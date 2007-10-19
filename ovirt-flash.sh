@@ -1,15 +1,26 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then
-    echo "Usage: ovirt-flash.sh <usbdevice>"
-    exit 1
+if [ $# -eq 1 ]; then
+    ISO=
+elif [ $# -eq 2 ]; then
+    ISO=$2
+else
+    echo "Usage: ovirt-flash.sh <usbdevice> [iso-image]"
 fi
 
-OUT=/tmp/output.$$
-USBDEVICE="$1"
+OUT=/tmp/ovirt-flash.$$
+USBDEVICE=$1
 
-#/usr/bin/livecd-creator -c ovirt.ks >& $OUT
-ISO=`ls -rt livecd-ovirt*.iso | tail -n 1`
+if [ ! -b "$USBDEVICE" ]; then
+    echo "USB device $USBDEVICE doesn't seem to exist"
+    exit 2
+fi
+
+if [ -z "$ISO" ]; then
+    # ISO image not provided on the command-line; build it
+    /usr/bin/livecd-creator -c ovirt.ks >& $OUT
+    ISO=`ls -1rt livecd-ovirt*.iso | tail -n 1`
+fi
 echo $ISO
 
 # clear out the old partition table

@@ -21,6 +21,7 @@ rootfiles
 dhclient
 libvirt
 openssh-clients
+openssh-server
 iscsi-initiator-utils
 ntp
 -policycoreutils
@@ -60,7 +61,23 @@ ntp
 -libcap.i386
 -zlib.i386
 -libgpg-error.i386
+-libxml2.i386
+-libgcc.i386
 -kbd
 -usermode
+-grub
+-fedora-logos
+-kpartx
+-dmraid
+-mkinitrd
+-parted
+-nash
+-tar
+-openldap
+-libuser
+-mdadm
+-mtools
+-cyrus-sasl-lib
+-cpio
 
 %end

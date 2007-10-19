@@ -1,9 +1,26 @@
-#!/bin/bash -x
+#!/bin/bash
 
-#ISOIMAGE=/root/livecd-ovirt-200710171708.iso
-ISOIMAGE=/root/livecd-ovirt-200710181701.iso
-ETHERNET_MODULE=e1000e
-REMOTE_IP=192.168.25.1
+if [ $# -eq 2 ]; then
+    ETHERNET_MODULE=$1
+    REMOTE_IP=$2
+    ISOIMAGE=
+elif [ $# -eq 3 ]; then
+    ETHERNET_MODULE=$1
+    REMOTE_IP=$2
+    ISOIMAGE=$3
+else
+    echo "Usage: ovirt-pxe.sh <ether_mod> <remote_ip> [iso-image]"
+    exit 1
+fi
+
+OUT=/tmp/ovirt-pxe.$$
+
+if [ -z "$ISOIMAGE" ]; then
+    # ISO image not provided on the command-line; build it
+    /usr/bin/livecd-creator -c ovirt.ks >& $OUT
+    ISOIMAGE=`ls -1rt livecd-ovirt*.iso | tail -n 1`
+fi
+
 CUSTOM_INIT=/root/ovirt-init
 
 PROGRAMS="/bin/basename /bin/sed /bin/cut /bin/awk /bin/uname /sbin/ifconfig /sbin/ip /sbin/dhclient /sbin/dhclient-script /sbin/route /sbin/consoletype"
