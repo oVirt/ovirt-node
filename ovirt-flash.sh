@@ -6,6 +6,7 @@ elif [ $# -eq 2 ]; then
     ISO=$2
 else
     echo "Usage: ovirt-flash.sh <usbdevice> [iso-image]"
+    exit 1
 fi
 
 OUT=/tmp/ovirt-flash.$$
