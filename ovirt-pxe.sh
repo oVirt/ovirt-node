@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 if [ $# -eq 2 ]; then
     ETHERNET_MODULE=$1
