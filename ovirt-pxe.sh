@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 if [ $# -eq 2 ]; then
     ETHERNET_MODULE=$1
@@ -21,9 +21,14 @@ if [ -z "$ISOIMAGE" ]; then
     ISOIMAGE=`ls -1rt livecd-ovirt*.iso | tail -n 1`
 fi
 
-CUSTOM_INIT=/root/ovirt-init
+CUSTOM_INIT=`pwd`/ovirt-init
+ISOIMAGE=`pwd`/$ISOIMAGE
+NEWINITDIR=`pwd`/`mktemp -d newinitrdXXXXX`
+ISOTMP=`pwd`/`mktemp -d isotmpXXXXXX`
 
 PROGRAMS="/bin/basename /bin/sed /bin/cut /bin/awk /bin/uname /sbin/ifconfig /sbin/ip /sbin/dhclient /sbin/dhclient-script /sbin/route /sbin/consoletype"
+
+mkdir -p /tftpboot
 
 # clean up from previous
 rm -rf /tftpboot/*
@@ -40,12 +45,13 @@ ONERROR LOCALBOOT 0
 EOF
 
 cp /usr/lib/syslinux/pxelinux.0 /tftpboot
-mkdir -p /mnt/tmp
 
 # pull the initrd and vmlinuz off of the ISO
-mount -o loop $ISOIMAGE /mnt/tmp
-cp /mnt/tmp/isolinux/vmlinuz /mnt/tmp/isolinux/initrd.img /tftpboot
-umount /mnt/tmp
+mount -o loop $ISOIMAGE $ISOTMP
+cp $ISOTMP/isolinux/vmlinuz $ISOTMP/isolinux/initrd.img /tftpboot
+umount $ISOTMP
+
+rmdir $ISOTMP
 
 # copy the ISO into place; we will need it for root later
 cp $ISOIMAGE /tftpboot
@@ -54,8 +60,7 @@ cp $ISOIMAGE /tftpboot
 rm -f /tmp/initrd.img
 cp /tftpboot/initrd.img /tmp
 gzip -dc < /tmp/initrd.img > /tmp/oldinitrd
-mkdir /tmp/newinitrd
-cd /tmp/newinitrd
+cd $NEWINITDIR
 cpio -idv < /tmp/oldinitrd
 rm -f /tmp/oldinitrd
 
@@ -114,5 +119,4 @@ rm -f /tftpboot/initrd.img.old
 mv /tftpboot/initrd.img /tftpboot/initrd.img.old
 mv /tmp/newimage.gz /tftpboot/initrd.img
 
-cd /tmp
-rm -rf /tmp/newinitrd
+rm -rf $NEWINITDIR
