@@ -5,6 +5,7 @@ auth --useshadow --enablemd5
 selinux --disabled
 firewall --disabled
 part / --size 1024
+services --disabled=iptables
 
 repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
 
@@ -24,6 +25,7 @@ openssh-clients
 openssh-server
 iscsi-initiator-utils
 ntp
+kvm
 -policycoreutils
 -audit-libs-python
 -hdparm
@@ -189,5 +191,16 @@ voA/N60UJ6aEVNXezG8LiYKIuuFURvhmGQhk+b0mLUrfVA4g767FcjObu8zxhM0t
 3adxSLtov8+wIBHYQG2rmwstsMkoEdxGYmQZ72mFfh+pU/u4Cm0MNLTsCp+NyYhH
 S3xMKzQLCZvbtDo=
 -----END CERTIFICATE-----" ) > /etc/pki/libvirt/servercert.pem
+
+if [ `grep -q "/sbin/iptables -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT" /etc/rc.d/rc.local` -ne 0 ]; then
+   echo "/sbin/iptables -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT" >> /etc/rc.d/rc.local
+fi
+
+(
+echo '#!/bin/sh
+
+switch=$(/sbin/ip route list | awk \'/^default / { print $NF }\')
+/sbin/ifconfig $1 0.0.0.0 up
+/usr/sbin/brctl addif ${switch} $1' ) > /etc/kvm-ifup
 
 %end

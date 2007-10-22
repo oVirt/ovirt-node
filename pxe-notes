@@ -1,0 +1,22 @@
+On "server" machine:
+1.  # yum install tftp-server dhcp tftp dhclient
+2.  edit /etc/xinetd.d/tftp, change disable to no
+3.  # service xinetd restart
+4.  edit /etc/dhcpd.conf; make it look like:
+
+allow booting;
+allow bootp;
+ddns-update-style interim;
+ignore client-updates;
+
+subnet 192.168.25.0 netmask 255.255.255.0 {
+        next-server 192.168.25.1;
+        range dynamic-bootp 192.168.25.100 192.168.25.200;
+        filename "pxelinux.0";
+}
+
+(except change the next-server, subnet, and range to suit)
+
+5.  # service dhcpd start
+6.  # livecd-creator -c /root/ovirt.ks
+7.  # /root/ovirt-setup-pxe.sh

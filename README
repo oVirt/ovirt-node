@@ -1,0 +1,78 @@
+OVIRT SCRIPTS README
+--------------------
+
+This is currently a collection of scripts to build/deploy an Ovirt instance,
+which is essentially stateless.  Each of the commands is described below, along
+with common usage.
+
+creator.py: This is basically livecd-creator from livecd-tools, with a couple
+of customization and bugfixes specific to Ovirt.  It is run as:
+
+./creator.py [-b <base_iso>] -c ovirt.ks
+
+which will create a new Live CD ISO based on the kickstart in ovirt.ks.  The
+output file will be named something like livecd-ovirt-200710221423.iso
+
+ovirt-cd.sh: This is just a thin wrapper around creator.py, mostly here for
+orthogonality with the other commands.
+
+ovirt-flash.sh: This is a wrapper around creator.py and livecd-iso-to-disk.
+Basically this creates an ISO with creator.py, and then lays down that ISO on
+top of a flash drive.  It is run as:
+
+./ovirt-flash.sh <usb-device> [base_iso]
+
+where the second argument is a base ISO to start from.  Note that this command
+completely destroys any USB device you point it at, so be careful.
+
+ovirt-pxe.sh: This is a command to create the files needed to do a PXE boot of
+ovirt.  It is run as:
+
+./ovirt-pxe.sh <ether_mod> <remote_ip> [base_iso]
+
+where <ether_mod> is the ethernet module the booting machine needs, and where
+<remote_ip> is the name of the server that will be serving the TFTP.  What this
+command does is to create an ISO (or use the one from base_iso), and then
+modify /tftpboot on the local machine to set it all up for PXE booting.  Then
+you can follow "pxe-notes" to set up the rest of the server, and you should be
+able to get the machine to boot from PXE.
+
+Typical Script Usage
+--------------------
+
+Here's how I've been typically using these scripts.
+
+1)  Have a 1GB flash drive.  I think you can get away with 500MB, but it might
+be quite tight.  Put the flash drive into the machine where you have the 
+scripts.
+2)  Run ./ovirt-flash.sh /dev/sdc.  This will build an ISO from repos, and
+lay it down on /dev/sdc
+3)  Put the flash drive in the target machine, and boot that machine from USB.
+4)  Oops!  I need to make a change.  Edit the ovirt.ks, then run
+./creator.py -b iso_from_last_step -c ovirt.ks; this will just update the parts
+of the ISO that is needed, which is much faster than regenerating the whole
+thing.  Now run ./ovirt-flash.sh /dev/sdc modified_iso, to lay down the
+ISO on the flash drive.
+
+Ovirt Usage
+-----------
+After booting the Ovirt machine with one of these methods, in theory everything
+should be setup for a local install, since libvirtd is not yet setup for
+remote installs.  Log into the console, and run the following command:
+
+# /usr/bin/qemu-kvm -M pc -m 500 -smp 1 -monitor pty -no-reboot -boot d -hda /dev/VolGroup00/iSCSI1 -cdrom /root/boot.iso -net nic,macaddr=00:16:3e:2f:ab:cd,vlan=0 -net tap,script=/etc/kvm-ifup,vlan=0 -vnc :0
+
+Note that you'll have to have some local storage currently (or manually set
+it up via iscsiadm), and you'll need to have the boot.iso locally available.
+Assuming all is well, from another machine you should be able to run
+"vncviewer <ip>:5900" and finish the installation.
+
+TODO
+----
+1)  Fix up the hardcoded MAC address in ovirt.ks %post for peth0
+2)  Disable dnsmasq in libvirtd
+3)  List of packages to later remove (but are extremely useful for debugging):
+    a) less
+    b) openssh-server
+    c) openssh-clients
+    d) net-tools
