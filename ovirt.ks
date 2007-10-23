@@ -132,7 +132,22 @@ echo "DEVICE=ovirtbr"
 echo "BOOTPROTO=dhcp"
 echo "ONBOOT=yes"
 echo "TYPE=Bridge"
+echo "DHCLIENTARGS=\"-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers\""
 ) > /etc/sysconfig/network-scripts/ifcfg-ovirtbr
+
+# needed for the iscsi-servers dhcp option
+(
+echo 'option iscsi-servers code 200 = array of ip-address;'
+) > /etc/dhclient.conf
+
+(
+echo    "if [ -n \"\$new_iscsi_servers\" ]; then"
+echo -e "\tfor s in \$new_iscsi_servers; do"
+echo -e "\t\techo \$s >> /etc/iscsi-servers.conf"
+echo -e "\tdone"
+echo    "fi"
+) > /etc/dhclient-up-hooks
+chmod +x /etc/dhclient-up-hooks
 
 (
 echo "DEVICE=peth0"
@@ -192,16 +207,19 @@ voA/N60UJ6aEVNXezG8LiYKIuuFURvhmGQhk+b0mLUrfVA4g767FcjObu8zxhM0t
 S3xMKzQLCZvbtDo=
 -----END CERTIFICATE-----" ) > /etc/pki/libvirt/servercert.pem
 
-if [ `grep -q "/sbin/iptables -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT" /etc/rc.d/rc.local` -ne 0 ]; then
+# add the iptables rule for bridge forwarding
+/bin/grep -q "/sbin/iptables -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT" /etc/rc.d/rc.local
+RETVAL=$?
+if [ $RETVAL -ne 0 ]; then
    echo "/sbin/iptables -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT" >> /etc/rc.d/rc.local
 fi
 
 (
-echo '#!/bin/sh
+echo "#!/bin/sh
 
-switch=$(/sbin/ip route list | awk \'/^default / { print $NF }\')
-/sbin/ifconfig $1 0.0.0.0 up
-/usr/sbin/brctl addif ${switch} $1' ) > /etc/kvm-ifup
+switch=\$(/sbin/ip route list | awk '/^default / { print \$NF }')
+/sbin/ifconfig \$1 0.0.0.0 up
+/usr/sbin/brctl addif \${switch} \$1" ) > /etc/kvm-ifup
 
 chmod +x /etc/kvm-ifup
 
