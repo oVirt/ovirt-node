@@ -67,6 +67,15 @@ it up via iscsiadm), and you'll need to have the boot.iso locally available.
 Assuming all is well, from another machine you should be able to run
 "vncviewer <ip>:5900" and finish the installation.
 
+Miscellaneous
+-------------
+Currently I have hardcoded a CA and some server certificates into the image,
+which we can use for libvirt remote support.  Later on we can use
+Kerberos/GSSAPI, but I think this is a good first step, and easy to undo later.
+Right now, with the appropriate client keys in place, I can connect remotely
+to the Ovirt server, but since we don't yet support installation, it is of
+limited usefulness.
+
 TODO
 ----
 1)  Fix up the hardcoded MAC address in ovirt.ks %post for peth0

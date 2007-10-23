@@ -203,4 +203,6 @@ switch=$(/sbin/ip route list | awk \'/^default / { print $NF }\')
 /sbin/ifconfig $1 0.0.0.0 up
 /usr/sbin/brctl addif ${switch} $1' ) > /etc/kvm-ifup
 
+chmod +x /etc/kvm-ifup
+
 %end
