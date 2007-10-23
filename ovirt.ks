@@ -26,6 +26,7 @@ openssh-server
 iscsi-initiator-utils
 ntp
 kvm
+nfs-utils
 -policycoreutils
 -audit-libs-python
 -hdparm
@@ -84,45 +85,58 @@ kvm
 
 %post
 
-# first the ovirt service (just modprobes kvm right now)
+# first the ovirt service
 (
-echo    "#!/bin/bash"
-echo    "#"
-echo -e "# ovirt\tStart ovirt services"
-echo    "#"
-echo    "# chkconfig: 3 99 00"
-echo    "# description: ovirt services"
-echo    "#"
-echo    "# Source functions library"
-echo    ". /etc/init.d/functions"
-echo    "start() {"
-echo -e "\tmodprobe kvm"
-echo -e "\tmodprobe kvm-intel >& /dev/null"
-echo -e "\tmodprobe kvm-amd >& /dev/null"
-echo    "}"
-echo -e "\n"
-echo    "stop() {"
-echo -e "\trmmod kvm-intel >& /dev/null"
-echo -e "\trmmod kvm-amd >& /dev/null"
-echo -e "\trmmod kvm >& /dev/null"
-echo    "}"
-echo -e "\n"
-echo    "case \"\$1\" in"
-echo    "  start)"
-echo    "        start"
-echo    "        ;;"
-echo    "  stop)"
-echo    "        stop"
-echo    "        ;;"
-echo    "  restart)"
-echo    "        stop"
-echo    "        start"
-echo    "        ;;"
-echo    "  *)"
-echo    "        echo \"Usage: ovirt {start|stop|restart}\""
-echo    "        exit 2"
-echo    "esac"
-) > /etc/init.d/ovirt
+echo "#!/bin/bash
+#
+# ovirt Start ovirt services
+#
+# chkconfig: 3 99 01
+# description: ovirt services
+#
+
+# Source functions library
+. /etc/init.d/functions
+
+start() {
+        modprobe kvm
+        modprobe kvm-intel >& /dev/null
+        modprobe kvm-amd >& /dev/null
+        # now login to all of the discovered iSCSI servers
+        for server in \`cat /etc/iscsi-servers.conf\`; do
+            scan=\`/sbin/iscsiadm --mode discovery --type sendtargets --portal \$server 2>/dev/null\`
+            if [ \$? -ne 0 ]; then
+                 echo \"Failed scanning \$server...skipping\"
+                 continue
+	    fi
+            target=\`echo \$scan | cut -d' ' -f2\`
+            port=\`echo \$scan | cut -d':' -f2 | cut -d',' -f1\`
+           /sbin/iscsiadm --mode node --targetname \$target --portal \$server:\$port --login
+        done
+}
+
+stop() {
+        /sbin/iscsiadm --mode node --logoutall=all
+        rmmod kvm-intel >& /dev/null
+        rmmod kvm-amd >& /dev/null
+        rmmod kvm >& /dev/null
+}
+
+case \"\$1\" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        stop
+        start
+        ;;
+  *)
+        echo \"Usage: ovirt {start|stop|restart}\"
+        exit 2
+esac" ) > /etc/init.d/ovirt
 chmod +x /etc/init.d/ovirt
 /sbin/chkconfig ovirt on
 
@@ -132,12 +146,13 @@ echo "DEVICE=ovirtbr"
 echo "BOOTPROTO=dhcp"
 echo "ONBOOT=yes"
 echo "TYPE=Bridge"
-echo "DHCLIENTARGS=\"-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers\""
+echo "DHCLIENTARGS=\"-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,etc-libvirt-nfs-server\""
 ) > /etc/sysconfig/network-scripts/ifcfg-ovirtbr
 
 # needed for the iscsi-servers dhcp option
 (
 echo 'option iscsi-servers code 200 = array of ip-address;'
+echo 'option etc-libvirt-nfs-server code 201 = text;'
 ) > /etc/dhclient.conf
 
 (
@@ -145,6 +160,9 @@ echo    "if [ -n \"\$new_iscsi_servers\" ]; then"
 echo -e "\tfor s in \$new_iscsi_servers; do"
 echo -e "\t\techo \$s >> /etc/iscsi-servers.conf"
 echo -e "\tdone"
+echo    "fi"
+echo    "if [ -n \"\$new_etc_libvirt_nfs_server\" ]; then"
+echo -e "\techo \"\$new_etc_libvirt_nfs_server /etc/libvirt nfs hard,bg,tcp,intr 0 0\" >> /etc/fstab"
 echo    "fi"
 ) > /etc/dhclient-up-hooks
 chmod +x /etc/dhclient-up-hooks
@@ -222,5 +240,8 @@ switch=\$(/sbin/ip route list | awk '/^default / { print \$NF }')
 /usr/sbin/brctl addif \${switch} \$1" ) > /etc/kvm-ifup
 
 chmod +x /etc/kvm-ifup
+
+# set up qemu daemon to allow outside VNC connections
+sed -i -e 's/# vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/' /etc/libvirt/qemu.conf
 
 %end

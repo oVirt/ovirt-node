@@ -10,11 +10,13 @@ ddns-update-style interim;
 ignore client-updates;
 
 option iscsi-servers code 200 = array of ip-address;
+option etc-libvirt-nfs-server code 201 = text;
 
 subnet 192.168.25.0 netmask 255.255.255.0 {
         next-server 192.168.25.1;
         option routers 192.168.25.1;
         option iscsi-servers 192.168.25.1,192.168.25.2;
+	option etc-libvirt-nfs-server "192.168.25.1:/tmp/ovirt-nfs";
         range dynamic-bootp 192.168.25.100 192.168.25.200;
         filename "pxelinux.0";
 }
@@ -22,5 +24,10 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
 (except change the next-server, subnet, and range to suit)
 
 5.  # service dhcpd start
-6.  # livecd-creator -c /root/ovirt.ks
-7.  # /root/ovirt-setup-pxe.sh
+6.  # service iptables stop
+7.  # mkdir /tmp/ovirt-nfs
+8.  # echo "/tmp	192.168.25.0/24(rw,no_root_squash)" > /etc/exports
+9.  # service nfs start
+
+10.  # livecd-creator -c /root/ovirt.ks
+11.  # /root/ovirt-setup-pxe.sh

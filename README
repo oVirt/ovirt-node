@@ -85,3 +85,6 @@ TODO
     b) openssh-server
     c) openssh-clients
     d) net-tools
+    e) nfs-utils
+4)  Use GSSAPI instead of TLS for libvirtd remote
+5)  Use proper iscsid/iscsi startup scripts instead of my hacked up iscsi_scan.sh
