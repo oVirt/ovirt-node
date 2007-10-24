@@ -67,6 +67,45 @@ it up via iscsiadm), and you'll need to have the boot.iso locally available.
 Assuming all is well, from another machine you should be able to run
 "vncviewer <ip>:5900" and finish the installation.
 
+iSCSI disks
+-----------
+When using iSCSI as the target for disks, you definitely don't want to use
+the /dev/sdc device, or whatever.  That could change on subsequent reboots
+depending on what order devices are scanned in, how many iSCSI servers there
+are, etc, etc.  What you really want to use is the ID (or WWID, or UUID) of the
+device.  That's available through /dev/disk/by-id.  For example, say I've
+mapped 3 LUNs from iSCSI server laforge.  If I run "# ls /dev/disk/by-path", I
+see the following:
+
+ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-1
+ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-1-part1
+ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-1-part2
+ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-2
+ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-2-part1
+ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-2-part2
+ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-3
+pci-0000:00:1f.2-scsi-0:0:0:0
+pci-0000:00:1f.2-scsi-0:0:0:0-part1
+pci-0000:00:1f.2-scsi-0:0:0:0-part2
+pci-0000:00:1f.2-scsi-1:0:0:0
+
+Note that there are 3 LUNs there.  If you know you want to install on LUN 3,
+then "# ls -l /dev/disk/by-path/ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-3" and you'll see:
+
+lrwxrwxrwx 1 root root 9 2007-10-24 19:14 ip-192.168.25.1:3260-iscsi-laforge:storage.virt-lun-3 -> ../../sdd
+
+Now run:
+
+# /sbin/scsi_id -g -u -s /block/sdd
+16465616462656166313a3300000000000000000000000000
+
+Which gives you the ID.  Finally, what this means is that for your disk device,
+you should use:
+
+/dev/disk/by-id/scsi-16465616462656166313a3300000000000000000000000000
+
+which will persist across reboots, and even changes to the LUN scheme.
+
 Miscellaneous
 -------------
 Currently I have hardcoded a CA and some server certificates into the image,
