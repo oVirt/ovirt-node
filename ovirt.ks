@@ -6,6 +6,7 @@ selinux --disabled
 firewall --disabled
 part / --size 1024
 services --disabled=iptables
+bootloader --timeout=1
 
 repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
 
@@ -162,17 +163,16 @@ echo -e "\t\techo \$s >> /etc/iscsi-servers.conf"
 echo -e "\tdone"
 echo    "fi"
 echo    "if [ -n \"\$new_etc_libvirt_nfs_server\" ]; then"
-echo -e "\techo \"\$new_etc_libvirt_nfs_server /etc/libvirt nfs hard,bg,tcp,intr 0 0\" >> /etc/fstab"
+echo -e "\techo \"\$new_etc_libvirt_nfs_server /etc/libvirt/qemu nfs hard,bg,tcp,intr 0 0\" >> /etc/fstab"
 echo    "fi"
 ) > /etc/dhclient-up-hooks
 chmod +x /etc/dhclient-up-hooks
 
 (
-echo "DEVICE=peth0"
+echo "DEVICE=eth0"
 echo "ONBOOT=yes"
 echo "BRIDGE=ovirtbr"
-echo "HWADDR=00:13:20:F5:FA:7C"
-) > /etc/sysconfig/network-scripts/ifcfg-peth0
+) > /etc/sysconfig/network-scripts/ifcfg-eth0
 
 # make libvirtd listen on the external interfaces
 sed -i -e 's/#LIBVIRTD_ARGS="--listen"/LIBVIRTD_ARGS="--listen"/' /etc/sysconfig/libvirtd

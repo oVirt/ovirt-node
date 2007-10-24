@@ -78,13 +78,12 @@ limited usefulness.
 
 TODO
 ----
-1)  Fix up the hardcoded MAC address in ovirt.ks %post for peth0
-2)  Disable dnsmasq in libvirtd
-3)  List of packages to later remove (but are extremely useful for debugging):
+1)  Disable dnsmasq in libvirtd
+2)  List of packages to later remove (but are extremely useful for debugging):
     a) less
     b) openssh-server
     c) openssh-clients
     d) net-tools
     e) nfs-utils
-4)  Use GSSAPI instead of TLS for libvirtd remote
-5)  Use proper iscsid/iscsi startup scripts instead of my hacked up iscsi_scan.sh
+3)  Use GSSAPI instead of TLS for libvirtd remote
+4)  Use proper iscsid/iscsi startup scripts instead of my hacked up iscsi_scan.sh

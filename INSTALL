@@ -1,0 +1,151 @@
+Installation instructions
+-------------------------
+
+This file will describe an Ovirt installation using a Flash drive as the root
+partition.  This is the easiest configuration to work with; using either a
+LiveCD or PXE is very similar, but presents a few additional steps, so it
+will not be discussed here.
+
+In order to have an ovirt host start up, you'll need to have two machines
+available:
+
+Machine 1 - Fedora 8 x86_64 machine - this will be the build server and the
+DHCP/NFS/iSCSI server for the rest of the setup
+
+Machine 2 - x86_64 machine - this will be the Ovirt host at the end
+
+There are quite a few steps to getting this running, so let's get started.
+
+Machine 1/Build Server setup
+1)  Make sure you have the following packages installed on the build server:
+
+python-virtinst
+libvirt
+libvirt-python
+livecd-tools
+dhcp
+nfs-utils
+scsi-target-utils
+gnutls-utils
+git
+
+2)  Pull the ovirt scripts onto the build host:
+# scp devserv.devel:~clalance/ovirt root@buildhost:/root
+
+3)  Put a 1GB (or greater) flash drive into the machine; you'll need to find out
+which SCSI device it got assigned to via dmesg (mine went to /dev/sdc, for
+instance)
+
+4)  # cd /root/ovirt ; ./ovirt-flash.sh /dev/sdc
+
+(replacing /dev/sdc with the device your USB stick is).  Be warned that this
+will totally destroy any data on the USB stick, so make sure to back up any
+data you care about.  This step will take quite a while, as it will download
+and yum install all of the necessary packages into a chroot jail, run the
+kickstart %post, and lay the resulting image down on the USB stick.
+
+5)  # mkdir -p /tmp/ovirt-nfs ; cp -av /etc/libvirt/qemu /tmp/ovirt-nfs
+
+6)  edit /etc/exports, add:
+
+/tmp 192.168.25.0/24(rw,no_root_squash)
+
+(replace 192.168.25.0 with the subnet you are using)
+
+7)  Edit /etc/dhcpd.conf; you'll want to make it look like:
+
+-------------------------<cut here>----------------------------------------
+allow booting;
+allow bootp;
+ddns-update-style interim;
+ignore client-updates;
+
+option iscsi-servers code 200 = array of ip-address;
+option etc-libvirt-nfs-server code 201 = text;
+
+subnet 192.168.25.0 netmask 255.255.255.0 {
+        option domain-name "redhat.com";
+        option domain-name-servers 172.16.76.10,172.16.76.20;
+        next-server 192.168.25.1;
+        option routers 192.168.25.1;
+        option iscsi-servers 192.168.25.1;
+        option etc-libvirt-nfs-server "192.168.25.1:/tmp/ovirt-nfs/qemu";
+        range dynamic-bootp 192.168.25.100 192.168.25.200;
+        filename "pxelinux.0";
+}
+-------------------------<cut here>----------------------------------------
+
+Make sure to replace the subnet with the one you want to use, the
+domain-name-servers to what you want, and the next-server, routers,
+iscsi-servers, and etc-libvirt-nfs-server options to be the IP address of
+*this* server.  Also make sure that the "range dynamic-bootp" option matches
+the subnet.
+
+8)  # service dhcpd start
+
+9)  # service iptables stop
+
+10) # service nfs restart
+
+11) Now generate the TLS certificates needed:
+
+Create a file called client.info:
+
+----------<cut here>----------
+country = GB
+state = London
+locality = London
+organization = Red Hat
+cn = client1
+tls_www_client
+encryption_key
+signing_key
+----------<cut here>----------
+
+(replace the appropriate information; cn can be anything)
+
+# certtool --generate-privkey > clientkey.pem
+# certtool --generate-certificate --load-privkey clientkey.pem \
+  --load-ca-certificate cacert.pem --load-ca-privkey cakey.pem \
+  --template client.info --outfile clientcert.pem
+# cp cacert.pem /etc/pki/CA
+# mkdir -p /etc/pki/libvirt/private
+# cp clientkey.pem /etc/pki/libvirt/private/clientkey.pem
+# cp clientcert.pem /etc/pki/libvirt/clientcert.pem
+
+12) Edit /etc/hosts
+
+-------------<cut here>--------------------
+192.168.25.200	  ovirt
+-------------<cut here>--------------------
+
+(for now this is necessary for the TLS stuff to work) - make sure that you
+replace 192.168.25.200 with the IP address the Ovirt host (machine 2) will use.
+
+13) Set up 1 or more iSCSI LUNs for export:
+
+# lvcreate -n iSCSI1 -L +10G /dev/HostGroup
+
+(or whatever you want; just make sure that you have either a raw partition or
+an LVM volume available for guests)
+
+# service tgtd start
+# tgtadm --lld iscsi --op new --mode target --tid 1 -T host:storage
+
+(the host:storage can actually be anything you want; it's mostly used as a
+descriptive name later.  I made mine <hostname>:storage.virt)
+
+# tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 1 -b /dev/HostGroup/iSCSI1
+
+(this exports /dev/HostGroup/iSCSI1 as LUN 1 on the target we made above. If
+you want, repeat this for additional devices, making sure to incremente the LUN
+for each)
+
+# tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
+
+Machine 2/Ovirt Host:
+1)  Take the USB stick created on the build server, and make sure your BIOS
+is set to boot to USB.
+2)  Boot the host; it should come up and login to all of the iSCSI servers
+that you specified.  It should also mount the build server NFS as
+/etc/libvirt/qemu for persistent storage of guest configuration data.
