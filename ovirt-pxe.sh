@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./ovirt-common.sh
+
 if [ $# -eq 2 ]; then
     ETHERNET_MODULE=$1
     REMOTE_IP=$2
@@ -16,13 +18,11 @@ fi
 OUT=/tmp/ovirt-pxe.$$
 
 if [ -z "$ISOIMAGE" ]; then
-    # ISO image not provided on the command-line; build it
-    ./creator.py -c ovirt.ks >& $OUT
-    ISOIMAGE=`ls -1rt livecd-ovirt*.iso | tail -n 1`
+    ISO=`create_iso`
 fi
 
 CUSTOM_INIT=`pwd`/ovirt-init
-ISOIMAGE=`pwd`/$ISOIMAGE
+ISOIMAGE=`pwd`/$ISO
 NEWINITDIR=`pwd`/`mktemp -d newinitrdXXXXX`
 ISOTMP=`pwd`/`mktemp -d isotmpXXXXXX`
 

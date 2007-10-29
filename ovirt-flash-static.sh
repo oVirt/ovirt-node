@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./ovirt-common.sh
+
 if [ $# -eq 1 ]; then
     ISO=
 elif [ $# -eq 2 ]; then
@@ -21,8 +23,7 @@ fi
 
 if [ -z "$ISO" ]; then
     # ISO image not provided on the command-line; build it
-    ./creator.py -c ovirt.ks -f ovirt
-    ISO=ovirt.iso
+    ISO=`create_iso`
 fi
 echo $ISO
 
@@ -45,7 +46,8 @@ cp $IMGTMP/isolinux/* $USBTMP
 rm -f $USBTMP/isolinux.bin
 mv $USBTMP/isolinux.cfg $USBTMP/extlinux.conf
 
-sed -i -e 's/ *append.*/  append initrd=initrd.img root=LABEL=ovirt ro/' $USBTMP/extlinux.conf
+LABEL=`echo $ISO | cut -d'.' -f1 | cut -c-16`
+sed -i -e "s/ *append.*/  append initrd=initrd.img root=LABEL=$LABEL ro/" $USBTMP/extlinux.conf
 
 extlinux -i $USBTMP
 

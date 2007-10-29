@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./ovirt-common.sh
+
 if [ $# -eq 1 ]; then
     ISO=
 elif [ $# -eq 2 ]; then
@@ -18,9 +20,7 @@ if [ ! -b "$USBDEVICE" ]; then
 fi
 
 if [ -z "$ISO" ]; then
-    # ISO image not provided on the command-line; build it
-    ./creator.py -c ovirt.ks >& $OUT
-    ISO=`ls -1rt livecd-ovirt*.iso | tail -n 1`
+    ISO=`create_iso`
 fi
 echo $ISO
 

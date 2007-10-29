@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# ISO image not provided on the command-line; build it
-./creator.py -c ovirt.ks >& $OUT
-ISO=`ls -1rt livecd-ovirt*.iso | tail -n 1`
+. ./ovirt-common.sh
+
+if [ $# -ne 0 ]; then
+    echo "Usage: ovirt-cd.sh"
+    exit 1
+fi
+
+ISO=`create_iso`
 echo $ISO
