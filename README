@@ -117,12 +117,12 @@ limited usefulness.
 
 TODO
 ----
-1)  Disable dnsmasq in libvirtd
-2)  List of packages to later remove (but are extremely useful for debugging):
+1)  List of packages to later remove (but are extremely useful for debugging):
     a) less
     b) openssh-server
     c) openssh-clients
     d) net-tools
     e) nfs-utils
-3)  Use GSSAPI instead of TLS for libvirtd remote
-4)  Use proper iscsid/iscsi startup scripts instead of my hacked up iscsi_scan.sh
+    f) wget
+2)  Use GSSAPI instead of TLS for libvirtd remote
+3)  Use proper iscsid/iscsi startup scripts instead of my hacked up iscsi_scan.sh
