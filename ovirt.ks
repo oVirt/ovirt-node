@@ -5,7 +5,7 @@ auth --useshadow --enablemd5
 selinux --disabled
 firewall --disabled
 part / --size 950
-services --disabled=iptables
+services --disabled=iptables --enabled=ntpd
 bootloader --timeout=1
 
 repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
@@ -29,6 +29,10 @@ ntp
 kvm
 nfs-utils
 wget
+krb5-workstation
+cyrus-sasl-gssapi
+cyrus-sasl
+cyrus-sasl-lib
 -policycoreutils
 -audit-libs-python
 -hdparm
@@ -66,7 +70,6 @@ wget
 -libcap.i386
 -zlib.i386
 -libgpg-error.i386
--libxml2.i386
 -libgcc.i386
 -kbd
 -usermode
@@ -82,8 +85,9 @@ wget
 -libuser
 -mdadm
 -mtools
--cyrus-sasl-lib
 -cpio
+-cyrus-sasl-gssapi.i386
+-cyrus-sasl-lib.i386
 
 %post
 
@@ -193,6 +197,9 @@ case \"\$1\" in
 esac" ) > /etc/init.d/ovirt-bridges
 chmod +x /etc/init.d/ovirt-bridges
 /sbin/chkconfig ovirt-bridges on
+
+# just to get a boot warning to shut up
+touch /etc/resolv.conf
 
 # needed for the iscsi-servers dhcp option
 (

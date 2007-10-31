@@ -49,7 +49,7 @@ mv $USBTMP/isolinux.cfg $USBTMP/extlinux.conf
 LABEL=`echo $ISO | cut -d'.' -f1 | cut -c-16`
 sed -i -e "s/ *append.*/  append initrd=initrd.img root=LABEL=$LABEL ro/" $USBTMP/extlinux.conf
 
-extlinux -i $USBTMP
+/sbin/extlinux -i $USBTMP
 
 umount $USBTMP
 umount $SQUASHTMP
