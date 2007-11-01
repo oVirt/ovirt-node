@@ -19,6 +19,18 @@ With that initial part, let's get started:
 
 On the freeipa machine:
 1)  FIXME: describe freeipa setup
+2)  Once you have freeipa installed somewhere, you'll need to add a principle
+for the libvirt service.  To do this, on the freeipa box, run:
+
+# kadmin.local
+> addprinc libvirt/ovirt@VIRT.BOSTON.REDHAT.COM
+> ktadd -k /tmp/ovirt-libvirt.tab libvirt/ovirt@VIRT.BOSTON.REDHAT.COM
+> quit
+
+This will add a new principle for libvirt for the "ovirt" machine, and export
+that principle to the /tmp/ovirt-libvirt.tab file.  Note that you'll need
+to replace "ovirt" and "VIRT.BOSTON.REDHAT.COM" with the DNS name and the realm
+you are using, respectively.
 
 On the ovirt machine:
 1)  First, we need to edit the krb5.conf to point to the correct realm and
@@ -67,7 +79,10 @@ KRB5_KTNAME=/etc/libvirt/krb5.tab /root/libvirtd --listen --daemon
 On the client machine:
 1)  Setup up krb5.conf exactly the same as described in step 1 for the ovirt
 machine.
-2)  Now you'll need to kinit to get an initial kerberos ticket for the realm.
+2)  Edit /etc/sasl2/libvirt.conf, and add:
+mech_list: gssapi
+
+3)  Now you'll need to kinit to get an initial kerberos ticket for the realm.
 In my case, I run:
 
 # kinit admin@VIRT.BOSTON.REDHAT.COM
@@ -91,7 +106,7 @@ Valid starting     Expires            Service principal
 Kerberos 4 ticket cache: /tmp/tkt0
 klist: You have no tickets cached
 
-3)  Now we can attempt to connect to the remote hypervisor with virsh.  Of
+4)  Now we can attempt to connect to the remote hypervisor with virsh.  Of
 course, make sure your virsh has the GSSAPI/kerberos support compiled in:
 
 # virsh --connect qemu+tcp://ovirt/system list --all
