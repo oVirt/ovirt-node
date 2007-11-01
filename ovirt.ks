@@ -10,7 +10,7 @@ bootloader --timeout=1
 
 repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
 
-#repo --name=libvirt-gssapi --baseurl=http://laforge.boston.redhat.com/rpms
+repo --name=libvirt-gssapi --baseurl=http://laforge.boston.redhat.com/rpms
 
 
 %packages
@@ -54,8 +54,8 @@ cyrus-sasl-lib
 -rhpl
 -glibc.i686
 -xen-libs.i386
--zlib.i386
 -libxml2.i386
+-zlib.i386
 -libvirt.i386
 -avahi.i386
 -libgcrypt.i386
@@ -263,8 +263,8 @@ if [ -n "$new_libvirt_auth_method" ]; then
         get_tls
 
         mkdir -p /etc/libvirt
-        cd /etc/libvirt ; wget -q http://$SERVER/krb5.tab
-        cd /etc ; rm -f /etc/krb5.conf ; wget -q http://$SERVER/krb5.conf
+        wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
+        rm -f /etc/krb5.conf ; wget -q http://$SERVER/krb5.conf -O /etc/krb5.conf
     fi
 fi
 EOF

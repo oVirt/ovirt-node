@@ -29,6 +29,9 @@ scsi-target-utils
 gnutls-utils
 git
 httpd
+cyrus-sasl
+cyrus-sasl-libs
+cyrus-sasl-gssapi
 
 2)  Checkout the ovirt scripts:
 # git clone git://et.devel.redhat.com/ovirt
@@ -75,7 +78,9 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
         option routers 192.168.25.1;
         option iscsi-servers 192.168.25.1;
         option etc-libvirt-nfs-server "192.168.25.1:/tmp/ovirt-nfs/qemu";
-	option libvirt-auth-method "tls:192.168.25.1";
+        option libvirt-auth-method "tls:192.168.25.1";
+        # comment out the above and un-comment the below for kerberos
+        #option libvirt-auth-method "krb5:192.168.25.1";
         range dynamic-bootp 192.168.25.100 192.168.25.200;
         filename "pxelinux.0";
 }
@@ -87,7 +92,15 @@ iscsi-servers, etc-libvirt-nfs-server, and libvirt-auth-method options to be
 the IP address of *this* server.  Also make sure that the "range dynamic-bootp"
 option matches the subnet.
 
-9)  # cp cacert.pem servercert.pem serverkey.pem /var/www/html
+9)  Either generate your own CA, and server keys and certs (instructions on
+http://libvirt.org/remote.html), or use the pre-built ones.  Note that if you
+use the pre-built ones, you'll have to add an entry in /etc/hosts later, while
+if you generate your own, you can do it with whatever DNS hostname your Ovirt
+server will resolve to.  Either way, you need to copy the cacert,
+the servercert, and the serverkey to an http server accessible to the
+ovirt host:
+
+# cp cacert.pem servercert.pem serverkey.pem /var/www/html
 
 10) Setup the services you need:
 
@@ -128,7 +141,8 @@ signing_key
 192.168.25.200	  ovirt
 -------------<cut here>--------------------
 
-(for now this is necessary for the TLS stuff to work) - make sure that you
+if, and only if, you used the prebuilt TLS certificates from the git repo.  If
+you made your own certificates, you can skip this step.  Make sure that you
 replace 192.168.25.200 with the IP address the Ovirt host (machine 2) will use.
 
 16) Set up 1 or more iSCSI LUNs for export:
@@ -151,6 +165,24 @@ you want, repeat this for additional devices, making sure to incremente the LUN
 for each)
 
 # tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
+
+17) Optional: if you want to get kerberos working, there are a number of
+additional steps:
+  a)  Take the libvirt SRPM in the repo, and re-compile it for your target
+      machine (x86_64 in my case).
+  b)  Copy the resulting RPM to /var/www/html/rpms, and then
+      "createrepo /var/www/html/rpms"
+  c)  Edit ovirt.ks, and add an additional repo where it will pull this updated
+      kerberized libvirt RPM.  There is an example repo in there already.
+  d)  Re-run the "./ovirt-flash.sh /dev/sdc" script, which should now grab the
+      kerberized libvirt.
+  e)  Edit /etc/dhcpd.conf, and turn on krb5 for the libvirt-auth-method.
+      Restart dhcpd.
+  f)  Follow the steps in README.krb5 for setup.  You'll need to take the
+      /etc/krb5.conf and keytable files that you generated for the "ovirt"
+      machine and place them in /var/www/html for the init scripts to fetch.
+      Make sure to call the keytable file "<ip>-libvirt.tab", as that is the
+      filename the scripts will look for.
 
 Machine 2/Ovirt Host:
 1)  Take the USB stick created on the build server, and make sure your BIOS
