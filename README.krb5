@@ -3,7 +3,9 @@ the libvirt stuff.  There are a lot of steps, it is fairly complicated, and
 the error reporting is pretty bad, so this is not for the faint of heart.
 
 It really helps to have a basic understanding of kerberos, KDC, and other
-terminology when getting this up.  You can mechn
+terminology when getting this up.  You *can* just follow the steps here, but
+when things go wrong (and they almost certainly will), you'll need more
+background knowledge.
 
 To start, you need a minimum of 3 machines here:
 
@@ -18,19 +20,23 @@ to this machine as "client" throughout the document.
 With that initial part, let's get started:
 
 On the freeipa machine:
-1)  FIXME: describe freeipa setup
+1)  Follow the directions on http://freeipa.org/page/QuickInstall to get the
+FreeIPA server up and running.  Note that if you are running on F8 or later,
+you'll need to pay particular attention to the mod_auth_kerb section.  During
+the FreeIPA setup, you can call your realm whatever you want; I'll use
+OVIRT.BOSTON.REDHAT.COM for the rest of the document.
 2)  Once you have freeipa installed somewhere, you'll need to add a principle
 for the libvirt service.  To do this, on the freeipa box, run:
 
 # kadmin.local
-> addprinc libvirt/ovirt@VIRT.BOSTON.REDHAT.COM
-> ktadd -k /tmp/ovirt-libvirt.tab libvirt/ovirt@VIRT.BOSTON.REDHAT.COM
+> addprinc libvirt/ovirt@OVIRT.BOSTON.REDHAT.COM
+> ktadd -k /tmp/ovirt-libvirt.tab libvirt/ovirt@OVIRT.BOSTON.REDHAT.COM
 > quit
 
 This will add a new principle for libvirt for the "ovirt" machine, and export
 that principle to the /tmp/ovirt-libvirt.tab file.  Note that you'll need
-to replace "ovirt" and "VIRT.BOSTON.REDHAT.COM" with the DNS name and the realm
-you are using, respectively.
+to replace "ovirt" and "OVIRT.BOSTON.REDHAT.COM" with the full DNS name and the
+realm you are using, respectively.
 
 On the ovirt machine:
 1)  First, we need to edit the krb5.conf to point to the correct realm and
@@ -38,25 +44,28 @@ KDC.  In /etc/krb5.conf, in the [realms] section, you'll want to add your
 realm name, along with it's kdc and admin server.  In my case, it looks like:
 
 [realms]
- VIRT.BOSTON.REDHAT.COM = {
-  kdc = danpb-vm01.virt.boston.redhat.com:88
-  admin_server = danpb-vm01.virt.boston.redhat.com:749
+ OVIRT.BOSTON.REDHAT.COM = {
+  kdc = freeipa:88
+  admin_server = freeipa:749
  }
+
+You'll need to replace "freeipa" with the fully qualified domain name of your
+freeipa server.
 
 Now, you'll need to associate that realm with DNS names.  So, you'll want to
 add 2 lines to the [domain_realm] section, which basically associates that
 realm with these names.  In my case, it looks like:
 
 [domain_realm]
- .virt.boston.redhat.com = VIRT.BOSTON.REDHAT.COM
- virt.boston.redhat.com = VIRT.BOSTON.REDHAT.COM
+ .ovirt.boston.redhat.com = OVIRT.BOSTON.REDHAT.COM
+ ovirt.boston.redhat.com = OVIRT.BOSTON.REDHAT.COM
 
 Finally, we'll need to make sure that this realm is the default realm.  In
 the [libdefaults] section, you'll want to change the default_realm to point
 to your realm.  In my case, it looks like:
 
 [libdefaults]
- default_realm = VIRT.BOSTON.REDHAT.COM
+ default_realm = OVIRT.BOSTON.REDHAT.COM
 
 2)  Now we need to make sure that libvirtd is configured properly.  In the
 simple case, libvirtd is using kerberos for authentication, and TCP for the
@@ -85,7 +94,7 @@ mech_list: gssapi
 3)  Now you'll need to kinit to get an initial kerberos ticket for the realm.
 In my case, I run:
 
-# kinit admin@VIRT.BOSTON.REDHAT.COM
+# kinit admin@OVIRT.BOSTON.REDHAT.COM
 
 and enter in the password to get a ticket.  You'll have to replace the username
 and the realm to suit your own setup.
@@ -125,3 +134,11 @@ time, and problems with DNS.  You have to make sure that all three machines
 in this example (freeipa, ovirt, client) are synced via NTP, and you have to
 make sure that all three machines can resolve each other's DNS name both
 forwards and backwards.  If either of those isn't true, it won't work.
+
+On the "freeipa" machine, you can look at /var/log/krb5kdc.log to get an idea
+of what went wrong.
+
+If you see an error like "Server not found in Kerberos database", either you
+didn't add the principle correctly in the first step here, or you have an
+alternate name for the server in /etc/hosts.  Remove any /etc/hosts aliases and
+try again.
