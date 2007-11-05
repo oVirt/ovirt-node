@@ -15,6 +15,7 @@ Requires: rubygem(rails) >= 1.2.2
 Requires: rubygem(mongrel) >= 1.0.1
 Requires: ruby-gettext-package
 Requires: httpd >= 2.0
+Requires: mod_auth_kerb
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 Requires(preun): /sbin/service
