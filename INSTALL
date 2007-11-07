@@ -92,15 +92,22 @@ iscsi-servers, etc-libvirt-nfs-server, and libvirt-auth-method options to be
 the IP address of *this* server.  Also make sure that the "range dynamic-bootp"
 option matches the subnet.
 
-9)  Either generate your own CA, and server keys and certs (instructions on
-http://libvirt.org/remote.html), or use the pre-built ones.  Note that if you
-use the pre-built ones, you'll have to add an entry in /etc/hosts later, while
-if you generate your own, you can do it with whatever DNS hostname your Ovirt
-server will resolve to.  Either way, you need to copy the cacert,
-the servercert, and the serverkey to an http server accessible to the
-ovirt host:
+9)  Generate all of the certificates needed for libvirt remote authentication.
+To do this, you will need to run the gencerts script:
+
+# ./gencerts perf200.perf.redhat.com
+
+This will create the CA cert, the server cert, and the client certs.  Make sure
+that the name you pass in here resolves both backwards and forwards in DNS; it
+is the name we will use later on to point virt-manager/virsh at the Ovirt host.
+
+Now we just need to copy these to the appropriate places:
 
 # cp cacert.pem servercert.pem serverkey.pem /var/www/html
+# cp cacert.pem /etc/pki/CA
+# mkdir -p /etc/pki/libvirt/private
+# cp clientkey.pem /etc/pki/libvirt/private/clientkey.pem
+# cp clientcert.pem /etc/pki/libvirt/clientcert.pem
 
 10) Setup the services you need:
 
@@ -109,43 +116,7 @@ ovirt host:
 # service nfs restart
 # service httpd start
 
-14) Now generate the TLS certificates needed:
-
-Create a file called client.info:
-
-----------<cut here>----------
-country = GB
-state = London
-locality = London
-organization = Red Hat
-cn = client1
-tls_www_client
-encryption_key
-signing_key
-----------<cut here>----------
-
-(replace the appropriate information; cn can be anything)
-
-# certtool --generate-privkey > clientkey.pem
-# certtool --generate-certificate --load-privkey clientkey.pem \
-  --load-ca-certificate cacert.pem --load-ca-privkey cakey.pem \
-  --template client.info --outfile clientcert.pem
-# cp cacert.pem /etc/pki/CA
-# mkdir -p /etc/pki/libvirt/private
-# cp clientkey.pem /etc/pki/libvirt/private/clientkey.pem
-# cp clientcert.pem /etc/pki/libvirt/clientcert.pem
-
-15) Edit /etc/hosts
-
--------------<cut here>--------------------
-192.168.25.200	  ovirt
--------------<cut here>--------------------
-
-if, and only if, you used the prebuilt TLS certificates from the git repo.  If
-you made your own certificates, you can skip this step.  Make sure that you
-replace 192.168.25.200 with the IP address the Ovirt host (machine 2) will use.
-
-16) Set up 1 or more iSCSI LUNs for export:
+11) Set up 1 or more iSCSI LUNs for export:
 
 # lvcreate -n iSCSI1 -L +10G /dev/HostGroup
 
@@ -166,7 +137,7 @@ for each)
 
 # tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
 
-17) Optional: if you want to get kerberos working, there are a number of
+12) Optional: if you want to get kerberos working, there are a number of
 additional steps:
   a)  Take the libvirt SRPM in the repo, and re-compile it for your target
       machine (x86_64 in my case).

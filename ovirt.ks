@@ -8,7 +8,8 @@ part / --size 950
 services --disabled=iptables --enabled=ntpd
 bootloader --timeout=1
 
-repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
+repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
+#repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
 
 repo --name=libvirt-gssapi --baseurl=http://laforge.boston.redhat.com/rpms
 
@@ -35,6 +36,7 @@ krb5-workstation
 cyrus-sasl-gssapi
 cyrus-sasl
 cyrus-sasl-lib
+collectd
 -policycoreutils
 -audit-libs-python
 -hdparm
@@ -289,5 +291,8 @@ sed -i -e 's/# vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/' /etc/libvirt/
 
 # set up libvirtd to listen on TCP (for kerberos)
 sed -i -e 's/# listen_tcp = 1/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
+
+# turn on collectd
+/sbin/chkconfig collectd on
 
 %end
