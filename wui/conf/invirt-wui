@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+#
+# invirt-wui       startup script for invirt-wui
+#
+# chkconfig: - 85 15
+# description: invirt-wui is the web front end for invirt.
+#              
+
+INVIRT_DIR=/usr/share/invirt-wui
+MONGREL_LOG=/var/log/invirt-wui/mongrel.log
+MONGREL_PID=/var/run/invirt-wui/mongrel.pid
+ADDR=127.0.0.1
+RAILS_ENVIRONMENT=production
+USER=invirt
+GROUP=invirt
+export Rails_GEM_VERSION=1.2.2
+
+RETVAL=0
+
+case "$1" in
+    start)
+      mongrel_rails start -c $INVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
+      RETVAL=$?
+  ;;
+    stop)
+      mongrel_rails stop -c $INVIRT_DIR -P $MONGREL_PID
+      RETVAL=$?
+  ;;
+    restart)
+      if [ -f $MONGREL_PID ] ; then
+	  mongrel_rails restart -c $INVIRT_DIR -P $MONGREL_PID
+	  RETVAL=$?
+      else
+	  pkill mongrel_rails
+	  mongrel_rails start -c $INVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
+	  RETVAL=$?
+      fi
+  ;;
+    *)
+      echo "Usage: invirt-wui {start|stop|restart}"
+      exit 1
+  ;;
+esac      
+
+exit $RETVAL
