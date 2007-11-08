@@ -87,9 +87,9 @@ fi
 # First, read rootfs target from embedded /etc/fstab file
 #
 if [ -f /etc/fstab ] ; then
-    root=/dev/mapper/livecd-rw
-    rootflags=defaults,noatime
-    rootfstype=ext3
+    root=$(cat /etc/fstab | while read d m f o r; do if [ "$m" == "/" ] ; then echo $d; fi; done)
+    rootflags=$(cat /etc/fstab | while read d m f o r; do if [ "$m" == "/" ] ; then echo $o; fi; done)
+    rootfstype=$(cat /etc/fstab | while read d m f o r; do if [ "$m" == "/" ] ; then echo $f; fi; done)
     if [ "$quiet" != "1" ] ; then
         echo "fstab suggests root=$root"
         echo "fstab suggests rootflags=$rootflags"
