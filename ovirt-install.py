@@ -33,9 +33,21 @@ gettext.bindtextdomain(virtinst.gettext_app, virtinst.gettext_dir)
 gettext.install(virtinst.gettext_app, virtinst.gettext_dir)
 
 ### General input gathering functions
-def get_disk(disk, size, sparse, guest, conn):
+def get_full_virt():
+    while 1:
+        res = cli.prompt_for_input(_("Would you like a fully virtualized guest (yes or no)?  This will allow you to run unmodified operating systems."))
+        try:
+            return cli.yes_or_no(res)
+        except ValueError, e:
+            print _("ERROR: "), e
+
+
+# OVIRT: FIXME: this is where we need to do remote stuff for disks
+def get_disk(disk, size, sparse, guest, hvm, conn):
     while 1:
         msg = _("What would you like to use as the disk (path)?")
+        if not size is None:
+            msg = _("Please enter the path to the file you would like to use for storage. It will have size %sGB.") %(size,)
         disk = cli.prompt_for_input(msg, disk)
         # the next few lines are a replacement for:
         # d = virtinst.VirtualDisk(path=disk, type=virtinst.VirtualDisk.TYPE_BLOCK)
@@ -46,8 +58,8 @@ def get_disk(disk, size, sparse, guest, conn):
         d.path = disk
         guest.disks.append(d)
         break
-        
-def get_disks(disk, size, sparse, nodisks, guest, conn):
+
+def get_disks(disk, size, sparse, nodisks, guest, hvm, conn):
     if nodisks:
         if disk or size:
             raise ValueError, _("Cannot use --file with --nodisks")
@@ -63,17 +75,34 @@ def get_disks(disk, size, sparse, nodisks, guest, conn):
         disk = [ None ] * len(size)
 
     if (type(disk) == list):
-        map(lambda d, s: get_disk(d, s, sparse, guest, conn),
+        map(lambda d, s: get_disk(d, s, sparse, guest, hvm, conn),
             disk, size)
     elif (type(size) == list):
-        map(lambda d, s: get_disk(d, s, sparse, guest, conn),
+        map(lambda d, s: get_disk(d, s, sparse, guest, hvm, conn),
             disk, size)
     else:
-        get_disk(disk, size, sparse, guest, conn)
+        get_disk(disk, size, sparse, guest, hvm, conn)
 
 def get_networks(macs, bridges, networks, guest):
     (macs, networks) = cli.digest_networks(macs, bridges, networks)
     map(lambda m, n: cli.get_network(m, n, guest), macs, networks)
+
+
+
+### Paravirt input gathering functions
+def get_paravirt_install(src, guest):
+    while 1:
+        src = cli.prompt_for_input(_("What is the install location?"), src)
+        try:
+            guest.location = src
+            break
+        except ValueError, e:
+            print _("ERROR: "), e
+            src = None
+
+def get_paravirt_extraargs(extra, guest):
+    guest.extraargs = extra
+
 
 ### fullvirt input gathering functions
 def get_fullvirt_cdrom(cdpath, location, guest):
@@ -158,6 +187,8 @@ def parse_args():
                       action="callback", callback=cli.check_before_store,
                       help=_("set up keymap for a graphical console"))
 
+    parser.add_option("", "--accelerate", action="store_true", dest="accelerate",
+                      help=_("Use kernel acceleration capabilities"))
     parser.add_option("", "--connect", type="string", dest="connect",
                       action="callback", callback=cli.check_before_store,
                       help=_("Connect to hypervisor with URI"),
@@ -166,6 +197,8 @@ def parse_args():
                       help=_("Specify the CDROM media is a LiveCD"))
 
     # fullvirt options
+    parser.add_option("-v", "--hvm", action="store_true", dest="fullvirt",
+                      help=_("This guest should be a fully virtualized guest"))
     parser.add_option("-c", "--cdrom", type="string", dest="cdrom",
                       action="callback", callback=cli.check_before_store,
                       help=_("File to use a virtual CD-ROM device for fully virtualized guests"))
@@ -184,6 +217,16 @@ def parse_args():
                       action="callback", callback=cli.check_before_store,
                       help=_("The CPU architecture to simulate"))
     
+    # paravirt options
+    parser.add_option("-p", "--paravirt", action="store_false", dest="paravirt",
+                      help=_("This guest should be a paravirtualized guest"))
+    parser.add_option("-l", "--location", type="string", dest="location",
+                      action="callback", callback=cli.check_before_store,
+                      help=_("Installation source for paravirtualized guest (eg, nfs:host:/path, http://host/path, ftp://host/path)"))
+    parser.add_option("-x", "--extra-args", type="string",
+                      dest="extra", default="",
+                      help=_("Additional arguments to pass to the installer with paravirt guests"))
+
     # Misc options
     parser.add_option("-d", "--debug", action="store_true", dest="debug", 
                       help=_("Print debugging information"))
@@ -243,19 +286,42 @@ def txt_console(dom, uri):
 def main():
     options = parse_args()
 
-    cli.setupLogging("ovirt-install", options.debug)
+    cli.setupLogging("virt-install", options.debug)
     conn = cli.getConnection(options.connect)
     type = None
 
-    options.location = None
-
-    type = "qemu"
-    if virtinst.util.is_kvm_capable():
-        type = "kvm"
-    elif virtinst.util.is_kqemu_capable():
-        type = "kqemu"
+    # first things first, are we trying to create a fully virt guest?
+    if conn.getType() == "Xen":
+        type = "xen"
+        hvm = options.fullvirt
+        pv  = options.paravirt
+        if virtinst.util.is_hvm_capable():
+            if hvm is not None and pv is not None:
+                print >> sys.stderr, _("Can't do both --hvm and --paravirt")
+                sys.exit(1)
+            elif pv is not None:
+                hvm = False
+        else:
+            if hvm is not None:
+                print >> sys.stderr, _("Can't do --hvm on this system: HVM guest is not supported by your CPU or enabled in your BIOS")
+                sys.exit(1)
+            else:
+                hvm = False
+        if hvm is None:
+            hvm = get_full_virt()
+    else:
+        hvm = True
+        type = "qemu"
+        if options.accelerate:
+            if virtinst.util.is_kvm_capable():
+                type = "kvm"
+            elif virtinst.util.is_kqemu_capable():
+                type = "kqemu"
 
     if options.livecd:
+        if not hvm:
+            print >> sys.stderr, _("LiveCD installations are not supported for paravirt guests")
+            sys.exit(1)
         installer = virtinst.LiveCDInstaller(type = type)
     elif options.pxe:
         installer = virtinst.PXEInstaller(type = type)
@@ -266,7 +332,16 @@ def main():
         print >> sys.stderr, _("Only one of --pxe, --location and --cdrom can be used")
         sys.exit(1)
 
-    guest = virtinst.FullVirtGuest(connection=conn, installer=installer, arch=options.arch)
+    if hvm:
+        # Xen only supports CDROM
+        if type == "xen":
+            installer.cdrom = True
+        guest = virtinst.FullVirtGuest(connection=conn, installer=installer, arch=options.arch)
+    else:
+        if options.pxe:
+            print >> sys.stderr, _("Network PXE boot is not support for paravirtualized guests")
+            sys.exit(1)
+        guest = virtinst.ParaVirtGuest(connection=conn, installer=installer)
 
     # now let's get some of the common questions out of the way
     cli.get_name(options.name, guest)
@@ -274,10 +349,9 @@ def main():
     cli.get_uuid(options.uuid, guest)
     cli.get_vcpus(options.vcpus, options.check_cpu, guest, conn)
 
-    # OVIRT: FIXME: this is where we need to do remote stuff for disks
     # set up disks
-    get_disks(options.diskfile, options.disksize, options.sparse,
-              options.nodisks, guest, conn)
+    get_disks(options.diskfile, options.disksize, options.sparse, options.nodisks,
+              guest, hvm, conn)
 
     # set up network information
     get_networks(options.mac, options.bridge, options.network, guest)
@@ -285,17 +359,23 @@ def main():
     # set up graphics information
     cli.get_graphics(options.vnc, options.vncport, options.nographics, options.sdl, options.keymap, guest)
 
-    if not options.pxe:
-        get_fullvirt_cdrom(options.cdrom, options.location, guest)
-    if options.noacpi:
-        guest.features["acpi"] = False
-    if options.noapic:
-        guest.features["apic"] = False
-    if options.os_type is not None:
-        guest.set_os_type(options.os_type)
-        if options.os_variant is not None:
-            guest.set_os_variant(options.os_variant)
-    continue_inst = guest.get_continue_inst()
+    # and now for the full-virt vs paravirt specific questions
+    if not hvm: # paravirt
+        get_paravirt_install(options.location, guest)
+        get_paravirt_extraargs(options.extra, guest)
+        continue_inst = False
+    else:
+        if not options.pxe:
+            get_fullvirt_cdrom(options.cdrom, options.location, guest)
+        if options.noacpi:
+            guest.features["acpi"] = False
+        if options.noapic:
+            guest.features["apic"] = False
+        if options.os_type is not None:
+            guest.set_os_type(options.os_type)
+            if options.os_variant is not None:
+                guest.set_os_variant(options.os_variant)
+        continue_inst = guest.get_continue_inst()
 
     def show_console(dom):
         if guest.graphics["enabled"]:
@@ -312,10 +392,6 @@ def main():
         conscb = show_console
 
     progresscb = progress.TextMeter()
-
-    #guest._prepare_install(progresscb)
-    #print guest.get_config_xml()
-    #sys.exit(100)
 
     # we've got everything -- try to start the install
     try:
@@ -365,3 +441,4 @@ if __name__ == "__main__":
         sys.exit(e.code)
     except Exception, e:
         logging.exception(e)
+

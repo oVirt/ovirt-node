@@ -1,6 +1,10 @@
 OVIRT SCRIPTS README
 --------------------
 
+If this is the first time you are using the Ovirt scripts, start with INSTALL.
+This file is a collection of usage notes, and they assume INSTALL has already
+been completed.
+
 This is currently a collection of scripts to build/deploy an Ovirt instance,
 which is essentially stateless.  Each of the commands is described below, along
 with common usage.
@@ -24,6 +28,12 @@ top of a flash drive.  It is run as:
 
 where the second argument is a base ISO to start from.  Note that this command
 completely destroys any USB device you point it at, so be careful.
+
+ovirt-flash-static.sh: This is a wrapper around creator.py that additionally
+will lay down the output from the creator.py onto a flash drive.  It is
+"static" because when you boot from this, you are actually booting and writing
+to the flash drive, not to a "LiveCD", in-memory drive.  This is useful for
+development.
 
 ovirt-pxe.sh: This is a command to create the files needed to do a PXE boot of
 ovirt.  It is run as:
@@ -57,15 +67,31 @@ ISO on the flash drive.
 Ovirt Usage
 -----------
 After booting the Ovirt machine with one of these methods, in theory everything
-should be setup for a local install, since libvirtd is not yet setup for
-remote installs.  Log into the console, and run the following command:
+should be setup for a remote install.  You'll need to use the modified
+ovirt-install.py in the repository; really the only part that is substantially
+modified is the section that checks with storage, since virt-install is
+assuming everything is locally stored.  There are three caveats to using the
+modified ovirt-install.py:
 
-# /usr/bin/qemu-kvm -M pc -m 500 -smp 1 -monitor pty -no-reboot -boot d -hda /dev/VolGroup00/iSCSI1 -cdrom /root/boot.iso -net nic,macaddr=00:16:3e:2f:ab:cd,vlan=0 -net tap,script=/etc/kvm-ifup,vlan=0 -vnc :0
+1)  You need to copy over the boot.iso to the Ovirt machine.  Currently it has
+no way to fetch this stuff remotely.  In theory we can use PXE for this,
+eliminating the need for the CD at all, but I haven't tested it.
 
-Note that you'll have to have some local storage currently (or manually set
-it up via iscsiadm), and you'll need to have the boot.iso locally available.
-Assuming all is well, from another machine you should be able to run
-"vncviewer <ip>:5900" and finish the installation.
+2)  In case you are using the boot.iso, you *also* need to have it locally, in
+the same location, on the build machine.  This is because there is one part
+of the install that actually checks for the existence of the boot.iso, but it
+operates on the local machine.
+
+3)  You need to know which bridge you want to bind this guest to, so you can
+pass it in.  They are called "ovirtbr<n>", starting from 0; if you only have
+one network card, it makes it easy.
+
+Assuming you have the above in place, you should be able to do:
+
+# ./ovirt-install.py --connect qemu+tcp://perf200.perf.redhat.com/system -n f8x86_64 -r 512 -f /dev/disk/by-id/scsi-16465616462656166313a3100000000000000000000000000 --vnc -c /root/boot.iso --bridge ovirtbr0 --accelerate -v
+
+If you have virt-viewer installed locally, it should automatically pop up and
+connect to the console.
 
 iSCSI disks
 -----------
