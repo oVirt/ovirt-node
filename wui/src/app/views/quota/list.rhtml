@@ -1,0 +1,27 @@
+<h1>Listing user_quotas</h1>
+
+<table>
+  <thead>
+  <% for column in UserQuota.content_columns %>
+    <th><%= column.human_name %></th>
+  <% end %>
+  </thead>
+  
+<% for user_quota in @user_quotas %>
+  <tr class="<%= cycle('odd','even') %>">
+  <% for column in UserQuota.content_columns %>
+    <td><%=h user_quota.send(column.name) %></td>
+  <% end %>
+    <td><%= link_to 'Show', :action => 'show', :id => user_quota %></td>
+    <td><%= link_to 'Edit', :action => 'edit', :id => user_quota %></td>
+    <td><%= link_to 'Destroy', { :action => 'destroy', :id => user_quota }, :confirm => 'Are you sure?', :method => :post %></td>
+  </tr>
+<% end %>
+</table>
+
+<%= link_to 'Previous page', { :page => @user_quota_pages.current.previous } if @user_quota_pages.current.previous %>
+<%= link_to 'Next page', { :page => @user_quota_pages.current.next } if @user_quota_pages.current.next %> 
+
+<br />
+
+<%= link_to 'New user_quota', :action => 'new' %>

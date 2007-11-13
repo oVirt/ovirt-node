@@ -34,7 +34,7 @@ genlangs:
 
 tar: clean genlangs
 	mkdir -p $(NV)
-	cp -a src conf $(NV)
+	cp -a src conf scripts $(NV)
 	find $(NV) \( -name '*~' -o -name '#*#' \) -print0 | xargs --no-run-if-empty --null rm -vf
 	find $(NV)/src/tmp -type f -print0 | xargs --no-run-if-empty --null rm -vf
 	mkdir -p rpm-build

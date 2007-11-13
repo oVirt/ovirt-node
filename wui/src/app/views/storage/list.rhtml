@@ -1,0 +1,27 @@
+<h1>Listing storage_volumes</h1>
+
+<table>
+  <thead>
+  <% for column in StorageVolume.content_columns %>
+    <th><%= column.human_name %></th>
+  <% end %>
+  </thead>
+  
+<% for storage_volume in @storage_volumes %>
+  <tr class="<%= cycle('odd','even') %>">
+  <% for column in StorageVolume.content_columns %>
+    <td><%=h storage_volume.send(column.name) %></td>
+  <% end %>
+    <td><%= link_to 'Show', :action => 'show', :id => storage_volume %></td>
+    <td><%= link_to 'Edit', :action => 'edit', :id => storage_volume %></td>
+    <td><%= link_to 'Destroy', { :action => 'destroy', :id => storage_volume }, :confirm => 'Are you sure?', :method => :post %></td>
+  </tr>
+<% end %>
+</table>
+
+<%= link_to 'Previous page', { :page => @storage_volume_pages.current.previous } if @storage_volume_pages.current.previous %>
+<%= link_to 'Next page', { :page => @storage_volume_pages.current.next } if @storage_volume_pages.current.next %> 
+
+<br />
+
+<%= link_to 'New storage_volume', :action => 'new' %>

@@ -1,0 +1,10 @@
+<table class='listing'>
+<% for column in Host.content_columns %>
+  <tr class="<%= cycle('odd','even') %>">
+  <td><b><%= column.human_name %>:</b></td><td><%=h @host.send(column.name) %></td>
+</p>
+<% end %>
+</table>
+
+<%= link_to 'Edit', :action => 'edit', :id => @host %> |
+<%= link_to 'Back', :action => 'list' %>

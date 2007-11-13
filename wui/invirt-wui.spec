@@ -14,6 +14,9 @@ Requires: ruby(abi) = 1.8
 Requires: rubygem(rails) >= 1.2.2
 Requires: rubygem(mongrel) >= 1.0.1
 Requires: ruby-gettext-package
+Requires: postgresql-server
+Requires: ruby-postgres
+Requires: pwgen
 Requires: httpd >= 2.0
 Requires: mod_auth_kerb
 Requires(post):  /sbin/chkconfig
@@ -41,10 +44,13 @@ The webapp for Invirt.
 test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 mkdir %{buildroot}
 
+%{__install} -d -m0755 %{buildroot}%{_bindir}
 %{__install} -d -m0755 %{buildroot}%{_sbindir}
 %{__install} -d -m0755 %{buildroot}%{_initrddir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/httpd/conf.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/%{name}
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/%{name}/db
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/log/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
@@ -55,6 +61,7 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/rails.log
 %{__install} -p -m0644 %{pbuild}/conf/%{name}.conf %{buildroot}%{_sysconfdir}/httpd/conf.d
 %{__install} -Dp -m0755 %{pbuild}/conf/%{name} %{buildroot}%{_initrddir}
 %{__cp} -a %{pbuild}/src/* %{buildroot}%{app_root}
+%{__cp} -a %{pbuild}/scripts/invirt_create_db.sh %{buildroot}%{_bindir}
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
 %{__ln_s} %{_localstatedir}/lib/%{name}/tmp %{buildroot}%{app_root}/tmp
@@ -66,6 +73,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0755)
+%{_bindir}/invirt_create_db.sh
 %{_initrddir}/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 #%dir /etc/sysconfig/%{name}
@@ -74,6 +82,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(-, invirt, invirt) %{_localstatedir}/run/%{name}
 %attr(-, invirt, invirt) %{_localstatedir}/log/%{name}
 %{app_root}
+%dir /etc/invirt-wui
+%defattr(2770,postgres,postgres)
+%dir /etc/invirt-wui/db
 
 %pre
 /usr/sbin/groupadd -r invirt 2>/dev/null || :
