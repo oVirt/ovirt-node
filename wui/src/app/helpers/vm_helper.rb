@@ -1,0 +1,2 @@
+module VmHelper
+end

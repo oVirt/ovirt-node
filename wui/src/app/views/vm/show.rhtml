@@ -1,0 +1,8 @@
+<% for column in Vm.content_columns %>
+<p>
+  <b><%= column.human_name %>:</b> <%=h @vm.send(column.name) %>
+</p>
+<% end %>
+
+<%= link_to 'Edit', :action => 'edit', :id => @vm %> |
+<%= link_to 'Back', :action => 'list' %>

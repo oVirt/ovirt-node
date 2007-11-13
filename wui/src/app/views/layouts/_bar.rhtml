@@ -3,7 +3,6 @@
 <span class="hello_message">Hello current_user.display_name</span>
 <span class="account_message"><span class="login">current_user.login</span> | <%= link_to "home", '/users/user' %> | <%= link_to "log out", logout_url %></span>
 <% else %>
-<span class="hello_message">Hello there anonymous!</span>
-<span class="account_message"><%= link_to "log in", login_url %></span>
+<span class="hello_message">Hello there <%= @request.env["HTTP_X_FORWARDED_USER"] %>!</span>
 <% end %>
 </div>

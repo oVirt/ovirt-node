@@ -12,10 +12,10 @@
 # And be sure to use new-style password hashing:
 #   http://dev.mysql.com/doc/refman/5.0/en/old-client.html
 development:
-  adapter: mysql
-  database: invirt-webapp_development
-  username: root
-  password:
+  adapter: postgresql
+  database: invirt
+  username: invirt
+  password: v23zj59an
   host: localhost
 
 # Warning: The database defined as 'test' will be erased and
@@ -29,8 +29,8 @@ test:
   host: localhost
 
 production:
-  adapter: mysql
-  database: invirt-webapp_production
-  username: root
-  password: 
+  adapter: postgresql
+  database: invirt
+  username: invirt
+  password: v23zj59an
   host: localhost

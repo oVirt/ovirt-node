@@ -89,6 +89,47 @@ input.green-button:hover {
 	background-color: #7ee600;
 }
 
+/* ======= Table stuff ======= */
+
+table.listing {
+	border-collapse: separate;
+        border-spacing: 0px 0px;
+}
+
+table.listing th, td {
+        font-family: "Luxi Sans", "DejaVu LGC Sans Condensed", sans-serif;
+        border-right: 1px solid #c4d7eb;
+        padding-right:16px;
+        padding-left: 8px; 
+        border-bottom: 1px dashed #d0d0d0;    
+}
+
+table.listing th {
+        height: 1.8em;
+        vertical-align: bottom;
+        text-align: left;
+        font-size: .8em;
+        color: #555;
+        font-weight: 700;    
+}
+
+table.listing td {
+        font-size: .8em;
+	color: #777;
+        font-weight: 100;
+        padding-top: 4px;
+        padding-bottom: 4px;
+}
+
+table.listing tr.odd td {
+	background-color: #f5f3ff;
+}
+
+table.listing .col-last {
+        border-right: none;
+}
+
+
 /* ======= DECENT SCAFFOLD DEFAULTS ======= */
 
 
