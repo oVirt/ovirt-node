@@ -1,0 +1,151 @@
+/* ========= STANDARD ========== */
+
+* { font-family: "Bitstream Vera Sans", "Liberation Sans", sans-serif; }
+
+body {  text-align: center; font-size: 14pt; color: #222; background-color: #fff; margin: 0pt; }
+
+a { color: #0066dd; background-color: inherit; }
+a:visited { color: #0066dd; }
+a:hover { color: #0066dd; }
+
+label { display: block; font-size: small; color: #333; }
+img { border: none; }
+
+#content { margin: 1em;  margin-left: auto; margin-right: auto; text-align: left; width: 50em; }
+#header { border-bottom: 2px solid #001833; margin-bottom: 1em; }
+#footer { border-top: 1px dotted #001833; margin-top: 1em; text-align: center; font-size: small; padding: 1em; }
+
+div.alertbox { text-align: center; }
+div.flash { display: inline; padding: 0em 1em; -moz-border-radius: 0.3em; }
+#errmsg { background-color: #cc0000; color: #fff; }
+#notice { font-weight: bold; background-color: #fce94f; }
+
+/* ========= TOP BAR ========== */
+
+#top_bar { width: 100%; height: 1.5em; margin: 0pt; text-align: left; font-size: 10pt; background-color: #fffccc; color: #333; border-bottom: 1px solid #999; padding: 0pt; }
+#top_bar .hello_message { padding: 0.2em; float: left; padding-left: 0.5em }
+#top_bar .account_message { padding: 0.2em; float: right; padding-right: 0.5em }
+#top_bar .account_message .login { font-weight: bold; }
+
+/* ========= HEADER ========== */
+
+img.logo { margin: 0.5em 0em; }
+
+/* ========= MAIN ========== */
+
+#main {  }
+#left { width: 35em; float: left; }
+#right { width: 14em; float: right; };
+
+/* ========= INPUTS ========== */
+
+input[type="text"], input[type="password"], textarea {
+	padding: 0.1em;
+	border: 1px solid #001833;
+	background-color: #fafafa;
+	color: #222;
+  width: 100%;
+}
+
+input[type="text"], input[type="password"] {
+  font-size: 18pt;
+  font-family: sans-serif;
+	padding: 0.2em;
+  font-weight: bold;
+}
+
+textarea { height: 10em; }
+
+input[type="submit"] {
+	font-size: 12pt;
+	font-weight: bold;
+	padding: 0 1em 0.1em 1em;
+	background-color:#003f87;
+	color: #fff;
+	border: 2px outset #04244a;
+}
+
+input[type="submit"]:hover {
+	background-color: #084fa1;
+}
+
+input.blue-button {
+	background-color: #0066dd;
+	border: 2px outset #0033aa;
+	color: #fff;
+}
+
+input.green-button {
+	background-color: #5cc400;
+	border: 2px outset #57e925;
+	color: #fff;
+}
+
+input.blue-button:hover {
+	background-color: #0099ff;
+}
+
+input.green-button:hover {
+	background-color: #7ee600;
+}
+
+/* ======= DECENT SCAFFOLD DEFAULTS ======= */
+
+
+pre {
+  background-color: #eee;
+  padding: 10px;
+  font-size: 11px;
+}
+
+.fieldWithErrors {
+  border: 2px solid red;
+}
+
+#errorExplanation {
+  border: 1px solid #c00;;
+  padding-bottom: 1.5em;
+  margin-bottom: 2em;
+  background-color: #f0f0f0;
+}
+
+#errorExplanation h2 {
+  text-align: left;
+  font-weight: bold;
+  padding: 0.5em;
+  font-size: small;
+  background-color: #c00;
+  color: #fff;
+}
+
+#errorExplanation p {
+  color: #333;
+  margin: 1em;
+}
+
+#errorExplanation ul li {
+  font-size: small;
+  list-style: square;
+}
+
+div.uploadStatus {
+  margin: 5px;
+}
+
+div.progressBar {
+  margin: 5px;
+}
+
+div.progressBar div.border {
+  background-color: #fff;
+  border: 1px solid grey;
+  width: 100%;
+}
+
+div.progressBar div.background {
+  background-color: #333;
+  height: 18px;
+  width: 0%;
+}
+
+

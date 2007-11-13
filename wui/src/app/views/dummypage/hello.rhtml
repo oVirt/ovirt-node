@@ -1,10 +1,25 @@
-      <% @page_title = _("Welcome to invirt") %>
-      <% @primary = "user" %>
-      <% @secondary = "list" %>
-     
-      <div id="content-main">
-Insert content here.
-      </div>
 
+  <div id="left">
+<p>
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus sed augue vel mi convallis adipiscing. Etiam sapien. Nulla facilisi. Duis lobortis lectus dapibus quam. Morbi quam nibh, auctor ut, scelerisque at, blandit vehicula, urna. Vestibulum commodo dolor eu enim. Aenean sed lacus. Fusce nec urna id mauris rutrum pulvinar. In turpis magna, suscipit ut, tincidunt a, porta eu, orci. Phasellus non turpis sit amet dui vulputate cursus. Etiam in turpis. Proin ipsum. Donec molestie volutpat mauris. Ut aliquam laoreet urna. Quisque porttitor urna a ligula. Curabitur convallis. Donec sollicitudin nibh vitae turpis. Nulla tempus magna. Quisque non odio. Praesent semper blandit velit.
+</p>
+<p>
+Donec id metus. Maecenas ac turpis. Sed nulla mauris, accumsan id, rutrum lobortis, lacinia in, dolor. Donec convallis euismod neque. Phasellus eget ipsum. Mauris aliquet arcu sed augue. Nullam libero sem, dignissim in, mattis ac, tristique a, tortor. Nunc quis arcu. Donec velit eros, faucibus vel, rutrum pulvinar, viverra eget, mauris. Nullam quis massa. Pellentesque sapien mi, blandit cursus, dictum id, pellentesque eu, pede. Nunc urna. Duis sit amet magna quis nunc venenatis facilisis. Pellentesque quis est non mi dictum sodales. Aenean velit arcu, euismod in, interdum et, dictum eget, nisi. Duis nunc mi, lobortis sed, ultricies non, imperdiet ut, dolor. Aenean mi tortor, tincidunt eget, fringilla non, venenatis non, nisl.
+</p>
+  </div>
+
+  <div id="right">
+<p>
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus sed augue vel mi convallis adipiscing. Etiam sapien. Nulla facilisi. Duis lobortis lectus dapibus quam. Morbi quam nibh, auctor ut, scelerisque at, blandit vehicula, urna. Vestibulum commodo dolor eu enim. Aenean sed lacus. Fusce nec urna id mauris rutrum pulvinar. In turpis magna, suscipit ut, tincidunt a, porta eu, orci. Phasellus non turpis sit amet dui vulputate cursus. Etiam in turpis. Proin ipsum. Donec molestie volutpat mauris. Ut aliquam laoreet urna. Quisque porttitor urna a ligula. Curabitur convallis. Donec sollicitudin nibh vitae turpis. Nulla tempus magna. Quisque non odio. Praesent semper blandit velit.
+</p>
+  </div>
+
+<%- content_for :title do -%>
+<%= _("Welcome to invirt") -%>
+<%- end -%>
+
+<%- content_for :scripts do -%>
+<%= javascript_include_tag "prototype" %>
+<%- end -%>
 
 
