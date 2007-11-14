@@ -5,6 +5,26 @@
 </p>
 <% end %>
 </table>
+<h3>Network Interfaces</h3>
+<table class='listing'>
+  <thead>
+  <% for column in Nic.content_columns %>
+    <th><%= column.human_name %></th>
+  <% end %>
+  </thead>
+<% for nic in @host.nics %>
+  <tr class="<%= cycle('odd','even') %>">
+  <% for column in Nic.content_columns %>
+    <td><%=h nic.send(column.name) %></td>
+  <% end %>
+    <td><%= link_to 'Show', :controller => "nic", :action => 'show', :id => nic %></td>
+    <td><%= link_to 'Edit', :controller => "nic", :action => 'edit', :id => nic %></td>
+    <td><%= link_to 'Remove', { :controller => "nic", :action => 'destroy', :id => nic }, :confirm => 'Are you sure?', :method => :post %></td>
+  </tr>
+</p>
+<% end %>
+</table>
 
+<%= link_to 'Add Network Interface', :controller => "nic", :action => 'new', :host_id => @host %> |
 <%= link_to 'Edit', :action => 'edit', :id => @host %> |
 <%= link_to 'Back', :action => 'list' %>
