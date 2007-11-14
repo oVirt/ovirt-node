@@ -1,0 +1,18 @@
+<%= error_messages_for 'nic' %>
+
+<!--[form:nic]-->
+<p>Host: <%= @host_id %><br/>
+<%= hidden_field 'nic', 'host_id', :value=>@host_id  %></p>
+<p><label for="nic_mac">Mac</label><br/>
+<%= text_field 'nic', 'mac'  %></p>
+
+<p><label for="nic_ip_addr">Ip addr</label><br/>
+<%= text_field 'nic', 'ip_addr'  %></p>
+
+<p><label for="nic_usage_type">Usage type</label><br/>
+<%= text_field 'nic', 'usage_type'  %></p>
+
+<p><label for="nic_bandwidth">Bandwidth</label><br/>
+<%= text_field 'nic', 'bandwidth'  %></p>
+<!--[eoform:nic]-->
+
