@@ -1,0 +1,130 @@
+
+* {
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+}
+
+body {
+  background-color: white;
+  color: black;
+}
+
+#logo {
+  display: none;
+}
+
+#header {
+  border: 0px;
+  border-bottom: 3px solid maroon;
+  padding: 0px;
+  margin: 0px
+
+  background-color: black; 
+  background-image: url('topbar-bg.png');
+  height: 65px;
+}
+
+#header br {
+  display: none;
+}
+
+h1 {
+  color: white;
+  margin: 0px;
+  height: 40px;
+  padding-left: 5px;
+  padding-top: 23px;
+  background: url('topbar-graphic.png') no-repeat top right;
+}
+
+h1 .subtitle {
+  color: #ccc;
+  font-size: smaller;
+}
+
+#content {
+  width: 55%;
+  margin-left: 3%;
+  color: #333;
+  padding-bottom: 2em;
+  border-bottom: 2px solid #aaa;
+}
+
+#content p {
+  padding: 3px;
+}
+
+#content .screenshot img {
+  margin-right: auto;
+  margin-left: auto;
+  display: block;
+}
+
+h2, h3, h4, h5 {
+  color: #777;
+  border-bottom: 4px solid maroon;
+  text-align: right;
+  text-transform: uppercase;
+  padding-right: 3px;
+}
+
+pre {
+  padding: 0.3em;
+  border: 1px solid rgb(80,80,80);
+  background: rgb(200,200,200);
+}
+
+
+#navigation h2 {
+  border-bottom: 3px solid maroon;
+}
+
+#navigation {
+  position: absolute;
+  top: 150px;
+  right: 5%;
+  margin-right: 0px;
+  margin-left: auto;
+  width: 30%;  
+}
+
+#navigation .panel .info {
+  background: maroon url('callout-bg.png') no-repeat top left;
+  color: white;
+}
+
+#navigation .panel .info ul {
+  list-style-type: none;
+  padding: 1em;
+  padding-left: 2em;
+  margin: 0px;
+}
+
+#navigation .panel .info li {
+  padding-bottom: 0.5em;
+}
+
+#navigation .panel .info .description {
+  color: #ccc;
+}
+
+#navigation .panel .info .title {
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+#navigation .panel .info a:hover, 
+#navigation .panel .info a:focus {
+  text-decoration: underline;
+}
+
+#footer {
+  width: 45%;
+  margin-left: 3%;
+}
+
+#footer p {
+  padding: 0%;
+}

@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Virtigo/Ovirt Project Plan</title>
+  </head>
+  <body>
+    <h1>Virtigo/Ovirt Project Plan</h1>
+
+    <h2>Overview</h2>
+    <h3>Ovirt is:</h3>
+    <ol>
+      <li>A tiny hypervisor/dom0 kernel that installs and (optionally)
+   runs off a CD, a usb key, or even a ramdisk (over PXE) on bare
+   metal. At a minimum includes libvirtd for management, meaning the
+   box and its guests would be manageable by virt-manager for small
+   numbers of machines.</li>
+
+      <li>A web-based management UI appliance for the tiny
+   hypervisor/domUs as well as the guests running on them. Rather than
+   the traditional machine -> guests -> resources paradigm, the admin
+   UI will be focused on grouping resources (vcpu, memory, disk,
+   network, redundancy) and granting them to users, then allowing each
+	user to manage his resource set as needed, via a separate user UI.</li>
+      
+      <li>A pre-configured freeIPA appliance that will provide
+	the Kerberos infrastructure as well as the
+	authorization/authentication tools for the above.</li>
+
+      <li>All of the above install to defaults with zero config input, but
+	are customizable for large-scale installations or edge cases.</li>
+    </ol>
+
+    <h2>Status at-a-glance</h2>
+    <ul>
+      <li>Milestone 1 complete on-time. Minimal dom0 with KVM installs
+      to a ramdisk from either pxe or a usb key (your
+      choice). Restrictions: requires fedora 8, x86_64; requires hacks
+      to virtinst to install a guest remotely (libvirt storage API not
+	yet available).</li>
+      <li>Milestone 2 in progress. All but the background worker
+      daemon for the manager app will be complete by 30
+      November. Worker thread may take as long as one more week, so 7
+	December.</li>
+      <li>Milestone 3 in planning stage now. Storage API and stats
+      collection work in KVM scheduled, expected mid-December.</li>
+    </ul>
+
+    <h2>Plan</h2>
+    <h3>Milestone 1 (First week Nov)</h3>
+
+    <p>Goal: Bootstrap initial development process</p>
+
+    <h3>Docs:</h3>
+
+    <p>A quick-and-dirty developer's setup guide to the following:</p>
+    <ul>
+      <li>Prepare image for pxe</li>
+      <li>Install iSCSI target locally and create LUNs (no, not
+	an iSCSI manual, just the necessary quick tips)</li> 
+      <li>Set up cobbler or manually do DHCP config</li>
+      <li>Install minimal host</li>
+      <li>Install guest on minimal host</li>
+    </ul>
+
+    <h3>Host:</h3>
+
+    <ul>
+      <li>PXE boot host image; Run from RAM; No permanent state
+	<ul>
+	  <li>Have a first crack at specifying and building a slimmed-down
+	    host image</li>
+	  <li>Automate the process so that as the component bits change anyone
+	    can go get a current version and install it</li>
+	  <li>Provide a PXE kernel/initrd and a ks that will download the
+	    rest of the image over tftp and install it to a RAM disk</li>
+	  <li>Optionally: provide a canned Cobbler distro/profile for
+	    auto-configuring the dhcp/tftp for the image.</li>
+	</ul>
+      </li>
+  
+      <li>NICs bridged to LAN & use DHCP config only
+	<ul>
+	  <li> Create temporary init scripts to put host nic into
+      bridging mode for guests. Later we'll extend libvirt networking
+	    to handle this better.</li>
+	</ul>
+      </li>
+      <li>iSCSI storage; LUNs pre-allocated on iSCSI server; no local
+	partitioning
+	<ul>
+	  <li>iSCSI server address is predefined in DHCP option records</li>
+	  <li>libvirt able to query local iSCSI initiator to list LUNs and
+	    mapped paths (this is optional but helpful for milestone 1)</li>
+	  <li>Be sure iSCSI target/initiator actually work for our purposes</li>
+	</ul>
+      </li>
+      <li>All per-host config data from DHCP option records or hardcoded in
+	image</li>
+
+      <li>Fetch pre-generated kerberos credentials from HTTP server.</li>
+    
+      <li>Sanity check virtinst to see that it will successfully install a
+      remote full-virt guest via PXE (i.e. without pulling down a
+      kernel/initrd or trying to create a disk). Ideally, make it use
+	libvirt LUN enumeration to check disk path exists.</li>
+    </ul>
+
+
+    <h3>Management:</h3>
+
+    <ul>
+      <li>Guest install & admin with virt-manager</li>
+      <li>Web interaction design</li>
+    </ul>
+
+    <h2>Milestone 2  (Last week Nov)</h2>
+
+    <p>Goal: Network service integration, functional management UI</p>
+
+    <h3>Host:</h3>
+
+    <ul>
+      <li>Persist configuration data (USB stick/flash/disk)<br />
+    The starting point for this should be making /etc/libvirt an nfs
+    mount I think. If we're using a USB stick for config persistence
+	later we can mount it in the same location.</li>
+
+      <li>Manual NIC address configuration<br />
+	Use PXE/DHCP to configure the primary NIC on the host. The
+	remainder (assuming there's more than one) will be
+	auto-configured to some sensible default, but not until
+	milestone 3.</li>
+
+
+      <li>Manual iSCSI configuration; iSCSI authentication<br />
+	iSCSI config can passed in in DHCP option records at the
+	moment. We may do this with LDAP/FreeIPA later.</li>
+
+      <li>FreeIPA integration for credential deployment<br />
+	For now we are manually distributing keytabs and kerberos conf
+	to hosts as they install. FreeIPA has a tool coming  that will
+	take over this part and do it automatically.</li> 
+
+      <li>Local disk for swap<br />
+	Automatically find local disk where it exists and allocate a
+	suitable swap partition. 
+      </li>
+    </ul>
+
+    <h3>Management:</h3>
+
+    <ul>
+      <li>Host &lt;-&gt; web service association<br /> When a host comes up
+	it will automatically advertise its presence via Avahi. On
+	the manager side, we need a worker to respond to that,
+	identify the host (via FreeIPA), and present it in the
+	manager UI.</li>
+
+      <li>PXE boot guest OS installation<br />
+	Be able to tell a host to start a guest with a particular MAC
+	address that will PXE off of the management app, assuming we
+	have control of the PXE server.</li> 
+
+      <li>Web service authentication against FreeIPA<br />
+	We will need the manager app to check that the user has
+	a current Kerberos principle and that they exist as a manager
+	app user, and if not redirect to some appropriate place.
+      </li>
+
+      <li>Allocate resources to users<br />
+	We need a way to model users, physical resources
+	(cpu/disk/memory/bandwidth), and quotas. We also need some notion
+	of how to enforce a quota. We also need a notion of the
+	maximum resources a guest can use on a particular machine,
+	regardless of the user's quota size: e.g. you can't assign
+	more memory than is available on a physical machine to a
+	guest, even if the user has more memory than that in their
+	quota.
+      </li>
+
+      <li>Live guest performance monitoring<br />
+	Collectd will let us do some of this but not until we have
+	some improvements in KVM that are coming for Milestone 3.
+      </li>
+
+      <li>Live host performance monitoring<br />
+	We will have collectd in the install image for this milestone
+	and we already have a libvirt plug-in for it, so we'll be able
+	to monitor host stats from a console on the manager at
+	least. No pretty graphs for this milestone though.</li>
+    </ul>
+  
+    <h2>Milestone 3 (New year's day)</h2>
+
+    <p>Goal: Network service adaptability</p>
+
+    <h3>Host:</h3>
+
+    <ul>
+      <li>NIC bonding for failover and bandwidth aggregation<br />
+	Have a reasonable set of default configs on a baremetal
+	install depending on the number of available NICs. The obvious
+	place to start is 1 NIC for storage, 1 for management, and 1
+	per guest. Be able to modify this from the management app so
+	that we can for example bond NICs for storage or for guest
+	use.</li>
+
+      <li>Partitioning of iSCSI LUNs on host; LVM management of iSCSI
+    LUNs for guest images<br />
+	Libvirt storage API gives us all of this stuff for free. We'll
+	need UI for managing it though. </li>
+
+      <li>Pre-emptive live migration, post failure offline
+	migration.<br />  Have a monitoring or stats daemon running on
+	the host that will generate events we can respond to from the
+	management app. Responses would take the form of migrating a
+	running guest automatically, or possibly offline migrating a
+	stopped guest. collectd may be helpful with this.</li>
+    </ul>
+
+    <h3>Management:</h3>
+
+    <ul>
+      <li>Delegation of host administration to owners<br />
+	Users should be able to manage
+	resources within their assigned quota -- e.g. if you have 2
+	physical NICs available decide if you want them bonded or if you
+	want each dedicated to a different guest, decide how you want
+	your storage dealt with, etc.</li>    
+
+      <li>Deployment of prebuilt images<br />
+	Allow admins to
+	maintain a list of available install images (OSes, appliances)
+	that users can choose to install in their allotted space.</li>
+
+      <li>Fine grained ACL integration with LDAP<br />
+	Be able to look up a user in LDAP and determine which VMs the
+	user ought to be able to look at/modify. This should happen
+	independently of the management app, although certain
+	operations (disk quota changes, etc.) we are going to want to allow only
+	from the management app.
+      </li>
+
+      <li>Long term performance monitoring<br /> 
+      With collectd in
+      place on installed hosts, be able to store snapshots of host and guest
+      performmance over time and display them graphically. With some
+      additional work in KVM, collectd will let us collect per-guest
+	stats for network i/o, disk i/o, and CPU usage.</li>
+
+      <li>Management appliance<br />
+	Be able to deploy the management app as an
+    appliance. This assumes we have a way to install an appliance
+    remotely, which depends on virtinst (already partially done) and
+    libvirt storage API (not yet done).
+      </li>
+    </ul>
+
+    <h2>Milestone 4 (Mid-end February)</h2>
+
+    <p>Goal: Redundancy / clustering, more capability  in managment UI</p>
+
+    <h2>Milestone 5 aka Release 1.0 (March sometime)</h2>
+
+    <p>Goal: Spit, polish & bling</p>
+  </body>
+</html>
