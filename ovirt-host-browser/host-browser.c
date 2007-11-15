@@ -50,28 +50,22 @@
 
 static AvahiSimplePoll *simple_poll = NULL;
 
-static void resolve_callback(
-    AvahiServiceResolver *r,
-    AvahiIfIndex interface,
-    AVAHI_GCC_UNUSED AvahiProtocol protocol,
-    AvahiResolverEvent event,
-    const char *name,
-    const char *type,
-    const char *domain,
-    const char *host_name,
-    const AvahiAddress *address,
-    uint16_t port,
-    AvahiStringList *txt,
-    AvahiLookupResultFlags flags,
-    AVAHI_GCC_UNUSED void* userdata) {
-
+static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
+			     AVAHI_GCC_UNUSED AvahiProtocol protocol,
+			     AvahiResolverEvent event, const char *name,
+			     const char *type, const char *domain,
+			     const char *host_name, const AvahiAddress *address,
+			     uint16_t port, AvahiStringList *txt,
+			     AvahiLookupResultFlags flags,
+			     AVAHI_GCC_UNUSED void* userdata)
+{
     assert(r);
 
     /* Called whenever a service has been resolved successfully or timed out */
 
     switch (event) {
         case AVAHI_RESOLVER_FAILURE:
-            fprintf(stderr, "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s\n", name, type, domain, avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r))));
+	  //fprintf(stderr, "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s\n", name, type, domain, avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r))));
             break;
 
         case AVAHI_RESOLVER_FOUND: {
@@ -157,17 +151,13 @@ static void resolve_callback(
     avahi_service_resolver_free(r);
 }
 
-static void browse_callback(
-    AvahiServiceBrowser *b,
-    AvahiIfIndex interface,
-    AvahiProtocol protocol,
-    AvahiBrowserEvent event,
-    const char *name,
-    const char *type,
-    const char *domain,
-    AVAHI_GCC_UNUSED AvahiLookupResultFlags flags,
-    void* userdata) {
-    
+static void browse_callback(AvahiServiceBrowser *b, AvahiIfIndex interface,
+			    AvahiProtocol protocol, AvahiBrowserEvent event,
+			    const char *name, const char *type,
+			    const char *domain,
+			    AVAHI_GCC_UNUSED AvahiLookupResultFlags flags,
+			    void* userdata)
+{    
     AvahiClient *c = userdata;
     assert(b);
 
@@ -199,7 +189,9 @@ static void browse_callback(
     }
 }
 
-static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UNUSED void * userdata) {
+static void client_callback(AvahiClient *c, AvahiClientState state,
+			    AVAHI_GCC_UNUSED void * userdata)
+{
     assert(c);
 
     /* Called whenever the client or server state changes */

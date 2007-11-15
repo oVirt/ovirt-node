@@ -20,12 +20,14 @@ ActiveRecord::Base.establish_connection(
 	:database => $develdb['database']
 )
 
-#ActiveRecord::Base.connection.execute("SELECT * from hosts")
+$host = Host.find(:first, :conditions => [ "uuid = ?", ARGV[0]])
 
-Host.new(
+if $host == nil
+   Host.new(
 	"uuid" => ARGV[0],
 	"num_cpus" => ARGV[1],
 	"cpu_speed" => ARGV[2],
 	"arch" => ARGV[3],
 	"memory" => ARGV[4]
-).save
+   ).save
+end
