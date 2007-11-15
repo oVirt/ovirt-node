@@ -33,14 +33,32 @@ cyrus-sasl
 cyrus-sasl-libs
 cyrus-sasl-gssapi
 
-2)  Checkout the ovirt scripts:
+2)  Checkout the ovirt repo:
 # git clone git://et.devel.redhat.com/ovirt
 
-3)  Put a 1GB (or greater) flash drive into the machine; you'll need to find out
+3)  Compile the collectd SRPM located in the "srpms" directory.  When it's
+done compiling, do the following:
+
+# mkdir -p /var/www/html/rpms
+# cp collectd-<version>.x86_64.rpm /var/www/html/rpms
+# createrepo /var/www/html/rpms
+
+4)  (Optional) Recompile the libvirt SRPM with GSSAPI/kerberos support.  When
+it's done recompiling, do the following:
+
+# mkdir -p /var/www/html/rpms
+# cp libvirt-<version>.x86_64.rpm /var/www/html/rpms
+# createrepo /var/www/html/rpms
+
+5)  Edit ovirt.ks, and add an additional repo where it will pull the collectd
+RPM (and optionally, the kerberized libvirt RPM).  There is an example repo in
+there already.
+
+6)  Put a 1GB (or greater) flash drive into the machine; you'll need to find out
 which SCSI device it got assigned to via dmesg (mine went to /dev/sdc, for
 instance)
 
-4)  # cd /root/ovirt ; ./ovirt-flash.sh /dev/sdc
+7)  # cd /root/ovirt ; ./ovirt-flash.sh /dev/sdc
 
 (replacing /dev/sdc with the device your USB stick is).  Be warned that this
 will totally destroy any data on the USB stick, so make sure to back up any
@@ -48,18 +66,17 @@ data you care about.  This step will take quite a while, as it will download
 and yum install all of the necessary packages into a chroot jail, run the
 kickstart %post, and lay the resulting image down on the USB stick.
 
-5)  # mkdir -p /tmp/ovirt-nfs ; cp -av /etc/libvirt/qemu /tmp/ovirt-nfs
-
-6)  # rm -f /tmp/ovirt-nfs/qemu/networks/autostart/default.xml
+8)  # mkdir -p /tmp/ovirt-nfs ; cp -av /etc/libvirt/qemu /tmp/ovirt-nfs
+    # rm -f /tmp/ovirt-nfs/qemu/networks/autostart/default.xml
 (this is to make sure we don't autostart virbr0 on libvirt startup)
 
-7)  edit /etc/exports, add:
+9)  Edit /etc/exports, add:
 
 /tmp 192.168.25.0/24(rw,no_root_squash)
 
 (replace 192.168.25.0 with the subnet you are using)
 
-8)  Edit /etc/dhcpd.conf; you'll want to make it look like:
+10) Edit /etc/dhcpd.conf; you'll want to make it look like:
 
 -------------------------<cut here>----------------------------------------
 allow booting;
@@ -81,7 +98,11 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
         option libvirt-auth-method "tls:192.168.25.1";
         # comment out the above and un-comment the below for kerberos
         #option libvirt-auth-method "krb5:192.168.25.1";
-        range dynamic-bootp 192.168.25.100 192.168.25.200;
+	host perf200 {
+	     fixed-address 192.168.25.200;
+	     hardware ethernet 00:13:20:f5:fa:7c;
+	}
+
         filename "pxelinux.0";
 }
 -------------------------<cut here>----------------------------------------
@@ -89,10 +110,12 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
 Make sure to replace the subnet with the one you want to use, the
 domain-name-servers to what you want, and the next-server, routers,
 iscsi-servers, etc-libvirt-nfs-server, and libvirt-auth-method options to be
-the IP address of *this* server.  Also make sure that the "range dynamic-bootp"
-option matches the subnet.
+the IP address of *this* server.  Finally, make sure that you change the
+"host perf200" to assign a static IP address to your ovirt host(s).  The IP
+address and DNS name will be important for a number of the authentication
+mechanisms later.
 
-9)  Generate all of the certificates needed for libvirt remote authentication.
+11) Generate all of the certificates needed for libvirt remote authentication.
 To do this, you will need to run the gencerts script:
 
 # ./gencerts perf200.perf.redhat.com
@@ -101,22 +124,24 @@ This will create the CA cert, the server cert, and the client certs.  Make sure
 that the name you pass in here resolves both backwards and forwards in DNS; it
 is the name we will use later on to point virt-manager/virsh at the Ovirt host.
 
-Now we just need to copy these to the appropriate places:
+Now we need to copy these to the appropriate places:
 
-# cp cacert.pem servercert.pem serverkey.pem /var/www/html
+# cp cacert.pem /var/www/html/<ovirt-host-ip>-cacert.pem
+# cp servercert.pem /var/www/html/<ovirt-host-ip>-servercert.pem
+# cp serverkey.pem /var/www/html/<ovirt-host-ip>-serverkey.pem
 # cp cacert.pem /etc/pki/CA
 # mkdir -p /etc/pki/libvirt/private
 # cp clientkey.pem /etc/pki/libvirt/private/clientkey.pem
 # cp clientcert.pem /etc/pki/libvirt/clientcert.pem
 
-10) Setup the services you need:
+12) Setup the services you need:
 
 # service dhcpd start
 # service iptables stop
 # service nfs restart
 # service httpd start
 
-11) Set up 1 or more iSCSI LUNs for export:
+13) Set up 1 or more iSCSI LUNs for export:
 
 # lvcreate -n iSCSI1 -L +10G /dev/HostGroup
 
@@ -137,23 +162,15 @@ for each)
 
 # tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
 
-12) Optional: if you want to get kerberos working, there are a number of
+14) Optional: if you want to get kerberos working, there are a couple of
 additional steps:
-  a)  Take the libvirt SRPM in the repo, and re-compile it for your target
-      machine (x86_64 in my case).
-  b)  Copy the resulting RPM to /var/www/html/rpms, and then
-      "createrepo /var/www/html/rpms"
-  c)  Edit ovirt.ks, and add an additional repo where it will pull this updated
-      kerberized libvirt RPM.  There is an example repo in there already.
-  d)  Re-run the "./ovirt-flash.sh /dev/sdc" script, which should now grab the
-      kerberized libvirt.
-  e)  Edit /etc/dhcpd.conf, and turn on krb5 for the libvirt-auth-method.
+  a)  Edit /etc/dhcpd.conf, and turn on krb5 for the libvirt-auth-method.
       Restart dhcpd.
-  f)  Follow the steps in README.krb5 for setup.  You'll need to take the
+  b)  Follow the steps in README.krb5 for setup.  You'll need to take the
       /etc/krb5.conf and keytable files that you generated for the "ovirt"
       machine and place them in /var/www/html for the init scripts to fetch.
-      Make sure to call the keytable file "<ip>-libvirt.tab", as that is the
-      filename the scripts will look for.
+      Make sure to call the keytable file "<ip>-libvirt.tab" and the krb5.conf
+      file "<ip>-krb5.conf", as that is the  filename the scripts will look for.
 
 Machine 2/Ovirt Host:
 1)  Take the USB stick created on the build server, and make sure your BIOS

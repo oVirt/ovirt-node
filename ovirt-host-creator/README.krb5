@@ -39,6 +39,11 @@ to replace "ovirt" and "OVIRT.BOSTON.REDHAT.COM" with the full DNS name and the
 realm you are using, respectively.
 
 On the ovirt machine:
+
+NOTE: if you use the scripts (i.e. ovirt-pxe.sh) to generate an ovirt host
+image, all of the following is done for you.  These are just notes for doing
+it by hand.
+
 1)  First, we need to edit the krb5.conf to point to the correct realm and
 KDC.  In /etc/krb5.conf, in the [realms] section, you'll want to add your
 realm name, along with it's kdc and admin server.  In my case, it looks like:
