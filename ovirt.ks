@@ -37,6 +37,7 @@ cyrus-sasl-gssapi
 cyrus-sasl
 cyrus-sasl-lib
 collectd
+tftp
 -policycoreutils
 -audit-libs-python
 -hdparm
