@@ -18,6 +18,7 @@ class QuotaController < ApplicationController
 
   def new
     @user_quota = UserQuota.new
+    @user_id=params[:user_id]
   end
 
   def create
@@ -32,6 +33,7 @@ class QuotaController < ApplicationController
 
   def edit
     @user_quota = UserQuota.find(params[:id])
+    @user_id=@user_quota.user_id
   end
 
   def update
@@ -45,7 +47,9 @@ class QuotaController < ApplicationController
   end
 
   def destroy
-    UserQuota.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    @user_quota = UserQuota.find(params[:id])
+    user_id = @user_quota.user_id
+    @user_quota.destroy
+    redirect_to :controller => 'user', :action => 'show', :id => user_id
   end
 end

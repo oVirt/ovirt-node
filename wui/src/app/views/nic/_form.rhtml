@@ -1,7 +1,6 @@
 <%= error_messages_for 'nic' %>
 
 <!--[form:nic]-->
-<p>Host: <%= @host_id %><br/>
 <%= hidden_field 'nic', 'host_id', :value=>@host_id  %></p>
 <p><label for="nic_mac">Mac</label><br/>
 <%= text_field 'nic', 'mac'  %></p>

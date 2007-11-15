@@ -1,6 +1,7 @@
 <%= error_messages_for 'user_quota' %>
 
 <!--[form:user_quota]-->
+<%= hidden_field 'user_quota', 'user_id', :value=>@user_id  %></p>
 <p><label for="user_quota_total_vcpus">Total vcpus</label><br/>
 <%= text_field 'user_quota', 'total_vcpus'  %></p>
 

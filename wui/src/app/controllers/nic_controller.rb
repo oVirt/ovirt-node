@@ -33,6 +33,7 @@ class NicController < ApplicationController
 
   def edit
     @nic = Nic.find(params[:id])
+    @host_id=@nic.host_id
   end
 
   def update

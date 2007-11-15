@@ -1,3 +1,4 @@
+<h1> User quota for <%= @user_quota.user.ldap_uid %></h1>
 <% for column in UserQuota.content_columns %>
 <p>
   <b><%= column.human_name %>:</b> <%=h @user_quota.send(column.name) %>

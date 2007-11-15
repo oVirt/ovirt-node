@@ -4,5 +4,11 @@
 </p>
 <% end %>
 
+
+<%if @user.user_quota -%>
+<%= link_to 'View Quota', :controller => "quota", :action => 'show', :id => @user.user_quota %> |
+<% else -%>
+<%= link_to 'Add Quota', :controller => "quota", :action => 'new', :user_id => @user %> |
+<% end -%>
 <%= link_to 'Edit', :action => 'edit', :id => @user %> |
 <%= link_to 'Back', :action => 'list' %>
