@@ -115,7 +115,7 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	  fprintf(stderr, "host is %s\n", name);
   
 	  maxvcpus = virConnectGetMaxVcpus(conn, "kvm");
-	  fprintf(stderr, "maxvcpus is %d\n",maxvcpus);
+	  fprintf(stderr, "maxvcpus is %d\n", maxvcpus);
 
 	  err = virNodeGetInfo(conn, &nodeinfo);
 
@@ -127,6 +127,8 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	  }
 	  else {
 	    fprintf(stderr, "Error getting node info: %s\n",strerror(errno));
+	    virConnectClose(conn);
+	    break;
 	  }
 
 	  virConnectClose(conn);
@@ -212,7 +214,7 @@ static void client_callback(AvahiClient *c, AvahiClientState state,
     }
 }
 
-int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char*argv[])
+int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[])
 {
     AvahiClient *client = NULL;
     AvahiServiceBrowser *sb = NULL;
