@@ -4,5 +4,24 @@
 </p>
 <% end %>
 
+<h3>Hosts</h3>
+<table class='listing'>
+  <thead>
+  <% for column in Host.content_columns %>
+    <th><%= column.human_name %></th>
+  <% end %>
+  </thead>
+<% for host in @storage_volume.hosts %>
+  <tr class="<%= cycle('odd','even') %>">
+  <% for column in Host.content_columns %>
+    <td><%=h host.send(column.name) %></td>
+  <% end %>
+    <td><%= link_to 'Show', :controller => "host", :action => 'show', :id => host %></td>
+    <td><%= link_to 'Remove', { :action => 'remove_from_host', :id => @storage_volume, :host_id => host }, :confirm => 'Are you sure?', :method => :post %></td>
+  </tr>
+</p>
+<% end %>
+</table>
+
 <%= link_to 'Edit', :action => 'edit', :id => @storage_volume %> |
 <%= link_to 'Back', :action => 'list' %>

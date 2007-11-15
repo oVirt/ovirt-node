@@ -25,6 +25,27 @@
 <% end %>
 </table>
 
+<h3>Storage Volumes</h3>
+<table class='listing'>
+  <thead>
+  <% for column in StorageVolume.content_columns %>
+    <th><%= column.human_name %></th>
+  <% end %>
+  </thead>
+<% for storage_volume in @host.storage_volumes %>
+  <tr class="<%= cycle('odd','even') %>">
+  <% for column in StorageVolume.content_columns %>
+    <td><%=h storage_volume.send(column.name) %></td>
+  <% end %>
+    <td><%= link_to 'Show', :controller => "storage", :action => 'show', :id => storage_volume %></td>
+    <td><%= link_to 'Edit', :controller => "storage", :action => 'edit', :id => storage_volume %></td>
+    <td><%= link_to 'Remove', { :controller => "storage", :action => 'remove_from_host', :id => storage_volume, :host_id => @host }, :confirm => 'Are you sure?', :method => :post %></td>
+  </tr>
+</p>
+<% end %>
+</table>
+
 <%= link_to 'Add Network Interface', :controller => "nic", :action => 'new', :host_id => @host %> |
+<%= link_to 'Add Storage Volume', :controller => "storage", :action => 'list', :attach_to_host => @host %> |
 <%= link_to 'Edit', :action => 'edit', :id => @host %> |
 <%= link_to 'Back', :action => 'list' %>
