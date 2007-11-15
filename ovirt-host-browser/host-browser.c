@@ -45,10 +45,22 @@
 #include <avahi-common/error.h>
 
 #include <libvirt/libvirt.h>
+#include <libvirt/virterror.h>
 
 #define INTSIZE 100
 
 static AvahiSimplePoll *simple_poll = NULL;
+
+static void ignoreVirtRemoteError(void *userData, virErrorPtr error)
+{
+  if ((userData != NULL) || (error == NULL))
+    return;
+
+  if (error->code == VIR_ERR_SYSTEM_ERROR)
+    return;
+
+  virDefaultErrorFunc(error);
+}
 
 static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 			     AVAHI_GCC_UNUSED AvahiProtocol protocol,
@@ -65,7 +77,6 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 
     switch (event) {
         case AVAHI_RESOLVER_FAILURE:
-	  //fprintf(stderr, "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s\n", name, type, domain, avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r))));
             break;
 
         case AVAHI_RESOLVER_FOUND: {
@@ -89,7 +100,6 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	  if (host == NULL) {
 	    // we failed to resolve the address to a hostname; we'll just try
 	    // with the IP address
-	    fprintf(stderr, "Error resolving hostname for address %s, remote %x\n",a,remote);
 	    name = a;
 	  }
 	  else {
@@ -208,6 +218,9 @@ int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char*argv[])
     AvahiServiceBrowser *sb = NULL;
     int error;
     int ret = 1;
+
+    virInitialize();
+    virSetErrorFunc(NULL, ignoreVirtRemoteError);
 
     /* Allocate main loop object */
     if (!(simple_poll = avahi_simple_poll_new())) {
