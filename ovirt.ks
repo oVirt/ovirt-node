@@ -159,13 +159,13 @@ chmod +x /etc/init.d/ovirt
 /sbin/chkconfig ovirt on
 
 # next the dynamic bridge setup service
-cat > /etc/init.d/ovirt-bridges << \EOF
+cat > /etc/init.d/ovirt-early << \EOF
 #!/bin/bash
 #
-# ovirt-bridges Start ovirt bridge services
+# ovirt-early Start early ovirt services
 #
 # chkconfig: 3 01 99
-# description: ovirt-bridges services
+# description: ovirt-early services
 #
 
 # Source functions library
@@ -183,27 +183,50 @@ start() {
             echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,etc-libvirt-nfs-server,libvirt-auth-method"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
-        # find and activate all of the swap partitions on the system
+        # find all of the partitions on the system
 
-        # get the system pagesize; that determines where the swap signature is
+        # get the system pagesize
         PAGESIZE=`getconf PAGESIZE`
 
         # look first at raw partitions
         BLOCKDEVS=`ls /dev/sd? /dev/hd? 2>/dev/null`
 
+        # now LVM partitions
+        LVMDEVS="$DEVICES `/usr/sbin/lvscan | awk '{print $2}' | tr -d \"'\"`"
+
+	SWAPDEVS="$LVMDEVS"
         for dev in $BLOCKDEVS; do
-            DEVICES="$DEVICEES `/sbin/fdisk -l $dev 2>/dev/null | sed -e 's/*/ /' | awk '$5 ~ /82/ {print $1}' | xargs`"
+            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | sed -e 's/*/ /' | awk '$5 ~ /82/ {print $1}' | xargs`"
         done
 
-        # now LVM partitions
-        DEVICES="$DEVICES `/usr/sbin/lvscan | awk '{print $2}' | tr -d \"'\"`"
-
-        for device in $DEVICES; do
+	# now check if any of these partitions are swap, and activate if so
+        for device in $SWAPDEVS; do
             sig=`dd if=$device bs=1 count=10 skip=$(( $PAGESIZE - 10 )) 2>/dev/null`
             if [ "$sig" = "SWAPSPACE2" ]; then
                 /sbin/swapon $device
             fi
         done
+
+	DATADEVS="$LVMDEVS"
+        for dev in $BLOCKDEVS; do
+            DATADEVS="$DATADEVS `/sbin/fdisk -l $dev 2>/dev/null | sed -e 's/*/ /' | awk '$5 ~ /83/ {print $1}' | xargs`"
+        done
+
+	# now check for a persistent storage device
+	mkdir -p /mnt/tmp
+	for device in $DATADEVS; do
+	    mount $device /mnt/tmp >& /dev/null
+	    if [ $? -ne 0 ]; then
+	       continue
+	    fi
+	    if [ -r /mnt/tmp/.ovirtstorage ]; then
+	       umount /mnt/tmp
+	       mount $device /etc/libvirt/qemu
+	       break
+	    fi
+	    umount /mnt/tmp
+	done
+	rmdir /mnt/tmp
 }
 
 stop() {
@@ -223,13 +246,13 @@ case "$1" in
         start
         ;;
   *)
-        echo "Usage: ovirt-bridges {start|stop|restart}"
+        echo "Usage: ovirt-early {start|stop|restart}"
         exit 2
 esac
 EOF
 
-chmod +x /etc/init.d/ovirt-bridges
-/sbin/chkconfig ovirt-bridges on
+chmod +x /etc/init.d/ovirt-early
+/sbin/chkconfig ovirt-early on
 
 # just to get a boot warning to shut up
 touch /etc/resolv.conf
@@ -248,16 +271,21 @@ if [ -n "$new_iscsi_servers" ]; then
     done
 fi
 if [ -n "$new_etc_libvirt_nfs_server" ]; then
-    echo "$new_etc_libvirt_nfs_server /etc/libvirt/qemu nfs hard,bg,tcp,intr 0 0" >> /etc/fstab
+    # it's possible that we mounted the storage locally earlier; if it's already
+    # mounted, skip this
+    awk '{print $2}' /proc/mounts | grep -q /etc/libvirt/qemu
+    if [ $? -ne 0 ]; then
+        echo "$new_etc_libvirt_nfs_server /etc/libvirt/qemu nfs hard,bg,tcp,intr 0 0" >> /etc/fstab
+    fi
 fi
 if [ -n "$new_libvirt_auth_method" ]; then
     METHOD=`echo $new_libvirt_auth_method | cut -d':' -f1`
     SERVER=`echo $new_libvirt_auth_method | cut -d':' -f2-`
     get_tls() {
         mkdir -p /etc/pki/CA /etc/pki/libvirt/private
-        cd /etc/pki/CA ; wget -q http://$SERVER/cacert.pem
-        cd /etc/pki/libvirt/private ; wget -q http://$SERVER/serverkey.pem
-        cd /etc/pki/libvirt ; wget -q http://$SERVER/servercert.pem        
+        wget -q http://$SERVER/$new_ip_address-cacert.pem -O /etc/pki/CA/cacert.pem
+        wget -q http://$SERVER/$new_ip_address-serverkey.pem -O /etc/pki/libvirt/private/serverkey.pem
+        wget -q http://$SERVER/$new_ip_address-servercert.pem -O /etc/pki/libvirt/servercert.pem
     }    
     if [ $METHOD = "tls" ]; then
         get_tls
@@ -267,7 +295,7 @@ if [ -n "$new_libvirt_auth_method" ]; then
 
         mkdir -p /etc/libvirt
         wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
-        rm -f /etc/krb5.conf ; wget -q http://$SERVER/krb5.conf -O /etc/krb5.conf
+        rm -f /etc/krb5.conf ; wget -q http://$SERVER/$new_ip_address-krb5.conf -O /etc/krb5.conf
     fi
 fi
 EOF
