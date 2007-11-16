@@ -1,19 +1,14 @@
 <%= error_messages_for 'host' %>
 
 <!--[form:host]-->
-<p><label for="host_uuid">Uuid</label>
-<%= text_field 'host', 'uuid'  %></p>
+<%= text_field_with_label "UUID", 'host', 'uuid'  %>
 
-<p><label for="host_num_cpus">Num cpus</label>
-<%= text_field 'host', 'num_cpus'  %>
+<%= text_field_with_label "Number of CPUs", 'host', 'num_cpus'  %>
 
-<p><label for="host_cpu_speed">Cpu speed</label>
-<%= text_field 'host', 'cpu_speed'  %></p>
+<%= text_field_with_label "CPU Speed", 'host', 'cpu_speed'  %>
 
-<p><label for="host_arch">Arch</label>
-<%= text_field 'host', 'arch'  %></p>
+<%= text_field_with_label "Architecture", 'host', 'arch'  %>
 
-<p><label for="host_memory">Memory</label>
-<%= text_field 'host', 'memory'  %></p>
+<%= text_field_with_label "Memory", 'host', 'memory'  %>
 <!--[eoform:host]-->
 
