@@ -9,7 +9,7 @@
 <% end %>
 </table>
 
-<h3>Network Interfaces <%= link_to 'Add Network Interface', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create", :style => "position: absolute; right: 0;font-size: 12pt;" } %></h3>
+<h3>Network Interfaces</h3>
 <table class='listing'>
   <thead>
   <% for column in Nic.content_columns %>
@@ -30,7 +30,7 @@
 <% end %>
 </table>
 
-<h3>Storage Volumes <%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach", :style => "position: absolute; right: 0;font-size: 12pt;"} %></h3>
+<h3>Storage Volumes</h3>
 <table class='listing'>
   <thead>
   <% for column in StorageVolume.content_columns %>
@@ -55,6 +55,8 @@
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions">
+  <li class="action"><%= link_to 'Add Network Interface', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %></li>
+  <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %></li>
   <li class="action"><%= link_to 'Edit Host', { :action => 'edit', :id => @host }, { :class => "edit" } %></li>
   <li class="action"><%= link_to 'Back to Hosts', { :action => 'list'}, { :class => "list" } %></li>
   </ul>
