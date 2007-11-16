@@ -8,16 +8,21 @@
 <h3> Virtual machines for <%= @user_quota.user.ldap_uid %></h3>
 <table class='listing'>
   <thead>
-  <% for column in Vm.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
+    <th></th>
+    <th>Uuid</th>
+    <th>CPUs</th>
+    <th>Memory (gigs)</th>
+    <th>vNIC MAC Addr</th>
+    <th>State</th>
   </thead>
   
 <% for vm in @user_quota.user.vms %>
   <tr class="<%= cycle('odd','even') %>">
-  <% for column in Vm.content_columns %>
-    <td><%=h vm.send(column.name) %></td>
-  <% end %>
+    <td><%= vm.uuid %></td>
+    <td><%= vm.num_vcpus_used %></td>
+    <td><%= vm.memory_used.gigabytes%></td>
+    <td><%= vm.vnic_mac_addr %></td>
+    <td><%= vm.state %></td>
     <td><%= link_to 'Show', :controller => 'vm', :action => 'show', :id => vm %></td>
     <td><%= link_to 'Edit', :controller => 'vm', :action => 'edit', :id => vm %></td>
     <td><%= link_to 'Destroy', { :controller => 'vm', :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post %></td>

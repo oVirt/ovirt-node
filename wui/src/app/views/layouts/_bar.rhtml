@@ -3,6 +3,6 @@
 <span class="hello_message">Hello current_user.display_name</span>
 <span class="account_message"><span class="login">current_user.login</span> | <%= link_to "home", '/users/user' %> | <%= link_to "log out", logout_url %></span>
 <% else %>
-<span class="hello_message">Hello there <%= @request.env["HTTP_X_FORWARDED_USER"] %>!</span>
+<span class="hello_message">Hello there <%= @controller.get_login_user %>!</span>
 <% end %>
 </div>
