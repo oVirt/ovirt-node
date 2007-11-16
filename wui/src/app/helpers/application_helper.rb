@@ -6,6 +6,30 @@ require 'erb'
 
 module ApplicationHelper
 
+  def text_field_with_label(label, obj, meth) 
+    %{ 
+      <div class="i"><label for="#{obj}_#{meth}">#{_(label)}</label>
+      #{text_field obj, meth}</div>
+     }
+  end
+
+  def select_with_label(label, obj, meth, coll, opts) 
+    %{ 
+      <div class="i"><label for="#{obj}_#{meth}">#{_(label)}</label>
+      #{select obj, meth, coll, opts}</div>
+     }
+  end
+
+  def timeout_flash(name)
+    %{
+    <script type="text/javascript">
+    // <![CDATA[
+          setTimeout(function() {$('#{name}').setStyle({'visibility':'hidden'})}, 1000 * 7);
+    // ]]>
+    </script>
+    }
+  end
+
    def ApplicationHelper.menubar(primary,secondary)
        # FIXME: primary and secondary are no longer used.
        # should change method signature.

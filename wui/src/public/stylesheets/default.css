@@ -17,8 +17,8 @@ img { border: none; }
 
 div.alertbox { text-align: center; }
 div.flash { display: inline; padding: 0em 1em; -moz-border-radius: 0.3em; }
-#errmsg { background-color: #cc0000; color: #fff; }
-#notice { font-weight: bold; background-color: #fce94f; }
+#errmsg { background-color: #ff7f7f; border: 1px solid #cc0000; color: #111; padding: 0.3em 1em; }
+#notice { font-weight: bold; background-color: #fce94f; padding: 0.1em 1em; }
 
 /* ========= TOP BAR ========== */
 
