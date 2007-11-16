@@ -1,19 +1,14 @@
 <%= error_messages_for 'storage_volume' %>
 
 <!--[form:storage_volume]-->
-<p><label for="storage_volume_ip_addr">Ip addr</label><br/>
-<%= text_field 'storage_volume', 'ip_addr'  %></p>
+<%= text_field_with_label "IP Address", 'storage_volume', 'ip_addr'  %>
 
-<p><label for="storage_volume_port">Port</label><br/>
-<%= text_field 'storage_volume', 'port'  %></p>
+<%= text_field_with_label "Port", 'storage_volume', 'port'  %>
 
-<p><label for="storage_volume_target">Target</label><br/>
-<%= text_field 'storage_volume', 'target'  %></p>
+<%= text_field_with_label "Target", 'storage_volume', 'target'  %>
 
-<p><label for="storage_volume_lun">Lun</label><br/>
-<%= text_field 'storage_volume', 'lun'  %></p>
+<%= text_field_with_label "Lun", 'storage_volume', 'lun'  %>
 
-<p><label for="storage_volume_size">Size</label><br/>
-<%= text_field 'storage_volume', 'size'  %></p>
+<%= text_field_with_label "Size (in Gigabytes)", 'storage_volume', 'size'  %>
 <!--[eoform:storage_volume]-->
 

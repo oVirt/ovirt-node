@@ -1,12 +1,11 @@
-<h1>
+<div id="left">
 <%if @attach_to_host or @attach_to_vm -%>
-  Choose Storage Volume
+  <h2><%= _("Choose a Storage Volume") %></h2>
 <% else -%>
-  Listing Storage Volumes
+  <h2><%= _("Listing Storage Volumes") %></h2>
 <% end -%>
-</h1>
 
-<table>
+<table class="listing">
   <thead>
   <% for column in StorageVolume.content_columns %>
     <th><%= column.human_name %></th>
@@ -19,13 +18,13 @@
     <td><%=h storage_volume.send(column.name) %></td>
   <% end %>
 <%if @attach_to_host -%>
-    <td><%= link_to 'Choose', :action => 'attach_to_host', :id => storage_volume, :host_id => @attach_to_host %></td>
+    <td><%= link_to 'Choose', { :action => 'attach_to_host', :id => storage_volume, :host_id => @attach_to_host }, { :class => "choose" } %></td>
 <%elsif @attach_to_vm -%>
-    <td><%= link_to 'Choose', :action => 'attach_to_vm', :id => storage_volume, :vm_id => @attach_to_vm %></td>
+    <td><%= link_to 'Choose', { :action => 'attach_to_vm', :id => storage_volume, :vm_id => @attach_to_vm }, { :class => "choose" } %></td>
 <% else -%>
-    <td><%= link_to 'Show', :action => 'show', :id => storage_volume %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => storage_volume %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => storage_volume }, :confirm => 'Are you sure?', :method => :post %></td>
+    <td><%= link_to 'Show', { :action => 'show', :id => storage_volume }, { :class => "show" } %></td>
+    <td><%= link_to 'Edit', { :action => 'edit', :id => storage_volume }, { :class => "edit" } %></td>
+    <td><%= link_to 'remove', { :action => 'destroy', :id => storage_volume }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
 <% end -%>
 
   </tr>
@@ -35,8 +34,13 @@
 <%= link_to 'Previous page', { :page => @storage_volume_pages.current.previous } if @storage_volume_pages.current.previous %>
 <%= link_to 'Next page', { :page => @storage_volume_pages.current.next } if @storage_volume_pages.current.next %> 
 
-<br />
+</div>
 
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
 <%unless @attach_to_host or @attach_to_vm -%>
-<%= link_to 'New storage_volume', :action => 'new' %>
+  <li class="action"><%= link_to 'New Storage Volume', { :action => 'new' }, { :class => "create" } %></li>
 <% end -%>
+  </ul>
+</div>
