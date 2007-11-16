@@ -11,7 +11,7 @@ a:hover { color: #0066dd; }
 label { display: block; font-size: small; color: #333; }
 img { border: none; }
 h2 { margin-top: 0em; }
-h3 { position: relative; }
+h3 { position: relative; border-bottom: 1px solid #999; }
 
 #content { margin: 1em;  margin-left: auto; margin-right: auto; text-align: left; width: 50em; }
 #header { border-bottom: 2px solid #001833; margin-bottom: 1em; }
@@ -98,7 +98,7 @@ input.green-button:hover {
 
 /* ========= ACTION LINKS ========== */
 ul.actions { list-style: none; padding: 0em 1em;  }
-li.action { }
+li.action { margin: 1em 0em; }
 
 a.show {  }
 a.edit { }

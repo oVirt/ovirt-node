@@ -1,9 +1,7 @@
-<h3 style="display:inline;">Manage Virtual Machines</h3> 
-<ul id="tools">
-  <li class="tool"><button>Pause Machine</button></li>
-  <li class="tool"><select><option>Other Actions</option><option></option><option>Stop Machine</option></select></li> 
-  <li><%= link_to 'Create new VM', {:controller => "vm", :action => 'new', :user_id => @user} if @quota %></li>
-</ul>
+<div id="left">
+<h2><%= _("Manage Virtual Machines") %></h2>
+<p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
+<button>Pause Machine</button> <select><option>Other Actions</option><option></option><option>Stop Machine</option></select>
 
 <%if @user -%>
 <table class='listing'>
@@ -40,3 +38,15 @@
 <% end -%>
 
 <%end -%>
+
+</div>
+
+<div id="right">
+  <strong>Actions</strong>
+  <ul class="actions">
+    <li class="action"><%= link_to_if @quota, 'Create New VM', {:controller => "vm", :action => 'new', :user_id => @user}, { :class => "create" } %></li>
+  </ul>
+</div>
+<%- content_for :title do -%>
+<%= _("Home") %>
+<%- end -%>
