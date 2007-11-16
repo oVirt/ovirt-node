@@ -1,26 +1,17 @@
 <%= error_messages_for 'vm' %>
 
 <!--[form:vm]-->
-<%= hidden_field 'vm', 'user_id', :value=>@user_id  %></p>
-<p><label for="vm_uuid">Uuid</label><br/>
-<%= text_field 'vm', 'uuid'  %></p>
+<%= hidden_field 'vm', 'user_id', :value=>@user_id  %>
+<%= text_field_with_label "UUID", "vm", "uuid" %>
 
-<p><label for="vm_num_vcpus_allocated">Num vcpus allocated</label><br/>
-<%= text_field 'vm', 'num_vcpus_allocated'  %></p>
+<%= text_field_with_label "CPUs", "vm", "num_vcpus_allocated" %>
 
-<p><label for="vm_num_vcpus_used">Num vcpus used</label><br/>
-<%= text_field 'vm', 'num_vcpus_used'  %></p>
+<% # text_field_with_label "CPUs Used", "vm", "num_vcpus_used" %>
 
-<p><label for="vm_memory_allocated">Memory allocated</label><br/>
-<%= text_field 'vm', 'memory_allocated'  %></p>
+<%= text_field_with_label "Memory", "vm", "memory_allocated" %>
 
-<p><label for="vm_memory_used">Memory used</label><br/>
-<%= text_field 'vm', 'memory_used'  %></p>
+<% # text_field_with_label "Memory Used", "vm", "memory_used" %>
 
-<p><label for="vm_vnic_mac_addr">Vnic mac addr</label><br/>
-<%= text_field 'vm', 'vnic_mac_addr'  %></p>
-
-<p><label for="vm_state">State</label><br/>
-<%= text_field 'vm', 'state'  %></p>
+<%= text_field_with_label "Network", "vm", "vnic_mac_addr" %>
 <!--[eoform:vm]-->
 
