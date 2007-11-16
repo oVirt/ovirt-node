@@ -18,13 +18,14 @@ class VmController < ApplicationController
 
   def new
     @vm = Vm.new
+    @user_id=params[:user_id]
   end
 
   def create
     @vm = Vm.new(params[:vm])
     if @vm.save
       flash[:notice] = 'Vm was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to :controller => 'quota', :action => 'show', :id => @vm.user.user_quota
     else
       render :action => 'new'
     end
@@ -32,20 +33,23 @@ class VmController < ApplicationController
 
   def edit
     @vm = Vm.find(params[:id])
+    @user_id=@vm.user_id
   end
 
   def update
     @vm = Vm.find(params[:id])
     if @vm.update_attributes(params[:vm])
       flash[:notice] = 'Vm was successfully updated.'
-      redirect_to :action => 'show', :id => @vm
+      redirect_to :controller => 'quota', :action => 'show', :id => @vm.user.user_quota
     else
       render :action => 'edit'
     end
   end
 
   def destroy
-    Vm.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    @vm = Vm.find(params[:id])
+    quota = @vm.user.user_quota
+    @vm.destroy
+    redirect_to :controller => 'quota', :action => 'show', :id => quota
   end
 end

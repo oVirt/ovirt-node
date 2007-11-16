@@ -5,4 +5,8 @@
 <% end %>
 
 <%= link_to 'Edit', :action => 'edit', :id => @vm %> |
-<%= link_to 'Back', :action => 'list' %>
+<% if @vm.user -%>
+  <%= link_to 'Back', :controller => 'quota', :action => 'show', :id => @vm.user.quota %>
+<% else -%>
+  <%= link_to 'Back', :action => 'list' %>
+<% end -%>

@@ -27,7 +27,7 @@ class StorageController < ApplicationController
     @storage_volume = StorageVolume.new(params[:storage_volume])
     if @storage_volume.save
       flash[:notice] = 'StorageVolume was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to :controller => 'admin', :action => 'index'
     else
       render :action => 'new'
     end
@@ -49,7 +49,7 @@ class StorageController < ApplicationController
 
   def destroy
     StorageVolume.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    redirect_to :controller => 'admin', :action => 'index'
   end
 
   def attach_to_host

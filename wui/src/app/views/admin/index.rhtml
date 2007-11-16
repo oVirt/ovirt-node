@@ -1,0 +1,36 @@
+<h3 style="display:inline;">Manage Hardware</h3> 
+<ul id="tools">
+  <li><%= link_to 'New storage volume', :controller => 'storage', :action => 'new' %></li>
+  <li><%= link_to 'New host', :controller => 'host', :action => 'new' %></li>
+</ul>
+
+<h4>Hosts</h4>
+<ul id="machines">
+<% for host in @hosts %>
+  <li><%= link_to host.uuid, :controller => 'host', :action => 'show', :id => host %></li>
+<% end %>
+</ul>
+<%= link_to 'Previous page', { :page => @host_pages.current.previous } if @host_pages.current.previous %>
+<%= link_to 'Next page', { :page => @host_pages.current.next } if @host_pages.current.next %> 
+
+<h4>Storage volumes</h4>
+<ul id="machines">
+<% for storage_volume in @storage_volumes %>
+  <li><%= link_to "#{storage_volume.ip_addr} #{storage_volume.target}:#{storage_volume.lun}", :controller => 'storage', :action => 'show', :id => storage_volume %></li>
+<% end %>
+</ul>
+<%= link_to 'Previous page', { :page => @storage_volume_pages.current.previous } if @storage_volume_pages.current.previous %>
+<%= link_to 'Next page', { :page => @storage_volume_pages.current.next } if @storage_volume_pages.current.next %> 
+
+<h3>Manage Quotas</h3>
+<ul id="resources">
+<% for quota in @user_quotas %>
+  <li><%= link_to quota.user.ldap_uid, :controller => 'quota', :action => 'show', :id => quota %></li>
+<% end %>
+</ul>
+<%= link_to 'Previous page', { :page => @user_quota_pages.current.previous } if @user_quota_pages.current.previous %>
+<%= link_to 'Next page', { :page => @user_quota_pages.current.next } if @user_quota_pages.current.next %> 
+<ul id="tools">
+  <li><%= link_to 'New user', :controller => 'user', :action => 'new' %></li>
+</ul>
+

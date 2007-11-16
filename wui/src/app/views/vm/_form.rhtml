@@ -1,6 +1,7 @@
 <%= error_messages_for 'vm' %>
 
 <!--[form:vm]-->
+<%= hidden_field 'vm', 'user_id', :value=>@user_id  %></p>
 <p><label for="vm_uuid">Uuid</label><br/>
 <%= text_field 'vm', 'uuid'  %></p>
 

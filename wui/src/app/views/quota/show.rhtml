@@ -5,5 +5,26 @@
 </p>
 <% end %>
 
+<h3> Virtual machines for <%= @user_quota.user.ldap_uid %></h3>
+<table class='listing'>
+  <thead>
+  <% for column in Vm.content_columns %>
+    <th><%= column.human_name %></th>
+  <% end %>
+  </thead>
+  
+<% for vm in @user_quota.user.vms %>
+  <tr class="<%= cycle('odd','even') %>">
+  <% for column in Vm.content_columns %>
+    <td><%=h vm.send(column.name) %></td>
+  <% end %>
+    <td><%= link_to 'Show', :controller => 'vm', :action => 'show', :id => vm %></td>
+    <td><%= link_to 'Edit', :controller => 'vm', :action => 'edit', :id => vm %></td>
+    <td><%= link_to 'Destroy', { :controller => 'vm', :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post %></td>
+  </tr>
+<% end %>
+</table>
+
+<%= link_to 'Create new VM', :controller => "vm", :action => 'new', :user_id => @user_quota.user %> |
 <%= link_to 'Edit', :action => 'edit', :id => @user_quota %> |
 <%= link_to 'Back', :action => 'list' %>
