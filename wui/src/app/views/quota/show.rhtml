@@ -8,7 +8,6 @@
 <h3> Virtual machines for <%= @user_quota.user.ldap_uid %></h3>
 <table class='listing'>
   <thead>
-    <th></th>
     <th>Uuid</th>
     <th>CPUs</th>
     <th>Memory (gigs)</th>
@@ -20,7 +19,7 @@
   <tr class="<%= cycle('odd','even') %>">
     <td><%= vm.uuid %></td>
     <td><%= vm.num_vcpus_used %></td>
-    <td><%= vm.memory_used.gigabytes%></td>
+    <td><%= vm.memory_used %></td>
     <td><%= vm.vnic_mac_addr %></td>
     <td><%= vm.state %></td>
     <td><%= link_to 'Show', :controller => 'vm', :action => 'show', :id => vm %></td>
