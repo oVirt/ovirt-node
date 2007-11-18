@@ -1,14 +1,23 @@
+<div id="left">
+<h2><%= _("User") %></h2>
+
 <% for column in User.content_columns %>
 <p>
   <b><%= column.human_name %>:</b> <%=h @user.send(column.name) %>
 </p>
 <% end %>
 
+</div>
 
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
 <%if @user.user_quota -%>
-<%= link_to 'View Quota', :controller => "quota", :action => 'show', :id => @user.user_quota %> |
+  <li class="action"><%= link_to 'View Quota', { :controller => "quota", :action => 'show', :id => @user.user_quota }, { :class => "show" } %></li>
 <% else -%>
-<%= link_to 'Add Quota', :controller => "quota", :action => 'new', :user_id => @user %> |
+  <li class="action"><%= link_to 'Add Quota', { :controller => "quota", :action => 'new', :user_id => @user }, { :class => "create" } %></li>
 <% end -%>
-<%= link_to 'Edit', :action => 'edit', :id => @user %> |
-<%= link_to 'Back', :action => 'list' %>
+  <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @user }, { :class => "edit" } %></li>
+  <li class="action"><%= link_to 'All Users', { :action => 'list' }, { :class => "list" } %></li>
+  </ul>
+</div>

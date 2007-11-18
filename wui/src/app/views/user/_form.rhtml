@@ -1,7 +1,6 @@
 <%= error_messages_for 'user' %>
 
 <!--[form:user]-->
-<p><label for="user_ldap_uid">Ldap uid</label><br/>
-<%= text_field 'user', 'ldap_uid'  %></p>
+<%= text_field_with_label "LDAP User ID", 'user', 'ldap_uid'  %>
 <!--[eoform:user]-->
 

@@ -1,8 +1,17 @@
-<h1>New user</h1>
+<div id="left">
+<h2><%= _("New User") %></h2>
 
 <% form_tag :action => 'create' do %>
   <%= render :partial => 'form' %>
   <%= submit_tag "Create" %>
 <% end %>
 
-<%= link_to 'Back', :action => 'list' %>
+</div>
+
+<div id="right">
+  <strong>Actions</strong>
+  <ul class="actions">
+    <li class="action"><%= link_to 'All Users', { :controller => 'user', :action => 'list' }, { :class => "list" } %></li>
+  </ul>
+</div>
+

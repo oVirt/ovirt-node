@@ -98,7 +98,7 @@ input.green-button:hover {
 
 /* ========= ACTION LINKS ========== */
 ul.actions { list-style: none; padding: 0em 1em;  }
-li.action { margin: 1em 0em; }
+li.action { margin: 1em 0em; font-size: 12pt; }
 
 a.show {  }
 a.edit { }
