@@ -1,17 +1,14 @@
 <%= error_messages_for 'user_quota' %>
 
 <!--[form:user_quota]-->
-<%= hidden_field 'user_quota', 'user_id', :value=>@user_id  %></p>
-<p><label for="user_quota_total_vcpus">Total vcpus</label><br/>
-<%= text_field 'user_quota', 'total_vcpus'  %></p>
+<%= hidden_field 'user_quota', 'user_id', :value=>@user_id  %>
 
-<p><label for="user_quota_total_vmemory">Total vmemory</label><br/>
-<%= text_field 'user_quota', 'total_vmemory'  %></p>
+<%= text_field_with_label "Total Virtual CPUs", 'user_quota', 'total_vcpus'  %>
 
-<p><label for="user_quota_total_vnics">Total vnics</label><br/>
-<%= text_field 'user_quota', 'total_vnics'  %></p>
+<%= text_field_with_label "Total Memory", 'user_quota', 'total_vmemory'  %>
 
-<p><label for="user_quota_total_storage">Total storage</label><br/>
-<%= text_field 'user_quota', 'total_storage'  %></p>
+<%= text_field_with_label "Total Virtual NICs", 'user_quota', 'total_vnics'  %>
+
+<%= text_field_with_label "Total Storage", 'user_quota', 'total_storage'  %>
 <!--[eoform:user_quota]-->
 

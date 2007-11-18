@@ -1,11 +1,13 @@
-<h1> User quota for <%= @user_quota.user.ldap_uid %></h1>
+<div id="left">
+<h2><%= _("User quota for ID: %s " % @user_quota.user.ldap_uid) %></h2>
+
 <% for column in UserQuota.content_columns %>
 <p>
   <b><%= column.human_name %>:</b> <%=h @user_quota.send(column.name) %>
 </p>
 <% end %>
 
-<h3> Virtual machines for <%= @user_quota.user.ldap_uid %></h3>
+<h3> Virtual machines for ID: <%= @user_quota.user.ldap_uid %></h3>
 <table class='listing'>
   <thead>
     <th>Uuid</th>
@@ -29,6 +31,13 @@
 <% end %>
 </table>
 
-<%= link_to 'Create new VM', :controller => "vm", :action => 'new', :user_id => @user_quota.user %> |
-<%= link_to 'Edit', :action => 'edit', :id => @user_quota %> |
-<%= link_to 'Back', :action => 'list' %>
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Create New VM', { :controller => "vm", :action => 'new', :user_id => @user_quota.user }, { :class => "create" } %></li>
+    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @user_quota }, { :class => "edit" } %></li>
+    <li class="action"><%= link_to 'Back', { :action => 'list' }, { :class => "list" } %></li>
+  </ul>
+</div>
