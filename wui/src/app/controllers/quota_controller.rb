@@ -17,8 +17,7 @@ class QuotaController < ApplicationController
   end
 
   def new
-    @user_quota = UserQuota.new
-    @user_id=params[:user_id]
+    @user_quota = UserQuota.new( { :user_id => params[:user_id] } )
   end
 
   def create
@@ -33,7 +32,6 @@ class QuotaController < ApplicationController
 
   def edit
     @user_quota = UserQuota.find(params[:id])
-    @user_id=@user_quota.user_id
   end
 
   def update

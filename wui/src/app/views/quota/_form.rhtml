@@ -1,7 +1,7 @@
 <%= error_messages_for 'user_quota' %>
 
 <!--[form:user_quota]-->
-<%= hidden_field 'user_quota', 'user_id', :value=>@user_id  %>
+<%= hidden_field_with_label "User", 'user_quota', 'user_id', @user_quota.user.ldap_uid  %>
 
 <%= text_field_with_label "Total Virtual CPUs", 'user_quota', 'total_vcpus'  %>
 
