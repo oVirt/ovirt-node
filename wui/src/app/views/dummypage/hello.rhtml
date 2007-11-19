@@ -9,9 +9,14 @@ Donec id metus. Maecenas ac turpis. Sed nulla mauris, accumsan id, rutrum lobort
   </div>
 
   <div id="right">
-<p>
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus sed augue vel mi convallis adipiscing. Etiam sapien. Nulla facilisi. Duis lobortis lectus dapibus quam. Morbi quam nibh, auctor ut, scelerisque at, blandit vehicula, urna. Vestibulum commodo dolor eu enim. Aenean sed lacus. Fusce nec urna id mauris rutrum pulvinar. In turpis magna, suscipit ut, tincidunt a, porta eu, orci. Phasellus non turpis sit amet dui vulputate cursus. Etiam in turpis. Proin ipsum. Donec molestie volutpat mauris. Ut aliquam laoreet urna. Quisque porttitor urna a ligula. Curabitur convallis. Donec sollicitudin nibh vitae turpis. Nulla tempus magna. Quisque non odio. Praesent semper blandit velit.
-</p>
+  <ul>
+    <li><%= link_to "VMs", :controller => "vm" %></li>
+    <li><%= link_to "Quota", :controller => "quota" %></li>
+    <li><%= link_to "Hosts", :controller => "host" %></li>
+    <li><%= link_to "NICs", :controller => "nic" %></li>
+    <li><%= link_to "Storage", :controller => "storage" %></li>
+    <li><%= link_to "User", :controller => "user" %></li>
+  </ul>
   </div>
 
 <%- content_for :title do -%>

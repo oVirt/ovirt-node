@@ -1,6 +1,7 @@
-<h1>Listing users</h1>
+<div id="left">
+<h2><%= _("Available Users") %></h2>
 
-<table>
+<table class="listing">
   <thead>
   <% for column in User.content_columns %>
     <th><%= column.human_name %></th>
@@ -12,9 +13,9 @@
   <% for column in User.content_columns %>
     <td><%=h user.send(column.name) %></td>
   <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => user %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => user %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post %></td>
+    <td><%= link_to 'Show', { :action => 'show', :id => user}, { :class => "show" }  %></td>
+    <td><%= link_to 'Edit', { :action => 'edit', :id => user}, { :class => "edit" }  %></td>
+    <td><%= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post,  :class => "remove" %></td>
   </tr>
 <% end %>
 </table>
@@ -22,6 +23,12 @@
 <%= link_to 'Previous page', { :page => @user_pages.current.previous } if @user_pages.current.previous %>
 <%= link_to 'Next page', { :page => @user_pages.current.next } if @user_pages.current.next %> 
 
-<br />
+</div>
 
-<%= link_to 'New user', :action => 'new' %>
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'New User', { :action => 'new'}, {:class => "create" } %></li>
+  </ul>
+</div>
+

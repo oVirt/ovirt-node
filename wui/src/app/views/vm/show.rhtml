@@ -1,8 +1,22 @@
+<div id="left">
+<h2><%= _("Virtual Machine") %></h2>
+
 <% for column in Vm.content_columns %>
 <p>
   <b><%= column.human_name %>:</b> <%=h @vm.send(column.name) %>
 </p>
 <% end %>
 
-<%= link_to 'Edit', :action => 'edit', :id => @vm %> |
-<%= link_to 'Back', :action => 'list' %>
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @vm } , {:class => "edit" } %></li>
+    <% if @vm.user -%>
+      <li class="action"><%= link_to 'Back to Quota', { :controller => 'quota', :action => 'show', :id => @vm.user.user_quota }, { :class => "list" } %></li>
+    <% else -%>
+      <li class="action"><%= link_to 'Back to all VMs', { :action => 'list' }, { :class => "list" } %></li>
+    <% end -%>
+  </ul>
+</div>

@@ -6,4 +6,4 @@
 <% end %>
 
 <%= link_to 'Show', :action => 'show', :id => @nic %> |
-<%= link_to 'Back', :action => 'list' %>
+<%= link_to 'Back', :controller => 'host', :action => 'show', :id => @nic.host_id %>

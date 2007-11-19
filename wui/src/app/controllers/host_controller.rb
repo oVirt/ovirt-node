@@ -24,7 +24,7 @@ class HostController < ApplicationController
     @host = Host.new(params[:host])
     if @host.save
       flash[:notice] = 'Host was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to :controller => 'admin', :action => 'index'
     else
       render :action => 'new'
     end
@@ -46,6 +46,6 @@ class HostController < ApplicationController
 
   def destroy
     Host.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    redirect_to :controller => 'admin', :action => 'index'
   end
 end

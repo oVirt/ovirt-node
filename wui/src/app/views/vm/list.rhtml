@@ -1,6 +1,7 @@
-<h1>Listing vms</h1>
+<div id="left">
+<h2><%= _("Available Virtual Machines") %></h2>
 
-<table>
+<table class='listing'>
   <thead>
   <% for column in Vm.content_columns %>
     <th><%= column.human_name %></th>
@@ -8,20 +9,24 @@
   </thead>
   
 <% for vm in @vms %>
-  <tr>
+  <tr class="<%= cycle('odd','even') %>">
   <% for column in Vm.content_columns %>
     <td><%=h vm.send(column.name) %></td>
   <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => vm %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => vm %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post %></td>
+    <td><%= link_to 'Show', { :action => 'show', :id => vm }, { :class => "show" } %></td>
+    <td><%= link_to 'Edit', { :action => 'edit', :id => vm }, { :class => "edit" } %></td>
+    <td><%= link_to 'Destroy', { :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </tr>
 <% end %>
 </table>
 
 <%= link_to 'Previous page', { :page => @vm_pages.current.previous } if @vm_pages.current.previous %>
 <%= link_to 'Next page', { :page => @vm_pages.current.next } if @vm_pages.current.next %> 
+</div>
 
-<br />
-
-<%= link_to 'New vm', :action => 'new' %>
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'New vm', { :action => 'new' }, { :class => "create" } %></li>
+  </ul>
+</div>

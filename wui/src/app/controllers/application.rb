@@ -7,4 +7,11 @@ class ApplicationController < ActionController::Base
   init_gettext "invirt"
   layout 'default'
 
+  def get_login_user
+    user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
+  end
+  
+  def user_from_principal(principal)
+    principal.split('@')[0]
+  end
 end

@@ -1,4 +1,5 @@
-<h1>Listing hosts</h1>
+<div id="left">
+<h2><%= _("Available Hosts") %></h2>
 
 <table class='listing'>
   <thead>
@@ -12,9 +13,9 @@
   <% for column in Host.content_columns %>
     <td><%=h host.send(column.name) %></td>
   <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => host %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => host %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => host }, :confirm => 'Are you sure?', :method => :post %></td>
+    <td><%= link_to 'Show', {:action => 'show', :id => host}, { :class => "show" } %></td>
+    <td><%= link_to 'Edit', {:action => 'edit', :id => host}, { :class => "edit" } %></td>
+    <td><%= link_to 'Destroy', { :action => 'destroy', :id => host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </tr>
 <% end %>
 </table>
@@ -22,6 +23,12 @@
 <%= link_to 'Previous page', { :page => @host_pages.current.previous } if @host_pages.current.previous %>
 <%= link_to 'Next page', { :page => @host_pages.current.next } if @host_pages.current.next %> 
 
-<br />
+</div>
 
-<%= link_to 'New host', :action => 'new' %>
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'New host', { :action => 'new'}, {:class => "create" } %></li>
+  </ul>
+</div>
+  

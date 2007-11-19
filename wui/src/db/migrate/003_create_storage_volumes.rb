@@ -7,7 +7,6 @@ class CreateStorageVolumes < ActiveRecord::Migration
       t.column :lun,         :string
       t.column :type,        :string
       t.column :size,        :integer
-      t.column :host_id,     :integer, :null => false
     end
 
     create_table :hosts_storage_volumes, :id => false do |t|

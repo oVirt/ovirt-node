@@ -1,8 +1,16 @@
-<h1>New host</h1>
+<div id="left">
+<h2><%= _("New Host") %></h2>
 
 <% form_tag :action => 'create' do %>
   <%= render :partial => 'form' %>
   <%= submit_tag "Create" %>
 <% end %>
 
-<%= link_to 'Back', :action => 'list' %>
+</div>
+
+<div id="right">
+  <strong>Actions</strong>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Back', { :action => 'list' }, { :class => "list" } %></li>
+  </ul>
+</div>

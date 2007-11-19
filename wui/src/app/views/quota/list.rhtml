@@ -1,6 +1,7 @@
-<h1>Listing user_quotas</h1>
+<div id="left">
+<h2><%= _("All User Quotas") %></h2>
 
-<table>
+<table class="listing">
   <thead>
   <% for column in UserQuota.content_columns %>
     <th><%= column.human_name %></th>
@@ -22,6 +23,11 @@
 <%= link_to 'Previous page', { :page => @user_quota_pages.current.previous } if @user_quota_pages.current.previous %>
 <%= link_to 'Next page', { :page => @user_quota_pages.current.next } if @user_quota_pages.current.next %> 
 
-<br />
+</div>
 
-<%= link_to 'New user_quota', :action => 'new' %>
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'New User Quota', { :action => 'new' }, { :class => "create" } %></li>
+  </ul>
+</div>
