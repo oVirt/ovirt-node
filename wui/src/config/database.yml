@@ -40,7 +40,7 @@ test:
 
 production:
   adapter: postgresql
-  database: invirt_production
+  database: invirt
   username: invirt
   password: v23zj59an
   host: localhost

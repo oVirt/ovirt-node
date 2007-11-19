@@ -22,6 +22,8 @@ class VmController < ApplicationController
   end
 
   def create
+    params[:vm]["num_vcpus_used"] = params[:vm]["num_vcpus_allocated"] unless params[:vm]["num_vcpus_used"]
+    params[:vm]["memory_used"] = params[:vm]["memory_allocated"] unless params[:vm]["memory_used"]
     @vm = Vm.new(params[:vm])
     if @vm.save
       flash[:notice] = 'Vm was successfully created.'
@@ -38,6 +40,8 @@ class VmController < ApplicationController
 
   def update
     @vm = Vm.find(params[:id])
+    params[:vm]["num_vcpus_used"] = params[:vm]["num_vcpus_allocated"] unless params[:vm]["num_vcpus_used"]
+    params[:vm]["memory_used"] = params[:vm]["memory_allocated"] unless params[:vm]["memory_used"]
     if @vm.update_attributes(params[:vm])
       flash[:notice] = 'Vm was successfully updated.'
       redirect_to :controller => 'quota', :action => 'show', :id => @vm.user.user_quota
