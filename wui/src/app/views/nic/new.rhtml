@@ -1,8 +1,16 @@
-<h1>New nic</h1>
+<div id="left">
+<h2><%= _("New Network Interface") %></h2>
 
 <% form_tag :action => 'create' do %>
   <%= render :partial => 'form' %>
   <%= submit_tag "Create" %>
 <% end %>
 
-<%= link_to 'Back', :controller => 'host', :action => 'show', :id => @nic.host_id %>
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @nic.host_id }, { :class => "show" } %></li>
+  </ul>
+</div>

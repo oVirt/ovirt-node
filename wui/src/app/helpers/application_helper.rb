@@ -20,6 +20,13 @@ module ApplicationHelper
      }
   end
 
+  def hidden_field_with_label(label, obj, meth, display) 
+    %{ 
+      <div class="i"><label for="#{obj}_#{meth}">#{_(label)}</label>
+      #{hidden_field obj, meth}<span class="hidden">#{display}</span></div>
+     }
+  end
+
   def timeout_flash(name)
     %{
     <script type="text/javascript">
