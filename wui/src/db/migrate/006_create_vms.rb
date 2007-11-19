@@ -2,6 +2,7 @@ class CreateVms < ActiveRecord::Migration
   def self.up
     create_table :vms do |t|
       t.column :uuid,                :string
+      t.column :description,         :string
       t.column :num_vcpus_allocated, :integer
       t.column :num_vcpus_used,      :integer
       t.column :memory_allocated,    :integer

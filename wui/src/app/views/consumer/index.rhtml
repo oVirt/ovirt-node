@@ -8,6 +8,7 @@
   <thead>
     <th></th>
     <th>Uuid</th>
+    <th>Description</th>
     <th>CPUs</th>
     <th>Memory (gigs)</th>
     <th>vNIC MAC Addr</th>
@@ -17,6 +18,7 @@
   <tr class="<%= cycle('odd','even') %>">
     <td><input type="checkbox"></td>  
     <td><%= vm.uuid %></td>
+    <td><%= vm.description %></td>
     <td><%= vm.num_vcpus_used %></td>
     <td><%= vm.memory_used.gigabytes%></td>
     <td><%= vm.vnic_mac_addr %></td>

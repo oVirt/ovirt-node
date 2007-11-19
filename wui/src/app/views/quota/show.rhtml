@@ -11,6 +11,7 @@
 <table class='listing'>
   <thead>
     <th>Uuid</th>
+    <th>Description</th>
     <th>CPUs</th>
     <th>Memory (gigs)</th>
     <th>vNIC MAC Addr</th>
@@ -20,6 +21,7 @@
 <% for vm in @user_quota.user.vms %>
   <tr class="<%= cycle('odd','even') %>">
     <td><%= vm.uuid %></td>
+    <td><%= vm.description %></td>
     <td><%= vm.num_vcpus_used %></td>
     <td><%= vm.memory_used %></td>
     <td><%= vm.vnic_mac_addr %></td>
