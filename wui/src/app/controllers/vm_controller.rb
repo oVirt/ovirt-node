@@ -17,8 +17,7 @@ class VmController < ApplicationController
   end
 
   def new
-    @vm = Vm.new
-    @user_id=params[:user_id]
+    @vm = Vm.new( { :user_id => params[:user_id] } )
   end
 
   def create
@@ -35,7 +34,6 @@ class VmController < ApplicationController
 
   def edit
     @vm = Vm.find(params[:id])
-    @user_id=@vm.user_id
   end
 
   def update

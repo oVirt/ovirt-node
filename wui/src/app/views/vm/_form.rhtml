@@ -1,7 +1,8 @@
 <%= error_messages_for 'vm' %>
 
 <!--[form:vm]-->
-<%= hidden_field 'vm', 'user_id', :value=>@user_id  %>
+<%= hidden_field_with_label "User", 'vm', 'user_id', @vm.user.ldap_uid  %>
+
 <%= text_field_with_label "UUID", "vm", "uuid" %>
 
 <%= text_field_with_label "Description", "vm", "description" %>
