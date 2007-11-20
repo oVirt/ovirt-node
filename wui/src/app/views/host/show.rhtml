@@ -10,6 +10,7 @@
 </table>
 
 <h3>Network Interfaces</h3>
+<% if !@host.nics.empty? %>
 <table class='listing'>
   <thead>
   <% for column in Nic.content_columns %>
@@ -26,11 +27,14 @@
     <td><%= link_to 'Edit', { :controller => "nic", :action => 'edit', :id => nic }, { :class => "edit" } %></td>
     <td><%= link_to 'Remove', { :controller => "nic", :action => 'destroy', :id => nic }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </tr>
-</p>
-<% end %>
+  <% end %>
 </table>
+<% else %>
+<p>No Network Interfaces, perhaps you should <%= link_to 'add one', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %>?</p>
+<% end %>
 
 <h3>Storage Volumes</h3>
+<% if !@host.storage_volumes.empty? %>
 <table class='listing'>
   <thead>
   <% for column in StorageVolume.content_columns %>
@@ -46,19 +50,27 @@
     <td><%= link_to 'Edit', { :controller => "storage", :action => 'edit', :id => storage_volume }, { :class => "edit" } %></td>
     <td><%= link_to 'Remove', { :controller => "storage", :action => 'remove_from_host', :id => storage_volume, :host_id => @host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </tr>
-</p>
-<% end %>
+  <% end %>
 </table>
-
+<% else %>
+<p>No attached Storage Volumes, perhaps you should <%= link_to 'attach one', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %>?</p>
+<% end %>
 </div>
 
 <div id="right">
   <h2>Actions</h2>
-  <ul class="actions">
+  <ul class="actions create">
   <li class="action"><%= link_to 'Add Network Interface', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %></li>
-  <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %></li>
+  <li class="action"><%= link_to 'Attach Storage Volume', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %></li>
+  </ul>
+  <ul class="actions edit">
   <li class="action"><%= link_to 'Edit Host', { :action => 'edit', :id => @host }, { :class => "edit" } %></li>
-  <li class="action"><%= link_to 'List All Hosts', { :action => 'list'}, { :class => "list" } %></li>
+  </ul>
+  <ul class="actions remove">
   <li class="action"><%= link_to 'Delete Host', { :action => 'destroy', :id => @host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
+  </ul>
+  <ul class="actions">
+    <li class="action"><%= link_to 'List All Hosts', { :action => 'list'}, { :class => "list" } %></li>
+  </ul>
   </ul>
 </div>

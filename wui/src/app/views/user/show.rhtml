@@ -11,13 +11,18 @@
 
 <div id="right">
   <h2>Actions</h2>
+<%if !@user.user_quota -%>
+  <ul class="actions create">
+    <li class="action"><%= link_to 'Add Quota', { :controller => "quota", :action => 'new', :user_id => @user }, { :class => "create" } %></li>
+  </ul>
+<% end -%>
+  <ul class="actions edit">
+    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @user }, { :class => "edit" } %></li>
+  </ul>
   <ul class="actions">
 <%if @user.user_quota -%>
   <li class="action"><%= link_to 'View Quota', { :controller => "quota", :action => 'show', :id => @user.user_quota }, { :class => "show" } %></li>
-<% else -%>
-  <li class="action"><%= link_to 'Add Quota', { :controller => "quota", :action => 'new', :user_id => @user }, { :class => "create" } %></li>
-<% end -%>
-  <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @user }, { :class => "edit" } %></li>
-  <li class="action"><%= link_to 'All Users', { :action => 'list' }, { :class => "list" } %></li>
+<% end %>
+    <li class="action"><%= link_to 'All Users', { :action => 'list' }, { :class => "list" } %></li>
   </ul>
 </div>

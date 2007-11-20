@@ -4,9 +4,9 @@
 
 body {  text-align: center; font-size: 14pt; color: #222; background-color: #fff; margin: 0pt; }
 
-a { color: #0066dd; background-color: inherit; }
-a:visited { color: #0066dd; }
-a:hover { color: #0066dd; }
+a { color: #3465a4; background-color: inherit; }
+a:visited { color: #3465a4; }
+a:hover { color: #3465a4; }
 
 label { display: block; font-size: small; color: #333; }
 img { border: none; }
@@ -100,15 +100,19 @@ input.green-button:hover {
 }
 
 /* ========= ACTION LINKS ========== */
-ul.actions { list-style: none; padding: 0em 1em;  }
-li.action { margin: 1em 0em; font-size: 12pt; }
+ul.actions { list-style: none; padding: 0em 0em 0em 1em;  -moz-border-radius: 0.5em; }
+li.action { padding: 1em 1em 1em 0em; font-size: 12pt; }
 
-a.show {  }
-a.edit { }
-a.create, a.attach { color: green; font-weight: bold; padding: 0.3em 0em; }
-a.remove { color: #cc0000; text-decoration: none; padding: 0.2em; }
-a.remove:hover { color: #fff; background-color: #cc0000; }
-a.list { }
+ul.create { background-color: #73d216; }
+ul.edit { background-color: #3465a4; }
+ul.remove { background-color: #cc0000; }
+
+ul.create li a, ul.edit li a, ul.remove li a { color: #fff; font-weight: bold; }
+
+a.edit {  }
+a.create, a.attach { }
+a.remove { color: #cc0000; }
+a.list, a.show { font-weight: bold; }
 
 /* ========= DASHBOARD LISTS ========== */
 
