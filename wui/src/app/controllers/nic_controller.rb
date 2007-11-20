@@ -17,8 +17,7 @@ class NicController < ApplicationController
   end
 
   def new
-    @nic = Nic.new
-    @host_id=params[:host_id]
+    @nic = Nic.new({ :host_id => params[:host_id] })
   end
 
   def create
@@ -33,7 +32,6 @@ class NicController < ApplicationController
 
   def edit
     @nic = Nic.find(params[:id])
-    @host_id=@nic.host_id
   end
 
   def update

@@ -16,7 +16,7 @@
     <% if @vm.user -%>
       <li class="action"><%= link_to 'Back to Quota', { :controller => 'quota', :action => 'show', :id => @vm.user.user_quota }, { :class => "list" } %></li>
     <% else -%>
-      <li class="action"><%= link_to 'Back to all VMs', { :action => 'list' }, { :class => "list" } %></li>
+      <li class="action"><%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %></li>
     <% end -%>
   </ul>
 </div>

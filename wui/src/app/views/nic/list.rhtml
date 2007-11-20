@@ -1,4 +1,5 @@
-<h1>Listing nics</h1>
+<div id="left">
+<h2><%= _("All Available Network Interfaces") %></h2>
 
 <table class='listing'>
   <thead>
@@ -22,6 +23,11 @@
 <%= link_to 'Previous page', { :page => @nic_pages.current.previous } if @nic_pages.current.previous %>
 <%= link_to 'Next page', { :page => @nic_pages.current.next } if @nic_pages.current.next %> 
 
-<br />
+</div>
 
-<%= link_to 'New nic', :action => 'new' %>
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Create New NIC', { :action => 'new' }, { :class => "create" } %></li>
+  </ul>
+</div>

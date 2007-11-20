@@ -17,10 +17,13 @@ h3 { position: relative; border-bottom: 1px solid #999; }
 #header { border-bottom: 2px solid #001833; margin-bottom: 1em; }
 #footer { border-top: 1px dotted #001833; margin-top: 1em; text-align: center; font-size: small; padding: 1em; }
 
+/* ========= FLASH ========== */
+
 div.alertbox { text-align: center; }
 div.flash { display: inline; padding: 0em 1em; -moz-border-radius: 0.3em; }
 #errmsg { background-color: #ff7f7f; border: 1px solid #cc0000; color: #111; padding: 0.3em 1em; }
 #notice { font-weight: bold; background-color: #fce94f; padding: 0.1em 1em; }
+div.flash a { text-decoration: none; }
 
 /* ========= TOP BAR ========== */
 

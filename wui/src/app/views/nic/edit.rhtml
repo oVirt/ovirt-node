@@ -1,9 +1,17 @@
-<h1>Editing nic</h1>
+<div id="left">
+<h2><%= _("Editing Network Interface") %></h2>
 
 <% form_tag :action => 'update', :id => @nic do %>
   <%= render :partial => 'form' %>
   <%= submit_tag 'Edit' %>
 <% end %>
 
-<%= link_to 'Show', :action => 'show', :id => @nic %> |
-<%= link_to 'Back', :controller => 'host', :action => 'show', :id => @nic.host_id %>
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @nic }, { :class => "show" } %></li>
+    <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @nic.host_id }, { :class => "show" } %></li>
+  </ul>
+</div>
