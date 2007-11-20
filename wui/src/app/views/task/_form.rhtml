@@ -1,0 +1,19 @@
+<%= error_messages_for 'task' %>
+
+<!--[form:task]-->
+<p><label for="task_action">Action</label><br/>
+<%= text_field 'task', 'action'  %></p>
+
+<p><label for="task_state">State</label><br/>
+<%= text_field 'task', 'state'  %></p>
+
+<p><label for="task_args">Args</label><br/>
+<%= text_field 'task', 'args'  %></p>
+
+<p><label for="task_time_started">Time started</label><br/>
+<%= datetime_select 'task', 'time_started'  %></p>
+
+<p><label for="task_time_ended">Time ended</label><br/>
+<%= datetime_select 'task', 'time_ended'  %></p>
+<!--[eoform:task]-->
+
