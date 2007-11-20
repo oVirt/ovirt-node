@@ -59,5 +59,6 @@
   <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %></li>
   <li class="action"><%= link_to 'Edit Host', { :action => 'edit', :id => @host }, { :class => "edit" } %></li>
   <li class="action"><%= link_to 'List All Hosts', { :action => 'list'}, { :class => "list" } %></li>
+  <li class="action"><%= link_to 'Delete Host', { :action => 'destroy', :id => @host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
   </ul>
 </div>

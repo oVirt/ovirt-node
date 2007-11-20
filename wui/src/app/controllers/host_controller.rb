@@ -45,7 +45,10 @@ class HostController < ApplicationController
   end
 
   def destroy
-    Host.find(params[:id]).destroy
+    h = Host.find(params[:id])
+    hostname = h.hostname
+    h.destroy
+    flash[:notice] = '%s was successfully destroyed.' % hostname
     redirect_to :controller => 'admin', :action => 'index'
   end
 end
