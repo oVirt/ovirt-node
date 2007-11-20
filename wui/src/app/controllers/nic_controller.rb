@@ -23,7 +23,9 @@ class NicController < ApplicationController
   def create
     @nic = Nic.new(params[:nic])
     if @nic.save
-      flash[:notice] = 'Nic was successfully added.'
+      host_url = url_for( :controller => "host", :action => "show", :id => @nic.host )
+      nic_url = url_for( :controller => "nic", :action => "show", :id => @nic )
+      flash[:notice] = 'Nic <a class="show" href="%s">%s</a> has been added to <a class="show" href="%s">%s</a>.' % [ nic_url, @nic.mac, host_url, @nic.host.hostname ]
       redirect_to :controller => 'host', :action => 'show', :id => @nic.host_id
     else
       render :action => 'new'
@@ -37,7 +39,9 @@ class NicController < ApplicationController
   def update
     @nic = Nic.find(params[:id])
     if @nic.update_attributes(params[:nic])
-      flash[:notice] = 'Nic was successfully updated.'
+      host_url = url_for( :controller => "host", :action => "show", :id => @nic.host )
+      nic_url = url_for( :controller => "nic", :action => "show", :id => @nic )
+      flash[:notice] = 'Nic <a class="show" href="%s">%s</a> has been updated for <a class="show" href="%s">%s</a>.' % [ nic_url, @nic.mac, host_url, @nic.host.hostname ]
       redirect_to :controller => 'host', :action => 'show', :id => @nic.host_id
     else
       render :action => 'edit'
@@ -46,8 +50,12 @@ class NicController < ApplicationController
 
   def destroy
     @nic = Nic.find(params[:id])
+    hostname = @nic.host.hostname
+    mac = @nic.mac
+    host_url = url_for( :controller => "host", :action => "show", :id => @nic.host )
     host_id = @nic.host_id
     @nic.destroy
+    flash[:notice] = 'Nic %s has been removed from <a class="show" href="%s">%s</a>.' % [ mac, host_url, hostname ]
     redirect_to :controller => 'host', :action => 'show', :id => host_id
   end
 end
