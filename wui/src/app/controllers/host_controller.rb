@@ -23,7 +23,7 @@ class HostController < ApplicationController
   def create
     @host = Host.new(params[:host])
     if @host.save
-      flash[:notice] = 'Host was successfully created.'
+      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
       redirect_to :controller => 'admin', :action => 'index'
     else
       render :action => 'new'
