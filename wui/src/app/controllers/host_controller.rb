@@ -23,7 +23,7 @@ class HostController < ApplicationController
   def create
     @host = Host.new(params[:host])
     if @host.save
-      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
+      flash[:notice] = '<a class="show" href="%s">%s</a> was created.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
       redirect_to :controller => 'admin', :action => 'index'
     else
       render :action => 'new'
@@ -37,7 +37,7 @@ class HostController < ApplicationController
   def update
     @host = Host.find(params[:id])
     if @host.update_attributes(params[:host])
-      flash[:notice] = 'Host was successfully updated.'
+      flash[:notice] = '<a class="show" href="%s">%s</a> was updated.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
       redirect_to :action => 'show', :id => @host
     else
       render :action => 'edit'
@@ -48,7 +48,7 @@ class HostController < ApplicationController
     h = Host.find(params[:id])
     hostname = h.hostname
     h.destroy
-    flash[:notice] = '%s was successfully destroyed.' % hostname
+    flash[:notice] = '%s was destroyed.' % hostname
     redirect_to :controller => 'admin', :action => 'index'
   end
 end

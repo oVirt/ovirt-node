@@ -26,7 +26,8 @@ class StorageController < ApplicationController
   def create
     @storage_volume = StorageVolume.new(params[:storage_volume])
     if @storage_volume.save
-      flash[:notice] = 'StorageVolume was successfully created.'
+      storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_volume)
+      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ storage_url ,@storage_volume.ip_addr]
       redirect_to :controller => 'admin', :action => 'index'
     else
       render :action => 'new'
@@ -40,7 +41,8 @@ class StorageController < ApplicationController
   def update
     @storage_volume = StorageVolume.find(params[:id])
     if @storage_volume.update_attributes(params[:storage_volume])
-      flash[:notice] = 'StorageVolume was successfully updated.'
+      storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_volume)
+      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully updated.' % [ storage_url ,@storage_volume.ip_addr]
       redirect_to :action => 'show', :id => @storage_volume
     else
       render :action => 'edit'
@@ -55,14 +57,16 @@ class StorageController < ApplicationController
   def attach_to_host
     @storage_volume = StorageVolume.find(params[:id])
     host = Host.find(params[:host_id])
+    storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_volume)
+    host_url = url_for(:controller => "host", :action => "show", :id => host)
     if @storage_volume.hosts.include?(host)
-      flash[:notice] = 'StorageVolume is already attached to this host.'
+      flash[:notice] = '<a class="show" href="%s">%s</a> is already attached to <a href="%s">%s</a>.' % [ storage_url ,@storage_volume.ip_addr, host_url , host.hostname]
       redirect_to :controller => 'host', :action => 'show', :id => host
     elsif @storage_volume.hosts << host 
-      flash[:notice] = 'StorageVolume was successfully attached to this host.'
+      flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ storage_url ,@storage_volume.ip_addr, host_url, host.hostname ]
       redirect_to :controller => 'host', :action => 'show', :id => host
     else
-      flash[:notice] = 'Problem attaching StorageVolume to this host.'
+      flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' %  [ storage_url ,@storage_volume.ip_addr, host_url, host.hostname ]
       redirect_to :controller => 'host', :action => 'show', :id => host
     end
   end
@@ -70,16 +74,18 @@ class StorageController < ApplicationController
   def remove_from_host
     @storage_volume = StorageVolume.find(params[:id])
     host = Host.find(params[:host_id])
+    storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_volume)
+    host_url = url_for(:controller => "host", :action => "show", :id => host)
     if @storage_volume.hosts.include?(host)
       if @storage_volume.hosts.delete(host)
-        flash[:notice] = 'StorageVolume was successfully removed from this host.'
+        flash[:notice] = '<a class="show" href="%s">%s</a> is removed from <a href="%s">%s</a>.' %[ storage_url ,@storage_volume.ip_addr, host_url, host.hostname ]
         redirect_to :controller => 'host', :action => 'show', :id => host
       else
-        flash[:notice] = 'Problem attaching StorageVolume to this host.'
+        flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' % [ storage_url ,@storage_volume.ip_addr, host_url, host.hostname ]
         redirect_to :controller => 'host', :action => 'show', :id => host
       end
     else
-      flash[:notice] = 'StorageVolume is not attached to this host.'
+      flash[:notice] = '<a class="show" href="%s">%s</a> is not attached to <a href="%s">%s</a>.' % [ storage_url ,@storage_volume.ip_addr, host_url, host.hostname ]
       redirect_to :controller => 'host', :action => 'show', :id => host
     end
   end
