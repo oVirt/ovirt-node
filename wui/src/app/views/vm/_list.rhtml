@@ -1,0 +1,22 @@
+<table class='listing'>
+  <thead>
+    <th class="empty">Description <span class="amp">&</span> UUID</th>
+    <th>CPUs</th>
+    <th>Memory (gigs)</th>
+    <th>vNIC MAC Addr</th>
+    <th>State</th>
+    <th class="empty" colspan="2"></th>
+  </thead>
+  
+<% for vm in vms %>
+  <tr class="<%= cycle('odd','even') %>">
+    <td style="text-align:left"><%= link_to vm.description, { :controller => "vm", :action => 'show', :id => vm }, { :class => "show" } %><div class="secondary"><%= vm.uuid %></div></td>
+    <td><%= vm.num_vcpus_used %></td>
+    <td><%= vm.memory_used %></td>
+    <td><%= vm.vnic_mac_addr %></td>
+    <td><%= vm.state %></td>
+    <td><%= link_to 'Edit', { :controller => "vm", :action => 'edit', :id => vm }, { :class => "edit" } %></td>
+    <td><%= link_to 'Destroy', { :controller => "vm", :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
+  </tr>
+<% end %>
+</table>

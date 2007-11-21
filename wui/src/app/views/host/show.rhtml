@@ -1,7 +1,7 @@
 <div id="left">
 <h2><%= _("Host") %></h2>
 
-<table class='listing'>
+<table>
 <% for column in Host.content_columns %>
   <tr class="<%= cycle('odd','even') %>">
   <td><b><%= column.human_name %>:</b></td><td><%=h @host.send(column.name) %></td>
@@ -10,45 +10,10 @@
 </table>
 
 <h3>Network Interfaces</h3>
-<table class='listing'>
-  <thead>
-  <% for column in Nic.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-    <th colspan="3"></th>
-  </thead>
-<% for nic in @host.nics %>
-  <tr class="<%= cycle('odd','even') %>">
-  <% for column in Nic.content_columns %>
-    <td><%=h nic.send(column.name) %></td>
-  <% end %>
-    <td><%= link_to 'Show', { :controller => "nic", :action => 'show', :id => nic }, { :class => "show" } %></td>
-    <td><%= link_to 'Edit', { :controller => "nic", :action => 'edit', :id => nic }, { :class => "edit" } %></td>
-    <td><%= link_to 'Remove', { :controller => "nic", :action => 'destroy', :id => nic }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
-  </tr>
-</p>
-<% end %>
-</table>
+<%= render :partial => "/nic/list", :locals => { :nics => @host.nics } %>
 
 <h3>Storage Volumes</h3>
-<table class='listing'>
-  <thead>
-  <% for column in StorageVolume.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-  </thead>
-<% for storage_volume in @host.storage_volumes %>
-  <tr class="<%= cycle('odd','even') %>">
-  <% for column in StorageVolume.content_columns %>
-    <td><%=h storage_volume.send(column.name) %></td>
-  <% end %>
-    <td><%= link_to 'Show', { :controller => "storage", :action => 'show', :id => storage_volume }, { :class => "show" } %></td>
-    <td><%= link_to 'Edit', { :controller => "storage", :action => 'edit', :id => storage_volume }, { :class => "edit" } %></td>
-    <td><%= link_to 'Remove', { :controller => "storage", :action => 'remove_from_host', :id => storage_volume, :host_id => @host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
-  </tr>
-</p>
-<% end %>
-</table>
+<%= render :partial => "/storage/list", :locals => { :storage_volumes => @host.storage_volumes, :remove_from_host => true, :host => @host } %>
 
 </div>
 

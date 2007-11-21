@@ -1,0 +1,17 @@
+<table class='listing'>
+  <thead>
+  <tr><th class="empty">IP</th><th>MAC</th><th>Usage Type</th><th>Bandwidth</th><th class="empty" colspan="2"></th></tr>
+  </thead>
+<% for nic in nics %>
+  <tr class="<%= cycle('odd','even', :name => nics) %>">
+    <td><%= link_to nic.ip_addr, { :controller => "nic", :action => 'show', :id => nic }, { :class => "show" } %></td>
+    <td><%= nic.mac %></td>
+    <td><%= nic.usage_type %></td>
+    <td><%= nic.bandwidth %></td>
+
+    <td><%= link_to 'edit', { :controller => "nic", :action => 'edit', :id => nic }, { :class => "edit" } %></td>
+    <td><%= link_to 'remove', { :controller => "nic", :action => 'destroy', :id => nic }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
+  </tr>
+</p>
+<% end %>
+</table>

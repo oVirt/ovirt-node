@@ -3,40 +3,18 @@
 <p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
 <button>Pause Machine</button> <select><option>Other Actions</option><option></option><option>Stop Machine</option></select>
 
+<br/><br/>
+
 <%if @user -%>
-<table class='listing'>
-  <thead>
-    <th></th>
-    <th>Uuid</th>
-    <th>Description</th>
-    <th>CPUs</th>
-    <th>Memory (gigs)</th>
-    <th>vNIC MAC Addr</th>
-    <th>State</th>
-  </thead>
-<% for vm in @user.vms %>
-  <tr class="<%= cycle('odd','even') %>">
-    <td><input type="checkbox"></td>  
-    <td><%= vm.uuid %></td>
-    <td><%= vm.description %></td>
-    <td><%= vm.num_vcpus_used %></td>
-    <td><%= vm.memory_used.gigabytes%></td>
-    <td><%= vm.vnic_mac_addr %></td>
-    <td><%= vm.state %></td>
-    <td><%= link_to 'Show', :controller => 'vm', :action => 'show', :id => vm %></td>
-    <td><%= link_to 'Edit', :controller => 'vm', :action => 'edit', :id => vm %></td>
-    <td><%= link_to 'Destroy', { :controller => 'vm', :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post %></td>
-  </tr>
-<% end %>
+<%= render :partial => "/vm/list", :locals => { :vms => @user.vms } %>
 
-</table>
-<h3>Your Resource Pool/Quota</h3>
-<%if @quota -%>
+  <h3>Your Resource Pool/Quota</h3>
+  <%if @quota -%>
 
-<abbr><%= @quota.total_vmemory  %> GB Mem</abbr> | 
-<abbr><%= @quota.total_storage  %> GB Disk</abbr> | 
-<abbr><%= @quota.total_vcpus %> CPUs</abbr>
-<% end -%>
+  <abbr><%= @quota.total_vmemory  %> GB Mem</abbr> | 
+  <abbr><%= @quota.total_storage  %> GB Disk</abbr> | 
+  <abbr><%= @quota.total_vcpus %> CPUs</abbr>
+  <% end -%>
 
 <%end -%>
 
