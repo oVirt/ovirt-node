@@ -79,14 +79,13 @@ ActiveRecord::Base.establish_connection(
 
 def create_vm(task)
   puts "create_vm"
-  puts task
-  puts task.vm_id
 
   # since we are actually generating XML on the fly in the "start_vm" method,
   # we don't actually need to do much here.  We might need to allocate disk
   # space, etc, but we can skip that for now
 
   task.state = "SUCCESS"
+  task.save
 end
 
 def shutdown_vm(task)
@@ -101,6 +100,7 @@ def shutdown_vm(task)
   if vm == nil
     puts "No VM found"
     task.state = "ERROR: VM id " + task.vm_id + "not found"
+    task.save
     return    
   end
 
@@ -108,6 +108,8 @@ def shutdown_vm(task)
     # the VM is already shutdown; just return success
     task.state = "SUCCESS"
     vm.host_id = nil
+    task.save
+    vm.save
     return
   end
 
@@ -122,6 +124,7 @@ def shutdown_vm(task)
     # vm.host_id if we did.  However, if you have a large number of hosts
     # out there, this could take a while.
     task.state = "ERROR: No host_id for VM" + task.vm_id
+    task.save
     return
   end
 
@@ -136,6 +139,7 @@ def shutdown_vm(task)
     # FIXME: we should probably contact the hosts we know about and check to
     # see if this VM is running
     task.state = "ERROR: Could not find the host that VM is running on"
+    task.save
     return
   end
 
@@ -148,6 +152,13 @@ def shutdown_vm(task)
   dom.undefine
 
   conn.close
+
+  vm.host_id = nil
+  vm.state = "SHUTDOWN"
+  task.state = "SUCCESS"
+
+  vm.save
+  task.save
 end
 
 def start_vm(task)
@@ -161,6 +172,7 @@ def start_vm(task)
   if vm == nil
     puts "No VM found"
     task.state = "ERROR: VM id " + task.vm_id + "not found"
+    task.save
     return
   end
 
@@ -177,7 +189,16 @@ def start_vm(task)
       # thinks that VM is running
 
       conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
-      dom = conn.lookupDomainByUUID(vm.uuid)
+      begin
+        dom = conn.lookupDomainByUUID(vm.uuid)
+      rescue
+        # if we failed here, we couldn't find that UUID on the host.  Let's
+        # update the DB here
+        dom = nil
+        vm.host_id = nil
+        vm.save
+      end
+
       if dom != nil
         # OK, this VM is defined on this host; let's look at the state
 
@@ -186,9 +207,10 @@ def start_vm(task)
           # we found it on the remote host, and it was already running
           vm.state = "RUNNING"
           task.state = "SUCCESS"
+          vm.save
+          task.save
           return
-        elsif info.state == dom.SHUTDOWN || info.state == dom.SHUTOFF
-          || info.state == dom.CRASHED || info.state == dom.NOSTATE
+        elsif info.state == dom.SHUTDOWN || info.state == dom.SHUTOFF || info.state == dom.CRASHED || info.state == dom.NOSTATE
           # in these states, we want to undefine it so we can start it down
           # below
           # FIXME: especially in the "CRASHED" case, we probably want to record
@@ -197,6 +219,7 @@ def start_vm(task)
         elsif info.state == dom.PAUSED
           # the domain is defined, but paused.  We can't start it again
           task.state = "ERROR: Domain paused"
+          task.save
           return
         end
       end
@@ -213,6 +236,7 @@ def start_vm(task)
   if host == nil
     # we couldn't find a host that matches this description; report ERROR
     task.state = "ERROR: No host matching VM parameters could be found"
+    task.save
     return
   end
 
@@ -223,16 +247,25 @@ def start_vm(task)
                       "ovirtbr0",
                       "/dev/disk/by-id/scsi-16465616462656166313a3300000000000000000000000000")
 
-  # FIXME: handle exceptions
-
   conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
-  dom = conn.defineDomainXML(xml)
-  dom.create
+  begin
+    dom = conn.defineDomainXML(xml.to_s)
+    dom.create
+  rescue
+    # these may fail for various reasons:
+    # 1.  The domain is already defined and/or started - update the DB
+    # 2.  We couldn't define the domain for some reason
+    puts "rescue"
+  end
+
   conn.close
 
   vm.host_id = host.id
   vm.state = "RUNNING"
   task.state = "SUCCESS"
+
+  vm.save
+  task.save
 end
 
 def suspend_vm(task)
