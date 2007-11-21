@@ -24,7 +24,7 @@
 <% for storage_volume in @storage_volumes %>
 <tr>
   <td style="text-align:left;"><%= link_to storage_volume.ip_addr, :controller => 'storage', :action => 'show', :id => storage_volume %></td>
-  <td><%= storage_volume.type %> - <%= storage_volume.lun %></td>
+  <td><%= storage_volume.storage_type %> - <%= storage_volume.lun %></td>
   <td><%= storage_volume.target %></td>
   <td><%= storage_volume.size %></td>
 </tr>
