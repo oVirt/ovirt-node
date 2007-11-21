@@ -8,23 +8,7 @@
 <% end %>
 
 <h3>Hosts</h3>
-<table class='listing'>
-  <thead>
-  <% for column in Host.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-  </thead>
-<% for host in @storage_volume.hosts %>
-  <tr class="<%= cycle('odd','even') %>">
-  <% for column in Host.content_columns %>
-    <td><%=h host.send(column.name) %></td>
-  <% end %>
-    <td><%= link_to 'Show', { :controller => "host", :action => 'show', :id => host }, { :class => "show" } %></td>
-    <td><%= link_to 'Remove', { :action => 'remove_from_host', :id => @storage_volume, :host_id => host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
-  </tr>
-</p>
-<% end %>
-</table>
+<%= render :partial => "/host/list", :locals => { :hosts => @storage_volume.hosts, :remove_from_host => true  } %>
 
 </div>
 
@@ -33,5 +17,6 @@
   <ul class="actions">
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @storage_volume }, { :class => "edit" } %></li>
     <li class="action"><%= link_to 'All Storage Volumes', { :action => 'list' }, { :class => "list" } %></li>
+    <li class="action"><%= link_to 'Remove Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %></li>
   </ul>
 </div>

@@ -4,32 +4,14 @@
 <p>Manage Hardware from this interface, create new hosts and storage volumes</p>
 
 <h3>Hosts</h3>
-<table class="dashboard">
-<tr><th></th><th>CPUs x speed</th><th>arch</th><th>RAM <sub>(gigs)</sub></th></tr>
-<% for host in @hosts %>
-<tr>
-  <td style="text-align:left;"><%= link_to host.hostname, { :controller => 'host', :action => 'show', :id => host }, { :class => "show" } %></td>
-  <td><%= host.num_cpus %> x <%= host.cpu_speed %> Mhz</td>
-  <td><%= host.arch %></td>
-  <td><%= host.memory %></td>
-</tr>
-<% end %>
-</table>
+<%= render :partial => "/host/list", :locals => { :hosts => @hosts } %>
+
 <%= link_to 'Previous page', { :page => @host_pages.current.previous } if @host_pages.current.previous %>
 <%= link_to 'Next page', { :page => @host_pages.current.next } if @host_pages.current.next %> 
 
 <h3>Storage Volumes</h3>
-<table class="dashboard">
-<tr><th></th><th>type - LUN</th><th>target</th><th>size <sub>(gigs)</sub></th></tr>
-<% for storage_volume in @storage_volumes %>
-<tr>
-  <td style="text-align:left;"><%= link_to storage_volume.ip_addr, :controller => 'storage', :action => 'show', :id => storage_volume %></td>
-  <td><%= storage_volume.storage_type %> - <%= storage_volume.lun %></td>
-  <td><%= storage_volume.target %></td>
-  <td><%= storage_volume.size %></td>
-</tr>
-<% end %>
-</table>
+<%= render :partial => "/storage/list", :locals => { :storage_volumes => @storage_volumes } %>
+
 <%= link_to 'Previous page', { :page => @storage_volume_pages.current.previous } if @storage_volume_pages.current.previous %>
 <%= link_to 'Next page', { :page => @storage_volume_pages.current.next } if @storage_volume_pages.current.next %> 
 
