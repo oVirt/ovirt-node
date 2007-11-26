@@ -17,8 +17,10 @@
   <ul class="actions edit">
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @storage_volume }, { :class => "edit" } %></li>
   </ul>
+  <ul class="actions remove">
+    <li class="action"><%= link_to 'Delete Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %></li>
+  </ul>
   <ul class="actions">
     <li class="action"><%= link_to 'All Storage Volumes', { :action => 'list' }, { :class => "list" } %></li>
-    <li class="action"><%= link_to 'Remove Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %></li>
   </ul>
 </div>

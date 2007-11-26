@@ -13,7 +13,8 @@
 
   <abbr><%= @quota.total_vmemory  %> GB Mem</abbr> | 
   <abbr><%= @quota.total_storage  %> GB Disk</abbr> | 
-  <abbr><%= @quota.total_vcpus %> CPUs</abbr>
+  <abbr><%= @quota.total_vcpus %> CPUs</abbr> |
+  <%= link_to "Show", { :controller => "quota", :action => "show", :id => @quota }, { :class => "show" } %>
   <% end -%>
 
 <%end -%>
@@ -22,7 +23,7 @@
 
 <div id="right">
   <h2>Actions</h2>
-  <ul class="actions">
+  <ul class="actions create">
     <li class="action"><%= link_to_if @quota, 'Create New VM', {:controller => "vm", :action => 'new', :user_id => @user}, { :class => "create" } %></li>
   </ul>
 </div>
