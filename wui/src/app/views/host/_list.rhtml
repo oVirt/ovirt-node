@@ -1,0 +1,19 @@
+<table class="listing">
+<thead>
+  <tr><th class="empty">host <span class="amp">&</span> uuid</th><th>CPUs</th><th>speed <span class="unit">(Mhz)</span></th><th>arch</th><th>RAM <span class="unit">(gigs)</span></th></tr>
+</thead>
+<tbody>
+<% for host in hosts %>
+<tr class="<%= cycle('odd','even', :name => hosts) %>">
+  <td style="text-align:left;"><%= link_to host.hostname, { :controller => 'host', :action => 'show', :id => host }, { :class => "show" } %><div class="secondary"><%= host.uuid %></div></td>
+  <td><%= host.num_cpus %></td>
+  <td><%= host.cpu_speed %></td>
+  <td><%= host.arch %></td>
+  <td><%= host.memory %></td>
+  <%- if defined?(remove_from_host) && remove_from_host -%>
+    <td><%= link_to( 'detach', { :action => 'remove_from_host', :id => @storage_volume, :host_id => host }, :confirm => 'Are you sure?', :method => :post, :class => "remove") %></td>
+  <%- end -%>
+</tr>
+<% end %>
+<tbody>
+</table>

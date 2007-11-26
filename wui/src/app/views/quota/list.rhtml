@@ -6,6 +6,7 @@
   <% for column in UserQuota.content_columns %>
     <th><%= column.human_name %></th>
   <% end %>
+    <th class="empty" colspan="3"></th>
   </thead>
   
 <% for user_quota in @user_quotas %>

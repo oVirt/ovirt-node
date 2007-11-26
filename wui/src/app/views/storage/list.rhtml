@@ -5,31 +5,7 @@
   <h2><%= _("Listing Storage Volumes") %></h2>
 <% end -%>
 
-<table class="listing">
-  <thead>
-  <% for column in StorageVolume.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-  </thead>
-  
-<% for storage_volume in @storage_volumes %>
-  <tr class="<%= cycle('odd','even') %>">
-  <% for column in StorageVolume.content_columns %>
-    <td><%=h storage_volume.send(column.name) %></td>
-  <% end %>
-<%if @attach_to_host -%>
-    <td><%= link_to 'Choose', { :action => 'attach_to_host', :id => storage_volume, :host_id => @attach_to_host }, { :class => "choose" } %></td>
-<%elsif @attach_to_vm -%>
-    <td><%= link_to 'Choose', { :action => 'attach_to_vm', :id => storage_volume, :vm_id => @attach_to_vm }, { :class => "choose" } %></td>
-<% else -%>
-    <td><%= link_to 'Show', { :action => 'show', :id => storage_volume }, { :class => "show" } %></td>
-    <td><%= link_to 'Edit', { :action => 'edit', :id => storage_volume }, { :class => "edit" } %></td>
-    <td><%= link_to 'remove', { :action => 'destroy', :id => storage_volume }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
-<% end -%>
-
-  </tr>
-<% end %>
-</table>
+<%= render :partial => "/storage/list", :locals => { :storage_volumes => @storage_volumes } %>
 
 <%= link_to 'Previous page', { :page => @storage_volume_pages.current.previous } if @storage_volume_pages.current.previous %>
 <%= link_to 'Next page', { :page => @storage_volume_pages.current.next } if @storage_volume_pages.current.next %> 

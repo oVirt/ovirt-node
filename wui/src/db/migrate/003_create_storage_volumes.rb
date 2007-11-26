@@ -1,12 +1,12 @@
 class CreateStorageVolumes < ActiveRecord::Migration
   def self.up
     create_table :storage_volumes do |t|
-      t.column :ip_addr,     :string
-      t.column :port,        :integer
-      t.column :target,      :string
-      t.column :lun,         :string
-      t.column :type,        :string
-      t.column :size,        :integer
+      t.column :ip_addr,      :string
+      t.column :port,         :integer
+      t.column :target,       :string
+      t.column :lun,          :string
+      t.column :storage_type, :string
+      t.column :size,         :integer
     end
 
     create_table :hosts_storage_volumes, :id => false do |t|

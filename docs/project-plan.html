@@ -3,12 +3,12 @@
   <head>
      <link rel="StyleSheet" type="text/css"
 	   href="./styles/default.css" title="Main style" />
-     <title>Virtigo/Ovirt Project Plan</title>
+     <title>Ovirt Project Plan</title>
 
   </head>
   <body>
     <div id="header">
-      <h1>Virtigo/Ovirt Project Plan</h1>
+      <h1>Ovirt Project Plan</h1>
     </div>
     <div id="content">
     <h2>Overview</h2>
@@ -236,7 +236,8 @@
       <li>Deployment of prebuilt images<br />
 	Allow admins to
 	maintain a list of available install images (OSes, appliances)
-	that users can choose to install in their allotted space.</li>
+	that users can choose to install in their allotted
+	space. Probably just wrap Cobbler for this.</li>
 
       <li>Fine grained ACL integration with LDAP<br />
 	Be able to look up a user in LDAP and determine which VMs the
@@ -259,18 +260,69 @@
     remotely, which depends on virtinst (already partially done) and
     libvirt storage API (not yet done).
       </li>
+      
+      <li>Expand manager UI<br />
+	Add UI for network management, storage management, automation
+	(auto-failover e.g.). Continue to polish existing user and
+	admin UI.
+      </li>
     </ul>
 
     <h2>Milestone 4 (Mid-end February)</h2>
 
     <p>Goal: Redundancy / clustering, more capability  in managment UI</p>
 
+    <h3>Host:</h3>
+
+    <ul>
+      <li>NFS/GFS/Fibrechannel storage options (no longer restricted
+	to iSCSI)</li>
+      <li>Manage host pairing with quorum disk</li>
+      <li>Cluster-LVM awareness</li>
+    </ul>
+
+    <h3>Management:</h3>
+    <ul>
+      <li>Automatic migration upon failure.<br />
+	This should be the beginning of a policy engine that would
+	eventually include dynamic scheduler changes, memory
+	allocation, and so on.</li>
+
+      <li>Grouping of hosts for clusters</li>
+
+      <li>Deployment of guests to cluster</li>
+    </ul>
+
     <h2>Milestone 5 aka Release 1.0 (March sometime)</h2>
 
     <p>Goal: Spit, polish & bling</p>
+
+    <h3>Host:</h3>
+
+    <ul>
+      <li>Access guest consoles directly on host hardware<br />
+	The beginnings of the local host &quot;bios&quot; for local
+	machine management.
+      </li>
+      <li>Manage internal IDE/SCSI storage, USB disks, firewire
+      disks<br />
+	Libvirt storage API will handle this for us, we just need
+	manager UI to cope with it.</li>
+      <li>Install guest from local CDROM</li>
+    </ul>
+    <h3>Management</h3>
+    
+    <ul>
+      <li>FreeIPA appliance, Cobbler appliance, iSCSI server
+	appliance</li>
+      <li>Additional UI from milestone 4 polished up.</li>
+      <li>Testing on various host configurations</li>
+    </ul>
+    
     </div>
     <div id="footer">
        <p>
+	 Web design courtesy Mairin Duffy and Dan Berrange<br />
     A project from the <a href="http://et.redhat.com/">Red Hat Emerging Technologies</a> group.
     </p>
   </body>
