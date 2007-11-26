@@ -102,12 +102,16 @@ input.green-button:hover {
 }
 
 /* ========= ACTION LINKS ========== */
-ul.actions { list-style: none; padding: 0em 0em 0em 1em;  -moz-border-radius: 0.5em; }
-li.action { padding: 1em 1em 1em 0em; font-size: 12pt; }
+#right h2 { font-size: 90%; border-bottom: 1px solid #333; margin-right: 50%; }
+ul.actions { list-style: none; padding: 0em 0em 0em 1em;  -moz-border-radius: 0.5em; margin: 0.5em 0em; }
+li.action { margin: 0em; padding: 0.75em 0.75em 0.75em 0em; font-size: 12pt; }
 
-ul.create { background-color: #73d216; }
-ul.edit { background-color: #3465a4; }
-ul.remove { background-color: #cc0000; }
+ul.actions { background-color: #eeeeee; }
+
+ul.create { background-color: #64a334; border: 2px solid #5c9630; }
+ul.edit { background-color: #3464a3; border: 2px solid #2c558a; }
+ul.remove { background-color: #cc0000; border: 2px solid #bf0000; }
+
 
 ul.create li a, ul.edit li a, ul.remove li a { color: #fff; font-weight: bold; }
 
