@@ -18,7 +18,7 @@
 <h3>Manage Quotas</h3>
 <ul id="resources">
 <% for quota in @user_quotas %>
-  <li><%= link_to quota.user.ldap_uid, :controller => 'quota', :action => 'show', :id => quota %></li>
+  <li><%= link_to quota.user.ldap_uid, { :controller => 'quota', :action => 'show', :id => quota }, { :class => "show" } %></li>
 <% end %>
 </ul>
 
