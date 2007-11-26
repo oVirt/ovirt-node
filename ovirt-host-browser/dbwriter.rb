@@ -29,6 +29,7 @@ $host = Host.find(:first, :conditions => [ "uuid = ?", ARGV[0]])
 if $host == nil
   Host.new(
            "uuid" => ARGV[0],
+           "hostname" => ARGV[0],
            "num_cpus" => ARGV[1],
            "cpu_speed" => ARGV[2],
            "arch" => ARGV[3],
