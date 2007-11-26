@@ -17,5 +17,6 @@ class Vm < ActiveRecord::Base
   STATE_STOPPING  = "stopping"
   STATE_UNKNOWN   = "unknown"
   STATE_UNPAUSING = "unpausing"
+  STATE_SAVED     = "saved"
 
 end

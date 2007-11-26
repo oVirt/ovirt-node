@@ -13,6 +13,9 @@ class Task < ActiveRecord::Base
   ACTION_UNPAUSE_VIRT  = "unpause_virt"
   ACTION_TEST          = "test"
 
+  ACTION_SAVE_VIRT     = "save_virt"
+  ACTION_RESTORE_VIRT  = "restore_virt"
+
   STATE_QUEUED         = "queued"
   STATE_RUNNING        = "running"
   STATE_FINISHED       = "finished"
