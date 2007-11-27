@@ -9,7 +9,7 @@
   <td><%= host.num_cpus %></td>
   <td><%= host.cpu_speed %></td>
   <td><%= host.arch %></td>
-  <td><%= host.memory %></td>
+  <td><%= host.memory_in_gb %></td>
   <%- if defined?(remove_from_host) && remove_from_host -%>
     <td><%= link_to( 'detach', { :action => 'remove_from_host', :id => @storage_volume, :host_id => host }, :confirm => 'Are you sure?', :method => :post, :class => "remove") %></td>
   <%- end -%>
