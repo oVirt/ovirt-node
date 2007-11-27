@@ -11,7 +11,7 @@
   <td style="text-align:left;"><%= link_to host.hostname, { :controller => 'host', :action => 'show', :id => host }, { :class => "show" } %></td>
   <td><%= host.num_cpus %> x <%= host.cpu_speed %> Mhz</td>
   <td><%= host.arch %></td>
-  <td><%= host.memory %></td>
+  <td><%= host.memory_in_gb %></td>
 </tr>
 <% end %>
 </table>
