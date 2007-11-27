@@ -1,24 +1,7 @@
 <div id="left">
 <h2><%= _("All Available Network Interfaces") %></h2>
 
-<table class='listing'>
-  <thead>
-  <% for column in Nic.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-  </thead>
-  
-<% for nic in @nics %>
-  <tr class="<%= cycle('odd','even') %>">
-  <% for column in Nic.content_columns %>
-    <td><%=h nic.send(column.name) %></td>
-  <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => nic %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => nic %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => nic }, :confirm => 'Are you sure?', :method => :post %></td>
-  </tr>
-<% end %>
-</table>
+<%= render :partial => "list", :locals => { :nics => @nics } %>
 
 <%= link_to 'Previous page', { :page => @nic_pages.current.previous } if @nic_pages.current.previous %>
 <%= link_to 'Next page', { :page => @nic_pages.current.next } if @nic_pages.current.next %> 

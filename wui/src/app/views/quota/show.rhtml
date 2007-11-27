@@ -1,5 +1,5 @@
 <div id="left">
-<h2><%= _("User quota for ID: %s " % @user_quota.user.ldap_uid) %></h2>
+<h2><%= _("User quota for ID:") %> <%= link_to @user_quota.user.ldap_uid, { :controller => "user", :action => "show", :id =>  @user_quota.user }, { :class => "show" } %></h2>
 
 <% for column in UserQuota.content_columns %>
 <p>
@@ -7,39 +7,20 @@
 </p>
 <% end %>
 
-<h3> Virtual machines for ID: <%= @user_quota.user.ldap_uid %></h3>
-<table class='listing'>
-  <thead>
-    <th>Uuid</th>
-    <th>Description</th>
-    <th>CPUs</th>
-    <th>Memory (gigs)</th>
-    <th>vNIC MAC Addr</th>
-    <th>State</th>
-  </thead>
-  
-<% for vm in @user_quota.user.vms %>
-  <tr class="<%= cycle('odd','even') %>">
-    <td><%= vm.uuid %></td>
-    <td><%= vm.description %></td>
-    <td><%= vm.num_vcpus_used %></td>
-    <td><%= vm.memory_used %></td>
-    <td><%= vm.vnic_mac_addr %></td>
-    <td><%= vm.state %></td>
-    <td><%= link_to 'Show', :controller => 'vm', :action => 'show', :id => vm %></td>
-    <td><%= link_to 'Edit', :controller => 'vm', :action => 'edit', :id => vm %></td>
-    <td><%= link_to 'Destroy', { :controller => 'vm', :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post %></td>
-  </tr>
-<% end %>
-</table>
+<h3> Virtual machines for ID: <%= link_to @user_quota.user.ldap_uid, { :controller => "user", :action => "show", :id =>  @user_quota.user }, { :class => "show" } %></h3>
+<%= render :partial => "/vm/list", :locals => { :vms => @user_quota.user.vms } %>
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
-  <ul class="actions">
+  <ul class="actions create">
     <li class="action"><%= link_to 'Create New VM', { :controller => "vm", :action => 'new', :user_id => @user_quota.user }, { :class => "create" } %></li>
+  </ul>
+  <ul class="actions edit">
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @user_quota }, { :class => "edit" } %></li>
+  </ul>
+  <ul class="actions">
     <li class="action"><%= link_to 'List All Quotas', { :action => 'list' }, { :class => "list" } %></li>
   </ul>
 </div>

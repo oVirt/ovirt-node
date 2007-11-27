@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+     <link rel="StyleSheet" type="text/css"
+	   href="./styles/default.css" title="Main style" />
+     <title>Ovirt Task Matrix</title>
+
+  </head>
+  <body>
+    <div id="header">
+      <h1>Ovirt Task Matrix</h1>
+    </div>
+    <div id="content">
+      <table>
+	<tr>
+	  <th>Milestone 1<br />Due first week November</th>
+	  <th>Milestone 2<br />Due end November</th>
+	  <th>Milestone 3<br />Due end December</th>
+	  <th>Milestone 4<br />Due mid-February</th>
+	  <th>Milestone 5/Release 1<br />Due mid-March</th>
+	</tr>
+	<tr>
+	  <td valign="top"><!-- Milestone 1 tasks -->
+	    <table cellspacing="10">
+	      <tr>
+		<td valign="top">PXE-boot host; run from RAM disk; no permanent state</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">NICS bridged to LAN, using DHCP config only + custom init scripts</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">iSCSI storage; LUNs pre-allocated on iSCSI server; no local partitioning</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">All per-host config data from DHCP option records or hardcoded in
+		  image</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Fetch pre-generated kerberos credentials from HTTP server.</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Sanity check virtinst to see that it will successfully install a
+		  remote full-virt guest via PXE (i.e. without pulling down a
+		  kernel/initrd or trying to create a disk). </td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.<br /><em>Note: Had to hack up virtinst for this, will need to fix it when libvirt storage API becomes available</em></td>
+	      </tr>
+	      <tr>
+		<td valign="top">Can install a guest on the built host and admin it with
+		  virt-manager</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris
+		  L.<br /><em>Note: Depends on hacked-up virtinst above,
+		    waiting on libvirt storage API to do this properly</em></td>
+	      </tr>
+	      <tr>
+		<td valign="top">Web app design concept solid, wireframes in process.</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Bryan clark,
+		  Hugh Brock, Dan Berrange</td>
+	      </tr>
+	    </table>
+	  </td>
+	  <td valign="top" valign="top"><!-- Milestone 2 Tasks -->
+	    <table cellspacing="10">
+	      <tr>
+		<td valign="top">Persist configuration data for host (e.g. /etc/libvirt).</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris
+		  L.<br /><em>For now we're using an NFS mount for this, we need
+		    to add other options.</em></td>
+	      </tr>
+	      <tr>
+		<td valign="top">Manual NIC address configuration: primary NIC on the
+		  host is configured via PXE setup rather than random DHCP
+		  assignment.</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris
+		  L.<br /><em>Note: remaining NICs will be autoconfigured to
+		    a sensible default, but not until Milestone 3.</em></td>
+	      </tr>
+	      <tr>
+		<td valign="top">Manual iSCSI configuration and authentication; iSCSI
+		  config passed in DHCP option records. (Will do this with
+		  ldap/freeipa later.)</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">FreeIPA integration, credential deployment and
+		  authentication. (Authentication only, distributing keytabs
+		  manually for now until FreeIPA tool comes along to do it
+		  for us.)</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L., Dan
+		  B., Scott S.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Automatically find local disk where it exists and
+		  allocate a suitable swap partition.</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Host &lt;-&gt; web service association: When a new host
+		  comes up and advertises itself, a worker in the management
+		  app identifies it, authenticates it, and makes an
+		  appropriate entry in the database.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In Progress<br />By: Chris L.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">PXE-boot guest installation</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />We get it for free
+		  from virtinst.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Web service authentication against FreeIPA. Manager app
+		  referes to the FreeIPA server to authenticate, if user is
+		  not authenticated redirects to an appropriate place.</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Scott S.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Allocate resources to users. Model users, physical
+		  resoures, and quotas, enforce quotas. Deal with
+		  machine-size issues.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />By: Scott S.</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Performance monitoring. Be able to run a text client on
+		  the manager box that will display resource usage on remote
+		  machines.</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />By: Rich Jones (via
+		  virttop)</td>
+	      </tr>
+	      <tr>
+		<td valign="top">&quot;User pages&quot; laid out and coded. First cut
+		  can be basic but should demonstrate flow, will be
+		  jazzed up for milestone 3.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />By: Scott
+		  Seago, Bryan Clark</td>
+	      </tr>
+	      <tr>
+		<td valign="top">&quot;Admin pages&quot; laid out and coded. First cut
+		  can be basic but should demonstrate flow.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Scott Seago, Bryan Clark</td>
+	      </tr>
+	    </table>
+	  </td>
+	  <td valign="top"><!-- Milestone 3 tasks -->
+	    <table cellspacing="10">
+	      <tr>
+		<td valign="top">NIC bonding for failover and
+		bandwidth aggregation. We want to set a sensible
+		default automatically, but also be able to modify it
+		from the manager app.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Scott Seago, Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Partitioning of iSCSI LUNs on host;
+		LVM management of iSCSI LUNs for guests. All
+		adjustable from the management app.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Scott Seago, Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Pre-emptive live migration, post
+		failure offline migration. Based on working
+		monitoring tools + automatable/schedulable tasks.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not
+		started<br />Assigned to: Scott Seago, Chris
+		Lalancette, Rich Jones</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Delegation of host administration to
+		quota owners. For example a user should be able to choose to
+		bond NICs they've been assigned.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />
+		  Assigned to: Scott Seago, Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Deployment of prebuilt
+		images. Admins should be able to set up a store of
+		available OS install images that users can PXE onto
+		their guests.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Scott Seago, Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Fine grained ACL integration with
+		LDAP. At the libvirt level, should be able to look up
+		a user and determine which VMs they are allowed to
+		see or modify.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not
+		  started<br />Assigned to:
+		  Dan Berrange, Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Long term performance
+		monitoring. Should be able to aggregate host and
+		guest stats over time and display them graphically.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Rich Jones</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Management app packaged as appliance</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started<br />Assigned to:
+		  David Lutterkort</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Expand manager UI. Add UI for
+		network, storage management, managing auto-migration. </td>
+		<td valign="top" bgcolor="#99FFFF">State: not started<br />Assigned to:
+		  Bryan Clark, Scott Seago</td>
+	      </tr>
+	    </table>
+	  </td>
+	  <td valign="top"><!-- Milestone 4 tasks -->
+	    <table cellspacing="10">
+	      <tr>
+		<td valign="top">Expanded storage options. Need to be
+		able to access NFS/GFS/Fibrechannel storage for
+		config and guest images.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Manage host pairing with quorum
+		disk.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Cluster-LVM awareness.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Automatic migration upon
+		failure. Basis of larger inbuilt policy engine.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Grouping of hosts for clusters.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Deployment of guests to cluster.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	    </table>
+	  </td>
+	  <td valign="top"><!-- Milestone 5 tasks -->
+	    <table cellspacing="10">
+	      <tr>
+		<td valign="top">Access guest consoles directly on
+		host hardware.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Manage internal IDE/SCSI storage, USB
+		disks, firewire disks.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Install guests from local CDROM.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">FreeIPA/Cobbler/iSCSI server
+		deployable as appliances.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Additional UI from milestone 4
+		polished up.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Testing on various host configurations.</td>
+		<td valign="top" bgcolor="#99FFFF">State: not started</td>
+	      </tr>
+	    </table>
+	  </td>
+	</tr>
+      </table>
+    </div>
+    <div id="footer">
+       <p>
+    A project from the <a href="http://et.redhat.com/">Red Hat Emerging Technologies</a> group.
+    </p>
+  </body>
+</html>
