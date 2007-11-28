@@ -105,7 +105,7 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	  else {
 	    name = host->h_name;
 	  }
-	  snprintf(connString,1024,"qemu+tls://%s/system", name);
+	  snprintf(connString,1024,"qemu+tcp://%s/system", name);
 
 	  conn = virConnectOpenReadOnly(connString);
 	  if (conn == NULL) {

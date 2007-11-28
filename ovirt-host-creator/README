@@ -134,12 +134,8 @@ which will persist across reboots, and even changes to the LUN scheme.
 
 Miscellaneous
 -------------
-Currently I have hardcoded a CA and some server certificates into the image,
-which we can use for libvirt remote support.  Later on we can use
-Kerberos/GSSAPI, but I think this is a good first step, and easy to undo later.
-Right now, with the appropriate client keys in place, I can connect remotely
-to the Ovirt server, but since we don't yet support installation, it is of
-limited usefulness.
+We are only going to support kerberos in Ovirt, so we disable TLS completely
+and open up the TCP port.
 
 TODO
 ----
@@ -150,5 +146,4 @@ TODO
     d) net-tools
     e) nfs-utils
     f) wget
-2)  Use GSSAPI instead of TLS for libvirtd remote
-3)  Use proper iscsid/iscsi startup scripts instead of my hacked up iscsi_scan.sh
+2)  Use proper iscsid/iscsi startup scripts instead of my hacked up iscsi_scan.sh

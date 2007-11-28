@@ -1,15 +1,17 @@
 #!/usr/bin/ruby
 
+$: << "../wui/src/app"
+
 require 'active_record'
 require 'erb'
 require 'libvirt'
 require 'rexml/document'
 include REXML
 
-require '../wui/src/app/models/task.rb'
-require '../wui/src/app/models/host.rb'
-require '../wui/src/app/models/vm.rb'
-require '../wui/src/app/models/storage_volume.rb'
+require 'models/task.rb'
+require 'models/host.rb'
+require 'models/vm.rb'
+require 'models/storage_volume.rb'
 
 def database_configuration
   YAML::load(ERB.new(IO.read('../wui/src/config/database.yml')).result)
@@ -203,7 +205,7 @@ def shutdown_vm(task)
   end
 
   begin
-    conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookupDomainByUUID(vm.uuid)
     dom.shutdown
     dom.undefine
@@ -285,7 +287,7 @@ def start_vm(task)
                       "/dev/disk/by-id/scsi-" + $wwid)
 
   begin
-    conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.defineDomainXML(xml.to_s)
     dom.create
     conn.close
@@ -337,7 +339,7 @@ def save_vm(task)
   end
 
   begin
-    conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookupDomainByUUID(vm.uuid)
     dom.save("/tmp/" + vm.uuid + ".save")
     conn.close
@@ -395,7 +397,7 @@ def restore_vm(task)
   # the state is
   
   begin
-    conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookupDomainByUUID(vm.uuid)
     dom.restore
     conn.close
@@ -444,7 +446,7 @@ def suspend_vm(task)
   end
 
   begin
-    conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookupDomainByUUID(vm.uuid)
     dom.suspend
     conn.close
@@ -494,7 +496,7 @@ def resume_vm(task)
   end
 
   begin
-    conn = Libvirt::open("qemu+tls://" + host.hostname + "/system")
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookupDomainByUUID(vm.uuid)
     dom.resume
     conn.close
@@ -521,7 +523,9 @@ while(true)
     when Task::ACTION_UNPAUSE_VIRT then resume_vm(task)
     when Task::ACTION_SAVE_VIRT then save_vm(task)
     when Task::ACTION_RESTORE_VIRT then restore_vm(task)
-    else puts "unknown task " + task.action
+    else
+      puts "unknown task " + task.action
+      setTaskState(task, Task::STATE_FAILED, "Unknown task type")
     end
 
     task.time_ended = Time.now
