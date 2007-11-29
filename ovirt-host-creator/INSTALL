@@ -43,22 +43,35 @@ done compiling, do the following:
 # cp collectd-<version>.x86_64.rpm /var/www/html/rpms
 # createrepo /var/www/html/rpms
 
-4)  Recompile the libvirt SRPM with GSSAPI/kerberos support.  When
-it's done recompiling, do the following:
+4)  Recompile the libvirt SRPM with GSSAPI/kerberos support (located in the 
+"srpms" directory).  When it's done recompiling, do the following:
 
 # mkdir -p /var/www/html/rpms
 # cp libvirt-<version>.x86_64.rpm /var/www/html/rpms
 # createrepo /var/www/html/rpms
 
-5)  Edit ovirt.ks, and add an additional repo where it will pull the collectd
+5)  Recompile the kvm SRPM located in the "srpms" directory.  We need this to
+bring it up to version 54; note that just using the package from rawhide is
+*not* enough, since it doesn't include the updated kernel modules.  You need to
+install the kernel-devel package to successfully compile this.  Note that the
+version of kernel-devel you need is the version that will be on the ovirt host,
+that is, what is going to get pulled in by yum in subsequent steps; otherwise,
+the modules will fail to load on the ovirt host.  When it is done recompiling,
+do the following:
+
+# mkdir -p /var/www/html/rpms
+# cp kvm-<version>modules.x86_64.rpm /var/www/html/rpms
+# createrepo /var/www/html/rpms
+
+6)  Edit ovirt.ks, and add an additional repo where it will pull the collectd
 RPM (and optionally, the kerberized libvirt RPM).  There is an example repo in
 there already.
 
-6)  Put a 1GB (or greater) flash drive into the machine; you'll need to find out
+7)  Put a 1GB (or greater) flash drive into the machine; you'll need to find out
 which SCSI device it got assigned to via dmesg (mine went to /dev/sdc, for
 instance)
 
-7)  # cd /root/ovirt ; ./ovirt-flash.sh /dev/sdc
+8)  # cd /root/ovirt ; ./ovirt-flash.sh /dev/sdc
 
 (replacing /dev/sdc with the device your USB stick is).  Be warned that this
 will totally destroy any data on the USB stick, so make sure to back up any
@@ -66,7 +79,7 @@ data you care about.  This step will take quite a while, as it will download
 and yum install all of the necessary packages into a chroot jail, run the
 kickstart %post, and lay the resulting image down on the USB stick.
 
-8)  Edit /etc/dhcpd.conf; you'll want to make it look like:
+9)  Edit /etc/dhcpd.conf; you'll want to make it look like:
 
 -------------------------<cut here>----------------------------------------
 allow booting;
@@ -101,19 +114,19 @@ the IP address of *this* server.  Finally, make sure that you change the
 address and DNS name will be important for a number of the authentication
 mechanisms later.
 
-9)  Follow the steps in README.krb5 for setup.  You'll need to take the
+10) Follow the steps in README.krb5 for setup.  You'll need to take the
 /etc/krb5.conf and keytable files that you generated for the "ovirt"
 machine and place them in /var/www/html for the init scripts to fetch.
 Make sure to call the keytable file "<ip>-libvirt.tab" and the krb5.conf
 file "<ip>-krb5.conf", as that is the  filename the scripts will look for.
 
-10) Setup the services you need:
+11) Setup the services you need:
 
 # service dhcpd start
 # service iptables stop
 # service httpd start
 
-11) Set up 1 or more iSCSI LUNs for export:
+12) Set up 1 or more iSCSI LUNs for export:
 
 # lvcreate -n iSCSI1 -L +10G /dev/HostGroup
 

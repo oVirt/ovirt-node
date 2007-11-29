@@ -17,8 +17,8 @@ def database_configuration
   YAML::load(ERB.new(IO.read('../wui/src/config/database.yml')).result)
 end
 
-def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, macAddr, bridge,
-                  disk_device)
+def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
+                  macAddr, bridge, diskDevice)
   doc = Document.new
 
   doc.add_element("domain", {"type" => "kvm"})
@@ -41,7 +41,7 @@ def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, macAddr, bridge,
   doc.root.add_element("os")
   doc.root.elements["os"].add_element("type")
   doc.root.elements["os"].elements["type"].text = "hvm"
-  doc.root.elements["os"].add_element("boot", {"dev" => "network"})
+  doc.root.elements["os"].add_element("boot", {"dev" => bootDevice})
   
   doc.root.add_element("clock", {"offset" => "utc"})
   
@@ -58,12 +58,11 @@ def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, macAddr, bridge,
   doc.root.elements["devices"].add_element("emulator")
   doc.root.elements["devices"].elements["emulator"].text = "/usr/bin/qemu-kvm"
   doc.root.elements["devices"].add_element("disk", {"type" => "block", "device" => "disk"})
-  doc.root.elements["devices"].elements["disk"].add_element("source", {"dev" => disk_device})
+  doc.root.elements["devices"].elements["disk"].add_element("source", {"dev" => diskDevice})
   doc.root.elements["devices"].elements["disk"].add_element("target", {"dev" => "hda"})
   doc.root.elements["devices"].add_element("interface", {"type" => "bridge"})
   doc.root.elements["devices"].elements["interface"].add_element("mac", {"address" => macAddr})
   doc.root.elements["devices"].elements["interface"].add_element("source", {"bridge" => bridge})
-  doc.root.elements["devices"].elements["interface"].add_element("target", {"dev" => "vnet0"})
   doc.root.elements["devices"].add_element("input", {"type" => "mouse", "bus" => "ps2"})
   doc.root.elements["devices"].add_element("graphics", {"type" => "vnc", "port" => "-1", "listen" => "0.0.0.0"})
 
@@ -163,13 +162,10 @@ ActiveRecord::Base.establish_connection(
 def create_vm(task)
   puts "create_vm"
 
-  # since we are actually generating XML on the fly in the "start_vm" method,
-  # we don't actually need to do much here.  We might need to allocate disk
-  # space, etc, but we can skip that for now
+  # we really just need to call start_vm here, and say this is first_boot so
+  # that we boot to the network instead of the hard drive
 
-  # FIXME: what do we do about attaching a CDROM for first install?
-
-  setTaskState(task, Task::STATE_FINISHED)
+  start_vm(task, true)
 end
 
 def shutdown_vm(task)
@@ -222,7 +218,7 @@ def shutdown_vm(task)
   vm.save
 end
 
-def start_vm(task)
+def start_vm(task, first_boot = nil)
   puts "start_vm"
 
   # here, we are given an id for a VM to start
@@ -280,10 +276,16 @@ def start_vm(task)
 
   # OK, we found a host that will work; now let's build up the XML
 
-  # FIXME: get rid of the hardcoded bridge and disk here
+  if first_boot
+    bootdev = "network"
+  else
+    bootdev = "hd"
+  end
+
+  # FIXME: get rid of the hardcoded bridge
   xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
-                      vm.memory_used, vm.num_vcpus_used, vm.vnic_mac_addr,
-                      "ovirtbr0",
+                      vm.memory_used, vm.num_vcpus_used, bootdev,
+                      vm.vnic_mac_addr, "ovirtbr0",
                       "/dev/disk/by-id/scsi-" + $wwid)
 
   begin
