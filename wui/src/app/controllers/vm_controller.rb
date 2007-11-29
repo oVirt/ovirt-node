@@ -17,7 +17,18 @@ class VmController < ApplicationController
   end
 
   def new
-    @vm = Vm.new( { :user_id => params[:user_id] } )
+    # random MAC
+    mac = [ 0x00, 0x16, 0x3e, rand(0x7f), rand(0xff), rand(0xff) ]
+    # random uuid
+    uuid = ["%02x" * 4, "%02x" * 2, "%02x" * 2, "%02x" * 2, "%02x" * 6].join("-") % 
+      Array.new(16) {|x| rand(0xff) }
+    newargs = { 
+      :user_id => params[:user_id],
+      :vnic_mac_addr => mac.collect {|x| "%02x" % x}.join(":"),
+      :uuid => uuid
+    }
+
+    @vm = Vm.new( newargs )
   end
 
   def create
