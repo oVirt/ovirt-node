@@ -4,6 +4,11 @@ class Vm < ActiveRecord::Base
   has_many :tasks, :dependent => :destroy
   has_and_belongs_to_many :storage_volumes
 
+  NEEDS_RESTART_FIELDS = [:uuid, 
+                          :num_vcpus_allocated,
+                          :memory_allocated,
+                          :vnic_mac_addr]
+
   STATE_CREATING  = "creating"
   STATE_DELETING  = "deleting"
   STATE_MIGRATING = "migrating"
