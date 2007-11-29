@@ -111,6 +111,11 @@ cat > /etc/init.d/ovirt << \EOF
 . /etc/init.d/functions
 
 start() {
+        # HACK: we need to do depmod here to make sure we get updated kvm
+        # modules; this does not work in %post, since I don't think that is
+        # done in a chroot
+        /sbin/depmod
+
         modprobe kvm
         modprobe kvm-intel >& /dev/null
         modprobe kvm-amd >& /dev/null
