@@ -2,6 +2,7 @@
 
 $: << "../wui/src/app"
 
+require 'rubygems'
 require 'active_record'
 require 'erb'
 require 'models/host.rb'
