@@ -7,6 +7,7 @@ class CreateHosts < ActiveRecord::Migration
       t.column :cpu_speed,   :integer
       t.column :arch,        :string
       t.column :memory,      :integer
+      t.column :is_disabled, :integer
     end
   end
 

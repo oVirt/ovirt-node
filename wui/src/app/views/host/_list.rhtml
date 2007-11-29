@@ -1,6 +1,13 @@
 <table class="listing">
 <thead>
-  <tr><th class="empty">host <span class="amp">&</span> uuid</th><th>CPUs</th><th>speed <span class="unit">(Mhz)</span></th><th>arch</th><th>RAM <span class="unit">(gigs)</span></th></tr>
+  <tr>
+    <th class="empty">host <span class="amp">&</span> uuid</th>
+    <th>CPUs</th>
+    <th>speed <span class="unit">(Mhz)</span></th>
+    <th>arch</th>
+    <th>RAM <span class="unit">(gigs)</span></th>
+    <th>Disabled?</th>
+  </tr>
 </thead>
 <tbody>
 <% for host in hosts %>
@@ -10,6 +17,12 @@
   <td><%= host.cpu_speed %></td>
   <td><%= host.arch %></td>
   <td><%= host.memory_in_gb %></td>
+  <td><%= if host.is_disabled.nil? or host.is_disabled == 0 
+            "No"
+          else
+            "Yes"
+          end
+      %></td>
   <%- if defined?(remove_from_host) && remove_from_host -%>
     <td><%= link_to( 'detach', { :action => 'remove_from_host', :id => @storage_volume, :host_id => host }, :confirm => 'Are you sure?', :method => :post, :class => "remove") %></td>
   <%- end -%>
