@@ -5,7 +5,7 @@ auth --useshadow --enablemd5
 selinux --disabled
 firewall --disabled
 part / --size 950
-services --disabled=iptables --enabled=ntpd
+services --disabled=iptables --enabled=ntpd,collectd
 bootloader --timeout=1
 
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
@@ -180,7 +180,7 @@ start() {
             BRIDGE=ovirtbr`echo $eth | cut -b4-`
             echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" > /etc/sysconfig/network-scripts/ifcfg-$eth
             echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,etc-libvirt-nfs-server,libvirt-auth-method"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,libvirt-auth-method"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
         # find all of the partitions on the system
@@ -206,27 +206,6 @@ start() {
                 /sbin/swapon $device
             fi
         done
-
-	DATADEVS="$LVMDEVS"
-        for dev in $BLOCKDEVS; do
-            DATADEVS="$DATADEVS `/sbin/fdisk -l $dev 2>/dev/null | sed -e 's/*/ /' | awk '$5 ~ /83/ {print $1}' | xargs`"
-        done
-
-	# now check for a persistent storage device
-	mkdir -p /mnt/tmp
-	for device in $DATADEVS; do
-	    mount $device /mnt/tmp >& /dev/null
-	    if [ $? -ne 0 ]; then
-	       continue
-	    fi
-	    if [ -r /mnt/tmp/.ovirtstorage ]; then
-	       umount /mnt/tmp
-	       mount $device /etc/libvirt/qemu
-	       break
-	    fi
-	    umount /mnt/tmp
-	done
-	rmdir /mnt/tmp
 }
 
 stop() {
@@ -260,7 +239,6 @@ touch /etc/resolv.conf
 # needed for the iscsi-servers dhcp option
 cat > /etc/dhclient.conf << EOF
 option iscsi-servers code 200 = array of ip-address;
-option etc-libvirt-nfs-server code 201 = text;
 option libvirt-auth-method code 202 = text;
 EOF
 
@@ -270,29 +248,10 @@ if [ -n "$new_iscsi_servers" ]; then
         echo $s >> /etc/iscsi-servers.conf
     done
 fi
-if [ -n "$new_etc_libvirt_nfs_server" ]; then
-    # it's possible that we mounted the storage locally earlier; if it's already
-    # mounted, skip this
-    awk '{print $2}' /proc/mounts | grep -q /etc/libvirt/qemu
-    if [ $? -ne 0 ]; then
-        echo "$new_etc_libvirt_nfs_server /etc/libvirt/qemu nfs hard,bg,tcp,intr 0 0" >> /etc/fstab
-    fi
-fi
 if [ -n "$new_libvirt_auth_method" ]; then
     METHOD=`echo $new_libvirt_auth_method | cut -d':' -f1`
     SERVER=`echo $new_libvirt_auth_method | cut -d':' -f2-`
-    get_tls() {
-        mkdir -p /etc/pki/CA /etc/pki/libvirt/private
-        wget -q http://$SERVER/$new_ip_address-cacert.pem -O /etc/pki/CA/cacert.pem
-        wget -q http://$SERVER/$new_ip_address-serverkey.pem -O /etc/pki/libvirt/private/serverkey.pem
-        wget -q http://$SERVER/$new_ip_address-servercert.pem -O /etc/pki/libvirt/servercert.pem
-    }    
-    if [ $METHOD = "tls" ]; then
-        get_tls
-    elif [ $METHOD = "krb5" ]; then
-        # we always need to get TLS to get libvirtd to start up
-        get_tls
-
+    if [ $METHOD = "krb5" ]; then
         mkdir -p /etc/libvirt
         wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
         rm -f /etc/krb5.conf ; wget -q http://$SERVER/$new_ip_address-krb5.conf -O /etc/krb5.conf
@@ -320,8 +279,9 @@ sed -i -e 's/# vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/' /etc/libvirt/
 
 # set up libvirtd to listen on TCP (for kerberos)
 sed -i -e 's/# listen_tcp = 1/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
+sed -i -e 's/# listen_tls = 0/listen_tls = 0/' /etc/libvirt/libvirtd.conf
 
-# turn on collectd
-/sbin/chkconfig collectd on
+# make sure we don't autostart virbr0 on libvirtd startup
+rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 
 %end
