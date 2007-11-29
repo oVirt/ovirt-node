@@ -11,6 +11,7 @@ class CreateVms < ActiveRecord::Migration
       t.column :state,               :string
       t.column :host_id,             :integer
       t.column :user_id,             :integer
+      t.column :needs_restart,       :integer
     end
     create_table :storage_volumes_vms, :id => false do |t|
       t.column :vm_id,             :integer, :null => false

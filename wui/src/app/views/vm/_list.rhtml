@@ -5,6 +5,7 @@
     <th>Memory (gigs)</th>
     <th>vNIC MAC Addr</th>
     <th>State</th>
+    <th>Needs Restart?</th>
     <th class="empty" colspan="2"></th>
   </thead>
   
@@ -15,6 +16,12 @@
     <td><%= vm.memory_used %></td>
     <td><%= vm.vnic_mac_addr %></td>
     <td><%= vm.state %></td>
+    <td><%= if vm.needs_restart.nil? or vm.needs_restart == 0 
+            "No"
+          else
+            "Yes"
+          end
+        %></td>
     <td><%= link_to 'Edit', { :controller => "vm", :action => 'edit', :id => vm }, { :class => "edit" } %></td>
     <td><%= link_to 'Destroy', { :controller => "vm", :action => 'destroy', :id => vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </tr>
