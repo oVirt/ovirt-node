@@ -22,6 +22,7 @@ Machine 1/Build Server setup
 python-virtinst
 libvirt
 libvirt-python
+libvirt-devel
 livecd-tools
 dhcp
 nfs-utils
@@ -30,8 +31,12 @@ gnutls-utils
 git
 httpd
 cyrus-sasl
-cyrus-sasl-libs
+cyrus-sasl-lib
 cyrus-sasl-gssapi
+rpm-build
+libxml2-devel
+perl-ExtUtils-MakeMaker
+lm_sensors-devel
 
 2)  Checkout the ovirt repo:
 # git clone git://et.devel.redhat.com/ovirt
