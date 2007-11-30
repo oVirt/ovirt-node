@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-$: << "../app/models"
+$: << "../app"
 
 require 'rubygems'
 require 'active_record'
@@ -9,10 +9,10 @@ require 'libvirt'
 require 'rexml/document'
 include REXML
 
-require 'task.rb'
-require 'host.rb'
-require 'vm.rb'
-require 'storage_volume.rb'
+require 'models/task.rb'
+require 'models/host.rb'
+require 'models/vm.rb'
+require 'models/storage_volume.rb'
 
 def database_configuration
   YAML::load(ERB.new(IO.read('../config/database.yml')).result)

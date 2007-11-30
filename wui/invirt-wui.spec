@@ -79,7 +79,6 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/rails.log
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
 %{__ln_s} %{_localstatedir}/lib/%{name}/tmp %{buildroot}%{app_root}/tmp
-#find %{buildroot}%{app_root} -type f -perm +ugo+x -print0 | xargs -0 -r %{__chmod} a-x
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -90,7 +89,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/invirt_create_db.sh
 %{_initrddir}/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
-#%dir /etc/sysconfig/%{name}
 %doc
 %attr(-, invirt, invirt) %{_localstatedir}/lib/%{name}
 %attr(-, invirt, invirt) %{_localstatedir}/run/%{name}

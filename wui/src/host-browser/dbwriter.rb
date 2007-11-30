@@ -1,11 +1,11 @@
 #!/usr/bin/ruby
 
-$: << "../app/models"
+$: << "../app"
 
 require 'rubygems'
 require 'active_record'
 require 'erb'
-require 'host.rb'
+require 'models/host.rb'
 
 def database_configuration
   YAML::load(ERB.new(IO.read('../config/database.yml')).result)
