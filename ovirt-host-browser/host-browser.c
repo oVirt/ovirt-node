@@ -62,6 +62,35 @@ static void ignoreVirtRemoteError(void *userData, virErrorPtr error)
   virDefaultErrorFunc(error);
 }
 
+static void usage(void)
+{
+  fprintf(stderr, "Usage: host-browser [OPTIONS]\n");
+  fprintf(stderr, "OPTIONS:\n\n");
+  fprintf(stderr, " -d\t\tRun in daemon mode (the default)\n");
+  fprintf(stderr, " -h\t\tPrint this help message\n");
+  fprintf(stderr, " -n\t\tRun in interactive (non-daemon) mode (useful for debugging)\n");
+  exit(1);
+}
+
+// the function to make a daemon out of this program
+static int daemonize(void)
+{
+  pid_t pid;
+
+  if((pid=fork()) < 0){
+    return -1;
+  }
+  else if (pid != 0){
+    exit(0);
+  }
+
+  setsid();
+
+  //  umask(0);
+
+  return 0;
+}
+
 static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 			     AVAHI_GCC_UNUSED AvahiProtocol protocol,
 			     AvahiResolverEvent event, const char *name,
@@ -220,9 +249,36 @@ int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[])
     AvahiServiceBrowser *sb = NULL;
     int error;
     int ret = 1;
+    int daemon_mode = 1;
+    int c;
+
+    while ((c = getopt(argc, argv,":dhn")) != -1) {
+      switch(c) {
+      case 'd':
+	daemon_mode = 1;
+	break;
+      case 'h':
+	usage();
+	break;
+      case 'n':
+	daemon_mode = 0;
+	break;
+      default:
+	usage();
+	break;
+      }
+    }
+
+    if ((argc - optind) != 0) {
+      usage();
+    }
 
     virInitialize();
     virSetErrorFunc(NULL, ignoreVirtRemoteError);
+
+    if (daemon_mode) {
+        daemonize();
+    }
 
     /* Allocate main loop object */
     if (!(simple_poll = avahi_simple_poll_new())) {
