@@ -32,9 +32,18 @@ class VmController < ApplicationController
   end
 
   def create
+    params[:vm][:state] = Vm::STATE_PENDING
     @vm = Vm.new(params[:vm])
     if @vm.save
-      flash[:notice] = 'Vm was successfully created.'
+      @task = Task.new({ :user_id => get_login_user_id.id,
+                         :vm_id   => @vm.id,
+                         :action  => Task::ACTION_CREATE_VM,
+                         :state   => Task::STATE_QUEUED})
+      if @task.save
+        flash[:notice] = 'Vm was successfully created.'
+      else
+        flash[:notice] = 'Error in inserting task.'
+      end
       redirect_to :controller => 'quota', :action => 'show', :id => @vm.user.user_quota
     else
       render :action => 'new'
@@ -69,5 +78,8 @@ class VmController < ApplicationController
     quota = @vm.user.user_quota
     @vm.destroy
     redirect_to :controller => 'quota', :action => 'show', :id => quota
+  end
+
+  def vm_action
   end
 end
