@@ -1,7 +1,7 @@
 <div id="left">
 <h2><%= _("Manage Virtual Machines") %></h2>
 <p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
-<button>Pause Machine</button> <select><option>Other Actions</option><option></option><option>Stop Machine</option></select>
+<%= button_to "Start", {} %>  <%= button_to "Stop", {} %> <select><option class="other">Other Actions</option><option></option><option>Suspend</option><option>Resume</option><option>Reboot</option><option>-------------------</option><option class="remove">Destroy</option></select>
 
 <br/><br/>
 

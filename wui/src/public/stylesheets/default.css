@@ -15,6 +15,10 @@ h3 { position: relative; border-bottom: 1px solid #999; margin-bottom: 0.5em; }
 span.amp { font-family: "Luxi Mono", monospace; font-size: small; }
 span.unit { font-family: "Luxi Mono", monospace; font-size: small; }
 
+form { display: inline; margin: 0em; padding: 0em; }
+form.button-to div { display: inline; }
+option.other { color: #999; }
+
 #content { margin: 1em;  margin-left: auto; margin-right: auto; text-align: left; width: 50em; }
 #header { border-bottom: 2px solid #001833; margin-bottom: 1em; }
 #footer { border-top: 1px dotted #001833; margin-top: 1em; text-align: center; font-size: small; padding: 1em; }
@@ -119,6 +123,8 @@ a.edit {  }
 a.create, a.attach { }
 a.remove { color: #cc0000; }
 a.list, a.show { font-weight: bold; }
+
+option.remove { font-weight: bold; color: #cc0000; }
 
 /* ========= TABLE LISTS ========== */
 
