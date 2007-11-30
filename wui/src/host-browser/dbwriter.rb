@@ -1,14 +1,14 @@
 #!/usr/bin/ruby
 
-$: << "../wui/src/app"
+$: << "../app/models"
 
 require 'rubygems'
 require 'active_record'
 require 'erb'
-require 'models/host.rb'
+require 'host.rb'
 
 def database_configuration
-  YAML::load(ERB.new(IO.read('../wui/src/config/database.yml')).result)
+  YAML::load(ERB.new(IO.read('../config/database.yml')).result)
 end
 
 if ARGV.length != 5

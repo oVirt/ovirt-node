@@ -1,20 +1,21 @@
 #!/usr/bin/ruby
 
-$: << "../wui/src/app"
+$: << "../app/models"
 
+require 'rubygems'
 require 'active_record'
 require 'erb'
 require 'libvirt'
 require 'rexml/document'
 include REXML
 
-require 'models/task.rb'
-require 'models/host.rb'
-require 'models/vm.rb'
-require 'models/storage_volume.rb'
+require 'task.rb'
+require 'host.rb'
+require 'vm.rb'
+require 'storage_volume.rb'
 
 def database_configuration
-  YAML::load(ERB.new(IO.read('../wui/src/config/database.yml')).result)
+  YAML::load(ERB.new(IO.read('../config/database.yml')).result)
 end
 
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
