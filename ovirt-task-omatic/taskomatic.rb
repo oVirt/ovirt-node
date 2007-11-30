@@ -186,10 +186,10 @@ def shutdown_vm(task)
     vm.host_id = nil
     vm.save
     return
-  elsif vm.state == Vm::STATE_PAUSED || vm.state == Vm::STATE_SAVED
+  elsif vm.state == Vm::STATE_SUSPENDED || vm.state == Vm::STATE_SAVED
     # FIXME: hm, we have two options here: either resume the VM and then
     # shut it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown paused domain")
+    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
     return
   end
 
@@ -233,10 +233,10 @@ def start_vm(task, first_boot = nil)
     # the VM is already running; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
-  elsif vm.state == Vm::STATE_PAUSED || vm.state == Vm::STATE_SAVED
+  elsif vm.state == Vm::STATE_SUSPENDED || vm.state == Vm::STATE_SAVED
     # FIXME: hm, we have two options here: either resume the VM and then
     # shut it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown paused domain")
+    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
     return
   end
 
@@ -323,10 +323,10 @@ def save_vm(task)
     # the VM is already saved; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
-  elsif vm.state == Vm::STATE_PAUSED
+  elsif vm.state == Vm::STATE_SUSPENDED
     # FIXME: hm, we have two options here: either resume the VM and then
     # save it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot save paused domain")
+    setTaskState(task, Task::STATE_FAILED, "Cannot save suspended domain")
     return    
   elsif vm.state == Vm::STATE_STOPPED
     setTaskState(task, Task::STATE_FAILED, "Cannot save shutdown domain")
@@ -378,10 +378,10 @@ def restore_vm(task)
     # the VM is already saved; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
-  elsif vm.state == Vm::STATE_PAUSED
+  elsif vm.state == Vm::STATE_SUSPENDED
     # FIXME: hm, we have two options here: either resume the VM and then
     # save it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot restore paused domain")
+    setTaskState(task, Task::STATE_FAILED, "Cannot restore suspended domain")
     return    
   elsif vm.state == Vm::STATE_STOPPED
     setTaskState(task, Task::STATE_FAILED, "Cannot restore shutdown domain")
@@ -429,14 +429,14 @@ def suspend_vm(task)
     return
   end
 
-  if vm.state == Vm::STATE_PAUSED
-    # the VM is already paused; just return success
+  if vm.state == Vm::STATE_SUSPENDED
+    # the VM is already suspended; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_STOPPED || vm.state == Vm::STATE_SAVED
     # FIXME: hm, we have two options here: either resume the VM and then
     # pause it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown paused domain")
+    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
     return
   end
 
@@ -457,12 +457,12 @@ def suspend_vm(task)
     return
   end
 
-  # note that we do *not* reset the host_id here, since we just paused the VM
+  # note that we do *not* reset the host_id here, since we just suspended the VM
   # resume_vm will pick it up from here
 
   setTaskState(task, Task::STATE_FINISHED)
 
-  vm.state = Vm::STATE_PAUSED
+  vm.state = Vm::STATE_SUSPENDED
   vm.save
 end
 
@@ -480,13 +480,13 @@ def resume_vm(task)
   # OK, marked in the database as already running on a host; let's check it
 
   if vm.state == Vm::STATE_RUNNING
-    # the VM is already paused; just return success
+    # the VM is already suspended; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_STOPPED || vm.state == Vm::STATE_SAVED
     # FIXME: hm, we have two options here: either resume the VM and then
     # pause it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown paused domain")
+    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
     return
   end
 
@@ -518,13 +518,13 @@ while(true)
   
   Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
     case task.action
-    when Task::ACTION_INSTALL_VIRT then create_vm(task)
-    when Task::ACTION_SHUTDOWN_VIRT then shutdown_vm(task)
-    when Task::ACTION_START_VIRT then start_vm(task)
-    when Task::ACTION_PAUSE_VIRT then suspend_vm(task)
-    when Task::ACTION_UNPAUSE_VIRT then resume_vm(task)
-    when Task::ACTION_SAVE_VIRT then save_vm(task)
-    when Task::ACTION_RESTORE_VIRT then restore_vm(task)
+    when Task::ACTION_CREATE_VM then create_vm(task)
+    when Task::ACTION_SHUTDOWN_VM then shutdown_vm(task)
+    when Task::ACTION_START_VM then start_vm(task)
+    when Task::ACTION_SUSPEND_VM then suspend_vm(task)
+    when Task::ACTION_RESUME_VM then resume_vm(task)
+    when Task::ACTION_SAVE_VM then save_vm(task)
+    when Task::ACTION_RESTORE_VM then restore_vm(task)
     else
       puts "unknown task " + task.action
       setTaskState(task, Task::STATE_FAILED, "Unknown task type")

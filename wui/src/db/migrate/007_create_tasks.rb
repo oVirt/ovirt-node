@@ -6,6 +6,7 @@ class CreateTasks < ActiveRecord::Migration
       t.column :action,            :string
       t.column :state,             :string
       t.column :args,              :string
+      t.column :created_at,        :timestamp
       t.column :time_started,      :timestamp
       t.column :time_ended,        :timestamp
       t.column :message,           :text

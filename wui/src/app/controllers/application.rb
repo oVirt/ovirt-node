@@ -11,6 +11,10 @@ class ApplicationController < ActionController::Base
     user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
   end
   
+  def get_login_user_id
+    User.find_by_ldap_uid(get_login_user)
+  end
+  
   def user_from_principal(principal)
     principal.split('@')[0]
   end

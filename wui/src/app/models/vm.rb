@@ -9,19 +9,24 @@ class Vm < ActiveRecord::Base
                           :memory_allocated,
                           :vnic_mac_addr]
 
-  STATE_CREATING  = "creating"
-  STATE_DELETING  = "deleting"
-  STATE_MIGRATING = "migrating"
-  STATE_PAUSED    = "paused"
-  STATE_PAUSING   = "pausing"
-  STATE_PENDING   = "pending"
-  STATE_RUNNING   = "running"
-  STATE_STARTED   = "started"
-  STATE_STARTING  = "starting"
-  STATE_STOPPED   = "stopped"
-  STATE_STOPPING  = "stopping"
-  STATE_UNKNOWN   = "unknown"
-  STATE_UNPAUSING = "unpausing"
-  STATE_SAVED     = "saved"
+  STATE_PENDING    = "pending"
+  STATE_CREATING   = "creating"
+  STATE_RUNNING    = "running"
+
+  STATE_STOPPING   = "stopping"
+  STATE_STOPPED    = "stopped"
+  STATE_STARTING   = "starting"
+
+  STATE_SUSPENDING = "suspending"
+  STATE_SUSPENDED  = "suspended"
+  STATE_RESUMING   = "resuming"
+
+  STATE_SAVING     = "saving"
+  STATE_SAVED      = "saved"
+  STATE_RESTORING  = "restoring"
+
+  STATE_DELETING   = "deleting"
+  STATE_MIGRATING  = "migrating"
+  STATE_UNKNOWN    = "unknown"
 
 end
