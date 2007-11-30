@@ -26,6 +26,8 @@
   <ul class="actions create">
     <li class="action"><%= link_to_if @quota, 'Create New VM', {:controller => "vm", :action => 'new', :user_id => @user}, { :class => "create" } %></li>
   </ul>
+  <%= render :partial => "/task/user_list", :locals => { :tasks => @user.tasks } %>
+
 </div>
 <%- content_for :title do -%>
 <%= _("Home") %>
