@@ -1,0 +1,19 @@
+<table class='listing'>
+  <thead>
+    <th>Action</th>
+    <th>VM</th>
+    <th>State</th>
+    <th>Args</th>
+    <th>Message</th>
+  </thead>
+  
+<% for task in tasks %>
+  <tr class="<%= cycle('odd','even') %>">
+    <td><%= link_to task.action, { :controller => "task", :action => 'show', :id => task.id }, { :class => "show" } %></td>
+    <td style="text-align:left"><%= link_to task.vm.description, { :controller => "vm", :action => 'show', :id => task.vm.id }, { :class => "show" } %><div class="secondary"><%= task.vm.uuid %></div></td>
+    <td><%= task.state %></td>
+    <td><%= task.args %></td>
+    <td><%= task.message %></td>
+  </tr>
+<% end %>
+</table>
