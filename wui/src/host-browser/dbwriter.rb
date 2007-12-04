@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 $: << "../app"
+$: << "/usr/share/invirt-wui/app"
 
 require 'rubygems'
 require 'active_record'
@@ -8,7 +9,7 @@ require 'erb'
 require 'models/host.rb'
 
 def database_configuration
-  YAML::load(ERB.new(IO.read('../config/database.yml')).result)
+  YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
 end
 
 if ARGV.length != 5
