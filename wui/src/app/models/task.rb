@@ -50,6 +50,14 @@ class Task < ActiveRecord::Base
                                       :success => Vm::STATE_RUNNING,
                                       :failure => Vm::STATE_SAVED} }
 
+  VALID_ACTIONS_PER_VM_STATE = {  Vm::STATE_PENDING       => [ACTION_CREATE_VM],
+                                  Vm::STATE_RUNNING       => [ACTION_SHUTDOWN_VM,
+                                                              ACTION_SUSPEND_VM,
+                                                              ACTION_SAVE_VM],
+                                  Vm::STATE_STOPPED       => [ACTION_START_VM],
+                                  Vm::STATE_SUSPENDED     => [ACTION_RESUME_VM],
+                                  Vm::STATE_SAVED         => [ACTION_RESTORE_VM],
+                                  Vm::STATE_CREATE_FAILED => []}
 
   STATE_QUEUED       = "queued"
   STATE_RUNNING      = "running"
@@ -62,4 +70,6 @@ class Task < ActiveRecord::Base
     self[:state] = STATE_CANCELED
     save
   end
+
+
 end
