@@ -27,14 +27,6 @@ class Vm < ActiveRecord::Base
   STATE_CREATE_FAILED = "create_failed"
   STATE_INVALID       = "invalid"
 
-  VALID_ACTIONS_PER_STATE = {  STATE_PENDING       => [Task::ACTION_CREATE_VM],
-                               STATE_RUNNING       => [Task::ACTION_SHUTDOWN_VM,
-                                                       Task::ACTION_SUSPEND_VM,
-                                                       Task::ACTION_SAVE_VM],
-                               STATE_STOPPED       => [Task::ACTION_START_VM],
-                               STATE_SUSPENDED     => [Task::ACTION_RESUME_VM],
-                               STATE_SAVED         => [Task::ACTION_RESTORE_VM],
-                               STATE_CREATE_FAILED => []}
 
   EFFECTIVE_STATE = {  STATE_PENDING       => STATE_PENDING,
                        STATE_CREATING      => STATE_RUNNING, 
@@ -74,7 +66,7 @@ class Vm < ActiveRecord::Base
   end    
 
   def get_action_list
-    VALID_ACTIONS_PER_STATE[get_pending_state]
+    Task::VALID_ACTIONS_PER_VM_STATE[get_pending_state]
   end
 
   def get_action_and_label_list
