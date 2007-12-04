@@ -41,7 +41,10 @@ The webapp for Invirt.
 %setup -q
 
 %build
-make -C src/host-browser
+
+# make sure we override the DBWRITER_PATH with where it will actually be in
+# the end; yes, this is ugly
+CFLAGS="-DDBWRITER_PATH=\\\"/usr/share/invirt-wui/host-browser/dbwriter.rb\\\"" make -C src/host-browser
 
 %install
 test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
@@ -68,7 +71,6 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/rails.log
 %{__cp} -a %{pbuild}/src/* %{buildroot}%{app_root}
 
 # remove the files not needed for the installation
-%{__rm} -f %{buildroot}%{app_root}/Rakefile
 %{__rm} -f %{buildroot}%{app_root}/host-browser/Makefile
 %{__rm} -f %{buildroot}%{app_root}/host-browser/.gitignore
 %{__rm} -f %{buildroot}%{app_root}/host-browser/*.o
