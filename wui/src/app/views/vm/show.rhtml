@@ -6,13 +6,26 @@
   <b><%= column.human_name %>:</b> <%=h @vm.send(column.name) %>
 </p>
 <% end %>
+<p>
+  <b>Pending state:</b> <%=h @vm.get_pending_state %>
+</p>
 
+<h2><%= _("Tasks") %></h2>
+
+  <%= render :partial => "/task/list_table", :locals => { :tasks => @vm.tasks } %>
 </div>
 
 <div id="right">
   <h2>Actions</h2>
+  
+  <ul class="actions create">
+    <% for action in @actions %>
+      <li class="action"><%= link_to action[0], { :action => 'vm_action', :id => @vm, :vm_action => action[1] } , {:class => "create" } %></li>
+    <% end %>
+  </ul>
   <ul class="actions edit">
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @vm } , {:class => "edit" } %></li>
+    <li class="action"><%= link_to 'Cancel queued tasks', { :action => 'cancel_queued_tasks', :id => @vm } , {:class => "edit" } %></li>
   </ul>
   <ul class="actions">
     <% if @vm.user -%>

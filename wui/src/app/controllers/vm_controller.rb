@@ -14,6 +14,7 @@ class VmController < ApplicationController
 
   def show
     @vm = Vm.find(params[:id])
+    @actions = @vm.get_action_and_label_list
   end
 
   def new
@@ -81,5 +82,27 @@ class VmController < ApplicationController
   end
 
   def vm_action
+    @vm = Vm.find(params[:id])
+    if @vm.get_action_list.include?(params[:vm_action])
+      @task = Task.new({ :user_id => get_login_user_id.id,
+                         :vm_id   => params[:id],
+                         :action  => params[:vm_action],
+                         :state   => Task::STATE_QUEUED})
+      if @task.save
+        flash[:notice] = "#{params[:vm_action]} was successfully queued."
+      else
+        flash[:notice] = "Error in inserting task for #{params[:vm_action]}."
+      end
+    else
+      flash[:notice] = "#{params[:vm_action]} is an invalid action."
+    end
+    redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
+  end
+
+  def cancel_queued_tasks
+    @vm = Vm.find(params[:id])
+    @vm.get_queued_tasks.each { |task| task.cancel}
+    flash[:notice] = "queued tasks canceled."
+    redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
   end
 end
