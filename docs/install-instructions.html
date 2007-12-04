@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+     <link rel="StyleSheet" type="text/css"
+	   href="./styles/default.css" title="Main style" />
+     <title>Ovirt Installation Instructions</title>
+
+  </head>
+  <body>
+    <div id="header">
+      <h1>Ovirt Installation Instructions</h1>
+    </div>
+    <div id="content">
+    <h2>Overview</h2>
+    <h3>How to use this document</h3>
+    <p>This documented is intended to give both a high-level view
+    of <strong>Ovirt's</strong> moving parts, and also walk the user
+    through a complete installation. However as of this writing
+    (Dec. 1, 2007) <strong>Ovirt</strong> is a rapidly moving
+    target. Therefore, please consult the README and INSTALL documents
+    included with the source code when you install each piece; this
+    document will inevitably lag them.
+    </p>
+    <p>Throughout this document, we give commands to type at a shell
+    prompt. By convention, if a command is meant to be run by a
+    non-priviliged user, we will precede it with a <code>$</code>
+    prompt. If a command is meant to be run by the root user, we will
+      precede it with a <code>#</code>.</p>
+      
+
+    <h3>Ovirt parts and connections</h3>
+    <p><strong>Ovirt</strong> consists of the following bits:</p>
+
+    <ol>
+
+      <li>A stripped-down Fedora 8 build that installs and runs off a
+   CD, a usb key, or a ramdisk (over PXE) on a physical
+   host. <strong>Ovirt-host-builder</strong> provides a kickstart and
+   a set of scripts to build a livecd/usb key, or if you prefer a
+   pxeboot setup. The kickstart will download the latest Fedora 8
+   packages, along with modified versions
+   of <em>libvirt</em>, <em>collectd</em>, and <em>kvm</em> from
+   the <strong>Ovirt</strong> repository, and package them up into a
+	bootable image for your virtualization host. Note
+   the <strong>Ovirt</strong> host currently uses kvm-53 for virtual
+   machines running on it, although it could use any of several
+   different virtualization technologies.</li>
+
+      <li>A web-based management UI application
+      for <strong>Ovirt</strong> hosts, users, and vms. The management
+      app installs from RPM and requires postgresql, httpd, kerberos,
+      libvirt (our modified version), libvirt-ruby, and webapp
+      framework Ruby On Rails (currently we require version 1.2.6). 
+      </li>
+
+      <li>The <strong>FreeIPA</strong> ldap/kerberos identity and
+	directory application. <strong>FreeIPA</strong> also installs
+	via a dedicated Yum repository.</li>
+    </ol>
+    <p>Once you have the bits, they connect in the following ways:</p>
+    <ul>
+      <li>The <strong>FreeIPA</strong> host handles kerberos
+	administration and allows you to generate <em>keytabs</em>
+	(essentially, kerberos credentials) for the machines that need
+	them (the management machine and each <strong>Ovirt</strong>
+	host machine). It's probably best to set this host up
+	first.</li>
+      <li>The <strong>Ovirt</strong> host builder creates
+	your <strong>Ovirt</strong> image and will provide a
+	pxeboot <em>next-server</em> for installing the image if
+	required. Note that for the moment you will need control over
+	DHCP for your local subnet (you need to specify the
+	next-server IP for the booting host, plus there are two DHCP
+	option records that the host requires for configuration
+	data). This requirement will be lifted in an upcoming
+	release. </li>
+      <li>The <strong>Ovirt</strong> management application, like
+	the <strong>Ovirt</strong> host(s), requires a keytab from
+	the <strong>FreeIPA</strong> machine. Once authenticated
+	by <strong>FreeIPA</strong>, the manager communicates with
+	the <em>libvirtd</em> running on each <strong>Ovirt</strong>
+	host via an encrypted SASL connection using
+	the <em>libvirt</em> SASL infrastructure.</li>
+      <li>An <em>iSCSI</em> target, running on
+      the <strong>Ovirt</strong> management machine or on any other
+	machine reachable from the <strong>Ovirt</strong> host,
+	provides disk storage for <strong>Ovirt</strong>
+      guests. The <strong>Ovirt</strong> host will automatically make
+	the storage targets on the <em>iSCSI</em> server it is
+	configured for available for <strong>Ovirt</strong> guest
+	installs.
+      </li>
+    </ul>
+
+    <h3>Preparing the ground</h3>
+
+    <p><strong>Ovirt</strong> requires a minimum of two physical
+      hosts: the <strong>Ovirt</strong> host itself where the kernel
+      image is installed, and another host to run the support tools
+      and the management application. However it is important to note
+      that each of the support tools prefers to run in its own
+      environment; one host for <strong>FreeIPA</strong>, one for
+      the <strong>Ovirt</strong> host builder (and tftp server and
+      iSCSI server, if desired), and one for
+      the <strong>Ovirt</strong> management app. The simplest way to
+      do this is to run each of these in its own VM on a VT-equipped
+      host, thereby avoiding port conflicts, firewall conflicts, and
+      so on. For this case the recommended base architecture would be
+      as follows (note all these machines must be on the same local
+      subnet):
+    </p>
+    <ul>
+      <li><strong>Ovirt host:</strong> Bare metal, will be provisioned
+	via PXE, usb key, or live CD. Will host managed VMs once it is
+	built.</li>
+      <li><strong>FreeIPA server:</strong> A Fedora 7 host or VM.</li>
+      <li><strong>Ovirt host builder:</strong> A Fedora 8 host or
+	VM. Will need to run tftp if you are using PXE to build
+	the <strong>Ovirt</strong> host. You can also use this machine
+	as your iSCSI target if necessary.</li>
+      <li><strong>Ovirt management app:</strong> A Fedora 7 or Fedora
+	8 host or VM. </li>
+    </ul>
+    <p>Note that if you run the management app or
+    the <strong>FreeIPA</strong> server in a vm, you will need to run
+    ntpd to make sure the time stays synchronized (kerberos will break
+    if time between machines is very far off). If you are using KVM
+    you will need to use kvm-53 kernel module and userspace to keep
+    the clock from getting hopelessly out of sync (we provide srpms
+      for these with the <strong>Ovirt</strong> host builder).
+    </p>
+
+    <h3>Installing <strong>FreeIPA</strong></h3>
+    <p>The installation procedure for <strong>FreeIPA</strong> is well
+      documented <a href="http://www.freeipa.com/page/QuickInstall">here</a>.
+      As mentioned above, make sure you install on a physical host or
+      VM that will keep good time.
+    </p>
+
+    <h3>Building the <strong>Ovirt</strong> host image</h3>
+    <p>At this writing we are still working out packaging details for
+    the host image, so it remains necessary to manually build the
+    image before installing it. Fortunately this process is not
+      difficult. There are three ways to package
+      the <strong>Ovirt</strong> host image:</p>
+    <ul>
+      <li>USB drive</li>
+      <li>CDROM</li>
+      <li>PXE setup</li>
+    </ul>
+
+    <p>Most of the build steps are common to all three methods, so we
+    present here a single set of steps with variations for each
+    packaging method included along
+      the way.</p>
+    
+    <ul>
+      <li><strong>Prerequisites:</strong> <br />
+	<ul>
+	  <li>Current fedora 8 machine, with root access</li>
+	  <li>git installed</li>
+	  <li>Access to full fedora 8 repository</li>
+	  <li>A properly set up RPM build environment. As a
+	  non-privileged user, do: <br /><pre>$ cd; echo "%_topdir ~/buildroot" > .rpmmacros; mkdir buildroot; cd buildroot; mkdir RPMS SOURCES SRPMS BUILD</pre></li>
+	</ul>
+      </li>
+      <li><strong>Getting the code</strong>. You can get an anonymous
+	checkout of the current repository with <pre>$ git clone git://et.devel.redhat.com/ovirt</pre>. Once you have it, copy
+	the <code>ovirt-host-creator</code> directory to /tmp. (The
+	creator needs to run as root, so it's best not to run it
+	directly in your checkout.)
+      </li>
+      <li><strong>Building custom packages</strong>. At this writing
+      there are several custom packages required to build the host
+      (these will be eliminated as more features make their way into
+      fedora). For now we require 3 custom RPMs that you should build
+      as a non-privileged user from the <code>srpms/</code> directory
+	in your <strong>Ovirt</strong> checkout:
+	<pre>$ rpmbuild --rebuild collectd-4.2.0.26.ga2323a2-1.ovirt.src.rpm
+$ rpmbuild --rebuild libvirt-0.3.3-3.fc8.gssapi2.src.rpm
+$ rpmbuild --rebuild kvm-54-2modules.fc8.src./rpm
+	</pre><br />
+	Note that you will almost certainly have to pull in several
+	packages that are required to build these three, but they are
+	all available in the fedora 8 repository.
+      </li>
+      <li><strong>Putting custom packages where the builder can reach
+      them</strong>. <br />
+	<pre>$ cd; mkdir ovirt-repo; cp &gt;path-to-rpms&lt;/*.rpm ~/ovirt-repo; createrepo ~/ovirt-repo</pre><br />
+	Note that if you do not already have createrepo installed, you
+	will need to install it like <pre># yum install createrepo</pre>.
+      </li>
+    </ul>
+    </div>
+    <div id="footer">
+       <p>
+	 Web design courtesy Mairin Duffy and Dan Berrange<br />
+    A project from the <a href="http://et.redhat.com/">Red Hat Emerging Technologies</a> group.
+    </p>
+  </body>
+</html>
