@@ -21,6 +21,8 @@ RETVAL=0
 . /etc/init.d/functions
 
 start() {
+    echo -n "Starting invirt-wui: "
+
     mongrel_rails start -c $INVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
     RETVAL=$?
     if [ $RETVAL -eq 0 ] && touch /var/lock/subsys/invirt-wui ; then
@@ -34,12 +36,22 @@ start() {
     echo -n "Starting host-browser: "
     daemon $INVIRT_DIR/host-browser/host-browser
     echo
+
+    echo -n "Starting taskomatic: "
+    daemon $INVIRT_DIR/task-omatic/taskomatic.rb
+    echo
 }
 
 stop() {
+    echo -n "Shutting down taskomatic: "
+    killproc taskomatic.rb
+    echo
+
     echo -n "Shutting down host-browser: "
     killproc host-browser
+    echo
 
+    echo -n "Shutting down invirt-wui: "
     mongrel_rails stop -c $INVIRT_DIR -P $MONGREL_PID
     RETVAL=$?
     if [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/invirt-wui ; then
@@ -56,6 +68,7 @@ case "$1" in
 	start
 	;;
     stop)
+	stop
 	;;
     restart)
 	stop
