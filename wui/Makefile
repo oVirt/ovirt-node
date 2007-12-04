@@ -32,7 +32,7 @@ clean:
 genlangs:
 	cd src; rake updatepo; rake makemo
 
-tar: clean genlangs
+tar: clean
 	mkdir -p $(NV)
 	cp -a src conf scripts $(NV)
 	find $(NV) \( -name '*~' -o -name '#*#' \) -print0 | xargs --no-run-if-empty --null rm -vf

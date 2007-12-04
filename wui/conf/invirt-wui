@@ -14,29 +14,66 @@ ADDR=127.0.0.1
 RAILS_ENVIRONMENT=production
 USER=invirt
 GROUP=invirt
-export Rails_GEM_VERSION=1.2.2
+export Rails_GEM_VERSION=1.2.6
 
 RETVAL=0
 
+. /etc/init.d/functions
+
+start() {
+    echo -n "Starting invirt-wui: "
+
+    mongrel_rails start -c $INVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ] && touch /var/lock/subsys/invirt-wui ; then
+	echo_success
+	echo
+    else
+	echo_failure
+	echo
+    fi
+
+    echo -n "Starting host-browser: "
+    daemon $INVIRT_DIR/host-browser/host-browser
+    echo
+
+    echo -n "Starting taskomatic: "
+    daemon $INVIRT_DIR/task-omatic/taskomatic.rb
+    echo
+}
+
+stop() {
+    echo -n "Shutting down taskomatic: "
+    killproc taskomatic.rb
+    echo
+
+    echo -n "Shutting down host-browser: "
+    killproc host-browser
+    echo
+
+    echo -n "Shutting down invirt-wui: "
+    mongrel_rails stop -c $INVIRT_DIR -P $MONGREL_PID
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/invirt-wui ; then
+	echo_success
+	echo
+    else
+	echo_failure
+	echo
+    fi
+}
+
 case "$1" in
     start)
-      mongrel_rails start -c $INVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
-      RETVAL=$?
-  ;;
+	start
+	;;
     stop)
-      mongrel_rails stop -c $INVIRT_DIR -P $MONGREL_PID
-      RETVAL=$?
-  ;;
+	stop
+	;;
     restart)
-      if [ -f $MONGREL_PID ] ; then
-	  mongrel_rails restart -c $INVIRT_DIR -P $MONGREL_PID
-	  RETVAL=$?
-      else
-	  pkill mongrel_rails
-	  mongrel_rails start -c $INVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
-	  RETVAL=$?
-      fi
-  ;;
+	stop
+	start
+	;;
     *)
       echo "Usage: invirt-wui {start|stop|restart}"
       exit 1

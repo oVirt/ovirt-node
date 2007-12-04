@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -Wall
+CFLAGS+=-g -Wall
 OBJS=host-browser.o
 LIBS=-lavahi-client -lvirt
 
