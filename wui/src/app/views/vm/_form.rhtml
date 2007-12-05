@@ -16,5 +16,11 @@
 <% # text_field_with_label "Memory Used", "vm", "memory_used" %>
 
 <%= text_field_with_label "Network", "vm", "vnic_mac_addr" %>
+
+<div class="i"><label for="#{vm}_#{storage_volumes}">Storage Volumes</label>
+<select name="storage_volumes[]" multiple="multiple">
+<%= options_from_collection_for_select(@storage_volumes, 'id', 'display_name', @vm.storage_volume_ids) %>
+</select>
+</div>
 <!--[eoform:vm]-->
 

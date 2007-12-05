@@ -10,6 +10,13 @@
   <b>Pending state:</b> <%=h @vm.get_pending_state %>
 </p>
 
+<h3>Storage Volumes</h3>
+<% if !@vm.storage_volumes.empty? %>
+  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @vm.storage_volumes, :remove_from_host => false } %>
+<% else %>
+<p>No attached Storage Volumes</p>
+<% end %>
+
 <h2><%= _("Tasks") %></h2>
 
   <%= render :partial => "/task/list_table", :locals => { :tasks => @vm.tasks } %>
@@ -25,11 +32,14 @@
   </ul>
   <ul class="actions edit">
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @vm } , {:class => "edit" } %></li>
-    <li class="action"><%= link_to 'Cancel queued tasks', { :action => 'cancel_queued_tasks', :id => @vm } , {:class => "edit" } %></li>
+    <li class="action"><%= link_to 'Cancel queued tasks', { :action => 'cancel_queued_tasks', :id => @vm } , {:confirm => 'Are you sure?', :method => :post, :class => "edit" } %></li>
+  </ul>
+  <ul class="actions remove">
+    <li class="action"><%= link_to 'Destroy', { :action => 'destroy', :id => @vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </ul>
   <ul class="actions">
     <% if @vm.user -%>
-      <li class="action"><%= link_to 'Back to Quota', { :controller => 'quota', :action => 'show', :id => @vm.user.user_quota }, { :class => "list" } %></li>
+      <li class="action"><%= link_to 'Back to Home', { :controller => 'consumer', :action => 'index' }, { :class => "list" } %></li>
     <% else -%>
       <li class="action"><%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %></li>
     <% end -%>

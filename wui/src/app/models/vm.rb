@@ -43,6 +43,14 @@ class Vm < ActiveRecord::Base
                        STATE_CREATE_FAILED => STATE_CREATE_FAILED}
   TASK_STATE_TRANSITIONS = []
 
+  def storage_volume_ids
+    storage_volumes.collect {|x| x.id }
+  end
+
+  def storage_volume_ids=(ids)
+    self.storage_volumes = ids.collect{|x| StorageVolume.find(x) }
+  end
+
   def get_pending_state
     pending_state = state
     pending_state = EFFECTIVE_STATE[state] if pending_state

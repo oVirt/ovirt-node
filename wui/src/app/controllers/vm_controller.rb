@@ -28,14 +28,16 @@ class VmController < ApplicationController
       :vnic_mac_addr => mac.collect {|x| "%02x" % x}.join(":"),
       :uuid => uuid
     }
-
+    @storage_volumes = StorageVolume.find_for_vm
     @vm = Vm.new( newargs )
   end
 
   def create
     params[:vm][:state] = Vm::STATE_PENDING
     @vm = Vm.new(params[:vm])
+    new_storage_ids = params[:storage_volumes].sort.collect {|x| x.to_i }
     if @vm.save
+      @vm.storage_volume_ids=new_storage_ids 
       @task = Task.new({ :user_id => get_login_user_id.id,
                          :vm_id   => @vm.id,
                          :action  => Task::ACTION_CREATE_VM,
@@ -45,7 +47,7 @@ class VmController < ApplicationController
       else
         flash[:notice] = 'Error in inserting task.'
       end
-      redirect_to :controller => 'quota', :action => 'show', :id => @vm.user.user_quota
+      redirect_to :controller => 'consumer', :action => 'index'
     else
       render :action => 'new'
     end
@@ -53,22 +55,31 @@ class VmController < ApplicationController
 
   def edit
     @vm = Vm.find(params[:id])
+    @storage_volumes = StorageVolume.find_for_vm(@vm)
   end
 
   def update
     @vm = Vm.find(params[:id])
     #needs restart if certain fields are changed (since those will only take effect the next startup)
     needs_restart = false
+    needs_new_storage_ids = false
     Vm::NEEDS_RESTART_FIELDS.each do |field|
       unless @vm[field].to_s == params[:vm][field]
         needs_restart = true
         break
       end
     end
+    current_storage_ids = @vm.storage_volume_ids.sort
+    new_storage_ids = params[:storage_volumes].sort.collect {|x| x.to_i }
+    unless current_storage_ids == new_storage_ids
+      needs_new_storage_ids = true 
+      needs_restart = true
+    end
     params[:vm][:needs_restart] = 1 if needs_restart
     if @vm.update_attributes(params[:vm])
+      @vm.storage_volume_ids=new_storage_ids if needs_new_storage_ids
       flash[:notice] = 'Vm was successfully updated.'
-      redirect_to :controller => 'quota', :action => 'show', :id => @vm.user.user_quota
+      redirect_to :controller => 'consumer', :action => 'index'
     else
       render :action => 'edit'
     end
@@ -78,7 +89,7 @@ class VmController < ApplicationController
     @vm = Vm.find(params[:id])
     quota = @vm.user.user_quota
     @vm.destroy
-    redirect_to :controller => 'quota', :action => 'show', :id => quota
+    redirect_to :controller => 'consumer', :action => 'index'
   end
 
   def vm_action

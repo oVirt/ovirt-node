@@ -1,12 +1,36 @@
 <div id="left">
 <h2><%= _("Manage Virtual Machines") %></h2>
 <p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
-<%= button_to "Start", {} %>  <%= button_to "Stop", {} %> <select><option class="other">Other Actions</option><option></option><option>Suspend</option><option>Resume</option><option>Reboot</option><option>-------------------</option><option class="remove">Destroy</option></select>
+
+<%if @user -%>
+<%= error_messages_for 'vm_actions' %>
+<script type="text/javascript">
+function confirm_and_submit(item){
+   c = true
+   if(item.options[item.options.selectedIndex].value == "destroy"){
+      c = confirm('Are you sure you want to destroy these VMs?')
+   }
+   if(c){ item.form.submit(); } else{ item.selectedIndex = 0; }
+}
+</script> 
+
+<form action="/consumer/vm_actions" name="vm_actions" method="post">
+<%= tag :input, { "type" => "submit", "name" => "vm_actions[#{Task::ACTION_START_VM}]", "value" => "Start"}  %> 
+<%= tag :input, { "type" => "submit", "name" => "vm_actions[#{Task::ACTION_SHUTDOWN_VM}]", "value" => "Stop"}  %> 
+<select onchange="return confirm_and_submit(this)" name="vm_actions[other_actions]">
+  <option class="other">Other Actions</option>
+  <option></option>
+<% for action in @action_values %>
+  <option value="<%= action[1]%>"><%= action[0]%></option>
+<% end %>
+  <option>-------------------</option>
+  <option class="remove" value="destroy" onSelect="confirm('Are you sure?'">Destroy</option>
+</select>
 
 <br/><br/>
 
-<%if @user -%>
 <%= render :partial => "/vm/list", :locals => { :vms => @user.vms } %>
+</form>
 
   <h3>Your Resource Pool/Quota</h3>
   <%if @quota -%>
