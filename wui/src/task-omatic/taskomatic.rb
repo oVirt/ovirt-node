@@ -75,7 +75,7 @@ end
 
 def setTaskState(task, state, msg = nil)
   task.state = state
-  #task.msg = msg
+  task.message = msg
   task.save
 end
 
@@ -126,8 +126,8 @@ end
 # that this runs locally, so the management server will have to have access
 # to the same iSCSI LUNs as the guests will
 def find_wwid(ipaddr, port, target, lun)
-  system('/sbin/iscsiadm --mode discovery --type sendtargets --portal $IPADDR >& /dev/null')
-  system('/sbin/iscsiadm --mode node --targetname $TARGET --portal $IPADDR:$PORT --login >& /dev/null')
+  system('/sbin/iscsiadm --mode discovery --type sendtargets --portal ' + ipaddr)
+  system('/sbin/iscsiadm --mode node --targetname ' + target + ' --portal ' + ipaddr + ':'+ port.to_s + ' --login')
   
   sessions = Dir['/sys/class/iscsi_session/session*']
 
@@ -276,6 +276,14 @@ def start_vm(task, first_boot = nil)
     # FIXME: right now we are only looking at the very first volume; eventually
     # we will want to do every volume here
     break
+  end
+
+  if $wwid == nil
+    # we couldn't find *any* disk to attach to the VM; we have to quit
+    # FIXME: eventually, we probably want to allow diskless machines that will
+    # boot via NFS or iSCSI or whatever
+    setTaskState(task, Task::STATE_FAILED, "No valid storage volumes found")
+    return
   end
 
   # OK, we found a host that will work; now let's build up the XML
