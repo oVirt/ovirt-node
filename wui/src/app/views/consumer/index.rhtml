@@ -41,16 +41,20 @@ function confirm_and_submit(item){
   <%= link_to "Show", { :controller => "quota", :action => "show", :id => @quota }, { :class => "show" } %>
   <% end -%>
 
+<%else -%>
+Your quota has not yet been set up. Please contact an administrator.
 <%end -%>
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
+  <%if @user -%>
   <ul class="actions create">
     <li class="action"><%= link_to_if @quota, 'Create New VM', {:controller => "vm", :action => 'new', :user_id => @user}, { :class => "create" } %></li>
   </ul>
   <%= render :partial => "/task/user_list", :locals => { :tasks => @user.tasks } %>
+  <%end -%>
 
 </div>
 <%- content_for :title do -%>

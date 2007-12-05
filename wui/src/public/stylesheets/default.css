@@ -45,8 +45,8 @@ img.logo { margin: 0.5em 0em; }
 /* ========= MAIN ========== */
 
 #main {  }
-#left { width: 35em; float: left; }
-#right { width: 14em; float: right; }
+#left { width: 37em; float: left; }
+#right { width: 12em; float: right; }
 
 /* ========= INPUTS ========== */
 
@@ -128,7 +128,7 @@ option.remove { font-weight: bold; color: #cc0000; }
 
 /* ========= TABLE LISTS ========== */
 
-table.listing { width: 35em; border: none; margin: 0em; padding: 0em; border-collapse: collapse;}
+table.listing { font-size: 11pt; width: 37em; border: none; margin: 0em; padding: 0em; border-collapse: collapse;}
 table.listing tr { padding: 0em; margin: 0em; }
 table.listing th { text-align: center; font-weight: normal; color: #aaa; border: 1px solid #eee; background-color: #fff; }
 table.listing th.empty { border: none;  background-color: #fff; }

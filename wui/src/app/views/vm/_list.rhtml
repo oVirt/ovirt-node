@@ -6,7 +6,6 @@
     <th>Memory (gigs)</th>
     <th>vNIC MAC Addr</th>
     <th>State</th>
-    <th>Needs Restart?</th>
   </thead>
   
 <% for vm in vms %>
@@ -17,13 +16,12 @@
     <td><%= vm.num_vcpus_used %></td>
     <td><%= vm.memory_used %></td>
     <td><%= vm.vnic_mac_addr %></td>
-    <td><%= vm.state %></td>
-    <td><%= if vm.needs_restart.nil? or vm.needs_restart == 0 
-            "No"
-          else
-            "Yes"
-          end
-        %></td>
+    <td style="text-align:left">
+      <%= vm.state %>
+      <%unless vm.needs_restart.nil? or vm.needs_restart == 0  -%>
+        <div class="secondary">(needs restart)</div>
+      <% end -%>
+    </td>
   </tr>
 <% end %>
 </table>
