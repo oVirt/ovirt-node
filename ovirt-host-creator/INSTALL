@@ -37,6 +37,25 @@ rpm-build
 libxml2-devel
 perl-ExtUtils-MakeMaker
 lm_sensors-devel
+python-devel
+readline-devel
+ncurses-devel
+avahi-devel
+qemu
+cyrus-sasl-devel
+gcc
+autoconf
+automake
+libtool
+SDL-devel
+dev86
+iasl
+compat-gcc-34
+e2fsprogs-devel
+texi2html
+glibc-devel
+kernel-devel
+createrepo
 
 2)  Checkout the ovirt repo:
 # git clone git://et.devel.redhat.com/ovirt

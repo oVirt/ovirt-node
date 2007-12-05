@@ -49,6 +49,10 @@
 
 #define INTSIZE 100
 
+#ifndef DBWRITER_PATH
+#define DBWRITER_PATH "./dbwriter.rb"
+#endif
+
 static AvahiSimplePoll *simple_poll = NULL;
 
 static void ignoreVirtRemoteError(void *userData, virErrorPtr error)
@@ -116,7 +120,7 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	  virConnectPtr conn;
 	  int maxvcpus;
 	  virNodeInfo nodeinfo;
-	  int err;
+	  int err, ret;
 	  char *name;
 	  char *argv[7];
 	  char memout[INTSIZE],cpuout[INTSIZE],cpuspeedout[INTSIZE];
@@ -176,14 +180,21 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 
 	  pid = fork();
 
-	  if (pid == 0) {
+	  if (pid < 0) {
+	    fprintf(stderr, "Failed to fork: %s\n",strerror(errno));
+	  }
+	  else if (pid == 0) {
 	    // child
-	    execv("dbwriter.rb",argv);
+	    ret = execv(DBWRITER_PATH, argv);
+	    if (ret < 0) {
+	      fprintf(stderr, "Failed to exec %s: %s\n",DBWRITER_PATH,strerror(errno));
+	    }
 	  }
 	  else {
 	    // parent
 	    waitpid(pid, NULL, 0);
 	  }
+	  
 
 	  break;
         }

@@ -1,20 +1,24 @@
 #!/usr/bin/ruby
 
-$: << "../wui/src/app"
+$: << "../app"
+$: << "/usr/share/invirt-wui/app"
 
+require 'rubygems'
 require 'active_record'
 require 'erb'
 require 'libvirt'
 require 'rexml/document'
 include REXML
 
+require 'models/vm.rb'
 require 'models/task.rb'
 require 'models/host.rb'
-require 'models/vm.rb'
 require 'models/storage_volume.rb'
 
+$stdout = File.new('/var/log/taskomatic.log', 'a')
+
 def database_configuration
-  YAML::load(ERB.new(IO.read('../wui/src/config/database.yml')).result)
+  YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
 end
 
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
@@ -513,26 +517,31 @@ def resume_vm(task)
   vm.save
 end
 
-while(true)
-  puts 'Checking for tasks...'
-  
-  Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
-    case task.action
-    when Task::ACTION_CREATE_VM then create_vm(task)
-    when Task::ACTION_SHUTDOWN_VM then shutdown_vm(task)
-    when Task::ACTION_START_VM then start_vm(task)
-    when Task::ACTION_SUSPEND_VM then suspend_vm(task)
-    when Task::ACTION_RESUME_VM then resume_vm(task)
-    when Task::ACTION_SAVE_VM then save_vm(task)
-    when Task::ACTION_RESTORE_VM then restore_vm(task)
-    else
-      puts "unknown task " + task.action
-      setTaskState(task, Task::STATE_FAILED, "Unknown task type")
+pid = fork do
+  loop do
+    puts 'Checking for tasks...'
+    
+    Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
+      case task.action
+      when Task::ACTION_CREATE_VM then create_vm(task)
+      when Task::ACTION_SHUTDOWN_VM then shutdown_vm(task)
+      when Task::ACTION_START_VM then start_vm(task)
+      when Task::ACTION_SUSPEND_VM then suspend_vm(task)
+      when Task::ACTION_RESUME_VM then resume_vm(task)
+      when Task::ACTION_SAVE_VM then save_vm(task)
+      when Task::ACTION_RESTORE_VM then restore_vm(task)
+      else
+        puts "unknown task " + task.action
+        setTaskState(task, Task::STATE_FAILED, "Unknown task type")
+      end
+      
+      task.time_ended = Time.now
+      task.save
     end
-
-    task.time_ended = Time.now
-    task.save
+    
+    $stdout.flush
+    sleep 5
   end
-  
-  sleep 5
 end
+
+Process.detach(pid)

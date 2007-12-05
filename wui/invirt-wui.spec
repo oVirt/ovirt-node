@@ -26,8 +26,10 @@ BuildRequires: ruby >= 1.8.1
 BuildRequires: ruby-devel
 BuildRequires: ruby-gettext-package
 BuildRequires: rubygem(rake) >= 0.7
+BuildRequires: avahi-devel
+BuildRequires: libvirt-devel
 Provides: invirt-wui
-BuildArch: noarch
+BuildArch: i386 x86_64
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL: http://invirt.et.redhat.com
 
@@ -39,6 +41,10 @@ The webapp for Invirt.
 %setup -q
 
 %build
+
+# make sure we override the DBWRITER_PATH with where it will actually be in
+# the end; yes, this is ugly
+CFLAGS="-DDBWRITER_PATH=\\\"/usr/share/invirt-wui/host-browser/dbwriter.rb\\\"" make -C src/host-browser
 
 %install
 test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
@@ -60,12 +66,21 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/mongrel.log
 touch %{buildroot}%{_localstatedir}/log/%{name}/rails.log
 %{__install} -p -m0644 %{pbuild}/conf/%{name}.conf %{buildroot}%{_sysconfdir}/httpd/conf.d
 %{__install} -Dp -m0755 %{pbuild}/conf/%{name} %{buildroot}%{_initrddir}
+
+# copy over all of the src directory...
 %{__cp} -a %{pbuild}/src/* %{buildroot}%{app_root}
+
+# remove the files not needed for the installation
+%{__rm} -f %{buildroot}%{app_root}/host-browser/Makefile
+%{__rm} -f %{buildroot}%{app_root}/host-browser/.gitignore
+%{__rm} -f %{buildroot}%{app_root}/host-browser/*.o
+%{__rm} -f %{buildroot}%{app_root}/host-browser/*.c
+%{__rm} -f %{buildroot}%{app_root}/task-omatic/.gitignore
+
 %{__cp} -a %{pbuild}/scripts/invirt_create_db.sh %{buildroot}%{_bindir}
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
 %{__ln_s} %{_localstatedir}/lib/%{name}/tmp %{buildroot}%{app_root}/tmp
-find %{buildroot}%{app_root} -type f -perm +ugo+x -print0 | xargs -0 -r %{__chmod} a-x
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -76,7 +91,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/invirt_create_db.sh
 %{_initrddir}/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
-#%dir /etc/sysconfig/%{name}
 %doc
 %attr(-, invirt, invirt) %{_localstatedir}/lib/%{name}
 %attr(-, invirt, invirt) %{_localstatedir}/run/%{name}
