@@ -2,7 +2,7 @@ require 'util/ovirt'
 
 class UserQuota < ActiveRecord::Base
   belongs_to :user
-  validates_presence_of :total_vcpus, :total_memory, :total_vnics, :total_storage
+  validates_presence_of :total_vcpus, :total_vmemory, :total_vnics, :total_storage
 
   def total_vmemory_in_mb
     kb_to_mb(total_vmemory)
