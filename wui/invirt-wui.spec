@@ -21,6 +21,7 @@ Requires: httpd >= 2.0
 Requires: mod_auth_kerb
 Requires: ruby-libvirt
 Requires: iscsi-initiator-utils
+Requires: cyrus-sasl-gssapi
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 Requires(preun): /sbin/service
