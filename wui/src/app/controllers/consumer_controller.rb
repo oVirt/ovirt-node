@@ -11,6 +11,9 @@ class ConsumerController < ApplicationController
     else
       @quota = nil
     end
+    if @quota
+      @resources = @quota.full_resources
+    end
   end
 
   def vm_actions

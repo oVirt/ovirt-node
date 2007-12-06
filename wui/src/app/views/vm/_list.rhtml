@@ -3,7 +3,7 @@
     <th class="empty"></th>
     <th class="empty">Description <span class="amp">&</span> UUID</th>
     <th>CPUs</th>
-    <th>Memory (gigs)</th>
+    <th>Memory (mb)</th>
     <th>vNIC MAC Addr</th>
     <th>State</th>
   </thead>
@@ -13,8 +13,8 @@
    
     <td><%= check_box_tag "vm_actions[vms][]", "#{vm.id}" -%>  </td>
     <td style="text-align:left"><%= link_to vm.description, { :controller => "vm", :action => 'show', :id => vm }, { :class => "show" } %><div class="secondary"><%= vm.uuid %></div></td>
-    <td><%= vm.num_vcpus_used %></td>
-    <td><%= vm.memory_used %></td>
+    <td><%= vm.num_vcpus_allocated %></td>
+    <td><%= vm.memory_allocated_in_mb %></td>
     <td><%= vm.vnic_mac_addr %></td>
     <td style="text-align:left">
       <%= vm.state %>

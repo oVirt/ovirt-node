@@ -14,6 +14,8 @@ require 'models/vm.rb'
 require 'models/task.rb'
 require 'models/host.rb'
 require 'models/storage_volume.rb'
+require 'models/user.rb'
+require 'models/user_quota.rb'
 
 $stdout = File.new('/var/log/taskomatic.log', 'a')
 
@@ -77,6 +79,11 @@ def setTaskState(task, state, msg = nil)
   task.state = state
   task.message = msg
   task.save
+end
+
+def setVmState(vm, state)
+  vm.state = state
+  vm.save
 end
 
 def findVM(task, fail_on_nil_host_id = true)
@@ -197,6 +204,8 @@ def shutdown_vm(task)
     return
   end
 
+  setVmState(vm, Vm::STATE_STOPPING)
+
   # OK, now that we found the VM, go looking in the hosts table
   begin
     host = findHost(task, vm)
@@ -211,6 +220,13 @@ def shutdown_vm(task)
     dom.undefine
     conn.close
   rescue
+    # FIXME: we could get out of sync with the host here, for instance, by the
+    # user typing "shutdown" inside the guest.  That would actually shutdown
+    # the guest, and the host would know about it, but we would not.  The
+    # solution here is to be more selective in which exceptions we handle; a
+    # connection exception we just want to fail, but if we fail to find the
+    # ID on the host, we should probably still mark it shut off to regain
+    # consistency
     setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
     return
   end
@@ -218,12 +234,15 @@ def shutdown_vm(task)
   setTaskState(task, Task::STATE_FINISHED)
 
   vm.host_id = nil
+  vm.memory_used = nil
+  vm.num_vcpus_used = nil
   vm.state = Vm::STATE_STOPPED
   vm.save
 end
 
 def start_vm(task, first_boot = nil)
   puts "start_vm"
+
 
   # here, we are given an id for a VM to start
 
@@ -243,6 +262,8 @@ def start_vm(task, first_boot = nil)
     setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
     return
   end
+
+  setVmState(vm, Vm::STATE_STARTING)
 
   # the VM might be in an inconsistent state in the database; however, we
   # should check it out on the remote host, and update the database as
@@ -275,7 +296,9 @@ def start_vm(task, first_boot = nil)
     $wwid = find_wwid(volume.ip_addr, volume.port, volume.target, volume.lun)
     # FIXME: right now we are only looking at the very first volume; eventually
     # we will want to do every volume here
-    break
+    if $wwid != nil
+      break
+    end
   end
 
   if $wwid == nil
@@ -317,11 +340,14 @@ def start_vm(task, first_boot = nil)
 
   vm.host_id = host.id
   vm.state = Vm::STATE_RUNNING
+  vm.memory_used = vm.memory_allocated
+  vm.num_vcpus_used = vm.num_vcpus_allocated
   vm.save
 end
 
 def save_vm(task)
   puts "save_vm"
+
 
   # here, we are given an id for a VM to suspend
 
@@ -344,6 +370,8 @@ def save_vm(task)
     setTaskState(task, Task::STATE_FAILED, "Cannot save shutdown domain")
     return
   end
+
+  setVmState(vm, Vm::STATE_SAVING)
 
   # OK, now that we found the VM, go looking in the hosts table
   begin
@@ -400,6 +428,8 @@ def restore_vm(task)
     return
   end
 
+  setVmState(vm, Vm::STATE_RESTORING)
+
   # OK, now that we found the VM, go looking in the hosts table
   begin
     host = findHost(task, vm)
@@ -452,6 +482,8 @@ def suspend_vm(task)
     return
   end
 
+  setVmState(vm, Vm::STATE_SUSPENDING)
+
   # OK, now that we found the VM, go looking in the hosts table
   begin
     host = findHost(task, vm)
@@ -501,6 +533,8 @@ def resume_vm(task)
     setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
     return
   end
+
+  setVmState(vm, Vm::STATE_RESUMING)
 
   # OK, now that we found the VM, go looking in the hosts table
   begin

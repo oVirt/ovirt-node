@@ -28,17 +28,15 @@ class VmController < ApplicationController
       :vnic_mac_addr => mac.collect {|x| "%02x" % x}.join(":"),
       :uuid => uuid
     }
-    @storage_volumes = StorageVolume.find_for_vm
     @vm = Vm.new( newargs )
   end
 
   def create
     params[:vm][:state] = Vm::STATE_PENDING
     @vm = Vm.new(params[:vm])
-    new_storage_ids = params[:storage_volumes].sort.collect {|x| x.to_i }
+    user = get_login_user_id
     if @vm.save
-      @vm.storage_volume_ids=new_storage_ids 
-      @task = Task.new({ :user_id => get_login_user_id.id,
+      @task = Task.new({ :user_id => user.id,
                          :vm_id   => @vm.id,
                          :action  => Task::ACTION_CREATE_VM,
                          :state   => Task::STATE_QUEUED})
@@ -55,7 +53,6 @@ class VmController < ApplicationController
 
   def edit
     @vm = Vm.find(params[:id])
-    @storage_volumes = StorageVolume.find_for_vm(@vm)
   end
 
   def update
@@ -70,14 +67,15 @@ class VmController < ApplicationController
       end
     end
     current_storage_ids = @vm.storage_volume_ids.sort
-    new_storage_ids = params[:storage_volumes].sort.collect {|x| x.to_i }
+    new_storage_ids = params[:vm][:storage_volume_ids]
+    new_storage_ids = [] unless new_storage_ids
+    new_storage_ids = new_storage_ids.sort.collect {|x| x.to_i }
     unless current_storage_ids == new_storage_ids
       needs_new_storage_ids = true 
       needs_restart = true
     end
     params[:vm][:needs_restart] = 1 if needs_restart
     if @vm.update_attributes(params[:vm])
-      @vm.storage_volume_ids=new_storage_ids if needs_new_storage_ids
       flash[:notice] = 'Vm was successfully updated.'
       redirect_to :controller => 'consumer', :action => 'index'
     else
@@ -87,7 +85,6 @@ class VmController < ApplicationController
 
   def destroy
     @vm = Vm.find(params[:id])
-    quota = @vm.user.user_quota
     @vm.destroy
     redirect_to :controller => 'consumer', :action => 'index'
   end
