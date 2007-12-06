@@ -57,7 +57,8 @@ class Task < ActiveRecord::Base
                                   Vm::STATE_STOPPED       => [ACTION_START_VM],
                                   Vm::STATE_SUSPENDED     => [ACTION_RESUME_VM],
                                   Vm::STATE_SAVED         => [ACTION_RESTORE_VM],
-                                  Vm::STATE_CREATE_FAILED => []}
+                                  Vm::STATE_CREATE_FAILED => [],
+                                  Vm::STATE_INVALID       => []}
 
   STATE_QUEUED       = "queued"
   STATE_RUNNING      = "running"

@@ -85,7 +85,8 @@ class Vm < ActiveRecord::Base
   end    
 
   def get_action_list
-    Task::VALID_ACTIONS_PER_VM_STATE[get_pending_state]
+    # return empty list rather than nil
+    Task::VALID_ACTIONS_PER_VM_STATE[get_pending_state] || []
   end
 
   def get_action_and_label_list
