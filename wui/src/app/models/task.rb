@@ -65,7 +65,10 @@ class Task < ActiveRecord::Base
   STATE_FINISHED     = "finished"
   STATE_PAUSED       = "paused"
   STATE_FAILED       = "failed"
-  STATE_CANCELED       = "canceled"
+  STATE_CANCELED     = "canceled"
+
+  COMPLETED_STATES = [STATE_FINISHED, STATE_FAILED, STATE_CANCELED]
+  WORKING_STATES   = [STATE_QUEUED, STATE_RUNNING, STATE_PAUSED]
 
   def cancel
     self[:state] = STATE_CANCELED

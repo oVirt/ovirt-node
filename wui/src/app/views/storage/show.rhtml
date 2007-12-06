@@ -1,11 +1,13 @@
 <div id="left">
 <h2><%= _("Storage Volume") %></h2>
 
-<% for column in StorageVolume.content_columns %>
-<p>
-  <b><%= column.human_name %>:</b> <%=h @storage_volume.send(column.name) %>
-</p>
-<% end %>
+<p><b>IP address:</b> <%=h @storage_volume.ip_addr %></p>
+<p><b>Port:</b>       <%=h @storage_volume.port %></p>
+<p><b>Target:</b>     <%=h @storage_volume.target %></p>
+<p><b>LUN:</b>        <%=h @storage_volume.lun %></p>
+<p><b>Size:</b>       <%=h @storage_volume.size_in_gb %> GB</p>
+<p><b>Type:</b>       <%=h @storage_volume.storage_type %></p>
+
 
 <h3>Hosts</h3>
 <%= render :partial => "/host/list", :locals => { :hosts => @storage_volume.hosts, :remove_from_host => true  } %>
@@ -21,6 +23,12 @@
     <li class="action"><%= link_to 'Delete Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %></li>
   </ul>
   <ul class="actions">
-    <li class="action"><%= link_to 'All Storage Volumes', { :action => 'list' }, { :class => "list" } %></li>
+    <% if params[:vm_id] -%>
+      <li class="action"><%= link_to 'Back to VM', { :controller => 'vm', :action => 'show', :id => params[:vm_id] }, { :class => "list" } %></li>
+    <% elsif params[:host_id] -%>
+      <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => params[:host_id] }, { :class => "list" } %></li>
+    <% else -%>
+      <li class="action"><%= link_to 'Back to admin', { :controller => 'admin', :action => 'index' }, { :class => "list" } %></li>
+    <% end -%>
   </ul>
 </div>

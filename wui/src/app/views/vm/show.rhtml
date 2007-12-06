@@ -1,18 +1,27 @@
 <div id="left">
 <h2><%= _("Virtual Machine") %></h2>
 
-<% for column in Vm.content_columns %>
+<p><b>Uuid:</b>                <%=h @vm.uuid %></p>
+<p><b>Description:</b>         <%=h @vm.description %></p>
+<p><b>Num vcpus allocated:</b> <%=h @vm.num_vcpus_allocated %></p>
+<p><b>Num vcpus used:</b>      <%=h @vm.num_vcpus_used %></p>
+<p><b>Memory allocated:</b>    <%=h @vm.memory_allocated_in_mb %> MB</p>
+<p><b>Memory used:</b>         <%=h @vm.memory_used_in_mb %> MB</p>
+<p><b>vNIC MAC address:</b>    <%=h @vm.vnic_mac_addr %></p>
+<br/>
 <p>
-  <b><%= column.human_name %>:</b> <%=h @vm.send(column.name) %>
+  <b>State:</b>               <%=h @vm.state %>
+  <%unless @vm.needs_restart.nil? or @vm.needs_restart == 0  -%>
+    (needs restart)
+  <% end -%>
 </p>
-<% end %>
 <p>
-  <b>Pending state:</b> <%=h @vm.get_pending_state %>
+  <b>Pending state:</b>    <%=h @vm.get_pending_state %>
 </p>
 
 <h3>Storage Volumes</h3>
 <% if !@vm.storage_volumes.empty? %>
-  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @vm.storage_volumes, :remove_from_host => false } %>
+  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @vm.storage_volumes, :remove_from_host => false, :vm_id => @vm.id } %>
 <% else %>
 <p>No attached Storage Volumes</p>
 <% end %>

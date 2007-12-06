@@ -12,7 +12,11 @@
 <tbody>
 <% for storage_volume in storage_volumes %>
 <tr class="<%= cycle('odd','even', :name => storage_volumes) %>">
-  <td style="text-align:left;"><%= link_to storage_volume.ip_addr, { :controller => 'storage', :action => 'show', :id => storage_volume }, { :class => "show" } %><span class="secondary">:<%= storage_volume.port %></span></td>
+  <% vol_hash = { :controller => 'storage', :action => 'show', :id => storage_volume }
+     vol_hash[:vm_id] = vm_id if defined? vm_id
+     vol_hash[:host_id] = host_id if defined? host_id
+  %>
+  <td style="text-align:left;"><%= link_to storage_volume.ip_addr, vol_hash, { :class => "show" } %><span class="secondary">:<%= storage_volume.port %></span></td>
   <td><%= storage_volume.storage_type %></td>
   <td><%= storage_volume.lun %></td>
   <td><%= storage_volume.target %></td>

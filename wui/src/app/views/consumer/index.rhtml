@@ -57,7 +57,7 @@ Your quota has not yet been set up. Please contact an administrator.
   <ul class="actions create">
     <li class="action"><%= link_to_if @quota, 'Create New VM', {:controller => "vm", :action => 'new', :user_id => @user}, { :class => "create" } %></li>
   </ul>
-  <%= render :partial => "/task/user_list", :locals => { :tasks => @user.tasks } %>
+  <%= render :partial => "/task/user_list", :locals => { :tasks => @user.working_tasks } %>
   <%end -%>
 
 </div>

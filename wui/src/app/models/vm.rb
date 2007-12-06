@@ -62,6 +62,13 @@ class Vm < ActiveRecord::Base
     self[:memory_allocated]=(mb_to_kb(mem))
   end
 
+  def memory_used_in_mb
+    kb_to_mb(memory_used)
+  end
+  def memory_used_in_mb=(mem)
+    self[:memory_used]=(mb_to_kb(mem))
+  end
+
   def get_pending_state
     pending_state = state
     pending_state = EFFECTIVE_STATE[state] if pending_state
