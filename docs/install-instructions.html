@@ -12,11 +12,17 @@
     </div>
     <div id="content">
     <h2>Overview</h2>
+    <p><strong>Warning: Right now Ovirt installation is for developers
+    only! We are working hard to make installation much simpler (and
+    this document much shorter) but at the moment it requires numerous 
+	bleeding-edge packages and a lot of configuration. You have
+	been warned!</strong></p>
+
     <h3>How to use this document</h3>
     <p>This documented is intended to give both a high-level view
     of <strong>Ovirt's</strong> moving parts, and also walk the user
     through a complete installation. However as of this writing
-    (Dec. 1, 2007) <strong>Ovirt</strong> is a rapidly moving
+    (Dec. 6, 2007) <strong>Ovirt</strong> is a rapidly moving
     target. Therefore, please consult the README and INSTALL documents
     included with the source code when you install each piece; this
     document will inevitably lag them.
@@ -431,7 +437,19 @@ Your IP addresses will of course be different, and you will
     </ul>
     
     <h3>Installing the WUI</h3>
-    Instructions coming soon...
+    <h4>Overview</h4>
+    <p>Installing the <strong>Ovirt</strong> WUI is fairly
+      straightforward. The basic steps are:</p>
+    <ol>
+      <li>Install the invirt-wui rpm with yum. It will pull in a
+	large number of dependencies</li>
+      <li>Run the script to create the database and load the
+      schema</li>
+      <li>Obtain necessary Kerberos conf and keytabs</li>
+      <li>Start the wui service</li>
+    </ol>
+
+    <p>Details coming...</p>
 
     </div>
     <div id="footer">
