@@ -59,20 +59,18 @@ class VmController < ApplicationController
     @vm = Vm.find(params[:id])
     #needs restart if certain fields are changed (since those will only take effect the next startup)
     needs_restart = false
-    needs_new_storage_ids = false
-    Vm::NEEDS_RESTART_FIELDS.each do |field|
-      unless @vm[field].to_s == params[:vm][field]
-        needs_restart = true
-        break
+    unless @vm.get_pending_state == Vm::STATE_STOPPED
+      Vm::NEEDS_RESTART_FIELDS.each do |field|
+        unless @vm[field].to_s == params[:vm][field]
+          needs_restart = true
+          break
+        end
       end
-    end
-    current_storage_ids = @vm.storage_volume_ids.sort
-    new_storage_ids = params[:vm][:storage_volume_ids]
-    new_storage_ids = [] unless new_storage_ids
-    new_storage_ids = new_storage_ids.sort.collect {|x| x.to_i }
-    unless current_storage_ids == new_storage_ids
-      needs_new_storage_ids = true 
-      needs_restart = true
+      current_storage_ids = @vm.storage_volume_ids.sort
+      new_storage_ids = params[:vm][:storage_volume_ids]
+      new_storage_ids = [] unless new_storage_ids
+      new_storage_ids = new_storage_ids.sort.collect {|x| x.to_i }
+      needs_restart = true unless current_storage_ids == new_storage_ids
     end
     params[:vm][:needs_restart] = 1 if needs_restart
     if @vm.update_attributes(params[:vm])
@@ -85,8 +83,13 @@ class VmController < ApplicationController
 
   def destroy
     @vm = Vm.find(params[:id])
-    @vm.destroy
-    redirect_to :controller => 'consumer', :action => 'index'
+    if @vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED
+      @vm.destroy
+      redirect_to :controller => 'consumer', :action => 'index'
+    else
+      flash[:notice] = "Vm must be stopped to destroy it."
+      redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
+    end
   end
 
   def vm_action
