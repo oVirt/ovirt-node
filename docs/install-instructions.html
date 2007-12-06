@@ -112,10 +112,11 @@
     <ul>
       <li><strong>Ovirt host:</strong> Bare metal, will be provisioned
 	via PXE, usb key, or live CD. Will host managed VMs once it is
-	built.</li>
+	built. x86_64 only supported (it may well work on x86 but we
+	don't build or test it that way).</li>
       <li><strong>FreeIPA server:</strong> A Fedora 7 host or VM.</li>
       <li><strong>Ovirt host builder:</strong> A Fedora 8 host or
-	VM. Will need to run tftp if you are using PXE to build
+	VM, x86_64 only. Will need to run tftp if you are using PXE to build
 	the <strong>Ovirt</strong> host. You can also use this machine
 	as your iSCSI target if necessary.</li>
       <li><strong>Ovirt management app:</strong> A Fedora 7 or Fedora
@@ -134,8 +135,41 @@
     <p>The installation procedure for <strong>FreeIPA</strong> is well
       documented <a href="http://www.freeipa.com/page/QuickInstall">here</a>.
       As mentioned above, make sure you install on a physical host or
-      VM that will keep good time.
+      VM that will keep good time. Another thing to consider is that
+      each of the hosts listed above will need a static DNS entry that
+      resolves both ways. This is probably a good time to choose the
+      IPs you're going to use and add DNS records for them.
     </p>
+    <p>Once <strong>FreeIPA</strong> is installed, you will need to generate a keytab
+      for each <strong>Ovirt</strong> host you install. You do this
+      from the command line on your freeIPA server, as follows:
+<pre>[root@freeipa ~]# kinit admin@EXAMPLE.COM
+Password for admin@EXAMPLE.COM:
+[root@freeipa ~]# kadmin.local
+Authenticating as principal admin/admin@EXAMPLE.COM with password.
+kadmin.local: kadmin.local:  addprinc -randkey libvirt/ovirt@EXAMPLE.COM
+WARNING: no policy specified for libvirt/ovirt@EXAMPLE.COM;
+  defaulting to no policy
+Principal "libvirt/ovirt@EXAMPLE.COM" created.
+kadmin.local:  ktadd -k /tmp/ovirt-libvirt.tab libvirt/ovirt@EXAMPLE.COM
+Entry for principal
+  libvirt/ovirt@EXAMPLE.COM with kvno 2, encryption type Triple DES
+  cbc mode with HMAC/sha1 added to keytab
+  WRFILE:/tmp/ovirt-libvirt.tab.
+Entry for principal libvirt/ovirt@EXAMPLE.COM with kvno 2,
+  encryption type ArcFour with HMAC/md5 added to keytab
+  WRFILE:/tmp/ovirt-libvirt.tab.
+Entry for principal libvirt/ovirt@EXAMPLE.COM with kvno 2,
+  encryption type DES with HMAC/sha1 added to keytab
+  WRFILE:/tmp/ovirt-libvirt.tab.
+Entry for principal libvirt/ovirt@EXAMPLE.COM with kvno 2,
+  encryption type DES cbc mode with RSA-MD5 added to keytab
+  WRFILE:/tmp/ovirt-libvirt.tab.
+kadmin.local: quit</pre></p>
+
+    <p>Later we'll move the keytab where the
+      new <strong>Ovirt</strong> host can download it on boot, along
+      with a kerberos config file.</p>
 
     <h3>Building the <strong>Ovirt</strong> host image</h3>
     <p>At this writing we are still working out packaging details for
@@ -155,45 +189,254 @@
       the way.</p>
     
     <ul>
-      <li><strong>Prerequisites:</strong> <br />
+      <li><h4>Prerequisites:</h4> <br />
 	<ul>
-	  <li>Current fedora 8 machine, with root access</li>
-	  <li>git installed</li>
+	  <li>Current fedora 8 x86_64 machine to function as <code>ovirt-host-creator</code>, with root access</li>
 	  <li>Access to full fedora 8 repository</li>
-	  <li>A properly set up RPM build environment. As a
-	  non-privileged user, do: <br /><pre>$ cd; echo "%_topdir ~/buildroot" > .rpmmacros; mkdir buildroot; cd buildroot; mkdir RPMS SOURCES SRPMS BUILD</pre></li>
+	  <li>A properly set up RPM build environment. 
+<pre>$ echo "%_topdir ~/buildroot" > ~/.rpmmacros
+$ mkdir -p ~/buildroot/{RPMS,SOURCES,SRPMS,BUILD}</pre></li>
+	  <li>You'll need (at least) the following packages installed:
+<pre>python-virtinst
+libvirt
+libvirt-python
+libvirt-devel
+livecd-tools
+nfs-utils
+scsi-target-utils
+gnutls-utils
+git
+httpd
+cyrus-sasl
+cyrus-sasl-lib
+cyrus-sasl-gssapi
+rpm-build
+libxml2-devel
+perl-ExtUtils-MakeMaker
+lm_sensors-devel
+python-devel
+readline-devel
+ncurses-devel
+avahi-devel
+qemu
+cyrus-sasl-devel
+gcc
+autoconf
+automake
+libtool
+SDL-devel
+dev86
+iasl
+compat-gcc-34
+e2fsprogs-devel
+texi2html
+glibc-devel
+kernel-devel
+createrepo</pre>
+	  </li>
 	</ul>
       </li>
-      <li><strong>Getting the code</strong>. You can get an anonymous
-	checkout of the current repository with <pre>$ git clone git://et.devel.redhat.com/ovirt</pre>. Once you have it, copy
-	the <code>ovirt-host-creator</code> directory to /tmp. (The
+      <li><h4>Getting the code.</h4> You can get an anonymous
+	checkout of the current repository with 
+<pre>$ git clone git://et.devel.redhat.com/ovirt</pre>
+Once you have it, copy
+the <code>ovirt-host-creator</code> directory to <code>/tmp</code>. (The
 	creator needs to run as root, so it's best not to run it
 	directly in your checkout.)
       </li>
-      <li><strong>Building custom packages</strong>. At this writing
+      <li><h4>Building custom packages</h4>. At this writing
       there are several custom packages required to build the host
-      (these will be eliminated as more features make their way into
-      fedora). For now we require 3 custom RPMs that you should build
-      as a non-privileged user from the <code>srpms/</code> directory
-	in your <strong>Ovirt</strong> checkout:
-	<pre>$ rpmbuild --rebuild collectd-4.2.0.26.ga2323a2-1.ovirt.src.rpm
+      (these will be eliminated as later versions of these packages 
+	make their way into
+      Fedora). For now we require 3 custom RPMs that you should build
+      from the <code>srpms/</code> directory in your <strong>Ovirt</strong> checkout:
+<pre>$ rpmbuild --rebuild collectd-4.2.0.26.ga2323a2-1.ovirt.src.rpm
 $ rpmbuild --rebuild libvirt-0.3.3-3.fc8.gssapi2.src.rpm
-$ rpmbuild --rebuild kvm-54-2modules.fc8.src./rpm
-	</pre><br />
-	Note that you will almost certainly have to pull in several
-	packages that are required to build these three, but they are
-	all available in the fedora 8 repository.
+$ rpmbuild --rebuild kvm-54-2modules.fc8.src./rpm</pre>
+	You'll find the build RPMs under ~/buildroot/RPMS/x86_64.
       </li>
-      <li><strong>Putting custom packages where the builder can reach
-      them</strong>. <br />
-	<pre>$ cd; mkdir ovirt-repo; cp &gt;path-to-rpms&lt;/*.rpm ~/ovirt-repo; createrepo ~/ovirt-repo</pre><br />
-	Note that if you do not already have createrepo installed, you
-	will need to install it like <pre># yum install createrepo</pre>.
+      <li><h4>Putting custom packages where the builder can reach
+	  them</h4><br />
+<pre>$ cd; mkdir ovirt-repo; cp &lt;path-to-rpms&gt;/*.rpm ~/ovirt-repo; createrepo ~/ovirt-repo</pre>
+      </li>
+      <li><h4>Edit the default kickstart</h4>. Edit <code>/tmp/ovirt-host-creator/ovirt.ks</code>. If
+      you have a local fedora 8 mirror, point the f8 repository to it
+	by editing the line beginning <code>repo
+	  --name=f8</code>. Next change the line beginning <code>repo
+      --name=libvirt-gssapi</code> to point to the rpm repository you
+      made. The line should look something like 
+	<pre>repo --name=libvirt-gssapi --baseurl=file:///home/&lt;username&gt;/ovirt-repo</pre>
+      </li>
+      <li><h4>Put kerberos conf and keytabs in place</h4>
+	These files need to go where the host can
+	  reach them when it is starting up. You can use any
+	  http server on your local subnet for this purpose, but it's
+	probably easiest to use <code>ovirt-host-builder</code>. Make
+	sure <code>httpd</code> is running and that port 80 is
+	  open. Then copy the keytab you made when setting up FreeIPA
+	to the html directory, along with your updated <code>/etc/krb5.conf</code>
+	file (you did update your local <code>/etc/krb5.conf</code>
+	file when you installed <strong>FreeIPA</strong>, didn't you?).
+<pre># scp root@freeipa:/tmp/ovirt-libvirt.tab /var/www/html/&lt;ovirt-host-ip-address&gt;-libvirt.tab
+# cp /etc/krb5.conf /var/www/html/&lt;ovirt-host-ip-address&gt;-krb5.conf</pre>
+Naming the files with the future <strong>Ovirt</strong> host's IP
+address lets you serve more than one keytab/krb5.conf when necessary.
+      </li>
+      <li><h4>Setting up an iSCSI server for storage</h4>
+	At this writing the only storage the <strong>Ovirt</strong>
+	host provides to its guests is an iSCSI target that it makes
+	available to them. The iSCSI target can be on any machine on
+	your local subnet, but it's probably easiest to set it up on
+	the <strong>Ovirt</strong> host creator. Here are the steps:
+	<ol>
+	  <li>Create logical volumes to back your iSCSI targets:
+<pre># lvcreate -n iSCSI1 -L +10G /dev/VolGroup00</pre>
+Obviously you may call the volume(s) whatever you like, and you can
+just as easily use a raw partition. LVM is probably the easiest way to
+go however. Note you will need to replace <code>/dev/VolGroup00</code>
+with the name of the volume group you want to use.
+	  </li>
+	  <li>Start the iSCSI target service and create the target:
+<pre># service tgtd start
+# tgtadm --lld iscsi --op new --mode target --tid 1 -T host:storage</pre>
+<code>host:storage</code> can be anything you want, it's mostly used
+as a descriptive name later.</li>
+	  <li>Export the target as a LUN:
+<pre># tgtadm --lld iscsi --op new --mode logicalunit \
+--tid 1 --lun 1 --b /dev/VolGroup00/iSCSI1</pre>
+This exports /dev/VolGroup00 as LUN 1 on the target we made above. If
+you want, repeat this for additional devices, making sure to increment
+the LUN for each.</li>
+	  <li>Make the LUNs available:
+	    <pre># tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL</pre>
+	  </li>
+	</ol>
+      </li>
+      <li>
+	<h4>Set up DHCP</h4> At this writing
+	the <strong>Ovirt</strong> host requires two custom DHCP
+	option records for config information when it starts up. If you are able to run your own local
+	DHCP server, you can edit <code>/etc/dhcpd.conf</code> to add
+	these records. If not, you will have to beg your local DHCP
+	administrator... but note that the option records are
+	harmless. First add the following two lines above
+	the <code>subnet</code> section of <code>dhcpd.conf</code>:
+	<pre>option iscsi-servers code 200 = array of ip-address;
+option libvirt-auth-method code 202 = text;</pre>
+	Then in the subnet section pertaining to
+	the <strong>Ovirt</strong> host you are setting up, fill in
+	values for those option records:
+	<pre>option iscsi-servers &lt;ip-address-of-your-iscsi-server&gt;;
+          option libvirt-auth-method "krb5:&lt;ip-address-to-obtain-krb5-conf-and-keytab&gt;";</pre>
+	Replace the ip addresses in the two lines above with correct
+        ones for your installation, of course. Finally, you'll need to
+        add a host record for the <strong>Ovirt</strong> host you are
+          setting up, like so: 
+<pre>host ovirt {
+        hardware ethernet 00:16:76:84:f0:71;
+        fixed-address 172.31.0.50;
+        next-server ovirt-builder.example.com;
+}</pre>
+The next-server line is only necessary if you plan to boot
+        the <strong>Ovirt</strong> host via PXE. The finished
+        /etc/dhcpd.conf should look something like: 
+<pre>allow booting;
+allow bootp;
+ddns-update-style interim;
+ignore client-updates;
+
+option iscsi-servers code 200 = array of ip-address;
+option libvirt-auth-method code 202 = text;
+
+subnet 192.168.25.0 netmask 255.255.255.0 {
+        option domain-name "example.com";
+        option domain-name-servers 172.16.76.10,172.16.76.20;
+        next-server 192.168.25.1;
+        option routers 192.168.25.1;
+        option iscsi-servers 192.168.25.1;
+        option libvirt-auth-method "krb5:192.168.25.1";
+        host perf200 {
+             fixed-address 192.168.25.200;
+             hardware ethernet 00:13:20:f5:fa:7c;
+        }
+
+        filename "pxelinux.0";
+}
+
+host ovirt {
+        hardware ethernet 00:16:76:84:f0:71;
+        fixed-address 172.31.0.50;
+        next-server ovirt-host-creator.example.com;
+}</pre>
+Your IP addresses will of course be different, and you will
+        undoubtedly have more than one host record.
+</li>
+      <li><h4>Building for a USB key</h4>
+	Finally we're ready to build and boot
+	the <strong>Ovirt</strong> host.
+	<ol>
+	  <li>Put a 1GB (or greater) flash drive into the machine;
+	    you'll need to find out which SCSI device it got assigned
+	    to via <code>dmesg</code>.</li>
+	  <li>Run the flash drive build script:
+	    <pre># cd /tmp/ovirt ; ./ovirt-flash.sh /dev/sdc</pre>
+	    (Substitute your SCSI device for /dev/sdc). Be warned that
+	    this  will totally destroy any data on the flash drive, so
+	    make sure to back up any data you care about.  This step
+	    will take quite a while, as it will download and yum
+	    install all of the necessary packages into a chroot jail,
+	    run the kickstart %post, and lay the resulting image down
+	    on the flash drive.</li>
+	  <li>Insert the flash drive into the <strong>Ovirt</strong>
+	    host, and make sure its BIOS is set to boot to USB</li>
+	  <li>Boot the host; it should come up and login to all of the
+	  iSCSI servers that you specified. It should also be all set
+	    up for connecting via GSSAPI. If you have
+	  the <strong>Ovirt</strong> UI running (next chapter), the
+	  host will appear in the list of available hosts.
+	  </li>
+	</ol>
+      </li>
+      <li><h4>Building for PXE</h4>
+	Assuming you have set up DHCP as described above with
+	a <code>next-server</code> record pointing to
+	the <strong>Ovirt</strong> host creator machine, building and
+	booting for PXE is a snap. 
+	<ol>
+	  <li>You will need a tftp-server on the
+	machine:
+	    <pre># yum install tftp tftp-server</pre></li>
+	  <li>You will need to edit <code>/etc/xinetd.d/tftp</code>,
+	change "disable" to "no", and then
+	    <pre># service xinetd restart</pre></li>
+	  <li>Finally, you are ready to run the <code>ovirt-pxe.sh</code>
+	script, which will blow away your existing tftpboot directory
+	(if you have one) and lay down everything needed
+	for <strong>Ovirt</strong>. Note that you will need to know
+	the ethernet module your <strong>Ovirt</strong> host uses, and
+	you will need (for now) to supply the IP address of
+	the <strong>Ovirt</strong> host creator machine to the
+	script. Run it like so:
+	<pre># cd /tmp/ovirt ; ./ovirt-pxe.sh e1000
+	192.168.25.13</pre>
+	  </li>
+	  <li>Once it has finished, you should be abot to boot
+	  the <strong>Ovirt</strong> host, making sure the BIOS is set
+	  to PXE. It should come up and login to all the iSCSI servers
+	  that you specified, and it should be all set up for
+	  connectng via GSSAPI.
+	  </li>
+	</ol>
       </li>
     </ul>
+    
+    <h3>Installing the WUI</h3>
+    Instructions coming soon...
+
     </div>
     <div id="footer">
        <p>
+	 Docs by Hugh Brock and Chris Lalancette<br />
 	 Web design courtesy Mairin Duffy and Dan Berrange<br />
     A project from the <a href="http://et.redhat.com/">Red Hat Emerging Technologies</a> group.
     </p>
