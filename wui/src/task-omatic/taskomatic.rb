@@ -17,7 +17,8 @@ require 'models/storage_volume.rb'
 require 'models/user.rb'
 require 'models/user_quota.rb'
 
-$stdout = File.new('/var/log/taskomatic.log', 'a')
+$stdout = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
+$stderr = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
 
 def database_configuration
   YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
@@ -107,7 +108,7 @@ def findVM(task, fail_on_nil_host_id = true)
     # can mark it either as off (if we didn't find it), or mark the correct
     # vm.host_id if we did.  However, if you have a large number of hosts
     # out there, this could take a while.
-    setTaskState(task, Task::STATE_FAILED, "No host_id for VM" + task.vm_id)
+    setTaskState(task, Task::STATE_FAILED, "No host_id for VM " + task.vm_id.to_s)
     raise
   end
 
@@ -204,31 +205,36 @@ def shutdown_vm(task)
     return
   end
 
+  vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STOPPING)
 
-  # OK, now that we found the VM, go looking in the hosts table
   begin
-    host = findHost(task, vm)
+    # OK, now that we found the VM, go looking in the hosts table
+    begin
+      host = findHost(task, vm)
+    rescue
+      raise
+    end
+    
+    begin
+      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom.shutdown
+      dom.undefine
+      conn.close
+    rescue
+      # FIXME: we could get out of sync with the host here, for instance, by the
+      # user typing "shutdown" inside the guest.  That would actually shutdown
+      # the guest, and the host would know about it, but we would not.  The
+      # solution here is to be more selective in which exceptions we handle; a
+      # connection exception we just want to fail, but if we fail to find the
+      # ID on the host, we should probably still mark it shut off to regain
+      # consistency
+      setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
+      raise
+    end
   rescue
-    return
-  end
-
-  begin
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-    dom = conn.lookupDomainByUUID(vm.uuid)
-    dom.shutdown
-    dom.undefine
-    conn.close
-  rescue
-    # FIXME: we could get out of sync with the host here, for instance, by the
-    # user typing "shutdown" inside the guest.  That would actually shutdown
-    # the guest, and the host would know about it, but we would not.  The
-    # solution here is to be more selective in which exceptions we handle; a
-    # connection exception we just want to fail, but if we fail to find the
-    # ID on the host, we should probably still mark it shut off to regain
-    # consistency
-    setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
-    return
+    setVmState(vm, vm_orig_state)
   end
 
   setTaskState(task, Task::STATE_FINISHED)
@@ -237,12 +243,12 @@ def shutdown_vm(task)
   vm.memory_used = nil
   vm.num_vcpus_used = nil
   vm.state = Vm::STATE_STOPPED
+  vm.needs_restart = nil
   vm.save
 end
 
 def start_vm(task, first_boot = nil)
   puts "start_vm"
-
 
   # here, we are given an id for a VM to start
 
@@ -263,76 +269,83 @@ def start_vm(task, first_boot = nil)
     return
   end
 
+  vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STARTING)
 
-  # the VM might be in an inconsistent state in the database; however, we
+  # FIXME: the VM might be in an inconsistent state in the database; however, we
   # should check it out on the remote host, and update the database as
   # appropriate
 
-  if vm.host_id != nil
-    # OK, marked in the database as already running on a host; for now, we
-    # will just fail the operation
-
-    # FIXME: we probably want to go out to the host it is marked on and check
-    # things out, just to make sure things are consistent
-
-    setTaskState(task, Task::STATE_FAILED, "VM already running")
-    return
-  end
-
-  # OK, now that we found the VM, go looking in the hosts table to see if there
-  # is a host that will fit these constraints
-  host = Host.find(:first, :conditions => [ "num_cpus >= ? AND memory >= ?",
-                                            vm.num_vcpus_allocated,
-                                            vm.memory_allocated])
-
-  if host == nil
-    # we couldn't find a host that matches this description; report ERROR
-    setTaskState(task, Task::STATE_FAILED, "No host matching VM parameters could be found")
-    return
-  end
-
-  vm.storage_volumes.each do |volume|
-    $wwid = find_wwid(volume.ip_addr, volume.port, volume.target, volume.lun)
-    # FIXME: right now we are only looking at the very first volume; eventually
-    # we will want to do every volume here
-    if $wwid != nil
-      break
-    end
-  end
-
-  if $wwid == nil
-    # we couldn't find *any* disk to attach to the VM; we have to quit
-    # FIXME: eventually, we probably want to allow diskless machines that will
-    # boot via NFS or iSCSI or whatever
-    setTaskState(task, Task::STATE_FAILED, "No valid storage volumes found")
-    return
-  end
-
-  # OK, we found a host that will work; now let's build up the XML
-
-  if first_boot
-    bootdev = "network"
-  else
-    bootdev = "hd"
-  end
-
-  # FIXME: get rid of the hardcoded bridge
-  xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
-                      vm.memory_used, vm.num_vcpus_used, bootdev,
-                      vm.vnic_mac_addr, "ovirtbr0",
-                      "/dev/disk/by-id/scsi-" + $wwid)
-
   begin
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-    dom = conn.defineDomainXML(xml.to_s)
-    dom.create
-    conn.close
+    if vm.host_id != nil
+      # OK, marked in the database as already running on a host; for now, we
+      # will just fail the operation
+      
+      # FIXME: we probably want to go out to the host it is marked on and check
+      # things out, just to make sure things are consistent
+      errmsg = "VM already running"      
+      raise
+    end
+    
+    # OK, now that we found the VM, go looking in the hosts table to see if there
+    # is a host that will fit these constraints
+    host = Host.find(:first, :conditions => [ "num_cpus >= ? AND memory >= ?",
+                                              vm.num_vcpus_allocated,
+                                              vm.memory_allocated])
+    
+    if host == nil
+      # we couldn't find a host that matches this description; report ERROR
+      errmsg = "No host matching VM parameters could be found"
+      raise
+    end
+        
+    wwid = nil
+    vm.storage_volumes.each do |volume|
+      wwid = find_wwid(volume.ip_addr, volume.port, volume.target, volume.lun)
+      # FIXME: right now we are only looking at the very first volume; eventually
+      # we will want to do every volume here
+      if wwid != nil
+        break
+      end
+    end
+    
+    if wwid == nil
+      # we couldn't find *any* disk to attach to the VM; we have to quit
+      # FIXME: eventually, we probably want to allow diskless machines that will
+      # boot via NFS or iSCSI or whatever
+      errmsg = "No valid storage volumes found"
+      raise
+    end
+
+    # OK, we found a host that will work; now let's build up the XML
+    
+    if first_boot
+      bootdev = "network"
+    else
+      bootdev = "hd"
+    end
+
+    # FIXME: get rid of the hardcoded bridge
+    xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
+                        vm.memory_used, vm.num_vcpus_allocated, bootdev,
+                        vm.vnic_mac_addr, "ovirtbr0",
+                        "/dev/disk/by-id/scsi-" + wwid)
+
+    begin
+      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+      dom = conn.defineDomainXML(xml.to_s)
+      dom.create
+      conn.close
+    rescue
+      # FIXME: these may fail for various reasons:
+      # 1.  The domain is already defined and/or started - update the DB
+      # 2.  We couldn't define the domain for some reason
+      errmsg = "Libvirt error"
+      raise
+    end
   rescue
-    # FIXME: these may fail for various reasons:
-    # 1.  The domain is already defined and/or started - update the DB
-    # 2.  We couldn't define the domain for some reason
-    setTaskState(task, Task::STATE_FAILED, "Libvirt error")
+    setTaskState(task, Task::STATE_FAILED, errmsg)
+    setVmState(vm, vm_orig_state)
     return
   end
 
@@ -347,7 +360,6 @@ end
 
 def save_vm(task)
   puts "save_vm"
-
 
   # here, we are given an id for a VM to suspend
 
@@ -371,22 +383,28 @@ def save_vm(task)
     return
   end
 
+  vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_SAVING)
 
-  # OK, now that we found the VM, go looking in the hosts table
   begin
-    host = findHost(task, vm)
+    # OK, now that we found the VM, go looking in the hosts table
+    begin
+      host = findHost(task, vm)
+    rescue
+      raise
+    end
+    
+    begin
+      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom.save("/tmp/" + vm.uuid + ".save")
+      conn.close
+    rescue
+      setTaskState(task, Task::STATE_FAILED, "Save failed")
+      raise
+    end
   rescue
-    return
-  end
-
-  begin
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-    dom = conn.lookupDomainByUUID(vm.uuid)
-    dom.save("/tmp/" + vm.uuid + ".save")
-    conn.close
-  rescue
-    setTaskState(task, Task::STATE_FAILED, "Save failed")
+    setVmState(vm, vm_orig_state)
     return
   end
 
@@ -397,9 +415,9 @@ def save_vm(task)
   # the host_id and undefine the XML; that way we could resume it on another
   # host later.  This needs more thought
 
-  vm.state = Vm::STATE_SAVED
   setTaskState(task, Task::STATE_FINISHED)
 
+  vm.state = Vm::STATE_SAVED
   vm.save
 end
 
@@ -428,28 +446,34 @@ def restore_vm(task)
     return
   end
 
+  vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_RESTORING)
 
-  # OK, now that we found the VM, go looking in the hosts table
   begin
-    host = findHost(task, vm)
+    # OK, now that we found the VM, go looking in the hosts table
+    begin
+      host = findHost(task, vm)
+    rescue
+      raise
+    end
+    
+    # FIXME: we should probably go out to the host and check what it thinks
+    # the state is
+    
+    begin
+      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom.restore
+      conn.close
+    rescue
+      # FIXME: these may fail for various reasons:
+      # 1.  The domain is already defined and/or started - update the DB
+      # 2.  We couldn't define the domain for some reason
+      setTaskState(task, Task::STATE_FAILED, "Libvirt error")
+      raise
+    end
   rescue
-    return
-  end
-
-  # FIXME: we should probably go out to the host and check what it thinks
-  # the state is
-  
-  begin
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-    dom = conn.lookupDomainByUUID(vm.uuid)
-    dom.restore
-    conn.close
-  rescue
-    # FIXME: these may fail for various reasons:
-    # 1.  The domain is already defined and/or started - update the DB
-    # 2.  We couldn't define the domain for some reason
-    setTaskState(task, Task::STATE_FAILED, "Libvirt error")
+    setVmState(vm, vm_orig_state)
     return
   end
 
@@ -482,22 +506,28 @@ def suspend_vm(task)
     return
   end
 
+  vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_SUSPENDING)
 
-  # OK, now that we found the VM, go looking in the hosts table
   begin
-    host = findHost(task, vm)
+    # OK, now that we found the VM, go looking in the hosts table
+    begin
+      host = findHost(task, vm)
+    rescue
+      raise
+    end
+    
+    begin
+      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom.suspend
+      conn.close
+    rescue
+      setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
+      raise
+    end
   rescue
-    return
-  end
-
-  begin
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-    dom = conn.lookupDomainByUUID(vm.uuid)
-    dom.suspend
-    conn.close
-  rescue
-    setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
+    setVmState(vm, vm_orig_state)
     return
   end
 
@@ -534,25 +564,31 @@ def resume_vm(task)
     return
   end
 
+  vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_RESUMING)
 
-  # OK, now that we found the VM, go looking in the hosts table
   begin
-    host = findHost(task, vm)
+    # OK, now that we found the VM, go looking in the hosts table
+    begin
+      host = findHost(task, vm)
+    rescue
+      raise
+    end
+    
+    begin
+      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom.resume
+      conn.close
+    rescue
+      setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
+      raise
+    end
   rescue
+    setVmState(vm, vm_orig_state)
     return
   end
 
-  begin
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-    dom = conn.lookupDomainByUUID(vm.uuid)
-    dom.resume
-    conn.close
-  rescue
-    setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
-    return
-  end
-  
   setTaskState(task, Task::STATE_FINISHED)
   
   vm.state = Vm::STATE_RUNNING
@@ -562,7 +598,7 @@ end
 pid = fork do
   loop do
     puts 'Checking for tasks...'
-    
+
     Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
       case task.action
       when Task::ACTION_CREATE_VM then create_vm(task)
