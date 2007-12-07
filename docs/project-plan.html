@@ -42,10 +42,11 @@
       choice). Restrictions: requires fedora 8, x86_64; requires hacks
       to virtinst to install a guest remotely (libvirt storage API not
 	yet available).</li>
-      <li>Milestone 2 in progress. All but the background worker
-      daemon for the manager app will be complete by 30
-      November. Worker thread may take as long as one more week, so 7
-	December.</li>
+      <li>Milestone 2 finished, one week late (December
+      7). Installation is still very cumbersome, but we have 
+      integration with FreeIPA for authentication and we can create, stop, start,
+      suspend, and resume guests from the UI. In addition we can
+      create and edit user quotas and we automatically enforce them.
       <li>Milestone 3 in planning stage now. Storage API and stats
       collection work in KVM scheduled, expected mid-December.</li>
     </ul>
@@ -195,7 +196,60 @@
 	least. No pretty graphs for this milestone though.</li>
     </ul>
   
-    <h2>Milestone 3 (New year's day)</h2>
+    <h2>Milestone 2.5 (December 21)</h2>
+    <p>Goal: Packaging (developers need to be able to download and
+      install everything easily)</p>
+
+    <h3>Docs:</h3>
+    <ul>
+      <li>We need a proper name for the project and a public
+      website. On the website we need a yum repo, an up-to-date
+	install doc, a way to download source tars, and a user
+      doc.</li>
+      <li>Update install docs</li>
+      <li>Create user manual doc</li>
+    </ul>
+
+    <h3>Host:</h3>
+
+    <ul>
+      <li>Prebuilt host images for pxe, flash drive, and CDROM
+      available for download.<br />
+	Having the image prebuilt means the PXE initrd needs to
+      autodetect the network card so that it can download the full
+      host image. Also we will try to slim the image down as much as
+      we can without getting into breaking up packages (that will come
+      later). Finally we need to automaticall obtain krb5.conf and
+      keytab for each image we're going to install and stuff those two
+      files into the image. This should mean that a prebuilt image can
+      be customized for an installation with one command, and then
+      booted on a host.
+      </li>
+    </ul>
+    <h3>Manager:</h3>
+    <ul>
+
+      <li>Prebuilt RPMs in a repo<br />
+	For the WUI and for the packages we have to
+      build manually (libvirt, collectd, kvm) we need a yum repo
+	developers can pull from.</li>
+
+      <li>WUI setup script<br />
+	We need to automate the (fairly simple) WUI setup steps,
+	including creating and populating the database, installing
+	keytabs, and making sure all the rpm deps are correct.
+      </li>
+      
+      <li>Further LDAP integration<br />
+	We need to automatically pull available users (and eventually
+	groups?) from the LDAP server and associate them with roles
+	and quotas. We do authentication this way now but we are
+	manually creating users in the WUI db, which is wrong.
+      </li>
+    </ul>
+    
+
+    <h2>Milestone 3 (End of January)</h2>
 
     <p>Goal: Network service adaptability</p>
 
