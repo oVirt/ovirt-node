@@ -1,6 +1,7 @@
 class User < ActiveRecord::Base
-  has_one  :user_quota, :dependent => :nullify
-  has_many :vms, :dependent => :nullify, :order => "id ASC"
+
+  # permissions not implemented yet
+  #has_many :user_permissions, :dependent => :destroy, :order => "id ASC"
   has_many :tasks, :dependent => :nullify, :order => "id ASC"
 
   def working_tasks

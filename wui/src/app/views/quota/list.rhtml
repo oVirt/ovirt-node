@@ -1,34 +1,34 @@
 <div id="left">
-<h2><%= _("All User Quotas") %></h2>
+<h2><%= _("All Quotas") %></h2>
 
 <table class="listing">
   <thead>
-  <% for column in UserQuota.content_columns %>
+  <% for column in Quota.content_columns %>
     <th><%= column.human_name %></th>
   <% end %>
     <th class="empty" colspan="3"></th>
   </thead>
   
-<% for user_quota in @user_quotas %>
+<% for quota in @quotas %>
   <tr class="<%= cycle('odd','even') %>">
-  <% for column in UserQuota.content_columns %>
-    <td><%=h user_quota.send(column.name) %></td>
+  <% for column in Quota.content_columns %>
+    <td><%=h quota.send(column.name) %></td>
   <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => user_quota %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => user_quota %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => user_quota }, :confirm => 'Are you sure?', :method => :post %></td>
+    <td><%= link_to 'Show', :action => 'show', :id => quota %></td>
+    <td><%= link_to 'Edit', :action => 'edit', :id => quota %></td>
+    <td><%= link_to 'Destroy', { :action => 'destroy', :id => quota }, :confirm => 'Are you sure?', :method => :post %></td>
   </tr>
 <% end %>
 </table>
 
-<%= link_to 'Previous page', { :page => @user_quota_pages.current.previous } if @user_quota_pages.current.previous %>
-<%= link_to 'Next page', { :page => @user_quota_pages.current.next } if @user_quota_pages.current.next %> 
+<%= link_to 'Previous page', { :page => @quota_pages.current.previous } if @quota_pages.current.previous %>
+<%= link_to 'Next page', { :page => @quota_pages.current.next } if @quota_pages.current.next %> 
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions create">
-    <li class="action"><%= link_to 'New User Quota', { :action => 'new' }, { :class => "create" } %></li>
+    <li class="action"><%= link_to 'New Quota', { :action => 'new' }, { :class => "create" } %></li>
   </ul>
 </div>

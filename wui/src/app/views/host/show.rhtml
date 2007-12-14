@@ -2,11 +2,15 @@
 <h2><%= _("Host") %></h2>
 
 <table>
-<% for column in Host.content_columns %>
-  <tr class="<%= cycle('odd','even') %>">
-  <td><b><%= column.human_name %>:</b></td><td><%=h @host.send(column.name) %></td>
-</p>
-<% end %>
+  <tr><td><b>UUID:</b></td><td><%=h @host.uuid %></td></tr>
+  <tr><td><b>Hostname:</b></td><td><%=h @host.hostname %></td></tr>
+  <tr><td><b>Num CPUs:</b></td><td><%=h @host.num_cpus %></td></tr>
+  <tr><td><b>CPU Speed:</b></td><td><%=h @host.cpu_speed %> MHz</td></tr>
+  <tr><td><b>Architecture:</b></td><td><%=h @host.arch %></td></tr>
+  <tr><td><b>RAM:</b></td><td><%=h @host.memory_in_mb %> MB</td></tr>
+  <%unless @host.is_disabled.nil? or @host.is_disabled == 0  -%>
+  <tr><td><b>(disabled)</b></td></tr>
+  <% end -%>
 </table>
 
 <h3>Network Interfaces</h3>
@@ -32,13 +36,19 @@
   <li class="action"><%= link_to 'Attach Storage Volume', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %></li>
   </ul>
   <ul class="actions edit">
-  <li class="action"><%= link_to 'Edit Host', { :action => 'edit', :id => @host }, { :class => "edit" } %></li>
+  <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
+    <li class="action"><%= link_to 'Disable Host', { :action => 'disable', :id => @host }, { :class => "edit" } %></li>
+  <% else -%>
+    <li class="action"><%= link_to 'Enable Host', { :action => 'enable', :id => @host }, { :class => "edit" } %></li>
+  <% end -%>
   </ul>
+<!-- hide for now
   <ul class="actions remove">
   <li class="action"><%= link_to 'Delete Host', { :action => 'destroy', :id => @host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
   </ul>
+-->
   <ul class="actions">
-    <li class="action"><%= link_to 'List All Hosts', { :action => 'list'}, { :class => "list" } %></li>
+      <li class="action"><%= link_to 'Back to admin', { :controller => 'admin', :action => 'index' }, { :class => "list" } %></li>
   </ul>
   </ul>
 </div>

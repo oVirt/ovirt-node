@@ -51,4 +51,28 @@ class HostController < ApplicationController
     flash[:notice] = '%s was destroyed.' % hostname
     redirect_to :controller => 'admin', :action => 'index'
   end
+
+  def disable
+    @host = Host.find(params[:id])
+    @host.is_disabled = 1
+    if @host.save
+      flash[:notice] = '<a class="show" href="%s">%s</a> was disabled.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
+    else
+      flash[:notice] = 'Disable failed for <a class="show" href="%s">%s</a>.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
+    end
+    redirect_to :action => 'show', :id => @host
+  end
+
+  def enable
+    @host = Host.find(params[:id])
+    @host.is_disabled = 0
+    if @host.save
+      flash[:notice] = '<a class="show" href="%s">%s</a> was enabled.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
+    else
+      flash[:notice] = 'Enable failed for <a class="show" href="%s">%s</a>.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
+    end
+    redirect_to :action => 'show', :id => @host
+  end
+
+
 end

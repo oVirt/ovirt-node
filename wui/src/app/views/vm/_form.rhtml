@@ -1,5 +1,5 @@
 <%= error_messages_for 'vm' %>
-<%  resources = @vm.user.user_quota.available_resources_for_vm(@vm) %>
+<%  resources = @vm.user.quota.available_resources_for_vm(@vm) %>
 
 <!--[form:vm]-->
 <%= hidden_field_with_label "User", 'vm', 'user_id', @vm.user.ldap_uid  %>

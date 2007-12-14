@@ -10,9 +10,14 @@ class CreateVms < ActiveRecord::Migration
       t.column :vnic_mac_addr,       :string
       t.column :state,               :string
       t.column :host_id,             :integer
-      t.column :user_id,             :integer
+      t.column :quota_id,            :integer
       t.column :needs_restart,       :integer
     end
+    execute "alter table vms add constraint fk_vms_hosts
+             foreign key (host_id) references hosts(id)"
+    execute "alter table vms add constraint fk_vms_quotas
+             foreign key (quota_id) references quotas(id)"
+
     create_table :storage_volumes_vms, :id => false do |t|
       t.column :vm_id,             :integer, :null => false
       t.column :storage_volume_id, :integer, :null => false

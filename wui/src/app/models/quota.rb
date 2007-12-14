@@ -1,7 +1,14 @@
 require 'util/ovirt'
 
-class UserQuota < ActiveRecord::Base
-  belongs_to :user
+class Quota < ActiveRecord::Base
+  # deleted
+  # belongs_to :user
+
+  # not activated yet
+  #has_many :user_permissions, :dependent => :destroy, :order => "id ASC"
+
+  has_many :vms, :dependent => :nullify, :order => "id ASC"
+  belongs_to :hardware_resource_group
   validates_presence_of :total_vcpus, :total_vmemory, :total_vnics, :total_storage
 
   def total_vmemory_in_mb

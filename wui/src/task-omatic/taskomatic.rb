@@ -15,7 +15,7 @@ require 'models/task.rb'
 require 'models/host.rb'
 require 'models/storage_volume.rb'
 require 'models/user.rb'
-require 'models/user_quota.rb'
+require 'models/quota.rb'
 
 $stdout = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
 $stderr = File.new('/var/log/invirt-wui/taskomatic.log', 'a')

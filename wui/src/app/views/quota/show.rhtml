@@ -1,24 +1,24 @@
 <div id="left">
-<h2><%= _("User quota for ID:") %> <%= link_to @user_quota.user.ldap_uid, { :controller => "user", :action => "show", :id =>  @user_quota.user }, { :class => "show" } %></h2>
+<h2><%= _("quota for ID:") %> <%= link_to @quota.user.ldap_uid, { :controller => "user", :action => "show", :id =>  @quota.user }, { :class => "show" } %></h2>
 
-<% for column in UserQuota.content_columns %>
+<% for column in Quota.content_columns %>
 <p>
-  <b><%= column.human_name %>:</b> <%=h @user_quota.send(column.name) %>
+  <b><%= column.human_name %>:</b> <%=h @quota.send(column.name) %>
 </p>
 <% end %>
 
-<h3> Virtual machines for ID: <%= link_to @user_quota.user.ldap_uid, { :controller => "user", :action => "show", :id =>  @user_quota.user }, { :class => "show" } %></h3>
-<%= render :partial => "/vm/list", :locals => { :vms => @user_quota.user.vms } %>
+<h3> Virtual machines for ID: <%= link_to @quota.user.ldap_uid, { :controller => "user", :action => "show", :id =>  @quota.user }, { :class => "show" } %></h3>
+<%= render :partial => "/vm/list", :locals => { :vms => @quota.user.vms } %>
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions create">
-    <li class="action"><%= link_to 'Create New VM', { :controller => "vm", :action => 'new', :user_id => @user_quota.user }, { :class => "create" } %></li>
+    <li class="action"><%= link_to 'Create New VM', { :controller => "vm", :action => 'new', :user_id => @quota.user }, { :class => "create" } %></li>
   </ul>
   <ul class="actions edit">
-    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @user_quota }, { :class => "edit" } %></li>
+    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @quota }, { :class => "edit" } %></li>
   </ul>
   <ul class="actions">
     <li class="action"><%= link_to 'List All Quotas', { :action => 'list' }, { :class => "list" } %></li>

@@ -1,7 +1,7 @@
 require 'util/ovirt'
 
 class StorageVolume < ActiveRecord::Base
-  has_and_belongs_to_many :hosts
+  belongs_to              :hardware_resource_group
   has_and_belongs_to_many :vms
 
   def display_name
