@@ -1,7 +1,7 @@
 class CreateTasks < ActiveRecord::Migration
   def self.up
     create_table :tasks do |t|
-      t.column :user_id,           :integer
+      t.column :user,              :string
       t.column :vm_id,             :integer
       t.column :action,            :string
       t.column :state,             :string

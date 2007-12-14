@@ -1,5 +1,4 @@
 class Task < ActiveRecord::Base
-  belongs_to :user
   belongs_to :vm
 
   ACTION_CREATE_VM   = "create_vm"
@@ -75,5 +74,18 @@ class Task < ActiveRecord::Base
     save
   end
 
+  def working_tasks(user = nil)
+    tasks_for_states(Task::WORKING_STATES, user)
+  end
+
+  def completed_tasks(user = nil)
+    tasks_for_states(Task::COMPLETED_STATES, user)
+  end
+
+  def tasks_for_states(state_array, user = nil)
+    conditions = state_array.collect {|x| "state='#{x}'"}.join(" or ")
+    conditions = "(#{conditions}) and user=#{user}"
+    tasks.find(:all, :conditions => conditions)
+  end
 
 end
