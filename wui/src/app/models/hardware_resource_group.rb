@@ -1,6 +1,5 @@
 class HardwareResourceGroup < ActiveRecord::Base
-  # needs to be added to belongs_to obj first
-  #has_many :user_permissions, :dependent => :destroy, :order => "id ASC"
+  has_many :permissions, :dependent => :destroy, :order => "id ASC"
 
   has_many :hosts, :dependent => :nullify, :order => "id ASC"
   has_many :storage_volumes, :dependent => :nullify, :order => "id ASC"

@@ -16,7 +16,6 @@ class CreateStorageVolumes < ActiveRecord::Migration
   end
 
   def self.down
-    drop_table :hosts_storage_volumes
     drop_table :storage_volumes
   end
 end

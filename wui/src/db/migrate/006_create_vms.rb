@@ -26,12 +26,6 @@ class CreateVms < ActiveRecord::Migration
              foreign key (vm_id) references vms(id)"
     execute "alter table storage_volumes_vms add constraint fk_stor_vol_vms_stor_vol_id
              foreign key (storage_volume_id) references storage_volumes(id)"
-
-
-    execute "alter table vms add constraint fk_vms_users
-             foreign key (user_id) references users(id)"
-    execute "alter table vms add constraint fk_vms_hosts
-             foreign key (host_id) references hosts(id)"
   end
 
   def self.down

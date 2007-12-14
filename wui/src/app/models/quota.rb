@@ -5,7 +5,7 @@ class Quota < ActiveRecord::Base
   # belongs_to :user
 
   # not activated yet
-  #has_many :user_permissions, :dependent => :destroy, :order => "id ASC"
+  has_many :permissions, :dependent => :destroy, :order => "id ASC"
 
   has_many :vms, :dependent => :nullify, :order => "id ASC"
   belongs_to :hardware_resource_group

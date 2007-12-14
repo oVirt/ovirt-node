@@ -6,12 +6,12 @@ class CreatePermissions < ActiveRecord::Migration
       t.column :hardware_resource_group_id, :integer
       t.column :quota_id,                   :integer
     end
-  end
-
     execute "alter table permissions add constraint fk_permissions_hw_groups
              foreign key (hardware_resource_group_id) references hardware_resource_groups(id)"
     execute "alter table permissions add constraint fk_permissions_quotas
-             foreign key (quotas_id) references quotas(id)"
+             foreign key (quota_id) references quotas(id)"
+  end
+
 
   def self.down
     drop_table :permissions
