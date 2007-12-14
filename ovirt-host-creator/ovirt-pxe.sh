@@ -2,14 +2,12 @@
 
 . ./ovirt-common.sh
 
-if [ $# -eq 1 ]; then
-    ETHERNET_MODULE=$1
+if [ $# -eq 0 ]; then
     ISO=
-elif [ $# -eq 2 ]; then
-    ETHERNET_MODULE=$1
-    ISO=$2
+elif [ $# -eq 1 ]; then
+    ISO=$1
 else
-    echo "Usage: ovirt-pxe.sh <ether_mod> [iso-image]"
+    echo "Usage: ovirt-pxe.sh [iso-image]"
     exit 1
 fi
 
@@ -59,17 +57,17 @@ cp $ISOTMP/isolinux/vmlinuz0 $ISOTMP/isolinux/initrd0.img $TFTPDIR
 cp $ISOIMAGE $TFTPDIR
 
 # now edit the initrd
-rm -f /tmp/initrd.img
+rm -f /tmp/initrd0.img
 cp $TFTPDIR/initrd0.img /tmp
 gzip -dc < /tmp/initrd0.img > /tmp/oldinitrd
 cd $NEWINITDIR
 cpio -id < /tmp/oldinitrd
 rm -f /tmp/oldinitrd
 
-# find the necessary kernel module for the ethernet device
-BOOTKERNEL=`ls lib/modules`
-MODULE=`find $EXT3TMP/lib/modules/$BOOTKERNEL/kernel -name $ETHERNET_MODULE.ko`
-cp -f $MODULE lib/modules/$BOOTKERNEL/
+# copy the ethernet modules over
+KERNEL=`ls -1 lib/modules | head -n 1`
+cp `find $EXT3TMP/lib/modules/$KERNEL/kernel/drivers/net -iname '*.ko'` lib/modules/$KERNEL
+/sbin/depmod -a -b $NEWINITDIR $KERNEL
 
 mkdir -p var/lib/dhclient var/run tmp etc usr/bin
 touch etc/resolv.conf
@@ -118,7 +116,14 @@ cp $CUSTOM_INIT init
 ISONAME=`basename $ISOIMAGE`
 rm -f /tmp/custom_init
 cat > /tmp/custom_init << EOF
-insmod /lib/modules/$BOOTKERNEL/$ETHERNET_MODULE.ko
+for pcibus in \`ls -d /sys/devices/pci*\`; do
+    for device in \`ls -d \$pcibus/[0-9]*\`; do
+        class=\`cat \$device/class\`
+        if [ \$class = "0x020000" ]; then
+            modprobe \`cat \$device/modalias\`
+        fi
+    done
+done
 /sbin/ip link set dev eth0 up
 /sbin/dhclient eth0 -R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,libvirt-auth-method,ovirt-tftp-server
 echo "Fetching root filesystem from server..."
