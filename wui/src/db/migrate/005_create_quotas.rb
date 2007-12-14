@@ -13,6 +13,6 @@ class CreateQuotas < ActiveRecord::Migration
   end
 
   def self.down
-    drop_table :user_quotas
+    drop_table :quotas
   end
 end

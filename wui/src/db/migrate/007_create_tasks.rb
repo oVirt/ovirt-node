@@ -11,8 +11,6 @@ class CreateTasks < ActiveRecord::Migration
       t.column :time_ended,        :timestamp
       t.column :message,           :text
     end
-    execute "alter table tasks add constraint fk_tasks_users
-             foreign key (user_id) references users(id)"
     execute "alter table tasks add constraint fk_tasks_vms
              foreign key (vm_id) references vms(id)"
   end
