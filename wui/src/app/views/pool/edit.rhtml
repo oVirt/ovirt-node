@@ -1,0 +1,9 @@
+<h1>Editing hardware_resource_group</h1>
+
+<% form_tag :action => 'update', :id => @hardware_resource_group do %>
+  <%= render :partial => 'form' %>
+  <%= submit_tag 'Edit' %>
+<% end %>
+
+<%= link_to 'Show', :action => 'show', :id => @hardware_resource_group %> |
+<%= link_to 'Back', :action => 'list' %>

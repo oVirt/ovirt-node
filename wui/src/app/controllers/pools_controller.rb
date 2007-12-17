@@ -1,0 +1,2 @@
+class PoolsController < ApplicationController
+end

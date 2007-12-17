@@ -1,0 +1,2 @@
+module QuotasHelper
+end

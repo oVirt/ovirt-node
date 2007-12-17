@@ -1,0 +1,2 @@
+class QuotasController < ApplicationController
+end
