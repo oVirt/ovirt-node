@@ -9,7 +9,7 @@ class VmController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @vm_pages, @vms = paginate :vms, :per_page => 10
+    @vms = Vm.find(:all)
   end
 
   def show
@@ -24,7 +24,7 @@ class VmController < ApplicationController
     uuid = ["%02x" * 4, "%02x" * 2, "%02x" * 2, "%02x" * 2, "%02x" * 6].join("-") % 
       Array.new(16) {|x| rand(0xff) }
     newargs = { 
-      :user_id => params[:user_id],
+      :quota_id => params[:quota_id],
       :vnic_mac_addr => mac.collect {|x| "%02x" % x}.join(":"),
       :uuid => uuid
     }
@@ -34,9 +34,9 @@ class VmController < ApplicationController
   def create
     params[:vm][:state] = Vm::STATE_PENDING
     @vm = Vm.new(params[:vm])
-    user = get_login_user_id
+    user = get_login_user
     if @vm.save
-      @task = Task.new({ :user_id => user.id,
+      @task = Task.new({ :user    => user,
                          :vm_id   => @vm.id,
                          :action  => Task::ACTION_CREATE_VM,
                          :state   => Task::STATE_QUEUED})
@@ -45,7 +45,7 @@ class VmController < ApplicationController
       else
         flash[:notice] = 'Error in inserting task.'
       end
-      redirect_to :controller => 'consumer', :action => 'index'
+      redirect_to :controller => 'quota', :action => 'show', :id => @vm.quota
     else
       render :action => 'new'
     end
@@ -95,7 +95,7 @@ class VmController < ApplicationController
   def vm_action
     @vm = Vm.find(params[:id])
     if @vm.get_action_list.include?(params[:vm_action])
-      @task = Task.new({ :user_id => get_login_user_id.id,
+      @task = Task.new({ :user    => get_login_user,
                          :vm_id   => params[:id],
                          :action  => params[:vm_action],
                          :state   => Task::STATE_QUEUED})
