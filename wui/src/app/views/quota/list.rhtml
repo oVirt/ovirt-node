@@ -35,7 +35,9 @@ function confirm_and_submit(item){
   <table>
   <%for quota in @quotas %>
   <% resources = quota.full_resources %>
-  <td><th colspan="2"><%= quota.name %></th></tr>
+  <td><th colspan="2">
+    <%= link_to quota.name, { :action => 'show', :id => quota }, { :class => "show" } %>
+  </th></tr>
   <% for item in resources[:labels] %>
     <tr>
     <th><%= item[0]%>:</th>
