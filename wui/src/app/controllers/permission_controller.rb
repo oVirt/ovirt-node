@@ -17,7 +17,8 @@ class PermissionController < ApplicationController
   end
 
   def new
-    @permission = Permission.new
+    @permission = Permission.new( { :hardware_resource_group_id => params[:hardware_resource_group_id],
+                                    :quota_id => params[:quota_id]})
   end
 
   def create

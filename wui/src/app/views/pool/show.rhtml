@@ -1,8 +1,51 @@
-<% for column in HardwareResourceGroup.content_columns %>
-<p>
-  <b><%= column.human_name %>:</b> <%=h @hardware_resource_group.send(column.name) %>
-</p>
-<% end %>
+<div id="left">
+<h2><%= _("Manage Hardware Resource Group: #{@hardware_resource_group.name}") %></h2> 
 
-<%= link_to 'Edit', :action => 'edit', :id => @hardware_resource_group %> |
-<%= link_to 'Back', :action => 'list' %>
+
+<h3>Hosts</h3>
+<%= render :partial => "/host/list", :locals => { :hosts => @hardware_resource_group.hosts } %>
+
+<h3>Storage Volumes</h3>
+<%= render :partial => "/storage/list", :locals => { :storage_volumes => @hardware_resource_group.storage_volumes } %>
+
+<%unless @hardware_resource_group.subgroups.empty? -%>
+<h3>Hardware Resource Subgroups</h3>
+<%= render :partial => "list", :locals => { :hardware_resource_groups => @hardware_resource_group.subgroups } %>
+<% end -%>
+
+<%unless @hardware_resource_group.quotas.empty? -%>
+<h3>Quotas</h3>
+<%= render :partial => "/quota/list", :locals => { :quotas => @hardware_resource_group.quotas } %>
+<% end -%>
+
+<h3>Permissions</h3>
+<%= render :partial => "/permission/list", :locals => { :permissions => @hardware_resource_group.permissions, :show_object => false } %>
+
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions create">
+    <%if @hardware_resource_group.subgroups.empty? -%>
+      <li class="action"><%= link_to 'New Quota', { :controller => 'quota', :action => 'new', :hardware_resource_group => @hardware_resource_group}, { :class => "create" } %></li>
+    <% end -%>
+    <%if @hardware_resource_group.quotas.empty? -%>
+      <li class="action"><%= link_to 'New Subgroup', { :action => 'new', :supergroup => @hardware_resource_group}, { :class => "create" } %></li>
+    <% end -%>
+  </ul>
+  <ul class="actions edit">
+    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @hardware_resource_group}, { :class => "edit" } %></li>
+    <li class="action"><%= link_to 'Add Host', { :controller => 'host', :action => 'list', :attach_to_group => @hardware_resource_group}, { :class => "edit" } %></li>
+    <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_group => @hardware_resource_group }, {:class => "edit" } %></li>
+    <li class="action"><%= link_to 'Grant Privileges', { :controller => 'permission', :action => 'new', :hardware_resource_group_id => @hardware_resource_group}, { :class => "edit" } %></li>
+  </ul>
+  <ul class="actions remove">
+    <li class="action"><%= link_to 'Delete Group', { :controller => "pool", :action => 'destroy', :id => @hardware_resource_group }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
+  </ul>
+  <ul class="actions">
+      <%if @hardware_resource_group.supergroup -%>
+        <li class="action"><%= link_to "Up to #{@hardware_resource_group.supergroup.name}", { :action => 'show', :id => @hardware_resource_group.supergroup_id}, { :class => "list" } %></li>
+      <% end -%>
+      <li class="action"><%= link_to 'Back to pools', { :controller => 'pool', :action => 'list' }, { :class => "list" } %></li>
+  </ul>
+</div>

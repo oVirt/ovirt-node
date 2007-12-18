@@ -32,7 +32,7 @@ class Quota < ActiveRecord::Base
     memory = 0
     nics = 0
     storage = 0
-    self.user.vms.each do |vm|
+    self.vms.each do |vm|
       unless (exclude_vm and exclude_vm.id == vm.id)
         cpus += vm.num_vcpus_allocated
         memory += vm.memory_allocated
@@ -87,5 +87,10 @@ class Quota < ActiveRecord::Base
     # update mb/gb values
     return get_resource_hash(resources[:cpus], resources[:memory], 
                              resources[:nics], resources[:storage])
+  end
+
+  def self.list_for_user(user)
+    find(:all, :include => "permissions", 
+         :conditions => "permissions.user='#{user}'")
   end
 end

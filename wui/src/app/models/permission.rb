@@ -6,5 +6,7 @@ class Permission < ActiveRecord::Base
   MONITOR = "monitor"
   ADMIN = "admin"
   DELEGATE = "delegate"
-  PRIVILEGES = [MONITOR, ADMIN, DELEGATE]
+  PRIVILEGES = [["Monitor", MONITOR], 
+                ["Admin", ADMIN],
+                ["Delegate", DELEGATE]]
 end

@@ -8,4 +8,10 @@ class HardwareResourceGroup < ActiveRecord::Base
   # subgroups _or_ quotas
   has_many :subgroups, :class_name => "HardwareResourceGroup", :foreign_key => "supergroup_id", :dependent => :nullify, :order => "id ASC"
   has_many :quotas, :dependent => :destroy, :order => "id ASC"
+
+
+  def self.list_for_user(user)
+    find(:all, :include => "permissions", 
+         :conditions => "permissions.user='#{user}'")
+  end
 end

@@ -1,0 +1,23 @@
+<table class="listing">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>Virtual CPUs</th>
+    <th>Memory (MB)</th>
+    <th>Virtual NICs</th>
+    <th>Storage (GB)</th>
+  </tr>
+</thead>
+<tbody>
+<% for quota in quotas %>
+<% resources = quota.full_resources %>
+<tr class="<%= cycle('odd','even', :name => quotas) %>">
+  <td><%= link_to quota.name, { :controller => 'quota', :action => 'show', :id => quota }, { :class => "show" } %></td>
+  <td><%= resources[:allocated][:cpus] %> / <%= resources[:total][:cpus] %></td>
+  <td><%= resources[:allocated][:memory_in_mb] %> / <%= resources[:total][:memory_in_mb] %></td>
+  <td><%= resources[:allocated][:nics] %> / <%= resources[:total][:nics] %></td>
+  <td><%= resources[:allocated][:storage_in_gb] %> / <%= resources[:total][:storage_in_gb] %></td>
+</tr>
+<% end %>
+<tbody>
+</table>

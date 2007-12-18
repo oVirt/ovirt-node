@@ -1,34 +1,60 @@
 <div id="left">
-<h2><%= _("All Quotas") %></h2>
+<h2><%= _("Manage Virtual Machines") %></h2>
+<p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
 
-<table class="listing">
-  <thead>
-  <% for column in Quota.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-    <th class="empty" colspan="3"></th>
-  </thead>
-  
-<% for quota in @quotas %>
-  <tr class="<%= cycle('odd','even') %>">
-  <% for column in Quota.content_columns %>
-    <td><%=h quota.send(column.name) %></td>
-  <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => quota %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => quota %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => quota }, :confirm => 'Are you sure?', :method => :post %></td>
-  </tr>
+<%= error_messages_for 'vm_actions' %>
+<script type="text/javascript">
+function confirm_and_submit(item){
+   c = true
+   if(item.options[item.options.selectedIndex].value == "destroy"){
+      c = confirm('Are you sure you want to destroy these VMs?')
+   }
+   if(c){ item.form.submit(); } else{ item.selectedIndex = 0; }
+}
+</script> 
+
+<form action="/quota/vm_actions" name="vm_actions" method="post">
+<%= tag :input, { "type" => "submit", "name" => "vm_actions[#{Task::ACTION_START_VM}]", "value" => "Start"}  %> 
+<%= tag :input, { "type" => "submit", "name" => "vm_actions[#{Task::ACTION_SHUTDOWN_VM}]", "value" => "Stop"}  %> 
+<select onchange="return confirm_and_submit(this)" name="vm_actions[other_actions]">
+  <option class="other">Other Actions</option>
+  <option></option>
+<% for action in @action_values %>
+  <option value="<%= action[1]%>"><%= action[0]%></option>
 <% end %>
-</table>
+  <option>-------------------</option>
+  <option class="remove" value="destroy" onSelect="confirm('Are you sure?'">Destroy</option>
+</select>
 
-<%= link_to 'Previous page', { :page => @quota_pages.current.previous } if @quota_pages.current.previous %>
-<%= link_to 'Next page', { :page => @quota_pages.current.next } if @quota_pages.current.next %> 
+<br/><br/>
+
+<%= render :partial => "/vm/list", :locals => { :vms => @vms } %>
+</form>
+
+  <h3>Quotas</h3>
+  <table>
+  <%for quota in @quotas %>
+  <% resources = quota.full_resources %>
+  <td><th colspan="2"><%= quota.name %></th></tr>
+  <% for item in resources[:labels] %>
+    <tr>
+    <th><%= item[0]%>:</th>
+    <td><%= resources[:allocated][item[1]] %> / <%= resources[:total][item[1]] %>
+        <%= item[2]%></td>
+    </tr>
+  <% end %>
+  <% end %>
+  </table>
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
-  <ul class="actions create">
-    <li class="action"><%= link_to 'New Quota', { :action => 'new' }, { :class => "create" } %></li>
-  </ul>
+  <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
+
 </div>
+<%- content_for :title do -%>
+<%= _("Home") %>
+<%- end -%>
+
+

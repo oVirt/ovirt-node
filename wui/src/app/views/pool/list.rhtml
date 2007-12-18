@@ -1,27 +1,26 @@
-<h1>Listing hardware_resource_groups</h1>
+<div id="left">
+<h2><%= _("Manage Hardware Resource Groups") %></h2> 
 
-<table>
-  <tr>
-  <% for column in HardwareResourceGroup.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-  </tr>
-  
-<% for hardware_resource_group in @hardware_resource_groups %>
-  <tr>
-  <% for column in HardwareResourceGroup.content_columns %>
-    <td><%=h hardware_resource_group.send(column.name) %></td>
-  <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => hardware_resource_group %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => hardware_resource_group %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => hardware_resource_group }, :confirm => 'Are you sure?', :method => :post %></td>
-  </tr>
-<% end %>
-</table>
+<p>Manage Hardware Resource Groups from this interface</p>
 
-<%= link_to 'Previous page', { :page => @hardware_resource_group_pages.current.previous } if @hardware_resource_group_pages.current.previous %>
-<%= link_to 'Next page', { :page => @hardware_resource_group_pages.current.next } if @hardware_resource_group_pages.current.next %> 
+<h3>Hardware Resource Groups</h3>
+<%= render :partial => "list", :locals => { :hardware_resource_groups => @hardware_resource_groups } %>
 
-<br />
+<h3>Hosts</h3>
+<%= render :partial => "/host/list", :locals => { :hosts => @hosts } %>
 
-<%= link_to 'New hardware_resource_group', :action => 'new' %>
+<h3>Storage Volumes</h3>
+<%= render :partial => "/storage/list", :locals => { :storage_volumes => @storage_volumes } %>
+
+
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions create">
+    <li class="action"><%= link_to 'New Hardware Resource Group', { :action => 'new'}, { :class => "create" } %></li>
+    <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new'}, { :class => "create" } %></li>
+  </ul>
+</div>
+
+

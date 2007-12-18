@@ -11,6 +11,7 @@ class StorageVolume < ActiveRecord::Base
   def size_in_gb
     kb_to_gb(size)
   end
+
   def size_in_gb=(new_size)
     self[:size]=(gb_to_kb(new_size))
   end
@@ -18,6 +19,6 @@ class StorageVolume < ActiveRecord::Base
   def self.find_for_vm(include_vm = nil)
     condition =  "vms.id is null"
     condition += " or vms.id=#{include_vm.id}" if (include_vm and include_vm.id)
-    StorageVolume.find(:all, :include => [:vms], :conditions => condition)
+    self.find(:all, :include => [:vms], :conditions => condition)
   end
 end

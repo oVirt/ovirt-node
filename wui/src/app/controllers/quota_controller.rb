@@ -9,15 +9,29 @@ class QuotaController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @quota_pages, @quotas = paginate :quotas, :per_page => 10
+    @user = get_login_user
+    @quotas = Quota.list_for_user(@user)
+    @vms = Set.new
+    @quotas.each { |quota| @vms += quota.vms}
+    @vms = @vms.entries
+    @action_values = [["Suspend", Task::ACTION_SUSPEND_VM],
+                      ["Resume", Task::ACTION_RESUME_VM],
+                      ["Save", Task::ACTION_SAVE_VM],
+                      ["Restore", Task::ACTION_RESTORE_VM]]
   end
 
   def show
     @quota = Quota.find(params[:id])
+    @user = get_login_user
+    @action_values = [["Suspend", Task::ACTION_SUSPEND_VM],
+                      ["Resume", Task::ACTION_RESUME_VM],
+                      ["Save", Task::ACTION_SAVE_VM],
+                      ["Restore", Task::ACTION_RESTORE_VM]]
+                      
   end
 
   def new
-    @quota = Quota.new( { :user_id => params[:user_id] } )
+    @quota = Quota.new( { :hardware_resource_group_id => params[:hardware_resource_group] } )
   end
 
   def create
@@ -46,8 +60,8 @@ class QuotaController < ApplicationController
 
   def destroy
     @quota = Quota.find(params[:id])
-    user_id = @quota.user_id
+    group_id = @quota.hardware_resource_group_id
     @quota.destroy
-    redirect_to :controller => 'user', :action => 'show', :id => user_id
+    redirect_to :controller => 'pool', :action => 'show', :id => hardware_resource_group_id
   end
 end

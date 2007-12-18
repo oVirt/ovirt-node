@@ -23,6 +23,9 @@
             "Yes"
           end
       %></td>
+<%if @attach_to_group -%>
+    <td><%= link_to 'Choose', { :action => 'attach_to_group', :id => host, :hardware_resource_group_id => @attach_to_group }, { :class => "choose" } %></td>
+<% end -%>
   <%- if defined?(remove_from_host) && remove_from_host -%>
     <td><%= link_to( 'detach', { :action => 'remove_from_host', :id => @storage_volume, :host_id => host }, :confirm => 'Are you sure?', :method => :post, :class => "remove") %></td>
   <%- end -%>

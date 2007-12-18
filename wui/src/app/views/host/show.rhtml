@@ -20,20 +20,12 @@
 <p>No Network Interfaces, perhaps you should <%= link_to 'add one', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %>?</p>
 <% end %>
 
-<h3>Storage Volumes</h3>
-<% if !@host.storage_volumes.empty? %>
-  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @host.storage_volumes, :remove_from_host => true, :host => @host, :host_id => @host.id } %>
-<% else %>
-<p>No attached Storage Volumes, perhaps you should <%= link_to 'attach one', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %>?</p>
-<% end %>
-
 </div>
 
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions create">
   <li class="action"><%= link_to 'Add Network Interface', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %></li>
-  <li class="action"><%= link_to 'Attach Storage Volume', { :controller => "storage", :action => 'list', :attach_to_host => @host }, {:class => "attach" } %></li>
   </ul>
   <ul class="actions edit">
   <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>

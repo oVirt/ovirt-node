@@ -1,7 +1,9 @@
 <%= error_messages_for 'quota' %>
 
 <!--[form:quota]-->
-<%= hidden_field_with_label "User", 'quota', 'user_id', @quota.user.ldap_uid  %>
+<%= hidden_field_with_label "Hardware Resource Group", 'quota', 'hardware_resource_group_id', @quota.hardware_resource_group.name  %>
+
+<%= text_field_with_label "Name", 'quota', 'name'  %>
 
 <%= text_field_with_label "Total Virtual CPUs", 'quota', 'total_vcpus'  %>
 

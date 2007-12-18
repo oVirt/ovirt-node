@@ -1,27 +1,12 @@
-<h1>Listing permissions</h1>
+<div id="left">
+<h2><%= _("Permissions") %></h2>
 
-<table>
-  <tr>
-  <% for column in Permission.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
-  </tr>
-  
-<% for permission in @permissions %>
-  <tr>
-  <% for column in Permission.content_columns %>
-    <td><%=h permission.send(column.name) %></td>
-  <% end %>
-    <td><%= link_to 'Show', :action => 'show', :id => permission %></td>
-    <td><%= link_to 'Edit', :action => 'edit', :id => permission %></td>
-    <td><%= link_to 'Destroy', { :action => 'destroy', :id => permission }, :confirm => 'Are you sure?', :method => :post %></td>
-  </tr>
-<% end %>
-</table>
+<%= render :partial => "list", :locals => { :permissions => @permissions, :show_object => true } %>
+</div>
 
-<%= link_to 'Previous page', { :page => @permission_pages.current.previous } if @permission_pages.current.previous %>
-<%= link_to 'Next page', { :page => @permission_pages.current.next } if @permission_pages.current.next %> 
-
-<br />
-
-<%= link_to 'New permission', :action => 'new' %>
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions create">
+<!--    <li class="action"><%= link_to 'New Virtual Machine', { :action => 'new' }, { :class => "create" } %></li>-->
+  </ul>
+</div>

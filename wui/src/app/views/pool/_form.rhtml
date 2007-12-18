@@ -1,7 +1,8 @@
 <%= error_messages_for 'hardware_resource_group' %>
 
 <!--[form:hardware_resource_group]-->
-<p><label for="hardware_resource_group_name">Name</label><br/>
-<%= text_field 'hardware_resource_group', 'name'  %></p>
+<%= hidden_field_with_label "Supergroup", 'hardware_resource_group', 'supergroup_id', @hardware_resource_group.supergroup.name  %>
+
+<%= text_field_with_label 'Name' 'hardware_resource_group', 'name'  %>
 <!--[eoform:hardware_resource_group]-->
 

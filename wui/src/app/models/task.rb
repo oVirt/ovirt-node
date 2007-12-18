@@ -74,18 +74,18 @@ class Task < ActiveRecord::Base
     save
   end
 
-  def working_tasks(user = nil)
-    tasks_for_states(Task::WORKING_STATES, user)
+  def self.working_tasks(user = nil)
+    self.tasks_for_states(Task::WORKING_STATES, user)
   end
 
-  def completed_tasks(user = nil)
-    tasks_for_states(Task::COMPLETED_STATES, user)
+  def self.completed_tasks(user = nil)
+    self.tasks_for_states(Task::COMPLETED_STATES, user)
   end
 
-  def tasks_for_states(state_array, user = nil)
+  def self.tasks_for_states(state_array, user = nil)
     conditions = state_array.collect {|x| "state='#{x}'"}.join(" or ")
-    conditions = "(#{conditions}) and user=#{user}"
-    tasks.find(:all, :conditions => conditions)
+    conditions = "(#{conditions}) and user='#{user}'"
+    Task.find(:all, :conditions => conditions)
   end
 
 end

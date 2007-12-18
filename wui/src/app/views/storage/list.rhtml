@@ -1,5 +1,5 @@
 <div id="left">
-<%if @attach_to_host or @attach_to_vm -%>
+<%if @attach_to_group or @attach_to_vm -%>
   <h2><%= _("Choose a Storage Volume") %></h2>
 <% else -%>
   <h2><%= _("Listing Storage Volumes") %></h2>
@@ -7,14 +7,12 @@
 
 <%= render :partial => "/storage/list", :locals => { :storage_volumes => @storage_volumes } %>
 
-<%= link_to 'Previous page', { :page => @storage_volume_pages.current.previous } if @storage_volume_pages.current.previous %>
-<%= link_to 'Next page', { :page => @storage_volume_pages.current.next } if @storage_volume_pages.current.next %> 
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
-<%unless @attach_to_host or @attach_to_vm -%>
+<%unless @attach_to_group or @attach_to_vm -%>
   <ul class="actions create">
   <li class="action"><%= link_to 'New Storage Volume', { :action => 'new' }, { :class => "create" } %></li>
   </ul>
