@@ -8,7 +8,7 @@ class CreateHosts < ActiveRecord::Migration
       t.column :arch,                       :string
       t.column :memory,                     :integer
       t.column :is_disabled,                :integer
-      t.column :hardware_resource_group_id, :integer
+      t.column :hardware_resource_group_id, :integer, :null => false
     end
 
     execute "alter table hosts add constraint fk_host_hw_groups
