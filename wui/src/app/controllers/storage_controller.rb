@@ -20,7 +20,7 @@ class StorageController < ApplicationController
       vm = Vm.find(@attach_to_vm)
       @storage_volumes = StorageVolume.find(:all, :conditions => "hardware_resource_group_id=#{vm.hardware_resource_group_id}")
     else
-      @storage_volume_pages, @storage_volumes = paginate :storage_volumes, :per_page => 10
+      @storage_volumes = StorageVolume.find(:all)
     end
 
   end
@@ -38,7 +38,7 @@ class StorageController < ApplicationController
     if @storage_volume.save
       storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_volume)
       flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ storage_url ,@storage_volume.ip_addr]
-      redirect_to :controller => 'admin', :action => 'index'
+      redirect_to :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_resource_group_id
     else
       render :action => 'new'
     end
@@ -60,8 +60,9 @@ class StorageController < ApplicationController
   end
 
   def destroy
-    StorageVolume.find(params[:id]).destroy
-    redirect_to :controller => 'admin', :action => 'index'
+    @storage_volume = StorageVolume.find(params[:id])
+    pool = @storage_volume.hardware_resource_group_id
+    redirect_to :controller => 'pool', :action => 'show', :id => pool
   end
 
   def attach_to_group

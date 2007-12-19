@@ -3,9 +3,6 @@
 
 <%= render :partial => "list", :locals => { :nics => @nics } %>
 
-<%= link_to 'Previous page', { :page => @nic_pages.current.previous } if @nic_pages.current.previous %>
-<%= link_to 'Next page', { :page => @nic_pages.current.next } if @nic_pages.current.next %> 
-
 </div>
 
 <div id="right">

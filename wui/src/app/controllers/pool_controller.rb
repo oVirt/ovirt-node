@@ -33,7 +33,11 @@ class PoolController < ApplicationController
     @hardware_resource_group = HardwareResourceGroup.new(params[:hardware_resource_group])
     if @hardware_resource_group.save
       flash[:notice] = 'HardwareResourceGroup was successfully created.'
-      redirect_to :action => 'list'
+      if @hardware_resource_group.supergroup
+        redirect_to :action => 'show', :id => @hardware_resource_group.supergroup_id
+      else
+        redirect_to :action => 'list'
+      end
     else
       render :action => 'new'
     end
@@ -71,8 +75,11 @@ class PoolController < ApplicationController
         subgroup.save
       end
       # what about quotas -- for now they're deleted
+      HardwareResourceGroup.find(params[:id]).destroy
+      redirect_to :action => 'show', :id => supergroup
+    else
+      flash[:notice] = "You can't delete the top level HW group."
+      redirect_to :action => 'show', :id => group
     end
-    HardwareResourceGroup.find(params[:id]).destroy
-    redirect_to :action => 'list'
   end
 end

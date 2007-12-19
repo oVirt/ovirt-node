@@ -25,7 +25,13 @@ class PermissionController < ApplicationController
     @permission = Permission.new(params[:permission])
     if @permission.save
       flash[:notice] = 'Permission was successfully created.'
-      redirect_to :action => 'list'
+      if @permission.hardware_resource_group
+        redirect_to :controller => 'pool', :action => 'show', :id => @permission.hardware_resource_group_id
+      elsif @permission.quota
+        redirect_to :controller => 'quota', :action => 'show', :id => @permission.quota_id
+      else
+        redirect_to :action => 'show', :id => @permission
+      end
     else
       render :action => 'new'
     end
@@ -46,7 +52,16 @@ class PermissionController < ApplicationController
   end
 
   def destroy
-    Permission.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    @permission = Permission.find(params[:id])
+    quota_id = @permission.quota_id
+    pool_id =  @permission.permission.hardware_resource_group_id
+    if @permission.destroy
+      if pool_id
+        redirect_to :controller => 'pool', :action => 'show', :id => pool_id
+      elsif quota_id
+        redirect_to :controller => 'quota', :action => 'show', :id => quota_id
+      else
+        redirect_to :action => 'list'
+      end
   end
 end

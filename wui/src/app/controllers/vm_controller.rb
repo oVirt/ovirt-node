@@ -75,7 +75,7 @@ class VmController < ApplicationController
     params[:vm][:needs_restart] = 1 if needs_restart
     if @vm.update_attributes(params[:vm])
       flash[:notice] = 'Vm was successfully updated.'
-      redirect_to :controller => 'consumer', :action => 'index'
+      redirect_to :action => 'show', :id => @vm
     else
       render :action => 'edit'
     end
@@ -83,9 +83,14 @@ class VmController < ApplicationController
 
   def destroy
     @vm = Vm.find(params[:id])
+    quota = @vm.quota_id
     if @vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED
       @vm.destroy
-      redirect_to :controller => 'consumer', :action => 'index'
+      if quota
+        redirect_to :controller => 'quota', :action => 'show', :id => quota
+      else
+        redirect_to :controller => 'quota', :action => 'list'
+      end
     else
       flash[:notice] = "Vm must be stopped to destroy it."
       redirect_to :controller => 'vm', :action => 'show', :id => params[:id]

@@ -32,7 +32,7 @@ class HostController < ApplicationController
     @host = Host.new(params[:host])
     if @host.save
       flash[:notice] = '<a class="show" href="%s">%s</a> was created.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
-      redirect_to :controller => 'admin', :action => 'index'
+      redirect_to :action => 'show', :id => @host
     else
       render :action => 'new'
     end
@@ -54,10 +54,11 @@ class HostController < ApplicationController
 
   def destroy
     h = Host.find(params[:id])
+    hw_group = h.hardware_resource_group_id
     hostname = h.hostname
     h.destroy
     flash[:notice] = '%s was destroyed.' % hostname
-    redirect_to :controller => 'admin', :action => 'index'
+    redirect_to :controller => 'pool', :action => 'show', :id => hw_group
   end
 
   def disable
@@ -81,6 +82,7 @@ class HostController < ApplicationController
     end
     redirect_to :action => 'show', :id => @host
   end
+
   def attach_to_group
     @host = Host.find(params[:id])
     group = HardwareResourceGroup.find(params[:hardware_resource_group_id])

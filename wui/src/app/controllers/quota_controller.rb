@@ -38,7 +38,7 @@ class QuotaController < ApplicationController
     @quota = Quota.new(params[:quota])
     if @quota.save
       flash[:notice] = 'Quota was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to :controller => 'pool', :action => 'show', :id => @quota.hardware_resource_group
     else
       render :action => 'new'
     end
@@ -62,7 +62,7 @@ class QuotaController < ApplicationController
     @quota = Quota.find(params[:id])
     group_id = @quota.hardware_resource_group_id
     @quota.destroy
-    redirect_to :controller => 'pool', :action => 'show', :id => hardware_resource_group_id
+    redirect_to :controller => 'pool', :action => 'show', :id => group_id
   end
 
   def vm_actions
@@ -93,6 +93,10 @@ class QuotaController < ApplicationController
     else
         flash[:notice] = 'No Virtual Machines Selected.'
     end
-    redirect_to :action => 'index'
+    if params[:vm_actions][:quota_id]
+    redirect_to :action => 'show', :id => params[:vm_actions][:quota_id]
+    else
+      redirect_to :action => 'list'
+    end
   end
 end

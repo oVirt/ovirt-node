@@ -9,7 +9,7 @@ class TaskController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @task_pages, @tasks = paginate :tasks, :per_page => 10
+    @tasks = Task.find(:all)
   end
 
   def show

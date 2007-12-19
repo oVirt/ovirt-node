@@ -9,7 +9,7 @@ class NicController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @nic_pages, @nics = paginate :nics, :per_page => 10
+    @nics = Nic.find(:all)
   end
 
   def show
