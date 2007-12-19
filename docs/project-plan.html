@@ -24,8 +24,8 @@
    hypervisor/domUs as well as the guests running on them. Rather than
    the traditional machine -> guests -> resources paradigm, the admin
    UI will be focused on grouping resources (cpu, memory, disk,
-   network, redundancy) into pools, granting quota on those pools to
-   users, then allowing each user to manage VMs within his quota as
+   network, redundancy, VMs) into pools, granting quota on those pools
+   to users, then allowing each user to manage VMs within his quota as
    needed via a separate user UI.</li>
       
       <li>A pre-configured freeIPA appliance that will provide
@@ -224,17 +224,12 @@
 
     <ul>
       <li>Prebuilt host images for pxe, flash drive, and CDROM
-      available for download.<br />
-	Having the image prebuilt means the PXE initrd needs to
-      autodetect the network card so that it can download the full
-      host image. Also we will try to slim the image down as much as
-      we can without getting into breaking up packages (that will come
-      later). Finally we need to automaticall obtain krb5.conf and
+	available for download</li>
+      <li>PXE initrd autodetects the network card so that it can download the full
+	host image</li>
+      <li>Automatically obtain krb5.conf and
       keytab for each image we're going to install and stuff those two
-      files into the image. This should mean that a prebuilt image can
-      be customized for an installation with one command, and then
-      booted on a host.
-      </li>
+	files into the image</li>
     </ul>
     <h3>Manager:</h3>
     <ul>
@@ -244,7 +239,7 @@
 	detailed <a href="ovirt-plan-update.txt">here</a>; in summary
 	we are abandoning the admin/user divide from the first
 	prototype and instead establishing a way to group machines and
-	delegate control over groups of machines to certain users.
+	delegate control over groups of machines to certain users. 
       </li>
       <li>Update the existing UI views to work with the new schema</li>
       <li>Implement the first cut of the new permissions system. No
@@ -253,6 +248,10 @@
       <li>Fix the taskomatic bit so that it runs as a service user
       with its own kerberos credential, so that the user doesn't have
 	to kinit as root to get the wui to run.</li>
+      <li>Change the quota concept to explicitly limit the number of
+      VMs a user can run. Also, take into account that some quotas
+      (LUNs) are enforced at all times, but some (RAM, active VMs,
+	CPUs) are only enforced for running VMs</li>
     </ul>
     
     <h2>Milestone 3 (Late January -- Fedora Test 1 timeframe)</h2>
@@ -323,11 +322,14 @@
       partitions on a disk; and finally UI for choosing one of these
       for a guest.</li>
       <li>Add UI to resource pool for manual VM placement and resource
-      limitation. In other words, we need a resource pool owner to be
+      limitation. In other words, a resource pool owner should be
       able to control placement and migration of any VMs running in
-      their pool, and also we need to be able to dynamically CPU-limit
-      VMs and groups of VMs running in a pool. This is a precursor to
-	automating this kind of management down the line.</li>
+      their pool, and also be able to dynamically limit VMs
+      and groups of VMs running in a pool (right now we can only limit
+      bandwidth and storage, CPU limiting coming). This is a precursor
+      to automating this kind of management down the line.</li>
+      <li>Have back-end structure for creating logical groupings of
+	hardware resources across resource pools</li>
     </ul>
 
     <h2>Milestone 4, AKA Release 1 (March 4, F9t2 timeframe)</h2>
@@ -352,9 +354,11 @@
 
     </ul>
 
-    <h3>Management:</h3>
+    <h3>Manager:</h3>
 
     <ul>
+      <li>GVNC (console viewer) plug-in for Windows</li>
+      <li>Set hard CPU resource limits</li>
       <li>Delegation of host administration to owners<br />
 	Users should be able to manage
 	resources within their assigned quota -- e.g. if you have 2
@@ -372,15 +376,17 @@
       <li>Grouping of hosts for clusters</li>
 
       <li>Deployment of guests to cluster</li>
-      
       <li>Expand manager UI<br />
 	Add UI for network management, storage management, automation
 	(auto-failover e.g.). Continue to polish existing user and
 	admin UI.
       </li>
+      <li>UI for creating, editing, and deleting logical groupings of
+	resources across resource pools</li>
+      <li>Testing on various host configurations</li>
     </ul>
 
-    <h2>Future work (no particlar order</h2>
+    <h2>Future work (no particular order)</h2>
     
     <h3>Host:</h3>
 
@@ -410,15 +416,19 @@
 	Be able to deploy the management app as an
     appliance. </li>
 
-      <li>Automatic migration upon failure.<br />
-	This should be the beginning of a policy engine that would
-	eventually include dynamic scheduler changes, memory
-	allocation, and so on.</li>
+      <li>ESX-style graphical map viewer for resource groups and
+	logical groupings</li>
+      <li>High-level tuning knobs for resource groups and logical
+      groupings: adjust allowed CPU, bandwidth, disk usage for groups
+	of VMs.</li>
+      <li>Automatic (event- or calendar-based) adjustment of allowed
+	resources for resource groups and logical groups</li>
 
-      <li>FreeIPA appliance, Cobbler appliance, iSCSI server
-	appliance</li>
-      <li>Additional UI from milestone 4 polished up.</li>
-      <li>Testing on various host configurations</li>
+      <li>Automatic migration upon failure.<br />
+	Integrate with cluster manager; migrate VMs in the event of
+	imminent hardware failure; other event-driven migration possible.</li>
+
+      <li>FreeIPA appliance, iSCSI server appliance</li>
     </ul>
 
     </div>
