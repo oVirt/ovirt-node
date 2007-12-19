@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 setup() {
     mkdir -p /mnt/livecd-tmp /mnt/livecd-tmp2 /mnt/livecd-tmp3

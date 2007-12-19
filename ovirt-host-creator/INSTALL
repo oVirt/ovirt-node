@@ -112,6 +112,7 @@ ddns-update-style interim;
 ignore client-updates;
 
 option iscsi-servers code 200 = array of ip-address;
+option ovirt-tftp-server code 201 = ip-address;
 option libvirt-auth-method code 202 = text;
 
 subnet 192.168.25.0 netmask 255.255.255.0 {
@@ -120,6 +121,7 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
         next-server 192.168.25.1;
         option routers 192.168.25.1;
         option iscsi-servers 192.168.25.1;
+        option ovirt-tftp-server 192.168.25.2;
         option libvirt-auth-method "krb5:192.168.25.1";
 	host perf200 {
 	     fixed-address 192.168.25.200;
@@ -132,7 +134,7 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
 
 Make sure to replace the subnet with the one you want to use, the
 domain-name-servers to what you want, and the next-server, routers,
-iscsi-servers, etc-libvirt-nfs-server, and libvirt-auth-method options to be
+iscsi-servers, ovirt-tftp-server, and libvirt-auth-method options to be
 the IP address of *this* server.  Finally, make sure that you change the
 "host perf200" to assign a static IP address to your ovirt host(s).  The IP
 address and DNS name will be important for a number of the authentication

@@ -244,6 +244,7 @@ touch /etc/resolv.conf
 # needed for the iscsi-servers dhcp option
 cat > /etc/dhclient.conf << EOF
 option iscsi-servers code 200 = array of ip-address;
+option ovirt-tftp-server code 201 = ip-address;
 option libvirt-auth-method code 202 = text;
 EOF
 

@@ -15,7 +15,8 @@
 	<tr>
 	  <th>Milestone 1<br />Due first week November</th>
 	  <th>Milestone 2<br />Due end November</th>
-	  <th>Milestone 3<br />Due end December</th>
+	  <th>Milestone 2.5<br />Due year-end</th>
+	  <th>Milestone 3<br />Due end January</th>
 	  <th>Milestone 4<br />Due mid-February</th>
 	  <th>Milestone 5/Release 1<br />Due mid-March</th>
 	</tr>
@@ -120,7 +121,7 @@
 		<td valign="top">Allocate resources to users. Model users, physical
 		  resoures, and quotas, enforce quotas. Deal with
 		  machine-size issues.</td>
-		<td valign="top" bgcolor="#FFFF00">State: In progress; All but quota enforcing is done. Enforce quotas by December 7.<br />By: Scott S.</td>
+		<td valign="top" bgcolor="#00FF00">State: In progress; All but quota enforcing is done. Enforce quotas by December 7.<br />By: Scott S.</td>
 	      </tr>
 	      <tr>
 		<td valign="top">Performance monitoring. Be able to run a text client on
@@ -146,6 +147,45 @@
 		<td valign="top">Basic VM management. Create a VM, start it, stop it, pause it, resume it, delete it from the web UI.</td>
 		<td valign="top" bgcolor="#00FF00">State: Done<br />Assigned to:
 		  Scott Seago, Chris Lalancette</td>
+	      </tr>
+	    </table>
+	  </td>
+	  <td valign="top"><!--Milestone 2.5 tasks -->
+	    <table cellspacing="10">
+	      <tr>
+		<td valign="top">Prebuilt <strong>Ovirt</strong> host images for PXE, flash drive, and CDROM.
+	The PXE initrd needs to
+      autodetect the network card so that it can download the full
+      host image. Also, automatically obtain krb5.conf and
+      keytab for each image we're going to install and stuff those two
+		  files into the image. </td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Prebuilt WUI RPMs in a repo.
+	For the WUI and for the packages we have to
+      build manually (libvirt, collectd, kvm) we need a yum repo
+		  developers can pull from.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Hugh Brock, Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">WUI setup script.
+	We need to automate the (fairly simple) WUI setup steps,
+	including creating and populating the database, installing
+		  keytabs, and making sure all the rpm deps are correct.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Hugh Brock, Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Further LDAP integration.
+	We need to automatically pull available users (and eventually
+	groups?) from the LDAP server and associate them with roles
+	and quotas. We do authentication this way now but we are
+		  manually creating users in the WUI db, which is wrong.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Hugh Brock, Scott Seago</td>
 	      </tr>
 	    </table>
 	  </td>
