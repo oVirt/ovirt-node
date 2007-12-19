@@ -32,6 +32,7 @@
     <%if @hardware_resource_group.quotas.empty? -%>
       <li class="action"><%= link_to 'New Subgroup', { :action => 'new', :supergroup => @hardware_resource_group}, { :class => "create" } %></li>
     <% end -%>
+    <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new', :hardware_resource_group_id => @hardware_resource_group}, { :class => "create" } %></li>
   </ul>
   <ul class="actions edit">
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @hardware_resource_group}, { :class => "edit" } %></li>

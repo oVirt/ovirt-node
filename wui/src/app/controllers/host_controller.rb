@@ -16,7 +16,7 @@ class HostController < ApplicationController
       conditions += " or hardware_resource_group_id=#{group.supergroup_id}" if group.supergroup
       @hosts = Host.find(:all, :conditions => conditions)
     else
-      @host_pages, @hosts = paginate :hosts, :per_page => 10
+      @hosts = Host.find(:all)
     end
   end
 

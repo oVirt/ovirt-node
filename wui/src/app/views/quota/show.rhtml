@@ -62,7 +62,7 @@ function confirm_and_submit(item){
     <li class="action"><%= link_to 'Delete Quota', { :controller => "quota", :action => 'destroy', :id => @quota }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
   </ul>
   <ul class="actions">
-    <li class="action"><%= link_to 'List All Quotas', { :action => 'list' }, { :class => "list" } %></li>
+    <li class="action"><%= link_to 'Your Quotas', { :action => 'list' }, { :class => "list" } %></li>
     <li class="action"><%= link_to "to #{@quota.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @quota.hardware_resource_group }, { :class => "list" } %></li>
   </ul>
   <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>

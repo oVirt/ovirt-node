@@ -12,6 +12,6 @@
   <h2>Actions</h2>
   <ul class="actions">
     <li class="action"><%= link_to 'Show', { :action => 'show', :id => @storage_volume }, { :class => "show" } %></li>
-    <li class="action"><%= link_to 'All Storage Volumes', { :action => 'list' }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "Back to #{@storage_volume.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_resource_group.id }, { :class => "list" } %></li>
   </ul>
 </div>

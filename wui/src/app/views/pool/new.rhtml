@@ -1,8 +1,19 @@
-<h1>New hardware_resource_group</h1>
+<div id="left">
+<h2><%= _("New Hardware Resource Group") %></h2>
 
 <% form_tag :action => 'create' do %>
   <%= render :partial => 'form' %>
   <%= submit_tag "Create" %>
 <% end %>
 
-<%= link_to 'Back', :action => 'list' %>
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <%if @hardware_resource_group.supergroup -%>
+      <li class="action"><%= link_to "Back to #{@hardware_resource_group.supergroup.name}", { :action => 'show', :id => @hardware_resource_group.supergroup_id}, { :class => "list" } %></li>
+    <% end -%>
+  </ul>
+</div>
+

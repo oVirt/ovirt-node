@@ -30,7 +30,7 @@ class StorageController < ApplicationController
   end
 
   def new
-    @storage_volume = StorageVolume.new
+    @storage_volume = StorageVolume.new({ :hardware_resource_group_id => params[:hardware_resource_group_id] })
   end
 
   def create

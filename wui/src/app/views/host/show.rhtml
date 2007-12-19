@@ -40,7 +40,7 @@
   </ul>
 -->
   <ul class="actions">
-      <li class="action"><%= link_to 'Back to admin', { :controller => 'admin', :action => 'index' }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "Back to #{@host.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @host.hardware_resource_group.id }, { :class => "list" } %></li>
   </ul>
   </ul>
 </div>

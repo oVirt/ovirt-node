@@ -1,8 +1,17 @@
+<div id="left">
+<h2><%= _("Task") %></h2>
+
 <% for column in Task.content_columns %>
 <p>
   <b><%= column.human_name %>:</b> <%=h @task.send(column.name) %>
 </p>
 <% end %>
 
-<%= link_to 'Edit', :action => 'edit', :id => @task %> |
-<%= link_to 'Back', :action => 'list' %>
+
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Back to VM', { :controller => 'vm', :action => 'show', :id => @task.vm.id }, { :class => "show"  } %></li>
+  </ul>
+</div>
