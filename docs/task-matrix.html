@@ -16,9 +16,9 @@
 	  <th>Milestone 1<br />Due first week November</th>
 	  <th>Milestone 2<br />Due end November</th>
 	  <th>Milestone 2.5<br />Due year-end</th>
-	  <th>Milestone 3<br />Due end January</th>
-	  <th>Milestone 4<br />Due mid-February</th>
-	  <th>Milestone 5/Release 1<br />Due mid-March</th>
+	  <th>Milestone 3<br />Due late January (F9T1)</th>
+	  <th>Milestone 4/Release 1<br />Due March 4 (F9beta)</th>
+	  <th>Milestone 5 (Future work)<br />Due ?</th>
 	</tr>
 	<tr>
 	  <td valign="top"><!-- Milestone 1 tasks -->
@@ -156,19 +156,19 @@
 		<td valign="top">Prebuilt <strong>Ovirt</strong> host images for PXE, flash drive, and CDROM.
 	The PXE initrd needs to
       autodetect the network card so that it can download the full
-      host image. Also, automatically obtain krb5.conf and
-      keytab for each image we're going to install and stuff those two
-		  files into the image. </td>
-		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+      host image. </td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />Assigned to:
 		  Chris Lalancette</td>
 	      </tr>
 	      <tr>
-		<td valign="top">Prebuilt WUI RPMs in a repo.
-	For the WUI and for the packages we have to
-      build manually (libvirt, collectd, kvm) we need a yum repo
-		  developers can pull from.</td>
+		<td valign="top">Update install docs (since we should no longer have to manually build the image)</td>
 		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
-		  Hugh Brock, Scott Seago</td>
+		  Hugh Brock</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Start writing a user manual</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Hugh Brock</td>
 	      </tr>
 	      <tr>
 		<td valign="top">WUI setup script.
@@ -179,17 +179,140 @@
 		  Hugh Brock, Scott Seago</td>
 	      </tr>
 	      <tr>
-		<td valign="top">Further LDAP integration.
-	We need to automatically pull available users (and eventually
-	groups?) from the LDAP server and associate them with roles
-	and quotas. We do authentication this way now but we are
-		  manually creating users in the WUI db, which is wrong.</td>
-		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
-		  Hugh Brock, Scott Seago</td>
+		<td valign="top">Update schema to handle richer user/group/permission/quota model</td>
+		<td valign="top" bgcolor="#00FF00">State: Done<br />Assigned to:
+		  Scott Seago</td>
 	      </tr>
-	    </table>
+	      <tr>
+		<td valign="top">Update existing UI views to work with the new schema</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Implement the first cut at the new permissioning system</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Fix the taskomatic bit so that it runs as a service user
+		  with its own kerberos credential</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Update the quota object and rules to
+		explicitly limit available VMs. Also take into
+		account time-of-enforcement (creation-time, runtime)</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		  Scott Seago</td>
+	      </tr>
+ 	    </table>
 	  </td>
 	  <td valign="top"><!-- Milestone 3 tasks -->
+	    <table cellspacing="10">
+	      <tr>
+		<td valign="top">Finish last bits of host install -- including automatically
+	rolling in the kerberos config and keytab for the image.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Build guest with libvirt w/storage API patches (if they're
+	not already in a released version).</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Add hooks to collectd to feed us info on guest state (for
+      updating status)</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Chris Lalancette, Rich Jones</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Make permission system work and integrate with
+      LDAP/FreeIPA</td>
+		<td valign="top" bgcolor="#FFFF00">State: In Progress<br />Assigned to:
+		  Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Make necessary alterations to former admin pages so they
+	work as resource pool pages.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In Progress<br />Assigned to:
+		  Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Update quota UI to reflect new quota attributes: CPUs, RAM,
+      storage, NICs, VMs, redundancy.</td>
+		<td valign="top" bgcolor="#FFFF00">State: In Progress<br />Assigned to:
+		  Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">UI scaling, stage 1: Make sure any widget with a list that
+	may get large is limited and paginated (stage 2 adds
+	filtering)</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		  Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Add management for available install ISOs to resource pool
+      pages</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		 Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Add ISO chooser to VM install page</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		 Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Do NSAPI plug-in for virt-viewer on linux, add it to VM view
+      page</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		 Rich Jones, Hugh Brock</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Add auto-refresh for VM and host status widgets so that
+	state information is current</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		 Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Make WUI install seamless (rpm, &quot;firstboot&quot; script
+		  run from init script)</td>
+		<td valign="top" bgcolor="#FFFF00">State: In progress<br />Assigned to:
+		 Scott Seago</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Storage API integration, as API becomes available. This
+      means UI for enumerating LUNs on an iSCSI target, UI for
+      enumerating LVs in a volume group, UI for enumerating
+      partitions on a disk; and finally UI for choosing one of these
+      for a guest.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		 Scott Seago, Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Add UI to resource pool for manual VM placement and resource
+      limitation. In other words, a resource pool owner should be
+      able to control placement and migration of any VMs running in
+      their pool, and also be able to dynamically limit VMs
+      and groups of VMs running in a pool (right now we can only limit
+      bandwidth and storage, CPU limiting coming). This is a precursor
+      to automating this kind of management down the line..</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		 Scott Seago, Chris Lalancette</td>
+	      </tr>
+	      <tr>
+		<td valign="top">Have back-end structure for creating logical groupings of
+	hardware resources across resource pools.</td>
+		<td valign="top" bgcolor="#99FFFF">State: Not started<br />Assigned to:
+		 Scott Seago, Chris Lalancette</td>
+	      </tr>
+
+
+	    </table>
+	  </td>
+	  <td valign="top"><!-- Milestone 4 tasks -->
 	    <table cellspacing="10">
 	      <tr>
 		<td valign="top">NIC bonding for failover and
@@ -256,10 +379,6 @@
 		<td valign="top" bgcolor="#99FFFF">State: not started<br />Assigned to:
 		  Bryan Clark, Scott Seago</td>
 	      </tr>
-	    </table>
-	  </td>
-	  <td valign="top"><!-- Milestone 4 tasks -->
-	    <table cellspacing="10">
 	      <tr>
 		<td valign="top">Expanded storage options. Need to be
 		able to access NFS/GFS/Fibrechannel storage for
