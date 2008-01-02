@@ -63,5 +63,6 @@ class PermissionController < ApplicationController
       else
         redirect_to :action => 'list'
       end
+    end
   end
 end
