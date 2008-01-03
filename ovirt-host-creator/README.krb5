@@ -29,7 +29,7 @@ OVIRT.BOSTON.REDHAT.COM for the rest of the document.
 for the libvirt service.  To do this, on the freeipa box, run:
 
 # kadmin.local
-> addprinc libvirt/ovirt@OVIRT.BOSTON.REDHAT.COM
+> addprinc -randkey libvirt/ovirt@OVIRT.BOSTON.REDHAT.COM
 > ktadd -k /tmp/ovirt-libvirt.tab libvirt/ovirt@OVIRT.BOSTON.REDHAT.COM
 > quit
 

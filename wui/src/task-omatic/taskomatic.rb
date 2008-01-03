@@ -9,6 +9,9 @@ require 'erb'
 require 'libvirt'
 require 'rexml/document'
 include REXML
+require 'kerberos'
+include Kerberos
+require 'socket'
 
 require 'models/vm.rb'
 require 'models/task.rb'
@@ -599,6 +602,12 @@ pid = fork do
   loop do
     puts 'Checking for tasks...'
 
+    # make sure we get our credentials up-front
+    krb5 = Krb5.new
+    default_realm = krb5.get_default_realm
+    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/task-omatic/taskomatic.keytab')
+    krb5.cache
+
     Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
       case task.action
       when Task::ACTION_CREATE_VM then create_vm(task)
@@ -617,6 +626,10 @@ pid = fork do
       task.save
     end
     
+    # and now we can destroy the credentials
+    krb5.destroy
+    krb5.close
+
     $stdout.flush
     sleep 5
   end
