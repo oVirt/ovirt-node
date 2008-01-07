@@ -12,6 +12,6 @@ class HardwareResourceGroup < ActiveRecord::Base
 
   def self.list_for_user(user)
     find(:all, :include => "permissions", 
-         :conditions => "permissions.user='#{user}'")
+         :conditions => "permissions.user='#{user}' and permissions.privilege='#{Permission::ADMIN}'")
   end
 end

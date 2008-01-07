@@ -9,6 +9,8 @@ class PoolController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
+    @default_group = HardwareResourceGroup.find(:first, :include => "permissions", 
+                                                :conditions => "supergroup_id is null")
     @hardware_resource_groups = HardwareResourceGroup.list_for_user(get_login_user)
     @hosts = Set.new
     @storage_volumes = Set.new
@@ -30,16 +32,21 @@ class PoolController < ApplicationController
   end
 
   def create
-    @hardware_resource_group = HardwareResourceGroup.new(params[:hardware_resource_group])
-    if @hardware_resource_group.save
-      flash[:notice] = 'HardwareResourceGroup was successfully created.'
-      if @hardware_resource_group.supergroup
-        redirect_to :action => 'show', :id => @hardware_resource_group.supergroup_id
-      else
-        redirect_to :action => 'list'
-      end
+    unless params[:hardware_resource_group][:supergroup_id]
+      flash[:notice] = 'Parent group is required for new HardwareResourceGroup '
+      redirect_to :action => 'list'
     else
-      render :action => 'new'
+      @hardware_resource_group = HardwareResourceGroup.new(params[:hardware_resource_group])
+      if @hardware_resource_group.save
+        flash[:notice] = 'HardwareResourceGroup was successfully created.'
+        if @hardware_resource_group.supergroup
+          redirect_to :action => 'show', :id => @hardware_resource_group.supergroup_id
+        else
+          redirect_to :action => 'list'
+        end
+      else
+        render :action => 'new'
+      end
     end
   end
 
