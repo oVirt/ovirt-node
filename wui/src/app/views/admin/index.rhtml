@@ -1,7 +1,7 @@
 <div id="left">
-<h2><%= _("Manage Hardware") %></h2> 
+<h2><%= _("Manage Hardware Resource Groups") %></h2> 
 
-<p>Manage Hardware from this interface, create new hosts and storage volumes</p>
+<p>Manage Hardware Resource Groups from this interface</p>
 
 <h3>Hosts</h3>
 <%= render :partial => "/host/list", :locals => { :hosts => @hosts } %>
@@ -17,20 +17,19 @@
 
 <h3>Manage Quotas</h3>
 <ul id="resources">
-<% for quota in @user_quotas %>
+<% for quota in @quotas %>
   <li><%= link_to quota.user.ldap_uid, { :controller => 'quota', :action => 'show', :id => quota }, { :class => "show" } %></li>
 <% end %>
 </ul>
 
-<%= link_to 'Previous page', { :page => @user_quota_pages.current.previous } if @user_quota_pages.current.previous %>
-<%= link_to 'Next page', { :page => @user_quota_pages.current.next } if @user_quota_pages.current.next %> 
+<%= link_to 'Previous page', { :page => @quota_pages.current.previous } if @quota_pages.current.previous %>
+<%= link_to 'Next page', { :page => @quota_pages.current.next } if @quota_pages.current.next %> 
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions create">
-    <li class="action"><%= link_to 'New host', { :controller => 'host', :action => 'new' }, { :class => "create" } %></li>
     <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new'}, { :class => "create" } %></li>
     <li class="action"><%= link_to 'New user', { :controller => 'user', :action => 'new'} , { :class => "create" } %></li>
   </ul>

@@ -1,0 +1,14 @@
+<table class="listing">
+<thead>
+  <tr>
+    <th>Name</th>
+  </tr>
+</thead>
+<tbody>
+<% for group in hardware_resource_groups %>
+<tr class="<%= cycle('odd','even') %>">
+  <td style="text-align:left;"><%= link_to group.name, { :controller => 'pool', :action => 'show', :id => group }, { :class => "show" } %></td>
+</tr>
+<% end %>
+<tbody>
+</table>

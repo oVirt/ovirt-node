@@ -13,7 +13,7 @@ module ApplicationHelper
      }
   end
 
-  def select_with_label(label, obj, meth, coll, opts) 
+  def select_with_label(label, obj, meth, coll, opts={}) 
     %{ 
       <div class="i"><label for="#{obj}_#{meth}">#{_(label)}</label>
       #{select obj, meth, coll, opts}</div>

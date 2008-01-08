@@ -1,0 +1,12 @@
+<div id="left">
+<h2><%= _("Permissions") %></h2>
+
+<%= render :partial => "list", :locals => { :permissions => @permissions, :show_object => true } %>
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions create">
+<!--    <li class="action"><%= link_to 'New Virtual Machine', { :action => 'new' }, { :class => "create" } %></li>-->
+  </ul>
+</div>

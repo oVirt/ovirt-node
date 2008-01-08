@@ -1,17 +1,16 @@
 <div id="left">
-<h2><%= _("Available Hosts") %></h2>
+<%if @attach_to_group -%>
+  <h2><%= _("Choose a Host") %></h2>
+<% else -%>
+  <h2><%= _("Listing Hosts") %></h2>
+<% end -%>
 
 <%= render :partial => "list", :locals => { :hosts => @hosts } %>
 
-<%= link_to 'Previous page', { :page => @host_pages.current.previous } if @host_pages.current.previous %>
-<%= link_to 'Next page', { :page => @host_pages.current.next } if @host_pages.current.next %> 
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
-  <ul class="actions create">
-    <li class="action"><%= link_to 'New host', { :action => 'new'}, {:class => "create" } %></li>
-  </ul>
 </div>
   

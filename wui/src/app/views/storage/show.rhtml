@@ -9,8 +9,6 @@
 <p><b>Type:</b>       <%=h @storage_volume.storage_type %></p>
 
 
-<h3>Hosts</h3>
-<%= render :partial => "/host/list", :locals => { :hosts => @storage_volume.hosts, :remove_from_host => true  } %>
 
 </div>
 
@@ -23,12 +21,6 @@
     <li class="action"><%= link_to 'Delete Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %></li>
   </ul>
   <ul class="actions">
-    <% if params[:vm_id] -%>
-      <li class="action"><%= link_to 'Back to VM', { :controller => 'vm', :action => 'show', :id => params[:vm_id] }, { :class => "list" } %></li>
-    <% elsif params[:host_id] -%>
-      <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => params[:host_id] }, { :class => "list" } %></li>
-    <% else -%>
-      <li class="action"><%= link_to 'Back to admin', { :controller => 'admin', :action => 'index' }, { :class => "list" } %></li>
-    <% end -%>
+    <li class="action"><%= link_to "Back to #{@storage_volume.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_resource_group.id }, { :class => "list" } %></li>
   </ul>
 </div>

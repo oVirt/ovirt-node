@@ -23,9 +23,10 @@
       <li>A web-based management UI appliance for the tiny
    hypervisor/domUs as well as the guests running on them. Rather than
    the traditional machine -> guests -> resources paradigm, the admin
-   UI will be focused on grouping resources (vcpu, memory, disk,
-   network, redundancy) and granting them to users, then allowing each
-	user to manage his resource set as needed, via a separate user UI.</li>
+   UI will be focused on grouping resources (cpu, memory, disk,
+   network, redundancy, VMs) into pools, granting quota on those pools
+   to users, then allowing each user to manage VMs within his quota as
+   needed via a separate user UI.</li>
       
       <li>A pre-configured freeIPA appliance that will provide
 	the Kerberos infrastructure as well as the
@@ -47,10 +48,14 @@
       integration with FreeIPA for authentication and we can create, stop, start,
       suspend, and resume guests from the UI. In addition we can
 	create and edit user quotas and we automatically enforce them.</li>
-      <li>Milestone 2.5, in process now and due by year-end, focuses on making what we have easy to deploy,
-	plus if possible storage API integration. Storage API is
-	available in beta form now so we can write to it.</li>
-      <li>Milestone 3 in planning stage, deadline moved to end of January.</li>
+      <li>Milestone 2.5, in process now and due by year-end, focuses
+      on making what we have easy to deploy, and on doing required schema
+      changes to implement the resource pool/quota/permission
+	structure we have added to the project.</li>
+
+      <li>Milestone 3 in planning stage, deadline moved to end of
+      January. Milestone 3 aims to have a publicly releasable project
+      usable by developers.</li>
     </ul>
 
     <h2>Plan</h2>
@@ -200,7 +205,7 @@
   
     <h2>Milestone 2.5 (December 21)</h2>
     <p>Goal: Packaging (developers need to be able to download and
-      install everything easily)</p>
+      install host image easily)</p>
     <p>NB: This milestone is still for developers only. Installation
     will be easier but we do not expect guest storage to be
       configurable from the UI by this release.</p>
@@ -219,48 +224,124 @@
 
     <ul>
       <li>Prebuilt host images for pxe, flash drive, and CDROM
-      available for download.<br />
-	Having the image prebuilt means the PXE initrd needs to
-      autodetect the network card so that it can download the full
-      host image. Also we will try to slim the image down as much as
-      we can without getting into breaking up packages (that will come
-      later). Finally we need to automaticall obtain krb5.conf and
+	available for download</li>
+      <li>PXE initrd autodetects the network card so that it can download the full
+	host image</li>
+      <li>Automatically obtain krb5.conf and
       keytab for each image we're going to install and stuff those two
-      files into the image. This should mean that a prebuilt image can
-      be customized for an installation with one command, and then
-      booted on a host.
-      </li>
+	files into the image</li>
     </ul>
     <h3>Manager:</h3>
     <ul>
 
-      <li>Prebuilt RPMs in a repo<br />
-	For the WUI and for the packages we have to
-      build manually (libvirt, collectd, kvm) we need a yum repo
-	developers can pull from.</li>
-
-      <li>WUI setup script<br />
-	We need to automate the (fairly simple) WUI setup steps,
-	including creating and populating the database, installing
-	keytabs, and making sure all the rpm deps are correct.
+      <li>Update the schema to reflect the changes from our planning
+	meetings of December 10-11. These are
+	detailed <a href="ovirt-plan-update.txt">here</a>; in summary
+	we are abandoning the admin/user divide from the first
+	prototype and instead establishing a way to group machines and
+	delegate control over groups of machines to certain users. 
       </li>
-      
-      <li>Further LDAP integration<br />
-	We need to automatically pull available users (and eventually
-	groups?) from the LDAP server and associate them with roles
-	and quotas. We do authentication this way now but we are
-	manually creating users in the WUI db, which is wrong.
-      </li>
+      <li>Update the existing UI views to work with the new schema</li>
+      <li>Implement the first cut of the new permissions system. No
+      integration with LDAP yet and no groups, but check user
+	permissions before allowing views/actions.</li>
+      <li>Fix the taskomatic bit so that it runs as a service user
+      with its own kerberos credential, so that the user doesn't have
+	to kinit as root to get the wui to run.</li>
+      <li>Change the quota concept to explicitly limit the number of
+      VMs a user can run. Also, take into account that some quotas
+      (LUNs) are enforced at all times, but some (RAM, active VMs,
+	CPUs) are only enforced for running VMs</li>
     </ul>
     
+    <h2>Milestone 3 (Late January -- Fedora Test 1 timeframe)</h2>
 
-    <h2>Milestone 3 (End of January)</h2>
+    <p>Goal: End to end demo of all basic features (and
+      unveiling). Demo includes:</p>
+    <ul>
+      <li>Create a resource pool with an ovirt host and a storage
+      provider</li>
+      <li>Add 2 users to the pool from the available users in FreeIPA</li>
+      <li>Give each user quota on the pool</li>
+      <li>Log in as each user and create a guest, assigning it storage
+	from the pool</li>
+      <li>Start the guests and demonstrate that they install
+      successfully, choosing the install image from a list of
+      available isos in the system.</li>
+      <li>Access the guests using virt-viewer</li>
+      <li>Stop, start, suspend, resume, save, restore the guests</li>
+      <li>Demonstrate that users can't exceed quota</li>
+      <li>Demonstrate that one user can't access another's guests</li>
+      <li>Demonstrate that state updates both on the guest view and
+	on the host view</li>
+    </ul>
 
-    <p>Goal: Network service adaptability</p>
+    <h3>Docs:</h3>
+
+    <ul>
+      <li>Update install doc</li>
+      <li>Create tutorial doc for user manual</li>
+    </ul>
+
+    <h3>Host:</h3>
+    
+    <ul>
+      <li>Finish last bits of host install -- including automatically
+	rolling in the kerberos config and keytab for the image.</li>
+      <li>Build guest with libvirt w/storage API patches (if they're
+	not already in a released version)</li>
+      <li>Add hooks to collectd to feed us info on guest state (for
+      updating status)</li>
+    </ul>
+
+    <h3>Manager:</h3>
+    
+    <ul>
+      <li>Make permission system work and integrate with
+      LDAP/FreeIPA</li>
+      <li>Make necessary alterations to former admin pages so they
+	work as resource pool pages.</li>
+      <li>Add user management for resource pools</li>
+      <li>Update quota UI to reflect new quota attributes: CPUs, RAM,
+      storage, NICs, VMs, redundancy</li>
+      <li>UI scaling, stage 1: Make sure any widget with a list that
+	may get large is limited and paginated (stage 2 adds
+	filtering)</li>
+      <li>Add management for available install ISOs to resource pool
+      pages</li>
+      <li>Add ISO chooser to VM install page</li>
+      <li>Do NSAPI plug-in for virt-viewer on linux, add it to VM view
+      page</li>
+      <li>Add auto-refresh for VM and host status widgets so that
+	state information is current</li>
+      <li>Make WUI install seamless (rpm, &quot;firstboot&quot; script
+	run from init script)</li>
+      <li>Storage API integration, as API becomes available. This
+      means UI for enumerating LUNs on an iSCSI target, UI for
+      enumerating LVs in a volume group, UI for enumerating
+      partitions on a disk; and finally UI for choosing one of these
+      for a guest.</li>
+      <li>Add UI to resource pool for manual VM placement and resource
+      limitation. In other words, a resource pool owner should be
+      able to control placement and migration of any VMs running in
+      their pool, and also be able to dynamically limit VMs
+      and groups of VMs running in a pool (right now we can only limit
+      bandwidth and storage, CPU limiting coming). This is a precursor
+      to automating this kind of management down the line.</li>
+      <li>Have back-end structure for creating logical groupings of
+	hardware resources across resource pools</li>
+    </ul>
+
+    <h2>Milestone 4, AKA Release 1 (March 4, F9t2 timeframe)</h2>
+
+    <p>Goal: Clustering and NIC bonding</p>
 
     <h3>Host:</h3>
 
     <ul>
+
+      <li>Partitioning of iSCSI LUNs on host; LVM management of iSCSI
+    LUNs for guest image. </li>
       <li>NIC bonding for failover and bandwidth aggregation<br />
 	Have a reasonable set of default configs on a baremetal
 	install depending on the number of available NICs. The obvious
@@ -268,43 +349,22 @@
 	per guest. Be able to modify this from the management app so
 	that we can for example bond NICs for storage or for guest
 	use.</li>
+      <li>Manage host pairing with quorum disk</li>
+      <li>Cluster-LVM awareness</li>
 
-      <li>Partitioning of iSCSI LUNs on host; LVM management of iSCSI
-    LUNs for guest images<br />
-	Libvirt storage API gives us all of this stuff for free. We'll
-	need UI for managing it though. </li>
-
-      <li>Pre-emptive live migration, post failure offline
-	migration.<br />  Have a monitoring or stats daemon running on
-	the host that will generate events we can respond to from the
-	management app. Responses would take the form of migrating a
-	running guest automatically, or possibly offline migrating a
-	stopped guest. collectd may be helpful with this.</li>
     </ul>
 
-    <h3>Management:</h3>
+    <h3>Manager:</h3>
 
     <ul>
+      <li>GVNC (console viewer) plug-in for Windows</li>
+      <li>Set hard CPU resource limits</li>
       <li>Delegation of host administration to owners<br />
 	Users should be able to manage
 	resources within their assigned quota -- e.g. if you have 2
 	physical NICs available decide if you want them bonded or if you
 	want each dedicated to a different guest, decide how you want
 	your storage dealt with, etc.</li>    
-
-      <li>Deployment of prebuilt images<br />
-	Allow admins to
-	maintain a list of available install images (OSes, appliances)
-	that users can choose to install in their allotted
-	space. Probably just wrap Cobbler for this.</li>
-
-      <li>Fine grained ACL integration with LDAP<br />
-	Be able to look up a user in LDAP and determine which VMs the
-	user ought to be able to look at/modify. This should happen
-	independently of the management app, although certain
-	operations (disk quota changes, etc.) we are going to want to allow only
-	from the management app.
-      </li>
 
       <li>Long term performance monitoring<br /> 
       With collectd in
@@ -313,52 +373,26 @@
       additional work in KVM, collectd will let us collect per-guest
 	stats for network i/o, disk i/o, and CPU usage.</li>
 
-      <li>Management appliance<br />
-	Be able to deploy the management app as an
-    appliance. This assumes we have a way to install an appliance
-    remotely, which depends on virtinst (already partially done) and
-    libvirt storage API (not yet done).
-      </li>
-      
+      <li>Grouping of hosts for clusters</li>
+
+      <li>Deployment of guests to cluster</li>
       <li>Expand manager UI<br />
 	Add UI for network management, storage management, automation
 	(auto-failover e.g.). Continue to polish existing user and
 	admin UI.
       </li>
+      <li>UI for creating, editing, and deleting logical groupings of
+	resources across resource pools</li>
+      <li>Testing on various host configurations</li>
     </ul>
 
-    <h2>Milestone 4 (Mid-end February)</h2>
-
-    <p>Goal: Redundancy / clustering, more capability  in managment UI</p>
-
+    <h2>Future work (no particular order)</h2>
+    
     <h3>Host:</h3>
 
     <ul>
       <li>NFS/GFS/Fibrechannel storage options (no longer restricted
 	to iSCSI)</li>
-      <li>Manage host pairing with quorum disk</li>
-      <li>Cluster-LVM awareness</li>
-    </ul>
-
-    <h3>Management:</h3>
-    <ul>
-      <li>Automatic migration upon failure.<br />
-	This should be the beginning of a policy engine that would
-	eventually include dynamic scheduler changes, memory
-	allocation, and so on.</li>
-
-      <li>Grouping of hosts for clusters</li>
-
-      <li>Deployment of guests to cluster</li>
-    </ul>
-
-    <h2>Milestone 5 aka Release 1.0 (March sometime)</h2>
-
-    <p>Goal: Spit, polish & bling</p>
-
-    <h3>Host:</h3>
-
-    <ul>
       <li>Access guest consoles directly on host hardware<br />
 	The beginnings of the local host &quot;bios&quot; for local
 	machine management.
@@ -368,16 +402,35 @@
 	Libvirt storage API will handle this for us, we just need
 	manager UI to cope with it.</li>
       <li>Install guest from local CDROM</li>
+      <li>Pre-emptive live migration, post failure offline
+	migration.<br />  Have a monitoring or stats daemon running on
+	the host that will generate events we can respond to from the
+	management app. Responses would take the form of migrating a
+	running guest automatically, or possibly offline migrating a
+	stopped guest. collectd may be helpful with this.</li>
     </ul>
     <h3>Management</h3>
     
     <ul>
-      <li>FreeIPA appliance, Cobbler appliance, iSCSI server
-	appliance</li>
-      <li>Additional UI from milestone 4 polished up.</li>
-      <li>Testing on various host configurations</li>
+      <li>Management appliance<br />
+	Be able to deploy the management app as an
+    appliance. </li>
+
+      <li>ESX-style graphical map viewer for resource groups and
+	logical groupings</li>
+      <li>High-level tuning knobs for resource groups and logical
+      groupings: adjust allowed CPU, bandwidth, disk usage for groups
+	of VMs.</li>
+      <li>Automatic (event- or calendar-based) adjustment of allowed
+	resources for resource groups and logical groups</li>
+
+      <li>Automatic migration upon failure.<br />
+	Integrate with cluster manager; migrate VMs in the event of
+	imminent hardware failure; other event-driven migration possible.</li>
+
+      <li>FreeIPA appliance, iSCSI server appliance</li>
     </ul>
-    
+
     </div>
     <div id="footer">
        <p>

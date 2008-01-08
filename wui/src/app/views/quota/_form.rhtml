@@ -1,14 +1,16 @@
-<%= error_messages_for 'user_quota' %>
+<%= error_messages_for 'quota' %>
 
-<!--[form:user_quota]-->
-<%= hidden_field_with_label "User", 'user_quota', 'user_id', @user_quota.user.ldap_uid  %>
+<!--[form:quota]-->
+<%= hidden_field_with_label "Hardware Resource Group", 'quota', 'hardware_resource_group_id', @quota.hardware_resource_group.name  %>
 
-<%= text_field_with_label "Total Virtual CPUs", 'user_quota', 'total_vcpus'  %>
+<%= text_field_with_label "Name", 'quota', 'name'  %>
 
-<%= text_field_with_label "Total Memory (MB)", 'user_quota', 'total_vmemory_in_mb'  %>
+<%= text_field_with_label "Total Virtual CPUs", 'quota', 'total_vcpus'  %>
 
-<%= text_field_with_label "Total Virtual NICs", 'user_quota', 'total_vnics'  %>
+<%= text_field_with_label "Total Memory (MB)", 'quota', 'total_vmemory_in_mb'  %>
 
-<%= text_field_with_label "Total Storage (GB)", 'user_quota', 'total_storage_in_gb'  %>
-<!--[eoform:user_quota]-->
+<%= text_field_with_label "Total Virtual NICs", 'quota', 'total_vnics'  %>
+
+<%= text_field_with_label "Total Storage (GB)", 'quota', 'total_storage_in_gb'  %>
+<!--[eoform:quota]-->
 

@@ -4,6 +4,6 @@
 <span class="account_message"><span class="login">current_user.login</span> | <%= link_to "home", '/users/user' %> | <%= link_to "log out", logout_url %></span>
 <% else %>
 <span class="hello_message">Hello there <%= @controller.get_login_user %>!</span>
-<span class="account_message"><%= link_to "admin", :controller => 'admin' %> | <%= link_to "home", :controller => "consumer" %></span>
+<span class="account_message"><%= link_to "pools", :controller => 'pool' %> | <%= link_to "quotas", :controller => "quota" %></span>
 <% end %>
 </div>

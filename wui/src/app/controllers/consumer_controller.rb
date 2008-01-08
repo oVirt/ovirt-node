@@ -7,7 +7,7 @@ class ConsumerController < ApplicationController
                       ["Restore", Task::ACTION_RESTORE_VM]]
                       
     if @user
-      @quota = @user.user_quota
+      @quota = @user.quota
     else
       @quota = nil
     end

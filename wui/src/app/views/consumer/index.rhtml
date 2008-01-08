@@ -2,7 +2,6 @@
 <h2><%= _("Manage Virtual Machines") %></h2>
 <p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
 
-<%if @user -%>
 <%= error_messages_for 'vm_actions' %>
 <script type="text/javascript">
 function confirm_and_submit(item){

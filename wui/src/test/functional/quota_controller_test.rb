@@ -5,14 +5,14 @@ require 'quota_controller'
 class QuotaController; def rescue_action(e) raise e end; end
 
 class QuotaControllerTest < Test::Unit::TestCase
-  fixtures :user_quotas
+  fixtures :quotas
 
   def setup
     @controller = QuotaController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
 
-    @first_id = user_quotas(:first).id
+    @first_id = quotas(:first).id
   end
 
   def test_index
@@ -27,7 +27,7 @@ class QuotaControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'list'
 
-    assert_not_nil assigns(:user_quotas)
+    assert_not_nil assigns(:quotas)
   end
 
   def test_show
@@ -36,8 +36,8 @@ class QuotaControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'show'
 
-    assert_not_nil assigns(:user_quota)
-    assert assigns(:user_quota).valid?
+    assert_not_nil assigns(:quota)
+    assert assigns(:quota).valid?
   end
 
   def test_new
@@ -46,18 +46,18 @@ class QuotaControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'new'
 
-    assert_not_nil assigns(:user_quota)
+    assert_not_nil assigns(:quota)
   end
 
   def test_create
-    num_user_quotas = UserQuota.count
+    num_quotas = Quota.count
 
-    post :create, :user_quota => {}
+    post :create, :quota => {}
 
     assert_response :redirect
     assert_redirected_to :action => 'list'
 
-    assert_equal num_user_quotas + 1, UserQuota.count
+    assert_equal num_quotas + 1, Quota.count
   end
 
   def test_edit
@@ -66,8 +66,8 @@ class QuotaControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'edit'
 
-    assert_not_nil assigns(:user_quota)
-    assert assigns(:user_quota).valid?
+    assert_not_nil assigns(:quota)
+    assert assigns(:quota).valid?
   end
 
   def test_update
@@ -78,7 +78,7 @@ class QuotaControllerTest < Test::Unit::TestCase
 
   def test_destroy
     assert_nothing_raised {
-      UserQuota.find(@first_id)
+      Quota.find(@first_id)
     }
 
     post :destroy, :id => @first_id
@@ -86,7 +86,7 @@ class QuotaControllerTest < Test::Unit::TestCase
     assert_redirected_to :action => 'list'
 
     assert_raise(ActiveRecord::RecordNotFound) {
-      UserQuota.find(@first_id)
+      Quota.find(@first_id)
     }
   end
 end

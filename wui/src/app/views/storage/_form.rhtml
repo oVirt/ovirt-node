@@ -1,6 +1,8 @@
 <%= error_messages_for 'storage_volume' %>
 
 <!--[form:storage_volume]-->
+<%= hidden_field_with_label "Hardware Resource Group", 'storge_volume', 'hardware_resource_group_id', @storage_volume.hardware_resource_group.name  %>
+
 <%= text_field_with_label "IP Address", 'storage_volume', 'ip_addr'  %>
 
 <%= text_field_with_label "Port", 'storage_volume', 'port'  %>

@@ -14,7 +14,7 @@ ADDR=127.0.0.1
 RAILS_ENVIRONMENT=production
 USER=invirt
 GROUP=invirt
-export Rails_GEM_VERSION=1.2.6
+export RAILS_GEM_VERSION=2.0.1
 
 RETVAL=0
 

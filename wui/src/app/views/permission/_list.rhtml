@@ -1,0 +1,35 @@
+<table class="listing">
+<thead>
+  <tr>
+    <th>User</th>
+    <th>Privilege</th>
+  <%if show_object -%>
+    <th>Object</th>
+  <% end -%>
+  </tr>
+</thead>
+<tbody>
+<% for permission in permissions %>
+<tr class="<%= cycle('odd','even') %>">
+  <td><%= permission.user %>
+  <td><%= permission.privilege %>
+  <%if show_object -%>
+    <td style="text-align:left;">
+      <%if permission.hardware_resource_group_id -%>
+        <%= link_to permission.hardware_resource_group.name, 
+	    { :controller => 'pool', :action => 'show', 
+	      :id => permission.hardware_resource_group }, { :class => "show" } %>
+    <%elsif permission.quota_id -%>
+        <%= link_to permission.quota.name, 
+	    { :controller => 'pool', :action => 'show', 
+	      :id => permission.quota }, { :class => "show" } %>
+    <%else -%>
+      Empty
+    <% end -%>
+  </td>
+  <% end -%>
+  <td><%= link_to 'Revoke', { :controller => 'permission', :action => 'destroy', :id => permission }, :confirm => 'Are you sure?', :method => :post %></td>
+</tr>
+<% end %>
+<tbody>
+</table>

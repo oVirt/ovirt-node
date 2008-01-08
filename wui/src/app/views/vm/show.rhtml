@@ -47,10 +47,13 @@
     <li class="action"><%= link_to 'Destroy', { :action => 'destroy', :id => @vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </ul>
   <ul class="actions">
-    <% if @vm.user -%>
-      <li class="action"><%= link_to 'Back to Home', { :controller => 'consumer', :action => 'index' }, { :class => "list" } %></li>
+    <% if @vm.quota -%>
+      <li class="action"><%= link_to 'Back to Quota', { :controller => 'quota', :action => 'show', :id => @vm.quota }, { :class => "list" } %></li>
     <% else -%>
       <li class="action"><%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %></li>
     <% end -%>
+    <%if @vm.host  -%>
+      <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @vm.host_id }, { :class => "show"  } %></li>
+    <% end  -%>
   </ul>
 </div>

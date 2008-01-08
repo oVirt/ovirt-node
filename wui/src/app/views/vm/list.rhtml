@@ -2,9 +2,6 @@
 <h2><%= _("Available Virtual Machines") %></h2>
 
 <%= render :partial => "list", :locals => { :vms => @vms } %>
-
-<%= link_to 'Previous page', { :page => @vm_pages.current.previous } if @vm_pages.current.previous %>
-<%= link_to 'Next page', { :page => @vm_pages.current.next } if @vm_pages.current.next %> 
 </div>
 
 <div id="right">

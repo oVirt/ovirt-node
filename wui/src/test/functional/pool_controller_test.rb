@@ -1,18 +1,18 @@
 require File.dirname(__FILE__) + '/../test_helper'
-require 'user_controller'
+require 'pool_controller'
 
 # Re-raise errors caught by the controller.
-class UserController; def rescue_action(e) raise e end; end
+class PoolController; def rescue_action(e) raise e end; end
 
-class UserControllerTest < Test::Unit::TestCase
-  fixtures :users
+class PoolControllerTest < Test::Unit::TestCase
+  fixtures :hardware_resource_groups
 
   def setup
-    @controller = UserController.new
+    @controller = PoolController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
 
-    @first_id = users(:first).id
+    @first_id = hardware_resource_groups(:first).id
   end
 
   def test_index
@@ -27,7 +27,7 @@ class UserControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'list'
 
-    assert_not_nil assigns(:users)
+    assert_not_nil assigns(:hardware_resource_groups)
   end
 
   def test_show
@@ -36,8 +36,8 @@ class UserControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'show'
 
-    assert_not_nil assigns(:user)
-    assert assigns(:user).valid?
+    assert_not_nil assigns(:hardware_resource_group)
+    assert assigns(:hardware_resource_group).valid?
   end
 
   def test_new
@@ -46,18 +46,18 @@ class UserControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'new'
 
-    assert_not_nil assigns(:user)
+    assert_not_nil assigns(:hardware_resource_group)
   end
 
   def test_create
-    num_users = User.count
+    num_hardware_resource_groups = HardwareResourceGroup.count
 
-    post :create, :user => {}
+    post :create, :hardware_resource_group => {}
 
     assert_response :redirect
     assert_redirected_to :action => 'list'
 
-    assert_equal num_users + 1, User.count
+    assert_equal num_hardware_resource_groups + 1, HardwareResourceGroup.count
   end
 
   def test_edit
@@ -66,8 +66,8 @@ class UserControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'edit'
 
-    assert_not_nil assigns(:user)
-    assert assigns(:user).valid?
+    assert_not_nil assigns(:hardware_resource_group)
+    assert assigns(:hardware_resource_group).valid?
   end
 
   def test_update
@@ -78,7 +78,7 @@ class UserControllerTest < Test::Unit::TestCase
 
   def test_destroy
     assert_nothing_raised {
-      User.find(@first_id)
+      HardwareResourceGroup.find(@first_id)
     }
 
     post :destroy, :id => @first_id
@@ -86,7 +86,7 @@ class UserControllerTest < Test::Unit::TestCase
     assert_redirected_to :action => 'list'
 
     assert_raise(ActiveRecord::RecordNotFound) {
-      User.find(@first_id)
+      HardwareResourceGroup.find(@first_id)
     }
   end
 end

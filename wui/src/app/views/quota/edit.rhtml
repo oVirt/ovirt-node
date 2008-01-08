@@ -1,7 +1,7 @@
 <div id="left">
 <h2><%= _("Editing User Quotas") %></h2>
 
-<% form_tag :action => 'update', :id => @user_quota do %>
+<% form_tag :action => 'update', :id => @quota do %>
   <%= render :partial => 'form' %>
   <%= submit_tag 'Edit' %>
 <% end %>
@@ -11,7 +11,7 @@
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions">
-    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @user_quota }, { :class => "show" } %></li>
-    <li class="action"><%= link_to 'All Quotas', { :action => 'list' }, { :class => "list" } %></li>
+    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @quota }, { :class => "show" } %></li>
+    <li class="action"><%= link_to 'Your Quotas', { :action => 'list' }, { :class => "list" } %></li>
   </ul>
 </div>

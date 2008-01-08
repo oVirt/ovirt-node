@@ -1,0 +1,12 @@
+<%= error_messages_for 'permission' %>
+
+<!--[form:permission]-->
+<%= hidden_field_with_label "Hardware Resource Group", 'permission', 'hardware_resource_group_id', @permission.hardware_resource_group.name if @permission.hardware_resource_group  %>
+<%= hidden_field_with_label "Quota", 'permission', 'quota_id', @permission.quota.name if @permission.quota  %>
+
+<%= select_with_label 'Privilege', 'permission', 'privilege', Permission::PRIVILEGES  %>
+
+<%= text_field_with_label 'User', 'permission', 'user'  %>
+
+<!--[eoform:permission]-->
+
