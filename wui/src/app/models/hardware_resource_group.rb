@@ -14,4 +14,9 @@ class HardwareResourceGroup < ActiveRecord::Base
     find(:all, :include => "permissions", 
          :conditions => "permissions.user='#{user}' and permissions.privilege='#{Permission::ADMIN}'")
   end
+
+  def self.get_default_group
+    find(:first, :include => "permissions", :order => "hardware_resource_groups.id ASC", 
+         :conditions => "supergroup_id is null")
+  end
 end
