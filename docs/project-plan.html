@@ -227,9 +227,6 @@
 	available for download</li>
       <li>PXE initrd autodetects the network card so that it can download the full
 	host image</li>
-      <li>Automatically obtain krb5.conf and
-      keytab for each image we're going to install and stuff those two
-	files into the image</li>
     </ul>
     <h3>Manager:</h3>
     <ul>
@@ -248,10 +245,6 @@
       <li>Fix the taskomatic bit so that it runs as a service user
       with its own kerberos credential, so that the user doesn't have
 	to kinit as root to get the wui to run.</li>
-      <li>Change the quota concept to explicitly limit the number of
-      VMs a user can run. Also, take into account that some quotas
-      (LUNs) are enforced at all times, but some (RAM, active VMs,
-	CPUs) are only enforced for running VMs</li>
     </ul>
     
     <h2>Milestone 3 (Late January -- Fedora Test 1 timeframe)</h2>
@@ -288,8 +281,6 @@
     <ul>
       <li>Finish last bits of host install -- including automatically
 	rolling in the kerberos config and keytab for the image.</li>
-      <li>Build guest with libvirt w/storage API patches (if they're
-	not already in a released version)</li>
       <li>Add hooks to collectd to feed us info on guest state (for
       updating status)</li>
     </ul>
@@ -297,6 +288,10 @@
     <h3>Manager:</h3>
     
     <ul>
+      <li>Change the quota concept to explicitly limit the number of
+      VMs a user can run. Also, take into account that some quotas
+      (LUNs) are enforced at all times, but some (RAM, active VMs,
+	CPUs) are only enforced for running VMs</li>
       <li>Make permission system work and integrate with
       LDAP/FreeIPA</li>
       <li>Make necessary alterations to former admin pages so they
@@ -316,11 +311,6 @@
 	state information is current</li>
       <li>Make WUI install seamless (rpm, &quot;firstboot&quot; script
 	run from init script)</li>
-      <li>Storage API integration, as API becomes available. This
-      means UI for enumerating LUNs on an iSCSI target, UI for
-      enumerating LVs in a volume group, UI for enumerating
-      partitions on a disk; and finally UI for choosing one of these
-      for a guest.</li>
       <li>Add UI to resource pool for manual VM placement and resource
       limitation. In other words, a resource pool owner should be
       able to control placement and migration of any VMs running in
@@ -340,6 +330,9 @@
 
     <ul>
 
+      <li>Automatically obtain krb5.conf and
+      keytab for each image we're going to install and stuff those two
+	files into the image</li>
       <li>Partitioning of iSCSI LUNs on host; LVM management of iSCSI
     LUNs for guest image. </li>
       <li>NIC bonding for failover and bandwidth aggregation<br />
@@ -350,6 +343,8 @@
 	that we can for example bond NICs for storage or for guest
 	use.</li>
       <li>Manage host pairing with quorum disk</li>
+      <li>Build guest with libvirt w/storage API patches (if they're
+	not already in a released version)</li>
       <li>Cluster-LVM awareness</li>
 
     </ul>
@@ -357,6 +352,11 @@
     <h3>Manager:</h3>
 
     <ul>
+      <li>Storage API integration, as API becomes available. This
+      means UI for enumerating LUNs on an iSCSI target, UI for
+      enumerating LVs in a volume group, UI for enumerating
+      partitions on a disk; and finally UI for choosing one of these
+      for a guest.</li>
       <li>GVNC (console viewer) plug-in for Windows</li>
       <li>Set hard CPU resource limits</li>
       <li>Delegation of host administration to owners<br />
