@@ -1,0 +1,44 @@
+#!/usr/bin/ruby
+
+$: << "../app"
+$: << "/usr/share/invirt-wui/app"
+
+require 'rubygems'
+require 'active_record'
+require 'erb'
+require 'models/hardware_resource_group.rb'
+require 'models/permission.rb'
+
+def database_configuration
+  YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
+end
+
+if ARGV.length != 1
+  print "Username is required\n"
+  exit
+end
+
+$dbconfig = database_configuration
+
+$develdb = $dbconfig['development']
+
+ActiveRecord::Base.establish_connection(
+                                        :adapter  => $develdb['adapter'],
+                                        :host     => $develdb['host'],
+                                        :username => $develdb['username'],
+                                        :password => $develdb['password'],
+                                        :database => $develdb['database']
+                                        )
+
+$hwgroup = HardwareResourceGroup.get_default_group
+if $hwgroup
+  Permission.new( { :privilege => Permission::MONITOR,
+                    :user => ARGV[0],
+                    :hardware_resource_group_id => $hwgroup.id}).save
+  Permission.new( { :privilege => Permission::ADMIN,
+                    :user => ARGV[0],
+                    :hardware_resource_group_id => $hwgroup.id}).save
+  Permission.new( { :privilege => Permission::DELEGATE,
+                    :user => ARGV[0],
+                    :hardware_resource_group_id => $hwgroup.id}).save
+end

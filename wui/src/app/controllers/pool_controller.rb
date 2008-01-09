@@ -9,8 +9,7 @@ class PoolController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @default_group = HardwareResourceGroup.find(:first, :include => "permissions", 
-                                                :conditions => "supergroup_id is null")
+    @default_group = HardwareResourceGroup.get_default_group
     @hardware_resource_groups = HardwareResourceGroup.list_for_user(get_login_user)
     @hosts = Set.new
     @storage_volumes = Set.new
