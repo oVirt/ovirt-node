@@ -15,15 +15,20 @@
 
 <h3>Network Interfaces</h3>
 <% if !@host.nics.empty? %>
-  <%= render :partial => "/nic/list", :locals => { :nics => @host.nics } %>
+  <%= render :partial => "/nic/list", :locals => { :nics => @host.nics, :show_actions => @is_admin } %>
 <% else %>
-<p>No Network Interfaces, perhaps you should <%= link_to 'add one', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %>?</p>
+<p>No Network Interfaces.
+<%if @is_admin -%>
+ perhaps you should <%= link_to 'add one', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %>?
+<% end -%>
+</p>
 <% end %>
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
+  <%if @is_admin -%>
   <ul class="actions create">
   <li class="action"><%= link_to 'Add Network Interface', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %></li>
   </ul>
@@ -34,11 +39,7 @@
     <li class="action"><%= link_to 'Enable Host', { :action => 'enable', :id => @host }, { :class => "edit" } %></li>
   <% end -%>
   </ul>
-<!-- hide for now
-  <ul class="actions remove">
-  <li class="action"><%= link_to 'Delete Host', { :action => 'destroy', :id => @host }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
-  </ul>
--->
+  <% end -%>
   <ul class="actions">
     <li class="action"><%= link_to "Back to #{@host.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @host.hardware_resource_group.id }, { :class => "list" } %></li>
   </ul>

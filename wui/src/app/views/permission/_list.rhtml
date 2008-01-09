@@ -28,7 +28,9 @@
     <% end -%>
   </td>
   <% end -%>
-  <td><%= link_to 'Revoke', { :controller => 'permission', :action => 'destroy', :id => permission }, :confirm => 'Are you sure?', :method => :post %></td>
+  <%if show_actions -%>
+    <td><%= link_to 'Revoke', { :controller => 'permission', :action => 'destroy', :id => permission }, :confirm => 'Are you sure?', :method => :post %></td>
+  <% end -%>
 </tr>
 <% end %>
 <tbody>

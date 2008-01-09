@@ -18,13 +18,16 @@
 <%= render :partial => "/quota/list", :locals => { :quotas => @hardware_resource_group.quotas } %>
 <% end -%>
 
+<%if @is_admin -%>
 <h3>Permissions</h3>
-<%= render :partial => "/permission/list", :locals => { :permissions => @hardware_resource_group.permissions, :show_object => false } %>
+<%= render :partial => "/permission/list", :locals => { :permissions => @hardware_resource_group.permissions, :show_object => false, :show_actions => @can_delegate } %>
+<% end -%>
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
+  <%if @is_admin -%>
   <ul class="actions create">
     <%if @hardware_resource_group.subgroups.empty? -%>
       <li class="action"><%= link_to 'New Quota', { :controller => 'quota', :action => 'new', :hardware_resource_group => @hardware_resource_group}, { :class => "create" } %></li>
@@ -34,15 +37,22 @@
     <% end -%>
     <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new', :hardware_resource_group_id => @hardware_resource_group}, { :class => "create" } %></li>
   </ul>
+  <% end -%>
   <ul class="actions edit">
+    <%if @is_admin -%>
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @hardware_resource_group}, { :class => "edit" } %></li>
     <li class="action"><%= link_to 'Add Host', { :controller => 'host', :action => 'list', :attach_to_group => @hardware_resource_group}, { :class => "edit" } %></li>
     <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_group => @hardware_resource_group }, {:class => "edit" } %></li>
+    <% end -%>
+    <%if @can_delegate -%>
     <li class="action"><%= link_to 'Grant Privileges', { :controller => 'permission', :action => 'new', :hardware_resource_group_id => @hardware_resource_group}, { :class => "edit" } %></li>
+    <% end -%>
   </ul>
+  <%if @is_admin -%>
   <ul class="actions remove">
     <li class="action"><%= link_to 'Delete Group', { :controller => "pool", :action => 'destroy', :id => @hardware_resource_group }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
   </ul>
+  <% end -%>
   <ul class="actions">
       <%if @hardware_resource_group.supergroup -%>
         <li class="action"><%= link_to "Up to #{@hardware_resource_group.supergroup.name}", { :action => 'show', :id => @hardware_resource_group.supergroup_id}, { :class => "list" } %></li>
