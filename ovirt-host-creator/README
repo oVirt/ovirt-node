@@ -9,15 +9,7 @@ This is currently a collection of scripts to build/deploy an Ovirt instance,
 which is essentially stateless.  Each of the commands is described below, along
 with common usage.
 
-creator.py: This is basically livecd-creator from livecd-tools, with a couple
-of customization and bugfixes specific to Ovirt.  It is run as:
-
-./creator.py [-b <base_iso>] -c ovirt.ks
-
-which will create a new Live CD ISO based on the kickstart in ovirt.ks.  The
-output file will be named something like livecd-ovirt-200710221423.iso
-
-ovirt-cd.sh: This is just a thin wrapper around creator.py, mostly here for
+ovirt-cd.sh: This is just a thin wrapper around livecd-creator, mostly here for
 orthogonality with the other commands.
 
 ovirt-flash.sh: This is a wrapper around creator.py and livecd-iso-to-disk.
@@ -38,14 +30,12 @@ development.
 ovirt-pxe.sh: This is a command to create the files needed to do a PXE boot of
 ovirt.  It is run as:
 
-./ovirt-pxe.sh <ether_mod> <remote_ip> [base_iso]
+./ovirt-pxe.sh [base_iso]
 
-where <ether_mod> is the ethernet module the booting machine needs, and where
-<remote_ip> is the name of the server that will be serving the TFTP.  What this
-command does is to create an ISO (or use the one from base_iso), and then
-modify /tftpboot on the local machine to set it all up for PXE booting.  Then
-you can follow "pxe-notes" to set up the rest of the server, and you should be
-able to get the machine to boot from PXE.
+What this command does is to create an ISO (or use the one from base_iso), and
+then create a tftpboot/ in the local directory to set it all up for PXE
+booting.  You can then follow README.pxe to set up the rest of the server, and
+you should be able to get the machine to boot from PXE.
 
 Typical Script Usage
 --------------------

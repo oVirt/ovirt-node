@@ -8,10 +8,11 @@ part / --size 950
 services --disabled=iptables --enabled=ntpd,collectd
 bootloader --timeout=1
 
-repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
+repo --name=f8 --baseurl=http://gromit.redhat.com/pub/fedora/linux/releases/8/Everything/x86_64/os/
+#repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
 #repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
 
-repo --name=libvirt-gssapi --baseurl=http://laforge.boston.redhat.com/rpms
+repo --name=libvirt-gssapi --baseurl=http://192.168.25.2/rpms
 
 
 %packages
@@ -185,7 +186,7 @@ start() {
             BRIDGE=ovirtbr`echo $eth | cut -b4-`
             echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" > /etc/sysconfig/network-scripts/ifcfg-$eth
             echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,libvirt-auth-method"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,libvirt-auth-method,collectd-server"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
         # find all of the partitions on the system
@@ -246,6 +247,7 @@ cat > /etc/dhclient.conf << EOF
 option iscsi-servers code 200 = array of ip-address;
 option ovirt-tftp-server code 201 = ip-address;
 option libvirt-auth-method code 202 = text;
+option collectd-server code 203 = ip-address;
 EOF
 
 cat > /etc/dhclient-up-hooks << \EOF
@@ -262,6 +264,9 @@ if [ -n "$new_libvirt_auth_method" ]; then
         wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
         rm -f /etc/krb5.conf ; wget -q http://$SERVER/$new_ip_address-krb5.conf -O /etc/krb5.conf
     fi
+fi
+if [ -n "$new_collectd_server" ]; then
+   sed -i -e "s/Server.*/Server \"$new_collectd_server\"/" /etc/collectd.conf
 fi
 EOF
 
@@ -284,10 +289,35 @@ chmod +x /etc/kvm-ifup
 sed -i -e 's/# vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/' /etc/libvirt/qemu.conf
 
 # set up libvirtd to listen on TCP (for kerberos)
-sed -i -e 's/# listen_tcp = 1/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
-sed -i -e 's/# listen_tls = 0/listen_tls = 0/' /etc/libvirt/libvirtd.conf
+sed -i -e 's/#listen_tcp = 1/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
+sed -i -e 's/#listen_tls = 0/listen_tls = 0/' /etc/libvirt/libvirtd.conf
 
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
+
+# with the new libvirt (0.4.0), make sure we we setup gssapi in the mech_list
+sed -i -e 's/mech_list: digest-md5/#mech_list: digest-md5/' /etc/sasl2/libvirt.conf
+sed -i -e 's/#mech_list: gssapi/mech_list: gssapi/' /etc/sasl2/libvirt.conf
+
+# setup collectd configuration
+cat > /etc/collectd.conf << \EOF
+LoadPlugin logfile
+LoadPlugin network
+LoadPlugin libvirt
+LoadPlugin memory
+LoadPlugin cpu
+
+<Plugin libvirt>
+        Connection "qemu:///system"
+        RefreshInterval "10"
+        HostnameFormat "hostname"
+</Plugin>
+
+# FIXME: we want to multicast this eventually
+# this will be replaced with the DHCP option record "collectd-server"
+<Plugin network>
+        Server "192.168.25.4"
+</Plugin>
+EOF
 
 %end
