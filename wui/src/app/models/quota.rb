@@ -1,10 +1,6 @@
 require 'util/ovirt'
 
 class Quota < ActiveRecord::Base
-  # deleted
-  # belongs_to :user
-
-  # not activated yet
   has_many :permissions, :dependent => :destroy, :order => "id ASC"
 
   has_many :vms, :dependent => :nullify, :order => "id ASC"
@@ -91,6 +87,27 @@ class Quota < ActiveRecord::Base
 
   def self.list_for_user(user)
     find(:all, :include => "permissions", 
-         :conditions => "permissions.user='#{user}'")
+         :conditions => "permissions.user='#{user}' and permissions.privilege='#{Permission::ADMIN}'")
+  end
+
+  def can_monitor(user)
+    has_privilege(user, Permission::MONITOR)
+  end
+  def can_delegate(user)
+    has_privilege(user, Permission::DELEGATE)
+  end
+  def is_admin(user)
+    has_privilege(user, Permission::ADMIN)
+  end
+
+  def has_privilege(user, privilege)
+    # check quota permissions first
+    if (permissions.find(:first, 
+                         :conditions => "permissions.privilege = '#{privilege}' and permissions.user = '#{user}'"))
+      return true
+    else
+      # now check HW resource group permissions
+      return hardware_resource_group.has_privilege(user, privilege)
+    end
   end
 end

@@ -1,51 +1,23 @@
 class TaskController < ApplicationController
-  def index
-    list
-    render :action => 'list'
-  end
-
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def list
-    @tasks = Task.find(:all)
-  end
-
   def show
     @task = Task.find(params[:id])
-  end
-
-  def new
-    @task = Task.new
-  end
-
-  def create
-    @task = Task.new(params[:task])
-    if @task.save
-      flash[:notice] = 'Task was successfully created.'
-      redirect_to :action => 'list'
-    else
-      render :action => 'new'
+    set_perms(@task.vm.quota)
+    unless @can_monitor
+      flash[:notice] = 'You do not have permission to view this task: redirecting to top level'
+      redirect_to :controller => 'quota', :action => 'list'
     end
+
   end
 
-  def edit
-    @task = Task.find(params[:id])
+  def set_perms(perm_obj)
+    @user = get_login_user
+    @is_admin = perm_obj.is_admin(@user)
+    @can_monitor = perm_obj.can_monitor(@user)
+    @can_delegate = perm_obj.can_delegate(@user)
   end
 
-  def update
-    @task = Task.find(params[:id])
-    if @task.update_attributes(params[:task])
-      flash[:notice] = 'Task was successfully updated.'
-      redirect_to :action => 'show', :id => @task
-    else
-      render :action => 'edit'
-    end
-  end
-
-  def destroy
-    Task.find(params[:id]).destroy
-    redirect_to :action => 'list'
-  end
 end
