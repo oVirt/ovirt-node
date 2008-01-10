@@ -11,15 +11,16 @@ License: GPL
 Group: Applications/System
 Requires: ruby >= 1.8.1
 Requires: ruby(abi) = 1.8
-Requires: rubygem(rails) >= 1.2.2
+Requires: rubygem(rails) = 2.0.1
 Requires: rubygem(mongrel) >= 1.0.1
+Requires: rubygem(kerberos) >= 0.4
 Requires: ruby-gettext-package
 Requires: postgresql-server
 Requires: ruby-postgres
 Requires: pwgen
 Requires: httpd >= 2.0
 Requires: mod_auth_kerb
-Requires: ruby-libvirt
+Requires: ruby-libvirt >= 0.0.2
 Requires: iscsi-initiator-utils
 Requires: cyrus-sasl-gssapi
 Requires(post):  /sbin/chkconfig

@@ -28,7 +28,7 @@ def database_configuration
 end
 
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
-                  macAddr, bridge, diskDevice)
+                  macAddr, bridge, diskDevices)
   doc = Document.new
 
   doc.add_element("domain", {"type" => "kvm"})
@@ -67,9 +67,19 @@ def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
   doc.root.add_element("devices")
   doc.root.elements["devices"].add_element("emulator")
   doc.root.elements["devices"].elements["emulator"].text = "/usr/bin/qemu-kvm"
-  doc.root.elements["devices"].add_element("disk", {"type" => "block", "device" => "disk"})
-  doc.root.elements["devices"].elements["disk"].add_element("source", {"dev" => diskDevice})
-  doc.root.elements["devices"].elements["disk"].add_element("target", {"dev" => "hda"})
+
+  devs = [ 'hda', 'hdb', 'hdc', 'hdd' ]
+  i = 0
+  diskDevices.each do |disk|
+    diskdev = Element.new("disk")
+    diskdev.add_attribute("type", "block")
+    diskdev.add_attribute("device", "disk")
+    diskdev.add_element("source", {"dev" => disk})
+    diskdev.add_element("target", {"dev" => devs[i]})
+    doc.root.elements["devices"] << diskdev
+    i += 1
+  end
+
   doc.root.elements["devices"].add_element("interface", {"type" => "bridge"})
   doc.root.elements["devices"].elements["interface"].add_element("mac", {"address" => macAddr})
   doc.root.elements["devices"].elements["interface"].add_element("source", {"bridge" => bridge})
@@ -91,7 +101,7 @@ def setVmState(vm, state)
 end
 
 def findVM(task, fail_on_nil_host_id = true)
-  # first, find the matching VM in the vms table
+  # find the matching VM in the vms table
   vm = Vm.find(:first, :conditions => [ "id = ?", task.vm_id ])
   
   if vm == nil
@@ -174,13 +184,22 @@ ActiveRecord::Base.establish_connection(
                                         :database => $develdb['database']
                                         )
 
+############### TASK FUNCTIONS #######################
 def create_vm(task)
   puts "create_vm"
 
-  # we really just need to call start_vm here, and say this is first_boot so
-  # that we boot to the network instead of the hard drive
+  # FIXME: we need some sort of flag to say whether we will boot to the network,
+  # disk, etc.
+  #start_vm(task, true)
 
-  start_vm(task, true)
+  setVmState(vm, Vm::STATE_CREATING)
+  setTaskState(task, Task::STATE_RUNNING)
+
+  # FIXME: in here, we would do any long running creating tasks (allocating
+  # disk, etc.)
+
+  setVmState(vm, Vm::STATE_STOPPED)
+  setTaskState(task, Task::STATE_FINISHED)  
 end
 
 def shutdown_vm(task)
@@ -201,11 +220,12 @@ def shutdown_vm(task)
     vm.host_id = nil
     vm.save
     return
-  elsif vm.state == Vm::STATE_SUSPENDED || vm.state == Vm::STATE_SAVED
-    # FIXME: hm, we have two options here: either resume the VM and then
-    # shut it down below, or fail.  I'm leaning towards fail
+  elsif vm.state == Vm::STATE_SUSPENDED
     setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
     return
+  elsif vm.state == Vm::STATE_SAVED
+    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown saved domain")
+    return    
   end
 
   vm_orig_state = vm.state
@@ -221,7 +241,7 @@ def shutdown_vm(task)
     
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom = conn.lookup_domain_by_uuid(vm.uuid)
       dom.shutdown
       dom.undefine
       conn.close
@@ -265,12 +285,16 @@ def start_vm(task, first_boot = nil)
     # the VM is already running; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
-  elsif vm.state == Vm::STATE_SUSPENDED || vm.state == Vm::STATE_SAVED
-    # FIXME: hm, we have two options here: either resume the VM and then
-    # shut it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
+  elsif vm.state == Vm::STATE_SUSPENDED
+    setTaskState(task, Task::STATE_FAILED, "Cannot start suspended domain")
+    return
+  elsif vm.state == Vm::STATE_SAVED
+    setTaskState(task, Task::STATE_FAILED, "Cannot start saved domain")
     return
   end
+
+  # FIXME: Validate that the VM is still within quota
+  #vm.validate
 
   vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STARTING)
@@ -290,33 +314,39 @@ def start_vm(task, first_boot = nil)
       raise
     end
     
-    # OK, now that we found the VM, go looking in the hosts table to see if there
-    # is a host that will fit these constraints
-    host = Host.find(:first, :conditions => [ "num_cpus >= ? AND memory >= ?",
-                                              vm.num_vcpus_allocated,
-                                              vm.memory_allocated])
+    # OK, now that we found the VM, go looking in the hardware_resource_group
+    # hosts to see if there is a host that will fit these constraints
+    host = nil
+    vm.quota.hardware_resource_groups.hosts.each do |curr|
+      if curr.num_cpus >= vm.num_vcpus_allocated and curr.memory >= vm.memory_allocated
+        host = curr
+        break
+      end
+    end
     
     if host == nil
       # we couldn't find a host that matches this description; report ERROR
       errmsg = "No host matching VM parameters could be found"
       raise
     end
-        
-    wwid = nil
+
+    storagedevs = []
     vm.storage_volumes.each do |volume|
       wwid = find_wwid(volume.ip_addr, volume.port, volume.target, volume.lun)
-      # FIXME: right now we are only looking at the very first volume; eventually
-      # we will want to do every volume here
+
       if wwid != nil
-        break
+        storagedevs << "/dev/disk/by-id/scsi-" + wwid
       end
     end
-    
-    if wwid == nil
+ 
+    if storagedevs.length < 1
       # we couldn't find *any* disk to attach to the VM; we have to quit
       # FIXME: eventually, we probably want to allow diskless machines that will
       # boot via NFS or iSCSI or whatever
       errmsg = "No valid storage volumes found"
+      raise
+    elsif storagedevs.length > 4
+      errmsg = "Too many storage volumes; maximum is 4"
       raise
     end
 
@@ -331,12 +361,11 @@ def start_vm(task, first_boot = nil)
     # FIXME: get rid of the hardcoded bridge
     xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
                         vm.memory_used, vm.num_vcpus_allocated, bootdev,
-                        vm.vnic_mac_addr, "ovirtbr0",
-                        "/dev/disk/by-id/scsi-" + wwid)
+                        vm.vnic_mac_addr, "ovirtbr0", storagedevs)
 
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.defineDomainXML(xml.to_s)
+      dom = conn.define_domain_xml(xml.to_s)
       dom.create
       conn.close
     rescue
@@ -377,8 +406,6 @@ def save_vm(task)
     setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_SUSPENDED
-    # FIXME: hm, we have two options here: either resume the VM and then
-    # save it down below, or fail.  I'm leaning towards fail
     setTaskState(task, Task::STATE_FAILED, "Cannot save suspended domain")
     return    
   elsif vm.state == Vm::STATE_STOPPED
@@ -399,7 +426,7 @@ def save_vm(task)
     
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom = conn.lookup_domain_by_uuid(vm.uuid)
       dom.save("/tmp/" + vm.uuid + ".save")
       conn.close
     rescue
@@ -416,7 +443,8 @@ def save_vm(task)
 
   # FIXME: it would be much nicer to be able to save the VM and remove the
   # the host_id and undefine the XML; that way we could resume it on another
-  # host later.  This needs more thought
+  # host later.  This can be done once we have the storage APIs, but it will
+  # need more work
 
   setTaskState(task, Task::STATE_FINISHED)
 
@@ -440,8 +468,6 @@ def restore_vm(task)
     setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_SUSPENDED
-    # FIXME: hm, we have two options here: either resume the VM and then
-    # save it down below, or fail.  I'm leaning towards fail
     setTaskState(task, Task::STATE_FAILED, "Cannot restore suspended domain")
     return    
   elsif vm.state == Vm::STATE_STOPPED
@@ -465,7 +491,7 @@ def restore_vm(task)
     
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom = conn.lookup_domain_by_uuid(vm.uuid)
       dom.restore
       conn.close
     rescue
@@ -502,10 +528,11 @@ def suspend_vm(task)
     # the VM is already suspended; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
-  elsif vm.state == Vm::STATE_STOPPED || vm.state == Vm::STATE_SAVED
-    # FIXME: hm, we have two options here: either resume the VM and then
-    # pause it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
+  elsif vm.state == Vm::STATE_STOPPED
+    setTaskState(task, Task::STATE_FAILED, "Cannot suspend stopped domain")
+    return
+  elsif vm.state == Vm::STATE_SAVED
+    setTaskState(task, Task::STATE_FAILED, "Cannot suspend saved domain")
     return
   end
 
@@ -522,7 +549,7 @@ def suspend_vm(task)
     
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom = conn.lookup_domain_by_uuid(vm.uuid)
       dom.suspend
       conn.close
     rescue
@@ -560,10 +587,11 @@ def resume_vm(task)
     # the VM is already suspended; just return success
     setTaskState(task, Task::STATE_FINISHED)
     return
-  elsif vm.state == Vm::STATE_STOPPED || vm.state == Vm::STATE_SAVED
-    # FIXME: hm, we have two options here: either resume the VM and then
-    # pause it down below, or fail.  I'm leaning towards fail
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
+  elsif vm.state == Vm::STATE_STOPPED
+    setTaskState(task, Task::STATE_FAILED, "Cannot resume stopped domain")
+    return
+  elsif vm.state == Vm::STATE_SAVED
+    setTaskState(task, Task::STATE_FAILED, "Cannot resume suspended domain")
     return
   end
 
@@ -580,7 +608,7 @@ def resume_vm(task)
     
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookupDomainByUUID(vm.uuid)
+      dom = conn.lookup_domain_by_uuid(vm.uuid)
       dom.resume
       conn.close
     rescue

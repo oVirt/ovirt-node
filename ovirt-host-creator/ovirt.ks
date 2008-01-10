@@ -10,9 +10,9 @@ bootloader --timeout=1
 
 repo --name=f8 --baseurl=http://gromit.redhat.com/pub/fedora/linux/releases/8/Everything/x86_64/os/
 #repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
-#repo --name=development --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
 
-repo --name=libvirt-gssapi --baseurl=http://192.168.25.2/rpms
+repo --name=ovirt-noarch --baseurl=http://people.redhat.com/clalance/virt/noarch
+repo --name=ovirt-x86_64 --baseurl=http://people.redhat.com/clalance/virt/x86_64
 
 
 %packages

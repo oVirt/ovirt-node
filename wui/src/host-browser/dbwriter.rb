@@ -7,6 +7,7 @@ require 'rubygems'
 require 'active_record'
 require 'erb'
 require 'models/host.rb'
+require 'models/hardware_resource_group.rb'
 
 def database_configuration
   YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
@@ -28,6 +29,7 @@ ActiveRecord::Base.establish_connection(
                                         :database => $develdb['database']
                                         )
 
+# FIXME: we need a better way to get a UUID, rather than the hostname
 $host = Host.find(:first, :conditions => [ "uuid = ?", ARGV[0]])
 
 if $host == nil
@@ -37,6 +39,9 @@ if $host == nil
            "num_cpus" => ARGV[1],
            "cpu_speed" => ARGV[2],
            "arch" => ARGV[3],
-           "memory" => ARGV[4]
+           "memory" => ARGV[4],
+           "is_disabled" => 0,
+           "hardware_resource_group" => HardwareResourceGroup.get_default_group
            ).save
+
 end
