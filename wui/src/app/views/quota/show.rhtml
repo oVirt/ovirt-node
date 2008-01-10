@@ -44,23 +44,33 @@ function confirm_and_submit(item){
   <% end %>
   </table>
 
+<%if @is_admin -%>
 <h3>Permissions</h3>
-<%= render :partial => "/permission/list", :locals => { :permissions => @quota.permissions, :show_object => false } %>
+<%= render :partial => "/permission/list", :locals => { :permissions => @quota.permissions, :show_object => false, :show_actions => @can_delegate  } %>
+<% end -%>
 
 </div>
 
 <div id="right">
   <h2>Actions</h2>
+  <%if @is_admin -%>
   <ul class="actions create">
     <li class="action"><%= link_to_if @quota, 'Create New VM', {:controller => "vm", :action => 'new', :quota_id => @quota}, { :class => "create" } %></li>
   </ul>
+  <% end -%>
   <ul class="actions edit">
+    <%if @is_hwgroup_admin -%>
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @quota }, { :class => "edit" } %></li>
+    <% end -%>
+    <%if @can_delegate -%>
     <li class="action"><%= link_to 'Grant Privileges', { :controller => 'permission', :action => 'new', :quota_id => @quota}, { :class => "edit" } %></li>
+    <% end -%>
   </ul>
+  <%if @is_hwgroup_admin -%>
   <ul class="actions remove">
     <li class="action"><%= link_to 'Delete Quota', { :controller => "quota", :action => 'destroy', :id => @quota }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
   </ul>
+  <% end -%>
   <ul class="actions">
     <li class="action"><%= link_to 'Your Quotas', { :action => 'list' }, { :class => "list" } %></li>
     <li class="action"><%= link_to "to #{@quota.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @quota.hardware_resource_group }, { :class => "list" } %></li>

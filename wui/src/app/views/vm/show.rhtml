@@ -34,6 +34,7 @@
 <div id="right">
   <h2>Actions</h2>
   
+  <%if @is_admin -%>
   <ul class="actions create">
     <% for action in @actions %>
       <li class="action"><%= link_to action[0], { :action => 'vm_action', :id => @vm, :vm_action => action[1] } , {:class => "create" } %></li>
@@ -46,6 +47,7 @@
   <ul class="actions remove">
     <li class="action"><%= link_to 'Destroy', { :action => 'destroy', :id => @vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </ul>
+  <% end -%>
   <ul class="actions">
     <% if @vm.quota -%>
       <li class="action"><%= link_to 'Back to Quota', { :controller => 'quota', :action => 'show', :id => @vm.quota }, { :class => "list" } %></li>
