@@ -14,12 +14,14 @@
 
 <div id="right">
   <h2>Actions</h2>
+  <%if @is_admin -%>
   <ul class="actions edit">
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @storage_volume }, { :class => "edit" } %></li>
   </ul>
   <ul class="actions remove">
     <li class="action"><%= link_to 'Delete Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %></li>
   </ul>
+  <% end -%>
   <ul class="actions">
     <li class="action"><%= link_to "Back to #{@storage_volume.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_resource_group.id }, { :class => "list" } %></li>
   </ul>

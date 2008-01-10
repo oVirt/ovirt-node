@@ -19,4 +19,29 @@ class HardwareResourceGroup < ActiveRecord::Base
     find(:first, :include => "permissions", :order => "hardware_resource_groups.id ASC", 
          :conditions => "supergroup_id is null")
   end
+
+  def can_monitor(user)
+    has_privilege(user, Permission::MONITOR)
+  end
+  def can_delegate(user)
+    has_privilege(user, Permission::DELEGATE)
+  end
+  def is_admin(user)
+    has_privilege(user, Permission::ADMIN)
+  end
+
+  def has_privilege(user, privilege)
+    group = self
+    # prevent infinite loops
+    visited_groups = []
+    while (not group.nil? || visited_groups.include?(group))
+      if (group.permissions.find(:first, 
+                           :conditions => "permissions.privilege = '#{privilege}' and permissions.user = '#{user}'"))
+        return true
+      end
+      visited_groups << group
+      group = group.supergroup
+    end
+    return false
+  end
 end
