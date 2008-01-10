@@ -56,6 +56,7 @@ texi2html
 glibc-devel
 kernel-devel
 createrepo
+rrdtool-devel
 
 2)  Checkout the ovirt repo:
 # git clone git://et.devel.redhat.com/ovirt
@@ -114,6 +115,7 @@ ignore client-updates;
 option iscsi-servers code 200 = array of ip-address;
 option ovirt-tftp-server code 201 = ip-address;
 option libvirt-auth-method code 202 = text;
+option collectd-server code 203 = ip-address;
 
 subnet 192.168.25.0 netmask 255.255.255.0 {
         option domain-name "redhat.com";
@@ -122,11 +124,12 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
         option routers 192.168.25.1;
         option iscsi-servers 192.168.25.1;
         option ovirt-tftp-server 192.168.25.2;
+        option collectd-server 192.168.25.4;
         option libvirt-auth-method "krb5:192.168.25.1";
-	host perf200 {
-	     fixed-address 192.168.25.200;
-	     hardware ethernet 00:13:20:f5:fa:7c;
-	}
+        host perf200 {
+             fixed-address 192.168.25.200;
+             hardware ethernet 00:13:20:f5:fa:7c;
+        }
 
         filename "pxelinux.0";
 }
