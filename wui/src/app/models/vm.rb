@@ -8,28 +8,33 @@ class Vm < ActiveRecord::Base
   validates_presence_of :uuid, :description, :num_vcpus_allocated,
                         :memory_allocated, :vnic_mac_addr
 
+  BOOT_DEV_HD          = "hd"
+  BOOT_DEV_NETWORK     = "network"
+  BOOT_DEV_CDROM       = "cdrom"
+  BOOT_DEV_FIELDS      = [ BOOT_DEV_HD, BOOT_DEV_NETWORK, BOOT_DEV_CDROM ]
+
   NEEDS_RESTART_FIELDS = [:uuid, 
                           :num_vcpus_allocated,
                           :memory_allocated,
                           :vnic_mac_addr]
 
-  STATE_PENDING       = "pending"
-  STATE_CREATING      = "creating"
-  STATE_RUNNING       = "running"
+  STATE_PENDING        = "pending"
+  STATE_CREATING       = "creating"
+  STATE_RUNNING        = "running"
 
-  STATE_STOPPING      = "stopping"
-  STATE_STOPPED       = "stopped"
-  STATE_STARTING      = "starting"
+  STATE_STOPPING       = "stopping"
+  STATE_STOPPED        = "stopped"
+  STATE_STARTING       = "starting"
 
-  STATE_SUSPENDING    = "suspending"
-  STATE_SUSPENDED     = "suspended"
-  STATE_RESUMING      = "resuming"
+  STATE_SUSPENDING     = "suspending"
+  STATE_SUSPENDED      = "suspended"
+  STATE_RESUMING       = "resuming"
 
-  STATE_SAVING        = "saving"
-  STATE_SAVED         = "saved"
-  STATE_RESTORING     = "restoring"
-  STATE_CREATE_FAILED = "create_failed"
-  STATE_INVALID       = "invalid"
+  STATE_SAVING         = "saving"
+  STATE_SAVED          = "saved"
+  STATE_RESTORING      = "restoring"
+  STATE_CREATE_FAILED  = "create_failed"
+  STATE_INVALID        = "invalid"
 
 
   EFFECTIVE_STATE = {  STATE_PENDING       => STATE_PENDING,
