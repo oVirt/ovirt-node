@@ -12,6 +12,7 @@ class CreateVms < ActiveRecord::Migration
       t.column :host_id,             :integer
       t.column :quota_id,            :integer
       t.column :needs_restart,       :integer
+      t.column :boot_device,         :string, :null => false
     end
     execute "alter table vms add constraint fk_vms_hosts
              foreign key (host_id) references hosts(id)"

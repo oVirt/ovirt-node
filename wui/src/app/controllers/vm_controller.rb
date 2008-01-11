@@ -41,6 +41,8 @@ class VmController < ApplicationController
 
   def create
     params[:vm][:state] = Vm::STATE_PENDING
+    #set boot device to network for first boot (install)
+    params[:vm][:boot_device] = Vm::BOOT_DEV_NETWORK unless params[:vm][:boot_device]
     @vm = Vm.new(params[:vm])
     set_perms(@vm.quota)
     unless @is_admin
