@@ -16,7 +16,7 @@ class Task < ActiveRecord::Base
   ACTIONS = { ACTION_CREATE_VM   => { :label => "Create VM",
                                       :start => Vm::STATE_PENDING,
                                       :running => Vm::STATE_CREATING,
-                                      :success => Vm::STATE_RUNNING,
+                                      :success => Vm::STATE_STOPPED,
                                       :failure => Vm::STATE_CREATE_FAILED},
               ACTION_START_VM    => { :label => "Start VM",
                                       :start => Vm::STATE_STOPPED,
