@@ -633,7 +633,7 @@ pid = fork do
     # make sure we get our credentials up-front
     krb5 = Krb5.new
     default_realm = krb5.get_default_realm
-    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/task-omatic/taskomatic.keytab')
+    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/ovirt.keytab')
     krb5.cache
 
     Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
