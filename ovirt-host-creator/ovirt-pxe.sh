@@ -14,7 +14,7 @@ fi
 OUT=/tmp/ovirt-pxe.$$
 
 if [ -z "$ISO" ]; then
-    ISO=`create_iso`
+    ISO=`create_iso` || exit 1
 fi
 
 TFTPDIR=`pwd`/tftpboot
