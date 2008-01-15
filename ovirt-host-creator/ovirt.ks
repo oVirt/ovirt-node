@@ -250,7 +250,7 @@ option libvirt-auth-method code 202 = text;
 option collectd-server code 203 = ip-address;
 EOF
 
-cat > /etc/dhclient-up-hooks << \EOF
+cat > /etc/dhclient-ovirtbr0-up-hooks << \EOF
 if [ -n "$new_iscsi_servers" ]; then
     for s in $new_iscsi_servers; do
         echo $s >> /etc/iscsi-servers.conf
@@ -270,7 +270,7 @@ if [ -n "$new_collectd_server" ]; then
 fi
 EOF
 
-chmod +x /etc/dhclient-up-hooks
+chmod +x /etc/dhclient-ovirtbr0-up-hooks
 
 # make libvirtd listen on the external interfaces
 sed -i -e 's/#LIBVIRTD_ARGS="--listen"/LIBVIRTD_ARGS="--listen"/' /etc/sysconfig/libvirtd
