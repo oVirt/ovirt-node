@@ -27,6 +27,13 @@ module ApplicationHelper
      }
   end
 
+  def check_box_tag_with_label(label, name, value = "1", checked = false) 
+    %{ 
+      <div class="i"><label for="#{name}">#{_(label)}</label>
+      #{check_box_tag name, value, checked}</div>
+     }
+  end
+
   def timeout_flash(name)
     %{
     <script type="text/javascript">

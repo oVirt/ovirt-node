@@ -17,8 +17,12 @@ class StorageVolume < ActiveRecord::Base
   end
 
   def self.find_for_vm(include_vm = nil)
-    condition =  "vms.id is null"
-    condition += " or vms.id=#{include_vm.id}" if (include_vm and include_vm.id)
-    self.find(:all, :include => [:vms], :conditions => condition)
+    if include_vm 
+      condition =  "(vms.id is null and hardware_resource_group_id=#{include_vm.quota.hardware_resource_group_id})"
+      condition += " or vms.id=#{include_vm.id}" if (include_vm.id)
+      self.find(:all, :include => [:vms], :conditions => condition)
+    else
+      return []
+    end
   end
 end

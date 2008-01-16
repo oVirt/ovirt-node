@@ -24,22 +24,34 @@ class Quota < ActiveRecord::Base
   end
 
   def allocated_resources(exclude_vm = nil)
-    cpus = 0
-    memory = 0
-    nics = 0
+    pending_cpus = 0
+    pending_memory = 0
+    pending_nics = 0
+    current_cpus = 0
+    current_memory = 0
+    current_nics = 0
     storage = 0
     self.vms.each do |vm|
       unless (exclude_vm and exclude_vm.id == vm.id)
-        cpus += vm.num_vcpus_allocated
-        memory += vm.memory_allocated
-        # a vNIC per VM for now
-        nics += 1
+        if vm.consuming_resources?
+          current_cpus += vm.num_vcpus_allocated
+          current_memory += vm.memory_allocated
+          # a vNIC per VM for now
+          current_nics += 1
+        end
+        if vm.pending_resource_consumption?
+          pending_cpus += vm.num_vcpus_allocated
+          pending_memory += vm.memory_allocated
+          # a vNIC per VM for now
+          pending_nics += 1
+        end
         vm.storage_volumes.each do |volume|
           storage += volume.size
         end
       end
     end
-    return get_resource_hash(cpus, memory, nics, storage)
+    return { :current => get_resource_hash(current_cpus, current_memory, current_nics, storage),
+             :pending => get_resource_hash(pending_cpus, pending_memory, pending_nics, storage)}
   end
 
   def total_resources
@@ -49,10 +61,15 @@ class Quota < ActiveRecord::Base
   def full_resources(exclude_vm = nil)
     total = total_resources
     allocated = allocated_resources(exclude_vm)
-    available = get_resource_hash(total[:cpus] - allocated[:cpus],
-                                  total[:memory] - allocated[:memory],
-                                  total[:nics] - allocated[:nics],
-                                  total[:storage] - allocated[:storage])
+    available = {}
+    available[:current] = get_resource_hash(total[:cpus] - allocated[:current][:cpus],
+                                            total[:memory] - allocated[:current][:memory],
+                                            total[:nics] - allocated[:current][:nics],
+                                            total[:storage] - allocated[:current][:storage])
+    available[:pending] = get_resource_hash(total[:cpus] - allocated[:pending][:cpus],
+                                            total[:memory] - allocated[:pending][:memory],
+                                            total[:nics] - allocated[:pending][:nics],
+                                            total[:storage] - allocated[:pending][:storage])
     labels = [["CPUs", :cpus, ""], 
               ["Memory", :memory_in_mb, "(mb)"], 
               ["NICs", :nics, ""], 
@@ -74,12 +91,42 @@ class Quota < ActiveRecord::Base
     return full_resources(exclude_vm)[:available]
   end
 
-  def available_resources_for_vm(vm = nil)
-    resources = full_resources(vm)[:available]
-    host_mem_limit = Host.find(:first, :order => "memory DESC").memory
-    host_cpu_limit = Host.find(:first, :order => "num_cpus DESC").num_cpus
+  # these resource checks are made at VM start/restore time
+  # use pending here by default since this is used for queueing VM
+  # creation/start operations
+  #taskomatic should set use_pending_values to false
+  def available_resources_for_vm(vm = nil, use_pending_values=true)
+    if use_pending_values
+      resources = full_resources(vm)[:available][:pending]
+    else
+      resources = full_resources(vm)[:available][:current]
+    end
+    # creation is limited to total quota value or values from largest host
+    memhost = Host.find(:first, :order => "memory DESC",
+                        :conditions => "hardware_resource_group_id = #{hardware_resource_group.id}")
+    host_mem_limit = (memhost.nil? ? 0 : memhost.memory)
+    cpuhost = Host.find(:first, :order => "num_cpus DESC",
+                        :conditions => "hardware_resource_group_id = #{hardware_resource_group.id}")
+    host_cpu_limit = cpuhost.nil? ? 0 : cpuhost.num_cpus
     resources[:memory] = host_mem_limit if host_mem_limit < resources[:memory]
     resources[:cpus] = host_cpu_limit if host_cpu_limit < resources[:cpus]
+    # update mb/gb values
+    return get_resource_hash(resources[:cpus], resources[:memory], 
+                             resources[:nics], resources[:storage])
+  end
+
+  # these resource checks are made at VM create time
+  def max_resources_for_vm(vm = nil)
+    # use pending here since this is used for VM creation/start
+    tot_resources = full_resources(vm)
+    resources = tot_resources[:total]
+    available = tot_resources[:available][:pending]
+    # storage is enforced at creation
+    resources[:storage] = available[:storage]
+
+    # creation is limited to total quota value. Don't limit to largest
+    # host at this point as new hosts may be added before starting VM
+
     # update mb/gb values
     return get_resource_hash(resources[:cpus], resources[:memory], 
                              resources[:nics], resources[:storage])

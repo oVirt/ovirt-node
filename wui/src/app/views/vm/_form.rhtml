@@ -1,5 +1,6 @@
 <%= error_messages_for 'vm' %>
-<%  resources = @vm.quota.available_resources_for_vm(@vm) %>
+<%  create_resources = @vm.quota.max_resources_for_vm(@vm) %>
+<%  start_resources = @vm.quota.available_resources_for_vm(@vm) %>
 
 <!--[form:vm]-->
 <%= hidden_field_with_label "Quota", 'vm', 'quota_id', @vm.quota.name  %>
@@ -8,22 +9,24 @@
 
 <%= text_field_with_label "Description", "vm", "description" %>
 
-<%= text_field_with_label "CPUs (max #{resources[:cpus]})", "vm", "num_vcpus_allocated" %>
+<%= text_field_with_label "CPUs (max to create #{create_resources[:cpus]}, max to start now #{start_resources[:cpus]})", "vm", "num_vcpus_allocated" %>
 
 
 <% # text_field_with_label "CPUs Used", "vm", "num_vcpus_used" %>
 
-<%= text_field_with_label "Memory (mb) (max #{resources[:memory_in_mb]} mb)", "vm", "memory_allocated_in_mb" %>
+<%= text_field_with_label "Memory (mb) (max to create #{create_resources[:memory_in_mb]} mb, max to start now #{start_resources[:memory_in_mb]} mb)", "vm", "memory_allocated_in_mb" %>
 
 <% # text_field_with_label "Memory Used", "vm", "memory_used" %>
 
 <%= text_field_with_label "Network", "vm", "vnic_mac_addr" %>
 
-<div class="i"><label for="#{vm}_#{storage_volumes}">Storage Volumes (max total size <%= resources[:storage_in_gb]%> gb)</label>
+<div class="i"><label for="#{vm}_#{storage_volumes}">Storage Volumes (max total size <%= create_resources[:storage_in_gb]%> gb)</label>
 <select name="vm[storage_volume_ids][]" multiple="multiple">
 <%= options_from_collection_for_select(StorageVolume.find_for_vm(@vm), 'id', 'display_name', @vm.storage_volume_ids) %>
 </select>
 </div>
+
+<%= check_box_tag_with_label "Start VM Now? (pending current resource availability)", "start_now", nil %>
 
 <!--[eoform:vm]-->
 

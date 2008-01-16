@@ -41,7 +41,7 @@ function confirm_and_submit(item){
   <% for item in resources[:labels] %>
     <tr>
     <th><%= item[0]%>:</th>
-    <td><%= resources[:allocated][item[1]] %> / <%= resources[:total][item[1]] %>
+    <td><%= resources[:allocated][:current][item[1]] %> / <%= resources[:total][item[1]] %>
         <%= item[2]%></td>
     </tr>
   <% end %>

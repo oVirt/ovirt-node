@@ -56,6 +56,22 @@ class VmController < ApplicationController
                            :state   => Task::STATE_QUEUED})
         if @task.save
           flash[:notice] = 'Vm was successfully created.'
+          start_now = params[:start_now]
+          if (start_now)
+            if @vm.get_action_list.include?(Task::ACTION_START_VM)
+              @task = Task.new({ :user    => @user,
+                                 :vm_id   => @vm.id,
+                                 :action  => Task::ACTION_START_VM,
+                                 :state   => Task::STATE_QUEUED})
+              if @task.save
+                flash[:notice] = flash[:notice] + ' VM Start action queued.'
+              else
+                flash[:notice] = flash[:notice] + ' Error in inserting Start task.'
+              end
+            else
+              flash[:notice] = flash[:notice] + ' Resources are not available to start VM now.'
+            end
+          end
         else
           flash[:notice] = 'Error in inserting task.'
         end
@@ -115,7 +131,8 @@ class VmController < ApplicationController
       redirect_to :action => 'show', :id => @vm
     else
       quota = @vm.quota_id
-      if @vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED
+      if ((@vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED) or
+          (@vm.state == Vm::STATE_PENDING and @vm.get_pending_state == Vm::STATE_PENDING))
         @vm.destroy
         if quota
           redirect_to :controller => 'quota', :action => 'show', :id => quota

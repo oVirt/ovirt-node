@@ -36,9 +36,17 @@ class Vm < ActiveRecord::Base
   STATE_CREATE_FAILED  = "create_failed"
   STATE_INVALID        = "invalid"
 
+  RUNNING_STATES       = [STATE_RUNNING,
+                          STATE_SUSPENDED,
+                          STATE_STOPPING,
+                          STATE_STARTING,
+                          STATE_SUSPENDING,
+                          STATE_RESUMING,
+                          STATE_SAVING,
+                          STATE_RESTORING]
 
   EFFECTIVE_STATE = {  STATE_PENDING       => STATE_PENDING,
-                       STATE_CREATING      => STATE_RUNNING, 
+                       STATE_CREATING      => STATE_STOPPED, 
                        STATE_RUNNING       => STATE_RUNNING,
                        STATE_STOPPING      => STATE_STOPPED,
                        STATE_STOPPED       => STATE_STOPPED,
@@ -84,6 +92,14 @@ class Vm < ActiveRecord::Base
     return pending_state
   end
 
+  def consuming_resources?
+    RUNNING_STATES.include?(state)
+  end
+
+  def pending_resource_consumption?
+    RUNNING_STATES.include?(get_pending_state)
+  end
+
   def get_queued_tasks(state=nil)
     get_tasks(Task::STATE_QUEUED)
   end
@@ -98,7 +114,13 @@ class Vm < ActiveRecord::Base
 
   def get_action_list
     # return empty list rather than nil
-    Task::VALID_ACTIONS_PER_VM_STATE[get_pending_state] || []
+    return_val = Task::VALID_ACTIONS_PER_VM_STATE[get_pending_state] || []
+    # filter actions based on quota
+    unless resources_for_start?
+      return_val.delete(Task::ACTION_START_VM)
+      return_val.delete(Task::ACTION_RESTORE_VM)
+    end
+    return_val
   end
 
   def get_action_and_label_list
@@ -107,18 +129,32 @@ class Vm < ActiveRecord::Base
     end
   end
 
+  # these resource checks are made at VM start/restore time
+  # use pending here by default since this is used for queueing VM
+  # creation/start operations
+  #taskomatic should set use_pending_values to false
+  def resources_for_start?(use_pending_values = true)
+    return_val = true
+    resources = quota.available_resources_for_vm(self, use_pending_values)
+    return_val = false unless not(memory_allocated) or memory_allocated <= resources[:memory]
+    return_val = false unless not(num_vcpus_allocated) or num_vcpus_allocated <= resources[:cpus]
+    return_val = false unless resources[:nics] >= 1
+
+    # no need to enforce storage here since starting doesn't increase storage allocation
+    return return_val
+  end
+
   protected
   def validate
-    #@storage_volumes_pending = [] unless defined? @storage_volumes_pending
-    resources = quota.available_resources_for_vm(self)
+    resources = quota.max_resources_for_vm(self)
     errors.add("memory_allocated_in_mb", "violates quota") unless not(memory_allocated) or memory_allocated <= resources[:memory]
+    errors.add("num_vcpus_allocated", "violates quota") unless not(num_vcpus_allocated) or num_vcpus_allocated <= resources[:cpus]
+    errors.add_to_base("No available nics in quota") unless resources[:nics] >= 1
     # need to enforce storage differently since obj is saved first
     storage_size = 0
     @storage_volumes_pending.each { |volume| storage_size += volume.size } if @storage_volumes_pending if defined? @storage_volumes_pending
     
     errors.add("storage_volumes", "violates quota") unless storage_size <= resources[:storage]
-    errors.add("num_vcpus_allocated", "violates quota") unless not(num_vcpus_allocated) or num_vcpus_allocated <= resources[:cpus]
-    errors.add_to_base("No available nics in quota") unless resources[:nics] >= 1
     if errors.empty? and defined? @storage_volumes_pending
       self.storage_volumes=@storage_volumes_pending
       @storage_volumes_pending = []

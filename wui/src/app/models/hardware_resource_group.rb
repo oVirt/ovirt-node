@@ -44,4 +44,5 @@ class HardwareResourceGroup < ActiveRecord::Base
     end
     return false
   end
+
 end
