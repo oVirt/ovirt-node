@@ -47,8 +47,6 @@
 #include <libvirt/libvirt.h>
 #include <libvirt/virterror.h>
 
-#define INTSIZE 100
-
 #ifndef DBWRITER_PATH
 #define DBWRITER_PATH "./dbwriter.rb"
 #endif
@@ -116,15 +114,10 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	  char a[AVAHI_ADDRESS_STR_MAX];
 	  in_addr_t remote;
 	  struct hostent *host;
-	  char connString[1024];
-	  virConnectPtr conn;
-	  int maxvcpus;
-	  virNodeInfo nodeinfo;
-	  int err, ret;
-	  char *name;
-	  char *argv[7];
-	  char memout[INTSIZE],cpuout[INTSIZE],cpuspeedout[INTSIZE];
+	  char *argv[3];
 	  pid_t pid;
+	  int ret;
+	  char *libvirt_hostname;
 
 	  avahi_address_snprint(a, sizeof(a), address);
 
@@ -133,50 +126,15 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	  if (host == NULL) {
 	    // we failed to resolve the address to a hostname; we'll just try
 	    // with the IP address
-	    name = a;
+	    libvirt_hostname = a;
 	  }
 	  else {
-	    name = host->h_name;
-	  }
-	  snprintf(connString,1024,"qemu+tcp://%s/system", name);
-
-	  conn = virConnectOpenReadOnly(connString);
-	  if (conn == NULL) {
-	    break;
+	    libvirt_hostname = host->h_name;
 	  }
 
-	  fprintf(stderr, "host is %s\n", name);
-  
-	  maxvcpus = virConnectGetMaxVcpus(conn, "kvm");
-	  fprintf(stderr, "maxvcpus is %d\n", maxvcpus);
-
-	  err = virNodeGetInfo(conn, &nodeinfo);
-
-	  if (err == 0) {
-	    fprintf(stderr, "model is %s\n",nodeinfo.model);
-	    fprintf(stderr, "memory kb is %ld\n",nodeinfo.memory);
-	    fprintf(stderr, "cpus is %d\n",nodeinfo.cpus);
-	    fprintf(stderr, "mhz is %d\n",nodeinfo.mhz);
-	  }
-	  else {
-	    fprintf(stderr, "Error getting node info: %s\n",strerror(errno));
-	    virConnectClose(conn);
-	    break;
-	  }
-
-	  virConnectClose(conn);
-
-	  snprintf(cpuout,INTSIZE,"%u",nodeinfo.cpus);
-	  snprintf(cpuspeedout,INTSIZE,"%u",nodeinfo.mhz);
-	  snprintf(memout,INTSIZE,"%lu",nodeinfo.memory);
-
-	  argv[0] = "dbwriter.rb";
-	  argv[1] = name;
-	  argv[2] = cpuout;
-	  argv[3] = cpuspeedout;
-	  argv[4] = nodeinfo.model;
-	  argv[5] = memout;
-	  argv[6] = NULL;
+	  argv[0] = DBWRITER_PATH;
+	  argv[1] = libvirt_hostname;
+	  argv[2] = NULL;
 
 	  pid = fork();
 
@@ -194,7 +152,6 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	    // parent
 	    waitpid(pid, NULL, 0);
 	  }
-	  
 
 	  break;
         }
