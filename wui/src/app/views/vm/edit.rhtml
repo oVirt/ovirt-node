@@ -2,7 +2,7 @@
 <h2><%= _("Editing Virtual Machine") %></h2>
 
 <% form_tag :action => 'update', :id => @vm do %>
-  <%= render :partial => 'form', :create => true %>
+  <%= render :partial => 'form', :locals => { :create => false } %>
   <%= submit_tag 'Edit' %>
 <% end %>
 
