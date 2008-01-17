@@ -20,7 +20,7 @@ fi
 TFTPDIR=`pwd`/tftpboot
 CUSTOM_INIT=`pwd`/ovirt-init
 ISOIMAGE=`pwd`/$ISO
-NEWINITDIR=`pwd`/`mktemp -d newinitrdXXXXX`
+NEWINITDIR=`pwd`/`mktemp -d newinitrdXXXXXX`
 ISOTMP=`pwd`/`mktemp -d isotmpXXXXXX`
 SQUASHFSTMP=`pwd`/`mktemp -d squashfstmpXXXXXX`
 EXT3TMP=`pwd`/`mktemp -d ext3tmpXXXXXX`
