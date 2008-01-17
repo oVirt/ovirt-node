@@ -57,12 +57,8 @@ cp $ISOTMP/isolinux/vmlinuz0 $ISOTMP/isolinux/initrd0.img $TFTPDIR
 cp $ISOIMAGE $TFTPDIR
 
 # now edit the initrd
-rm -f /tmp/initrd0.img
-cp $TFTPDIR/initrd0.img /tmp
-gzip -dc < /tmp/initrd0.img > /tmp/oldinitrd
 cd $NEWINITDIR
-cpio -id < /tmp/oldinitrd
-rm -f /tmp/oldinitrd
+gzip -dc $TFTPDIR/initrd0.img | cpio -id
 
 # copy the ethernet modules over
 KERNEL=`ls -1 lib/modules | head -n 1`
