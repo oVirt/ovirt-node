@@ -27,13 +27,12 @@ EXT3TMP=`pwd`/`mktemp -d ext3tmpXXXXXX`
 
 PROGRAMS="/bin/basename /bin/sed /bin/cut /bin/awk /bin/uname /sbin/ifconfig /sbin/ip /sbin/dhclient /sbin/dhclient-script /sbin/route /sbin/consoletype /bin/cp /bin/mktemp /usr/bin/tftp /usr/bin/logger"
 
+# clean up from previous
+rm -rf $TFTPDIR
 mkdir -p $TFTPDIR
 
-# clean up from previous
-rm -rf $TFTPDIR/*
-
 # create the basic TFTP stuff
-mkdir -p $TFTPDIR/pxelinux.cfg
+mkdir $TFTPDIR/pxelinux.cfg
 cat <<EOF > $TFTPDIR/pxelinux.cfg/default
 DEFAULT pxeboot
 TIMEOUT 100
