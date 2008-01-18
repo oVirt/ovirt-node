@@ -109,8 +109,7 @@ rm -f init
 cp $CUSTOM_INIT init
 
 ISONAME=`basename $ISOIMAGE`
-rm -f /tmp/custom_init
-cat > /tmp/custom_init << EOF
+cat > tmp/custom_init << EOF
 for pcibus in \`ls -d /sys/devices/pci*\`; do
     for device in \`ls -d \$pcibus/[0-9]*\`; do
         class=\`cat \$device/class\`
@@ -128,8 +127,8 @@ thingtomount=$ISONAME
 mountoptions=" -o loop"
 EOF
 
-sed -i -e '/# OVIRT: XXXREPLACE_MEXXX/r /tmp/custom_init' init
-rm -f /tmp/custom_init
+sed -i -e '/# OVIRT: XXXREPLACE_MEXXX/r tmp/custom_init' init
+rm -f tmp/custom_init
 
 # OK, done with the initrd; package it up and install
 rm -f $TFTPDIR/initrd.img.old
