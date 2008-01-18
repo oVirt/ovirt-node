@@ -132,13 +132,8 @@ EOF
 sed -i -e '/# OVIRT: XXXREPLACE_MEXXX/r /tmp/custom_init' init
 rm -f /tmp/custom_init
 
-# OK, done with the initrd; package it back up
-( find . | cpio -H newc --quiet -o) >| /tmp/newimage
-gzip -9 /tmp/newimage
-
-# now put it in place
+# OK, done with the initrd; package it up and install
 rm -f $TFTPDIR/initrd.img.old
 mv $TFTPDIR/initrd0.img $TFTPDIR/initrd.img.old
-mv /tmp/newimage.gz $TFTPDIR/initrd0.img
-
+find . | cpio -H newc --quiet -o | gzip -9 > $TFTPDIR/initrd0.img
 rm -rf $NEWINITDIR
