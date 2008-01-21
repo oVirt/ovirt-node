@@ -5,6 +5,7 @@
     <th>Virtual CPUs</th>
     <th>Memory (MB)</th>
     <th>Virtual NICs</th>
+    <th>VMs (0 is unlimited)</th>
     <th>Storage (GB)</th>
   </tr>
 </thead>
@@ -16,6 +17,7 @@
   <td><%= resources[:allocated][:current][:cpus] %> / <%= resources[:total][:cpus] %></td>
   <td><%= resources[:allocated][:current][:memory_in_mb] %> / <%= resources[:total][:memory_in_mb] %></td>
   <td><%= resources[:allocated][:current][:nics] %> / <%= resources[:total][:nics] %></td>
+  <td><%= resources[:allocated][:current][:vms] %> / <%= resources[:total][:vms] %></td>
   <td><%= resources[:allocated][:current][:storage_in_gb] %> / <%= resources[:total][:storage_in_gb] %></td>
 </tr>
 <% end %>

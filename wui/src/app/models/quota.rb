@@ -27,35 +27,43 @@ class Quota < ActiveRecord::Base
     pending_cpus = 0
     pending_memory = 0
     pending_nics = 0
+    pending_vms = 0
     current_cpus = 0
     current_memory = 0
     current_nics = 0
+    current_vms = 0
     storage = 0
     self.vms.each do |vm|
       unless (exclude_vm and exclude_vm.id == vm.id)
         if vm.consuming_resources?
           current_cpus += vm.num_vcpus_allocated
           current_memory += vm.memory_allocated
-          # a vNIC per VM for now
+          # one vNIC per VM for now
           current_nics += 1
+          current_vms += 1
         end
         if vm.pending_resource_consumption?
           pending_cpus += vm.num_vcpus_allocated
           pending_memory += vm.memory_allocated
-          # a vNIC per VM for now
+          # one vNIC per VM for now
           pending_nics += 1
+          pending_vms += 1
         end
         vm.storage_volumes.each do |volume|
           storage += volume.size
         end
       end
     end
-    return { :current => get_resource_hash(current_cpus, current_memory, current_nics, storage),
-             :pending => get_resource_hash(pending_cpus, pending_memory, pending_nics, storage)}
+    return { :current => get_resource_hash(current_cpus, current_memory, current_nics, current_vms, storage),
+             :pending => get_resource_hash(pending_cpus, pending_memory, pending_nics, pending_vms, storage)}
   end
 
   def total_resources
-    return get_resource_hash(total_vcpus, total_vmemory, total_vnics, total_storage)
+    return get_resource_hash(total_vcpus, total_vmemory, total_vnics, total_vms, total_storage)
+  end
+
+  def unlimited_vms?
+    total_vms.nil? or total_vms == 0
   end
 
   def full_resources(exclude_vm = nil)
@@ -65,24 +73,28 @@ class Quota < ActiveRecord::Base
     available[:current] = get_resource_hash(total[:cpus] - allocated[:current][:cpus],
                                             total[:memory] - allocated[:current][:memory],
                                             total[:nics] - allocated[:current][:nics],
+                                            (unlimited_vms? ? "unlimited" : (total[:vms] - allocated[:current][:vms])),
                                             total[:storage] - allocated[:current][:storage])
     available[:pending] = get_resource_hash(total[:cpus] - allocated[:pending][:cpus],
                                             total[:memory] - allocated[:pending][:memory],
                                             total[:nics] - allocated[:pending][:nics],
+                                            (unlimited_vms? ? "unlimited" : (total[:vms] - allocated[:pending][:vms])),
                                             total[:storage] - allocated[:pending][:storage])
     labels = [["CPUs", :cpus, ""], 
               ["Memory", :memory_in_mb, "(mb)"], 
               ["NICs", :nics, ""], 
+              ["VMs", :vms, "(0 is unlimited)"], 
               ["Disk", :storage_in_gb, "(gb)"]]
     return {:total => total, :allocated => allocated, :available => available,
             :labels => labels}
   end
 
-  def get_resource_hash(cpus, memory, nics, storage)
+  def get_resource_hash(cpus, memory, nics, vms, storage)
     return { :cpus => cpus,
              :memory => memory,
              :memory_in_mb => kb_to_mb(memory),
              :nics => nics,
+             :vms => vms,
              :storage => storage,
              :storage_in_gb => kb_to_gb(storage)}
   end
@@ -112,7 +124,8 @@ class Quota < ActiveRecord::Base
     resources[:cpus] = host_cpu_limit if host_cpu_limit < resources[:cpus]
     # update mb/gb values
     return get_resource_hash(resources[:cpus], resources[:memory], 
-                             resources[:nics], resources[:storage])
+                             resources[:nics], resources[:vms], 
+                             resources[:storage])
   end
 
   # these resource checks are made at VM create time
@@ -129,7 +142,8 @@ class Quota < ActiveRecord::Base
 
     # update mb/gb values
     return get_resource_hash(resources[:cpus], resources[:memory], 
-                             resources[:nics], resources[:storage])
+                             resources[:nics], unlimited_vms? ? "unlimited" : resources[:vms], 
+                             resources[:storage])
   end
 
   def self.list_for_user(user)

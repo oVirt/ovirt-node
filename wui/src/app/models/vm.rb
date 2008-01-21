@@ -117,8 +117,7 @@ class Vm < ActiveRecord::Base
     return_val = Task::VALID_ACTIONS_PER_VM_STATE[get_pending_state] || []
     # filter actions based on quota
     unless resources_for_start?
-      return_val.delete(Task::ACTION_START_VM)
-      return_val.delete(Task::ACTION_RESTORE_VM)
+      return_val = return_val - [Task::ACTION_START_VM, Task::ACTION_RESTORE_VM]
     end
     return_val
   end
@@ -139,6 +138,7 @@ class Vm < ActiveRecord::Base
     return_val = false unless not(memory_allocated) or memory_allocated <= resources[:memory]
     return_val = false unless not(num_vcpus_allocated) or num_vcpus_allocated <= resources[:cpus]
     return_val = false unless resources[:nics] >= 1
+    return_val = false unless (quota.unlimited_vms? or resources[:vms] >= 1)
 
     # no need to enforce storage here since starting doesn't increase storage allocation
     return return_val
@@ -150,6 +150,7 @@ class Vm < ActiveRecord::Base
     errors.add("memory_allocated_in_mb", "violates quota") unless not(memory_allocated) or memory_allocated <= resources[:memory]
     errors.add("num_vcpus_allocated", "violates quota") unless not(num_vcpus_allocated) or num_vcpus_allocated <= resources[:cpus]
     errors.add_to_base("No available nics in quota") unless resources[:nics] >= 1
+    # no need to validate VM limit here
     # need to enforce storage differently since obj is saved first
     storage_size = 0
     @storage_volumes_pending.each { |volume| storage_size += volume.size } if @storage_volumes_pending if defined? @storage_volumes_pending

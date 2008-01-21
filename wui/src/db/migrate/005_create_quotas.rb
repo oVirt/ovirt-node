@@ -6,6 +6,7 @@ class CreateQuotas < ActiveRecord::Migration
       t.column :total_vmemory,              :integer
       t.column :total_vnics,                :integer
       t.column :total_storage,              :integer
+      t.column :total_vms,                  :integer
       t.column :hardware_resource_group_id, :integer, :null => false
     end
     execute "alter table quotas add constraint fk_quotas_hw_groups
