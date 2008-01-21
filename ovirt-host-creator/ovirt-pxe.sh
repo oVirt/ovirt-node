@@ -11,8 +11,6 @@ else
     exit 1
 fi
 
-OUT=/tmp/ovirt-pxe.$$
-
 if [ -z "$ISO" ]; then
     ISO=`create_iso` || exit 1
 fi
@@ -20,20 +18,19 @@ fi
 TFTPDIR=`pwd`/tftpboot
 CUSTOM_INIT=`pwd`/ovirt-init
 ISOIMAGE=`pwd`/$ISO
-NEWINITDIR=`pwd`/`mktemp -d newinitrdXXXXX`
+NEWINITDIR=`pwd`/`mktemp -d newinitrdXXXXXX`
 ISOTMP=`pwd`/`mktemp -d isotmpXXXXXX`
 SQUASHFSTMP=`pwd`/`mktemp -d squashfstmpXXXXXX`
 EXT3TMP=`pwd`/`mktemp -d ext3tmpXXXXXX`
 
 PROGRAMS="/bin/basename /bin/sed /bin/cut /bin/awk /bin/uname /sbin/ifconfig /sbin/ip /sbin/dhclient /sbin/dhclient-script /sbin/route /sbin/consoletype /bin/cp /bin/mktemp /usr/bin/tftp /usr/bin/logger"
 
+# clean up from previous
+rm -rf $TFTPDIR
 mkdir -p $TFTPDIR
 
-# clean up from previous
-rm -rf $TFTPDIR/*
-
 # create the basic TFTP stuff
-mkdir -p $TFTPDIR/pxelinux.cfg
+mkdir $TFTPDIR/pxelinux.cfg
 cat <<EOF > $TFTPDIR/pxelinux.cfg/default
 DEFAULT pxeboot
 TIMEOUT 100
@@ -57,12 +54,8 @@ cp $ISOTMP/isolinux/vmlinuz0 $ISOTMP/isolinux/initrd0.img $TFTPDIR
 cp $ISOIMAGE $TFTPDIR
 
 # now edit the initrd
-rm -f /tmp/initrd0.img
-cp $TFTPDIR/initrd0.img /tmp
-gzip -dc < /tmp/initrd0.img > /tmp/oldinitrd
 cd $NEWINITDIR
-cpio -id < /tmp/oldinitrd
-rm -f /tmp/oldinitrd
+gzip -dc $TFTPDIR/initrd0.img | cpio -id
 
 # copy the ethernet modules over
 KERNEL=`ls -1 lib/modules | head -n 1`
@@ -114,8 +107,7 @@ rm -f init
 cp $CUSTOM_INIT init
 
 ISONAME=`basename $ISOIMAGE`
-rm -f /tmp/custom_init
-cat > /tmp/custom_init << EOF
+cat > tmp/custom_init << EOF
 for pcibus in \`ls -d /sys/devices/pci*\`; do
     for device in \`ls -d \$pcibus/[0-9]*\`; do
         class=\`cat \$device/class\`
@@ -133,16 +125,11 @@ thingtomount=$ISONAME
 mountoptions=" -o loop"
 EOF
 
-sed -i -e '/# OVIRT: XXXREPLACE_MEXXX/r /tmp/custom_init' init
-rm -f /tmp/custom_init
+sed -i -e '/# OVIRT: XXXREPLACE_MEXXX/r tmp/custom_init' init
+rm -f tmp/custom_init
 
-# OK, done with the initrd; package it back up
-( find . | cpio -H newc --quiet -o) >| /tmp/newimage
-gzip -9 /tmp/newimage
-
-# now put it in place
+# OK, done with the initrd; package it up and install
 rm -f $TFTPDIR/initrd.img.old
 mv $TFTPDIR/initrd0.img $TFTPDIR/initrd.img.old
-mv /tmp/newimage.gz $TFTPDIR/initrd0.img
-
+find . | cpio -H newc --quiet -o | gzip -9 > $TFTPDIR/initrd0.img
 rm -rf $NEWINITDIR

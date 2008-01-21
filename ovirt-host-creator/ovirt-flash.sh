@@ -11,7 +11,6 @@ else
     exit 1
 fi
 
-OUT=/tmp/ovirt-flash.$$
 USBDEVICE=$1
 
 if [ ! -b "$USBDEVICE" ]; then
@@ -20,7 +19,7 @@ if [ ! -b "$USBDEVICE" ]; then
 fi
 
 if [ -z "$ISO" ]; then
-    ISO=`create_iso`
+    ISO=`create_iso` || exit 1
 fi
 echo $ISO
 

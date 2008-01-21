@@ -23,7 +23,7 @@ fi
 
 if [ -z "$ISO" ]; then
     # ISO image not provided on the command-line; build it
-    ISO=`create_iso`
+    ISO=`create_iso` || exit 1
 fi
 echo $ISO
 
