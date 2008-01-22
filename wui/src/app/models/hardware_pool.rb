@@ -1,12 +1,12 @@
-class HardwareResourceGroup < ActiveRecord::Base
+class HardwarePool < ActiveRecord::Base
   has_many :permissions, :dependent => :destroy, :order => "id ASC"
 
   has_many :hosts, :dependent => :nullify, :order => "id ASC"
   has_many :storage_volumes, :dependent => :nullify, :order => "id ASC"
-  belongs_to :supergroup, :class_name => "HardwareResourceGroup", :foreign_key => "supergroup_id"
-  # a Hardware Resource Group should, at any one time, have only
-  # subgroups _or_ quotas
-  has_many :subgroups, :class_name => "HardwareResourceGroup", :foreign_key => "supergroup_id", :dependent => :nullify, :order => "id ASC"
+  belongs_to :superpool, :class_name => "HardwarePool", :foreign_key => "superpool_id"
+  # a Hardware Pool should, at any one time, have only
+  # subpools _or_ quotas
+  has_many :subpools, :class_name => "HardwarePool", :foreign_key => "superpool_id", :dependent => :nullify, :order => "id ASC"
   has_many :quotas, :dependent => :destroy, :order => "id ASC"
 
 
@@ -15,9 +15,9 @@ class HardwareResourceGroup < ActiveRecord::Base
          :conditions => "permissions.user='#{user}' and permissions.privilege='#{Permission::ADMIN}'")
   end
 
-  def self.get_default_group
-    find(:first, :include => "permissions", :order => "hardware_resource_groups.id ASC", 
-         :conditions => "supergroup_id is null")
+  def self.get_default_pool
+    find(:first, :include => "permissions", :order => "hardware_pools.id ASC", 
+         :conditions => "superpool_id is null")
   end
 
   def can_monitor(user)
@@ -31,16 +31,16 @@ class HardwareResourceGroup < ActiveRecord::Base
   end
 
   def has_privilege(user, privilege)
-    group = self
+    pool = self
     # prevent infinite loops
-    visited_groups = []
-    while (not group.nil? || visited_groups.include?(group))
-      if (group.permissions.find(:first, 
+    visited_pools = []
+    while (not pool.nil? || visited_pools.include?(pool))
+      if (pool.permissions.find(:first, 
                            :conditions => "permissions.privilege = '#{privilege}' and permissions.user = '#{user}'"))
         return true
       end
-      visited_groups << group
-      group = group.supergroup
+      visited_pools << pool
+      pool = pool.superpool
     end
     return false
   end

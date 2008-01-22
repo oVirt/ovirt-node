@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class HardwareResourceGroupTest < Test::Unit::TestCase
-  fixtures :hardware_resource_groups
+class HardwarePoolTest < Test::Unit::TestCase
+  fixtures :hardware_pools
 
   # Replace this with your real tests.
   def test_truth

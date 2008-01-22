@@ -6,7 +6,7 @@ $: << "/usr/share/invirt-wui/app"
 require 'rubygems'
 require 'active_record'
 require 'erb'
-require 'models/hardware_resource_group.rb'
+require 'models/hardware_pool.rb'
 require 'models/permission.rb'
 
 def database_configuration
@@ -30,15 +30,15 @@ ActiveRecord::Base.establish_connection(
                                         :database => $develdb['database']
                                         )
 
-$hwgroup = HardwareResourceGroup.get_default_group
-if $hwgroup
+$hwpool = HardwarePool.get_default_pool
+if $hwpool
   Permission.new( { :privilege => Permission::MONITOR,
                     :user => ARGV[0],
-                    :hardware_resource_group_id => $hwgroup.id}).save
+                    :hardware_pool_id => $hwpool.id}).save
   Permission.new( { :privilege => Permission::ADMIN,
                     :user => ARGV[0],
-                    :hardware_resource_group_id => $hwgroup.id}).save
+                    :hardware_pool_id => $hwpool.id}).save
   Permission.new( { :privilege => Permission::DELEGATE,
                     :user => ARGV[0],
-                    :hardware_resource_group_id => $hwgroup.id}).save
+                    :hardware_pool_id => $hwpool.id}).save
 end

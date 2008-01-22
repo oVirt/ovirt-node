@@ -8,16 +8,16 @@ class NicController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def set_perms(hwgroup)
+  def set_perms(hwpool)
     @user = get_login_user
-    @is_admin = hwgroup.is_admin(@user)
-    @can_monitor = hwgroup.can_monitor(@user)
-    @can_delegate = hwgroup.can_delegate(@user)
+    @is_admin = hwpool.is_admin(@user)
+    @can_monitor = hwpool.can_monitor(@user)
+    @can_delegate = hwpool.can_delegate(@user)
   end
 
   def show
     @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_resource_group)
+    set_perms(@nic.host.hardware_pool)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this NIC: redirecting to top level'
       redirect_to :controller => 'pool', :action => 'list'
@@ -26,7 +26,7 @@ class NicController < ApplicationController
 
   def new
     @nic = Nic.new({ :host_id => params[:host_id] })
-    set_perms(@nic.host.hardware_resource_group)
+    set_perms(@nic.host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create this NIC: redirecting to top level'
       redirect_to :controller => 'host', :action => 'show', :id => @nic.host
@@ -35,7 +35,7 @@ class NicController < ApplicationController
 
   def create
     @nic = Nic.new(params[:nic])
-    set_perms(@nic.host.hardware_resource_group)
+    set_perms(@nic.host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create this NIC: redirecting to top level'
       redirect_to :controller => 'host', :action => 'show', :id => @nic.host
@@ -53,7 +53,7 @@ class NicController < ApplicationController
 
   def edit
     @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_resource_group)
+    set_perms(@nic.host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to update this NIC: redirecting to top level'
       redirect_to :controller => 'host', :action => 'show', :id => @nic.host
@@ -62,7 +62,7 @@ class NicController < ApplicationController
 
   def update
     @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_resource_group)
+    set_perms(@nic.host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to update this NIC: redirecting to top level'
       redirect_to :controller => 'host', :action => 'show', :id => @nic.host
@@ -80,7 +80,7 @@ class NicController < ApplicationController
 
   def destroy
     @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_resource_group)
+    set_perms(@nic.host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to delete this NIC: redirecting to top level'
       redirect_to :controller => 'host', :action => 'show', :id => @nic.host

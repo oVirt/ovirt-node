@@ -314,10 +314,10 @@ def start_vm(task, first_boot = nil)
       raise
     end
     
-    # OK, now that we found the VM, go looking in the hardware_resource_group
+    # OK, now that we found the VM, go looking in the hardware_pool
     # hosts to see if there is a host that will fit these constraints
     host = nil
-    vm.quota.hardware_resource_groups.hosts.each do |curr|
+    vm.quota.hardware_pools.hosts.each do |curr|
       if curr.num_cpus >= vm.num_vcpus_allocated and curr.memory >= vm.memory_allocated
         host = curr
         break

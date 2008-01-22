@@ -1,7 +1,7 @@
 require 'util/ovirt'
 
 class StorageVolume < ActiveRecord::Base
-  belongs_to              :hardware_resource_group
+  belongs_to              :hardware_pool
   has_and_belongs_to_many :vms
 
   def display_name
@@ -18,7 +18,7 @@ class StorageVolume < ActiveRecord::Base
 
   def self.find_for_vm(include_vm = nil)
     if include_vm 
-      condition =  "(vms.id is null and hardware_resource_group_id=#{include_vm.quota.hardware_resource_group_id})"
+      condition =  "(vms.id is null and hardware_pool_id=#{include_vm.quota.hardware_pool_id})"
       condition += " or vms.id=#{include_vm.id}" if (include_vm.id)
       self.find(:all, :include => [:vms], :conditions => condition)
     else

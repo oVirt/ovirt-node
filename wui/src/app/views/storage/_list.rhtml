@@ -21,8 +21,8 @@
   <td><%= storage_volume.lun %></td>
   <td><%= storage_volume.target %></td>
   <td><%= storage_volume.size_in_gb %></td>
-<%if @attach_to_group -%>
-    <td><%= link_to 'Choose', { :action => 'attach_to_group', :id => storage_volume, :hardware_resource_group_id => @attach_to_group }, { :class => "choose" } %></td>
+<%if @attach_to_pool -%>
+    <td><%= link_to 'Choose', { :action => 'attach_to_pool', :id => storage_volume, :hardware_pool_id => @attach_to_pool }, { :class => "choose" } %></td>
 <%elsif @attach_to_vm -%>
     <td><%= link_to 'Choose', { :action => 'attach_to_vm', :id => storage_volume, :vm_id => @attach_to_vm }, { :class => "choose" } %></td>
 <% else -%>

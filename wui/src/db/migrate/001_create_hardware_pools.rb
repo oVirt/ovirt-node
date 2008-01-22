@@ -1,16 +1,16 @@
-class CreateHardwareResourceGroups < ActiveRecord::Migration
+class CreateHardwarePools < ActiveRecord::Migration
   def self.up
-    create_table :hardware_resource_groups do |t|
+    create_table :hardware_pools do |t|
       t.column :name,           :string
-      t.column :supergroup_id,  :integer
+      t.column :superpool_id,  :integer
     end
 
-    execute "alter table hardware_resource_groups add constraint fk_hr_group_supergroup
-             foreign key (supergroup_id) references hardware_resource_groups(id)"
-    HardwareResourceGroup.create( :name=>'default')
+    execute "alter table hardware_pools add constraint fk_hr_pool_superpool
+             foreign key (superpool_id) references hardware_poolss(id)"
+    HardwarePool.create( :name=>'default')
   end
 
   def self.down
-    drop_table :hardware_resource_groups
+    drop_table :hardware_pools
   end
 end

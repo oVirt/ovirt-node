@@ -10,7 +10,7 @@ require 'libvirt'
 require 'active_record'
 require 'erb'
 require 'models/host.rb'
-require 'models/hardware_resource_group.rb'
+require 'models/hardware_pool.rb'
 require 'models/permission.rb'
 
 def database_configuration
@@ -70,7 +70,7 @@ if $host == nil
            "arch" => info.model,
            "memory" => info.memory,
            "is_disabled" => 0,
-           "hardware_resource_group" => HardwareResourceGroup.get_default_group
+           "hardware_pool" => HardwarePool.get_default_pool
            ).save
 
 end

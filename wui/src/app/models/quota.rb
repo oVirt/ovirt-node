@@ -4,7 +4,7 @@ class Quota < ActiveRecord::Base
   has_many :permissions, :dependent => :destroy, :order => "id ASC"
 
   has_many :vms, :dependent => :nullify, :order => "id ASC"
-  belongs_to :hardware_resource_group
+  belongs_to :hardware_pool
   validates_presence_of :total_vcpus, :total_vmemory, :total_vnics, :total_storage
 
   def total_vmemory_in_mb
@@ -115,10 +115,10 @@ class Quota < ActiveRecord::Base
     end
     # creation is limited to total quota value or values from largest host
     memhost = Host.find(:first, :order => "memory DESC",
-                        :conditions => "hardware_resource_group_id = #{hardware_resource_group.id}")
+                        :conditions => "hardware_pool_id = #{hardware_pool.id}")
     host_mem_limit = (memhost.nil? ? 0 : memhost.memory)
     cpuhost = Host.find(:first, :order => "num_cpus DESC",
-                        :conditions => "hardware_resource_group_id = #{hardware_resource_group.id}")
+                        :conditions => "hardware_pool_id = #{hardware_pool.id}")
     host_cpu_limit = cpuhost.nil? ? 0 : cpuhost.num_cpus
     resources[:memory] = host_mem_limit if host_mem_limit < resources[:memory]
     resources[:cpus] = host_cpu_limit if host_cpu_limit < resources[:cpus]
@@ -167,8 +167,8 @@ class Quota < ActiveRecord::Base
                          :conditions => "permissions.privilege = '#{privilege}' and permissions.user = '#{user}'"))
       return true
     else
-      # now check HW resource group permissions
-      return hardware_resource_group.has_privilege(user, privilege)
+      # now check HW pool permissions
+      return hardware_pool.has_privilege(user, privilege)
     end
   end
 end

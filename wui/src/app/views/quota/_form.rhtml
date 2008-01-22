@@ -1,7 +1,7 @@
 <%= error_messages_for 'quota' %>
 
 <!--[form:quota]-->
-<%= hidden_field_with_label "Hardware Resource Group", 'quota', 'hardware_resource_group_id', @quota.hardware_resource_group.name  %>
+<%= hidden_field_with_label "Hardware Pool", 'quota', 'hardware_pool_id', @quota.hardware_pool.name  %>
 
 <%= text_field_with_label "Name", 'quota', 'name'  %>
 

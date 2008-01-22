@@ -1,5 +1,5 @@
 <div id="left">
-<h2><%= _("New Hardware Resource Group") %></h2>
+<h2><%= _("New Hardware Pool") %></h2>
 
 <% form_tag :action => 'create' do %>
   <%= render :partial => 'form' %>
@@ -11,8 +11,8 @@
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions">
-    <%if @hardware_resource_group.supergroup -%>
-      <li class="action"><%= link_to "Back to #{@hardware_resource_group.supergroup.name}", { :action => 'show', :id => @hardware_resource_group.supergroup_id}, { :class => "list" } %></li>
+    <%if @hardware_pool.superpool -%>
+      <li class="action"><%= link_to "Back to #{@hardware_pool.superpool.name}", { :action => 'show', :id => @hardware_pool.superpool_id}, { :class => "list" } %></li>
     <% end -%>
   </ul>
 </div>

@@ -23,6 +23,6 @@
   </ul>
   <% end -%>
   <ul class="actions">
-    <li class="action"><%= link_to "Back to #{@storage_volume.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_resource_group.id }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "Back to #{@storage_volume.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_pool.id }, { :class => "list" } %></li>
   </ul>
 </div>

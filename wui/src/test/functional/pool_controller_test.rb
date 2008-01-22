@@ -5,14 +5,14 @@ require 'pool_controller'
 class PoolController; def rescue_action(e) raise e end; end
 
 class PoolControllerTest < Test::Unit::TestCase
-  fixtures :hardware_resource_groups
+  fixtures :hardware_pools
 
   def setup
     @controller = PoolController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
 
-    @first_id = hardware_resource_groups(:first).id
+    @first_id = hardware_pools(:first).id
   end
 
   def test_index
@@ -27,7 +27,7 @@ class PoolControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'list'
 
-    assert_not_nil assigns(:hardware_resource_groups)
+    assert_not_nil assigns(:hardware_pools)
   end
 
   def test_show
@@ -36,8 +36,8 @@ class PoolControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'show'
 
-    assert_not_nil assigns(:hardware_resource_group)
-    assert assigns(:hardware_resource_group).valid?
+    assert_not_nil assigns(:hardware_pool)
+    assert assigns(:hardware_pool).valid?
   end
 
   def test_new
@@ -46,18 +46,18 @@ class PoolControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'new'
 
-    assert_not_nil assigns(:hardware_resource_group)
+    assert_not_nil assigns(:hardware_pool)
   end
 
   def test_create
-    num_hardware_resource_groups = HardwareResourceGroup.count
+    num_hardware_pools = HardwarePool.count
 
-    post :create, :hardware_resource_group => {}
+    post :create, :hardware_pool => {}
 
     assert_response :redirect
     assert_redirected_to :action => 'list'
 
-    assert_equal num_hardware_resource_groups + 1, HardwareResourceGroup.count
+    assert_equal num_hardware_pools + 1, HardwarePool.count
   end
 
   def test_edit
@@ -66,8 +66,8 @@ class PoolControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'edit'
 
-    assert_not_nil assigns(:hardware_resource_group)
-    assert assigns(:hardware_resource_group).valid?
+    assert_not_nil assigns(:hardware_pool)
+    assert assigns(:hardware_pool).valid?
   end
 
   def test_update
@@ -78,7 +78,7 @@ class PoolControllerTest < Test::Unit::TestCase
 
   def test_destroy
     assert_nothing_raised {
-      HardwareResourceGroup.find(@first_id)
+      HardwarePool.find(@first_id)
     }
 
     post :destroy, :id => @first_id
@@ -86,7 +86,7 @@ class PoolControllerTest < Test::Unit::TestCase
     assert_redirected_to :action => 'list'
 
     assert_raise(ActiveRecord::RecordNotFound) {
-      HardwareResourceGroup.find(@first_id)
+      HardwarePool.find(@first_id)
     }
   end
 end

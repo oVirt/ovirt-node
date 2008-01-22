@@ -1,7 +1,7 @@
 require 'util/ovirt'
 
 class Host < ActiveRecord::Base
-  belongs_to :hardware_resource_group
+  belongs_to :hardware_pool
   has_many :nics, :dependent => :destroy
   has_many :vms, :dependent => :nullify
 

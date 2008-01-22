@@ -11,7 +11,7 @@
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions">
-    <li class="action"><%= link_to "Back to #{@permission.hardware_resource_group.name}", { :controller => 'pool', :action => 'show', :id => @permission.hardware_resource_group_id }, { :class => "show" } if @permission.hardware_resource_group %></li>
+    <li class="action"><%= link_to "Back to #{@permission.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @permission.hardware_pool_id }, { :class => "show" } if @permission.hardware_pool %></li>
     <li class="action"><%= link_to "Back to #{@permission.quota.name}", { :controller => 'quota', :action => 'show', :id => @permission.quota_id }, { :class => "show" } if @permission.quota %></li>
   </ul>
 </div>

@@ -30,7 +30,7 @@ class QuotaController < ApplicationController
   def show
     @quota = Quota.find(params[:id])
     set_perms(@quota)
-    @is_hwgroup_admin = @quota.hardware_resource_group.is_admin(@user)
+    @is_hwpool_admin = @quota.hardware_pool.is_admin(@user)
     @action_values = [["Suspend", Task::ACTION_SUSPEND_VM],
                       ["Resume", Task::ACTION_RESUME_VM],
                       ["Save", Task::ACTION_SAVE_VM],
@@ -43,24 +43,24 @@ class QuotaController < ApplicationController
   end
 
   def new
-    @quota = Quota.new( { :hardware_resource_group_id => params[:hardware_resource_group] } )
-    set_perms(@quota.hardware_resource_group)
+    @quota = Quota.new( { :hardware_pool_id => params[:hardware_pool] } )
+    set_perms(@quota.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create a quota '
-      redirect_to :controller => 'pool', :action => 'show', :id => @quota.hardware_resource_group
+      redirect_to :controller => 'pool', :action => 'show', :id => @quota.hardware_pool
     end
   end
 
   def create
     @quota = Quota.new(params[:quota])
-    set_perms(@quota.hardware_resource_group)
+    set_perms(@quota.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create a quota '
-      redirect_to :controller => 'pool', :action => 'show', :id => @quota.hardware_resource_group
+      redirect_to :controller => 'pool', :action => 'show', :id => @quota.hardware_pool
     else
       if @quota.save
         flash[:notice] = 'Quota was successfully created.'
-        redirect_to :controller => 'pool', :action => 'show', :id => @quota.hardware_resource_group
+        redirect_to :controller => 'pool', :action => 'show', :id => @quota.hardware_pool
       else
         render :action => 'new'
       end
@@ -69,7 +69,7 @@ class QuotaController < ApplicationController
 
   def edit
     @quota = Quota.find(params[:id])
-    set_perms(@quota.hardware_resource_group)
+    set_perms(@quota.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this quota '
       redirect_to :action => 'show', :id => @quota
@@ -78,7 +78,7 @@ class QuotaController < ApplicationController
 
   def update
     @quota = Quota.find(params[:id])
-    set_perms(@quota.hardware_resource_group)
+    set_perms(@quota.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this quota '
       redirect_to :action => 'show', :id => @quota
@@ -94,14 +94,14 @@ class QuotaController < ApplicationController
 
   def destroy
     @quota = Quota.find(params[:id])
-    set_perms(@quota.hardware_resource_group)
+    set_perms(@quota.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to delete this quota '
       redirect_to :action => 'show', :id => @quota
     else
-      group_id = @quota.hardware_resource_group_id
+      pool_id = @quota.hardware_pool_id
       @quota.destroy
-      redirect_to :controller => 'pool', :action => 'show', :id => group_id
+      redirect_to :controller => 'pool', :action => 'show', :id => pool_id
     end
   end
 

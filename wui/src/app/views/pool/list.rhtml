@@ -1,10 +1,10 @@
 <div id="left">
-<h2><%= _("Manage Hardware Resource Groups") %></h2> 
+<h2><%= _("Manage Hardware Pools") %></h2> 
 
-<p>Manage Hardware Resource Groups from this interface</p>
+<p>Manage Hardware Pools from this interface</p>
 
-<h3>Hardware Resource Groups</h3>
-<%= render :partial => "list", :locals => { :hardware_resource_groups => @hardware_resource_groups } %>
+<h3>Hardware Pools</h3>
+<%= render :partial => "list", :locals => { :hardware_pools => @hardware_pools } %>
 
 <h3>Hosts</h3>
 <%= render :partial => "/host/list", :locals => { :hosts => @hosts } %>
@@ -19,7 +19,7 @@
   <h2>Actions</h2>
   <ul class="actions create">
     <%if @is_admin -%>
-      <li class="action"><%= link_to 'New Hardware Resource Group', { :action => 'new', :supergroup => @default_group}, { :class => "create" } %></li>
+      <li class="action"><%= link_to 'New Hardware Pool', { :action => 'new', :superpool => @default_pool}, { :class => "create" } %></li>
     <% end -%>
   </ul>
 </div>

@@ -5,10 +5,10 @@ class PermissionController < ApplicationController
 
   def set_perms
     @user = get_login_user
-    if @permission.hardware_resource_group
-      @is_admin = @permission.hardware_resource_group.is_admin(@user)
-      @can_monitor = @permission.hardware_resource_group.can_monitor(@user)
-      @can_delegate = @permission.hardware_resource_group.can_delegate(@user)
+    if @permission.hardware_pool
+      @is_admin = @permission.hardware_pool.is_admin(@user)
+      @can_monitor = @permission.hardware_pool.can_monitor(@user)
+      @can_delegate = @permission.hardware_pool.can_delegate(@user)
     elsif @permission.quota
       @is_admin = @permission.quota.is_admin(@user)
       @can_monitor = @permission.quota.can_monitor(@user)
@@ -21,8 +21,8 @@ class PermissionController < ApplicationController
   end
 
   def redirect_to_parent
-    if @permission.hardware_resource_group
-      redirect_to :controller => 'pool', :action => 'show', :id => @permission.hardware_resource_group_id
+    if @permission.hardware_pool
+      redirect_to :controller => 'pool', :action => 'show', :id => @permission.hardware_pool_id
     elsif @permission.quota
       redirect_to :controller => 'quota', :action => 'show', :id => @permission.quota_id
     else
@@ -41,7 +41,7 @@ class PermissionController < ApplicationController
   end
 
   def new
-    @permission = Permission.new( { :hardware_resource_group_id => params[:hardware_resource_group_id],
+    @permission = Permission.new( { :hardware_pool_id => params[:hardware_pool_id],
                                     :quota_id => params[:quota_id]})
     set_perms
     # admin permission required to view permissions
@@ -75,7 +75,7 @@ class PermissionController < ApplicationController
       redirect_to_parent
     else
       quota_id = @permission.quota_id
-      pool_id =  @permission.hardware_resource_group_id
+      pool_id =  @permission.hardware_pool_id
       if @permission.destroy
         if pool_id
           redirect_to :controller => 'pool', :action => 'show', :id => pool_id

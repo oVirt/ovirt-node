@@ -8,24 +8,24 @@ class HostController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def set_perms(hwgroup)
+  def set_perms(hwpool)
     @user = get_login_user
-    @is_admin = hwgroup.is_admin(@user)
-    @can_monitor = hwgroup.can_monitor(@user)
-    @can_delegate = hwgroup.can_delegate(@user)
+    @is_admin = hwpool.is_admin(@user)
+    @can_monitor = hwpool.can_monitor(@user)
+    @can_delegate = hwpool.can_delegate(@user)
   end
 
   def list
-    @attach_to_group=params[:attach_to_group]
-    if @attach_to_group
-      group = HardwareResourceGroup.find(@attach_to_group)
-      set_perms(group)
+    @attach_to_pool=params[:attach_to_pool]
+    if @attach_to_pool
+      pool = HardwarePool.find(@attach_to_pool)
+      set_perms(pool)
       unless @can_monitor
         flash[:notice] = 'You do not have permission to view this host list: redirecting to top level'
         redirect_to :controller => 'pool', :action => 'list'
       else
-        conditions = "hardware_resource_group_id is null"
-        conditions += " or hardware_resource_group_id=#{group.supergroup_id}" if group.supergroup
+        conditions = "hardware_pool_id is null"
+        conditions += " or hardware_pool_id=#{pool.superpool_id}" if pool.superpool
         @hosts = Host.find(:all, :conditions => conditions)
       end
     else
@@ -36,7 +36,7 @@ class HostController < ApplicationController
 
   def show
     @host = Host.find(params[:id])
-    set_perms(@host.hardware_resource_group)
+    set_perms(@host.hardware_pool)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this host: redirecting to top level'
       redirect_to :controller => 'pool', :action => 'list'
@@ -45,7 +45,7 @@ class HostController < ApplicationController
 
   def edit
     @host = Host.find(params[:id])
-    set_perms(@host.hardware_resource_group)
+    set_perms(@host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
@@ -54,7 +54,7 @@ class HostController < ApplicationController
 
   def update
     @host = Host.find(params[:id])
-    set_perms(@host.hardware_resource_group)
+    set_perms(@host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
@@ -70,7 +70,7 @@ class HostController < ApplicationController
 
   def disable
     @host = Host.find(params[:id])
-    set_perms(@host.hardware_resource_group)
+    set_perms(@host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
@@ -87,7 +87,7 @@ class HostController < ApplicationController
 
   def enable
     @host = Host.find(params[:id])
-    set_perms(@host.hardware_resource_group)
+    set_perms(@host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
@@ -102,23 +102,23 @@ class HostController < ApplicationController
     end
   end
 
-  def attach_to_group
+  def attach_to_pool
     @host = Host.find(params[:id])
-    set_perms(@host.hardware_resource_group)
+    set_perms(@host.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
     else
-      group = HardwareResourceGroup.find(params[:hardware_resource_group_id])
+      pool = HardwarePool.find(params[:hardware_pool_id])
       host_url = url_for(:controller => "host", :action => "show", :id => @host)
-      group_url = url_for(:controller => "hardware_resource_group", :action => "show", :id => group)
-      @host.hardware_resource_group_id = group.id
+      pool_url = url_for(:controller => "hardware_pool", :action => "show", :id => pool)
+      @host.hardware_pool_id = pool.id
       if @host.save
-        flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, group_url, group.name ]
-        redirect_to :controller => 'pool', :action => 'show', :id => group
+        flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, pool_url, pool.name ]
+        redirect_to :controller => 'pool', :action => 'show', :id => pool
       else
         flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, host_url, host.hostname ]
-        redirect_to :controller => 'pool', :action => 'show', :id => group
+        redirect_to :controller => 'pool', :action => 'show', :id => pool
       end
     end
   end

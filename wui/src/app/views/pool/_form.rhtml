@@ -1,8 +1,8 @@
-<%= error_messages_for 'hardware_resource_group' %>
+<%= error_messages_for 'hardware_pool' %>
 
-<!--[form:hardware_resource_group]-->
-<%= hidden_field_with_label "Supergroup", 'hardware_resource_group', 'supergroup_id', @hardware_resource_group.supergroup.name if @hardware_resource_group.supergroup %>
+<!--[form:hardware_pool]-->
+<%= hidden_field_with_label "Parent pool", 'hardware_pool', 'superpool_id', @hardware_pool.superpool.name if @hardware_pool.superpool %>
 
-<%= text_field_with_label 'Name', 'hardware_resource_group', 'name'  %>
-<!--[eoform:hardware_resource_group]-->
+<%= text_field_with_label 'Name', 'hardware_pool', 'name'  %>
+<!--[eoform:hardware_pool]-->
 

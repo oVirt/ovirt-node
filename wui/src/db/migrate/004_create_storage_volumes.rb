@@ -7,11 +7,11 @@ class CreateStorageVolumes < ActiveRecord::Migration
       t.column :lun,                        :string
       t.column :storage_type,               :string
       t.column :size,                       :integer
-      t.column :hardware_resource_group_id, :integer, :null => false
+      t.column :hardware_pool_id,           :integer, :null => false
     end
 
-    execute "alter table storage_volumes add constraint fk_storage_volume_hw_groups
-             foreign key (hardware_resource_group_id) references hardware_resource_groups(id)"
+    execute "alter table storage_volumes add constraint fk_storage_volume_hw_pools
+             foreign key (hardware_pool_id) references hardware_pools(id)"
 
   end
 

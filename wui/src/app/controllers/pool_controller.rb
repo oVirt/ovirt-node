@@ -10,64 +10,64 @@ class PoolController < ApplicationController
 
   def list
     @user = get_login_user
-    @default_group = HardwareResourceGroup.get_default_group
-    set_perms(@default_group)
-    @hardware_resource_groups = HardwareResourceGroup.list_for_user(@user)
+    @default_pool = HardwarePool.get_default_pool
+    set_perms(@default_pool)
+    @hardware_pools = HardwarePool.list_for_user(@user)
     @hosts = Set.new
     @storage_volumes = Set.new
-    @hardware_resource_groups.each do |group|
-      @hosts += group.hosts
-      @storage_volumes += group.storage_volumes
+    @hardware_pools.each do |pool|
+      @hosts += pool.hosts
+      @storage_volumes += pool.storage_volumes
     end
     @hosts = @hosts.entries
     @storage_volumes = @storage_volumes.entries
   end
 
-  def set_perms(hwgroup)
+  def set_perms(hwpool)
     @user = get_login_user
-    @is_admin = hwgroup.is_admin(@user)
-    @can_monitor = hwgroup.can_monitor(@user)
-    @can_delegate = hwgroup.can_delegate(@user)
+    @is_admin = hwpool.is_admin(@user)
+    @can_monitor = hwpool.can_monitor(@user)
+    @can_delegate = hwpool.can_delegate(@user)
   end
 
   def show
-    @hardware_resource_group = HardwareResourceGroup.find(params[:id])
-    set_perms(@hardware_resource_group)
+    @hardware_pool = HardwarePool.find(params[:id])
+    set_perms(@hardware_pool)
     unless @can_monitor
-      flash[:notice] = 'You do not have permission to view this hardware resource group: redirecting to top level'
+      flash[:notice] = 'You do not have permission to view this hardware resource pool: redirecting to top level'
       redirect_to :action => 'list'
     end
   end
 
   def new
-    unless params[:supergroup]
-      flash[:notice] = 'Parent group is required for new HardwareResourceGroup '
+    unless params[:superpool]
+      flash[:notice] = 'Parent pool is required for new HardwarePool '
       redirect_to :action => 'list'
     else
-      @hardware_resource_group = HardwareResourceGroup.new( { :supergroup_id => params[:supergroup] } )
-      set_perms(@hardware_resource_group.supergroup)
+      @hardware_pool = HardwarePool.new( { :superpool_id => params[:superpool] } )
+      set_perms(@hardware_pool.superpool)
       unless @is_admin
-        flash[:notice] = 'You do not have permission to create a subgroup '
-        redirect_to :action => 'show', :id => @hardware_resource_group.supergroup_id
+        flash[:notice] = 'You do not have permission to create a subpool '
+        redirect_to :action => 'show', :id => @hardware_pool.superpool_id
       end
     end
   end
 
   def create
-    unless params[:hardware_resource_group][:supergroup_id]
-      flash[:notice] = 'Parent group is required for new HardwareResourceGroup '
+    unless params[:hardware_pool][:superpool_id]
+      flash[:notice] = 'Parent pool is required for new HardwarePool '
       redirect_to :action => 'list'
     else
-      @hardware_resource_group = HardwareResourceGroup.new(params[:hardware_resource_group])
-      set_perms(@hardware_resource_group.supergroup)
+      @hardware_pool = HardwarePool.new(params[:hardware_pool])
+      set_perms(@hardware_pool.superpool)
       unless @is_admin
-        flash[:notice] = 'You do not have permission to create a subgroup '
-        redirect_to :action => 'show', :id => @hardware_resource_group.supergroup_id
+        flash[:notice] = 'You do not have permission to create a subpool '
+        redirect_to :action => 'show', :id => @hardware_pool.superpool_id
       else
-        if @hardware_resource_group.save
-          flash[:notice] = 'HardwareResourceGroup was successfully created.'
-          if @hardware_resource_group.supergroup
-            redirect_to :action => 'show', :id => @hardware_resource_group.supergroup_id
+        if @hardware_pool.save
+          flash[:notice] = 'HardwarePool was successfully created.'
+          if @hardware_pool.superpool
+            redirect_to :action => 'show', :id => @hardware_pool.superpool_id
           else
             redirect_to :action => 'list'
           end
@@ -79,58 +79,58 @@ class PoolController < ApplicationController
   end
 
   def edit
-    @hardware_resource_group = HardwareResourceGroup.find(params[:id])
-    set_perms(@hardware_resource_group)
+    @hardware_pool = HardwarePool.find(params[:id])
+    set_perms(@hardware_pool)
     unless @is_admin
-      flash[:notice] = 'You do not have permission to edit this group '
-      redirect_to :action => 'show', :id => @hardware_resource_group
+      flash[:notice] = 'You do not have permission to edit this pool '
+      redirect_to :action => 'show', :id => @hardware_pool
     end
   end
 
   def update
-    @hardware_resource_group = HardwareResourceGroup.find(params[:id])
-    set_perms(@hardware_resource_group)
+    @hardware_pool = HardwarePool.find(params[:id])
+    set_perms(@hardware_pool)
     unless @is_admin
-      flash[:notice] = 'You do not have permission to edit this group '
-      redirect_to :action => 'show', :id => @hardware_resource_group
+      flash[:notice] = 'You do not have permission to edit this pool '
+      redirect_to :action => 'show', :id => @hardware_pool
     else
-      if @hardware_resource_group.update_attributes(params[:hardware_resource_group])
-        flash[:notice] = 'HardwareResourceGroup was successfully updated.'
-        redirect_to :action => 'show', :id => @hardware_resource_group
+      if @hardware_pool.update_attributes(params[:hardware_pool])
+        flash[:notice] = 'HardwarePool was successfully updated.'
+        redirect_to :action => 'show', :id => @hardware_pool
       else
         render :action => 'edit'
       end
     end
   end
 
-  # move group associations upward upon delete
+  # move pool associations upward upon delete
   def destroy
-    group = HardwareResourceGroup.find(params[:id])
-    set_perms(group)
+    pool = HardwarePool.find(params[:id])
+    set_perms(pool)
     unless @is_admin
-      flash[:notice] = 'You do not have permission to destroy this group '
-      redirect_to :action => 'show', :id => group
+      flash[:notice] = 'You do not have permission to destroy this pool '
+      redirect_to :action => 'show', :id => pool
     else
-      supergroup = group.supergroup
-      if supergroup
-        group.hosts.each do |host| 
-          host.hardware_resource_group_id=supergroup.id
+      superpool = pool.superpool
+      if superpool
+        pool.hosts.each do |host| 
+          host.hardware_pool_id=superpool.id
           host.save
         end
-        group.storage_volumes.each do |vol| 
-          vol.hardware_resource_group_id=supergroup.id
+        pool.storage_volumes.each do |vol| 
+          vol.hardware_pool_id=superpool.id
           vol.save
         end
-        group.subgroups.each do |subgroup| 
-          subgroup.supergroup_id=supergroup.id
-          subgroup.save
+        pool.subpools.each do |subpool| 
+          subpool.superpool_id=superpool.id
+          subpool.save
         end
         # what about quotas -- for now they're deleted
-        HardwareResourceGroup.find(params[:id]).destroy
-        redirect_to :action => 'show', :id => supergroup
+        HardwarePool.find(params[:id]).destroy
+        redirect_to :action => 'show', :id => superpool
       else
-        flash[:notice] = "You can't delete the top level HW group."
-        redirect_to :action => 'show', :id => group
+        flash[:notice] = "You can't delete the top level HW pool."
+        redirect_to :action => 'show', :id => pool
       end
     end
   end

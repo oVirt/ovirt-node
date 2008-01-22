@@ -8,11 +8,11 @@ class CreateHosts < ActiveRecord::Migration
       t.column :arch,                       :string
       t.column :memory,                     :integer
       t.column :is_disabled,                :integer
-      t.column :hardware_resource_group_id, :integer, :null => false
+      t.column :hardware_pool_id,           :integer, :null => false
     end
 
-    execute "alter table hosts add constraint fk_host_hw_groups
-             foreign key (hardware_resource_group_id) references hardware_resource_groups(id)"
+    execute "alter table hosts add constraint fk_host_hw_pools
+             foreign key (hardware_pool_id) references hardware_pools(id)"
   end
 
   def self.down

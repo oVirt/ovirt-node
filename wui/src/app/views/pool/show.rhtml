@@ -1,26 +1,26 @@
 <div id="left">
-<h2><%= _("Manage Hardware Resource Group: #{@hardware_resource_group.name}") %></h2> 
+<h2><%= _("Manage Hardware Pool: #{@hardware_pool.name}") %></h2> 
 
 
 <h3>Hosts</h3>
-<%= render :partial => "/host/list", :locals => { :hosts => @hardware_resource_group.hosts } %>
+<%= render :partial => "/host/list", :locals => { :hosts => @hardware_pool.hosts } %>
 
 <h3>Storage Volumes</h3>
-<%= render :partial => "/storage/list", :locals => { :storage_volumes => @hardware_resource_group.storage_volumes } %>
+<%= render :partial => "/storage/list", :locals => { :storage_volumes => @hardware_pool.storage_volumes } %>
 
-<%unless @hardware_resource_group.subgroups.empty? -%>
-<h3>Hardware Resource Subgroups</h3>
-<%= render :partial => "list", :locals => { :hardware_resource_groups => @hardware_resource_group.subgroups } %>
+<%unless @hardware_pool.subpools.empty? -%>
+<h3>Hardware Subpools</h3>
+<%= render :partial => "list", :locals => { :hardware_pools => @hardware_pool.subpools } %>
 <% end -%>
 
-<%unless @hardware_resource_group.quotas.empty? -%>
+<%unless @hardware_pool.quotas.empty? -%>
 <h3>Quotas</h3>
-<%= render :partial => "/quota/list", :locals => { :quotas => @hardware_resource_group.quotas } %>
+<%= render :partial => "/quota/list", :locals => { :quotas => @hardware_pool.quotas } %>
 <% end -%>
 
 <%if @is_admin -%>
 <h3>Permissions</h3>
-<%= render :partial => "/permission/list", :locals => { :permissions => @hardware_resource_group.permissions, :show_object => false, :show_actions => @can_delegate } %>
+<%= render :partial => "/permission/list", :locals => { :permissions => @hardware_pool.permissions, :show_object => false, :show_actions => @can_delegate } %>
 <% end -%>
 
 </div>
@@ -29,33 +29,33 @@
   <h2>Actions</h2>
   <%if @is_admin -%>
   <ul class="actions create">
-    <%if @hardware_resource_group.subgroups.empty? -%>
-      <li class="action"><%= link_to 'New Quota', { :controller => 'quota', :action => 'new', :hardware_resource_group => @hardware_resource_group}, { :class => "create" } %></li>
+    <%if @hardware_pool.subpools.empty? -%>
+      <li class="action"><%= link_to 'New Quota', { :controller => 'quota', :action => 'new', :hardware_pool => @hardware_pool}, { :class => "create" } %></li>
     <% end -%>
-    <%if @hardware_resource_group.quotas.empty? -%>
-      <li class="action"><%= link_to 'New Subgroup', { :action => 'new', :supergroup => @hardware_resource_group}, { :class => "create" } %></li>
+    <%if @hardware_pool.quotas.empty? -%>
+      <li class="action"><%= link_to 'New Subpool', { :action => 'new', :superpool => @hardware_pool}, { :class => "create" } %></li>
     <% end -%>
-    <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new', :hardware_resource_group_id => @hardware_resource_group}, { :class => "create" } %></li>
+    <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new', :hardware_pool_id => @hardware_pool}, { :class => "create" } %></li>
   </ul>
   <% end -%>
   <ul class="actions edit">
     <%if @is_admin -%>
-    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @hardware_resource_group}, { :class => "edit" } %></li>
-    <li class="action"><%= link_to 'Add Host', { :controller => 'host', :action => 'list', :attach_to_group => @hardware_resource_group}, { :class => "edit" } %></li>
-    <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_group => @hardware_resource_group }, {:class => "edit" } %></li>
+    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @hardware_pool}, { :class => "edit" } %></li>
+    <li class="action"><%= link_to 'Add Host', { :controller => 'host', :action => 'list', :attach_to_pool => @hardware_pool}, { :class => "edit" } %></li>
+    <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_pool => @hardware_pool }, {:class => "edit" } %></li>
     <% end -%>
     <%if @can_delegate -%>
-    <li class="action"><%= link_to 'Grant Privileges', { :controller => 'permission', :action => 'new', :hardware_resource_group_id => @hardware_resource_group}, { :class => "edit" } %></li>
+    <li class="action"><%= link_to 'Grant Privileges', { :controller => 'permission', :action => 'new', :hardware_pool_id => @hardware_pool}, { :class => "edit" } %></li>
     <% end -%>
   </ul>
   <%if @is_admin -%>
   <ul class="actions remove">
-    <li class="action"><%= link_to 'Delete Group', { :controller => "pool", :action => 'destroy', :id => @hardware_resource_group }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
+    <li class="action"><%= link_to 'Delete Pool', { :controller => "pool", :action => 'destroy', :id => @hardware_pool }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
   </ul>
   <% end -%>
   <ul class="actions">
-      <%if @hardware_resource_group.supergroup -%>
-        <li class="action"><%= link_to "Up to #{@hardware_resource_group.supergroup.name}", { :action => 'show', :id => @hardware_resource_group.supergroup_id}, { :class => "list" } %></li>
+      <%if @hardware_pool.superpool -%>
+        <li class="action"><%= link_to "Up to #{@hardware_pool.superpool.name}", { :action => 'show', :id => @hardware_pool.superpool_id}, { :class => "list" } %></li>
       <% end -%>
       <li class="action"><%= link_to 'Back to pools', { :controller => 'pool', :action => 'list' }, { :class => "list" } %></li>
   </ul>
