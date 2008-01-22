@@ -6,7 +6,7 @@ class CreateHardwarePools < ActiveRecord::Migration
     end
 
     execute "alter table hardware_pools add constraint fk_hr_pool_superpool
-             foreign key (superpool_id) references hardware_poolss(id)"
+             foreign key (superpool_id) references hardware_pools(id)"
     HardwarePool.create( :name=>'default')
   end
 
