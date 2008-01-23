@@ -16,12 +16,15 @@ require 'socket'
 require 'models/vm.rb'
 require 'models/task.rb'
 require 'models/host.rb'
+require 'models/hardware_resource_group.rb'
+require 'models/permission.rb'
 require 'models/storage_volume.rb'
-require 'models/user.rb'
 require 'models/quota.rb'
 
 $stdout = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
 $stderr = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
+
+ENV['KRB5CCNAME'] = '/usr/share/invirt-wui/ovirt-cc'
 
 def database_configuration
   YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
@@ -188,9 +191,16 @@ ActiveRecord::Base.establish_connection(
 def create_vm(task)
   puts "create_vm"
 
-  # FIXME: we need some sort of flag to say whether we will boot to the network,
-  # disk, etc.
-  #start_vm(task, true)
+  begin
+    vm = findVM(task, false)
+  rescue
+    return
+  end
+
+  if vm.state != Vm::STATE_PENDING
+    setTaskState(task, Task::STATE_FAILED, "VM not pending")
+    return
+  end
 
   setVmState(vm, Vm::STATE_CREATING)
   setTaskState(task, Task::STATE_RUNNING)
@@ -634,7 +644,7 @@ pid = fork do
     krb5 = Krb5.new
     default_realm = krb5.get_default_realm
     krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/ovirt.keytab')
-    krb5.cache
+    krb5.cache(ENV['KRB5CCNAME'])
 
     Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
       case task.action
@@ -654,9 +664,8 @@ pid = fork do
       task.save
     end
     
-    # and now we can destroy the credentials
-    krb5.destroy
-    krb5.close
+    # we could destroy credentials, but another process might be using them (in
+    # particular, host-browser).  Just leave them around, it shouldn't hurt
 
     $stdout.flush
     sleep 5

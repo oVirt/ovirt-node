@@ -13,6 +13,8 @@ require 'models/host.rb'
 require 'models/hardware_pool.rb'
 require 'models/permission.rb'
 
+ENV['KRB5CCNAME'] = '/usr/share/invirt-wui/ovirt-cc'
+
 def database_configuration
   YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
 end
@@ -25,7 +27,7 @@ end
 krb5 = Krb5.new
 default_realm = krb5.get_default_realm
 krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/ovirt.keytab')
-krb5.cache
+krb5.cache(ENV['KRB5CCNAME'])
 
 begin
   conn = Libvirt::open("qemu+tcp://" + ARGV[0] + "/system")
@@ -37,9 +39,8 @@ rescue
   exit
 end
 
-# and now we can destroy the credentials
-krb5.destroy
-krb5.close
+# we could destroy the credentials, but another process might be using them
+# (in particular, the taskomatic).  Just leave them around, it shouldn't hurt
 
 puts info.cpus
 puts info.mhz
