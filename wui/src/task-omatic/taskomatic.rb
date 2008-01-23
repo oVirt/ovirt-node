@@ -280,7 +280,7 @@ def shutdown_vm(task)
   vm.save
 end
 
-def start_vm(task, first_boot = nil)
+def start_vm(task)
   puts "start_vm"
 
   # here, we are given an id for a VM to start
@@ -362,15 +362,9 @@ def start_vm(task, first_boot = nil)
 
     # OK, we found a host that will work; now let's build up the XML
     
-    if first_boot
-      bootdev = "network"
-    else
-      bootdev = "hd"
-    end
-
     # FIXME: get rid of the hardcoded bridge
     xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
-                        vm.memory_used, vm.num_vcpus_allocated, bootdev,
+                        vm.memory_used, vm.num_vcpus_allocated, vm.boot_device,
                         vm.vnic_mac_addr, "ovirtbr0", storagedevs)
 
     begin
@@ -397,6 +391,7 @@ def start_vm(task, first_boot = nil)
   vm.state = Vm::STATE_RUNNING
   vm.memory_used = vm.memory_allocated
   vm.num_vcpus_used = vm.num_vcpus_allocated
+  vm.boot_device = Vm::BOOT_DEV_HD
   vm.save
 end
 
