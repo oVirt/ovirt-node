@@ -1,5 +1,5 @@
 <div id="left">
-<h2><%= _("New Hardware Pool") %></h2>
+<h2>New <%= @hardware_pool.get_type_label %></h2>
 
 <% form_tag :action => 'create' do %>
   <%= render :partial => 'form' %>

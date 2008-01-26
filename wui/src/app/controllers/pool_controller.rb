@@ -40,11 +40,20 @@ class PoolController < ApplicationController
   end
 
   def new
-    unless params[:superpool]
+    if not params[:superpool]
       flash[:notice] = 'Parent pool is required for new HardwarePool '
       redirect_to :action => 'list'
+    elsif not (params[:is_organizational] or 
+               params[:is_network_map] or 
+               params[:is_host_collection])
+      flash[:notice] = 'Pool type is required for new HardwarePool '
+      redirect_to :action => 'list'
     else
-      @hardware_pool = HardwarePool.new( { :superpool_id => params[:superpool] } )
+
+      @hardware_pool = HardwarePool.new( { :superpool_id => params[:superpool],
+                                         :is_organizational => params[:is_organizational],
+                                         :is_network_map => params[:is_network_map],
+                                         :is_host_collection => params[:is_host_collection]} )
       set_perms(@hardware_pool.superpool)
       unless @is_admin
         flash[:notice] = 'You do not have permission to create a subpool '
@@ -54,8 +63,13 @@ class PoolController < ApplicationController
   end
 
   def create
-    unless params[:hardware_pool][:superpool_id]
+    if not params[:hardware_pool][:superpool_id]
       flash[:notice] = 'Parent pool is required for new HardwarePool '
+      redirect_to :action => 'list'
+    elsif not (params[:hardware_pool][:is_organizational] or 
+               params[:hardware_pool][:is_network_map] or 
+               params[:hardware_pool][:is_host_collection])
+      flash[:notice] = 'Pool type is required for new HardwarePool '
       redirect_to :action => 'list'
     else
       @hardware_pool = HardwarePool.new(params[:hardware_pool])
@@ -101,6 +115,48 @@ class PoolController < ApplicationController
         render :action => 'edit'
       end
     end
+  end
+
+  def make_pool
+    set_pool_type("is_organizational", 1, "Organizational Pool")
+  end
+  def unset_pool
+    set_pool_type("is_organizational", nil, "Organizational Pool")
+  end
+  def make_map
+    set_pool_type("is_network_map", 1, "Network Map")
+  end
+  def unset_map
+    set_pool_type("is_network_map", nil, "Network Map")
+  end
+  def make_collection
+    set_pool_type("is_host_collection", 1, "Host Collection")
+  end
+  def unset_collection
+    set_pool_type("is_host_collection", nil, "Host Collection")
+  end
+
+  def set_pool_type(method,val, label)
+    @hardware_pool = HardwarePool.find(params[:id])
+    set_perms(@hardware_pool)
+    if (not @is_admin)
+      flash[:notice] = 'You do not have permission to edit this pool '
+    elsif (not @hardware_pool.is_type_update_ok?(method, val))
+      operation = val.nil? ? "clear" : "set"
+      flash[:notice] = "#{operation}  #{label} is not a valid operation."
+    elsif @hardware_pool.send(method) == val
+      operation = val.nil? ? "cleared" : "set"
+      flash[:notice] = "Pool type #{label} is already #{operation}."
+    else
+      @hardware_pool.send(method+"=", val)
+      operation = val.nil? ? "clear" : "set"
+      if @hardware_pool.save
+        flash[:notice] = "Pool type #{operation}: #{label}."
+      else
+        flash[:notice] = "#{operation} #{label} failed."
+      end
+    end
+    redirect_to :action => 'show', :id => @hardware_pool
   end
 
   # move pool associations upward upon delete

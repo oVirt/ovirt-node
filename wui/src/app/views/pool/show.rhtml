@@ -1,5 +1,5 @@
 <div id="left">
-<h2><%= _("Manage Hardware Pool: #{@hardware_pool.name}") %></h2> 
+<h2><%= _("Manage #{@hardware_pool.get_type_label}: #{@hardware_pool.name}") %></h2> 
 
 
 <h3>Hosts</h3>
@@ -29,17 +29,41 @@
   <h2>Actions</h2>
   <%if @is_admin -%>
   <ul class="actions create">
-    <%if @hardware_pool.subpools.empty? -%>
+    <%if @hardware_pool.is_host_collection -%>
       <li class="action"><%= link_to 'New Quota', { :controller => 'quota', :action => 'new', :hardware_pool => @hardware_pool}, { :class => "create" } %></li>
     <% end -%>
-    <%if @hardware_pool.quotas.empty? -%>
-      <li class="action"><%= link_to 'New Subpool', { :action => 'new', :superpool => @hardware_pool}, { :class => "create" } %></li>
+    <%if @hardware_pool.sub_org_pool_ok? -%>
+      <li class="action"><%= link_to 'New Pool', { :action => 'new', :superpool => @hardware_pool, :is_organizational => 1}, { :class => "create" } %></li>
+    <% end -%>
+    <%if @hardware_pool.sub_network_map_ok? -%>
+      <li class="action"><%= link_to 'New Map', { :action => 'new', :superpool => @hardware_pool, :is_network_map => 1}, { :class => "create" } %></li>
+    <% end -%>
+    <%if @hardware_pool.sub_host_collection_ok? -%>
+      <li class="action"><%= link_to 'New Collection', { :action => 'new', :superpool => @hardware_pool, :is_host_collection => 1}, { :class => "create" } %></li>
     <% end -%>
     <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new', :hardware_pool_id => @hardware_pool}, { :class => "create" } %></li>
   </ul>
   <% end -%>
   <ul class="actions edit">
     <%if @is_admin -%>
+    <%if @hardware_pool.org_pool_ok? -%>
+      <li class="action"><%= link_to 'Make this a Pool', { :action => 'make_pool', :id => @hardware_pool}, { :class => "edit" } %></li>
+    <% end -%>
+    <%if @hardware_pool.unset_org_pool_ok? -%>
+      <li class="action"><%= link_to 'Revoke Pool status', { :action => 'unset_pool', :id => @hardware_pool}, { :class => "edit" } %></li>
+    <% end -%>
+    <%if @hardware_pool.network_map_ok? -%>
+      <li class="action"><%= link_to 'Make this a Map', { :action => 'make_map', :id => @hardware_pool}, { :class => "edit" } %></li>
+    <% end -%>
+    <%if @hardware_pool.unset_network_map_ok? -%>
+      <li class="action"><%= link_to 'Revoke Map status', { :action => 'unset_map', :id => @hardware_pool}, { :class => "edit" } %></li>
+    <% end -%>
+    <%if @hardware_pool.host_collection_ok? -%>
+      <li class="action"><%= link_to 'Make this a Collection', { :action => 'make_collection', :id => @hardware_pool}, { :class => "edit" } %></li>
+    <% end -%>
+    <%if @hardware_pool.unset_host_collection_ok? -%>
+      <li class="action"><%= link_to 'Revoke Collection status', { :action => 'unset_collection', :id => @hardware_pool}, { :class => "edit" } %></li>
+    <% end -%>
     <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @hardware_pool}, { :class => "edit" } %></li>
     <li class="action"><%= link_to 'Add Host', { :controller => 'host', :action => 'list', :attach_to_pool => @hardware_pool}, { :class => "edit" } %></li>
     <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_pool => @hardware_pool }, {:class => "edit" } %></li>
