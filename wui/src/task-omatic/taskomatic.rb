@@ -16,12 +16,15 @@ require 'socket'
 require 'models/vm.rb'
 require 'models/task.rb'
 require 'models/host.rb'
+require 'models/hardware_pool.rb'
+require 'models/permission.rb'
 require 'models/storage_volume.rb'
-require 'models/user.rb'
 require 'models/quota.rb'
 
 $stdout = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
 $stderr = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
+
+ENV['KRB5CCNAME'] = '/usr/share/invirt-wui/ovirt-cc'
 
 def database_configuration
   YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
@@ -188,9 +191,16 @@ ActiveRecord::Base.establish_connection(
 def create_vm(task)
   puts "create_vm"
 
-  # FIXME: we need some sort of flag to say whether we will boot to the network,
-  # disk, etc.
-  #start_vm(task, true)
+  begin
+    vm = findVM(task, false)
+  rescue
+    return
+  end
+
+  if vm.state != Vm::STATE_PENDING
+    setTaskState(task, Task::STATE_FAILED, "VM not pending")
+    return
+  end
 
   setVmState(vm, Vm::STATE_CREATING)
   setTaskState(task, Task::STATE_RUNNING)
@@ -270,7 +280,7 @@ def shutdown_vm(task)
   vm.save
 end
 
-def start_vm(task, first_boot = nil)
+def start_vm(task)
   puts "start_vm"
 
   # here, we are given an id for a VM to start
@@ -317,7 +327,7 @@ def start_vm(task, first_boot = nil)
     # OK, now that we found the VM, go looking in the hardware_pool
     # hosts to see if there is a host that will fit these constraints
     host = nil
-    vm.quota.hardware_pools.hosts.each do |curr|
+    vm.quota.hardware_pool.hosts.each do |curr|
       if curr.num_cpus >= vm.num_vcpus_allocated and curr.memory >= vm.memory_allocated
         host = curr
         break
@@ -352,15 +362,9 @@ def start_vm(task, first_boot = nil)
 
     # OK, we found a host that will work; now let's build up the XML
     
-    if first_boot
-      bootdev = "network"
-    else
-      bootdev = "hd"
-    end
-
     # FIXME: get rid of the hardcoded bridge
     xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
-                        vm.memory_used, vm.num_vcpus_allocated, bootdev,
+                        vm.memory_used, vm.num_vcpus_allocated, vm.boot_device,
                         vm.vnic_mac_addr, "ovirtbr0", storagedevs)
 
     begin
@@ -387,6 +391,7 @@ def start_vm(task, first_boot = nil)
   vm.state = Vm::STATE_RUNNING
   vm.memory_used = vm.memory_allocated
   vm.num_vcpus_used = vm.num_vcpus_allocated
+  vm.boot_device = Vm::BOOT_DEV_HD
   vm.save
 end
 
@@ -634,7 +639,7 @@ pid = fork do
     krb5 = Krb5.new
     default_realm = krb5.get_default_realm
     krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/ovirt.keytab')
-    krb5.cache
+    krb5.cache(ENV['KRB5CCNAME'])
 
     Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
       case task.action
@@ -654,9 +659,8 @@ pid = fork do
       task.save
     end
     
-    # and now we can destroy the credentials
-    krb5.destroy
-    krb5.close
+    # we could destroy credentials, but another process might be using them (in
+    # particular, host-browser).  Just leave them around, it shouldn't hurt
 
     $stdout.flush
     sleep 5

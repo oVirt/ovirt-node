@@ -44,25 +44,11 @@
 #include <avahi-common/malloc.h>
 #include <avahi-common/error.h>
 
-#include <libvirt/libvirt.h>
-#include <libvirt/virterror.h>
-
 #ifndef DBWRITER_PATH
 #define DBWRITER_PATH "./dbwriter.rb"
 #endif
 
 static AvahiSimplePoll *simple_poll = NULL;
-
-static void ignoreVirtRemoteError(void *userData, virErrorPtr error)
-{
-  if ((userData != NULL) || (error == NULL))
-    return;
-
-  if (error->code == VIR_ERR_SYSTEM_ERROR)
-    return;
-
-  virDefaultErrorFunc(error);
-}
 
 static void usage(void)
 {
@@ -240,9 +226,6 @@ int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[])
     if ((argc - optind) != 0) {
       usage();
     }
-
-    virInitialize();
-    virSetErrorFunc(NULL, ignoreVirtRemoteError);
 
     if (daemon_mode) {
         daemonize();
