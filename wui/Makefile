@@ -2,8 +2,8 @@ VERSION		= $(shell echo `awk '{ print $$1 }' version`)
 RELEASE		= $(shell echo `awk '{ print $$2 }' version`)
 NEWRELEASE	= $(shell echo $$(($(RELEASE) + 1)))
 
-SPEC_FILE	= invirt-wui.spec
-NAME		= invirt-wui
+SPEC_FILE	= ovirt-wui.spec
+NAME		= ovirt-wui
  
 NV		= $(NAME)-$(VERSION)
 RPM_FLAGS	=	--define "_topdir	%(pwd)/rpm-build" \
@@ -26,8 +26,8 @@ setversion:
 
 
 clean:
-	-rm -f invirt*.gz invirt*.rpm 
-	-rm -rf invirt-wui-* dist build
+	-rm -f ovirt*.gz ovirt*.rpm 
+	-rm -rf ovirt-wui-* dist build
 
 genlangs:
 	cd src; rake updatepo; rake makemo
@@ -49,5 +49,5 @@ rpms: tar
 
 # convience method to simulate make install, not for production use
 install: rpms
-	rpm -Uvh rpm-build/invirt-wui-$(VERSION)-$(RELEASE).fc7.noarch.rpm --force
-	/sbin/service invirt-wui restart	
+	rpm -Uvh rpm-build/ovirt-wui-$(VERSION)-$(RELEASE).fc7.noarch.rpm --force
+	/sbin/service ovirt-wui restart	

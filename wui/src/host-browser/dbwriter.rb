@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 $: << "../app"
-$: << "/usr/share/invirt-wui/app"
+$: << "/usr/share/ovirt-wui/app"
 
 require 'rubygems'
 require 'kerberos'
@@ -13,10 +13,10 @@ require 'models/host.rb'
 require 'models/hardware_pool.rb'
 require 'models/permission.rb'
 
-ENV['KRB5CCNAME'] = '/usr/share/invirt-wui/ovirt-cc'
+ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
 
 def database_configuration
-  YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
+  YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
 end
 
 if ARGV.length != 1
@@ -26,7 +26,7 @@ end
 # make sure we get our credentials up-front
 krb5 = Krb5.new
 default_realm = krb5.get_default_realm
-krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/ovirt.keytab')
+krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
 krb5.cache(ENV['KRB5CCNAME'])
 
 begin

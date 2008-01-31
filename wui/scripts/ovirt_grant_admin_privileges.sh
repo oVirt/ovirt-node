@@ -1,4 +1,4 @@
 #!/bin/bash
-INVIRT_DIR=/usr/share/invirt-wui
+OVIRT_DIR=/usr/share/ovirt-wui
 
-$INVIRT_DIR/script/grant_admin_privileges $*
+$OVIRT_DIR/script/grant_admin_privileges $*

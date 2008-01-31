@@ -1,19 +1,19 @@
 #!/bin/bash
 #
 #
-# invirt-wui       startup script for invirt-wui
+# ovirt-wui       startup script for ovirt-wui
 #
 # chkconfig: - 85 15
-# description: invirt-wui is the web front end for invirt.
+# description: ovirt-wui is the web front end for ovirt.
 #              
 
-INVIRT_DIR=/usr/share/invirt-wui
-MONGREL_LOG=/var/log/invirt-wui/mongrel.log
-MONGREL_PID=/var/run/invirt-wui/mongrel.pid
+OVIRT_DIR=/usr/share/ovirt-wui
+MONGREL_LOG=/var/log/ovirt-wui/mongrel.log
+MONGREL_PID=/var/run/ovirt-wui/mongrel.pid
 ADDR=127.0.0.1
 RAILS_ENVIRONMENT=production
-USER=invirt
-GROUP=invirt
+USER=ovirt
+GROUP=ovirt
 export RAILS_GEM_VERSION=2.0.1
 
 RETVAL=0
@@ -21,11 +21,11 @@ RETVAL=0
 . /etc/init.d/functions
 
 start() {
-    echo -n "Starting invirt-wui: "
+    echo -n "Starting ovirt-wui: "
 
-    mongrel_rails start -c $INVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
+    mongrel_rails start -c $OVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID -a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP -d
     RETVAL=$?
-    if [ $RETVAL -eq 0 ] && touch /var/lock/subsys/invirt-wui ; then
+    if [ $RETVAL -eq 0 ] && touch /var/lock/subsys/ovirt-wui ; then
 	echo_success
 	echo
     else
@@ -34,11 +34,11 @@ start() {
     fi
 
     echo -n "Starting host-browser: "
-    daemon $INVIRT_DIR/host-browser/host-browser
+    daemon $OVIRT_DIR/host-browser/host-browser
     echo
 
     echo -n "Starting taskomatic: "
-    daemon $INVIRT_DIR/task-omatic/taskomatic.rb
+    daemon $OVIRT_DIR/task-omatic/taskomatic.rb
     echo
 }
 
@@ -51,10 +51,10 @@ stop() {
     killproc host-browser
     echo
 
-    echo -n "Shutting down invirt-wui: "
-    mongrel_rails stop -c $INVIRT_DIR -P $MONGREL_PID
+    echo -n "Shutting down ovirt-wui: "
+    mongrel_rails stop -c $OVIRT_DIR -P $MONGREL_PID
     RETVAL=$?
-    if [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/invirt-wui ; then
+    if [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/ovirt-wui ; then
 	echo_success
 	echo
     else
@@ -75,7 +75,7 @@ case "$1" in
 	start
 	;;
     *)
-      echo "Usage: invirt-wui {start|stop|restart}"
+      echo "Usage: ovirt-wui {start|stop|restart}"
       exit 1
   ;;
 esac      

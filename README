@@ -19,4 +19,4 @@ On the freeipa server:
   > modprinc +requires_preauth libvirt/<hostname>@<realm>
   > ktadd -k /tmp/taskomatic.keytab libvirt/<hostname>@<realm>
   > quit
-# scp /tmp/taskomatic.keytab wui:/usr/share/invirt-wui/ovirt.keytab (where 'wui' is the name of the machine where the WUI is running)
+# scp /tmp/taskomatic.keytab wui:/usr/share/ovirt-wui/ovirt.keytab (where 'wui' is the name of the machine where the WUI is running)

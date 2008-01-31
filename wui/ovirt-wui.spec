@@ -1,8 +1,8 @@
 %define pbuild %{_builddir}/%{name}-%{version}
 %define app_root %{_datadir}/%{name}
 
-Summary: Invirt front end WUI
-Name: invirt-wui
+Summary: Ovirt front end WUI
+Name: ovirt-wui
 Source1: version
 Version: %(echo `awk '{ print $1 }' %{SOURCE1}`)
 Release: %(echo `awk '{ print $2 }' %{SOURCE1}`)%{?dist}
@@ -32,14 +32,14 @@ BuildRequires: ruby-gettext-package
 BuildRequires: rubygem(rake) >= 0.7
 BuildRequires: avahi-devel
 BuildRequires: libvirt-devel
-Provides: invirt-wui
+Provides: ovirt-wui
 BuildArch: i386 x86_64
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-URL: http://invirt.et.redhat.com
+URL: http://ovirt.et.redhat.com
 
 %description
 
-The webapp for Invirt.
+The webapp for Ovirt.
 
 %prep
 %setup -q
@@ -48,7 +48,7 @@ The webapp for Invirt.
 
 # make sure we override the DBWRITER_PATH with where it will actually be in
 # the end; yes, this is ugly
-CFLAGS="-DDBWRITER_PATH=\\\"/usr/share/invirt-wui/host-browser/dbwriter.rb\\\"" make -C src/host-browser
+CFLAGS="-DDBWRITER_PATH=\\\"/usr/share/ovirt-wui/host-browser/dbwriter.rb\\\"" make -C src/host-browser
 
 %install
 test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
@@ -81,7 +81,7 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/rails.log
 %{__rm} -f %{buildroot}%{app_root}/host-browser/*.c
 %{__rm} -f %{buildroot}%{app_root}/task-omatic/.gitignore
 
-%{__cp} -a %{pbuild}/scripts/invirt_create_db.sh %{buildroot}%{_bindir}
+%{__cp} -a %{pbuild}/scripts/ovirt_create_db.sh %{buildroot}%{_bindir}
 %{__cp} -a %{pbuild}/scripts/ovirt_grant_admin_privileges.sh %{buildroot}%{_bindir}
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
@@ -93,32 +93,32 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0755)
-%{_bindir}/invirt_create_db.sh
+%{_bindir}/ovirt_create_db.sh
 %{_bindir}/ovirt_grant_admin_privileges.sh
 %{_initrddir}/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %doc
-%attr(-, invirt, invirt) %{_localstatedir}/lib/%{name}
-%attr(-, invirt, invirt) %{_localstatedir}/run/%{name}
-%attr(-, invirt, invirt) %{_localstatedir}/log/%{name}
+%attr(-, ovirt, ovirt) %{_localstatedir}/lib/%{name}
+%attr(-, ovirt, ovirt) %{_localstatedir}/run/%{name}
+%attr(-, ovirt, ovirt) %{_localstatedir}/log/%{name}
 %{app_root}
-%dir /etc/invirt-wui
+%dir /etc/ovirt-wui
 %defattr(2770,postgres,postgres)
-%dir /etc/invirt-wui/db
+%dir /etc/ovirt-wui/db
 
 %pre
-/usr/sbin/groupadd -r invirt 2>/dev/null || :
-/usr/sbin/useradd -g invirt -c "Invirt" \
-    -s /sbin/nologin -r -d /var/invirt invirt 2> /dev/null || :
+/usr/sbin/groupadd -r ovirt 2>/dev/null || :
+/usr/sbin/useradd -g ovirt -c "Ovirt" \
+    -s /sbin/nologin -r -d /var/ovirt ovirt 2> /dev/null || :
 
 %post
-/sbin/chkconfig --add invirt-wui
+/sbin/chkconfig --add ovirt-wui
 exit 0
 
 %preun
 if [ "$1" = 0 ] ; then
-  /sbin/service invirt-wui stop > /dev/null 2>&1
-  /sbin/chkconfig --del invirt-wui
+  /sbin/service ovirt-wui stop > /dev/null 2>&1
+  /sbin/chkconfig --del ovirt-wui
 fi
 %changelog
 * Fri Nov  2 2007  <sseago@redhat.com> - 0.0.1-1
