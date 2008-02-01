@@ -6,8 +6,15 @@ class CreateQuotas < ActiveRecord::Migration
       t.column :total_vnics,                :integer
       t.column :total_storage,              :integer
       t.column :total_vms,                  :integer
+      t.column :hardware_pool_id,           :integer
+      t.column :vm_library_id,              :integer
     end
   end
+
+    execute "alter table quotas add constraint fk_quotas_hw_pools
+             foreign key (hardware_pool_id) references hardware_pools(id)"
+    execute "alter table quotas add constraint fk_quotas_vm_libraries
+             foreign key (vm_library_id) references vm_libraries(id)"
 
   def self.down
     drop_table :quotas
