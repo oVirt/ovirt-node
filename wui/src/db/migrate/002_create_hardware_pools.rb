@@ -6,10 +6,13 @@ class CreateHardwarePools < ActiveRecord::Migration
       t.column :is_network_map,     :integer
       t.column :is_host_collection, :integer
       t.column :superpool_id,       :integer
+      t.column :quota_id,           :integer
     end
 
     execute "alter table hardware_pools add constraint fk_hr_pool_superpool
              foreign key (superpool_id) references hardware_pools(id)"
+    execute "alter table hardware_pools add constraint fk_hr_pool_quotas
+             foreign key (quota_id) references quotas(id)"
     HardwarePool.create( :name=>'default', :is_organizational => 1)
   end
 
