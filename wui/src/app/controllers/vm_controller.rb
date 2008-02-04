@@ -13,10 +13,10 @@ class VmController < ApplicationController
   def show
     @vm = Vm.find(params[:id])
     @actions = @vm.get_action_and_label_list
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this vm: redirecting to top level'
-      redirect_to :controller => 'quota', :action => 'list'
+      redirect_to :controller => 'library', :action => 'list'
     end
   end
 
@@ -27,15 +27,15 @@ class VmController < ApplicationController
     uuid = ["%02x" * 4, "%02x" * 2, "%02x" * 2, "%02x" * 2, "%02x" * 6].join("-") % 
       Array.new(16) {|x| rand(0xff) }
     newargs = { 
-      :quota_id => params[:quota_id],
+      :vm_library_id => params[:vm_library_id],
       :vnic_mac_addr => mac.collect {|x| "%02x" % x}.join(":"),
       :uuid => uuid
     }
     @vm = Vm.new( newargs )
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create this vm'
-      redirect_to :controller => 'quota', :action => 'show', :id => @vm.quota_id
+      redirect_to :controller => 'library', :action => 'show', :id => @vm.vm_library_id
     end
   end
 
@@ -44,10 +44,10 @@ class VmController < ApplicationController
     #set boot device to network for first boot (install)
     params[:vm][:boot_device] = Vm::BOOT_DEV_NETWORK unless params[:vm][:boot_device]
     @vm = Vm.new(params[:vm])
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create this vm'
-      redirect_to :controller => 'quota', :action => 'show', :id => @vm.quota_id
+      redirect_to :controller => 'library', :action => 'show', :id => @vm.vm_library_id
     else
       if @vm.save
         @task = Task.new({ :user    => @user,
@@ -75,7 +75,7 @@ class VmController < ApplicationController
         else
           flash[:notice] = 'Error in inserting task.'
         end
-        redirect_to :controller => 'quota', :action => 'show', :id => @vm.quota
+        redirect_to :controller => 'library', :action => 'show', :id => @vm.vm_library
       else
         render :action => 'new'
       end
@@ -84,7 +84,7 @@ class VmController < ApplicationController
 
   def edit
     @vm = Vm.find(params[:id])
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this vm'
       redirect_to :action => 'show', :id => @vm
@@ -93,7 +93,7 @@ class VmController < ApplicationController
 
   def update
     @vm = Vm.find(params[:id])
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this vm'
       redirect_to :action => 'show', :id => @vm
@@ -125,19 +125,19 @@ class VmController < ApplicationController
 
   def destroy
     @vm = Vm.find(params[:id])
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @is_admin
       flash[:notice] = 'You do not have permission to delete this vm'
       redirect_to :action => 'show', :id => @vm
     else
-      quota = @vm.quota_id
+      vm_library = @vm.vm_library_id
       if ((@vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED) or
           (@vm.state == Vm::STATE_PENDING and @vm.get_pending_state == Vm::STATE_PENDING))
         @vm.destroy
-        if quota
-          redirect_to :controller => 'quota', :action => 'show', :id => quota
+        if vm_library
+          redirect_to :controller => 'library', :action => 'show', :id => vm_library
         else
-          redirect_to :controller => 'quota', :action => 'list'
+          redirect_to :controller => 'library', :action => 'list'
         end
       else
         flash[:notice] = "Vm must be stopped to destroy it."
@@ -148,7 +148,7 @@ class VmController < ApplicationController
 
   def vm_action
     @vm = Vm.find(params[:id])
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @is_admin
       flash[:notice] = 'You do not have permission to schedule actions for this vm'
       redirect_to :action => 'show', :id => @vm
@@ -172,7 +172,7 @@ class VmController < ApplicationController
 
   def cancel_queued_tasks
     @vm = Vm.find(params[:id])
-    set_perms(@vm.quota)
+    set_perms(@vm.vm_library)
     unless @is_admin
       flash[:notice] = 'You do not have permission to cancel actions for this vm'
       redirect_to :action => 'show', :id => @vm

@@ -4,10 +4,9 @@ class HardwarePool < ActiveRecord::Base
   has_many :hosts, :dependent => :nullify, :order => "id ASC"
   has_many :storage_volumes, :dependent => :nullify, :order => "id ASC"
   belongs_to :superpool, :class_name => "HardwarePool", :foreign_key => "superpool_id"
-  # a Hardware Pool should, at any one time, have only
-  # subpools _or_ quotas
   has_many :subpools, :class_name => "HardwarePool", :foreign_key => "superpool_id", :dependent => :nullify, :order => "id ASC"
-  has_many :quotas, :dependent => :destroy, :order => "id ASC"
+  has_many :vm_libraries, :dependent => :destroy, :order => "id ASC"
+  has_one :quota, :dependent => :destroy
 
 
   def self.list_for_user(user)
@@ -108,9 +107,8 @@ class HardwarePool < ActiveRecord::Base
     is_organizational and subpools.empty? and is_network_map and (not is_host_collection)
   end
   # HC must remain an HC unless it's also an NM and has no VM Libraries
-  # (quota bit changes to vm library when this is implemented)
   def unset_host_collection_ok?
-    is_network_map and quotas.empty? and is_host_collection
+    is_network_map and vm_libraries.empty? and is_host_collection
   end
 
   # a subpool can be an OP if:

@@ -34,7 +34,7 @@ class StorageController < ApplicationController
       set_perms(vm.hardware_pool)
       unless @can_monitor
         flash[:notice] = 'You do not have permission to view this storage volume list: redirecting to top level'
-        redirect_to :controller => 'quota', :action => 'list'
+        redirect_to :controller => 'library', :action => 'list'
       else
         @storage_volumes = StorageVolume.find(:all, :conditions => "hardware_pool_id=#{vm.hardware_pool_id}")
       end

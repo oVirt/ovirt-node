@@ -50,8 +50,8 @@
   </ul>
   <% end -%>
   <ul class="actions">
-    <% if @vm.quota -%>
-      <li class="action"><%= link_to 'Back to Quota', { :controller => 'quota', :action => 'show', :id => @vm.quota }, { :class => "list" } %></li>
+    <% if @vm.vm_library -%>
+      <li class="action"><%= link_to 'Back to Vm Library', { :controller => 'library', :action => 'show', :id => @vm.vm_library }, { :class => "list" } %></li>
     <% else -%>
       <li class="action"><%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %></li>
     <% end -%>

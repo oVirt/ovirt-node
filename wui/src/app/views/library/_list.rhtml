@@ -1,0 +1,26 @@
+<table class="listing">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>Virtual CPUs</th>
+    <th>Memory (MB)</th>
+    <th>Virtual NICs</th>
+    <th>VMs</th>
+    <th>Storage (GB)</th>
+  </tr>
+</thead>
+<tbody>
+<% for vm_library in vm_libraries %>
+<% resources = vm_library.full_resources %>
+<tr class="<%= cycle('odd','even', :name => vm_libraries) %>">
+  <td><%= link_to vm_library.name, { :controller => 'library', :action => 'show', :id => vm_library }, { :class => "show" } %></td>
+  <% resource_attributes = [:cpus, :memory_in_mb, :nics, :vms, :storage_in_gb] %>
+  <% for item in resource_attributes %>
+  <% total_limit = resources[:total][item]
+     total_limit = "unlimited" if total_limit.nil? %>
+  <td><%= resources[:allocated][:current][item] %> / <%= total_limit %></td>
+  <% end %>
+</tr>
+<% end %>
+<tbody>
+</table>

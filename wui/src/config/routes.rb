@@ -1,4 +1,5 @@
 ActionController::Routing::Routes.draw do |map|
+
   # The priority is based upon order of creation: first created -> highest priority.
   
   # Sample of regular route:
@@ -11,10 +12,10 @@ ActionController::Routing::Routes.draw do |map|
 
   # You can have the root of your site routed by hooking up '' 
   # -- just remember to delete public/index.html.
-  map.default '', :controller => 'quota', :action => 'list'
+  map.default '', :controller => 'library', :action => 'list'
 
-  map.login '/login', :controller => 'quota', :action => 'list'
-  map.logout '/logout', :controller => 'quota', :action => 'list'
+  map.login '/login', :controller => 'library', :action => 'list'
+  map.logout '/logout', :controller => 'library', :action => 'list'
 
   # Allow downloading Web Service WSDL as a file with an extension
   # instead of a file named 'wsdl'

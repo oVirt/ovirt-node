@@ -19,10 +19,10 @@
         <%= link_to permission.hardware_pool.name, 
 	    { :controller => 'pool', :action => 'show', 
 	      :id => permission.hardware_pool }, { :class => "show" } %>
-    <%elsif permission.quota_id -%>
-        <%= link_to permission.quota.name, 
+    <%elsif permission.vm_library_id -%>
+        <%= link_to permission.vm_library.name, 
 	    { :controller => 'pool', :action => 'show', 
-	      :id => permission.quota }, { :class => "show" } %>
+	      :id => permission.vm_library }, { :class => "show" } %>
     <%else -%>
       Empty
     <% end -%>

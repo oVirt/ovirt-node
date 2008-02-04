@@ -1,9 +1,9 @@
 <%= error_messages_for 'vm' %>
-<%  create_resources = @vm.quota.max_resources_for_vm(@vm) %>
-<%  start_resources = @vm.quota.available_resources_for_vm(@vm) %>
+<%  create_resources = @vm.vm_library.max_resources_for_vm(@vm) %>
+<%  start_resources = @vm.vm_library.available_resources_for_vm(@vm) %>
 
 <!--[form:vm]-->
-<%= hidden_field_with_label "Quota", 'vm', 'quota_id', @vm.quota.name  %>
+<%= hidden_field_with_label "Vm Library", 'vm', 'vm_library_id', @vm.vm_library.name  %>
 
 <%= text_field_with_label "UUID", "vm", "uuid" %>
 
