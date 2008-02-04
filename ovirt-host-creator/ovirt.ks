@@ -313,11 +313,33 @@ LoadPlugin cpu
         HostnameFormat "hostname"
 </Plugin>
 
-# FIXME: we want to multicast this eventually
 # this will be replaced with the DHCP option record "collectd-server"
 <Plugin network>
         Server "192.168.25.4"
 </Plugin>
 EOF
+
+# here, remove a bunch of files we don't need that are just eating up space.
+# it breaks rpm slightly, but it's not too bad
+
+# FIXME: ug, hard-coded paths.  This is going to break if we change to F-9
+# or upgrade certain packages.  Not quite sure how to handle it better
+
+# Sigh.  ntp has a silly dependency on perl because of auxiliary scripts which
+# we don't need to use.  Forcibly remove it here
+rpm -e --nodeps perl perl-libs
+
+rm -rf /usr/share/omf/fedora-release-notes
+rm -rf /usr/share/omf/about-fedora
+rm -rf /usr/share/gnome/help/fedora-release-notes
+rm -rf /usr/share/gnome/help/about-fedora
+rm -rf /usr/share/doc/HTML
+rm -rf /usr/share/locale
+find /usr/share/i18n/locales -type f ! -iname en_US -exec rm -f {} \;
+rm -rf /usr/share/man
+rm -rf /usr/lib64/gconv
+rm -rf /usr/share/doc
+rm -rf /usr/share/X11
+rm -f /usr/lib/locale/*
 
 %end

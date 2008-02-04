@@ -1,8 +1,8 @@
 #!/bin/bash
-DATABASE="invirt"
-PW_FILE="/etc/invirt-wui/db/dbaccess"  
-USERNAME="invirt"
-EXISTS_FILE="/etc/invirt-wui/db/exists" 
+DATABASE="ovirt"
+PW_FILE="/etc/ovirt-wui/db/dbaccess"  
+USERNAME="ovirt"
+EXISTS_FILE="/etc/ovirt-wui/db/exists" 
 
 #generate pg user password
 PASSWD=$(/usr/bin/pwgen -1 -n 8 -s) # create random password

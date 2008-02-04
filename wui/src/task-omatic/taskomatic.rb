@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 $: << "../app"
-$: << "/usr/share/invirt-wui/app"
+$: << "/usr/share/ovirt-wui/app"
 
 require 'rubygems'
 require 'active_record'
@@ -21,13 +21,13 @@ require 'models/permission.rb'
 require 'models/storage_volume.rb'
 require 'models/quota.rb'
 
-$stdout = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
-$stderr = File.new('/var/log/invirt-wui/taskomatic.log', 'a')
+$stdout = File.new('/var/log/ovirt-wui/taskomatic.log', 'a')
+$stderr = File.new('/var/log/ovirt-wui/taskomatic.log', 'a')
 
-ENV['KRB5CCNAME'] = '/usr/share/invirt-wui/ovirt-cc'
+ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
 
 def database_configuration
-  YAML::load(ERB.new(IO.read('/usr/share/invirt-wui/config/database.yml')).result)
+  YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
 end
 
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
@@ -638,7 +638,7 @@ pid = fork do
     # make sure we get our credentials up-front
     krb5 = Krb5.new
     default_realm = krb5.get_default_realm
-    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/invirt-wui/ovirt.keytab')
+    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
     krb5.cache(ENV['KRB5CCNAME'])
 
     Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
