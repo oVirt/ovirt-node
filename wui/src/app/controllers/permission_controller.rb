@@ -9,10 +9,10 @@ class PermissionController < ApplicationController
       @is_admin = @permission.hardware_pool.is_admin(@user)
       @can_monitor = @permission.hardware_pool.can_monitor(@user)
       @can_delegate = @permission.hardware_pool.can_delegate(@user)
-    elsif @permission.quota
-      @is_admin = @permission.quota.is_admin(@user)
-      @can_monitor = @permission.quota.can_monitor(@user)
-      @can_delegate = @permission.quota.can_delegate(@user)
+    elsif @permission.vm_library
+      @is_admin = @permission.vm_library.is_admin(@user)
+      @can_monitor = @permission.vm_library.can_monitor(@user)
+      @can_delegate = @permission.vm_library.can_delegate(@user)
     else
       @is_admin = false
       @can_monitor = false
@@ -23,8 +23,8 @@ class PermissionController < ApplicationController
   def redirect_to_parent
     if @permission.hardware_pool
       redirect_to :controller => 'pool', :action => 'show', :id => @permission.hardware_pool_id
-    elsif @permission.quota
-      redirect_to :controller => 'quota', :action => 'show', :id => @permission.quota_id
+    elsif @permission.vm_library
+      redirect_to :controller => 'library', :action => 'show', :id => @permission.vm_library_id
     else
       redirect_to :controller => 'pool', :action => 'list'
     end
@@ -42,7 +42,7 @@ class PermissionController < ApplicationController
 
   def new
     @permission = Permission.new( { :hardware_pool_id => params[:hardware_pool_id],
-                                    :quota_id => params[:quota_id]})
+                                    :vm_library_id => params[:vm_library_id]})
     set_perms
     # admin permission required to view permissions
     unless @can_delegate
@@ -74,15 +74,15 @@ class PermissionController < ApplicationController
       flash[:notice] = 'You do not have permission to delete this permission record'
       redirect_to_parent
     else
-      quota_id = @permission.quota_id
+      vm_library_id = @permission.vm_library_id
       pool_id =  @permission.hardware_pool_id
       if @permission.destroy
         if pool_id
           redirect_to :controller => 'pool', :action => 'show', :id => pool_id
-        elsif quota_id
-          redirect_to :controller => 'quota', :action => 'show', :id => quota_id
+        elsif vm_library_id
+          redirect_to :controller => 'library', :action => 'show', :id => vm_library_id
         else
-          redirect_to :controller => 'quota', :action => 'list'
+          redirect_to :controller => 'library', :action => 'list'
         end
       end
     end

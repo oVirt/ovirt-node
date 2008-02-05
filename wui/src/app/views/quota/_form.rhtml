@@ -1,9 +1,8 @@
 <%= error_messages_for 'quota' %>
 
 <!--[form:quota]-->
-<%= hidden_field_with_label "Hardware Pool", 'quota', 'hardware_pool_id', @quota.hardware_pool.name  %>
-
-<%= text_field_with_label "Name", 'quota', 'name'  %>
+<%= hidden_field_with_label "Hardware Pool", 'quota', 'hardware_pool_id', @quota.hardware_pool.name if @quota.hardware_pool  %>
+<%= hidden_field_with_label "VM Library", 'quota', 'vm_library_id', @quota.vm_library.name if @quota.vm_library  %>
 
 <%= text_field_with_label "Total Virtual CPUs", 'quota', 'total_vcpus'  %>
 
@@ -11,7 +10,7 @@
 
 <%= text_field_with_label "Total Virtual NICs", 'quota', 'total_vnics'  %>
 
-<%= text_field_with_label "Total VMs (0 is unlimited)", 'quota', 'total_vms'  %>
+<%= text_field_with_label "Total VMs", 'quota', 'total_vms'  %>
 
 <%= text_field_with_label "Total Storage (GB)", 'quota', 'total_storage_in_gb'  %>
 <!--[eoform:quota]-->

@@ -1,7 +1,7 @@
 require 'util/ovirt'
 
 class Vm < ActiveRecord::Base
-  belongs_to :quota
+  belongs_to :vm_library
   belongs_to :host
   has_many :tasks, :dependent => :destroy, :order => "id DESC"
   has_and_belongs_to_many :storage_volumes
@@ -134,11 +134,11 @@ class Vm < ActiveRecord::Base
   #taskomatic should set use_pending_values to false
   def resources_for_start?(use_pending_values = true)
     return_val = true
-    resources = quota.available_resources_for_vm(self, use_pending_values)
-    return_val = false unless not(memory_allocated) or memory_allocated <= resources[:memory]
-    return_val = false unless not(num_vcpus_allocated) or num_vcpus_allocated <= resources[:cpus]
-    return_val = false unless resources[:nics] >= 1
-    return_val = false unless (quota.unlimited_vms? or resources[:vms] >= 1)
+    resources = vm_library.available_resources_for_vm(self, use_pending_values)
+    return_val = false unless not(memory_allocated) or resources[:memory].nil? or memory_allocated <= resources[:memory]
+    return_val = false unless not(num_vcpus_allocated) or resources[:cpus].nil? or num_vcpus_allocated <= resources[:cpus]
+    return_val = false unless resources[:nics].nil? or resources[:nics] >= 1
+    return_val = false unless (resources[:vms].nil? or resources[:vms] >= 1)
 
     # no need to enforce storage here since starting doesn't increase storage allocation
     return return_val
@@ -146,19 +146,20 @@ class Vm < ActiveRecord::Base
 
   protected
   def validate
-    resources = quota.max_resources_for_vm(self)
-    errors.add("memory_allocated_in_mb", "violates quota") unless not(memory_allocated) or memory_allocated <= resources[:memory]
-    errors.add("num_vcpus_allocated", "violates quota") unless not(num_vcpus_allocated) or num_vcpus_allocated <= resources[:cpus]
-    errors.add_to_base("No available nics in quota") unless resources[:nics] >= 1
+    resources = vm_library.max_resources_for_vm(self)
+    errors.add("memory_allocated_in_mb", "violates quota") unless not(memory_allocated) or resources[:memory].nil? or memory_allocated <= resources[:memory]
+    errors.add("num_vcpus_allocated", "violates quota") unless not(num_vcpus_allocated) or resources[:cpus].nil? or num_vcpus_allocated <= resources[:cpus]
+    errors.add_to_base("No available nics in quota") unless resources[:nics].nil? or resources[:nics] >= 1
     # no need to validate VM limit here
     # need to enforce storage differently since obj is saved first
     storage_size = 0
-    @storage_volumes_pending.each { |volume| storage_size += volume.size } if @storage_volumes_pending if defined? @storage_volumes_pending
-    
-    errors.add("storage_volumes", "violates quota") unless storage_size <= resources[:storage]
-    if errors.empty? and defined? @storage_volumes_pending
-      self.storage_volumes=@storage_volumes_pending
-      @storage_volumes_pending = []
+    unless resources[:storage].nil?
+      @storage_volumes_pending.each { |volume| storage_size += volume.size } if @storage_volumes_pending if defined? @storage_volumes_pending
+      errors.add("storage_volumes", "violates quota") unless storage_size <= resources[:storage]
+      if errors.empty? and defined? @storage_volumes_pending
+        self.storage_volumes=@storage_volumes_pending
+        @storage_volumes_pending = []
+      end
     end
   end
 

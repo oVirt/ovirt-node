@@ -5,10 +5,10 @@ class TaskController < ApplicationController
 
   def show
     @task = Task.find(params[:id])
-    set_perms(@task.vm.quota)
+    set_perms(@task.vm.vm_library)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this task: redirecting to top level'
-      redirect_to :controller => 'quota', :action => 'list'
+      redirect_to :controller => 'library', :action => 'list'
     end
 
   end

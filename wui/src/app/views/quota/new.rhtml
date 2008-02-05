@@ -1,5 +1,5 @@
 <div id="left">
-<h2><%= _("New User Quota") %></h2>
+<h2><%= _("New Quota") %></h2>
 
 <% form_tag :action => 'create' do %>
   <%= render :partial => 'form' %>
@@ -11,6 +11,7 @@
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions">
-    <li class="action"><%= link_to 'Your Quotas', { :action => 'list' }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "Back to #{@quota.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @quota.hardware_pool_id }, { :class => "show" } if @quota.hardware_pool %></li>
+    <li class="action"><%= link_to "Back to #{@quota.vm_library.name}", { :controller => 'library', :action => 'show', :id => @quota.vm_library_id }, { :class => "show" } if @quota.vm_library %></li>
   </ul>
 </div>

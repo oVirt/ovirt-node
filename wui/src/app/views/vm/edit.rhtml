@@ -12,8 +12,8 @@
   <h2>Actions</h2>
   <ul class="actions">
     <li class="action"><%= link_to 'Show', { :action => 'show', :id => @vm }, { :class => "show" } %></li>
-    <%if @vm.quota  -%>
-       <li class="action"><%= link_to 'Back to Quota', { :controller => 'quota', :action => 'show', :id => @vm.quota_id }, { :class => "show" } %></li>
+    <%if @vm.vm_library  -%>
+       <li class="action"><%= link_to 'Back to Vm Library', { :controller => 'library', :action => 'show', :id => @vm.vm_library_id }, { :class => "show" } %></li>
     <% end  -%>
     <%if @vm.host  -%>
       <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @vm.host_id }, { :class => "show"  } %></li>

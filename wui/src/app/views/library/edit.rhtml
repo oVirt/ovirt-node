@@ -1,0 +1,16 @@
+<div id="left">
+<h2><%= _("Editing VM Library") %></h2>
+
+<% form_tag :action => 'update', :id => @vm_library do %>
+  <%= render :partial => 'form' %>
+  <%= submit_tag 'Edit' %>
+<% end %>
+
+</div>
+
+<div id="right">
+  <h2>Actions</h2>
+  <ul class="actions">
+    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @vm_library }, { :class => "show" } %></li>
+  </ul>
+</div>

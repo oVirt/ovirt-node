@@ -13,9 +13,9 @@
 <%= render :partial => "list", :locals => { :hardware_pools => @hardware_pool.subpools } %>
 <% end -%>
 
-<%unless @hardware_pool.quotas.empty? -%>
-<h3>Quotas</h3>
-<%= render :partial => "/quota/list", :locals => { :quotas => @hardware_pool.quotas } %>
+<%unless @hardware_pool.vm_libraries.empty? -%>
+<h3>VM Libraries</h3>
+<%= render :partial => "/library/list", :locals => { :vm_libraries => @hardware_pool.vm_libraries } %>
 <% end -%>
 
 <%if @is_admin -%>
@@ -30,7 +30,7 @@
   <%if @is_admin -%>
   <ul class="actions create">
     <%if @hardware_pool.is_host_collection -%>
-      <li class="action"><%= link_to 'New Quota', { :controller => 'quota', :action => 'new', :hardware_pool => @hardware_pool}, { :class => "create" } %></li>
+      <li class="action"><%= link_to 'New VM Library', { :controller => 'library', :action => 'new', :hardware_pool => @hardware_pool}, { :class => "create" } %></li>
     <% end -%>
     <%if @hardware_pool.sub_org_pool_ok? -%>
       <li class="action"><%= link_to 'New Pool', { :action => 'new', :superpool => @hardware_pool, :is_organizational => 1}, { :class => "create" } %></li>
