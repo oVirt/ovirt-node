@@ -1,0 +1,134 @@
+When you first download the appliance, you'll need to make some modifications
+to get it on the network.  We suggest giving it a static IP address.  To do
+this, you'll need to edit a few files:
+
+1.  /etc/sysconfig/network-scripts/ifcfg-eth0
+This file will contain your static IP addresses.  Something like the following:
+
+# Realtek Semiconductor Co., Ltd. RTL-8139/8139C/8139C+
+DEVICE=eth0
+BOOTPROTO=static
+HWADDR=00:16:3E:08:91:E9
+IPADDR=192.168.25.2
+NETMASK=255.255.255.0
+ONBOOT=yes
+
+2.  /etc/resolv.conf
+This file will have your name servers.  Something like the following:
+
+search boston.redhat.com redhat.com lab.boston.redhat.com
+nameserver 172.16.76.10
+nameserver 172.16.76.20
+nameserver 172.16.52.28
+
+3.  /etc/sysconfig/network
+This file will have your overall networking setup, including your default
+gateway.  Something like the following:
+
+NETWORKING=yes
+HOSTNAME=localhost.localdomain
+GATEWAY=192.168.25.1
+
+
+This document assumes that you've downloaded the Ovirt WUI appliance, and
+have it up and running on your public network.  It also assumes you are
+logged into the appliance as root, since many of the steps require root
+access.
+
+There are a number of steps necessary here to get things up and running, so
+let's get started:
+
+1.  First, we need to setup dhcpd on this server, since this will act as
+the DHCP server for all of the Ovirt host machines.  You can start with the
+following as an example:
+
+-------------------------<cut here>----------------------------------------
+allow booting;
+allow bootp;
+ddns-update-style interim;
+ignore client-updates;
+
+option iscsi-servers code 200 = array of ip-address;
+option ovirt-tftp-server code 201 = ip-address;
+option libvirt-auth-method code 202 = text;
+option collectd-server code 203 = ip-address;
+
+subnet 192.168.25.0 netmask 255.255.255.0 {
+        option domain-name "redhat.com";
+        option domain-name-servers 172.16.76.10,172.16.76.20;
+        next-server 192.168.25.2;
+        option routers 192.168.25.1;
+        option iscsi-servers 192.168.25.1;
+        option ovirt-tftp-server 192.168.25.2;
+        option collectd-server 192.168.25.4;
+        option libvirt-auth-method "krb5:192.168.25.2";
+	range 192.168.25.3 192.168.25.250;
+        filename "pxelinux.0";
+}
+-------------------------<cut here>----------------------------------------
+
+Make sure to replace all of the relevant domain names, IP address, subnets, etc.
+to match your setup.  Note that you should *not* change the
+"filename pxelinux.0" or any of the "option <num> code" lines near the top
+unless you really know what you are doing.
+
+2)  # chkconfig dhcpd on ; service dhcpd restart
+
+3)  Next we need to setup the FreeIPA (http://freeipa.org) server.  This is
+the heart of the authentication and encryption system that Ovirt utilizes.
+You should run:
+
+# /usr/sbin/ipa-server-install
+
+This will ask you a number of questions; the page at:
+http://www.freeipa.com/page/InstallAndDeploy
+
+can give you more details about what the questions mean.  Remember your
+realm name; it will be very important later on.
+
+Server host name [perf2.perf.redhat.com]: You can usually accept the default,
+       	    	 			  unless it says localhost.localdomain.
+					  You'll need to make sure that the IP
+					  address you are using for the server
+					  resolves to a stable DNS name.
+
+Please provide a realm name [PERF.REDHAT.COM]: This can be anything you want, 
+       	       	       	    		       except it cannot conflict with
+					       another kerberos server on the
+					       same network
+
+Directory Manager password: 
+Password (confirm): 
+
+IPA admin password: 
+Password (confirm): 
+
+The above two passwords will be important; it is best to make them the
+same password, and to make sure you remember that password for later.
+
+4)  Assuming that your ipa-server-install went well, we can now generate
+some of the principals you will need.  From the /root directory on the
+appliance, run:
+
+# ./create_default_principals.py
+
+5)  For now, you'll need to create principals for each of the Ovirt hosts
+that will connect to the WUI.  This will become automated later.  This means
+that the Ovirt hosts really need stable DNS entries; the easiest way to do
+this is to find out what their MAC address is and add a "fixed-address" section
+to the dhcpd.conf:
+
+host perf201 {
+     fixed-address 192.168.25.78;
+     hardware ethernet 00:16:3e:76:45:ea;
+}
+
+(remember to restart dhcpd if you change things)
+
+Then for each host you are going to attach, you should run from the /root
+directory:
+
+# ./add_host_principal.py perf201.perf.redhat.com
+
+6)  That should be it.  Assuming you have all the above setup properly, it's
+best at this point to reboot your appliance to get all of the services running.
