@@ -86,7 +86,7 @@ function confirm_and_submit(item){
   <% end -%>
   <ul class="actions">
     <li class="action"><%= link_to 'Your VM Libraries', { :action => 'list' }, { :class => "list" } %></li>
-    <li class="action"><%= link_to "to #{@vm_library.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @vm_library.hardware_pool }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "to #{@vm_library.host_collection.name}", { :controller => 'pool', :action => 'show', :id => @vm_library.host_collection }, { :class => "list" } %></li>
   </ul>
   <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
 

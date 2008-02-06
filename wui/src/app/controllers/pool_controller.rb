@@ -10,7 +10,7 @@ class PoolController < ApplicationController
 
   def list
     @user = get_login_user
-    @default_pool = HardwarePool.get_default_pool
+    @default_pool = MotorPool.find(:first)
     set_perms(@default_pool)
     @hardware_pools = HardwarePool.list_for_user(@user)
     @hosts = Set.new
@@ -43,17 +43,13 @@ class PoolController < ApplicationController
     if not params[:superpool]
       flash[:notice] = 'Parent pool is required for new HardwarePool '
       redirect_to :action => 'list'
-    elsif not (params[:is_organizational] or 
-               params[:is_network_map] or 
-               params[:is_host_collection])
+    elsif not (params[:pool_type] and 
+               [OrganizationalPool.name, NetworkMap.name, HostCollection.name].include?(params[:pool_type]))
       flash[:notice] = 'Pool type is required for new HardwarePool '
       redirect_to :action => 'list'
     else
-
-      @hardware_pool = HardwarePool.new( { :superpool_id => params[:superpool],
-                                         :is_organizational => params[:is_organizational],
-                                         :is_network_map => params[:is_network_map],
-                                         :is_host_collection => params[:is_host_collection]} )
+      @hardware_pool = HardwarePool.factory(params[:pool_type], 
+                                            { :superpool_id => params[:superpool]} )
       set_perms(@hardware_pool.superpool)
       unless @is_admin
         flash[:notice] = 'You do not have permission to create a subpool '
@@ -66,13 +62,12 @@ class PoolController < ApplicationController
     if not params[:hardware_pool][:superpool_id]
       flash[:notice] = 'Parent pool is required for new HardwarePool '
       redirect_to :action => 'list'
-    elsif not (params[:hardware_pool][:is_organizational] or 
-               params[:hardware_pool][:is_network_map] or 
-               params[:hardware_pool][:is_host_collection])
+    elsif not (params[:pool_type] and 
+               [OrganizationalPool.name, NetworkMap.name, HostCollection.name].include?(params[:pool_type]))
       flash[:notice] = 'Pool type is required for new HardwarePool '
       redirect_to :action => 'list'
     else
-      @hardware_pool = HardwarePool.new(params[:hardware_pool])
+      @hardware_pool = HardwarePool.factory(params[:pool_type], params[:hardware_pool])
       set_perms(@hardware_pool.superpool)
       unless @is_admin
         flash[:notice] = 'You do not have permission to create a subpool '
@@ -117,49 +112,7 @@ class PoolController < ApplicationController
     end
   end
 
-  def make_pool
-    set_pool_type("is_organizational", 1, "Organizational Pool")
-  end
-  def unset_pool
-    set_pool_type("is_organizational", nil, "Organizational Pool")
-  end
-  def make_map
-    set_pool_type("is_network_map", 1, "Network Map")
-  end
-  def unset_map
-    set_pool_type("is_network_map", nil, "Network Map")
-  end
-  def make_collection
-    set_pool_type("is_host_collection", 1, "Host Collection")
-  end
-  def unset_collection
-    set_pool_type("is_host_collection", nil, "Host Collection")
-  end
-
-  def set_pool_type(method,val, label)
-    @hardware_pool = HardwarePool.find(params[:id])
-    set_perms(@hardware_pool)
-    if (not @is_admin)
-      flash[:notice] = 'You do not have permission to edit this pool '
-    elsif (not @hardware_pool.is_type_update_ok?(method, val))
-      operation = val.nil? ? "clear" : "set"
-      flash[:notice] = "#{operation}  #{label} is not a valid operation."
-    elsif @hardware_pool.send(method) == val
-      operation = val.nil? ? "cleared" : "set"
-      flash[:notice] = "Pool type #{label} is already #{operation}."
-    else
-      @hardware_pool.send(method+"=", val)
-      operation = val.nil? ? "clear" : "set"
-      if @hardware_pool.save
-        flash[:notice] = "Pool type #{operation}: #{label}."
-      else
-        flash[:notice] = "#{operation} #{label} failed."
-      end
-    end
-    redirect_to :action => 'show', :id => @hardware_pool
-  end
-
-  # move pool associations upward upon delete
+  # pool must be have no subpools empty to delete
   def destroy
     pool = HardwarePool.find(params[:id])
     set_perms(pool)
@@ -168,7 +121,13 @@ class PoolController < ApplicationController
       redirect_to :action => 'show', :id => pool
     else
       superpool = pool.superpool
-      if superpool
+      if not(superpool)
+        flash[:notice] = "You can't delete the top level HW pool."
+        redirect_to :action => 'show', :id => pool
+      elsif not(subpools.empty?)
+        flash[:notice] = "You can't delete a pool with subpools."
+        redirect_to :action => 'show', :id => pool
+      else
         pool.hosts.each do |host| 
           host.hardware_pool_id=superpool.id
           host.save
@@ -177,16 +136,9 @@ class PoolController < ApplicationController
           vol.hardware_pool_id=superpool.id
           vol.save
         end
-        pool.subpools.each do |subpool| 
-          subpool.superpool_id=superpool.id
-          subpool.save
-        end
         # what about quotas -- for now they're deleted
         HardwarePool.find(params[:id]).destroy
         redirect_to :action => 'show', :id => superpool
-      else
-        flash[:notice] = "You can't delete the top level HW pool."
-        redirect_to :action => 'show', :id => pool
       end
     end
   end

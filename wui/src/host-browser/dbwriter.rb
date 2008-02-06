@@ -86,7 +86,7 @@ if $host == nil
            "arch" => info.model,
            "memory" => info.memory,
            "is_disabled" => 0,
-           "hardware_pool" => HardwarePool.get_default_pool
+           "hardware_pool" => MotorPool.find(:first)
            ).save
 
   ipaddr = get_ip(ARGV[0])

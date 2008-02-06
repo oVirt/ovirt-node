@@ -11,6 +11,6 @@
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions">
-    <li class="action"><%= link_to "back to #{@vm_library.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @vm_library.hardware_pool_id }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "back to #{@vm_library.host_collection.name}", { :controller => 'pool', :action => 'show', :id => @vm_library.host_collection }, { :class => "list" } %></li>
   </ul>
 </div>

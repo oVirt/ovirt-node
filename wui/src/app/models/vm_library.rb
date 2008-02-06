@@ -2,7 +2,7 @@ class VmLibrary < ActiveRecord::Base
   has_many :permissions, :dependent => :destroy, :order => "id ASC"
 
   has_many :vms, :dependent => :nullify, :order => "id ASC"
-  belongs_to :hardware_pool
+  belongs_to :host_collection
   has_one :quota, :dependent => :destroy
 
 
@@ -25,8 +25,8 @@ class VmLibrary < ActiveRecord::Base
   def total_resources
     the_quota = quota
     if the_quota.nil?
-      pool = hardware_pool
-      while not(pool.nil?)
+      pool = host_collection
+      while not(pool.nil?) and (pool[:type] == HostCollection.name)
         if pool.quota
           the_quota = pool.quota
           pool = nil
@@ -108,10 +108,10 @@ class VmLibrary < ActiveRecord::Base
     end
     # creation is limited to total quota value or values from largest host
     memhost = Host.find(:first, :order => "memory DESC",
-                        :conditions => "hardware_pool_id = #{hardware_pool.id}")
+                        :conditions => "hardware_pool_id = #{host_collection.id}")
     host_mem_limit = (memhost.nil? ? 0 : memhost.memory)
     cpuhost = Host.find(:first, :order => "num_cpus DESC",
-                        :conditions => "hardware_pool_id = #{hardware_pool.id}")
+                        :conditions => "hardware_pool_id = #{host_collection.id}")
     host_cpu_limit = cpuhost.nil? ? 0 : cpuhost.num_cpus
     resources[:memory] = host_mem_limit if resources[:memory].nil? or host_mem_limit < resources[:memory]
     resources[:cpus] = host_cpu_limit if resources[:cpus].nil? or host_cpu_limit < resources[:cpus]
@@ -145,7 +145,7 @@ class VmLibrary < ActiveRecord::Base
       return true
     else
       # now check HW pool permissions
-      return hardware_pool.has_privilege(user, privilege)
+      return host_collection.has_privilege(user, privilege)
     end
   end
 end
