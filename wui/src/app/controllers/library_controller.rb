@@ -30,7 +30,7 @@ class LibraryController < ApplicationController
   def show
     @vm_library = VmLibrary.find(params[:id])
     set_perms(@vm_library)
-    @is_hwpool_admin = @vm_library.hardware_pool.is_admin(@user)
+    @is_hwpool_admin = @vm_library.host_collection.is_admin(@user)
     @action_values = [["Suspend", Task::ACTION_SUSPEND_VM],
                       ["Resume", Task::ACTION_RESUME_VM],
                       ["Save", Task::ACTION_SAVE_VM],
@@ -43,24 +43,24 @@ class LibraryController < ApplicationController
   end
 
   def new
-    @vm_library = VmLibrary.new( { :hardware_pool_id => params[:hardware_pool] } )
-    set_perms(@vm_library.hardware_pool)
+    @vm_library = VmLibrary.new( { :host_collection_id => params[:host_collection] } )
+    set_perms(@vm_library.host_collection)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create a VM library '
-      redirect_to :controller => 'pool', :action => 'show', :id => @vm_library.hardware_pool
+      redirect_to :controller => 'pool', :action => 'show', :id => @vm_library.host_collection
     end
   end
 
   def create
     @vm_library = VmLibrary.new(params[:vm_library])
-    set_perms(@vm_library.hardware_pool)
+    set_perms(@vm_library.host_collection)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create a VM library '
-      redirect_to :controller => 'pool', :action => 'show', :id => @vm_library.hardware_pool
+      redirect_to :controller => 'pool', :action => 'show', :id => @vm_library.host_collection
     else
       if @vm_library.save
         flash[:notice] = 'VM Library was successfully created.'
-        redirect_to :controller => 'pool', :action => 'show', :id => @vm_library.hardware_pool
+        redirect_to :controller => 'pool', :action => 'show', :id => @vm_library.host_collection
       else
         render :action => 'new'
       end
@@ -69,7 +69,7 @@ class LibraryController < ApplicationController
 
   def edit
     @vm_library = VmLibrary.find(params[:id])
-    set_perms(@vm_library.hardware_pool)
+    set_perms(@vm_library.host_collection)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this VM library '
       redirect_to :action => 'show', :id => @vm_library
@@ -78,7 +78,7 @@ class LibraryController < ApplicationController
 
   def update
     @vm_library = VmLibrary.find(params[:id])
-    set_perms(@vm_library.hardware_pool)
+    set_perms(@vm_library.host_collection)
     unless @is_admin
       flash[:notice] = 'You do not have permission to edit this VM library '
       redirect_to :action => 'show', :id => @vm_library
@@ -94,12 +94,12 @@ class LibraryController < ApplicationController
 
   def destroy
     @vm_library = VmLibrary.find(params[:id])
-    set_perms(@vm_library.hardware_pool)
+    set_perms(@vm_library.host_collection)
     unless @is_admin
       flash[:notice] = 'You do not have permission to delete this VM library '
       redirect_to :action => 'show', :id => @vm_library
     else
-      pool_id = @vm_library.hardware_pool_id
+      pool_id = @vm_library.host_collection_id
       @vm_library.destroy
       redirect_to :controller => 'pool', :action => 'show', :id => pool_id
     end

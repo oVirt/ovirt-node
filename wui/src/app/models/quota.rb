@@ -1,8 +1,8 @@
 require 'util/ovirt'
 
 class Quota < ActiveRecord::Base
-  # should belong_to _either_ a Hardware Pool _or_ a VM Library -- not both
-  belongs_to :hardware_pool
+  # should belong_to _either_ a Host Collection _or_ a VM Library -- not both
+  belongs_to :host_collection
   belongs_to :vm_library
 
   validates_presence_of :total_vcpus, :total_vmemory, :total_vnics, :total_storage
