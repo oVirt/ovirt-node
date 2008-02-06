@@ -256,7 +256,15 @@ if [ -n "$new_iscsi_servers" ]; then
         echo $s >> /etc/iscsi-servers.conf
     done
 fi
-if [ -n "$new_libvirt_auth_method" ]; then
+# NOTE that libvirt_auth_method is handled in the exit-hooks
+if [ -n "$new_collectd_server" ]; then
+   sed -i -e "s/Server.*/Server \"$new_collectd_server\"/" /etc/collectd.conf
+fi
+EOF
+chmod +x /etc/dhclient-ovirtbr0-up-hooks
+
+cat > /etc/dhclient-exit-hooks << \EOF
+if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
     METHOD=`echo $new_libvirt_auth_method | cut -d':' -f1`
     SERVER=`echo $new_libvirt_auth_method | cut -d':' -f2-`
     if [ $METHOD = "krb5" ]; then
@@ -265,12 +273,8 @@ if [ -n "$new_libvirt_auth_method" ]; then
         rm -f /etc/krb5.conf ; wget -q http://$SERVER/config/krb5.ini -O /etc/krb5.conf
     fi
 fi
-if [ -n "$new_collectd_server" ]; then
-   sed -i -e "s/Server.*/Server \"$new_collectd_server\"/" /etc/collectd.conf
-fi
 EOF
-
-chmod +x /etc/dhclient-ovirtbr0-up-hooks
+chmod +x /etc/dhclient-exit-hooks
 
 # make libvirtd listen on the external interfaces
 sed -i -e 's/#LIBVIRTD_ARGS="--listen"/LIBVIRTD_ARGS="--listen"/' /etc/sysconfig/libvirtd
