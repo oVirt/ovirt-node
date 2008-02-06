@@ -261,8 +261,8 @@ if [ -n "$new_libvirt_auth_method" ]; then
     SERVER=`echo $new_libvirt_auth_method | cut -d':' -f2-`
     if [ $METHOD = "krb5" ]; then
         mkdir -p /etc/libvirt
-        wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
-        rm -f /etc/krb5.conf ; wget -q http://$SERVER/$new_ip_address-krb5.conf -O /etc/krb5.conf
+        wget -q http://$SERVER/config/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
+        rm -f /etc/krb5.conf ; wget -q http://$SERVER/config/krb5.ini -O /etc/krb5.conf
     fi
 fi
 if [ -n "$new_collectd_server" ]; then
