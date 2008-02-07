@@ -61,6 +61,8 @@ collectd
 ruby-libvirt
 ruby-postgres
 ovirt-wui
+firefox
+xorg-x11-xauth
 -bittorrent
 -fetchmail
 -slrn
@@ -131,6 +133,15 @@ os.chmod(outname, 0644)
 EOF
 chmod +x /root/add_host_principal.py
 
+cat > /usr/share/ovirt-wui/psql.cmds << \EOF
+CREATE USER ovirt WITH PASSWORD 'v23zj59an';
+CREATE DATABASE ovirt;
+GRANT ALL PRIVILEGES ON DATABASE ovirt to ovirt;
+CREATE DATABASE ovirt_test;
+GRANT ALL PRIVILEGES ON DATABASE ovirt_test to ovirt;
+EOF
+chmod a+r /usr/share/ovirt-wui/psql.cmds
+
 cat > /etc/init.d/ovirt-app-first-run << \EOF
 #!/bin/bash
 #
@@ -149,7 +160,8 @@ start() {
 	echo "host all all 127.0.0.1 255.255.255.0 trust" >> /var/lib/pgsql/data/pg_hba.conf
 	service postgresql start
 
-	su - postgres -c "/usr/bin/createdb ovirt ; psql ovirt -c 'CREATE USER ovirt WITH PASSWORD \'v23zj59an\'; GRANT ALL PRIVILEGES ON DATABASE ovirt to ovirt; CREATE DATABASE ovirt_test; GRANT ALL PRIVILEGES ON DATABASE ovirt_test to ovirt;'"
+	su - postgres -c "/usr/bin/psql -f /usr/share/ovirt-wui/psql.cmds"
+
 	cd /usr/share/ovirt-wui ; rake db:migrate
 	/usr/bin/ovirt_grant_admin_privileges.sh admin
 }
@@ -168,14 +180,35 @@ EOF
 chmod +x /etc/init.d/ovirt-app-first-run
 chkconfig ovirt-app-first-run on
 
-sed -i -e 's/\(.*\)disable\(.*\)= yes/\1disable\2= no' /etc/xinetd.d/tftp
+sed -i -e 's/\(.*\)disable\(.*\)= yes/\1disable\2= no/' /etc/xinetd.d/tftp
+
+# set up the yum repos
+cat > /etc/yum.repos.d/freeipa.repo << \EOF
+[freeipa]
+name=FreeIPA Development
+baseurl=http://freeipa.com/downloads/devel/rpms/F7/x86_64/
+enabled=1
+gpgcheck=0
+EOF
+
+cat > /etc/yum.repos.d/ovirt.repo << \EOF
+[ovirt]
+name=Ovirt
+baseurl=http://ovirt.et.redhat.com/repos/ovirt/x86_64
+enabled=1
+gpgcheck=0
+EOF
 
 # remove the mod_auth_kerb, and make sure we get the one from freeipa
 rpm -e --nodeps mod_auth_kerb
-yum --disablerepo=* --enablerepo=freeipa install mod_auth_kerb
+yum -y --disablerepo=* --enablerepo=freeipa install mod_auth_kerb
 
 # with the new libvirt (0.4.0), make sure we we setup gssapi in the mech_list
 sed -i -e 's/mech_list: digest-md5/#mech_list: digest-md5/' /etc/sasl2/libvirt.conf
 sed -i -e 's/#mech_list: gssapi/mech_list: gssapi/' /etc/sasl2/libvirt.conf
+
+# for firefox, we need to add the following to ~/.mozilla/firefox/zzzzz/prefs.js
+#echo 'user_pref("network.negotiate-auth.delegation-uris", ".redhat.com");' >> ~/.mozilla/firefox/zzzz/prefs.js
+#echo 'user_pref("network.negotiate-auth.trusted-uris", ".redhat.com");' >> ~/.mozilla/firefox/zzzz/prefs.js
 
 %end
