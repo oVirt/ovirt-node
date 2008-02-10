@@ -8,7 +8,10 @@ class CreateHardwarePools < ActiveRecord::Migration
 
     execute "alter table hardware_pools add constraint fk_hr_pool_superpool
              foreign key (superpool_id) references hardware_pools(id)"
-    MotorPool.create( :name=>'default')
+    mp = MotorPool.create( :name=>'default')
+    pool = OrganizationalPool.create( :name=>'default', :superpool_id => mp.id)
+    map = NetworkMap.create( :name=>'default', :superpool_id => pool.id)
+    collection = HostCollection.create( :name=>'default', :superpool_id => map.id)
   end
 
   def self.down
