@@ -1,44 +1,49 @@
-When you first download the appliance, you'll need to make some modifications
-to get it on the network.  We suggest giving it a static IP address.  To do
-this, you'll need to edit a few files:
+This document describes basic setup steps for getting your Ovirt WUI appliance
+running.  It assumes you've either downloaded the appliance from
+http://ovirt.org, or that you've built an equivalent appliance locally using
+the wui-appliance kickstart file.  The default root password for the
+appliance is 'ovirtwui' (no quotes); you'll want to change that as soon as
+possible.
 
-1.  /etc/sysconfig/network-scripts/ifcfg-eth0
-This file will contain your static IP addresses.  Something like the following:
+-----------------------------------------------------------------------------
+Network configuration
+-----------------------------------------------------------------------------
+If you haven't yet done it, you'll need to make some modifications
+to get it on the network.  We strongly suggest giving it a static IP address;
+this will make sure that the DNS name for the host is stable, which is
+important for FreeIPA to work properly.  The easiest way to do this is to
+run:
 
-# Realtek Semiconductor Co., Ltd. RTL-8139/8139C/8139C+
-DEVICE=eth0
-BOOTPROTO=static
-HWADDR=00:16:3E:08:91:E9
-IPADDR=192.168.25.2
-NETMASK=255.255.255.0
-ONBOOT=yes
+# system-config-network
 
-2.  /etc/resolv.conf
-This file will have your name servers.  Something like the following:
+As root, and fill in your appropriate configuration.  After this is done,
+you'll want to reboot to make sure that your IP address and hostname get
+setup properly.
 
-search boston.redhat.com redhat.com lab.boston.redhat.com
-nameserver 172.16.76.10
-nameserver 172.16.76.20
-nameserver 172.16.52.28
+-----------------------------------------------------------------------------
+PXE configuration
+-----------------------------------------------------------------------------
+If you downloaded the pre-built appliance, you can skip this step.  If you
+built the appliance from the kickstart file, you'll need to download the Ovirt
+PXE host image that the physical machines will use to boot up.  This is
+available as a tarball from http://ovirt.org/downloads.  Once you've downloaded
+the tarball, run (as root):
 
-3.  /etc/sysconfig/network
-This file will have your overall networking setup, including your default
-gateway.  Something like the following:
+# mv /tftpboot /tftpboot.old
+# tar -C / -jxvf ovirt-pxe-host-image-<version>.tar.bz2
+# service xinetd restart
 
-NETWORKING=yes
-HOSTNAME=localhost.localdomain
-GATEWAY=192.168.25.1
+This should explode the PXE host image into /tftpboot, and restart xinetd
+so it notices the changes.
 
+-----------------------------------------------------------------------------
+Site-specific configuration
+-----------------------------------------------------------------------------
+From here on out, we will assume that you are logged on as root, since most
+of these steps require root access.  There are a number of steps necessary
+to get things up and running, so let's get started:
 
-This document assumes that you've downloaded the Ovirt WUI appliance, and
-have it up and running on your public network.  It also assumes you are
-logged into the appliance as root, since many of the steps require root
-access.
-
-There are a number of steps necessary here to get things up and running, so
-let's get started:
-
-1.  First, we need to setup dhcpd on this server, since this will act as
+1)  First, we need to setup dhcpd on this server, since this will act as
 the DHCP server for all of the Ovirt host machines.  You can start with the
 following as an example:
 
@@ -60,9 +65,9 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
         option routers 192.168.25.1;
         option iscsi-servers 192.168.25.1;
         option ovirt-tftp-server 192.168.25.2;
-        option collectd-server 192.168.25.4;
+        option collectd-server 192.168.25.2;
         option libvirt-auth-method "krb5:192.168.25.2";
-	range 192.168.25.3 192.168.25.250;
+        range 192.168.25.3 192.168.25.250;
         filename "pxelinux.0";
 }
 -------------------------<cut here>----------------------------------------
@@ -130,5 +135,7 @@ directory:
 
 # ./add_host_principal.py perf201.perf.redhat.com
 
-6)  That should be it.  Assuming you have all the above setup properly, it's
+6)  # service ovirt-wui restart
+
+7)  That should be it.  Assuming you have all the above setup properly, it's
 best at this point to reboot your appliance to get all of the services running.

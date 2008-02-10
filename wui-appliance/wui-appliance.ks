@@ -63,6 +63,11 @@ ruby-postgres
 ovirt-wui
 firefox
 xorg-x11-xauth
+-libgcj
+-glib-java
+-valgrind
+-boost-devel
+-frysk
 -bittorrent
 -fetchmail
 -slrn
@@ -75,7 +80,7 @@ cat > /root/create_default_principals.py << \EOF
 #!/usr/bin/python
 
 import krbV
-import os
+import os, string, re
 import socket
 import shutil
 
@@ -91,6 +96,45 @@ default_realm = krbV.Context().default_realm
 this_libvirt_princ = 'libvirt/' + socket.gethostname() + '@' + default_realm
 kadmin_local('addprinc -randkey +requires_preauth ' + this_libvirt_princ)
 kadmin_local('ktadd -k /usr/share/ovirt-wui/ovirt.keytab ' + this_libvirt_princ)
+
+# We need to replace the KrbAuthRealms in the ovirt-wui http configuration
+# file to be the correct Realm (i.e. default_realm)
+ovirtconfname = '/etc/httpd/conf.d/ovirt-wui.conf'
+ipaconfname = '/etc/httpd/conf.d/ipa.conf'
+
+# make sure we skip this on subsequent runs of this script
+if string.find(file(ipaconfname, 'rb').read(), '<VirtualHost *:8089>') < 0:
+    ipaconf = open(ipaconfname, 'r')
+    ipatext = ipaconf.readlines()
+    ipaconf.close()
+
+    ipaconf2 = open(ipaconfname, 'w')
+    print >>ipaconf2, "Listen 8089"
+    print >>ipaconf2, "NameVirtualHost *:8089"
+    print >>ipaconf2, "<VirtualHost *:8089>"
+    for line in ipatext:
+        newline = re.sub(r'(.*RewriteCond %{HTTP_HOST}.*)', r'#\1', line)
+        newline = re.sub(r'(.*RewriteRule \^/\(.*\).*)', r'#\1', newline)
+        newline = re.sub(r'(.*RewriteCond %{SERVER_PORT}.*)', r'#\1', newline)
+        newline = re.sub(r'(.*RewriteCond %{REQUEST_URI}.*)', r'#\1', newline)
+        ipaconf2.write(newline)
+    print >>ipaconf2, "</VirtualHost>"
+    ipaconf2.close()
+
+if string.find(file(ovirtconfname, 'rb').read(), '<VirtualHost *:80>') < 0:
+    ovirtconf = open(ovirtconfname, 'r')
+    ovirttext = ovirtconf.readlines()
+    ovirtconf.close()
+
+    ovirtconf2 = open(ovirtconfname, 'w')
+    print >>ovirtconf2, "NameVirtualHost *:80"
+    print >>ovirtconf2, "<VirtualHost *:80>"
+    for line in ovirttext:
+        newline = re.sub(r'(.*)KrbAuthRealms.*', r'\1KrbAuthRealms ' + default_realm, line)
+        newline = re.sub(r'(.*)Krb5KeyTab.*', r'\1Krb5KeyTab /etc/httpd/conf/ipa.keytab', newline)
+        ovirtconf2.write(newline)
+    print >>ovirtconf2, "</VirtualHost>"
+    ovirtconf2.close()
 EOF
 chmod +x /root/create_default_principals.py
 
@@ -198,6 +242,8 @@ baseurl=http://ovirt.et.redhat.com/repos/ovirt/x86_64
 enabled=1
 gpgcheck=0
 EOF
+
+echo "0.fedora.pool.ntp.org" >> /etc/ntp/step-tickers
 
 # remove the mod_auth_kerb, and make sure we get the one from freeipa
 rpm -e --nodeps mod_auth_kerb
