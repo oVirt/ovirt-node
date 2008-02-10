@@ -73,9 +73,9 @@ subnet 192.168.25.0 netmask 255.255.255.0 {
 -------------------------<cut here>----------------------------------------
 
 Make sure to replace all of the relevant domain names, IP address, subnets, etc.
-to match your setup.  Note that you should *not* change the
-"filename pxelinux.0" or any of the "option <num> code" lines near the top
-unless you really know what you are doing.
+to match your setup.  All of these really need to be right for anything to
+work properly; for more information, read the file
+ovirt-appliance-dhcpd-conf.txt.
 
 2)  # chkconfig dhcpd on ; service dhcpd restart
 

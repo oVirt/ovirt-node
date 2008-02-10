@@ -9,7 +9,7 @@ rootpw  --iscrypted $1$HNOucon/$m69RprODwQn4XjzVUi9TU0
 firewall --disabled
 authconfig --enableshadow --enablemd5
 selinux --disabled
-services --disabled=iptables,yum-updatesd,libvirtd,bluetooth,cups,gpm,pcscd --enabled=ntpd,dhcpd,xinetd,httpd,postgresql
+services --disabled=iptables,yum-updatesd,libvirtd,bluetooth,cups,gpm,pcscd --enabled=ntpd,dhcpd,xinetd,httpd,postgresql,ovirt-wui
 timezone --utc America/New_York
 text
 bootloader --location=mbr --driveorder=sda
@@ -63,6 +63,7 @@ ruby-postgres
 ovirt-wui
 firefox
 xorg-x11-xauth
+virt-viewer
 -libgcj
 -glib-java
 -valgrind
