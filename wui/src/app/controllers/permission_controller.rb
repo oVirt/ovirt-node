@@ -22,7 +22,8 @@ class PermissionController < ApplicationController
 
   def redirect_to_parent
     if @permission.hardware_pool
-      redirect_to :controller => 'pool', :action => 'show', :id => @permission.hardware_pool_id
+      c = hardware_pool_type_to_controller(HardwarePool.find(@permission.hardware_pool_id).type)
+      redirect_to :controller => "%s" % c, :action => 'show', :id => @permission.hardware_pool_id
     elsif @permission.vm_library
       redirect_to :controller => 'library', :action => 'show', :id => @permission.vm_library_id
     else
@@ -43,6 +44,7 @@ class PermissionController < ApplicationController
   def new
     @permission = Permission.new( { :hardware_pool_id => params[:hardware_pool_id],
                                     :vm_library_id => params[:vm_library_id]})
+    @perms = (@permission.hardware_pool)? @permission.hardware_pool.permissions : @permission.vm_library.permissions
     set_perms
     # admin permission required to view permissions
     unless @can_delegate
@@ -60,7 +62,7 @@ class PermissionController < ApplicationController
     else
       if @permission.save
         flash[:notice] = 'Permission was successfully created.'
-        redirect_to_parent
+        redirect_to :action => "new", :hardware_pool_id => @permission.hardware_pool_id
       else
         render :action => 'new'
       end
@@ -78,7 +80,8 @@ class PermissionController < ApplicationController
       pool_id =  @permission.hardware_pool_id
       if @permission.destroy
         if pool_id
-          redirect_to :controller => 'pool', :action => 'show', :id => pool_id
+          flash[:notice] = "<strong>#{@permission.user}</strong> permissions were revoked successfully"
+          redirect_to :action => "new", :hardware_pool_id => @permission.hardware_pool_id
         elsif vm_library_id
           redirect_to :controller => 'library', :action => 'show', :id => vm_library_id
         else

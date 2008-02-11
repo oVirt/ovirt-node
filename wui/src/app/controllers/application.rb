@@ -14,4 +14,12 @@ class ApplicationController < ActionController::Base
   def user_from_principal(principal)
     principal.split('@')[0]
   end
+
+  def set_perms(hwpool)
+    @user = get_login_user
+    @is_admin = hwpool.is_admin(@user)
+    @can_monitor = hwpool.can_monitor(@user)
+    @can_delegate = hwpool.can_delegate(@user)
+  end
+
 end

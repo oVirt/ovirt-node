@@ -1,18 +1,36 @@
-<div id="left">
-<h2><%= _("New Permission") %></h2>
+          <div id="dataTableWrapper">
 
-<% form_tag :action => 'create' do %>
-  <%= render :partial => 'form' %>
-  <%= submit_tag "Create" %>
-<% end %>
+          <div class="dataTable">
+              <div class="inside">
 
-</div>
+                <div class="data-table-column">
+                <% form_tag :action => 'create' do %>
+                  <%= render :partial => 'form' %>
+                  <%= submit_tag "Add User" %>
+                <% end %>
+                </div>
 
-<div id="right">
-  <h2>Actions</h2>
-  <ul class="actions">
-    <li class="action"><%= link_to "Back to #{@permission.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @permission.hardware_pool_id }, { :class => "show" } if @permission.hardware_pool %></li>
-    <li class="action"><%= link_to "Back to #{@permission.vm_library.name}", { :controller => 'library', :action => 'show', :id => @permission.vm_library_id }, { :class => "show" } if @permission.vm_library %></li>
-  </ul>
-</div>
+                <div class="data-table-column">
+                <h3>Existing Users</h3>
+                <%= render :partial => "/permission/list", :locals => { :permissions => @perms, :show_object => false, :show_actions => @can_delegate } %>
+                </div>
+
+              </div> <!-- end #data-table.inside -->
+            </div> <!-- end #dataTable -->
+
+          </div> <!-- end #dataTableWrapper -->
+
+          <div id="tools">
+
+          <h3>Actions</h3>
+            <div class="actions">
+              <%= link_to "Back to #{@permission.hardware_pool.name}", { :controller => hardware_pool_type_to_controller(@permission.hardware_pool.type), :action => 'show', :id => @permission.hardware_pool_id }, { :class => "show" } if @permission.hardware_pool %>
+              <%= link_to "Back to #{@permission.vm_library.name}", { :controller => 'library', :action => 'show', :id => @permission.vm_library_id }, { :class => "show" } if @permission.vm_library %>
+            </div>
+          </div> <!-- end #tools -->
+
+<%- content_for :title do -%>
+<%= "Edit Permissions for #{@permission.hardware_pool.name}" %>
+<%- end -%>
+
 
