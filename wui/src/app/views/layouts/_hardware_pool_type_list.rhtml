@@ -1,0 +1,24 @@
+<div class="inside">
+  <%- if organizational_pools -%>
+  <div class="data-table-column">
+    <h3>Hardware Pools (<%= organizational_pools.size -%>)</h3>
+    <%= render :partial => "/pool/list", :locals => { :hardware_pools => organizational_pools } %>
+  </div> <!-- end .data-table-column -->
+  <%- end -%>
+
+  <%- if network_maps -%>
+  <div class="data-table-column">
+    <h3>Maps (<%= network_maps.size -%>)</h3>
+    <%= render :partial => "/network_map/list", :locals => { :network_maps => network_maps } %>
+  </div> <!-- end .data-table-column -->
+  <%- end -%>
+
+  <%- if host_collections -%>
+  <div class="data-table-column">
+    <h3>Collections (<%= host_collections.size -%>)</h3>
+    <%= render :partial => "/collection/list", :locals => { :host_collections => host_collections } %>
+  </div> <!-- end .data-table-column -->
+  <%- end -%>
+
+</div> <!-- end #data-table.inside -->
+
