@@ -8,13 +8,6 @@ class StorageController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def set_perms(hwpool)
-    @user = get_login_user
-    @is_admin = hwpool.is_admin(@user)
-    @can_monitor = hwpool.can_monitor(@user)
-    @can_delegate = hwpool.can_delegate(@user)
-  end
-
   def list
     @attach_to_pool=params[:attach_to_pool]
     @attach_to_vm=params[:attach_to_vm]
@@ -56,6 +49,7 @@ class StorageController < ApplicationController
   def new
     @storage_volume = StorageVolume.new({ :hardware_pool_id => params[:hardware_pool_id] })
     set_perms(@storage_volume.hardware_pool)
+    @storage_volumes = @storage_volume.hardware_pool.storage_volumes
     unless @is_admin
       flash[:notice] = 'You do not have permission to create this storage volume'
       redirect_to :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_pool
