@@ -4,21 +4,15 @@
               <div class="inside">
 
                 <div class="data-table-column">
-                <% form_tag :action => 'update', :id => @organizational_pool do %>
+                <% form_tag :action => 'update', :id => @collection do %>
                   <%= render :partial => 'form' %>
                   <%= submit_tag 'Edit' %>
                 <% end %>
                 </div>
 
-
                 <div class="data-table-column">
-                  <strong>Other Pool Names</strong>
-                  <% for pool in @other_pools %>
-                  <div><%= link_to pool.name, { :controller => "pool", :action => "show", :id => pool }, { } %></div>
-                  <% end %>
-                  <%- if @other_pools.empty? -%>
-                  <div><em>none</em></div>
-                  <%- end -%>
+                  <strong>Existing Collections</strong>
+                  <%= render :partial => "list", :locals => { :host_collections => @collection.network_map.host_collections } %>
                 </div>
 
 
@@ -31,12 +25,11 @@
           <div id="tools">
           <h3>Actions</h3>
             <div class="actions">
-              <%= link_to "Back to #{@organizational_pool.name}", { :action => 'show', :id => @organizational_pool }, { :class => "" } %>
+              <%= link_to "Back to #{@collection.name}", { :action => 'show', :id => @collection }, { :class => "" } %>
             </div>
           </div> <!-- end #tools -->
 
 
 <%- content_for :title do -%>
-<%= "Editing Hardware Pool #{@organizational_pool.name}" %>
+<%= "Editing Collection #{@collection.name}" %>
 <%- end -%>
-

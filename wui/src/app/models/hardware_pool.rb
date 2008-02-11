@@ -1,26 +1,32 @@
 class HardwarePool < ActiveRecord::Base
-  has_many :permissions, :dependent => :destroy, :order => "id ASC"
 
-  has_many :hosts, :dependent => :nullify, :order => "id ASC"
-  has_many :storage_volumes, :dependent => :nullify, :order => "id ASC"
-  belongs_to :superpool, :class_name => "HardwarePool", :foreign_key => "superpool_id"
-  has_many :subpools, :class_name => "HardwarePool", :foreign_key => "superpool_id", :dependent => :nullify, :order => "id ASC"
+  # overloading this method such that we can use permissions.admins to get all the admins for an object
+  has_many :permissions, :dependent => :destroy, :order => "id ASC" do
+      def admins
+          find_all_by_privilege(Permission::ADMIN)
+      end
+      def monitors
+          find_all_by_privilege(Permission::MONITOR)
+      end
+      def delegates
+          find_all_by_privilege(Permission::DELEGATE)
+      end
+  end
 
-
-  def self.factory(type, params = nil)
-    case type
-      when MotorPool.name
-        return MotorPool.new(params)
-      when OrganizationalPool.name
-        return OrganizationalPool.new(params)
-      when NetworkMap.name
-        return NetworkMap.new(params)
-      when HostCollection.name
-        return HostCollection.new(params)
-      else
-        return nil
+  has_many :hosts, :dependent => :nullify, :order => "id ASC" do
+    def total_cpus
+      find(:all).inject(0){ |sum, host| sum + host.num_cpus }
     end
   end
+
+  has_many :storage_volumes, :dependent => :nullify, :order => "id ASC" do
+    def total_size_in_gb
+      find(:all).inject(0){ |sum, sv| sum + sv.size_in_gb }
+    end
+  end
+
+  belongs_to :superpool, :class_name => "HardwarePool", :foreign_key => "superpool_id"
+#  has_many :subpools, :class_name => "HardwarePool", :foreign_key => "superpool_id", :dependent => :nullify, :order => "id ASC"
 
   def self.list_for_user(user)
     find(:all, :include => "permissions", 

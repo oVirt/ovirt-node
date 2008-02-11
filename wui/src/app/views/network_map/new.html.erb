@@ -4,15 +4,15 @@
               <div class="inside">
 
                 <div class="data-table-column">
-                <% form_tag :action => 'create' do %>
+                <% form_tag :action => 'create', :id => @network_map do %>
                   <%= render :partial => 'form' %>
-                  <%= submit_tag "Create Pool" %>
+                  <%= submit_tag 'Create Network Map' %>
                 <% end %>
                 </div>
 
                 <div class="data-table-column">
-                <h3>Existing Hardware Pools</h3>
-                  <%= render :partial => "list", :locals => { :hardware_pools => @organizational_pools } %>
+                  <strong>Existing Network Maps</strong>
+                  <%= render :partial => "list", :locals => { :network_maps => @organizational_pool.network_maps } %>
                 </div>
 
               </div> <!-- end #data-table.inside -->
@@ -25,12 +25,11 @@
 
           <h3>Actions</h3>
             <div class="actions">
-              <%= link_to "Back to Dashboard", { :controller => 'dashboard' }, { :class => "" } %>
+              <%= link_to "Back to #{@network_map.organizational_pool.name}", { :controller => 'pool', :action => 'show', :id => @network_map.organizational_pool }, { :class => "" } %>
             </div>
           </div> <!-- end #tools -->
 
 <%- content_for :title do -%>
-<%= "Create New Hardware Pool" %>
+<%= _("Create New Network Map") %>
 <%- end -%>
-
 

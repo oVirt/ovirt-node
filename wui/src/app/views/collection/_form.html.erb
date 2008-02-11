@@ -1,0 +1,7 @@
+<%= error_messages_for 'collection' %>
+
+<!--[form:collection]-->
+<%= hidden_field_with_label "Parent Network Map", 'collection', 'superpool_id', @collection.network_map.name %>
+
+<%= text_field_with_label 'Name', 'collection', 'name'  %>
+<!--[eoform:collection]-->

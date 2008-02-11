@@ -1,0 +1,3 @@
+<% for collection in host_collections %>
+<div><%= link_to collection.name, { :controller => "collection", :action => "show", :id => collection }, { } %></div>
+<% end %>

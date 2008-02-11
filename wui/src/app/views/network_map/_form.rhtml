@@ -1,0 +1,7 @@
+<%= error_messages_for 'network_map' %>
+
+<!--[form:network_map]-->
+<%= hidden_field_with_label "Parent Hardware Pool", 'network_map', 'superpool_id', @network_map.organizational_pool.name %>
+
+<%= text_field_with_label 'Name', 'network_map', 'name'  %>
+<!--[eoform:network_map]-->

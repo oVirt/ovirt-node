@@ -1,10 +1,5 @@
-<%= error_messages_for 'hardware_pool' %>
+<%= error_messages_for 'organizational_pool' %>
 
-<!--[form:hardware_pool]-->
-<%= hidden_field_with_label "Parent pool", 'hardware_pool', 'superpool_id', @hardware_pool.superpool.name if @hardware_pool.superpool %>
-
-<%= hidden_field_tag "pool_type", @hardware_pool[:type] %>
-
-<%= text_field_with_label 'Name', 'hardware_pool', 'name'  %>
+<%= text_field_with_label 'Pool Name', 'organizational_pool', 'name'  %>
 <!--[eoform:hardware_pool]-->
 

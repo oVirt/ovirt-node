@@ -1,0 +1,6 @@
+<% for map in network_maps %>
+<div><%= link_to map.name, { :controller => "network_map", :action => "show", :id => map }, { } %></div>
+<% end %>
+<%- if network_maps.empty? -%>
+<div><em>none</em></div>
+<%- end -%>

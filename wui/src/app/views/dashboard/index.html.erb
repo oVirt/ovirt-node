@@ -1,20 +1,27 @@
           <div id="dataTableWrapper">
 
-            <div class="dataTable">
+          <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @default_pool, :vms => @vms } %>
+
+          <div class="dataTable">
+
               <div class="inside">
 
                 <div class="data-table-column">
-                <p>Manage Hardware Pools from this interface</p>
+                <p> Hardware Pools are the high level organizational pool </p>
                 </div>
 
                 <div class="data-table-column">
-                  <div class="listing">
-                  <h3>Pools</h3>
-                  <%= render :partial => "list", :locals => { :hardware_pools => @organizational_pools } %>
-                  </div>
-                </div> <!-- end .data-table-column -->
+                <p> Network Maps provide Host and Storage level mapping </p>
+                </div>
+
+                <div class="data-table-column">
+                <p> Host Collections give boundries for VM Migrations </p>
+                </div>
 
               </div> <!-- end #data-table.inside -->
+
+              <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :organizational_pools => @organizational_pools, :network_maps => @network_maps, :host_collections => @host_collections } %>
+
             </div> <!-- end #dataTable -->
 
             <div class="data-section">
@@ -22,7 +29,7 @@
               <div class="data-section-stats">Statistics Data</div>
               <div class="data-section-table">
                 <div class="inside">
-                  <%= render :partial => "/host/list", :locals => { :hosts => @hosts } %>
+                  <%= render :partial => "/host/list", :locals => { :hosts => @available_hosts } %>
                 </div>
               </div>
             </div>
@@ -32,7 +39,7 @@
               <div class="data-section-stats">Statistics Data</div>
               <div class="data-section-table">
                 <div class="inside">
-                <%= render :partial => "/storage/list", :locals => { :storage_volumes => @storage_volumes } %>
+                  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @available_storage_volumes } %>
                 </div>
               </div>
             </div>
@@ -42,11 +49,15 @@
           <div id="tools">
 
           <h3>Actions</h3>
+          <%if @is_admin -%>
           <div class="actions create">
-            <%if @is_admin -%>
-              <%= link_to 'Create New Pool', { :action => 'new', :superpool => @default_pool}, { :class => "create" } %>
-            <% end -%>
+<!--
+              <%= link_to 'Add Storage', { :controller => 'storage', :action => 'new', :hardware_pool_id => @default_pool}, { :class => "" } %>
+              <hr/>
+-->
+              <%= link_to 'Create New Pool', { :controller => "pool", :action => 'new', :superpool => @default_pool}, { :class => "" } %>
           </div>
+          <% end -%>
 
           <div class="actions users">
             <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :hardware_pool_id => @default_pool }, { :class => "edit" } %></div>
