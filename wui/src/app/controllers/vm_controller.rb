@@ -3,13 +3,6 @@ class VmController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def set_perms(perm_obj)
-    @user = get_login_user
-    @is_admin = perm_obj.is_admin(@user)
-    @can_monitor = perm_obj.can_monitor(@user)
-    @can_delegate = perm_obj.can_delegate(@user)
-  end
-
   def show
     @vm = Vm.find(params[:id])
     @actions = @vm.get_action_and_label_list
