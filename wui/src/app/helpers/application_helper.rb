@@ -44,6 +44,16 @@ module ApplicationHelper
     }
   end
 
+  def focus(field_name)
+    %{
+    <script type="text/javascript">
+    // <![CDATA[
+      Field.activate('#{field_name}');
+    // ]]>
+    </script>
+    }
+  end
+
   # this should probably be in the model instead
   def hardware_pool_type_to_controller(type)
     case type.to_s
