@@ -60,6 +60,16 @@ static void usage(void)
   exit(1);
 }
 
+static void sig_chld(int signo)
+{
+  int status;
+
+  if (waitpid(-1, &status, WNOHANG) < 0) {
+    fprintf(stderr, "Error doing waitpid for child\n");
+    return;
+  }
+}
+
 // the function to make a daemon out of this program
 static int daemonize(void)
 {
@@ -135,8 +145,7 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	    }
 	  }
 	  else {
-	    // parent
-	    waitpid(pid, NULL, 0);
+	    // parent, do nothing; we'll catch the child exits with SIGCHLD
 	  }
 
 	  break;
@@ -205,6 +214,7 @@ int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[])
     int ret = 1;
     int daemon_mode = 1;
     int c;
+    struct sigaction act;
 
     while ((c = getopt(argc, argv,":dhn")) != -1) {
       switch(c) {
@@ -230,6 +240,11 @@ int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[])
     if (daemon_mode) {
         daemonize();
     }
+
+    act.sa_handler = sig_chld;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_NOCLDSTOP;
+    sigaction(SIGCHLD, &act, NULL);
 
     /* Allocate main loop object */
     if (!(simple_poll = avahi_simple_poll_new())) {

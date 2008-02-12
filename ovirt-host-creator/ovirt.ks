@@ -39,6 +39,7 @@ cyrus-sasl
 cyrus-sasl-lib
 collectd
 tftp
+nc
 -policycoreutils
 -audit-libs-python
 -hdparm
@@ -267,10 +268,15 @@ cat > /etc/dhclient-exit-hooks << \EOF
 if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
     METHOD=`echo $new_libvirt_auth_method | cut -d':' -f1`
     SERVER=`echo $new_libvirt_auth_method | cut -d':' -f2-`
+    IP=`echo $new_libvirt_auth_method | cut -d':' -f2 | cut -d'/' -f1`
     if [ $METHOD = "krb5" ]; then
         mkdir -p /etc/libvirt
-        wget -q http://$SERVER/config/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
-        rm -f /etc/krb5.conf ; wget -q http://$SERVER/config/krb5.ini -O /etc/krb5.conf
+        # here, we wait for the "host-keyadd" service to finish adding our
+        # keytab and returning to us
+        # FIXME: we should check the return string here; it should be "SUCCESS"
+        echo "KERB" | /usr/bin/nc $IP 6666
+        /usr/bin/wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
+        rm -f /etc/krb5.conf ; /usr/bin/wget -q http://$SERVER/krb5.ini -O /etc/krb5.conf
     fi
 fi
 EOF

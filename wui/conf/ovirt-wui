@@ -33,6 +33,10 @@ start() {
 	echo
     fi
 
+    echo -n "Starting host-keyadd: "
+    daemon $OVIRT_DIR/host-keyadd/host-keyadd.rb
+    echo
+
     echo -n "Starting host-browser: "
     daemon $OVIRT_DIR/host-browser/host-browser
     echo
@@ -49,6 +53,10 @@ stop() {
 
     echo -n "Shutting down host-browser: "
     killproc host-browser
+    echo
+
+    echo -n "Shutting down host-keyadd: "
+    killproc host-keyadd
     echo
 
     echo -n "Shutting down ovirt-wui: "
