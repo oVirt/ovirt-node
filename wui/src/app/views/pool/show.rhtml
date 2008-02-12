@@ -43,20 +43,18 @@
 
             <h3>Actions</h3>
 
+            <%if @is_admin -%>
             <div class="actions create">
-              <%= link_to_if @is_admin, 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "" } %>
-              <%= link_to_if @is_admin, 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @hardware_pool}, { :class => "" } %>
+              <%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "" } %>
+              <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @hardware_pool}, { :class => "" } %>
               <hr/>
               <%= link_to_if @is_admin, 'Create Network Map', { :controller => "network_map", :action => 'new', :superpool_id => @organizational_pool }, { :class => "" } %>
             </div>
 
-            <%if @is_admin -%>
             <div class="actions edit">
               <%= link_to 'Edit Pool Properties', { :action => 'edit', :id => @organizational_pool}, { :class => "edit" } %>
             </div>
-            <%- end -%>
 
-            <%if @is_admin -%>
             <div class="actions remove">
               <%= link_to 'Delete Pool', { :controller => "pool", :action => 'destroy', :id => @organizational_pool }, :confirm => 'Are you sure you want to delete - %s?' % @organizational_pool.name, :method => :post, :class => "remove" %>
             </div>

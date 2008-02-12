@@ -1,16 +1,14 @@
-class CollectionController < ApplicationController
-
-  def show
-    @collection = HostCollection.find(params[:id])
-    set_perms(@collection)
-  end
+class CollectionController < AbstractPoolController
 
   def new
-    @collection = HostCollection.new({ :network_map => NetworkMap.find(params[:superpool_id]) } )
+    if @collection.network_map
+      @collections = @collection.network_map.host_collections
+    else
+      @collections = @collection.parent_collection.host_collections
+    end
   end
 
   def create
-    @collection = HostCollection.create(params[:collection])
     if @collection.save
       flash[:notice] = 'Host Collection successfully created'
       redirect_to  :controller => 'collection', :action => 'show', :id => @collection
@@ -20,8 +18,6 @@ class CollectionController < ApplicationController
   end
 
   def update
-    @collection = HostCollection.find(params[:id])
-
     if @collection.update_attributes(params[:collection])
       flash[:notice] = 'Host Collection was successfully updated.'
       redirect_to  :controller => 'collection', :action => 'show', :id => @collection
@@ -30,14 +26,35 @@ class CollectionController < ApplicationController
     end
   end
 
-  def edit
-    @collection = HostCollection.find(params[:id])
+  def destroy
+    superpool = @collection.superpool
+    unless(@collection.host_collections.empty?)
+      flash[:notice] = "You can't delete a Collection without first deleting its Subollections."
+      redirect_to :action => 'show', :id => @collection
+    else
+      move_contents_and_destory(@collection)
+      flash[:notice] = 'Host Collection successfully destroyed'
+      redirect_to :controller => 'pool', :action => 'show', :id => @collection.organizational_pool
+      if superpool[:type] == NetworkMap.name
+        redirect_to :controller => 'network_map', :action => 'show', :id => @collection.network_map
+      else
+        redirect_to :controller => 'collection', :action => 'show', :id => @collection.superpool_id
+      end
+    end
   end
 
-  def destroy
+  private
+  #filter methods
+  def pre_new
+    @collection = HostCollection.new( { :superpool_id => params[:superpool_id] } )
+    @perm_pool = @collection.superpool
+  end
+  def pre_create
+    @collection = HostCollection.create(params[:collection])
+    @perm_pool = @collection.superpool
+  end
+  def pre_edit
     @collection = HostCollection.find(params[:id])
-    @collection.destroy
-    flash[:notice] = 'Host Collection successfully destroyed'
-    redirect_to :controller => 'network_map', :action => 'show', :id => @collection.network_map
+    @perm_pool = @collection
   end
 end

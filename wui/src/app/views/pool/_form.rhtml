@@ -1,8 +1,12 @@
 <%= error_messages_for 'organizational_pool' %>
 
+<!--[form:organizational_pool]-->
+<%= hidden_field_with_label "Parent pool", 'organizational_pool', 'superpool_id', @organizational_pool.superpool.name if @organizational_pool.superpool %>
+
 <%= text_field_with_label 'Pool Name', 'organizational_pool', 'name'  %>
 
 <%= focus('organizational_pool_name') %>
 
-<!--[eoform:hardware_pool]-->
+<!--[eoform:organizational_pool]-->
+
 

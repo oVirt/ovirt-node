@@ -81,12 +81,12 @@ function confirm_and_submit(item){
   </ul>
   <%if @is_hwpool_admin -%>
   <ul class="actions remove">
-    <li class="action"><%= link_to 'Delete Library', { :controller => "vm_library", :action => 'destroy', :id => @vm_library }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
+    <li class="action"><%= link_to 'Delete Library', { :controller => "library", :action => 'destroy', :id => @vm_library }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
   </ul>
   <% end -%>
   <ul class="actions">
     <li class="action"><%= link_to 'Your VM Libraries', { :action => 'list' }, { :class => "list" } %></li>
-    <li class="action"><%= link_to "to #{@vm_library.host_collection.name}", { :controller => 'pool', :action => 'show', :id => @vm_library.host_collection }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "to #{@vm_library.host_collection.name}", { :controller => 'collection', :action => 'show', :id => @vm_library.host_collection }, { :class => "list" } %></li>
   </ul>
   <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
 
