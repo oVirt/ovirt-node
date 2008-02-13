@@ -20,5 +20,12 @@
   </div> <!-- end .data-table-column -->
   <%- end -%>
 
+  <%- if defined? vm_libraries and ! vm_libraries.nil? -%>
+  <div class="data-table-column">
+    <h3>VM Libraries (<%= vm_libraries.size -%>)</h3>
+    <%= render :partial => "/library/list", :locals => { :vm_libraries => vm_libraries } %>
+  </div> <!-- end .data-table-column -->
+  <%- end -%>
+
 </div> <!-- end #data-table.inside -->
 
