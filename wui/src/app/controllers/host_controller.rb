@@ -22,7 +22,7 @@ class HostController < ApplicationController
       set_perms(pool)
       unless @can_monitor
         flash[:notice] = 'You do not have permission to view this host list: redirecting to top level'
-        redirect_to :controller => 'pool', :action => 'list'
+        redirect_to :controller => 'dashboard', :action => 'list'
       else
         conditions = "hardware_pool_id is null"
         conditions += " or hardware_pool_id=#{pool.superpool_id}" if pool.superpool
@@ -39,7 +39,7 @@ class HostController < ApplicationController
     set_perms(@host.hardware_pool)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this host: redirecting to top level'
-      redirect_to :controller => 'pool', :action => 'list'
+      redirect_to :controller => 'dashboard', :action => 'list'
     end
   end
 
@@ -111,14 +111,14 @@ class HostController < ApplicationController
     else
       pool = HardwarePool.find(params[:hardware_pool_id])
       host_url = url_for(:controller => "host", :action => "show", :id => @host)
-      pool_url = url_for(:controller => "hardware_pool", :action => "show", :id => pool)
+      pool_url = url_for(:controller => pool.get_controller, :action => "show", :id => pool)
       @host.hardware_pool_id = pool.id
       if @host.save
         flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, pool_url, pool.name ]
-        redirect_to :controller => 'pool', :action => 'show', :id => pool
+        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
       else
         flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, host_url, host.hostname ]
-        redirect_to :controller => 'pool', :action => 'show', :id => pool
+        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
       end
     end
   end

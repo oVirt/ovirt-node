@@ -8,12 +8,6 @@ class LibraryController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  before_filter :pre_new, :only => [:new]
-  before_filter :pre_create, :only => [:create]
-  before_filter :pre_show, :only => [:show]
-  before_filter :pre_edit, :only => [:edit, :update, :destroy]
-  before_filter :authorize_admin, :only => [:new, :create, :edit, :update, :destroy]
-
   def list
     @user = get_login_user
     @vm_libraries = VmLibrary.list_for_user(@user)
@@ -112,27 +106,15 @@ class LibraryController < ApplicationController
   end
 
   protected
-  def authorize_admin
-    set_perms(@perm_obj)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to create or modify a library here '
-      if @perm_obj.class = HostCollection
-        redirect_to :controller => 'collection', :action => 'show', :id => @perm_obj
-      else
-        redirect_to :action => 'show', :id => @perm_obj
-      end
-    end
-    false
-  end
   def pre_new
     @vm_library = VmLibrary.new( { :host_collection_id => params[:host_collection_id] } )
     @perm_obj = @vm_library.host_collection
-    @redir_obj = @perm_obj
+    @redir_controller = 'collection'
   end
   def pre_create
     @vm_library = VmLibrary.new(params[:vm_library])
     @perm_obj = @vm_library.host_collection
-    @redir_obj = @perm_obj
+    @redir_controller = 'collection'
   end
   def pre_show
     @vm_library = VmLibrary.find(params[:id])

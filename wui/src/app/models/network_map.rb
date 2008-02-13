@@ -7,4 +7,7 @@ class NetworkMap < HardwarePool
     "Network Map"
   end
 
+  def get_controller
+    'network_map'
+  end
 end

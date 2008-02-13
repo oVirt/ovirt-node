@@ -57,7 +57,7 @@ class PoolController < AbstractPoolController
       flash[:notice] = "You can't delete a pool without first deleting its Network Maps."
       redirect_to :action => 'show', :id => @organizational_pool
     else
-      move_contents_and_destory(@organizational_pool)
+      @organizational_pool.move_contents_and_destroy
       redirect_to :controller => "dashboard"
     end
   end
@@ -66,14 +66,18 @@ class PoolController < AbstractPoolController
   #filter methods
   def pre_new
     @organizational_pool = OrganizationalPool.new( { :superpool_id => params[:superpool_id] } )
-    @perm_pool = @organizational_pool.superpool
+    @perm_obj = @organizational_pool.superpool
   end
   def pre_create
     @organizational_pool = OrganizationalPool.create(params[:organizational_pool])
-    @perm_pool = @organizational_pool.superpool
+    @perm_obj = @organizational_pool.superpool
   end
   def pre_edit
     @organizational_pool = OrganizationalPool.find(params[:id])
-    @perm_pool = @organizational_pool
+    @perm_obj = @organizational_pool
+  end
+  def pre_show
+    @organizational_pool = OrganizationalPool.find(params[:id])
+    @perm_obj = @organizational_pool
   end
 end

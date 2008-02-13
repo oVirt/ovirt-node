@@ -9,4 +9,8 @@ class OrganizationalPool < HardwarePool
   def get_type_label
     "Organizational Pool"
   end
+
+  def get_controller
+    'pool'
+  end
 end

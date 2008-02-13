@@ -47,6 +47,9 @@ class HardwarePool < ActiveRecord::Base
     "Hardware Pool"
   end
 
+  def get_controller
+    return 'dashboard' 
+  end
   def has_privilege(user, privilege)
     pool = self
     # prevent infinite loops
@@ -60,6 +63,20 @@ class HardwarePool < ActiveRecord::Base
       pool = pool.superpool
     end
     return false
+  end
+
+  def move_contents_and_destroy
+    superpool_id = superpool.id
+    hosts.each do |host| 
+      host.hardware_pool_id=superpool_id
+      host.save
+    end
+    storage_volumes.each do |vol| 
+      vol.hardware_pool_id=superpool_id
+      vol.save
+    end
+    # what about quotas -- for now they're deleted
+    destroy
   end
 
 end

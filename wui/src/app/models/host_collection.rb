@@ -10,4 +10,7 @@ class HostCollection < HardwarePool
     "Host Collection"
   end
 
+  def get_controller
+    'collection'
+  end
 end

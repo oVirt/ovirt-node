@@ -32,7 +32,7 @@ class CollectionController < AbstractPoolController
       flash[:notice] = "You can't delete a Collection without first deleting its Subollections."
       redirect_to :action => 'show', :id => @collection
     else
-      move_contents_and_destory(@collection)
+      @collection.move_contents_and_destroy
       flash[:notice] = 'Host Collection successfully destroyed'
       redirect_to :controller => 'pool', :action => 'show', :id => @collection.organizational_pool
       if superpool[:type] == NetworkMap.name
@@ -47,14 +47,18 @@ class CollectionController < AbstractPoolController
   #filter methods
   def pre_new
     @collection = HostCollection.new( { :superpool_id => params[:superpool_id] } )
-    @perm_pool = @collection.superpool
+    @perm_obj = @collection.superpool
   end
   def pre_create
     @collection = HostCollection.create(params[:collection])
-    @perm_pool = @collection.superpool
+    @perm_obj = @collection.superpool
   end
   def pre_edit
     @collection = HostCollection.find(params[:id])
-    @perm_pool = @collection
+    @perm_obj = @collection
+  end
+  def pre_show
+    @collection = HostCollection.find(params[:id])
+    @perm_obj = @collection
   end
 end
