@@ -1,12 +1,43 @@
-/* ========= STANDARD ========== */
-
 * { font-family: "Bitstream Vera Sans", "Liberation Sans", sans-serif; }
+body {  padding: 0px; width: 976px; margin: 0px auto;}
 
-body {  text-align: center; font-size: 14pt; color: #222; background-color: #fff; margin: 0pt; }
+a { color: #0066dd; background-color: inherit; }
+a:visited { color: #0066dd; background-color: inherit; }
+a:hover { color: #0066dd; background-color: inherit; }
 
-a { color: #3465a4; background-color: inherit; }
-a:visited { color: #3465a4; }
-a:hover { color: #3465a4; }
+/* ========= HEADER ========== */
+
+#logoHeader { height: 55px; }
+#greenLine { height: 4px; background-color: #82aa32; }
+#darkGreenLine { height: 2px background-color: #688828; }
+
+#loginStatus { font-weight: bold; color: #ffffff; float: right; }
+
+/* ========= TABLE ========== */
+
+#main { border-collapse: collapse; padding: 0px; margin: 0px; width: 976px; }
+#main td { margin: 0px 10px; vertical-align: top; }
+
+/* ========= TREE ========== */
+
+#left { width: 164px; font-size: 12pt; }
+#tree a { display: block; -moz-border-radius: 0.1em 0em 0em 0.1em; padding-left: 0.2em; }
+#tree a:hover { background-color: #f9f9f9; }
+#tree a.selected { background-color: #f2f2f2; }
+#dashboard { padding: 0.5em 0.2em; }
+div.group { margin-left: 0.2em; }
+div.group a { padding-top: 0.2em; padding-bottom: 0.2em; }
+a.pool { font-weight: bold; }
+a.map { margin-left: 0.8em; }
+a.collection { margin-left: 2em; }
+
+/* ========= CENTER ========== */
+#center { width: 570px; }
+
+/* ========= RIGHT ========== */
+
+#right { width: 222px; }
+
 
 label { display: block; font-size: small; color: #333; }
 img { border: none; }
@@ -31,22 +62,6 @@ div.flash { display: inline; padding: 0em 1em; -moz-border-radius: 0.3em; }
 #notice { font-weight: bold; background-color: #fce94f; padding: 0.1em 1em; }
 div.flash a { text-decoration: none; }
 
-/* ========= TOP BAR ========== */
-
-#top_bar { width: 100%; height: 1.5em; margin: 0pt; text-align: left; font-size: 10pt; background-color: #fffccc; color: #333; border-bottom: 1px solid #999; padding: 0pt; }
-#top_bar .hello_message { padding: 0.2em; float: left; padding-left: 0.5em }
-#top_bar .account_message { padding: 0.2em; float: right; padding-right: 0.5em }
-#top_bar .account_message .login { font-weight: bold; }
-
-/* ========= HEADER ========== */
-
-img.logo { margin: 0.5em 0em; }
-
-/* ========= MAIN ========== */
-
-#main {  }
-#left { width: 37em; float: left; }
-#right { width: 12em; float: right; }
 
 /* ========= INPUTS ========== */
 

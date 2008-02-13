@@ -1,4 +1,7 @@
-          <div id="dataTableWrapper">
+    <div id="data">
+      <div class="inside">
+
+         <div id="dataTableWrapper">
 
           <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @default_pool, :vms => @vms } %>
 
@@ -46,6 +49,11 @@
 
           </div> <!-- end #dataTableWrapper -->
 
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
           <div id="tools">
 
           <h3>Actions</h3>
@@ -69,6 +77,9 @@
           </div>
 
           </div> <!-- end #tools -->
+  </td>
+
+
 
 <%- content_for :title do -%>
 <%= _("Dashboard") %>

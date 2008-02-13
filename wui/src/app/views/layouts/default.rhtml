@@ -5,50 +5,40 @@
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
   <title><%= yield :title -%></title>
-  <%= stylesheet_link_tag 'ovirt' %>
+  <%= stylesheet_link_tag 'default' %>
   <%= javascript_include_tag "prototype" -%>
   <%= yield :scripts -%>
 </head>
-<body style="background: #fff url('<%= image_path('fade.png') -%>') repeat-x scroll top left;">
+<body>
 
 <div id="wrapper">
 
-  <%= render :partial => '/layouts/header' %>
+  <div id="loginStatus"></div>
 
-  <div id="body">
+  <div id="logoHeader">&nbsp;</div>
+  <div id="greenLine">&nbsp;</div>
+  <div id="darkGreenLine">&nbsp;</div>
 
-    <div id="left">
+  <table id="main"><tr>
+  <td id="left">
+    <%= render :partial => '/layouts/tree' %>
+  </td>
+  <td id="center">
+    <div id="heading"><h3><%= yield :title -%></h3></div>
 
-      <%= render :partial => '/layouts/tree' %>
-
-    </div> <!-- end #left -->
-
-    <div id="primary">
-
-      <div id="heading"><h3><%= yield :title -%></h3></div>
-
-      <div id="viz"></div>
-
-      <div class = "alertbox">
-      <%- for name in [:notice, :errmsg] -%>
-        <%- if flash[name] -%>
-          <%= "<div class=\"flash\" id=\"#{name}\">#{flash[name]}</div>" -%>
-          <%= timeout_flash name -%>
-        <%- end -%>
+    <div class = "alertbox">
+    <%- for name in [:notice, :errmsg] -%>
+      <%- if flash[name] -%>
+        <%= "<div class=\"flash\" id=\"#{name}\">#{flash[name]}</div>" -%>
+        <%= timeout_flash name -%>
       <%- end -%>
-      </div>
+    <%- end -%>
+    </div>
 
-      <div id="data">
-        <div class="inside">
+    <%= yield  %> <% # the rest of the center and right hand side %>
 
-            <%= yield  %>
+  </tr></table>
 
-        </div> <!-- end #data.inside -->
-        </div> <!-- end #data -->
-
-      </div> <!-- end #primary -->
-
-  </div> <!-- end #body -->
 </div> <!-- end #wrapper -->
 
 </body>
