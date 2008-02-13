@@ -5,6 +5,8 @@
 # Copyright 2005-2006  Red Hat, Inc.
 # Jeremy Katz <katzj@redhat.com>
 # Option handling added by Andrew Puch <apuch@redhat.com>
+# Copyright 2008  Red Hat, Inc.
+# Chris Lalancette <clalance@redhat.com> - modified to work with Ovirt
 #
 # This software may be freely redistributed under the terms of the GNU
 # general public license.
