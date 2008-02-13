@@ -1,16 +1,29 @@
-<div id="left">
-<%if @attach_to_pool -%>
-  <h2><%= _("Choose a Host") %></h2>
-<% else -%>
-  <h2><%= _("Listing Hosts") %></h2>
-<% end -%>
+<div id="dataTableWrapper">
 
-<%= render :partial => "list", :locals => { :hosts => @hosts } %>
+  <div class="dataTable">
+    <div class="inside">
+
+      <div class="data-table-column">
+        <%= render :partial => "list", :locals => { :hosts => @hosts } %>
+      </div>
+
+    </div> <!-- end #data-table.inside -->
+
+  </div> <!-- end #dataTable -->
+
+</div> <!-- end #dataTableWrapper -->
+
+<div id="tools">
 
 
 </div>
 
-<div id="right">
-  <h2>Actions</h2>
-</div>
-  
+<%- content_for :title do -%>
+  <%if @attach_to_pool -%>
+    <%= _("Choose a Host") %>
+  <% else -%>
+    <%= _("Listing Hosts") %>
+  <% end -%>
+<%- end -%>
+
+
