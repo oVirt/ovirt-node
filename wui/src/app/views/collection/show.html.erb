@@ -2,26 +2,13 @@
 
           <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @collection, :vms => [] } %>
 
-          <div clss="dataTable">
-              <div class="inside">
+          <div class="dataTable">
 
-                <div class="data-table-column">
-                <p>lakdjfalkds jfalkdfja sdlk</p>
-                </div>
-
-                <div class="data-table-column">
-                  <% for library in @collection.vm_libraries %>
-                  <div><%= link_to library.name, { :controller => "library", :action => "show", :id => library }, { } %></div>
-                  <% end %>
-                </div>
-
-              </div> <!-- end #data-table.inside -->
-
-            <div class="dataTable">
-
-            <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :host_collections => @collection.host_collections } %>
+            <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :host_collections => @collection.host_collections, :vm_libraries => @collection.vm_libraries } %>
 
             </div> <!-- end #dataTable -->
+
+            <div class="dataTable">
               <div class="inside">
 
                 <div class="data-table-column">
