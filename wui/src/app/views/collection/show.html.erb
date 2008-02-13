@@ -50,7 +50,7 @@
             <h3>Actions</h3>
             <%if @is_admin -%>
             <div class="actions create">
-              <%= link_to 'Create Virtual Machine', { :controller => 'vm', :action => 'new', :attach_to_pool => @collection }, { :class => "" } %>
+              <%= link_to 'Create Virtual Machine', { :controller => 'vm', :action => 'new', :host_collection_id => @collection }, { :class => "" } %>
               <%= link_to 'Add Storage to Collection', { :controller => 'storage', :action => 'new', :hardware_pool_id => @collection }, { :class => "" } %>
               <%= link_to 'Add Host to Collection', { :controller => 'host', :action => 'list', :attach_to_pool => @collection }, { :class => "" } %>
               <hr/>
