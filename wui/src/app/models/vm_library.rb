@@ -1,5 +1,17 @@
 class VmLibrary < ActiveRecord::Base
-  has_many :permissions, :dependent => :destroy, :order => "id ASC"
+  # should have put this into /lib and used the :extend => attr
+  has_many :permissions, :dependent => :destroy, :order => "id ASC" do
+      def admins
+          find_all_by_privilege(Permission::ADMIN)
+      end
+      def monitors
+          find_all_by_privilege(Permission::MONITOR)
+      end
+      def delegates
+          find_all_by_privilege(Permission::DELEGATE)
+      end
+  end
+
 
   has_many :vms, :dependent => :nullify, :order => "id ASC"
   belongs_to :host_collection
