@@ -1,4 +1,21 @@
 #!/bin/bash
+#
+# Create an Ovirt Host PXE boot
+# Copyright 2008 Red Hat, Inc.
+# Written by Chris Lalancette <clalance@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 . ./ovirt-common.sh
 
@@ -119,7 +136,7 @@ done
 /sbin/ip link set dev eth0 up
 /sbin/dhclient eth0 -R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,libvirt-auth-method,ovirt-tftp-server
 echo "Fetching root filesystem from server..."
-/usr/bin/tftp \`cat /etc/ovirt_tftp_server\` -c get $ISONAME
+/usr/bin/tftp -m binary \`cat /etc/ovirt_tftp_server\` -c get $ISONAME
 rootfstype=iso9660
 thingtomount=$ISONAME
 mountoptions=" -o loop"
