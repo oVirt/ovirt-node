@@ -1,0 +1,35 @@
+<div id="dataTableWrapper">
+
+<div class="dataTable">
+    <div class="inside">
+
+      <div class="data-table-column">
+      <% form_tag :action => 'update', :id => @collection do %>
+        <%= render :partial => 'form' %>
+        <%= submit_tag 'Edit' %>
+      <% end %>
+      </div>
+
+      <div class="data-table-column">
+        <strong>Existing Collections</strong>
+        <%= render :partial => "list", :locals => { :host_collections => @collection.network_map.host_collections } %>
+      </div>
+
+
+    </div> <!-- end #data-table.inside -->
+  </div> <!-- end #dataTable -->
+
+
+</div> <!-- end #dataTableWrapper -->
+
+<div id="tools">
+<h3>Actions</h3>
+  <div class="actions">
+    <%= link_to "Back to #{@collection.name}", { :action => 'show', :id => @collection }, { :class => "" } %>
+  </div>
+</div> <!-- end #tools -->
+
+
+<%- content_for :title do -%>
+<%= "Editing Collection #{@collection.name}" %>
+<%- end -%>

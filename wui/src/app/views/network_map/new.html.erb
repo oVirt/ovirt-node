@@ -1,0 +1,35 @@
+          <div id="dataTableWrapper">
+
+          <div class="dataTable">
+              <div class="inside">
+
+                <div class="data-table-column">
+                <% form_tag :action => 'create', :id => @network_map do %>
+                  <%= render :partial => 'form' %>
+                  <%= submit_tag 'Create Network Map' %>
+                <% end %>
+                </div>
+
+                <div class="data-table-column">
+                  <strong>Existing Network Maps</strong>
+                  <%= render :partial => "list", :locals => { :network_maps => @organizational_pool.network_maps } %>
+                </div>
+
+              </div> <!-- end #data-table.inside -->
+            </div> <!-- end #dataTable -->
+
+
+          </div> <!-- end #dataTableWrapper -->
+
+          <div id="tools">
+
+          <h3>Actions</h3>
+            <div class="actions">
+              <%= link_to "Back to #{@network_map.organizational_pool.name}", { :controller => 'pool', :action => 'show', :id => @network_map.organizational_pool }, { :class => "" } %>
+            </div>
+          </div> <!-- end #tools -->
+
+<%- content_for :title do -%>
+<%= _("Create New Network Map") %>
+<%- end -%>
+

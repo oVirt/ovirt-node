@@ -1,7 +1,7 @@
 <%= error_messages_for 'quota' %>
 
 <!--[form:quota]-->
-<%= hidden_field_with_label "Hardware Pool", 'quota', 'hardware_pool_id', @quota.hardware_pool.name if @quota.hardware_pool  %>
+<%= hidden_field_with_label "Host Collection", 'quota', 'host_collection_id', @quota.host_collection.name if @quota.host_collection  %>
 <%= hidden_field_with_label "VM Library", 'quota', 'vm_library_id', @quota.vm_library.name if @quota.vm_library  %>
 
 <%= text_field_with_label "Total Virtual CPUs", 'quota', 'total_vcpus'  %>

@@ -1,4 +1,23 @@
 #!/usr/bin/ruby
+# 
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Chris Lalancette <clalance@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
 
 $: << "../app"
 $: << "/usr/share/ovirt-wui/app"
@@ -12,31 +31,12 @@ require 'erb'
 require 'models/host.rb'
 require 'models/hardware_pool.rb'
 require 'models/permission.rb'
-require 'socket'
+require 'models/motor_pool.rb'
 
 ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
 
 def database_configuration
   YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
-end
-
-def kadmin_local(command)
-  # FIXME: we really should implement the ruby-kerberos bindings to do the
-  # same thing as kadmin.local
-  # FIXME: we should check the return value from the system() call and throw
-  # an exception.
-  # FIXME: we need to return the output back to the caller here
-  system("/usr/kerberos/sbin/kadmin.local -q '" + command + "'")
-end
-
-def get_ip(hostname)
-  ip = Socket::gethostbyname(hostname)[3].unpack('CCCC')
-  addr = ''
-  ip.each do |octet|
-    addr += octet.to_s + '.'
-  end
-
-  return addr[0..-2]
 end
 
 if ARGV.length != 1
@@ -56,6 +56,7 @@ begin
 rescue
   # if we can't contact the host or get details for some reason, we just
   # don't do anything and don't add anything to the database
+  puts "Failed connecting to host " + ARGV[0]
   exit
 end
 
@@ -86,18 +87,6 @@ if $host == nil
            "arch" => info.model,
            "memory" => info.memory,
            "is_disabled" => 0,
-           "hardware_pool" => HardwarePool.get_default_pool
+           "hardware_pool" => MotorPool.find(:first)
            ).save
-
-  ipaddr = get_ip(ARGV[0])
-
-  libvirt_princ = 'libvirt/' + ARGV[0] + '@' + default_realm
-
-  outname = '/var/www/html/' + ipaddr + '-libvirt.tab'
-
-  # FIXME: in order for things to truly run automatically here, the freeipa
-  # server needs to run on the same machine as the WUI.  We could fix this
-  # by doing kadmin with some credentials, but that gets more complicated.  Punt
-  kadmin_local('addprinc -randkey ' + libvirt_princ)
-  kadmin_local('ktadd -k ' + outname + ' ' + libvirt_princ)
 end

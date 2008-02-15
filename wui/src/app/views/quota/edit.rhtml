@@ -1,18 +1,36 @@
-<div id="left">
-<h2><%= _("Editing Quota") %></h2>
+<div id="dataTableWrapper">
 
-<% form_tag :action => 'update', :id => @quota do %>
-  <%= render :partial => 'form' %>
-  <%= submit_tag 'Edit' %>
-<% end %>
+  <div class="dataTable">
+      <div class="inside">
+
+        <div class="data-table-column">
+          <% form_tag :action => 'update', :id => @quota do %>
+            <%= render :partial => 'form' %>
+            <%= submit_tag 'Edit' %>
+          <% end %>
+       </div>
+
+    </div> <!-- end #data-table.inside -->
+  </div> <!-- end #dataTable -->
+
+</div> <!-- end #dataTableWrapper -->
+
+<div id="tools">
+  <h3>Actions</h3>
+
+  <%if @is_admin -%>
+  <div class="actions remove">
+      <%= link_to 'Remove Quota (unlimited)', { :controller => 'quota', :action => 'destroy', :id => @quota }, { :confirm => 'Are you sure?', :method=> :post, :class => "edit" } %>
+  </div>
+  <%- end -%>
+
+  <div class="actions">
+    <%= link_to "Back to #{@quota.host_collection.name}", { :controller => 'pool', :action => 'show', :id => @quota.host_collection }, { :class => "show" } if @quota.host_collection %>
+    <%= link_to "Back to #{@quota.vm_library.name}", { :controller => 'library', :action => 'show', :id => @quota.vm_library_id }, { :class => "show" } if @quota.vm_library %>
+  </div>
 
 </div>
 
-<div id="right">
-  <h2>Actions</h2>
-  <ul class="actions">
-    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @quota }, { :class => "show" } %></li>
-    <li class="action"><%= link_to "Back to #{@quota.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @quota.hardware_pool_id }, { :class => "show" } if @quota.hardware_pool %></li>
-    <li class="action"><%= link_to "Back to #{@quota.vm_library.name}", { :controller => 'library', :action => 'show', :id => @quota.vm_library_id }, { :class => "show" } if @quota.vm_library %></li>
-  </ul>
-</div>
+<%- content_for :title do -%>
+<%=  _("Editing Quota") %>
+<%- end -%>

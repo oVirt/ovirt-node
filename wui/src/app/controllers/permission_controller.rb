@@ -1,3 +1,22 @@
+# 
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Scott Seago <sseago@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
 class PermissionController < ApplicationController
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
@@ -22,7 +41,8 @@ class PermissionController < ApplicationController
 
   def redirect_to_parent
     if @permission.hardware_pool
-      redirect_to :controller => 'pool', :action => 'show', :id => @permission.hardware_pool_id
+      c = hardware_pool_type_to_controller(HardwarePool.find(@permission.hardware_pool_id).type)
+      redirect_to :controller => "%s" % c, :action => 'show', :id => @permission.hardware_pool_id
     elsif @permission.vm_library
       redirect_to :controller => 'library', :action => 'show', :id => @permission.vm_library_id
     else
@@ -43,6 +63,7 @@ class PermissionController < ApplicationController
   def new
     @permission = Permission.new( { :hardware_pool_id => params[:hardware_pool_id],
                                     :vm_library_id => params[:vm_library_id]})
+    @perms = (@permission.hardware_pool)? @permission.hardware_pool.permissions : @permission.vm_library.permissions
     set_perms
     # admin permission required to view permissions
     unless @can_delegate
@@ -60,7 +81,7 @@ class PermissionController < ApplicationController
     else
       if @permission.save
         flash[:notice] = 'Permission was successfully created.'
-        redirect_to_parent
+        redirect_to :action => "new", :hardware_pool_id => @permission.hardware_pool_id
       else
         render :action => 'new'
       end
@@ -78,7 +99,8 @@ class PermissionController < ApplicationController
       pool_id =  @permission.hardware_pool_id
       if @permission.destroy
         if pool_id
-          redirect_to :controller => 'pool', :action => 'show', :id => pool_id
+          flash[:notice] = "<strong>#{@permission.user}</strong> permissions were revoked successfully"
+          redirect_to :action => "new", :hardware_pool_id => @permission.hardware_pool_id
         elsif vm_library_id
           redirect_to :controller => 'library', :action => 'show', :id => vm_library_id
         else

@@ -1,0 +1,11 @@
+<%= error_messages_for 'collection' %>
+
+<!--[form:collection]-->
+<%= hidden_field_with_label "Parent Network Map", 'collection', 'superpool_id', @collection.network_map.name if @collection.network_map%>
+<%= hidden_field_with_label "Parent Host Collection", 'collection', 'superpool_id', @collection.parent_collection.name if @collection.parent_collection%>
+
+<%= text_field_with_label 'Name', 'collection', 'name'  %>
+
+<%= focus('collection_name') %>
+
+<!--[eoform:collection]-->

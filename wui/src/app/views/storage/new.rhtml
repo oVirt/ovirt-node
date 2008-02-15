@@ -1,16 +1,27 @@
-<div id="left">
-<h2><%= _("New Storage Volume") %></h2>
+          <div id="dataTableWrapper">
 
-<% form_tag :action => 'create' do %>
-  <%= render :partial => 'form' %>
-  <%= submit_tag "Create" %>
-<% end %>
+          <div class="dataTable">
+              <div class="inside">
 
-</div>
+                <div class="data-table-column">
+                <% form_tag :action => 'create' do %>
+                  <%= render :partial => 'form' %>
+                  <%= submit_tag "Create" %>
+                <% end %>
+                </div>
 
-<div id="right">
-  <h2>Actions</h2>
-  <ul class="actions">
-    <li class="action"><%= link_to "Back to #{@storage_volume.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_pool.id }, { :class => "list" } %></li>
-  </ul>
-</div>
+                <div class="data-table-column">
+                  <strong>Choose From Storage in <%= @storage_volume.hardware_pool.superpool.name %></strong>
+                  <%= render :partial => "list", :locals => { :storage_volumes => @storage_volume.hardware_pool.storage_volumes } %>
+                </div>
+
+              </div> <!-- end #data-table.inside -->
+            </div> <!-- end #dataTable -->
+
+
+          </div> <!-- end #dataTableWrapper -->
+
+
+<%- content_for :title do -%>
+<%= _("Add Storage") %>
+<%- end -%>

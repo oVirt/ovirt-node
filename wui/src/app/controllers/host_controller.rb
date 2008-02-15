@@ -1,3 +1,22 @@
+# 
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Scott Seago <sseago@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
 class HostController < ApplicationController
   def index
     list
@@ -22,7 +41,7 @@ class HostController < ApplicationController
       set_perms(pool)
       unless @can_monitor
         flash[:notice] = 'You do not have permission to view this host list: redirecting to top level'
-        redirect_to :controller => 'pool', :action => 'list'
+        redirect_to :controller => 'dashboard', :action => 'list'
       else
         conditions = "hardware_pool_id is null"
         conditions += " or hardware_pool_id=#{pool.superpool_id}" if pool.superpool
@@ -39,7 +58,7 @@ class HostController < ApplicationController
     set_perms(@host.hardware_pool)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this host: redirecting to top level'
-      redirect_to :controller => 'pool', :action => 'list'
+      redirect_to :controller => 'dashboard', :action => 'list'
     end
   end
 
@@ -111,14 +130,14 @@ class HostController < ApplicationController
     else
       pool = HardwarePool.find(params[:hardware_pool_id])
       host_url = url_for(:controller => "host", :action => "show", :id => @host)
-      pool_url = url_for(:controller => "hardware_pool", :action => "show", :id => pool)
+      pool_url = url_for(:controller => pool.get_controller, :action => "show", :id => pool)
       @host.hardware_pool_id = pool.id
       if @host.save
         flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, pool_url, pool.name ]
-        redirect_to :controller => 'pool', :action => 'show', :id => pool
+        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
       else
         flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, host_url, host.hostname ]
-        redirect_to :controller => 'pool', :action => 'show', :id => pool
+        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
       end
     end
   end

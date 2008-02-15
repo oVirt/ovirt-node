@@ -1,86 +1,80 @@
-<div id="left">
-<h2><%= _("Manage #{@hardware_pool.get_type_label}: #{@hardware_pool.name}") %></h2> 
+          <div id="dataTableWrapper">
+
+          <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @organizational_pool, :vms => [] } %>
+
+          <div class="dataTable">
+
+              <div class="inside">
+
+                <div class="data-table-column">
+                <p> This explains what a Hardware Pool actually does </p>
+                </div>
+
+              </div> <!-- end #data-table.inside -->
+
+              <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :network_maps => @organizational_pool.network_maps, :host_collections => @organizational_pool.host_collections } %>
+
+            </div> <!-- end .dataTable -->
 
 
-<h3>Hosts</h3>
-<%= render :partial => "/host/list", :locals => { :hosts => @hardware_pool.hosts } %>
+            <div class="data-section">
+              <div class="data-section-header"><strong>Available Hosts</strong></div>
+              <div class="data-section-stats">Statistics Data</div>
+              <div class="data-section-table">
+                <div class="inside">
+                <%= render :partial => "/host/list", :locals => { :hosts => @organizational_pool.hosts } %>
+                </div>
+              </div>
+            </div>
 
-<h3>Storage Volumes</h3>
-<%= render :partial => "/storage/list", :locals => { :storage_volumes => @hardware_pool.storage_volumes } %>
+            <div class="data-section">
+              <div class="data-section-header"><strong>Available Storage</strong></div>
+              <div class="data-section-stats">Statistics Data</div>
+              <div class="data-section-table">
+                <div class="inside">
+                  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @organizational_pool.storage_volumes } %>
+                </div>
+              </div>
+            </div>
 
-<%unless @hardware_pool.subpools.empty? -%>
-<h3>Hardware Subpools</h3>
-<%= render :partial => "list", :locals => { :hardware_pools => @hardware_pool.subpools } %>
-<% end -%>
+          </div> <!-- end #dataTableWrapper -->
 
-<%unless @hardware_pool.vm_libraries.empty? -%>
-<h3>VM Libraries</h3>
-<%= render :partial => "/library/list", :locals => { :vm_libraries => @hardware_pool.vm_libraries } %>
-<% end -%>
+          <div id="tools">
 
-<%if @is_admin -%>
-<h3>Permissions</h3>
-<%= render :partial => "/permission/list", :locals => { :permissions => @hardware_pool.permissions, :show_object => false, :show_actions => @can_delegate } %>
-<% end -%>
+            <h3>Actions</h3>
 
-</div>
+            <%if @is_admin -%>
+            <div class="actions create">
+              <%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "" } %>
+              <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @hardware_pool}, { :class => "" } %>
+              <hr/>
+              <%= link_to_if @is_admin, 'Create Network Map', { :controller => "network_map", :action => 'new', :superpool_id => @organizational_pool }, { :class => "" } %>
+            </div>
 
-<div id="right">
-  <h2>Actions</h2>
-  <%if @is_admin -%>
-  <ul class="actions create">
-    <%if @hardware_pool.is_host_collection -%>
-      <li class="action"><%= link_to 'New VM Library', { :controller => 'library', :action => 'new', :hardware_pool => @hardware_pool}, { :class => "create" } %></li>
-    <% end -%>
-    <%if @hardware_pool.sub_org_pool_ok? -%>
-      <li class="action"><%= link_to 'New Pool', { :action => 'new', :superpool => @hardware_pool, :is_organizational => 1}, { :class => "create" } %></li>
-    <% end -%>
-    <%if @hardware_pool.sub_network_map_ok? -%>
-      <li class="action"><%= link_to 'New Map', { :action => 'new', :superpool => @hardware_pool, :is_network_map => 1}, { :class => "create" } %></li>
-    <% end -%>
-    <%if @hardware_pool.sub_host_collection_ok? -%>
-      <li class="action"><%= link_to 'New Collection', { :action => 'new', :superpool => @hardware_pool, :is_host_collection => 1}, { :class => "create" } %></li>
-    <% end -%>
-    <li class="action"><%= link_to 'New Storage Volume', { :controller => 'storage', :action => 'new', :hardware_pool_id => @hardware_pool}, { :class => "create" } %></li>
-  </ul>
-  <% end -%>
-  <ul class="actions edit">
-    <%if @is_admin -%>
-    <%if @hardware_pool.org_pool_ok? -%>
-      <li class="action"><%= link_to 'Make this a Pool', { :action => 'make_pool', :id => @hardware_pool}, { :class => "edit" } %></li>
-    <% end -%>
-    <%if @hardware_pool.unset_org_pool_ok? -%>
-      <li class="action"><%= link_to 'Revoke Pool status', { :action => 'unset_pool', :id => @hardware_pool}, { :class => "edit" } %></li>
-    <% end -%>
-    <%if @hardware_pool.network_map_ok? -%>
-      <li class="action"><%= link_to 'Make this a Map', { :action => 'make_map', :id => @hardware_pool}, { :class => "edit" } %></li>
-    <% end -%>
-    <%if @hardware_pool.unset_network_map_ok? -%>
-      <li class="action"><%= link_to 'Revoke Map status', { :action => 'unset_map', :id => @hardware_pool}, { :class => "edit" } %></li>
-    <% end -%>
-    <%if @hardware_pool.host_collection_ok? -%>
-      <li class="action"><%= link_to 'Make this a Collection', { :action => 'make_collection', :id => @hardware_pool}, { :class => "edit" } %></li>
-    <% end -%>
-    <%if @hardware_pool.unset_host_collection_ok? -%>
-      <li class="action"><%= link_to 'Revoke Collection status', { :action => 'unset_collection', :id => @hardware_pool}, { :class => "edit" } %></li>
-    <% end -%>
-    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @hardware_pool}, { :class => "edit" } %></li>
-    <li class="action"><%= link_to 'Add Host', { :controller => 'host', :action => 'list', :attach_to_pool => @hardware_pool}, { :class => "edit" } %></li>
-    <li class="action"><%= link_to 'Add Storage Volume', { :controller => "storage", :action => 'list', :attach_to_pool => @hardware_pool }, {:class => "edit" } %></li>
-    <% end -%>
-    <%if @can_delegate -%>
-    <li class="action"><%= link_to 'Grant Privileges', { :controller => 'permission', :action => 'new', :hardware_pool_id => @hardware_pool}, { :class => "edit" } %></li>
-    <% end -%>
-  </ul>
-  <%if @is_admin -%>
-  <ul class="actions remove">
-    <li class="action"><%= link_to 'Delete Pool', { :controller => "pool", :action => 'destroy', :id => @hardware_pool }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
-  </ul>
-  <% end -%>
-  <ul class="actions">
-      <%if @hardware_pool.superpool -%>
-        <li class="action"><%= link_to "Up to #{@hardware_pool.superpool.name}", { :action => 'show', :id => @hardware_pool.superpool_id}, { :class => "list" } %></li>
-      <% end -%>
-      <li class="action"><%= link_to 'Back to pools', { :controller => 'pool', :action => 'list' }, { :class => "list" } %></li>
-  </ul>
-</div>
+            <div class="actions edit">
+              <%= link_to 'Edit Pool Properties', { :action => 'edit', :id => @organizational_pool}, { :class => "edit" } %>
+            </div>
+
+            <div class="actions remove">
+              <%= link_to 'Delete Pool', { :controller => "pool", :action => 'destroy', :id => @organizational_pool }, :confirm => 'Are you sure you want to delete - %s?' % @organizational_pool.name, :method => :post, :class => "remove" %>
+            </div>
+            <%- end -%>
+            <div class="actions">
+              <%= link_to "Back to Dashboard", { :controller => 'dashboard' }, { :class => "" } %>
+            </div>
+
+            <div class="actions users">
+              <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "edit" } %></div>
+              <table>
+                <tr><td><%= pluralize @organizational_pool.permissions.admins.size, "Admin" %></td></tr>
+                <tr><td><%= pluralize @organizational_pool.permissions.delegates.size, "Delegate" %></td></tr>
+                <tr><td><%= pluralize @organizational_pool.permissions.monitors.size, "Monitor" %></td></tr>
+              </table>
+            </div>
+
+          </div>
+
+<%- content_for :title do -%>
+<%= @organizational_pool.name %>
+<%- end -%>
+

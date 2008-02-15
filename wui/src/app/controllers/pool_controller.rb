@@ -1,21 +1,37 @@
-class PoolController < ApplicationController
+# 
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Scott Seago <sseago@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
+class PoolController < AbstractPoolController
   def index
     list
     render :action => 'list'
   end
 
-  # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, :create, :update ],
-         :redirect_to => { :action => :list }
-
+  #FIXME: this method isn't really needed anymore
   def list
     @user = get_login_user
-    @default_pool = HardwarePool.get_default_pool
+    @default_pool = MotorPool.find(:first)
     set_perms(@default_pool)
-    @hardware_pools = HardwarePool.list_for_user(@user)
+    @organizational_pools = OrganizationalPool.list_for_user(@user)
     @hosts = Set.new
     @storage_volumes = Set.new
-    @hardware_pools.each do |pool|
+    @organizational_pools.each do |pool|
       @hosts += pool.hosts
       @storage_volumes += pool.storage_volumes
     end
@@ -23,171 +39,64 @@ class PoolController < ApplicationController
     @storage_volumes = @storage_volumes.entries
   end
 
-  def set_perms(hwpool)
-    @user = get_login_user
-    @is_admin = hwpool.is_admin(@user)
-    @can_monitor = hwpool.can_monitor(@user)
-    @can_delegate = hwpool.can_delegate(@user)
-  end
-
-  def show
-    @hardware_pool = HardwarePool.find(params[:id])
-    set_perms(@hardware_pool)
-    unless @can_monitor
-      flash[:notice] = 'You do not have permission to view this hardware resource pool: redirecting to top level'
-      redirect_to :action => 'list'
-    end
-  end
 
   def new
-    if not params[:superpool]
-      flash[:notice] = 'Parent pool is required for new HardwarePool '
-      redirect_to :action => 'list'
-    elsif not (params[:is_organizational] or 
-               params[:is_network_map] or 
-               params[:is_host_collection])
-      flash[:notice] = 'Pool type is required for new HardwarePool '
-      redirect_to :action => 'list'
-    else
-
-      @hardware_pool = HardwarePool.new( { :superpool_id => params[:superpool],
-                                         :is_organizational => params[:is_organizational],
-                                         :is_network_map => params[:is_network_map],
-                                         :is_host_collection => params[:is_host_collection]} )
-      set_perms(@hardware_pool.superpool)
-      unless @is_admin
-        flash[:notice] = 'You do not have permission to create a subpool '
-        redirect_to :action => 'show', :id => @hardware_pool.superpool_id
-      end
-    end
+    @organizational_pools = OrganizationalPool.find(:all)
   end
 
   def create
-    if not params[:hardware_pool][:superpool_id]
-      flash[:notice] = 'Parent pool is required for new HardwarePool '
-      redirect_to :action => 'list'
-    elsif not (params[:hardware_pool][:is_organizational] or 
-               params[:hardware_pool][:is_network_map] or 
-               params[:hardware_pool][:is_host_collection])
-      flash[:notice] = 'Pool type is required for new HardwarePool '
-      redirect_to :action => 'list'
+    if @organizational_pool.save
+      flash[:notice] = 'HardwarePool was successfully created.'
+      redirect_to :action => 'show', :id => @organizational_pool
     else
-      @hardware_pool = HardwarePool.new(params[:hardware_pool])
-      set_perms(@hardware_pool.superpool)
-      unless @is_admin
-        flash[:notice] = 'You do not have permission to create a subpool '
-        redirect_to :action => 'show', :id => @hardware_pool.superpool_id
-      else
-        if @hardware_pool.save
-          flash[:notice] = 'HardwarePool was successfully created.'
-          if @hardware_pool.superpool
-            redirect_to :action => 'show', :id => @hardware_pool.superpool_id
-          else
-            redirect_to :action => 'list'
-          end
-        else
-          render :action => 'new'
-        end
-      end
+      render :action => 'new'
     end
   end
 
   def edit
-    @hardware_pool = HardwarePool.find(params[:id])
-    set_perms(@hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to edit this pool '
-      redirect_to :action => 'show', :id => @hardware_pool
-    end
+    @other_pools = OrganizationalPool.find(:all, :conditions => [ "id != ?", params[:id] ])
   end
 
   def update
-    @hardware_pool = HardwarePool.find(params[:id])
-    set_perms(@hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to edit this pool '
-      redirect_to :action => 'show', :id => @hardware_pool
+    if @organizational_pool.update_attributes(params[:organizational_pool])
+      flash[:notice] = 'Hardware Pool was successfully updated.'
+      redirect_to :action => 'show', :id => @organizational_pool
     else
-      if @hardware_pool.update_attributes(params[:hardware_pool])
-        flash[:notice] = 'HardwarePool was successfully updated.'
-        redirect_to :action => 'show', :id => @hardware_pool
-      else
-        render :action => 'edit'
-      end
+      render :action => 'edit'
     end
   end
 
-  def make_pool
-    set_pool_type("is_organizational", 1, "Organizational Pool")
-  end
-  def unset_pool
-    set_pool_type("is_organizational", nil, "Organizational Pool")
-  end
-  def make_map
-    set_pool_type("is_network_map", 1, "Network Map")
-  end
-  def unset_map
-    set_pool_type("is_network_map", nil, "Network Map")
-  end
-  def make_collection
-    set_pool_type("is_host_collection", 1, "Host Collection")
-  end
-  def unset_collection
-    set_pool_type("is_host_collection", nil, "Host Collection")
-  end
-
-  def set_pool_type(method,val, label)
-    @hardware_pool = HardwarePool.find(params[:id])
-    set_perms(@hardware_pool)
-    if (not @is_admin)
-      flash[:notice] = 'You do not have permission to edit this pool '
-    elsif (not @hardware_pool.is_type_update_ok?(method, val))
-      operation = val.nil? ? "clear" : "set"
-      flash[:notice] = "#{operation}  #{label} is not a valid operation."
-    elsif @hardware_pool.send(method) == val
-      operation = val.nil? ? "cleared" : "set"
-      flash[:notice] = "Pool type #{label} is already #{operation}."
-    else
-      @hardware_pool.send(method+"=", val)
-      operation = val.nil? ? "clear" : "set"
-      if @hardware_pool.save
-        flash[:notice] = "Pool type #{operation}: #{label}."
-      else
-        flash[:notice] = "#{operation} #{label} failed."
-      end
-    end
-    redirect_to :action => 'show', :id => @hardware_pool
-  end
-
-  # move pool associations upward upon delete
+  # pool must be have no subpools empty to delete
   def destroy
-    pool = HardwarePool.find(params[:id])
-    set_perms(pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to destroy this pool '
-      redirect_to :action => 'show', :id => pool
+    superpool = @organizational_pool.superpool
+    if not(superpool)
+      flash[:notice] = "You can't delete the top level HW pool."
+      redirect_to :action => 'show', :id => @organizational_pool
+    elsif not(@organizational_pool.network_maps.empty?)
+      flash[:notice] = "You can't delete a pool without first deleting its Network Maps."
+      redirect_to :action => 'show', :id => @organizational_pool
     else
-      superpool = pool.superpool
-      if superpool
-        pool.hosts.each do |host| 
-          host.hardware_pool_id=superpool.id
-          host.save
-        end
-        pool.storage_volumes.each do |vol| 
-          vol.hardware_pool_id=superpool.id
-          vol.save
-        end
-        pool.subpools.each do |subpool| 
-          subpool.superpool_id=superpool.id
-          subpool.save
-        end
-        # what about quotas -- for now they're deleted
-        HardwarePool.find(params[:id]).destroy
-        redirect_to :action => 'show', :id => superpool
-      else
-        flash[:notice] = "You can't delete the top level HW pool."
-        redirect_to :action => 'show', :id => pool
-      end
+      @organizational_pool.move_contents_and_destroy
+      redirect_to :controller => "dashboard"
     end
+  end
+
+  private
+  #filter methods
+  def pre_new
+    @organizational_pool = OrganizationalPool.new( { :superpool_id => params[:superpool_id] } )
+    @perm_obj = @organizational_pool.superpool
+  end
+  def pre_create
+    @organizational_pool = OrganizationalPool.create(params[:organizational_pool])
+    @perm_obj = @organizational_pool.superpool
+  end
+  def pre_edit
+    @organizational_pool = OrganizationalPool.find(params[:id])
+    @perm_obj = @organizational_pool
+  end
+  def pre_show
+    @organizational_pool = OrganizationalPool.find(params[:id])
+    @perm_obj = @organizational_pool
   end
 end

@@ -1,12 +1,12 @@
-<%= error_messages_for 'hardware_pool' %>
+<%= error_messages_for 'organizational_pool' %>
 
-<!--[form:hardware_pool]-->
-<%= hidden_field_with_label "Parent pool", 'hardware_pool', 'superpool_id', @hardware_pool.superpool.name if @hardware_pool.superpool %>
+<!--[form:organizational_pool]-->
+<%= hidden_field_with_label "Parent pool", 'organizational_pool', 'superpool_id', @organizational_pool.superpool.name if @organizational_pool.superpool %>
 
-<%= hidden_field 'hardware_pool', 'is_organizational' if @hardware_pool.is_organizational %>
-<%= hidden_field 'hardware_pool', 'is_network_map' if @hardware_pool.is_network_map %>
-<%= hidden_field 'hardware_pool', 'is_host_collection' if @hardware_pool.is_host_collection %>
+<%= text_field_with_label 'Pool Name', 'organizational_pool', 'name'  %>
 
-<%= text_field_with_label 'Name', 'hardware_pool', 'name'  %>
-<!--[eoform:hardware_pool]-->
+<%= focus('organizational_pool_name') %>
+
+<!--[eoform:organizational_pool]-->
+
 

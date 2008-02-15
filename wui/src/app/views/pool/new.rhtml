@@ -1,19 +1,36 @@
-<div id="left">
-<h2>New <%= @hardware_pool.get_type_label %></h2>
+          <div id="dataTableWrapper">
 
-<% form_tag :action => 'create' do %>
-  <%= render :partial => 'form' %>
-  <%= submit_tag "Create" %>
-<% end %>
+          <div class="dataTable">
+              <div class="inside">
 
-</div>
+                <div class="data-table-column">
+                <% form_tag :action => 'create' do %>
+                  <%= render :partial => 'form' %>
+                  <%= submit_tag "Create Pool" %>
+                <% end %>
+                </div>
 
-<div id="right">
-  <h2>Actions</h2>
-  <ul class="actions">
-    <%if @hardware_pool.superpool -%>
-      <li class="action"><%= link_to "Back to #{@hardware_pool.superpool.name}", { :action => 'show', :id => @hardware_pool.superpool_id}, { :class => "list" } %></li>
-    <% end -%>
-  </ul>
-</div>
+                <div class="data-table-column">
+                <h3>Existing Hardware Pools</h3>
+                  <%= render :partial => "list", :locals => { :hardware_pools => @organizational_pools } %>
+                </div>
+
+              </div> <!-- end #data-table.inside -->
+            </div> <!-- end #dataTable -->
+
+
+          </div> <!-- end #dataTableWrapper -->
+
+          <div id="tools">
+
+          <h3>Actions</h3>
+            <div class="actions">
+              <%= link_to "Back to Dashboard", { :controller => 'dashboard' }, { :class => "" } %>
+            </div>
+          </div> <!-- end #tools -->
+
+<%- content_for :title do -%>
+<%= "Create New Hardware Pool" %>
+<%- end -%>
+
 

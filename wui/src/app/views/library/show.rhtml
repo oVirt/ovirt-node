@@ -1,17 +1,7 @@
-<div id="left">
-<h2><%= _("Manage Virtual Machines") %></h2>
-<p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
-
+<div id="dataTableWrapper">
 <%= error_messages_for 'vm_actions' %>
-<script type="text/javascript">
-function confirm_and_submit(item){
-   c = true
-   if(item.options[item.options.selectedIndex].value == "destroy"){
-      c = confirm('Are you sure you want to destroy these VMs?')
-   }
-   if(c){ item.form.submit(); } else{ item.selectedIndex = 0; }
-}
-</script> 
+
+<p>From this console you can control operation, Add, Edit, and Remove Virtual Machines.</p>
 
 <form action="/library/vm_actions" name="vm_actions" method="post">
 <%= tag :input, { "type" => "hidden", "name" => "vm_actions[vm_library_id]", "value" => "@vm_library.id"}  %> 
@@ -32,7 +22,7 @@ function confirm_and_submit(item){
 <%= render :partial => "/vm/list", :locals => { :vms => @vm_library.vms } %>
 </form>
 
-  <h3>VM Library <%= @vm_library.name %></h3>
+  <h3>VM Library Resources</h3>
   <table>
     <tr>
     <th></th>
@@ -50,49 +40,60 @@ function confirm_and_submit(item){
   <% end %>
   </table>
 
-<%if @is_admin -%>
-<h3>Permissions</h3>
-<%= render :partial => "/permission/list", :locals => { :permissions => @vm_library.permissions, :show_object => false, :show_actions => @can_delegate  } %>
-<% end -%>
+</div> <!-- end #dataTableWrapper -->
 
-</div>
-
-<div id="right">
-  <h2>Actions</h2>
+<div id="tools">
+  <h3>Actions</h3>
   <%if @is_admin -%>
-  <ul class="actions create">
-    <li class="action"><%= link_to_if @vm_library, 'Create New VM', {:controller => "vm", :action => 'new', :vm_library_id => @vm_library}, { :class => "create" } %></li>
-  </ul>
+  <div class="actions create">
+    <%= link_to_if @vm_library, 'Create New VM', {:controller => "vm", :action => 'new', :vm_library_id => @vm_library}, { :class => "create" } %>
+  </div>
   <% end -%>
-  <ul class="actions edit">
+  <div class="actions edit">
     <%if @is_hwpool_admin -%>
-    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @vm_library }, { :class => "edit" } %></li>
+    <%= link_to 'Edit VM Library', { :action => 'edit', :id => @vm_library }, { :class => "edit" } %>
       <%if @vm_library.quota -%>
-      <li class="action"><%= link_to 'Edit Quota', { :controller => 'quota', :action => 'edit', :id => @vm_library.quota }, { :class => "edit" } %></li>
-      <li class="action"><%= link_to 'Remove Quota', { :controller => 'quota', :action => 'destroy', :id => @vm_library.quota }, { :confirm => 'Are you sure?', :method=> :post, :class => "edit" } %></li>
-      <li class="action"><%= link_to 'Delete Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %></li>
+      <%= link_to 'Edit Quota', { :controller => 'quota', :action => 'edit', :id => @vm_library.quota }, { :class => "edit" } %>
+      <%= link_to 'Delete Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %>
       <% else -%>
-      <li class="action"><%= link_to 'Add Quota', { :controller => 'quota', :action => 'new', :vm_library_id => @vm_library }, { :class => "edit" } %></li>
+      <%= link_to 'Edit Quota', { :controller => 'quota', :action => 'new', :vm_library_id => @vm_library }, { :class => "edit" } %>
       <% end -%>
     <% end -%>
-    <%if @can_delegate -%>
-    <li class="action"><%= link_to 'Grant Privileges', { :controller => 'permission', :action => 'new', :vm_library_id => @vm_library}, { :class => "edit" } %></li>
-    <% end -%>
-  </ul>
+  </div>
   <%if @is_hwpool_admin -%>
-  <ul class="actions remove">
-    <li class="action"><%= link_to 'Delete Library', { :controller => "vm_library", :action => 'destroy', :id => @vm_library }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></li>
-  </ul>
+  <div class="actions remove">
+    <%= link_to 'Delete Library', { :controller => "library", :action => 'destroy', :id => @vm_library }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %>
+  </div>
   <% end -%>
-  <ul class="actions">
-    <li class="action"><%= link_to 'Your VM Libraries', { :action => 'list' }, { :class => "list" } %></li>
-    <li class="action"><%= link_to "to #{@vm_library.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @vm_library.hardware_pool }, { :class => "list" } %></li>
-  </ul>
+  <div class="actions">
+    <%= link_to 'All your VM Libraries', { :action => 'list' }, { :class => "list" } %>
+    <%= link_to "Back to #{@vm_library.host_collection.name}", { :controller => 'collection', :action => 'show', :id => @vm_library.host_collection }, { :class => "list" } %>
+  </div>
+  <div class="actions users">
+    <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :vm_library_id => @vm_library }, { :class => "" } %></div>
+    <table>
+      <tr><td><%= pluralize @vm_library.permissions.admins.size, "Admin" %></td></tr>
+      <tr><td><%= pluralize @vm_library.permissions.delegates.size, "Delegate" %></td></tr>
+      <tr><td><%= pluralize @vm_library.permissions.monitors.size, "Monitor" %></td></tr>
+    </table>
+  </div>
   <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
 
 </div>
+
 <%- content_for :title do -%>
-<%= _("Home") %>
+<%= @vm_library.name %>
 <%- end -%>
 
+<%- content_for :scripts do -%>
+<script type="text/javascript">
+function confirm_and_submit(item){
+   c = true
+   if(item.options[item.options.selectedIndex].value == "destroy"){
+      c = confirm('Are you sure you want to destroy these VMs?')
+   }
+   if(c){ item.form.submit(); } else{ item.selectedIndex = 0; }
+}
+</script>
+<%- end -%>
 

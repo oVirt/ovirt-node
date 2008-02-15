@@ -1,23 +1,21 @@
-/* $Id$ */
-
-/***
-  This file is part of avahi.
- 
-  avahi is free software; you can redistribute it and/or modify it
-  under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation; either version 2.1 of the
-  License, or (at your option) any later version.
- 
-  avahi is distributed in the hope that it will be useful, but WITHOUT
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
-  Public License for more details.
- 
-  You should have received a copy of the GNU Lesser General Public
-  License along with avahi; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-  USA.
-***/
+/* 
+ *  Copyright (C) 2008  Red Hat, Inc.
+ *  Written by Chris Lalancette <clalance@redhat.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -58,6 +56,16 @@ static void usage(void)
   fprintf(stderr, " -h\t\tPrint this help message\n");
   fprintf(stderr, " -n\t\tRun in interactive (non-daemon) mode (useful for debugging)\n");
   exit(1);
+}
+
+static void sig_chld(int signo)
+{
+  int status;
+
+  if (waitpid(-1, &status, WNOHANG) < 0) {
+    fprintf(stderr, "Error doing waitpid for child\n");
+    return;
+  }
 }
 
 // the function to make a daemon out of this program
@@ -135,8 +143,7 @@ static void resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface,
 	    }
 	  }
 	  else {
-	    // parent
-	    waitpid(pid, NULL, 0);
+	    // parent, do nothing; we'll catch the child exits with SIGCHLD
 	  }
 
 	  break;
@@ -205,6 +212,7 @@ int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[])
     int ret = 1;
     int daemon_mode = 1;
     int c;
+    struct sigaction act;
 
     while ((c = getopt(argc, argv,":dhn")) != -1) {
       switch(c) {
@@ -230,6 +238,11 @@ int main(AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[])
     if (daemon_mode) {
         daemonize();
     }
+
+    act.sa_handler = sig_chld;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_NOCLDSTOP;
+    sigaction(SIGCHLD, &act, NULL);
 
     /* Allocate main loop object */
     if (!(simple_poll = avahi_simple_poll_new())) {

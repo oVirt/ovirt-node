@@ -1,0 +1,74 @@
+          <div id="dataTableWrapper">
+
+          <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @collection, :vms => [] } %>
+
+          <div class="dataTable">
+
+            <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :host_collections => @collection.host_collections, :vm_libraries => @collection.vm_libraries } %>
+
+            </div> <!-- end #dataTable -->
+
+            <div class="dataTable">
+              <div class="inside">
+
+                <div class="data-table-column">
+                </div>
+
+                <div class="data-table-column">
+                </div>
+
+              </div> <!-- end #data-table.inside -->
+
+            </div> <!-- end #dataTable -->
+
+            <div class="data-section">
+              <div class="data-section-header"><strong>Available Hosts</strong></div>
+              <div class="data-section-stats">Statistics Data</div>
+              <div class="data-section-table">
+                <div class="inside">
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- end #dataTableWrapper -->
+
+          <div id="tools">
+
+            <h3>Actions</h3>
+            <%if @is_admin -%>
+            <div class="actions create">
+              <%= link_to 'Create Virtual Machine', { :controller => 'vm', :action => 'new', :host_collection_id => @collection }, { :class => "" } %>
+              <%= link_to 'Add Storage to Collection', { :controller => 'storage', :action => 'new', :hardware_pool_id => @collection }, { :class => "" } %>
+              <%= link_to 'Add Host to Collection', { :controller => 'host', :action => 'list', :attach_to_pool => @collection }, { :class => "" } %>
+              <hr/>
+              <%= link_to 'Create Subcollection', { :controller => "collection", :action => 'new', :superpool_id => @collection }, { :class => "" } %>
+              <hr/>
+              <%= link_to 'Create VM Library', { :controller => "library", :action => 'new', :host_collection_id => @collection }, { :class => "" } %>
+            </div>
+            <div class="actions edit">
+              <%= link_to 'Edit Collection Properties', { :action => 'edit', :id => @collection }, { :class => "" } %>
+            </div>
+            <div class="actions remove">
+              <%= link_to "Delete Collection", { :controller => 'collection', :action => 'destroy', :id => @collection }, { :method => :post, :confirm => 'Are you sure you want to delete - %s?' % @collection.name, :class => "" } %>
+            </div>
+            <%- end -%>
+            <div class="actions">
+              <%= link_to "Back to #{@collection.network_map.name}", { :controller => 'network_map', :action => 'show', :id => @collection.network_map }, { :class => "" } if @collection.network_map %>
+              <%= link_to "Back to #{@collection.parent_collection.name}", { :action => 'show', :id => @collection.parent_collection }, { :class => "" } if @collection.parent_collection %>
+            </div>
+
+            <div class="actions users">
+              <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :hardware_pool_id => @collection }, { :class => "edit" } %></div>
+              <table>
+                <tr><td><%= pluralize @collection.permissions.admins.size, "Admin" %></td></tr>
+                <tr><td><%= pluralize @collection.permissions.delegates.size, "Delegate" %></td></tr>
+                <tr><td><%= pluralize @collection.permissions.monitors.size, "Monitor" %></td></tr>
+              </table>
+            </div>
+
+
+          </div>
+
+<%- content_for :title do -%>
+<%= @collection.name %>
+<%- end -%>

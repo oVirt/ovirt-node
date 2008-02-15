@@ -1,0 +1,111 @@
+This file explains the various options DHCP options necessary, and how Ovirt
+uses them.  All of these really must be right for things to work, so please
+read carefully.  Also note that I will refer to the "appliance" frequently in
+the following information; this means the Ovirt WUI appliance that you can
+download from ovirt.org.
+
+Let's start with the example dhcpd.conf from the ovirt-appliance-setup.txt:
+
+-------------------------<cut here>----------------------------------------
+1  allow booting;
+2  allow bootp;
+3  ddns-update-style interim;
+4  ignore client-updates;
+5
+6  option iscsi-servers code 200 = array of ip-address;
+7  option ovirt-tftp-server code 201 = ip-address;
+8  option libvirt-auth-method code 202 = text;
+9  option collectd-server code 203 = ip-address;
+10
+11 subnet 192.168.25.0 netmask 255.255.255.0 {
+12         option domain-name "redhat.com";
+13         option domain-name-servers 172.16.76.10,172.16.76.20;
+14         next-server 192.168.25.2;
+15         option routers 192.168.25.1;
+16         option iscsi-servers 192.168.25.1;
+17         option ovirt-tftp-server 192.168.25.2;
+18         option collectd-server 192.168.25.2;
+19         option libvirt-auth-method "krb5:192.168.25.2";
+20         range 192.168.25.3 192.168.25.250;
+21         filename "pxelinux.0";
+22 }
+-------------------------<cut here>----------------------------------------
+
+I'll go through each line (or set of related lines) and explain what they are
+for:
+
+Lines 1-2:  These specify that this DHCP server should allow booting clients
+            connect.  This is necessary since the individual Ovirt hosts will
+            boot using PXE, and hence need to get an IP address/PXE information
+            from this DHCP server.
+
+Lines 3-4:  These specify how DHCP interacts with DNS.  For the most part, you
+            can leave these as-is; if you have special circumstances, you can
+            modify these for your environment.  If you don't know what I am
+            talking about, don't touch these.
+
+Lines 6-9:  These are known as DHCP option records; they are basically
+            extensions to the DHCP protocol that allow you to pass arbitrary
+            information from a DHCP server to clients.  Ovirt requires a number
+            of these DHCP options.  Some sites actually already use certain
+            DHCP option records; if your site is one of these, *and* the option
+            record number conflicts with one of the above, read on, otherwise
+            skip to the next section.  If your in-use option records conflict
+            with what Ovirt wants to use, you *can* change these numbers, but
+            then you'll need to go into the ovirt-host-creator/ovirt.ks
+            kickstart, modify the equivalent options in there, and re-build your
+            Ovirt host image.
+
+Line 11:    This line specifies which subnet this DHCP server is going to serve.
+            This will be the subnet that your Ovirt WUI will live on, as well as
+            all of your Ovirt hosts.
+
+Line 12:    This line specifies which domain name will be handed out to DHCP
+            clients.  For Ovirt purposes, this mostly specifies the search path
+            the Ovirt hosts will use when trying to resolve DNS names.
+
+Line 13:    This line specifies which domain name servers will be handed out to
+            DHCP clients.  You can specify a number of comma separated IP
+            addresses here.  Make sure these IP addresses are reachable from
+            this subnet, otherwise things will not work properly.
+
+Line 14:    This line specifies where the PXE server that will serve out the
+            Ovirt host image lives.  If you are using the appliance, this IP
+            address should be the same as the appliance IP.  If your PXE server
+            lives elsewhere, you'll need to specify the appropriate IP address.
+
+Line 15:    This line specifies the default gateway that clients should use.
+
+Line 16:    This line specifies where the iscsi server(s) are that Ovirt hosts
+            should use.  For now, the iscsi servers must be up and running *and*
+            already exporting the LUNs you will want to use, before you boot
+            up any Ovirt host.  This will become much more dynamic in the
+            future.
+
+Line 17:    This line specifies where the TFTP server for Ovirt is.  This will
+            always be the same as the value in "next-server".  If you are using
+            the appliance, this IP address should be the same as the appliance
+            IP.
+
+Line 18:    This line specifies where the Ovirt hosts should send performance
+            monitoring information.  If you are using the appliance, this IP
+            address should be the same as the appliance IP.  Otherwise, it
+            should be set to the same IP address as the Ovirt WUI is running on.
+
+Line 19:    This line specifies the authentication method libvirt should use
+            to talk to Ovirt hosts.  This is specified as "<auth>:<server>".
+            Currently, the only supported <auth> type is krb5 (for Kerberos
+            encryption/authentication).  The <server> section is a little
+            special; it actually specifies an http server that is serving out
+            the kerberos keytab files for the various Ovirt hosts.  If you are
+            using the appliance, this should be set to
+            "applianceIP:8089".
+
+Line 20:    This line specifies the range of dynamic IP addresses that this
+            DHCP server will serve out.  For now, it's best to have
+            fixed-address for your Ovirt hosts (since we depend on stable
+            hostnames); this is described in more detail in the
+            ovirt-appliance-setup.txt document.
+
+Line 21:    This line describes the name of the PXE file that the Ovirt
+            hosts will first fetch.  This should not be changed.

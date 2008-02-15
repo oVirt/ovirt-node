@@ -1,8 +1,39 @@
+# 
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Scott Seago <sseago@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
 class VmLibrary < ActiveRecord::Base
-  has_many :permissions, :dependent => :destroy, :order => "id ASC"
+  # should have put this into /lib and used the :extend => attr
+  has_many :permissions, :dependent => :destroy, :order => "id ASC" do
+      def admins
+          find_all_by_privilege(Permission::ADMIN)
+      end
+      def monitors
+          find_all_by_privilege(Permission::MONITOR)
+      end
+      def delegates
+          find_all_by_privilege(Permission::DELEGATE)
+      end
+  end
+
 
   has_many :vms, :dependent => :nullify, :order => "id ASC"
-  belongs_to :hardware_pool
+  belongs_to :host_collection
   has_one :quota, :dependent => :destroy
 
 
@@ -25,8 +56,8 @@ class VmLibrary < ActiveRecord::Base
   def total_resources
     the_quota = quota
     if the_quota.nil?
-      pool = hardware_pool
-      while not(pool.nil?)
+      pool = host_collection
+      while not(pool.nil?) and (pool[:type] == HostCollection.name)
         if pool.quota
           the_quota = pool.quota
           pool = nil
@@ -108,10 +139,10 @@ class VmLibrary < ActiveRecord::Base
     end
     # creation is limited to total quota value or values from largest host
     memhost = Host.find(:first, :order => "memory DESC",
-                        :conditions => "hardware_pool_id = #{hardware_pool.id}")
+                        :conditions => "hardware_pool_id = #{host_collection.id}")
     host_mem_limit = (memhost.nil? ? 0 : memhost.memory)
     cpuhost = Host.find(:first, :order => "num_cpus DESC",
-                        :conditions => "hardware_pool_id = #{hardware_pool.id}")
+                        :conditions => "hardware_pool_id = #{host_collection.id}")
     host_cpu_limit = cpuhost.nil? ? 0 : cpuhost.num_cpus
     resources[:memory] = host_mem_limit if resources[:memory].nil? or host_mem_limit < resources[:memory]
     resources[:cpus] = host_cpu_limit if resources[:cpus].nil? or host_cpu_limit < resources[:cpus]
@@ -145,7 +176,7 @@ class VmLibrary < ActiveRecord::Base
       return true
     else
       # now check HW pool permissions
-      return hardware_pool.has_privilege(user, privilege)
+      return host_collection.has_privilege(user, privilege)
     end
   end
 end

@@ -1,3 +1,9 @@
+This document is for developers only.  It describes, step-by-step, all of the
+painful steps that you need to do to get this whole setup running.  If you
+just want to get up and running with Ovirt, you should consider either
+using the pre-built appliance image or the kickstart image, both available
+at http://ovirt.org/download.html
+
 # FIXME: describe all of the other setup you need to do on the host (
 KVM modules, bridge setup, etc.)
 
@@ -140,22 +146,87 @@ imake
 
 13.  From now on, all of the commands are inside the guest.
 
-14.  # yum install dhcp
+14.  Setup the additional yum repositories you will need.  Put the following
+in /etc/yum.repos.d/freeipa.repo:
 
-15.  # chkconfig ntpd on
+[freeipa]
+name=FreeIPA Development
+baseurl=http://freeipa.com/downloads/devel/rpms/F7/x86_64/
+enabled=1
+gpgcheck=0
 
-16.  # echo "0.fedora.pool.ntp.org" >> /etc/ntp/step-tickers
+Also put the following into /etc/yum.repos.d/ovirt.repo:
 
-17.  # service ntpd start
+[ovirt]
+name=Ovirt
+baseurl=http://ovirt.et.redhat.com/repos/ovirt/x86_64
+enabled=1
+gpgcheck=0
 
-18.  # yum install tftp-server tftp dhclient
+15.  # yum install dhcp tftp-server tftp dhclient ipa-server ipa-admintools xinetd libvirt cyrus-sasl-gssapi iscsi-initiator-utils collectd ruby-libvirt ruby-postgres ovirt-wui firefox xorg-x11-xauth
 
-19.  # cd /etc/yum.repos.d ; wget http://freeipa.com/downloads/freeipa-f7-x86_64-devel.repo
+16.  We need to replace the stock mod_auth_kerb with the one from FreeIPA:
 
-20.  # yum install ipa-server ipa-admintools
+# rpm -e --nodeps mod_auth_kerb
+# yum --disablerepo=* --enablerepo=freeipa install mod_auth_kerb
 
-21.  # rpm -e --nodeps mod_auth_kerb
+17.  # chkconfig ntpd on
 
-22.  # yum --disablerepo=fedora --disablerepo=updates install mod_auth_kerb
+18.  # echo "0.fedora.pool.ntp.org" >> /etc/ntp/step-tickers
 
-23.  # chkconfig yum-updatesd off
+19.  # service ntpd start
+
+20.  # chkconfig yum-updatesd off
+
+21.  # chkconfig iptables off
+
+22.  # chkconfig libvirtd off
+
+23.  # chkconfig bluetooth off
+
+24.  # chkconfig cups off
+
+25.  # chkconfig gpm off
+
+26.  # chkconfig pcscd off
+
+27.  # chkconfig dhcpd on
+
+28.  # chkconfig xinetd on
+
+29.  # chkconfig httpd on
+
+30.  # chkconfig postgresql on
+
+31.  Edit /etc/xinetd.d/tftp, and change "disable = yes" to "disable = no"
+
+32.  # service xinetd restart
+
+33.  Edit /etc/sasl2/libvirt.conf, make sure everything is commented out
+except "mech_list: gssapi"
+
+34.  # service postgresql initdb
+
+35.  Edit /var/lib/pgsql/data/pg_hba.conf; erase the whole file, and make it
+look like:
+
+local all all trust
+host all all 127.0.0.1 255.255.255.0 trust
+
+36.  # service postgresql start
+
+37.  Now, create a file that has a few SQL commands (I'll call mine psql.cmds):
+
+CREATE USER ovirt WITH PASSWORD 'v23zj59an';
+CREATE DATABASE ovirt;
+GRANT ALL PRIVILEGES ON DATABASE ovirt to ovirt;
+CREATE DATABASE ovirt_test;
+GRANT ALL PRIVILEGES ON DATABASE ovirt_test to ovirt;
+
+38.  # su - postgres -c "/usr/bin/psql -f psql.cmds"
+
+39.  # cd /usr/share/ovirt-wui ; rake db:migrate
+
+40.  # /usr/bin/ovirt_grant_admin_privileges.sh admin
+
+# FIXME: to be completed
