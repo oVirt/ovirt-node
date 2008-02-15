@@ -1,4 +1,4 @@
-lang en_US.UTF-8
+lang C
 keyboard us
 timezone US/Eastern
 auth --useshadow --enablemd5
@@ -8,11 +8,12 @@ part / --size 950
 services --disabled=iptables --enabled=ntpd,collectd
 bootloader --timeout=1
 
-repo --name=f8 --baseurl=http://gromit.redhat.com/pub/fedora/linux/releases/8/Everything/x86_64/os/
-#repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
-
-repo --name=ovirt-noarch --baseurl=http://people.redhat.com/clalance/virt/noarch
-repo --name=ovirt-x86_64 --baseurl=http://people.redhat.com/clalance/virt/x86_64
+repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
+# Can't enable F8-updates until we have updated KVM modules
+#repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
+# Not using rawhide currently
+#repo --name=rawhide --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
+repo --name=ovirt-x86_64 --baseurl=http://ovirt.org/repos/ovirt/$basearch/
 
 
 %packages
@@ -308,6 +309,24 @@ rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 # with the new libvirt (0.4.0), make sure we we setup gssapi in the mech_list
 sed -i -e 's/mech_list: digest-md5/#mech_list: digest-md5/' /etc/sasl2/libvirt.conf
 sed -i -e 's/#mech_list: gssapi/mech_list: gssapi/' /etc/sasl2/libvirt.conf
+
+# pretty login screen..
+
+echo -e "" > /etc/issue
+echo -e "           888     888 \\033[0;32md8b\\033[0;39m         888    " >> /etc/issue
+echo -e "           888     888 \\033[0;32mY8P\\033[0;39m         888    " >> /etc/issue
+echo -e "           888     888             888    " >> /etc/issue
+echo -e "   .d88b.  Y88b   d88P 888 888d888 888888 " >> /etc/issue
+echo -e "  d88''88b  Y88b d88P  888 888P'   888    " >> /etc/issue
+echo -e "  888  888   Y88o88P   888 888     888    " >> /etc/issue
+echo -e "  Y88..88P    Y888P    888 888     Y88b.  " >> /etc/issue
+echo -e "   'Y88P'      Y8P     888 888      'Y888 " >> /etc/issue
+echo -e "" >> /etc/issue
+echo -e "  Virtualization just got the \\033[0;32mGreen Light\\033[0;39m" >> /etc/issue
+echo -e "" >> /etc/issue
+
+cp /etc/issue /etc/issue.net
+
 
 # setup collectd configuration
 cat > /etc/collectd.conf << \EOF
