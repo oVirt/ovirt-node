@@ -46,7 +46,7 @@
             <%if @is_admin -%>
             <div class="actions create">
               <%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "" } %>
-              <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @hardware_pool}, { :class => "" } %>
+              <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @organizational_pool}, { :class => "" } %>
               <hr/>
               <%= link_to_if @is_admin, 'Create Network Map', { :controller => "network_map", :action => 'new', :superpool_id => @organizational_pool }, { :class => "" } %>
             </div>

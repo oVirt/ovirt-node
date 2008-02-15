@@ -26,8 +26,8 @@
 
           <h3>Actions</h3>
             <div class="actions">
-              <%= link_to_if @collection.network_map, "Back to #{@collection.network_map.name}", { :controller => 'network_map', :action => 'show', :id => @collection.network_map }, { :class => "" } %>
-              <%= link_to_if @collection.parent_collection, "Back to #{@collection.parent_collection.name}", { :action => 'show', :id => @collection.parent_collection }, { :class => "" } %>
+              <%= link_to "Back to #{@collection.network_map.name}", { :controller => 'network_map', :action => 'show', :id => @collection.network_map }, { :class => "" } if @collection.network_map %>
+              <%= link_to "Back to #{@collection.parent_collection.name}", { :action => 'show', :id => @collection.parent_collection }, { :class => "" } if @collection.parent_collection %>
             </div>
           </div> <!-- end #tools -->
 
