@@ -119,7 +119,7 @@ done
 /sbin/ip link set dev eth0 up
 /sbin/dhclient eth0 -R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,libvirt-auth-method,ovirt-tftp-server
 echo "Fetching root filesystem from server..."
-/usr/bin/tftp \`cat /etc/ovirt_tftp_server\` -c get $ISONAME
+/usr/bin/tftp -m binary \`cat /etc/ovirt_tftp_server\` -c get $ISONAME
 rootfstype=iso9660
 thingtomount=$ISONAME
 mountoptions=" -o loop"
