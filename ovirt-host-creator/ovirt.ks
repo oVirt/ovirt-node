@@ -322,6 +322,8 @@ echo -e "  888  888   Y88o88P   888 888     888    " >> /etc/issue
 echo -e "  Y88..88P    Y888P    888 888     Y88b.  " >> /etc/issue
 echo -e "   'Y88P'      Y8P     888 888      'Y888 " >> /etc/issue
 echo -e "" >> /etc/issue
+echo -e "  Managed node \\\\n " >> /etc/issue
+echo -e "" >> /etc/issue
 echo -e "  Virtualization just got the \\033[0;32mGreen Light\\033[0;39m" >> /etc/issue
 echo -e "" >> /etc/issue
 
