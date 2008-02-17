@@ -17,7 +17,7 @@ bootloader --location=mbr --driveorder=sda
 # Note that any partitions you deleted are not expressed
 # here so unless you clear all partitions first, this is
 # not guaranteed to work
-zerombr yes
+zerombr
 clearpart --all --drives=sda
 part /boot --fstype ext3 --size=100 --ondisk=sda
 part pv.2 --size=0 --grow --ondisk=sda
@@ -25,10 +25,10 @@ volgroup VolGroup00 --pesize=32768 pv.2
 logvol swap --fstype swap --name=LogVol01 --vgname=VolGroup00 --size=512
 logvol / --fstype ext3 --name=LogVol00 --vgname=VolGroup00 --size=1024 --grow
 
-repo --name=everything --baseurl=http://download.fedora.redhat.com/pub/fedora/linux/releases/8/Everything/x86_64/os/
-repo --name=updates --baseurl=http://download.fedora.redhat.com/pub/fedora/linux/updates/8/x86_64/
-repo --name=freeipa --baseurl=http://freeipa.com/downloads/devel/rpms/F7/x86_64/
-repo --name=ovirt --baseurl=http://ovirt.et.redhat.com/repos/ovirt/x86_64
+repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
+repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
+repo --name=freeipa --baseurl=http://freeipa.com/downloads/devel/rpms/F7/$basearch/
+repo --name=ovirt --baseurl=http://ovirt.et.redhat.com/repos/ovirt/$basearch/
 
 %packages
 @admin-tools
@@ -243,6 +243,25 @@ baseurl=http://ovirt.et.redhat.com/repos/ovirt/x86_64
 enabled=1
 gpgcheck=0
 EOF
+
+# pretty login screen..
+
+echo -e "" > /etc/issue
+echo -e "           888     888 \\033[0;32md8b\\033[0;39m         888    " >> /etc/issue
+echo -e "           888     888 \\033[0;32mY8P\\033[0;39m         888    " >> /etc/issue
+echo -e "           888     888             888    " >> /etc/issue
+echo -e "   .d88b.  Y88b   d88P 888 888d888 888888 " >> /etc/issue
+echo -e "  d88''88b  Y88b d88P  888 888P'   888    " >> /etc/issue
+echo -e "  888  888   Y88o88P   888 888     888    " >> /etc/issue
+echo -e "  Y88..88P    Y888P    888 888     Y88b.  " >> /etc/issue
+echo -e "   'Y88P'      Y8P     888 888      'Y888 " >> /etc/issue
+echo -e "" >> /etc/issue
+echo -e "  Admin node \\\\n " >> /etc/issue
+echo -e "" >> /etc/issue
+echo -e "  Virtualization just got the \\033[0;32mGreen Light\\033[0;39m" >> /etc/issue
+echo -e "" >> /etc/issue
+
+cp /etc/issue /etc/issue.net
 
 echo "0.fedora.pool.ntp.org" >> /etc/ntp/step-tickers
 
