@@ -53,7 +53,6 @@ class CollectionController < AbstractPoolController
     else
       @collection.move_contents_and_destroy
       flash[:notice] = 'Host Collection successfully destroyed'
-      redirect_to :controller => 'pool', :action => 'show', :id => @collection.organizational_pool
       if superpool[:type] == NetworkMap.name
         redirect_to :controller => 'network_map', :action => 'show', :id => @collection.network_map
       else
