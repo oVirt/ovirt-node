@@ -1,4 +1,7 @@
-<div id="dataTableWrapper">
+    <div id="data">
+      <div class="inside">
+
+        <div id="dataTableWrapper">
 
             <div class="dataTable">
               <div class="inside">
@@ -56,7 +59,12 @@
             </div>
 
           </div> <!-- end #dataTableWrapper -->
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
 
+  </td>
+  <td id="right">
+    <div class="heading">&nbsp;</div>
           <div id="tools">
 
             <h3>Actions</h3>
@@ -65,31 +73,32 @@
     <%- if ! @actions.empty? -%>
     <div class="actions create">
       <% for action in @actions %>
-        <li class="action"><%= link_to action[0], { :action => 'vm_action', :id => @vm, :vm_action => action[1] } , {:class => "create" } %>
+        <%= link_to action[0], { :action => 'vm_action', :id => @vm, :vm_action => action[1] } , {:class => "create" } %>
       <% end %>
     </div>
     <%- end -%>
   <div class="actions edit">
-    <li class="action"><%= link_to 'Edit', { :action => 'edit', :id => @vm } , {:class => "edit" } %>
-    <li class="action"><%= link_to 'Cancel queued tasks', { :action => 'cancel_queued_tasks', :id => @vm } , {:confirm => 'Are you sure?', :method => :post, :class => "edit" } %>
+    <%= link_to 'Edit', { :action => 'edit', :id => @vm } , {:class => "edit" } %>
+    <%= link_to 'Cancel queued tasks', { :action => 'cancel_queued_tasks', :id => @vm } , {:confirm => 'Are you sure?', :method => :post, :class => "edit" } %>
   </div>
   <div class="actions remove">
-    <li class="action"><%= link_to 'Destroy this VM', { :action => 'destroy', :id => @vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
+    <%= link_to 'Destroy this VM', { :action => 'destroy', :id => @vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
   </div>
   <% end -%>
   <div class="actions">
     <% if @vm.vm_library -%>
-      <li class="action"><%= link_to 'Back to Vm Library', { :controller => 'library', :action => 'show', :id => @vm.vm_library }, { :class => "list" } %>
+      <%= link_to 'Back to Vm Library', { :controller => 'library', :action => 'show', :id => @vm.vm_library }, { :class => "list" } %>
     <% else -%>
-      <li class="action"><%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %>
+      <%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %>
     <% end -%>
     <%if @vm.host  -%>
-      <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @vm.host_id }, { :class => "show"  } %>
+      <%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @vm.host_id }, { :class => "show"  } %>
     <% end  -%>
   </div>
 
 </div>
 
+</td>
 
 <%- content_for :title do -%>
 <%= "Virtual Machine #{@vm.description}" %>
