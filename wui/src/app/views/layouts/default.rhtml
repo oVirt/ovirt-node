@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  <div id="headerFade"><div id="logoHeader"><%= image_tag("ovirt_logo.png", :class_name => "logo") -%><span id="loginStatus">Logged in as: <strong><%= @controller.get_login_user -%></strong> | <a href="">freeIPA</a></span></div></div>
+  <div id="headerFade"><div id="logoHeader"><%= link_to image_tag("ovirt_logo.png", :class_name => "logo"), :controller => "library", :action => "list" -%><span id="loginStatus">Logged in as: <strong><%= @controller.get_login_user -%></strong> | <a href="">freeIPA</a></span></div></div>
   <div id="greenLine">&nbsp;</div>
   <div id="darkGreenLine">&nbsp;</div>
 
