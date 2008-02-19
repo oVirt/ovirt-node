@@ -1,3 +1,6 @@
+    <div id="data">
+      <div class="inside">
+
           <div id="dataTableWrapper">
 
           <div class="dataTable">
@@ -11,9 +14,9 @@
                </div>
 
                 <div class="data-table-column">
-                  <strong>Existing Collections</strong>
+                  <strong class="header">Current Collections (<%= @collections.size %>)</strong>
                   <% for collection in @collections %>
-                  <div><%= link_to collection.name, { :controller => "collection", :action => "show", :id => collection }, { } %></div>
+                  <div class="hardware-item"><%= link_to collection.name, { :controller => "collection", :action => "show", :id => collection }, { } %></div>
                   <% end %>
                 </div>
 
@@ -22,6 +25,12 @@
 
           </div> <!-- end #dataTableWrapper -->
 
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+          <div class="heading">&nbsp;</div>
           <div id="tools">
 
           <h3>Actions</h3>
@@ -30,6 +39,7 @@
               <%= link_to "Back to #{@collection.parent_collection.name}", { :action => 'show', :id => @collection.parent_collection }, { :class => "" } if @collection.parent_collection %>
             </div>
           </div> <!-- end #tools -->
+  </td>
 
 <%- content_for :title do -%>
 <%= _("Create New Host Collection") %>

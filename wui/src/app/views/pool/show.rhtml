@@ -1,16 +1,11 @@
+    <div id="data">
+      <div class="inside">
+
           <div id="dataTableWrapper">
 
           <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @organizational_pool, :vms => [] } %>
 
           <div class="dataTable">
-
-              <div class="inside">
-
-                <div class="data-table-column">
-                <p> This explains what a Hardware Pool actually does </p>
-                </div>
-
-              </div> <!-- end #data-table.inside -->
 
               <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :network_maps => @organizational_pool.network_maps, :host_collections => @organizational_pool.host_collections } %>
 
@@ -18,7 +13,7 @@
 
 
             <div class="data-section">
-              <div class="data-section-header"><strong>Available Hosts</strong></div>
+              <div class="data-section-header"><strong>Available Hosts (<%= @organizational_pool.hosts.size -%>)</strong></div>
               <div class="data-section-stats">Statistics Data</div>
               <div class="data-section-table">
                 <div class="inside">
@@ -28,7 +23,7 @@
             </div>
 
             <div class="data-section">
-              <div class="data-section-header"><strong>Available Storage</strong></div>
+              <div class="data-section-header"><strong>Available Storage (<%= @organizational_pool.storage_volumes.size -%>)</strong></div>
               <div class="data-section-stats">Statistics Data</div>
               <div class="data-section-table">
                 <div class="inside">
@@ -39,31 +34,30 @@
 
           </div> <!-- end #dataTableWrapper -->
 
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+          <div class="heading">&nbsp;</div>
           <div id="tools">
 
             <h3>Actions</h3>
 
             <%if @is_admin -%>
-            <div class="actions create">
-              <%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "" } %>
-              <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @organizational_pool}, { :class => "" } %>
-              <hr/>
-              <%= link_to_if @is_admin, 'Create Network Map', { :controller => "network_map", :action => 'new', :superpool_id => @organizational_pool }, { :class => "" } %>
+            <div class="actions">
+              <div><%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "create" } %></div>
+              <div><%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @organizational_pool}, { :class => "create" } %></div>
+              <div><%= link_to_if @is_admin, 'Create Network Map', { :controller => "network_map", :action => 'new', :superpool_id => @organizational_pool }, { :class => "create" } %></div>
             </div>
 
-            <div class="actions edit">
-              <%= link_to 'Edit Pool Properties', { :action => 'edit', :id => @organizational_pool}, { :class => "edit" } %>
-            </div>
-
-            <div class="actions remove">
+            <div class="actions">
               <%= link_to 'Delete Pool', { :controller => "pool", :action => 'destroy', :id => @organizational_pool }, :confirm => 'Are you sure you want to delete - %s?' % @organizational_pool.name, :method => :post, :class => "remove" %>
             </div>
             <%- end -%>
-            <div class="actions">
-              <%= link_to "Back to Dashboard", { :controller => 'dashboard' }, { :class => "" } %>
-            </div>
 
-            <div class="actions users">
+            <div class="actions">
+              <div><%= link_to 'Edit Pool Properties', { :action => 'edit', :id => @organizational_pool}, { :class => "edit" } %></div>
               <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :hardware_pool_id => @organizational_pool}, { :class => "edit" } %></div>
               <table>
                 <tr><td><%= pluralize @organizational_pool.permissions.admins.size, "Admin" %></td></tr>
@@ -72,7 +66,13 @@
               </table>
             </div>
 
+            <div class="actions">
+              <%= link_to "Back to Dashboard", { :controller => 'dashboard' }, { :class => "" } %>
+            </div>
+
           </div>
+
+    </td>
 
 <%- content_for :title do -%>
 <%= @organizational_pool.name %>

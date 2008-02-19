@@ -1,3 +1,6 @@
+    <div id="data">
+      <div class="inside">
+
           <div id="dataTableWrapper">
 
           <div class="dataTable">
@@ -11,7 +14,7 @@
                 </div>
 
                 <div class="data-table-column">
-                  <strong>Existing Network Maps</strong>
+                  <strong class="header">Current Network Maps (<%= @organizational_pool.network_maps.size -%>)</strong>
                   <%= render :partial => "list", :locals => { :network_maps => @organizational_pool.network_maps } %>
                 </div>
 
@@ -21,6 +24,12 @@
 
           </div> <!-- end #dataTableWrapper -->
 
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+          <div class="heading">&nbsp;</div>
           <div id="tools">
 
           <h3>Actions</h3>
@@ -28,6 +37,8 @@
               <%= link_to "Back to #{@network_map.organizational_pool.name}", { :controller => 'pool', :action => 'show', :id => @network_map.organizational_pool }, { :class => "" } %>
             </div>
           </div> <!-- end #tools -->
+
+  </td>
 
 <%- content_for :title do -%>
 <%= _("Create New Network Map") %>

@@ -4,7 +4,7 @@
 
     <%- if hpool -%>
       <div class="data-table-column">
-      <h3>Active Hosts</h3>
+      <strong>Active Hosts</strong>
       <div><strong><%= hpool.hosts.size %></strong> Hosts</div>
       <div><strong><%= hpool.hosts.total_cpus %></strong> CPUs</div>
       </div>
@@ -12,7 +12,7 @@
 
     <%- if hpool -%>
       <div class="data-table-column">
-      <h3>Active Storage</h3>
+      <strong>Active Storage</strong>
       <div><strong><%= hpool.storage_volumes.size %></strong> Storage Volumes</div>
       <div><strong><%= hpool.storage_volumes.total_size_in_gb %></strong> GB</div>
       </div>
@@ -20,31 +20,9 @@
 
     <%- if vms -%>
       <div class="data-table-column">
-      <h3>Active VMs</h3>
+      <strong>Active VMs</strong>
       <div><strong><%= vms.size %></strong> Virtual Machines</div>
       </div>
-    <%- end -%>
-
-  </div> <!-- end #data-table.inside -->
-
-  <div class="inside">
-
-    <%- if hpool -%>
-    <div class="data-table-column">
-    <hr/>
-    </div>
-    <%- end -%>
-
-    <%- if hpool -%>
-    <div class="data-table-column">
-    <hr/>
-    </div>
-    <%- end -%>
-
-    <%- if vms -%>
-    <div class="data-table-column">
-    <hr/>
-    </div>
     <%- end -%>
 
   </div> <!-- end #data-table.inside -->

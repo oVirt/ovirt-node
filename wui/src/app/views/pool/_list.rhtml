@@ -1,9 +1,4 @@
-<table class="listing">
-<tbody>
 <% for pool in hardware_pools %>
-<tr class="<%= cycle('odd','even') %>">
-  <td style="text-align:left;"><%= link_to pool.name, { :controller => 'pool', :action => 'show', :id => pool }, { :class => "show" } %></td>
-</tr>
+  <div class="hardware-item"><%= link_to pool.name, { :controller => 'pool', :action => 'show', :id => pool }, { :class => "" } %></div>
 <% end %>
-<tbody>
-</table>
+

@@ -1,3 +1,6 @@
+<div id="data">
+  <div class="inside">
+
           <div id="dataTableWrapper">
 
           <div class="dataTable">
@@ -20,7 +23,13 @@
 
           </div> <!-- end #dataTableWrapper -->
 
-          <div id="tools">
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+    <div class="heading">&nbsp;</div>
+    <div id="tools">
 
           <h3>Actions</h3>
             <div class="actions">
@@ -29,6 +38,7 @@
             </div>
           </div> <!-- end #tools -->
 
+    </td>
 <%- content_for :title do -%>
 <%= "Edit Permissions for #{@permission.hardware_pool.name}" %>
 <%- end -%>

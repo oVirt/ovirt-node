@@ -1,7 +1,10 @@
-<div id="dataTableWrapper">
+<div id="data">
+  <div class="inside">
 
-<div class="dataTable">
-    <div class="inside">
+    <div id="dataTableWrapper">
+
+    <div class="dataTable">
+        <div class="inside">
 
       <div class="data-table-column">
       <% form_tag :action => 'update', :id => @collection do %>
@@ -11,7 +14,7 @@
       </div>
 
       <div class="data-table-column">
-        <strong>Existing Collections</strong>
+        <strong class="header">Existing Collections (<%= @collection.network_map.host_collections.size %>)</strong>
         <%= render :partial => "list", :locals => { :host_collections => @collection.network_map.host_collections } %>
       </div>
 
@@ -22,13 +25,21 @@
 
 </div> <!-- end #dataTableWrapper -->
 
-<div id="tools">
-<h3>Actions</h3>
-  <div class="actions">
-    <%= link_to "Back to #{@collection.name}", { :action => 'show', :id => @collection }, { :class => "" } %>
-  </div>
-</div> <!-- end #tools -->
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
 
+  </td>
+  <td id="right">
+    <div class="heading">&nbsp;</div>
+
+    <div id="tools">
+    <h3>Actions</h3>
+      <div class="actions">
+        <%= link_to "Back to #{@collection.name}", { :action => 'show', :id => @collection }, { :class => "" } %>
+      </div>
+    </div> <!-- end #tools -->
+
+  </td>
 
 <%- content_for :title do -%>
 <%= "Editing Collection #{@collection.name}" %>
