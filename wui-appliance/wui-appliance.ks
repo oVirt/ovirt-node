@@ -27,7 +27,7 @@ logvol / --fstype ext3 --name=LogVol00 --vgname=VolGroup00 --size=1024 --grow
 
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
 repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
-repo --name=freeipa --baseurl=http://freeipa.com/downloads/devel/rpms/F7/$basearch/
+repo --name=freeipa --baseurl=http://freeipa.com/downloads/devel/rpms/F7/$basearch/ --includepkgs=ipa*
 repo --name=ovirt --baseurl=http://ovirt.et.redhat.com/repos/ovirt/$basearch/
 
 %packages
@@ -223,7 +223,7 @@ esac
 chkconfig ovirt-app-first-run off
 EOF
 chmod +x /etc/init.d/ovirt-app-first-run
-chkconfig ovirt-app-first-run on
+/sbin/chkconfig ovirt-app-first-run on
 
 sed -i -e 's/\(.*\)disable\(.*\)= yes/\1disable\2= no/' /etc/xinetd.d/tftp
 
@@ -264,10 +264,6 @@ echo -e "" >> /etc/issue
 cp /etc/issue /etc/issue.net
 
 echo "0.fedora.pool.ntp.org" >> /etc/ntp/step-tickers
-
-# remove the mod_auth_kerb, and make sure we get the one from freeipa
-rpm -e --nodeps mod_auth_kerb
-yum -y --disablerepo=* --enablerepo=freeipa install mod_auth_kerb
 
 # with the new libvirt (0.4.0), make sure we we setup gssapi in the mech_list
 sed -i -e 's/mech_list: digest-md5/#mech_list: digest-md5/' /etc/sasl2/libvirt.conf
