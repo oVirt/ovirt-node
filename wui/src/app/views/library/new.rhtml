@@ -1,16 +1,44 @@
-<div id="left">
-<h2><%= _("New VM Library") %></h2>
+    <div id="data">
+      <div class="inside">
 
-<% form_tag :action => 'create' do %>
-  <%= render :partial => 'form' %>
-  <%= submit_tag "Create" %>
-<% end %>
+         <div id="dataTableWrapper">
 
-</div>
+          <div class="dataTable">
+              <div class="inside">
 
-<div id="right">
-  <h2>Actions</h2>
-  <ul class="actions">
-    <li class="action"><%= link_to "back to #{@vm_library.host_collection.name}", { :controller => 'collection', :action => 'show', :id => @vm_library.host_collection }, { :class => "list" } %></li>
-  </ul>
-</div>
+                <div class="data-table-column">
+                <% form_tag :action => 'create' do %>
+                  <%= render :partial => 'form' %>
+                  <%= submit_tag "Create" %>
+                <% end %>
+               </div>
+
+                <div class="data-table-column">
+                  <strong class="header">Current VM Libraries (<%= @vm_library.host_collection.vm_libraries.size %>)</strong>
+                  <% for library in @vm_library.host_collection.vm_libraries %>
+                  <div class="hardware-item"><%= link_to library.name, { :controller => "library", :action => "show", :id => library }, { } %></div>
+                  <% end %>
+                </div>
+
+          </div> <!-- end #dataTableWrapper -->
+
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+    <div class="heading">&nbsp;</div>
+    <div id="tools">
+      <h3>Actions</h3>
+      <div class="actions">
+        <div><%= link_to "back to #{@vm_library.host_collection.name}", { :controller => 'collection', :action => 'show', :id => @vm_library.host_collection }, { :class => "" } %></div>
+      </div>
+    </div>
+
+  </td>
+
+
+<%- content_for :title do -%>
+<%= _("New VM Library") %>
+<%- end -%>
+

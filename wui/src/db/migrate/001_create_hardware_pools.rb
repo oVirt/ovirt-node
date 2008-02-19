@@ -29,8 +29,8 @@ class CreateHardwarePools < ActiveRecord::Migration
              foreign key (superpool_id) references hardware_pools(id)"
     mp = MotorPool.create( :name=>'default')
     pool = OrganizationalPool.create( :name=>'default', :superpool_id => mp.id)
-    map = NetworkMap.create( :name=>'default', :superpool_id => pool.id)
-    collection = HostCollection.create( :name=>'default', :superpool_id => map.id)
+    map = NetworkMap.create( :name=>'network map', :superpool_id => pool.id)
+    collection = HostCollection.create( :name=>'host collection', :superpool_id => map.id)
   end
 
   def self.down

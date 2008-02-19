@@ -138,6 +138,22 @@ class VmController < ApplicationController
 
   protected
   def pre_new
+    # if no vm_library is passed in, find (or auto-create) it based on host_collection_id
+    unless params[:vm_library_id]
+      unless params[:host_collection_id]
+        flash[:notice] = "Library or Host Collection is required."
+        redirect_to :controller => 'dashboard'
+      end
+      collection = HostCollection.find(params[:host_collection_id])
+      @user = get_login_user
+      library = collection.vm_libraries.find(:first, :conditions => ["name = '#{@user}'"])
+      unless library
+        library = VmLibrary.new({:name => @user, :host_collection_id => params[:host_collection_id]})
+        library.save
+      end
+      params[:vm_library_id] = library.id
+    end
+
     # random MAC
     mac = [ 0x00, 0x16, 0x3e, rand(0x7f), rand(0xff), rand(0xff) ]
     # random uuid

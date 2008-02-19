@@ -1,3 +1,6 @@
+    <div id="data">
+      <div class="inside">
+
           <div id="dataTableWrapper">
 
           <div class="dataTable">
@@ -12,7 +15,7 @@
 
 
                 <div class="data-table-column">
-                  <strong>Existing Network Maps</strong>
+                  <strong class="header">Existing Network Maps (<%= @network_map.organizational_pool.network_maps.size %>)</strong>
                   <%= render :partial => "list", :locals => { :network_maps => @network_map.organizational_pool.network_maps } %>
                 </div>
 
@@ -23,6 +26,12 @@
 
           </div> <!-- end #dataTableWrapper -->
 
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+          <div class="heading">&nbsp;</div>
           <div id="tools">
           <h3>Actions</h3>
             <div class="actions">
@@ -30,6 +39,7 @@
             </div>
           </div> <!-- end #tools -->
 
+  </td>
 
 <%- content_for :title do -%>
 <%= "Editing Network Map #{@network_map.name}" %>
