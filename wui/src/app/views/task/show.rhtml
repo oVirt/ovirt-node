@@ -1,29 +1,39 @@
-<div id="dataTableWrapper">
+    <div id="data">
+      <div class="inside">
 
-  <div class="dataTable">
-    <div class="inside">
+        <div id="dataTableWrapper">
 
-      <div class="data-table-column">
+            <div class="dataTable">
+              <div class="inside">
 
-  <h2><%= _("Task") %></h2>
+                <div class="data-table-column">
 
-      <% for column in Task.content_columns %>
-      <p>
-        <b><%= column.human_name %>:</b> <%=h @task.send(column.name) %>
-      </p>
-      <% end %>
+                  <% for column in Task.content_columns %>
+                  <p>
+                    <b><%= column.human_name %>:</b> <%=h @task.send(column.name) %>
+                  </p>
+                  <% end %>
+                  </div>
+
+              </div> <!-- end #data-table.inside -->
+
+            </div> <!-- end #dataTable -->
+
+          </div> <!-- end #dataTableWrapper -->
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+    <div class="heading">&nbsp;</div>
+      <div id="tools">
+        <h3>Actions</h3>
+        <div class="actions">
+          <%= link_to "Back to #{@task.vm.description}", { :controller => 'vm', :action => 'show', :id => @task.vm.id }, { :class => "show"  } %>
+        </div>
       </div>
+  </td>
 
-    </div> <!-- end #data-table.inside -->
-
-  </div> <!-- end #dataTable -->
-
-</div> <!-- end #dataTableWrapper -->
-
-<div id="tools">
-
-  <h3>Actions</h3>
-  <div class="actions">
-    <%= link_to "Back to #{@task.vm.description}", { :controller => 'vm', :action => 'show', :id => @task.vm.id }, { :class => "show"  } %>
-  </div>
-</div>
+<%- content_for :title do -%>
+<%= _("Task") %>
+<%- end -%>
