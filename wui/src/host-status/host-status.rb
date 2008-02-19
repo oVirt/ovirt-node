@@ -34,6 +34,11 @@ require 'models/host.rb'
 
 ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
 
+$logfile = '/var/log/ovirt-wui/host-status.log'
+
+$stdout = File.new($logfile, 'a')
+$stderr = File.new($logfile, 'a')
+
 def database_configuration
   YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
 end
@@ -124,7 +129,7 @@ update_host_list
 
 # OK, now we have an initial list.  Let's fork off and check back periodically
 
-#pid = fork do
+pid = fork do
   loop do
     puts "Waking up to check host status..."
     get_credentials
@@ -173,6 +178,6 @@ update_host_list
     
     sleep 20
   end
-#end
+end
 
-#Process.detach(pid)
+Process.detach(pid)
