@@ -19,10 +19,13 @@
 
 . ./ovirt-common.sh
 
-if [ $# -ne 0 ]; then
-    echo "Usage: ovirt-cd.sh"
+if [ $# -eq 1 ]; then
+    ISO=
+elif [ $# -eq 2 ]; then
+    ISO=$2
+else
+    echo "Usage: ovirt-cd.sh [iso-image]"
     exit 1
 fi
 
-ISO=`create_iso`
-echo $ISO
+ISO=`create_iso $ISO`
