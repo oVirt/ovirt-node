@@ -172,13 +172,11 @@ class Vm < ActiveRecord::Base
     # no need to validate VM limit here
     # need to enforce storage differently since obj is saved first
     storage_size = 0
-    unless resources[:storage].nil?
-      @storage_volumes_pending.each { |volume| storage_size += volume.size } if @storage_volumes_pending if defined? @storage_volumes_pending
-      errors.add("storage_volumes", "violates quota") unless storage_size <= resources[:storage]
-      if errors.empty? and defined? @storage_volumes_pending
-        self.storage_volumes=@storage_volumes_pending
-        @storage_volumes_pending = []
-      end
+    @storage_volumes_pending.each { |volume| storage_size += volume.size } if @storage_volumes_pending if defined? @storage_volumes_pending
+    errors.add("storage_volumes", "violates quota") unless resources[:storage].nil? or storage_size <= resources[:storage]
+    if errors.empty? and defined? @storage_volumes_pending
+      self.storage_volumes=@storage_volumes_pending
+      @storage_volumes_pending = []
     end
   end
 
