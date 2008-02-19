@@ -19,10 +19,10 @@
 
 . ./ovirt-common.sh
 
-if [ $# -eq 1 ]; then
+if [ $# -eq 0 ]; then
     ISO=
-elif [ $# -eq 2 ]; then
-    ISO=$2
+elif [ $# -eq 1 ]; then
+    ISO=$1
 else
     echo "Usage: ovirt-cd.sh [iso-image]"
     exit 1
