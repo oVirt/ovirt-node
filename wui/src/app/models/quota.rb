@@ -24,7 +24,6 @@ class Quota < ActiveRecord::Base
   belongs_to :host_collection
   belongs_to :vm_library
 
-  validates_presence_of :total_vcpus, :total_vmemory, :total_vnics, :total_storage
 
   def total_vmemory_in_mb
     kb_to_mb(total_vmemory)
