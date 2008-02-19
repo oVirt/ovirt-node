@@ -35,7 +35,7 @@ class StorageController < ApplicationController
       set_perms(pool)
       unless @can_monitor
         flash[:notice] = 'You do not have permission to view this storage volume list: redirecting to top level'
-        redirect_to :controller => 'pool', :action => 'list'
+        redirect_to :controller => 'dashboard'
       else
         conditions = "hardware_pool_id is null"
         conditions += " or hardware_pool_id=#{pool.superpool_id}" if pool.superpool
@@ -61,7 +61,7 @@ class StorageController < ApplicationController
     set_perms(@storage_volume.hardware_pool)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this storage volume: redirecting to top level'
-      redirect_to :controller => 'pool', :action => 'list'
+      redirect_to :controller => 'dashboard'
     end
   end
 
@@ -71,7 +71,7 @@ class StorageController < ApplicationController
     @storage_volumes = @storage_volume.hardware_pool.storage_volumes
     unless @is_admin
       flash[:notice] = 'You do not have permission to create this storage volume'
-      redirect_to :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_pool
+      redirect_to :controller => @storage_volume.hardware_pool.get_controller, :action => 'show', :id => @storage_volume.hardware_pool
     end
   end
 
@@ -80,12 +80,12 @@ class StorageController < ApplicationController
     set_perms(@storage_volume.hardware_pool)
     unless @is_admin
       flash[:notice] = 'You do not have permission to create this storage volume'
-      redirect_to :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_pool
+      redirect_to :controller => @storage_volume.hardware_pool.get_controller, :action => 'show', :id => @storage_volume.hardware_pool
     else
       if @storage_volume.save
         storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_volume)
         flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ storage_url ,@storage_volume.ip_addr]
-        redirect_to :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_pool_id
+        redirect_to :controller => @storage_volume.hardware_pool.get_controller, :action => 'show', :id => @storage_volume.hardware_pool_id
       else
         render :action => 'new'
       end
@@ -125,9 +125,9 @@ class StorageController < ApplicationController
       flash[:notice] = 'You do not have permission to delete this storage volume'
       redirect_to :action => 'show', :id => @storage_volume
     else
-      pool = @storage_volume.hardware_pool_id
+      pool = @storage_volume.hardware_pool
       @storage_volume.destroy
-      redirect_to :controller => 'pool', :action => 'show', :id => pool
+      redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
     end
   end
 
@@ -144,10 +144,10 @@ class StorageController < ApplicationController
       @storage_volume.hardware_pool_id = pool.id
       if @storage_volume.save
         flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ storage_url ,@storage_volume.ip_addr, pool_url, pool.name ]
-        redirect_to :controller => 'pool', :action => 'show', :id => pool
+        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
       else
         flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' %  [ storage_url ,@storage_volume.ip_addr, host_url, host.hostname ]
-        redirect_to :controller => 'pool', :action => 'show', :id => pool
+        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
       end
     end
   end
