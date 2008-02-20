@@ -38,11 +38,7 @@ if [ ! -b "$USBDEVICE" ]; then
     exit 2
 fi
 
-if [ -z "$ISO" ]; then
-    # ISO image not provided on the command-line; build it
-    ISO=`create_iso` || exit 1
-fi
-echo $ISO
+ISO=`create_iso $ISO` || exit 1
 
 # do setup
 mkdir -p $IMGTMP $SQUASHTMP $USBTMP

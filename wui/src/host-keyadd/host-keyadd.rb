@@ -24,17 +24,21 @@ require 'rubygems'
 require 'kerberos'
 include Kerberos
 
+$logfile = '/var/log/ovirt-wui/host-keyadd.log'
+
+$stdout = File.new($logfile, 'a')
+$stderr = File.new($logfile, 'a')
+
 def kadmin_local(command)
   # FIXME: we really should implement the ruby-kerberos bindings to do the
   # same thing as kadmin.local
   # FIXME: we should check the return value from the system() call and throw
   # an exception.
   # FIXME: we need to return the output back to the caller here
-  system("/usr/kerberos/sbin/kadmin.local -q '" + command + "'")
+  $stdout.flush
+  $stderr.flush
+  system("/usr/kerberos/sbin/kadmin.local -q '" + command + "' >> " + $logfile + " 2>&1")
 end
-
-$stdout = File.new('/var/log/ovirt-wui/host-keyadd.log', 'a')
-$stderr = File.new('/var/log/ovirt-wui/host-keyadd.log', 'a')
 
 server = TCPServer.new(6666)
 

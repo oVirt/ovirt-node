@@ -68,6 +68,9 @@ mkdir %{buildroot}
 
 touch %{buildroot}%{_localstatedir}/log/%{name}/mongrel.log
 touch %{buildroot}%{_localstatedir}/log/%{name}/rails.log
+touch %{buildroot}%{_localstatedir}/log/%{name}/taskomatic.log
+touch %{buildroot}%{_localstatedir}/log/%{name}/host-keyadd.log
+touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 %{__install} -p -m0644 %{pbuild}/conf/%{name}.conf %{buildroot}%{_sysconfdir}/httpd/conf.d
 %{__install} -Dp -m0755 %{pbuild}/conf/%{name} %{buildroot}%{_initrddir}
 

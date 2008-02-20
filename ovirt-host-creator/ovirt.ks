@@ -10,7 +10,7 @@ bootloader --timeout=1
 
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
 # Can't enable F8-updates until we have updated KVM modules
-#repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
+repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
 # Not using rawhide currently
 #repo --name=rawhide --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
 repo --name=ovirt-x86_64 --baseurl=http://ovirt.org/repos/ovirt/$basearch/
@@ -247,7 +247,6 @@ touch /etc/resolv.conf
 # needed for the iscsi-servers dhcp option
 cat > /etc/dhclient.conf << EOF
 option iscsi-servers code 200 = array of ip-address;
-option ovirt-tftp-server code 201 = ip-address;
 option libvirt-auth-method code 202 = text;
 option collectd-server code 203 = ip-address;
 EOF
@@ -274,8 +273,11 @@ if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
         mkdir -p /etc/libvirt
         # here, we wait for the "host-keyadd" service to finish adding our
         # keytab and returning to us
-        # FIXME: we should check the return string here; it should be "SUCCESS"
-        echo "KERB" | /usr/bin/nc $IP 6666
+	VAL=""
+	while [ "$VAL" != "SUCCESS" ]; do
+            VAL=`echo "KERB" | /usr/bin/nc $IP 6666`
+            sleep 1
+        done
         /usr/bin/wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
         rm -f /etc/krb5.conf ; /usr/bin/wget -q http://$SERVER/krb5.ini -O /etc/krb5.conf
     fi
@@ -297,18 +299,20 @@ EOF
 chmod +x /etc/kvm-ifup
 
 # set up qemu daemon to allow outside VNC connections
-sed -i -e 's/# vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/' /etc/libvirt/qemu.conf
+sed -i -e 's/[[:space:]]*#[[:space:]]*vnc_listen = "0.0.0.0"/vnc_listen = "0.0.0.0"/' /etc/libvirt/qemu.conf
 
 # set up libvirtd to listen on TCP (for kerberos)
-sed -i -e 's/#listen_tcp = 1/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
-sed -i -e 's/#listen_tls = 0/listen_tls = 0/' /etc/libvirt/libvirtd.conf
+sed -i -e 's/[[:space:]]*#[[:space:]]*listen_tcp.*/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
+sed -i -e 's/[[:space:]]*#[[:space:]]*listen_tls.*/listen_tls = 0/' /etc/libvirt/libvirtd.conf
 
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 
 # with the new libvirt (0.4.0), make sure we we setup gssapi in the mech_list
-sed -i -e 's/mech_list: digest-md5/#mech_list: digest-md5/' /etc/sasl2/libvirt.conf
-sed -i -e 's/#mech_list: gssapi/mech_list: gssapi/' /etc/sasl2/libvirt.conf
+if [ `egrep -c '^mech_list: gssapi' /etc/sasl2/libvirt.conf` -eq 0 ]; then
+   sed -i -e 's/^\([[:space:]]*mech_list.*\)/#\1/' /etc/sasl2/libvirt.conf
+   echo "mech_list: gssapi" >> /etc/sasl2/libvirt.conf
+fi
 
 # pretty login screen..
 

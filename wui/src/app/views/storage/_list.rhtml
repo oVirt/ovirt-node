@@ -17,6 +17,7 @@
      vol_hash[:host_id] = host_id if defined? host_id
   %>
   <td style="text-align:left;"><%= link_to storage_volume.ip_addr, vol_hash, { :class => "show" } %><span class="secondary">:<%= storage_volume.port %></span></td>
+  <td><%= storage_volume.path %></td>
   <td><%= storage_volume.storage_type %></td>
   <td><%= storage_volume.lun %></td>
   <td><%= storage_volume.target %></td>

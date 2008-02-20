@@ -35,10 +35,7 @@ if [ ! -b "$USBDEVICE" ]; then
     exit 2
 fi
 
-if [ -z "$ISO" ]; then
-    ISO=`create_iso` || exit 1
-fi
-echo $ISO
+ISO=`create_iso $ISO` || exit 1
 
 # clear out the old partition table
 dd if=/dev/zero of=$USBDEVICE bs=4096 count=1

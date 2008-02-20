@@ -41,6 +41,10 @@ start() {
     daemon $OVIRT_DIR/host-browser/host-browser
     echo
 
+    echo -n "Starting host-status: "
+    daemon $OVIRT_DIR/host-status/host-status.rb
+    echo
+
     echo -n "Starting taskomatic: "
     daemon $OVIRT_DIR/task-omatic/taskomatic.rb
     echo
@@ -51,12 +55,16 @@ stop() {
     killproc taskomatic.rb
     echo
 
+    echo -n "Shutting down host-status: "
+    killproc host-status.rb
+    echo
+
     echo -n "Shutting down host-browser: "
     killproc host-browser
     echo
 
     echo -n "Shutting down host-keyadd: "
-    killproc host-keyadd
+    killproc host-keyadd.rb
     echo
 
     echo -n "Shutting down ovirt-wui: "

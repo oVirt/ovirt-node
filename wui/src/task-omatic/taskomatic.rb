@@ -33,6 +33,10 @@ include Kerberos
 require 'socket'
 
 require 'models/vm.rb'
+require 'models/vm_library.rb'
+require 'models/hardware_pool.rb'
+require 'models/network_map.rb'
+require 'models/host_collection.rb'
 require 'models/task.rb'
 require 'models/host.rb'
 require 'models/hardware_pool.rb'
@@ -271,7 +275,13 @@ def shutdown_vm(task)
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
       dom = conn.lookup_domain_by_uuid(vm.uuid)
-      dom.shutdown
+      # FIXME: crappy.  Right now we destroy the domain to make sure it
+      # really went away.  We really want to shutdown the domain to make
+      # sure it gets a chance to cleanly go down, but how can we tell when
+      # it is truly shut off?  And then we probably need a timeout in case
+      # of problems.  Needs more thought
+      #dom.shutdown
+      dom.destroy
       dom.undefine
       conn.close
     rescue
@@ -332,6 +342,7 @@ def start_vm(task)
   # should check it out on the remote host, and update the database as
   # appropriate
 
+  errmsg = "Unknown error"
   begin
     if vm.host_id != nil
       # OK, marked in the database as already running on a host; for now, we
@@ -346,13 +357,13 @@ def start_vm(task)
     # OK, now that we found the VM, go looking in the hardware_pool
     # hosts to see if there is a host that will fit these constraints
     host = nil
-    vm.quota.hardware_pool.hosts.each do |curr|
+    vm.vm_library.host_collection.hosts.each do |curr|
       if curr.num_cpus >= vm.num_vcpus_allocated and curr.memory >= vm.memory_allocated
         host = curr
         break
       end
     end
-    
+
     if host == nil
       # we couldn't find a host that matches this description; report ERROR
       errmsg = "No host matching VM parameters could be found"
