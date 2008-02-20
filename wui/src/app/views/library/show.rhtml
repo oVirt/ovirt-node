@@ -24,7 +24,9 @@
                 <option class="remove" value="destroy" onSelect="confirm('Are you sure?'">Destroy</option>
               </select>
 
-              <br/><br/>
+              <br/>
+              <%= render :partial => '/layouts/alertbox' %>
+              <br/>
 
               <%= render :partial => "/vm/list", :locals => { :vms => @vm_library.vms } %>
               </form>
@@ -70,7 +72,7 @@
   </td>
   <td id="right">
     <div class="heading">&nbsp;</div>
-    <div id="tools">
+    <div class="tools">
     <h3>Actions</h3>
 
   <%if @is_admin -%>
@@ -106,9 +108,9 @@
       <tr><td><%= pluralize @vm_library.permissions.monitors.size, "Monitor" %></td></tr>
     </table>
   </div>
-  <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
-
   </div>
+
+  <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
 
   </td>
 

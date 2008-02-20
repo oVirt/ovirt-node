@@ -76,14 +76,14 @@ function confirm_and_submit(item){
   </td>
   <td id="right">
           <div class="heading">&nbsp;</div>
-          <div id="tools">
+          <div class="tools">
             <h3>Actions</h3>
             <div class="actions">
               <%= link_to "Back to Dashboard", { :controller => 'dashboard' }, { :class => "" } %>
             </div>
-
-            <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
           </div>
+
+          <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
   </td>
 
 <%- content_for :title do -%>
