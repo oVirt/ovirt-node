@@ -32,6 +32,15 @@
               </div>
             </div>
 
+            <div class="data-section">
+              <div class="data-section-header"><strong>Tasks</strong></div>
+              <div class="data-section-stats">Statistics Data</div>
+              <div class="data-section-table">
+                <div class="inside">
+                  <%= render :partial => "/task/list_table", :locals => { :tasks => @storage_pool.tasks, :type => "Storage Pool"  } %>
+                </div>
+              </div>
+            </div>
           </div> <!-- end #dataTableWrapper -->
 
       </div> <!-- end #data.inside -->

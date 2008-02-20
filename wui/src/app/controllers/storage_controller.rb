@@ -73,11 +73,17 @@ class StorageController < ApplicationController
 
   def create
     if @storage_pool.save
-      storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
-      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ storage_url ,@storage_pool.ip_addr]
-      redirect_to :controller => @storage_pool.hardware_pool.get_controller, :action => 'show', :id => @storage_pool.hardware_pool_id
-    else
-      render :action => 'new'
+      @task = StorageTask.new({ :user            => @user,
+                                :storage_pool_id => @storage_pool.id,
+                                :action          => StorageTask::ACTION_REFRESH_POOL,
+                                :state           => Task::STATE_QUEUED})
+      if @task.save
+        storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
+        flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ storage_url ,@storage_pool.ip_addr]
+        redirect_to :controller => @storage_pool.hardware_pool.get_controller, :action => 'show', :id => @storage_pool.hardware_pool_id
+      else
+        render :action => 'new'
+      end
     end
   end
 

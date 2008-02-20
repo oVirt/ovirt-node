@@ -33,19 +33,19 @@ class LibraryController < ApplicationController
     @vms = Set.new
     @vm_libraries.each { |vm_library| @vms += vm_library.vms}
     @vms = @vms.entries
-    @action_values = [["Suspend", Task::ACTION_SUSPEND_VM],
-                      ["Resume", Task::ACTION_RESUME_VM],
-                      ["Save", Task::ACTION_SAVE_VM],
-                      ["Restore", Task::ACTION_RESTORE_VM]]
+    @action_values = [["Suspend", VmTask::ACTION_SUSPEND_VM],
+                      ["Resume", VmTask::ACTION_RESUME_VM],
+                      ["Save", VmTask::ACTION_SAVE_VM],
+                      ["Restore", VmTask::ACTION_RESTORE_VM]]
   end
 
   def show
     set_perms(@perm_obj)
     @is_hwpool_admin = @vm_library.host_collection.is_admin(@user)
-    @action_values = [["Suspend", Task::ACTION_SUSPEND_VM],
-                      ["Resume", Task::ACTION_RESUME_VM],
-                      ["Save", Task::ACTION_SAVE_VM],
-                      ["Restore", Task::ACTION_RESTORE_VM]]
+    @action_values = [["Suspend", VmTask::ACTION_SUSPEND_VM],
+                      ["Resume", VmTask::ACTION_RESUME_VM],
+                      ["Save", VmTask::ACTION_SAVE_VM],
+                      ["Restore", VmTask::ACTION_RESTORE_VM]]
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this VM library: redirecting to top level'
       redirect_to :action => 'list'
@@ -94,18 +94,18 @@ class LibraryController < ApplicationController
       end
       if params[:vm_actions][:vms]
         vms = params[:vm_actions][:vms]
-        if params[:vm_actions][Task::ACTION_START_VM]
+        if params[:vm_actions][VmTask::ACTION_START_VM]
           flash[:notice] = "Starting Machines #{vms.join(',')}."
-        elsif params[:vm_actions][Task::ACTION_SHUTDOWN_VM]
+        elsif params[:vm_actions][VmTask::ACTION_SHUTDOWN_VM]
           flash[:notice] = "Stopping Machines #{vms.join(',')}."
         elsif params[:vm_actions][:other_actions]
           case params[:vm_actions][:other_actions]
-          when Task::ACTION_SHUTDOWN_VM then flash[:notice] = "Stopping Machines #{vms.join(',')}."
-          when Task::ACTION_START_VM then flash[:notice] = "Starting Machines #{vms.join(',')}."
-          when Task::ACTION_SUSPEND_VM then flash[:notice] = "Suspending Machines #{vms.join(',')}."
-          when Task::ACTION_RESUME_VM then flash[:notice] = "Resuming Machines #{vms.join(',')}."
-          when Task::ACTION_SAVE_VM then flash[:notice] = "Saving Machines #{vms.join(',')}."
-          when Task::ACTION_RESTORE_VM then flash[:notice] = "Restoring Machines #{vms.join(',')}."
+          when VmTask::ACTION_SHUTDOWN_VM then flash[:notice] = "Stopping Machines #{vms.join(',')}."
+          when VmTask::ACTION_START_VM then flash[:notice] = "Starting Machines #{vms.join(',')}."
+          when VmTask::ACTION_SUSPEND_VM then flash[:notice] = "Suspending Machines #{vms.join(',')}."
+          when VmTask::ACTION_RESUME_VM then flash[:notice] = "Resuming Machines #{vms.join(',')}."
+          when VmTask::ACTION_SAVE_VM then flash[:notice] = "Saving Machines #{vms.join(',')}."
+          when VmTask::ACTION_RESTORE_VM then flash[:notice] = "Restoring Machines #{vms.join(',')}."
           when "destroy" then flash[:notice] = "Destroying Machines #{vms.join(',')}."
           else
             flash[:notice] = 'No Action Chosen.'

@@ -22,7 +22,7 @@ require 'util/ovirt'
 class Vm < ActiveRecord::Base
   belongs_to :vm_library
   belongs_to :host
-  has_many :tasks, :dependent => :destroy, :order => "id DESC"
+  has_many :vm_tasks, :dependent => :destroy, :order => "id DESC"
   has_and_belongs_to_many :storage_volumes
   validates_presence_of :uuid, :description, :num_vcpus_allocated,
                         :memory_allocated, :vnic_mac_addr
@@ -105,8 +105,8 @@ class Vm < ActiveRecord::Base
     pending_state = state
     pending_state = EFFECTIVE_STATE[state] if pending_state
     get_queued_tasks.each do |task|
-      return STATE_INVALID unless Task::ACTIONS[task.action][:start] == pending_state
-      pending_state = Task::ACTIONS[task.action][:success]
+      return STATE_INVALID unless VmTask::ACTIONS[task.action][:start] == pending_state
+      pending_state = VmTask::ACTIONS[task.action][:success]
     end
     return pending_state
   end
@@ -126,24 +126,24 @@ class Vm < ActiveRecord::Base
   def get_tasks(state=nil)
     conditions = "vm_id = '#{id}'"
     conditions += " AND state = '#{Task::STATE_QUEUED}'" if state
-    Task.find(:all, 
+    VmTask.find(:all, 
               :conditions => conditions,
               :order => "id")
   end    
 
   def get_action_list
     # return empty list rather than nil
-    return_val = Task::VALID_ACTIONS_PER_VM_STATE[get_pending_state] || []
+    return_val = VmTask::VALID_ACTIONS_PER_VM_STATE[get_pending_state] || []
     # filter actions based on quota
     unless resources_for_start?
-      return_val = return_val - [Task::ACTION_START_VM, Task::ACTION_RESTORE_VM]
+      return_val = return_val - [VmTask::ACTION_START_VM, VmTask::ACTION_RESTORE_VM]
     end
     return_val
   end
 
   def get_action_and_label_list
     get_action_list.collect do |action|
-      [Task::ACTIONS[action][:label], action]
+      [VmTask::ACTIONS[action][:label], action]
     end
   end
 
@@ -161,6 +161,10 @@ class Vm < ActiveRecord::Base
 
     # no need to enforce storage here since starting doesn't increase storage allocation
     return return_val
+  end
+
+  def tasks
+    vm_tasks
   end
 
   protected

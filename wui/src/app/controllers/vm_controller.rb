@@ -38,18 +38,18 @@ class VmController < ApplicationController
 
   def create
     if @vm.save
-      @task = Task.new({ :user    => @user,
+      @task = VmTask.new({ :user    => @user,
                          :vm_id   => @vm.id,
-                         :action  => Task::ACTION_CREATE_VM,
+                         :action  => VmTask::ACTION_CREATE_VM,
                          :state   => Task::STATE_QUEUED})
       if @task.save
         flash[:notice] = 'Vm was successfully created.'
         start_now = params[:start_now]
         if (start_now)
-          if @vm.get_action_list.include?(Task::ACTION_START_VM)
-            @task = Task.new({ :user    => @user,
+          if @vm.get_action_list.include?(VmTask::ACTION_START_VM)
+            @task = VmTask.new({ :user    => @user,
                                :vm_id   => @vm.id,
-                               :action  => Task::ACTION_START_VM,
+                               :action  => VmTask::ACTION_START_VM,
                                :state   => Task::STATE_QUEUED})
             if @task.save
               flash[:notice] = flash[:notice] + ' VM Start action queued.'
@@ -115,7 +115,7 @@ class VmController < ApplicationController
 
   def vm_action
     if @vm.get_action_list.include?(params[:vm_action])
-      @task = Task.new({ :user    => get_login_user,
+      @task = VmTask.new({ :user    => get_login_user,
                          :vm_id   => params[:id],
                          :action  => params[:vm_action],
                          :state   => Task::STATE_QUEUED})

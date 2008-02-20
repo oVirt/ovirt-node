@@ -53,7 +53,7 @@
               <div class="data-section-stats">Statistics Data</div>
               <div class="data-section-table">
                 <div class="inside">
-                  <%= render :partial => "/task/list_table", :locals => { :tasks => @vm.tasks } %>
+                  <%= render :partial => "/task/list_table", :locals => { :tasks => @vm.tasks, :type => "VM" } %>
                 </div>
               </div>
             </div>

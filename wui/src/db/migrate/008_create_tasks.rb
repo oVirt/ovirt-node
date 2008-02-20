@@ -21,7 +21,7 @@ class CreateTasks < ActiveRecord::Migration
   def self.up
     create_table :tasks do |t|
       t.column :user,              :string
-      t.column :vm_id,             :integer, :null => false
+      t.column :type,              :string
       t.column :action,            :string
       t.column :state,             :string
       t.column :args,              :string
@@ -29,9 +29,15 @@ class CreateTasks < ActiveRecord::Migration
       t.column :time_started,      :timestamp
       t.column :time_ended,        :timestamp
       t.column :message,           :text
+      # VmTask columns
+      t.column :vm_id,             :integer
+      # StorageTask columns
+      t.column :storage_pool_id,   :integer
     end
     execute "alter table tasks add constraint fk_tasks_vms
              foreign key (vm_id) references vms(id)"
+    execute "alter table tasks add constraint fk_tasks_pools
+             foreign key (storage_pool_id) references storage_pools(id)"
   end
 
   def self.down

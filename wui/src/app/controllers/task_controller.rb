@@ -24,19 +24,16 @@ class TaskController < ApplicationController
 
   def show
     @task = Task.find(params[:id])
-    set_perms(@task.vm.vm_library)
+    if @task[:type] == VmTask.name
+      set_perms(@task.vm.vm_library)
+    elsif @task[:type] == StorageTask.name 
+      set_perms(@task.storage_pool.hardware_pool)
+    end
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this task: redirecting to top level'
-      redirect_to :controller => 'library', :action => 'list'
+      redirect_to :controller => 'dashboard'
     end
 
-  end
-
-  def set_perms(perm_obj)
-    @user = get_login_user
-    @is_admin = perm_obj.is_admin(@user)
-    @can_monitor = perm_obj.can_monitor(@user)
-    @can_delegate = perm_obj.can_delegate(@user)
   end
 
 end
