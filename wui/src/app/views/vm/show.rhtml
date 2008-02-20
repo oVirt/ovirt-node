@@ -40,7 +40,7 @@
               <div class="data-section-table">
                 <div class="inside">
 <% if !@vm.storage_volumes.empty? %>
-  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @vm.storage_volumes, :remove_from_host => false, :vm_id => @vm.id } %>
+  <%= render :partial => "/storage/list_volumes", :locals => { :storage_volumes => @vm.storage_volumes, :remove_from_host => false, :vm_id => @vm.id } %>
 <% else %>
 <p>No attached Storage Volumes</p>
 <% end %>

@@ -23,10 +23,11 @@
 
             <div class="data-section">
               <div class="data-section-header"><strong>Available Storage (<%= @available_storage_volumes.size %>)</strong></div>
+              <div class="data-section-header"><strong>Storage Pools (<%= @storage_pools.size %>)</strong></div>
               <div class="data-section-stats">Statistics Data</div>
               <div class="data-section-table">
                 <div class="inside">
-                  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @available_storage_volumes } %>
+                  <%= render :partial => "/storage/list_volumes", :locals => { :storage_volumes => @available_storage_volumes } %>
                 </div>
               </div>
             </div>

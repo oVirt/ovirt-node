@@ -38,9 +38,9 @@ class HardwarePool < ActiveRecord::Base
     end
   end
 
-  has_many :storage_volumes, :dependent => :nullify, :order => "id ASC" do
+  has_many :storage_pools, :dependent => :nullify, :order => "id ASC" do
     def total_size_in_gb
-      find(:all).inject(0){ |sum, sv| sum + sv.size_in_gb }
+      find(:all).inject(0){ |sum, sp| sum + sp.storage_volumes.total_size_in_gb }
     end
   end
 
@@ -90,7 +90,7 @@ class HardwarePool < ActiveRecord::Base
       host.hardware_pool_id=superpool_id
       host.save
     end
-    storage_volumes.each do |vol| 
+    storage_pools.each do |vol| 
       vol.hardware_pool_id=superpool_id
       vol.save
     end
@@ -98,4 +98,10 @@ class HardwarePool < ActiveRecord::Base
     destroy
   end
 
+  def total_storage_volumes
+    storage_pools.inject(0) { |sum, pool| sum += pool.storage_volumes.size}
+  end
+  def storage_volumes
+    storage_pools.collect { |pool| pool.storage_volumes}.flatten
+  end
 end

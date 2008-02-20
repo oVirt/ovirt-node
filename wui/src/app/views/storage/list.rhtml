@@ -7,7 +7,7 @@
               <div class="inside">
 
                 <div class="data-table-column">
-                  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @storage_volumes } %>
+                  <%= render :partial => "/storage/list", :locals => { :storage_pools => @storage_pools } %>
                 </div>
 
               </div> <!-- end #data-table.inside -->
@@ -22,19 +22,12 @@
   <td id="right">
     <div class="heading">&nbsp;</div>
     <div id="tools">
-    <h3>Actions</h3>
-      <%unless @attach_to_pool or @attach_to_vm -%>
-        <div class="actions">
-        <%= link_to 'New Storage Volume', { :action => 'new' }, { :class => "create" } %>
-        </div>
-      <% end -%>
-    </div>
   </td>
 
 <%- content_for :title do -%>
-  <%if @attach_to_pool or @attach_to_vm -%>
-    <%= _("Choose a Storage Volume") %>
+  <%if @attach_to_pool -%>
+    <%= _("Choose a Storage Pool") %>
   <% else -%>
-    <%= _("Listing Storage Volumes") %>
+    <%= _("Listing Storage Pools") %>
   <% end -%>
 <%- end -%>

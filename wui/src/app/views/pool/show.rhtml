@@ -23,11 +23,12 @@
             </div>
 
             <div class="data-section">
-              <div class="data-section-header"><strong>Available Storage (<%= @organizational_pool.storage_volumes.size -%>)</strong></div>
+              <div class="data-section-header"><strong>Available Storage (<%= @organizational_pool.total_storage_volumes -%>)</strong></div>
+              <div class="data-section-header"><strong>Storage Pools (<%= @organizational_pool.storage_pools.size -%>)</strong></div>
               <div class="data-section-stats">Statistics Data</div>
               <div class="data-section-table">
                 <div class="inside">
-                  <%= render :partial => "/storage/list", :locals => { :storage_volumes => @organizational_pool.storage_volumes } %>
+                  <%= render :partial => "/storage/list", :locals => { :storage_pools => @organizational_pool.storage_pools } %>
                 </div>
               </div>
             </div>

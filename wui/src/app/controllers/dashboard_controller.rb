@@ -27,6 +27,7 @@ class DashboardController < ApplicationController
     @host_collections = HostCollection.find(:all)
     @available_hosts = Host.find(:all)
     @available_storage_volumes = StorageVolume.find(:all)
+    @storage_pools = StoragePool.find(:all)
     @hosts = Host.find(:all)
     @storage_volumes = StorageVolume.find(:all)
     @vms = Vm.find(:all)

@@ -17,31 +17,11 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-require 'util/ovirt'
-
-class StorageVolume < ActiveRecord::Base
-  belongs_to              :storage_pool
-  has_and_belongs_to_many :vms
-
-  def display_name
-    "#{storage_pool.ip_addr}:#{storage_pool.target}:#{lun}"
-  end
-
-  def size_in_gb
-    kb_to_gb(size)
-  end
-
-  def size_in_gb=(new_size)
-    self[:size]=(gb_to_kb(new_size))
-  end
-
-  def self.find_for_vm(include_vm = nil)
-    if include_vm 
-      condition =  "(vms.id is null and storage_pools.hardware_pool_id=#{include_vm.vm_library.host_collection_id})"
-      condition += " or vms.id=#{include_vm.id}" if (include_vm.id)
-      self.find(:all, :include => [:vms, :storage_pool], :conditions => condition)
-    else
-      return []
+class StoragePool < ActiveRecord::Base
+  belongs_to              :hardware_pool
+  has_many                :storage_volumes, :dependent => :destroy, :include => :storage_pool do
+    def total_size_in_gb
+      find(:all).inject(0){ |sum, sv| sum + sv.size_in_gb }
     end
   end
 end

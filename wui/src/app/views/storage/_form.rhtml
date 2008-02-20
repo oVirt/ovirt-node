@@ -1,23 +1,17 @@
-<%= error_messages_for 'storage_volume' %>
+<%= error_messages_for 'storage_pool' %>
 
-<!--[form:storage_volume]-->
-<%= hidden_field_with_label "Hardware Pool", 'storage_volume', 'hardware_pool_id', @storage_volume.hardware_pool.name  %>
+<!--[form:storage_pool]-->
+<%= hidden_field_with_label "Hardware Pool", 'storage_pool', 'hardware_pool_id', @storage_pool.hardware_pool.name  %>
 
-<%= text_field_with_label "IP Address", 'storage_volume', 'ip_addr'  %>
+<%= text_field_with_label "IP Address", 'storage_pool', 'ip_addr'  %>
 
-<%= text_field_with_label "Path", 'storage_volume', 'path'  %>
+<%= text_field_with_label "Port", 'storage_pool', 'port'  %>
 
-<%= text_field_with_label "Port", 'storage_volume', 'port'  %>
+<%= text_field_with_label "Target", 'storage_pool', 'target'  %>
 
-<%= text_field_with_label "Target", 'storage_volume', 'target'  %>
+<%= text_field_with_label "Storage Type", 'storage_pool', 'storage_type'  %>
 
-<%= text_field_with_label "Lun", 'storage_volume', 'lun'  %>
+<%= focus('storage_pool_ip_addr') %>
 
-<%= text_field_with_label "Size (in Gigabytes)", 'storage_volume', 'size_in_gb'  %>
-
-<%= text_field_with_label "Storage Type", 'storage_volume', 'storage_type'  %>
-
-<%= focus('storage_volume_ip_addr') %>
-
-<!--[eoform:storage_volume]-->
+<!--[eoform:storage_pool]-->
 

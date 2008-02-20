@@ -19,23 +19,29 @@
 
 class CreateStorageVolumes < ActiveRecord::Migration
   def self.up
-    create_table :storage_volumes do |t|
+    create_table :storage_pools do |t|
       t.column :ip_addr,                    :string
-      t.column :path,                       :string
       t.column :port,                       :integer
       t.column :target,                     :string
-      t.column :lun,                        :string
       t.column :storage_type,               :string
-      t.column :size,                       :integer
       t.column :hardware_pool_id,           :integer, :null => false
     end
+    create_table :storage_volumes do |t|
+      t.column :path,                       :string
+      t.column :lun,                        :string
+      t.column :size,                       :integer
+      t.column :storage_pool_id,            :integer, :null => false
+    end
 
-    execute "alter table storage_volumes add constraint fk_storage_volume_hw_pools
+    execute "alter table storage_pools add constraint fk_storage_pool_hw_pools
              foreign key (hardware_pool_id) references hardware_pools(id)"
+    execute "alter table storage_volumes add constraint fk_storage_volume_st_pools
+             foreign key (storage_pool_id) references storage_pools(id)"
 
   end
 
   def self.down
     drop_table :storage_volumes
+    drop_table :storage_pools
   end
 end

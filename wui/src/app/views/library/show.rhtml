@@ -83,7 +83,7 @@
     <%= link_to 'Edit VM Library', { :action => 'edit', :id => @vm_library }, { :class => "edit" } %>
       <%if @vm_library.quota -%>
       <%= link_to 'Edit Quota', { :controller => 'quota', :action => 'edit', :id => @vm_library.quota }, { :class => "edit" } %>
-      <%= link_to 'Delete Storage Volume', { :action => 'destroy', :id => @storage_volume }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %>
+      <%= link_to 'Revert to default Quota', { :controller => 'quota', :action => 'destroy', :id => @vm_library.quota }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %>
       <% else -%>
       <%= link_to 'Edit Quota', { :controller => 'quota', :action => 'new', :vm_library_id => @vm_library }, { :class => "edit" } %>
       <% end -%>

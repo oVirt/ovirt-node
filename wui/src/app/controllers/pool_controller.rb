@@ -30,13 +30,13 @@ class PoolController < AbstractPoolController
     set_perms(@default_pool)
     @organizational_pools = OrganizationalPool.list_for_user(@user)
     @hosts = Set.new
-    @storage_volumes = Set.new
+    @storage_pools = Set.new
     @organizational_pools.each do |pool|
       @hosts += pool.hosts
-      @storage_volumes += pool.storage_volumes
+      @storage_pools += pool.storage_pools
     end
     @hosts = @hosts.entries
-    @storage_volumes = @storage_volumes.entries
+    @storage_pools = @storage_pools.entries
   end
 
 

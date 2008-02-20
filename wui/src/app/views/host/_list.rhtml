@@ -26,9 +26,6 @@
 <%if @attach_to_pool -%>
     <td><%= link_to 'Choose', { :action => 'attach_to_pool', :id => host, :hardware_pool_id => @attach_to_pool }, { :class => "choose" } %></td>
 <% end -%>
-  <%- if defined?(remove_from_host) && remove_from_host -%>
-    <td><%= link_to( 'detach', { :action => 'remove_from_host', :id => @storage_volume, :host_id => host }, :confirm => 'Are you sure?', :method => :post, :class => "remove") %></td>
-  <%- end -%>
 </tr>
 <% end %>
 <tbody>

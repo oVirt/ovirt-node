@@ -1,7 +1,7 @@
 <div id="left">
-<h2><%= _("Editing a Storage Volume") %></h2>
+<h2><%= _("Editing a Storage Pool") %></h2>
 
-<% form_tag :action => 'update', :id => @storage_volume do %>
+<% form_tag :action => 'update', :id => @storage_pool do %>
   <%= render :partial => 'form' %>
   <%= submit_tag 'Edit' %>
 <% end %>
@@ -11,7 +11,7 @@
 <div id="right">
   <h2>Actions</h2>
   <ul class="actions">
-    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @storage_volume }, { :class => "show" } %></li>
-    <li class="action"><%= link_to "Back to #{@storage_volume.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @storage_volume.hardware_pool.id }, { :class => "list" } %></li>
+    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @storage_pool }, { :class => "show" } %></li>
+    <li class="action"><%= link_to "Back to #{@storage_pool.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @storage_pool.hardware_pool.id }, { :class => "list" } %></li>
   </ul>
 </div>

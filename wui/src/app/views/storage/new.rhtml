@@ -14,8 +14,8 @@
                 </div>
 
                 <div class="data-table-column">
-                  <strong>Choose From Storage in <%= @storage_volume.hardware_pool.superpool.name %></strong>
-                  <%= render :partial => "list", :locals => { :storage_volumes => @storage_volume.hardware_pool.storage_volumes } %>
+                  <strong>Choose From Storage in <%= @storage_pool.hardware_pool.superpool.name %></strong>
+                  <%= render :partial => "list", :locals => { :storage_pools => @storage_pool.hardware_pool.storage_pools } %>
                 </div>
 
               </div> <!-- end #data-table.inside -->
