@@ -24,7 +24,9 @@
                 <option class="remove" value="destroy" onSelect="confirm('Are you sure?'">Destroy</option>
               </select>
 
-              <br/><br/>
+              <br/>
+              <%= render :partial => '/layouts/alertbox' %>
+              <br/>
 
               <%= render :partial => "/vm/list", :locals => { :vms => @vm_library.vms } %>
               </form>

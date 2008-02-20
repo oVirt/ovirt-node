@@ -57,7 +57,8 @@ module ApplicationHelper
     %{
     <script type="text/javascript">
     // <![CDATA[
-          setTimeout(function() {$('#{name}').setStyle({'visibility':'hidden'})}, 1000 * 7);
+          var closeFlash = function() {$('#{name}').setStyle({'display':'none'})};
+          setTimeout(closeFlash, 1000 * 45);
     // ]]>
     </script>
     }
