@@ -154,11 +154,11 @@ option.remove { font-weight: bold; color: #cc0000; }
 
 /* ========= TABLE LISTS ========== */
 
-table.listing { font-size: 11pt; width: 100%; border: none; margin: 0em; padding: 0em; border-collapse: collapse;}
-table.listing tr { padding: 0em; margin: 0em; }
-table.listing th { text-align: center; font-weight: normal; color: #aaa; border: 1px solid #eee; background-color: #fff; }
-table.listing th.empty { border: none;  background-color: #fff; }
-table.listing td { border: 1px solid #ddd; margin: 0em; padding: 0.3em; color: #333; text-align: center; }
+table.listing { font-size: 9pt; width: 100%; border: 1px solid #bbbbbb; margin: 0em; padding: 0em; border-collapse: collapse;}
+table.listing tr { padding: 0em; margin: 0em; border: 1px solid #bbbbbb; }
+table.listing th { font-size: 9pt; padding: 7px 1px; text-align: center; font-weight: normal; color: #333; background-color: #eeeeee; }
+table.listing th.empty { }
+table.listing td { margin: 0em; padding: 10px 2px; color: #000; text-align: center; }
 table.listing tr.even td { background-color: #f9f9f9; }
 table.listing td .secondary { color: #999; font-size: 80%; }
 
