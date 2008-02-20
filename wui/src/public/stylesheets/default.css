@@ -73,10 +73,10 @@ h2.title { background-color: #f2f2f2; display: block; }
 
 /* ========= RIGHT ========== */
 
-#right { width: 222px; background: #ffffff url("/images/right-fade.png") repeat-x scroll top left; }
+#right { width: 222px; }
 #right .heading { background-color: #fff; }
-#tools { border-top: 2px solid #777777; padding: 10px 10px; }
-#tools h3 { border: none; font-size: 10pt; }
+.tools { border-top: 2px solid #777777; padding: 10px; margin-bottom: 10px; color: #000; background-color: #efefef;}
+.tools h3 { border: none; font-size: 10pt; }
 
 label { display: block; font-size: small; color: #333; }
 img { border: none; }
