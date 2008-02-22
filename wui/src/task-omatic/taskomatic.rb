@@ -43,6 +43,10 @@ require 'models/hardware_pool.rb'
 require 'models/permission.rb'
 require 'models/storage_volume.rb'
 require 'models/quota.rb'
+require 'models/storage_task.rb'
+require 'models/vm_task.rb'
+require 'models/storage_pool.rb'
+require 'models/motor_pool.rb'
 
 $stdout = File.new('/var/log/ovirt-wui/taskomatic.log', 'a')
 $stderr = File.new('/var/log/ovirt-wui/taskomatic.log', 'a')
@@ -154,50 +158,37 @@ def findVM(task, fail_on_nil_host_id = true)
   return vm
 end
 
-def findHost(task, vm)
-  host = Host.find(:first, :conditions => [ "id = ?", vm.host_id])
+def findHost(task, host_id)
+  host = Host.find(:first, :conditions => [ "id = ?", host_id])
 
   if host == nil
     # Hm, we didn't find the host_id.  Seems odd.  Return a failure
-
-    # FIXME: we should probably contact the hosts we know about and check to
-    # see if this VM is running
-    setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
     raise
   end
 
   return host
 end
 
-# a function to find a SCSI wwid based on ipaddr, port, target, lun.  Note
-# that this runs locally, so the management server will have to have access
-# to the same iSCSI LUNs as the guests will
-def find_wwid(ipaddr, port, target, lun)
-  system('/sbin/iscsiadm --mode discovery --type sendtargets --portal ' + ipaddr)
-  system('/sbin/iscsiadm --mode node --targetname ' + target + ' --portal ' + ipaddr + ':'+ port.to_s + ' --login')
-  
-  sessions = Dir['/sys/class/iscsi_session/session*']
+def create_storage_xml(ipaddr, target)
+  # FIXME: we are going to want to randomly generate this, I believe
+  name = "foobar"
 
-  sessions.each do |session|
-    current = IO.read(session + '/targetname')
-    if not target <=> current
-      next
-    end
+  doc = Document.new
 
-    # OK, we found the target; now let's go looking for the devices
-    devices = Dir[session + '/device/target*/[0-9]*:' + lun.to_s]
+  doc.add_element("pool", {"type" => "iscsi"})
 
-    devices.each do |device|
-      blocks = Dir[device + '/block:sd*']
-      blocks.each do |block|
-        out = IO.popen('/sbin/scsi_id -g -u -s ' + block.sub(/\/sys(.*)/, '\1'), mode="r")
-        id = out.readline
-        out.close
-        return id.chomp
-      end
-    end
-  end
-  return nil
+  doc.root.add_element("name")
+  doc.root.elements["name"].text = name
+
+  doc.root.add_element("source")
+  doc.root.elements["source"].add_element("host", {"name" => ipaddr})
+  doc.root.elements["source"].add_element("device", {"path" => target})
+
+  doc.root.add_element("target")
+  doc.root.elements["target"].add_element("path")
+  doc.root.elements["target"].elements["path"].text = "/dev/disk/by-id"
+
+  return doc
 end
 
 $dbconfig = database_configuration
@@ -267,8 +258,9 @@ def shutdown_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     begin
-      host = findHost(task, vm)
+      host = findHost(task, vm.host_id)
     rescue
+      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
       raise
     end
     
@@ -284,6 +276,8 @@ def shutdown_vm(task)
       dom.destroy
       dom.undefine
       conn.close
+      # FIXME: hm.  We probably want to undefine the storage pool that this host
+      # was using if and only if it's not in use by another VM.
     rescue
       # FIXME: we could get out of sync with the host here, for instance, by the
       # user typing "shutdown" inside the guest.  That would actually shutdown
@@ -370,15 +364,58 @@ def start_vm(task)
       raise
     end
 
-    storagedevs = []
-    vm.storage_volumes.each do |volume|
-      wwid = find_wwid(volume.ip_addr, volume.port, volume.target, volume.lun)
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
 
-      if wwid != nil
-        storagedevs << "/dev/disk/by-id/scsi-" + wwid
+    # here, build up a list of already defined iscsi pools.  We'll use it
+    # later to see if we need to define new pools for the storage or just
+    # keep using existing ones
+
+    defined_pools = []
+    conn.list_defined_storage_pools.each do |remote_pool_name|
+      tmppool = conn.lookup_storage_pool_by_name(remote_pool_name)
+      doc = Document.new(tmppool.xml_desc(0))
+      root = doc.root
+      
+      if root.attributes['type'] == 'iscsi'
+        defined_pools << [ root.elements['source'].elements['host'].attributes['name'], root.elements['source'].elements['device'].attributes['path'] ]
       end
     end
- 
+
+    storagedevs = []
+    vm.storage_volumes.each do |volume|
+      storagedevs << volume.path
+
+      # here, we need to iterate through each volume and possibly attach it
+      # to the host we are going to be using
+      storage_pool = StoragePool.find(volume.storage_pool_id)
+
+      thislist = [ storage_pool.ip_addr, storage_pool.target ]
+
+      found_pool = false
+      defined_pools.each do |pool|
+        if thislist === pool
+          # the one we are going to define is already there; we don't need
+          # to do it again
+          found_pool = true
+          break
+        end
+      end
+
+      if not found_pool
+        # well, it doesn't seem this pool is defined; let's go ahead and do that
+        storage_xml = create_storage_xml(storage_pool.ip_addr, storage_pool.target)
+        begin
+          # FIXME: due to a bug either in the libvirt storage API or in the 
+          # ruby bindings, sometimes list_defined_storage_pools doesn't
+          # show you all of the pools.  For now, just ignore errors here
+          new_pool = conn.define_storage_pool_xml(storage_xml.to_s)
+          new_pool.create
+        rescue
+        end
+      end
+    end
+    conn.close
+
     if storagedevs.length < 1
       # we couldn't find *any* disk to attach to the VM; we have to quit
       # FIXME: eventually, we probably want to allow diskless machines that will
@@ -391,7 +428,7 @@ def start_vm(task)
     end
 
     # OK, we found a host that will work; now let's build up the XML
-    
+
     # FIXME: get rid of the hardcoded bridge
     xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
                         vm.memory_used, vm.num_vcpus_allocated, vm.boot_device,
@@ -454,8 +491,9 @@ def save_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     begin
-      host = findHost(task, vm)
+      host = findHost(task, vm.host_id)
     rescue
+      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
       raise
     end
     
@@ -516,8 +554,9 @@ def restore_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     begin
-      host = findHost(task, vm)
+      host = findHost(task, vm.host_id)
     rescue
+      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
       raise
     end
     
@@ -577,8 +616,9 @@ def suspend_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     begin
-      host = findHost(task, vm)
+      host = findHost(task, vm.host_id)
     rescue
+      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
       raise
     end
     
@@ -636,8 +676,9 @@ def resume_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     begin
-      host = findHost(task, vm)
+      host = findHost(task, vm.host_id)
     rescue
+      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
       raise
     end
     
@@ -661,6 +702,94 @@ def resume_vm(task)
   vm.save
 end
 
+def refresh_pool(task)
+  puts "refresh_pool"
+
+  pool = StoragePool.find(task[:storage_pool_id])
+
+  storage_xml = create_storage_xml(pool.ip_addr, pool.target)
+
+  begin
+    host = findHost(task, pool.hardware_pool_id)
+  rescue
+    # well, there may be no hosts in this collection/map yet.  Let's try the
+    # default group
+    begin
+      host = findHost(task, MotorPool.find(:first).id)
+    rescue
+      # in this case, there are no hosts we can use; we have to bail out
+      puts "Failed finding host"
+      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
+      return
+    end
+  end
+
+  puts host.hostname
+  remote_pool_defined = false
+  remote_pool_started = false
+  remote_pool = nil
+
+  conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+
+  # here, run through the list of already defined pools on the remote side
+  # and see if a pool matching "iscsi", IP, target already exists.  If it does
+  # we don't try to define it again, we just scan it
+  pool_defined = false
+  conn.list_defined_storage_pools.each do |remote_pool_name|
+    puts remote_pool_name
+    tmppool = conn.lookup_storage_pool_by_name(remote_pool_name)
+    doc = Document.new(tmppool.xml_desc(0))
+    root = doc.root
+    if root.attributes['type'] == 'iscsi' and
+        root.elements['source'].elements['host'].attributes['name'] == pool.ip_addr and
+        root.elements['source'].elements['device'].attributes['path'] == pool.target
+      pool_defined = true
+      remote_pool = tmppool
+      break
+    end
+  end
+  if not pool_defined
+    remote_pool = conn.define_storage_pool_xml(storage_xml.to_s)
+    remote_pool_defined = true
+  end
+  remote_pool_info = remote_pool.info
+  if remote_pool_info.state == Libvirt::StoragePool::INACTIVE
+    # only try to start the pool if it is currently inactive; in all other
+    # states, assume it is already running
+    remote_pool.create
+    remote_pool_started = true
+  end
+  vols = remote_pool.list_volumes
+  vols.each do |volname|
+    volptr = remote_pool.lookup_volume_by_name(volname)
+    existing_vol = StorageVolume.find(:first, :conditions => [ "path = ?", volptr.path ])
+    if existing_vol != nil
+      # in this case, this path already exists in the database; just skip
+      next
+    end
+
+    volinfo = volptr.info
+    storage_volume = StorageVolume.new
+    storage_volume.path = volptr.path
+    storage_volume.lun = volname
+    storage_volume.size = volinfo.capacity / 1024
+    storage_volume.storage_pool_id = pool.id
+    storage_volume.save
+  end
+  if remote_pool_started
+    remote_pool.destroy
+  end
+  if remote_pool_defined
+    remote_pool.undefine
+  end
+  conn.close
+
+  # FIXME: if we encounter errors after defining the pool, we should try to
+  # clean up after ourselves
+
+  setTaskState(task, Task::STATE_FINISHED)
+end
+
 pid = fork do
   loop do
     puts 'Checking for tasks...'
@@ -673,13 +802,14 @@ pid = fork do
 
     Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
       case task.action
-      when Task::ACTION_CREATE_VM then create_vm(task)
-      when Task::ACTION_SHUTDOWN_VM then shutdown_vm(task)
-      when Task::ACTION_START_VM then start_vm(task)
-      when Task::ACTION_SUSPEND_VM then suspend_vm(task)
-      when Task::ACTION_RESUME_VM then resume_vm(task)
-      when Task::ACTION_SAVE_VM then save_vm(task)
-      when Task::ACTION_RESTORE_VM then restore_vm(task)
+      when VmTask::ACTION_CREATE_VM then create_vm(task)
+      when VmTask::ACTION_SHUTDOWN_VM then shutdown_vm(task)
+      when VmTask::ACTION_START_VM then start_vm(task)
+      when VmTask::ACTION_SUSPEND_VM then suspend_vm(task)
+      when VmTask::ACTION_RESUME_VM then resume_vm(task)
+      when VmTask::ACTION_SAVE_VM then save_vm(task)
+      when VmTask::ACTION_RESTORE_VM then restore_vm(task)
+      when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
       else
         puts "unknown task " + task.action
         setTaskState(task, Task::STATE_FAILED, "Unknown task type")

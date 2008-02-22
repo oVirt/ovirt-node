@@ -114,10 +114,18 @@ def update_host_list
 end
 
 def get_credentials
-  krb5 = Krb5.new
-  default_realm = krb5.get_default_realm
-  krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
-  krb5.cache(ENV['KRB5CCNAME'])
+  begin
+    krb5 = Krb5.new
+    default_realm = krb5.get_default_realm
+    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
+    krb5.cache(ENV['KRB5CCNAME'])
+  rescue
+    # well, if we run into an error here, there's not much we can do.  Just
+    # print a warning, and blindly go on in the hopes that this was some sort
+    # of temporary error
+    puts "Error caching credentials; attempting to continue..."
+    return
+  end
 end
 
 # here, get an initial list of hosts to monitor.  This is done by looking at
@@ -158,7 +166,13 @@ pid = fork do
         dom_states[domname] = info.state
       end
       conn.close
-      
+
+      puts "host is " + host
+      puts "Old state:"
+      puts $host_vms[host]
+      puts "New state:"
+      puts dom_states
+
       if dom_states === $host_vms[host]
         # here, the domain states are the same as they were last time.  Good, we
         # can go on
@@ -170,13 +184,14 @@ pid = fork do
       # domain states, as well as the database.  The latter we do through a
       # taskomatic task, since it is the keeper, in the end, of the database
       
+      puts "Domain states changed; updating"
       $host_vms[host] = dom_states
       
       # FIXME: implement the taskomatic task!
       
     end
     
-    sleep 20
+    sleep 5
   end
 end
 
