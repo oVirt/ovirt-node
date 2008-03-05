@@ -18,41 +18,23 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-
-$: << "../app"
-$: << "/usr/share/ovirt-wui/app"
+$: << File.join(File.dirname(__FILE__), "../app")
+$: << File.join(File.dirname(__FILE__), "../dutils")
 
 require 'rubygems'
 require 'active_record'
-require 'erb'
-require 'kerberos'
-include Kerberos
 require 'libvirt'
+require 'optparse'
 
-require 'models/vm.rb'
-require 'models/host.rb'
-
-ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
+require 'dutils'
+require 'models/vm'
+require 'models/host'
 
 $logfile = '/var/log/ovirt-wui/host-status.log'
 
-$stdout = File.new($logfile, 'a')
-$stderr = File.new($logfile, 'a')
-
-def database_configuration
-  YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
-end
-
-$dbconfig = database_configuration
-$develdb = $dbconfig['development']
-ActiveRecord::Base.establish_connection(
-                                        :adapter  => $develdb['adapter'],
-                                        :host     => $develdb['host'],
-                                        :username => $develdb['username'],
-                                        :password => $develdb['password'],
-                                        :database => $develdb['database']
-                                        )
-
+UPDATE_VM_OFF = 0
+UPDATE_VM_RUNNING = 1
+UPDATE_VM_PAUSHED = 2
 
 def findHost(vm)
   host = Host.find(:first, :conditions => [ "id = ?", vm.host_id])
@@ -65,134 +47,83 @@ def findHost(vm)
   return host
 end
 
-def update_host_list
+def kick_taskomatic(msg, vm)
+  puts msg
+end
+
+do_daemon = true
+sleeptime = 5
+opts = OptionParser.new do |opts|
+  opts.on("-h", "--help", "Print help message") do
+    puts opts
+    exit
+  end
+  opts.on("-n", "--nodaemon", "Run interactively (useful for debugging)") do |n|
+    do_daemon = !n
+  end
+  opts.on("-s N", Integer, "--sleep", "Seconds to sleep between iterations (default is 5 seconds)") do |s|
+    sleeptime = s
+  end
+end
+begin
+  opts.parse!(ARGV)
+rescue OptionParser::InvalidOption
+  puts opts
+  exit
+end
+
+if do_daemon
+  daemonize
+  STDOUT.reopen $logfile, 'a'
+  STDERR.reopen STDOUT
+end
+
+database_connect
+
+loop do
+  puts "hello"
+  get_credentials
   vms = Vm.find(:all, :conditions => [ "host_id is NOT NULL" ])
   vms.each do |vm|
+    host = findHost(vm)
+
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     begin
-      host = findHost(vm)
+      dom = conn.lookup_domain_by_uuid(vm.uuid)
     rescue
-      # well, we couldn't find the host that this VM is supposedly running on.
-      # for now, just skip it
-      # FIXME: should we update the database, possibly taking that host
-      # 'offline', or whatever?  Really, this shouldn't happen, so it's not
-      # a huge deal for now
-    end
-
-    if $host_vms.has_key?(host.hostname)
-      # we already saw this host (from another VM); don't look at it again
-      next
-    end
-    
-    begin
-      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-    rescue
-      # OK, if we failed to connect for some reason, we just won't monitor this
-      # host for now.  It's not a big deal; if this is just a temporary
-      # condition, we will pick it up in the next loop
-      puts "Can't contact " + host.hostname + "; skipping for now"
-      next
-    end
-    
-    defined_domains = conn.list_defined_domains
-    
-    # FIXME: what happens if defined_domains disagrees with what we have in the
-    # database?  This is something *this* daemon is responsible for, so we will
-    # have to come up with a way to handle it
-    
-    dom_states = {}
-    defined_domains.each do |domname|
-      dom = conn.lookup_domain_by_name(domname)
-      info = dom.info
-      dom_states[domname] = info.state
-    end
-    $host_vms[host.hostname] = dom_states
-
-    conn.close
-  end
-  
-  puts $host_vms
-end
-
-def get_credentials
-  begin
-    krb5 = Krb5.new
-    default_realm = krb5.get_default_realm
-    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
-    krb5.cache(ENV['KRB5CCNAME'])
-  rescue
-    # well, if we run into an error here, there's not much we can do.  Just
-    # print a warning, and blindly go on in the hopes that this was some sort
-    # of temporary error
-    puts "Error caching credentials; attempting to continue..."
-    return
-  end
-end
-
-# here, get an initial list of hosts to monitor.  This is done by looking at
-# the running VMs and making a unique list of hosts that that they are running
-# on.  In the loop below, the host list will be updated as necessary.
-$host_vms = {}
-get_credentials
-update_host_list
-
-# OK, now we have an initial list.  Let's fork off and check back periodically
-
-pid = fork do
-  loop do
-    puts "Waking up to check host status..."
-    get_credentials
-    
-    # the first thing to do is to go into the database and check whether we need
-    # to update our host list
-    update_host_list
-    
-    $host_vms.keys.each do |host|
-      begin
-        conn = Libvirt::open("qemu+tcp://" + host + "/system")
-      rescue
-        # OK, if we failed to connect for some reason, we just won't monitor
-        # this host for now.  It's not a big deal; if this is just a temporary
-        # condition, we will pick it up in the next loop
-        puts "Can't contact " + host + "; skipping for now"
-        next
-      end
-      
-      defined_domains = conn.list_defined_domains    
-      
-      dom_states = {}
-      defined_domains.each do |domname|
-        dom = conn.lookup_domain_by_name(domname)
-        info = dom.info
-        dom_states[domname] = info.state
-      end
+      # OK.  We couldn't find the UUID that we thought was there.  The only
+      # explanation is that the domain is no longer there.  Kick taskomatic
+      # and tell it
+      kick_taskomatic(UPDATE_VM_OFF, vm)
       conn.close
-
-      puts "host is " + host
-      puts "Old state:"
-      puts $host_vms[host]
-      puts "New state:"
-      puts dom_states
-
-      if dom_states === $host_vms[host]
-        # here, the domain states are the same as they were last time.  Good, we
-        # can go on
-        puts "Domain states unchanged on host " + host
-        next
-      end
-      
-      # otherwise we need to update both our internal representation of the
-      # domain states, as well as the database.  The latter we do through a
-      # taskomatic task, since it is the keeper, in the end, of the database
-      
-      puts "Domain states changed; updating"
-      $host_vms[host] = dom_states
-      
-      # FIXME: implement the taskomatic task!
-      
+      next
     end
-    
-    sleep 5
-  end
-end
+    info = dom.info
+    conn.close
 
-Process.detach(pid)
+
+    case info.state
+    when Libvirt::Domain::NOSTATE, Libvirt::Domain::SHUTDOWN,
+      Libvirt::Domain::SHUTOFF, Libvirt::Domain::CRASHED then
+      if Vm::RUNNING_STATES.include?(vm.state)
+        # OK, the host thinks this VM is off, while the database thinks it
+        # is running; we have to kick taskomatic
+        kick_taskomatic(UPDATE_VM_OFF, vm)
+      end
+    when Libvirt::Domain::RUNNING, Libvirt::Domain::BLOCKED then
+      if not Vm::RUNNING_STATES.include?(vm.state)
+        # OK, the host thinks this VM is running, but it's not marked as running
+        # in the database; kick taskomatic
+        kick_taskomatic(UPDATE_VM_RUNNING, vm)
+      end
+    when Libvirt::Domain::PAUSED then
+      if vm.state != Vm::STATE_SUSPENDING and vm.state != Vm::STATE_SUSPENDED
+        kick_taskomatic(UPDATE_VM_PAUSED, vm)
+      end
+    else
+      puts "Unknown vm state...skipping"
+    end
+  end
+
+  sleep sleeptime
+end

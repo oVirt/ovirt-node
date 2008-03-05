@@ -19,17 +19,14 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 
-$: << "../app"
-$: << "/usr/share/ovirt-wui/app"
+$: << File.join(File.dirname(__FILE__), "../app")
+$: << File.join(File.dirname(__FILE__), "../dutils")
 
 require 'rubygems'
 require 'active_record'
-require 'erb'
 require 'libvirt'
 require 'rexml/document'
 include REXML
-require 'kerberos'
-include Kerberos
 require 'socket'
 
 require 'models/vm.rb'
@@ -48,14 +45,7 @@ require 'models/vm_task.rb'
 require 'models/storage_pool.rb'
 require 'models/motor_pool.rb'
 
-$stdout = File.new('/var/log/ovirt-wui/taskomatic.log', 'a')
-$stderr = File.new('/var/log/ovirt-wui/taskomatic.log', 'a')
-
-ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
-
-def database_configuration
-  YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
-end
+$logfile = '/var/log/ovirt-wui/taskomatic.log'
 
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
                   macAddr, bridge, diskDevices)
@@ -190,16 +180,6 @@ def create_storage_xml(ipaddr, target)
 
   return doc
 end
-
-$dbconfig = database_configuration
-$develdb = $dbconfig['development']
-ActiveRecord::Base.establish_connection(
-                                        :adapter  => $develdb['adapter'],
-                                        :host     => $develdb['host'],
-                                        :username => $develdb['username'],
-                                        :password => $develdb['password'],
-                                        :database => $develdb['database']
-                                        )
 
 ############### TASK FUNCTIONS #######################
 def create_vm(task)
@@ -790,41 +770,62 @@ def refresh_pool(task)
   setTaskState(task, Task::STATE_FINISHED)
 end
 
-pid = fork do
-  loop do
-    puts 'Checking for tasks...'
-
-    # make sure we get our credentials up-front
-    krb5 = Krb5.new
-    default_realm = krb5.get_default_realm
-    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
-    krb5.cache(ENV['KRB5CCNAME'])
-
-    Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
-      case task.action
-      when VmTask::ACTION_CREATE_VM then create_vm(task)
-      when VmTask::ACTION_SHUTDOWN_VM then shutdown_vm(task)
-      when VmTask::ACTION_START_VM then start_vm(task)
-      when VmTask::ACTION_SUSPEND_VM then suspend_vm(task)
-      when VmTask::ACTION_RESUME_VM then resume_vm(task)
-      when VmTask::ACTION_SAVE_VM then save_vm(task)
-      when VmTask::ACTION_RESTORE_VM then restore_vm(task)
-      when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
-      else
-        puts "unknown task " + task.action
-        setTaskState(task, Task::STATE_FAILED, "Unknown task type")
-      end
-      
-      task.time_ended = Time.now
-      task.save
-    end
-    
-    # we could destroy credentials, but another process might be using them (in
-    # particular, host-browser).  Just leave them around, it shouldn't hurt
-
-    $stdout.flush
-    sleep 5
+do_daemon = true
+sleeptime = 5
+opts = OptionParser.new do |opts|
+  opts.on("-h", "--help", "Print help message") do
+    puts opts
+    exit
+  end
+  opts.on("-n", "--nodaemon", "Run interactively (useful for debugging)") do |n|
+    do_daemon = !n
+  end
+  opts.on("-s N", Integer, "--sleep", "Seconds to sleep between iterations (default is 5 seconds)") do |s|
+    sleeptime = s
   end
 end
+begin
+  opts.parse!(ARGV)
+rescue OptionParser::InvalidOption
+  puts opts
+  exit
+end
 
-Process.detach(pid)
+if do_daemon
+  daemonize
+  STDOUT.reopen $logfile, 'a'
+  STDERR.reopen STDOUT
+end
+
+database_connect
+
+loop do
+  puts 'Checking for tasks...'
+  
+  # make sure we get our credentials up-front
+  get_credentials
+
+  Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
+    case task.action
+    when VmTask::ACTION_CREATE_VM then create_vm(task)
+    when VmTask::ACTION_SHUTDOWN_VM then shutdown_vm(task)
+    when VmTask::ACTION_START_VM then start_vm(task)
+    when VmTask::ACTION_SUSPEND_VM then suspend_vm(task)
+    when VmTask::ACTION_RESUME_VM then resume_vm(task)
+    when VmTask::ACTION_SAVE_VM then save_vm(task)
+    when VmTask::ACTION_RESTORE_VM then restore_vm(task)
+    when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
+    else
+      puts "unknown task " + task.action
+      setTaskState(task, Task::STATE_FAILED, "Unknown task type")
+    end
+    
+    task.time_ended = Time.now
+    task.save
+  end
+  
+  # we could destroy credentials, but another process might be using them (in
+  # particular, host-browser).  Just leave them around, it shouldn't hurt
+  
+  sleep sleeptime
+end
