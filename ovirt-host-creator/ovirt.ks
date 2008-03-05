@@ -5,7 +5,7 @@ auth --useshadow --enablemd5
 selinux --disabled
 firewall --disabled
 part / --size 950
-services --disabled=iptables --enabled=ntpd,collectd
+services --enabled=ntpd,collectd,iptables
 bootloader --timeout=1
 
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
@@ -23,7 +23,6 @@ kernel
 passwd
 policycoreutils
 chkconfig
-authconfig
 rootfiles
 dhclient
 libvirt
@@ -86,6 +85,9 @@ nc
 -kpartx
 -dmraid
 -mkinitrd
+-gzip
+-less
+-which
 -parted
 -nash
 -tar
@@ -96,75 +98,18 @@ nc
 -cpio
 -cyrus-sasl-gssapi.i386
 -cyrus-sasl-lib.i386
+-xorg-x11-filesystem
 
 %post
 
-# the ovirt service
-
-cat > /etc/init.d/ovirt << \EOF
-#!/bin/bash
-#
-# ovirt Start ovirt services
-#
-# chkconfig: 3 99 01
-# description: ovirt services
-#
-
-# Source functions library
-. /etc/init.d/functions
-
-start() {
-        # HACK: we need to do depmod here to make sure we get updated kvm
-        # modules; this does not work in %post, since I don't think that is
-        # done in a chroot
-        /sbin/depmod
-
-        modprobe kvm
-        modprobe kvm-intel >& /dev/null
-        modprobe kvm-amd >& /dev/null
-        # login to all of the discovered iSCSI servers
-	# HACK: this should be delegated to the iSCSI scripts
-        for server in `cat /etc/iscsi-servers.conf`; do
-            scan=`/sbin/iscsiadm --mode discovery --type sendtargets --portal $server 2>/dev/null`
-            if [ $? -ne 0 ]; then
-                 echo "Failed scanning $server...skipping"
-                 continue
-	    fi
-            target=`echo $scan | cut -d' ' -f2`
-            port=`echo $scan | cut -d':' -f2 | cut -d',' -f1`
-            /sbin/iscsiadm --mode node --targetname $target --portal $server:$port --login
-        done
-
-        /sbin/iptables -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT
-}
-
-stop() {
-        /sbin/iptables -D FORWARD -m physdev --physdev-is-bridged -j ACCEPT
-        /sbin/iscsiadm --mode node --logoutall=all
-        rmmod kvm-intel >& /dev/null
-        rmmod kvm-amd >& /dev/null
-        rmmod kvm >& /dev/null
-}
-
-case "$1" in
-  start)
-        start
-        ;;
-  stop)
-        stop
-        ;;
-  restart)
-        stop
-        start
-        ;;
-  *)
-        echo "Usage: ovirt {start|stop|restart}"
-        exit 2
-esac
+cat > /etc/sysconfig/iptables << \EOF
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A FORWARD -m physdev --physdev-is-bridged -j ACCEPT
+COMMIT
 EOF
-
-chmod +x /etc/init.d/ovirt
-/sbin/chkconfig ovirt on
 
 # next the dynamic bridge setup service
 cat > /etc/init.d/ovirt-early << \EOF
@@ -188,7 +133,7 @@ start() {
             BRIDGE=ovirtbr`echo $eth | cut -b4-`
             echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" > /etc/sysconfig/network-scripts/ifcfg-$eth
             echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,iscsi-servers,libvirt-auth-method,collectd-server"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,libvirt-auth-method"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
         # find all of the partitions on the system
@@ -244,26 +189,11 @@ chmod +x /etc/init.d/ovirt-early
 # just to get a boot warning to shut up
 touch /etc/resolv.conf
 
-# needed for the iscsi-servers dhcp option
 cat > /etc/dhclient.conf << EOF
-option iscsi-servers code 200 = array of ip-address;
 option libvirt-auth-method code 202 = text;
-option collectd-server code 203 = ip-address;
 EOF
 
-cat > /etc/dhclient-ovirtbr0-up-hooks << \EOF
-if [ -n "$new_iscsi_servers" ]; then
-    for s in $new_iscsi_servers; do
-        echo $s >> /etc/iscsi-servers.conf
-    done
-fi
 # NOTE that libvirt_auth_method is handled in the exit-hooks
-if [ -n "$new_collectd_server" ]; then
-   sed -i -e "s/Server.*/Server \"$new_collectd_server\"/" /etc/collectd.conf
-fi
-EOF
-chmod +x /etc/dhclient-ovirtbr0-up-hooks
-
 cat > /etc/dhclient-exit-hooks << \EOF
 if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
     METHOD=`echo $new_libvirt_auth_method | cut -d':' -f1`
@@ -272,10 +202,12 @@ if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
     if [ $METHOD = "krb5" ]; then
         mkdir -p /etc/libvirt
         # here, we wait for the "host-keyadd" service to finish adding our
-        # keytab and returning to us
-	VAL=""
-	while [ "$VAL" != "SUCCESS" ]; do
-            VAL=`echo "KERB" | /usr/bin/nc $IP 6666`
+        # keytab and returning to us; note that we will try 5 times and
+        # then give up
+        tries=0
+        while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
+            VAL=`echo "KERB" | /usr/bin/nc $IP 6666`	
+            tries=$(( $tries + 1 ))
             sleep 1
         done
         /usr/bin/wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
@@ -348,11 +280,15 @@ LoadPlugin cpu
         HostnameFormat "hostname"
 </Plugin>
 
-# this will be replaced with the DHCP option record "collectd-server"
 <Plugin network>
-        Server "192.168.25.4"
+        Server "224.0.0.1"
 </Plugin>
 EOF
+
+# because we aren't installing authconfig, we aren't setting up shadow
+# and gshadow properly.  Do it by hand here
+/usr/sbin/pwconv
+/usr/sbin/grpconv
 
 # here, remove a bunch of files we don't need that are just eating up space.
 # it breaks rpm slightly, but it's not too bad
@@ -363,6 +299,10 @@ EOF
 # Sigh.  ntp has a silly dependency on perl because of auxiliary scripts which
 # we don't need to use.  Forcibly remove it here
 rpm -e --nodeps perl perl-libs
+
+# another crappy dependency; rrdtool pulls in dejavu-lgc-fonts for some reason
+# remove it here
+rpm -e --nodeps dejavu-lgc-fonts
 
 rm -rf /usr/share/omf/fedora-release-notes
 rm -rf /usr/share/omf/about-fedora
@@ -376,5 +316,6 @@ rm -rf /usr/lib64/gconv
 rm -rf /usr/share/doc
 rm -rf /usr/share/X11
 rm -f /usr/lib/locale/*
+rm -rf /usr/share/terminfo/*
 
 %end

@@ -1,7 +1,7 @@
 <div class = "alertbox">
 <%- for name in [:notice, :errmsg] -%>
   <%- if flash[name] -%>
-    <%= "<div class=\"flash\" id=\"#{name}\">#{flash[name]} #{link_to_function image_tag('closebox-11.png'), 'closeFlash();', { :class_name => 'flash-close' }}</div>" -%>
+    <%= "<div class=\"flash\" id=\"#{name}\">#{flash[name]} #{link_to_function image_tag('closebox-11.png'), 'closeFlash();', { :class => 'flash-close' }}</div>" -%>
     <%= timeout_flash name -%>
   <%- end -%>
 <%- end -%>

@@ -96,8 +96,8 @@ option.other { color: #999; }
 /* ========= FLASH ========== */
 
 div.alertbox { text-align: center; margin: 7px 0px; }
-div.flash { padding: 7px; position: relative; }
-div.flash a { position: absolute; right: 10px; top: 9px; }
+div.flash { padding: 7px 20px 7px 7px; position: relative; }
+div.flash a.flash-close { position: absolute; right: 10px; top: 9px; }
 #errmsg { background-color: #ff7f7f; border: 1px solid #cc0000; color: #111; padding: 0.3em 1em; }
 #notice { font-weight: bold; background-color: #ffffcc;  border: 1px solid #fee4aa; }
 div.flash a { text-decoration: none; }
