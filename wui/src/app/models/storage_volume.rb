@@ -24,7 +24,7 @@ class StorageVolume < ActiveRecord::Base
   has_and_belongs_to_many :vms
 
   def display_name
-    "#{storage_pool.ip_addr}:#{storage_pool.target}:#{lun}"
+    "#{storage_pool.ip_addr}:#{storage_pool[:target]}:#{lun}"
   end
 
   def size_in_gb
