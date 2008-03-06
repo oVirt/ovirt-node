@@ -22,6 +22,7 @@ require 'socket'
 require 'rubygems'
 require 'kerberos'
 include Kerberos
+require 'optparse'
 
 $logfile = '/var/log/ovirt-wui/host-keyadd.log'
 

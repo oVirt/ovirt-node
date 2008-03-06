@@ -29,12 +29,10 @@ require 'optparse'
 require 'dutils'
 require 'models/vm'
 require 'models/host'
+require 'models/task'
+require 'models/vm_task'
 
 $logfile = '/var/log/ovirt-wui/host-status.log'
-
-UPDATE_VM_OFF = 0
-UPDATE_VM_RUNNING = 1
-UPDATE_VM_PAUSHED = 2
 
 def findHost(vm)
   host = Host.find(:first, :conditions => [ "id = ?", vm.host_id])
@@ -48,7 +46,15 @@ def findHost(vm)
 end
 
 def kick_taskomatic(msg, vm)
-  puts msg
+  task = VmTask.new
+  task.user = "host-status"
+  task.action = VmTask::ACTION_UPDATE_STATE_VM
+  task.state = Task::STATE_QUEUED
+  task.args = msg
+  task.created_at = Time.now
+  task.time_started = Time.now
+  task.vm_id = vm.id
+  task.save
 end
 
 do_daemon = true
@@ -81,8 +87,12 @@ end
 database_connect
 
 loop do
-  puts "hello"
+  puts "Waking up to check host status"
   get_credentials
+
+  # FIXME: this only monitors hosts that have VMs running that *we* started.
+  # We might want to enhance this to look at all hosts that we are capable
+  # of contacting, just to check that rogue guests didn't get started.
   vms = Vm.find(:all, :conditions => [ "host_id is NOT NULL" ])
   vms.each do |vm|
     host = findHost(vm)
@@ -94,13 +104,13 @@ loop do
       # OK.  We couldn't find the UUID that we thought was there.  The only
       # explanation is that the domain is no longer there.  Kick taskomatic
       # and tell it
-      kick_taskomatic(UPDATE_VM_OFF, vm)
+      puts "Failed to find domain " + vm.description
+      kick_taskomatic(Vm::STATE_STOPPED, vm)
       conn.close
       next
     end
     info = dom.info
     conn.close
-
 
     case info.state
     when Libvirt::Domain::NOSTATE, Libvirt::Domain::SHUTDOWN,
@@ -108,22 +118,23 @@ loop do
       if Vm::RUNNING_STATES.include?(vm.state)
         # OK, the host thinks this VM is off, while the database thinks it
         # is running; we have to kick taskomatic
-        kick_taskomatic(UPDATE_VM_OFF, vm)
+        kick_taskomatic(Vm::STATE_STOPPED, vm)
       end
     when Libvirt::Domain::RUNNING, Libvirt::Domain::BLOCKED then
       if not Vm::RUNNING_STATES.include?(vm.state)
         # OK, the host thinks this VM is running, but it's not marked as running
         # in the database; kick taskomatic
-        kick_taskomatic(UPDATE_VM_RUNNING, vm)
+        kick_taskomatic(Vm::STATE_RUNNING, vm)
       end
     when Libvirt::Domain::PAUSED then
       if vm.state != Vm::STATE_SUSPENDING and vm.state != Vm::STATE_SUSPENDED
-        kick_taskomatic(UPDATE_VM_PAUSED, vm)
+        kick_taskomatic(Vm::STATE_SUSPENDED, vm)
       end
     else
       puts "Unknown vm state...skipping"
     end
   end
 
+  STDOUT.flush
   sleep sleeptime
 end

@@ -28,7 +28,9 @@ require 'libvirt'
 require 'rexml/document'
 include REXML
 require 'socket'
+require 'optparse'
 
+require 'dutils'
 require 'models/vm.rb'
 require 'models/vm_library.rb'
 require 'models/hardware_pool.rb'
@@ -501,8 +503,7 @@ def save_vm(task)
 
   setTaskState(task, Task::STATE_FINISHED)
 
-  vm.state = Vm::STATE_SAVED
-  vm.save
+  setVmState(vm, Vm::STATE_SAVED)
 end
 
 def restore_vm(task)
@@ -562,8 +563,7 @@ def restore_vm(task)
 
   setTaskState(task, Task::STATE_FINISHED)
 
-  vm.state = Vm::STATE_RUNNING
-  vm.save
+  setVmState(vm, Vm::STATE_RUNNING)
 end
 
 def suspend_vm(task)
@@ -621,8 +621,7 @@ def suspend_vm(task)
 
   setTaskState(task, Task::STATE_FINISHED)
 
-  vm.state = Vm::STATE_SUSPENDED
-  vm.save
+  setVmState(vm, Vm::STATE_SUSPENDED)
 end
 
 def resume_vm(task)
@@ -678,8 +677,38 @@ def resume_vm(task)
 
   setTaskState(task, Task::STATE_FINISHED)
   
-  vm.state = Vm::STATE_RUNNING
-  vm.save
+  setVmState(vm, Vm::STATE_RUNNING)
+end
+
+def update_state_vm(task)
+  puts "update_state_vm"
+
+  begin
+    vm = findVM(task)
+  rescue
+    return
+  end
+
+  vm_effective_state = Vm::EFFECTIVE_STATE[vm.state]
+  task_effective_state = Vm::EFFECTIVE_STATE[task.args]
+
+  if vm_effective_state != task_effective_state
+    vm.state = task.args
+
+    if task_effective_state == Vm::STATE_STOPPED
+      vm.host_id = nil
+      vm.memory_used = nil
+      vm.num_vcpus_used = nil
+      vm.needs_restart = nil
+      vm.host_id = nil
+    end
+    vm.save
+    msg = "Updated state to " + task.args
+  else
+    msg = nil
+  end
+
+  setTaskState(task, Task::STATE_FINISHED, msg)
 end
 
 def refresh_pool(task)
@@ -814,6 +843,7 @@ loop do
     when VmTask::ACTION_RESUME_VM then resume_vm(task)
     when VmTask::ACTION_SAVE_VM then save_vm(task)
     when VmTask::ACTION_RESTORE_VM then restore_vm(task)
+    when VmTask::ACTION_UPDATE_STATE_VM then update_state_vm(task)
     when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
     else
       puts "unknown task " + task.action
@@ -827,5 +857,6 @@ loop do
   # we could destroy credentials, but another process might be using them (in
   # particular, host-browser).  Just leave them around, it shouldn't hurt
   
+  STDOUT.flush
   sleep sleeptime
 end
