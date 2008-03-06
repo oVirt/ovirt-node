@@ -23,6 +23,8 @@ require 'rubygems'
 require 'kerberos'
 include Kerberos
 require 'optparse'
+require 'daemons'
+include Daemonize
 
 $logfile = '/var/log/ovirt-wui/host-keyadd.log'
 
@@ -34,8 +36,6 @@ def kadmin_local(command)
   # FIXME: we need to return the output back to the caller here
   system("/usr/kerberos/sbin/kadmin.local -q '" + command + "'")
 end
-
-server = TCPServer.new(6666)
 
 do_daemon = true
 opts = OptionParser.new do |opts|
@@ -59,6 +59,8 @@ if do_daemon
   STDOUT.reopen $logfile, 'a'
   STDERR.reopen STDOUT
 end
+
+server = TCPServer.new(6666)
 
 loop do
   Thread.start(server.accept) do |s|
