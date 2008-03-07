@@ -9,11 +9,10 @@ services --enabled=ntpd,collectd,iptables
 bootloader --timeout=1
 
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
-# Can't enable F8-updates until we have updated KVM modules
 repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
 # Not using rawhide currently
 #repo --name=rawhide --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
-repo --name=ovirt-x86_64 --baseurl=http://ovirt.org/repos/ovirt/$basearch/
+repo --name=ovirt-host --baseurl=http://ovirt.org/repos/ovirt-host-repo/$basearch/
 
 
 %packages

@@ -28,7 +28,7 @@ logvol / --fstype ext3 --name=LogVol00 --vgname=VolGroup00 --size=1024 --grow
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
 repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
 repo --name=freeipa --baseurl=http://freeipa.com/downloads/devel/rpms/F7/$basearch/ --includepkgs=ipa*
-repo --name=ovirt --baseurl=http://ovirt.et.redhat.com/repos/ovirt/$basearch/
+repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-management-repo/$basearch/
 
 %packages
 @admin-tools
