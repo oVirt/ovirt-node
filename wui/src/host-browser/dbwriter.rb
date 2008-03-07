@@ -25,10 +25,11 @@ require 'rubygems'
 require 'libvirt'
 require 'active_record'
 
-require 'models/host.rb'
-require 'models/hardware_pool.rb'
-require 'models/permission.rb'
-require 'models/motor_pool.rb'
+require 'dutils'
+require 'models/host'
+require 'models/hardware_pool'
+require 'models/permission'
+require 'models/motor_pool'
 
 if ARGV.length != 1
   exit
