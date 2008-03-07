@@ -64,6 +64,8 @@ ovirt-wui
 firefox
 xorg-x11-xauth
 virt-viewer
+bind
+bind-chroot
 -libgcj
 -glib-java
 -valgrind
@@ -236,10 +238,10 @@ enabled=1
 gpgcheck=0
 EOF
 
-cat > /etc/yum.repos.d/ovirt.repo << \EOF
-[ovirt]
-name=Ovirt
-baseurl=http://ovirt.et.redhat.com/repos/ovirt/x86_64
+cat > /etc/yum.repos.d/ovirt-management.repo << \EOF
+[ovirt-management]
+name=ovirt-management
+baseurl=http://ovirt.et.redhat.com/repos/ovirt-management-repo/x86_64
 enabled=1
 gpgcheck=0
 EOF
