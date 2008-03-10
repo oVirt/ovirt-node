@@ -334,6 +334,30 @@ echo -e "" >> /etc/issue
 
 cp /etc/issue /etc/issue.net
 
+# for firefox, we need to make some subdirs and add some preferences
+mkdir -p /root/.mozilla/firefox/uxssq4qb.ovirtadmin
+cat >> /root/.mozilla/firefox/uxssq4qb.ovirtadmin/prefs.js << \EOF
+user_pref("network.negotiate-auth.delegation-uris", "priv.ovirt.org");
+user_pref("network.negotiate-auth.trusted-uris", "priv.ovirt.org");
+EOF
+
+cat >> /root/.mozilla/firefox/profiles.ini << \EOF
+[General]
+StartWithLastProfile=1
+
+[Profile0]
+Name=ovirtadmin
+IsRelative=1
+Path=uxssq4qb.ovirtadmin
+EOF
+
+# make sure we use ourselves as the nameserver (not what we get from DHCP)
+cat > /etc/dhclient-exit-hooks << \EOF
+echo "search ovirt.org priv.ovirt.org" > /etc/resolv.conf
+echo "nameserver 192.168.50.2" >> /etc/resolv.conf
+EOF
+chmod +x /etc/dhclient-exit-hooks
+
 cat > /etc/init.d/ovirt-app-first-run << \EOF
 #!/bin/bash
 #
@@ -349,11 +373,6 @@ cat > /etc/init.d/ovirt-app-first-run << \EOF
 KADMIN=/usr/kerberos/sbin/kadmin.local
 
 start() {
-	# for firefox, we need to add to ~/.mozilla/firefox/zzzzz/prefs.js
-	/usr/bin/firefox -CreateProfile ovirtadmin
-	echo 'user_pref("network.negotiate-auth.delegation-uris", "ovirt.org");' >> ~/.mozilla/firefox/*ovirtadmin/prefs.js
-	echo 'user_pref("network.negotiate-auth.trusted-uris", "ovirt.org");' >> ~/.mozilla/firefox/*ovirtadmin/prefs.js
-
 	# set up freeipa
 	/usr/sbin/ipa-server-install -r PRIV.OVIRT.ORG -p ovirtwui -P ovirtwui -a ovirtwui --hostname management.priv.ovirt.org -u admin -U
 
