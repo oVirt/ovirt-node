@@ -93,6 +93,9 @@ HWADDR=00:16:3E:12:34:56
 ONBOOT=yes
 EOF
 
+# make sure our "hostname" resolves to management.priv.ovirt.org
+sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
+
 cat > /etc/dhcpd.conf << \EOF
 allow booting;
 allow bootp;
@@ -249,7 +252,7 @@ sed -i -e 's/\(.*\)disable\(.*\)= yes/\1disable\2= no/' /etc/xinetd.d/tftp
 cat > /etc/cron.hourly/ovirtadmin.cron << \EOF
 #!/bin/bash
 /usr/kerberos/bin/kdestroy
-/usr/kerberos/bin/kinit -k -t /usr/share/ovirt-wui/ovirtadmin.tab ovirtadmin@OVIRT.ORG
+/usr/kerberos/bin/kinit -k -t /usr/share/ovirt-wui/ovirtadmin.tab ovirtadmin@PRIV.OVIRT.ORG
 EOF
 chmod 755 /etc/cron.hourly/ovirtadmin.cron
 
@@ -373,12 +376,14 @@ cat > /etc/init.d/ovirt-app-first-run << \EOF
 KADMIN=/usr/kerberos/sbin/kadmin.local
 
 start() {
+	echo -n "Starting ovirt-app-first-run: "
+	(
 	# set up freeipa
 	/usr/sbin/ipa-server-install -r PRIV.OVIRT.ORG -p ovirtwui -P ovirtwui -a ovirtwui --hostname management.priv.ovirt.org -u admin -U
 
 	# now create the ovirtadmin user
 	$KADMIN -q 'addprinc -randkey ovirtadmin@PRIV.OVIRT.ORG'	
-	$KADMIN -q 'ktadd -k -t /usr/share/ovirt-wui/ovirtadmin.tab ovirtadmin@PRIV.OVIRT.ORG'
+	$KADMIN -q 'ktadd -k /usr/share/ovirt-wui/ovirtadmin.tab ovirtadmin@PRIV.OVIRT.ORG'
 	/etc/cron.hourly/ovirtadmin.cron
 
 	/root/create_default_principals.py
@@ -392,6 +397,14 @@ start() {
 
 	cd /usr/share/ovirt-wui ; rake db:migrate
 	/usr/bin/ovirt_grant_admin_privileges.sh ovirtadmin
+	) > /root/ovirt-app-first-run.log
+	RETVAL=$?
+	if [ $RETVAL -eq 0 ]; then
+		echo_success
+	else
+		echo_failure
+	fi
+	echo
 }
 
 case "$1" in
@@ -407,5 +420,9 @@ esac
 EOF
 chmod +x /etc/init.d/ovirt-app-first-run
 /sbin/chkconfig ovirt-app-first-run on
+
+# Finally, get the PXE boot image; note that this can take a while!
+cd /tmp ; wget http://ovirt.org/download/ovirt-pxe-host-image-0.1.tar.bz2
+tar -C / -jxvf /tmp/ovirt-pxe-host-image-0.1.tar.bz2
 
 %end
