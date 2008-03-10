@@ -1,7 +1,10 @@
 Installation instructions
 -------------------------
 
-This file will describe an Ovirt installation using a Flash drive as the root
+[ CAUTION: The instructions in http://ovirt.org/install-instructions.html
+  are usually more up-to-date than the instructions here. ]
+
+This file describes an Ovirt installation using a Flash drive as the root
 partition.  This is the easiest configuration to work with; using either a
 LiveCD or PXE is very similar, but presents a few additional steps, so it
 will not be discussed here.
@@ -68,7 +71,7 @@ done compiling, do the following:
 # cp collectd-<version>.x86_64.rpm /var/www/html/rpms
 # createrepo /var/www/html/rpms
 
-4)  Recompile the libvirt SRPM with GSSAPI/kerberos support (located in the 
+4)  Recompile the libvirt SRPM with GSSAPI/kerberos support (located in the
 "srpms" directory).  When it's done recompiling, do the following:
 
 # mkdir -p /var/www/html/rpms
