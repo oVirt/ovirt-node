@@ -31,6 +31,8 @@ class VmTask < Task
   ACTION_SAVE_VM     = "save_vm"
   ACTION_RESTORE_VM  = "restore_vm"
 
+  ACTION_UPDATE_STATE_VM = "update_state_vm"
+
   # a hash of task actions which point to a hash which define valid state transitions
   ACTIONS = { ACTION_CREATE_VM   => { :label => "Create VM",
                                       :start => Vm::STATE_PENDING,

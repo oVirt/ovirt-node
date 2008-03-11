@@ -31,7 +31,6 @@ BuildRequires: ruby-devel
 BuildRequires: ruby-gettext-package
 BuildRequires: rubygem(rake) >= 0.7
 BuildRequires: avahi-devel
-BuildRequires: libvirt-devel
 Provides: ovirt-wui
 BuildArch: i386 x86_64
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot

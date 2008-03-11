@@ -1,6 +1,9 @@
 OVIRT SCRIPTS README
 --------------------
 
+[ CAUTION: The instructions in http://ovirt.org/install-instructions.html
+  are usually more up-to-date than the instructions here. ]
+
 If this is the first time you are using the Ovirt scripts, start with INSTALL.
 This file is a collection of usage notes, and they assume INSTALL has already
 been completed.
@@ -43,7 +46,7 @@ Typical Script Usage
 Here's how I've been typically using these scripts.
 
 1)  Have a 1GB flash drive.  I think you can get away with 500MB, but it might
-be quite tight.  Put the flash drive into the machine where you have the 
+be quite tight.  Put the flash drive into the machine where you have the
 scripts.
 2)  Run ./ovirt-flash.sh /dev/sdc.  This will build an ISO from repos, and
 lay it down on /dev/sdc
