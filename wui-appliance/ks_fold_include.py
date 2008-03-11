@@ -4,6 +4,8 @@ import sys
 import re
 import os
 
+include_regex = re.compile("^%include\s+(.*)")
+
 def usage():
     print "Usage: ks_fold_include.py <kickstart>"
     sys.exit(1)
@@ -12,7 +14,7 @@ def replace_lines(filename):
     try:
         file = open(filename)
         for line in file.readlines():
-            matched = re.compile("^%include\s+(.*)").match(line)
+            matched = include_regex.match(line)
             if matched:
                 replace_lines(matched.group(1))
             else:
@@ -26,6 +28,13 @@ def replace_lines(filename):
 if len(sys.argv) != 2:
     usage()
 
-os.chdir(os.path.dirname(sys.argv[1]))
+dirname = os.path.dirname(sys.argv[1])
+basename = os.path.basename(sys.argv[1])
 
-replace_lines(os.path.basename(sys.argv[1]))
+# if the user passes an argument like 'ks_fold_include.py foo.ks', then
+# dirname returns a blank string; assume we are already in the right directory
+# and do nothing
+if dirname != '':
+	os.chdir(dirname)
+
+replace_lines(basename)
