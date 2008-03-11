@@ -14,7 +14,7 @@
      vol_hash[:hardware_pool_id] = hardware_pool_id if defined? hardware_pool_id
   %>
   <td style="text-align:left;"><%= link_to storage_pool.ip_addr, vol_hash, { :class => "show" } %><span class="secondary">:<%= storage_pool.port %></span></td>
-  <td><%= storage_pool.storage_type %></td>
+  <td><%= storage_pool.get_type_label %></td>
   <td><%= storage_pool[:target] %></td>
 <%if @attach_to_pool -%>
     <td><%= link_to 'Choose', { :action => 'attach_to_pool', :id => storage_pool, :hardware_pool_id => @attach_to_pool }, { :class => "choose" } %></td>

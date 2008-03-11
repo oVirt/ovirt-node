@@ -25,12 +25,23 @@ class StoragePool < ActiveRecord::Base
       find(:all).inject(0){ |sum, sv| sum + sv.size_in_gb }
     end
   end
- 
-  def display_name
-    "#{ip_addr}:#{target}"
+
+  STORAGE_TYPES = { "iSCSI" => IscsiStoragePool }
+
+  def self.factory(type, params = nil)
+    subclass = STORAGE_TYPES[type]
+    subclass.new(params) if subclass
   end
 
- def tasks
+  def display_name
+    "#{get_type_label}#{ip_addr}:#{target}"
+  end
+
+  def get_type_label
+    STORAGE_TYPES.invert[self.class]
+  end
+
+  def tasks
     storage_tasks
   end
 end

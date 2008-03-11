@@ -17,19 +17,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-require 'util/ovirt'
+class IscsiStoragePool < StoragePool
 
-class Host < ActiveRecord::Base
-  belongs_to :hardware_pool
-  has_many :nics, :dependent => :destroy
-  has_many :vms, :dependent => :nullify
-
-  KVM_HYPERVISOR_TYPE = "KVM"
-  HYPERVISOR_TYPES = [KVM_HYPERVISOR_TYPE]
-  def memory_in_mb
-    kb_to_mb(memory)
-  end
-  def memory_in_mb=(mem)
-    self[:memory]=(mb_to_kb(mem))
-  end
 end

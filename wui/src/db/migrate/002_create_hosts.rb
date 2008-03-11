@@ -21,6 +21,7 @@ class CreateHosts < ActiveRecord::Migration
   def self.up
     create_table :hosts do |t|
       t.column :uuid,                       :string
+      t.column :hypervisor_type,            :string
       t.column :hostname,                   :string
       t.column :num_cpus,                   :integer
       t.column :cpu_speed,                  :integer
