@@ -24,6 +24,8 @@ class Host < ActiveRecord::Base
   has_many :nics, :dependent => :destroy
   has_many :vms, :dependent => :nullify
 
+  KVM_HYPERVISOR_TYPE = "KVM"
+  HYPERVISOR_TYPES = [KVM_HYPERVISOR_TYPE]
   def memory_in_mb
     kb_to_mb(memory)
   end

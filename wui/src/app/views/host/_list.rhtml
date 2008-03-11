@@ -2,6 +2,7 @@
 <thead>
   <tr>
     <th class="empty">host <span class="amp">&</span> uuid</th>
+    <th>Hypervisor Type</th>
     <th>CPUs</th>
     <th>speed <span class="unit">(Mhz)</span></th>
     <th>arch</th>
@@ -13,6 +14,7 @@
 <% for host in hosts %>
 <tr class="<%= cycle('odd','even', :name => hosts) %>">
   <td style="text-align:left;"><%= link_to host.hostname, { :controller => 'host', :action => 'show', :id => host }, { :class => "show" } %><div class="secondary"><%= host.uuid %></div></td>
+  <td><%= host.hypervisor_type %></td>
   <td><%= host.num_cpus %></td>
   <td><%= host.cpu_speed %></td>
   <td><%= host.arch %></td>
