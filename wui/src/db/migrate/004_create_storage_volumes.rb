@@ -23,7 +23,7 @@ class CreateStorageVolumes < ActiveRecord::Migration
       t.column :ip_addr,                    :string
       t.column :port,                       :integer
       t.column :target,                     :string
-      t.column :storage_type,               :string
+      t.column :type,                       :string
       t.column :hardware_pool_id,           :integer, :null => false
     end
     create_table :storage_volumes do |t|

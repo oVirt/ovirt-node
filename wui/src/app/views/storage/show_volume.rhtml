@@ -11,7 +11,7 @@
                 <p><b>IP address:</b> <%=h @storage_volume.storage_pool.ip_addr %></p>
                 <p><b>Port:</b>       <%=h @storage_volume.storage_pool.port %></p>
                 <p><b>Target:</b>     <%=h @storage_volume.storage_pool[:target] %></p>
-                <p><b>Type:</b>       <%=h @storage_volume.storage_pool.storage_type %></p>
+                <p><b>Type:</b>       <%=h @storage_volume.storage_pool.get_type_label %></p>
 		<p></p>
                 <p><b>Path:</b>       <%=h @storage_volume.path %></p>
                 <p><b>LUN:</b>        <%=h @storage_volume.lun %></p>

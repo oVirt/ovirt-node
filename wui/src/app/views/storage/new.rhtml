@@ -7,15 +7,23 @@
               <div class="inside">
 
                 <div class="data-table-column">
-                <% form_tag :action => 'create' do %>
-                  <%= render :partial => 'form' %>
-                  <%= submit_tag "Create" %>
+                <% form_tag :action => 'new2' do %>
+<%= error_messages_for 'storage_pool' %>
+
+<!--[form:storage_pool]-->
+<%= hidden_field_tag_with_label "Hardware Pool", 'hardware_pool_id', @hardware_pool.id, @hardware_pool.name  %>
+
+<%= select_tag_with_label "Storage Type", 'storage_type', @storage_types  %>
+
+<!--[eoform:storage_pool]-->
+
+                  <%= submit_tag "Choose Type" %>
                 <% end %>
                 </div>
 
                 <div class="data-table-column">
-                  <strong>Choose From Storage in <%= @storage_pool.hardware_pool.superpool.name %></strong>
-                  <%= render :partial => "list", :locals => { :storage_pools => @storage_pool.hardware_pool.storage_pools } %>
+                  <strong>Choose From Storage in <%= @hardware_pool.superpool.name %></strong>
+                  <%= render :partial => "list", :locals => { :storage_pools => @hardware_pool.storage_pools } %>
                 </div>
 
               </div> <!-- end #data-table.inside -->

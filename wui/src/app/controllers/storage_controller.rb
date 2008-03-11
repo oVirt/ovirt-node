@@ -20,6 +20,7 @@
 class StorageController < ApplicationController
 
   before_filter :pre_pool_admin, :only => [:attach_to_pool, :remove_from_pool]
+  before_filter :pre_new2, :only => [:new2]
 
   def index
     list
@@ -68,6 +69,11 @@ class StorageController < ApplicationController
   end
 
   def new
+    @storage_pools = @hardware_pool.storage_volumes
+    @storage_types = StoragePool::STORAGE_TYPES.keys
+  end
+
+  def new2
     @storage_pools = @storage_pool.hardware_pool.storage_volumes
   end
 
@@ -139,13 +145,22 @@ class StorageController < ApplicationController
   end
 
   def pre_new
-    @storage_pool = StoragePool.new({ :hardware_pool_id => params[:hardware_pool_id],
-                                      :port => 3260})
+    @hardware_pool = HardwarePool.find(params[:hardware_pool_id])
+    @perm_obj = @hardware_pool
+    @redir_controller = @perm_obj.get_controller
+  end
+
+  def pre_new2
+    @storage_pool = StoragePool.factory(params[:storage_type], 
+                                        { :hardware_pool_id => params[:hardware_pool_id],
+                                          :port => 3260})
     @perm_obj = @storage_pool.hardware_pool
     @redir_controller = @storage_pool.hardware_pool.get_controller
+    authorize_admin
   end
   def pre_create
-    @storage_pool = StoragePool.new(params[:storage_pool])
+    print "type: ", params[:storage_type], "\n"
+    @storage_pool = StoragePool.factory(params[:storage_type], params[:storage_pool])
     @perm_obj = @storage_pool.hardware_pool
     @redir_controller = @storage_pool.hardware_pool.get_controller
   end

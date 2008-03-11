@@ -39,10 +39,24 @@ module ApplicationHelper
      }
   end
 
+  def select_tag_with_label(label, name, select_options, opts={}) 
+    %{ 
+      <div class="i"><label for="#{name}">#{_(label)}</label>
+      #{select_tag name, options_for_select(select_options), opts}</div>
+     }
+  end
+
   def hidden_field_with_label(label, obj, meth, display) 
     %{ 
       <div class="i"><label for="#{obj}_#{meth}">#{_(label)}</label>
       #{hidden_field obj, meth}<span class="hidden">#{display}</span></div>
+     }
+  end
+
+  def hidden_field_tag_with_label(label, name, value, display) 
+    %{ 
+      <div class="i"><label for="#{name}">#{_(label)}</label>
+      #{hidden_field_tag name, value}<span class="hidden">#{display}</span></div>
      }
   end
 

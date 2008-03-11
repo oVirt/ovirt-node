@@ -16,7 +16,7 @@
      vol_hash[:vm_id] = vm_id if defined? vm_id
   %>
   <td style="text-align:left;"><%= link_to storage_volume.storage_pool.ip_addr, vol_hash, { :class => "show" } %><span class="secondary">:<%= storage_volume.storage_pool.port %></span></td>
-  <td><%= storage_volume.storage_pool.storage_type %></td>
+  <td><%= storage_volume.storage_pool.get_type_label %></td>
   <td><%= storage_volume.storage_pool[:target] %></td>
   <td><%= storage_volume.path %></td>
   <td><%= storage_volume.lun %></td>

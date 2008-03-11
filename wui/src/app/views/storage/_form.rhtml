@@ -2,6 +2,7 @@
 
 <!--[form:storage_pool]-->
 <%= hidden_field_with_label "Hardware Pool", 'storage_pool', 'hardware_pool_id', @storage_pool.hardware_pool.name  %>
+<%= hidden_field_tag_with_label "Storage Type",  'storage_type', @storage_pool.get_type_label, @storage_pool.get_type_label  %>
 
 <%= text_field_with_label "IP Address", 'storage_pool', 'ip_addr'  %>
 
@@ -9,7 +10,6 @@
 
 <%= text_field_with_label "Target", 'storage_pool', 'target'  %>
 
-<%= text_field_with_label "Storage Type", 'storage_pool', 'storage_type'  %>
 
 <%= focus('storage_pool_ip_addr') %>
 
