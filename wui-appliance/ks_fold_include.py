@@ -17,6 +17,7 @@ def replace_lines(filename):
             matched = include_regex.match(line)
             if matched:
                 replace_lines(matched.group(1))
+                sys.stdout.write("\n")
             else:
                 sys.stdout.write(line)
 
