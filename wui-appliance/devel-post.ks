@@ -141,6 +141,7 @@ mkdir -p /root/.mozilla/firefox/uxssq4qb.ovirtadmin
 cat >> /root/.mozilla/firefox/uxssq4qb.ovirtadmin/prefs.js << \EOF
 user_pref("network.negotiate-auth.delegation-uris", "priv.ovirt.org");
 user_pref("network.negotiate-auth.trusted-uris", "priv.ovirt.org");
+user_pref("browser.startup.homepage", "http://management.priv.ovirt.org/");
 EOF
 
 cat >> /root/.mozilla/firefox/profiles.ini << \EOF
@@ -187,6 +188,10 @@ start() {
 
 	/root/create_default_principals.py
 
+	# create_default_principals munges the apache config, so we have to
+	# restart it here
+	service httpd restart
+
 	service postgresql initdb
 	echo "local all all trust" > /var/lib/pgsql/data/pg_hba.conf
 	echo "host all all 127.0.0.1 255.255.255.0 trust" >> /var/lib/pgsql/data/pg_hba.conf
@@ -196,7 +201,7 @@ start() {
 
 	cd /usr/share/ovirt-wui ; rake db:migrate
 	/usr/bin/ovirt_grant_admin_privileges.sh ovirtadmin
-	) > /root/ovirt-app-first-run.log
+	) > /root/ovirt-app-first-run.log 2>&1
 	RETVAL=$?
 	if [ $RETVAL -eq 0 ]; then
 		echo_success
