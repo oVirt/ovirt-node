@@ -21,15 +21,29 @@ cat > /etc/init.d/ovirt-early << \EOF
 . /etc/init.d/functions
 
 start() {
+
+dhcp_options='subnet-mask
+broadcast-address
+time-offset
+routers
+domain-name
+domain-name-servers
+host-name
+nis-domain
+nis-servers
+ntp-servers
+libvirt-auth-method'
+
         # find all of the ethernet devices in the system
-        cd /sys/class/net
-        ETHDEVS=`ls -d eth*`
-        cd $OLDPWD
+        ETHDEVS=$(cd /sys/class/net && ls -d eth*)
         for eth in $ETHDEVS; do
             BRIDGE=ovirtbr`echo $eth | cut -b4-`
-            echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" > /etc/sysconfig/network-scripts/ifcfg-$eth
-            echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,libvirt-auth-method"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+            echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" \
+	      > /etc/sysconfig/network-scripts/ifcfg-$eth
+            echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" \
+	      > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+	    printf 'DHCLIENTARGS="-R %s"\n' $(printf "$dhcp_options"|tr '\n' ,)\
+	      >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
         # find all of the partitions on the system
