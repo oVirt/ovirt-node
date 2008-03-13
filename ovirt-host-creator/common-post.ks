@@ -45,7 +45,7 @@ start() {
 
 	SWAPDEVS="$LVMDEVS"
         for dev in $BLOCKDEVS; do
-            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | sed -e 's/*/ /' | awk '$5 ~ /82/ {print $1}' | xargs`"
+            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | tr '*' ' ' | awk '$5 ~ /82/ {print $1}' | xargs`"
         done
 
 	# now check if any of these partitions are swap, and activate if so
