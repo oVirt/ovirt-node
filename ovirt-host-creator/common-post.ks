@@ -114,7 +114,7 @@ EOF
 chmod +x /etc/dhclient-exit-hooks
 
 # make libvirtd listen on the external interfaces
-sed -i -e 's/#LIBVIRTD_ARGS="--listen"/LIBVIRTD_ARGS="--listen"/' /etc/sysconfig/libvirtd
+sed -i -e 's/^#\(LIBVIRTD_ARGS="--listen"\).*/\1/' /etc/sysconfig/libvirtd
 
 cat > /etc/kvm-ifup << \EOF
 #!/bin/sh
@@ -127,11 +127,13 @@ EOF
 chmod +x /etc/kvm-ifup
 
 # set up qemu daemon to allow outside VNC connections
-sed -i -e 's/[[:space:]]*#[[:space:]]*vnc_listen = "0.0.0.0"/vnc_listen = "0.0.0.0"/' /etc/libvirt/qemu.conf
+sed -i -e 's/^[[:space:]]*#[[:space:]]*\(vnc_listen = "0.0.0.0"\).*/\1/' \
+  /etc/libvirt/qemu.conf
 
 # set up libvirtd to listen on TCP (for kerberos)
-sed -i -e 's/[[:space:]]*#[[:space:]]*listen_tcp.*/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
-sed -i -e 's/[[:space:]]*#[[:space:]]*listen_tls.*/listen_tls = 0/' /etc/libvirt/libvirtd.conf
+sed -i -e 's/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/' \
+       -e 's/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/' \
+  /etc/libvirt/libvirtd.conf
 
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
