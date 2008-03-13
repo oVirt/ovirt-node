@@ -63,11 +63,11 @@ start() {
         BLOCKDEVS=`ls /dev/sd? /dev/hd? 2>/dev/null`
 
         # now LVM partitions
-        LVMDEVS="$DEVICES `/usr/sbin/lvscan | awk '{print $2}' | tr -d \"'\"`"
+        LVMDEVS="$DEVICES `lvscan | awk '{print $2}' | tr -d \"'\"`"
 
 	SWAPDEVS="$LVMDEVS"
         for dev in $BLOCKDEVS; do
-            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | tr '*' ' ' \
+            SWAPDEVS="$SWAPDEVS `fdisk -l $dev 2>/dev/null | tr '*' ' ' \
 	                         | awk '$5 ~ /82/ {print $1}'`"
         done
 
@@ -76,7 +76,7 @@ start() {
             sig=`dd if=$device bs=1 count=10 skip=$(( $PAGESIZE - 10 )) \
 	         2>/dev/null`
             if [ "$sig" = "SWAPSPACE2" ]; then
-                /sbin/swapon $device
+                swapon $device
             fi
         done
 }
@@ -92,7 +92,7 @@ esac
 EOF
 
 chmod +x /etc/init.d/ovirt-early
-/sbin/chkconfig ovirt-early on
+chkconfig ovirt-early on
 
 # just to get a boot warning to shut up
 touch /etc/resolv.conf
@@ -131,7 +131,7 @@ start() {
     # then give up
     tries=0
     while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
-        VAL=`echo "KERB" | /usr/bin/nc $SRV_HOST 6666`
+        VAL=`echo "KERB" | nc $SRV_HOST 6666`
         if [ "$VAL" == "SUCCESS" ]; then
             break
         fi
@@ -193,9 +193,9 @@ echo "Setting up bridged networking"
 cat > /etc/kvm-ifup << \EOF
 #!/bin/sh
 
-switch=$(/sbin/ip route list | awk '/^default / { print $NF }')
-/sbin/ifconfig $1 0.0.0.0 up
-/usr/sbin/brctl addif ${switch} $1
+switch=$(ip route list | awk '/^default / { print $NF }')
+ifconfig $1 0.0.0.0 up
+brctl addif ${switch} $1
 EOF
 
 chmod +x /etc/kvm-ifup
@@ -270,8 +270,8 @@ rm -f /etc/krb5.conf
 echo "Creating shadow files"
 # because we aren't installing authconfig, we aren't setting up shadow
 # and gshadow properly.  Do it by hand here
-/usr/sbin/pwconv
-/usr/sbin/grpconv
+pwconv
+grpconv
 
 echo "Re-creating cracklib dicts"
 # cracklib-dicts is 8MB.  We probably don't need to have strict password

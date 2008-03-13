@@ -30,5 +30,4 @@ fi
 
 ISO=`create_iso $ISO` || exit 1
 
-/usr/bin/livecd-iso-to-pxeboot $ISO
-
+livecd-iso-to-pxeboot $ISO

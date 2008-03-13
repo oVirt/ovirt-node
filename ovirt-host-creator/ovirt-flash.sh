@@ -39,7 +39,7 @@ ISO=`create_iso $ISO` || exit 1
 
 # clear out the old partition table
 dd if=/dev/zero of=$USBDEVICE bs=4096 count=1
-echo -e 'n\np\n1\n\n\nt\n6\na\n1\nw\n' | /sbin/fdisk $USBDEVICE
-/sbin/mkdosfs -n ovirt ${USBDEVICE}1
+printf 'n\np\n1\n\n\nt\n6\na\n1\nw\n' | fdisk $USBDEVICE
+mkdosfs -n ovirt ${USBDEVICE}1
 cat /usr/lib/syslinux/mbr.bin > $USBDEVICE
-/usr/bin/livecd-iso-to-disk $ISO ${USBDEVICE}1
+livecd-iso-to-disk $ISO ${USBDEVICE}1
