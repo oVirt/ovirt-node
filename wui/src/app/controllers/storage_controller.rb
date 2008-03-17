@@ -19,7 +19,7 @@
 
 class StorageController < ApplicationController
 
-  before_filter :pre_pool_admin, :only => [:attach_to_pool, :remove_from_pool]
+  before_filter :pre_pool_admin, :only => [:attach_to_pool, :remove_from_pool, :refresh]
   before_filter :pre_new2, :only => [:new2]
 
   def index
@@ -77,13 +77,27 @@ class StorageController < ApplicationController
     @storage_pools = @storage_pool.hardware_pool.storage_volumes
   end
 
+  def insert_refresh_task
+    @task = StorageTask.new({ :user            => @user,
+                              :storage_pool_id => @storage_pool.id,
+                              :action          => StorageTask::ACTION_REFRESH_POOL,
+                              :state           => Task::STATE_QUEUED})
+    @task.save
+  end
+
+  def refresh
+    if insert_refresh_task
+      storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
+      flash[:notice] = 'Storage pool refresh was successfully scheduled.'
+    else
+      flash[:notice] = 'Error scheduling Storage pool refresh.'
+    end
+    redirect_to :action => 'show', :id => @storage_pool.id
+  end
+
   def create
     if @storage_pool.save
-      @task = StorageTask.new({ :user            => @user,
-                                :storage_pool_id => @storage_pool.id,
-                                :action          => StorageTask::ACTION_REFRESH_POOL,
-                                :state           => Task::STATE_QUEUED})
-      if @task.save
+      if insert_refresh_task
         storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
         flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ storage_url ,@storage_pool.ip_addr]
         redirect_to :controller => @storage_pool.hardware_pool.get_controller, :action => 'show', :id => @storage_pool.hardware_pool_id
@@ -98,12 +112,33 @@ class StorageController < ApplicationController
 
   def update
     if @storage_pool.update_attributes(params[:storage_pool])
-      storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
-      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully updated.' % [ storage_url ,@storage_pool.ip_addr]
-      redirect_to :action => 'show', :id => @storage_pool
+      if insert_refresh_task
+        storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
+        flash[:notice] = '<a class="show" href="%s">%s</a> was successfully updated.' % [ storage_url ,@storage_pool.ip_addr]
+        redirect_to :action => 'show', :id => @storage_pool
+      else
+        render :action => 'edit'
+      end
     else
       render :action => 'edit'
     end
+  end
+
+  def vm_action
+    if @vm.get_action_list.include?(params[:vm_action])
+      @task = VmTask.new({ :user    => get_login_user,
+                         :vm_id   => params[:id],
+                         :action  => params[:vm_action],
+                         :state   => Task::STATE_QUEUED})
+      if @task.save
+        flash[:notice] = "#{params[:vm_action]} was successfully queued."
+      else
+        flash[:notice] = "Error in inserting task for #{params[:vm_action]}."
+      end
+    else
+      flash[:notice] = "#{params[:vm_action]} is an invalid action."
+    end
+    redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
   end
 
   def destroy
