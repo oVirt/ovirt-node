@@ -1,106 +1,3 @@
-lang C
-keyboard us
-timezone US/Eastern
-auth --useshadow --enablemd5
-selinux --disabled
-firewall --disabled
-part / --size 950
-services --enabled=ntpd,collectd,iptables
-bootloader --timeout=1
-
-repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=$basearch
-repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=$basearch
-# Not using rawhide currently
-#repo --name=rawhide --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
-repo --name=ovirt-host --baseurl=http://ovirt.et.redhat.com/repos/ovirt-host-repo/$basearch/
-
-
-%packages
-@core
-bash
-kernel
-passwd
-policycoreutils
-chkconfig
-rootfiles
-dhclient
-libvirt
-openssh-clients
-openssh-server
-iscsi-initiator-utils
-ntp
-kvm
-nfs-utils
-wget
-krb5-workstation
-cyrus-sasl-gssapi
-cyrus-sasl
-cyrus-sasl-lib
-collectd
-tftp
-nc
--policycoreutils
--audit-libs-python
--hdparm
--libsemanage
--ustr
--authconfig
--rhpl
--wireless-tools
--setserial
--prelink
--newt-python
--newt
--selinux-policy-targeted
--selinux-policy
--kudzu
--libselinux-python
--rhpl
--glibc.i686
--xen-libs.i386
--libxml2.i386
--zlib.i386
--libvirt.i386
--avahi.i386
--libgcrypt.i386
--gnutls.i386
--libstdc++.i386
--e2fsprogs-libs.i386
--ncurses.i386
--readline.i386
--libselinux.i386
--device-mapper-libs.i386
--libdaemon.i386
--dbus-libs.i386
--expat.i386
--libsepol.i386
--libcap.i386
--libgpg-error.i386
--libgcc.i386
--kbd
--usermode
--grub
--fedora-logos
--kpartx
--dmraid
--mkinitrd
--gzip
--less
--which
--parted
--nash
--tar
--openldap
--libuser
--mdadm
--mtools
--cpio
--cyrus-sasl-gssapi.i386
--cyrus-sasl-lib.i386
--xorg-x11-filesystem
-
-%post
-
 cat > /etc/sysconfig/iptables << \EOF
 *filter
 :INPUT ACCEPT [0:0]
@@ -124,15 +21,29 @@ cat > /etc/init.d/ovirt-early << \EOF
 . /etc/init.d/functions
 
 start() {
+
+dhcp_options='subnet-mask
+broadcast-address
+time-offset
+routers
+domain-name
+domain-name-servers
+host-name
+nis-domain
+nis-servers
+ntp-servers
+libvirt-auth-method'
+
         # find all of the ethernet devices in the system
-        cd /sys/class/net
-        ETHDEVS=`ls -d eth*`
-        cd $OLDPWD
+        ETHDEVS=$(cd /sys/class/net && ls -d eth*)
         for eth in $ETHDEVS; do
             BRIDGE=ovirtbr`echo $eth | cut -b4-`
-            echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" > /etc/sysconfig/network-scripts/ifcfg-$eth
-            echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-            echo 'DHCLIENTARGS="-R subnet-mask,broadcast-address,time-offset,routers,domain-name,domain-name-servers,host-name,nis-domain,nis-servers,ntp-servers,libvirt-auth-method"' >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+            echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" \
+	      > /etc/sysconfig/network-scripts/ifcfg-$eth
+            echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" \
+	      > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+	    printf 'DHCLIENTARGS="-R %s"\n' $(printf "$dhcp_options"|tr '\n' ,)\
+	      >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
         # find all of the partitions on the system
@@ -148,7 +59,7 @@ start() {
 
 	SWAPDEVS="$LVMDEVS"
         for dev in $BLOCKDEVS; do
-            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | sed -e 's/*/ /' | awk '$5 ~ /82/ {print $1}' | xargs`"
+            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | tr '*' ' ' | awk '$5 ~ /82/ {print $1}' | xargs`"
         done
 
 	# now check if any of these partitions are swap, and activate if so
@@ -205,7 +116,7 @@ if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
         # then give up
         tries=0
         while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
-            VAL=`echo "KERB" | /usr/bin/nc $IP 6666`	
+            VAL=`echo "KERB" | /usr/bin/nc $IP 6666`
             tries=$(( $tries + 1 ))
             sleep 1
         done
@@ -217,7 +128,7 @@ EOF
 chmod +x /etc/dhclient-exit-hooks
 
 # make libvirtd listen on the external interfaces
-sed -i -e 's/#LIBVIRTD_ARGS="--listen"/LIBVIRTD_ARGS="--listen"/' /etc/sysconfig/libvirtd
+sed -i -e 's/^#\(LIBVIRTD_ARGS="--listen"\).*/\1/' /etc/sysconfig/libvirtd
 
 cat > /etc/kvm-ifup << \EOF
 #!/bin/sh
@@ -230,11 +141,13 @@ EOF
 chmod +x /etc/kvm-ifup
 
 # set up qemu daemon to allow outside VNC connections
-sed -i -e 's/[[:space:]]*#[[:space:]]*vnc_listen = "0.0.0.0"/vnc_listen = "0.0.0.0"/' /etc/libvirt/qemu.conf
+sed -i -e 's/^[[:space:]]*#[[:space:]]*\(vnc_listen = "0.0.0.0"\).*/\1/' \
+  /etc/libvirt/qemu.conf
 
 # set up libvirtd to listen on TCP (for kerberos)
-sed -i -e 's/[[:space:]]*#[[:space:]]*listen_tcp.*/listen_tcp = 1/' /etc/libvirt/libvirtd.conf
-sed -i -e 's/[[:space:]]*#[[:space:]]*listen_tls.*/listen_tls = 0/' /etc/libvirt/libvirtd.conf
+sed -i -e 's/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/' \
+       -e 's/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/' \
+  /etc/libvirt/libvirtd.conf
 
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
@@ -247,20 +160,24 @@ fi
 
 # pretty login screen..
 
-echo -e "" > /etc/issue
-echo -e "           888     888 \\033[0;32md8b\\033[0;39m         888    " >> /etc/issue
-echo -e "           888     888 \\033[0;32mY8P\\033[0;39m         888    " >> /etc/issue
-echo -e "           888     888             888    " >> /etc/issue
-echo -e "   .d88b.  Y88b   d88P 888 888d888 888888 " >> /etc/issue
-echo -e "  d88''88b  Y88b d88P  888 888P'   888    " >> /etc/issue
-echo -e "  888  888   Y88o88P   888 888     888    " >> /etc/issue
-echo -e "  Y88..88P    Y888P    888 888     Y88b.  " >> /etc/issue
-echo -e "   'Y88P'      Y8P     888 888      'Y888 " >> /etc/issue
-echo -e "" >> /etc/issue
-echo -e "  Managed node \\\\n " >> /etc/issue
-echo -e "" >> /etc/issue
-echo -e "  Virtualization just got the \\033[0;32mGreen Light\\033[0;39m" >> /etc/issue
-echo -e "" >> /etc/issue
+g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
+n=$(printf '\33[m')            # similar to n=$(tput sgr0)
+cat <<EOF > /t/i2
+
+           888     888 ${g}d8b$n         888
+           888     888 ${g}Y8P$n         888
+           888     888             888
+   .d88b.  Y88b   d88P 888 888d888 888888
+  d88''88b  Y88b d88P  888 888P'   888
+  888  888   Y88o88P   888 888     888
+  Y88..88P    Y888P    888 888     Y88b.
+   'Y88P'      Y8P     888 888      'Y888
+
+  Managed node
+
+  Virtualization just got the ${g}Green Light$n
+
+EOF
 
 cp /etc/issue /etc/issue.net
 
@@ -316,5 +233,3 @@ rm -rf /usr/share/doc
 rm -rf /usr/share/X11
 rm -f /usr/lib/locale/*
 rm -rf /usr/share/terminfo/*
-
-%end
