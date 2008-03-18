@@ -144,14 +144,15 @@ class VmController < ApplicationController
         flash[:notice] = "Library or Host Collection is required."
         redirect_to :controller => 'dashboard'
       end
-      collection = HostCollection.find(params[:host_collection_id])
+      @collection = HostCollection.find(params[:host_collection_id])
       @user = get_login_user
-      library = collection.vm_libraries.find(:first, :conditions => ["name = '#{@user}'"])
-      unless library
-        library = VmLibrary.new({:name => @user, :host_collection_id => params[:host_collection_id]})
-        library.save
+      library = @collection.vm_libraries.find(:first, :conditions => ["name = '#{@user}'"])
+      if library
+        params[:vm_library_id] = library.id
+      else
+        @library = VmLibrary.new({:name => library, :host_collection_id => params[:host_collection_id]})
+        @vm_library_name = @user
       end
-      params[:vm_library_id] = library.id
     end
 
     # random MAC
@@ -165,11 +166,21 @@ class VmController < ApplicationController
       :uuid => uuid
     }
     @vm = Vm.new( newargs )
+    unless params[:vm_library_id]
+      @vm.vm_library = @library
+    end
     @perm_obj = @vm.vm_library
     @redir_controller = 'library'
   end
   def pre_create
     params[:vm][:state] = Vm::STATE_PENDING
+    library_name = params[:vm_library_name]
+    collection_id = params[:host_collection_id]
+    if library_name and collection_id
+      library = VmLibrary.new({:name => library_name, :host_collection_id => collection_id})
+      library.save
+      params[:vm][:vm_library_id] = library.id
+    end
     #set boot device to network for first boot (install)
     params[:vm][:boot_device] = Vm::BOOT_DEV_NETWORK unless params[:vm][:boot_device]
     @vm = Vm.new(params[:vm])

@@ -3,7 +3,9 @@
 <%  start_resources = @vm.vm_library.available_resources_for_vm(@vm) %>
 
 <!--[form:vm]-->
-<%= hidden_field_with_label "Vm Library", 'vm', 'vm_library_id', @vm.vm_library.name  %>
+<%= hidden_field_with_label "Vm Library", 'vm', 'vm_library_id', @vm.vm_library.name unless @vm_library_name %>
+<%= hidden_field_tag_with_label "Vm Library", 'vm_library_name', @vm_library_name, @vm_library_name if @vm_library_name %>
+<%= hidden_field_tag_with_label "Collection", 'host_collection_id', @collection.id, @collection.name if @collection %>
 
 <%= text_field_with_label "UUID", "vm", "uuid" %>
 
