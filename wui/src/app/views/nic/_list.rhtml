@@ -8,11 +8,6 @@
     <td><%= nic.mac %></td>
     <td><%= nic.usage_type %></td>
     <td><%= nic.bandwidth %></td>
-
-  <%if show_actions -%>
-    <td><%= link_to 'edit', { :controller => "nic", :action => 'edit', :id => nic }, { :class => "edit" } %></td>
-    <td><%= link_to 'remove', { :controller => "nic", :action => 'destroy', :id => nic }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %></td>
-  <% end -%>
   </tr>
 </p>
 <% end %>

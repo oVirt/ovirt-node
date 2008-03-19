@@ -19,9 +19,6 @@
   <%= render :partial => "/nic/list", :locals => { :nics => @host.nics, :show_actions => @is_admin } %>
 <% else %>
 <p>No Network Interfaces.
-<%if @is_admin -%>
- perhaps you should <%= link_to 'add one', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %>?
-<% end -%>
 </p>
 <% end %>
 
@@ -30,9 +27,6 @@
 <div id="right">
   <h2>Actions</h2>
   <%if @is_admin -%>
-  <ul class="actions create">
-  <li class="action"><%= link_to 'Add Network Interface', { :controller => "nic", :action => 'new', :host_id => @host }, { :class => "create" } %></li>
-  </ul>
   <ul class="actions edit">
   <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
     <li class="action"><%= link_to 'Disable Host', { :action => 'disable', :id => @host }, { :class => "edit" } %></li>

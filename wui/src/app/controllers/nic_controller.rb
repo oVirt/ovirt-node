@@ -27,16 +27,8 @@ class NicController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def set_perms(hwpool)
-    @user = get_login_user
-    @is_admin = hwpool.is_admin(@user)
-    @can_monitor = hwpool.can_monitor(@user)
-    @can_delegate = hwpool.can_delegate(@user)
-  end
-
   def show
-    @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_pool)
+    set_perms(@perm_obj)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this NIC: redirecting to top level'
       redirect_to :controller => 'pool', :action => 'list'
@@ -44,73 +36,38 @@ class NicController < ApplicationController
   end
 
   def new
-    @nic = Nic.new({ :host_id => params[:host_id] })
-    set_perms(@nic.host.hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to create this NIC: redirecting to top level'
-      redirect_to :controller => 'host', :action => 'show', :id => @nic.host
-    end
   end
 
   def create
-    @nic = Nic.new(params[:nic])
-    set_perms(@nic.host.hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to create this NIC: redirecting to top level'
-      redirect_to :controller => 'host', :action => 'show', :id => @nic.host
-    else
-      if @nic.save
-        host_url = url_for( :controller => "host", :action => "show", :id => @nic.host )
-        nic_url = url_for( :controller => "nic", :action => "show", :id => @nic )
-        flash[:notice] = 'Nic <a class="show" href="%s">%s</a> has been added to <a class="show" href="%s">%s</a>.' % [ nic_url, @nic.mac, host_url, @nic.host.hostname ]
-        redirect_to :controller => 'host', :action => 'show', :id => @nic.host_id
-      else
-        render :action => 'new'
-      end
-    end
   end
 
   def edit
-    @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to update this NIC: redirecting to top level'
-      redirect_to :controller => 'host', :action => 'show', :id => @nic.host
-    end
   end
 
   def update
-    @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to update this NIC: redirecting to top level'
-      redirect_to :controller => 'host', :action => 'show', :id => @nic.host
-    else
-      if @nic.update_attributes(params[:nic])
-        host_url = url_for( :controller => "host", :action => "show", :id => @nic.host )
-        nic_url = url_for( :controller => "nic", :action => "show", :id => @nic )
-        flash[:notice] = 'Nic <a class="show" href="%s">%s</a> has been updated for <a class="show" href="%s">%s</a>.' % [ nic_url, @nic.mac, host_url, @nic.host.hostname ]
-        redirect_to :controller => 'host', :action => 'show', :id => @nic.host_id
-      else
-        render :action => 'edit'
-      end
-    end
   end
 
   def destroy
-    @nic = Nic.find(params[:id])
-    set_perms(@nic.host.hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to delete this NIC: redirecting to top level'
-      redirect_to :controller => 'host', :action => 'show', :id => @nic.host
-    else
-      hostname = @nic.host.hostname
-      mac = @nic.mac
-      host_url = url_for( :controller => "host", :action => "show", :id => @nic.host )
-      host_id = @nic.host_id
-      @nic.destroy
-      flash[:notice] = 'Nic %s has been removed from <a class="show" href="%s">%s</a>.' % [ mac, host_url, hostname ]
-      redirect_to :controller => 'host', :action => 'show', :id => host_id
-    end
   end
+
+  private
+  #filter methods
+  def pre_new
+    flash[:notice] = 'Network Interfaces may not be edited via the web UI'
+    redirect_to :controller => 'host', :action => 'show', :id => params[:host_id]
+  end
+  def pre_create
+    flash[:notice] = 'Network Interfaces may not be edited via the web UI'
+    redirect_to :controller => 'dashboard'
+  end
+  def pre_edit
+    @nic = Nic.find(params[:id])
+    flash[:notice] = 'Network Interfaces may not be edited via the web UI'
+    redirect_to :action=> 'show', :id => @nic
+  end
+  def pre_show
+    @nic = Nic.find(params[:id])
+    @perm_obj = @nic.host.hardware_pool
+  end
+
 end
