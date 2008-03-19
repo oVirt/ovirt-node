@@ -28,10 +28,10 @@ repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-ma
 %include common-post.ks
 %include devel-post.ks
 
-# get the PXE boot image; this can take a while.  Note that this is not in the
-# devel-post because it needs to be different arches, even if that is not
-# reflected right now
-cd /tmp ; wget http://ovirt.org/download/ovirt-pxe-host-image-0.1.tar.bz2
-tar -C / -jxvf /tmp/ovirt-pxe-host-image-0.1.tar.bz2
+# get the PXE boot image; this can take a while
+IMAGE=ovirt-pxe-host-image-x86_64-0.3.tar.bz2
+wget http://ovirt.org/download/$IMAGE -O /tmp/$IMAGE
+tar -C / -jxvf /tmp/$IMAGE
+rm -f /tmp/$IMAGE
 
 %end

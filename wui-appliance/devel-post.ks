@@ -161,6 +161,9 @@ echo "nameserver 192.168.50.2" >> /etc/resolv.conf
 EOF
 chmod +x /etc/dhclient-exit-hooks
 
+# make sure that we get a kerberos principal on every boot
+echo "/etc/cron.hourly/ovirtadmin.cron" >> /etc/rc.d/rc.local
+
 cat > /etc/init.d/ovirt-app-first-run << \EOF
 #!/bin/bash
 #
@@ -201,6 +204,9 @@ start() {
 
 	cd /usr/share/ovirt-wui ; rake db:migrate
 	/usr/bin/ovirt_grant_admin_privileges.sh ovirtadmin
+
+	service ovirt-wui restart
+
 	) > /root/ovirt-app-first-run.log 2>&1
 	RETVAL=$?
 	if [ $RETVAL -eq 0 ]; then
