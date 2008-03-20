@@ -105,7 +105,7 @@ EOF
 
 # NOTE that libvirt_auth_method is handled in the exit-hooks
 cat > /etc/dhclient-exit-hooks << \EOF
-if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
+if [ -n "$new_libvirt_auth_method" ]; then
     METHOD=`echo $new_libvirt_auth_method | cut -d':' -f1`
     SERVER=`echo $new_libvirt_auth_method | cut -d':' -f2-`
     IP=`echo $new_libvirt_auth_method | cut -d':' -f2 | cut -d'/' -f1`
@@ -117,11 +117,18 @@ if [ "$interface" = "ovirtbr0" -a -n "$new_libvirt_auth_method" ]; then
         tries=0
         while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
             VAL=`echo "KERB" | /usr/bin/nc $IP 6666`
+            if [ "$VAL" == "SUCCESS" ]; then
+                break
+            fi
             tries=$(( $tries + 1 ))
             sleep 1
         done
-        /usr/bin/wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
-        rm -f /etc/krb5.conf ; /usr/bin/wget -q http://$SERVER/krb5.ini -O /etc/krb5.conf
+        if [ ! -r /etc/libvirt/krb5.tab ]; then
+            /usr/bin/wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
+        fi
+        if [ ! -r /etc/krb5.conf ]; then
+            rm -f /etc/krb5.conf ; /usr/bin/wget -q http://$SERVER/krb5.ini -O /etc/krb5.conf
+        fi
     fi
 fi
 EOF
@@ -200,6 +207,9 @@ LoadPlugin cpu
         Server "224.0.0.1"
 </Plugin>
 EOF
+
+# remove the /etc/krb5.conf file; it will be fetched on bootup
+rm -f /etc/krb5.conf
 
 # because we aren't installing authconfig, we aren't setting up shadow
 # and gshadow properly.  Do it by hand here
