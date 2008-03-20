@@ -162,7 +162,7 @@ fi
 
 g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
 n=$(printf '\33[m')            # similar to n=$(tput sgr0)
-cat <<EOF > /t/i2
+cat <<EOF
 
            888     888 ${g}d8b$n         888
            888     888 ${g}Y8P$n         888
