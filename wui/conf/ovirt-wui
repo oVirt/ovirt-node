@@ -3,7 +3,7 @@
 #
 # ovirt-wui       startup script for ovirt-wui
 #
-# chkconfig: - 85 15
+# chkconfig: - 97 03
 # description: ovirt-wui is the web front end for ovirt.
 #              
 
