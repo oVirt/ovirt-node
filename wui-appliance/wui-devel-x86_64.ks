@@ -2,18 +2,8 @@
 
 install
 url --url http://download.fedora.redhat.com/pub/fedora/linux/releases/8/Fedora/x86_64/os/
-lang en_US.UTF-8
-keyboard us
-network --device eth0 --bootproto dhcp
-rootpw  --iscrypted $1$HNOucon/$m69RprODwQn4XjzVUi9TU0
-firewall --disabled
-authconfig --enableshadow --enablemd5
-selinux --disabled
-services --disabled=iptables,yum-updatesd,libvirtd,bluetooth,cups,gpm,pcscd --enabled=ntpd,dhcpd,xinetd,httpd,postgresql,ovirt-wui,named
-timezone --utc America/New_York
-text
 
-%include common-lvm.ks
+%include common-install.ks
 
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=x86_64
 repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=x86_64

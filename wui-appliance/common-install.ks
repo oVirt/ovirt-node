@@ -1,3 +1,14 @@
+lang en_US.UTF-8
+keyboard us
+network --device eth0 --bootproto dhcp
+rootpw  --iscrypted $1$HNOucon/$m69RprODwQn4XjzVUi9TU0
+firewall --disabled
+authconfig --enableshadow --enablemd5
+selinux --disabled
+services --disabled=iptables,yum-updatesd,libvirtd,bluetooth,cups,gpm,pcscd --enabled=ntpd,dhcpd,xinetd,httpd,postgresql,ovirt-wui,named
+timezone --utc America/New_York
+text
+
 bootloader --location=mbr --driveorder=sda
 # The following is the partition information you requested
 # Note that any partitions you deleted are not expressed
@@ -10,3 +21,4 @@ part pv.2 --size=0 --grow --ondisk=sda
 volgroup VolGroup00 --pesize=32768 pv.2
 logvol swap --fstype swap --name=LogVol01 --vgname=VolGroup00 --size=512
 logvol / --fstype ext3 --name=LogVol00 --vgname=VolGroup00 --size=1024 --grow
+
