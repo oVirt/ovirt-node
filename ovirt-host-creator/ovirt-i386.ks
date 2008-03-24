@@ -1,6 +1,6 @@
 %include common-install.ks
 
-%packages
+%packages --excludedocs
 %include common-pkgs.ks
 
 %post

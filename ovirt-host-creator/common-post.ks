@@ -216,6 +216,12 @@ rm -f /etc/krb5.conf
 /usr/sbin/pwconv
 /usr/sbin/grpconv
 
+# cracklib-dicts is 8MB.  We probably don't need to have strict password
+# checking on the ovirt host
+# unfortunately we can't create an empty cracklib dict, so we create it
+# with a single entry "1"
+echo 1 | /usr/sbin/packer
+
 # here, remove a bunch of files we don't need that are just eating up space.
 # it breaks rpm slightly, but it's not too bad
 
@@ -230,16 +236,49 @@ rpm -e --nodeps perl perl-libs
 # remove it here
 rpm -e --nodeps dejavu-lgc-fonts
 
-rm -rf /usr/share/omf/fedora-release-notes
-rm -rf /usr/share/omf/about-fedora
-rm -rf /usr/share/gnome/help/fedora-release-notes
-rm -rf /usr/share/gnome/help/about-fedora
-rm -rf /usr/share/doc/HTML
-rm -rf /usr/share/locale
-find /usr/share/i18n/locales -type f ! -iname en_US -exec rm -f {} \;
-rm -rf /usr/share/man
-rm -rf /usr/lib64/gconv
-rm -rf /usr/share/doc
-rm -rf /usr/share/X11
-rm -f /usr/lib/locale/*
-rm -rf /usr/share/terminfo/*
+RM="rm -rf"
+
+# Remove docs and internationalization
+$RM /usr/share/omf
+$RM /usr/share/gnome
+$RM /usr/share/doc
+$RM /usr/share/locale
+$RM /usr/share/libthai
+$RM /usr/share/man
+$RM /usr/share/terminfo
+$RM /usr/share/X11
+$RM /usr/share/i18n
+
+find /usr/share/zoneinfo -regextype egrep -type f ! -regex ".*/EST.*|.*/GMT" -exec $RM {} \;
+
+$RM /usr/lib/locale
+$RM /usr/lib/syslinux
+$RM /usr/lib64/gconv
+$RM /usr/lib64/pango
+$RM /usr/lib64/libpango*
+$RM /etc/pango
+$RM /usr/bin/pango*
+
+# Remove unnecessary kernel modules
+MODULES="/lib/modules/*/kernel"
+
+$RM $MODULES/sound
+
+fs_mods="9p affs autofs autofs4 befs bfs cifs coda cramfs dlm \
+         ecryptfs efs exportfs freevxfs fuse gfs2 hfs hfsplus jbd jbd2 \
+         jffs jfs minix ncpfs ocfs2 qnx4 reiserfs romfs sysv udf ufs xfs"
+for dir in $fs_mods ; do
+   $RM $MODULES/fs/$dir
+done
+
+net_mods="802 8021q 9p appletalk atm ax25 bluetooth dccp decnet \
+          ieee80211 ipx irda mac80211 netrom rfkill rose sched \
+          tipc wanrouter wireless"
+for dir in $net_mods ; do
+   $RM $MODULES/net/$dir
+done
+
+driver_mods="bluetooth firewire i2c isdn media"
+for dir in $driver_mods ; do
+   $RM $MODULES/drivers/$dir
+done
