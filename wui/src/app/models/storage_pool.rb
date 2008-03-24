@@ -26,11 +26,15 @@ class StoragePool < ActiveRecord::Base
     end
   end
 
-  STORAGE_TYPES = { "iSCSI" => IscsiStoragePool }
+  STORAGE_TYPES = { "iSCSI" => "IscsiStoragePool" }
 
   def self.factory(type, params = nil)
-    subclass = STORAGE_TYPES[type]
-    subclass.new(params) if subclass
+    case type
+    when "iSCSI"
+      return IscsiStoragePool.new(params)
+    else
+      return nil
+    end
   end
 
   def display_name
@@ -38,7 +42,7 @@ class StoragePool < ActiveRecord::Base
   end
 
   def get_type_label
-    STORAGE_TYPES.invert[self.class]
+    STORAGE_TYPES.invert[self.class.name]
   end
 
   def tasks
