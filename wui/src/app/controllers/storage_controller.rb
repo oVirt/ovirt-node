@@ -194,7 +194,6 @@ class StorageController < ApplicationController
     authorize_admin
   end
   def pre_create
-    print "type: ", params[:storage_type], "\n"
     @storage_pool = StoragePool.factory(params[:storage_type], params[:storage_pool])
     @perm_obj = @storage_pool.hardware_pool
     @redir_controller = @storage_pool.hardware_pool.get_controller
