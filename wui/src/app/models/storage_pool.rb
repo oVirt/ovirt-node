@@ -19,7 +19,7 @@
 
 class StoragePool < ActiveRecord::Base
   belongs_to              :hardware_pool
-  has_many                :storage_tasks
+  has_many                :storage_tasks, :dependent => :destroy, :order => "id DESC"
   has_many                :storage_volumes, :dependent => :destroy, :include => :storage_pool do
     def total_size_in_gb
       find(:all).inject(0){ |sum, sv| sum + sv.size_in_gb }
