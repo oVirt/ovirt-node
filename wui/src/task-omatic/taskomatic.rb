@@ -45,6 +45,7 @@ require 'models/quota.rb'
 require 'models/storage_task.rb'
 require 'models/vm_task.rb'
 require 'models/storage_pool.rb'
+require 'models/iscsi_storage_pool.rb'
 require 'models/motor_pool.rb'
 
 $logfile = '/var/log/ovirt-wui/taskomatic.log'
@@ -728,12 +729,11 @@ def refresh_pool(task)
     rescue
       # in this case, there are no hosts we can use; we have to bail out
       puts "Failed finding host"
-      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
+      setTaskState(task, Task::STATE_FAILED, "Could not find a host to scan storage")
       return
     end
   end
 
-  puts host.hostname
   remote_pool_defined = false
   remote_pool_started = false
   remote_pool = nil
@@ -745,7 +745,6 @@ def refresh_pool(task)
   # we don't try to define it again, we just scan it
   pool_defined = false
   conn.list_defined_storage_pools.each do |remote_pool_name|
-    puts remote_pool_name
     tmppool = conn.lookup_storage_pool_by_name(remote_pool_name)
     doc = Document.new(tmppool.xml_desc(0))
     root = doc.root
@@ -761,13 +760,24 @@ def refresh_pool(task)
     remote_pool = conn.define_storage_pool_xml(storage_xml.to_s)
     remote_pool_defined = true
   end
+
   remote_pool_info = remote_pool.info
   if remote_pool_info.state == Libvirt::StoragePool::INACTIVE
     # only try to start the pool if it is currently inactive; in all other
     # states, assume it is already running
-    remote_pool.create
+    begin
+      remote_pool.create
+    rescue
+      # this can fail, for instance, if the remote storage that the user
+      # put in is not actually available.  We just return here with a failure;
+      # there's not a lot more we can do
+      setTaskState(task, Task::STATE_FAILED,"Could not create storage volume")
+      conn.close
+      return
+    end
     remote_pool_started = true
   end
+
   vols = remote_pool.list_volumes
   vols.each do |volname|
     volptr = remote_pool.lookup_volume_by_name(volname)

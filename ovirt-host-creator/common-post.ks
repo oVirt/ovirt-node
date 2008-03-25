@@ -169,7 +169,7 @@ fi
 
 g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
 n=$(printf '\33[m')            # similar to n=$(tput sgr0)
-cat <<EOF
+cat <<EOF > /etc/issue
 
            888     888 ${g}d8b$n         888
            888     888 ${g}Y8P$n         888
@@ -220,7 +220,7 @@ rm -f /etc/krb5.conf
 # checking on the ovirt host
 # unfortunately we can't create an empty cracklib dict, so we create it
 # with a single entry "1"
-echo 1 | /usr/sbin/packer
+echo 1 | /usr/sbin/packer >& /dev/null
 
 # here, remove a bunch of files we don't need that are just eating up space.
 # it breaks rpm slightly, but it's not too bad

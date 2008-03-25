@@ -97,7 +97,15 @@ loop do
   vms.each do |vm|
     host = findHost(vm)
 
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    begin
+      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    rescue
+      # we couldn't contact the host for whatever reason; we'll try again
+      # on the next iteration
+      puts "Failed to contact host " + host.hostname + "; skipping for now"
+      next
+    end
+
     begin
       dom = conn.lookup_domain_by_uuid(vm.uuid)
     rescue
