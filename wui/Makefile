@@ -1,10 +1,12 @@
 VERSION		= $(shell echo `awk '{ print $$1 }' version`)
 RELEASE		= $(shell echo `awk '{ print $$2 }' version`)
 NEWRELEASE	= $(shell echo $$(($(RELEASE) + 1)))
+DIST		= $(shell rpm --eval '%{dist}')
+ARCH		= $(shell uname -i)
 
 SPEC_FILE	= ovirt-wui.spec
 NAME		= ovirt-wui
- 
+
 NV		= $(NAME)-$(VERSION)
 RPM_FLAGS	=	--define "_topdir	%(pwd)/rpm-build" \
 			--define "_builddir	%{_topdir}" \
@@ -49,5 +51,5 @@ rpms: tar
 
 # convience method to simulate make install, not for production use
 install: rpms
-	rpm -Uvh rpm-build/ovirt-wui-$(VERSION)-$(RELEASE).fc7.noarch.rpm --force
+	rpm -Uvh rpm-build/ovirt-wui-$(VERSION)-$(RELEASE)$(DIST).$(ARCH).rpm --force
 	/sbin/service ovirt-wui restart	
