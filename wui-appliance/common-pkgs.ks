@@ -21,6 +21,7 @@ ipa-admintools
 xinetd
 libvirt
 cyrus-sasl-gssapi
+scsi-target-utils
 iscsi-initiator-utils
 collectd
 ruby-libvirt

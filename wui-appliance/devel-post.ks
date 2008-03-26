@@ -230,3 +230,23 @@ esac
 EOF
 chmod +x /etc/init.d/ovirt-app-first-run
 /sbin/chkconfig ovirt-app-first-run on
+
+# Setup the iscsi stuff to be ready on each boot.  Since tgtadm does not use a config file
+# append what we need to the rc.local file.  Note that this for the developers version only. 
+
+cat >> /etc/rc.d/rc.local << \EOF
+#
+# Set up the fake iscsi targets
+tgtadm --lld iscsi --op new --mode target --tid 1 -T ovirtpriv:storage
+#
+# Now associate them to the LVs
+# 
+tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 1 -b /dev/VolGroup00/iSCSI1
+tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 2 -b /dev/VolGroup00/iSCSI2
+tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 3 -b /dev/VolGroup00/iSCSI3
+# 
+# Now make them available
+#
+tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
+EOF
+
