@@ -186,9 +186,11 @@ class StorageController < ApplicationController
   end
 
   def pre_new2
-    @storage_pool = StoragePool.factory(params[:storage_type], 
-                                        { :hardware_pool_id => params[:hardware_pool_id],
-                                          :port => 3260})
+    new_params = { :hardware_pool_id => params[:hardware_pool_id]}
+    if (params[:storage_type] == "iSCSI")
+      new_params[:port] = 3260
+    end
+    @storage_pool = StoragePool.factory(params[:storage_type], new_params)
     @perm_obj = @storage_pool.hardware_pool
     @redir_controller = @storage_pool.hardware_pool.get_controller
     authorize_admin

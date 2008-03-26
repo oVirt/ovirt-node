@@ -9,8 +9,12 @@
                 <div class="data-table-column">
 
                 <p><b>IP address:</b> <%=h @storage_pool.ip_addr %></p>
+<% if @storage_pool[:type] == "IscsiStoragePool" %>
                 <p><b>Port:</b>       <%=h @storage_pool.port %></p>
                 <p><b>Target:</b>     <%=h @storage_pool.target %></p>
+<% elsif @storage_pool[:type] == "NfsStoragePool" %>
+                <p><b>Export path:</b>     <%=h @storage_pool.export_path %></p>
+<% end %>
                 <p><b>Type:</b>       <%=h @storage_pool.get_type_label %></p>
 
                 </div>

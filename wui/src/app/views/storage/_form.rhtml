@@ -6,9 +6,11 @@
 
 <%= text_field_with_label "IP Address", 'storage_pool', 'ip_addr'  %>
 
-<%= text_field_with_label "Port", 'storage_pool', 'port'  %>
+<%= text_field_with_label "Port", 'storage_pool', 'port' if @storage_pool[:type] == "IscsiStoragePool" %>
 
-<%= text_field_with_label "Target", 'storage_pool', 'target'  %>
+<%= text_field_with_label "Target", 'storage_pool', 'target'  if @storage_pool[:type] == "IscsiStoragePool"  %>
+
+<%= text_field_with_label "Export Path", 'storage_pool', 'export_path'  if @storage_pool[:type] == "NfsStoragePool"  %>
 
 
 <%= focus('storage_pool_ip_addr') %>

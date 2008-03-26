@@ -17,8 +17,8 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-class IscsiStoragePool < StoragePool
+class IscsiStorageVolume < StorageVolume
   def label_components
-    "#{target}"
+    "#{storage_pool[:target]}:#{lun}"
   end
 end

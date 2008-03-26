@@ -23,8 +23,23 @@ class StorageVolume < ActiveRecord::Base
   belongs_to              :storage_pool
   has_and_belongs_to_many :vms
 
+  def self.factory(type, params = nil)
+    case type
+    when "iSCSI"
+      return IscsiStoragePool.new(params)
+    when "NFS"
+      return NfsStoragePool.new(params)
+    else
+      return nil
+    end
+  end
+
+  def get_type_label
+    StoragePool::STORAGE_TYPES.invert[self.class.name.gsub("StorageVolume", "")]
+  end
+
   def display_name
-    "#{storage_pool.ip_addr}:#{storage_pool[:target]}:#{lun}"
+    "#{get_type_label}: #{storage_pool.ip_addr}:#{label_components}"
   end
 
   def size_in_gb

@@ -26,23 +26,28 @@ class StoragePool < ActiveRecord::Base
     end
   end
 
-  STORAGE_TYPES = { "iSCSI" => "IscsiStoragePool" }
+  ISCSI = "iSCSI"
+  NFS   = "NFS"
+  STORAGE_TYPES = { ISCSI => "Iscsi",
+                    NFS   => "Nfs" }
 
   def self.factory(type, params = nil)
     case type
-    when "iSCSI"
+    when ISCSI
       return IscsiStoragePool.new(params)
+    when NFS
+      return NfsStoragePool.new(params)
     else
       return nil
     end
   end
 
   def display_name
-    "#{get_type_label}#{ip_addr}:#{target}"
+    "#{get_type_label}: #{ip_addr}:#{label_components}"
   end
 
   def get_type_label
-    STORAGE_TYPES.invert[self.class.name]
+    STORAGE_TYPES.invert[self.class.name.gsub("StoragePool", "")]
   end
 
   def tasks

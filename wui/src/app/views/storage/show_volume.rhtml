@@ -9,12 +9,20 @@
                 <div class="data-table-column">
 
                 <p><b>IP address:</b> <%=h @storage_volume.storage_pool.ip_addr %></p>
+<% if @storage_volume.storage_pool[:type] == "IscsiStoragePool" %>
                 <p><b>Port:</b>       <%=h @storage_volume.storage_pool.port %></p>
                 <p><b>Target:</b>     <%=h @storage_volume.storage_pool[:target] %></p>
+<% elsif @storage_volume.storage_pool[:type] == "NfsStoragePool" %>
+                <p><b>Export path:</b> <%=h @storage_volume.storage_pool.export_path %></p>
+<% end %>
                 <p><b>Type:</b>       <%=h @storage_volume.storage_pool.get_type_label %></p>
 		<p></p>
                 <p><b>Path:</b>       <%=h @storage_volume.path %></p>
+<% if @storage_volume[:type] == "IscsiStorageVolume" %>
                 <p><b>LUN:</b>        <%=h @storage_volume.lun %></p>
+<% elsif @storage_volume[:type] == "NfsStorageVolume" %>
+                <p><b>Filename:</b>        <%=h @storage_volume.filename %></p>
+<% end %>
                 <p><b>Size:</b>       <%=h @storage_volume.size_in_gb %> GB</p>
 
                 </div>
