@@ -5,6 +5,11 @@ url --url http://download.fedora.redhat.com/pub/fedora/linux/releases/8/Fedora/i
 
 %include common-install.ks
 
+# Create some fake iSCSI partitions
+logvol /iscsi3 --name=iSCSI3 --vgname=VolGroup00 --size=64 --grow
+logvol /iscsi4 --name=iSCSI4 --vgname=VolGroup00 --size=64 --grow
+logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64 --grow
+
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=i386
 repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=i386
 repo --name=freeipa --baseurl=http://freeipa.com/downloads/devel/rpms/F7/i386/ --includepkgs=ipa*
