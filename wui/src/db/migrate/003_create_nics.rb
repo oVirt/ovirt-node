@@ -22,6 +22,7 @@ class CreateNics < ActiveRecord::Migration
     create_table :nics do |t|
       t.column :mac,         :string
       t.column :ip_addr,     :string
+      t.column :bridge,      :string
       t.column :usage_type,  :string
       t.column :bandwidth,   :integer
       t.column :host_id,     :integer, :null => false
