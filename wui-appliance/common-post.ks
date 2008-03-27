@@ -83,20 +83,15 @@ if string.find(file(ipaconfname, 'rb').read(), '<VirtualHost *:8089>') < 0:
     print >>ipaconf2, "</VirtualHost>"
     ipaconf2.close()
 
-if string.find(file(ovirtconfname, 'rb').read(), '<VirtualHost *:80>') < 0:
-    ovirtconf = open(ovirtconfname, 'r')
-    ovirttext = ovirtconf.readlines()
-    ovirtconf.close()
+ovirtconf = open(ovirtconfname, 'r')
+ovirttext = ovirtconf.readlines()
+ovirtconf.close()
 
-    ovirtconf2 = open(ovirtconfname, 'w')
-    print >>ovirtconf2, "NameVirtualHost *:80"
-    print >>ovirtconf2, "<VirtualHost *:80>"
-    for line in ovirttext:
-        newline = re.sub(r'(.*)KrbAuthRealms.*', r'\1KrbAuthRealms ' + default_realm, line)
-        newline = re.sub(r'(.*)Krb5KeyTab.*', r'\1Krb5KeyTab /etc/httpd/conf/ipa.keytab', newline)
-        ovirtconf2.write(newline)
-    print >>ovirtconf2, "</VirtualHost>"
-    ovirtconf2.close()
+ovirtconf2 = open(ovirtconfname, 'w')
+for line in ovirttext:
+    newline = re.sub(r'(.*)KrbAuthRealms.*', r'\1KrbAuthRealms ' + default_realm, line)
+    ovirtconf2.write(newline)
+ovirtconf2.close()
 EOF
 chmod +x /root/create_default_principals.py
 
