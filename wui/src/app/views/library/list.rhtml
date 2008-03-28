@@ -19,7 +19,7 @@ function confirm_and_submit(item){
               <div class="inside">
 
                 <div class="data-table-column">
-<form action="/library/vm_actions" name="vm_actions" method="post">
+<% form_tag( {:controller => 'library', :action => 'vm_actions'}, {:name => "vm_actions", :method => "post"}) do -%>
 <%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_START_VM}]", "value" => "Start"}  %> 
 <%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_SHUTDOWN_VM}]", "value" => "Stop"}  %> 
 <select onchange="return confirm_and_submit(this)" name="vm_actions[other_actions]">
@@ -35,7 +35,7 @@ function confirm_and_submit(item){
 <br/><br/>
 
 <%= render :partial => "/vm/list", :locals => { :vms => @vms } %>
-</form>
+<% end -%>
                 </div>
 
               </div> <!-- end #data-table.inside -->

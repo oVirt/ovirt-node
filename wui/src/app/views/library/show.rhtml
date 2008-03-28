@@ -10,7 +10,7 @@
 
                 <div class="data-table-column">
 
-              <form action="/library/vm_actions" name="vm_actions" method="post">
+              <% form_tag( {:controller => 'library', :action => 'vm_actions'}, {:name => "vm_actions", :method => "post"}) do -%>
               <%= tag :input, { "type" => "hidden", "name" => "vm_actions[vm_library_id]", "value" => "@vm_library.id"}  %>
               <%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_START_VM}]", "value" => "Start"}  %>
               <%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_SHUTDOWN_VM}]", "value" => "Stop"}  %>
@@ -29,7 +29,7 @@
               <br/>
 
               <%= render :partial => "/vm/list", :locals => { :vms => @vm_library.vms } %>
-              </form>
+              <% end -%>
 
                 </div>
 
