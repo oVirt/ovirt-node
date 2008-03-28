@@ -21,6 +21,7 @@ repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-ma
 %post
 
 %include common-post.ks
+
 %include devel-post.ks
 
 # get the PXE boot image; this can take a while

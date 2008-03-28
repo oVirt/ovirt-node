@@ -16,6 +16,7 @@ repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-ma
 %post
 
 %include common-post.ks
+
 %include production-post.ks
 
 %end
