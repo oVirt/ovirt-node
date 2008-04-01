@@ -32,4 +32,34 @@ class HostCollection < HardwarePool
   def get_controller
     'collection'
   end
+
+  def total_resources
+    the_quota = nil
+    pool = self
+    while not(pool.nil?) and (pool[:type] == HostCollection.name)
+      if pool.quota
+        the_quota = pool.quota
+        pool = nil
+      else
+        pool = pool.superpool
+      end
+    end
+    if the_quota.nil?
+      Quota.get_resource_hash(nil, nil, nil, nil, nil)
+    else
+      the_quota.total_resources
+    end
+  end
+
+  def full_resources(exclude_vm = nil)
+    total = total_resources
+    labels = [["CPUs", :cpus, ""], 
+              ["Memory", :memory_in_mb, "(mb)"], 
+              ["NICs", :nics, ""], 
+              ["VMs", :vms, ""], 
+              ["Disk", :storage_in_gb, "(gb)"]]
+    return {:total => total, :labels => labels}
+  end
+
+
 end
