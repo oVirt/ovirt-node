@@ -85,6 +85,7 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 
 %{__cp} -a %{pbuild}/scripts/ovirt_create_db.sh %{buildroot}%{_bindir}
 %{__cp} -a %{pbuild}/scripts/ovirt_grant_admin_privileges.sh %{buildroot}%{_bindir}
+%{__cp} -a %{pbuild}/scripts/ovirt_reset_db.sh %{buildroot}%{_bindir}
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
 %{__ln_s} %{_localstatedir}/lib/%{name}/tmp %{buildroot}%{app_root}/tmp
@@ -97,6 +98,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,0755)
 %{_bindir}/ovirt_create_db.sh
 %{_bindir}/ovirt_grant_admin_privileges.sh
+%{_bindir}/ovirt_reset_db.sh
 %{_initrddir}/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %doc
