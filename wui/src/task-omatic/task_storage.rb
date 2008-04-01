@@ -24,6 +24,7 @@ require 'models/storage_task.rb'
 require 'models/vm_task.rb'
 require 'models/storage_pool.rb'
 require 'models/iscsi_storage_pool.rb'
+require 'models/nfs_storage_pool.rb'
 require 'models/motor_pool.rb'
 
 def refresh_pool(task)
@@ -36,12 +37,12 @@ def refresh_pool(task)
     return
   end
 
-  if pool.type == "IscsiStoragePool"
+  if pool[:type] == "IscsiStoragePool"
     storage = Iscsi.new(pool.ip_addr, pool.target)
-  elsif pool.type == "NFSStoragePool"
-    storage = NFS.new(pool.ip_addr, pool.remote_path)
+  elsif pool[:type] == "NfsStoragePool"
+    storage = NFS.new(pool.ip_addr, pool.export_path)
   else
-    setTaskState(task, Task::STATE_FAILED, "Unknown storage pool type " + pool.type)
+    setTaskState(task, Task::STATE_FAILED, "Unknown storage pool type " + pool[:type].to_s)
     return
   end
 
@@ -80,10 +81,12 @@ def refresh_pool(task)
     if storage.xmlequal?(doc.root)
       pool_defined = true
       remote_pool = tmppool
+      break
     end
   end
   if not pool_defined
-    remote_pool = conn.define_storage_pool_xml(storage.getxml)
+    remote_pool = conn.define_storage_pool_xml(storage.getxml, 0)
+    remote_pool.build(0)
     remote_pool_defined = true
   end
 
@@ -92,7 +95,7 @@ def refresh_pool(task)
     # only try to start the pool if it is currently inactive; in all other
     # states, assume it is already running
     begin
-      remote_pool.create
+      remote_pool.create(0)
     rescue
       # this can fail, for instance, if the remote storage that the user
       # put in is not actually available.  We just return here with a failure;

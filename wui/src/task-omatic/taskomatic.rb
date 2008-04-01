@@ -65,10 +65,14 @@ database_connect
 loop do
   puts 'Checking for tasks...'
   
-  # make sure we get our credentials up-front
-  get_credentials
-
+  first = true
   Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
+    if first
+      # make sure we get our credentials up-front
+      get_credentials
+      first = false
+    end
+
     case task.action
     when VmTask::ACTION_CREATE_VM then create_vm(task)
     when VmTask::ACTION_SHUTDOWN_VM then shutdown_vm(task)

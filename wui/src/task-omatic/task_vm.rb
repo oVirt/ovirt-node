@@ -335,8 +335,6 @@ def start_vm(task)
 
     storagedevs = []
     vm.storage_volumes.each do |volume|
-      storagedevs << volume.path
-
       # here, we need to iterate through each volume and possibly attach it
       # to the host we are going to be using
       storage_pool = StoragePool.find(volume.storage_pool_id)
@@ -355,6 +353,8 @@ def start_vm(task)
         # Hm, a storage type we don't understand; skip it
         next
       end
+
+      storagedevs << volume.path
 
       found_pool = false
       defined_pools.each do |pool|

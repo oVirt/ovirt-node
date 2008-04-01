@@ -15,7 +15,17 @@ def String.random_alphanumeric(size=16)
   s
 end
 
-class Iscsi
+class StorageType
+  def xmlequal?(docroot)
+    return false
+  end
+
+  def getxml
+    return @xml.to_s
+  end
+end
+
+class Iscsi < StorageType
   def initialize(ipaddr, target)
     @type = 'iscsi'
     @ipaddr = ipaddr
@@ -42,13 +52,9 @@ class Iscsi
       docroot.elements['source'].elements['host'].attributes['name'] == @ipaddr and
       docroot.elements['source'].elements['device'].attributes['path'] == @target)
   end
-
-  def getxml
-    return @xml.to_s
-  end
 end
 
-class NFS
+class NFS < StorageType
   def initialize(host, remote_path)
     @type = 'netfs'
     @host = host
@@ -63,8 +69,9 @@ class NFS
     @xml.root.elements["name"].text = @name
 
     @xml.root.add_element("source")
-    @xml.root.elements["source"].add_element("host", {"name" => host})
-    @xml.root.elements["source"].add_element("dir", {"path" => remote_path})
+    @xml.root.elements["source"].add_element("host", {"name" => @host})
+    @xml.root.elements["source"].add_element("dir", {"path" => @remote_path})
+    @xml.root.elements["source"].add_element("format", {"type" => "nfs"})
 
     @xml.root.add_element("target")
     @xml.root.elements["target"].add_element("path")
@@ -75,9 +82,5 @@ class NFS
     return (docroot.attributes['type'] == @type and
       docroot.elements['source'].elements['host'].attributes['name'] == @host and
       docroot.elements['source'].elements['dir'].attributes['path'] == @remote_path)
-  end
-
-  def getxml
-    return @xml.to_s
   end
 end
