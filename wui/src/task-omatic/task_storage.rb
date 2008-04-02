@@ -25,6 +25,8 @@ require 'models/vm_task.rb'
 require 'models/storage_pool.rb'
 require 'models/iscsi_storage_pool.rb'
 require 'models/nfs_storage_pool.rb'
+require 'models/iscsi_storage_volume.rb'
+require 'models/nfs_storage_volume.rb'
 require 'models/motor_pool.rb'
 
 def refresh_pool(task)
@@ -53,11 +55,15 @@ def refresh_pool(task)
   conn = nil
   hosts.each do |host|
     begin
+      # FIXME: this can actually hang up taskomatic for quite some time.  To
+      # see how, make one of your remote servers do "iptables -I INPUT -j DROP"
+      # and then try to run this; it will take TCP quite a while to give up.
+      # Unfortunately the solution is probably to do some sort of threading
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
 
       # if we didn't raise an exception, we connected; get out of here
       break
-    rescue
+    rescue ArgumentError
       # if we couldn't connect for whatever reason, just try the next host
       next
     end
@@ -76,7 +82,7 @@ def refresh_pool(task)
   # and see if a pool matching the XML already exists.  If it does
   # we don't try to define it again, we just scan it
   pool_defined = false
-  conn.list_defined_storage_pools.each do |remote_pool_name|
+  all_storage_pools(conn).each do |remote_pool_name|
     tmppool = conn.lookup_storage_pool_by_name(remote_pool_name)
     doc = Document.new(tmppool.xml_desc(0))
 

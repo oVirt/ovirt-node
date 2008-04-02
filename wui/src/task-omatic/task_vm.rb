@@ -316,15 +316,17 @@ def start_vm(task)
     # keep using existing ones
 
     defined_pools = []
-    conn.list_defined_storage_pools.each do |remote_pool_name|
+    all_storage_pools(conn).each do |remote_pool_name|
       tmppool = conn.lookup_storage_pool_by_name(remote_pool_name)
       doc = Document.new(tmppool.xml_desc(0))
       root = doc.root
 
       if root.attributes['type'] == 'iscsi'
-        storage = Iscsi.new(root.elements['source'].elements['host'].attributes['name'], root.elements['source'].elements['device'].attributes['path'])
+        storage = Iscsi.new(root.elements['source'].elements['host'].attributes['name'],
+                            root.elements['source'].elements['device'].attributes['path'])
       elsif root.attributes['type'] == 'netfs'
-        storage = NFS.new(root.elements['source'].elements['host'].attributes['name'], root.elements['source'].elements['dir'].attributes['path'])
+        storage = NFS.new(root.elements['source'].elements['host'].attributes['name'],
+                          root.elements['source'].elements['dir'].attributes['path'])
       else
         # a storage type we don't understand; just skip it
         next
@@ -345,9 +347,9 @@ def start_vm(task)
         next
       end
 
-      if storage_pool.type == "IscsiStoragePool"
+      if storage_pool[:type] == "IscsiStoragePool"
         thisstorage = Iscsi.new(storage_pool.ip_addr, storage_pool.target)
-      elsif storage_pool.type == "NFSStoragePool"
+      elsif storage_pool[:type] == "NfsStoragePool"
         thisstorage = NFS.new(storage_pool.ip_addr, storage_pool.remote_path)
       else
         # Hm, a storage type we don't understand; skip it
@@ -358,21 +360,17 @@ def start_vm(task)
 
       found_pool = false
       defined_pools.each do |pool|
-        if pool.xmlequal?(thisstorage.getxml)
+        doc = Document.new(thisstorage.getxml)
+        if pool.xmlequal?(doc.root)
           found_pool = true
           break
         end
       end
 
       if not found_pool
-        begin
-          # FIXME: due to a bug either in the libvirt storage API or in the 
-          # ruby bindings, sometimes list_defined_storage_pools doesn't
-          # show you all of the pools.  For now, just ignore errors here
-          new_pool = conn.define_storage_pool_xml(thisstorage.getxml)
-          new_pool.create
-        rescue
-        end
+        new_pool = conn.define_storage_pool_xml(thisstorage.getxml, 0)
+        new_pool.build(0)
+        new_pool.create(0)
       end
     end
     conn.close

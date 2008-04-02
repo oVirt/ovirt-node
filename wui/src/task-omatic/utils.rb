@@ -15,6 +15,13 @@ def String.random_alphanumeric(size=16)
   s
 end
 
+def all_storage_pools(conn)
+  all_pools = []
+  all_pools.concat(conn.list_defined_storage_pools)
+  all_pools.concat(conn.list_storage_pools)
+  return all_pools
+end
+
 class StorageType
   attr_reader :db_column
 
