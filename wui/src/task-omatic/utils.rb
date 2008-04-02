@@ -16,6 +16,8 @@ def String.random_alphanumeric(size=16)
 end
 
 class StorageType
+  attr_reader :db_column
+
   def xmlequal?(docroot)
     return false
   end
@@ -30,6 +32,7 @@ class Iscsi < StorageType
     @type = 'iscsi'
     @ipaddr = ipaddr
     @target = target
+    @db_column = 'lun'
 
     @xml = Document.new
     @xml.add_element("pool", {"type" => @type})
@@ -60,6 +63,7 @@ class NFS < StorageType
     @host = host
     @remote_path = remote_path
     @name = String.random_alphanumeric
+    @db_column = 'filename'
 
     @xml = Document.new
     @xml.add_element("pool", {"type" => @type})

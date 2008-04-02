@@ -47,7 +47,8 @@ def refresh_pool(task)
   end
 
   # find all of the hosts in the same pool as the storage
-  hosts = Host.find(:all, :conditions => [ "hardware_pool_id = ?", pool.hardware_pool_id ])
+  hosts = Host.find(:all, :conditions =>
+                    [ "hardware_pool_id = ?", pool.hardware_pool_id ])
 
   conn = nil
   hosts.each do |host|
@@ -111,18 +112,21 @@ def refresh_pool(task)
   vols = remote_pool.list_volumes
   vols.each do |volname|
     volptr = remote_pool.lookup_volume_by_name(volname)
-    existing_vol = StorageVolume.find(:first, :conditions => [ "path = ?", volptr.path ])
+    existing_vol = StorageVolume.find(:first, :conditions =>
+                                      [ "path = ?", volptr.path ])
     if existing_vol != nil
       # in this case, this path already exists in the database; just skip
       next
     end
 
     volinfo = volptr.info
+
     storage_volume = StorageVolume.new
     storage_volume.path = volptr.path
-    storage_volume.lun = volname
     storage_volume.size = volinfo.capacity / 1024
     storage_volume.storage_pool_id = pool.id
+    storage_volume[:type] = StoragePool::STORAGE_TYPES[pool.get_type_label] + "StorageVolume"
+    storage_volume.write_attribute(storage.db_column, volname)
     storage_volume.save
   end
   if remote_pool_started
