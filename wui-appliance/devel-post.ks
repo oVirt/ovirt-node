@@ -167,13 +167,13 @@ chmod +x /etc/dhclient-exit-hooks
 # make sure that we get a kerberos principal on every boot
 echo "/etc/cron.hourly/ovirtadmin.cron" >> /etc/rc.d/rc.local
 
-cat > /etc/init.d/ovirt-app-first-run << \EOF
+cat > /etc/init.d/ovirt-wui-dev-first-run << \EOF
 #!/bin/bash
 #
-# ovirt-app-first-run First run configuration for Ovirt WUI appliance
+# ovirt-wui-dev-first-run First run configuration for Ovirt WUI Dev appliance
 #
-# chkconfig: 3 99 01
-# description: ovirt appliance first run configuration
+# chkconfig: 3 95 01
+# description: ovirt dev wui appliance first run configuration
 #
 
 # Source functions library
@@ -182,35 +182,17 @@ cat > /etc/init.d/ovirt-app-first-run << \EOF
 KADMIN=/usr/kerberos/sbin/kadmin.local
 
 start() {
-	echo -n "Starting ovirt-app-first-run: "
+	echo -n "Starting ovirt-dev-wui-first-run: "
 	(
 	# set up freeipa
-	/usr/sbin/ipa-server-install -r PRIV.OVIRT.ORG -p ovirtwui -P ovirtwui -a ovirtwui --hostname management.priv.ovirt.org -u admin -U
+	/usr/sbin/ipa-server-install -r PRIV.OVIRT.ORG -p ovirtwui -P ovirtwui -a ovirtwui --hostname management.priv.ovirt.org -u dirsrv -U
 
 	# now create the ovirtadmin user
 	$KADMIN -q 'addprinc -randkey ovirtadmin@PRIV.OVIRT.ORG'	
 	$KADMIN -q 'ktadd -k /usr/share/ovirt-wui/ovirtadmin.tab ovirtadmin@PRIV.OVIRT.ORG'
 	/etc/cron.hourly/ovirtadmin.cron
 
-	/root/create_default_principals.py
-
-	# create_default_principals munges the apache config, so we have to
-	# restart it here
-	service httpd restart
-
-	service postgresql initdb
-	echo "local all all trust" > /var/lib/pgsql/data/pg_hba.conf
-	echo "host all all 127.0.0.1 255.255.255.0 trust" >> /var/lib/pgsql/data/pg_hba.conf
-	service postgresql start
-
-	su - postgres -c "/usr/bin/psql -f /usr/share/ovirt-wui/psql.cmds"
-
-	cd /usr/share/ovirt-wui ; rake db:migrate
-	/usr/bin/ovirt_grant_admin_privileges.sh ovirtadmin
-
-	service ovirt-wui restart
-
-	) > /root/ovirt-app-first-run.log 2>&1
+	) > /var/log/ovirt-wui-dev-first-run.log 2>&1
 	RETVAL=$?
 	if [ $RETVAL -eq 0 ]; then
 		echo_success
@@ -225,14 +207,14 @@ case "$1" in
         start
         ;;
   *)
-        echo "Usage: ovirt {start}"
+        echo "Usage: ovirt-wui-dev-first-run {start}"
         exit 2
 esac
 
-/sbin/chkconfig ovirt-app-first-run off
+/sbin/chkconfig ovirt-wui-dev-first-run off
 EOF
-chmod +x /etc/init.d/ovirt-app-first-run
-/sbin/chkconfig ovirt-app-first-run on
+chmod +x /etc/init.d/ovirt-wui-dev-first-run
+/sbin/chkconfig ovirt-wui-dev-first-run on
 
 # Setup the iscsi stuff to be ready on each boot.  Since tgtadm does not use
 # a config file append what we need to the rc.local file.  Note that this for

@@ -12,7 +12,6 @@ logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64 --grow
 
 repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=i386
 repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=i386
-repo --name=freeipa --baseurl=http://freeipa.com/downloads/devel/rpms/F7/i386/ --includepkgs=ipa*
 repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-management-repo/i386/
 
 %packages
