@@ -49,12 +49,13 @@ def refresh_pool(task)
   # find all of the hosts in the same pool as the storage
   hosts = Host.find(:all, :conditions => [ "hardware_pool_id = ?", pool.hardware_pool_id ])
 
-  # FIXME: should we check the default MotorPool for hosts?
-
   conn = nil
   hosts.each do |host|
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+
+      # if we didn't raise an exception, we connected; get out of here
+      break
     rescue
       # if we couldn't connect for whatever reason, just try the next host
       next
@@ -71,7 +72,7 @@ def refresh_pool(task)
   remote_pool = nil
 
   # here, run through the list of already defined pools on the remote side
-  # and see if a pool matching "iscsi", IP, target already exists.  If it does
+  # and see if a pool matching the XML already exists.  If it does
   # we don't try to define it again, we just scan it
   pool_defined = false
   conn.list_defined_storage_pools.each do |remote_pool_name|
