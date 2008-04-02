@@ -25,7 +25,7 @@ class QuotaController < ApplicationController
   def set_perms
     @user = get_login_user
     if @quota.host_collection
-      @Is_admin = @quota.host_collection.is_admin(@user)
+      @is_admin = @quota.host_collection.is_admin(@user)
       @can_monitor = @quota.host_collection.can_monitor(@user)
       @can_delegate = @quota.host_collection.can_delegate(@user)
     elsif @quota.vm_library
@@ -41,7 +41,7 @@ class QuotaController < ApplicationController
 
   def redirect_to_parent
     if @quota.host_collection
-      redirect_to :controller => 'pool', :action => 'show', :id => @quota.host_collection
+      redirect_to :controller => 'collection', :action => 'show', :id => @quota.host_collection
     elsif @quota.vm_library
       redirect_to :controller => 'library', :action => 'show', :id => @quota.vm_library
     else
@@ -124,7 +124,7 @@ class QuotaController < ApplicationController
         flash[:notice] = 'destroying quota failed '
       end
       if pool_id
-        redirect_to :controller => 'pool', :action => 'show', :id => pool_id
+        redirect_to :controller => 'collection', :action => 'show', :id => pool_id
       elsif vm_library_id
         redirect_to :controller => 'library', :action => 'show', :id => vm_library_id
       else

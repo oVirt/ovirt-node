@@ -31,6 +31,32 @@
               </div>
             </div>
 
+            <div class="data-section">
+              <div class="data-section-header"><strong>Default VM Library Resources</strong></div>
+              <div class="data-section-stats">Statistics Data</div>
+              <div class="data-section-table">
+                <div class="inside">
+
+                <table>
+                  <tr>
+                  <th></th>
+                  <td> default values for VM Libraries</td>
+                  </tr>
+                <% resources = @collection.full_resources %>
+                <% for item in resources[:labels] %>
+                <% total_limit = resources[:total][item[1]]
+                   total_limit = "unlimited" if total_limit.nil? %>
+                  <tr>
+                  <th><%= item[0]%>:</th>
+                  <td><%= total_limit %>
+                      <%= item[2]%></td>
+                  </tr>
+                <% end %>
+                </table>
+
+                </div>
+              </div>
+            </div>
           </div> <!-- end #dataTableWrapper -->
 
       </div> <!-- end #data.inside -->
@@ -59,6 +85,12 @@
 
             <div class="actions">
               <div><%= link_to 'Edit Collection Properties', { :action => 'edit', :id => @collection }, { :class => "edit" } %></div>
+              <%if @collection.quota -%>
+                <%= link_to 'Edit default Quota', { :controller => 'quota', :action => 'edit', :id => @collection.quota }, { :class => "edit" } %>
+                <%= link_to 'Remove default Quota', { :controller => 'quota', :action => 'destroy', :id => @collection.quota }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %>
+              <% else -%>
+                <%= link_to 'Edit Quota', { :controller => 'quota', :action => 'new', :host_collection_id => @collection }, { :class => "edit" } %>
+              <% end -%>
               <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :hardware_pool_id => @collection }, { :class => "edit" } %></div>
               <table>
                 <tr><td><%= pluralize @collection.permissions.admins.size, "Admin" %></td></tr>
