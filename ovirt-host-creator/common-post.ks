@@ -223,9 +223,10 @@ rm -f /etc/krb5.conf
 echo 1 | /usr/sbin/packer >& /dev/null
 
 # force logins (via ssh, etc) to use C locale, since we remove locales
-{ echo '# oVirt: force our locale to C since we don't have locale stuff'
-  echo 'export LC_ALL=C LANG=C'
-} >> /etc/profile
+cat >> /etc/profile << \EOF
+# oVirt: force our locale to C since we don't have locale stuff'
+echo 'export LC_ALL=C LANG=C'
+EOF
 
 # here, remove a bunch of files we don't need that are just eating up space.
 # it breaks rpm slightly, but it's not too bad
