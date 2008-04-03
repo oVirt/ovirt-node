@@ -26,9 +26,9 @@ class StorageVolume < ActiveRecord::Base
   def self.factory(type, params = nil)
     case type
     when "iSCSI"
-      return IscsiStoragePool.new(params)
+      return IscsiStorageVolume.new(params)
     when "NFS"
-      return NfsStoragePool.new(params)
+      return NfsStorageVolume.new(params)
     else
       return nil
     end
