@@ -238,7 +238,7 @@ echo "Forcing C locale"
 # force logins (via ssh, etc) to use C locale, since we remove locales
 cat >> /etc/profile << \EOF
 # oVirt: force our locale to C since we don't have locale stuff'
-echo 'export LC_ALL=C LANG=C'
+export LC_ALL=C LANG=C
 EOF
 
 # here, remove a bunch of files we don't need that are just eating up space.
