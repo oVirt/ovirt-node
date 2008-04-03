@@ -1,3 +1,6 @@
+echo "Starting Kickstart Post"
+
+echo "Setting up Networking"
 cat > /etc/sysconfig/iptables << \EOF
 *filter
 :INPUT ACCEPT [0:0]
@@ -7,6 +10,7 @@ cat > /etc/sysconfig/iptables << \EOF
 COMMIT
 EOF
 
+echo "Writing ovirt-early init script"
 # next the dynamic bridge setup service
 cat > /etc/init.d/ovirt-early << \EOF
 #!/bin/bash
@@ -99,6 +103,7 @@ chmod +x /etc/init.d/ovirt-early
 # just to get a boot warning to shut up
 touch /etc/resolv.conf
 
+echo "Setting up dhclient"
 cat > /etc/dhclient.conf << EOF
 option libvirt-auth-method code 202 = text;
 EOF
@@ -134,9 +139,11 @@ fi
 EOF
 chmod +x /etc/dhclient-exit-hooks
 
+echo "Setting up libvirt interfaces"
 # make libvirtd listen on the external interfaces
 sed -i -e 's/^#\(LIBVIRTD_ARGS="--listen"\).*/\1/' /etc/sysconfig/libvirtd
 
+echo "Setting up bridged networking"
 cat > /etc/kvm-ifup << \EOF
 #!/bin/sh
 
@@ -147,6 +154,7 @@ EOF
 
 chmod +x /etc/kvm-ifup
 
+echo "Setting up libvirt VNC and networking"
 # set up qemu daemon to allow outside VNC connections
 sed -i -e 's/^[[:space:]]*#[[:space:]]*\(vnc_listen = "0.0.0.0"\).*/\1/' \
   /etc/libvirt/qemu.conf
@@ -165,6 +173,7 @@ if [ `egrep -c '^mech_list: gssapi' /etc/sasl2/libvirt.conf` -eq 0 ]; then
    echo "mech_list: gssapi" >> /etc/sasl2/libvirt.conf
 fi
 
+echo "Setting up login screen"
 # pretty login screen..
 
 g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
@@ -188,7 +197,7 @@ EOF
 
 cp /etc/issue /etc/issue.net
 
-
+echo "Setting up collectd"
 # setup collectd configuration
 cat > /etc/collectd.conf << \EOF
 LoadPlugin logfile
@@ -208,20 +217,24 @@ LoadPlugin cpu
 </Plugin>
 EOF
 
+echo "Clearing kerberos config"
 # remove the /etc/krb5.conf file; it will be fetched on bootup
 rm -f /etc/krb5.conf
 
+echo "Creating shadow files"
 # because we aren't installing authconfig, we aren't setting up shadow
 # and gshadow properly.  Do it by hand here
 /usr/sbin/pwconv
 /usr/sbin/grpconv
 
+echo "Re-creating cracklib dicts"
 # cracklib-dicts is 8MB.  We probably don't need to have strict password
 # checking on the ovirt host
 # unfortunately we can't create an empty cracklib dict, so we create it
 # with a single entry "1"
 echo 1 | /usr/sbin/packer >& /dev/null
 
+echo "Forcing C locale"
 # force logins (via ssh, etc) to use C locale, since we remove locales
 cat >> /etc/profile << \EOF
 # oVirt: force our locale to C since we don't have locale stuff'
@@ -234,6 +247,7 @@ EOF
 # FIXME: ug, hard-coded paths.  This is going to break if we change to F-9
 # or upgrade certain packages.  Not quite sure how to handle it better
 
+echo "Removing excess RPMs"
 # Sigh.  ntp has a silly dependency on perl because of auxiliary scripts which
 # we don't need to use.  Forcibly remove it here
 rpm -e --nodeps perl perl-libs
@@ -244,7 +258,7 @@ rpm -e --nodeps dejavu-lgc-fonts
 
 RM="rm -rf"
 
-# Remove docs and internationalization
+echo "Removing docs and internationalization"
 $RM /usr/share/omf
 $RM /usr/share/gnome
 $RM /usr/share/doc
@@ -265,7 +279,7 @@ $RM /usr/lib64/libpango*
 $RM /etc/pango
 $RM /usr/bin/pango*
 
-# Remove unnecessary kernel modules
+echo "Removing excess kernel modules"
 MODULES="/lib/modules/*/kernel"
 
 $RM $MODULES/sound
@@ -288,3 +302,5 @@ driver_mods="bluetooth firewire i2c isdn media"
 for dir in $driver_mods ; do
    $RM $MODULES/drivers/$dir
 done
+
+echo "Finished Kickstart Post"
