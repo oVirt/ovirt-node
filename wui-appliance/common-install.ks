@@ -1,7 +1,7 @@
 lang en_US.UTF-8
 keyboard us
 network --device eth0 --bootproto dhcp
-rootpw ovirt
+rootpw --iscrypted Xa8QeYfWrtscM
 firewall --disabled
 authconfig --enableshadow --enablemd5
 selinux --disabled
