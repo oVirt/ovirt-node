@@ -1,7 +1,7 @@
 lang en_US.UTF-8
 keyboard us
 network --device eth0 --bootproto dhcp
-rootpw  --iscrypted $1$HNOucon/$m69RprODwQn4XjzVUi9TU0
+rootpw ovirt
 firewall --disabled
 authconfig --enableshadow --enablemd5
 selinux --disabled
