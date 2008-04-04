@@ -12,6 +12,8 @@ EOF
 # make sure our "hostname" resolves to management.priv.ovirt.org
 sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
 
+echo -e "192.168.50.2\t\tmanagement.priv.ovirt.org" >> /etc/hosts
+
 cat > /etc/dhcpd.conf << \EOF
 allow booting;
 allow bootp;
