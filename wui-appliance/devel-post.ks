@@ -23,6 +23,7 @@ option libvirt-auth-method code 202 = text;
 subnet 192.168.50.0 netmask 255.255.255.0 {
         option domain-name "priv.ovirt.org";
         option domain-name-servers 192.168.50.2;
+        option ntp-servers 192.168.50.2;
         next-server 192.168.50.2;
         option routers 192.168.50.1;
         option libvirt-auth-method "krb5:192.168.50.2:8089/config";

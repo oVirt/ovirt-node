@@ -44,7 +44,7 @@ libvirt-auth-method'
             BRIDGE=ovirtbr`echo $eth | cut -b4-`
             echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" \
 	      > /etc/sysconfig/network-scripts/ifcfg-$eth
-            echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge" \
+            echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge\nPEERNTP=yes" \
 	      > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
 	    printf 'DHCLIENTARGS="-R %s"\n' $(printf "$dhcp_options"|tr '\n' ,)\
 	      >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
@@ -135,6 +135,12 @@ if [ -n "$new_libvirt_auth_method" ]; then
             rm -f /etc/krb5.conf ; /usr/bin/wget -q http://$SERVER/krb5.ini -O /etc/krb5.conf
         fi
     fi
+fi
+
+if [ -n "$new_ntp_servers" ]; then
+    for ntp_server in $new_ntp_servers; do
+        echo "$ntp_server" >> /etc/ntp/step-tickers
+    done
 fi
 EOF
 chmod +x /etc/dhclient-exit-hooks
