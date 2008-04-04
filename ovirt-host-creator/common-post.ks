@@ -26,18 +26,6 @@ cat > /etc/init.d/ovirt-early << \EOF
 
 start() {
 
-dhcp_options='subnet-mask
-broadcast-address
-time-offset
-routers
-domain-name
-domain-name-servers
-host-name
-nis-domain
-nis-servers
-ntp-servers
-libvirt-auth-method'
-
         # find all of the ethernet devices in the system
         ETHDEVS=$(cd /sys/class/net && ls -d eth*)
         for eth in $ETHDEVS; do
@@ -46,8 +34,6 @@ libvirt-auth-method'
 	      > /etc/sysconfig/network-scripts/ifcfg-$eth
             echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge\nPEERNTP=yes" \
 	      > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-	    printf 'DHCLIENTARGS="-R %s"\n' $(printf "$dhcp_options"|tr '\n' ,)\
-	      >> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
         # find all of the partitions on the system
@@ -75,24 +61,12 @@ libvirt-auth-method'
         done
 }
 
-stop() {
-        # nothing to do
-        return
-}
-
 case "$1" in
   start)
         start
         ;;
-  stop)
-        stop
-        ;;
-  restart)
-        stop
-        start
-        ;;
   *)
-        echo "Usage: ovirt-early {start|stop|restart}"
+        echo "Usage: ovirt-early {start}"
         exit 2
 esac
 EOF
@@ -103,40 +77,7 @@ chmod +x /etc/init.d/ovirt-early
 # just to get a boot warning to shut up
 touch /etc/resolv.conf
 
-echo "Setting up dhclient"
-cat > /etc/dhclient.conf << EOF
-option libvirt-auth-method code 202 = text;
-EOF
-
-# NOTE that libvirt_auth_method is handled in the exit-hooks
 cat > /etc/dhclient-exit-hooks << \EOF
-if [ -n "$new_libvirt_auth_method" ]; then
-    METHOD=`echo $new_libvirt_auth_method | cut -d':' -f1`
-    SERVER=`echo $new_libvirt_auth_method | cut -d':' -f2-`
-    IP=`echo $new_libvirt_auth_method | cut -d':' -f2 | cut -d'/' -f1`
-    if [ $METHOD = "krb5" ]; then
-        mkdir -p /etc/libvirt
-        # here, we wait for the "host-keyadd" service to finish adding our
-        # keytab and returning to us; note that we will try 5 times and
-        # then give up
-        tries=0
-        while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
-            VAL=`echo "KERB" | /usr/bin/nc $IP 6666`
-            if [ "$VAL" == "SUCCESS" ]; then
-                break
-            fi
-            tries=$(( $tries + 1 ))
-            sleep 1
-        done
-        if [ ! -r /etc/libvirt/krb5.tab ]; then
-            /usr/bin/wget -q http://$SERVER/$new_ip_address-libvirt.tab -O /etc/libvirt/krb5.tab
-        fi
-        if [ ! -r /etc/krb5.conf ]; then
-            rm -f /etc/krb5.conf ; /usr/bin/wget -q http://$SERVER/krb5.ini -O /etc/krb5.conf
-        fi
-    fi
-fi
-
 if [ -n "$new_ntp_servers" ]; then
     for ntp_server in $new_ntp_servers; do
         echo "$ntp_server" >> /etc/ntp/step-tickers
@@ -144,6 +85,77 @@ if [ -n "$new_ntp_servers" ]; then
 fi
 EOF
 chmod +x /etc/dhclient-exit-hooks
+
+echo "Writing ovirt init script"
+# ovirt startup script to do krb init
+cat > /etc/init.d/ovirt << \EOF
+#!/bin/bash
+#
+# ovirt Start ovirt services
+#
+# chkconfig: 3 11 99
+# description: ovirt services
+#
+
+# Source functions library
+. /etc/init.d/functions
+
+start() {
+    echo -n $"Starting ovirt: "
+    IPA=$(/usr/bin/dig +short -t srv _ipa._tcp.$(/bin/dnsdomainname))
+    HOST=$(echo $IPA | head -1 | awk '{print $4}')
+    PORT=$(echo $IPA | head -1 | awk '{print $3}')
+
+    mkdir -p /etc/libvirt
+    # here, we wait for the "host-keyadd" service to finish adding our
+    # keytab and returning to us; note that we will try 5 times and
+    # then give up
+    tries=0
+    while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
+        VAL=`echo "KERB" | /usr/bin/nc $HOST 6666`
+        if [ "$VAL" == "SUCCESS" ]; then
+            break
+        fi
+        tries=$(( $tries + 1 ))
+        sleep 1
+        echo -n "."
+    done
+
+    if [ "$VAL" != "SUCCESS" ]; then
+        echo -n "Failed generating keytab" ; failure ; echo ; exit 1
+    fi
+
+    if [ ! -s /etc/libvirt/krb5.tab ]; then
+        /usr/bin/wget -q http://$HOST:$PORT/config/$(/bin/hostname -i)-libvirt.tab -O /etc/libvirt/krb5.tab
+        if [ $? -ne 0 ]; then
+            echo -n "Failed getting keytab" ; failure ; echo ; exit 1
+        fi
+    fi
+
+    if [ ! -s /etc/krb5.conf ]; then
+        rm -f /etc/krb5.conf
+        /usr/bin/wget -q http://$HOST:$PORT/config/krb5.ini -O /etc/krb5.conf
+        if [ "$?" -ne 0 ]; then
+            echo "Failed getting krb5.conf" ; failure ; echo ; exit 1
+        fi
+    fi
+
+    success
+    echo
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  *)
+    echo "Usage: ovirt {start}"
+    exit 2
+esac
+EOF
+
+chmod +x /etc/init.d/ovirt
+/sbin/chkconfig ovirt on
 
 echo "Setting up libvirt interfaces"
 # make libvirtd listen on the external interfaces

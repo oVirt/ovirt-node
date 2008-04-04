@@ -23,15 +23,12 @@ allow bootp;
 ddns-update-style interim;
 ignore client-updates;
 
-option libvirt-auth-method code 202 = text;
-
 subnet 192.168.50.0 netmask 255.255.255.0 {
         option domain-name "priv.ovirt.org";
         option domain-name-servers 192.168.50.2;
         option ntp-servers 192.168.50.2;
         next-server 192.168.50.2;
         option routers 192.168.50.1;
-        option libvirt-auth-method "krb5:192.168.50.2:8089/config";
         filename "pxelinux.0";
         host node3 {
                 fixed-address 192.168.50.3;
@@ -114,6 +111,9 @@ management      IN      A       192.168.50.2
 node3           IN      A       192.168.50.3
 node4           IN      A       192.168.50.4
 node5           IN      A       192.168.50.5
+_ovirt._tcp     IN      SRV     0 0 80 management
+_ipa._tcp       IN      SRV     0 0 8089 management
+_ldap._tcp      IN      SRV     0 0 389 management
 EOF
 
 cat > /var/named/chroot/var/named/50.168.192.in-addr.arpa.zone << \EOF
