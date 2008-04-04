@@ -1,57 +1,60 @@
 #!/bin/bash
 
+ME=$(basename "$0")
+warn() { printf "$ME: $@\n" >&2; }
+try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
+die() { warn "$@"; try_h; exit 1; }
+
 NAME=developer
 RAM=512
-IMGNAME=${NAME}.img
+IMGNAME=$NAME.img
 IMGSIZE=6
-
-usage() {
-    echo "usage: $0 -i install_iso [-d image_dir] [-a x86_64|i386] [-m MAC]"
-    echo "  -i: location of installation ISO"
-    echo "  -d: directory to place virtual disk (default: /var/lib/libvirt/images)"
-    echo "  -a: architecture for the virtual machine (default: x86_64)"
-    echo "  -m: specify fixed MAC address for the primary network interface"
-    exit 1
-} >&2
 
 MAC=
 ISO=
-IMGDIR=/var/lib/libvirt/images
-ARCH=x86_64
-for i ; do
-    case $1 in
-        -i)
-            [ $# -lt 2 ] && usage
-            ISO="$2"
-            shift; shift;;
-        -d)
-            [ $# -lt 2 ] && usage
-            IMGDIR="$2"
-            shift; shift;;
-        -a)
-            [ $# -lt 2 ] && usage
-            ARCH="$2"
-            shift; shift;;
-        -m)
-            [ $# -lt 2 ] && usage
-            MAC="$2"
-            shift; shift;;
-        -?|-*)
-            usage;;
+IMGDIR_DEFAULT=/var/lib/libvirt/images
+ARCH_DEFAULT=x86_64
+
+ARCH=$ARCH_DEFAULT
+IMGDIR=$IMGDIR_DEFAULT
+
+usage() {
+    case $# in 1) warn "$1"; try_h; exit 1;; esac
+    cat <<EOF
+Usage: $ME -i install_iso [-d image_dir] [-a x86_64|i386] [-m MAC]
+  -i: location of installation ISO (required)
+  -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
+  -a: architecture for the virtual machine (default: $ARCH_DEFAULT)
+  -m: specify fixed MAC address for the primary network interface
+  -h: display this help and exit
+EOF
+}
+
+err=0 help=0
+while getopts :a:d:i:m:h c; do
+    case $c in
+        i) ISO=$OPTARG;;
+        d) IMGDIR=$OPTARG;;
+        a) ARCH=$OPTARG;;
+        m) MAC=$OPTARG;;
+        h) help=1;;
+	'?') err=1; warn "invalid option: \`-$OPTARG'";;
+	:) err=1; warn "missing argument to \`-$OPTARG' option";;
+        *) err=1; warn "internal error: \`-$OPTARG' not handled";;
     esac
 done
+test $err = 1 && { try_h; exit 1; }
+test $help = 1 && { usage; exit 0; }
 
-if [ -z $ISO ]; then
-    echo "Please supply the location of the OS ISO" >&2
-    usage
-fi
+test -z "$ISO" && usage "no ISO file specified"
+test -r "$ISO" || usage "missing or unreadable ISO file: \`$ISO'"
 
-if [[ "$ARCH" != "i386" && "$ARCH" != "x86_64" ]]; then
-    echo "Please specify a valid architecture" >&2
-    usage
-fi
+case $ARCH in
+    i386|x86_64);;
+    *) usage "invalid architecture: \`$ARCH'";;
+esac
 
-if [ -n $MAC ]; then
+if [ -n "$MAC" ]; then
     MAC="-m $MAC"
 fi
 
@@ -59,8 +62,8 @@ mkdir -p $IMGDIR
 
 virsh destroy $NAME > /dev/null 2>&1
 virsh undefine $NAME > /dev/null 2>&1
-virt-install -n $NAME -r $RAM -f $IMGDIR/$IMGNAME -s $IMGSIZE --vnc \
-             --accelerate -v -c $ISO --os-type=linux --arch=$ARCH \
+virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
+             --accelerate -v -c "$ISO" --os-type=linux --arch=$ARCH \
              --noreboot $MAC
 ./ovirt-mod-xml.sh
 virsh start $NAME
