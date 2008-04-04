@@ -9,6 +9,9 @@ HWADDR=00:16:3E:12:34:56
 ONBOOT=yes
 EOF
 
+# turn on tftp in xinetd
+sed -i -e 's/\(.*\)disable\(.*\)= yes/\1disable\2= no/' /etc/xinetd.d/tftp
+
 # make sure our "hostname" resolves to management.priv.ovirt.org
 sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
 
