@@ -142,7 +142,7 @@ mkdir -p /root/.mozilla/firefox/uxssq4qb.ovirtadmin
 cat >> /root/.mozilla/firefox/uxssq4qb.ovirtadmin/prefs.js << \EOF
 user_pref("network.negotiate-auth.delegation-uris", "priv.ovirt.org");
 user_pref("network.negotiate-auth.trusted-uris", "priv.ovirt.org");
-user_pref("browser.startup.homepage", "http://management.priv.ovirt.org/");
+user_pref("browser.startup.homepage", "http://management.priv.ovirt.org/ovirt");
 EOF
 
 cat >> /root/.mozilla/firefox/profiles.ini << \EOF
@@ -157,7 +157,7 @@ EOF
 
 # make sure we use ourselves as the nameserver (not what we get from DHCP)
 cat > /etc/dhclient-exit-hooks << \EOF
-echo "search ovirt.org priv.ovirt.org" > /etc/resolv.conf
+echo "search priv.ovirt.org ovirt.org" > /etc/resolv.conf
 echo "nameserver 192.168.50.2" >> /etc/resolv.conf
 EOF
 chmod +x /etc/dhclient-exit-hooks
