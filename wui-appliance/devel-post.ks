@@ -12,6 +12,8 @@ EOF
 # make sure our "hostname" resolves to management.priv.ovirt.org
 sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
 
+echo -e "192.168.50.2\t\tmanagement.priv.ovirt.org" >> /etc/hosts
+
 cat > /etc/dhcpd.conf << \EOF
 allow booting;
 allow bootp;
@@ -23,6 +25,7 @@ option libvirt-auth-method code 202 = text;
 subnet 192.168.50.0 netmask 255.255.255.0 {
         option domain-name "priv.ovirt.org";
         option domain-name-servers 192.168.50.2;
+        option ntp-servers 192.168.50.2;
         next-server 192.168.50.2;
         option routers 192.168.50.1;
         option libvirt-auth-method "krb5:192.168.50.2:8089/config";
@@ -141,7 +144,7 @@ mkdir -p /root/.mozilla/firefox/uxssq4qb.ovirtadmin
 cat >> /root/.mozilla/firefox/uxssq4qb.ovirtadmin/prefs.js << \EOF
 user_pref("network.negotiate-auth.delegation-uris", "priv.ovirt.org");
 user_pref("network.negotiate-auth.trusted-uris", "priv.ovirt.org");
-user_pref("browser.startup.homepage", "http://management.priv.ovirt.org/");
+user_pref("browser.startup.homepage", "http://management.priv.ovirt.org/ovirt");
 EOF
 
 cat >> /root/.mozilla/firefox/profiles.ini << \EOF
@@ -156,7 +159,7 @@ EOF
 
 # make sure we use ourselves as the nameserver (not what we get from DHCP)
 cat > /etc/dhclient-exit-hooks << \EOF
-echo "search ovirt.org priv.ovirt.org" > /etc/resolv.conf
+echo "search priv.ovirt.org ovirt.org" > /etc/resolv.conf
 echo "nameserver 192.168.50.2" >> /etc/resolv.conf
 EOF
 chmod +x /etc/dhclient-exit-hooks
