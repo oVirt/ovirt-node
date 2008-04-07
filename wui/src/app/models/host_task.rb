@@ -17,25 +17,8 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-class TaskController < ApplicationController
-  # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, :create, :update ],
-         :redirect_to => { :action => :list }
+class HostTask < Task
+  belongs_to :host
 
-  def show
-    @task = Task.find(params[:id])
-    if @task[:type] == VmTask.name
-      set_perms(@task.vm.vm_library)
-    elsif @task[:type] == StorageTask.name 
-      set_perms(@task.storage_pool.hardware_pool)
-    elsif @task[:type] == HostTask.name 
-      set_perms(@task.host.hardware_pool)
-    end
-    unless @can_monitor
-      flash[:notice] = 'You do not have permission to view this task: redirecting to top level'
-      redirect_to :controller => 'dashboard'
-    end
-
-  end
-
+  ACTION_CLEAR_VMS = "clear_vms"
 end

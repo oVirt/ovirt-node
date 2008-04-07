@@ -31,6 +31,7 @@
         <div class="actions">
           <%= link_to "Back to #{@task.vm.description}", { :controller => 'vm', :action => 'show', :id => @task.vm.id }, { :class => "show"  } if @task[:type] == VmTask.name  %>
           <%= link_to "Back to #{@task.storage_pool.display_name}", { :controller => 'storage', :action => 'show', :id => @task.storage_pool.id }, { :class => "show"  } if @task[:type] == StorageTask.name %>
+          <%= link_to "Back to #{@task.host.hostname}", { :controller => 'host', :action => 'show', :id => @task.host.id }, { :class => "show"  } if @task[:type] == HostTask.name %>
         </div>
       </div>
   </td>

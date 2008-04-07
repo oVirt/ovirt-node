@@ -33,11 +33,15 @@ class CreateTasks < ActiveRecord::Migration
       t.column :vm_id,             :integer
       # StorageTask columns
       t.column :storage_pool_id,   :integer
+      # HostTask columns
+      t.column :host_id,           :integer
     end
     execute "alter table tasks add constraint fk_tasks_vms
              foreign key (vm_id) references vms(id)"
     execute "alter table tasks add constraint fk_tasks_pools
              foreign key (storage_pool_id) references storage_pools(id)"
+    execute "alter table tasks add constraint fk_tasks_hosts
+             foreign key (host_id) references hosts(id)"
   end
 
   def self.down
