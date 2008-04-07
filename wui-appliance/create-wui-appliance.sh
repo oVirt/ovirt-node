@@ -10,7 +10,6 @@ RAM=512
 IMGNAME=$NAME.img
 IMGSIZE=6
 
-MAC=
 ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
 ARCH_DEFAULT=x86_64
@@ -21,11 +20,10 @@ IMGDIR=$IMGDIR_DEFAULT
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME -i install_iso [-d image_dir] [-a x86_64|i386] [-m MAC]
+Usage: $ME -i install_iso [-d image_dir] [-a x86_64|i686]
   -i: location of installation ISO (required)
   -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
   -a: architecture for the virtual machine (default: $ARCH_DEFAULT)
-  -m: specify fixed MAC address for the primary network interface
   -h: display this help and exit
 EOF
 }
@@ -36,7 +34,6 @@ while getopts :a:d:i:m:h c; do
         i) ISO=$OPTARG;;
         d) IMGDIR=$OPTARG;;
         a) ARCH=$OPTARG;;
-        m) MAC=$OPTARG;;
         h) help=1;;
 	'?') err=1; warn "invalid option: \`-$OPTARG'";;
 	:) err=1; warn "missing argument to \`-$OPTARG' option";;
@@ -50,23 +47,32 @@ test -z "$ISO" && usage "no ISO file specified"
 test -r "$ISO" || usage "missing or unreadable ISO file: \`$ISO'"
 
 case $ARCH in
-    i386|x86_64);;
+    i686|x86_64);;
     *) usage "invalid architecture: \`$ARCH'";;
 esac
 
-if [ -n "$MAC" ]; then
-    MAC="-m $MAC"
-fi
+gen_dummy() {
+cat <<\EOF
+<network>
+  <name>dummy</name>
+  <bridge name="dummybridge" stp="off" forwardDelay="0" />
+  <ip address="192.168.50.1" netmask="255.255.255.0"/>
+</network>
+EOF
+}
+
+# TODO when virFileReadAll is fixed for stdin
+#virsh net-define <(gen_dummy)
+TMPXML=$(mktemp) || exit 1
+gen_dummy > $TMPXML
+virsh net-define $TMPXML
+rm $TMPXML
+virsh net-start dummy
+virsh net-autostart dummy
 
 mkdir -p $IMGDIR
-
 virsh destroy $NAME > /dev/null 2>&1
 virsh undefine $NAME > /dev/null 2>&1
 virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
              --accelerate -v -c "$ISO" --os-type=linux --arch=$ARCH \
-             --noreboot $MAC
-./ovirt-mod-xml.sh
-virsh start $NAME
-virt-viewer $NAME &
-
-exit 0
+             -w network:default -w network:dummy
