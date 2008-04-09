@@ -5,7 +5,7 @@ rootpw --iscrypted Xa8QeYfWrtscM
 firewall --disabled
 authconfig --enableshadow --enablemd5
 selinux --disabled
-services --disabled=iptables,yum-updatesd,libvirtd,bluetooth,cups,gpm,pcscd --enabled=ntpd,dhcpd,xinetd,httpd,postgresql,ovirt-wui,named,tgtd
+services --disabled=iptables,yum-updatesd,libvirtd,bluetooth,cups,gpm,pcscd --enabled=ntpd,httpd,postgresql,ovirt-wui,tgtd
 timezone --utc America/New_York
 text
 

@@ -6,13 +6,13 @@ try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
 die() { warn "$@"; try_h; exit 1; }
 
 NAME=developer
-RAM=512
+RAM=768
 IMGNAME=$NAME.img
 IMGSIZE=6
 
 ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
-ARCH_DEFAULT=x86_64
+ARCH_DEFAULT=$(uname -i)
 
 ARCH=$ARCH_DEFAULT
 IMGDIR=$IMGDIR_DEFAULT

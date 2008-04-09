@@ -12,13 +12,10 @@
 @development-tools
 pax
 imake
-dhcp
-tftp-server
-tftp
+dnsmasq
 dhclient
 ipa-server
 ipa-admintools
-xinetd
 libvirt
 cyrus-sasl-gssapi
 scsi-target-utils
@@ -30,10 +27,6 @@ ovirt-wui
 firefox
 xorg-x11-xauth
 virt-viewer
-bind
-bind-chroot
-emacs
-git
 ruby-devel
 avahi-devel
 livecd-tools
