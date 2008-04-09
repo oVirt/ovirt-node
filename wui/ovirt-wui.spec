@@ -7,7 +7,9 @@ Source1: version
 Version: %(echo `awk '{ print $1 }' %{SOURCE1}`)
 Release: %(echo `awk '{ print $2 }' %{SOURCE1}`)%{?dist}
 Source0: %{name}-%{version}.tar.gz
-License: GPL
+#Entire source code is GPL except for vendor/plugins/will_paginate, which
+#is MIT, public/javascripts/jquery.*, which is both MIT and GPL
+License: GPL and MIT
 Group: Applications/System
 Requires: ruby >= 1.8.1
 Requires: ruby(abi) = 1.8
