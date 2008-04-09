@@ -1,7 +1,12 @@
 # make sure our "hostname" resolves to management.priv.ovirt.org
 sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
 
-echo -e "192.168.50.2\t\tmanagement.priv.ovirt.org" >> /etc/hosts
+cat >> /etc/hosts < \EOF
+192.168.50.2 management.priv.ovirt.org
+192.168.50.3 node3.priv.ovirt.org
+192.168.50.4 node4.priv.ovirt.org
+192.168.50.5 node5.priv.ovirt.org
+EOF
 
 # automatically refresh the kerberos ticket every hour (we'll create the
 # principal on first-boot)
@@ -107,28 +112,30 @@ cat > /etc/init.d/ovirt-wui-dev << \EOF
 
 start() {
     echo -n "Starting ovirt-wui-dev: "
-    /usr/sbin/dnsmasq -F 192.168.50.3,192.168.50.252 -s priv.ovirt.org \
-	-W _ovirt._tcp,management.priv.ovirt.org,80 \
-	-W _ipa._tcp,management.priv.ovirt.org,8089 \
-	-W _ldap._tcp,managment.priv.ovirt.org,389 \
-	--enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
-	-O option:router,192.168.50.1 \
-	-O option:ntp-server,192.168.50.2 \
-	-R -S 192.168.122.1
+    /usr/sbin/dnsmasq -i eth1 -F 192.168.50.6,192.168.50.252 \
+        -G 00:16:3e:12:34:57,192.168.50.3 -G 00:16:3e:12:34:58,192.168.50.4 \
+        -G 00:16:3e:12:34:59,192.168.50.5 \
+        -s priv.ovirt.org \
+        -W _ovirt._tcp,management.priv.ovirt.org,80 \
+        -W _ipa._tcp,management.priv.ovirt.org,8089 \
+        -W _ldap._tcp,managment.priv.ovirt.org,389 \
+        --enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
+        -O option:router,192.168.50.1 -O option:ntp-server,192.168.50.2 \
+        -R -S 192.168.122.1
     
     # Set up the fake iscsi target
     /usr/sbin/tgtadm --lld iscsi --op new --mode target --tid 1 \
-	-T ovirtpriv:storage
+        -T ovirtpriv:storage
     
     #
     # Now associate them to the LVs
     # 
     /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-	--lun 1 -b /dev/VolGroup00/iSCSI3
+        --lun 1 -b /dev/VolGroup00/iSCSI3
     /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-	--lun 2 -b /dev/VolGroup00/iSCSI4
+        --lun 2 -b /dev/VolGroup00/iSCSI4
     /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-	--lun 3 -b /dev/VolGroup00/iSCSI5
+        --lun 3 -b /dev/VolGroup00/iSCSI5
     
     # 
     # Now make them available
@@ -164,12 +171,12 @@ case "$1" in
         start
         ;;
     stop)
-	stop
-	;;
+        stop
+        ;;
     restart)
-	stop
-	start
-	;;
+        stop
+        start
+        ;;
     *)
         echo "Usage: ovirt-wui-dev {start|stop|restart}"
         exit 2
