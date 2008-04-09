@@ -40,3 +40,7 @@ livecd-tools
 -slrn
 -cadaver
 -mutt
+-oprofile-gui
+-qt
+-nmap
+-kernel-devel

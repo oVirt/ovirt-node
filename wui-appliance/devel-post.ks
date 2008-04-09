@@ -30,6 +30,10 @@ IsRelative=1
 Path=uxssq4qb.ovirtadmin
 EOF
 
+# make sure we don't mount the "fake" iSCSI LUNs, since they are meant to
+# be exported
+sed -i -e '/\/dev\/VolGroup00\/iSCSI[0-9].*/d' /etc/fstab
+
 # make sure we use ourselves as the nameserver (not what we get from DHCP)
 cat > /etc/dhclient-exit-hooks << \EOF
 echo "search priv.ovirt.org ovirt.org" > /etc/resolv.conf
@@ -120,11 +124,11 @@ start() {
     # Now associate them to the LVs
     # 
     /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-	--lun 1 -b /dev/VolGroup00/iSCSI1
+	--lun 1 -b /dev/VolGroup00/iSCSI3
     /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-	--lun 2 -b /dev/VolGroup00/iSCSI2
+	--lun 2 -b /dev/VolGroup00/iSCSI4
     /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-	--lun 3 -b /dev/VolGroup00/iSCSI3
+	--lun 3 -b /dev/VolGroup00/iSCSI5
     
     # 
     # Now make them available
