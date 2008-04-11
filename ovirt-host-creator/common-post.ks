@@ -1,4 +1,6 @@
 echo "Starting Kickstart Post"
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+export PATH
 
 echo "Setting up Networking"
 cat > /etc/sysconfig/iptables << \EOF
@@ -183,7 +185,7 @@ esac
 EOF
 
 chmod +x /etc/init.d/ovirt
-/sbin/chkconfig ovirt on
+chkconfig ovirt on
 
 echo "Setting up libvirt interfaces"
 # make libvirtd listen on the external interfaces
@@ -278,7 +280,7 @@ echo "Re-creating cracklib dicts"
 # checking on the ovirt host
 # unfortunately we can't create an empty cracklib dict, so we create it
 # with a single entry "1"
-echo 1 | /usr/sbin/packer >& /dev/null
+echo 1 | packer >& /dev/null
 
 echo "Forcing C locale"
 # force logins (via ssh, etc) to use C locale, since we remove locales

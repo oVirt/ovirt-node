@@ -165,7 +165,7 @@ esac
 chkconfig ovirt-wui-dev-first-run off
 EOF
 chmod +x $first_run_file
-/sbin/chkconfig ovirt-wui-dev-first-run on
+chkconfig ovirt-wui-dev-first-run on
 
 cat > /etc/init.d/ovirt-wui-dev << \EOF
 #!/bin/bash
@@ -253,7 +253,7 @@ case "$1" in
 esac
 EOF
 chmod +x /etc/init.d/ovirt-wui-dev
-/sbin/chkconfig ovirt-wui-dev on
+chkconfig ovirt-wui-dev on
 
 # get the PXE boot image; this can take a while
 PXE_URL=http://ovirt.org/download

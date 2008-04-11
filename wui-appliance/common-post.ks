@@ -1,3 +1,6 @@
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+export PATH
+
 # pretty login screen..
 g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
 n=$(printf '\33[m')            # similar to n=$(tput sgr0)
@@ -54,10 +57,10 @@ case "$1" in
         exit 2
 esac
 
-/sbin/chkconfig ovirt-wui-first-run off
+chkconfig ovirt-wui-first-run off
 EOF
 chmod +x /etc/init.d/ovirt-wui-first-run
-/sbin/chkconfig ovirt-wui-first-run on
+chkconfig ovirt-wui-first-run on
 
 cat > /etc/yum.repos.d/ovirt-management.repo << \EOF
 [ovirt-management]
