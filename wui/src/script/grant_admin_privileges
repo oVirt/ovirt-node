@@ -6,8 +6,8 @@ $: << "/usr/share/ovirt-wui/app"
 require 'rubygems'
 require 'active_record'
 require 'erb'
+require 'models/pool.rb'
 require 'models/hardware_pool.rb'
-require 'models/motor_pool.rb'
 require 'models/permission.rb'
 
 def database_configuration
@@ -31,15 +31,15 @@ ActiveRecord::Base.establish_connection(
                                         :database => $develdb['database']
                                         )
 
-$hwpool = MotorPool.find(:first)
+$hwpool = HardwarePool.get_default_pool
 if $hwpool
   Permission.new( { :privilege => Permission::MONITOR,
                     :user => ARGV[0],
-                    :hardware_pool_id => $hwpool.id}).save
+                    :pool_id => $hwpool.id}).save
   Permission.new( { :privilege => Permission::ADMIN,
                     :user => ARGV[0],
-                    :hardware_pool_id => $hwpool.id}).save
+                    :pool_id => $hwpool.id}).save
   Permission.new( { :privilege => Permission::DELEGATE,
                     :user => ARGV[0],
-                    :hardware_pool_id => $hwpool.id}).save
+                    :pool_id => $hwpool.id}).save
 end

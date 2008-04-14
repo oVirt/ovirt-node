@@ -25,8 +25,7 @@
   <%- end -%>
 
   <div class="actions">
-    <%= link_to "Back to #{@quota.host_collection.name}", { :controller => 'pool', :action => 'show', :id => @quota.host_collection }, { :class => "show" } if @quota.host_collection %>
-    <%= link_to "Back to #{@quota.vm_library.name}", { :controller => 'library', :action => 'show', :id => @quota.vm_library_id }, { :class => "show" } if @quota.vm_library %>
+    <%= link_to "Back to #{@quota.pool.name}", { :controller => @quota.pool.get_controller, :action => 'show', :id => @quota.pool }, { :class => "show" } %>
   </div>
 
 </div>

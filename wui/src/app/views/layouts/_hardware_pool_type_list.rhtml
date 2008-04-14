@@ -1,29 +1,15 @@
 <div class="inside">
-  <%- if defined? organizational_pools and ! organizational_pools.nil? -%>
+  <%- if defined? hardware_pools and ! hardware_pools.nil? -%>
   <div class="data-table-column">
-    <strong class="header">Hardware Pools (<%= organizational_pools.size -%>)</strong>
-    <%= render :partial => "/pool/list", :locals => { :hardware_pools => organizational_pools } %>
+    <strong class="header">Hardware Pools (<%= hardware_pools.size -%>)</strong>
+    <%= render :partial => "/hardware/list", :locals => { :hardware_pools => hardware_pools } %>
   </div> <!-- end .data-table-column -->
   <%- end -%>
 
-  <%- if defined? network_maps and ! network_maps.nil? -%>
+  <%- if defined? vm_resource_pools and ! vm_resource_pools.nil? -%>
   <div class="data-table-column">
-    <strong class="header">Maps (<%= network_maps.size -%>)</strong>
-    <%= render :partial => "/network_map/list", :locals => { :network_maps => network_maps } %>
-  </div> <!-- end .data-table-column -->
-  <%- end -%>
-
-  <%- if defined? host_collections and ! host_collections.nil? -%>
-  <div class="data-table-column">
-    <strong class="header">Collections (<%= host_collections.size -%>)</strong>
-    <%= render :partial => "/collection/list", :locals => { :host_collections => host_collections } %>
-  </div> <!-- end .data-table-column -->
-  <%- end -%>
-
-  <%- if defined? vm_libraries and ! vm_libraries.nil? -%>
-  <div class="data-table-column">
-    <strong class="header">VM Libraries (<%= vm_libraries.size -%>)</strong>
-    <%= render :partial => "/library/list", :locals => { :vm_libraries => vm_libraries } %>
+    <strong class="header">VM Resource Pools (<%= vm_resource_pools.size -%>)</strong>
+    <%= render :partial => "/resources/list", :locals => { :vm_resource_pools => vm_resource_pools } %>
   </div> <!-- end .data-table-column -->
   <%- end -%>
 

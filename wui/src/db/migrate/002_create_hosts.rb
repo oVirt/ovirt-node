@@ -31,8 +31,8 @@ class CreateHosts < ActiveRecord::Migration
       t.column :hardware_pool_id,           :integer, :null => false
     end
 
-    execute "alter table hosts add constraint fk_host_hw_pools
-             foreign key (hardware_pool_id) references hardware_pools(id)"
+    execute "alter table hosts add constraint fk_host_pools
+             foreign key (hardware_pool_id) references pools(id)"
   end
 
   def self.down

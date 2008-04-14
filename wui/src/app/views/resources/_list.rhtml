@@ -1,0 +1,4 @@
+<% for vm_resource_pool in vm_resource_pools %>
+  <div><%= link_to vm_resource_pool.name, { :controller => 'resources', :action => 'show', :id => vm_resource_pool }, { :class => "show" } %></div>
+<% end %>
+

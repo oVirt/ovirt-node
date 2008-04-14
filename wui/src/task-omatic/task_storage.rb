@@ -27,7 +27,6 @@ require 'models/iscsi_storage_pool.rb'
 require 'models/nfs_storage_pool.rb'
 require 'models/iscsi_storage_volume.rb'
 require 'models/nfs_storage_volume.rb'
-require 'models/motor_pool.rb'
 
 def refresh_pool(task)
   puts "refresh_pool"

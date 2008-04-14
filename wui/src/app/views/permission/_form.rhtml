@@ -1,8 +1,7 @@
 <%= error_messages_for 'permission' %>
 
 <!--[form:permission]-->
-<%= hidden_field_with_label "Hardware Pool", 'permission', 'hardware_pool_id', @permission.hardware_pool.name if @permission.hardware_pool  %>
-<%= hidden_field_with_label "Vm Library", 'permission', 'vm_library_id', @permission.vm_library.name if @permission.vm_library  %>
+<%= hidden_field_with_label "Pool", 'permission', 'pool_id', @permission.pool.name %>
 
 <%= select_with_label 'Privilege', 'permission', 'privilege', Permission::PRIVILEGES  %>
 

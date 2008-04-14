@@ -1,0 +1,44 @@
+    <div id="data">
+      <div class="inside">
+
+         <div id="dataTableWrapper">
+
+          <div class="dataTable">
+              <div class="inside">
+
+                <div class="data-table-column">
+                <% form_tag :action => 'create' do %>
+                  <%= render :partial => 'form' %>
+                  <%= submit_tag "Create" %>
+                <% end %>
+               </div>
+
+                <div class="data-table-column">
+                  <strong class="header">Current VM Resource Pools (<%= @vm_resource_pool.superpool.sub_vm_resource_pools.size %>)</strong>
+                  <% for resource in @vm_resource_pool.superpool.sub_vm_resource_pools %>
+                  <div class="hardware-item"><%= link_to resource.name, { :controller => "resources", :action => "show", :id => resource }, { } %></div>
+                  <% end %>
+                </div>
+
+          </div> <!-- end #dataTableWrapper -->
+
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+    <div class="heading">&nbsp;</div>
+    <div class="tools">
+      <h3>Actions</h3>
+      <div class="actions">
+        <div><%= link_to "back to #{@vm_resource_pool.superpool.name}", { :controller => @vm_resource_pool.superpool.get_controller, :action => 'show', :id => @vm_resource_pool.superpool }, { :class => "" } %></div>
+      </div>
+    </div>
+
+  </td>
+
+
+<%- content_for :title do -%>
+<%= _("New VM Resource Pool") %>
+<%- end -%>
+

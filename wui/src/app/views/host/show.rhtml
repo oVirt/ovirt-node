@@ -36,7 +36,7 @@
   </ul>
   <% end -%>
   <ul class="actions">
-    <li class="action"><%= link_to "Back to #{@host.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @host.hardware_pool.id }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "Back to #{@host.hardware_pool.name}", { :controller => 'hardware', :action => 'show', :id => @host.hardware_pool.id }, { :class => "list" } %></li>
   </ul>
   </ul>
 </div>

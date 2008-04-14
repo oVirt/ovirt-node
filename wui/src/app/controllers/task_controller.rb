@@ -25,7 +25,7 @@ class TaskController < ApplicationController
   def show
     @task = Task.find(params[:id])
     if @task[:type] == VmTask.name
-      set_perms(@task.vm.vm_library)
+      set_perms(@task.vm.vm_resource_pool)
     elsif @task[:type] == StorageTask.name 
       set_perms(@task.storage_pool.hardware_pool)
     elsif @task[:type] == HostTask.name 

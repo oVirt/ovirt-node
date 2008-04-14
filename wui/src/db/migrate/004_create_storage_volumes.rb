@@ -45,8 +45,8 @@ class CreateStorageVolumes < ActiveRecord::Migration
       t.column :filename,                   :string
     end
 
-    execute "alter table storage_pools add constraint fk_storage_pool_hw_pools
-             foreign key (hardware_pool_id) references hardware_pools(id)"
+    execute "alter table storage_pools add constraint fk_storage_pool_pools
+             foreign key (hardware_pool_id) references pools(id)"
     execute "alter table storage_volumes add constraint fk_storage_volume_st_pools
              foreign key (storage_pool_id) references storage_pools(id)"
 

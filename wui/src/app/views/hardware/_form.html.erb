@@ -1,0 +1,10 @@
+<%= error_messages_for 'pool' %>
+
+<!--[form:hardware_pool]-->
+<%= hidden_field_with_label 'Parent Hardware Pool', 'pool', 'superpool_id', @pool.superpool.name if @pool.superpool %>
+
+<%= text_field_with_label 'Name', 'pool', 'name'  %>
+
+<%= focus('pool_name') %>
+
+<!--[eoform:pool]-->

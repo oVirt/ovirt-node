@@ -7,12 +7,11 @@
               <div class="inside">
 
                 <div class="data-table-column">
-
-                <% form_tag :action => 'create' do %>
+                <% form_tag :action => 'update', :id => @vm_resource_pool do %>
                   <%= render :partial => 'form' %>
-                  <%= submit_tag "Create" %>
+                  <%= submit_tag 'Edit' %>
                 <% end %>
-                </div>
+                 </div>
 
               </div> <!-- end #data-table.inside -->
             </div> <!-- end #dataTable -->
@@ -28,12 +27,11 @@
     <div class="tools">
     <h3>Actions</h3>
     <div class="actions">
-      <%= link_to "Back to #{@quota.pool.name}", { :controller => @quota.pool.get_controller, :action => 'show', :id => @quota.pool }, { :class => "show" } %>
+      <%= link_to "Back to #{@vm_resource_pool.name}", { :action => 'show', :id => @vm_resource_pool }, { :class => "show" } %>
     </div>
     </div>
-
   </td>
 
 <%- content_for :title do -%>
-<%= _("New Quota") %>
+<%= "Editing VM Resource Pool #{@vm_resource_pool.name}" %>
 <%- end -%>

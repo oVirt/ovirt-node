@@ -2,20 +2,19 @@
         <% selected = "selected" if controller.controller_name == "dashboard" && params[:action] == "index" %>
         <%= link_to "Dashboard", { :controller => "dashboard" }, { :id => "dashboard", :class => "#{selected}" } %>
 
-        <% for pool in OrganizationalPool.find(:all) %>
+        <% pool = HardwarePool.get_default_pool %>
           <div class="group">
             <% selected = (pool.id == params[:id].to_i)? "selected" : ""  %>
-            <%= link_to "%s %s" % ["", pool.name], { :controller => 'pool', :action => 'show', :id => pool }, { :class => "pool #{selected}" } %>
-            <% for map in pool.network_maps %>
+            <%= link_to "%s %s" % ["", pool.name], { :controller => 'hardware', :action => 'show', :id => pool }, { :class => "pool #{selected}" } %>
+            <% for map in pool.sub_hardware_pools %>
               <% selected = (map.id == params[:id].to_i)? "selected" : ""  %>
-              <%= link_to "%s %s" % [image_tag("map.png"), map.name], { :controller => "network_map", :action => "show", :id => map }, { :class => "map #{selected}" } %>
-              <% for collection in map.host_collections %>
+              <%= link_to "%s %s" % [image_tag("map.png"), map.name], { :controller => "hardware", :action => "show", :id => map }, { :class => "map #{selected}" } %>
+              <% for collection in map.sub_hardware_pools %>
                 <% selected = (collection.id == params[:id].to_i)? "selected" : "#{collection.id} != #{params[:id]}"  %>
                 <% # FIXME: this doesn't decend into sub-collections for now %>
-                <%= link_to "%s %s" % [image_tag("host.png"), collection.name], { :controller => "collection", :action => "show", :id => collection }, { :class => "collection #{selected}" } %>
+                <%= link_to "%s %s" % [image_tag("host.png"), collection.name], { :controller => "hardware", :action => "show", :id => collection }, { :class => "collection #{selected}" } %>
               <% end %>
             <% end %>
           </div>
-        <%- end -%>
 
       </div> <!-- end #tree -->

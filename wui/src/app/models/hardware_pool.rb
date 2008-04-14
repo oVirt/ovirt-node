@@ -17,20 +17,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-class HardwarePool < ActiveRecord::Base
-
-  # overloading this method such that we can use permissions.admins to get all the admins for an object
-  has_many :permissions, :dependent => :destroy, :order => "id ASC" do
-      def admins
-          find_all_by_privilege(Permission::ADMIN)
-      end
-      def monitors
-          find_all_by_privilege(Permission::MONITOR)
-      end
-      def delegates
-          find_all_by_privilege(Permission::DELEGATE)
-      end
-  end
+class HardwarePool < Pool
 
   has_many :hosts, :dependent => :nullify, :order => "id ASC" do
     def total_cpus
@@ -44,44 +31,17 @@ class HardwarePool < ActiveRecord::Base
     end
   end
 
-  belongs_to :superpool, :class_name => "HardwarePool", :foreign_key => "superpool_id"
-#  has_many :subpools, :class_name => "HardwarePool", :foreign_key => "superpool_id", :dependent => :nullify, :order => "id ASC"
-
-  def self.list_for_user(user)
-    find(:all, :include => "permissions", 
-         :conditions => "permissions.user='#{user}' and permissions.privilege='#{Permission::ADMIN}'")
-  end
-
-  def can_monitor(user)
-    has_privilege(user, Permission::MONITOR)
-  end
-  def can_delegate(user)
-    has_privilege(user, Permission::DELEGATE)
-  end
-  def is_admin(user)
-    has_privilege(user, Permission::ADMIN)
-  end
-
   def get_type_label
     "Hardware Pool"
   end
 
   def get_controller
-    return 'dashboard' 
+    return 'hardware' 
   end
-  def has_privilege(user, privilege)
-    pool = self
-    # prevent infinite loops
-    visited_pools = []
-    while (not pool.nil? || visited_pools.include?(pool))
-      if (pool.permissions.find(:first, 
-                           :conditions => "permissions.privilege = '#{privilege}' and permissions.user = '#{user}'"))
-        return true
-      end
-      visited_pools << pool
-      pool = pool.superpool
-    end
-    return false
+
+  def self.get_default_pool
+    find(:first, :include => "permissions", :order => "pools.id ASC", 
+         :conditions => "superpool_id is null")
   end
 
   def move_contents_and_destroy
@@ -104,4 +64,11 @@ class HardwarePool < ActiveRecord::Base
   def storage_volumes
     storage_pools.collect { |pool| pool.storage_volumes}.flatten
   end
+
+  def full_resources(exclude_vm = nil)
+    total = total_resources
+    labels = RESOURCE_LABELS
+    return {:total => total, :labels => labels}
+  end
+
 end

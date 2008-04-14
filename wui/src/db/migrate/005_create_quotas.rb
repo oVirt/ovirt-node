@@ -17,18 +17,22 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-class DashboardController < ApplicationController
+class CreateQuotas < ActiveRecord::Migration
+  def self.up
+    create_table :quotas do |t|
+      t.column :total_vcpus,                :integer
+      t.column :total_vmemory,              :integer
+      t.column :total_vnics,                :integer
+      t.column :total_storage,              :integer
+      t.column :total_vms,                  :integer
+      t.column :pool_id,                    :integer
+    end
 
-  def index
-    @default_pool = HardwarePool.get_default_pool
-    set_perms(@default_pool)
-    #remove these soon
-    @hardware_pools = HardwarePool.find(:all)
-    @available_hosts = Host.find(:all)
-    @available_storage_volumes = StorageVolume.find(:all)
-    @storage_pools = StoragePool.find(:all)
-    @hosts = Host.find(:all)
-    @storage_volumes = StorageVolume.find(:all)
-    @vms = Vm.find(:all)
+    execute "alter table quotas add constraint fk_quotas_pools
+             foreign key (pool_id) references pools(id)"
+  end
+
+  def self.down
+    drop_table :quotas
   end
 end
