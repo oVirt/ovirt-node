@@ -18,9 +18,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class Permission < ActiveRecord::Base
-  # should belong_to _either_ a Hardware Pool _or_ a VM Library -- not both
-  belongs_to :hardware_pool
-  belongs_to :vm_library
+  belongs_to :pool
 
   MONITOR = "monitor"
   ADMIN = "admin"

@@ -12,8 +12,8 @@
   <h2>Actions</h2>
   <ul class="actions">
     <li class="action"><%= link_to 'Show', { :action => 'show', :id => @vm }, { :class => "show" } %></li>
-    <%if @vm.vm_library  -%>
-       <li class="action"><%= link_to 'Back to Vm Library', { :controller => 'library', :action => 'show', :id => @vm.vm_library_id }, { :class => "show" } %></li>
+    <%if @vm.vm_resource_pool  -%>
+       <li class="action"><%= link_to 'Back to Vm Resource Pool', { :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool_id }, { :class => "show" } %></li>
     <% end  -%>
     <%if @vm.host  -%>
       <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @vm.host_id }, { :class => "show"  } %></li>

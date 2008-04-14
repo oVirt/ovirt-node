@@ -29,7 +29,6 @@ require 'dutils'
 require 'models/host'
 require 'models/hardware_pool'
 require 'models/permission'
-require 'models/motor_pool'
 
 if ARGV.length != 1
   exit
@@ -66,6 +65,6 @@ if $host == nil
            "arch" => info.model,
            "memory" => info.memory,
            "is_disabled" => 0,
-           "hardware_pool" => MotorPool.find(:first)
+           "hardware_pool" => HardwarePool.get_default_pool
            ).save
 end

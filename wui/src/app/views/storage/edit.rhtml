@@ -12,6 +12,6 @@
   <h2>Actions</h2>
   <ul class="actions">
     <li class="action"><%= link_to 'Show', { :action => 'show', :id => @storage_pool }, { :class => "show" } %></li>
-    <li class="action"><%= link_to "Back to #{@storage_pool.hardware_pool.name}", { :controller => 'pool', :action => 'show', :id => @storage_pool.hardware_pool.id }, { :class => "list" } %></li>
+    <li class="action"><%= link_to "Back to #{@storage_pool.hardware_pool.name}", { :controller => 'hardware', :action => 'show', :id => @storage_pool.hardware_pool.id }, { :class => "list" } %></li>
   </ul>
 </div>

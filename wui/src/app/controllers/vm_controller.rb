@@ -29,7 +29,7 @@ class VmController < ApplicationController
     @actions = @vm.get_action_and_label_list
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this vm: redirecting to top level'
-      redirect_to :controller => 'library', :action => 'list'
+      redirect_to :controller => 'resources', :action => 'list'
     end
   end
 
@@ -63,7 +63,7 @@ class VmController < ApplicationController
       else
         flash[:notice] = 'Error in inserting task.'
       end
-      redirect_to :controller => 'library', :action => 'show', :id => @vm.vm_library
+      redirect_to :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool
     else
       render :action => 'new'
     end
@@ -98,14 +98,14 @@ class VmController < ApplicationController
   end
 
   def destroy
-    vm_library = @vm.vm_library_id
+    vm_resource_pool = @vm.vm_resource_pool_id
     if ((@vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED) or
         (@vm.state == Vm::STATE_PENDING and @vm.get_pending_state == Vm::STATE_PENDING))
       @vm.destroy
-      if vm_library
-        redirect_to :controller => 'library', :action => 'show', :id => vm_library
+      if vm_resource_pool
+        redirect_to :controller => 'resources', :action => 'show', :id => vm_resource_pool
       else
-        redirect_to :controller => 'library', :action => 'list'
+        redirect_to :controller => 'resources', :action => 'list'
       end
     else
       flash[:notice] = "Vm must be stopped to destroy it."
@@ -138,20 +138,20 @@ class VmController < ApplicationController
 
   protected
   def pre_new
-    # if no vm_library is passed in, find (or auto-create) it based on host_collection_id
-    unless params[:vm_library_id]
-      unless params[:host_collection_id]
-        flash[:notice] = "Library or Host Collection is required."
+    # if no vm_resource_pool is passed in, find (or auto-create) it based on hardware_pool_id
+    unless params[:vm_resource_pool_id]
+      unless params[:hardware_pool_id]
+        flash[:notice] = "VM Resource Pool or Hardware Pool is required."
         redirect_to :controller => 'dashboard'
       end
-      @collection = HostCollection.find(params[:host_collection_id])
+      @hardware_pool = HardwarePool.find(params[:hardware_pool_id])
       @user = get_login_user
-      library = @collection.vm_libraries.find(:first, :conditions => ["name = '#{@user}'"])
-      if library
-        params[:vm_library_id] = library.id
+      vm_resource_pool = @hardware_pool.sub_vm_resource_pools.select {|pool| pool.name == @user}.first
+      if vm_resource_pool
+        params[:vm_resource_pool_id] = vm_resource_pool.id
       else
-        @library = VmLibrary.new({:name => library, :host_collection_id => params[:host_collection_id]})
-        @vm_library_name = @user
+        @vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool, :superpool_id => params[:hardware_pool_id]})
+        @vm_resource_pool_name = @user
       end
     end
 
@@ -161,39 +161,39 @@ class VmController < ApplicationController
     uuid = ["%02x" * 4, "%02x" * 2, "%02x" * 2, "%02x" * 2, "%02x" * 6].join("-") % 
       Array.new(16) {|x| rand(0xff) }
     newargs = { 
-      :vm_library_id => params[:vm_library_id],
+      :vm_resource_pool_id => params[:vm_resource_pool_id],
       :vnic_mac_addr => mac.collect {|x| "%02x" % x}.join(":"),
       :uuid => uuid
     }
     @vm = Vm.new( newargs )
-    unless params[:vm_library_id]
-      @vm.vm_library = @library
+    unless params[:vm_resource_pool_id]
+      @vm.vm_resource_pool = @vm_resource_pool
     end
-    @perm_obj = @vm.vm_library
-    @redir_controller = 'library'
+    @perm_obj = @vm.vm_resource_pool
+    @redir_controller = 'resources'
   end
   def pre_create
     params[:vm][:state] = Vm::STATE_PENDING
-    library_name = params[:vm_library_name]
-    collection_id = params[:host_collection_id]
-    if library_name and collection_id
-      library = VmLibrary.new({:name => library_name, :host_collection_id => collection_id})
-      library.save
-      params[:vm][:vm_library_id] = library.id
+    vm_resource_pool_name = params[:vm_resource_pool_name]
+    hardware_pool_id = params[:hardware_pool_id]
+    if vm_resource_pool_name and hardware_pool_id
+      vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool_name, :superpool_id => hardware_pool_id})
+      vm_resource_pool.save
+      params[:vm][:vm_resource_pool_id] = vm_resource_pool.id
     end
     #set boot device to network for first boot (install)
     params[:vm][:boot_device] = Vm::BOOT_DEV_NETWORK unless params[:vm][:boot_device]
     @vm = Vm.new(params[:vm])
-    @perm_obj = @vm.vm_library
-    @redir_controller = 'library'
+    @perm_obj = @vm.vm_resource_pool
+    @redir_controller = 'resources'
   end
   def pre_show
     @vm = Vm.find(params[:id])
-    @perm_obj = @vm.vm_library
+    @perm_obj = @vm.vm_resource_pool
   end
   def pre_edit
     @vm = Vm.find(params[:id])
-    @perm_obj = @vm.vm_library
+    @perm_obj = @vm.vm_resource_pool
     @redir_obj = @vm
   end
   def pre_vm_admin

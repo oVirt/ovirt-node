@@ -27,13 +27,6 @@ class HostController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def set_perms(hwpool)
-    @user = get_login_user
-    @is_admin = hwpool.is_admin(@user)
-    @can_monitor = hwpool.can_monitor(@user)
-    @can_delegate = hwpool.can_delegate(@user)
-  end
-
   def list
     @attach_to_pool=params[:attach_to_pool]
     if @attach_to_pool
@@ -54,37 +47,26 @@ class HostController < ApplicationController
   end
 
   def show
-    @host = Host.find(params[:id])
-    set_perms(@host.hardware_pool)
+    set_perms(@perm_obj)
     unless @can_monitor
       flash[:notice] = 'You do not have permission to view this host: redirecting to top level'
       redirect_to :controller => 'dashboard', :action => 'list'
     end
   end
 
+  def new
+  end
+
+  def create
+  end
+
   def edit
-    @host = Host.find(params[:id])
-    set_perms(@host.hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to edit this host'
-      redirect_to :action => 'show', :id => @host
-    end
   end
 
   def update
-    @host = Host.find(params[:id])
-    set_perms(@host.hardware_pool)
-    unless @is_admin
-      flash[:notice] = 'You do not have permission to edit this host'
-      redirect_to :action => 'show', :id => @host
-    else
-      if @host.update_attributes(params[:host])
-        flash[:notice] = '<a class="show" href="%s">%s</a> was updated.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
-        redirect_to :action => 'show', :id => @host
-      else
-        render :action => 'edit'
-      end
-    end
+  end
+
+  def destroy
   end
 
   def disable
@@ -140,6 +122,26 @@ class HostController < ApplicationController
         redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
       end
     end
+  end
+
+  private
+  #filter methods
+  def pre_new
+    flash[:notice] = 'Hosts may not be edited via the web UI'
+    redirect_to :controller => 'hardware', :action => 'show', :id => params[:hardware_pool_id]
+  end
+  def pre_create
+    flash[:notice] = 'Hosts may not be edited via the web UI'
+    redirect_to :controller => 'dashboard'
+  end
+  def pre_edit
+    @host = Host.find(params[:id])
+    flash[:notice] = 'Hosts may not be edited via the web UI'
+    redirect_to :action=> 'show', :id => @host
+  end
+  def pre_show
+    @host = Host.find(params[:id])
+    @perm_obj = @host.hardware_pool
   end
 
 

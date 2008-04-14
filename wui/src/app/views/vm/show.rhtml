@@ -86,8 +86,8 @@
         </div>
       <% end -%>
       <div class="actions">
-        <% if @vm.vm_library -%>
-          <%= link_to 'Back to Vm Library', { :controller => 'library', :action => 'show', :id => @vm.vm_library }, { :class => "list" } %>
+        <% if @vm.vm_resource_pool -%>
+          <%= link_to 'Back to Vm Resource Pool', { :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool }, { :class => "list" } %>
         <% else -%>
           <%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %>
         <% end -%>

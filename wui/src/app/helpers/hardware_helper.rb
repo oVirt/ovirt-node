@@ -17,18 +17,5 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-class DashboardController < ApplicationController
-
-  def index
-    @default_pool = HardwarePool.get_default_pool
-    set_perms(@default_pool)
-    #remove these soon
-    @hardware_pools = HardwarePool.find(:all)
-    @available_hosts = Host.find(:all)
-    @available_storage_volumes = StorageVolume.find(:all)
-    @storage_pools = StoragePool.find(:all)
-    @hosts = Host.find(:all)
-    @storage_volumes = StorageVolume.find(:all)
-    @vms = Vm.find(:all)
-  end
+module HardwareHelper
 end

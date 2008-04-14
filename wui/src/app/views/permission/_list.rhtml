@@ -15,17 +15,9 @@
   <td><%= permission.privilege %>
   <%if show_object -%>
     <td style="text-align:left;">
-      <%if permission.hardware_pool_id -%>
-        <%= link_to permission.hardware_pool.name, 
-	    { :controller => 'pool', :action => 'show', 
-	      :id => permission.hardware_pool }, { :class => "show" } %>
-    <%elsif permission.vm_library_id -%>
-        <%= link_to permission.vm_library.name, 
-	    { :controller => 'pool', :action => 'show', 
-	      :id => permission.vm_library }, { :class => "show" } %>
-    <%else -%>
-      Empty
-    <% end -%>
+      <%= link_to permission.pool.name, 
+	    { :controller => permission.pool.get_controller, :action => 'show', 
+	      :id => permission.pool }, { :class => "show" } %>
   </td>
   <% end -%>
   <%if show_actions -%>

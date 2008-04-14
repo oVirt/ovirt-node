@@ -1,0 +1,93 @@
+    <div id="data">
+      <div class="inside">
+
+<%= error_messages_for 'vm_actions' %>
+
+<script type="text/javascript">
+function confirm_and_submit(item){
+   c = true
+   if(item.options[item.options.selectedIndex].value == "destroy"){
+      c = confirm('Are you sure you want to destroy these VMs?')
+   }
+   if(c){ item.form.submit(); } else{ item.selectedIndex = 0; }
+}
+</script> 
+
+         <div id="dataTableWrapper">
+
+          <div class="dataTable">
+              <div class="inside">
+
+                <div class="data-table-column">
+<% form_tag( {:controller => 'resources', :action => 'vm_actions'}, {:name => "vm_actions", :method => "post"}) do -%>
+<%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_START_VM}]", "value" => "Start"}  %> 
+<%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_SHUTDOWN_VM}]", "value" => "Stop"}  %> 
+<select onchange="return confirm_and_submit(this)" name="vm_actions[other_actions]">
+  <option class="other">Other Actions</option>
+  <option></option>
+<% for action in @action_values %>
+  <option value="<%= action[1]%>"><%= action[0]%></option>
+<% end %>
+  <option>-------------------</option>
+  <option class="remove" value="destroy" onSelect="confirm('Are you sure?'">Destroy</option>
+</select>
+
+<br/><br/>
+
+<%= render :partial => "/vm/list", :locals => { :vms => @vms } %>
+<% end -%>
+                </div>
+
+              </div> <!-- end #data-table.inside -->
+
+            </div> <!-- end #dataTable -->
+
+            <div class="data-section">
+              <div class="data-section-header"><strong>VM Resource Pools (<%= @vm_resource_pools.size -%>)</strong></div>
+              <div class="data-section-stats">Statistics Data</div>
+              <div class="data-section-table">
+                <div class="inside">
+                <table>
+                <%for vm_resource_pool in @vm_resource_pools %>
+                <% resources = vm_resource_pool.full_resources %>
+                <td><th colspan="2">
+                  <%= link_to vm_resource_pool.name, { :action => 'show', :id => vm_resource_pool }, { :class => "show" } %>
+                </th></tr>
+                  <% for item in resources[:labels] %>
+                  <% total_limit = resources[:total][item[1]]
+                     total_limit = "unlimited" if total_limit.nil? %>
+                    <tr>
+                    <th><%= item[0]%>:</th>
+                    <td><%= resources[:allocated][:current][item[1]] %> / <%= resources[:allocated][:pending][item[1]] %> / <%= total_limit %>
+                        <%= item[2]%></td>
+                    </tr>
+                  <% end %>
+                <% end %>
+                </table>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- end #dataTableWrapper -->
+
+      </div> <!-- end #data.inside -->
+      </div> <!-- end #data -->
+
+  </td>
+  <td id="right">
+          <div class="heading">&nbsp;</div>
+          <div class="tools">
+            <h3>Actions</h3>
+            <div class="actions">
+              <%= link_to "Back to Dashboard", { :controller => 'dashboard' }, { :class => "" } %>
+            </div>
+          </div>
+
+          <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
+  </td>
+
+<%- content_for :title do -%>
+<%= _("Manage Virtual Machines") %>
+<%- end -%>
+
+

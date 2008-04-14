@@ -22,10 +22,8 @@ include REXML
 require 'utils'
 
 require 'models/vm.rb'
-require 'models/vm_library.rb'
+require 'models/vm_storage_pool.rb'
 require 'models/hardware_pool.rb'
-require 'models/network_map.rb'
-require 'models/host_collection.rb'
 require 'models/task.rb'
 require 'models/host.rb'
 require 'models/hardware_pool.rb'
@@ -36,7 +34,6 @@ require 'models/storage_task.rb'
 require 'models/vm_task.rb'
 require 'models/storage_pool.rb'
 require 'models/iscsi_storage_pool.rb'
-require 'models/motor_pool.rb'
 
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
                   macAddr, bridge, diskDevices)
@@ -296,7 +293,8 @@ def start_vm(task)
     # OK, now that we found the VM, go looking in the hardware_pool
     # hosts to see if there is a host that will fit these constraints
     host = nil
-    vm.vm_library.host_collection.hosts.each do |curr|
+
+    vm.vm_resource_pool.get_hardware_pool.hosts.each do |curr|
       if curr.num_cpus >= vm.num_vcpus_allocated and curr.memory >= vm.memory_allocated
         host = curr
         break
@@ -339,7 +337,7 @@ def start_vm(task)
     vm.storage_volumes.each do |volume|
       # here, we need to iterate through each volume and possibly attach it
       # to the host we are going to be using
-      storage_pool = StoragePool.find(volume.storage_pool_id)
+      storage_pool = volume.storage_pool
 
       if storage_pool == nil
         # Hum.  Specified by the VM description, but not in the storage pool?

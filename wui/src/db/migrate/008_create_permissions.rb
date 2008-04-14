@@ -17,18 +17,17 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-class DashboardController < ApplicationController
+class CreatePermissions < ActiveRecord::Migration
+  def self.up
+    create_table :permissions do |t|
+      t.column :privilege,                  :string
+      t.column :user,                       :string
+      t.column :pool_id,                    :integer
+    end
+  end
 
-  def index
-    @default_pool = HardwarePool.get_default_pool
-    set_perms(@default_pool)
-    #remove these soon
-    @hardware_pools = HardwarePool.find(:all)
-    @available_hosts = Host.find(:all)
-    @available_storage_volumes = StorageVolume.find(:all)
-    @storage_pools = StoragePool.find(:all)
-    @hosts = Host.find(:all)
-    @storage_volumes = StorageVolume.find(:all)
-    @vms = Vm.find(:all)
+
+  def self.down
+    drop_table :permissions
   end
 end

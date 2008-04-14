@@ -88,18 +88,4 @@ module ApplicationHelper
     }
   end
 
-  # this should probably be in the model instead
-  def hardware_pool_type_to_controller(type)
-    case type.to_s
-      when "NetworkMap"
-        return 'network_map'
-      when "HostCollection"
-        return 'collection'
-      when "OrganizationalPool"
-        return 'pool'
-      else
-        return 'dashboard'
-    end
-  end
-
 end

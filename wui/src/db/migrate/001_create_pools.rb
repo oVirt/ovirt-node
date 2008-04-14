@@ -17,18 +17,20 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-class DashboardController < ApplicationController
+class CreatePools < ActiveRecord::Migration
+  def self.up
+    create_table :pools do |t|
+      t.column :name,               :string
+      t.column :type,               :string
+      t.column :superpool_id,       :integer
+    end
 
-  def index
-    @default_pool = HardwarePool.get_default_pool
-    set_perms(@default_pool)
-    #remove these soon
-    @hardware_pools = HardwarePool.find(:all)
-    @available_hosts = Host.find(:all)
-    @available_storage_volumes = StorageVolume.find(:all)
-    @storage_pools = StoragePool.find(:all)
-    @hosts = Host.find(:all)
-    @storage_volumes = StorageVolume.find(:all)
-    @vms = Vm.find(:all)
+    execute "alter table pools add constraint fk_pool_superpool
+             foreign key (superpool_id) references pools(id)"
+    mp = HardwarePool.create( :name=>'default')
+  end
+
+  def self.down
+    drop_table :pools
   end
 end

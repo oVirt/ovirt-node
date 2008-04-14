@@ -20,7 +20,7 @@
 require 'util/ovirt'
 
 class Vm < ActiveRecord::Base
-  belongs_to :vm_library
+  belongs_to :vm_resource_pool
   belongs_to :host
   has_many :vm_tasks, :dependent => :destroy, :order => "id DESC"
   has_and_belongs_to_many :storage_volumes
@@ -153,7 +153,7 @@ class Vm < ActiveRecord::Base
   #taskomatic should set use_pending_values to false
   def resources_for_start?(use_pending_values = true)
     return_val = true
-    resources = vm_library.available_resources_for_vm(self, use_pending_values)
+    resources = vm_resource_pool.available_resources_for_vm(self, use_pending_values)
     return_val = false unless not(memory_allocated) or resources[:memory].nil? or memory_allocated <= resources[:memory]
     return_val = false unless not(num_vcpus_allocated) or resources[:cpus].nil? or num_vcpus_allocated <= resources[:cpus]
     return_val = false unless resources[:nics].nil? or resources[:nics] >= 1
@@ -169,7 +169,7 @@ class Vm < ActiveRecord::Base
 
   protected
   def validate
-    resources = vm_library.max_resources_for_vm(self)
+    resources = vm_resource_pool.max_resources_for_vm(self)
     errors.add("memory_allocated_in_mb", "violates quota") unless not(memory_allocated) or resources[:memory].nil? or memory_allocated <= resources[:memory]
     errors.add("num_vcpus_allocated", "violates quota") unless not(num_vcpus_allocated) or resources[:cpus].nil? or num_vcpus_allocated <= resources[:cpus]
     errors.add_to_base("No available nics in quota") unless resources[:nics].nil? or resources[:nics] >= 1
