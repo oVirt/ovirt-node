@@ -21,6 +21,7 @@ cyrus-sasl-lib
 collectd
 tftp
 nc
+bind-utils
 -policycoreutils
 -audit-libs-python
 -hdparm

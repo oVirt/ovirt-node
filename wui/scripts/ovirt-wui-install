@@ -1,0 +1,121 @@
+#!/bin/bash
+
+OVIRT_DIR=/usr/share/ovirt-wui
+OVIRT_CFG=/etc/ovirt-wui
+
+DATABASE=ovirt
+USERNAME=ovirt
+
+EXISTS_FILE=${OVIRT_CFG}/db/exists
+PW_FILE=${OVIRT_CFG}/db/dbaccess
+STEP_TICKER=0.fedora.pool.ntp.org
+STEP_FILE=/etc/ntp/step-tickers
+SASL_FILE=/etc/sasl2/libvirt.conf
+
+DISABLE_SVCS="libvirtd" 
+ENABLE_SVCS="ntpd httpd postgresql ovirt-wui"
+
+usage() {
+    echo "usage: $0 [-p password]"
+    echo "  -p : password to use for database connections, if omitted"
+    echo "       a random password will be generated"
+    exit 1
+} >&2
+
+PASSWD=
+for i ; do
+    case $1 in
+        -p)
+            [ $# -lt 2 ] && usage
+            PASSWD="$2"
+            shift; shift;;
+        -?|-*)
+            usage;;
+    esac
+done
+
+{
+for svc in $DISABLE_SVCS ; do
+    chkconfig $svc off
+    service $svc off
+done
+
+for svc in $ENABLE_SVCS ; do
+    chkconfig $svc on
+done
+} > /dev/null 2>&1
+
+# setup an NTP step-ticker
+if [ -f $STEP_FILE ]; then
+    if ! grep "^$${STEP_TICKER}$" $STEP_FILE > /dev/null 2>&1 ; then
+    echo $STEP_TICKER >> $STEP_FILE
+    fi
+fi
+
+# setup gssapi in the mech_list
+if [ `egrep -c '^mech_list: gssapi' $SASL_FILE` -eq 0 ]; then
+    sed -i -e 's/^\([[:space:]]*mech_list.*\)/#\1/' $SASL_FILE
+    echo "mech_list: gssapi" >> $SASL_FILE
+fi
+
+service postgresql stop > /dev/null 2>&1
+service postgresql initdb > /dev/null 2>&1
+echo "local all all trust" > /var/lib/pgsql/data/pg_hba.conf 
+echo "host all all 127.0.0.1 255.255.255.0 trust" >> /var/lib/pgsql/data/pg_hba.conf 
+service postgresql stop > /dev/null 2>&1
+service postgresql start
+[ $? != 0 ] && echo "Failed to start database" && exit 1
+
+if [ -z $PASSWD ]; then
+    # generate random pg user password
+    PASSWD=$(/usr/bin/pwgen -1 -n 8 -s)
+fi
+
+echo -e "${PASSWD}\n" > $PW_FILE
+
+# drop old db
+su - postgres -c "/usr/bin/dropdb $DATABASE > /dev/null 2>&1"
+
+# create new DB
+su - postgres -c "/usr/bin/createdb $DATABASE"
+[ $? != 0 ] && echo "Failed to create database $DATABASE" && exit 1
+
+su - postgres -c "psql --dbname $DATABASE <<EOF
+    DROP ROLE $USERNAME;
+EOF" > /dev/null 2>&1
+
+su - postgres -c "psql --dbname $DATABASE <<EOF
+    CREATE ROLE $USERNAME LOGIN PASSWORD '$PASSWD'
+    NOINHERIT
+    VALID UNTIL 'infinity';
+    GRANT ALL ON DATABASE $DATABASE TO $USERNAME;
+EOF"
+[ $? != 0 ] && echo "Failed to run database setup" && exit 1
+
+touch $EXISTS_FILE
+
+cd ${OVIRT_DIR}
+mkdir -p log
+rake db:migrate
+cd -
+
+${OVIRT_DIR}/script/grant_admin_privileges admin
+[ $? != 0 ] && echo "Failed to grant admin privileges" && exit 1
+
+if [ -f /usr/share/ovirt-wui/ovirtadmin.tab ]; then
+    ${OVIRT_DIR}/script/grant_admin_privileges ovirtadmin
+    [ $? != 0 ] && echo "Failed to grant ovirtadmin privileges" && exit 1
+fi
+
+/usr/bin/ovirt-add-host $(hostname) ${OVIRT_DIR}/ovirt.keytab
+
+# This is temporary until we get a version of FreeIPA that runs under /ipa
+# instead of as root
+if [ -f /etc/httpd/conf.d/ipa.conf ]; then
+    /usr/bin/ovirt-fix-ipa
+    service httpd restart
+    service ipa_webgui restart
+fi
+
+exit 0
+
