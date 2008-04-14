@@ -5,9 +5,7 @@ warn() { printf "$ME: $@\n" >&2; }
 try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
 die() { warn "$@"; try_h; exit 1; }
 
-NAME=developer
 RAM=768
-IMGNAME=$NAME.img
 IMGSIZE=6
 
 ISO=
@@ -17,6 +15,10 @@ ARCH_DEFAULT=$(uname -p)
 ARCH=$ARCH_DEFAULT
 IMGDIR=$IMGDIR_DEFAULT
 
+# stupid bridge name so that if all of our checks below fail, we will still
+# fail the install
+BRIDGENAME=failme
+
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
@@ -24,17 +26,22 @@ Usage: $ME -i install_iso [-d image_dir] [-a x86_64|i686]
   -i: location of installation ISO (required)
   -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
   -a: architecture for the virtual machine (default: $ARCH_DEFAULT)
+  -v: Install in developer mode (see http://ovirt.org for details)
+  -p: Install in production mode (see http://ovirt.org for details)
   -h: display this help and exit
 EOF
 }
 
 err=0 help=0
-while getopts :a:d:i:m:h c; do
+devel=0 prod=0
+while getopts :a:d:i:hvp c; do
     case $c in
         i) ISO=$OPTARG;;
         d) IMGDIR=$OPTARG;;
         a) ARCH=$OPTARG;;
         h) help=1;;
+        v) devel=1;;
+        p) prod=1;;
 	'?') err=1; warn "invalid option: \`-$OPTARG'";;
 	:) err=1; warn "missing argument to \`-$OPTARG' option";;
         *) err=1; warn "internal error: \`-$OPTARG' not handled";;
@@ -46,13 +53,16 @@ test $help = 1 && { usage; exit 0; }
 test -z "$ISO" && usage "no ISO file specified"
 test -r "$ISO" || usage "missing or unreadable ISO file: \`$ISO'"
 
+test $devel = 1 -a $prod = 1 && usage "Can only specify one of -v and -p"
+test $devel = 0 -a $prod = 0 && usage "Must specify one of -v or -p"
+
 case $ARCH in
     i686|x86_64);;
     *) usage "invalid architecture: \`$ARCH'";;
 esac
 
 gen_bridge() {
-name=${1}bridge
+name=$1
 addr=$2
 cat << EOF
 <network>
@@ -98,15 +108,18 @@ cat <<EOF
 EOF
 }
 
-if [ $ME = "create-wui-appliance.sh" ]; then
+if [ $devel = 1 ]; then
+    NAME=developer
+    BRIDGENAME=dummybridge
+
     # TODO when virFileReadAll is fixed for stdin
     #virsh net-define <(gen_dummy)
     TMPXML=$(mktemp) || exit 1
-    gen_bridge "dummy" "192.168.50.1" > $TMPXML
+    gen_bridge $BRIDGENAME "192.168.50.1" > $TMPXML
     virsh net-define $TMPXML
     rm $TMPXML
-    virsh net-start dummy
-    virsh net-autostart dummy
+    virsh net-start $BRIDGENAME
+    virsh net-autostart $BRIDGENAME
 
     # define the fake managed nodes we will use
     for i in `seq 3 5` ; do
@@ -116,29 +129,28 @@ if [ $ME = "create-wui-appliance.sh" ]; then
 	virsh define $TMPXML
 	rm $TMPXML
     done
+elif [ $prod = 1 ]; then
+    NAME=production
+    BRIDGENAME=eth1bridge
 
-    mkdir -p $IMGDIR
-    virsh destroy $NAME > /dev/null 2>&1
-    virsh undefine $NAME > /dev/null 2>&1
-    virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
-        --accelerate -v -c "$ISO" --os-type=linux --arch=$ARCH \
-        -w network:default -w network:dummy
-elif [ $ME = "setup-prod.sh" ]; then
     TMPXML=$(mktemp) || exit 1
-    gen_bridge "eth1" "192.168.25.1" > $TMPXML
+    gen_bridge $BRIDGENAME "192.168.25.1" > $TMPXML
     virsh net-define $TMPXML
     rm $TMPXML
-    virsh net-start eth1bridge
-    virsh net-autostart eth1bridge
+    virsh net-start $BRIDGENAME
+    virsh net-autostart $BRIDGENAME
     
-    /usr/sbin/brctl addif eth1bridge eth1
-    
-    virsh destroy $NAME > /dev/null 2>&1
-    virsh undefine $NAME > /dev/null 2>&1
-    virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
-        --accelerate -v -c "$ISO" --os-type=linux --arch=$ARCH \
-        -w network:default -w network:eth1bridge
-else
-    usage "This script must be run as either create-wui-appliance.sh or setup-prod.sh"
+    # unfortunately, these two can't be done by libvirt at the moment, so
+    # we do them by hand here
+    # FIXME: how do we make this persistent, so that we survive reboots?
+    /usr/sbin/brctl addif $BRIDGENAME eth1
+    /sbin/ifconfig eth1 up
 fi
 
+IMGNAME=$NAME.img
+mkdir -p $IMGDIR
+virsh destroy $NAME > /dev/null 2>&1
+virsh undefine $NAME > /dev/null 2>&1
+virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
+    --accelerate -v -c "$ISO" --os-type=linux --arch=$ARCH \
+    -w network:default -w network:$BRIDGENAME
