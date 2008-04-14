@@ -1,7 +1,7 @@
 # make sure our "hostname" resolves to management.priv.ovirt.org
 sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
 
-cat >> /etc/hosts < \EOF
+cat >> /etc/hosts << \EOF
 192.168.50.2 management.priv.ovirt.org
 192.168.50.3 node3.priv.ovirt.org
 192.168.50.4 node4.priv.ovirt.org
