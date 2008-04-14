@@ -18,4 +18,11 @@ repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-ma
 
 %include production-post.ks
 
+# get the PXE boot image; this can take a while
+PXE_URL=http://ovirt.org/download
+IMAGE=ovirt-pxe-host-image-x86_64-0.4.tar.bz2
+wget ${PXE_URL}/$IMAGE -O /tmp/$IMAGE
+tar -C / -jxvf /tmp/$IMAGE
+rm -f /tmp/$IMAGE
+
 %end
