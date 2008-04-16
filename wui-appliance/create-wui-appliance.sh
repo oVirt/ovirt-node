@@ -98,7 +98,7 @@ cat <<EOF
     <emulator>/usr/bin/qemu-kvm</emulator>
     <interface type='network'>
       <mac address='00:16:3e:12:34:$last_mac'/>
-      <source network='dummy'/>
+      <source network='dummybridge'/>
     </interface>
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' listen='127.0.0.1'/>
