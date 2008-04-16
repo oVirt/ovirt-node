@@ -19,6 +19,7 @@ cyrus-sasl-gssapi
 cyrus-sasl
 cyrus-sasl-lib
 collectd
+collectd-virt
 tftp
 nc
 bind-utils
