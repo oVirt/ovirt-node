@@ -1,14 +1,11 @@
 all: ks
 
 primary_src = \
-  wui-app-x86_64.ks	\
   wui-devel-x86_64.ks
 
 rel_ks =		\
-  wui-rel-app-i386.ks	\
-  wui-rel-app-x86_64.ks	\
-  wui-rel-devel-i386.ks	\
-  wui-rel-devel-x86_64.ks
+  wui-rel-i386.ks	\
+  wui-rel-x86_64.ks
 
 ks: $(rel_ks)
 
@@ -19,10 +16,10 @@ define ks-flatten
   mv $@-t $@
 endef
 
-wui-rel-app-%.ks: wui-app-%.ks
+wui-rel-%.ks: wui-app-%.ks
 	$(ks-flatten)
 
-wui-rel-devel-%.ks: wui-devel-%.ks
+wui-rel-%.ks: wui-devel-%.ks
 	$(ks-flatten)
 
 # Generate each wui-*-i386.ks file from the corresponding x86_64.ks one.
@@ -42,4 +39,4 @@ include .deps
 	mv $@-t $@
 
 clean:
-	rm -f wui-devel-i386.ks wui-app-i386.ks $(rel_ks) .deps
+	rm -f wui-devel-i386.ks $(rel_ks) .deps *~
