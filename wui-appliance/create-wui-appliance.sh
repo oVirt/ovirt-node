@@ -124,6 +124,16 @@ elif [ $bundled = 1 ]; then
     BRIDGENAME=eth1bridge
 fi
 
+virsh net-dumpxml $BRIDGENAME >& /dev/null
+RETVAL=$?
+if [ $( brctl show | grep -c $BRIDGENAME ) -ne 0 -a $RETVAL -ne 0 ]; then
+	# in this case, the bridge exists, but isn't managed by libvirt
+	# abort, since the user will have to clean up themselves
+	echo "Bridge $BRIDGENAME already exists.  Please make sure you"
+	echo "unconfigure $BRIDGENAME, and then try the command again"
+	exit 1
+fi
+
 # TODO when virFileReadAll is fixed for stdin
 #virsh net-define <(gen_dummy)
 virsh net-destroy $BRIDGENAME
