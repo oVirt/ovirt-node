@@ -16,9 +16,6 @@ define ks-flatten
   mv $@-t $@
 endef
 
-wui-rel-%.ks: wui-app-%.ks
-	$(ks-flatten)
-
 wui-rel-%.ks: wui-devel-%.ks
 	$(ks-flatten)
 
