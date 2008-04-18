@@ -63,6 +63,14 @@ EOF
 # be exported
 sed -i -e '/\/dev\/VolGroup00\/iSCSI[0-9].*/d' /etc/fstab
 
+# make an NFS directory with some small, fake disks and export them via NFS
+# to show off the NFS part of the WUI
+mkdir -p /ovirtnfs
+for i in `seq 1 5`; do
+    dd if=/dev/zero of=/ovirtnfs/disk$i.dsk bs=1 count=1 seek=1G
+done
+echo "/ovirtnfs 192.168.50.0/24(rw,no_root_squash)" >> /etc/exports
+
 # make sure we use ourselves as the nameserver (not what we get from DHCP)
 cat > /etc/dhclient-exit-hooks << \EOF
 echo "search priv.ovirt.org ovirt.org" > /etc/resolv.conf
