@@ -41,7 +41,7 @@ class StorageController < ApplicationController
         redirect_to :controller => 'dashboard'
       else
         conditions = "hardware_pool_id is null"
-        conditions += " or hardware_pool_id=#{pool.superpool_id}" if pool.superpool
+        conditions += " or hardware_pool_id=#{pool.parent_id}" if pool.parent
         @storage_pools = StoragePool.find(:all, :conditions => conditions)
       end
     else

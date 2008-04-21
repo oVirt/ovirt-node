@@ -30,15 +30,11 @@ class HardwareController < ApplicationController
   end
 
   def new
-    if @pool.superpool
-      @pools = @pool.superpool.subpools
-    else
-      @pools = []
-    end
+    @pools = @pool.self_and_like_siblings
   end
 
   def create
-    if @pool.save
+    if @pool.create_with_parent(@parent)
       flash[:notice] = 'Hardware Pool successfully created'
       redirect_to  :action => 'show', :id => @pool
     else
@@ -59,32 +55,35 @@ class HardwareController < ApplicationController
   end
 
   def destroy
-    superpool = @pool.superpool
-    if not(superpool)
+    parent = @pool.parent
+    if not(parent)
       flash[:notice] = "You can't delete the top level Hardware pool."
       redirect_to :action => 'show', :id => @pool
-    elsif not(@pool.subpools.empty?)
-      flash[:notice] = "You can't delete a Pool without first deleting its Subpools."
+    elsif not(@pool.children.empty?)
+      flash[:notice] = "You can't delete a Pool without first deleting its children."
       redirect_to :action => 'show', :id => @pool
     else
       @pool.move_contents_and_destroy
       flash[:notice] = 'Hardware Pool successfully destroyed'
-      redirect_to :action => 'show', :id => @pool.superpool_id
+      redirect_to :action => 'show', :id => @pool.parent_id
     end
   end
 
   private
   #filter methods
   def pre_new
-    @pool = HardwarePool.new( { :superpool_id => params[:superpool_id] } )
-    @perm_obj = @pool.superpool
+    @pool = HardwarePool.new
+    @parent = Pool.find(params[:parent_id])
+    @perm_obj = @parent
   end
   def pre_create
-    @pool = HardwarePool.create(params[:pool])
-    @perm_obj = @pool.superpool
+    @pool = HardwarePool.new(params[:pool])
+    @parent = Pool.find(params[:parent_id])
+    @perm_obj = @parent
   end
   def pre_edit
     @pool = HardwarePool.find(params[:id])
+    @parent = @pool.parent
     @perm_obj = @pool
   end
   def pre_show

@@ -1,10 +1,9 @@
 <%= error_messages_for 'vm_resource_pool' %>
 
 <!--[form:vm_resource_pool]-->
-<%= hidden_field_with_label ((@vm_resource_pool.superpool[:type] == HardwarePool.name) ? 
+<%= hidden_field_tag_with_label ((@parent[:type] == HardwarePool.name) ? 
                               "Hardware Pool" : "Parent VM Resource Pool"), 
-                            'vm_resource_pool', 'superpool_id', 
-                            @vm_resource_pool.superpool.name   %>
+                            'parent_id', @parent.id, @parent.name   %>
 
 <%= text_field_with_label "Name", 'vm_resource_pool', 'name'  %>
 

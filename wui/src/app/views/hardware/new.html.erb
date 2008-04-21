@@ -35,7 +35,7 @@
 
           <h3>Actions</h3>
             <div class="actions">
-              <%= link_to "Back to #{@pool.superpool.name}", { :controller => 'hardware', :action => 'show', :id => @pool.superpool }, { :class => "" } if @pool.superpool %>
+              <%= link_to "Back to #{@parent.name}", { :controller => 'hardware', :action => 'show', :id => @parent }, { :class => "" } if @parent %>
             </div>
           </div> <!-- end #tools -->
   </td>

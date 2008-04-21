@@ -75,9 +75,9 @@
               <%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @pool }, { :class => "create" } %>
               <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @pool }, { :class => "create" } %>
               <hr/>
-              <%= link_to 'Create Hardware Subpool', { :controller => "hardware", :action => 'new', :superpool_id => @pool }, { :class => "create" } %>
+              <%= link_to 'Create Hardware Subpool', { :controller => "hardware", :action => 'new', :parent_id => @pool }, { :class => "create" } %>
 
-              <%= link_to 'Create VM Resource Pool', { :controller => "resources", :action => 'new', :superpool_id => @pool }, { :class => "create" } %>
+              <%= link_to 'Create VM Resource Pool', { :controller => "resources", :action => 'new', :parent_id => @pool }, { :class => "create" } %>
             </div>
             <div class="actions">
               <%= link_to "Delete Pool", { :controller => 'hardware', :action => 'destroy', :id => @pool }, { :method => :post, :confirm => 'Are you sure you want to delete - %s?' % @pool.name, :class => "remove" } %>
@@ -101,7 +101,7 @@
             </div>
 
             <div class="actions">
-              <%= link_to "Back to #{@pool.superpool.name}", { :controller => 'hardware', :action => 'show', :id => @pool.superpool }, { :class => "" } if @pool.superpool %>
+              <%= link_to "Back to #{@pool.parent.name}", { :controller => 'hardware', :action => 'show', :id => @pool.parent }, { :class => "" } if @pool.parent %>
             </div>
 
           </div>

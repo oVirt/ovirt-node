@@ -20,13 +20,16 @@
 class CreatePools < ActiveRecord::Migration
   def self.up
     create_table :pools do |t|
-      t.column :name,               :string
-      t.column :type,               :string
-      t.column :superpool_id,       :integer
+      t.string :name
+      t.string :type
+      t.integer :parent_id
+      t.integer :lft
+      t.integer :rgt
+      t.timestamps
     end
 
-    execute "alter table pools add constraint fk_pool_superpool
-             foreign key (superpool_id) references pools(id)"
+    execute "alter table pools add constraint fk_pool_parent
+             foreign key (parent_id) references pools(id)"
     mp = HardwarePool.create( :name=>'default')
   end
 

@@ -18,44 +18,13 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-$: << File.join(File.dirname(__FILE__), "../app")
 $: << File.join(File.dirname(__FILE__), "../dutils")
 
 require 'rubygems'
-require 'active_record'
 require 'libvirt'
 require 'optparse'
 
-require 'dutils'
-require 'models/vm'
-require 'models/host'
-require 'models/task'
-require 'models/vm_task'
-
 $logfile = '/var/log/ovirt-wui/host-status.log'
-
-def findHost(vm)
-  host = Host.find(:first, :conditions => [ "id = ?", vm.host_id])
-
-  if host == nil
-    # Hm, we didn't find the host_id.  Seems odd.  Return a failure
-    raise
-  end
-
-  return host
-end
-
-def kick_taskomatic(msg, vm)
-  task = VmTask.new
-  task.user = "host-status"
-  task.action = VmTask::ACTION_UPDATE_STATE_VM
-  task.state = Task::STATE_QUEUED
-  task.args = msg
-  task.created_at = Time.now
-  task.time_started = Time.now
-  task.vm_id = vm.id
-  task.save
-end
 
 do_daemon = true
 sleeptime = 5
@@ -84,7 +53,32 @@ if do_daemon
   STDERR.reopen STDOUT
 end
 
-database_connect
+# connects to the db in here
+require 'dutils'
+
+
+def findHost(vm)
+  host = Host.find(:first, :conditions => [ "id = ?", vm.host_id])
+
+  if host == nil
+    # Hm, we didn't find the host_id.  Seems odd.  Return a failure
+    raise
+  end
+
+  return host
+end
+
+def kick_taskomatic(msg, vm)
+  task = VmTask.new
+  task.user = "host-status"
+  task.action = VmTask::ACTION_UPDATE_STATE_VM
+  task.state = Task::STATE_QUEUED
+  task.args = msg
+  task.created_at = Time.now
+  task.time_started = Time.now
+  task.vm_id = vm.id
+  task.save
+end
 
 loop do
   puts "Waking up to check host status"

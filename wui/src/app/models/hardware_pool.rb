@@ -39,23 +39,26 @@ class HardwarePool < Pool
     return 'hardware' 
   end
 
+  # note: doesn't currently join w/ permissions
   def self.get_default_pool
-    find(:first, :include => "permissions", :order => "pools.id ASC", 
-         :conditions => "superpool_id is null")
+    self.root
   end
 
+  # todo: does this method still make sense? or should we just enforce "empty" pools?
   def move_contents_and_destroy
-    superpool_id = superpool.id
-    hosts.each do |host| 
-      host.hardware_pool_id=superpool_id
-      host.save
+    transaction do 
+      parent_id = parent.id
+      hosts.each do |host| 
+        host.hardware_pool_id=parent_id
+        host.save
+      end
+      storage_pools.each do |vol| 
+        vol.hardware_pool_id=parent_id
+        vol.save
+      end
+      # what about quotas -- for now they're deleted
+      destroy
     end
-    storage_pools.each do |vol| 
-      vol.hardware_pool_id=superpool_id
-      vol.save
-    end
-    # what about quotas -- for now they're deleted
-    destroy
   end
 
   def total_storage_volumes

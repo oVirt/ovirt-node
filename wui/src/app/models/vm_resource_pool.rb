@@ -92,12 +92,13 @@ class VmResourcePool < Pool
     else
       resources = full_resources(vm)[:available][:current]
     end
+    hw_pool = get_hardware_pool
     # creation is limited to total quota value or values from largest host
     memhost = Host.find(:first, :order => "memory DESC",
-                        :conditions => "hardware_pool_id = #{superpool.id}")
+                        :conditions => "hardware_pool_id = #{hw_pool.id}")
     host_mem_limit = (memhost.nil? ? 0 : memhost.memory)
     cpuhost = Host.find(:first, :order => "num_cpus DESC",
-                        :conditions => "hardware_pool_id = #{superpool.id}")
+                        :conditions => "hardware_pool_id = #{hw_pool.id}")
     host_cpu_limit = cpuhost.nil? ? 0 : cpuhost.num_cpus
     resources[:memory] = host_mem_limit if resources[:memory].nil? or host_mem_limit < resources[:memory]
     resources[:cpus] = host_cpu_limit if resources[:cpus].nil? or host_cpu_limit < resources[:cpus]

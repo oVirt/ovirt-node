@@ -21,20 +21,6 @@ include REXML
 
 require 'utils'
 
-require 'models/vm.rb'
-require 'models/vm_storage_pool.rb'
-require 'models/hardware_pool.rb'
-require 'models/task.rb'
-require 'models/host.rb'
-require 'models/hardware_pool.rb'
-require 'models/permission.rb'
-require 'models/storage_volume.rb'
-require 'models/quota.rb'
-require 'models/storage_task.rb'
-require 'models/vm_task.rb'
-require 'models/storage_pool.rb'
-require 'models/iscsi_storage_pool.rb'
-
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
                   macAddr, bridge, diskDevices)
   doc = Document.new

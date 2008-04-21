@@ -16,25 +16,12 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-require 'rubygems'
+require 'active_record_env'
 require 'kerberos'
 include Kerberos
-require 'active_record'
-require 'erb'
 
 ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
 
-def database_connect
-  $dbconfig = YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
-  $develdb = $dbconfig['development']
-  ActiveRecord::Base.establish_connection(
-                                          :adapter  => $develdb['adapter'],
-                                          :host     => $develdb['host'],
-                                          :username => $develdb['username'],
-                                          :password => $develdb['password'],
-                                          :database => $develdb['database']
-                                          )
-end
 
 def get_credentials
   begin
