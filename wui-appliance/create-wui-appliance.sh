@@ -107,6 +107,18 @@ cat <<EOF
 EOF
 }
 
+# first, check to see we are root
+if [ $( id -u ) -ne 0 ]; then
+    die "Must run as root"
+fi
+
+# now make sure the packages we need are installed
+rpm -q libvirt -q kvm -q virt-manager -q virt-viewer >& /dev/null
+if [ $? -ne 0 ]; then
+    # one of the previous packages wasn't installed; bail out
+    die "Must have the libvirt, kvm, virt-manager, and virt-viewer packages installed"
+fi
+
 if [ $devel = 1 ]; then
     NAME=developer
     BRIDGENAME=dummybridge
