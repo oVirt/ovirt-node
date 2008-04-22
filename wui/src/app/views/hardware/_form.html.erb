@@ -1,7 +1,7 @@
 <%= error_messages_for 'pool' %>
 
 <!--[form:hardware_pool]-->
-<%= hidden_field_with_label 'Parent Hardware Pool', 'pool', 'superpool_id', @pool.superpool.name if @pool.superpool %>
+<%= hidden_field_tag_with_label "Parent Hardware Pool", 'parent_id', @parent.id, @parent.name if @parent %>
 
 <%= text_field_with_label 'Name', 'pool', 'name'  %>
 

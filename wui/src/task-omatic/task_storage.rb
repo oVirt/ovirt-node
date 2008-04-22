@@ -20,14 +20,6 @@ require 'utils'
 
 require 'libvirt'
 
-require 'models/storage_task.rb'
-require 'models/vm_task.rb'
-require 'models/storage_pool.rb'
-require 'models/iscsi_storage_pool.rb'
-require 'models/nfs_storage_pool.rb'
-require 'models/iscsi_storage_volume.rb'
-require 'models/nfs_storage_volume.rb'
-
 def refresh_pool(task)
   puts "refresh_pool"
 

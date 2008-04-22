@@ -37,7 +37,7 @@ class HostController < ApplicationController
         redirect_to :controller => 'dashboard', :action => 'list'
       else
         conditions = "hardware_pool_id is null"
-        conditions += " or hardware_pool_id=#{pool.superpool_id}" if pool.superpool
+        conditions += " or hardware_pool_id=#{pool.parent_id}" if pool.parent
         @hosts = Host.find(:all, :conditions => conditions)
       end
     else

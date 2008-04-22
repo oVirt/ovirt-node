@@ -98,7 +98,7 @@
   <% end -%>
   <div class="actions">
     <%= link_to 'All your VM Resource Pools', { :action => 'list' }, { :class => "list" } %>
-    <%= link_to "Back to #{@vm_resource_pool.superpool.name}", { :controller => @vm_resource_pool.superpool.get_controller, :action => 'show', :id => @vm_resource_pool.superpool }, { :class => "" } %>
+    <%= link_to "Back to #{@vm_resource_pool.parent.name}", { :controller => @vm_resource_pool.parent.get_controller, :action => 'show', :id => @vm_resource_pool.parent }, { :class => "" } %>
   </div>
   <div class="actions ">
     <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @vm_resource_pool }, { :class => "edit" } %></div>

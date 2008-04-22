@@ -18,17 +18,10 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-$: << File.join(File.dirname(__FILE__), "../app")
 $: << File.join(File.dirname(__FILE__), "../dutils")
 
 require 'rubygems'
 require 'libvirt'
-require 'active_record'
-
-require 'dutils'
-require 'models/host'
-require 'models/hardware_pool'
-require 'models/permission'
 
 if ARGV.length != 1
   exit
@@ -51,7 +44,8 @@ end
 # we could destroy the credentials, but another process might be using them
 # (in particular, the taskomatic).  Just leave them around, it shouldn't hurt
 
-database_connect
+# connects to the db in here
+require 'dutils'
 
 # FIXME: we need a better way to get a UUID, rather than the hostname
 $host = Host.find(:first, :conditions => [ "uuid = ?", ARGV[0]])

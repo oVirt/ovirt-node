@@ -1,35 +1,8 @@
 #!/usr/bin/ruby
 
-$: << "../app"
-$: << "/usr/share/ovirt-wui/app"
+$: << File.join(File.dirname(__FILE__), "../dutils")
 
-require 'rubygems'
-require 'active_record'
-require 'erb'
-require 'models/pool.rb'
-require 'models/hardware_pool.rb'
-require 'models/permission.rb'
-
-def database_configuration
-  YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
-end
-
-if ARGV.length != 1
-  print "Username is required\n"
-  exit
-end
-
-$dbconfig = database_configuration
-
-$develdb = $dbconfig['development']
-
-ActiveRecord::Base.establish_connection(
-                                        :adapter  => $develdb['adapter'],
-                                        :host     => $develdb['host'],
-                                        :username => $develdb['username'],
-                                        :password => $develdb['password'],
-                                        :database => $develdb['database']
-                                        )
+require 'active_record_env'
 
 $hwpool = HardwarePool.get_default_pool
 if $hwpool

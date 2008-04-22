@@ -41,7 +41,7 @@ class ResourcesController < ApplicationController
 
   def show
     set_perms(@perm_obj)
-    @is_hwpool_admin = @vm_resource_pool.superpool.is_admin(@user)
+    @is_hwpool_admin = @vm_resource_pool.parent.is_admin(@user)
     @action_values = [["Suspend", VmTask::ACTION_SUSPEND_VM],
                       ["Resume", VmTask::ACTION_RESUME_VM],
                       ["Save", VmTask::ACTION_SAVE_VM],
@@ -53,12 +53,13 @@ class ResourcesController < ApplicationController
   end
 
   def new
+    @vm_resource_pools = @vm_resource_pool.self_and_like_siblings
   end
 
   def create
-    if @vm_resource_pool.save
+    if @vm_resource_pool.create_with_parent(@parent)
       flash[:notice] = 'VM Resource Pool was successfully created.'
-      redirect_to :controller => @vm_resource_pool.superpool.get_controller, :action => 'show', :id => @vm_resource_pool.superpool
+      redirect_to :controller => @vm_resource_pool.parent.get_controller, :action => 'show', :id => @vm_resource_pool.parent
     else
       render :action => 'new'
     end
@@ -77,9 +78,9 @@ class ResourcesController < ApplicationController
   end
 
   def destroy
-    superpool = @vm_resource_pool.superpool
+    parent = @vm_resource_pool.parent
     @vm_resource_pool.destroy
-    redirect_to :controller => @vm_resource_pool.superpool.get_controller, :action => 'show', :id => superpool
+    redirect_to :controller => parent.get_controller, :action => 'show', :id => parent
   end
 
   def vm_actions
@@ -126,13 +127,15 @@ class ResourcesController < ApplicationController
 
   protected
   def pre_new
-    @vm_resource_pool = VmResourcePool.new( { :superpool_id => params[:superpool_id] } )
-    @perm_obj = @vm_resource_pool.superpool
+    @vm_resource_pool = VmResourcePool.new
+    @parent = Pool.find(params[:parent_id])
+    @perm_obj = @parent
     @redir_controller = @perm_obj.get_controller
   end
   def pre_create
     @vm_resource_pool = VmResourcePool.new(params[:vm_resource_pool])
-    @perm_obj = @vm_resource_pool.superpool
+    @parent = Pool.find(params[:parent_id])
+    @perm_obj = @parent
     @redir_controller = @perm_obj.get_controller
   end
   def pre_show
@@ -141,7 +144,8 @@ class ResourcesController < ApplicationController
   end
   def pre_edit
     @vm_resource_pool = VmResourcePool.find(params[:id])
-    @perm_obj = @vm_resource_pool.superpool
+    @parent = @vm_resource_pool.parent
+    @perm_obj = @vm_resource_pool.parent
     @redir_obj = @vm_resource_pool
   end
 

@@ -14,8 +14,8 @@
       </div>
 
       <div class="data-table-column">
-        <strong class="header">Existing Pools (<%= @pool.superpool.subpools.size if @pool.superpool %>)</strong>
-        <%= render :partial => "list", :locals => { :hardware_pools => @pool.superpool.subpools } if @pool.superpool %>
+        <strong class="header">Existing Pools (<%= @pool.self_and_siblings.size %>)</strong>
+        <%= render :partial => "list", :locals => { :hardware_pools => @pool.self_and_siblings } %>
       </div>
 
 

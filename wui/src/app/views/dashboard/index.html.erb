@@ -49,7 +49,7 @@
               <%= link_to 'Add Storage', { :controller => 'storage', :action => 'new', :hardware_pool_id => @default_pool}, { :class => "create" } %>
               <hr/>
 -->
-              <%= link_to 'Create New Pool', { :controller => "hardware", :action => 'new', :superpool_id => @default_pool}, { :class => "create" } %>
+              <%= link_to 'Create New Pool', { :controller => "hardware", :action => 'new', :parent_id => @default_pool}, { :class => "create" } %>
           </div>
           <% end -%>
 

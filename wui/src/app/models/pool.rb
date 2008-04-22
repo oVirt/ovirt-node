@@ -18,6 +18,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class Pool < ActiveRecord::Base
+  acts_as_nested_set
+
   # overloading this method such that we can use permissions.admins to get all the admins for an object
   has_many :permissions, :dependent => :destroy, :order => "id ASC" do
     def admins
@@ -31,9 +33,15 @@ class Pool < ActiveRecord::Base
     end
   end
 
-  belongs_to :superpool, :class_name => "Pool", :foreign_key => "superpool_id"
-  has_many :subpools, :class_name => "Pool", :foreign_key => "superpool_id", :dependent => :destroy, :order => "id ASC"
   has_one :quota, :dependent => :destroy
+
+  def create_with_parent(parent)
+    transaction do
+      save
+      move_to_child_of(parent)
+    end
+  end
+
 
   def self.list_for_user(user)
     find(:all, :include => "permissions", 
@@ -41,10 +49,13 @@ class Pool < ActiveRecord::Base
   end
 
   def sub_hardware_pools
-    subpools.select {|pool| pool[:type] == "HardwarePool"}
+    children.select {|pool| pool[:type] == "HardwarePool"}
   end
   def sub_vm_resource_pools
-    subpools.select {|pool| pool[:type] == "VmResourcePool"}
+    children.select {|pool| pool[:type] == "VmResourcePool"}
+  end
+  def self_and_like_siblings
+    self_and_siblings.select {|pool| pool[:type] == self.class.name}
   end
 
   def can_monitor(user)
@@ -81,14 +92,9 @@ class Pool < ActiveRecord::Base
 
   protected
   def traverse_parents
-    the_pool = self
-    # prevent infinite loops
-    visited_pools = []
-    while (not (the_pool.nil? || visited_pools.include?(the_pool)))
+    self_and_ancestors.reverse_each do |the_pool|
       val = yield the_pool
       return val if val
-      visited_pools << the_pool
-      the_pool = the_pool.superpool
     end
     return nil
   end

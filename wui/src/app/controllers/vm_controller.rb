@@ -150,7 +150,7 @@ class VmController < ApplicationController
       if vm_resource_pool
         params[:vm_resource_pool_id] = vm_resource_pool.id
       else
-        @vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool, :superpool_id => params[:hardware_pool_id]})
+        @vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool, :parent_id => params[:hardware_pool_id]})
         @vm_resource_pool_name = @user
       end
     end
@@ -177,7 +177,7 @@ class VmController < ApplicationController
     vm_resource_pool_name = params[:vm_resource_pool_name]
     hardware_pool_id = params[:hardware_pool_id]
     if vm_resource_pool_name and hardware_pool_id
-      vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool_name, :superpool_id => hardware_pool_id})
+      vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool_name, :parent_id => hardware_pool_id})
       vm_resource_pool.save
       params[:vm][:vm_resource_pool_id] = vm_resource_pool.id
     end

@@ -18,18 +18,10 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-$: << File.join(File.dirname(__FILE__), "../app")
 $: << File.join(File.dirname(__FILE__), "../dutils")
-$: << File.join(File.dirname(__FILE__), ".")
 
+require 'rubygems'
 require 'optparse'
-
-require 'dutils'
-
-require 'models/task'
-
-require 'task_vm'
-require 'task_storage'
 
 $logfile = '/var/log/ovirt-wui/taskomatic.log'
 
@@ -60,7 +52,9 @@ if do_daemon
   STDERR.reopen STDOUT
 end
 
-database_connect
+require 'dutils'
+require 'task_vm'
+require 'task_storage'
 
 loop do
   puts 'Checking for tasks...'
