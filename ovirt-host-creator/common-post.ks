@@ -10,6 +10,23 @@ cat > /etc/sysconfig/iptables << \EOF
 COMMIT
 EOF
 
+echo "Writing ovirt-functions script"
+# common functions
+cat > /etc/init.d/ovirt-functions << \EOF
+# -*-Shell-script-*-
+
+find_srv() {
+        local dnsreply
+        dnsreply=$(dig +short -t srv _$1._$2.$(dnsdomainname))
+        if [ $? == 0 ]; then
+            set _ $dnsreply; shift
+            SRV_HOST=$4; SRV_PORT=$3
+        else
+            SRV_HOST=; SRV_PORT=
+        fi
+}
+
+
 echo "Writing ovirt-early init script"
 # next the dynamic bridge setup service
 cat > /etc/init.d/ovirt-early << \EOF
@@ -99,12 +116,11 @@ cat > /etc/init.d/ovirt << \EOF
 
 # Source functions library
 . /etc/init.d/functions
+. /etc/init.d/ovirt-functions
 
 start() {
     echo -n $"Starting ovirt: "
-    IPA=$(/usr/bin/dig +short -t srv _ipa._tcp.$(/bin/dnsdomainname))
-    HOST=$(echo $IPA | head -1 | awk '{print $4}')
-    PORT=$(echo $IPA | head -1 | awk '{print $3}')
+    find_srv ipa tcp
 
     mkdir -p /etc/libvirt
     # here, we wait for the "host-keyadd" service to finish adding our
@@ -112,7 +128,7 @@ start() {
     # then give up
     tries=0
     while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
-        VAL=`echo "KERB" | /usr/bin/nc $HOST 6666`
+        VAL=`echo "KERB" | /usr/bin/nc $SRV_HOST 6666`
         if [ "$VAL" == "SUCCESS" ]; then
             break
         fi
@@ -126,7 +142,7 @@ start() {
     fi
 
     if [ ! -s /etc/libvirt/krb5.tab ]; then
-        /usr/bin/wget -q http://$HOST:$PORT/config/$(/bin/hostname -i)-libvirt.tab -O /etc/libvirt/krb5.tab
+        /usr/bin/wget -q http://$SRV_HOST:$SRV_PORT/config/$(/bin/hostname -i)-libvirt.tab -O /etc/libvirt/krb5.tab
         if [ $? -ne 0 ]; then
             echo -n "Failed getting keytab" ; failure ; echo ; exit 1
         fi
@@ -134,7 +150,7 @@ start() {
 
     if [ ! -s /etc/krb5.conf ]; then
         rm -f /etc/krb5.conf
-        /usr/bin/wget -q http://$HOST:$PORT/config/krb5.ini -O /etc/krb5.conf
+        /usr/bin/wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O /etc/krb5.conf
         if [ "$?" -ne 0 ]; then
             echo "Failed getting krb5.conf" ; failure ; echo ; exit 1
         fi
