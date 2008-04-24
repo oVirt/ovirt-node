@@ -29,7 +29,7 @@ class NicController < ApplicationController
 
   def show
     set_perms(@perm_obj)
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this NIC: redirecting to top level'
       redirect_to :controller => 'pool', :action => 'list'
     end

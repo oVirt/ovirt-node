@@ -32,7 +32,7 @@ class HostController < ApplicationController
     if @attach_to_pool
       pool = HardwarePool.find(@attach_to_pool)
       set_perms(pool)
-      unless @can_monitor
+      unless @can_view
         flash[:notice] = 'You do not have permission to view this host list: redirecting to top level'
         redirect_to :controller => 'dashboard', :action => 'list'
       else
@@ -48,7 +48,7 @@ class HostController < ApplicationController
 
   def show
     set_perms(@perm_obj)
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this host: redirecting to top level'
       redirect_to :controller => 'dashboard', :action => 'list'
     end
@@ -72,7 +72,7 @@ class HostController < ApplicationController
   def disable
     @host = Host.find(params[:id])
     set_perms(@host.hardware_pool)
-    unless @is_admin
+    unless @can_modify
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
     else
@@ -89,7 +89,7 @@ class HostController < ApplicationController
   def enable
     @host = Host.find(params[:id])
     set_perms(@host.hardware_pool)
-    unless @is_admin
+    unless @can_modify
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
     else
@@ -106,7 +106,7 @@ class HostController < ApplicationController
   def attach_to_pool
     @host = Host.find(params[:id])
     set_perms(@host.hardware_pool)
-    unless @is_admin
+    unless @can_modify
       flash[:notice] = 'You do not have permission to edit this host'
       redirect_to :action => 'show', :id => @host
     else

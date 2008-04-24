@@ -40,7 +40,7 @@
     <div class="heading">&nbsp;</div>
     <div id="tools">
     <h3>Actions</h3>
-    <%if @is_admin -%>
+    <%if @can_modify -%>
     <% end -%>
     <div class="actions">
       <%= link_to "Back to #{@storage_volume.storage_pool.ip_addr}: #{@storage_volume.storage_pool[:target]}", { :action => 'show', :id => @storage_volume.storage_pool.id }, { :class => "" } %>

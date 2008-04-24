@@ -6,13 +6,7 @@ require 'active_record_env'
 
 $hwpool = HardwarePool.get_default_pool
 if $hwpool
-  Permission.new( { :privilege => Permission::MONITOR,
-                    :user => ARGV[0],
-                    :pool_id => $hwpool.id}).save
-  Permission.new( { :privilege => Permission::ADMIN,
-                    :user => ARGV[0],
-                    :pool_id => $hwpool.id}).save
-  Permission.new( { :privilege => Permission::DELEGATE,
+  Permission.new( { :role => Permission::ROLE_SUPER_ADMIN,
                     :user => ARGV[0],
                     :pool_id => $hwpool.id}).save
 end

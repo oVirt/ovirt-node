@@ -23,7 +23,7 @@ class HardwareController < ApplicationController
          :redirect_to => { :action => :list }
   def show
     set_perms(@perm_obj)
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
       redirect_to :controller => "dashboard"
     end

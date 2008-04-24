@@ -20,16 +20,23 @@
 class Pool < ActiveRecord::Base
   acts_as_nested_set
 
+  # used to allow parent traversal before obj is saved to the db 
+  # (needed for view code 'create' form)
+  attr_accessor :tmp_parent
+
   # overloading this method such that we can use permissions.admins to get all the admins for an object
   has_many :permissions, :dependent => :destroy, :order => "id ASC" do
+    def super_admins
+      find_all_by_user_role(Permission::ROLE_SUPER_ADMIN)
+    end
     def admins
-      find_all_by_privilege(Permission::ADMIN)
+      find_all_by_user_role(Permission::ROLE_ADMIN)
+    end
+    def users
+      find_all_by_user_role(Permission::ROLE_USER)
     end
     def monitors
-      find_all_by_privilege(Permission::MONITOR)
-    end
-    def delegates
-      find_all_by_privilege(Permission::DELEGATE)
+      find_all_by_user_role(Permission::ROLE_MONITOR)
     end
   end
 
@@ -42,10 +49,13 @@ class Pool < ActiveRecord::Base
     end
   end
 
-
-  def self.list_for_user(user)
-    find(:all, :include => "permissions", 
-         :conditions => "permissions.user='#{user}' and permissions.privilege='#{Permission::ADMIN}'")
+  # this method lists pools with direct permission grants, but does not 
+  # include implied permissions (i.e. subtrees)
+  def self.list_for_user(user, privilege)
+    pools = find(:all, :include => "permissions", 
+                 :conditions => "permissions.user='#{user}' and 
+                       permissions.user_role in 
+                       ('#{Permission.roles_for_privilege(privilege).join("', '")}')")
   end
 
   def sub_hardware_pools
@@ -58,20 +68,28 @@ class Pool < ActiveRecord::Base
     self_and_siblings.select {|pool| pool[:type] == self.class.name}
   end
 
-  def can_monitor(user)
-    has_privilege(user, Permission::MONITOR)
+  def can_view(user)
+    has_privilege(user, Permission::PRIV_VIEW)
   end
-  def can_delegate(user)
-    has_privilege(user, Permission::DELEGATE)
+  def can_control_vms(user)
+    has_privilege(user, Permission::PRIV_VM_CONTROL)
   end
-  def is_admin(user)
-    has_privilege(user, Permission::ADMIN)
+  def can_modify(user)
+    has_privilege(user, Permission::PRIV_MODIFY)
+  end
+  def can_view_perms(user)
+    has_privilege(user, Permission::PRIV_PERM_VIEW)
+  end
+  def can_set_perms(user)
+    has_privilege(user, Permission::PRIV_PERM_SET)
   end
 
   def has_privilege(user, privilege)
     traverse_parents do |pool|
       pool.permissions.find(:first, 
-                            :conditions => "permissions.privilege = '#{privilege}' and permissions.user = '#{user}'")
+                            :conditions => "permissions.user='#{user}' and 
+                         permissions.user_role in 
+                         ('#{Permission.roles_for_privilege(privilege).join("', '")}')")
     end
   end
 
@@ -92,7 +110,14 @@ class Pool < ActiveRecord::Base
 
   protected
   def traverse_parents
-    self_and_ancestors.reverse_each do |the_pool|
+    if id
+      ancestor_array = self_and_ancestors
+    elsif tmp_parent
+      ancestor_array = tmp_parent.self_and_ancestors
+    else
+      ancestor_array = []
+    end
+    ancestor_array.reverse_each do |the_pool|
       val = yield the_pool
       return val if val
     end

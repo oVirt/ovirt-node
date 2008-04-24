@@ -42,9 +42,11 @@ class ApplicationController < ActionController::Base
 
   def set_perms(hwpool)
     @user = get_login_user
-    @is_admin = hwpool.is_admin(@user)
-    @can_monitor = hwpool.can_monitor(@user)
-    @can_delegate = hwpool.can_delegate(@user)
+    @can_view = hwpool.can_view(@user)
+    @can_control_vms = hwpool.can_control_vms(@user)
+    @can_modify = hwpool.can_modify(@user)
+    @can_view_perms = hwpool.can_view_perms(@user)
+    @can_set_perms = hwpool.can_set_perms(@user)
   end
 
   protected
@@ -59,10 +61,16 @@ class ApplicationController < ActionController::Base
   def pre_show
   end
 
+  def authorize_user
+    authorize_action(false)
+  end
   def authorize_admin
+    authorize_action(true)
+  end
+  def authorize_action(is_modify_action)
     if @perm_obj
       set_perms(@perm_obj)
-      unless @is_admin
+      unless (is_modify_action ? @can_modify : @can_control_vms)
         @redir_obj = @perm_obj unless @redir_obj
         flash[:notice] = 'You do not have permission to create or modify this item '
         if @redir_controller

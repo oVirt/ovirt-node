@@ -20,10 +20,44 @@
 class Permission < ActiveRecord::Base
   belongs_to :pool
 
-  MONITOR = "monitor"
-  ADMIN = "admin"
-  DELEGATE = "delegate"
-  PRIVILEGES = [["Monitor", MONITOR], 
-                ["Admin", ADMIN],
-                ["Delegate", DELEGATE]]
+  ROLE_SUPER_ADMIN = "Super Admin"
+  ROLE_ADMIN       = "Administrator"
+  ROLE_USER        = "User"
+  ROLE_MONITOR     = "Monitor"
+
+  PRIV_PERM_SET    = "set_perms"
+  PRIV_PERM_VIEW   = "view_perms"
+  PRIV_MODIFY      = "modify"
+  PRIV_VM_CONTROL  = "vm_control"
+  PRIV_VIEW        = "view"
+
+  ROLES = { ROLE_SUPER_ADMIN => [PRIV_VIEW, PRIV_VM_CONTROL, PRIV_MODIFY, 
+                                 PRIV_PERM_VIEW, PRIV_PERM_SET],
+            ROLE_ADMIN       => [PRIV_VIEW, PRIV_VM_CONTROL, PRIV_MODIFY],
+            ROLE_USER        => [PRIV_VIEW, PRIV_VM_CONTROL],
+            ROLE_MONITOR     => [PRIV_VIEW]}
+ 
+  def self.invert_roles
+    return_hash = {}
+    ROLES.each do |role, privs|
+      privs.each do |priv|
+        priv_key = return_hash[priv]
+        priv_key ||= []
+        priv_key << role
+        return_hash[priv] = priv_key
+      end
+    end
+    return_hash
+  end
+
+  PRIVILEGES = self.invert_roles
+
+  def self.privileges_for_role(role)
+    ROLES[role]
+  end
+  def self.roles_for_privilege(privilege)
+    PRIVILEGES[privilege]
+  end
+
+
 end

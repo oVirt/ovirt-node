@@ -2,7 +2,7 @@
 <thead>
   <tr>
     <th>User</th>
-    <th>Privilege</th>
+    <th>Role</th>
   <%if show_object -%>
     <th>Object</th>
   <% end -%>
@@ -12,7 +12,7 @@
 <% for permission in permissions %>
 <tr class="<%= cycle('odd','even') %>">
   <td><%= permission.user %>
-  <td><%= permission.privilege %>
+  <td><%= permission.user_role %>
   <%if show_object -%>
     <td style="text-align:left;">
       <%= link_to permission.pool.name, 

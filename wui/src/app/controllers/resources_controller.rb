@@ -29,7 +29,7 @@ class ResourcesController < ApplicationController
 
   def list
     @user = get_login_user
-    @vm_resource_pools = VmResourcePool.list_for_user(@user)
+    @vm_resource_pools = VmResourcePool.list_for_user(@user, Permission::PRIV_VIEW)
     @vms = Set.new
     @vm_resource_pools.each { |vm_resource_pool| @vms += vm_resource_pool.vms}
     @vms = @vms.entries
@@ -41,12 +41,12 @@ class ResourcesController < ApplicationController
 
   def show
     set_perms(@perm_obj)
-    @is_hwpool_admin = @vm_resource_pool.parent.is_admin(@user)
+    @is_hwpool_admin = @vm_resource_pool.parent.can_modify(@user)
     @action_values = [["Suspend", VmTask::ACTION_SUSPEND_VM],
                       ["Resume", VmTask::ACTION_RESUME_VM],
                       ["Save", VmTask::ACTION_SAVE_VM],
                       ["Restore", VmTask::ACTION_RESTORE_VM]]
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
       redirect_to :action => 'list'
     end
@@ -86,7 +86,7 @@ class ResourcesController < ApplicationController
   def vm_actions
     @vm_resource_pool = VmResourcePool.find(params[:vm_resource_pool_id])
     set_perms(@vm_resource_pool)
-    unless @is_admin
+    unless @can_modify
       flash[:notice] = 'You do not have permission to perform VM actions for this VM Resource Pool '
       redirect_to :action => 'show', :id => @vm_resource_pool
     else
