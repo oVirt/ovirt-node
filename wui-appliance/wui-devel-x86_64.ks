@@ -25,12 +25,12 @@ repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-ma
 # make sure our "hostname" resolves to management.priv.ovirt.org
 sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
 
-cat >> /etc/hosts << \EOF
-192.168.50.2 management.priv.ovirt.org
-192.168.50.3 node3.priv.ovirt.org
-192.168.50.4 node4.priv.ovirt.org
-192.168.50.5 node5.priv.ovirt.org
-EOF
+# make sure to update the /etc/hosts with the list of all possible DHCP
+# addresses we can hand out; dnsmasq uses this
+echo "192.168.50.2 management.priv.ovirt.org" >> /etc/hosts
+for i in `seq 3 252` ; do
+    echo "192.168.50.$i node$i.priv.ovirt.org" >> /etc/hosts
+done
 
 # automatically refresh the kerberos ticket every hour (we'll create the
 # principal on first-boot)

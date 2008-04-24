@@ -302,21 +302,7 @@ def start_vm(task)
     defined_pools = []
     all_storage_pools(conn).each do |remote_pool_name|
       tmppool = conn.lookup_storage_pool_by_name(remote_pool_name)
-      doc = Document.new(tmppool.xml_desc(0))
-      root = doc.root
-
-      if root.attributes['type'] == 'iscsi'
-        storage = Iscsi.new(root.elements['source'].elements['host'].attributes['name'],
-                            root.elements['source'].elements['device'].attributes['path'])
-      elsif root.attributes['type'] == 'netfs'
-        storage = NFS.new(root.elements['source'].elements['host'].attributes['name'],
-                          root.elements['source'].elements['dir'].attributes['path'])
-      else
-        # a storage type we don't understand; just skip it
-        next
-      end
-
-      defined_pools << storage
+      defined_pools << tmppool
     end
 
     storagedevs = []
@@ -334,29 +320,32 @@ def start_vm(task)
       if storage_pool[:type] == "IscsiStoragePool"
         thisstorage = Iscsi.new(storage_pool.ip_addr, storage_pool.target)
       elsif storage_pool[:type] == "NfsStoragePool"
-        thisstorage = NFS.new(storage_pool.ip_addr, storage_pool.remote_path)
+        thisstorage = NFS.new(storage_pool.ip_addr, storage_pool.export_path)
       else
         # Hm, a storage type we don't understand; skip it
         next
       end
 
-      storagedevs << volume.path
-
-      found_pool = false
+      thepool = nil
       defined_pools.each do |pool|
-        doc = Document.new(thisstorage.getxml)
-        if pool.xmlequal?(doc.root)
-          found_pool = true
-          break
-        end
+         doc = Document.new(pool.xml_desc(0))
+         root = doc.root
+
+         if thisstorage.xmlequal?(doc.root)
+           thepool = pool
+           break
+         end
       end
 
-      if not found_pool
-        new_pool = conn.define_storage_pool_xml(thisstorage.getxml, 0)
-        new_pool.build(0)
-        new_pool.create(0)
+      if thepool == nil
+        thepool = conn.define_storage_pool_xml(thisstorage.getxml, 0)
+        thepool.build(0)
+        thepool.create(0)
       end
+
+      storagedevs << thepool.lookup_volume_by_name(volume.read_attribute(thisstorage.db_column)).path
     end
+
     conn.close
 
     if storagedevs.length < 1
