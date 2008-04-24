@@ -4,7 +4,7 @@ timezone US/Eastern
 auth --useshadow --enablemd5
 selinux --disabled
 firewall --disabled
-part / --size 450
+part / --size 550
 services --enabled=ntpd,collectd,iptables,network
 bootloader --timeout=1
 rootpw --iscrypted Xa8QeYfWrtscM
