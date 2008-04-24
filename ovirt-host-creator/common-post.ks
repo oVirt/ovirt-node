@@ -18,14 +18,14 @@ cat > /etc/init.d/ovirt-functions << \EOF
 find_srv() {
         local dnsreply
         dnsreply=$(dig +short -t srv _$1._$2.$(dnsdomainname))
-        if [ $? == 0 ]; then
+        if [ $? -eq 0 ]; then
             set _ $dnsreply; shift
             SRV_HOST=$4; SRV_PORT=$3
         else
             SRV_HOST=; SRV_PORT=
         fi
 }
-
+EOF
 
 echo "Writing ovirt-early init script"
 # next the dynamic bridge setup service
