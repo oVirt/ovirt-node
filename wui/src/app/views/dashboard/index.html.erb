@@ -43,7 +43,7 @@
           <div class="tools">
 
           <h3>Actions</h3>
-          <%if @is_admin -%>
+          <%if @can_modify -%>
           <div class="actions">
 <!--
               <%= link_to 'Add Storage', { :controller => 'storage', :action => 'new', :hardware_pool_id => @default_pool}, { :class => "create" } %>
@@ -54,10 +54,11 @@
           <% end -%>
 
           <div class="actions">
-            <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @default_pool }, { :class => "edit" } %></div>
+            <div><%= link_to_if @can_set_perms, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @default_pool }, { :class => "edit" } %></div>
             <table>
-              <tr><td><%= pluralize @default_pool.permissions.admins.size, "Admin" %></td></tr>
-              <tr><td><%= pluralize @default_pool.permissions.delegates.size, "Delegate" %></td></tr>
+              <tr><td><%= pluralize @default_pool.permissions.super_admins.size, "Super Admin" %></td></tr>
+              <tr><td><%= pluralize @default_pool.permissions.admins.size, "Administrator" %></td></tr>
+              <tr><td><%= pluralize @default_pool.permissions.users.size, "User" %></td></tr>
               <tr><td><%= pluralize @default_pool.permissions.monitors.size, "Monitor" %></td></tr>
             </table>
           </div>

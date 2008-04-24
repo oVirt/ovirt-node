@@ -69,7 +69,7 @@
 
         <h3>Actions</h3>
 
-      <%if @is_admin -%>
+      <%if @can_modify -%>
         <%- if ! @actions.empty? -%>
           <div class="actions create">
             <% for action in @actions %>

@@ -19,7 +19,7 @@
 
 class HardwarePool < Pool
 
-  has_many :hosts, :dependent => :nullify, :order => "id ASC" do
+  has_many :hosts, :include => :nics, :dependent => :nullify, :order => "hosts.id ASC" do
     def total_cpus
       find(:all).inject(0){ |sum, host| sum + host.num_cpus }
     end

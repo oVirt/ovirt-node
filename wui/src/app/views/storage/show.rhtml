@@ -55,7 +55,7 @@
     <div class="heading">&nbsp;</div>
     <div class="tools">
     <h3>Actions</h3>
-    <%if @is_admin -%>
+    <%if @can_modify -%>
     <div class="actions">
       <%= link_to 'Edit', { :action => 'edit', :id => @storage_pool }, { :class => "edit" } %>
       <%= link_to 'Refresh Storage Pool', { :action => 'refresh', :id => @storage_pool }, { :class => "edit" } %>

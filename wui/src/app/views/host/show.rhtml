@@ -16,7 +16,7 @@
 
 <h3>Network Interfaces</h3>
 <% if !@host.nics.empty? %>
-  <%= render :partial => "/nic/list", :locals => { :nics => @host.nics, :show_actions => @is_admin } %>
+  <%= render :partial => "/nic/list", :locals => { :nics => @host.nics, :show_actions => @can_modify } %>
 <% else %>
 <p>No Network Interfaces.
 </p>
@@ -26,7 +26,7 @@
 
 <div id="right">
   <h2>Actions</h2>
-  <%if @is_admin -%>
+  <%if @can_modify -%>
   <ul class="actions edit">
   <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
     <li class="action"><%= link_to 'Disable Host', { :action => 'disable', :id => @host }, { :class => "edit" } %></li>

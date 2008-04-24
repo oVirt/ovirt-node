@@ -30,7 +30,7 @@ class PermissionController < ApplicationController
     @permission = Permission.find(params[:id])
     set_perms(@permission.pool)
     # admin permission required to view permissions
-    unless @is_admin
+    unless @can_view_perms
       flash[:notice] = 'You do not have permission to view this permission record'
       redirect_to_parent
     end
@@ -41,7 +41,7 @@ class PermissionController < ApplicationController
     @perms = @permission.pool.permissions
     set_perms(@permission.pool)
     # admin permission required to view permissions
-    unless @can_delegate
+    unless @can_set_perms
       flash[:notice] = 'You do not have permission to create this permission record'
       redirect_to_parent
     end
@@ -50,7 +50,7 @@ class PermissionController < ApplicationController
   def create
     @permission = Permission.new(params[:permission])
     set_perms(@permission.pool)
-    unless @can_delegate
+    unless @can_set_perms
       flash[:notice] = 'You do not have permission to create this permission record'
       redirect_to_parent
     else
@@ -66,7 +66,7 @@ class PermissionController < ApplicationController
   def destroy
     @permission = Permission.find(params[:id])
     set_perms(@permission.pool)
-    unless @can_delegate
+    unless @can_set_perms
       flash[:notice] = 'You do not have permission to delete this permission record'
       redirect_to_parent
     else

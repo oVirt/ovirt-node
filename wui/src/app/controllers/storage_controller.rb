@@ -36,7 +36,7 @@ class StorageController < ApplicationController
     if @attach_to_pool
       pool = HardwarePool.find(@attach_to_pool)
       set_perms(pool)
-      unless @can_monitor
+      unless @can_view
         flash[:notice] = 'You do not have permission to view this storage pool list: redirecting to top level'
         redirect_to :controller => 'dashboard'
       else
@@ -53,7 +53,7 @@ class StorageController < ApplicationController
   def show
     @storage_pool = StoragePool.find(params[:id])
     set_perms(@storage_pool.hardware_pool)
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this storage pool: redirecting to top level'
       redirect_to :controller => 'dashboard'
     end
@@ -62,7 +62,7 @@ class StorageController < ApplicationController
   def show_volume
     @storage_volume = StorageVolume.find(params[:id])
     set_perms(@storage_volume.storage_pool.hardware_pool)
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this storage volume: redirecting to top level'
       redirect_to :controller => 'dashboard'
     end

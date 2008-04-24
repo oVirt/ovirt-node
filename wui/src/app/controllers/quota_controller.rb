@@ -30,7 +30,7 @@ class QuotaController < ApplicationController
     @quota = Quota.find(params[:id])
     set_perms(@quota.pool)
 
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this quota: redirecting to top level'
       redirect_to_parent
     end

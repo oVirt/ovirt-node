@@ -22,12 +22,12 @@ class VmController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  before_filter :pre_vm_admin, :only => [:vm_action, :cancel_queued_tasks]
+  before_filter :pre_vm_action, :only => [:vm_action, :cancel_queued_tasks]
 
   def show
     set_perms(@perm_obj)
     @actions = @vm.get_action_and_label_list
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this vm: redirecting to top level'
       redirect_to :controller => 'resources', :action => 'list'
     end
@@ -150,7 +150,8 @@ class VmController < ApplicationController
       if vm_resource_pool
         params[:vm_resource_pool_id] = vm_resource_pool.id
       else
-        @vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool, :parent_id => params[:hardware_pool_id]})
+        @vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool})
+        @vm_resource_pool.tmp_parent = @hardware_pool
         @vm_resource_pool_name = @user
       end
     end
@@ -177,8 +178,8 @@ class VmController < ApplicationController
     vm_resource_pool_name = params[:vm_resource_pool_name]
     hardware_pool_id = params[:hardware_pool_id]
     if vm_resource_pool_name and hardware_pool_id
-      vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool_name, :parent_id => hardware_pool_id})
-      vm_resource_pool.save
+      vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool_name})
+      vm_resource_pool.create_with_parent(hardware_pool_id)
       params[:vm][:vm_resource_pool_id] = vm_resource_pool.id
     end
     #set boot device to network for first boot (install)
@@ -196,8 +197,8 @@ class VmController < ApplicationController
     @perm_obj = @vm.vm_resource_pool
     @redir_obj = @vm
   end
-  def pre_vm_admin
+  def pre_vm_action
     pre_edit
-    authorize_admin
+    authorize_user
   end
 end

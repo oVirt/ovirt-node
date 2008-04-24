@@ -20,9 +20,9 @@
 class CreatePermissions < ActiveRecord::Migration
   def self.up
     create_table :permissions do |t|
-      t.column :privilege,                  :string
-      t.column :user,                       :string
-      t.column :pool_id,                    :integer
+      t.string :user_role
+      t.string :user
+      t.integer :pool_id
     end
   end
 

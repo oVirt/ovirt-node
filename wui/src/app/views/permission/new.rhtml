@@ -15,7 +15,7 @@
 
                 <div class="data-table-column">
                 <h3>Existing Users</h3>
-                <%= render :partial => "/permission/list", :locals => { :permissions => @perms, :show_object => false, :show_actions => @can_delegate } %>
+                <%= render :partial => "/permission/list", :locals => { :permissions => @perms, :show_object => false, :show_actions => @can_view } %>
                 </div>
 
               </div> <!-- end #data-table.inside -->

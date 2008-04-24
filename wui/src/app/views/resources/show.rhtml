@@ -75,7 +75,7 @@
     <div class="tools">
     <h3>Actions</h3>
 
-  <%if @is_admin -%>
+  <%if @can_modify -%>
   <div class="actions create">
     <%= link_to_if @vm_resource_pool, 'Create New VM', {:controller => "vm", :action => 'new', :vm_resource_pool_id => @vm_resource_pool}, { :class => "create" } %>
   </div>
@@ -101,10 +101,11 @@
     <%= link_to "Back to #{@vm_resource_pool.parent.name}", { :controller => @vm_resource_pool.parent.get_controller, :action => 'show', :id => @vm_resource_pool.parent }, { :class => "" } %>
   </div>
   <div class="actions ">
-    <div><%= link_to_if @can_delegate, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @vm_resource_pool }, { :class => "edit" } %></div>
+    <div><%= link_to_if @can_set_perms, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @vm_resource_pool }, { :class => "edit" } %></div>
     <table>
-      <tr><td><%= pluralize @vm_resource_pool.permissions.admins.size, "Admin" %></td></tr>
-      <tr><td><%= pluralize @vm_resource_pool.permissions.delegates.size, "Delegate" %></td></tr>
+      <tr><td><%= pluralize @vm_resource_pool.permissions.super_admins.size, "Super Admin" %></td></tr>
+      <tr><td><%= pluralize @vm_resource_pool.permissions.admins.size, "Administrator" %></td></tr>
+      <tr><td><%= pluralize @vm_resource_pool.permissions.users.size, "User" %></td></tr>
       <tr><td><%= pluralize @vm_resource_pool.permissions.monitors.size, "Monitor" %></td></tr>
     </table>
   </div>

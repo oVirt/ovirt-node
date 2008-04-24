@@ -31,7 +31,7 @@ class TaskController < ApplicationController
     elsif @task[:type] == HostTask.name 
       set_perms(@task.host.hardware_pool)
     end
-    unless @can_monitor
+    unless @can_view
       flash[:notice] = 'You do not have permission to view this task: redirecting to top level'
       redirect_to :controller => 'dashboard'
     end
