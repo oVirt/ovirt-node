@@ -156,6 +156,12 @@ start() {
         fi
     fi
 
+    find_srv collectd tcp
+    if [ -f /etc/collectd.conf.in -a $SRV_HOST -a $SRV_PORT ]; then
+        sed -e s/@COLLECTD_SERVER@/$SRV_HOST/ -e s/@COLLECTD_PORT@/$SRV_PORT/ /etc/collectd.conf.in > /etc/collectd.conf
+        service collectd restart
+    fi
+
     success
     echo
 }
@@ -231,9 +237,9 @@ EOF
 
 cp /etc/issue /etc/issue.net
 
-echo "Setting up collectd"
+echo "Setting up collectd configuration"
 # setup collectd configuration
-cat > /etc/collectd.conf << \EOF
+cat > /etc/collectd.conf.in << \EOF
 LoadPlugin logfile
 LoadPlugin network
 LoadPlugin libvirt
@@ -247,7 +253,7 @@ LoadPlugin cpu
 </Plugin>
 
 <Plugin network>
-        Server "224.0.0.1"
+        Server "@COLLECTD_SERVER@" @COLLECTD_PORT@
 </Plugin>
 EOF
 
