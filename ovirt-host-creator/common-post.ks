@@ -47,10 +47,11 @@ start() {
         ETHDEVS=$(cd /sys/class/net && ls -d eth*)
         for eth in $ETHDEVS; do
             BRIDGE=ovirtbr`echo $eth | cut -b4-`
-            echo -e "DEVICE=$eth\nONBOOT=yes\nBRIDGE=$BRIDGE" \
+            printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
 	      > /etc/sysconfig/network-scripts/ifcfg-$eth
-            echo -e "DEVICE=$BRIDGE\nBOOTPROTO=dhcp\nONBOOT=yes\nTYPE=Bridge\nPEERNTP=yes" \
-	      > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+            printf '%s\n' "DEVICE=$BRIDGE" BOOTPROTO=dhcp \
+                ONBOOT=yes TYPE=Bridge PEERNTP=yes \
+              > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         done
 
         # find all of the partitions on the system
@@ -66,12 +67,14 @@ start() {
 
 	SWAPDEVS="$LVMDEVS"
         for dev in $BLOCKDEVS; do
-            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | tr '*' ' ' | awk '$5 ~ /82/ {print $1}' | xargs`"
+            SWAPDEVS="$SWAPDEVS `/sbin/fdisk -l $dev 2>/dev/null | tr '*' ' ' \
+	                         | awk '$5 ~ /82/ {print $1}'`"
         done
 
 	# now check if any of these partitions are swap, and activate if so
         for device in $SWAPDEVS; do
-            sig=`dd if=$device bs=1 count=10 skip=$(( $PAGESIZE - 10 )) 2>/dev/null`
+            sig=`dd if=$device bs=1 count=10 skip=$(( $PAGESIZE - 10 )) \
+	         2>/dev/null`
             if [ "$sig" = "SWAPSPACE2" ]; then
                 /sbin/swapon $device
             fi
@@ -142,7 +145,8 @@ start() {
     fi
 
     if [ ! -s /etc/libvirt/krb5.tab ]; then
-        /usr/bin/wget -q http://$SRV_HOST:$SRV_PORT/config/$(/bin/hostname -i)-libvirt.tab -O /etc/libvirt/krb5.tab
+        wget -q http://$SRV_HOST:$SRV_PORT/config/$(hostname -i)-libvirt.tab \
+	  -O /etc/libvirt/krb5.tab
         if [ $? -ne 0 ]; then
             echo -n "Failed getting keytab" ; failure ; echo ; exit 1
         fi
@@ -150,7 +154,7 @@ start() {
 
     if [ ! -s /etc/krb5.conf ]; then
         rm -f /etc/krb5.conf
-        /usr/bin/wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O /etc/krb5.conf
+        wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O /etc/krb5.conf
         if [ "$?" -ne 0 ]; then
             echo "Failed getting krb5.conf" ; failure ; echo ; exit 1
         fi
@@ -158,7 +162,9 @@ start() {
 
     find_srv collectd tcp
     if [ -f /etc/collectd.conf.in -a $SRV_HOST -a $SRV_PORT ]; then
-        sed -e s/@COLLECTD_SERVER@/$SRV_HOST/ -e s/@COLLECTD_PORT@/$SRV_PORT/ /etc/collectd.conf.in > /etc/collectd.conf
+        sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
+            -e "s/@COLLECTD_PORT@/$SRV_PORT/" /etc/collectd.conf.in \
+          > /etc/collectd.conf
         service collectd restart
     fi
 
@@ -309,7 +315,8 @@ $RM /usr/share/terminfo
 $RM /usr/share/X11
 $RM /usr/share/i18n
 
-find /usr/share/zoneinfo -regextype egrep -type f ! -regex ".*/EST.*|.*/GMT" -exec $RM {} \;
+find /usr/share/zoneinfo -regextype egrep -type f \
+  ! -regex ".*/EST.*|.*/GMT" -exec $RM {} \;
 
 $RM /usr/lib/locale
 $RM /usr/lib/syslinux
