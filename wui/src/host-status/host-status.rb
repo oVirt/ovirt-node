@@ -23,6 +23,7 @@ $: << File.join(File.dirname(__FILE__), "../dutils")
 require 'rubygems'
 require 'libvirt'
 require 'optparse'
+require 'daemons'
 
 $logfile = '/var/log/ovirt-wui/host-status.log'
 
@@ -48,7 +49,7 @@ rescue OptionParser::InvalidOption
 end
 
 if do_daemon
-  daemonize
+  Daemons.daemonize
   STDOUT.reopen $logfile, 'a'
   STDERR.reopen STDOUT
 end

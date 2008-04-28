@@ -22,10 +22,14 @@ $: << File.join(File.dirname(__FILE__), "../dutils")
 
 require 'rubygems'
 require 'libvirt'
+require 'dutils'
 
 if ARGV.length != 1
   exit
 end
+
+# connects to the db in here
+require 'dutils'
 
 # make sure we get our credentials up-front
 get_credentials
@@ -44,8 +48,6 @@ end
 # we could destroy the credentials, but another process might be using them
 # (in particular, the taskomatic).  Just leave them around, it shouldn't hurt
 
-# connects to the db in here
-require 'dutils'
 
 # FIXME: we need a better way to get a UUID, rather than the hostname
 $host = Host.find(:first, :conditions => [ "uuid = ?", ARGV[0]])
