@@ -81,6 +81,30 @@ chmod +x /etc/dhclient-exit-hooks
 # make sure that we get a kerberos principal on every boot
 echo "/etc/cron.hourly/ovirtadmin.cron" >> /etc/rc.d/rc.local
 
+# make collectd.conf.
+cat > /etc/collectd.conf << \EOF
+LoadPlugin network
+LoadPlugin logfile
+LoadPlugin rrdtool
+
+<Plugin logfile>
+        LogLevel info
+        File STDOUT
+</Plugin>
+
+<Plugin network>
+        Listen "0.0.0.0"
+</Plugin>
+
+<Plugin rrdtool>
+        DataDir "/var/lib/collectd/rrd"
+        CacheTimeout 120
+        CacheFlush   900
+</Plugin>
+
+EOF
+
+
 cat > /etc/init.d/ovirt-wui-dev-first-run << \EOF
 #!/bin/bash
 #
@@ -151,6 +175,7 @@ start() {
         -W _ovirt._tcp,management.priv.ovirt.org,80 \
         -W _ipa._tcp,management.priv.ovirt.org,8089 \
         -W _ldap._tcp,managment.priv.ovirt.org,389 \
+        -W _collectd._tcp,management.priv.ovirt.org,25826 \
         --enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
         -O option:router,192.168.50.1 -O option:ntp-server,192.168.50.2 \
         -R -S 192.168.122.1
