@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+ <head>
+   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+   <title><%= yield :title -%></title>
+   <%= stylesheet_link_tag 'default' %> <%# remove me %>
+   <%= stylesheet_link_tag 'layout' %>
+   <%= stylesheet_link_tag 'components' %>
+   <%= javascript_include_tag "prototype" -%>
+   <%= yield :scripts -%>
+ </head>
+
+ <body>
+
+   <div id="header">
+      <%= render :partial => '/layouts/header_redux' %>
+   </div>
+
+   <div id="side">
+     <%= render :partial => '/layouts/tree' %>
+   </div>
+
+   <div id="side-toolbar" class="header_menu_wrapper">
+     <%= render :partial => '/layouts/side_toolbar' %>
+   </div>
+
+   <div id="main">
+      <div id="navigation-tabs">
+        <%= render :partial => '/layouts/navigation_tabs' %>
+      </div> 
+      <div id="content-area">
+        <%= yield  %> <%# the rest of the center and right hand side %>
+      </div>
+   </div>
+
+ </body>
+</html>

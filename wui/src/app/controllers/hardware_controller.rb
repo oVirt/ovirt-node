@@ -29,6 +29,22 @@ class HardwareController < ApplicationController
     end
   end
 
+  def show_vms
+    show
+  end
+
+  def show_users
+    show
+  end
+
+  def show_hosts
+    show
+  end
+
+  def show_storage
+    show
+  end
+
   def new
     @pools = @pool.self_and_like_siblings
   end

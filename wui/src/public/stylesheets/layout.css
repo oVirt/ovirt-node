@@ -1,0 +1,218 @@
+@charset "UTF-8";
+
+/****************
+    html elements 
+**/
+
+html {
+  /*overflow: hidden;*/
+  font-size: small;
+}
+
+body {
+  /*overflow: hidden;*/
+  font-family:"Lucida Grande","Luxi Sans","Bitstream Vera Sans","Trebuchet MS",helvetica,verdana,arial,sans-serif;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background-color:#333333;
+  font-size: 90%; 
+}
+
+img
+{  
+  border-style: none;
+}
+
+/************************** 
+    oVirt layout components 
+**/
+
+#header {
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  top: 0px;    
+  left: 0px;
+  width: 100%;
+  height: 90px;
+  overflow: hidden;
+  background:#535353 url(images/bg_header.jpg) repeat-x top;
+}
+
+#side {    
+  padding: 5px 0 0 5px;
+  margin: 0;
+  position: absolute;    
+  top: 70px;
+  left: 0px;
+  bottom: 35px;
+  overflow: auto;    
+  width: 225px; 
+  background-color:#FFFFFF;  
+}
+
+#side-toolbar{
+  float:none; 
+  position:absolute; 
+  bottom:0px;
+}
+
+#main {
+  position:absolute; 
+  top:40px; 
+  left:231px;
+}
+
+#navigation-tabs{
+  height: 30px;
+}
+
+#content-area {
+}
+
+
+
+
+
+
+
+
+
+.toolbar {
+  margin: 1px 0 1px 0;
+  background: #CCCCCC url(images/bg_menu_big.jpg) repeat-x top;
+  height: 31px;
+  border-left: #FFFFFF solid 1px; 
+  border-top: #FFFFFF solid 1px; 
+  border-bottom: #FFFFFF solid 1px; 
+  border-right: #B4B4B4 solid 1px; 
+  }
+
+.breadcrumb_main {
+  padding: 0;
+  margin: 40px 0 0 10px;
+  float:left;
+  color:#B5B5B5;
+}
+.breadcrumb_main a:link    { color: #B5B5B5; text-decoration: underline; }   
+.breadcrumb_main a:active  { color: #B5B5B5; text-decoration: underline; }
+.breadcrumb_main a:visited { color: #B5B5B5; text-decoration: underline; }
+.breadcrumb_main a:hover   { color: #FFFFFF; text-decoration: none; }
+
+.breadcrumb_currentpage {
+  color:#FFFFFF;
+  font-size: 130%;
+}
+
+/*  ----- Right side of Header --------  */
+
+
+#textfield_effect {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #7A7A7A;
+    padding-left: 5px;
+    background: #4A4A4A;
+    font-size: 100%;
+    color: #FFFFFF;
+    width: 100px;
+    height: 16px;
+}
+#searchbox-button{
+    vertical-align: bottom;
+}
+
+
+.panel_header {
+  padding: 5px 0 0 10px;
+  margin: 0;
+  height: 23px;
+  color: #FFFFFF;
+  font-size: 110%;
+  border-left: 1px solid #93B2C4;
+  background: #000000 url(images/bg_toolbarheader.jpg) repeat-x top;
+}
+
+
+
+/*  ----- Blue Tabbed Navigation --------  */
+.tab_nav {
+    margin:0;
+    padding: 0;
+    background: none;
+    list-style-type: none;
+    float: left;
+    font-size: 110%;
+}
+.tab_nav li {
+    margin: 0 1px 0 1px;
+    padding: 0;
+    float: left;
+}
+.tab_nav a {
+    float:left;
+    padding: 0 15px 0 15px;
+    color: #CCCCCC;
+    text-decoration: none;
+    line-height: 2.3;
+    height: 24px;
+    text-align: center;
+    background: none;
+
+}
+.tab_nav a:hover {color:#FFFFFF; border-bottom: 5px solid #5599B8;}
+.tab_nav li.current a {color:#FFFFFF; font-weight: bold; height: 24px; line-height:1.6; border-bottom: 5px solid #5599B8;}
+
+
+
+/*  ----- Toolbar Navigation --------  */
+.toolbar_nav {
+    margin:0;
+    padding: 0;
+    background: #E5E5E5;
+    list-style-type: none;
+    float: left;
+    }
+.toolbar_nav li {
+    margin: 0;
+    padding: 0;
+    float: left;
+}
+.toolbar_nav a {
+    float:left;
+    padding: 0 10px 0 10px;
+    color: #FFFFFF;
+    text-decoration: none;
+    line-height: 2.3;
+    height: 28px;
+    text-align: center;
+    border-right: 1px solid #5A7A8E;
+    border-left: 1px solid #93B2C4;
+    background: #000000 url(images/bg_toolbarheader.jpg) repeat-x top; 
+}
+.toolbar_nav a:hover {background-position: 0 -28px; border-left: 1px solid #82B6CE;}
+
+
+
+/*  ----- Panel Contents --------  */
+
+.panel_summary {
+  padding:0;
+  margin:0;
+  height: 100px;
+  background: #E5E5E5;
+}
+
+.selection_detail {
+  padding: 10px;
+  margin: 35px 0 0 0;
+  position:absolute; 
+  bottom:0px; 
+  left: 0px;
+  right: 0px;
+  height: 150px;
+  background: #DEE7EB;
+  border-top: #CCCCCC solid 1px;
+}
