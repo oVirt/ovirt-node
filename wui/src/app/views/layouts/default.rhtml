@@ -7,18 +7,33 @@
   <title><%= yield :title -%></title>
   <%= stylesheet_link_tag 'default' %>
   <%= javascript_include_tag "prototype" -%>
+
+  <%= stylesheet_link_tag '/javascripts/jquery-treeview/jquery.treeview.css' %>
+  <%= javascript_include_tag "jquery.pack.js" -%>
+  <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
+  <!--%= javascript_include_tag "jquery-treeview/jquery.treeview.edit.js" -%-->
+  <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
   <%= yield :scripts -%>
+      <script type="text/javascript">
+        jQuery.noConflict()
+        jQuery(document).ready(function(){
+	    jQuery("#treenav").treeview({
+			url: "/hardware/json",
+                        hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
+                        resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
+	    })
+	});
+      </script>
 </head>
-<body>
+<body class="tundra">
 
   <div id="headerFade"><div id="logoHeader"><%= link_to image_tag("ovirt_logo.png", :class_name => "logo"), :controller => "resources", :action => "list" -%><span id="loginStatus">Logged in as: <strong><%= @controller.get_login_user -%></strong></div></div>
   <div id="greenLine">&nbsp;</div>
   <div id="darkGreenLine">&nbsp;</div>
 
-<div id="wrapper">
-
   <table id="main"><tr>
   <td id="left">
+
     <%= render :partial => '/layouts/tree' %>
   </td>
   <td id="center">

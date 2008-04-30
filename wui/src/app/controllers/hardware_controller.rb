@@ -28,6 +28,36 @@ class HardwareController < ApplicationController
       redirect_to :controller => "dashboard"
     end
   end
+  
+  def json
+    id = params[:id]
+    logger.debug "id is #{id}"
+    if id
+      @pool = HardwarePool.find(id)
+      logger.debug  "The object is #{@pool.inspect}"
+      set_perms(@pool)
+      unless @can_view
+        flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
+        redirect_to :controller => "dashboard"
+        return
+      end
+    end
+    if @pool
+      pools = @pool.children
+      logger.debug "@pool exists"
+      logger.debug "it is: #{pools.inspect}"
+    else
+      pools = Pool.list_for_user(get_login_user,Permission::PRIV_VIEW)
+      logger.debug 'trying to show a list of pools'
+      logger.debug pools.inspect
+    end
+    return_hash = { :label => 'name', 
+                    :identifier => 'id', 
+                    :items => pools }
+    
+    render :json => pools.to_json(:methods => [:text, :hasChildren], 
+                                        :only => [:id, :name, :type])
+  end
 
   def show_vms
     show
