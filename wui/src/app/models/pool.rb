@@ -128,4 +128,12 @@ class Pool < ActiveRecord::Base
     return nil
   end
 
+  #needed by tree widget for display
+  def text
+    name
+  end
+  def hasChildren
+    return (rgt - lft) != 1
+  end
+
 end

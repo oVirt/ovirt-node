@@ -31,7 +31,7 @@ class HardwareController < ApplicationController
       redirect_to :controller => "dashboard"
     end
   end
-
+  
   def json
     id = params[:id]
     if id

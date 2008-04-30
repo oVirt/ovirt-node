@@ -1,7 +1,3 @@
-      <div id="tree">
-      <ul id="treenav">
-
-      </ul>
-        <% selected = "selected" if controller.controller_name == "dashboard" && params[:action] == "index" %>
-        <%= link_to "Dashboard", { :controller => "dashboard" }, { :id => "dashboard", :class => "#{selected}" } %>
-      </div> <!-- end #tree -->
+<% selected = "selected" if controller.controller_name == "dashboard" && params[:action] == "index" %>
+<%= link_to "Dashboard", { :controller => "dashboard" }, { :id => "dashboard", :class => "#{selected}" } %>
+<ul id="tree" class="filetree treeview"></ul>

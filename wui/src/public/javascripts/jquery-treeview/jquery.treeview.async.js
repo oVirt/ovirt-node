@@ -21,10 +21,16 @@ function load(settings, root, child, container) {
 		function createNode(parent) {
                         //settings.url = settings.url + "/" + this.id;
                         settings.id = this.id;                        
-                        this.type=="HardwarePool"?settings.link_to=settings.hardware_url:settings.link_to=settings.resource_url;
+                        if (this.type=="HardwarePool") {
+                            settings.link_to=settings.hardware_url 
+                            settings.span_class="folder";
+                        } else {
+                            settings.link_to=settings.resource_url;
+                            settings.span_class="file";
+                        }
                         //alert(settings.link_to);
 			var current = $("<li/>").attr("id", this.id || "")
-                          .html("<span><a href=\"" + settings.link_to + "/" + this.id + "\">" + this.text +  "</a></span>")
+                          .html("<span class=\"" + settings.span_class + "\"><a href=\"" + settings.link_to + "/" + this.id + "\">" + this.text +  "</a></span>")
                           .appendTo(parent);
 			if (this.classes) {
 				current.children("span").addClass(this.classes);
@@ -37,7 +43,7 @@ function load(settings, root, child, container) {
 				if (this.hasChildren) {
 					current.addClass("hasChildren");
 					createNode.call({
-						text:"placeholder",
+						text:" ",
 						id:"placeholder",
 						children:[]
 					}, branch);
