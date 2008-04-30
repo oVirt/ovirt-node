@@ -1,6 +1,7 @@
 @core
 bash
 kernel
+hwdata
 passwd
 policycoreutils
 chkconfig
