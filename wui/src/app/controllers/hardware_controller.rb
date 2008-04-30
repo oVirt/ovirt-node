@@ -78,6 +78,21 @@ class HardwareController < ApplicationController
       end
       hash
     end
+
+  def show_vms
+    show
+  end
+
+  def show_users
+    show
+  end
+
+  def show_hosts
+    show
+  end
+
+  def show_storage
+    show
   end
 
   def new

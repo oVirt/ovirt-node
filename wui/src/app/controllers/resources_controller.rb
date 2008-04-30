@@ -39,6 +39,7 @@ class ResourcesController < ApplicationController
                       ["Restore", VmTask::ACTION_RESTORE_VM]]
   end
 
+  # resource's summary page
   def show
     set_perms(@perm_obj)
     @is_hwpool_admin = @vm_resource_pool.parent.can_modify(@user)
@@ -50,6 +51,16 @@ class ResourcesController < ApplicationController
       flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
       redirect_to :action => 'list'
     end
+  end
+
+  # resource's vms list page
+  def show_vms
+    show
+  end
+
+  # resource's users list page
+  def show_users
+    show
   end
 
   def new

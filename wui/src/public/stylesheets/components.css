@@ -1,0 +1,43 @@
+/****************
+     header style 
+**/
+
+.header_logo {
+    position:absolute; 
+    top:10px; 
+    left:10px;
+}
+
+.header_info {
+  padding: 40px 20px 0px 10px;
+  margin: 0;
+  float: right;
+  text-align: right;
+  font-size: 100%;
+  color: #B5B5B5;
+}
+
+.header_info a:link    { color: #B5B5B5; text-decoration: none; }   
+.header_info a:active  { color: #B5B5B5; text-decoration: none; }
+.header_info a:visited { color: #B5B5B5; text-decoration: none; }
+.header_info a:hover   { color: #FFFFFF; text-decoration: none; }
+
+.header_menu_wrapper {
+  padding: 0;
+  margin: 35px 0 0 0;
+  float:left;
+  height: 35px;
+  width: 230px;
+  background: #CCCCCC;
+}
+
+.header_menu {
+  padding: 5px 0 0 10px;
+  margin: 1px;
+  background: #CCCCCC url(images/bg_menu_big.jpg) repeat-x top;
+  font-size: 110%;
+  line-height:1.5;
+  height: 26px;
+  width: 216px;
+  border: #FFFFFF solid 1px;
+}

@@ -1,0 +1,8 @@
+<table class="listing">
+  <thead>
+<% for permission in permissions %>
+  <tr class="<%= cycle('odd','even') %>">
+    <td><%= permission.user %></td>
+  </tr>
+<% end %>
+</table>

@@ -1,0 +1,8 @@
+Super Admins:
+ <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.super_admins    } %>
+Admins:
+ <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.admins    } %>
+Monitors:
+ <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.monitors  } %>
+Users:
+ <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.users } %>

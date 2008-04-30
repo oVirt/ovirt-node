@@ -1,5 +1,5 @@
 * { font-family: "Arial", "Bitstream Vera Sans", "Liberation Sans", sans-serif; }
-body {  padding: 0px; margin: 0px auto; font-size: 12pt; text-align: center; margin: 0px; }
+body {  padding: 0px; margin: 0px auto; font-size: 12pt; margin: 0px; }
 
 a { color: #0066dd; background-color: inherit; }
 a:visited { color: #0066dd; background-color: inherit; }
@@ -27,7 +27,7 @@ hr { height: 1px; border: none; border-top: 1px solid #bbbbbb; margin: 14px 0px;
 
 #left { width: 164px; background: #ffffff url("/images/left-fade.png") repeat-y scroll top right; border-left: 10px solid #fff;}
 #tree { font-size: 10pt;  }
-#tree a { display: block; width: 100%; }
+#tree a { display: block; width: 90%; }
 #tree a:hover { background-color: #fff; }
 #tree a.selected { background-color: #fff; }
 #dashboard { padding: 0.5em 0em; }

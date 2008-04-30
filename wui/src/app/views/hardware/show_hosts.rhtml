@@ -1,0 +1,9 @@
+<div class="data-section">
+  <div class="data-section-header"><strong>Available Hosts (<%= @pool.hosts.size -%>)</strong></div>
+  <div class="data-section-stats">Statistics Data</div>
+  <div class="data-section-table">
+    <div class="inside">
+       <%= render :partial => "/host/list", :locals => { :hosts => @pool.hosts } %>
+    </div>
+  </div>
+</div>

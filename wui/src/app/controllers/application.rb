@@ -24,12 +24,12 @@ class ApplicationController < ActionController::Base
   # Pick a unique cookie name to distinguish our session data from others'
   session :session_key => '_ovirt_session_id'
   init_gettext "ovirt"
-  layout 'default'
+  layout 'redux'
 
   before_filter :pre_new, :only => [:new]
   before_filter :pre_create, :only => [:create]
   before_filter :pre_edit, :only => [:edit, :update, :destroy]
-  before_filter :pre_show, :only => [:show]
+  before_filter :pre_show, :only => [:show, :show_vms, :show_users, :show_hosts, :show_storage]
   before_filter :authorize_admin, :only => [:new, :create, :edit, :update, :destroy]
 
   def get_login_user
