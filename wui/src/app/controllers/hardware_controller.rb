@@ -78,6 +78,7 @@ class HardwareController < ApplicationController
       end
       hash
     end
+  end
 
   def show_vms
     show
