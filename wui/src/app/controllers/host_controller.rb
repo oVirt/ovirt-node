@@ -138,10 +138,12 @@ class HostController < ApplicationController
     @host = Host.find(params[:id])
     flash[:notice] = 'Hosts may not be edited via the web UI'
     redirect_to :action=> 'show', :id => @host
+    @current_pool_id=@perm_obj.id
   end
   def pre_show
     @host = Host.find(params[:id])
     @perm_obj = @host.hardware_pool
+    @current_pool_id=@perm_obj.id
   end
 
 
