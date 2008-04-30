@@ -108,6 +108,10 @@ class Pool < ActiveRecord::Base
                      ["VMs", :vms, ""], 
                      ["Disk", :storage_in_gb, "(gb)"]]
 
+  #needed by tree widget for display
+  def hasChildren
+    return (rgt - lft) != 1
+  end
   protected
   def traverse_parents
     if id

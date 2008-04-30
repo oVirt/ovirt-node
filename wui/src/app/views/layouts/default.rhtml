@@ -11,14 +11,13 @@
   <%= stylesheet_link_tag '/javascripts/jquery-treeview/jquery.treeview.css' %>
   <%= javascript_include_tag "jquery.pack.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
-  <!--%= javascript_include_tag "jquery-treeview/jquery.treeview.edit.js" -%-->
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
   <%= yield :scripts -%>
       <script type="text/javascript">
         jQuery.noConflict()
         jQuery(document).ready(function(){
 	    jQuery("#treenav").treeview({
-			url: "/hardware/json",
+ 	                url: "<%= url_for :controller =>'/hardware', :action => 'json' %>",
                         hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
                         resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
 	    })
