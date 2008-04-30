@@ -37,8 +37,7 @@ class ApplicationController < ActionController::Base
   end
   
   def user_from_principal(principal)
-    #principal.split('@')[0]
-    'sseago'
+    principal.split('@')[0]
   end
 
   def set_perms(hwpool)

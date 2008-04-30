@@ -112,6 +112,33 @@ class Pool < ActiveRecord::Base
   def hasChildren
     return (rgt - lft) != 1
   end
+
+  def self.nav_json(pools, open_list)
+    pool_hash(pools, open_list).to_json
+  end
+  def self.pool_hash(pools, open_list)
+    pools.collect do |pool|
+      hash = {}
+      hash[:id] = pool.id
+      hash[:type] = pool[:type]
+      hash[:text] = pool.name
+      hash[:name] = pool.name
+      hash[:hasChildren] = pool.hasChildren
+      found = false
+      open_list.each do |open_pool|
+        if pool.id == open_pool.id
+          new_open_list = open_list[(open_list.index(open_pool)+1)..-1]
+          unless new_open_list.empty?
+            hash[:children] = pool_hash(pool.children, new_open_list)
+          end
+          break
+        end
+      end
+      hash
+    end
+  end
+    
+
   protected
   def traverse_parents
     if id
@@ -128,12 +155,5 @@ class Pool < ActiveRecord::Base
     return nil
   end
 
-  #needed by tree widget for display
-  def text
-    name
-  end
-  def hasChildren
-    return (rgt - lft) != 1
-  end
 
 end

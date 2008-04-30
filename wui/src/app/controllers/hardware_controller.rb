@@ -22,7 +22,6 @@ class HardwareController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  #before_filter :pre_json, :only => [:json]
 
   def show
     set_perms(@perm_obj)
@@ -35,7 +34,7 @@ class HardwareController < ApplicationController
   def json
     id = params[:id]
     if id
-      @pool = HardwarePool.find(id)
+      @pool = Pool.find(id)
       set_perms(@pool)
       unless @can_view
         flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
@@ -56,28 +55,8 @@ class HardwareController < ApplicationController
         open_list = []
       end
     end
-    render :json => pool_hash(pools, open_list).to_json
-  end
-  def pool_hash(pools, open_list)
-    pools.collect do |pool|
-      hash = {}
-      hash[:id] = pool.id
-      hash[:type] = pool[:type]
-      hash[:text] = pool.name
-      hash[:name] = pool.name
-      hash[:hasChildren] = pool.hasChildren
-      found = false
-      open_list.each do |open_pool|
-        if pool.id == open_pool.id
-          new_open_list = open_list[(open_list.index(open_pool)+1)..-1]
-          unless new_open_list.empty?
-            hash[:children] = pool_hash(pool.children, new_open_list)
-          end
-          break
-        end
-      end
-      hash
-    end
+
+    render :json => Pool.nav_json(pools, open_list)
   end
 
   def show_vms
@@ -160,8 +139,5 @@ class HardwareController < ApplicationController
     @pool = HardwarePool.find(params[:id])
     @perm_obj = @pool
     @current_pool_id=@pool.id
-  end
-  def pre_json
-    pre_show
   end
 end
