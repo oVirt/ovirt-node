@@ -104,6 +104,9 @@ class StorageController < ApplicationController
       else
         render :action => 'new'
       end
+    else 
+      flash[:notice] = 'Storage Pool creation failed.'
+      redirect_to :controller => @storage_pool.hardware_pool.get_controller, :action => 'show', :id => @storage_pool.hardware_pool_id
     end
   end
 

@@ -18,6 +18,9 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class IscsiStoragePool < StoragePool
+  
+  validates_uniqueness_of :ip_addr, :scope => [:port, :target]
+  
   def label_components
     "#{target}"
   end
