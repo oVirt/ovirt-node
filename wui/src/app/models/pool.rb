@@ -131,6 +131,7 @@ class Pool < ActiveRecord::Base
           unless new_open_list.empty?
             hash[:children] = pool_hash(pool.children, new_open_list)
             hash[:expanded] = true
+            hash.delete(:hasChildren)
           end
           break
         end
