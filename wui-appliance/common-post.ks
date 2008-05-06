@@ -34,7 +34,7 @@ cat > /etc/init.d/ovirt-wui-first-run << \EOF
 start() {
 	echo -n "Starting ovirt-wui-first-run: "
 
-	/usr/bin/ovirt-wui-install > /var/log/ovirt-wui-first-run.log 2>&1
+	ovirt-wui-install > /var/log/ovirt-wui-first-run.log 2>&1
 
 	RETVAL=$?
 	if [ $RETVAL -eq 0 ]; then

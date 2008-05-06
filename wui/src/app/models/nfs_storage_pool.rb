@@ -18,6 +18,9 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class NfsStoragePool < StoragePool
+
+  validates_uniqueness_of :ip_addr, :scope => :export_path
+
   def label_components
     "#{export_path}"
   end
