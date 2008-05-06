@@ -23,7 +23,8 @@ repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-ma
 %include common-post.ks
 
 # make sure our "hostname" resolves to management.priv.ovirt.org
-sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' /etc/sysconfig/network
+sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' \
+  /etc/sysconfig/network
 
 # make sure to update the /etc/hosts with the list of all possible DHCP
 # addresses we can hand out; dnsmasq uses this
@@ -32,31 +33,38 @@ for i in `seq 3 252` ; do
     echo "192.168.50.$i node$i.priv.ovirt.org" >> /etc/hosts
 done
 
+principal=ovirtadmin@PRIV.OVIRT.ORG
+cron_file=/etc/cron.hourly/ovirtadmin.cron
+ktab_file=/usr/share/ovirt-wui/ovirtadmin.tab
+
 # automatically refresh the kerberos ticket every hour (we'll create the
 # principal on first-boot)
-cat > /etc/cron.hourly/ovirtadmin.cron << \EOF
+cat > $cron_file << EOF
 #!/bin/bash
-/usr/kerberos/bin/kdestroy
-/usr/kerberos/bin/kinit -k -t /usr/share/ovirt-wui/ovirtadmin.tab ovirtadmin@PRIV.OVIRT.ORG
+export PATH=/usr/kerberos/bin:$PATH
+kdestroy
+kinit -k -t $ktab_file $principal
 EOF
-chmod 755 /etc/cron.hourly/ovirtadmin.cron
+chmod 755 $cron_file
+
+ff_profile_dir=uxssq4qb.ovirtadmin
 
 # for firefox, we need to make some subdirs and add some preferences
-mkdir -p /root/.mozilla/firefox/uxssq4qb.ovirtadmin
-cat >> /root/.mozilla/firefox/uxssq4qb.ovirtadmin/prefs.js << \EOF
+mkdir -p /root/.mozilla/firefox/$ff_profile_dir
+cat >> /root/.mozilla/firefox/$ff_profile_dir/prefs.js << \EOF
 user_pref("network.negotiate-auth.delegation-uris", "priv.ovirt.org");
 user_pref("network.negotiate-auth.trusted-uris", "priv.ovirt.org");
 user_pref("browser.startup.homepage", "http://management.priv.ovirt.org/ovirt");
 EOF
 
-cat >> /root/.mozilla/firefox/profiles.ini << \EOF
+cat >> /root/.mozilla/firefox/profiles.ini << EOF
 [General]
 StartWithLastProfile=1
 
 [Profile0]
 Name=ovirtadmin
 IsRelative=1
-Path=uxssq4qb.ovirtadmin
+Path=$ff_profile_dir
 EOF
 
 # make sure we don't mount the "fake" iSCSI LUNs, since they are meant to
@@ -79,7 +87,7 @@ EOF
 chmod +x /etc/dhclient-exit-hooks
 
 # make sure that we get a kerberos principal on every boot
-echo "/etc/cron.hourly/ovirtadmin.cron" >> /etc/rc.d/rc.local
+echo "$cron_file" >> /etc/rc.d/rc.local
 
 # make collectd.conf.
 cat > /etc/collectd.conf << \EOF
@@ -105,7 +113,11 @@ LoadPlugin rrdtool
 EOF
 
 
-cat > /etc/init.d/ovirt-wui-dev-first-run << \EOF
+first_run_file=/etc/init.d/ovirt-wui-dev-first-run
+sed -e "s,@cron_file@,$cron_file," \
+    -e "s,@principal@,$principal," \
+    -e "s,@ktab_file@,$ktab_file," \
+   > $first_run_file << \EOF
 #!/bin/bash
 #
 # ovirt-wui-dev-first-run First run configuration for Ovirt WUI Dev appliance
@@ -123,12 +135,13 @@ start() {
 	echo -n "Starting ovirt-dev-wui-first-run: "
 	(
 	# set up freeipa
-	/usr/sbin/ipa-server-install -r PRIV.OVIRT.ORG -p ovirt -P ovirt -a ovirtwui --hostname management.priv.ovirt.org -u dirsrv -U
+	ipa-server-install -r PRIV.OVIRT.ORG -p ovirt -P ovirt -a ovirtwui \
+	  --hostname management.priv.ovirt.org -u dirsrv -U
 
 	# now create the ovirtadmin user
-	$KADMIN -q 'addprinc -randkey ovirtadmin@PRIV.OVIRT.ORG'	
-	$KADMIN -q 'ktadd -k /usr/share/ovirt-wui/ovirtadmin.tab ovirtadmin@PRIV.OVIRT.ORG'
-	/etc/cron.hourly/ovirtadmin.cron
+	$KADMIN -q 'addprinc -randkey @principal@'
+	$KADMIN -q 'ktadd -k @ktab_file@ @principal@'
+	@cron_file@
 
 	) > /var/log/ovirt-wui-dev-first-run.log 2>&1
 	RETVAL=$?
@@ -149,10 +162,10 @@ case "$1" in
         exit 2
 esac
 
-/sbin/chkconfig ovirt-wui-dev-first-run off
+chkconfig ovirt-wui-dev-first-run off
 EOF
-chmod +x /etc/init.d/ovirt-wui-dev-first-run
-/sbin/chkconfig ovirt-wui-dev-first-run on
+chmod +x $first_run_file
+chkconfig ovirt-wui-dev-first-run on
 
 cat > /etc/init.d/ovirt-wui-dev << \EOF
 #!/bin/bash
@@ -168,7 +181,7 @@ cat > /etc/init.d/ovirt-wui-dev << \EOF
 
 start() {
     echo -n "Starting ovirt-wui-dev: "
-    /usr/sbin/dnsmasq -i eth1 -F 192.168.50.6,192.168.50.252 \
+    dnsmasq -i eth1 -F 192.168.50.6,192.168.50.252 \
         -G 00:16:3e:12:34:57,192.168.50.3 -G 00:16:3e:12:34:58,192.168.50.4 \
         -G 00:16:3e:12:34:59,192.168.50.5 \
         -s priv.ovirt.org \
@@ -181,23 +194,23 @@ start() {
         -R -S 192.168.122.1
     
     # Set up the fake iscsi target
-    /usr/sbin/tgtadm --lld iscsi --op new --mode target --tid 1 \
+    tgtadm --lld iscsi --op new --mode target --tid 1 \
         -T ovirtpriv:storage
     
     #
     # Now associate them to the LVs
     # 
-    /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
+    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
         --lun 1 -b /dev/VolGroup00/iSCSI3
-    /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
+    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
         --lun 2 -b /dev/VolGroup00/iSCSI4
-    /usr/sbin/tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
+    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
         --lun 3 -b /dev/VolGroup00/iSCSI5
-    
+
     # 
     # Now make them available
     #
-    /usr/sbin/tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
+    tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
 
     echo_success
     echo
@@ -207,15 +220,15 @@ stop() {
     echo -n "Stopping ovirt-wui-dev: "
 
     # stop access to the iscsi target
-    /usr/sbin/tgtadm --lld iscsi --op unbind --mode target --tid 1 -I ALL
+    tgtadm --lld iscsi --op unbind --mode target --tid 1 -I ALL
 
     # unbind the LUNs
-    /usr/sbin/tgtadm --lld iscsi --op delete --mode logicalunit --tid 1 --lun 3
-    /usr/sbin/tgtadm --lld iscsi --op delete --mode logicalunit --tid 1 --lun 2
-    /usr/sbin/tgtadm --lld iscsi --op delete --mode logicalunit --tid 1 --lun 1
+    tgtadm --lld iscsi --op delete --mode logicalunit --tid 1 --lun 3
+    tgtadm --lld iscsi --op delete --mode logicalunit --tid 1 --lun 2
+    tgtadm --lld iscsi --op delete --mode logicalunit --tid 1 --lun 1
 
     # shutdown the target
-    /usr/sbin/tgtadm --lld iscsi --op delete --mode target --tid 1
+    tgtadm --lld iscsi --op delete --mode target --tid 1
 
     kill $(cat /var/run/dnsmasq.pid)
 
@@ -240,7 +253,7 @@ case "$1" in
 esac
 EOF
 chmod +x /etc/init.d/ovirt-wui-dev
-/sbin/chkconfig ovirt-wui-dev on
+chkconfig ovirt-wui-dev on
 
 # get the PXE boot image; this can take a while
 PXE_URL=http://ovirt.org/download
