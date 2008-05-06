@@ -9,7 +9,6 @@ one:
   filename: 'foobar'
 two:
   id: 2
-  lun: 'abcd'
   size: '20485760'
   path: '/home/secretstuff'
   storage_pool_id: 2
@@ -30,13 +29,11 @@ four:
   type: 'IscsiStorageVolume'
 five:
   id: 5
-  lun: 'af2b0d00-2235-400b-8582-68aa1a011c33'
   size: '42424242'
   storage_pool_id: 2
   type: 'NfsStorageVolume'
 six:
   id: 6
-  lun: 'ba8c071f-b971-4f31-a08e-2cd26f06d5bb'
   size: '007007'
   storage_pool_id: 6
   type: 'NfsStorageVolume'

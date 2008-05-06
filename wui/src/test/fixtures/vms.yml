@@ -9,7 +9,7 @@ one:
   vnic_mac_addr: '23:51:90:A1:13:37'
   state: 'stopped'
   needs_restart: 0
-  boot_device: '/dev/sda1'
+  boot_device: 'hd'
   host_id: 1
   vm_resource_pool_id: 7
 two:
@@ -23,7 +23,7 @@ two:
   vnic_mac_addr: '15:99:FE:ED:11:EE'
   state: 'running'
   needs_restart: 0
-  boot_device: '/dev/sda2'
+  boot_device: 'network'
   host_id: 1
   vm_resource_pool_id: 7
 three:
@@ -35,9 +35,9 @@ three:
   memory_allocated: 1024
   memory_used: 512
   vnic_mac_addr: 'FF:AA:BB:00:11:55'
-  state: 'kernel panic'
+  state: 'stopped'
   needs_restart: 1
-  boot_device: '/dev/sda3'
+  boot_device: 'cdrom'
   host_id: 1
   vm_resource_pool_id: 7
 four:
@@ -51,7 +51,7 @@ four:
   vnic_mac_addr: '48:24:12:93:42:11'
   state: 'running'
   needs_restart: 0
-  boot_device: '/dev/sda4'
+  boot_device: 'hd'
   host_id: 1
   vm_resource_pool_id: 7
 five:
@@ -65,7 +65,7 @@ five:
   vnic_mac_addr: '19:18:17:16:15:14'
   state: 'running'
   needs_restart: 0
-  boot_device: '/var/disks/foobar/dev'
+  boot_device: 'hd'
   host_id: 5
   vm_resource_pool_id: 2
 six:
@@ -79,7 +79,7 @@ six:
   vnic_mac_addr: '25:62:A1:0F:EE:BB'
   state: 'running'
   needs_restart: 0
-  boot_device: '/var/disks/foobar/qa'
+  boot_device: 'hd'
   host_id: 5
   vm_resource_pool_id: 2
 seven:
@@ -93,7 +93,7 @@ seven:
   vnic_mac_addr: '42:42:42:42:42:42'
   state: 'running'
   needs_restart: 0
-  boot_device: '/var/disks/foobar/stage1'
+  boot_device: 'cdrom'
   host_id: 5
   vm_resource_pool_id: 2
 eight:
@@ -107,7 +107,7 @@ eight:
   vnic_mac_addr: '24:24:24:24:24:24'
   state: 'running'
   needs_restart: 0
-  boot_device: '/var/disks/foobar/stage2'
+  boot_device: 'cdrom'
   host_id: 5
   vm_resource_pool_id: 2
 nine:
@@ -121,7 +121,7 @@ nine:
   vnic_mac_addr: 'FF:FF:FF:EE:EE:EE'
   state: 'running'
   needs_restart: 0
-  boot_device: '/var/disks/foobar/prod1'
+  boot_device: 'cdrom'
   host_id: 6
   vm_resource_pool_id: 2
 ten:
@@ -135,7 +135,7 @@ ten:
   vnic_mac_addr: 'EE:EE:EE:FF:FF:FF'
   state: 'running'
   needs_restart: 0
-  boot_device: '/var/disks/foobar/prod2'
+  boot_device: 'cdrom'
   host_id: 6
   vm_resource_pool_id: 2
 eleven:
@@ -149,7 +149,7 @@ eleven:
   vnic_mac_addr: '77:77:77:77:77:77'
   state: 'running'
   needs_restart: 0
-  boot_device: '/dev/hda1'
+  boot_device: 'network'
   host_id: 8
   vm_resource_pool_id: 6
 twelve:
@@ -163,6 +163,6 @@ twelve:
   vnic_mac_addr: '77:77:77:77:77:77'
   state: 'running'
   needs_restart: 0
-  boot_device: '/dev/hda2'
+  boot_device: 'network'
   host_id: 8
   vm_resource_pool_id: 6

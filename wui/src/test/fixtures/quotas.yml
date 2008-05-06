@@ -55,3 +55,11 @@ seven:
   total_storage: 112233
   total_vms: 
   pool_id: 11
+eight:
+  id: 8
+  total_vcpus: 20
+  total_vmemory: 200000
+  total_vnics: 30
+  total_storage: 1111111111
+  total_vms: 20
+  pool_id: 7

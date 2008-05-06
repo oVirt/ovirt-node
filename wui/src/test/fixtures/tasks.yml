@@ -23,7 +23,7 @@ two:
 three:
   id: 3
   user: 'luser'
-  action: 'refresh_vm'
+  action: 'start_vm'
   state: 'finished'
   created_at: '2002-12-14 05:12:23.417883'
   time_started: '2002-12-14 05:12:23.417884'

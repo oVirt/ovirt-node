@@ -5,15 +5,16 @@ one:
   type: 'IscsiStoragePool'
   port: 53
   target: 'footarget'
-  export_path: '/tmp/foopath'
 two:
   id: 2
   hardware_pool_id: 4
   type: 'NfsStoragePool'
+  export_path: '/tmp/foopath'
 three:
   id: 3
   hardware_pool_id: 4
   type: 'NfsStoragePool'
+  export_path: '/tmp/barpath'
 four:
   id: 4
   hardware_pool_id: 9
@@ -24,27 +25,32 @@ five:
   id: 5
   hardware_pool_id: 9
   type: 'NfsStoragePool'
+  export_path: '/tmp/thepath'
 six:
   id: 6
   hardware_pool_id: 9
   type: 'NfsStoragePool'
-  port: 506
+  export_path: '/tmp/anotherpath'
 seven:
   id: 7
   hardware_pool_id: 9
   type: 'NfsStoragePool'
-  target: 'asdf'
+  export_path: '/tmp/apath'
 eight:
   id: 8
   hardware_pool_id: 6
   type: 'IscsiStoragePool'
+  port: 531
+  target: 'bartarget'
 nine:
   id: 9
   hardware_pool_id: 8
   type: 'NfsStoragePool'
   ip_addr: '1.2.3.4'
-  export_path: '/tmp/path'
+  export_path: '/tmp/somepath'
 ten:
   id: 10
   hardware_pool_id: 6
   type: 'IscsiStoragePool'
+  port: 539
+  target: 'stayontarget'
