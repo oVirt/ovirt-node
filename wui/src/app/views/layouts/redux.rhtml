@@ -18,7 +18,6 @@
       $(document).ready(function(){         
         $("#tree").treeview({
             //animated: "normal",
-            toggle: function() {alert("I am in the redux toggle!");},
             current_pool_id:  <%if @current_pool_id == nil%>""<%else%><%=@current_pool_id%><%end%>,
             url: "<%=  url_for :controller =>'/hardware', :action => 'json' %>",
             hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",

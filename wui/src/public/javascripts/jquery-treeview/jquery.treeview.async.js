@@ -69,7 +69,6 @@ $.fn.treeview = function(settings) {
 	return proxied.call(this, $.extend({}, settings, {
 		collapsed: true,
 		toggle: function() {
-                        alert("I am in the async toggle!");
 			var $this = $(this);
 			if ($this.hasClass("hasChildren")) {
 				var childList = $this.removeClass("hasChildren").find("ul");
