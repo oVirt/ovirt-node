@@ -72,7 +72,7 @@ class StorageControllerTest < Test::Unit::TestCase
     hw_pool = HardwarePool.get_default_pool
     num_storage_volumes = StoragePool.count
 
-    post :create, :storage_type => 'NFS', :storage_pool => { :hardware_pool => hw_pool }
+    post :create, :storage_type => 'NFS', :storage_pool => { :hardware_pool => hw_pool, :ip_addr => '111.121.131.141'}
 
     assert_response :redirect
     assert_redirected_to :controller => 'hardware', :action => 'show', :id => hw_pool.id  
