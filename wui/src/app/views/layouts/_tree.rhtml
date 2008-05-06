@@ -1,3 +1,7 @@
-<% selected = "selected" if controller.controller_name == "dashboard" && params[:action] == "index" %>
-<%= link_to "Dashboard", { :controller => "dashboard" }, { :id => "dashboard", :class => "#{selected}" } %>
-<ul id="tree" class="filetree treeview"></ul>
+<div style=" float:left; padding:0 0 0 5px;"><%= image_tag("icon_dashboard.gif")%></div>
+  <% selected = "selected" if controller.controller_name == "dashboard" && params[:action] == "index" %>
+<div style=" float:left; padding:5px 0 0 5px;">
+    <%= link_to "Dashboard", { :controller => "dashboard" }, { :id => "dashboard", :class => "#{selected}" } %>
+</div>
+<div style="clear:both"></div>
+<ul id="tree" class="filetree treeview-famfamfam treeview"></ul>

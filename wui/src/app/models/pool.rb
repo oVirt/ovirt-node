@@ -127,9 +127,10 @@ class Pool < ActiveRecord::Base
       found = false
       open_list.each do |open_pool|
         if pool.id == open_pool.id
-          new_open_list = open_list[(open_list.index(open_pool)+1)..-1]
+          new_open_list = open_list[(open_list.index(open_pool)+1)..-1]          
           unless new_open_list.empty?
             hash[:children] = pool_hash(pool.children, new_open_list)
+            hash[:expanded] = true
           end
           break
         end
