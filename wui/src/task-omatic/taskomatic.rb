@@ -24,6 +24,7 @@ $: << File.join(File.dirname(__FILE__), ".")
 require 'rubygems'
 require 'optparse'
 require 'daemons'
+include Daemonize
 
 $logfile = '/var/log/ovirt-wui/taskomatic.log'
 
@@ -49,7 +50,7 @@ rescue OptionParser::InvalidOption
 end
 
 if do_daemon
-  Daemons.daemonize
+  daemonize
   STDOUT.reopen $logfile, 'a'
   STDERR.reopen STDOUT
 end

@@ -16,11 +16,11 @@
 ;(function($) {
 
 function load(settings, root, child, container) {
-        root?settings.p={id:root}:settings.p=null;
-	$.getJSON(settings.url, settings.p, function(response) { //{id: root}
-		function createNode(parent) {
-                        //settings.url = settings.url + "/" + this.id;
-                        settings.id = this.id;                        
+        var params;
+        root?params={id:root}:settings.current_pool_id!=""?params={current_id:settings.current_pool_id}:null;
+        //null;
+	$.getJSON(settings.url, params, function(response) { //{id: root}
+		function createNode(parent) {                  
                         if (this.type=="HardwarePool") {
                             settings.link_to=settings.hardware_url 
                             settings.span_class="folder";
@@ -28,7 +28,6 @@ function load(settings, root, child, container) {
                             settings.link_to=settings.resource_url;
                             settings.span_class="file";
                         }
-                        //alert(settings.link_to);
 			var current = $("<li/>").attr("id", this.id || "")
                           .html("<span class=\"" + settings.span_class + "\"><a href=\"" + settings.link_to + "/" + this.id + "\">" + this.text +  "</a></span>")
                           .appendTo(parent);
@@ -42,17 +41,17 @@ function load(settings, root, child, container) {
 				var branch = $("<ul/>").appendTo(current);
 				if (this.hasChildren) {
 					current.addClass("hasChildren");
-					createNode.call({
-						text:" ",
-						id:"placeholder",
-						children:[]
-					}, branch);
+					//createNode.call({
+						//classes:"placeholder",
+                                        //        text:"&nbsp;",
+					//	children:[]
+					//}, branch);
 				}
 				if (this.children && this.children.length) {
 					$.each(this.children, createNode, [branch])
 				}
 			}
-		}
+		}                
 		$.each(response, createNode, [child]);
         $(container).treeview({add: child});
     });
@@ -72,7 +71,7 @@ $.fn.treeview = function(settings) {
 			var $this = $(this);
 			if ($this.hasClass("hasChildren")) {
 				var childList = $this.removeClass("hasChildren").find("ul");
-				childList.empty();
+                                childList.empty();
 				load(settings, this.id, childList, container);
 			}
 			if (userToggle) {
