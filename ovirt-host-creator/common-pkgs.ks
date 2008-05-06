@@ -22,6 +22,7 @@ cyrus-sasl-lib
 collectd
 collectd-virt
 tftp
+augeas
 nc
 bind-utils
 -policycoreutils

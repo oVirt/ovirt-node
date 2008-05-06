@@ -69,3 +69,19 @@ baseurl=http://ovirt.et.redhat.com/repos/ovirt-management-repo/$basearch/
 enabled=1
 gpgcheck=0
 EOF
+
+# XXX default configuration db
+cat > /var/www/html/ovirt-cfgdb << \EOF
+rm /files/etc/sysconfig/network-scripts/ifcfg-eth0
+set /files/etc/sysconfig/network-scripts/ifcfg-eth0/DEVICE eth0
+set /files/etc/sysconfig/network-scripts/ifcfg-eth0/ONBOOT yes
+set /files/etc/sysconfig/network-scripts/ifcfg-eth0/BRIDGE ovirtbr0
+rm /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0
+set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/DEVICE ovirtbr0
+set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/BOOTPROTO dhcp
+set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/ONBOOT y
+set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/TYPE Bridge
+set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/PEERNTP yes
+save
+EOF
+
