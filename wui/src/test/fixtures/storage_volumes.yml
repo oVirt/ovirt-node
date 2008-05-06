@@ -6,7 +6,6 @@ one:
   path: '/tmp/foobar'
   storage_pool_id: 1
   type: 'IscsiStorageVolume'
-  filename: 'foobar'
 two:
   id: 2
   size: '20485760'
@@ -32,8 +31,10 @@ five:
   size: '42424242'
   storage_pool_id: 2
   type: 'NfsStorageVolume'
+  filename: 'foobar'
 six:
   id: 6
   size: '007007'
   storage_pool_id: 6
   type: 'NfsStorageVolume'
+  filename: 'barfoo'
