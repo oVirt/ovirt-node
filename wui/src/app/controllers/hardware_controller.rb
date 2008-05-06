@@ -21,12 +21,42 @@ class HardwareController < ApplicationController
 
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
+
+
   def show
     set_perms(@perm_obj)
     unless @can_view
       flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
       redirect_to :controller => "dashboard"
     end
+  end
+  
+  def json
+    id = params[:id]
+    if id
+      @pool = Pool.find(id)
+      set_perms(@pool)
+      unless @can_view
+        flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
+        redirect_to :controller => "dashboard"
+        return
+      end
+    end
+    if @pool
+      pools = @pool.children
+      open_list = []
+    else
+      pools = Pool.list_for_user(get_login_user,Permission::PRIV_VIEW)
+      current_id = params[:current_id]
+      if current_id
+        current_pool = Pool.find(current_id)
+        open_list = current_pool.self_and_ancestors
+      else
+        open_list = []
+      end
+    end
+
+    render :json => Pool.nav_json(pools, open_list)
   end
 
   def show_vms
@@ -91,19 +121,23 @@ class HardwareController < ApplicationController
     @pool = HardwarePool.new
     @parent = Pool.find(params[:parent_id])
     @perm_obj = @parent
+    @current_pool_id=@parent.id
   end
   def pre_create
     @pool = HardwarePool.new(params[:pool])
     @parent = Pool.find(params[:parent_id])
     @perm_obj = @parent
+    @current_pool_id=@parent.id
   end
   def pre_edit
     @pool = HardwarePool.find(params[:id])
     @parent = @pool.parent
     @perm_obj = @pool
+    @current_pool_id=@pool.id
   end
   def pre_show
     @pool = HardwarePool.find(params[:id])
     @perm_obj = @pool
+    @current_pool_id=@pool.id
   end
 end

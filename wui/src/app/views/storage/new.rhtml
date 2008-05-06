@@ -22,7 +22,6 @@
                 </div>
 
                 <div class="data-table-column">
-                  <strong>Choose From Storage in <%= @hardware_pool.parent.name %></strong>
                   <%= render :partial => "list", :locals => { :storage_pools => @hardware_pool.storage_pools } %>
                 </div>
 

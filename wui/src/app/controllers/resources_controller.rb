@@ -142,22 +142,26 @@ class ResourcesController < ApplicationController
     @parent = Pool.find(params[:parent_id])
     @perm_obj = @parent
     @redir_controller = @perm_obj.get_controller
+    @current_pool_id=@parent.id
   end
   def pre_create
     @vm_resource_pool = VmResourcePool.new(params[:vm_resource_pool])
     @parent = Pool.find(params[:parent_id])
     @perm_obj = @parent
     @redir_controller = @perm_obj.get_controller
+    @current_pool_id=@parent.id
   end
   def pre_show
     @vm_resource_pool = VmResourcePool.find(params[:id])
     @perm_obj = @vm_resource_pool
+    @current_pool_id=@vm_resource_pool.id
   end
   def pre_edit
     @vm_resource_pool = VmResourcePool.find(params[:id])
     @parent = @vm_resource_pool.parent
     @perm_obj = @vm_resource_pool.parent
     @redir_obj = @vm_resource_pool
+    @current_pool_id=@vm_resource_pool.id
   end
 
 end

@@ -14,7 +14,7 @@ License: GPL and MIT
 Group: Applications/System
 Requires: ruby >= 1.8.1
 Requires: ruby(abi) = 1.8
-Requires: rubygem(rails) = 2.0.1
+Requires: rubygem(rails) >= 2.0.1
 Requires: rubygem(mongrel) >= 1.0.1
 Requires: rubygem(kerberos) >= 0.4
 Requires: ruby-gettext-package
@@ -87,7 +87,7 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 %{__rm} -f %{buildroot}%{app_root}/task-omatic/.gitignore
 
 %{__cp} -a %{pbuild}/scripts/ovirt-add-host %{buildroot}%{_bindir}
-%{__cp} -a %{pbuild}/scripts/ovirt-wui-install %{buildroot}%{_bindir}
+%{__cp} -a %{pbuild}/scripts/ovirt-wui-install %{buildroot}%{_sbindir}
 %{__cp} -a %{pbuild}/scripts/ovirt-fix-ipa %{buildroot}%{_bindir}
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
@@ -99,7 +99,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0755)
-%{_bindir}/ovirt-wui-install
+%{_sbindir}/ovirt-wui-install
 %{_bindir}/ovirt-add-host
 %{_bindir}/ovirt-fix-ipa
 %{_initrddir}/%{name}

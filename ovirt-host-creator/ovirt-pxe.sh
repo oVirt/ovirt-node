@@ -32,9 +32,3 @@ ISO=`create_iso $ISO` || exit 1
 
 /usr/bin/livecd-iso-to-pxeboot $ISO
 
-# workaround for console=tty dying during start_udev in F9 KVM guest
-sed -i -e 's/\<console=[a-zA-Z0-9,]*//g' \
-       -e 's/\<APPEND.*/& console=tty console=ttyS0,115200/' \
-       -e 's/[ \t]\{2,\}/ /g' \
-       tftpboot/pxelinux.cfg/default
-

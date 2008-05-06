@@ -3,13 +3,30 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
- <head>
-   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-   <title><%= yield :title -%></title>
-   <%= stylesheet_link_tag 'default' %> <%# remove me %>
-   <%= stylesheet_link_tag 'layout' %>
-   <%= stylesheet_link_tag 'components' %>
-   <%= javascript_include_tag "prototype" -%>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= yield :title -%></title>
+  <%= stylesheet_link_tag 'default' %> <%# remove me %>
+  <%= stylesheet_link_tag 'layout' %>
+  <%= stylesheet_link_tag 'components' %>
+  <%= stylesheet_link_tag '/javascripts/jquery-treeview/jquery.ovirt.treeview.css' %>
+  <%= javascript_include_tag "jquery.pack.js" -%>
+  <!--%= javascript_include_tag "jquery-treeview/jquery.cookie.js" -%-->
+  <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
+  <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
+  <%= yield :scripts -%>
+    <script type="text/javascript">
+      jQuery.noConflict()
+      jQuery(document).ready(function(){
+        jQuery("#tree").treeview({
+            animated: "normal",
+            /*persist: "cookie",*/
+            url: "<%=  url_for :controller =>'/hardware', :action => 'json' %>",
+            hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
+            resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
+	    })
+	});
+      </script>
    <%= yield :scripts -%>
  </head>
 

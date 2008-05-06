@@ -172,6 +172,7 @@ class VmController < ApplicationController
     end
     @perm_obj = @vm.vm_resource_pool
     @redir_controller = 'resources'
+    @current_pool_id=@perm_obj.id
   end
   def pre_create
     params[:vm][:state] = Vm::STATE_PENDING
@@ -187,15 +188,18 @@ class VmController < ApplicationController
     @vm = Vm.new(params[:vm])
     @perm_obj = @vm.vm_resource_pool
     @redir_controller = 'resources'
+    @current_pool_id=@perm_obj.id
   end
   def pre_show
     @vm = Vm.find(params[:id])
     @perm_obj = @vm.vm_resource_pool
+    @current_pool_id=@perm_obj.id
   end
   def pre_edit
     @vm = Vm.find(params[:id])
     @perm_obj = @vm.vm_resource_pool
     @redir_obj = @vm
+    @current_pool_id=@perm_obj.id
   end
   def pre_vm_action
     pre_edit
