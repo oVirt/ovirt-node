@@ -20,5 +20,22 @@
 # +Account+ represents a single user's account from the LDAP server.
 #
 class Account < ActiveLdap::Base
-  ldap_mapping :dn_attribute => 'uid', :classes => ['person', 'posixAccount']
+  ldap_mapping :dn_attribute => 'cn', :prefix => 'ou=Users', :scope => :one
+
+  # +query+ returns the set of all accounts that contain the given search value.
+  #
+  # This API requires that a previous connection be made using 
+  # +LDAPConnection.connect+.
+  #
+  def Account.query(value)
+
+    @users = Account.find(:all, value)
+
+    if block_given?
+      @users.each { |user| yield(user) }
+    end
+
+    return @users
+    
+  end
 end
