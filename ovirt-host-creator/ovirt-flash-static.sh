@@ -47,7 +47,7 @@ mount -o loop $IMGTMP/LiveOS/squashfs.img $SQUASHTMP
 
 # clear out the old partition table
 dd if=/dev/zero of=$USBDEVICE bs=4096 count=1
-echo -e 'n\np\n1\n\n\nt\n83\na\n1\nw\n' | /sbin/fdisk $USBDEVICE
+printf 'n\np\n1\n\n\nt\n83\na\n1\nw\n' | fdisk $USBDEVICE
 
 cat /usr/lib/syslinux/mbr.bin > $USBDEVICE
 dd if=$SQUASHTMP/LiveOS/ext3fs.img of=${USBDEVICE}1
@@ -62,7 +62,7 @@ mv $USBTMP/isolinux.cfg $USBTMP/extlinux.conf
 LABEL=`echo $ISO | cut -d'.' -f1 | cut -c-16`
 sed -i -e "s/ *append.*/  append initrd=initrd.img root=LABEL=$LABEL ro/" $USBTMP/extlinux.conf
 
-/sbin/extlinux -i $USBTMP
+extlinux -i $USBTMP
 
 umount $USBTMP
 umount $SQUASHTMP
