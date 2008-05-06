@@ -60,12 +60,10 @@ class HostControllerTest < Test::Unit::TestCase
   end
 
   def test_new
-    get :new
+    get :new, :hardware_pool_id => 1
 
-    assert_response :success
-    assert_template 'new'
-
-    assert_not_nil assigns(:host)
+    assert_response :redirect
+    assert_redirected_to :controller => 'hardware', :action => 'show', :id => 1
   end
 
   def test_create
@@ -74,16 +72,16 @@ class HostControllerTest < Test::Unit::TestCase
     post :create, :host => {}
 
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller => 'dashboard'
 
-    assert_equal num_hosts + 1, Host.count
+    assert_equal num_hosts, Host.count
   end
 
   def test_edit
     get :edit, :id => @first_id
 
-    assert_response :success
-    assert_template 'edit'
+    assert_response :redirect
+    assert_redirected_to :action => 'show', :id => @first_id
 
     assert_not_nil assigns(:host)
     assert assigns(:host).valid?
@@ -102,9 +100,9 @@ class HostControllerTest < Test::Unit::TestCase
 
     post :destroy, :id => @first_id
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :action => 'show', :id => @first_id
 
-    assert_raise(ActiveRecord::RecordNotFound) {
+    assert_nothing_raised {
       Host.find(@first_id)
     }
   end

@@ -1,5 +1,102 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 one:
   id: 1
+  user: 'admin'
+  action: 'create_vm'
+  state: 'queued'
+  args:
+  created_at: '2008-02-13 15:42:43.417883'
+  time_started:
+  time_ended:
+  message:
+  type: 'VmTask'
+  vm_id: 5
+  storage_pool_id: 
+  host_id:
 two:
   id: 2
+  user: 'admin'
+  action: 'refresh_pool'
+  state: 'queued'
+  created_at: '2008-01-13 15:40:13.417883'
+  type: 'StorageTask'
+  storage_pool_id: 1
+three:
+  id: 3
+  user: 'luser'
+  action: 'refresh_vm'
+  state: 'finished'
+  created_at: '2002-12-14 05:12:23.417883'
+  time_started: '2002-12-14 05:12:23.417884'
+  time_ended: '2002-12-14 05:12:23.417885'
+  message: 'finished!'
+  type: 'VmTask'
+  vm_id: 7
+four:
+  id: 4
+  user: 'buser'
+  action: 'pause_vm'
+  state: 'running'
+  created_at: '2015-11-23 15:12:43.417883'
+  time_started: '2015-11-23 15:12:43.417885'
+  type: 'VmTask'
+  vm_id: 2
+five:
+  id: 5
+  user: 'admin'
+  action: 'pause_vm'
+  state: 'running'
+  created_at: '2015-11-23 15:12:43.417883'
+  time_started: '2015-11-23 15:12:43.417885'
+  type: 'VmTask'
+  vm_id: 3
+six:
+  id: 6
+  user: 'buser'
+  action: 'clear_vms'
+  state: 'canceled'
+  created_at: '2001-01-03 01:01:01.417883'
+  time_started: '2001-01-03 01:05:01.417885'
+  time_ended: '2001-01-03 01:05:19.417885'
+  message: 'task cancelled'
+  type: 'HostTask'
+  host_id: 9
+seven:
+  id: 7
+  user: 'yuser'
+  action: 'refresh_pool'
+  state: 'failed'
+  created_at: '2001-05-10 13:47:53.417883'
+  time_started: '2001-05-10 13:49:12.417885'
+  time_ended: '2001-01-10 13:49:15.417885'
+  message: 'task failed, insufficient permissions'
+  type: 'StorageTask'
+  storage_pool_id: 4
+eight:
+  id: 8
+  user: 'yuser'
+  action: 'refresh_pool'
+  state: 'finished'
+  created_at: '2001-05-10 13:51:53.417883'
+  time_started: '2001-05-10 13:53:12.417885'
+  time_ended: '2001-01-10 14:04:15.417885'
+  message: 'completed'
+  type: 'StorageTask'
+  storage_pool_id: 4
+nine:
+  id: 9
+  user: 'kadmin'
+  action: 'save_vm'
+  state: 'paused'
+  created_at: '2008-04-20 04:00:00.417883'
+  time_started: '2008-04-20 20:00:00.417885'
+  message: 'paused'
+  type: 'VmTask'
+  vm_id: 12
+ten:
+  id: 10
+  user: 'kadmin'
+  action: 'shutdown_vm'
+  state: 'queued'
+  created_at: '2008-04-20 20:05:30.417883'
+  type: 'VmTask'
+  vm_id: 12

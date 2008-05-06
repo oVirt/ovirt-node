@@ -19,8 +19,8 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class HardwarePoolTest < Test::Unit::TestCase
-  fixtures :hardware_pools
+class PoolTest < Test::Unit::TestCase
+  fixtures :pools
 
   # Replace this with your real tests.
   def test_truth

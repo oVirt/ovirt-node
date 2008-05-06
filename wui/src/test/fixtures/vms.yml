@@ -1,5 +1,168 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 one:
   id: 1
+  uuid: 'dd2573c3-b97d-493d-bedf-6a8369c965e9'
+  description: 'production httpd appliance'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 2048
+  memory_used: 1024
+  vnic_mac_addr: '23:51:90:A1:13:37'
+  state: 'stopped'
+  needs_restart: 0
+  boot_device: '/dev/sda1'
+  host_id: 1
+  vm_resource_pool_id: 7
 two:
   id: 2
+  uuid: '89e62d32-04d9-4351-b573-b1a253397296'
+  description: 'production mysqld appliance'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 1
+  memory_allocated: 2048
+  memory_used: 512
+  vnic_mac_addr: '15:99:FE:ED:11:EE'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/dev/sda2'
+  host_id: 1
+  vm_resource_pool_id: 7
+three:
+  id: 3
+  uuid: 'e2714087-3a71-460c-8112-23e044f0aa1c'
+  description: 'production ftpd appliance'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 1
+  memory_allocated: 1024
+  memory_used: 512
+  vnic_mac_addr: 'FF:AA:BB:00:11:55'
+  state: 'kernel panic'
+  needs_restart: 1
+  boot_device: '/dev/sda3'
+  host_id: 1
+  vm_resource_pool_id: 7
+four:
+  id: 4
+  uuid: '95454587-24e0-4a52-bb0f-c16abf7433d0'
+  description: 'production postgresql appliance'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 2048
+  memory_used: 1536
+  vnic_mac_addr: '48:24:12:93:42:11'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/dev/sda4'
+  host_id: 1
+  vm_resource_pool_id: 7
+five:
+  id: 5
+  uuid: 'aae029b7-0e9a-4327-8f8a-8447f473a75b'
+  description: 'foobar pipeline stage1: dev'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 2048
+  memory_used: 2048
+  vnic_mac_addr: '19:18:17:16:15:14'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/var/disks/foobar/dev'
+  host_id: 5
+  vm_resource_pool_id: 2
+six:
+  id: 6
+  uuid: 'd02d27b9-328b-4d70-8237-28557e053cb6'
+  description: 'foobar pipeline stage2: qa'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 4096
+  memory_used: 4098
+  vnic_mac_addr: '25:62:A1:0F:EE:BB'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/var/disks/foobar/qa'
+  host_id: 5
+  vm_resource_pool_id: 2
+seven:
+  id: 7
+  uuid: '56f9d73d-d7bb-48d1-bc0e-0308fc22c504'
+  description: 'foobar pipeline stage3: stage1'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 4096 
+  memory_used: 4096
+  vnic_mac_addr: '42:42:42:42:42:42'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/var/disks/foobar/stage1'
+  host_id: 5
+  vm_resource_pool_id: 2
+eight:
+  id: 8
+  uuid: '1135ffad-78c7-437c-95c6-74302cf48198'
+  description: 'foobar pipeline stage3: stage2'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 4096 
+  memory_used: 4096
+  vnic_mac_addr: '24:24:24:24:24:24'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/var/disks/foobar/stage2'
+  host_id: 5
+  vm_resource_pool_id: 2
+nine:
+  id: 9
+  uuid: '786c824a-392f-4bce-b5bb-6765f810acd1'
+  description: 'foobar prod1'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 4096 
+  memory_used: 4096
+  vnic_mac_addr: 'FF:FF:FF:EE:EE:EE'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/var/disks/foobar/prod1'
+  host_id: 6
+  vm_resource_pool_id: 2
+ten:
+  id: 10
+  uuid: '24b9a994-d415-481d-ace8-1d810b601eb6'
+  description: 'foobar prod2'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 4096 
+  memory_used: 4096
+  vnic_mac_addr: 'EE:EE:EE:FF:FF:FF'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/var/disks/foobar/prod2'
+  host_id: 6
+  vm_resource_pool_id: 2
+eleven:
+  id: 11
+  uuid: '9b2c3c73-1abe-460e-b671-b8b7b6719e4c'
+  description: 'corp.com errata appliance'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 2048 
+  memory_used: 2048
+  vnic_mac_addr: '77:77:77:77:77:77'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/dev/hda1'
+  host_id: 8
+  vm_resource_pool_id: 6
+twelve:
+  id: 12
+  uuid: '552134c7-b0ad-4607-bbf5-d6b9a33c2476'
+  description: 'corp.com bugzilla appliance'
+  num_vcpus_allocated: 2
+  num_vcpus_used: 2
+  memory_allocated: 2048 
+  memory_used: 2048
+  vnic_mac_addr: '77:77:77:77:77:77'
+  state: 'running'
+  needs_restart: 0
+  boot_device: '/dev/hda2'
+  host_id: 8
+  vm_resource_pool_id: 6

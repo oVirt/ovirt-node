@@ -91,7 +91,7 @@ class ResourcesController < ApplicationController
   def destroy
     parent = @vm_resource_pool.parent
     @vm_resource_pool.destroy
-    redirect_to :controller => parent.get_controller, :action => 'show', :id => parent
+    redirect_to :controller => parent.get_controller, :action => 'show', :id => parent.id
   end
 
   def vm_actions

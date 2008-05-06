@@ -31,22 +31,7 @@ class PermissionControllerTest < Test::Unit::TestCase
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
 
-    @first_id = permissions(:first).id
-  end
-
-  def test_index
-    get :index
-    assert_response :success
-    assert_template 'list'
-  end
-
-  def test_list
-    get :list
-
-    assert_response :success
-    assert_template 'list'
-
-    assert_not_nil assigns(:permissions)
+    @first_id = permissions(:one).id
   end
 
   def test_show
@@ -60,7 +45,7 @@ class PermissionControllerTest < Test::Unit::TestCase
   end
 
   def test_new
-    get :new
+    get :new, :pool_id => 1
 
     assert_response :success
     assert_template 'new'
@@ -71,28 +56,12 @@ class PermissionControllerTest < Test::Unit::TestCase
   def test_create
     num_permissions = Permission.count
 
-    post :create, :permission => {}
+    post :create, :permission => { :user_role => 'Administrator', :user => 'admin', :pool_id => 1}
 
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller => 'hardware', :action => 'show', :id => 1
 
     assert_equal num_permissions + 1, Permission.count
-  end
-
-  def test_edit
-    get :edit, :id => @first_id
-
-    assert_response :success
-    assert_template 'edit'
-
-    assert_not_nil assigns(:permission)
-    assert assigns(:permission).valid?
-  end
-
-  def test_update
-    post :update, :id => @first_id
-    assert_response :redirect
-    assert_redirected_to :action => 'show', :id => @first_id
   end
 
   def test_destroy
@@ -102,7 +71,8 @@ class PermissionControllerTest < Test::Unit::TestCase
 
     post :destroy, :id => @first_id
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller => 'hardware', :action => 'show', :id => 1
+
 
     assert_raise(ActiveRecord::RecordNotFound) {
       Permission.find(@first_id)

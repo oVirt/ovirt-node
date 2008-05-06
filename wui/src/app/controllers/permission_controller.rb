@@ -19,8 +19,8 @@
 
 class PermissionController < ApplicationController
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, :create, :update ],
-         :redirect_to => { :action => :list }
+  verify :method => :post, :only => [ :destroy, :create ],
+         :redirect_to => { :controller => 'dashboard' }
 
   def redirect_to_parent
     redirect_to :controller => @permission.pool.get_controller, :action => 'show', :id => @permission.pool_id
@@ -74,7 +74,7 @@ class PermissionController < ApplicationController
       if @permission.destroy
         if pool
           flash[:notice] = "<strong>#{@permission.user}</strong> permissions were revoked successfully"
-          redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
+          redirect_to :controller => pool.get_controller, :action => 'show', :id => pool.id
         else
           redirect_to :controller => 'dashboard', :action => 'list'
         end

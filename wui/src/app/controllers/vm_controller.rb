@@ -20,7 +20,7 @@
 class VmController < ApplicationController
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
-         :redirect_to => { :action => :list }
+         :redirect_to => { :controller => 'dashboard' }
 
   before_filter :pre_vm_action, :only => [:vm_action, :cancel_queued_tasks]
 
@@ -29,7 +29,7 @@ class VmController < ApplicationController
     @actions = @vm.get_action_and_label_list
     unless @can_view
       flash[:notice] = 'You do not have permission to view this vm: redirecting to top level'
-      redirect_to :controller => 'resources', :action => 'list'
+      redirect_to :controller => 'resources', :controller => 'dashboard'
     end
   end
 
@@ -63,7 +63,7 @@ class VmController < ApplicationController
       else
         flash[:notice] = 'Error in inserting task.'
       end
-      redirect_to :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool
+      redirect_to :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool.id
     else
       render :action => 'new'
     end
@@ -105,7 +105,7 @@ class VmController < ApplicationController
       if vm_resource_pool
         redirect_to :controller => 'resources', :action => 'show', :id => vm_resource_pool
       else
-        redirect_to :controller => 'resources', :action => 'list'
+        redirect_to :controller => 'resources', :controller => 'dashboard'
       end
     else
       flash[:notice] = "Vm must be stopped to destroy it."

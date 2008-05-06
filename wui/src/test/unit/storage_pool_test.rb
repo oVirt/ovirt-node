@@ -1,6 +1,6 @@
 # 
 # Copyright (C) 2008 Red Hat, Inc.
-# Written by Scott Seago <sseago@redhat.com>
+# Written by Mohammed Morsi <mmorsi@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class VmResourcePoolTest < ActiveSupport::TestCase
+class StoragePoolTest < Test::Unit::TestCase
+  fixtures :storage_pools
+
   # Replace this with your real tests.
   def test_truth
     assert true

@@ -1,0 +1,71 @@
+one:
+  id: 1
+  name: 'master pool'
+  type: 'HardwarePool'
+  created_at: '2008-02-13 15:42:43.417883'
+  updated_at: '2008-02-14 16:41:42.417883'
+  lft: 1
+  rgt: 10
+two:
+  id: 2
+  name: 'foobar hosts'
+  type: 'VmResourcePool'
+  parent_id: 1
+  lft: 2
+  rgt: 9
+three:
+  id: 3
+  name: 'corp.com'
+  type: 'HardwarePool'
+  parent_id: 1
+  lft: 3
+  rgt: 8
+four:
+  id: 4
+  name: 'corp.com dev'
+  type: 'HardwarePool'
+  parent_id: 3
+  lft: 4
+  rgt: 7
+five:
+  id: 5
+  name: 'corp.com qa'
+  type: 'HardwarePool'
+  parent_id: 3
+  lft: 5
+  rgt: 6
+six:
+  id: 6
+  name: 'corp.com production vms'
+  type: 'VmResourcePool'
+  parent_id: 3
+  lft: 6
+  rgt: 5
+seven:
+  id: 7
+  name: 'foobar'
+  type: 'VmResourcePool'
+  parent_id: 6
+  lft: 7
+  rgt: 4
+eight:
+  id: 8
+  name: 'some foobar hardware'
+  type: 'HardwarePool'
+  parent_id: 7
+  lft: 8
+  rgt: 3
+nine:
+  id: 9
+  name: 'some more foobar hardware'
+  type: 'HardwarePool'
+  parent_id: 6
+  lft: 9
+  rgt: 2
+ten:
+  id: 10
+  name: 'yet another pool'
+  type: 'VmResourcePool'
+  parent_id: 6
+  lft: 10
+  rgt: 1

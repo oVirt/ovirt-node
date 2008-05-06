@@ -20,45 +20,54 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class ResourcesControllerTest < ActionController::TestCase
-  def test_should_get_index
+  def test_index
     get :index
     assert_response :success
     assert_not_nil assigns(:vm_resource_pools)
   end
 
-  def test_should_get_new
-    get :new
+  def test_new
+    get :new, :parent_id => 1
     assert_response :success
   end
 
-  def test_should_create_vm_resource_pool
+  def test_create
     assert_difference('VmResourcePool.count') do
-      post :create, :vm_resource_pool => { }
+      post :create, :vm_resource_pool => { }, :parent_id => 1
     end
 
-    assert_redirected_to vm_resource_pool_path(assigns(:vm_resource_pool))
+    assert_response :redirect
+    assert_redirected_to :controller => 'hardware', :action => 'show', :id => 1
   end
 
-  def test_should_show_vm_resource_pool
-    get :show, :id => 1
+  def test_show
+    get :show, :id => 2
     assert_response :success
   end
 
-  def test_should_get_edit
-    get :edit, :id => 1
+  def test_get
+    get :edit, :id => 2
     assert_response :success
   end
 
-  def test_should_update_vm_resource_pool
-    put :update, :id => 1, :vm_resource_pool => { }
-    assert_redirected_to vm_resource_pool_path(assigns(:vm_resource_pool))
+  def test_update
+    put :update, :id => 2, :vm_resource_pool => { }
+    assert_response :redirect
+    assert_redirected_to :action => 'list'
   end
 
-  def test_should_destroy_vm_resource_pool
-    assert_difference('VmResourcePool.count', -1) do
-      delete :destroy, :id => 1
-    end
+  def test_destroy
+    pool = nil
+    assert_nothing_raised {
+        pool = VmResourcePool.find(2).parent.id
+    }
 
-    assert_redirected_to vm_resource_pools_path
+    post :destroy, :id => 2
+    assert_response :redirect
+    assert_redirected_to :controller => 'hardware', :action => 'show', :id => pool
+
+    assert_raise(ActiveRecord::RecordNotFound) {
+      VmResourcePool.find(2)
+    }
   end
 end

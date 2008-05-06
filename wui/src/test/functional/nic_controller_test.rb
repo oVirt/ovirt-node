@@ -31,22 +31,7 @@ class NicControllerTest < Test::Unit::TestCase
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
 
-    @first_id = nics(:first).id
-  end
-
-  def test_index
-    get :index
-    assert_response :success
-    assert_template 'list'
-  end
-
-  def test_list
-    get :list
-
-    assert_response :success
-    assert_template 'list'
-
-    assert_not_nil assigns(:nics)
+    @first_id = nics(:one).id
   end
 
   def test_show
@@ -60,12 +45,11 @@ class NicControllerTest < Test::Unit::TestCase
   end
 
   def test_new
-    get :new
+    get :new, :host_id => 1
 
-    assert_response :success
-    assert_template 'new'
+    assert_response :redirect
+    assert_redirected_to :controller => 'host', :action => 'show', :id => 1
 
-    assert_not_nil assigns(:nic)
   end
 
   def test_create
@@ -74,16 +58,16 @@ class NicControllerTest < Test::Unit::TestCase
     post :create, :nic => {}
 
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller => 'dashboard'
 
-    assert_equal num_nics + 1, Nic.count
+    assert_equal num_nics, Nic.count
   end
 
   def test_edit
     get :edit, :id => @first_id
 
-    assert_response :success
-    assert_template 'edit'
+    assert_response :redirect
+    assert_redirected_to :action => 'show', :id => @first_id
 
     assert_not_nil assigns(:nic)
     assert assigns(:nic).valid?
@@ -102,9 +86,9 @@ class NicControllerTest < Test::Unit::TestCase
 
     post :destroy, :id => @first_id
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :action => 'show', :id => @first_id
 
-    assert_raise(ActiveRecord::RecordNotFound) {
+    assert_nothing_raised {
       Nic.find(@first_id)
     }
   end

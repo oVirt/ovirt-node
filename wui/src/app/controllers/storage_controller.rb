@@ -144,7 +144,7 @@ class StorageController < ApplicationController
   def destroy
     pool = @storage_pool.hardware_pool
     @storage_pool.destroy
-    redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
+    redirect_to :controller => pool.get_controller, :action => 'show', :id => pool.id
   end
 
   def attach_to_pool

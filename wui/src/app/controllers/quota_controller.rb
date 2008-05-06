@@ -20,7 +20,7 @@
 class QuotaController < ApplicationController
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
-         :redirect_to => { :action => :list }
+         :redirect_to => { :controller => 'dashboard' }
 
   def redirect_to_parent
     redirect_to :controller => @quota.pool.get_controller, :action => 'show', :id => @quota.pool
@@ -67,9 +67,9 @@ class QuotaController < ApplicationController
       flash[:notice] = 'destroying quota failed '
     end
     if pool
-      redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
+      redirect_to :controller => pool.get_controller, :action => 'show', :id => pool.id
     else
-      redirect_to :controller => 'dashboard', :action => 'list'
+      redirect_to :controller => 'dashboard'
     end
   end
 

@@ -31,22 +31,7 @@ class VmControllerTest < Test::Unit::TestCase
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
 
-    @first_id = vms(:first).id
-  end
-
-  def test_index
-    get :index
-    assert_response :success
-    assert_template 'list'
-  end
-
-  def test_list
-    get :list
-
-    assert_response :success
-    assert_template 'list'
-
-    assert_not_nil assigns(:vms)
+    @first_id = vms(:one).id
   end
 
   def test_show
@@ -60,7 +45,7 @@ class VmControllerTest < Test::Unit::TestCase
   end
 
   def test_new
-    get :new
+    get :new, :hardware_pool_id => 1
 
     assert_response :success
     assert_template 'new'
@@ -71,10 +56,10 @@ class VmControllerTest < Test::Unit::TestCase
   def test_create
     num_vms = Vm.count
 
-    post :create, :vm => {}
+    post :create, :vm_resource_pool_name => 'foobar', :hardware_pool_id => 1, :vm => { :uuid => 'f43b298c-1e65-46fa-965f-0f6fb9ffaa10', :description => 'descript', :num_vcpus_allocated => 4, :memory_allocated => 1024, :vnic_mac_addr => 'AA:BB:CC:DD:EE:FF' }
 
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller => 'resources', :action => 'show', :id => 12
 
     assert_equal num_vms + 1, Vm.count
   end
@@ -90,19 +75,20 @@ class VmControllerTest < Test::Unit::TestCase
   end
 
   def test_update
-    post :update, :id => @first_id
+    post :update, :id => @first_id, :vm => {}
     assert_response :redirect
     assert_redirected_to :action => 'show', :id => @first_id
   end
 
   def test_destroy
+    pool = nil
     assert_nothing_raised {
-      Vm.find(@first_id)
+      pool = Vm.find(@first_id).vm_resource_pool_id
     }
 
     post :destroy, :id => @first_id
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller=>'resources', :action => 'show', :id => pool
 
     assert_raise(ActiveRecord::RecordNotFound) {
       Vm.find(@first_id)

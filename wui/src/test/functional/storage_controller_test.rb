@@ -31,7 +31,7 @@ class StorageControllerTest < Test::Unit::TestCase
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
 
-    @first_id = storage_volumes(:first).id
+    @first_id = storage_volumes(:one).id
   end
 
   def test_index
@@ -46,7 +46,7 @@ class StorageControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'list'
 
-    assert_not_nil assigns(:storage_volumes)
+    assert_not_nil assigns(:storage_pools)
   end
 
   def test_show
@@ -55,28 +55,29 @@ class StorageControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'show'
 
-    assert_not_nil assigns(:storage_volume)
-    assert assigns(:storage_volume).valid?
+    assert_not_nil assigns(:storage_pool)
+    assert assigns(:storage_pool).valid?
   end
 
   def test_new
-    get :new
+    get :new, :hardware_pool_id => 4
 
     assert_response :success
     assert_template 'new'
 
-    assert_not_nil assigns(:storage_volume)
+    assert_not_nil assigns(:storage_pools)
   end
 
   def test_create
-    num_storage_volumes = StorageVolume.count
+    hw_pool = HardwarePool.get_default_pool
+    num_storage_volumes = StoragePool.count
 
-    post :create, :storage_volume => {}
+    post :create, :storage_type => 'NFS', :storage_pool => { :hardware_pool => hw_pool }
 
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller => 'hardware', :action => 'show', :id => hw_pool.id  
 
-    assert_equal num_storage_volumes + 1, StorageVolume.count
+    assert_equal num_storage_volumes + 1, StoragePool.count
   end
 
   def test_edit
@@ -85,8 +86,8 @@ class StorageControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_template 'edit'
 
-    assert_not_nil assigns(:storage_volume)
-    assert assigns(:storage_volume).valid?
+    assert_not_nil assigns(:storage_pool)
+    assert assigns(:storage_pool).valid?
   end
 
   def test_update
@@ -96,16 +97,18 @@ class StorageControllerTest < Test::Unit::TestCase
   end
 
   def test_destroy
+    hw_pool_id = nil
     assert_nothing_raised {
-      StorageVolume.find(@first_id)
+      pool = StoragePool.find(@first_id)
+      hw_pool_id = pool.hardware_pool.id
     }
 
     post :destroy, :id => @first_id
     assert_response :redirect
-    assert_redirected_to :action => 'list'
+    assert_redirected_to :controller => 'hardware', :action => 'show', :id => hw_pool_id
 
     assert_raise(ActiveRecord::RecordNotFound) {
-      StorageVolume.find(@first_id)
+      StoragePool.find(@first_id)
     }
   end
 end
