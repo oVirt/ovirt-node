@@ -21,23 +21,28 @@
 # connections with an LDAP server.
 #
 class LDAPConnection
-  @@config = YAML.load(File.open("#{RAILS_ROOT}/config/ldap.yml"))
-  
-  # Connects the LDAP server. 
-  def LDAPConnection.connect(base,host,port)
+
+  @@config = YAML::load(File.open("#{RAILS_ROOT}/config/ldap.yml"))
+
+  # Connects the specified LDAP server.
+  def self.connect(base = nil, host = nil, port = nil)
     
+    base = @@config[ENV['RAILS_ENV']]["base"] if base == nil
+    host = @@config[ENV['RAILS_ENV']]["host"] if host == nil
+    port = @@config[ENV['RAILS_ENV']]["port"] if port == nil
+
     ActiveLdap::Base.establish_connection(:host => host,
 					  :port => port,
 					  :base => base) if LDAPConnection.connected? == false
   end
 
   # Returns whether a connection already exists to the LDAP server.
-  def LDAPConnection.connected?
+  def self.connected?
     return ActiveLdap::Base.connected?
   end
 
   # Disconnects from the LDAP server.
-  def LDAPConnection.disconnect
+  def self.disconnect
     ActiveLdap::Base.remove_connection if LDAPConnection.connected?
   end
 

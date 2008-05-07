@@ -1,4 +1,4 @@
 development:
-  hostname: ldap.rdu.redhat.com
+  host: ldap.rdu.redhat.com
   port: 389
   base: dc=redhat,dc=com
