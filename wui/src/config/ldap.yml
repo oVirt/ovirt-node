@@ -2,3 +2,13 @@ development:
   host: ldap.rdu.redhat.com
   port: 389
   base: dc=redhat,dc=com
+
+test:
+  host: ldap.rdu.redhat.com
+  port: 389
+  base: dc=redhat,dc=com
+
+production:
+  host: ldap.rdu.redhat.com
+  port: 389
+  base: dc=redhat,dc=com
