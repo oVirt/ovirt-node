@@ -34,10 +34,18 @@
 .header_menu {
   padding: 5px 0 0 10px;
   margin: 1px;
-  background: #CCCCCC url(images/bg_menu_big.jpg) repeat-x top;
+  background: #CCCCCC url(/images/bg_menu_big.jpg) repeat-x top;
   font-size: 110%;
   line-height:1.5;
   height: 26px;
   width: 216px;
   border: #FFFFFF solid 1px;
+}
+
+#help-link {
+  vertical-align: bottom;
+}
+
+#hi-username{
+  margin-right: 5px;
 }

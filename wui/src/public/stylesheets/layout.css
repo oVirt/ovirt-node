@@ -38,7 +38,7 @@ img
   width: 100%;
   height: 90px;
   overflow: hidden;
-  background:#535353 url(images/bg_header.jpg) repeat-x top;
+  background:#535353 url(/images/bg_header.jpg) repeat-x top;
 }
 
 #side {    
@@ -61,12 +61,15 @@ img
 
 #main {
   position:absolute; 
-  top:40px; 
-  left:231px;
+  top:70px; 
+  left:235px;
+  width: 80%;
 }
 
 #navigation-tabs{
   height: 30px;
+  position: absolute;
+  top: -30px;
 }
 
 #content-area {
@@ -82,7 +85,7 @@ img
 
 .toolbar {
   margin: 1px 0 1px 0;
-  background: #CCCCCC url(images/bg_menu_big.jpg) repeat-x top;
+  background: #CCCCCC url(/images/bg_menu_big.jpg) repeat-x top;
   height: 31px;
   border-left: #FFFFFF solid 1px; 
   border-top: #FFFFFF solid 1px; 
@@ -132,7 +135,7 @@ img
   color: #FFFFFF;
   font-size: 110%;
   border-left: 1px solid #93B2C4;
-  background: #000000 url(images/bg_toolbarheader.jpg) repeat-x top;
+  background: #000000 url(/images/bg_toolbarheader.jpg) repeat-x top;
 }
 
 
@@ -190,7 +193,7 @@ img
     text-align: center;
     border-right: 1px solid #5A7A8E;
     border-left: 1px solid #93B2C4;
-    background: #000000 url(images/bg_toolbarheader.jpg) repeat-x top; 
+    background: #000000 url(/images/bg_toolbarheader.jpg) repeat-x top; 
 }
 .toolbar_nav a:hover {background-position: 0 -28px; border-left: 1px solid #82B6CE;}
 

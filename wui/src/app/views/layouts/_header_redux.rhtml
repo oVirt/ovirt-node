@@ -1,11 +1,12 @@
 <div class="header_logo"><img src="/images/ovirt_logo_redux.png" /></div>
 
 <div class="header_info">
+  <a id="hi-username" href="#" >Hi, <%= @user %></a>
   <form id="#" action="globalSearch.jspa">
     <input id="textfield_effect" name="q" value="Search" onkeypress="" onfocus="if( this.value == this.defaultValue ) this.value='';" type="text">
     <input id="searchbox-button" src="/images/icon_search.png" title="Search" type="image">&nbsp;&nbsp;|
-    <input id="searchbox-button" src="/images/icon_help.png" title="Search" type="image">
   </form>
+  <a id="help-link" href="<%= url_for :controller => :dashboard, :action => 'help' %>" ><img src="/images/icon_help.png" ></a>
 </div>
 
 <div class="header_menu_wrapper">
