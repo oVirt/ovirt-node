@@ -1,9 +1,60 @@
-<div class="data-section">
-  <div class="data-section-header"><strong>Available Storage</strong></div>
-  <div class="data-section-stats">Statistics Data</div>
-  <div class="data-section-table">
-    <div class="inside">
-      <%= render :partial => "/storage/list", :locals => { :storage_pools => @pool.storage_pools } %>
-    </div>
-  </div>
+<ul class="toolbar_nav">
+    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Server</a></li>
+    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Volume</a></li>
+    <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Move &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
+    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
+  </ul>
+
+  <div class="panel_header"></div>
+<!-- FIXME: with data-section, one table was hidden. we need to fix the div css 
+    or use another one <div class="data-section">-->
+<table id="storage_pools_grid" style="display:none"></table>
+<!--</div>-->
+<script type="text/javascript">
+	$("#storage_pools_grid").flexigrid
+	(
+	{
+	url: '<%=  url_for :action => "storage_pools_json", :id => @pool.id %>',
+	dataType: 'json',
+	colModel : [
+		{display: 'Alias', name : 'display_name', width : 180, sortable : false, align: 'left'},
+	        {display: 'IP', name : 'ip_addr', width : 80, sortable : true, align: 'left'},
+		{display: 'Type', name : 'type', width : 80, sortable : true, align: 'left'}
+		],
+	sortname: "ip_addr",
+	sortorder: "asc",
+	usepager: true,
+	title: "Storage Pools",
+	useRp: true,
+	rp: 10,
+	showTableToggleBtn: true
+	}
+	);   
+</script>
+<table id="storage_volumes_grid" style="display:none"></table>
+
+<script type="text/javascript">
+	$("#storage_volumes_grid").flexigrid
+	(
+	{
+	url: '<%=  url_for :action => "storage_volumes_json", :id => @pool.id %>',
+	dataType: 'json',
+	colModel : [
+		{display: 'Alias', name : 'display_name', width : 180, sortable : false, align: 'left'},
+	        {display: 'Size (Gb)', name : 'size', width : 80, sortable : true, align: 'left'},
+		{display: 'Type', name : 'type', width : 80, sortable : true, align: 'left'}
+		],
+	sortname: "size",
+	sortorder: "desc",
+	usepager: true,
+	useRp: true,
+	title: "Storage Volumes",
+	rp: 10,
+	showTableToggleBtn: true
+	}
+	);   
+</script>
+<div class="selection_detail">
+  <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
+  <div>Host description goes here if we allow a description.</div>
 </div>

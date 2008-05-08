@@ -6,13 +6,14 @@
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
   <title><%= yield :title -%></title>
-  <%= stylesheet_link_tag 'default' %> <%# remove me %>
   <%= stylesheet_link_tag 'layout' %>
   <%= stylesheet_link_tag 'components' %>
   <%= stylesheet_link_tag '/javascripts/jquery-treeview/ovirt.treeview.css' %>
+  <%= stylesheet_link_tag 'flexigrid/flexigrid.css' %>
   <%= javascript_include_tag "jquery.pack.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
+  <%= javascript_include_tag "flexigrid.js" -%>
   <%= yield :scripts -%>
     <script type="text/javascript">
       $(document).ready(function(){         

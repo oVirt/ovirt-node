@@ -1,15 +1,15 @@
 <ul class="tab_nav">
 
   <% if controller.controller_name == "hardware" %>
-    <li id="nav_summary"><a href="<%= url_for :action => 'show', :id => @pool.id %>">Summary</a></li>
-    <li id="nav_hosts">  <a href="<%= url_for :action => 'show_hosts', :id => @pool.id %>">Hosts</a></li>
-    <li id="nav_storage"><a href="<%= url_for :action => 'show_storage', :id => @pool.id %>">Storage</a></li>
-    <li id="nav_vmpool"> <a href="<%= url_for :action => 'show_vms', :id => @pool.id %>">Virtual Machine Pools</a></li>
-    <li id="nav_access"> <a href="<%= url_for :action => 'show_users', :id => @pool.id %>">User Access</a></li>
+    <li id="nav_summary" <%= 'class="current"' if controller.action_name == "show" %> ><%= link_to "Summary", {:action => 'show', :id => @pool.id} %></li>
+    <li id="nav_hosts" <%= 'class="current"' if controller.action_name == "show_hosts" %> >  <%= link_to "Hosts", {:action => 'show_hosts', :id => @pool.id} %></li>
+    <li id="nav_storage" <%= 'class="current"' if controller.action_name == "show_storage" %> ><%= link_to "Storage", {:action => 'show_storage', :id => @pool.id} %></li>
+    <li id="nav_vmpool" <%= 'class="current"' if controller.action_name == "show_vms" %> > <%= link_to "Virtual Machine Pools", {:action => 'show_vms', :id => @pool.id} %></li>
+    <li id="nav_access" <%= 'class="current"' if controller.action_name == "show_users" %> > <%= link_to "User Access", {:action => 'show_users', :id => @pool.id} %></li>
   <% elsif controller.controller_name == "resources" and @vm_resource_pool != nil %>
-    <li id="nav_summary"><a href="<%= url_for :action => 'show', :id => @vm_resource_pool.id %>">Summary</a></li>
-    <li id="nav_vmpool"> <a href="<%= url_for :action => 'show_vms', :id => @vm_resource_pool.id %>">Virtual Machines</a></li>
-    <li id="nav_access"> <a href="<%= url_for :action => 'show_users', :id => @vm_resource_pool.id %>">User Access</a></li>
+    <li id="nav_summary" <%= 'class="current"' if controller.action_name == "show" %> ><%= link_to "Summary", {:action => 'show', :id => @vm_resource_pool.id} %></li>
+    <li id="nav_vmpool" <%= 'class="current"' if controller.action_name == "show_vms" %> > <%= link_to "Virtual Machines", {:action => 'show_vms', :id => @vm_resource_pool.id} %></li>
+    <li id="nav_access" <%= 'class="current"' if controller.action_name == "show_users" %> > <%= link_to "User Access", {:action => 'show_users', :id => @vm_resource_pool.id} %></li>
   <% end %>
 
 </ul>

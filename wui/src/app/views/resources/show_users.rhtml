@@ -1,8 +1,29 @@
-Super Admins:
- <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.super_admins    } %>
-Admins:
- <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.admins    } %>
-Monitors:
- <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.monitors  } %>
-Users:
- <%= render :partial => "/user/list", :locals => { :permissions => @vm_resource_pool.permissions.users } %>
+<ul class="toolbar_nav">
+    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add User</a></li>
+    <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Change Role &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
+    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
+  </ul>
+
+  <div class="panel_header"></div>
+<div class="data-section">
+<table id="users_grid" style="display:none"></table>
+</div>
+<script type="text/javascript">
+	$("#users_grid").flexigrid
+	(
+	{
+	url: '<%=  url_for :action => "users_json", :id => @vm_resource_pool.id %>',
+	dataType: 'json',
+	colModel : [
+		{display: 'Name', name : 'user', width : 180, sortable : true, align: 'left'},
+	        {display: 'Role', name : 'user_role', width : 80, sortable : true, align: 'left'}
+		],
+	sortname: "user",
+	sortorder: "asc",
+	usepager: true,
+	useRp: true,
+	rp: 10,
+	showTableToggleBtn: true
+	}
+	);   
+</script>

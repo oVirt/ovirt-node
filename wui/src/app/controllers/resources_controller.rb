@@ -23,6 +23,8 @@ class ResourcesController < ApplicationController
     render :action => 'list'
   end
 
+  before_filter :pre_json, :only => [:vms_json, :users_json]
+
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
@@ -56,6 +58,16 @@ class ResourcesController < ApplicationController
   # resource's vms list page
   def show_vms
     show
+  end
+
+  def vms_json
+    json_list(@vm_resource_pool.vms, 
+              [:description, :uuid, :num_vcpus_allocated, :memory_allocated_in_mb, :vnic_mac_addr, :state])
+  end
+
+  def users_json
+    json_list(@vm_resource_pool.permissions, 
+              [:user, :user_role])
   end
 
   # resource's users list page
@@ -162,6 +174,10 @@ class ResourcesController < ApplicationController
     @perm_obj = @vm_resource_pool.parent
     @redir_obj = @vm_resource_pool
     @current_pool_id=@vm_resource_pool.id
+  end
+  def pre_json
+    pre_show
+    show
   end
 
 end
