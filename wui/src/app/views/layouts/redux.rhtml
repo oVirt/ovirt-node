@@ -43,10 +43,10 @@
      <%= render :partial => '/layouts/side_toolbar' %>
    </div>
 
+   <div id="navigation-tabs" style="position:absolute; top:40px; left:231px;">
+     <%= render :partial => '/layouts/navigation_tabs' %>
+   </div> 
    <div id="main">
-      <div id="navigation-tabs">
-        <%= render :partial => '/layouts/navigation_tabs' %>
-      </div> 
       <div id="content-area">
         <%= yield  %> <%# the rest of the center and right hand side %>
       </div>

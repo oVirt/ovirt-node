@@ -41,6 +41,12 @@ img
   background:#535353 url(images/bg_header.jpg) repeat-x top;
 }
 
+.header_image {
+	position:absolute; 
+	top:10px; 
+	left:10px;
+}
+
 #side {    
   padding: 5px 0 0 5px;
   margin: 0;
@@ -49,8 +55,9 @@ img
   left: 0px;
   bottom: 35px;
   overflow: auto;    
-  width: 225px; 
+  width: 224px; 
   background-color:#FFFFFF;  
+  border-right: 1px #CCCCCC solid; 
 }
 
 #side-toolbar{
@@ -60,11 +67,35 @@ img
 }
 
 #main {
-  bottom:0px;
-  left:231px;
-  position:absolute;
-  right:0px;
-  top:40px;
+  padding: 0;
+  margin-left: 0;
+  position: absolute;    
+  top: 70px;
+  left: 230px;
+  right: 0px;
+  bottom: 150px;
+  overflow: auto;
+  background-color:#FFFFFF; 
+  border-left:#CCCCCC solid 0px;
+}
+
+.header_menu_greybox {
+  padding: 0;
+  margin: 35px 0 0 0;
+  float:left;
+  height: 35px;
+  width: 230px;
+  background: #CCCCCC;
+}
+.header_menu {
+  padding: 5px 0 0 10px;
+  margin: 1px;
+  background: #CCCCCC url(images/bg_menu_big.jpg) repeat-x top;
+  font-size: 110%;
+  line-height:1.5;
+  height: 26px;
+  width: 216px;
+  border: #FFFFFF solid 1px;
 }
 
 #navigation-tabs{
@@ -110,6 +141,18 @@ img
 
 /*  ----- Right side of Header --------  */
 
+.header_info {
+  padding: 10px 20px 0px 10px;
+  margin: 0;
+  float: right;
+  text-align: right;
+  font-size: 100%;
+  color: #B5B5B5;
+}
+.header_info a:link    { color: #B5B5B5; text-decoration: none; }   
+.header_info a:active  { color: #B5B5B5; text-decoration: none; }
+.header_info a:visited { color: #B5B5B5; text-decoration: none; }
+.header_info a:hover   { color: #FFFFFF; text-decoration: none; }
 
 #textfield_effect {
     border-width: 1px;
@@ -141,27 +184,27 @@ img
 
 /*  ----- Blue Tabbed Navigation --------  */
 .tab_nav {
-    margin:0;
-    padding: 0;
-    background: none;
-    list-style-type: none;
-    float: left;
-    font-size: 110%;
+	margin:0;
+	padding: 0;
+	background: none;
+	list-style-type: none;
+	float: left;
+	font-size: 110%;
 }
 .tab_nav li {
-    margin: 0 1px 0 1px;
-    padding: 0;
-    float: left;
+	margin: 0 1px 0 1px;
+	padding: 0;
+	float: left;
 }
 .tab_nav a {
-    float:left;
-    padding: 0 15px 0 15px;
-    color: #CCCCCC;
-    text-decoration: none;
-    line-height: 2.3;
-    height: 24px;
-    text-align: center;
-    background: none;
+	float:left;
+	padding: 0 15px 0 15px;
+	color: #CCCCCC;
+	text-decoration: none;
+	line-height: 2.3;
+	height: 24px;
+	text-align: center;
+	background: none;
 
 }
 .tab_nav a:hover {color:#FFFFFF; border-bottom: 5px solid #5599B8;}
@@ -171,30 +214,32 @@ img
 
 /*  ----- Toolbar Navigation --------  */
 .toolbar_nav {
-    margin:0;
-    padding: 0;
-    background: #E5E5E5;
-    list-style-type: none;
-    float: left;
-    }
+	margin:0;
+	padding: 0;
+	background: #E5E5E5;
+	list-style-type: none;
+	float: left;
+	}
 .toolbar_nav li {
-    margin: 0;
-    padding: 0;
-    float: left;
+	margin: 0;
+	padding: 0;
+	float: left;
 }
+
 .toolbar_nav a {
-    float:left;
-    padding: 0 10px 0 10px;
-    color: #FFFFFF;
-    text-decoration: none;
-    line-height: 2.3;
-    height: 28px;
-    text-align: center;
-    border-right: 1px solid #5A7A8E;
-    border-left: 1px solid #93B2C4;
-    background: #000000 url(images/bg_toolbarheader.jpg) repeat-x top; 
+	float:left;
+	padding: 0 10px 0 10px;
+	color: #FFFFFF;
+	text-decoration: none;
+	line-height: 2.3;
+	height: 28px;
+	text-align: center;
+	border-right: 1px solid #5A7A8E;
+	border-left: 1px solid #93B2C4;
+	background: #000000 url(images/bg_toolbarheader.jpg) repeat-x top; 
 }
 .toolbar_nav a:hover {background-position: 0 -28px; border-left: 1px solid #82B6CE;}
+.toolbar_nav li.current a {background-position: 0 -56px; border-left: 1px solid #5A7A8E; font-weight: bold;}
 
 
 
@@ -225,3 +270,27 @@ img
   background: #DEE7EB;
   border-top: #CCCCCC solid 1px;
 }
+
+
+
+/*  ----- PopUp Dialog --------  */
+
+
+.dialog_title {
+  background:#DEE7EB; 
+  padding:15px; 
+  width:600px;
+}
+
+.header {
+  font-size: 180%;
+  line-height: 1.6;
+}
+
+.dialog_body {
+height: 300px;
+}
+
+
+
+
