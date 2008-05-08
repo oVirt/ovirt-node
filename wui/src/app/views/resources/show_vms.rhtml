@@ -1,1 +1,37 @@
-   <%= render :partial => "/vm/list", :locals => { :vms => @vm_resource_pool.vms } %>
+<ul class="toolbar_nav">
+    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
+    <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Move &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
+    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
+  </ul>
+
+  <div class="panel_header"></div>
+<div class="data-section">
+<table id="vms_grid" style="display:none"></table>
+</div>
+<script type="text/javascript">
+	$("#vms_grid").flexigrid
+	(
+	{
+	url: '<%=  url_for :action => "vms_json", :id => @vm_resource_pool.id %>',
+	dataType: 'json',
+	colModel : [
+		{display: 'Description', name : 'description', width : 180, sortable : true, align: 'left'},
+	        {display: 'UUID', name : 'uuid', width : 180, sortable : true, align: 'left'},
+		{display: 'CPUs', name : 'num_vcpus_allocated', width : 40, sortable : true, align: 'left'},
+		{display: 'Memory (MB)', name : 'memory_allocated', width : 60, sortable : true, align: 'right'},
+		{display: 'vNIC Mac Addr', name : 'vnic_mac_addr', width : 60, sortable : true, align: 'right'},
+		{display: 'State', name : 'state', width : 50, sortable : true, align: 'right'}
+		],
+	sortname: "description",
+	sortorder: "asc",
+	usepager: true,
+	useRp: true,
+	rp: 10,
+	showTableToggleBtn: true
+	}
+	);   
+</script>
+<div class="selection_detail">
+  <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
+  <div>Host description goes here if we allow a description.</div>
+</div>

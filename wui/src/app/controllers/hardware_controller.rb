@@ -22,6 +22,8 @@ class HardwareController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
+  before_filter :pre_json, :only => [:hosts_json, :vm_pools_json, :users_json, :storage_pools_json, :storage_volumes_json]
+
 
   def show
     set_perms(@perm_obj)
@@ -69,6 +71,31 @@ class HardwareController < ApplicationController
 
   def show_hosts
     show
+  end
+
+  def hosts_json
+    json_list(@pool.hosts, 
+              [:hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :is_disabled_str])
+  end
+
+  def vm_pools_json
+    json_list(@pool.sub_vm_resource_pools, 
+              [:name])
+  end
+
+  def users_json
+    json_list(@pool.permissions, 
+              [:user, :user_role])
+  end
+
+  def storage_pools_json
+    json_list(@pool.storage_pools, 
+              [:display_name, :ip_addr, :get_type_label])
+  end
+
+  def storage_volumes_json
+    json_list(@pool.all_storage_volumes, 
+              [:display_name, :size_in_gb, :get_type_label])
   end
 
   def show_storage
@@ -139,5 +166,9 @@ class HardwareController < ApplicationController
     @pool = HardwarePool.find(params[:id])
     @perm_obj = @pool
     @current_pool_id=@pool.id
+  end
+  def pre_json
+    pre_show
+    show
   end
 end

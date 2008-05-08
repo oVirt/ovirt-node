@@ -32,4 +32,11 @@ class Host < ActiveRecord::Base
   def memory_in_mb=(mem)
     self[:memory]=(mb_to_kb(mem))
   end
+  def is_disabled_str
+    if is_disabled.nil? or is_disabled == 0
+      "No"
+    else
+      "Yes"
+    end
+  end
 end

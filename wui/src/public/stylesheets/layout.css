@@ -60,10 +60,16 @@ img
 }
 
 #main {
-  position:absolute; 
+  /*position:absolute; 
   top:70px; 
   left:235px;
   width: 80%;
+  */
+  bottom:0px;
+  left:231px;
+  position:absolute;
+  right:0px;
+  top:40px;
 }
 
 #navigation-tabs{
@@ -206,6 +212,13 @@ img
   margin:0;
   height: 100px;
   background: #E5E5E5;
+}
+
+.data-section {
+  overflow: auto;
+  position: absolute;
+  bottom: 171px;
+  top: 58px;
 }
 
 .selection_detail {

@@ -31,6 +31,10 @@ class HardwarePool < Pool
     end
   end
 
+  def all_storage_volumes
+    StorageVolume.find(:all, :include => {:storage_pool => :hardware_pool}, :conditions => "pools.id = #{id}")
+  end
+
   def get_type_label
     "Hardware Pool"
   end

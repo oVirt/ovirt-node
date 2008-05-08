@@ -82,6 +82,23 @@ class ApplicationController < ActionController::Base
       end
     end
   end
+  def json_list(full_items, attributes)
+    page = params[:page].to_i
+    item_list = full_items.paginate(:page => page, 
+                                    :order => "#{params[:sortname]} #{params[:sortorder]}", 
+                                    :per_page => params[:rp])
+    json_hash = {}
+    json_hash[:page] = page
+    json_hash[:total] = full_items.size
+    json_hash[:rows] = item_list.collect do |item|
+      item_hash = {}
+      item_hash[:id] = item.id
+      item_hash[:cell] = attributes.collect {|attr| item.send(attr)}
+      item_hash
+    end
+    render :json => json_hash.to_json
+  end
+
 
 
 end
