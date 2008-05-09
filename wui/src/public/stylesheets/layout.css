@@ -252,11 +252,11 @@ img
   background: #E5E5E5;
 }
 
-.data-section {
+.data_section {
   overflow: auto;
   position: absolute;
+  top: 28px;
   bottom: 171px;
-  top: 58px;
 }
 
 .selection_detail {

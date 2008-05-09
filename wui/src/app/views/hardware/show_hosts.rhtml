@@ -5,11 +5,11 @@
   </ul>
 
   <div class="panel_header"></div>
-<div class="data-section">
-<table id="hosts1" style="display:none"></table>
+<div class="data_section">
+<table id="hosts_grid" style="display:none"></table>
 </div>
 <script type="text/javascript">
-	$("#hosts1").flexigrid
+	$("#hosts_grid").flexigrid
 	(
 	{
 	url: '<%=  url_for :action => "hosts_json", :id => @pool.id %>',
