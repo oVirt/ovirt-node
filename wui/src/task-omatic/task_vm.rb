@@ -633,6 +633,10 @@ end
 def update_state_vm(task)
   puts "update_state_vm"
 
+  # NOTE: findVM() will only return a vm if all the host information is filled
+  # in.  So if a vm that we thought was stopped is running, this returns nil
+  # and we don't update any information about it.  The tricky part
+  # is that we're still not sure what to do in this case :).  - Ian
   begin
     vm = findVM(task)
   rescue

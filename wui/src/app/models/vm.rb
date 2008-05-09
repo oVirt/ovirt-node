@@ -41,6 +41,8 @@ class Vm < ActiveRecord::Base
   STATE_CREATING       = "creating"
   STATE_RUNNING        = "running"
 
+  STATE_UNREACHABLE    = "unreachable"
+
   STATE_STOPPING       = "stopping"
   STATE_STOPPED        = "stopped"
   STATE_STARTING       = "starting"
@@ -65,6 +67,7 @@ class Vm < ActiveRecord::Base
                           STATE_RESTORING]
 
   EFFECTIVE_STATE = {  STATE_PENDING       => STATE_PENDING,
+                       STATE_UNREACHABLE   => STATE_UNREACHABLE,
                        STATE_CREATING      => STATE_STOPPED, 
                        STATE_RUNNING       => STATE_RUNNING,
                        STATE_STOPPING      => STATE_STOPPED,
