@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+#
+# ovirt-mongrel-rails       startup script for ovirt-mongrel-rails
+#
+# chkconfig: - 97 03
+# description: ovirt-mongrel-rails is an essential component of the \
+#    ovirt VM manager.
+#
+
+OVIRT_DIR=/usr/share/ovirt-wui
+MONGREL_PROG=mongrel_rails
+MONGREL_LOG=/var/log/ovirt-wui/mongrel.log
+MONGREL_PID=/var/run/ovirt-wui/mongrel.pid
+MONGREL_LOCKFILE=/var/lock/subsys/ovirt-wui
+ADDR=127.0.0.1
+RAILS_ENVIRONMENT=production
+USER=ovirt
+GROUP=ovirt
+PREFIX=/ovirt
+
+RETVAL=0
+
+. /etc/init.d/functions
+
+start() {
+    echo -n "Starting ovirt-mongrel-rails: "
+
+    $MONGREL_PROG start -c $OVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID \
+	-a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP \
+	-d --prefix=$PREFIX
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ] && touch $MONGREL_LOCKFILE ; then
+	echo_success
+	echo
+    else
+	echo_failure
+	echo
+    fi
+
+}
+
+stop() {
+    echo -n "Shutting down ovirt-mongrel-rails: "
+    $MONGREL_PROG stop -c $OVIRT_DIR -P $MONGREL_PID
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ] && rm -f $MONGREL_LOCKFILE ; then
+	echo_success
+	echo
+    else
+	echo_failure
+	echo
+    fi
+}
+
+case "$1" in
+    start)
+	start
+	;;
+    stop)
+	stop
+	;;
+    restart)
+	stop
+	start
+	;;
+    status)
+	status $MONGREL_PROG
+	RETVAL=$?
+	;;
+    *)
+      echo "Usage: ovirt-mongrel-rails {start|stop|restart|status}"
+      exit 1
+  ;;
+esac
+
+exit $RETVAL
