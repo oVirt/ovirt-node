@@ -69,7 +69,7 @@ img
 #main {
   padding: 0;
   margin-left: 0;
-  position: absolute;    
+  position: absolute;
   top: 70px;
   left: 236px;
   right: 0px;
@@ -100,10 +100,10 @@ img
   margin: 1px 0 1px 0;
   background: #CCCCCC url(../images/bg_menu_big.jpg) repeat-x top;
   height: 31px;
-  border-left: #FFFFFF solid 1px; 
-  border-top: #FFFFFF solid 1px; 
-  border-bottom: #FFFFFF solid 1px; 
-  border-right: #B4B4B4 solid 1px; 
+  border-left: #FFFFFF solid 1px;
+  border-top: #FFFFFF solid 1px;
+  border-bottom: #FFFFFF solid 1px;
+  border-right: #B4B4B4 solid 1px;
   }
 
 .breadcrumb_main {

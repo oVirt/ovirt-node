@@ -80,7 +80,7 @@
     height: 28px;
     border-right: 1px solid #5A7A8E;
     border-left: 1px solid #93B2C4;
-    background: #000000 url(../images/bg_toolbarheader.jpg) repeat-x top; 
+    background: #000000 url(../images/bg_toolbarheader.jpg) repeat-x top;
 }
 #toolbar_nav li, #toolbar_nav li a {
     text-decoration: none;
@@ -90,8 +90,8 @@
 #toolbar_nav ul ul {
     position: absolute;
     top: 28px;
-    left: 0; 
-    width: 100%; 
+    left: 0;
+    width: 100%;
     display: none;
 }
 #toolbar_nav ul li:hover ul{
