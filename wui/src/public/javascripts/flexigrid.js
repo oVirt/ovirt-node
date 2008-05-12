@@ -49,7 +49,8 @@
 			 onToggleCol: false,
 			 onChangeSort: false,
 			 onSuccess: false,
-			 onSubmit: false // using a custom populate function
+			 onSubmit: false, // using a custom populate function
+			 multiselect: false  // allow selection of multiple elements
 		  }, p);
 		  		
 
@@ -705,8 +706,11 @@
 							.click(
 								function (e) 
 									{ 
-										// var obj = (e.target || e.srcElement); if (obj.href || obj.type) return true;
-										 $(this).toggleClass('trSelected'); 
+									    var obj = (e.target || e.srcElement); if (obj.href || obj.type) return true;
+									    if ( p.multiselect == false ) {
+										$(t).find("tr.trSelected:not(#" + this.id + ")").removeClass('trSelected');
+									    } 
+									    $(this).toggleClass('trSelected'); 
 									}
 							)
 							.mousedown(

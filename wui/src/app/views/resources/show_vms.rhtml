@@ -1,11 +1,11 @@
 <ul class="toolbar_nav">
-    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
+    <li><a href="<%= url_for :controller => 'vm', :action => 'new', :vm_resource_pool_id => @vm_resource_pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
     <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Move &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
     <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
   </ul>
 
   <div class="panel_header"></div>
-<div class="data-section">
+<div class="data_section">
 <table id="vms_grid" style="display:none"></table>
 </div>
 <script type="text/javascript">

@@ -1,0 +1,14 @@
+development:
+  host: ldap.for.your.domain.com
+  port: 389
+  base: dc=domain,dc=com
+
+test:
+  host: ldap.for.your.domain.com
+  port: 389
+  base: dc=domain,dc=com
+
+production:
+  host: ldap.for.your.domain.com
+  port: 389
+  base: dc=domain,dc=com

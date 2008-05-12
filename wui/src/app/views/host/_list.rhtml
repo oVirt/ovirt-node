@@ -1,15 +1,7 @@
+
+
 <table class="listing">
-<thead>
-  <tr>
-    <th class="empty">host <span class="amp">&</span> uuid</th>
-    <th>Hypervisor Type</th>
-    <th>CPUs</th>
-    <th>speed <span class="unit">(Mhz)</span></th>
-    <th>arch</th>
-    <th>RAM <span class="unit">(gigs)</span></th>
-    <th>Disabled?</th>
-  </tr>
-</thead>
+<thead>  <tr>    <th class="empty">host <span class="amp">&</span> uuid</th><th>Hypervisor Type</th>    <th>CPUs</th>    <th>speed <span class="unit">(Mhz)</span></th>    <th>arch</th>    <th>RAM <span class="unit">(gigs)</span></th>    <th>Disabled?</th>  </tr></thead>
 <tbody>
 <% for host in hosts %>
 <tr class="<%= cycle('odd','even', :name => hosts) %>">

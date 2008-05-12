@@ -74,7 +74,12 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/taskomatic.log
 touch %{buildroot}%{_localstatedir}/log/%{name}/host-keyadd.log
 touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 %{__install} -p -m0644 %{pbuild}/conf/%{name}.conf %{buildroot}%{_sysconfdir}/httpd/conf.d
-%{__install} -Dp -m0755 %{pbuild}/conf/%{name} %{buildroot}%{_initrddir}
+
+%{__install} -Dp -m0755 %{pbuild}/conf/ovirt-host-browser %{buildroot}%{_initrddir}
+%{__install} -Dp -m0755 %{pbuild}/conf/ovirt-host-keyadd %{buildroot}%{_initrddir}
+%{__install} -Dp -m0755 %{pbuild}/conf/ovirt-host-status %{buildroot}%{_initrddir}
+%{__install} -Dp -m0755 %{pbuild}/conf/ovirt-mongrel-rails %{buildroot}%{_initrddir}
+%{__install} -Dp -m0755 %{pbuild}/conf/ovirt-taskomatic %{buildroot}%{_initrddir}
 
 # copy over all of the src directory...
 %{__cp} -a %{pbuild}/src/* %{buildroot}%{app_root}
@@ -102,7 +107,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/ovirt-wui-install
 %{_bindir}/ovirt-add-host
 %{_bindir}/ovirt-fix-ipa
-%{_initrddir}/%{name}
+%{_initrddir}/ovirt-host-browser
+%{_initrddir}/ovirt-host-keyadd
+%{_initrddir}/ovirt-host-status
+%{_initrddir}/ovirt-mongrel-rails
+%{_initrddir}/ovirt-taskomatic
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %doc
 %attr(-, ovirt, ovirt) %{_localstatedir}/lib/%{name}
@@ -119,13 +128,27 @@ rm -rf $RPM_BUILD_ROOT
     -s /sbin/nologin -r -d /var/ovirt ovirt 2> /dev/null || :
 
 %post
-/sbin/chkconfig --add ovirt-wui
+#removes legacy ovirt-wui script if present
+if [ -e %{_initrddir}/ovirt-wui ] ; then
+  /sbin/service ovirt-wui stop > /dev/null 2>&1
+  /sbin/chkconfig --del ovirt-wui
+  %{__rm} %{_initrddir}/ovirt-wui
+fi
+
 exit 0
 
 %preun
 if [ "$1" = 0 ] ; then
-  /sbin/service ovirt-wui stop > /dev/null 2>&1
-  /sbin/chkconfig --del ovirt-wui
+  /sbin/service ovirt-host-browser stop > /dev/null 2>&1
+  /sbin/service ovirt-host-keyadd stop > /dev/null 2>&1
+  /sbin/service ovirt-host-status stop > /dev/null 2>&1
+  /sbin/service ovirt-mongrel-rails stop > /dev/null 2>&1
+  /sbin/service ovirt-taskomatic stop > /dev/null 2>&1
+  /sbin/chkconfig --del ovirt-host-browser
+  /sbin/chkconfig --del ovirt-host-keyadd
+  /sbin/chkconfig --del ovirt-host-status
+  /sbin/chkconfig --del ovirt-mongrel-rails
+  /sbin/chkconfig --del ovirt-taskomatic
 fi
 %changelog
 * Fri Nov  2 2007  <sseago@redhat.com> - 0.0.1-1

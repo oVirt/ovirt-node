@@ -54,6 +54,14 @@ class HostController < ApplicationController
     end
   end
 
+  def addhost
+    @hardware_pool = Pool.find(params[:hardware_pool_id])
+    @unassigned = Pool.root.hosts.size
+    # FIXME: @assigned should match  the updated assigned hosts query when that's done
+    @assigned = Host.find(:all).size
+    render :layout => 'popup'    
+  end
+
   def new
   end
 

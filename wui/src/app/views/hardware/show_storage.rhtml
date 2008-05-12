@@ -6,10 +6,10 @@
   </ul>
 
   <div class="panel_header"></div>
-<!-- FIXME: with data-section, one table was hidden. we need to fix the div css 
-    or use another one <div class="data-section">-->
+<div class="data_section">
 <table id="storage_pools_grid" style="display:none"></table>
-<!--</div>-->
+<table id="storage_volumes_grid" style="display:none"></table>
+</div>
 <script type="text/javascript">
 	$("#storage_pools_grid").flexigrid
 	(
@@ -31,7 +31,6 @@
 	}
 	);   
 </script>
-<table id="storage_volumes_grid" style="display:none"></table>
 
 <script type="text/javascript">
 	$("#storage_volumes_grid").flexigrid

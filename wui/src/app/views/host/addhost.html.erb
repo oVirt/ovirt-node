@@ -1,0 +1,68 @@
+<div class="dialog_title">
+	<div class="header">Add Host</div>
+    <div>Select hosts from the list below to add to the <%= @hardware_pool.name %> hardware pool.  <a href="#">Learn how to manage hosts</a></div>
+</div>
+<ul class="toolbar_nav">
+    <li class="current" id="unassigned_tab"><a href="#" onClick = "show_unassigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Unassigned Hosts (<%= @unassigned %>)</a></li>
+    <li id="assigned_tab"><a href="#" onClick = "show_assigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Assigned Hosts (<%= @assigned %>)</a></li>
+</ul>
+<script type="text/javascript">
+  function show_unassigned()
+  {
+      $("#assigned_tab").removeClass('current');
+      $("#unassigned_tab").addClass('current');
+      $("#addhosts_assigned_grid_div").hide()
+      $("#addhosts_unassigned_grid_div").show()
+  }
+  function show_assigned()
+  {
+      $("#assigned_tab").addClass('current');
+      $("#unassigned_tab").removeClass('current');
+      $("#addhosts_unassigned_grid_div").hide()
+      $("#addhosts_assigned_grid_div").show()
+  }
+  function add_hosts()
+  {
+    var host_array = new Array()
+    var host_index = 0
+    for(var i=0; i < document.addhosts_unassigned_grid_form.grid_checkbox.length; i++){
+      if(document.addhosts_unassigned_grid_form.grid_checkbox[i].checked)
+      {
+        host_array[host_index]= document.addhosts_unassigned_grid_form.grid_checkbox[i].value
+        host_index++
+      }
+    }
+    for(var i=0; i < document.addhosts_assigned_grid_form.grid_checkbox.length; i++){
+      if(document.addhosts_assigned_grid_form.grid_checkbox[i].checked)
+      {
+      host_array[host_index]= document.addhosts_assigned_grid_form.grid_checkbox[i].value
+      host_index++
+      }
+    }
+    $.post('<%= url_for :controller => "hardware", :action => "add_hosts", :id => @hardware_pool %>',
+           { host_ids: host_array.toString() },
+            function(data,status){ 
+              alert("Returned " + data + ", status: " + status);
+              jQuery(document).trigger('close.facebox');
+              $("#hosts_grid").flexReload()
+             });
+  }
+</script>
+  <div class="panel_header"></div>
+  <div class="dialog_body">
+       <%= render :partial => "/host/grid", :locals => { :table_id => "addhosts_unassigned_grid",
+           :hwpool_id => Pool.root.id } %>
+       <%= render :partial => "/host/grid", :locals => { :table_id => "addhosts_assigned_grid",
+           :hwpool_id => nil } %>
+  </div>
+</div>
+<script type="text/javascript">
+  $("#addhosts_assigned_grid_div").hide()
+</script>
+<div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
+  <div>
+    <a href="#" onclick="add_hosts()"><%= image_tag "btn_addhosts.png", :title => "Add Selected Host(s)" %></a>
+    <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%= image_tag "btn_cancel.png", :title =>"Cancel" %></a>
+  </div>
+</div>
+

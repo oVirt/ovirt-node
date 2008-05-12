@@ -13,7 +13,8 @@ STEP_FILE=/etc/ntp/step-tickers
 SASL_FILE=/etc/sasl2/libvirt.conf
 
 DISABLE_SVCS="libvirtd" 
-ENABLE_SVCS="ntpd httpd postgresql ovirt-wui"
+ENABLE_SVCS="ntpd httpd postgresql ovirt-host-browser ovirt-host-status \
+             ovirt-taskomatic ovirt-host-keyadd ovirt-mongrel-rails"
 
 usage() {
     echo "usage: $0 [-p password]"

@@ -13,10 +13,12 @@
   <![endif]-->
   <%= stylesheet_link_tag '/javascripts/jquery-treeview/ovirt.treeview.css' %>
   <%= stylesheet_link_tag 'flexigrid/flexigrid.css' %>
+  <%= stylesheet_link_tag 'facebox' %>
   <%= javascript_include_tag "jquery.pack.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
   <%= javascript_include_tag "flexigrid.js" -%>
+  <%= javascript_include_tag "facebox.js" -%>
   <%= yield :scripts -%>
     <script type="text/javascript">
       $(document).ready(function(){         
@@ -28,6 +30,16 @@
             resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
 	    })
 	});
+      </script>
+      <script type="text/javascript">
+       jQuery(document).ready(function($) {
+        $('a[rel*=facebox]').facebox()
+      })
+      </script>
+      <script type="text/javascript">
+       jQuery(document).ready(function($) {
+        $('a[rel*=close]').trigger('close.facebox')
+      })
       </script>
    <%= yield :scripts -%>
  </head>
@@ -46,10 +58,10 @@
      <%= render :partial => '/layouts/side_toolbar' %>
    </div>
 
+   <div id="navigation-tabs" style="position:absolute; top:40px; left:231px;">
+     <%= render :partial => '/layouts/navigation_tabs' %>
+   </div> 
    <div id="main">
-      <div id="navigation-tabs">
-        <%= render :partial => '/layouts/navigation_tabs' %>
-      </div> 
       <div id="content-area">
         <%= yield  %> <%# the rest of the center and right hand side %>
       </div>

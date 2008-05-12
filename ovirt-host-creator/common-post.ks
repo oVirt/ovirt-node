@@ -42,19 +42,61 @@ cat > /etc/init.d/ovirt-early << \EOF
 
 # Source functions library
 . /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+configure_from_network() {
+    DEVICE=$1
+    if [ -n "$DEVICE" ]; then
+        prinf .
+        # setup temporary interface to retrieve configuration
+        echo "network --device $DEVICE --bootproto dhcp" | nash
+        if [ $? -eq 0 ]; then
+            printf .
+            # from network-scripts/ifup-post
+            IPADDR=$(LC_ALL=C ip -o -4 addr ls dev ${DEVICE} | awk '{ print $4 ; exit }')
+            eval $(ipcalc --silent --hostname ${IPADDR} ; echo "status=$?")
+            if [ "$status" = "0" ]; then
+                hostname $HOSTNAME
+                # retrieve remote config
+                find_srv ovirt tcp
+                printf .
+                if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+                    curl -s "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)" \
+                        | augtool > /dev/null 2>&1
+                    if [ $? -eq 0 ]; then
+                        return
+                    fi
+                fi
+            fi
+        fi
+    fi
+    # default oVirt network configuration:
+    # bridge each ethernet device in the system
+    ETHDEVS=$(cd /sys/class/net && ls -d eth*)
+    for eth in $ETHDEVS; do
+        BRIDGE=ovirtbr`echo $eth | cut -b4-`
+        printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
+          > /etc/sysconfig/network-scripts/ifcfg-$eth
+        printf '%s\n' "DEVICE=$BRIDGE" BOOTPROTO=dhcp \
+            ONBOOT=yes TYPE=Bridge PEERNTP=yes \
+          > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+    done
+}
 
 start() {
-
-        # find all of the ethernet devices in the system
-        ETHDEVS=$(cd /sys/class/net && ls -d eth*)
-        for eth in $ETHDEVS; do
-            BRIDGE=ovirtbr`echo $eth | cut -b4-`
-            printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
-	      > /etc/sysconfig/network-scripts/ifcfg-$eth
-            printf '%s\n' "DEVICE=$BRIDGE" BOOTPROTO=dhcp \
-                ONBOOT=yes TYPE=Bridge PEERNTP=yes \
-              > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+        # find boot interface from cmdline
+        # IPAPPEND 2 in pxelinux.cfg appends e.g. BOOTIF=01-00-16-3e-12-34-57
+        BOOTIF=
+        for i in $(cat /proc/cmdline); do
+            case $i in
+                BOOTIF=??-??-??-??-??-??-??)
+                    i=${i/#BOOTIF=??-/}
+                    BOOTMAC=${i//-/:}
+                    BOOTIF=$(grep -l $BOOTMAC /sys/class/net/eth*/address|rev|cut -d/ -f2|rev)
+                    ;;
+            esac
         done
+        configure_from_network $BOOTIF
 
         # find all of the partitions on the system
 
@@ -139,7 +181,7 @@ start() {
         fi
         tries=$(( $tries + 1 ))
         sleep 1
-        echo -n "."
+        printf .
     done
 
     if [ "$VAL" != "SUCCESS" ]; then

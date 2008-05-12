@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+#
+# ovirt-host-status       startup script for ovirt-host-status
+#
+# chkconfig: - 97 03
+# description: ovirt-host-status is an essential component of the \
+#    ovirt VM manager.
+#
+
+DAEMON=/usr/share/ovirt-wui/host-status/host-status.rb
+
+. /etc/init.d/functions
+
+start() {
+    echo -n "Starting ovirt-host-status: "
+    daemon $DAEMON
+    RETVAL=$?
+    echo
+}
+
+stop() {
+    echo -n "Shutting down ovirt-host-status: "
+    killproc host-status.rb
+    RETVAL=$?
+    echo
+}
+
+case "$1" in
+    start)
+	start
+	;;
+    stop)
+	stop
+	;;
+    restart)
+	stop
+	start
+	;;
+    status)
+	status $DAEMON
+	RETVAL=$?
+	;;
+    *)
+      echo "Usage: ovirt-host-status {start|stop|restart|status}"
+      exit 1
+  ;;
+esac
+exit $RETVAL
