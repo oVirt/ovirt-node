@@ -60,16 +60,11 @@ img
 }
 
 #main {
-  /*position:absolute; 
-  top:70px; 
-  left:235px;
-  width: 80%;
-  */
   bottom:0px;
-  left:231px;
+  left:236px;
   position:absolute;
   right:0px;
-  top:40px;
+  top:70px;
 }
 
 #navigation-tabs{
@@ -173,37 +168,6 @@ img
 }
 .tab_nav a:hover {color:#FFFFFF; border-bottom: 5px solid #5599B8;}
 .tab_nav li.current a {color:#FFFFFF; font-weight: bold; height: 24px; line-height:1.6; border-bottom: 5px solid #5599B8;}
-
-
-
-/*  ----- Toolbar Navigation --------  */
-.toolbar_nav {
-    margin:0;
-    padding: 0;
-    background: #E5E5E5;
-    list-style-type: none;
-    float: left;
-    }
-.toolbar_nav li {
-    margin: 0;
-    padding: 0;
-    float: left;
-}
-.toolbar_nav a {
-    float:left;
-    padding: 0 10px 0 10px;
-    color: #FFFFFF;
-    text-decoration: none;
-    line-height: 2.3;
-    height: 28px;
-    text-align: center;
-    border-right: 1px solid #5A7A8E;
-    border-left: 1px solid #93B2C4;
-    background: #000000 url(/images/bg_toolbarheader.jpg) repeat-x top; 
-}
-.toolbar_nav a:hover {background-position: 0 -28px; border-left: 1px solid #82B6CE;}
-
-
 
 /*  ----- Panel Contents --------  */
 

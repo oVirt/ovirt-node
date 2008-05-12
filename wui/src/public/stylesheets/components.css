@@ -9,10 +9,8 @@
 }
 
 .header_info {
-  padding: 40px 20px 0px 10px;
-  margin: 0;
+  padding: 40px 10px 0px 10px;
   float: right;
-  text-align: right;
   font-size: 100%;
   color: #B5B5B5;
 }
@@ -42,10 +40,57 @@
   border: #FFFFFF solid 1px;
 }
 
-#help-link {
-  vertical-align: bottom;
+#hi-username{
+  margin-right: 15px;
+  float: left;
 }
 
-#hi-username{
-  margin-right: 5px;
+#search-form{
+  float: left;
+}
+
+#help-link {
+}
+
+/*  ----- Toolbar Navigation --------  */
+#toolbar_nav {
+    background: #E5E5E5;
+    float: left;
+}
+#toolbar_nav ul{
+    list-style-type: none;
+    margin:0;
+    padding: 0;
+}
+#toolbar_nav li {
+    margin: 0;
+    padding: 0 10px 0 10px;
+    position: relative;
+    float: left;
+    color: #FFFFFF;
+    text-decoration: none;
+    line-height: 2.3;
+    height: 28px;
+    text-align: center;
+    border-right: 1px solid #5A7A8E;
+    border-left: 1px solid #93B2C4;
+    background: #000000 url(/images/bg_toolbarheader.jpg) repeat-x top; 
+}
+#toolbar_nav ul ul {
+    position: absolute;
+    top: 28px;
+    left: 0; 
+    width: 100%; 
+    display: none;
+}
+#toolbar_nav ul li:hover ul{
+   display: block;
+   z-index: 1;
+}
+#toolbar_nav ul ul li{
+   width: 200px;
+   background: #E5F1FD;
+   color: #000000;
+   text-align: left;
+   cursor: pointer;
 }
