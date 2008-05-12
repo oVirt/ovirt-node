@@ -10,10 +10,12 @@
   <%= stylesheet_link_tag 'components' %>
   <%= stylesheet_link_tag '/javascripts/jquery-treeview/ovirt.treeview.css' %>
   <%= stylesheet_link_tag 'flexigrid/flexigrid.css' %>
+  <%= stylesheet_link_tag 'facebox' %>
   <%= javascript_include_tag "jquery.pack.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
   <%= javascript_include_tag "flexigrid.js" -%>
+  <%= javascript_include_tag "facebox.js" -%>
   <%= yield :scripts -%>
     <script type="text/javascript">
       $(document).ready(function(){         
@@ -25,6 +27,16 @@
             resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
 	    })
 	});
+      </script>
+      <script type="text/javascript">
+       jQuery(document).ready(function($) {
+        $('a[rel*=facebox]').facebox()
+      })
+      </script>
+      <script type="text/javascript">
+       jQuery(document).ready(function($) {
+        $('a[rel*=close]').trigger('close.facebox')
+      })
       </script>
    <%= yield :scripts -%>
  </head>

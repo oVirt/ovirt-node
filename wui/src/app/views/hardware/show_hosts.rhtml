@@ -1,38 +1,34 @@
 <ul class="toolbar_nav">
-    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
+    <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
     <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Move &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
-    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
+    <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
   </ul>
 
-  <div class="panel_header"></div>
-<div class="data_section">
-<table id="hosts_grid" style="display:none"></table>
-</div>
 <script type="text/javascript">
-	$("#hosts_grid").flexigrid
-	(
-	{
-	url: '<%=  url_for :action => "hosts_json", :id => @pool.id %>',
-	dataType: 'json',
-	colModel : [
-		{display: 'Hostname', name : 'hostname', width : 60, sortable : true, align: 'left'},
-	        {display: 'UUID', name : 'uuid', width : 180, sortable : true, align: 'left'},
-		{display: 'Hypervisor Type', name : 'hypervisor_type', width : 80, sortable : true, align: 'left'},
-		{display: 'CPUs', name : 'num_cpus', width : 40, sortable : true, align: 'left'},
-		{display: 'Speed (MHz)', name : 'cpu_speed', width : 60, sortable : true, align: 'right'},
-		{display: 'Arch', name : 'arch', width : 50, sortable : true, align: 'right'},
-		{display: 'RAM (MB)', name : 'memory', width : 60, sortable : true, align: 'right'},
-		{display: 'Disabled', name : 'is_disabled', width : 50, sortable : true, align: 'right'}
-		],
-	sortname: "hostname",
-	sortorder: "asc",
-	usepager: true,
-	useRp: true,
-	rp: 10,
-	showTableToggleBtn: true
-	}
-	);   
+  function remove_hosts()
+  {
+    var host_array = new Array()
+    var host_index = 0
+    for(var i=0; i < document.hosts_grid_form.grid_checkbox.length; i++){
+    if(document.hosts_grid_form.grid_checkbox[i].checked)
+      {
+        host_array[host_index]= document.hosts_grid_form.grid_checkbox[i].value
+        host_index++
+      }
+    }
+    $.post('<%= url_for :controller => "hardware", :action => "move_hosts", :id => @pool %>',
+           { host_ids: host_array.toString(), target_pool_id: <%= Pool.root.id %> },
+            function(data,status){
+              alert("Returned " + data + ", status: " + status);
+              $("#hosts_grid").flexReload()
+             });
+  }
 </script>
+  <div class="panel_header"></div>
+    <div class="data_section">
+       <%= render :partial => "/host/grid", :locals => { :table_id => "hosts_grid",
+                                                         :hwpool_id => @pool.id } %>
+    </div>
 <div class="selection_detail">
   <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
   <div>Host description goes here if we allow a description.</div>

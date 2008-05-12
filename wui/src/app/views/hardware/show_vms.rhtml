@@ -1,11 +1,13 @@
 <ul class="toolbar_nav">
-    <li><a href="dialogs/addvmpool.html" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
-    <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Move &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
+    <li><a href="dialogs/addvmpool.html" rel="facebox[.bolder]"><%= image_tag "icon_add_vmpool.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;New Virtual Machine Pool</a></li>
     <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
   </ul>
 
   <div class="panel_header"></div>
 <div class="data_section">
+       <%= render :partial => "/host/grid", :locals => { :table_id => "vmpools_grid",
+                                                         :parent_controller => "hardware",
+                                                         :pool_id => @pool.id } %>
 <table id="vmpools_grid" style="display:none"></table>
 </div>
 <script type="text/javascript">

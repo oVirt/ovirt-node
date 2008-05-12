@@ -22,7 +22,8 @@ class HardwareController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  before_filter :pre_json, :only => [:hosts_json, :vm_pools_json, :users_json, :storage_pools_json, :storage_volumes_json]
+  before_filter :pre_json, :only => [:vm_pools_json, :users_json, :storage_pools_json, :storage_volumes_json]
+  before_filter :pre_modify, :only => [:add_hosts, :move_hosts]
 
 
   def show
@@ -74,8 +75,15 @@ class HardwareController < ApplicationController
   end
 
   def hosts_json
-    json_list(@pool.hosts, 
-              [:hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :is_disabled_str])
+    if params[:id]
+      pre_json
+      hosts = @pool.hosts
+    else
+      # FIXME: no permissions checks here yet, no filtering of current pool yet
+      hosts = Host.find(:all)
+    end
+    json_list(hosts, 
+              [:id, :hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :is_disabled_str])
   end
 
   def vm_pools_json
@@ -127,6 +135,41 @@ class HardwareController < ApplicationController
     end
   end
 
+  #FIXME: we need permissions checks. user must have permission on src pool
+  # in addition to the current pool (which is checked). We also need to fail
+  # for hosts that aren't currently empty
+  def add_hosts
+    host_ids_str = params[:host_ids]
+    host_ids = host_ids_str.split(",").collect {|x| x.to_i}
+    
+    @pool.transaction do
+      hosts = Host.find(:all, :conditions => "id in (#{host_ids.join(', ')})")
+      hosts.each do |host|
+        host.hardware_pool = @pool
+        host.save!
+      end
+    end
+    render :text => "added hosts (#{host_ids.join(', ')})"
+  end
+
+  #FIXME: we need permissions checks. user must have permission on src pool
+  # in addition to the current pool (which is checked). We also need to fail
+  # for hosts that aren't currently empty
+  def move_hosts
+    target_pool_id = params[:target_pool_id]
+    host_ids_str = params[:host_ids]
+    host_ids = host_ids_str.split(",").collect {|x| x.to_i}
+    
+    @pool.transaction do
+      hosts = Host.find(:all, :conditions => "id in (#{host_ids.join(', ')})")
+      hosts.each do |host|
+        host.hardware_pool_id = target_pool_id
+        host.save!
+      end
+    end
+    render :text => "added hosts (#{host_ids.join(', ')})"
+  end
+
   def destroy
     parent = @pool.parent
     if not(parent)
@@ -170,5 +213,9 @@ class HardwareController < ApplicationController
   def pre_json
     pre_show
     show
+  end
+  def pre_modify
+    pre_edit
+    authorize_admin
   end
 end
