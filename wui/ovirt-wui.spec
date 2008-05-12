@@ -17,6 +17,9 @@ Requires: ruby(abi) = 1.8
 Requires: rubygem(rails) >= 2.0.1
 Requires: rubygem(mongrel) >= 1.0.1
 Requires: rubygem(kerberos) >= 0.4
+Requires: rubygem(hoe) >= 1.5.1
+Requires: rubygem(rubyforge) >= 0.4.4
+Requires: rubygem(activeldap) >= 0.10.0
 Requires: ruby-gettext-package
 Requires: postgresql-server
 Requires: ruby-postgres
