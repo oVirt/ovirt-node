@@ -8,6 +8,9 @@
   <title><%= yield :title -%></title>
   <%= stylesheet_link_tag 'layout' %>
   <%= stylesheet_link_tag 'components' %>
+  <!--[if IE]>
+    <%= stylesheet_link_tag 'ie' %>
+  <![endif]-->
   <%= stylesheet_link_tag '/javascripts/jquery-treeview/ovirt.treeview.css' %>
   <%= stylesheet_link_tag 'flexigrid/flexigrid.css' %>
   <%= stylesheet_link_tag 'facebox' %>

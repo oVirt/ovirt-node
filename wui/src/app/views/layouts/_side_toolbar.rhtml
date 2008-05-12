@@ -1,10 +1,11 @@
+<% pool = HardwarePool.get_default_pool %>
 <div class="toolbar" style="float:left;">
-   <a href="#">
+   <a href="<%= url_for :controller => :hardware, :action => 'new', :parent_id => pool %>">
      <img title="Add Hardware Pool" src="/images/icon_add_hardwarepool.png" />
    </a>
 </div>
 <div class="toolbar" style="float:left;">
-   <a href="#">
+   <a href="<%= url_for :controller => :resources, :action => 'new', :parent_id => pool %>">
      <img title="Add Virtual Machine Pool" src="/images/icon_add_vmpool.png" />
    </a>
 </div>

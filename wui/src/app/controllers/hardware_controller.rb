@@ -72,6 +72,7 @@ class HardwareController < ApplicationController
 
   def show_hosts
     show
+    @hardware_pools = HardwarePool.find :all
   end
 
   def hosts_json
