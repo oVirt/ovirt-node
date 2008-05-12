@@ -76,14 +76,16 @@
     padding: 0 10px 0 10px;
     position: relative;
     float: left;
-    color: #FFFFFF;
-    text-decoration: none;
     line-height: 2.3;
     height: 28px;
-    text-align: center;
     border-right: 1px solid #5A7A8E;
     border-left: 1px solid #93B2C4;
     background: #000000 url(../images/bg_toolbarheader.jpg) repeat-x top; 
+}
+#toolbar_nav li, #toolbar_nav li a {
+    text-decoration: none;
+    text-align: center;
+    color: #FFFFFF;
 }
 #toolbar_nav ul ul {
     position: absolute;
