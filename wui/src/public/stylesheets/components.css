@@ -32,7 +32,7 @@
 .header_menu {
   padding: 5px 0 0 10px;
   margin: 1px;
-  background: #CCCCCC url(/images/bg_menu_big.jpg) repeat-x top;
+  background: #CCCCCC url(../images/bg_menu_big.jpg) repeat-x top;
   font-size: 110%;
   line-height:1.5;
   height: 26px;
@@ -83,7 +83,7 @@
     text-align: center;
     border-right: 1px solid #5A7A8E;
     border-left: 1px solid #93B2C4;
-    background: #000000 url(/images/bg_toolbarheader.jpg) repeat-x top; 
+    background: #000000 url(../images/bg_toolbarheader.jpg) repeat-x top; 
 }
 #toolbar_nav ul ul {
     position: absolute;
