@@ -68,6 +68,7 @@ class HardwareController < ApplicationController
 
   def show_users
     show
+    @roles = Permission::ROLES.keys
   end
 
   def show_hosts
@@ -77,6 +78,11 @@ class HardwareController < ApplicationController
   
   def show_graphs
     show
+  end
+
+  def show_storage
+    show
+    @hardware_pools = HardwarePool.find :all
   end
 
   def hosts_json
@@ -109,10 +115,6 @@ class HardwareController < ApplicationController
   def storage_volumes_json
     json_list(@pool.all_storage_volumes, 
               [:display_name, :size_in_gb, :get_type_label])
-  end
-
-  def show_storage
-    show
   end
 
   def new

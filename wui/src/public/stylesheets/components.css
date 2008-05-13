@@ -66,6 +66,9 @@
     background: #E5E5E5;
     float: left;
 }
+#toolbar_nav img{
+    vertical-align: middle;
+}
 #toolbar_nav ul{
     list-style-type: none;
     margin:0;
@@ -81,6 +84,9 @@
     border-right: 1px solid #5A7A8E;
     border-left: 1px solid #93B2C4;
     background: #000000 url(../images/bg_toolbarheader.jpg) repeat-x top;
+}
+#toolbar_nav li:hover {
+    background: #1E99DF;
 }
 #toolbar_nav li, #toolbar_nav li a {
     text-decoration: none;

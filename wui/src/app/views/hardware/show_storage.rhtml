@@ -1,11 +1,12 @@
-<ul class="toolbar_nav">
-    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Server</a></li>
-    <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Volume</a></li>
-    <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Move &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
-    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
-  </ul>
+<div id="toolbar_nav">
+<ul>
+    <li><a href="TODO"><%= image_tag "icon_addstorage.png" %>&nbsp;&nbsp;Add Storage</a></li>
+    <li><%= render :partial => 'move_menu' %></li>
+    <li><a href="TODO"><%= image_tag "icon_delete_white.png" %>&nbsp;&nbsp;Delete</a></li>
+</ul>
+</div>
 
-  <div class="panel_header"></div>
+<div class="panel_header"></div>
 <div class="data_section">
 <table id="storage_pools_grid" style="display:none"></table>
 <table id="storage_volumes_grid" style="display:none"></table>

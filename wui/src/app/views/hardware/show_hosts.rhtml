@@ -1,26 +1,8 @@
 <div id="toolbar_nav">
-  <ul>
-    <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
-    <li>
-      <%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Move &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %>
-      <ul>
-          <% @hardware_pools.each { |hw_pool| %>
-            <% if @pool.parent_id != hw_pool.id  and @pool.id != hw_pool.id %>
-              <li onclick="window.location='<%= url_for :controller => :hardware, :action => 'foobar' %>'">
-                 <%= image_tag "icon_hdwarepool.png", :style=> "vertical-align: middle;" %>
-            <% else %>
-              <li style="color: #CCCCCC; cursor: default;">
-                 <%= image_tag "icon_hdwarepool.png", :style=> "vertical-align: middle;" %>
-            <% end %>
-                 &nbsp; <%= hw_pool.name %></a>
-              </li>
-          <% } %>
-          <li style="border-top: 1px solid black; border-bottom: 1px solid black;">
-             Move to New Resource Group...
-          </li>
-      </ul>
-   </li>
-   <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
+ <ul>
+    <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png" %>&nbsp;&nbsp;Add Host</a></li>
+    <li><%= render :partial => 'move_menu' %></li>
+    <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_delete_white.png" %>&nbsp;&nbsp;Delete</a></li>
  </ul>
 </div>
 

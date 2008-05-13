@@ -1,113 +1,111 @@
-    <div id="data">
-      <div class="inside">
+<div id="toolbar_nav">
+<ul>
+    <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png" %>&nbsp;&nbsp;Add Host</a></li>
+    <li><a href="TODO"><%= image_tag "icon_addstorage.png" %>&nbsp;&nbsp;Add Storage</a></li>
+    <li><a href="TODO"><%= image_tag "icon_adduser.png" %>&nbsp;&nbsp;Add User</a></li>
+</ul>
+</div>
+<div class="panel_header"></div>
 
-          <div id="dataTableWrapper">
+<div id="data">
+  <div class="inside">
+    <div id="dataTableWrapper">
+      <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @pool, :vms => [] } %>
 
-          <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @pool, :vms => [] } %>
+      <div class="dataTable">
+        <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :hardware_pools => @pool.sub_hardware_pools, :vm_resource_pools => @pool.sub_vm_resource_pools } %>
+      </div> <!-- end #dataTable -->
 
-          <div class="dataTable">
-
-            <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :hardware_pools => @pool.sub_hardware_pools, :vm_resource_pools => @pool.sub_vm_resource_pools } %>
-
-            </div> <!-- end #dataTable -->
-
-            <div class="data-section">
-              <div class="data-section-header"><strong>Available Hosts (<%= @pool.hosts.size -%>)</strong></div>
-              <div class="data-section-stats">Statistics Data</div>
-              <div class="data-section-table">
-                <div class="inside">
-                <%= render :partial => "/host/list", :locals => { :hosts => @pool.hosts } %>
-                </div>
-              </div>
-            </div>
-
-            <div class="data-section">
-              <div class="data-section-header"><strong>Available Storage</strong></div>
-              <div class="data-section-stats">Statistics Data</div>
-              <div class="data-section-table">
-                <div class="inside">
-                  <%= render :partial => "/storage/list", :locals => { :storage_pools => @pool.storage_pools } %>
-                </div>
-              </div>
-            </div>
-
-            <div class="data-section">
-              <div class="data-section-header"><strong>Default VM Resource Quotas</strong></div>
-              <div class="data-section-stats">Statistics Data</div>
-              <div class="data-section-table">
-                <div class="inside">
-
-                <table>
-                  <tr>
-                  <th></th>
-                  <td> default values for VM Resource Pools</td>
-                  </tr>
-                <% resources = @pool.full_resources %>
-                <% for item in resources[:labels] %>
-                <% total_limit = resources[:total][item[1]]
-                   total_limit = "unlimited" if total_limit.nil? %>
-                  <tr>
-                  <th><%= item[0]%>:</th>
-                  <td><%= total_limit %>
-                      <%= item[2]%></td>
-                  </tr>
-                <% end %>
-                </table>
-
-                </div>
-              </div>
-            </div>
-          </div> <!-- end #dataTableWrapper -->
-
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
-  <td id="right">
-          <div class="heading">&nbsp;</div>
-          <div class="tools">
-
-            <h3>Actions</h3>
-            <%if @can_modify -%>
-            <div class="actions">
-              <!-- TODO: do we keep Create VM link? -->
-              <%= link_to 'Create Virtual Machine', { :controller => 'vm', :action => 'new', :hardware_pool_id => @pool }, { :class => "create" } %>
-              <%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @pool }, { :class => "create" } %>
-              <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @pool }, { :class => "create" } %>
-              <hr/>
-              <%= link_to 'Create Hardware Subpool', { :controller => "hardware", :action => 'new', :parent_id => @pool }, { :class => "create" } %>
-
-              <%= link_to 'Create VM Resource Pool', { :controller => "resources", :action => 'new', :parent_id => @pool }, { :class => "create" } %>
-            </div>
-            <div class="actions">
-              <%= link_to "Delete Pool", { :controller => 'hardware', :action => 'destroy', :id => @pool }, { :method => :post, :confirm => 'Are you sure you want to delete - %s?' % @pool.name, :class => "remove" } %>
-            </div>
-            <%- end -%>
-
-            <div class="actions">
-              <div><%= link_to 'Edit Hardware Pool Properties', { :action => 'edit', :id => @pool }, { :class => "edit" } %></div>
-              <%if @pool.quota -%>
-                <%= link_to 'Edit default Quota', { :controller => 'quota', :action => 'edit', :id => @pool.quota }, { :class => "edit" } %>
-                <%= link_to 'Remove default Quota', { :controller => 'quota', :action => 'destroy', :id => @pool.quota }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %>
-              <% else -%>
-                <%= link_to 'Edit default Quota', { :controller => 'quota', :action => 'new', :pool_id => @pool }, { :class => "edit" } %>
-              <% end -%>
-              <div><%= link_to_if @can_set_perms, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @pool }, { :class => "edit" } %></div>
-              <table>
-                <tr><td><%= pluralize @pool.permissions.super_admins.size, "Super Admin" %></td></tr>
-                <tr><td><%= pluralize @pool.permissions.admins.size, "Administrator" %></td></tr>
-                <tr><td><%= pluralize @pool.permissions.users.size, "User" %></td></tr>
-                <tr><td><%= pluralize @pool.permissions.monitors.size, "Monitor" %></td></tr>
-              </table>
-            </div>
-
-            <div class="actions">
-              <%= link_to "Back to #{@pool.parent.name}", { :controller => 'hardware', :action => 'show', :id => @pool.parent }, { :class => "" } if @pool.parent %>
-            </div>
-
+      <div class="data-section">
+        <div class="data-section-header"><strong>Available Hosts (<%= @pool.hosts.size -%>)</strong></div>
+        <div class="data-section-stats">Statistics Data</div>
+        <div class="data-section-table">
+          <div class="inside">
+            <%= render :partial => "/host/list", :locals => { :hosts => @pool.hosts } %>
           </div>
-  </td>
+        </div>
+     </div>
+
+     <div class="data-section">
+       <div class="data-section-header"><strong>Available Storage</strong></div>
+       <div class="data-section-stats">Statistics Data</div>
+       <div class="data-section-table">
+         <div class="inside">
+           <%= render :partial => "/storage/list", :locals => { :storage_pools => @pool.storage_pools } %>
+         </div>
+       </div>
+     </div>
+
+     <div class="data-section">
+       <div class="data-section-header"><strong>Default VM Resource Quotas</strong></div>
+       <div class="data-section-stats">Statistics Data</div>
+
+       <div class="data-section-table">
+         <div class="inside">
+           <table>
+             <tr><td> default values for VM Resource Pools</td></tr>
+             <% resources = @pool.full_resources %>
+             <% for item in resources[:labels] %>
+               <% total_limit = resources[:total][item[1]]
+                  total_limit = "unlimited" if total_limit.nil? %>
+                  <tr>
+                    <th><%= item[0]%>:</th>
+                    <td><%= total_limit %><%= item[2]%></td>
+                  </tr>
+             <% end %>
+           </table>
+         </div>
+       </div>
+
+     </div>
+    </div> <!-- end #dataTableWrapper -->
+
+  </div> <!-- end #data.inside -->
+</div> <!-- end #data -->
+
+<div class="heading">&nbsp;</div>
+<div class="tools">
+
+  <h3>Actions</h3>
+  <%if @can_modify -%>
+    <div class="actions">
+      <!-- TODO: do we keep Create VM link? -->
+      <%= link_to 'Create Virtual Machine', { :controller => 'vm', :action => 'new', :hardware_pool_id => @pool }, { :class => "create" } %>
+      <%= link_to 'Add Storage to Pool', { :controller => 'storage', :action => 'new', :hardware_pool_id => @pool }, { :class => "create" } %>
+      <%= link_to 'Add Host to Pool', { :controller => 'host', :action => 'list', :attach_to_pool => @pool }, { :class => "create" } %>
+      <hr/>
+      <%= link_to 'Create Hardware Subpool', { :controller => "hardware", :action => 'new', :parent_id => @pool }, { :class => "create" } %>
+
+      <%= link_to 'Create VM Resource Pool', { :controller => "resources", :action => 'new', :parent_id => @pool }, { :class => "create" } %>
+    </div>
+    <div class="actions">
+      <%= link_to "Delete Pool", { :controller => 'hardware', :action => 'destroy', :id => @pool }, { :method => :post, :confirm => 'Are you sure you want to delete - %s?' % @pool.name, :class => "remove" } %>
+    </div>
+  <%- end -%>
+
+  <div class="actions">
+    <div><%= link_to 'Edit Hardware Pool Properties', { :action => 'edit', :id => @pool }, { :class => "edit" } %></div>
+    <%if @pool.quota -%>
+      <%= link_to 'Edit default Quota', { :controller => 'quota', :action => 'edit', :id => @pool.quota }, { :class => "edit" } %>
+      <%= link_to 'Remove default Quota', { :controller => 'quota', :action => 'destroy', :id => @pool.quota }, :confirm => 'Are you sure?', :method=> :post, :class => "remove" %>
+    <% else -%>
+      <%= link_to 'Edit default Quota', { :controller => 'quota', :action => 'new', :pool_id => @pool }, { :class => "edit" } %>
+    <% end -%>
+
+    <div><%= link_to_if @can_set_perms, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @pool }, { :class => "edit" } %></div>
+    <table>
+      <tr><td><%= pluralize @pool.permissions.super_admins.size, "Super Admin" %></td></tr>
+      <tr><td><%= pluralize @pool.permissions.admins.size, "Administrator" %></td></tr>
+      <tr><td><%= pluralize @pool.permissions.users.size, "User" %></td></tr>
+      <tr><td><%= pluralize @pool.permissions.monitors.size, "Monitor" %></td></tr>
+    </table>
+  </div>
+
+   <div class="actions">
+     <%= link_to "Back to #{@pool.parent.name}", { :controller => 'hardware', :action => 'show', :id => @pool.parent }, { :class => "" } if @pool.parent %>
+   </div>
+</div>
 
 <%- content_for :title do -%>
-<%= @pool.name %>
+  <%= @pool.name %>
 <%- end -%>
