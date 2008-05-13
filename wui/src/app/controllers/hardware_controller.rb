@@ -74,6 +74,10 @@ class HardwareController < ApplicationController
     show
     @hardware_pools = HardwarePool.find :all
   end
+  
+  def show_graphs
+    show
+  end
 
   def hosts_json
     if params[:id]

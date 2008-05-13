@@ -15,11 +15,8 @@
 
 ;(function($) {
 
-function load(settings, root, child, container) {
-        var params;
-        root?params={id:root}:settings.current_pool_id!=""?params={current_id:settings.current_pool_id}:null;
-        //null;
-	$.getJSON(settings.url, params, function(response) { //{id: root}
+function load(settings, params, child, container) {
+        $.getJSON(settings.url, params, function(response) { //{id: root}
 		function createNode(parent) {                  
                         if (this.type=="HardwarePool") {
                             settings.link_to=settings.hardware_url 
@@ -63,7 +60,8 @@ $.fn.treeview = function(settings) {
 		return proxied.apply(this, arguments);
 	}
 	var container = this;
-	load(settings, settings.id, this, container); //original 2nd param value was "source"
+        settings.current_pool_id!=""?settings.params={current_id:settings.current_pool_id}:settings.params=null;
+	load(settings, settings.params, this, container);
 	var userToggle = settings.toggle;
 	return proxied.call(this, $.extend({}, settings, {
 		collapsed: true,
@@ -72,7 +70,7 @@ $.fn.treeview = function(settings) {
 			if ($this.hasClass("hasChildren")) {
 				var childList = $this.removeClass("hasChildren").find("ul");
                                 childList.empty();
-				load(settings, this.id, childList, container);
+				load(settings, {id:this.id}, childList, container);
 			}
 			if (userToggle) {
 				userToggle.apply(this, arguments);
@@ -81,4 +79,4 @@ $.fn.treeview = function(settings) {
 	}));
 };
 
-})(jQuery);
+}(jQuery);
