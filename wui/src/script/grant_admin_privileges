@@ -11,10 +11,9 @@ require 'active_ldap'
 
 require 'app/models/account'
 
-ldap_config = YAML::load(File.open("config/ldap.yml"))
+ldap_config = YAML::load(File.open("#{OVIRT_DIR}/config/ldap.yml"))
 uid = ARGV[0]
 base, host, port = ldap_config["production"]["base"], ldap_config["production"]["host"], ldap_config["production"]["port"]
-
 
 ActiveLdap::Base.establish_connection(:base => base, :host => host, :port => port)
 
@@ -28,7 +27,7 @@ puts "Validating UID #{uid} in LDAP"
 begin
   user = Account.find("uid=#{uid}")
 rescue StandardError => error
-  puts "Unable to validation in LDAP or no such user exists: uid=#{uid}" 
+  puts "Unable to verify user in LDAP or no such user exists: uid=#{uid}" 
 else
   $hwpool = HardwarePool.get_default_pool
   if $hwpool
