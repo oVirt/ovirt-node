@@ -1,0 +1,12 @@
+<script type="text/javascript">
+    $(document).ready(function(){  
+        $("#<%= div_id %>").svg();
+        buildGraph({
+            <%if defined? chartType%>chartType: "<%= chartType%>",<%end%>
+            <%if defined? dataType%>dataType: "<%= dataType%>",<%end%>
+            svg_container: "#<%= div_id %>",
+            graph_url: "<%=  url_for :controller =>'/graph', :action => 'graph' %>"
+        });
+    });  
+</script>
+<div id="<%= div_id %>"></div>

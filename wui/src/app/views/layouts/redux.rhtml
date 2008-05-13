@@ -6,6 +6,7 @@
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
   <title><%= yield :title -%></title>
+  <!--%= stylesheet_link_tag 'default' %--> <%# remove me %>
   <%= stylesheet_link_tag 'layout' %>
   <%= stylesheet_link_tag 'components' %>
   <!--[if IE]>
@@ -19,6 +20,9 @@
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
   <%= javascript_include_tag "flexigrid.js" -%>
   <%= javascript_include_tag "facebox.js" -%>
+  <%= javascript_include_tag "jquery-svg/jquery.svg.pack.js" -%>
+  <!--%= javascript_include_tag "jquery-svg/jquery.svgfilter.js" -%-->
+  <%= javascript_include_tag "jquery-svg/jquery.svggraph.pack.js" -%>
   <%= yield :scripts -%>
     <script type="text/javascript">
       $(document).ready(function(){         
@@ -28,8 +32,10 @@
             url: "<%=  url_for :controller =>'/hardware', :action => 'json' %>",
             hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
             resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
-	    })
-	});
+	    })    
+	}); 
+        
+        
       </script>
       <script type="text/javascript">
        jQuery(document).ready(function($) {
