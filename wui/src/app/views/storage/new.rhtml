@@ -1,42 +1,52 @@
-    <div id="data">
-      <div class="inside">
+<div class="dialog_title_small">
+  <div class="header">Add New Storage Pool</div>
+  <div>Add a new Storage Pool to this oVirt server.</div>
+</div>
 
-          <div id="dataTableWrapper">
+<div class="dialog_form">
+    <%= error_messages_for 'storage_pool' %>
+  <% form_tag  do %>
 
-          <div class="dataTable">
-              <div class="inside">
+    <!--[form:storage_pool]-->
+    <%= hidden_field_tag 'hardware_pool_id', @hardware_pool.id %>
+    <%= select_tag_with_label "Storage Type:", 'storage_type', @storage_types, :onChange => "load_details()"  %>
+    <!--[eoform:storage_pool]-->
+  <% end %>
 
-                <div class="data-table-column">
-                <% form_tag :action => 'new2' do %>
-<%= error_messages_for 'storage_pool' %>
+  <div class="clear_row"></div>
+  <div class="clear_row"></div>
+</div>
+<form method="POST" action="<%= url_for :action => 'create' %>" id="new_storage_pool_form" >
+<div class="dialog_form">
+  <div id="new_storage_pool"/>
 
-<!--[form:storage_pool]-->
-<%= hidden_field_tag_with_label "Hardware Pool", 'hardware_pool_id', @hardware_pool.id, @hardware_pool.name  %>
+</div>
+<div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
+  <div><input type="image" name="submitButton" value="Submit2" src="<%= image_path "btn_addstorage.png"%>" alt="Add Storage Server" />
+    <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%=image_tag "btn_cancel.png", :title=>"Cancel" %></a>
+  </div>
+</div>
+</form>
+  <script type="text/javascript">
+  function load_details()
+  {
+    $('#new_storage_pool').load('<%= url_for :controller => "storage", :action => "new2" %>',
+                                { hardware_pool_id: $('[name=hardware_pool_id]').val(), storage_type: $('[name=storage_type]').val()})
+  }
+  load_details()
+$(function() {
+    var storageoptions = {
+        target:        '<%= url_for :action => 'create' %>',   // target element to update
+        //beforeSubmit:  showStorageRequest,  // pre-submit callback
+	dataType:      'json',
+        success:       afterNewStoragePool  // post-submit callback
+    };
 
-<%= select_tag_with_label "Storage Type", 'storage_type', @storage_types  %>
-
-<!--[eoform:storage_pool]-->
-
-                  <%= submit_tag "Choose Type" %>
-                <% end %>
-                </div>
-
-                <div class="data-table-column">
-                  <%= render :partial => "list", :locals => { :storage_pools => @hardware_pool.storage_pools } %>
-                </div>
-
-              </div> <!-- end #data-table.inside -->
-            </div> <!-- end #dataTable -->
-
-
-          </div> <!-- end #dataTableWrapper -->
-
-
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
-
-<%- content_for :title do -%>
-<%= _("Add Storage") %>
-<%- end -%>
+    // bind form using 'ajaxForm' 
+    $('#new_storage_pool_form').ajaxForm(storageoptions); 
+});
+function afterNewStoragePool(response, status){
+    jQuery(document).trigger('close.facebox');
+    $("#storage_grid").flexReload()
+}
+  </script>

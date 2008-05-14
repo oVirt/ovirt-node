@@ -1,0 +1,29 @@
+<div id="<%= table_id %>_div">
+<form name="<%= table_id %>_form">
+<table id="<%= table_id %>" style="display:none"></table>
+</form>
+</div>
+<script type="text/javascript">
+	$("#<%= table_id %>").flexigrid
+	(
+	{
+	url: '<%=  url_for :controller => parent_controller, :action => "vm_pools_json", :id => pool_id %>',
+	dataType: 'json',
+	colModel : [
+		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
+		{display: 'Name', name : 'name', width : 160, sortable : true, align: 'left'}
+		],
+	sortname: "name",
+	sortorder: "asc",
+	usepager: true,
+	useRp: true,
+	rp: 10,
+	showTableToggleBtn: true
+	}
+	);   
+	function <%= table_id %>checkbox(celDiv)
+	{
+	       $(celDiv).html('<input type="checkbox" name="grid_checkbox" value="'+$(celDiv).html()+'"/>');
+	} 
+
+</script>

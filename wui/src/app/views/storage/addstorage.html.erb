@@ -1,0 +1,69 @@
+<div class="dialog_title">
+	<div class="header">Add Storage</div>
+    <div>Select storage pools from the list below to add to the <%= @hardware_pool.name %> hardware pool.</div>
+</div>
+<div id="toolbar_nav">
+<ul>
+    <li class="current" id="unassigned_tab"><a href="#" onClick = "show_unassigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Unassigned Storage (<%= @unassigned %>)</a></li>
+    <li id="assigned_tab"><a href="#" onClick = "show_assigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Assigned Storage (<%= @assigned %>)</a></li>
+</ul>
+</div>
+<script type="text/javascript">
+  function show_unassigned()
+  {
+      $("#assigned_tab").removeClass('current');
+      $("#unassigned_tab").addClass('current');
+      $("#addstorage_assigned_grid_div").hide()
+      $("#addstorage_unassigned_grid_div").show()
+  }
+  function show_assigned()
+  {
+      $("#assigned_tab").addClass('current');
+      $("#unassigned_tab").removeClass('current');
+      $("#addstorage_unassigned_grid_div").hide()
+      $("#addstorage_assigned_grid_div").show()
+  }
+  function add_storage()
+  {
+    var storage_array = new Array()
+    var storage_index = 0
+    for(var i=0; i < document.addstorage_unassigned_grid_form.grid_checkbox.length; i++){
+      if(document.addstorage_unassigned_grid_form.grid_checkbox[i].checked)
+      {
+        storage_array[storage_index]= document.addstorage_unassigned_grid_form.grid_checkbox[i].value
+        storage_index++
+      }
+    }
+    for(var i=0; i < document.addstorage_assigned_grid_form.grid_checkbox.length; i++){
+      if(document.addstorage_assigned_grid_form.grid_checkbox[i].checked)
+      {
+      storage_array[storage_index]= document.addstorage_assigned_grid_form.grid_checkbox[i].value
+      storage_index++
+      }
+    }
+    $.post('<%= url_for :controller => "hardware", :action => "add_storage", :id => @hardware_pool %>',
+           { storage_pool_ids: storage_array.toString() },
+            function(data,status){ 
+              jQuery(document).trigger('close.facebox');
+              $("#storage_grid").flexReload()
+             });
+  }
+</script>
+  <div class="panel_header"></div>
+  <div class="dialog_body">
+       <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_unassigned_grid",
+           :hwpool_id => Pool.root.id } %>
+       <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_assigned_grid",
+           :hwpool_id => nil } %>
+  </div>
+</div>
+<script type="text/javascript">
+  $("#addstorage_assigned_grid_div").hide()
+</script>
+<div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
+  <div>
+    <a href="#" onclick="add_storage()"><%= image_tag "btn_addstorage.png", :title => "Add Selected Storage Pools" %></a>
+    <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%= image_tag "btn_cancel.png", :title =>"Cancel" %></a>
+  </div>
+</div>
+

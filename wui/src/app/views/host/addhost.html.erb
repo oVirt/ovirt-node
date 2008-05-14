@@ -2,10 +2,12 @@
 	<div class="header">Add Host</div>
     <div>Select hosts from the list below to add to the <%= @hardware_pool.name %> hardware pool.  <a href="#">Learn how to manage hosts</a></div>
 </div>
-<ul class="toolbar_nav">
+<div id="toolbar_nav">
+<ul>
     <li class="current" id="unassigned_tab"><a href="#" onClick = "show_unassigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Unassigned Hosts (<%= @unassigned %>)</a></li>
     <li id="assigned_tab"><a href="#" onClick = "show_assigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Assigned Hosts (<%= @assigned %>)</a></li>
 </ul>
+</div>
 <script type="text/javascript">
   function show_unassigned()
   {
@@ -42,7 +44,6 @@
     $.post('<%= url_for :controller => "hardware", :action => "add_hosts", :id => @hardware_pool %>',
            { host_ids: host_array.toString() },
             function(data,status){ 
-              alert("Returned " + data + ", status: " + status);
               jQuery(document).trigger('close.facebox');
               $("#hosts_grid").flexReload()
              });

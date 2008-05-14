@@ -1,35 +1,16 @@
 <div id="toolbar_nav">
-<ul>
-    <li><a href="TODO"><%= image_tag "icon_add_vmpool.png" %>&nbsp;&nbsp;New Virtual Machine Pool</a></li>
-    <li><a href="TODO"><%= image_tag "icon_delete_white.png" %>&nbsp;&nbsp;Delete</a></li>
-</ul>
+ <ul>
+    <li><a href="dialogs/addvmpool.html" rel="facebox[.bolder]"><%= image_tag "icon_add_vmpool.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;New Virtual Machine Pool</a></li>
+    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
+ </ul>
 </div>
 
   <div class="panel_header"></div>
 <div class="data_section">
-       <%= render :partial => "/host/grid", :locals => { :table_id => "vmpools_grid",
+       <%= render :partial => "/resources/grid", :locals => { :table_id => "vmpools_grid",
                                                          :parent_controller => "hardware",
                                                          :pool_id => @pool.id } %>
-<table id="vmpools_grid" style="display:none"></table>
 </div>
-<script type="text/javascript">
-	$("#vmpools_grid").flexigrid
-	(
-	{
-	url: '<%=  url_for :action => "vm_pools_json", :id => @pool.id %>',
-	dataType: 'json',
-	colModel : [
-		{display: 'Name', name : 'name', width : 160, sortable : true, align: 'left'}
-		],
-	sortname: "name",
-	sortorder: "asc",
-	usepager: true,
-	useRp: true,
-	rp: 10,
-	showTableToggleBtn: true
-	}
-	);   
-</script>
 <div class="selection_detail">
   <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">VM Description</
   <div>VM description goes here if we allow a description.</div>

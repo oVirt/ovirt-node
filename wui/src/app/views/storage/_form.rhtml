@@ -1,19 +1,18 @@
 <%= error_messages_for 'storage_pool' %>
 
 <!--[form:storage_pool]-->
-<%= hidden_field_with_label "Hardware Pool", 'storage_pool', 'hardware_pool_id', @storage_pool.hardware_pool.name  %>
-<%= hidden_field_tag_with_label "Storage Type",  'storage_type', @storage_pool.get_type_label, @storage_pool.get_type_label  %>
+<%= hidden_field 'storage_pool', 'hardware_pool_id'  %>
+<%= hidden_field_tag 'storage_type', @storage_pool.get_type_label  %>
 
-<%= text_field_with_label "IP Address", 'storage_pool', 'ip_addr'  %>
+<%= text_field_with_label "IP Address:", 'storage_pool', 'ip_addr'  %>
 
-<%= text_field_with_label "Port", 'storage_pool', 'port' if @storage_pool[:type] == "IscsiStoragePool" %>
+<%= text_field_with_label "Port:", 'storage_pool', 'port' if @storage_pool[:type] == "IscsiStoragePool" %>
 
-<%= text_field_with_label "Target", 'storage_pool', 'target'  if @storage_pool[:type] == "IscsiStoragePool"  %>
+<%= text_field_with_label "Target:", 'storage_pool', 'target'  if @storage_pool[:type] == "IscsiStoragePool"  %>
 
-<%= text_field_with_label "Export Path", 'storage_pool', 'export_path'  if @storage_pool[:type] == "NfsStoragePool"  %>
+<%= text_field_with_label "Export Path:", 'storage_pool', 'export_path'  if @storage_pool[:type] == "NfsStoragePool"  %>
 
 
-<%= focus('storage_pool_ip_addr') %>
 
 <!--[eoform:storage_pool]-->
 
