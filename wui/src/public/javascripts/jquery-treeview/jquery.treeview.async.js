@@ -79,4 +79,4 @@ $.fn.treeview = function(settings) {
 	}));
 };
 
-}(jQuery);
+})(jQuery);
