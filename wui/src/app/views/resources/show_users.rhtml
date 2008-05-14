@@ -1,8 +1,10 @@
-<ul class="toolbar_nav">
+<div id="toolbar_nav">
+<ul>
     <li><a href="dialogs/addhost.html" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add User</a></li>
-    <li><a href="#" rel="close"><%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Change Role &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %></a></li>
+    <li><%= render :partial => 'user/change_role_menu' %></li>
     <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
-  </ul>
+</ul>
+</div>
 
   <div class="panel_header"></div>
 <div class="data_section">

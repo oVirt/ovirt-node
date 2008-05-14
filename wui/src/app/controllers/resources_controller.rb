@@ -58,6 +58,13 @@ class ResourcesController < ApplicationController
   # resource's vms list page
   def show_vms
     show
+    @actions = VmTask::ACTIONS.keys
+  end
+
+  # resource's users list page
+  def show_users
+    show
+    @roles = Permission::ROLES.keys
   end
 
   def vms_json
@@ -68,11 +75,6 @@ class ResourcesController < ApplicationController
   def users_json
     json_list(@vm_resource_pool.permissions, 
               [:user, :user_role])
-  end
-
-  # resource's users list page
-  def show_users
-    show
   end
 
   def new
