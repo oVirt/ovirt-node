@@ -20,6 +20,10 @@ body {
   font-size: 90%; 
 }
 
+textarea:focus, input:focus {
+  background-color: #FFFFCC;
+}
+
 img
 {  
   border-style: none;
@@ -232,6 +236,11 @@ img
   width:600px;
 }
 
+.dialog_title_small {
+  background:#DEE7EB; 
+  padding:15px; 
+  width:400px;
+}
 .header {
   font-size: 180%;
   line-height: 1.6;
@@ -239,6 +248,43 @@ img
 
 .dialog_body {
 height: 350px;
+}
+
+.dialog_form {
+  margin: 15px;
+}
+
+.field_title {
+  font-size: 105%;
+  font-weight:bold;
+}
+
+.textfield_effect {
+	padding: 2px 0 0 2px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #999999;
+    font-size: 105%;
+    width: 200px;
+    height: 20px;
+}
+
+.dropdown_effect {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #999999;
+    font-size: 105%;
+    height: 20px;
+}
+
+.form_field {
+  padding-top: 2px;
+  padding-bottom: 12px;
+}
+
+.clear_row {
+  clear:both;
+  height: 5px;
 }
 
 

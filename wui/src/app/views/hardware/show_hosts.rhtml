@@ -21,7 +21,6 @@
     $.post('<%= url_for :controller => "hardware", :action => "move_hosts", :id => @pool %>',
            { host_ids: host_array.toString(), target_pool_id: <%= Pool.root.id %> },
             function(data,status){
-              alert("Returned " + data + ", status: " + status);
               $("#hosts_grid").flexReload()
              });
   }

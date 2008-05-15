@@ -24,6 +24,7 @@
   <!--%= javascript_include_tag "jquery-svg/jquery.svgfilter.js" -%-->
   <%= javascript_include_tag "jquery-svg/jquery.svggraph.pack.js" -%>
   <%= yield :scripts -%>
+  <%= javascript_include_tag "jquery.form.js" -%>
     <script type="text/javascript">
       $(document).ready(function(){         
         $("#tree").treeview({
@@ -32,7 +33,7 @@
             url: "<%=  url_for :controller =>'/hardware', :action => 'json' %>",
             hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
             resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
-	    })    
+	    })
 	}); 
         
         

@@ -22,8 +22,11 @@ class HardwareController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  before_filter :pre_json, :only => [:vm_pools_json, :users_json, :storage_pools_json, :storage_volumes_json]
-  before_filter :pre_modify, :only => [:add_hosts, :move_hosts]
+  before_filter :pre_json, :only => [:vm_pools_json, :users_json, 
+                                     :storage_volumes_json]
+  before_filter :pre_modify, :only => [:add_hosts, :move_hosts, 
+                                       :add_storage, :move_storage, 
+                                       :create_storage, :delete_storage]
 
 
   def show
@@ -99,7 +102,7 @@ class HardwareController < ApplicationController
 
   def vm_pools_json
     json_list(@pool.sub_vm_resource_pools, 
-              [:name])
+              [:id, :name])
   end
 
   def users_json
@@ -108,8 +111,15 @@ class HardwareController < ApplicationController
   end
 
   def storage_pools_json
-    json_list(@pool.storage_pools, 
-              [:display_name, :ip_addr, :get_type_label])
+    if params[:id]
+      pre_json
+      storage_pools = @pool.storage_pools
+    else
+      # FIXME: no permissions checks here yet, no filtering of current pool yet
+      storage_pools = StoragePool.find(:all)
+    end
+    json_list(storage_pools, 
+              [:id, :display_name, :ip_addr, :get_type_label])
   end
 
   def storage_volumes_json
@@ -175,6 +185,41 @@ class HardwareController < ApplicationController
       end
     end
     render :text => "added hosts (#{host_ids.join(', ')})"
+  end
+
+  #FIXME: we need permissions checks. user must have permission on src pool
+  # in addition to the current pool (which is checked). We also need to fail
+  # for storage that aren't currently empty
+  def add_storage
+    storage_pool_ids_str = params[:storage_pool_ids]
+    storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
+    
+    @pool.transaction do
+      storage_pools = StoragePool.find(:all, :conditions => "id in (#{storage_pool_ids.join(', ')})")
+      storage_pools.each do |storage_pool|
+        storage_pool.hardware_pool = @pool
+        storage_pool.save!
+      end
+    end
+    render :text => "added storage (#{storage_pool_ids.join(', ')})"
+  end
+
+  #FIXME: we need permissions checks. user must have permission on src pool
+  # in addition to the current pool (which is checked). We also need to fail
+  # for storage that aren't currently empty
+  def move_storage
+    target_pool_id = params[:target_pool_id]
+    storage_pool_ids_str = params[:storage_pool_ids]
+    storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
+    
+    @pool.transaction do
+      storage = StoragePool.find(:all, :conditions => "id in (#{storage_pool_ids.join(', ')})")
+      storage.each do |storage_pool|
+        storage_pool.hardware_pool_id = target_pool_id
+        storage_pool.save!
+      end
+    end
+    render :text => "added storage (#{storage_pool_ids.join(', ')})"
   end
 
   def destroy

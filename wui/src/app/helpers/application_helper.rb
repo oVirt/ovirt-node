@@ -26,23 +26,29 @@ require 'erb'
 module ApplicationHelper
 
   def text_field_with_label(label, obj, meth) 
+    opts = {}
+    opts[:class] = "textfield_effect"
     %{ 
-      <div class="i"><label for="#{obj}_#{meth}">#{_(label)}</label>
-      #{text_field obj, meth}</div>
+      <div class="field_title"><label for="#{obj}_#{meth}">#{_(label)}</label></div>
+      <div class="form_field">#{text_field obj, meth, opts}</div>
      }
   end
 
   def select_with_label(label, obj, meth, coll, opts={}) 
+    opts[:class] = "dropdown_effect"
+    opts[:style]="width:320px;"
     %{ 
-      <div class="i"><label for="#{obj}_#{meth}">#{_(label)}</label>
-      #{select obj, meth, coll, opts}</div>
+      <div class="field_title"><label for="#{obj}_#{meth}">#{_(label)}</label></div>
+      <div class="form_field">#{select obj, meth, coll, opts}</div>
      }
   end
 
   def select_tag_with_label(label, name, select_options, opts={}) 
+    opts[:class] = "dropdown_effect"
+    opts[:style]="width:320px;"
     %{ 
-      <div class="i"><label for="#{name}">#{_(label)}</label>
-      #{select_tag name, options_for_select(select_options), opts}</div>
+      <div class="field_title"><label for="#{name}">#{_(label)}</label></div>
+      <div class="form_field">#{select_tag name, options_for_select(select_options), opts}</div>
      }
   end
 

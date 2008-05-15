@@ -71,10 +71,12 @@ class StorageController < ApplicationController
   def new
     @storage_pools = @hardware_pool.storage_volumes
     @storage_types = StoragePool::STORAGE_TYPES.keys
+    render :layout => 'popup'    
   end
 
   def new2
     @storage_pools = @storage_pool.hardware_pool.storage_volumes
+    render :layout => 'popup'    
   end
 
   def insert_refresh_task
@@ -98,13 +100,13 @@ class StorageController < ApplicationController
   def create
     if @storage_pool.save
       if insert_refresh_task
-        storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
-        flash[:notice] = '<a class="show" href="%s">%s</a> was successfully created.' % [ storage_url ,@storage_pool.ip_addr]
-        redirect_to :controller => @storage_pool.hardware_pool.get_controller, :action => 'show', :id => @storage_pool.hardware_pool_id
+        render :json => "created new storage pool #{@storage_pool.display_name}".to_json
       else
+        # FIXME: need to handle proper error messages w/ ajax
         render :action => 'new'
       end
     else 
+      # FIXME: need to handle proper error messages w/ ajax
       flash[:notice] = 'Storage Pool creation failed.'
       redirect_to :controller => @storage_pool.hardware_pool.get_controller, :action => 'show', :id => @storage_pool.hardware_pool_id
     end
@@ -125,6 +127,30 @@ class StorageController < ApplicationController
     else
       render :action => 'edit'
     end
+  end
+
+  def addstorage
+    @hardware_pool = Pool.find(params[:hardware_pool_id])
+    @unassigned = Pool.root.storage_pools.size
+    # FIXME: @assigned should match  the updated assigned storage pools query when that's done
+    @assigned = StoragePool.find(:all).size
+    render :layout => 'popup'    
+  end
+
+  #FIXME: we need permissions checks. user must have permission on src pool
+  # in addition to the current pool (which is checked). We also need to fail
+  # for storage that aren't currently empty
+  def delete_pools
+    storage_pool_ids_str = params[:storage_pool_ids]
+    storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
+    
+    StoragePool.transaction do
+      storage = StoragePool.find(:all, :conditions => "id in (#{storage_pool_ids.join(', ')})")
+      storage.each do |storage_pool|
+        storage_pool.destroy
+      end
+    end
+    render :text => "deleted storage (#{storage_pool_ids.join(', ')})"
   end
 
   def vm_action
