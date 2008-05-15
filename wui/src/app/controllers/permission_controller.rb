@@ -45,22 +45,56 @@ class PermissionController < ApplicationController
       flash[:notice] = 'You do not have permission to create this permission record'
       redirect_to_parent
     end
+    render :layout => 'popup'    
   end
 
   def create
     @permission = Permission.new(params[:permission])
     set_perms(@permission.pool)
     unless @can_set_perms
+      # FIXME: need to handle proper error messages w/ ajax
       flash[:notice] = 'You do not have permission to create this permission record'
       redirect_to_parent
     else
       if @permission.save
-        flash[:notice] = 'Permission was successfully created.'
-        redirect_to_parent
+        render :json => "created User Permissions for  #{@permission.user}".to_json
       else
+      # FIXME: need to handle proper error messages w/ ajax
         render :action => 'new'
       end
     end
+  end
+
+  #FIXME: we need permissions checks. user must have permission. We also need to fail
+  # for pools that aren't currently empty
+  def update_roles
+    role = params[:user_role]
+    permission_ids_str = params[:permission_ids]
+    permission_ids = permission_ids_str.split(",").collect {|x| x.to_i}
+    
+    Permission.transaction do
+      permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
+      permissions.each do |permission|
+        permission.user_role = role
+        permission.save!
+      end
+    end
+    render :text => "deleted user permissions (#{permission_ids.join(', ')})"
+  end
+
+  #FIXME: we need permissions checks. user must have permission. We also need to fail
+  # for pools that aren't currently empty
+  def delete
+    permission_ids_str = params[:permission_ids]
+    permission_ids = permission_ids_str.split(",").collect {|x| x.to_i}
+    
+    Permission.transaction do
+      permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
+      permissions.each do |permission|
+        permission.destroy
+      end
+    end
+    render :text => "deleted user permissions (#{permission_ids.join(', ')})"
   end
 
   def destroy

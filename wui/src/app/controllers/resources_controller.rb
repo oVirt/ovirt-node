@@ -58,7 +58,12 @@ class ResourcesController < ApplicationController
   # resource's vms list page
   def show_vms
     show
-    @actions = VmTask::ACTIONS.keys
+    @actions = [["Start", VmTask::ACTION_START_VM],
+                ["Shutdown", VmTask::ACTION_SHUTDOWN_VM, "break"],
+                ["Suspend", VmTask::ACTION_SUSPEND_VM],
+                ["Resume", VmTask::ACTION_RESUME_VM],
+                ["Save", VmTask::ACTION_SAVE_VM],
+                ["Restore", VmTask::ACTION_RESTORE_VM]]
   end
 
   # resource's users list page
@@ -69,23 +74,23 @@ class ResourcesController < ApplicationController
 
   def vms_json
     json_list(@vm_resource_pool.vms, 
-              [:description, :uuid, :num_vcpus_allocated, :memory_allocated_in_mb, :vnic_mac_addr, :state])
+              [:id, :description, :uuid, :num_vcpus_allocated, :memory_allocated_in_mb, :vnic_mac_addr, :state])
   end
 
   def users_json
     json_list(@vm_resource_pool.permissions, 
-              [:user, :user_role])
+              [:id, :user, :user_role])
   end
 
   def new
-    @vm_resource_pools = @vm_resource_pool.self_and_like_siblings
+    render :layout => 'popup'    
   end
 
   def create
     if @vm_resource_pool.create_with_parent(@parent)
-      flash[:notice] = 'VM Resource Pool was successfully created.'
-      redirect_to :controller => @vm_resource_pool.parent.get_controller, :action => 'show', :id => @vm_resource_pool.parent
+      render :json => "created new VM pool #{@vm_resource_pool.name}".to_json
     else
+      # FIXME: need to handle proper error messages w/ ajax
       render :action => 'new'
     end
   end
@@ -100,6 +105,21 @@ class ResourcesController < ApplicationController
     else
       render :action => 'edit'
     end
+  end
+
+  #FIXME: we need permissions checks. user must have permission. We also need to fail
+  # for pools that aren't currently empty
+  def delete
+    vm_pool_ids_str = params[:vm_pool_ids]
+    vm_pool_ids = vm_pool_ids_str.split(",").collect {|x| x.to_i}
+    
+    VmResourcePool.transaction do
+      pools = VmResourcePool.find(:all, :conditions => "id in (#{vm_pool_ids.join(', ')})")
+      pools.each do |pool|
+        pool.destroy
+      end
+    end
+    render :text => "deleted vm pools (#{vm_pool_ids.join(', ')})"
   end
 
   def destroy

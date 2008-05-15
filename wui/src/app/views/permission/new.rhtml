@@ -1,43 +1,35 @@
-<div id="data">
-  <div class="inside">
+<div class="dialog_title_small">
+  <div class="header">Add New User</div>
+  <div>Add a new user to  <%= @permission.pool.name %> pool.</div>
+</div>
 
-          <div id="dataTableWrapper">
+<form method="POST" action="<%= url_for :action => 'create' %>" id="new_permission_form" >
+<div class="dialog_form">
+  <%= render :partial => 'form' %>
+</div>
+<div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
+  <div><input type="image" name="submitButton" value="Submit2" src="<%= image_path "btn_addstorage.png"%>" alt="Create User Permission" />
+    <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%=image_tag "btn_cancel.png", :title=>"Cancel" %></a>
+  </div>
+</div>
+</form>
+  <script type="text/javascript">
+$(function() {
+    var permissionoptions = {
+        target:        '<%= url_for :action => 'create' %>',   // target element to update
+	dataType:      'json',
+        success:       afterNewPermission  // post-submit callback
+    };
 
-          <div class="dataTable">
-              <div class="inside">
+    // bind form using 'ajaxForm' 
+    $('#new_permission_form').ajaxForm(permissionoptions); 
+});
+function afterNewPermission(response, status){
+    jQuery(document).trigger('close.facebox');
+    $("#users_grid").flexReload()
+}
+</script>
 
-                <div class="data-table-column">
-                <% form_tag :action => 'create' do %>
-                  <%= render :partial => 'form' %>
-                  <%= submit_tag "Add User" %>
-                <% end %>
-                </div>
-
-                <div class="data-table-column">
-                <h3>Existing Users</h3>
-                <%= render :partial => "/permission/list", :locals => { :permissions => @perms, :show_object => false, :show_actions => @can_view } %>
-                </div>
-
-              </div> <!-- end #data-table.inside -->
-            </div> <!-- end #dataTable -->
-
-          </div> <!-- end #dataTableWrapper -->
-
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
-  <td id="right">
-    <div class="heading">&nbsp;</div>
-    <div class="tools">
-
-          <h3>Actions</h3>
-            <div class="actions">
-              <%= link_to "Back to #{@permission.pool.name}", { :controller => @permission.pool.get_controller, :action => 'show', :id => @permission.pool_id }, { :class => "show" } %>
-            </div>
-          </div> <!-- end #tools -->
-
-    </td>
 <%- content_for :title do -%>
 <%= "Edit Permissions for #{@permission.pool.name}" %>
 <%- end -%>

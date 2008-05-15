@@ -5,47 +5,48 @@
        <%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Actions &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %>
        <ul>
         <% @actions.each_index { |index| %>
-            <li
-            <% if index == @actions.length - 1 %>
+            <li onChange="vm_actions('<%=@actions[index][1]%>')"
+            <% if (index == @actions.length - 1) or @actions[index].length == 3 %>
                 style="border-bottom: 1px solid black;"
             <% end %>
                >
-                 <%= @actions[index] %>
+                 <%=@actions[index][0]%>
             </li>
         <% } %>
        </ul>
     </li>
-    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
+    <li><a href="#" onClick="delete_vms()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
 </ul>
 </div>
+<script type="text/javascript">
+  function get_selected_vms()
+  {
+    var vms_array = new Array()
+    var vms_index = 0
+    for(var i=0; i < document.vms_grid_form.grid_checkbox.length; i++){
+    if(document.vms_grid_form.grid_checkbox[i].checked)
+      {
+        vms_array[vms_index]= document.vms_grid_form.grid_checkbox[i].value
+        vms_index++
+      }
+    }
+    return vms_array
+  }
+  function delete_vms()
+  {
+    $.post('<%= url_for :controller => "vm", :action => "delete", :id => @pool %>',
+           { vm_ids: get_selected_vms().toString() },
+            function(data,status){
+              $("#vms_grid").flexReload()
+             });
+  }
+</script>
 
   <div class="panel_header"></div>
 <div class="data_section">
-<table id="vms_grid" style="display:none"></table>
+       <%= render :partial => "/vm/grid", :locals => { :table_id => "vms_grid",
+                                                              :pool_id => @vm_resource_pool.id } %>
 </div>
-<script type="text/javascript">
-	$("#vms_grid").flexigrid
-	(
-	{
-	url: '<%=  url_for :action => "vms_json", :id => @vm_resource_pool.id %>',
-	dataType: 'json',
-	colModel : [
-		{display: 'Description', name : 'description', width : 180, sortable : true, align: 'left'},
-	        {display: 'UUID', name : 'uuid', width : 180, sortable : true, align: 'left'},
-		{display: 'CPUs', name : 'num_vcpus_allocated', width : 40, sortable : true, align: 'left'},
-		{display: 'Memory (MB)', name : 'memory_allocated', width : 60, sortable : true, align: 'right'},
-		{display: 'vNIC Mac Addr', name : 'vnic_mac_addr', width : 60, sortable : true, align: 'right'},
-		{display: 'State', name : 'state', width : 50, sortable : true, align: 'right'}
-		],
-	sortname: "description",
-	sortorder: "asc",
-	usepager: true,
-	useRp: true,
-	rp: 10,
-	showTableToggleBtn: true
-	}
-	);   
-</script>
 <div class="selection_detail">
   <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
   <div>Host description goes here if we allow a description.</div>

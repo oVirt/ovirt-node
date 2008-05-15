@@ -1,0 +1,46 @@
+<div id="toolbar_nav">
+<ul>
+    <li><a href="<%= url_for :controller => 'permission', :action => 'new', :pool_id => pool_id %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add User</a></li>
+    <li><%= render :partial => 'user/change_role_menu' %></li>
+    <li><a href="#" onClick="delete_users()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
+</ul>
+</div>
+<script type="text/javascript">
+  function get_selected_users()
+  {
+    var users_array = new Array()
+    var users_index = 0
+    for(var i=0; i < document.users_grid_form.grid_checkbox.length; i++){
+    if(document.users_grid_form.grid_checkbox[i].checked)
+      {
+        users_array[users_index]= document.users_grid_form.grid_checkbox[i].value
+        users_index++
+      }
+    }
+    return users_array
+  }
+  function delete_users()
+  {
+    $.post('<%= url_for :controller => "permission", :action => "delete", :id => pool_id %>',
+           { permission_ids: get_selected_users().toString() },
+            function(data,status){
+              $("#users_grid").flexReload()
+             });
+  }
+  function update_users(role)
+  {
+    $.post('<%= url_for :controller => "permission", :action => "update_roles" %>',
+           { permission_ids: get_selected_users().toString(), user_role: role },
+            function(data,status){
+              $("#users_grid").flexReload()
+             });
+  }
+</script>
+
+  <div class="panel_header"></div>
+<div class="data_section">
+  <%= render :partial => "/user/grid", :locals => { :table_id => "users_grid",
+                                                     :parent_controller => parent_controller,
+                                                     :pool_id => pool_id } %>
+<table id="users_grid" style="display:none"></table>
+</div>

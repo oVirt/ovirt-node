@@ -1,13 +1,12 @@
 <%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Change Role &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %>
 <ul>
    <% @roles.each_index { |index| %>
-      <!-- FIXME point me at the right place -->
-      <li onclick="window.location='<%= url_for :action => 'foobar' %>'"
+      <li onClick="update_users('<%=@roles[index]%>')"
       <% if index == @roles.length - 1 %>
         style="border-bottom: 1px solid black;"
       <% end %>
         >
-            <%= @roles[index] %>
+            <%=@roles[index]%>
         </li>
    <% } %>
 </ul>
