@@ -53,7 +53,7 @@ class Pool < ActiveRecord::Base
   # include implied permissions (i.e. subtrees)
   def self.list_for_user(user, privilege)
     pools = find(:all, :include => "permissions", 
-                 :conditions => "permissions.user='#{user}' and 
+                 :conditions => "permissions.uid='#{user}' and 
                        permissions.user_role in 
                        ('#{Permission.roles_for_privilege(privilege).join("', '")}')")
   end
@@ -87,7 +87,7 @@ class Pool < ActiveRecord::Base
   def has_privilege(user, privilege)
     traverse_parents do |pool|
       pool.permissions.find(:first, 
-                            :conditions => "permissions.user='#{user}' and 
+                            :conditions => "permissions.uid='#{user}' and 
                          permissions.user_role in 
                          ('#{Permission.roles_for_privilege(privilege).join("', '")}')")
     end
