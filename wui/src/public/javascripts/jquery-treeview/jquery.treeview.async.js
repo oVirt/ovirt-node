@@ -25,8 +25,23 @@ function load(settings, params, child, container) {
                             settings.link_to=settings.resource_url;
                             settings.span_class="file";
                         }
-			var current = $("<li/>").attr("id", this.id || "")
-                          .html("<span class=\"" + settings.span_class + "\"><a href=\"" + settings.link_to + "/" + this.id + "\">" + this.text +  "</a></span>")
+			var link_open;
+			var link_close;
+			var span_onclick;
+			var current = $("<li/>").attr("id", this.id || "");
+			if (settings.action_type=="hyperlink"){
+			    link_open = "<a href=\"" + settings.link_to + "/" + this.id + "\">";
+			    link_close =  "</a>";
+			} else {
+			    link_open  = "";
+			    link_close = "";
+			}
+			if (settings.action_type=="javascript"){
+			    span_onclick = " onClick=\"" + settings.onclick + "(" + this.id + ")\" ";
+   		        } else {
+			    span_onclick = ""
+		        }
+                        current.html("<span class=\"" + settings.span_class + "\"" + span_onclick + ">" + link_open + this.text + link_close + "</span>")
                           .appendTo(parent);
 			if (this.classes) {
 				current.children("span").addClass(this.classes);

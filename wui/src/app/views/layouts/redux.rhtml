@@ -23,16 +23,20 @@
   <%= javascript_include_tag "jquery-svg/jquery.svg.pack.js" -%>
   <!--%= javascript_include_tag "jquery-svg/jquery.svgfilter.js" -%-->
   <%= javascript_include_tag "jquery-svg/jquery.svggraph.js" -%>
-  <%= yield :scripts -%>
+  <%= javascript_include_tag "ui.core.js" -%>
+  <%= javascript_include_tag "ui.slider.js" -%>
+  <%= javascript_include_tag "jquery.cookie.js" -%>
   <%= javascript_include_tag "jquery.form.js" -%>
+  <%= yield :scripts -%>
     <script type="text/javascript">
       $(document).ready(function(){         
         $("#tree").treeview({
             //animated: "normal",
             current_pool_id:  <%if @current_pool_id == nil%>""<%else%><%=@current_pool_id%><%end%>,
-            url: "<%=  url_for :controller =>'/hardware', :action => 'json' %>",
+            url: "<%=  url_for :controller =>'/hardware', :action => 'json_view_tree' %>",
             hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
-            resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
+            resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>",
+            action_type: "hyperlink"
 	    })
 	}); 
         

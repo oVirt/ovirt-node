@@ -58,11 +58,18 @@ class Pool < ActiveRecord::Base
                        ('#{Permission.roles_for_privilege(privilege).join("', '")}')")
   end
 
+  def self.select_hardware_pools(pools)
+    pools.select {|pool| pool[:type] == "HardwarePool"}
+  end
+  def self.select_vm_pools(pools)
+    pools.select {|pool| pool[:type] == "VmResourcePool"}
+  end
+
   def sub_hardware_pools
-    children.select {|pool| pool[:type] == "HardwarePool"}
+    Pool.select_hardware_pools(children)
   end
   def sub_vm_resource_pools
-    children.select {|pool| pool[:type] == "VmResourcePool"}
+    Pool.select_vm_pools(children)
   end
   def self_and_like_siblings
     self_and_siblings.select {|pool| pool[:type] == self.class.name}
@@ -113,23 +120,30 @@ class Pool < ActiveRecord::Base
     return (rgt - lft) != 1
   end
 
-  def self.nav_json(pools, open_list)
-    pool_hash(pools, open_list).to_json
+  def self.nav_json(pools, open_list, filter_vm_pools=false)
+    pool_hash(pools, open_list, filter_vm_pools).to_json
   end
-  def self.pool_hash(pools, open_list)
+  def self.pool_hash(pools, open_list, filter_vm_pools=false)
     pools.collect do |pool|
       hash = {}
       hash[:id] = pool.id
       hash[:type] = pool[:type]
       hash[:text] = pool.name
       hash[:name] = pool.name
-      hash[:hasChildren] = pool.hasChildren
+      children = nil
+      if filter_vm_pools
+        children = select_hardware_pools(pool.children)
+        hash[:hasChildren] = !children.empty?
+      else
+        hash[:hasChildren] = pool.hasChildren
+      end
       found = false
       open_list.each do |open_pool|
         if pool.id == open_pool.id
           new_open_list = open_list[(open_list.index(open_pool)+1)..-1]          
           unless new_open_list.empty?
-            hash[:children] = pool_hash(pool.children, new_open_list)
+            children = pool.children unless children
+            hash[:children] = pool_hash(children, new_open_list)
             hash[:expanded] = true
             hash.delete(:hasChildren)
           end

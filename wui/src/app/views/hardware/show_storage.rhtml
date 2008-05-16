@@ -25,7 +25,7 @@
   function remove_storage()
   {
     $.post('<%= url_for :controller => "hardware", :action => "move_storage", :id => @pool %>',
-           { storage_pool_ids: get_selected_storage().toString(), target_pool_id: <%= Pool.root.id %> },
+           { resource_ids: get_selected_storage().toString(), target_pool_id: <%= Pool.root.id %> },
             function(data,status){
               $("#storage_grid").flexReload()
              });

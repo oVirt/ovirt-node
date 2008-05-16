@@ -1,13 +1,13 @@
 <div id="toolbar_nav">
  <ul>
-    <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png" %>&nbsp;&nbsp;Add Host</a></li>
-    <li><%= render :partial => 'move_menu' %></li>
+    <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Add Host</a></li>
+    <li><a href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'hosts' %>" rel="facebox[.bolder]"><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a></li>
     <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_delete_white.png" %>&nbsp;&nbsp;Delete</a></li>
  </ul>
 </div>
 
 <script type="text/javascript">
-  function remove_hosts()
+  function get_selected_hosts()
   {
     var host_array = new Array()
     var host_index = 0
@@ -18,8 +18,12 @@
         host_index++
       }
     }
+    return host_array
+  }
+  function remove_hosts()
+  {
     $.post('<%= url_for :controller => "hardware", :action => "move_hosts", :id => @pool %>',
-           { host_ids: host_array.toString(), target_pool_id: <%= Pool.root.id %> },
+           { resource_ids: get_selected_hosts().toString(), target_pool_id: <%= Pool.root.id %> },
             function(data,status){
               $("#hosts_grid").flexReload()
              });

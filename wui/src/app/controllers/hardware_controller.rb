@@ -37,22 +37,30 @@ class HardwareController < ApplicationController
     end
   end
   
-  def json
+  def json_view_tree
+    json_tree_internal(Permission::PRIV_VIEW, false)
+  end
+  def json_move_tree
+    json_tree_internal(Permission::PRIV_MODIFY, true)
+  end
+  def json_tree_internal(privilege, filter_vm_pools)
     id = params[:id]
     if id
       @pool = Pool.find(id)
       set_perms(@pool)
-      unless @can_view
-        flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
+      unless @pool.has_privilege(@user, privilege)
+        flash[:notice] = 'You do not have permission to access this hardware pool: redirecting to top level'
         redirect_to :controller => "dashboard"
         return
       end
     end
     if @pool
       pools = @pool.children
+      pools = Pool.select_hardware_pools(pools) if filter_vm_pools
       open_list = []
     else
       pools = Pool.list_for_user(get_login_user,Permission::PRIV_VIEW)
+      pools = Pool.select_hardware_pools(pools) if filter_vm_pools
       current_id = params[:current_id]
       if current_id
         current_pool = Pool.find(current_id)
@@ -62,7 +70,7 @@ class HardwareController < ApplicationController
       end
     end
 
-    render :json => Pool.nav_json(pools, open_list)
+    render :json => Pool.nav_json(pools, open_list, filter_vm_pools)
   end
 
   def show_vms
@@ -150,7 +158,7 @@ class HardwareController < ApplicationController
 
   def users_json
     json_list(@pool.permissions, 
-              [:id, :name, :user_role])
+              [:id, :uid, :user_role])
   end
 
   def storage_pools_json
@@ -168,6 +176,12 @@ class HardwareController < ApplicationController
   def storage_volumes_json
     json_list(@pool.all_storage_volumes, 
               [:display_name, :size_in_gb, :get_type_label])
+  end
+
+  def move
+    pre_modify
+    @resource_type = params[:resource_type]
+    render :layout => 'popup'    
   end
 
   def new
@@ -217,7 +231,7 @@ class HardwareController < ApplicationController
   # for hosts that aren't currently empty
   def move_hosts
     target_pool_id = params[:target_pool_id]
-    host_ids_str = params[:host_ids]
+    host_ids_str = params[:resource_ids]
     host_ids = host_ids_str.split(",").collect {|x| x.to_i}
     
     @pool.transaction do
@@ -252,7 +266,7 @@ class HardwareController < ApplicationController
   # for storage that aren't currently empty
   def move_storage
     target_pool_id = params[:target_pool_id]
-    storage_pool_ids_str = params[:storage_pool_ids]
+    storage_pool_ids_str = params[:resource_ids]
     storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
     
     @pool.transaction do
