@@ -20,6 +20,8 @@
 class Permission < ActiveRecord::Base
   belongs_to :pool
 
+  validates_uniqueness_of :uid, :scope => "pool_id"
+
   ROLE_SUPER_ADMIN = "Super Admin"
   ROLE_ADMIN       = "Administrator"
   ROLE_USER        = "User"
