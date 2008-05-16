@@ -22,16 +22,23 @@ $: << File.join(File.dirname(__FILE__), "../app")
 $: << File.join(File.dirname(__FILE__), "../vendor/plugins/betternestedset/lib")
 
 require 'rubygems'
+
+gem 'activeldap' 
+
+require 'active_ldap'
 require 'active_support'
 require 'active_record'
 require 'action_pack'
 require 'action_controller'
 require 'action_view'
 require 'erb'
-require '/usr/share/ovirt-wui/vendor/plugins/betternestedset/init.rb'
+
+OVIRT_DIR = "/usr/share/ovirt-wui"
+
+require "#{OVIRT_DIR}/vendor/plugins/betternestedset/init.rb"
 
 def database_connect
-  $dbconfig = YAML::load(ERB.new(IO.read('/usr/share/ovirt-wui/config/database.yml')).result)
+  $dbconfig = YAML::load(ERB.new(IO.read("#{OVIRT_DIR}/config/database.yml")).result)
   $develdb = $dbconfig['development']
   ActiveRecord::Base.establish_connection(
                                           :adapter  => $develdb['adapter'],
@@ -44,6 +51,7 @@ end
 
 database_connect
 
+require 'models/account.rb'
 require 'models/pool.rb'
 require 'models/permission.rb'
 require 'models/quota.rb'
@@ -67,3 +75,4 @@ require 'models/nfs_storage_pool.rb'
 require 'models/storage_volume.rb'
 require 'models/iscsi_storage_volume.rb'
 require 'models/nfs_storage_volume.rb'
+

@@ -11,7 +11,7 @@
 <tbody>
 <% for permission in permissions %>
 <tr class="<%= cycle('odd','even') %>">
-  <td><%= permission.user %>
+  <td><%= permission.uid %>
   <td><%= permission.user_role %>
   <%if show_object -%>
     <td style="text-align:left;">

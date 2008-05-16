@@ -107,7 +107,7 @@ class PermissionController < ApplicationController
       pool =  @permission.pool
       if @permission.destroy
         if pool
-          flash[:notice] = "<strong>#{@permission.user}</strong> permissions were revoked successfully"
+          flash[:notice] = "<strong>#{@permission.uid}</strong> permissions were revoked successfully"
           redirect_to :controller => pool.get_controller, :action => 'show', :id => pool.id
         else
           redirect_to :controller => 'dashboard', :action => 'list'

@@ -191,7 +191,7 @@ start() {
         -W _collectd._tcp,management.priv.ovirt.org,25826 \
         --enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
         -O option:router,192.168.50.1 -O option:ntp-server,192.168.50.2 \
-        -R -S 192.168.122.1
+        -R --local /priv.ovirt.org/ --server 192.168.122.1
     
     # Set up the fake iscsi target
     tgtadm --lld iscsi --op new --mode target --tid 1 \
