@@ -1,7 +1,7 @@
 development:
-  host: ldap.rdu.redhat.com
+  host: ldap.for.your.domain.com
   port: 389
-  base: dc=redhat,dc=com
+  base: dc=domain,dc=com
 
 test:
   host: ldap.for.your.domain.com
