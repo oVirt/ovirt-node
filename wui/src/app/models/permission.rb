@@ -50,11 +50,18 @@ class Permission < ActiveRecord::Base
     return_hash
   end
 
+  def name
+    @account ||= Account.find("uid=#{uid}")
+
+    @account.cn
+  end
+
   PRIVILEGES = self.invert_roles
 
   def self.privileges_for_role(role)
     ROLES[role]
   end
+
   def self.roles_for_privilege(privilege)
     PRIVILEGES[privilege]
   end

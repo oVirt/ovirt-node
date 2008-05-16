@@ -39,6 +39,8 @@ class PermissionController < ApplicationController
   def new
     @permission = Permission.new( { :pool_id => params[:pool_id]})
     @perms = @permission.pool.permissions
+    filter = Permission.find(:all).collect{ |permission| permission.uid }
+    @users = Account.names(filter)
     set_perms(@permission.pool)
     # admin permission required to view permissions
     unless @can_set_perms
@@ -57,7 +59,7 @@ class PermissionController < ApplicationController
       redirect_to_parent
     else
       if @permission.save
-        render :json => "created User Permissions for  #{@permission.user}".to_json
+        render :json => "created User Permissions for  #{@permission.uid}".to_json
       else
       # FIXME: need to handle proper error messages w/ ajax
         render :action => 'new'

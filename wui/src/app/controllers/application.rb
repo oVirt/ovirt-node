@@ -34,7 +34,7 @@ class ApplicationController < ActionController::Base
 
   def get_login_user
     # user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
-    'admin'
+    'dpierce'
   end
   
   def user_from_principal(principal)
