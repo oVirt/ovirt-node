@@ -1,0 +1,34 @@
+<div id="<%= table_id %>_div">
+<form name="<%= table_id %>_form">
+<table id="<%= table_id %>" style="display:none"></table>
+</form>
+</div>
+<script type="text/javascript">
+	$("#<%= table_id %>").flexigrid
+	(
+	{
+	url: '<%=  url_for :controller => "resources", :action => "vms_json", :id => pool_id %>',
+	dataType: 'json',
+	colModel : [
+		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
+		{display: 'Description', name : 'description', width : 180, sortable : true, align: 'left'},
+	        {display: 'UUID', name : 'uuid', width : 180, sortable : true, align: 'left'},
+		{display: 'CPUs', name : 'num_vcpus_allocated', width : 40, sortable : true, align: 'left'},
+		{display: 'Memory (MB)', name : 'memory_allocated', width : 60, sortable : true, align: 'right'},
+		{display: 'vNIC Mac Addr', name : 'vnic_mac_addr', width : 60, sortable : true, align: 'right'},
+		{display: 'State', name : 'state', width : 50, sortable : true, align: 'right'}
+		],
+	sortname: "description",
+	sortorder: "asc",
+	usepager: true,
+	useRp: true,
+	rp: 10,
+	showTableToggleBtn: true
+	}
+	);   
+	function <%= table_id %>checkbox(celDiv)
+	{
+	       $(celDiv).html('<input type="checkbox" name="grid_checkbox" value="'+$(celDiv).html()+'"/>');
+	} 
+
+</script>

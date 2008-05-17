@@ -1,11 +1,7 @@
 <%= error_messages_for 'vm_resource_pool' %>
 
 <!--[form:vm_resource_pool]-->
-<%= hidden_field_tag_with_label ((@parent[:type] == HardwarePool.name) ? 
-                              "Hardware Pool" : "Parent VM Resource Pool"), 
-                            'parent_id', @parent.id, @parent.name   %>
-
+<%= hidden_field_tag 'parent_id', @parent.id %>
 <%= text_field_with_label "Name", 'vm_resource_pool', 'name'  %>
-
 <!--[eoform:vm_resource_pool]-->
 

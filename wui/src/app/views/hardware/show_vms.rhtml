@@ -1,9 +1,32 @@
 <div id="toolbar_nav">
  <ul>
-    <li><a href="dialogs/addvmpool.html" rel="facebox[.bolder]"><%= image_tag "icon_add_vmpool.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;New Virtual Machine Pool</a></li>
-    <li><a href="#"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
+    <li><a href="<%= url_for :controller => 'resources', :action => 'new', :parent_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_add_vmpool.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;New Virtual Machine Pool</a></li>
+    <li><a href="#" onClick="delete_vm_pools()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
  </ul>
 </div>
+<script type="text/javascript">
+  function get_selected_vm_pools()
+  {
+    var vm_pools_array = new Array()
+    var vm_pools_index = 0
+    for(var i=0; i < document.vmpools_grid_form.grid_checkbox.length; i++){
+    if(document.vmpools_grid_form.grid_checkbox[i].checked)
+      {
+        vm_pools_array[vm_pools_index]= document.vmpools_grid_form.grid_checkbox[i].value
+        vm_pools_index++
+      }
+    }
+    return vm_pools_array
+  }
+  function delete_vm_pools()
+  {
+    $.post('<%= url_for :controller => "resources", :action => "delete", :id => @pool %>',
+           { vm_pool_ids: get_selected_vm_pools().toString() },
+            function(data,status){
+              $("#vmpools_grid").flexReload()
+             });
+  }
+</script>
 
   <div class="panel_header"></div>
 <div class="data_section">

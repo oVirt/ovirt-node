@@ -1,4 +1,4 @@
-# 
+ 
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -56,7 +56,7 @@ class PermissionControllerTest < Test::Unit::TestCase
   def test_create
     num_permissions = Permission.count
 
-    post :create, :permission => { :user_role => 'Administrator', :user => 'admin', :pool_id => 1}
+    post :create, :permission => { :user_role => 'Administrator', :uid => 'admin', :pool_id => 1}
 
     assert_response :redirect
     assert_redirected_to :controller => 'hardware', :action => 'show', :id => 1

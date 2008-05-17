@@ -97,6 +97,20 @@ class VmController < ApplicationController
     end
   end
 
+  #FIXME: we need permissions checks. user must have permission. 
+  def delete
+    vm_ids_str = params[:vm_ids]
+    vm_ids = vm_ids_str.split(",").collect {|x| x.to_i}
+    
+    Vm.transaction do
+      vms = Vm.find(:all, :conditions => "id in (#{vm_ids.join(', ')})")
+      vms.each do |vm|
+        vm.destroy
+      end
+    end
+    render :text => "deleted vms  (#{vm_ids.join(', ')})"
+  end
+
   def destroy
     vm_resource_pool = @vm.vm_resource_pool_id
     if ((@vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED) or
