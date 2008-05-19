@@ -25,24 +25,11 @@
   }
   function add_hosts()
   {
-    var host_array = new Array()
-    var host_index = 0
-    for(var i=0; i < document.addhosts_unassigned_grid_form.grid_checkbox.length; i++){
-      if(document.addhosts_unassigned_grid_form.grid_checkbox[i].checked)
-      {
-        host_array[host_index]= document.addhosts_unassigned_grid_form.grid_checkbox[i].value
-        host_index++
-      }
-    }
-    for(var i=0; i < document.addhosts_assigned_grid_form.grid_checkbox.length; i++){
-      if(document.addhosts_assigned_grid_form.grid_checkbox[i].checked)
-      {
-      host_array[host_index]= document.addhosts_assigned_grid_form.grid_checkbox[i].value
-      host_index++
-      }
-    }
+    var assigned_selected= get_selected_checkboxes(document.addhosts_assigned_grid_form)
+    var unassigned_selected= get_selected_checkboxes(document.addhosts_unassigned_grid_form)
+    
     $.post('<%= url_for :controller => "hardware", :action => "add_hosts", :id => @hardware_pool %>',
-           { host_ids: host_array.toString() },
+           { host_ids: Array.concat(assigned_selected,unassigned_selected).toString() },
             function(data,status){ 
               jQuery(document).trigger('close.facebox');
               $("#hosts_grid").flexReload()

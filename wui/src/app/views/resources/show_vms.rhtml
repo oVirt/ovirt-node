@@ -21,16 +21,7 @@
 <script type="text/javascript">
   function get_selected_vms()
   {
-    var vms_array = new Array()
-    var vms_index = 0
-    for(var i=0; i < document.vms_grid_form.grid_checkbox.length; i++){
-    if(document.vms_grid_form.grid_checkbox[i].checked)
-      {
-        vms_array[vms_index]= document.vms_grid_form.grid_checkbox[i].value
-        vms_index++
-      }
-    }
-    return vms_array
+    return get_selected_checkboxes(document.vms_grid_form)
   }
   function delete_vms()
   {

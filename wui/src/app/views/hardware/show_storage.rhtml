@@ -2,7 +2,7 @@
 <ul>
     <li><a href="<%= url_for :controller => 'storage', :action => 'addstorage', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Server</a></li>
     <li><a href="<%= url_for :controller => 'storage', :action => 'new', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Create Storage Server</a></li>
-    <li><%= render :partial => 'move_menu' %></li>
+    <li><a href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'storage' %>" rel="facebox[.bolder]"><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a></li>
     <li><a href="#" onClick="delete_storage()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
     <li><a href="#" onClick="remove_storage()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
   </ul>
@@ -11,16 +11,7 @@
 <script type="text/javascript">
   function get_selected_storage()
   {
-    var storage_array = new Array()
-    var storage_index = 0
-    for(var i=0; i < document.storage_grid_form.grid_checkbox.length; i++){
-    if(document.storage_grid_form.grid_checkbox[i].checked)
-      {
-        storage_array[storage_index]= document.storage_grid_form.grid_checkbox[i].value
-        storage_index++
-      }
-    }
-    return storage_array
+    return get_selected_checkboxes(document.storage_grid_form)
   }
   function remove_storage()
   {

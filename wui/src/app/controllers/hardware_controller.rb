@@ -185,14 +185,20 @@ class HardwareController < ApplicationController
   end
 
   def new
-    @pools = @pool.self_and_like_siblings
+    @resource_type = params[:resource_type]
+    @resource_ids = params[:resource_ids]
+    render :layout => 'popup'    
   end
 
   def create
-    if @pool.create_with_parent(@parent)
-      flash[:notice] = 'Hardware Pool successfully created'
-      redirect_to  :action => 'show', :id => @pool
+    resource_type = params[:resource_type]
+    resource_ids_str = params[:resource_ids]
+    resource_ids = []
+    resource_ids = resource_ids_str.split(",").collect {|x| x.to_i} if resource_ids_str
+    if @pool.create_with_resources(@parent, resource_type, resource_ids)
+      render :json => "created new Hardware Pool pool #{@pool.name}".to_json
     else
+      # FIXME: need to handle proper error messages w/ ajax
       render :action => "new"
     end
   end
@@ -217,11 +223,7 @@ class HardwareController < ApplicationController
     host_ids = host_ids_str.split(",").collect {|x| x.to_i}
     
     @pool.transaction do
-      hosts = Host.find(:all, :conditions => "id in (#{host_ids.join(', ')})")
-      hosts.each do |host|
-        host.hardware_pool = @pool
-        host.save!
-      end
+      @pool.move_hosts(host_ids, @pool.id)
     end
     render :text => "added hosts (#{host_ids.join(', ')})"
   end
@@ -235,11 +237,7 @@ class HardwareController < ApplicationController
     host_ids = host_ids_str.split(",").collect {|x| x.to_i}
     
     @pool.transaction do
-      hosts = Host.find(:all, :conditions => "id in (#{host_ids.join(', ')})")
-      hosts.each do |host|
-        host.hardware_pool_id = target_pool_id
-        host.save!
-      end
+      @pool.move_hosts(host_ids, target_pool_id)
     end
     render :text => "added hosts (#{host_ids.join(', ')})"
   end
@@ -252,11 +250,7 @@ class HardwareController < ApplicationController
     storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
     
     @pool.transaction do
-      storage_pools = StoragePool.find(:all, :conditions => "id in (#{storage_pool_ids.join(', ')})")
-      storage_pools.each do |storage_pool|
-        storage_pool.hardware_pool = @pool
-        storage_pool.save!
-      end
+      @pool.move_storage(storage_pool_ids, @pool.id)
     end
     render :text => "added storage (#{storage_pool_ids.join(', ')})"
   end
@@ -270,11 +264,7 @@ class HardwareController < ApplicationController
     storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
     
     @pool.transaction do
-      storage = StoragePool.find(:all, :conditions => "id in (#{storage_pool_ids.join(', ')})")
-      storage.each do |storage_pool|
-        storage_pool.hardware_pool_id = target_pool_id
-        storage_pool.save!
-      end
+      @pool.move_storage(storage_pool_ids, target_pool_id)
     end
     render :text => "added storage (#{storage_pool_ids.join(', ')})"
   end

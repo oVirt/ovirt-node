@@ -42,10 +42,11 @@ class Pool < ActiveRecord::Base
 
   has_one :quota, :dependent => :destroy
 
-  def create_with_parent(parent)
+  def create_with_parent(parent, &other_actions)
     transaction do
       save
       move_to_child_of(parent)
+      yield other_actions if other_actions
     end
   end
 

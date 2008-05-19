@@ -9,16 +9,7 @@
 <script type="text/javascript">
   function get_selected_hosts()
   {
-    var host_array = new Array()
-    var host_index = 0
-    for(var i=0; i < document.hosts_grid_form.grid_checkbox.length; i++){
-    if(document.hosts_grid_form.grid_checkbox[i].checked)
-      {
-        host_array[host_index]= document.hosts_grid_form.grid_checkbox[i].value
-        host_index++
-      }
-    }
-    return host_array
+    return get_selected_checkboxes(document.hosts_grid_form)
   }
   function remove_hosts()
   {

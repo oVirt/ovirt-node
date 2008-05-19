@@ -1,6 +1,8 @@
 <div class="dialog_title_small">
   <div class="header">Add New Hardware Pool</div>
-  <div>Add a new Hardware Pool to the <%= @parent.name %> pool.</div>
+  <div>Add a new Hardware Pool to the <%= @parent.name %> pool.
+    <%= "Checked #{@resource_type} will be added to the new pool." if @resource_type %>
+  </div>
 </div>
 
 <form method="POST" action="<%= url_for :action => 'create' %>" id="new_hardware_pool_form" >
@@ -27,6 +29,7 @@ $(function() {
 function afterNewHwPool(response, status){
     jQuery(document).trigger('close.facebox');
     // FIXME do we need to reload the tree here
+    <%= "$('##{@resource_type}_grid').flexReload()" if @resource_type %>
     //$("#vmpools_grid").flexReload()
 }
 </script>

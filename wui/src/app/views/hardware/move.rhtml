@@ -20,7 +20,17 @@
 	      jQuery(document).trigger('close.facebox');
              });
   }
+$('#move_to_new_pool').click(function(){
+		$('#window').fadeOut('fast'); 
+        $("#window").empty().load("<%= url_for :controller => 'hardware', :action => 'new' %>",
+	{ parent_id: <%=@pool.id%>, 
+	  resource_ids: get_selected_<%= @resource_type %>().toString(),
+          resource_type: '<%=@resource_type%>'});
+		$('#window').fadeIn('fast'); 
+});
 </script>
+
+<div id="window">
 
 <div class="dialog_title_small">
 	<div class="header">Move  <%= @resource_type.capitalize %></div>
@@ -38,6 +48,7 @@
 
 
 <div class="facebox_timfooter">
-	<div style="float:left;"><a href="#" onclick=" $('#window').empty().load('<%= url_for :controller => 'resources', :action => 'new', :parent_id => @pool %>')"><%= image_tag "btn_moveto_newpool.png", :title=>"Move host to a new hardware pool" %></a></div>
+	<div style="float:left;"><a href="#" id="move_to_new_pool"><%= image_tag "btn_moveto_newpool.png", :title=>"Move host to a new hardware pool" %></a></div>
 	<div style="float:right;"><a href="#" onclick="jQuery(document).trigger('close.facebox')"><%= image_tag "btn_cancel.png", :title =>"Cancel" %></a></div>
+</div>
 </div>
