@@ -39,7 +39,8 @@ class PermissionController < ApplicationController
   def new
     @permission = Permission.new( { :pool_id => params[:pool_id]})
     @perms = @permission.pool.permissions
-    filter = Permission.find(:all).collect{ |permission| permission.uid }
+    @pool = Pool.find(params[:pool_id])
+    filter = @pool.permissions.collect{ |permission| permission.uid }
     @users = Account.names(filter)
     set_perms(@permission.pool)
     # admin permission required to view permissions
