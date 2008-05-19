@@ -3,7 +3,7 @@ url --url http://download.fedora.redhat.com/pub/fedora/linux/releases/8/Fedora/x
 
 %include common-install.ks
 
-network --device=eth1 --bootproto=static --ip=192.168.50.2 --netmask=255.255.255.0 --onboot=on
+network --device=eth1 --bootproto=static --ip=192.168.50.2 --netmask=255.255.255.0 --onboot=on --nameserver=192.168.50.2
 
 # Create some fake iSCSI partitions
 logvol /iscsi3 --name=iSCSI3 --vgname=VolGroup00 --size=64
@@ -78,13 +78,6 @@ for i in `seq 1 5`; do
     dd if=/dev/zero of=/ovirtnfs/disk$i.dsk bs=1 count=1 seek=1G
 done
 echo "/ovirtnfs 192.168.50.0/24(rw,no_root_squash)" >> /etc/exports
-
-# make sure we use ourselves as the nameserver (not what we get from DHCP)
-cat > /etc/dhclient-exit-hooks << \EOF
-echo "search priv.ovirt.org ovirt.org" > /etc/resolv.conf
-echo "nameserver 192.168.50.2" >> /etc/resolv.conf
-EOF
-chmod +x /etc/dhclient-exit-hooks
 
 # make sure that we get a kerberos principal on every boot
 echo "$cron_file" >> /etc/rc.d/rc.local
