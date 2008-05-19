@@ -20,6 +20,8 @@
 class Permission < ActiveRecord::Base
   belongs_to :pool
 
+  validates_uniqueness_of :uid, :scope => "pool_id"
+
   ROLE_SUPER_ADMIN = "Super Admin"
   ROLE_ADMIN       = "Administrator"
   ROLE_USER        = "User"
@@ -50,11 +52,18 @@ class Permission < ActiveRecord::Base
     return_hash
   end
 
+  def name
+    @account ||= Account.find("uid=#{uid}")
+
+    @account.cn
+  end
+
   PRIVILEGES = self.invert_roles
 
   def self.privileges_for_role(role)
     ROLES[role]
   end
+
   def self.roles_for_privilege(privilege)
     PRIVILEGES[privilege]
   end

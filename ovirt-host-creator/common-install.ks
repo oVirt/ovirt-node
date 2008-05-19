@@ -1,6 +1,6 @@
 lang C
 keyboard us
-timezone US/Eastern
+timezone --utc UTC
 auth --useshadow --enablemd5
 selinux --disabled
 firewall --disabled
@@ -11,5 +11,4 @@ rootpw --iscrypted Xa8QeYfWrtscM
 
 repo --name=f9 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-9&arch=$basearch
 repo --name=f9-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f9&arch=$basearch
-repo --name=ovirt-host --baseurl=http://ovirt.et.redhat.com/repos/ovirt/9/$basearch/
 

@@ -22,6 +22,8 @@
 class Account < ActiveLdap::Base
   ldap_mapping :dn_attribute => 'cn', :prefix => 'ou=Users', :scope => :one
 
+  @@users = nil
+
   # +query+ returns the set of all accounts that contain the given search value.
   #
   # This API requires that a previous connection be made using 
@@ -29,13 +31,33 @@ class Account < ActiveLdap::Base
   #
   def Account.query(value)
 
-    @users = Account.find(:all, value)
+    @@users ||= Account.find(:all, value)
 
     if block_given?
-      @users.each { |user| yield(user) }
+      @@users.each { |user| yield(user) }
     end
 
-    return @users
-    
+    @@users    
   end
+
+  # Retrieves the list of users from LDAP and returns a hash of
+  # their uids, indexed by their common name in the form:
+  # +username (uid) => uid+
+  #
+  # if a filter is passed in, those user ids are filtered out
+  # of the returned list.
+  #
+  def Account.names(filter = [])
+    result = {}
+
+    Account.query('*') do |user|
+      unless filter.include? user.uid
+	key = "#{user.cn} (#{user.uid})"
+	result[key] = user.uid
+      end
+    end
+
+    result.sort
+  end
+
 end
