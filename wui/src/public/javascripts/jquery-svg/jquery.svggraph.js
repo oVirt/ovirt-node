@@ -892,8 +892,8 @@ $.extend(SVGStackedColumnChart.prototype, {
 		graph._root.text(graph._chartGroup, 0, 0, svgGraphing.region.percentageText,
 			{text_anchor: 'middle', transform: 'translate(' + (dims[graph.X] - graph.yAxis._titleOffset) +
 			',' +(dims[graph.Y] + dims[graph.H] / 2) + ') rotate(-90)'});
-		graph._drawAxis(graph._getPercentageAxis(), 'yAxis',
-			dims[graph.X], dims[graph.Y], dims[graph.X], dims[graph.Y] + dims[graph.H]);
+		//graph._drawAxis(graph._getPercentageAxis(), 'yAxis',
+			//dims[graph.X], dims[graph.Y], dims[graph.X], dims[graph.Y] + dims[graph.H]);
 		this._drawXAxis(graph, numVal, barWidth, barGap, dims, xScale);
 		graph._drawLegend();
 	},

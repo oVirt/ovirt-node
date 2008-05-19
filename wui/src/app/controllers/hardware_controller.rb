@@ -87,6 +87,49 @@ class HardwareController < ApplicationController
     show
     @hardware_pools = HardwarePool.find :all
   end
+  
+  # retrieves data to be used by availablilty bar charts
+  def available_graph
+    target =  params[:target]
+    available = nil
+    used = nil
+    if target == 'memory'
+        available = @available_memory
+        used      = @used_memory
+    elsif target == 'storage'
+        available = @available_storage
+        used      = @used_storage
+    elsif target == 'vms'
+        available = @available_vms
+        used      = @used_vms
+    end
+
+    color = 'blue'
+    color = 'red' if (used.to_f / (available + used).to_f) > 0.75  # 3/4 is the critical boundry for now
+
+    graph_object = {
+       :timepoints => [],
+       :dataset => 
+        [
+            {
+                :name => target + "used",
+                :values => [used],
+                :fill => color,
+                :stroke => 'lightgray',
+                :strokeWidth => 1
+            },
+            {
+                :name => target + "available",
+                :values => [available],
+                :fill => 'white',
+                :stroke => 'lightgray',
+                :strokeWidth => 1
+            }
+       ]
+    }
+    render :json => graph_object
+  end
+
 
   def hosts_json
     if params[:id]
@@ -261,6 +304,16 @@ class HardwareController < ApplicationController
     @pool = HardwarePool.find(params[:id])
     @perm_obj = @pool
     @current_pool_id=@pool.id
+
+    # TODO pull real values in
+    @available_memory = 18
+    @used_memory = 62
+    
+    @available_storage = 183
+    @used_storage = 61
+
+    @available_vms = 1
+    @used_vms = 26
   end
   def pre_json
     pre_show

@@ -1,3 +1,12 @@
+<!-- TODO put style in stylesheet -->
+<style type="text/css">
+  #availability_graphs{ }
+  .availability_graph { float: left; width: 33%;}
+  .availability_graph_left { float: left; width: 50px;}
+  .availability_graph_right { float: left; margin-top: 10%; margin-left: 125px; min-width: 100px;}
+  #available_memory, #available_storage, #available_vms {margin-left:50px;width:100px;height:100px}
+</style>
+
 <div id="toolbar_nav">
 <ul>
     <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png" %>&nbsp;&nbsp;Add Host</a></li>
@@ -6,6 +15,46 @@
 </ul>
 </div>
 <div class="panel_header"></div>
+
+<%= @pool.name %>
+
+<div id="availability_graphs">
+  <div class="availability_graph">
+    <div class="availability_graph_left">
+      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_memory',  :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'memory' ) } %>
+    </div>
+    <div class="availability_graph_right">
+      Available: <%= @available_memory %> <br/> Used: <%= @used_memory %> <br/><b><%= @available_memory + @used_memory %> GB of Memory</b><br/>
+    </div>
+  </div>
+
+  <div class="availability_graph">
+    <div class="availability_graph_left">
+      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_storage', :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'storage') } %>
+    </div>
+    <div class="availability_graph_right">
+      Available: <%= @available_storage %> <br/> Used: <%= @used_storage %> <br/><b><%= @available_storage + @used_storage %> GB of Storage</b><br/>
+    </div>
+  </div>
+
+  <div class="availability_graph">
+    <div class="availability_graph_left">
+      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_vms',     :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'vms'    ) } %>
+    </div>
+    <div class="availability_graph_right">
+      Available: <%= @available_vms %> <br/> Used: <%= @used_vms %> <br/><b><%= @available_vms + @used_vms %> Virtual Machines</b><br/>
+    </div>
+  </div>
+</div>
+
+<%= # render :partial => '/graphs/load_history' 
+%>
+
+<br/>
+
+<%= #render :partial => '/graphs/network_traffic' 
+%>
+
 
 <div id="data">
   <div class="inside">

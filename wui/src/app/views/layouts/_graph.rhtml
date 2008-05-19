@@ -1,12 +1,29 @@
 <script type="text/javascript">
     $(document).ready(function(){  
+        <%  dataType  = "summary" unless defined? dataType  %>
+        <%  chartType = "line"    unless defined? chartType %>
+
         $("#<%= div_id %>").svg();
-        buildGraph({
-            <%if defined? chartType%>chartType: "<%= chartType%>",<%end%>
-            <%if defined? dataType%>dataType: "<%= dataType%>",<%end%>
-            svg_container: "#<%= div_id %>",
-            graph_url: "<%=  url_for :controller =>'/graph', :action => 'graph' %>"
-        });
+        var svg = svgManager.getSVGFor("#<%= div_id %>");
+        var params = { id:1, type:"<%= dataType %>", timeframe:"7 days", isJSON:true};
+            
+        $.getJSON("<%= url %>", params, 
+                  function(response) { 
+                      var defs = svg.defs();
+                      svg.graph.noDraw();
+                      svg.graph.chartFormat('white', 'white').chartType("<%= chartType %>", {explode: [2], explodeDist: 10})
+                      $(response.dataset).each(
+                           function(){
+                                svg.graph.addSeries(this.name, this.values, this.fill, this.stroke, this.strokeWidth);
+                           }
+                      );
+                      svg.graph.xAxis.line('white', 0);
+                      svg.graph.yAxis.line('white', 0);
+                      svg.graph.legend.show(false);
+                      svg.graph.redraw();
+                  }
+        );
     });  
 </script>
+
 <div id="<%= div_id %>"></div>
