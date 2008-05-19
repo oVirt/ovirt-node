@@ -47,7 +47,7 @@ cat > /etc/init.d/ovirt-early << \EOF
 configure_from_network() {
     DEVICE=$1
     if [ -n "$DEVICE" ]; then
-        prinf .
+        printf .
         # setup temporary interface to retrieve configuration
         echo "network --device $DEVICE --bootproto dhcp" | nash
         if [ $? -eq 0 ]; then
