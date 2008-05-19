@@ -6,7 +6,7 @@ firewall --disabled
 authconfig --enableshadow --enablemd5
 selinux --disabled
 services --disabled=iptables,yum-updatesd,libvirtd,bluetooth,cups,gpm,pcscd,NetworkManager,NetworkManagerDispatcher --enabled=ntpd,httpd,postgresql,ovirt-wui,tgtd,nfs,collectd
-timezone --utc America/New_York
+timezone --utc UTC
 text
 
 bootloader --location=mbr --driveorder=sda
