@@ -65,9 +65,10 @@ class VmController < ApplicationController
           end
         end
       else
+        # FIXME: task creation should be in a transaction here; if it fails, no VM created
         flash[:notice] = 'Error in inserting task.'
       end
-      redirect_to :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool.id
+      render :json => flash[:notice].to_json
     else
       render :action => 'new'
     end
