@@ -50,9 +50,9 @@ class StorageVolume < ActiveRecord::Base
     self[:size]=(gb_to_kb(new_size))
   end
 
-  def self.find_for_vm(include_vm = nil)
-    if include_vm 
-      condition =  "(vms.id is null and storage_pools.hardware_pool_id=#{include_vm.vm_resource_pool.get_hardware_pool.id})"
+  def self.find_for_vm(include_vm, vm_pool)
+    if vm_pool
+      condition =  "(vms.id is null and storage_pools.hardware_pool_id=#{vm_pool.get_hardware_pool.id})"
       condition += " or vms.id=#{include_vm.id}" if (include_vm.id)
       self.find(:all, :include => [:vms, :storage_pool], :conditions => condition)
     else

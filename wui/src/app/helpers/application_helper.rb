@@ -25,18 +25,22 @@ require 'erb'
 
 module ApplicationHelper
 
-  def text_field_with_label(label, obj, meth) 
-    opts = {}
+  def text_field_with_label(label, obj, meth, opts = {}, divopts = {}) 
     opts[:class] = "textfield_effect"
+    opts[:style]="width:250px;" unless opts[:style]
+    divsclass = ""
+    if divopts[:class]
+      divclass = " class=#{divopts[:class]}"
+    end
     %{ 
       <div class="field_title"><label for="#{obj}_#{meth}">#{_(label)}</label></div>
-      <div class="form_field">#{text_field obj, meth, opts}</div>
+      <div class="form_field"#{divclass}>#{text_field obj, meth, opts}#{divopts[:afterfield] if divopts[:afterfield]}</div>
      }
   end
 
   def select_with_label(label, obj, meth, coll, opts={}) 
     opts[:class] = "dropdown_effect"
-    opts[:style]="width:320px;"
+    opts[:style]="width:320px;" unless opts[:style]
     %{ 
       <div class="field_title"><label for="#{obj}_#{meth}">#{_(label)}</label></div>
       <div class="form_field">#{select obj, meth, coll, opts}</div>
@@ -45,7 +49,7 @@ module ApplicationHelper
 
   def select_tag_with_label(label, name, select_options, opts={}) 
     opts[:class] = "dropdown_effect"
-    opts[:style]="width:320px;"
+    opts[:style]="width:320px;" unless opts[:style]
     %{ 
       <div class="field_title"><label for="#{name}">#{_(label)}</label></div>
       <div class="form_field">#{select_tag name, options_for_select(select_options), opts}</div>

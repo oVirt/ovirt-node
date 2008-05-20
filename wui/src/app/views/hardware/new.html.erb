@@ -10,7 +10,8 @@
   <%= render :partial => 'form' %>
 </div>
 <div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
-  <div><input type="image" name="submitButton" value="Submit2" src="<%= image_path "btn_addstorage.png"%>" alt="Create Hardware Pool" />
+  <div>
+    <input type="image" name="submitButton" value="Submit2" src="<%= image_path "btn_addstorage.png"%>" alt="Create Hardware Pool" />
     <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%=image_tag "btn_cancel.png", :title=>"Cancel" %></a>
   </div>
 </div>

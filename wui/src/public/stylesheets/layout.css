@@ -307,7 +307,7 @@ textarea:focus, input:focus {
 .dialog_title_small {
   background:#DEE7EB; 
   padding:15px;
-  min-width: 400px; 
+  min-width: 500px; 
 }
 
 .header {
@@ -321,6 +321,7 @@ textarea:focus, input:focus {
 
 .dialog_form {
   margin: 15px;
+  background: #FFFFFF
 }
 
 .dialog_tree {
@@ -328,9 +329,15 @@ textarea:focus, input:focus {
   overflow: auto;
 }
 
+.form_heading {
+  font-size:115%; color:  #666666;
+  border-top:#CCCCCC 1px dotted;
+  padding-top: 10px;
+}
+
 .field_title {
   font-size: 105%;
-  font-weight:bold;
+  /*font-weight:bold;*/
 }
 
 .textfield_effect {
@@ -354,6 +361,7 @@ textarea:focus, input:focus {
 .form_field {
   padding-top: 2px;
   padding-bottom: 12px;
+  padding-right: 10px;
 }
 
 .clear_row {
@@ -366,15 +374,19 @@ textarea:focus, input:focus {
 /* This file skins sliders */
 
 .ui-slider { width: 200px; height: 23px; position: relative; background-repeat: no-repeat; background-position: center center; }
-.ui-slider-handle { position: absolute; z-index: 1; height: 23px; width: 12px; top: 0px; left: 0px; background-image: url(images/slider-handle.gif);  }
-.ui-slider-handle-active { border: 1px dotted black;  }
+.ui-slider-handle { position: absolute; z-index: 1; height: 23px; width: 12px; top: 0px; left: 0px; background-image: url(images/slider-handle.gif); cursor: move;}
+.ui-slider-handle-active { /*border: 1px dotted #CCCCCC;*/}
 .ui-slider-disabled .ui-slider-handle { opacity: 0.5; filter: alpha(opacity=50); }
 .ui-slider-range { position: absolute; background: #50A029; opacity: 0.3; filter: alpha(opacity=30); width: 100%; height: 100%; }
 
 /* Default slider backgrounds */
-.ui-slider, .ui-slider-1 { background-image: url(images/slider-bg-1.png); }
+.ui-slider, .ui-slider-1 { background-image: url(images/slider-bg-1.png); cursor: pointer;}
 .ui-slider-2 { background-image: url(images/slider-bg-2.png); }
 
 
 
 #slider_callout { background: #FFFFFF; height: 45px; width: 38px; overflow: hidden; position: absolute; top: -50px; margin-left:-10px;  padding: 8px 0px 0px 0px; font-family: "Myriad Pro"; color: #284a6e; font-weight: bold; text-align: center;} 
+
+.slider_value { background: #FFFFFF; font-size:105%; padding-left:5px; float:left;}
+.slider_minlabel { float:left; padding:4px 4px 4px 0;}
+.slider_maxlabel { float:left; padding:4px;}
