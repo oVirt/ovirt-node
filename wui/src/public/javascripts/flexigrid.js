@@ -49,6 +49,7 @@
 			 onToggleCol: false,
 			 onChangeSort: false,
 			 onSuccess: false,
+			 onSelect: false,
 			 onSubmit: false, // using a custom populate function
 			 multiselect: false  // allow selection of multiple elements
 		  }, p);
@@ -710,7 +711,8 @@
 									    if ( p.multiselect == false ) {
 										$(t).find("tr.trSelected:not(#" + this.id + ")").removeClass('trSelected');
 									    } 
-									    $(this).toggleClass('trSelected'); 
+									    $(this).toggleClass('trSelected');
+									    if (p.onSelect) p.onSelect($(t).find("tr.trSelected"));
 									}
 							)
 							.mousedown(

@@ -19,13 +19,25 @@
               $("#hosts_grid").flexReload()
              });
   }
+  function hosts_select(selected_rows)
+  {
+    var selected_ids = new Array() 
+    for(i=0; i<selected_rows.length; i++) { 
+      selected_ids[i] = selected_rows[i].id
+    }
+    if (selected_ids.length == 1)
+    {
+      $('#hosts_selection').load('<%= url_for :controller => "host", :action => "show" %>',
+                { id: parseInt(selected_ids[0].substring(3))})
+    }
+  }
 </script>
   <div class="panel_header"></div>
     <div class="data_section">
        <%= render :partial => "/host/grid", :locals => { :table_id => "hosts_grid",
-                                                         :hwpool_id => @pool.id } %>
+                                                         :hwpool_id => @pool.id,
+                                                         :on_select => "hosts_select" } %>
     </div>
-<div class="selection_detail">
-  <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
-  <div>Host description goes here if we allow a description.</div>
+<div class="selection_detail" id="hosts_selection">
+  <div>Select a host above.</div>
 </div>

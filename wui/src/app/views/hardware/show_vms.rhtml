@@ -17,15 +17,28 @@
               $("#vmpools_grid").flexReload()
              });
   }
+  function vmpools_select(selected_rows)
+  {
+    var selected_ids = new Array() 
+    for(i=0; i<selected_rows.length; i++) { 
+      selected_ids[i] = selected_rows[i].id
+    }
+    if (selected_ids.length == 1)
+    {
+      $('#vmpools_selection').load('<%= url_for :controller => "resources", 
+                                                :action => "quick_summary" %>',
+                { id: parseInt(selected_ids[0].substring(3))})
+    }
+  }
 </script>
 
   <div class="panel_header"></div>
 <div class="data_section">
        <%= render :partial => "/resources/grid", :locals => { :table_id => "vmpools_grid",
                                                          :parent_controller => "hardware",
-                                                         :pool_id => @pool.id } %>
+                                                         :pool_id => @pool.id,
+                                                         :on_select => "vmpools_select" } %>
 </div>
-<div class="selection_detail">
-  <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">VM Description</div>
-  <div>VM description goes here if we allow a description.</div>
+<div class="selection_detail" id="vmpools_selection">
+  <div>Select a VM pool above.</div>
 </div>
