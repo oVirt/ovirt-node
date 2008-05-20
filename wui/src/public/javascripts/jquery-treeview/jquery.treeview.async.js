@@ -21,19 +21,41 @@ function load(settings, params, child, container) {
                         if (this.type=="HardwarePool") {
                             settings.link_to=settings.hardware_url 
                             settings.span_class="folder";
+                            settings.current_class = settings.current + "_folder";
                         } else {
                             settings.link_to=settings.resource_url;
                             settings.span_class="file";
+                            settings.current_class = settings.current + "_file";
+                        }                        
+			var link_open;
+			var link_close;
+			var span_onclick;
+			var current = $("<li/>").attr("id", this.id || "");
+			if (settings.action_type=="hyperlink"){
+			    link_open = "<a href=\"" + settings.link_to + "/" + this.id + "\">";
+			    link_close =  "</a>";
+			} else {
+			    link_open  = "";
+			    link_close = "";
+			}
+			if (settings.action_type=="javascript"){
+			    span_onclick = " onClick=\"" + settings.onclick + "(" + this.id + ")\" ";
+   		        } else {
+			    span_onclick = ""
+		        }
+                        if (settings.current_pool_id==this.id) {
+                          current.html("<span class=\"" + settings.current_class + ">" + this.text  + "</span>")
+                            .appendTo(parent);
+                        } else {
+                          current.html("<span class=\"" + settings.span_class + "\"" + span_onclick + ">" + link_open + this.text + link_close + "</span>")
+                            .appendTo(parent);
                         }
-			var current = $("<li/>").attr("id", this.id || "")
-                          .html("<span class=\"" + settings.span_class + "\"><a href=\"" + settings.link_to + "/" + this.id + "\">" + this.text +  "</a></span>")
-                          .appendTo(parent);
 			if (this.classes) {
 				current.children("span").addClass(this.classes);
 			}
 			if (this.expanded) {
 				current.addClass("open");
-			}
+			}                        
 			if (this.hasChildren || this.children && this.children.length) {
 				var branch = $("<ul/>").appendTo(current);
 				if (this.hasChildren) {

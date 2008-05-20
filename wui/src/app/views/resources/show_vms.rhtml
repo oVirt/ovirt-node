@@ -21,16 +21,7 @@
 <script type="text/javascript">
   function get_selected_vms()
   {
-    var vms_array = new Array()
-    var vms_index = 0
-    for(var i=0; i < document.vms_grid_form.grid_checkbox.length; i++){
-    if(document.vms_grid_form.grid_checkbox[i].checked)
-      {
-        vms_array[vms_index]= document.vms_grid_form.grid_checkbox[i].value
-        vms_index++
-      }
-    }
-    return vms_array
+    return get_selected_checkboxes(document.vms_grid_form)
   }
   function delete_vms()
   {
@@ -40,14 +31,27 @@
               $("#vms_grid").flexReload()
              });
   }
+  function vms_select(selected_rows)
+  {
+    var selected_ids = new Array() 
+    for(i=0; i<selected_rows.length; i++) { 
+      selected_ids[i] = selected_rows[i].id
+    }
+    if (selected_ids.length == 1)
+    {
+      $('#vms_selection').load('<%= url_for :controller => "vm", 
+                                            :action => "show" %>',
+                { id: parseInt(selected_ids[0].substring(3))})
+    }
+  }
 </script>
 
   <div class="panel_header"></div>
 <div class="data_section">
        <%= render :partial => "/vm/grid", :locals => { :table_id => "vms_grid",
-                                                              :pool_id => @vm_resource_pool.id } %>
+                                                       :pool_id => @vm_resource_pool.id,
+                                                       :on_select => "vms_select" } %>
 </div>
-<div class="selection_detail">
-  <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
-  <div>Host description goes here if we allow a description.</div>
+<div class="selection_detail" id="vms_selection">
+  <div>Select a VM above.</div>
 </div>

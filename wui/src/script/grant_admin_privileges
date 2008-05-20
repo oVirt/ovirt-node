@@ -9,7 +9,7 @@ require 'rubygems'
 gem 'activeldap'
 require 'active_ldap'
 
-require 'app/models/account'
+require '/usr/share/ovirt-wui/app/models/account'
 
 ldap_config = YAML::load(File.open("#{OVIRT_DIR}/config/ldap.yml"))
 uid = ARGV[0]
@@ -32,7 +32,7 @@ else
   $hwpool = HardwarePool.get_default_pool
   if $hwpool
     Permission.new( {:user_role => Permission::ROLE_SUPER_ADMIN,
-		     :user      => $uid,
+		     :uid       => $uid,
 		     :pool_id   => $hwpool.id}).save
   end
 end

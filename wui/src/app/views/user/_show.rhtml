@@ -8,16 +8,7 @@
 <script type="text/javascript">
   function get_selected_users()
   {
-    var users_array = new Array()
-    var users_index = 0
-    for(var i=0; i < document.users_grid_form.grid_checkbox.length; i++){
-    if(document.users_grid_form.grid_checkbox[i].checked)
-      {
-        users_array[users_index]= document.users_grid_form.grid_checkbox[i].value
-        users_index++
-      }
-    }
-    return users_array
+    return get_selected_checkboxes(document.users_grid_form)
   }
   function delete_users()
   {

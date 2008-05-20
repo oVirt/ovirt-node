@@ -7,28 +7,81 @@
 <%= hidden_field_tag 'vm_resource_pool_name', @vm_resource_pool_name if @vm_resource_pool_name %>
 <%= hidden_field_tag 'hardware_pool_id', @hardware_pool.id if @hardware_pool %>
 
-<%= text_field_with_label "UUID:", "vm", "uuid" %>
+    <%= text_field_with_label "Name:", "vm", "description", {:style=>"width:250px;"}  %>
+    <!-- FIXME: cobbler stuff here. what do we do now? -->	
+    <%= select_tag_with_label "Operating System:", 'cobbler_profile', {"Fedora 9" => "fedora9"}, :style=>"width:250px;" %>
+    <div class="clear_row" style="height:15px;"></div>
 
-<%= text_field_with_label "Description:", "vm", "description" %>
+    <div class="form_heading">Resources</div>
+    <div class="clear_row"></div>
+    <div class="clear_row"></div>
+    <div style="float:left;width:150px;" >
+      <%= text_field_with_label "CPUs:", "vm", "num_vcpus_allocated",  {:style=>"width:100px;"}, {:style=>"padding-right: 50px;"} %>
+      <div class="field_title">max to create: <%=create_resources[:cpus]%> mb </div>
+      <div class="field_title">max to start: <%=start_resources[:cpus]%> mb </div>
+    </div>
+    <div style="float:left;">
+      <%= text_field_with_label "Memory:", "vm", "memory_allocated_in_mb",  {:style=>"width:100px;"}, {:afterfield=>"&nbsp;mb"} %>
+      <div class="field_title">max to create: <%=create_resources[:memory_in_mb]%> mb </div>
+      <div class="field_title">max to start: <%=start_resources[:memory_in_mb]%> mb </div>
+    </div>
+    <div style="clear:both;"></div>
+    <div class="clear_row"></div>
+    <div class="field_title">Storage: </div>
+    <div style="height:150px; overflow:auto; border:#CCCCCC solid 1px;">
+      <table id="storage_volumes_grid" style="display:none"></table>
+    </div>
 
-<%= text_field_with_label "CPUs (max to create #{create_resources[:cpus]}, max to start now #{start_resources[:cpus]}):", "vm", "num_vcpus_allocated" %>
+    <!-- FIXME: fill in total here -->
+    <div style="background:#F3F3F3; padding:6px; border-left:#CCCCCC solid 1px; border-right:#CCCCCC solid 1px; border-bottom:#CCCCCC solid 1px; ">Total:</div>
+    <div class="clear_row" style="height:15px;"></div>
+    <div class="clear_row"></div>
+    <div class="clear_row"></div>
+    
+    <div class="form_heading">Network</div>
+    <div class="clear_row"></div>
+    <div class="clear_row"></div>
+    <div style="float:left;">
+      <%= text_field_with_label "VNIC:", "vm", "vnic_mac_addr",  {:style=>"width:250;"} %>
+    </div>
+    <div style="float:left;">
+      <%= text_field_with_label "UUID:", "vm", "uuid",  {:style=>"width:200px;"} %>
+    </div>
+    <div style="clear:both;"></div>
+    <div class="clear_row"></div>
+    <div class="clear_row"></div>
 
-
-<% # text_field_with_label "CPUs Used:", "vm", "num_vcpus_used" %>
-
-<%= text_field_with_label "Memory (mb) (max to create #{create_resources[:memory_in_mb]} mb, max to start now #{start_resources[:memory_in_mb]} mb):", "vm", "memory_allocated_in_mb" %>
-
-<% # text_field_with_label "Memory Used", "vm", "memory_used" %>
-
-<%= text_field_with_label "Network:", "vm", "vnic_mac_addr" %>
-
-<div class="i"><label for="#{vm}_#{storage_volumes}">Storage Volumes (max total size <%= create_resources[:storage_in_gb]%> gb)</label>
-<select name="vm[storage_volume_ids][]" multiple="multiple">
-<%= options_from_collection_for_select(StorageVolume.find_for_vm(@vm), 'id', 'display_name', @vm.storage_volume_ids) %>
-</select>
-</div>
-
-<%= check_box_tag_with_label "Start VM Now? (pending current resource availability)", "start_now", nil if create%>
+   <%= check_box_tag_with_label "Start VM Now? (pending current resource availability)", "start_now", nil if create%>
 
 <!--[eoform:vm]-->
+<script type="text/javascript">
+	$("#storage_volumes_grid").flexigrid
+	(
+	{
+	url: '<%=  url_for :controller => "vm", 
+                           :action => "storage_volumes_for_vm_json", 
+                           :id => @vm, :vm_pool_id => @vm.vm_resource_pool %>',
+	dataType: 'json',
+	colModel : [
+		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: storage_volumes_grid_checkbox},
+		{display: 'Alias', name : 'display_name', width : 180, sortable : false, align: 'left'},
+	        {display: 'Size (Gb)', name : 'size', width : 80, sortable : true, align: 'left'},
+		{display: 'Type', name : 'type', width : 80, sortable : true, align: 'left'}
+		],
+	sortname: "size",
+	sortorder: "desc",
+	usepager: true,
+	useRp: true,
+	rp: 10,
+	showTableToggleBtn: true
+	}
+	);   
+
+	function storage_volumes_grid_checkbox(celDiv)
+	{
+	       $(celDiv).html('<input type="checkbox" name="vm[storage_volume_ids][]" value="'+$(celDiv).html()+'"/>');
+	} 
+
+</script>
+
 

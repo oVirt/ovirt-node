@@ -20,14 +20,16 @@ body {
   font-size: 90%; 
 }
 
-textarea:focus, input:focus {
-  background-color: #FFFFCC;
-}
-
 img
 {  
   border-style: none;
 }
+
+
+textarea:focus, input:focus {
+  background-color: #FFFFCC;
+}
+
 
 /************************** 
     oVirt layout components 
@@ -60,7 +62,7 @@ img
   bottom: 35px;
   overflow: auto;    
   width: 224px; 
-  background-color:#FFFFFF;  
+  background-color:#FFFFFF;
   border-right: 1px #CCCCCC solid; 
 }
 
@@ -73,9 +75,9 @@ img
 #main {
   padding: 0;
   margin-left: 0;
-  position: absolute;
+  position: absolute;    
   top: 70px;
-  left: 236px;
+  left: 230px;
   right: 0px;
   bottom: 0px;
   overflow: auto;
@@ -92,22 +94,14 @@ img
 #content-area {
 }
 
-
-
-
-
-
-
-
-
 .toolbar {
   margin: 1px 0 1px 0;
   background: #CCCCCC url(../images/bg_menu_big.jpg) repeat-x top;
   height: 31px;
-  border-left: #FFFFFF solid 1px;
-  border-top: #FFFFFF solid 1px;
-  border-bottom: #FFFFFF solid 1px;
-  border-right: #B4B4B4 solid 1px;
+  border-left: #FFFFFF solid 1px; 
+  border-top: #FFFFFF solid 1px; 
+  border-bottom: #FFFFFF solid 1px; 
+  border-right: #B4B4B4 solid 1px; 
   }
 
 .breadcrumb_main {
@@ -125,6 +119,9 @@ img
   color:#FFFFFF;
   font-size: 130%;
 }
+
+
+
 
 /*  ----- Right side of Header --------  */
 
@@ -146,7 +143,7 @@ img
     border-style: solid;
     border-color: #7A7A7A;
     padding-left: 5px;
-    background: #4A4A4A;
+	background: #4A4A4A;
     font-size: 100%;
     color: #FFFFFF;
     width: 100px;
@@ -214,8 +211,7 @@ img
 }
 
 .selection_detail {
-  padding: 10px;
-  margin: 35px 0 0 0;
+  margin: 0;
   position:absolute; 
   bottom:0px; 
   left: 0px;
@@ -223,7 +219,79 @@ img
   height: 150px;
   background: #DEE7EB;
   border-top: #CCCCCC solid 1px;
+  overflow: auto;
 }
+
+.selection_left {
+  padding: 10px 10px 10px 15px;
+  width:48%;
+  height: 126px;
+  float:left;
+}
+
+.selection_title {
+  font-size: 120%; 
+  font-weight:bold; 
+  padding-bottom: 10px;
+}
+
+.selection_key {
+  text-align:right;
+  float:left;
+  color:#666666;
+}
+
+.selection_value {
+  text-align:left;
+  float:left;
+  padding: 0 0 0 10px;
+}
+
+.selection_right {
+  width:48%;
+  float: right;
+   border-left: 1px solid #CCCCCC;
+   background: #F0F0F0;
+ }
+ 
+ .selection_right_title {
+   padding: 4px 4px 4px 6px;
+   background: #F0F0F0;
+   float: left;
+}
+
+ .selection_right_table {
+  height: 128px;
+  overflow:auto;
+  clear:both;
+ }
+ 
+ /*  ----- Selection Detail Tabbed Navigation --------  */
+.selection_tab_nav {
+	margin:0;
+	padding: 0;
+   background: #F0F0F0;
+	list-style-type: none;
+	float: right;
+}
+.selection_tab_nav li {
+	margin: 0 1px 0 1px;
+	padding: 0;
+	float: left;
+}
+.selection_tab_nav a {
+	float:left;
+	padding: 0 8px;
+	text-decoration: none;
+	text-align: center;
+	background: none;
+	color:#000000;
+	line-height: 1.7;
+
+}
+.selection_tab_nav a:hover {background:#E3E3E3;}
+
+
 
 
 
@@ -238,25 +306,38 @@ img
 
 .dialog_title_small {
   background:#DEE7EB; 
-  padding:15px; 
-  width:400px;
+  padding:15px;
+  min-width: 500px; 
 }
+
 .header {
   font-size: 180%;
   line-height: 1.6;
 }
 
 .dialog_body {
-height: 350px;
+  height: 350px;
 }
 
 .dialog_form {
   margin: 15px;
+  background: #FFFFFF
+}
+
+.dialog_tree {
+  height: 200px;
+  overflow: auto;
+}
+
+.form_heading {
+  font-size:115%; color:  #666666;
+  border-top:#CCCCCC 1px dotted;
+  padding-top: 10px;
 }
 
 .field_title {
   font-size: 105%;
-  font-weight:bold;
+  /*font-weight:bold;*/
 }
 
 .textfield_effect {
@@ -280,6 +361,7 @@ height: 350px;
 .form_field {
   padding-top: 2px;
   padding-bottom: 12px;
+  padding-right: 10px;
 }
 
 .clear_row {
@@ -289,4 +371,22 @@ height: 350px;
 
 
 
+/* This file skins sliders */
 
+.ui-slider { width: 200px; height: 23px; position: relative; background-repeat: no-repeat; background-position: center center; }
+.ui-slider-handle { position: absolute; z-index: 1; height: 23px; width: 12px; top: 0px; left: 0px; background-image: url(images/slider-handle.gif); cursor: move;}
+.ui-slider-handle-active { /*border: 1px dotted #CCCCCC;*/}
+.ui-slider-disabled .ui-slider-handle { opacity: 0.5; filter: alpha(opacity=50); }
+.ui-slider-range { position: absolute; background: #50A029; opacity: 0.3; filter: alpha(opacity=30); width: 100%; height: 100%; }
+
+/* Default slider backgrounds */
+.ui-slider, .ui-slider-1 { background-image: url(images/slider-bg-1.png); cursor: pointer;}
+.ui-slider-2 { background-image: url(images/slider-bg-2.png); }
+
+
+
+#slider_callout { background: #FFFFFF; height: 45px; width: 38px; overflow: hidden; position: absolute; top: -50px; margin-left:-10px;  padding: 8px 0px 0px 0px; font-family: "Myriad Pro"; color: #284a6e; font-weight: bold; text-align: center;} 
+
+.slider_value { background: #FFFFFF; font-size:105%; padding-left:5px; float:left;}
+.slider_minlabel { float:left; padding:4px 4px 4px 0;}
+.slider_maxlabel { float:left; padding:4px;}

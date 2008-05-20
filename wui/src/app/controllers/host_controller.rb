@@ -50,8 +50,10 @@ class HostController < ApplicationController
     set_perms(@perm_obj)
     unless @can_view
       flash[:notice] = 'You do not have permission to view this host: redirecting to top level'
+      #perm errors for ajax should be done differently
       redirect_to :controller => 'dashboard', :action => 'list'
     end
+    render :layout => 'selection'    
   end
 
   def addhost

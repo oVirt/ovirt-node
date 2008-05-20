@@ -1,37 +1,46 @@
-    <div id="data">
-      <div class="inside">
+<div id="window">
 
-          <div id="dataTableWrapper">
 
-          <div class="dataTable">
-              <div class="inside">
-
-                <div class="data-table-column">
-                <% form_tag :action => 'create' do %>
-                  <%= render :partial => 'form', :locals => { :create => true } %>
-                  <%= submit_tag "Create" %>
-                <% end %>
-                </div>
-
-              </div> <!-- end #data-table.inside -->
-            </div> <!-- end #dataTable -->
-
-          </div> <!-- end #dataTableWrapper -->
-
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
-  <td id="right">
-    <div class="heading">&nbsp;</div>
-    <div class="tools">
-    <h3>Actions</h3>
-      <div class="actions">
-        <%= link_to 'Back to Vm Resource Pool', { :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool_id }, { :class => "show" } if @vm.vm_resource_pool_id %>
-        <%= link_to 'Back to Hardware Pool', { :controller => 'hardware', :action => 'show', :id => @hardware_pool }, { :class => "show" } if @hardware_pool %>
-      </div>
+  <!-- DIALOG  TITLE -->
+  <div class="dialog_title_small">
+    <div class="header">Add Virtual Machine</div>
   </div>
-  </td>
+  
+  
+  <!-- DIALOG  BODY -->
+  <form method="POST" action="<%= url_for :action => 'create' %>" id="new_vm_form" >
+  <div class="dialog_form">
+    <%= render :partial => 'form', :locals => { :create => true }  %>
+  </div>
+  <!-- DIALOG  FOOTER -->
+  <div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
+    <div>
+    <input type="image" name="submitButton" value="Submit2" src="<%= image_path "btn_addvm.png"%>" alt="Add Virtual Machine" />
+    <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%=image_tag "btn_cancel.png", :title=>"Cancel" %></a>
+    </div>
+  </div>
+  </form>
+</div>
+
+
+
+<script type="text/javascript">
+$(function() {
+    var vmoptions = {
+        target:        '<%= url_for :action => 'create' %>',   // target element to update
+        //beforeSubmit:  showStorageRequest,  // pre-submit callback
+	dataType:      'json',
+        success:       afterNewVm  // post-submit callback
+    };
+
+    // bind form using 'ajaxForm' 
+    $('#new_vm_form').ajaxForm(vmoptions); 
+});
+function afterNewVm(response, status){
+    jQuery(document).trigger('close.facebox');
+    $("#vms_grid").flexReload()
+}
+</script>
 
 <%- content_for :title do -%>
 <%= "New Virtual Machine" %>

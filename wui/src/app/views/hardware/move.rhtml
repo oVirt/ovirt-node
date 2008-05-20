@@ -1,0 +1,55 @@
+<script type="text/javascript">
+      $(document).ready(function(){         
+        $("#move_tree").treeview({
+            //animated: "normal",
+            current_pool_id:  <%=@current_pool_id%>,
+            url: "<%=  url_for :controller =>'/hardware', :action => 'json_move_tree' %>",
+            current: "disabled",
+            hardware_url: "#",
+            resource_url: "#",
+            onclick: "move_<%= @resource_type %>",
+            action_type: "javascript"
+	    })
+	}); 
+  function move_<%= @resource_type %>(target_pool_id)
+  {
+    $.post('<%= url_for :controller => "hardware", :action => "move_#{@resource_type}", :id => @pool %>',
+           { resource_ids: get_selected_<%= @resource_type %>().toString(), 
+	     target_pool_id: target_pool_id },
+            function(data,status){
+              $("#<%= @resource_type %>_grid").flexReload()
+	      jQuery(document).trigger('close.facebox');
+             });
+  }
+$('#move_to_new_pool').click(function(){
+		$('#window').fadeOut('fast'); 
+        $("#window").empty().load("<%= url_for :controller => 'hardware', :action => 'new' %>",
+	{ parent_id: <%=@pool.id%>, 
+	  resource_ids: get_selected_<%= @resource_type %>().toString(),
+          resource_type: '<%=@resource_type%>'});
+		$('#window').fadeIn('fast'); 
+});
+</script>
+
+<div id="window">
+
+<div class="dialog_title_small">
+	<div class="header">Move  <%= @resource_type.capitalize %></div>
+    <div>Select an existing hardware pool or create a new pool for selected <%= @resource_type %>. </div>
+</div>
+
+<div class="dialog_tree">
+  <ul id="move_tree" class="filetree treeview-famfamfam treeview"></ul>
+
+  <!--  <div style="clear:both;"></div>
+  <div style=" float:left; padding:0 0 0 5px;"><%= image_tag "icon_unassignedhost.gif" %></div>
+  <div style=" float:left; padding:5px 0 0 5px;">Unassigned Hosts</div>-->
+</div>
+
+
+
+<div class="facebox_timfooter">
+	<div style="float:left;"><a href="#" id="move_to_new_pool"><%= image_tag "btn_moveto_newpool.png", :title=>"Move host to a new hardware pool" %></a></div>
+	<div style="float:right;"><a href="#" onclick="jQuery(document).trigger('close.facebox')"><%= image_tag "btn_cancel.png", :title =>"Cancel" %></a></div>
+</div>
+</div>

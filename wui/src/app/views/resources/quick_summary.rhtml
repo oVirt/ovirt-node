@@ -1,0 +1,22 @@
+  <div class="selection_left">
+  	<div class="selection_title"><%=h @vm_resource_pool.name %> quota</div>
+	
+    <% resources = @vm_resource_pool.full_resources %>
+    <div class="selection_key">
+        <br/>            
+        <% for item in resources[:labels] %>
+        <% total_limit = resources[:total][item[1]]
+           total_limit = "unlimited" if total_limit.nil? %>
+          <%= item[0]%>:<br/>
+        <% end %>
+    </div>
+    <div class="selection_value">
+        in use / awaiting use / total allowed<br/>
+        <% for item in resources[:labels] %>
+        <% total_limit = resources[:total][item[1]]
+           total_limit = "unlimited" if total_limit.nil? %>
+          <%= resources[:allocated][:current][item[1]] %> / <%= resources[:allocated][:pending][item[1]] %> / <%= total_limit %>
+          <%= item[2]%><br>
+        <% end %>
+    </div>
+</div>

@@ -2,7 +2,7 @@
 <ul>
     <li><a href="<%= url_for :controller => 'storage', :action => 'addstorage', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Server</a></li>
     <li><a href="<%= url_for :controller => 'storage', :action => 'new', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Create Storage Server</a></li>
-    <li><%= render :partial => 'move_menu' %></li>
+    <li><a href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'storage' %>" rel="facebox[.bolder]"><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a></li>
     <li><a href="#" onClick="delete_storage()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
     <li><a href="#" onClick="remove_storage()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
   </ul>
@@ -11,21 +11,12 @@
 <script type="text/javascript">
   function get_selected_storage()
   {
-    var storage_array = new Array()
-    var storage_index = 0
-    for(var i=0; i < document.storage_grid_form.grid_checkbox.length; i++){
-    if(document.storage_grid_form.grid_checkbox[i].checked)
-      {
-        storage_array[storage_index]= document.storage_grid_form.grid_checkbox[i].value
-        storage_index++
-      }
-    }
-    return storage_array
+    return get_selected_checkboxes(document.storage_grid_form)
   }
   function remove_storage()
   {
     $.post('<%= url_for :controller => "hardware", :action => "move_storage", :id => @pool %>',
-           { storage_pool_ids: get_selected_storage().toString(), target_pool_id: <%= Pool.root.id %> },
+           { resource_ids: get_selected_storage().toString(), target_pool_id: <%= Pool.root.id %> },
             function(data,status){
               $("#storage_grid").flexReload()
              });
@@ -38,36 +29,29 @@
               $("#storage_grid").flexReload()
              });
   }
+  function storage_select(selected_rows)
+  {
+    var selected_ids = new Array() 
+    for(i=0; i<selected_rows.length; i++) { 
+      selected_ids[i] = selected_rows[i].id
+    }
+    if (selected_ids.length == 1)
+    {
+      $('#storage_selection').load('<%= url_for :controller => "storage", :action => "show" %>',
+                { id: parseInt(selected_ids[0].substring(3))})
+    }
+  }
+
 </script>
   <div class="panel_header"></div>
 <div class="data_section">
        <%= render :partial => "/storage/grid", :locals => { :table_id => "storage_grid",
-                                                            :hwpool_id => @pool.id } %>
-<table id="storage_volumes_grid" style="display:none"></table>
+                                                            :hwpool_id => @pool.id,
+                                                         :on_select => "storage_select" } %>
 </div>
 
-<script type="text/javascript">
-	$("#storage_volumes_grid").flexigrid
-	(
-	{
-	url: '<%=  url_for :action => "storage_volumes_json", :id => @pool.id %>',
-	dataType: 'json',
-	colModel : [
-		{display: 'Alias', name : 'display_name', width : 180, sortable : false, align: 'left'},
-	        {display: 'Size (Gb)', name : 'size', width : 80, sortable : true, align: 'left'},
-		{display: 'Type', name : 'type', width : 80, sortable : true, align: 'left'}
-		],
-	sortname: "size",
-	sortorder: "desc",
-	usepager: true,
-	useRp: true,
-	title: "Storage Volumes",
-	rp: 10,
-	showTableToggleBtn: true
-	}
-	);   
-</script>
-<div class="selection_detail">
-  <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
-  <div>Host description goes here if we allow a description.</div>
+<div class="selection_detail" id="storage_selection">
+  <div class="selection_left">
+    <div>Select a storage volume.</div>
+  </div>
 </div>

@@ -31,9 +31,11 @@ class VmController < ApplicationController
       flash[:notice] = 'You do not have permission to view this vm: redirecting to top level'
       redirect_to :controller => 'resources', :controller => 'dashboard'
     end
+    render :layout => 'selection'    
   end
 
   def new
+    render :layout => 'popup'    
   end
 
   def create
@@ -52,18 +54,22 @@ class VmController < ApplicationController
                                :action  => VmTask::ACTION_START_VM,
                                :state   => Task::STATE_QUEUED})
             if @task.save
-              flash[:notice] = flash[:notice] + ' VM Start action queued.'
+              render :json => 'Vm was successfully created. VM Start action queued.'.to_json
+              return
             else
+              # FIXME: need to handle proper error messages w/ ajax
               flash[:notice] = flash[:notice] + ' Error in inserting Start task.'
             end
           else
-            flash[:notice] = flash[:notice] + ' Resources are not available to start VM now.'
+            render :json => 'Vm was successfully created. VM Start action queued. Resources are not available to start VM now.'.to_json
+            return
           end
         end
       else
+        # FIXME: task creation should be in a transaction here; if it fails, no VM created
         flash[:notice] = 'Error in inserting task.'
       end
-      redirect_to :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool.id
+      render :json => flash[:notice].to_json
     else
       render :action => 'new'
     end
@@ -125,6 +131,16 @@ class VmController < ApplicationController
       flash[:notice] = "Vm must be stopped to destroy it."
       redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
     end
+  end
+
+  def storage_volumes_for_vm_json
+    id = params[:id]
+    vm_pool_id = params[:vm_pool_id]
+    @vm = id ? Vm.find(id) : nil
+    @vm_pool = vm_pool_id ? VmResourcePool.find(vm_pool_id) : nil
+      
+    json_list(StorageVolume.find_for_vm(@vm, @vm_pool),
+              [:id, :display_name, :size_in_gb, :get_type_label])
   end
 
   def vm_action

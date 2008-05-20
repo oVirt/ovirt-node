@@ -66,3 +66,16 @@
 .filetree span.folder { background: url(images/folder.gif) 0 0 no-repeat; }
 .filetree li.expandable span.folder { background: url(images/folder-closed.gif) 0 0 no-repeat; }
 .filetree span.file { background: url(images/file.gif) 0 0 no-repeat; }
+
+.current_folder { padding: 6px 0pt 5px 28px; background:#698FA6 url(images/icon_hdwarepool.png) 4px 2px no-repeat; color:#FFFFFF; display:block; }
+.current_folder a {color:#FFFFFF; }
+
+
+.current_file { padding: 6px 0pt 5px 28px; background:#698FA6 url(images/icon_vmpool.png) 4px 2px no-repeat; color:#FFFFFF; display:block; }
+.current_file a {color:#FFFFFF;}
+
+.disabled_folder { padding: 4px 0pt 5px 24px; background: url(images/icon_hdwarepool_disabled.png) 0 0 no-repeat; color:#FFFFFF; display:block; }
+.disabled_folder a {color:#CCCCCC; }
+
+.disabled_file { padding: 4px 0pt 5px 24px; background: url(images/icon_vmpool_disabled.png) 0 0 no-repeat; color:#FFFFFF; display:block; }
+.disabled_file a {color:#CCCCCC;}

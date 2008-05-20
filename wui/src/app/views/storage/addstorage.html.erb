@@ -25,24 +25,10 @@
   }
   function add_storage()
   {
-    var storage_array = new Array()
-    var storage_index = 0
-    for(var i=0; i < document.addstorage_unassigned_grid_form.grid_checkbox.length; i++){
-      if(document.addstorage_unassigned_grid_form.grid_checkbox[i].checked)
-      {
-        storage_array[storage_index]= document.addstorage_unassigned_grid_form.grid_checkbox[i].value
-        storage_index++
-      }
-    }
-    for(var i=0; i < document.addstorage_assigned_grid_form.grid_checkbox.length; i++){
-      if(document.addstorage_assigned_grid_form.grid_checkbox[i].checked)
-      {
-      storage_array[storage_index]= document.addstorage_assigned_grid_form.grid_checkbox[i].value
-      storage_index++
-      }
-    }
+    var assigned_selected= get_selected_checkboxes(document.addstorage_assigned_grid_form)
+    var unassigned_selected= get_selected_checkboxes(document.addstorage_unassigned_grid_form)
     $.post('<%= url_for :controller => "hardware", :action => "add_storage", :id => @hardware_pool %>',
-           { storage_pool_ids: storage_array.toString() },
+           { storage_pool_ids: Array.concat(assigned_selected,unassigned_selected).toString() },
             function(data,status){ 
               jQuery(document).trigger('close.facebox');
               $("#storage_grid").flexReload()
@@ -52,9 +38,9 @@
   <div class="panel_header"></div>
   <div class="dialog_body">
        <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_unassigned_grid",
-           :hwpool_id => Pool.root.id } %>
+           :hwpool_id => Pool.root.id, :on_select => "false" } %>
        <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_assigned_grid",
-           :hwpool_id => nil } %>
+           :hwpool_id => nil, :on_select => "false" } %>
   </div>
 </div>
 <script type="text/javascript">

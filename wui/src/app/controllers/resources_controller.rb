@@ -55,6 +55,17 @@ class ResourcesController < ApplicationController
     end
   end
 
+  def quick_summary
+    pre_show
+    set_perms(@perm_obj)
+    @is_hwpool_admin = @vm_resource_pool.parent.can_modify(@user)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
+      redirect_to :action => 'list'
+    end
+    render :layout => 'selection'    
+  end
+
   # resource's vms list page
   def show_vms
     show
@@ -79,7 +90,7 @@ class ResourcesController < ApplicationController
 
   def users_json
     json_list(@vm_resource_pool.permissions, 
-              [:id, :user, :user_role])
+              [:id, :uid, :user_role])
   end
 
   def new
@@ -87,12 +98,10 @@ class ResourcesController < ApplicationController
   end
 
   def create
-    if @vm_resource_pool.create_with_parent(@parent)
-      render :json => "created new VM pool #{@vm_resource_pool.name}".to_json
-    else
-      # FIXME: need to handle proper error messages w/ ajax
-      render :action => 'new'
-    end
+    @vm_resource_pool.create_with_parent(@parent)
+    render :json => "created new VM pool #{@vm_resource_pool.name}".to_json
+    
+    # FIXME: need to handle proper error messages w/ ajax (catch exception from save!)
   end
 
   def edit

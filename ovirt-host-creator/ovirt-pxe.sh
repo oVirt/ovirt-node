@@ -34,5 +34,5 @@ livecd-iso-to-pxeboot $ISO
 
 # append BOOTIF with PXE MAC info
 f=tftpboot/pxelinux.cfg/default
-grep -q 'IPAPPEND 2' $f || sed -i '/KERNEL/a \tIPAPPEND 2' $f
+grep -q 'IPAPPEND 2' $f || sed -i '/KERNEL/a \\tIPAPPEND 2' $f
 
