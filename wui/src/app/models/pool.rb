@@ -44,7 +44,7 @@ class Pool < ActiveRecord::Base
 
   def create_with_parent(parent, &other_actions)
     transaction do
-      save
+      save!
       move_to_child_of(parent)
       yield other_actions if other_actions
     end

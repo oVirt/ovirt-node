@@ -98,12 +98,10 @@ class ResourcesController < ApplicationController
   end
 
   def create
-    if @vm_resource_pool.create_with_parent(@parent)
-      render :json => "created new VM pool #{@vm_resource_pool.name}".to_json
-    else
-      # FIXME: need to handle proper error messages w/ ajax
-      render :action => 'new'
-    end
+    @vm_resource_pool.create_with_parent(@parent)
+    render :json => "created new VM pool #{@vm_resource_pool.name}".to_json
+    
+    # FIXME: need to handle proper error messages w/ ajax (catch exception from save!)
   end
 
   def edit

@@ -195,12 +195,12 @@ class HardwareController < ApplicationController
     resource_ids_str = params[:resource_ids]
     resource_ids = []
     resource_ids = resource_ids_str.split(",").collect {|x| x.to_i} if resource_ids_str
-    if @pool.create_with_resources(@parent, resource_type, resource_ids)
-      render :json => "created new Hardware Pool pool #{@pool.name}".to_json
-    else
-      # FIXME: need to handle proper error messages w/ ajax
-      render :action => "new"
-    end
+    @pool.create_with_resources(@parent, resource_type, resource_ids)
+    render :json => "created new Hardware Pool pool #{@pool.name}".to_json
+
+    
+    # FIXME: need to handle proper error messages w/ ajax (catch exception from save!)
+    #render :action => "new"
   end
 
   def edit

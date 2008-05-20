@@ -1,18 +1,20 @@
-<% pool = HardwarePool.get_default_pool %>
+<% pool = @current_pool_id ? Pool.find(@current_pool_id) : nil %>
+<%if pool && pool[:type]=="HardwarePool" -%>
 <div class="toolbar" style="float:left;">
-   <a href="<%= url_for :controller => :hardware, :action => 'new', :parent_id => pool %>">
+   <a href="<%= url_for :controller => :hardware, :action => 'new', :parent_id => pool %>" rel="facebox[.bolder]">
      <%=image_tag "icon_add_hardwarepool.png", :title=>"Add Hardware Pool"  %>
    </a>
 </div>
 <div class="toolbar" style="float:left;">
-   <a href="<%= url_for :controller => :resources, :action => 'new', :parent_id => pool %>">
+   <a href="<%= url_for :controller => 'resources', :action => 'new', :parent_id => pool %>" rel="facebox[.bolder]">
      <%= image_tag "icon_add_vmpool.png", :title=>"Add Virtual Machine Pool" %>
    </a>
 </div>
+<% end -%>
 <div class="toolbar" style="float:left;">
-   <a href="#">
-     <%=image_tag "icon_delete.gif", :title=>"Delete Selected Pool"  %>
-   </a>
+   <%= link_to image_tag ("icon_delete.gif", :title=>"Delete Selected Pool"), 
+       { :action => 'destroy', :id => pool }, 
+       { :method => :post, :confirm => 'Are you sure you want to delete - %s?' % pool.name} %>
 </div>
 
 <div class="toolbar"></div>
