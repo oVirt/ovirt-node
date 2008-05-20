@@ -10,7 +10,7 @@
 }
 
 .treeview .hitarea {
-	background: url(images/treeview-default.gif) -64px -25px no-repeat;
+	background: url('images/treeview-default.gif') -64px -25px no-repeat;
 	height: 16px;
 	width: 16px;
 	margin-left: -16px;
@@ -65,3 +65,22 @@
 
 .filetree span.file { background: url(images/icon_vmpool.png) 0 0 no-repeat; }
 .filetree span.file.hover { background: #DEE7EB url(images/icon_vmpool.png) 0 0 no-repeat; }
+
+.current_folder, .current_folder.hover { padding: 6px 0pt 5px 28px; background:#698FA6 url(images/icon_hdwarepool.png) 4px 2px no-repeat; color:#FFFFFF; display:block; }
+.current_folder a {color:#FFFFFF; }
+
+.current_file, .current_file.hover { padding: 6px 0pt 5px 28px; background:#698FA6 url(images/icon_vmpool.png) 4px 2px no-repeat; color:#FFFFFF; display:block; }
+.current_file a {color:#FFFFFF;}
+
+.disabled_folder, .disabled_folder.hover { 
+    padding: 4px 0pt 5px 24px; 
+    background: url(images/icon_hdwarepool_disabled.png) 0 0 no-repeat; 
+    display:block; 
+    color:#CCCCCC; 
+}
+.disabled_file, .disabled_file.hover { 
+    padding: 4px 0pt 5px 24px; 
+    background: url(images/icon_vmpool_disabled.png) 0 0 no-repeat; 
+    display:block;
+    color:#CCCCCC;
+}

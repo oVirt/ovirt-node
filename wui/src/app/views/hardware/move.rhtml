@@ -4,6 +4,7 @@
             //animated: "normal",
             current_pool_id:  <%=@current_pool_id%>,
             url: "<%=  url_for :controller =>'/hardware', :action => 'json_move_tree' %>",
+            current: "disabled",
             hardware_url: "#",
             resource_url: "#",
             onclick: "move_<%= @resource_type %>",
