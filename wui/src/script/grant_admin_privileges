@@ -32,7 +32,7 @@ else
   $hwpool = HardwarePool.get_default_pool
   if $hwpool
     Permission.new( {:user_role => Permission::ROLE_SUPER_ADMIN,
-		     :user      => $uid,
+		     :uid       => $uid,
 		     :pool_id   => $hwpool.id}).save
   end
 end
