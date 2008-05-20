@@ -10,11 +10,11 @@
      <%= image_tag "icon_add_vmpool.png", :title=>"Add Virtual Machine Pool" %>
    </a>
 </div>
-<% end -%>
 <div class="toolbar" style="float:left;">
    <%= link_to image_tag ("icon_delete.gif", :title=>"Delete Selected Pool"), 
        { :action => 'destroy', :id => pool }, 
        { :method => :post, :confirm => 'Are you sure you want to delete - %s?' % pool.name} %>
+<% end -%>
 </div>
 
 <div class="toolbar"></div>
