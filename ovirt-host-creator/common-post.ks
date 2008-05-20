@@ -47,7 +47,7 @@ cat > /etc/init.d/ovirt-early << \EOF
 configure_from_network() {
     DEVICE=$1
     if [ -n "$DEVICE" ]; then
-        prinf .
+        printf .
         # setup temporary interface to retrieve configuration
         echo "network --device $DEVICE --bootproto dhcp" | nash
         if [ $? -eq 0 ]; then
@@ -360,7 +360,9 @@ $RM /usr/share/X11
 $RM /usr/share/i18n
 
 find /usr/share/zoneinfo -regextype egrep -type f \
-  ! -regex ".*/EST.*|.*/GMT" -exec $RM {} \;
+  ! -regex ".*/UTC" -exec $RM {} \;
+# XXX anaconda/timezone.py does it, missing in imgcreate/kickstart.py
+cp /usr/share/zoneinfo/UTC /etc/localtime
 
 $RM /usr/lib/locale
 $RM /usr/lib/syslinux

@@ -1,5 +1,5 @@
 install
-url --url http://download.fedora.redhat.com/pub/fedora/linux/releases/8/Fedora/x86_64/os/
+url --url http://download.fedora.redhat.com/pub/fedora/linux/releases/9/Fedora/x86_64/os/
 
 %include common-install.ks
 
@@ -10,9 +10,12 @@ logvol /iscsi3 --name=iSCSI3 --vgname=VolGroup00 --size=64
 logvol /iscsi4 --name=iSCSI4 --vgname=VolGroup00 --size=64
 logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64
 
-repo --name=f8 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-8&arch=x86_64
-repo --name=f8-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f8&arch=x86_64
-repo --name=ovirt-management --baseurl=http://ovirt.et.redhat.com/repos/ovirt-management-repo/x86_64/
+repo --name=f9 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-9&arch=x86_64
+repo --name=f9-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f9&arch=x86_64
+repo --name=ovirt-management --baseurl=http://ovirt.org/repos/ovirt/9/x86_64
+# temporary
+repo --name=f9testing --includepkgs=rubygem-rubyforge,rubygem-activeldap,rubygem-hoe --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f9&arch=x86_64
+
 
 %packages
 
@@ -179,7 +182,7 @@ start() {
         -G 00:16:3e:12:34:59,192.168.50.5 \
         -s priv.ovirt.org \
         -W _ovirt._tcp,management.priv.ovirt.org,80 \
-        -W _ipa._tcp,management.priv.ovirt.org,8089 \
+        -W _ipa._tcp,management.priv.ovirt.org,80 \
         -W _ldap._tcp,managment.priv.ovirt.org,389 \
         -W _collectd._tcp,management.priv.ovirt.org,25826 \
         --enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
@@ -250,7 +253,7 @@ chkconfig ovirt-wui-dev on
 
 # get the PXE boot image; this can take a while
 PXE_URL=http://ovirt.org/download
-IMAGE=ovirt-pxe-host-image-x86_64-0.4.tar.bz2
+IMAGE=ovirt-pxe-host-image-x86_64-0.5.tar.bz2
 wget ${PXE_URL}/$IMAGE -O /tmp/$IMAGE
 tar -C / -jxvf /tmp/$IMAGE
 rm -f /tmp/$IMAGE
