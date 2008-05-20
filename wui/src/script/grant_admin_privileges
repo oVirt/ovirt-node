@@ -9,7 +9,7 @@ require 'rubygems'
 gem 'activeldap'
 require 'active_ldap'
 
-require 'app/models/account'
+require '/usr/share/ovirt-wui/app/models/account'
 
 ldap_config = YAML::load(File.open("#{OVIRT_DIR}/config/ldap.yml"))
 uid = ARGV[0]
