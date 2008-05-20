@@ -55,6 +55,17 @@ class ResourcesController < ApplicationController
     end
   end
 
+  def quick_summary
+    pre_show
+    set_perms(@perm_obj)
+    @is_hwpool_admin = @vm_resource_pool.parent.can_modify(@user)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
+      redirect_to :action => 'list'
+    end
+    render :layout => 'selection'    
+  end
+
   # resource's vms list page
   def show_vms
     show

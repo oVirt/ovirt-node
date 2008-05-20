@@ -29,36 +29,29 @@
               $("#storage_grid").flexReload()
              });
   }
+  function storage_select(selected_rows)
+  {
+    var selected_ids = new Array() 
+    for(i=0; i<selected_rows.length; i++) { 
+      selected_ids[i] = selected_rows[i].id
+    }
+    if (selected_ids.length == 1)
+    {
+      $('#storage_selection').load('<%= url_for :controller => "storage", :action => "show" %>',
+                { id: parseInt(selected_ids[0].substring(3))})
+    }
+  }
+
 </script>
   <div class="panel_header"></div>
 <div class="data_section">
        <%= render :partial => "/storage/grid", :locals => { :table_id => "storage_grid",
-                                                            :hwpool_id => @pool.id } %>
-<table id="storage_volumes_grid" style="display:none"></table>
+                                                            :hwpool_id => @pool.id,
+                                                         :on_select => "storage_select" } %>
 </div>
 
-<script type="text/javascript">
-	$("#storage_volumes_grid").flexigrid
-	(
-	{
-	url: '<%=  url_for :action => "storage_volumes_json", :id => @pool.id %>',
-	dataType: 'json',
-	colModel : [
-		{display: 'Alias', name : 'display_name', width : 180, sortable : false, align: 'left'},
-	        {display: 'Size (Gb)', name : 'size', width : 80, sortable : true, align: 'left'},
-		{display: 'Type', name : 'type', width : 80, sortable : true, align: 'left'}
-		],
-	sortname: "size",
-	sortorder: "desc",
-	usepager: true,
-	useRp: true,
-	title: "Storage Volumes",
-	rp: 10,
-	showTableToggleBtn: true
-	}
-	);   
-</script>
-<div class="selection_detail">
-  <div style="font-size: 120%; font-weight:bold; line-height: 1.5;">Host Name</div>
-  <div>Host description goes here if we allow a description.</div>
+<div class="selection_detail" id="storage_selection">
+  <div class="selection_left">
+    <div>Select a storage volume.</div>
+  </div>
 </div>

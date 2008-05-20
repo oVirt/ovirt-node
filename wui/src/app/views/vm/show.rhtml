@@ -1,74 +1,45 @@
-    <div id="data">
-      <div class="inside">
+  <div class="selection_left">
+  	<div class="selection_title"><%=h @vm.description %></div>
+    <div class="selection_key">
+        Uuid:<br/>                
+	Num vcpus allocated:<br/> 
+	Num vcpus used:<br/>      
+	Memory allocated:<br/>    
+	Memory used:<br/>         
+	vNIC MAC address:<br/>    
+	Boot device:<br/>         
+	State:<br/>    
+	Pending State:<br/>    
+    </div>
+    <div class="selection_value">
+       <%=h @vm.uuid %><br/>
+       <%=h @vm.num_vcpus_allocated %><br/>
+       <%=h @vm.num_vcpus_used %><br/> 
+       <%=h @vm.memory_allocated_in_mb %> MB<br/>
+       <%=h @vm.memory_used_in_mb %> MB<br/>
+       <%=h @vm.vnic_mac_addr %><br/>
+       <%=h @vm.boot_device %><br/>
+       <%=h @vm.state %>
+       <%unless @vm.needs_restart.nil? or @vm.needs_restart == 0  -%>
+         (needs restart)
+       <% end -%><br/>
+       <%=h @vm.get_pending_state %>
+    </div>
+</div>
 
-        <div id="dataTableWrapper">
-
-            <div class="dataTable">
-              <div class="inside">
-
-                <div class="data-table-column">
-<p><b>Uuid:</b>                <%=h @vm.uuid %></p>
-<p><b>Description:</b>         <%=h @vm.description %></p>
-<p><b>Num vcpus allocated:</b> <%=h @vm.num_vcpus_allocated %></p>
-<p><b>Num vcpus used:</b>      <%=h @vm.num_vcpus_used %></p>
-<p><b>Memory allocated:</b>    <%=h @vm.memory_allocated_in_mb %> MB</p>
-<p><b>Memory used:</b>         <%=h @vm.memory_used_in_mb %> MB</p>
-<p><b>vNIC MAC address:</b>    <%=h @vm.vnic_mac_addr %></p>
-<p><b>Boot device:</b>         <%=h @vm.boot_device %></p>
-                </div>
-
-                <div class="data-table-column">
-<p>
-  <b>State:</b>               <%=h @vm.state %>
-  <%unless @vm.needs_restart.nil? or @vm.needs_restart == 0  -%>
-    (needs restart)
-  <% end -%>
-</p>
-<p>
-  <b>Pending state:</b>    <%=h @vm.get_pending_state %>
-</p>
-                </div>
-
-              </div> <!-- end #data-table.inside -->
-
-            </div> <!-- end #dataTable -->
-
-
-            <div class="data-section">
-              <div class="data-section-header"><strong>Storage Volumes</strong></div>
-              <div class="data-section-stats"></div>
-              <div class="data-section-table">
-                <div class="inside">
+<!-- FIXME: show storage volumes
 <% if !@vm.storage_volumes.empty? %>
   <%= render :partial => "/storage/list_volumes", :locals => { :storage_volumes => @vm.storage_volumes, :remove_from_host => false, :vm_id => @vm.id } %>
 <% else %>
 <p>No attached Storage Volumes</p>
 <% end %>
-                </div>
-              </div>
-            </div>
+-->
 
-            <div class="data-section">
-              <div class="data-section-header"><strong>Tasks</strong></div>
-              <div class="data-section-stats">Statistics Data</div>
-              <div class="data-section-table">
-                <div class="inside">
+<!-- FIXME: need to show tasks
                   <%= render :partial => "/task/list_table", :locals => { :tasks => @vm.tasks, :type => "VM" } %>
-                </div>
-              </div>
-            </div>
+-->
 
-          </div> <!-- end #dataTableWrapper -->
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
-  <td id="right">
-    <div class="heading">&nbsp;</div>
-      <div class="tools">
-
-        <h3>Actions</h3>
-
+<!-- FIXME: valid actions here?
       <%if @can_modify -%>
         <%- if ! @actions.empty? -%>
           <div class="actions create">
@@ -85,21 +56,4 @@
           <%= link_to 'Destroy this VM', { :action => 'destroy', :id => @vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %>
         </div>
       <% end -%>
-      <div class="actions">
-        <% if @vm.vm_resource_pool -%>
-          <%= link_to 'Back to Vm Resource Pool', { :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool }, { :class => "list" } %>
-        <% else -%>
-          <%= link_to 'List All VMs', { :action => 'list' }, { :class => "list" } %>
-        <% end -%>
-        <%if @vm.host  -%>
-          <%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @vm.host_id }, { :class => "show"  } %>
-        <% end  -%>
-      </div>
-
-    </div>
-
-  </td>
-
-<%- content_for :title do -%>
-<%= "Virtual Machine #{@vm.description}" %>
-<%- end -%>
+-->

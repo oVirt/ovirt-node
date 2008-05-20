@@ -1,19 +1,29 @@
-<div id="left">
-<h2><%= _("Host") %></h2>
-
-<table>
-  <tr><td><b>UUID:</b></td><td><%=h @host.uuid %></td></tr>
-  <tr><td><b>Hostname:</b></td><td><%=h @host.hostname %></td></tr>
-  <tr><td><b>Hypervisor Type:</b></td><td><%=h @host.hypervisor_type %></td></tr>
-  <tr><td><b>Num CPUs:</b></td><td><%=h @host.num_cpus %></td></tr>
-  <tr><td><b>CPU Speed:</b></td><td><%=h @host.cpu_speed %> MHz</td></tr>
-  <tr><td><b>Architecture:</b></td><td><%=h @host.arch %></td></tr>
-  <tr><td><b>RAM:</b></td><td><%=h @host.memory_in_mb %> MB</td></tr>
-  <%unless @host.is_disabled.nil? or @host.is_disabled == 0  -%>
-  <tr><td><b>(disabled)</b></td></tr>
-  <% end -%>
-</table>
-
+  <div class="selection_left">
+  	<div class="selection_title"><%=h @host.hostname %></div>
+    <div class="selection_key">
+        UUID:<br/>            
+	CPUs:<br/>        
+	Speed:<br/>       
+	Memory:<br/>          
+	Architecture:<br/>    
+	Hypervisor Type:<br/> 
+        Status:<br/>
+    </div>
+    <div class="selection_value">
+    	<%=h @host.uuid %><br/>
+        <%=h @host.num_cpus %><br/>
+        <%=h @host.cpu_speed %> MHz<br/>
+        <%=h @host.memory_in_mb %> MB<br/>
+        <%=h @host.arch %><br/>
+	<%=h @host.hypervisor_type %><br/>
+        <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
+          enabled
+        <% else -%>
+          disabled
+        <% end -%>
+        <br/>
+    </div>
+<!-- FIXME: need styling
 <h3>Network Interfaces</h3>
 <% if !@host.nics.empty? %>
   <%= render :partial => "/nic/list", :locals => { :nics => @host.nics, :show_actions => @can_modify } %>
@@ -21,22 +31,6 @@
 <p>No Network Interfaces.
 </p>
 <% end %>
-
+-->
 </div>
 
-<div id="right">
-  <h2>Actions</h2>
-  <%if @can_modify -%>
-  <ul class="actions edit">
-  <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
-    <li class="action"><%= link_to 'Disable Host', { :action => 'disable', :id => @host }, { :class => "edit" } %></li>
-  <% else -%>
-    <li class="action"><%= link_to 'Enable Host', { :action => 'enable', :id => @host }, { :class => "edit" } %></li>
-  <% end -%>
-  </ul>
-  <% end -%>
-  <ul class="actions">
-    <li class="action"><%= link_to "Back to #{@host.hardware_pool.name}", { :controller => 'hardware', :action => 'show', :id => @host.hardware_pool.id }, { :class => "list" } %></li>
-  </ul>
-  </ul>
-</div>

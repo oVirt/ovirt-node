@@ -123,11 +123,23 @@
 
   </td>
 
+<div class="selection_detail" id="vmpool_selection">
+  <div>Select a VM pool above.</div>
+</div>
+
 <%- content_for :title do -%>
 <%= @vm_resource_pool.name %>
 <%- end -%>
 
 <%- content_for :scripts do -%>
+<script type="text/javascript">
+      $(document).ready(function(){         
+        $('#vmpool_selection').load('<%= url_for :controller => "resources", 
+                                                :action => "quick_summary" %>',
+                { id: <%= @vm_resource_pool.id %>})
+	}); 
+</script>
+
 <script type="text/javascript">
 function confirm_and_submit(item){
    c = true

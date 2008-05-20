@@ -39,9 +39,9 @@
   <div class="panel_header"></div>
   <div class="dialog_body">
        <%= render :partial => "/host/grid", :locals => { :table_id => "addhosts_unassigned_grid",
-           :hwpool_id => Pool.root.id } %>
+           :hwpool_id => Pool.root.id, :on_select => "false"  } %>
        <%= render :partial => "/host/grid", :locals => { :table_id => "addhosts_assigned_grid",
-           :hwpool_id => nil } %>
+           :hwpool_id => nil, :on_select => "false" } %>
   </div>
 </div>
 <script type="text/javascript">

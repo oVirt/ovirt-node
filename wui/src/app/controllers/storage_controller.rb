@@ -21,6 +21,7 @@ class StorageController < ApplicationController
 
   before_filter :pre_pool_admin, :only => [:attach_to_pool, :remove_from_pool, :refresh]
   before_filter :pre_new2, :only => [:new2]
+  before_filter :pre_json, :only => [:storage_volumes_json]
 
   def index
     list
@@ -57,8 +58,19 @@ class StorageController < ApplicationController
       flash[:notice] = 'You do not have permission to view this storage pool: redirecting to top level'
       redirect_to :controller => 'dashboard'
     end
+    render :layout => 'selection'    
   end
 
+  def storage_volumes_json
+    @storage_pool = StoragePool.find(params[:id])
+    set_perms(@storage_pool.hardware_pool)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this storage pool: redirecting to top level'
+      redirect_to :controller => 'dashboard'
+    end
+    json_list(@storage_pool.storage_volumes, 
+              [:display_name, :size_in_gb, :get_type_label])
+  end
   def show_volume
     @storage_volume = StorageVolume.find(params[:id])
     set_perms(@storage_volume.storage_pool.hardware_pool)
@@ -233,6 +245,9 @@ class StorageController < ApplicationController
     @storage_pool = StoragePool.find(params[:id])
     @perm_obj = @storage_pool.hardware_pool
     @redir_obj = @storage_pool
+  end
+  def pre_json
+    pre_show
   end
   def pre_pool_admin
     pre_edit

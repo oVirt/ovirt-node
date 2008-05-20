@@ -31,6 +31,7 @@ class VmController < ApplicationController
       flash[:notice] = 'You do not have permission to view this vm: redirecting to top level'
       redirect_to :controller => 'resources', :controller => 'dashboard'
     end
+    render :layout => 'selection'    
   end
 
   def new
