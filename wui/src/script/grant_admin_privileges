@@ -1,38 +1,22 @@
 #!/usr/bin/ruby
 
-$: << File.join(File.dirname(__FILE__), "../dutils")
+$: << File.join(File.dirname(__FILE__), '../dutils')
 
 require 'active_record_env'
 
-require 'rubygems'
-
-gem 'activeldap'
-require 'active_ldap'
-
-require '/usr/share/ovirt-wui/app/models/account'
-
+# Get configuration options...
 ldap_config = YAML::load(File.open("#{OVIRT_DIR}/config/ldap.yml"))
 uid = ARGV[0]
-base, host, port = ldap_config["production"]["base"], ldap_config["production"]["host"], ldap_config["production"]["port"]
+base, host = ldap_config["production"]["base"], ldap_config["production"]["host"]
 
-ActiveLdap::Base.establish_connection(:base => base, :host => host, :port => port)
+ActiveLdap::Base.establish_connection :base => base, :host => host, :try_sasl => false
 
-#
-# If the uid is found in LDAP, then create an admin account
-# for that user. Otherwise, report an error and fail.
-#
-
-puts "Validating UID #{uid} in LDAP"
-
-begin
-  user = Account.find("uid=#{uid}")
-rescue StandardError => error
-  puts "Unable to verify user in LDAP or no such user exists: uid=#{uid}" 
-else
+if Account.exists?("uid=#{uid}")
+  puts "Creating an admin account for #{uid}..."
   $hwpool = HardwarePool.get_default_pool
-  if $hwpool
-    Permission.new( {:user_role => Permission::ROLE_SUPER_ADMIN,
-		     :uid       => $uid,
-		     :pool_id   => $hwpool.id}).save
-  end
+  permission = Permission.create(:user_role => Permission::ROLE_SUPER_ADMIN,
+				 :uid       => uid,
+				 :pool_id   => $hwpool.id)
+else
+  puts "Unable to verify user: uid=#{uid}"
 end

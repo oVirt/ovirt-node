@@ -6,7 +6,7 @@
   </style>
   <%= javascript_include_tag "jquery-svg/custom_test.js" -%>
   <%= render :partial => '/layouts/graph', 
-    :locals => {:div_id => "bar_graph",:chartType => "bar",:dataType =>"Memory"} %>
+    :locals => {:div_id => "bar_graph",:chartType => "bar",:dataType =>"Memory", :url => (url_for :controller => 'graphs', :action => 'graph', :dataType => "Memory") } %>
   <%= render :partial => '/layouts/graph', 
     :locals => {:div_id => "cool_graph",:chartType => "line",:dataType =>"summary"} %>
 </div> 
