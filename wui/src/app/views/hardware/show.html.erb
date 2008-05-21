@@ -1,12 +1,3 @@
-<!-- TODO put style in stylesheet -->
-<style type="text/css">
-  #availability_graphs{ }
-  .availability_graph { float: left; width: 33%;}
-  .availability_graph_left { float: left; width: 50px;}
-  .availability_graph_right { float: left; margin-top: 10%; margin-left: 125px; min-width: 100px;}
-  #available_memory, #available_storage, #available_vms {margin-left:50px;width:100px;height:100px}
-</style>
-
 <div id="toolbar_nav">
 <ul>
     <li><a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png" %>&nbsp;&nbsp;Add Host</a></li>
@@ -46,7 +37,42 @@
     </div>
   </div>
 </div>
+<div id="history_graphs">
+  <div id="history_graphs_control">
+   <div class="history_graphs_menu">
+      <script type="text/javascript">
+         function swap_history_graph(newgraph, title){
+             $('.history_graph').hide(); 
+             $('#' + newgraph).parent().show();
+             $('#history_graph_menu_header').html(title + '&nbsp;<%= image_tag 'icon_menu_arrow.gif' %>');
+         }
+      </script>
+      <ul>
+        <li><div id="history_graph_menu_header">Overall Load &nbsp;<%= image_tag 'icon_menu_arrow.gif' %></div></li>
+        <li class="history_graph_menu_item"><a href="#" onclick="swap_history_graph('host_usage_history', 'Host Usage');">Host Usage</a></li>
+        <li class="history_graph_menu_item"><a href="#" onclick="swap_history_graph('storage_usage_history', 'Storage Usage');" >Storage Usage</a></li>
+        <li class="history_graph_menu_item"><a href="#" onclick="swap_history_graph('vm_pool_usage_history', 'VM Pool Usage');" >VM Pool Usage</a></li>
+        <li class="history_graph_menu_item history_graph_menu_litem"><a href="#" onclick="swap_history_graph('overall_load_history', 'Overall Load')" >Overall Load</a></li>
+      </ul>
+   </div>
+   <div class="history_graphs_menu">
+      <ul>
+        <li>Last 7 Days</li>
+      </ul>
+   </div>
+   <div class="history_graphs_legend">
+       <font color="<%= @peak_color %>">Peak &nbsp; &nbsp;</font>
+       <font color="<%= @average_color %>">Average &nbsp; &nbsp;</font>
+   </div>
+  </div>
+  <div id="history_graphs_graphs">
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'host_usage_history',    :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'host_usage'            ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'storage_usage_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'storage_usage'         ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'vm_pool_usage_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'vm_pool_usage_history' ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'overall_load_history',  :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'overall_load'          ) } %></div>
+  </div>
 
+</div>
 <%= # render :partial => '/graphs/load_history' 
 %>
 

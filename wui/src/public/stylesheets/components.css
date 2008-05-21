@@ -121,3 +121,56 @@
 #toolbar_nav ul ul li:hover a {
     background: #1E99DF;
 }
+
+
+
+/***************************
+ *      Graphing Style
+ **************************/
+/* availability graphs on hardware / resource summary tab */
+#availability_graphs{ overflow: hidden; }
+.availability_graph { float: left; width: 33%;}
+.availability_graph_left { float: left; width: 50px;}
+.availability_graph_right { float: left; margin-top: 10%; margin-left: 125px; min-width: 100px;}
+#available_memory, #available_storage, #available_vms {margin-left:50px;width:100px;height:100px}
+
+/* history graphs on hardware / resource summary tab */
+#history_graphs { height: 300px; overflow: hidden; margin-left: 40px; margin-top: 60px; }
+#history_graphs_control { position: absolute; z-index: 1; height: 20px; width: 90%; border: 1px solid black; background: #CCCCCC; }
+.history_graphs_menu { float: left; width: 15%; }
+.history_graphs_legend { float: right; height: 20px; width: 15%; }
+.history_graphs_legend font { float: right; padding-top: 3px; }
+#history_graphs_graphs {  position: absolute; overflow: hidden; height: 210px; width: 90%; border: 1px solid black; }
+#history_graph_menu_header img{ vertical-align: middle; }
+.history_graphs_menu ul {
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+    list-style-type: none;
+    border-right: 1px solid black;
+}
+.history_graphs_menu ul li {
+    height: 17px;
+    background: #CCCCCC;
+    text-align: justify;
+    padding-left: 7px;
+    padding-top:  3px;
+}
+.history_graphs_menu .history_graph_menu_item{
+    display: none;
+    border-left:  1px solid black;
+}
+.history_graphs_menu .history_graph_menu_litem {
+    border-bottom: 1px solid black;
+}
+.history_graphs_menu:hover .history_graph_menu_item {
+    display: block;
+    background: #CCFFFF;
+}
+.history_graph{
+  height: 210px; 
+  position: relative;
+  float: left;
+}
+#host_usage_history, #storage_usage_history, #vm_pool_usage_history, #overall_load_history{
+  height: 200px; width: 1200px; position: absolute; left: -70px;
+}

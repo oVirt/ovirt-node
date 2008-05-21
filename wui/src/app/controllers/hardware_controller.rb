@@ -138,6 +138,54 @@ class HardwareController < ApplicationController
     render :json => graph_object
   end
 
+  # retrieves data used by history graphs
+  def history_graph
+    today = DateTime.now
+    dates = [ Date::ABBR_MONTHNAMES[today.month] + ' ' + today.day.to_s ]
+    1.upto(6){ |x|  # TODO get # of days from wui
+       dte = today - x
+       dates.push ( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
+    }
+    dates.reverse! # want in ascending order
+
+    target = params[:target]
+    peakvalues = nil
+    avgvalues  = nil
+    if target == 'host_usage'
+       peakvalues = [95.97, 91.80, 88.16, 86.64, 99.14, 75.14, 85.69] # TODO real values!
+       avgvalues  = [3.39, 2.83, 1.61, 0.00, 4.56, 1.23, 5.32] # TODO real values!
+    elsif target == 'storage_usage'
+       peakvalues = [11.12, 22.29, 99.12, 13.23, 54.32, 17.91, 50.1] # TODO real values!
+       avgvalues  = [19.23, 19.23, 19.23, 29.12, 68.96, 43.11, 0.1] # TODO real values!
+    elsif target == 'vm_pool_usage_history'
+       peakvalues = [42, 42, 42, 42, 42, 42, 42] # TODO real values!
+       avgvalues  = [0, 0, 0, 0, 0, 0, 0] # TODO real values!
+    elsif target == 'overall_load'
+       peakvalues = [19.68, 20.08, 19.84, 17.76, 0.0, 14.78, 9.71] # TODO real values!
+       avgvalues  = [0, 1, 2, 4, 8, 16, 32] # TODO real values!
+    end
+
+    graph_object = {
+       :timepoints => dates,
+       :dataset => 
+        [
+            {
+                :name => target + "peak",
+                :values =>  peakvalues,
+                :stroke => @peak_color,
+                :strokeWidth => 1
+            },
+            {
+                :name => target + "average",
+                :values => avgvalues, 
+                :stroke => @average_color,
+                :strokeWidth => 1
+            }
+       ]
+    }
+    render :json => graph_object
+  end
+
 
   def hosts_json
     if params[:id]
@@ -318,6 +366,9 @@ class HardwareController < ApplicationController
 
     @available_vms = 1
     @used_vms = 26
+
+    @peak_color = 'red'
+    @average_color = 'blue'
   end
   def pre_json
     pre_show
