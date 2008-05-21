@@ -20,7 +20,7 @@
 # +Account+ represents a single user's account from the LDAP server.
 #
 class Account < ActiveLdap::Base
-  ldap_mapping :dn_attribute => 'cn', :prefix => 'ou=Users', :scope => :one
+  ldap_mapping :dn_attribute => 'cn', :prefix => 'cn=users,cn=account', :scope => :one
 
   @@users = nil
 
