@@ -114,10 +114,12 @@ class StorageController < ApplicationController
     begin
       @storage_pool.save!
       insert_refresh_task
-      render :json => { :object => "storage_pool", :success => true, :alert => "Storage Pool was successfully created." }
+      render :json => { :object => "storage_pool", :success => true, 
+                        :alert => "Storage Pool was successfully created." }
     rescue
       # FIXME: need to distinguish pool vs. task save errors (but should mostly be pool)
-      render :json => { :object => "storage_pool", :success => false, :errors => @storage_pool.errors  }
+      render :json => { :object => "storage_pool", :success => false, 
+                        :errors => @storage_pool.errors.localize_error_messages.to_a  }
     end
   end
 

@@ -174,7 +174,7 @@ class Vm < ActiveRecord::Base
   def validate
     resources = vm_resource_pool.max_resources_for_vm(self)
     # FIXME: what should memory min/max be?
-    errors.add("memory_allocated_in_mb", "must be at least than 256 MB") unless memory_allocated_in_mb >=256
+    errors.add("memory_allocated_in_mb", "must be at least 256 MB") unless not(memory_allocated_in_mb) or memory_allocated_in_mb >=256
     # FIXME: what should cpu min/max
     errors.add("num_vcpus_allocated", "must be between 1 and 16") unless (num_vcpus_allocated >=1 and num_vcpus_allocated <= 16)
     errors.add("memory_allocated_in_mb", "violates quota") unless not(memory_allocated) or resources[:memory].nil? or memory_allocated <= resources[:memory]

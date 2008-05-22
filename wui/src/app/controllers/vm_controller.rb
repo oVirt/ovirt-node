@@ -63,7 +63,8 @@ class VmController < ApplicationController
       end
     rescue
       # FIXME: need to distinguish vm vs. task save errors (but should mostly be vm)
-      render :json => { :object => "vm", :success => false, :errors => @vm.errors  }
+      render :json => { :object => "vm", :success => false, 
+                        :errors => @vm.errors.localize_error_messages.to_a }
     end
 
   end
