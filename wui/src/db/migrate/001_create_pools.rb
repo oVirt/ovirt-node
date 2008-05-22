@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -25,6 +25,7 @@ class CreatePools < ActiveRecord::Migration
       t.integer :parent_id
       t.integer :lft
       t.integer :rgt
+      t.integer :lock_version, :default => 0
       t.timestamps
     end
 

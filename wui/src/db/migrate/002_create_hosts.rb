@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -20,15 +20,16 @@
 class CreateHosts < ActiveRecord::Migration
   def self.up
     create_table :hosts do |t|
-      t.column :uuid,                       :string
-      t.column :hypervisor_type,            :string
-      t.column :hostname,                   :string
-      t.column :num_cpus,                   :integer
-      t.column :cpu_speed,                  :integer
-      t.column :arch,                       :string
-      t.column :memory,                     :integer
-      t.column :is_disabled,                :integer
-      t.column :hardware_pool_id,           :integer, :null => false
+      t.string  :uuid
+      t.string  :hypervisor_type
+      t.string  :hostname
+      t.integer :num_cpus
+      t.integer :cpu_speed
+      t.string  :arch
+      t.integer :memory
+      t.integer :is_disabled
+      t.integer :hardware_pool_id, :null => false
+      t.integer :lock_version,     :default => 0
     end
 
     execute "alter table hosts add constraint fk_host_pools

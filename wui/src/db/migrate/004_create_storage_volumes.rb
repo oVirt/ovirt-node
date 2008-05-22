@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -20,29 +20,31 @@
 class CreateStorageVolumes < ActiveRecord::Migration
   def self.up
     create_table :storage_pools do |t|
-      t.column :ip_addr,                    :string
-      t.column :type,                       :string
-      t.column :hardware_pool_id,           :integer, :null => false
+      t.string :ip_addr
+      t.string :type
+      t.integer :hardware_pool_id, :null => false
+      t.integer :lock_version,     :default => 0
 
       # for IscsiStoragePool
-      t.column :port,                       :integer
-      t.column :target,                     :string
+      t.integer :port
+      t.string :target
 
       # for NfsStoragePool
-      t.column :export_path,                :string
+      t.string :export_path
     end
 
     create_table :storage_volumes do |t|
-      t.column :path,                       :string
-      t.column :size,                       :integer
-      t.column :storage_pool_id,            :integer, :null => false
-      t.column :type,                       :string
+      t.string :path
+      t.integer :size
+      t.integer :storage_pool_id,  :null => false
+      t.string :type
+      t.integer :lock_version,     :default => 0
 
       # for IscsiStorageVolume
-      t.column :lun,                        :string
+      t.string :lun
 
       # for IscsiStorageVolume
-      t.column :filename,                   :string
+      t.string :filename
     end
 
     execute "alter table storage_pools add constraint fk_storage_pool_pools
