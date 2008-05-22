@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -20,21 +20,25 @@
 class CreateTasks < ActiveRecord::Migration
   def self.up
     create_table :tasks do |t|
-      t.column :user,              :string
-      t.column :type,              :string
-      t.column :action,            :string
-      t.column :state,             :string
-      t.column :args,              :string
-      t.column :created_at,        :timestamp
-      t.column :time_started,      :timestamp
-      t.column :time_ended,        :timestamp
-      t.column :message,           :text
+      t.string    :user
+      t.string    :type
+      t.string    :action
+      t.string    :state
+      t.string    :args
+      t.timestamp :created_at
+      t.timestamp :time_started
+      t.timestamp :time_ended
+      t.text      :message
+      t.integer   :lock_version, :default => 0
+
       # VmTask columns
-      t.column :vm_id,             :integer
+      t.integer   :vm_id
+
       # StorageTask columns
-      t.column :storage_pool_id,   :integer
+      t.integer   :storage_pool_id
+
       # HostTask columns
-      t.column :host_id,           :integer
+      t.integer   :host_id
     end
     execute "alter table tasks add constraint fk_tasks_vms
              foreign key (vm_id) references vms(id)"

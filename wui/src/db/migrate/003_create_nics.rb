@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -20,12 +20,13 @@
 class CreateNics < ActiveRecord::Migration
   def self.up
     create_table :nics do |t|
-      t.column :mac,         :string
-      t.column :ip_addr,     :string
-      t.column :bridge,      :string
-      t.column :usage_type,  :string
-      t.column :bandwidth,   :integer
-      t.column :host_id,     :integer, :null => false
+      t.string  :mac
+      t.string  :ip_addr
+      t.string  :bridge
+      t.string  :usage_type
+      t.integer :bandwidth
+      t.integer :host_id,       :null => false
+      t.integer :lock_version,  :default => 0
     end
 
     execute "alter table nics add constraint fk_nic_hosts

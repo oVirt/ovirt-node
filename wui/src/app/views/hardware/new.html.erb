@@ -5,7 +5,7 @@
   </div>
 </div>
 
-<form method="POST" action="<%= url_for :action => 'create' %>" id="new_hardware_pool_form" >
+<form method="POST" action="<%= url_for :action => 'create' %>" id="pool_form" >
 <div class="dialog_form">
   <%= render :partial => 'form' %>
 </div>
@@ -25,13 +25,16 @@ $(function() {
     };
 
     // bind form using 'ajaxForm' 
-    $('#new_hardware_pool_form').ajaxForm(hwpooloptions); 
+    $('#pool_form').ajaxForm(hwpooloptions); 
 });
 function afterNewHwPool(response, status){
-    jQuery(document).trigger('close.facebox');
-    // FIXME do we need to reload the tree here
-    <%= "$('##{@resource_type}_grid').flexReload()" if @resource_type %>
-    //$("#vmpools_grid").flexReload()
+    ajax_validation(response, status)
+    if (response.success) {
+      jQuery(document).trigger('close.facebox');
+      // FIXME do we need to reload the tree here
+      <%= "$('##{@resource_type}_grid').flexReload()" if @resource_type %>
+      //$("#vmpools_grid").flexReload()
+    }
 }
 </script>
 

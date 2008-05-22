@@ -25,8 +25,11 @@ $(function() {
     $('#new_permission_form').ajaxForm(permissionoptions); 
 });
 function afterNewPermission(response, status){
-    jQuery(document).trigger('close.facebox');
-    $("#users_grid").flexReload()
+    ajax_validation(response, status)
+    if (response.success) {
+      jQuery(document).trigger('close.facebox');
+      $("#users_grid").flexReload()
+    }
 }
 </script>
 

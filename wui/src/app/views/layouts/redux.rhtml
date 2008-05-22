@@ -27,7 +27,6 @@
   <%= javascript_include_tag "ui.slider.js" -%>
   <%= javascript_include_tag "jquery.cookie.js" -%>
   <%= javascript_include_tag "jquery.form.js" -%>
-  <%= yield :scripts -%>
     <script type="text/javascript">
       $(document).ready(function(){         
         $("#tree").treeview({
@@ -46,19 +45,49 @@
     var selected_array = new Array()
     var selected_index = 0
     var checkboxes
-    if (obj_form.grid_checkbox.length == undefined) {
-      checkboxes = [obj_form.grid_checkbox]
-    } else {
-      checkboxes = obj_form.grid_checkbox
-    }
-    for(var i=0; i < checkboxes.length; i++){
-    if(checkboxes[i].checked)
-      {
-        selected_array[selected_index]= checkboxes[i].value
-        selected_index++
+    if (obj_form.grid_checkbox) {
+      if (obj_form.grid_checkbox.length == undefined) {
+        checkboxes = [obj_form.grid_checkbox]
+      } else {
+        checkboxes = obj_form.grid_checkbox
+      }
+      for(var i=0; i < checkboxes.length; i++){
+      if(checkboxes[i].checked)
+        {
+          selected_array[selected_index]= checkboxes[i].value
+          selected_index++
+        }
       }
     }
     return selected_array
+  }
+  function validate_selected(selected_array, name)
+  {
+    if (selected_array.length == 0) {
+      alert("Please select at least one " + name + "  to continue")
+      return false
+    } else {
+      return true
+    }
+  }
+  function ajax_validation(response, status)
+  {
+    if (response.object) {
+      $(".fieldWithErrors").removeClass("fieldWithErrors");
+      $("div.errorExplanation").remove();
+      if (!response.success) {
+        for(i=0; i<response.errors.length; i++) { 
+          var element = $("div.form_field:has(#"+response.object + "_" + response.errors[i][0]+")");
+          if (element) {
+            element.addClass("fieldWithErrors");
+            element.append('<div class="errorExplanation">'+response.errors[i][1]+'</div>');
+          }
+        }
+      }
+      if (response.alert) {
+        alert(response.alert)
+      }
+    }
   }
         
       </script>

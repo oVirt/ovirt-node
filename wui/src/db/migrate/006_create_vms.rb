@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -20,18 +20,19 @@
 class CreateVms < ActiveRecord::Migration
   def self.up
     create_table :vms do |t|
-      t.column :uuid,                :string
-      t.column :description,         :string
-      t.column :num_vcpus_allocated, :integer
-      t.column :num_vcpus_used,      :integer
-      t.column :memory_allocated,    :integer
-      t.column :memory_used,         :integer
-      t.column :vnic_mac_addr,       :string
-      t.column :state,               :string
-      t.column :host_id,             :integer
-      t.column :vm_resource_pool_id, :integer
-      t.column :needs_restart,       :integer
-      t.column :boot_device,         :string, :null => false
+      t.string  :uuid
+      t.string  :description
+      t.integer :num_vcpus_allocated
+      t.integer :num_vcpus_used
+      t.integer :memory_allocated
+      t.integer :memory_used
+      t.string  :vnic_mac_addr
+      t.string  :state
+      t.integer :host_id
+      t.integer :vm_resource_pool_id
+      t.integer :needs_restart
+      t.string  :boot_device,    :null => false
+      t.integer :lock_version,   :default => 0
     end
     execute "alter table vms add constraint fk_vms_hosts
              foreign key (host_id) references hosts(id)"
@@ -39,12 +40,14 @@ class CreateVms < ActiveRecord::Migration
              foreign key (vm_resource_pool_id) references pools(id)"
 
     create_table :storage_volumes_vms, :id => false do |t|
-      t.column :vm_id,             :integer, :null => false
-      t.column :storage_volume_id, :integer, :null => false
+      t.integer :vm_id,             :null => false
+      t.integer :storage_volume_id, :null => false
     end
-    execute "alter table storage_volumes_vms add constraint fk_stor_vol_vms_vm_id
+    execute "alter table storage_volumes_vms add constraint
+             fk_stor_vol_vms_vm_id
              foreign key (vm_id) references vms(id)"
-    execute "alter table storage_volumes_vms add constraint fk_stor_vol_vms_stor_vol_id
+    execute "alter table storage_volumes_vms add constraint
+             fk_stor_vol_vms_stor_vol_id
              foreign key (storage_volume_id) references storage_volumes(id)"
   end
 

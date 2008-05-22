@@ -25,7 +25,7 @@ class Vm < ActiveRecord::Base
   has_many :vm_tasks, :dependent => :destroy, :order => "id DESC"
   has_and_belongs_to_many :storage_volumes
   validates_presence_of :uuid, :description, :num_vcpus_allocated,
-                        :memory_allocated, :vnic_mac_addr
+                        :memory_allocated_in_mb, :memory_allocated, :vnic_mac_addr
 
   BOOT_DEV_HD          = "hd"
   BOOT_DEV_NETWORK     = "network"
@@ -173,6 +173,10 @@ class Vm < ActiveRecord::Base
   protected
   def validate
     resources = vm_resource_pool.max_resources_for_vm(self)
+    # FIXME: what should memory min/max be?
+    errors.add("memory_allocated_in_mb", "must be at least than 256 MB") unless memory_allocated_in_mb >=256
+    # FIXME: what should cpu min/max
+    errors.add("num_vcpus_allocated", "must be between 1 and 16") unless (num_vcpus_allocated >=1 and num_vcpus_allocated <= 16)
     errors.add("memory_allocated_in_mb", "violates quota") unless not(memory_allocated) or resources[:memory].nil? or memory_allocated <= resources[:memory]
     errors.add("num_vcpus_allocated", "violates quota") unless not(num_vcpus_allocated) or resources[:cpus].nil? or num_vcpus_allocated <= resources[:cpus]
     errors.add_to_base("No available nics in quota") unless resources[:nics].nil? or resources[:nics] >= 1

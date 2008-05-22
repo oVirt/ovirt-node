@@ -17,8 +17,8 @@
     <div class="clear_row"></div>
     <div style="float:left;width:150px;" >
       <%= text_field_with_label "CPUs:", "vm", "num_vcpus_allocated",  {:style=>"width:100px;"}, {:style=>"padding-right: 50px;"} %>
-      <div class="field_title">max to create: <%=create_resources[:cpus]%> mb </div>
-      <div class="field_title">max to start: <%=start_resources[:cpus]%> mb </div>
+      <div class="field_title">max to create: <%=create_resources[:cpus]%> </div>
+      <div class="field_title">max to start: <%=start_resources[:cpus]%> </div>
     </div>
     <div style="float:left;">
       <%= text_field_with_label "Memory:", "vm", "memory_allocated_in_mb",  {:style=>"width:100px;"}, {:afterfield=>"&nbsp;mb"} %>

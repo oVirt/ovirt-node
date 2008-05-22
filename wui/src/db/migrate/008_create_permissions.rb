@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -20,9 +20,10 @@
 class CreatePermissions < ActiveRecord::Migration
   def self.up
     create_table :permissions do |t|
-      t.string :user_role
-      t.string :user
+      t.string  :user_role
+      t.string  :user
       t.integer :pool_id
+      t.integer :lock_version, :default => 0
     end
   end
 
