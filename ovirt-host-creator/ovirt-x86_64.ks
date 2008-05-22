@@ -1,5 +1,7 @@
 %include common-install.ks
 
+%include repos.ks
+
 %packages --excludedocs
 %include common-pkgs.ks
 -glibc.i686

@@ -1,5 +1,4 @@
 install
-url --url http://download.fedora.redhat.com/pub/fedora/linux/releases/9/Fedora/x86_64/os/
 
 %include common-install.ks
 
@@ -10,12 +9,7 @@ logvol /iscsi3 --name=iSCSI3 --vgname=VolGroup00 --size=64
 logvol /iscsi4 --name=iSCSI4 --vgname=VolGroup00 --size=64
 logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64
 
-repo --name=f9 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-9&arch=x86_64
-repo --name=f9-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f9&arch=x86_64
-repo --name=ovirt-management --baseurl=http://ovirt.org/repos/ovirt/9/x86_64
-# temporary
-repo --name=f9testing --includepkgs=rubygem-rubyforge,rubygem-activeldap,rubygem-hoe --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f9&arch=x86_64
-
+%include repos.ks
 
 %packages
 

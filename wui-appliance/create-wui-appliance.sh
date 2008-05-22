@@ -22,8 +22,10 @@ BRIDGENAME=failme
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME -i install_iso [-d image_dir] [-a x86_64|i686]
-  -i: location of installation ISO (required)
+Usage: $ME -i install_iso | -t install_tree [-d image_dir] [-a x86_64|i686]
+  -i: location of installation ISO (required if -t not present)
+  -t: location of installation tree (required if -i not present)
+  -k: URL of kickstart file for use with installation tree
   -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
   -a: architecture for the virtual machine (default: $ARCH_DEFAULT)
   -v: Install in developer mode (see http://ovirt.org for details)
@@ -34,24 +36,39 @@ EOF
 
 err=0 help=0
 devel=0 bundled=0
-while getopts :a:d:i:hvb c; do
+while getopts :a:d:i:t:k:hvb c; do
     case $c in
         i) ISO=$OPTARG;;
+        t) TREE=$OPTARG;;
+        k) KICKSTART=$OPTARG;;
         d) IMGDIR=$OPTARG;;
         a) ARCH=$OPTARG;;
         h) help=1;;
         v) devel=1;;
         b) bundled=1;;
-	'?') err=1; warn "invalid option: \`-$OPTARG'";;
-	:) err=1; warn "missing argument to \`-$OPTARG' option";;
+	    '?') err=1; warn "invalid option: \`-$OPTARG'";;
+	    :) err=1; warn "missing argument to \`-$OPTARG' option";;
         *) err=1; warn "internal error: \`-$OPTARG' not handled";;
     esac
 done
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 
-test -z "$ISO" && usage "no ISO file specified"
-test -r "$ISO" || usage "missing or unreadable ISO file: \`$ISO'"
+test -n "$ISO" -a -n "$TREE" && usage "Can only specify one of -i and -t"
+test -z "$ISO" -a -z "$TREE" && usage "Must specify one of -i and -t"
+
+if [ -n "$ISO" ]; then
+    test -n "$KICKSTART" && usage "-k not valid in conjunction with -i"
+    test -r "$ISO" || usage "missing or unreadable ISO file: \`$ISO'"
+    cdrom_arg="-c $ISO"
+elif [ -n "$TREE" ]; then
+    location_arg="-l $TREE"
+fi
+
+if [ -n "$KICKSTART" ]; then
+    extra_flag=-x
+    extra_arg="ksdevice=eth0 ks=$KICKSTART"
+fi
 
 test $devel = 1 -a $bundled = 1 && usage "Can only specify one of -v and -b"
 test $devel = 0 -a $bundled = 0 && usage "Must specify one of -v or -b"
@@ -169,6 +186,8 @@ IMGNAME=$NAME.img
 mkdir -p $IMGDIR
 virsh destroy $NAME > /dev/null 2>&1
 virsh undefine $NAME > /dev/null 2>&1
+
 virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
-    --accelerate -v -c "$ISO" --os-type=linux --arch=$ARCH \
-    -w network:default -w network:$BRIDGENAME
+    --accelerate -v --os-type=linux --arch=$ARCH \
+    -w network:default -w network:$BRIDGENAME \
+    $location_arg $cdrom_arg $extra_flag "$extra_arg"
