@@ -1099,9 +1099,9 @@ $.extend(SVGStackedRowChart.prototype, {
 		graph._root.text(graph._chartGroup, dims[graph.X] + dims[graph.W] / 2,
 			dims[graph.Y] + dims[graph.H] + graph.xAxis._titleOffset,
 			svgGraphing.region.percentageText, {text_anchor: 'middle'});
-		graph._drawAxis(graph._getPercentageAxis(), 'xAxis',
-			dims[graph.X], dims[graph.Y] + dims[graph.H],
-			dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
+	//	graph._drawAxis(graph._getPercentageAxis(), 'xAxis',
+	//		dims[graph.X], dims[graph.Y] + dims[graph.H],
+	//		dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
 		this._drawYAxis(graph, numVal, barWidth, barGap, dims, yScale);
 		graph._drawLegend();
 	},

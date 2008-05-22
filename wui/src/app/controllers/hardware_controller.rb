@@ -186,6 +186,44 @@ class HardwareController < ApplicationController
     render :json => graph_object
   end
 
+  def network_traffic_graph
+    target =  params[:target]
+    network_load = nil
+    if target == 'in'
+        network_load      = @network_traffic['in']
+    elsif target == 'out'
+        network_load = @network_traffic['out']
+    elsif target == 'io'
+        network_load = @network_traffic['io']
+    end
+
+    network_load_remaining = 1024 - network_load
+
+    color = 'blue'
+    color = 'red' if (network_load.to_f / 1024.to_f) > 0.75  # 3/4 is the critical boundry for now
+
+    graph_object = {
+       :timepoints => [],
+       :dataset => 
+        [
+            {
+                :name => target,
+                :values => [network_load],
+                :fill => color,
+                :stroke => 'lightgray',
+                :strokeWidth => 1
+            },
+            {
+                :name => target + "remaining",
+                :values => [network_load_remaining],
+                :fill => 'white',
+                :stroke => 'lightgray',
+                :strokeWidth => 1
+            }
+       ]
+    }
+    render :json => graph_object
+  end
 
   def hosts_json
     if params[:id]
@@ -369,6 +407,11 @@ class HardwareController < ApplicationController
 
     @peak_color = 'red'
     @average_color = 'blue'
+
+    # TODO pull real values in
+    @network_traffic   = { 'in' => 100, 'out' => 1024, 'io' => 200 }
+    @network_errors = { 'in' => 0, 'out' => 4, 'io' => 2 }
+    @network_trends = { 'in' => 'up', 'out' => 'down', 'io' => 'check' }
   end
   def pre_json
     pre_show
