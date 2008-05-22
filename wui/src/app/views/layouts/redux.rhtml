@@ -80,7 +80,9 @@
           var element = $("div.form_field:has(#"+response.object + "_" + response.errors[i][0]+")");
           if (element) {
             element.addClass("fieldWithErrors");
-            element.append('<div class="errorExplanation">'+response.errors[i][1]+'</div>');
+            for(j=0; j<response.errors[i][1].length; j++) { 
+              element.append('<div class="errorExplanation">'+response.errors[i][1][j]+'</div>');
+            }
           }
         }
       }

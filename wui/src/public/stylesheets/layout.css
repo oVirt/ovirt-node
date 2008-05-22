@@ -359,9 +359,9 @@ textarea:focus, input:focus {
 }
 
 .form_field {
-  padding-top: 2px;
-  padding-bottom: 12px;
-  padding-right: 10px;
+  margin-bottom:12px;
+  margin-top:2px;
+  padding-right:10px;
 }
 
 .clear_row {
@@ -370,10 +370,14 @@ textarea:focus, input:focus {
 }
 
 .fieldWithErrors {
-  background-color: #c00;
+  background-color:#FFB2B2;
+  border:3px solid #FFB2B2;
 }
 
-
+.errorExplanation {
+  color:#333333;
+  padding: 2px;
+}
 
 
 /* This file skins sliders */

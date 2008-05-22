@@ -283,9 +283,11 @@ class HardwareController < ApplicationController
     resource_ids = resource_ids_str.split(",").collect {|x| x.to_i} if resource_ids_str
     begin
       @pool.create_with_resources(@parent, resource_type, resource_ids)
-      render :json => { :object => "pool", :success => true, :alert => "Storage Pool was successfully created." }
+      render :json => { :object => "pool", :success => true, 
+                        :alert => "Storage Pool was successfully created." }
     rescue
-      render :json => { :object => "pool", :success => false, :errors => @pool.errors  }
+      render :json => { :object => "pool", :success => false, 
+                        :errors => @pool.errors.localize_error_messages.to_a  }
     end
 
   end
