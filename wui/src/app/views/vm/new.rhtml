@@ -37,8 +37,11 @@ $(function() {
     $('#new_vm_form').ajaxForm(vmoptions); 
 });
 function afterNewVm(response, status){
-    jQuery(document).trigger('close.facebox');
-    $("#vms_grid").flexReload()
+    ajax_validation(response, status)
+    if (response.success) {
+      jQuery(document).trigger('close.facebox');
+      $("#vms_grid").flexReload()
+    }
 }
 </script>
 

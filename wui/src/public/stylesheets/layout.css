@@ -341,7 +341,7 @@ textarea:focus, input:focus {
 }
 
 .textfield_effect {
-	padding: 2px 0 0 2px;
+    padding: 2px 0 0 2px;
     border-width: 1px;
     border-style: solid;
     border-color: #999999;
@@ -368,6 +368,11 @@ textarea:focus, input:focus {
   clear:both;
   height: 5px;
 }
+
+.fieldWithErrors {
+  background-color: #c00;
+}
+
 
 
 

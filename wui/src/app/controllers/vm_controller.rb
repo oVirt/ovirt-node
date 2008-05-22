@@ -39,40 +39,33 @@ class VmController < ApplicationController
   end
 
   def create
-    if @vm.save
+    begin
+      @vm.save!
       @task = VmTask.new({ :user    => @user,
                          :vm_id   => @vm.id,
                          :action  => VmTask::ACTION_CREATE_VM,
                          :state   => Task::STATE_QUEUED})
-      if @task.save
-        flash[:notice] = 'Vm was successfully created.'
-        start_now = params[:start_now]
-        if (start_now)
-          if @vm.get_action_list.include?(VmTask::ACTION_START_VM)
-            @task = VmTask.new({ :user    => @user,
+      @task.save!
+      start_now = params[:start_now]
+      if (start_now)
+        if @vm.get_action_list.include?(VmTask::ACTION_START_VM)
+          @task = VmTask.new({ :user    => @user,
                                :vm_id   => @vm.id,
                                :action  => VmTask::ACTION_START_VM,
                                :state   => Task::STATE_QUEUED})
-            if @task.save
-              render :json => 'Vm was successfully created. VM Start action queued.'.to_json
-              return
-            else
-              # FIXME: need to handle proper error messages w/ ajax
-              flash[:notice] = flash[:notice] + ' Error in inserting Start task.'
-            end
-          else
-            render :json => 'Vm was successfully created. VM Start action queued. Resources are not available to start VM now.'.to_json
-            return
-          end
+          @task.save!
+          render :json => { :object => "vm", :success => true, :alert => "VM was successfully created. VM Start action queued." }
+        else
+          render :json => { :object => "vm", :success => true, :alert => "VM was successfully created. Resources are not available to start VM now." }
         end
       else
-        # FIXME: task creation should be in a transaction here; if it fails, no VM created
-        flash[:notice] = 'Error in inserting task.'
+        render :json => { :object => "vm", :success => true, :alert => "VM was successfully created." }
       end
-      render :json => flash[:notice].to_json
-    else
-      render :action => 'new'
+    rescue
+      # FIXME: need to distinguish vm vs. task save errors (but should mostly be vm)
+      render :json => { :object => "vm", :success => false, :errors => @vm.errors  }
     end
+
   end
 
   def edit

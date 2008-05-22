@@ -2,7 +2,10 @@
 <ul>
     <li><a href="<%= url_for :controller => 'storage', :action => 'addstorage', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Server</a></li>
     <li><a href="<%= url_for :controller => 'storage', :action => 'new', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Create Storage Server</a></li>
-    <li><a href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'storage' %>" rel="facebox[.bolder]"><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a></li>
+    <li>
+      <a href="#" onClick="return validate_for_move();" ><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a>
+      <a id="move_link_hidden" href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'storage' %>" rel="facebox[.bolder]"  style="display:none" ></a>
+    </li>
     <li><a href="#" onClick="delete_storage()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
     <li><a href="#" onClick="remove_storage()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
   </ul>
@@ -13,21 +16,33 @@
   {
     return get_selected_checkboxes(document.storage_grid_form)
   }
+  function validate_for_move()
+  {
+    if (validate_selected(get_selected_storage(), 'storage pool')) {
+      $('#move_link_hidden').click()
+    }
+  }
   function remove_storage()
   {
-    $.post('<%= url_for :controller => "hardware", :action => "move_storage", :id => @pool %>',
-           { resource_ids: get_selected_storage().toString(), target_pool_id: <%= Pool.root.id %> },
-            function(data,status){
-              $("#storage_grid").flexReload()
-             });
+    storage = get_selected_storage()
+    if (validate_selected(storage, "storage pool")) {
+      $.post('<%= url_for :controller => "hardware", :action => "move_storage", :id => @pool %>',
+             { resource_ids: storage.toString(), target_pool_id: <%= Pool.root.id %> },
+              function(data,status){
+                $("#storage_grid").flexReload()
+               });
+    }
   }
   function delete_storage()
   {
-    $.post('<%= url_for :controller => "storage", :action => "delete_pools", :id => @pool %>',
-           { storage_pool_ids: get_selected_storage().toString() },
-            function(data,status){
-              $("#storage_grid").flexReload()
-             });
+    storage = get_selected_storage()
+    if (validate_selected(storage, "storage pool")) {
+      $.post('<%= url_for :controller => "storage", :action => "delete_pools", :id => @pool %>',
+             { storage_pool_ids: storage.toString() },
+              function(data,status){
+                $("#storage_grid").flexReload()
+               });
+    }
   }
   function storage_select(selected_rows)
   {

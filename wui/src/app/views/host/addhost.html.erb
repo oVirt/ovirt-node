@@ -27,13 +27,15 @@
   {
     var assigned_selected= get_selected_checkboxes(document.addhosts_assigned_grid_form)
     var unassigned_selected= get_selected_checkboxes(document.addhosts_unassigned_grid_form)
-    
-    $.post('<%= url_for :controller => "hardware", :action => "add_hosts", :id => @hardware_pool %>',
-           { host_ids: Array.concat(assigned_selected,unassigned_selected).toString() },
-            function(data,status){ 
-              jQuery(document).trigger('close.facebox');
-              $("#hosts_grid").flexReload()
-             });
+    var hosts = Array.concat(assigned_selected,unassigned_selected)
+    if (validate_selected(hosts, "host")) {
+      $.post('<%= url_for :controller => "hardware", :action => "add_hosts", :id => @hardware_pool %>',
+             { host_ids: hosts.toString() },
+              function(data,status){ 
+                jQuery(document).trigger('close.facebox');
+                $("#hosts_grid").flexReload()
+               });
+    }
   }
 </script>
   <div class="panel_header"></div>

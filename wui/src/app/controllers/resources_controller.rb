@@ -98,10 +98,13 @@ class ResourcesController < ApplicationController
   end
 
   def create
-    @vm_resource_pool.create_with_parent(@parent)
-    render :json => "created new VM pool #{@vm_resource_pool.name}".to_json
+    begin
+      @vm_resource_pool.create_with_parent(@parent)
+      render :json => { :object => "vm_resource_pool", :success => true, :alert => "Storage Pool was successfully created." }
+    rescue
+      render :json => { :object => "vm_resource_pool", :success => false, :errors => @vm_resource_pool.errors  }
+    end
     
-    # FIXME: need to handle proper error messages w/ ajax (catch exception from save!)
   end
 
   def edit
