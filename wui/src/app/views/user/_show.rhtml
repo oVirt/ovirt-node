@@ -12,19 +12,25 @@
   }
   function delete_users()
   {
-    $.post('<%= url_for :controller => "permission", :action => "delete", :id => pool_id %>',
-           { permission_ids: get_selected_users().toString() },
+    permissions = get_selected_users()
+    if (validate_selected(permissions, "user")) {
+      $.post('<%= url_for :controller => "permission", :action => "delete", :id => pool_id %>',
+           { permission_ids: permissions.toString() },
             function(data,status){
               $("#users_grid").flexReload()
              });
+    }
   }
   function update_users(role)
   {
-    $.post('<%= url_for :controller => "permission", :action => "update_roles" %>',
-           { permission_ids: get_selected_users().toString(), user_role: role },
-            function(data,status){
-              $("#users_grid").flexReload()
-             });
+    permissions = get_selected_users()
+    if (validate_selected(permissions, "users)) {
+      $.post('<%= url_for :controller => "permission", :action => "update_roles" %>',
+             { permission_ids: permissions.toString(), user_role: role },
+              function(data,status){
+                $("#users_grid").flexReload()
+               });
+    }
   }
 </script>
 

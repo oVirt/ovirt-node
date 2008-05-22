@@ -46,7 +46,10 @@ $(function() {
     $('#new_storage_pool_form').ajaxForm(storageoptions); 
 });
 function afterNewStoragePool(response, status){
-    jQuery(document).trigger('close.facebox');
-    $("#storage_grid").flexReload()
+    ajax_validation(response, status)
+    if (response.success) {
+      jQuery(document).trigger('close.facebox');
+      $("#storage_grid").flexReload()
+    }
 }
   </script>

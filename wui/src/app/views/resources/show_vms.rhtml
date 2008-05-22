@@ -25,11 +25,14 @@
   }
   function delete_vms()
   {
-    $.post('<%= url_for :controller => "vm", :action => "delete", :id => @pool %>',
-           { vm_ids: get_selected_vms().toString() },
-            function(data,status){
-              $("#vms_grid").flexReload()
-             });
+    vms = get_selected_vms()
+    if (validate_selected(vms, "vm")) {
+      $.post('<%= url_for :controller => "vm", :action => "delete", :id => @pool %>',
+             { vm_ids: vms.toString() },
+              function(data,status){
+                $("#vms_grid").flexReload()
+               });
+    }
   }
   function vms_select(selected_rows)
   {

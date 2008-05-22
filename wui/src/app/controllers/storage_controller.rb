@@ -96,31 +96,28 @@ class StorageController < ApplicationController
                               :storage_pool_id => @storage_pool.id,
                               :action          => StorageTask::ACTION_REFRESH_POOL,
                               :state           => Task::STATE_QUEUED})
-    @task.save
+    @task.save!
   end
 
   def refresh
-    if insert_refresh_task
+    begin
+      insert_refresh_task
       storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
       flash[:notice] = 'Storage pool refresh was successfully scheduled.'
-    else
+    rescue
       flash[:notice] = 'Error scheduling Storage pool refresh.'
     end
     redirect_to :action => 'show', :id => @storage_pool.id
   end
 
   def create
-    if @storage_pool.save
-      if insert_refresh_task
-        render :json => "created new storage pool #{@storage_pool.display_name}".to_json
-      else
-        # FIXME: need to handle proper error messages w/ ajax
-        render :action => 'new'
-      end
-    else 
-      # FIXME: need to handle proper error messages w/ ajax
-      flash[:notice] = 'Storage Pool creation failed.'
-      redirect_to :controller => @storage_pool.hardware_pool.get_controller, :action => 'show', :id => @storage_pool.hardware_pool_id
+    begin
+      @storage_pool.save!
+      insert_refresh_task
+      render :json => { :object => "storage_pool", :success => true, :alert => "Storage Pool was successfully created." }
+    rescue
+      # FIXME: need to distinguish pool vs. task save errors (but should mostly be pool)
+      render :json => { :object => "storage_pool", :success => false, :errors => @storage_pool.errors  }
     end
   end
 
@@ -128,6 +125,7 @@ class StorageController < ApplicationController
   end
 
   def update
+    # FIXME: handle save! properly, in conjunction w/ update_attributes, json, etc
     if @storage_pool.update_attributes(params[:storage_pool])
       if insert_refresh_task
         storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)

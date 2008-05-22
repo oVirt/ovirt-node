@@ -26,6 +26,8 @@ class StoragePool < ActiveRecord::Base
     end
   end
 
+  validates_presence_of :ip_addr, :hardware_pool_id
+
   ISCSI = "iSCSI"
   NFS   = "NFS"
   STORAGE_TYPES = { ISCSI => "Iscsi",

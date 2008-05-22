@@ -24,6 +24,8 @@ class Pool < ActiveRecord::Base
   # (needed for view code 'create' form)
   attr_accessor :tmp_parent
 
+  validates_presence_of :name
+
   # overloading this method such that we can use permissions.admins to get all the admins for an object
   has_many :permissions, :dependent => :destroy, :order => "id ASC" do
     def super_admins
