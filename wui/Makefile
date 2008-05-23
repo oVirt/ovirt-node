@@ -57,4 +57,3 @@ rpms: tar
 # convience method to simulate make install, not for production use
 install: rpms
 	rpm -Uvh rpm-build/ovirt-wui-$(VERSION)-$(RELEASE)$(DIST).$(ARCH).rpm --force
-	/sbin/service ovirt-wui restart	
