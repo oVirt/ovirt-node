@@ -101,7 +101,7 @@ class ResourcesController < ApplicationController
     begin
       @vm_resource_pool.create_with_parent(@parent)
       render :json => { :object => "vm_resource_pool", :success => true, 
-                        :alert => "Storage Pool was successfully created." }
+                        :alert => "Virtual Machine Pool was successfully created." }
     rescue
       render :json => { :object => "vm_resource_pool", :success => false, 
                         :errors => @vm_resource_pool.errors.localize_error_messages.to_a}

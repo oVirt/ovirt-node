@@ -16,16 +16,12 @@
   <div class="clear_row"></div>
   <div class="clear_row"></div>
 </div>
-<form method="POST" action="<%= url_for :action => 'create' %>" id="new_storage_pool_form" >
+<form method="POST" action="<%= url_for :action => 'create' %>" id="storage_pool_form" >
 <div class="dialog_form">
   <div id="new_storage_pool"/>
 
 </div>
-<div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
-  <div><input type="image" name="submitButton" value="Submit2" src="<%= image_path "btn_addstorage.png"%>" alt="Add Storage Server" />
-    <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%=image_tag "btn_cancel.png", :title=>"Cancel" %></a>
-  </div>
-</div>
+<%= popup_footer("$('#storage_pool_form').submit()", "New Storage Pool") %>
 </form>
   <script type="text/javascript">
   function load_details()
@@ -43,7 +39,7 @@ $(function() {
     };
 
     // bind form using 'ajaxForm' 
-    $('#new_storage_pool_form').ajaxForm(storageoptions); 
+    $('#storage_pool_form').ajaxForm(storageoptions); 
 });
 function afterNewStoragePool(response, status){
     ajax_validation(response, status)
