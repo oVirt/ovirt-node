@@ -15,7 +15,7 @@ LDAP_CFG=${OVIRT_DIR}/config/ldap.yml
 
 OVIRT_SVCS="ovirt-host-browser ovirt-host-status \
             ovirt-taskomatic ovirt-host-keyadd ovirt-mongrel-rails"
-ENABLE_SVCS="ntpd httpd postgresql"
+ENABLE_SVCS="ntpd httpd postgresql libvirtd"
 
 usage() {
     echo "usage: $0 [-p password]"
@@ -177,9 +177,11 @@ if [ -f /etc/httpd/conf.d/ipa.conf ]; then
     service ipa_webgui restart
 fi
 
-for svc in $OVIRT_SVCS ; do
+for svc in $OVIRT_SVCS $ENABLE_SVCS; do
     service $svc start
 done
 
 exit 0
+
+
 
