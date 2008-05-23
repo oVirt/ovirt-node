@@ -13,9 +13,9 @@ STEP_FILE=/etc/ntp/step-tickers
 SASL_FILE=/etc/sasl2/libvirt.conf
 LDAP_CFG=${OVIRT_DIR}/config/ldap.yml
 
-DISABLE_SVCS="libvirtd" 
-ENABLE_SVCS="ntpd httpd postgresql ovirt-host-browser ovirt-host-status \
-             ovirt-taskomatic ovirt-host-keyadd ovirt-mongrel-rails"
+OVIRT_SVCS="ovirt-host-browser ovirt-host-status \
+            ovirt-taskomatic ovirt-host-keyadd ovirt-mongrel-rails"
+ENABLE_SVCS="ntpd httpd postgresql"
 
 usage() {
     echo "usage: $0 [-p password]"
@@ -83,12 +83,7 @@ for i ; do
 done
 
 {
-for svc in $DISABLE_SVCS ; do
-    chkconfig $svc off
-    service $svc off
-done
-
-for svc in $ENABLE_SVCS ; do
+for svc in $ENABLE_SVCS $OVIRT_SVCS; do
     chkconfig $svc on
 done
 } > /dev/null 2>&1
@@ -181,6 +176,10 @@ if [ -f /etc/httpd/conf.d/ipa.conf ]; then
     service httpd restart
     service ipa_webgui restart
 fi
+
+for svc in $OVIRT_SVCS ; do
+    service $svc start
+done
 
 exit 0
 
