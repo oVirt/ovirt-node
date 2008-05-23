@@ -19,7 +19,18 @@ class GraphController < ApplicationController
           }
         ]
       } 
-    else 
+    elsif params[:type] == "detail"
+      graph_object = {
+        :timepoints => ["April 1", "April 2","April 3","April 4","April 5","April 6","April 7"],
+        :dataset => [{
+            :name =>'Peak', 
+            :values => [75.97, 71.80, 68.16, 56.64,95.97, 81.80, 28.16], 
+            :fill => 'lightblue', 
+            :stroke => 'blue', 
+            :strokeWidth => 3
+          }]
+      }
+    else      
       graph_object = {
         :timepoints => ["April 1", "April 2","April 3","April 4"],
         :dataset => [{

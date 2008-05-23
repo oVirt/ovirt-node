@@ -251,7 +251,8 @@ textarea:focus, input:focus {
   width:48%;
   float: right;
    border-left: 1px solid #CCCCCC;
-   background: #F0F0F0;
+   /*background: #F0F0F0;*/
+   height: 148px;
  }
  
  .selection_right_title {

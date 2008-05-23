@@ -144,7 +144,7 @@ class HardwareController < ApplicationController
     dates = [ Date::ABBR_MONTHNAMES[today.month] + ' ' + today.day.to_s ]
     1.upto(6){ |x|  # TODO get # of days from wui
        dte = today - x
-       dates.push ( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
+       dates.push( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
     }
     dates.reverse! # want in ascending order
 
