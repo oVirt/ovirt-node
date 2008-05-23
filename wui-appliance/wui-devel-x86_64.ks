@@ -177,7 +177,7 @@ start() {
         -s priv.ovirt.org \
         -W _ovirt._tcp,management.priv.ovirt.org,80 \
         -W _ipa._tcp,management.priv.ovirt.org,80 \
-        -W _ldap._tcp,managment.priv.ovirt.org,389 \
+        -W _ldap._tcp,management.priv.ovirt.org,389 \
         -W _collectd._tcp,management.priv.ovirt.org,25826 \
         --enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
         -O option:router,192.168.50.1 -O option:ntp-server,192.168.50.2 \
