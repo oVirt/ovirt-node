@@ -11,10 +11,11 @@ PW_FILE=${OVIRT_CFG}/db/dbaccess
 STEP_TICKER=0.fedora.pool.ntp.org
 STEP_FILE=/etc/ntp/step-tickers
 SASL_FILE=/etc/sasl2/libvirt.conf
+LDAP_CFG=${OVIRT_DIR}/config/ldap.yml
 
-DISABLE_SVCS="libvirtd" 
-ENABLE_SVCS="ntpd httpd postgresql ovirt-host-browser ovirt-host-status \
-             ovirt-taskomatic ovirt-host-keyadd ovirt-mongrel-rails"
+OVIRT_SVCS="ovirt-host-browser ovirt-host-status \
+            ovirt-taskomatic ovirt-host-keyadd ovirt-mongrel-rails"
+ENABLE_SVCS="ntpd httpd postgresql libvirtd"
 
 usage() {
     echo "usage: $0 [-p password]"
@@ -22,6 +23,52 @@ usage() {
     echo "       a random password will be generated"
     exit 1
 } >&2
+
+find_srv() {
+    local dnsreply
+    
+    # This checks to see if we're running on a bundled/developer install.  
+    # If so, the server queried is localhost instead of using resolv.conf.  
+    if [ "$(hostname)" == "management.priv.ovirt.org" ]; then
+        local server_flag=@localhost
+    fi
+
+    dnsreply=$(dig $server_flag +short -t srv _$1._$2.$(dnsdomainname))
+    if [ $? -eq 0 ]; then
+        set _ $dnsreply; shift
+        SRV_HOST=$4; SRV_PORT=$3
+    else
+        SRV_HOST=; SRV_PORT=
+    fi
+}
+
+find_ldap_base() {
+    local found=0
+    
+    domain=$(echo $SRV_HOST | cut -d. -f 2-)
+    while [ -n "$domain" ]; do
+        base=$(echo $domain | awk -F. '{ for(i=1; i <= NF; i++) { printf("dc=%s", $(i)); if(i<NF) printf(","); } }')
+        ldapsearch -h $SRV_HOST -p $SRV_PORT -x \
+            -b "cn=users,cn=accounts,$base" -LLL uid > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            found=1
+            break
+        fi
+        
+        if ! echo $domain | grep "\." > /dev/null 2>&1 ; then
+            domain=""
+        else
+            domain=$(echo $domain | cut -d. -f 2-)
+        fi
+    done
+    
+    if [ $found -eq 1 ]; then
+        echo $base
+        return 0
+    else
+        return 1
+    fi   
+}
 
 PASSWD=
 for i ; do
@@ -36,20 +83,32 @@ for i ; do
 done
 
 {
-for svc in $DISABLE_SVCS ; do
-    chkconfig $svc off
-    service $svc off
-done
-
-for svc in $ENABLE_SVCS ; do
+for svc in $ENABLE_SVCS $OVIRT_SVCS; do
     chkconfig $svc on
 done
 } > /dev/null 2>&1
 
+# grab ldap server from DNS
+find_srv ldap tcp
+if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+    SRV_HOST=${SRV_HOST%.}
+    srv_base=$(find_ldap_base)
+    [ $? != 0 ] && echo "Failed to determine base for ldap" && exit 1
+    
+    sed -i -e "s/host: .*/host: $SRV_HOST/g" \
+        -e "s/port: .*/port: $SRV_PORT/g" \
+        -e "s/base: .*/base: $srv_base/g" \
+        $LDAP_CFG
+else
+    # FIXME: Eventually this script should prompt for things that can't
+    # be found in DNS SRV records.
+    echo "Failed to get ldap host/port" && exit 1
+fi
+
 # setup an NTP step-ticker
 if [ -f $STEP_FILE ]; then
     if ! grep "^$${STEP_TICKER}$" $STEP_FILE > /dev/null 2>&1 ; then
-    echo $STEP_TICKER >> $STEP_FILE
+        echo $STEP_TICKER >> $STEP_FILE
     fi
 fi
 
@@ -118,5 +177,11 @@ if [ -f /etc/httpd/conf.d/ipa.conf ]; then
     service ipa_webgui restart
 fi
 
+for svc in $OVIRT_SVCS $ENABLE_SVCS; do
+    service $svc start
+done
+
 exit 0
+
+
 
