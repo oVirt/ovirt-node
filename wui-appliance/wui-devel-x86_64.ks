@@ -110,7 +110,7 @@ sed -e "s,@cron_file@,$cron_file," \
    > $first_run_file << \EOF
 #!/bin/bash
 #
-# ovirt-wui-dev-first-run First run configuration for Ovirt WUI Dev appliance
+# ovirt-wui-dev-first-run First run configuration for oVirt WUI Dev appliance
 #
 # chkconfig: 3 95 01
 # description: ovirt dev wui appliance first run configuration
@@ -160,7 +160,7 @@ chkconfig ovirt-wui-dev-first-run on
 cat > /etc/init.d/ovirt-wui-dev << \EOF
 #!/bin/bash
 #
-# ovirt-wui-dev Ovirt WUI Dev appliance service
+# ovirt-wui-dev oVirt WUI Dev appliance service
 #
 # chkconfig: 3 60 40 
 # description: ovirt dev wui appliance service
