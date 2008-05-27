@@ -127,14 +127,21 @@ class ResourcesController < ApplicationController
   def delete
     vm_pool_ids_str = params[:vm_pool_ids]
     vm_pool_ids = vm_pool_ids_str.split(",").collect {|x| x.to_i}
-    
-    VmResourcePool.transaction do
-      pools = VmResourcePool.find(:all, :conditions => "id in (#{vm_pool_ids.join(', ')})")
-      pools.each do |pool|
-        pool.destroy
+    vm_pool_names = []
+    begin
+      VmResourcePool.transaction do
+        pools = VmResourcePool.find(:all, :conditions => "id in (#{vm_pool_ids.join(', ')})")
+        pools.each do |pool|
+          vm_pool_names << pool.name
+          pool.destroy
+        end
       end
+      render :json => { :object => "vm_resource_pool", :success => true, 
+                        :alert => "Virtual Machine Pools #{vm_pool_names.join(', ')} were successfully deleted." }
+    rescue
+      render :json => { :object => "vm_resource_pool", :success => false, 
+                        :alert => "Error in deleting Virtual Machine Pools."}
     end
-    render :text => "deleted vm pools (#{vm_pool_ids.join(', ')})"
   end
 
   def destroy

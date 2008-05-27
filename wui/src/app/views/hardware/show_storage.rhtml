@@ -30,7 +30,10 @@
              { resource_ids: storage.toString(), target_pool_id: <%= Pool.root.id %> },
               function(data,status){
                 $("#storage_grid").flexReload()
-               });
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
     }
   }
   function delete_storage()
@@ -41,7 +44,10 @@
              { storage_pool_ids: storage.toString() },
               function(data,status){
                 $("#storage_grid").flexReload()
-               });
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
     }
   }
   function storage_select(selected_rows)

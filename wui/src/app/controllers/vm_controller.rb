@@ -102,13 +102,18 @@ class VmController < ApplicationController
     vm_ids_str = params[:vm_ids]
     vm_ids = vm_ids_str.split(",").collect {|x| x.to_i}
     
-    Vm.transaction do
-      vms = Vm.find(:all, :conditions => "id in (#{vm_ids.join(', ')})")
-      vms.each do |vm|
-        vm.destroy
-      end
+    begin
+      Vm.transaction do
+        vms = Vm.find(:all, :conditions => "id in (#{vm_ids.join(', ')})")
+        vms.each do |vm|
+          vm.destroy
+        end
+      end      render :json => { :object => "vm", :success => true, 
+        :alert => "Virtual Machines were successfully deleted." }
+    rescue
+      render :json => { :object => "vm", :success => false, 
+        :alert => "Error deleting virtual machines." }
     end
-    render :text => "deleted vms  (#{vm_ids.join(', ')})"
   end
 
   def destroy

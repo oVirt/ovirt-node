@@ -155,14 +155,20 @@ class StorageController < ApplicationController
   def delete_pools
     storage_pool_ids_str = params[:storage_pool_ids]
     storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
-    
-    StoragePool.transaction do
-      storage = StoragePool.find(:all, :conditions => "id in (#{storage_pool_ids.join(', ')})")
-      storage.each do |storage_pool|
-        storage_pool.destroy
+
+    begin
+      StoragePool.transaction do
+        storage = StoragePool.find(:all, :conditions => "id in (#{storage_pool_ids.join(', ')})")
+        storage.each do |storage_pool|
+          storage_pool.destroy
+        end
       end
+      render :json => { :object => "storage_pool", :success => true, 
+        :alert => "Storage Pools were successfully deleted." }
+    rescue
+      render :json => { :object => "storage_pool", :success => true, 
+        :alert => "Error deleting storage pools." }
     end
-    render :text => "deleted storage (#{storage_pool_ids.join(', ')})"
   end
 
   def vm_action
