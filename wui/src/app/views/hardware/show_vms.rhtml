@@ -17,7 +17,10 @@
              { vm_pool_ids: vm_pools.toString() },
               function(data,status){
                 $("#vmpools_grid").flexReload()
-               });
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
     }
   }
   function vmpools_select(selected_rows)

@@ -19,7 +19,10 @@
             function(data,status){
               $("#<%= @resource_type %>_grid").flexReload()
 	      jQuery(document).trigger('close.facebox');
-             });
+	      if (data.alert) {
+	        alert(data.alert);
+              }
+             }, 'json');
   }
 $('#move_to_new_pool').click(function(){
 		$('#window').fadeOut('fast'); 

@@ -34,7 +34,10 @@
               function(data,status){ 
                 jQuery(document).trigger('close.facebox');
                 $("#hosts_grid").flexReload()
-               });
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
     }
   }
 </script>

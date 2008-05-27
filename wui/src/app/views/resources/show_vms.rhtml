@@ -31,7 +31,10 @@
              { vm_ids: vms.toString() },
               function(data,status){
                 $("#vms_grid").flexReload()
-               });
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
     }
   }
   function vm_actions(action)

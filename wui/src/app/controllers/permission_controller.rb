@@ -74,15 +74,21 @@ class PermissionController < ApplicationController
     role = params[:user_role]
     permission_ids_str = params[:permission_ids]
     permission_ids = permission_ids_str.split(",").collect {|x| x.to_i}
-    
-    Permission.transaction do
-      permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
-      permissions.each do |permission|
-        permission.user_role = role
-        permission.save!
+
+    begin
+      Permission.transaction do
+        permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
+        permissions.each do |permission|
+          permission.user_role = role
+          permission.save!
+        end
       end
+      render :json => { :object => "permission", :success => true, 
+        :alert => "User roles were successfully updated." }
+    rescue 
+      render :json => { :object => "permission", :success => false, 
+        :alert => "Error updating user roles: #{$!}" }
     end
-    render :text => "deleted user permissions (#{permission_ids.join(', ')})"
   end
 
   #FIXME: we need permissions checks. user must have permission. We also need to fail
@@ -90,14 +96,20 @@ class PermissionController < ApplicationController
   def delete
     permission_ids_str = params[:permission_ids]
     permission_ids = permission_ids_str.split(",").collect {|x| x.to_i}
-    
-    Permission.transaction do
-      permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
-      permissions.each do |permission|
-        permission.destroy
+
+    begin
+      Permission.transaction do
+        permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
+        permissions.each do |permission|
+          permission.destroy
+        end
       end
+      render :json => { :object => "permission", :success => true, 
+        :alert => "User roles were successfully deleted." }
+    rescue
+      render :json => { :object => "permission", :success => false, 
+        :alert => "Error deleting user roles." }
     end
-    render :text => "deleted user permissions (#{permission_ids.join(', ')})"
   end
 
   def destroy

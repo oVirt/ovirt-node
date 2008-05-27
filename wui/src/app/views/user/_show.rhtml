@@ -18,18 +18,24 @@
            { permission_ids: permissions.toString() },
             function(data,status){
               $("#users_grid").flexReload()
-             });
+		if (data.alert) {
+		  alert(data.alert);
+                }
+             }, 'json');
     }
   }
   function update_users(role)
   {
     permissions = get_selected_users()
-    if (validate_selected(permissions, "users)) {
+    if (validate_selected(permissions, "users")) {
       $.post('<%= url_for :controller => "permission", :action => "update_roles" %>',
              { permission_ids: permissions.toString(), user_role: role },
               function(data,status){
                 $("#users_grid").flexReload()
-               });
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
     }
   }
 </script>

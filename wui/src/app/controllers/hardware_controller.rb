@@ -310,11 +310,17 @@ class HardwareController < ApplicationController
   def add_hosts
     host_ids_str = params[:host_ids]
     host_ids = host_ids_str.split(",").collect {|x| x.to_i}
-    
-    @pool.transaction do
-      @pool.move_hosts(host_ids, @pool.id)
+
+    begin
+      @pool.transaction do
+        @pool.move_hosts(host_ids, @pool.id)
+      end
+      render :json => { :object => "host", :success => true, 
+        :alert => "Hosts were successfully added to this Hardware pool." }
+    rescue
+      render :json => { :object => "host", :success => false, 
+        :alert => "Error adding Hosts to this Hardware pool." }
     end
-    render :text => "added hosts (#{host_ids.join(', ')})"
   end
 
   #FIXME: we need permissions checks. user must have permission on src pool
@@ -325,10 +331,16 @@ class HardwareController < ApplicationController
     host_ids_str = params[:resource_ids]
     host_ids = host_ids_str.split(",").collect {|x| x.to_i}
     
-    @pool.transaction do
-      @pool.move_hosts(host_ids, target_pool_id)
+    begin
+      @pool.transaction do
+        @pool.move_hosts(host_ids, target_pool_id)
+      end
+      render :json => { :object => "host", :success => true, 
+        :alert => "Hosts were successfully moved." }
+    rescue
+      render :json => { :object => "host", :success => false, 
+        :alert => "Error moving hosts." }
     end
-    render :text => "added hosts (#{host_ids.join(', ')})"
   end
 
   #FIXME: we need permissions checks. user must have permission on src pool
@@ -338,10 +350,16 @@ class HardwareController < ApplicationController
     storage_pool_ids_str = params[:storage_pool_ids]
     storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
     
-    @pool.transaction do
-      @pool.move_storage(storage_pool_ids, @pool.id)
+    begin
+      @pool.transaction do
+        @pool.move_storage(storage_pool_ids, @pool.id)
+      end
+      render :json => { :object => "storage_pool", :success => true, 
+        :alert => "Storage Pools were successfully added to this Hardware pool." }
+    rescue
+      render :json => { :object => "storage_pool", :success => false, 
+        :alert => "Error adding storage pools to this Hardware pool." }
     end
-    render :text => "added storage (#{storage_pool_ids.join(', ')})"
   end
 
   #FIXME: we need permissions checks. user must have permission on src pool
@@ -351,11 +369,17 @@ class HardwareController < ApplicationController
     target_pool_id = params[:target_pool_id]
     storage_pool_ids_str = params[:resource_ids]
     storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
-    
-    @pool.transaction do
-      @pool.move_storage(storage_pool_ids, target_pool_id)
+
+    begin
+      @pool.transaction do
+        @pool.move_storage(storage_pool_ids, target_pool_id)
+      end
+      render :json => { :object => "storage_pool", :success => true, 
+        :alert => "Storage Pools were successfully moved." }
+    rescue
+      render :json => { :object => "storage_pool", :success => false, 
+        :alert => "Error moving storage pools." }
     end
-    render :text => "added storage (#{storage_pool_ids.join(', ')})"
   end
 
   def destroy
