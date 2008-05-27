@@ -25,7 +25,7 @@ cp /etc/issue /etc/issue.net
 cat > /etc/init.d/ovirt-wui-first-run << \EOF
 #!/bin/bash
 #
-# ovirt-wui-first-run First run configuration for Ovirt WUI appliance
+# ovirt-wui-first-run First run configuration for oVirt WUI appliance
 #
 # chkconfig: 3 96 01
 # description: ovirt wui appliance first run configuration
@@ -65,7 +65,7 @@ chkconfig ovirt-wui-first-run on
 cat > /etc/yum.repos.d/ovirt-management.repo << \EOF
 [ovirt-management]
 name=ovirt-management
-baseurl=http://ovirt.et.redhat.com/repos/ovirt-management-repo/$basearch/
+baseurl=http://ovirt.org/repos/ovirt/9/$basearch/
 enabled=1
 gpgcheck=0
 EOF
