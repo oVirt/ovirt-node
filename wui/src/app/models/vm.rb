@@ -170,6 +170,16 @@ class Vm < ActiveRecord::Base
     vm_tasks
   end
 
+  def queue_action(user, action)
+    return false unless get_action_list.include?(action)
+    task = VmTask.new({ :user    => user,
+                        :vm_id   => id,
+                         :action  => action,
+                        :state   => Task::STATE_QUEUED})
+    task.save!
+    return true
+  end
+
   protected
   def validate
     resources = vm_resource_pool.max_resources_for_vm(self)

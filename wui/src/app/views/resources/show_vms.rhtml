@@ -5,7 +5,7 @@
        <%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Actions &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %>
        <ul>
         <% @actions.each_index { |index| %>
-            <li onChange="vm_actions('<%=@actions[index][1]%>')"
+            <li onClick="vm_actions('<%=@actions[index][1]%>')"
             <% if (index == @actions.length - 1) or @actions[index].length == 3 %>
                 style="border-bottom: 1px solid black;"
             <% end %>
@@ -27,11 +27,21 @@
   {
     vms = get_selected_vms()
     if (validate_selected(vms, "vm")) {
-      $.post('<%= url_for :controller => "vm", :action => "delete", :id => @pool %>',
+      $.post('<%= url_for :controller => "vm", :action => "delete", :id => @vm_resource_pool %>',
              { vm_ids: vms.toString() },
               function(data,status){
                 $("#vms_grid").flexReload()
                });
+    }
+  }
+  function vm_actions(action)
+  {
+    vms = get_selected_vms()
+    if (validate_selected(vms, "vm")) {
+      jQuery.facebox('<div id="vm_action_results">')
+      $('#vm_action_results').load('<%= url_for :controller => "resources", 
+             :action => "vm_actions", :id => @vm_resource_pool %>',
+             { vm_ids: vms.toString(), vm_action: action });
     }
   }
   function vms_select(selected_rows)

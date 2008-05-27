@@ -24,6 +24,7 @@ class ResourcesController < ApplicationController
   end
 
   before_filter :pre_json, :only => [:vms_json, :users_json]
+  before_filter :pre_vm_actions, :only => [:vm_actions]
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
@@ -69,12 +70,12 @@ class ResourcesController < ApplicationController
   # resource's vms list page
   def show_vms
     show
-    @actions = [["Start", VmTask::ACTION_START_VM],
-                ["Shutdown", VmTask::ACTION_SHUTDOWN_VM, "break"],
-                ["Suspend", VmTask::ACTION_SUSPEND_VM],
-                ["Resume", VmTask::ACTION_RESUME_VM],
-                ["Save", VmTask::ACTION_SAVE_VM],
-                ["Restore", VmTask::ACTION_RESTORE_VM]]
+    @actions = [VmTask.label_and_action(VmTask::ACTION_START_VM),
+                (VmTask.label_and_action(VmTask::ACTION_SHUTDOWN_VM) << "break"),
+                VmTask.label_and_action(VmTask::ACTION_SUSPEND_VM),
+                VmTask.label_and_action(VmTask::ACTION_RESUME_VM),
+                VmTask.label_and_action(VmTask::ACTION_SAVE_VM),
+                VmTask.label_and_action(VmTask::ACTION_RESTORE_VM)]
   end
 
   # resource's users list page
@@ -143,45 +144,54 @@ class ResourcesController < ApplicationController
   end
 
   def vm_actions
-    @vm_resource_pool = VmResourcePool.find(params[:vm_resource_pool_id])
-    set_perms(@vm_resource_pool)
-    unless @can_modify
-      flash[:notice] = 'You do not have permission to perform VM actions for this VM Resource Pool '
-      redirect_to :action => 'show', :id => @vm_resource_pool
-    else
-      params[:vm_actions].each do |name, param|
-        print "param: ", name, ", ", param, "\n"
-      end
-      if params[:vm_actions][:vms]
-        vms = params[:vm_actions][:vms]
-        if params[:vm_actions][VmTask::ACTION_START_VM]
-          flash[:notice] = "Starting Machines #{vms.join(',')}."
-        elsif params[:vm_actions][VmTask::ACTION_SHUTDOWN_VM]
-          flash[:notice] = "Stopping Machines #{vms.join(',')}."
-        elsif params[:vm_actions][:other_actions]
-          case params[:vm_actions][:other_actions]
-          when VmTask::ACTION_SHUTDOWN_VM then flash[:notice] = "Stopping Machines #{vms.join(',')}."
-          when VmTask::ACTION_START_VM then flash[:notice] = "Starting Machines #{vms.join(',')}."
-          when VmTask::ACTION_SUSPEND_VM then flash[:notice] = "Suspending Machines #{vms.join(',')}."
-          when VmTask::ACTION_RESUME_VM then flash[:notice] = "Resuming Machines #{vms.join(',')}."
-          when VmTask::ACTION_SAVE_VM then flash[:notice] = "Saving Machines #{vms.join(',')}."
-          when VmTask::ACTION_RESTORE_VM then flash[:notice] = "Restoring Machines #{vms.join(',')}."
-          when "destroy" then flash[:notice] = "Destroying Machines #{vms.join(',')}."
+    @action = params[:vm_action]
+    @action_label = VmTask.action_label(@action)
+    vms_str = params[:vm_ids]
+    @vms = vms_str.split(",").collect {|x| Vm.find(x.to_i)}
+    @success_list = []
+    @failure_list = []
+    begin
+      @vm_resource_pool.transaction do 
+        @vms.each do |vm|
+          if vm.queue_action(@user, @action)
+            @success_list << vm
+            print vm.description, vm.id, "\n"
           else
-            flash[:notice] = 'No Action Chosen.'
+            @failure_list << vm
           end
-        else
-          flash[:notice] = 'No Action Chosen.'
         end
-      else
-        flash[:notice] = 'No Virtual Machines Selected.'
       end
-      if params[:vm_actions][:vm_resource_pool_id]
-        redirect_to :action => 'show', :id => params[:vm_actions][:vm_resource_pool_id]
-      else
-        redirect_to :action => 'list'
-      end
+    rescue
+      flash[:errmsg] = 'Error queueing VM actions.'
+      @success_list = []
+      @failure_list = []
     end
+    render :layout => 'confirmation'    
+        
+    #if params[:vm_actions][:vms]
+    #  vms = params[:vm_actions][:vms]
+    #  if params[:vm_actions][VmTask::ACTION_START_VM]
+    #    flash[:notice] = "Starting Machines #{vms.join(',')}."
+    #  elsif params[:vm_actions][VmTask::ACTION_SHUTDOWN_VM]
+    #    flash[:notice] = "Stopping Machines #{vms.join(',')}."
+    #  elsif params[:vm_actions][:other_actions]
+    #    case params[:vm_actions][:other_actions]
+    #    when VmTask::ACTION_SHUTDOWN_VM then flash[:notice] = "Stopping Machines #{vms.join(',')}."
+    #    when VmTask::ACTION_START_VM then flash[:notice] = "Starting Machines #{vms.join(',')}."
+    #    when VmTask::ACTION_SUSPEND_VM then flash[:notice] = "Suspending Machines #{vms.join(',')}."
+    #    when VmTask::ACTION_RESUME_VM then flash[:notice] = "Resuming Machines #{vms.join(',')}."
+    #    when VmTask::ACTION_SAVE_VM then flash[:notice] = "Saving Machines #{vms.join(',')}."
+    #    when VmTask::ACTION_RESTORE_VM then flash[:notice] = "Restoring Machines #{vms.join(',')}."
+    #    when "destroy" then flash[:notice] = "Destroying Machines #{vms.join(',')}."
+    #    else
+    #      flash[:notice] = 'No Action Chosen.'
+    #    end
+    #  else
+    #    flash[:notice] = 'No Action Chosen.'
+    #  end
+    #else
+    #  flash[:notice] = 'No Virtual Machines Selected.'
+    #end
   end
 
   protected
@@ -214,6 +224,13 @@ class ResourcesController < ApplicationController
   def pre_json
     pre_show
     show
+  end
+  def pre_vm_actions
+    @vm_resource_pool = VmResourcePool.find(params[:id])
+    @parent = @vm_resource_pool.parent
+    @perm_obj = @vm_resource_pool
+    @redir_obj = @vm_resource_pool
+    authorize_user
   end
 
 end

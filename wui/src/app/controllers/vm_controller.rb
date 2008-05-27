@@ -138,20 +138,15 @@ class VmController < ApplicationController
   end
 
   def vm_action
-    if @vm.get_action_list.include?(params[:vm_action])
-      @task = VmTask.new({ :user    => get_login_user,
-                         :vm_id   => params[:id],
-                         :action  => params[:vm_action],
-                         :state   => Task::STATE_QUEUED})
-      if @task.save
-        flash[:notice] = "#{params[:vm_action]} was successfully queued."
+    begin
+      if @vm.queue_action(get_login_user, params[:vm_action])
+        render :json => { :object => "vm", :success => true, :alert => "#{vm_action} was successfully queued." }
       else
-        flash[:notice] = "Error in inserting task for #{params[:vm_action]}."
+        render :json => { :object => "vm", :success => false, :alert => "#{vm_action} is an invalid action." }
       end
-    else
-      flash[:notice] = "#{params[:vm_action]} is an invalid action."
+    rescue
+      render :json => { :object => "vm", :success => false, :alert => "Error in queueing #{vm_action}." }
     end
-    redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
   end
 
   def cancel_queued_tasks
