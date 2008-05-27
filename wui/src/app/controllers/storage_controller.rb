@@ -112,8 +112,10 @@ class StorageController < ApplicationController
 
   def create
     begin
-      @storage_pool.save!
-      insert_refresh_task
+      StoragePool.transaction do
+        @storage_pool.save!
+        insert_refresh_task
+      end
       render :json => { :object => "storage_pool", :success => true, 
                         :alert => "Storage Pool was successfully created." }
     rescue
@@ -128,14 +130,16 @@ class StorageController < ApplicationController
 
   def update
     # FIXME: handle save! properly, in conjunction w/ update_attributes, json, etc
-    if @storage_pool.update_attributes(params[:storage_pool])
-      if insert_refresh_task
-        storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
-        flash[:notice] = '<a class="show" href="%s">%s</a> was successfully updated.' % [ storage_url ,@storage_pool.ip_addr]
-        redirect_to :action => 'show', :id => @storage_pool
-      else
-        render :action => 'edit'
-      end
+    StoragePool.transaction do
+      @storage_pool.update_attributes!(params[:storage_pool])
+      insert_refresh_task
+      transaction_succeeded = true
+    end
+       
+    if transaction_succeeded 
+      storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
+      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully updated.' % [ storage_url ,@storage_pool.ip_addr]
+      redirect_to :action => 'show', :id => @storage_pool
     else
       render :action => 'edit'
     end

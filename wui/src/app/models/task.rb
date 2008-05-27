@@ -31,7 +31,7 @@ class Task < ActiveRecord::Base
 
   def cancel
     self[:state] = STATE_CANCELED
-    save
+    save!
   end
 
   def self.working_tasks(user = nil)

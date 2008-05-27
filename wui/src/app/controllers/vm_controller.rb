@@ -40,12 +40,14 @@ class VmController < ApplicationController
 
   def create
     begin
-      @vm.save!
-      @task = VmTask.new({ :user    => @user,
-                         :vm_id   => @vm.id,
-                         :action  => VmTask::ACTION_CREATE_VM,
-                         :state   => Task::STATE_QUEUED})
-      @task.save!
+      Vm.transaction do
+        @vm.save!
+        @task = VmTask.new({ :user    => @user,
+                             :vm_id   => @vm.id,
+                             :action  => VmTask::ACTION_CREATE_VM,
+                             :state   => Task::STATE_QUEUED})
+        @task.save!
+      end
       start_now = params[:start_now]
       if (start_now)
         if @vm.get_action_list.include?(VmTask::ACTION_START_VM)
@@ -156,8 +158,14 @@ class VmController < ApplicationController
   end
 
   def cancel_queued_tasks
-    @vm.get_queued_tasks.each { |task| task.cancel}
-    flash[:notice] = "queued tasks canceled."
+    begin
+      Task.transaction do
+        @vm.get_queued_tasks.each { |task| task.cancel}
+      end
+      flash[:notice] = "queued tasks canceled."
+    rescue
+      flash[:notice] = "cancel queued tasks failed."
+    end
     redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
   end
 
