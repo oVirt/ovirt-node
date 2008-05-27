@@ -144,7 +144,7 @@ class HardwareController < ApplicationController
     dates = [ Date::ABBR_MONTHNAMES[today.month] + ' ' + today.day.to_s ]
     1.upto(6){ |x|  # TODO get # of days from wui
        dte = today - x
-       dates.push ( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
+       dates.push( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
     }
     dates.reverse! # want in ascending order
 
@@ -284,7 +284,7 @@ class HardwareController < ApplicationController
     begin
       @pool.create_with_resources(@parent, resource_type, resource_ids)
       render :json => { :object => "pool", :success => true, 
-                        :alert => "Storage Pool was successfully created." }
+                        :alert => "Hardware Pool was successfully created." }
     rescue
       render :json => { :object => "pool", :success => false, 
                         :errors => @pool.errors.localize_error_messages.to_a  }

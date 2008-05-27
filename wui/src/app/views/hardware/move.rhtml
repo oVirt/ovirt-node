@@ -49,7 +49,15 @@ $('#move_to_new_pool').click(function(){
 
 
 <div class="facebox_timfooter">
-	<div style="float:left;"><a href="#" id="move_to_new_pool"><%= image_tag "btn_moveto_newpool.png", :title=>"Move host to a new hardware pool" %></a></div>
-	<div style="float:right;"><a href="#" onclick="jQuery(document).trigger('close.facebox')"><%= image_tag "btn_cancel.png", :title =>"Cancel" %></a></div>
+        <div class="button">
+          <div class="button_left_grey"></div>
+          <div class="button_middle_grey"><a href="#" onclick="jQuery(document).trigger('close.facebox')">Cancel</a></div>
+          <div class="button_right_grey"></div>
+        </div>
+        <div class="button" style="float:left">
+          <div class="button_left_blue"></div>
+          <div class="button_middle_blue"><a href="#" id="move_to_new_pool">Move to new Hardware Pool</a></div>
+          <div class="button_right_blue"></div>
+        </div> 
 </div>
 </div>

@@ -251,7 +251,8 @@ textarea:focus, input:focus {
   width:48%;
   float: right;
    border-left: 1px solid #CCCCCC;
-   background: #F0F0F0;
+   /*background: #F0F0F0;*/
+   height: 148px;
  }
  
  .selection_right_title {
@@ -368,6 +369,60 @@ textarea:focus, input:focus {
   clear:both;
   height: 5px;
 }
+
+.button {
+  padding: 0 0 0 2px;
+  float:right;
+ }
+
+.button_left_blue {
+  background:url(../images/button_left.png) no-repeat;
+  width: 6px;
+  height: 29px;
+  float: left;
+}
+.button_middle_blue {
+  background:url(../images/button_middle.png) repeat-x;
+  height: 29px;
+  float: left;
+  color:#FFFFFF;
+  line-height: 2.3;
+  font-size: 105%;
+  display:block;
+}
+.button_right_blue {
+  background:url(../images/button_right.png) no-repeat;
+  width: 6px;
+  height: 29px;
+  float: left;
+}
+.button_middle_blue a {color:#FFFFFF; text-decoration: none; display:block; padding: 0 10px 0 10px;}
+.button_middle_blue a:hover {color:#E7EFF6; text-decoration:none; padding: 0 10px 0 10px;}
+
+.button_left_grey {
+  background:url(../images/button_left_grey.png) no-repeat;
+  width: 6px;
+  height: 29px;
+  float: left;
+}
+.button_middle_grey {
+  background:url(../images/button_middle_grey.png) repeat-x;
+  height: 29px;
+  float: left;
+  color:#FFFFFF;
+  line-height: 2.3;
+  font-size: 105%;
+  display:block;
+}
+.button_right_grey {
+  background:url(../images/button_right_grey.png) no-repeat;
+  width: 6px;
+  height: 29px;
+  float: left;
+}
+.button_middle_grey a {color:#FFFFFF; text-decoration: none; display:block; padding: 0 10px 0 10px;}
+.button_middle_grey a:hover {color:#E7EFF6; text-decoration:none; padding: 0 10px 0 10px;}
+
 
 .fieldWithErrors {
   background-color:#FFB2B2;

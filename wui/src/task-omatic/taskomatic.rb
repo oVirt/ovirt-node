@@ -24,6 +24,7 @@ $: << File.join(File.dirname(__FILE__), ".")
 require 'rubygems'
 require 'optparse'
 require 'daemons'
+
 include Daemonize
 
 $logfile = '/var/log/ovirt-wui/taskomatic.log'
@@ -55,7 +56,12 @@ if do_daemon
   STDERR.reopen STDOUT
 end
 
-require 'dutils'
+begin
+  require 'dutils'
+rescue => ex
+  puts "dutils require failed! #{ex.class}: #{ex.message}"
+end
+
 require 'task_vm'
 require 'task_storage'
 
@@ -63,30 +69,53 @@ loop do
   puts 'Checking for tasks...'
   
   first = true
-  Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ]).each do |task|
+  tasks = Array.new
+  begin
+    tasks = Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ])
+  rescue => ex
+    puts "1 #{ex.class}: #{ex.message}"
+    if Task.connected?
+      begin
+        ActiveRecord::Base.connection.reconnect!
+      rescue => norecon
+        puts "2 #{norecon.class}: #{norecon.message}"
+      end
+    else
+      begin
+        database_connect
+      rescue => ex
+        puts "3 #{ex.class}: #{ex.message}"
+      end
+    end
+  end
+  tasks.each do |task|
     if first
       # make sure we get our credentials up-front
       get_credentials
       first = false
     end
 
-    case task.action
-    when VmTask::ACTION_CREATE_VM then create_vm(task)
-    when VmTask::ACTION_SHUTDOWN_VM then shutdown_vm(task)
-    when VmTask::ACTION_START_VM then start_vm(task)
-    when VmTask::ACTION_SUSPEND_VM then suspend_vm(task)
-    when VmTask::ACTION_RESUME_VM then resume_vm(task)
-    when VmTask::ACTION_SAVE_VM then save_vm(task)
-    when VmTask::ACTION_RESTORE_VM then restore_vm(task)
-    when VmTask::ACTION_UPDATE_STATE_VM then update_state_vm(task)
-    when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
-    else
-      puts "unknown task " + task.action
-      setTaskState(task, Task::STATE_FAILED, "Unknown task type")
+    begin
+      case task.action
+      when VmTask::ACTION_CREATE_VM then create_vm(task)
+      when VmTask::ACTION_SHUTDOWN_VM then shutdown_vm(task)
+      when VmTask::ACTION_START_VM then start_vm(task)
+      when VmTask::ACTION_SUSPEND_VM then suspend_vm(task)
+      when VmTask::ACTION_RESUME_VM then resume_vm(task)
+      when VmTask::ACTION_SAVE_VM then save_vm(task)
+      when VmTask::ACTION_RESTORE_VM then restore_vm(task)
+      when VmTask::ACTION_UPDATE_STATE_VM then update_state_vm(task)
+      when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
+      else
+        puts "unknown task " + task.action
+        setTaskState(task, Task::STATE_FAILED, "Unknown task type")
+      end
+      
+      task.time_ended = Time.now
+      task.save
+    rescue => ex
+      puts "Task action processing failed: #{ex.class}: #{ex.message}"
     end
-    
-    task.time_ended = Time.now
-    task.save
   end
   
   # we could destroy credentials, but another process might be using them (in

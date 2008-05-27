@@ -201,3 +201,18 @@
    float: left;
    padding-top: 3px;
 }
+
+.detail-pane-chart {
+    height: 50px;
+    width: 375px;
+}
+
+.detail-pane-chart-header {
+    width:252.5px;
+    background: #F0F0F0;
+    position:relative;
+    margin-left:37px;
+    margin-bottom:-4px;
+    padding: 5px;
+    border: 1px solid #CCCCCC;
+}

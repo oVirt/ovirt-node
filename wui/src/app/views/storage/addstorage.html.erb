@@ -49,10 +49,5 @@
 <script type="text/javascript">
   $("#addstorage_assigned_grid_div").hide()
 </script>
-<div style="background: url(<%= image_path "fb_footer.jpg" %>) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
-  <div>
-    <a href="#" onclick="add_storage()"><%= image_tag "btn_addstorage.png", :title => "Add Selected Storage Pools" %></a>
-    <a href="#" onclick="jQuery(document).trigger('close.facebox')"><%= image_tag "btn_cancel.png", :title =>"Cancel" %></a>
-  </div>
-</div>
+<%= popup_footer("add_storage()", "Add Selected Storage Pools") %>
 

@@ -6,7 +6,6 @@
     <li id="nav_storage" <%= 'class="current"' if controller.action_name == "show_storage" %> ><%= link_to "Storage", {:action => 'show_storage', :id => @pool.id} %></li>
     <li id="nav_vmpool" <%= 'class="current"' if controller.action_name == "show_vms" %> > <%= link_to "Virtual Machine Pools", {:action => 'show_vms', :id => @pool.id} %></li>
     <li id="nav_access" <%= 'class="current"' if controller.action_name == "show_users" %> > <%= link_to "User Access", {:action => 'show_users', :id => @pool.id} %></li>
-    <li id="nav_graphs" <%= 'class="current"' if controller.action_name == "show_graphs" %> > <%= link_to "Graphs", {:action => 'show_graphs', :id => @pool.id} %></li>
   <% elsif controller.controller_name == "resources" and @vm_resource_pool != nil %>
     <li id="nav_summary" <%= 'class="current"' if controller.action_name == "show" %> ><%= link_to "Summary", {:action => 'show', :id => @vm_resource_pool.id} %></li>
     <li id="nav_vmpool" <%= 'class="current"' if controller.action_name == "show_vms" %> > <%= link_to "Virtual Machines", {:action => 'show_vms', :id => @vm_resource_pool.id} %></li>
