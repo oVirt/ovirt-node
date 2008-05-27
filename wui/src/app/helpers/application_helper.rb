@@ -94,6 +94,18 @@ module ApplicationHelper
      }
   end
 
+  def ok_footer
+    %{ 
+      <div style="background: url(#{image_path "fb_footer.jpg"}) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
+        <div class="button">
+          <div class="button_left_grey"></div>
+          <div class="button_middle_grey"><a href="#" onclick="jQuery(document).trigger('close.facebox')">OK</a></div>
+          <div class="button_right_grey"></div>
+        </div>
+      </div>
+     }
+  end
+
 
   def timeout_flash(name)
     %{

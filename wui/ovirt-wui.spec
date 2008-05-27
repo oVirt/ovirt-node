@@ -94,7 +94,6 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 
 %{__cp} -a %{pbuild}/scripts/ovirt-add-host %{buildroot}%{_bindir}
 %{__cp} -a %{pbuild}/scripts/ovirt-wui-install %{buildroot}%{_sbindir}
-%{__cp} -a %{pbuild}/scripts/ovirt-fix-ipa %{buildroot}%{_bindir}
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
 %{__ln_s} %{_localstatedir}/lib/%{name}/tmp %{buildroot}%{app_root}/tmp
@@ -107,7 +106,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-wui-install
 %{_bindir}/ovirt-add-host
-%{_bindir}/ovirt-fix-ipa
 %{_initrddir}/ovirt-host-browser
 %{_initrddir}/ovirt-host-keyadd
 %{_initrddir}/ovirt-host-status
