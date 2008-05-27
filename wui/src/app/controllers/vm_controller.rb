@@ -108,7 +108,8 @@ class VmController < ApplicationController
         vms.each do |vm|
           vm.destroy
         end
-      end      render :json => { :object => "vm", :success => true, 
+      end
+      render :json => { :object => "vm", :success => true, 
         :alert => "Virtual Machines were successfully deleted." }
     rescue
       render :json => { :object => "vm", :success => false, 
