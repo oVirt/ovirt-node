@@ -35,6 +35,9 @@ class HardwareController < ApplicationController
       flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
       redirect_to :controller => "dashboard"
     end
+    if params[:ajax]
+      render :layout => false #:template => 'hardware/show.html.erb'
+    end
   end
   
   def json_view_tree
