@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+#
+require 'util/stats/Stats'
 
 class HardwareController < ApplicationController
 
@@ -101,72 +103,85 @@ class HardwareController < ApplicationController
   
   # retrieves data to be used by availablilty bar charts
   def available_graph
+    data_sets = []
+    color = 'blue'
+
     target =  params[:target]
-    available = nil
-    used = nil
-    if target == 'memory'
-        available = @available_memory
-        used      = @used_memory
-    elsif target == 'storage'
-        available = @available_storage
-        used      = @used_storage
+    if target == 'cpu'
+        if (@total[:cpu] > @used[:cpu])
+            # 3/4 is the critical boundry for now
+            color = 'red' if (@used[:cpu].to_f / @total[:cpu].to_f) > 0.75 
+            data_sets.push ({ :name => 'cpu_used', :values => [@used[:cpu]],
+                                :fill => color, :stroke => 'lightgray', :strokeWidth => 1 },
+                            { :name => 'cpu_available', 
+                                :values => [@available[:cpu]], :fill => 'white',
+                                :stroke => 'lightgray', :strokeWidth => 1})
+        else
+            data_sets.push ({ :name => 'cpu_available', :values => [@available[:cpu]],
+                                :fill => 'white', :stroke => 'lightgray', :strokeWidth => 1 },
+                            { :name => 'cpu_used', 
+                                :values => [@used[:cpu]], :fill => 'red',
+                                :stroke => 'lightgray', :strokeWidth => 1})
+        end
+    elsif target == 'memory'
+        if (@total[:memory] > @used[:memory])
+            color = 'red' if (@used[:memory].to_f / @total[:memory].to_f) > 0.75
+            data_sets.push ({ :name => 'memory_used', :values => [@used[:memory]],
+                                :fill => color, :stroke => 'lightgray', :strokeWidth => 1 },
+                            { :name => 'memory_available', 
+                                :values => [@available[:memory]], :fill => 'white',
+                                :stroke => 'lightgray', :strokeWidth => 1})
+        else
+            data_sets.push ({ :name => 'memory_available', :values => [@available[:memory]],
+                                :fill => 'white', :stroke => 'lightgray', :strokeWidth => 1 },
+                            { :name => 'memory_used', 
+                                :values => [@used[:memory]], :fill => 'red',
+                                :stroke => 'lightgray', :strokeWidth => 1})
+        end
+
     elsif target == 'vms'
-        available = @available_vms
-        used      = @used_vms
+        total_remaining = @total[:vms] - @used[:vms] - @available[:vms]
+        data_sets.push({ :name => 'vms_used', :values => [@used[:vms]],
+                         :fill => 'blue', :stroke => 'lightgray', :strokeWidth => 1 },
+                       { :name => 'vms_available', :values => [@available[:vms]],
+                         :fill => 'red',  :stroke => 'lightgray', :strokeWidth => 1 },
+                       { :name => 'vms_remaining', :values => [total_remaining],
+                         :fill => 'white', :stroke => 'lightgray', :strokeWidth => 1})
     end
 
-    color = 'blue'
-    color = 'red' if (used.to_f / (available + used).to_f) > 0.75  # 3/4 is the critical boundry for now
-
-    graph_object = {
-       :timepoints => [],
-       :dataset => 
-        [
-            {
-                :name => target + "used",
-                :values => [used],
-                :fill => color,
-                :stroke => 'lightgray',
-                :strokeWidth => 1
-            },
-            {
-                :name => target + "available",
-                :values => [available],
-                :fill => 'white',
-                :stroke => 'lightgray',
-                :strokeWidth => 1
-            }
-       ]
-    }
-    render :json => graph_object
+    render :json => { :timepoints => [], :dataset => data_sets }
   end
 
   # retrieves data used by history graphs
   def history_graph
-    today = DateTime.now
+    target = params[:target]
+    today = Time.now
+    requestList = [ StatsRequest.new(@pool.id, target, 0, "used", today.to_i - 3600, 3600, 0), 
+                    StatsRequest.new(@pool.id, target, 0, "peak", today.to_i - 3600, 3600, 0) ]
     dates = [ Date::ABBR_MONTHNAMES[today.month] + ' ' + today.day.to_s ]
     1.upto(6){ |x|  # TODO get # of days from wui
        dte = today - x
-       dates.push( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
+       dates.push ( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
+       requestList.push ( StatsRequest.new (@pool.id, target, 0, "used", dte.to_i - 3600, 3600, 0), 
+                          StatsRequest.new (@pool.id, target, 0, "peak", dte.to_i - 3600, 3600, 0) )
     }
     dates.reverse! # want in ascending order
+    requestList.reverse!
 
-    target = params[:target]
-    peakvalues = nil
-    avgvalues  = nil
-    if target == 'host_usage'
-       peakvalues = [95.97, 91.80, 88.16, 86.64, 99.14, 75.14, 85.69] # TODO real values!
-       avgvalues  = [3.39, 2.83, 1.61, 0.00, 4.56, 1.23, 5.32] # TODO real values!
-    elsif target == 'storage_usage'
-       peakvalues = [11.12, 22.29, 99.12, 13.23, 54.32, 17.91, 50.1] # TODO real values!
-       avgvalues  = [19.23, 19.23, 19.23, 29.12, 68.96, 43.11, 0.1] # TODO real values!
-    elsif target == 'vm_pool_usage_history'
-       peakvalues = [42, 42, 42, 42, 42, 42, 42] # TODO real values!
-       avgvalues  = [0, 0, 0, 0, 0, 0, 0] # TODO real values!
-    elsif target == 'overall_load'
-       peakvalues = [19.68, 20.08, 19.84, 17.76, 0.0, 14.78, 9.71] # TODO real values!
-       avgvalues  = [0, 1, 2, 4, 8, 16, 32] # TODO real values!
-    end
+    statsList = getStatsData?( requestList )
+    statsList.each { |stat|
+        devClass = stat.get_devClass?
+        counter  = stat.get_counter?
+        value    = stat.get_value?.to_i + 20
+        if devClass == target
+            if counter == "used"
+                @avg_history[:values].push value
+            else
+            #elsif counter == "peak"
+                @peak_history[:values].push value
+            end
+        end
+    }
 
     graph_object = {
        :timepoints => dates,
@@ -174,14 +189,14 @@ class HardwareController < ApplicationController
         [
             {
                 :name => target + "peak",
-                :values =>  peakvalues,
-                :stroke => @peak_color,
+                :values => @peak_history[:values],
+                :stroke => @peak_history[:color],
                 :strokeWidth => 1
             },
             {
                 :name => target + "average",
-                :values => avgvalues, 
-                :stroke => @average_color,
+                :values => @avg_history[:values], 
+                :stroke => @avg_history[:color],
                 :strokeWidth => 1
             }
        ]
@@ -189,21 +204,25 @@ class HardwareController < ApplicationController
     render :json => graph_object
   end
 
-  def network_traffic_graph
+  def snapshot_graph
     target =  params[:target]
-    network_load = nil
-    if target == 'in'
-        network_load      = @network_traffic['in']
+    snapshot = nil
+    if target == 'overall_load'
+        snapshot = @snapshots[:avg][:overall_load]
+    elsif target == 'cpu'
+        snapshot = @snapshots[:avg][:cpu]
+    elsif target == 'in'
+        snapshot = @snapshots[:avg][:in]
     elsif target == 'out'
-        network_load = @network_traffic['out']
+        snapshot = @snapshots[:avg][:out]
     elsif target == 'io'
-        network_load = @network_traffic['io']
+        snapshot = @snapshots[:avg][:io]
     end
 
-    network_load_remaining = 1024 - network_load
+    snapshot_remaining = 1024 - snapshot
 
     color = 'blue'
-    color = 'red' if (network_load.to_f / 1024.to_f) > 0.75  # 3/4 is the critical boundry for now
+    color = 'red' if (snapshot.to_f / 1024.to_f) > 0.75  # 3/4 is the critical boundry for now
 
     graph_object = {
        :timepoints => [],
@@ -211,14 +230,14 @@ class HardwareController < ApplicationController
         [
             {
                 :name => target,
-                :values => [network_load],
+                :values => [snapshot],
                 :fill => color,
                 :stroke => 'lightgray',
                 :strokeWidth => 1
             },
             {
                 :name => target + "remaining",
-                :values => [network_load_remaining],
+                :values => [snapshot_remaining],
                 :fill => 'white',
                 :stroke => 'lightgray',
                 :strokeWidth => 1
@@ -455,23 +474,78 @@ class HardwareController < ApplicationController
     @perm_obj = @pool
     @current_pool_id=@pool.id
 
-    # TODO pull real values in
-    @available_memory = 18
-    @used_memory = 62
-    
-    @available_storage = 183
-    @used_storage = 61
+    # availability graphs - used
+    @used = {:cpu => 0, :memory => 0, :vms => 0}
+    @pool.sub_vm_resource_pools.each { |svrp| @used[:cpu]    += svrp.allocated_resources[:current][:cpus] }
+    @pool.sub_vm_resource_pools.each { |svrp| @used[:memory] += svrp.allocated_resources[:current][:memory] }
+    @pool.sub_vm_resource_pools.each { |svrp| @used[:vms]    += svrp.allocated_resources[:current][:vms]  }
 
-    @available_vms = 1
-    @used_vms = 26
+    # availability graphs - total
+    @total          = {:cpu => 0, :memory => 0, :vms => 0}
+    @total[:cpu]    = @pool.total_resources[:cpus]
+    @total[:memory] = @pool.total_resources[:memory]
+    @total[:vms]    = @pool.total_resources[:vms]
+    @total.each_key { |k| @total[k] = 0 if @total[k] == nil }
 
-    @peak_color = 'red'
-    @average_color = 'blue'
+    # availability graphs - available
+    @available          = {}
+    @available[:cpu]    = (@total[:cpu] - @used[:cpu]).abs
+    @available[:memory] = (@total[:memory] - @used[:memory]).abs
+    @available[:vms]    = 5 # TODO ?
 
-    # TODO pull real values in
-    @network_traffic   = { 'in' => 100, 'out' => 1024, 'io' => 200 }
-    @network_errors = { 'in' => 0, 'out' => 4, 'io' => 2 }
-    @network_trends = { 'in' => 'up', 'out' => 'down', 'io' => 'check' }
+    # history graphs
+    @peak_history = { :color => 'red',  :values => [] }
+    @avg_history  = { :color => 'blue', :values => [] }
+
+    # snapshot graphs
+    ret_time = Time.now.to_i - 3600
+    @snapshots = { :avg  => { :overall_load => 0, :cpu => 0, :in => 0, :out => 0, :io => 0 },
+                   :peak => { :overall_load => 0, :cpu => 0, :in => 0, :out => 0, :io => 0 }}
+    requestList = []
+    requestList << StatsRequest.new(@pool.id, "system", 0, "used", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "system", 0, "peak", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "cpu",    0, "used", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "cpu",    0, "peak", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "in",     0, "used", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "in",     0, "peak", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "out",    0, "used", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "out",    0, "peak", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "io",     0, "used", ret_time, 3600, 0)
+    requestList << StatsRequest.new(@pool.id, "io",     0, "peak", ret_time, 3600, 0)
+    statsList = getStatsData?( requestList )
+    statsList.each { |stat|
+        devClass = stat.get_devClass?
+        counter  = stat.get_counter?
+        value  = stat.get_value?
+        if counter == "used"
+            if devClass == "system"
+                @snapshots[:avg][:overall_load] = value
+            elsif devClass == "cpu"
+                @snapshots[:avg][:cpu] = value
+            elsif devClass == "in"
+                @snapshots[:avg][:in]  = value
+            elsif devClass == "out"
+                @snapshots[:avg][:out] = value
+            elsif devClass == "io"
+                @snapshots[:avg][:io]  = value
+            end
+        else
+        #elsif counter == "peak"
+            if devClass == "system"
+                @snapshots[:peak][:overall_load] = value.to_i
+            elsif devClass == "cpu"
+                @snapshots[:peak][:cpu] = value.to_i
+            elsif devClass == "in"
+                @snapshots[:peak][:in]  = value.to_i
+            elsif devClass == "out"
+                @snapshots[:peak][:out] = value.to_i
+            elsif devClass == "io"
+                @snapshots[:peak][:io]  = value.to_i
+            end
+        end
+    }
+    #@snapshots = { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 }
+
   end
   def pre_json
     pre_show

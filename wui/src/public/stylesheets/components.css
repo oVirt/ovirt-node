@@ -132,7 +132,7 @@
 .availability_graph { float: left; width: 33%;}
 .availability_graph_left { float: left; width: 50px;}
 .availability_graph_right { float: left; margin-top: 10%; margin-left: 125px; min-width: 100px;}
-#available_memory, #available_storage, #available_vms {margin-left:50px;width:100px;height:100px}
+#available_cpu, #available_memory, #available_vms {margin-left:50px;width:100px;height:100px}
 
 /* history graphs on hardware / resource summary tab */
 #history_graphs { height: 270px; overflow: hidden; margin-left: 40px; margin-top: 40px; }
@@ -184,22 +184,31 @@
   position: relative;
   float: left;
 }
-#host_usage_history, #storage_usage_history, #vm_pool_usage_history, #overall_load_history{
+#cpu_history, #io_history, #overall_load_history{
   height: 200px; width: 1200px; position: absolute; left: -70px;
 }
 
-
-/* network traffic graphs on hardware / resource summary tab */
-#network_traffic_graphs { height: 150px; padding-left: 60px; }
-#network_traffic_graphs table { width: 90%; border-spacing: 0;}
-#network_traffic_graphs th    { background: #CCCCCC; text-align: left; padding-left: 10px; border: 1px solid #DDDDDD;}
-#network_traffic_graphs td    { padding-left: 10px; border: 1px solid #DDDDDD;}
-#network_traffic_in, #network_traffic_out, #network_traffic_io {
-  width: 350px; height: 20px; float: right;
+/* snapshot graphs on hardware / resource summary tab */
+#snapshot_graphs { height: 150px; padding-left: 60px; }
+#snapshot_graphs table { width: 90%; border-spacing: 0;}
+#snapshot_graphs th    { background: #CCCCCC; text-align: left; padding-left: 10px; border: 1px solid #DDDDDD;}
+#snapshot_graphs td    { padding-left: 10px; border: 1px solid #DDDDDD;}
+#overall_load_snapshot, #cpu_snapshot, #net_in_snapshot, #net_out_snapshot, #io_snapshot {
+  width: 350px; height: 20px; float: left;
 }
-.network_traffic_load_text {
+.snapshot_graph_text {
    float: left;
-   padding-top: 3px;
+   padding-top: 13px;
+   width: 50px;
+}
+.snapshot_graph_container{
+    float: left;
+}
+.snapshot_graph_arrow{
+  width: 350px; height: 20px; float: left;
+}
+.snapshot_graph{
+  float: left;
 }
 
 .detail-pane-chart {

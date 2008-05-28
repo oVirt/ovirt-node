@@ -6,31 +6,32 @@
 <div id="availability_graphs">
   <div class="availability_graph">
     <div class="availability_graph_left">
-      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_memory',  :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'memory' ) } %>
+      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_cpu',  :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'cpu' ) } %>
     </div>
     <div class="availability_graph_right">
-      Available: <%= @available_memory %> <br/> Used: <%= @used_memory %> <br/><b><%= @available_memory + @used_memory %> GB of Memory</b><br/>
+      Available: <%= @available[:cpu] %> <br/> Used: <%= @used[:cpu] %> <br/><b><%= @total[:cpu] %> CPUs</b><br/>
     </div>
   </div>
 
   <div class="availability_graph">
     <div class="availability_graph_left">
-      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_storage', :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'storage') } %>
+      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_memory', :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'memory') } %>
     </div>
     <div class="availability_graph_right">
-      Available: <%= @available_storage %> <br/> Used: <%= @used_storage %> <br/><b><%= @available_storage + @used_storage %> GB of Storage</b><br/>
+      Available: <%= @available[:memory] %> <br/> Used: <%= @used[:memory] %> <br/><b><%= @total[:memory] %> GB of Memory</b><br/>
     </div>
   </div>
 
   <div class="availability_graph">
     <div class="availability_graph_left">
-      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_vms',     :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'vms'    ) } %>
+      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_vms', :chartType => 'stackedColumn', :url => (url_for :controller => 'hardware', :action => 'available_graph', :target => 'vms'    ) } %>
     </div>
     <div class="availability_graph_right">
-      Available: <%= @available_vms %> <br/> Used: <%= @used_vms %> <br/><b><%= @available_vms + @used_vms %> Virtual Machines</b><br/>
+      Assigned: <%= @available[:vms] %> <br/> Active: <%= @used[:vms] %> <br/><b><%= @total[:vms] %> Virtual Machines</b><br/>
     </div>
   </div>
 </div>
+
 <div id="history_graphs">
   <div id="history_graphs_control">
    <div class="history_graphs_menu">
@@ -43,10 +44,9 @@
       </script>
       <ul>
         <li><div id="history_graph_menu_header">Overall Load &nbsp;&nbsp;<%= image_tag 'icon_menu_arrow.gif' %></div></li>
-        <li class="history_graph_menu_item history_graph_menu_fitem"><a href="#" onclick="swap_history_graph('host_usage_history', 'Host Usage');">Host Usage</a></li>
-        <li class="history_graph_menu_item"><a href="#" onclick="swap_history_graph('storage_usage_history', 'Storage Usage');" >Storage Usage</a></li>
-        <li class="history_graph_menu_item"><a href="#" onclick="swap_history_graph('vm_pool_usage_history', 'VM Pool Usage');" >VM Pool Usage</a></li>
-        <li class="history_graph_menu_item history_graph_menu_litem"><a href="#" onclick="swap_history_graph('overall_load_history', 'Overall Load')" >Overall Load</a></li>
+        <li class="history_graph_menu_item history_graph_menu_fitem"><a href="#" onclick="swap_history_graph('overall_load_history', 'Overall Load')" >Overall Load</a></li>
+        <li class="history_graph_menu_item"><a href="#" onclick="swap_history_graph('cpu_history', 'CPU History');" >CPU History</a></li>
+        <li class="history_graph_menu_item history_graph_menu_litem"><a href="#" onclick="swap_history_graph('io_history', 'I/O Usage');">I/O Usage</a></li>
       </ul>
    </div>
    <div class="history_graphs_menu">
@@ -55,53 +55,83 @@
       </ul>
    </div>
    <div class="history_graphs_legend">
-       <font color="<%= @peak_color %>">Peak &nbsp; &nbsp;</font>
-       <font color="<%= @average_color %>">Average &nbsp; &nbsp;</font>
+       <font color="<%= @peak_history[:color]   %>">Peak &nbsp; &nbsp;</font>
+       <font color="<%= @avg_history[:color] %>">Average &nbsp; &nbsp;</font>
    </div>
   </div>
   <div id="history_graphs_graphs">
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'host_usage_history',    :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'host_usage'            ) } %></div>
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'storage_usage_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'storage_usage'         ) } %></div>
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'vm_pool_usage_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'vm_pool_usage_history' ) } %></div>
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'overall_load_history',  :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'overall_load'          ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'cpu_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'cpu'         ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'io_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'io' ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'overall_load_history',  :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'hardware', :action => 'history_graph', :target => 'system'          ) } %></div>
   </div>
 </div>
-<div id="network_traffic_graphs">
+<div id="snapshot_graphs">
    <table>
      <tr>  
-           <th width="15%">Network Traffic</th>
-           <th width="50%">Load</th>
-           <th width="15%">Errors</th>
-           <th width="15%">Trend</th>
+           <th width="25%">Metric</th>
+           <th width="70%">Load</th>
      </tr>
 
      <tr>  
+           <td>Overall Load </td>  
+           <td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:overall_load] %> </div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:overall_load] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                    <%= render :partial => '/layouts/graph', :locals => { :div_id => 'overall_load_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'snapshot_graph', :target => 'overall_load'  ) } %>
+                  </div>
+               </div>
+           </td> 
+     </tr>
+     <tr>  
+           <td>CPU </td>  
+           <td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:cpu] %> </div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:cpu] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'cpu_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'snapshot_graph', :target => 'cpu'  ) } %>
+                  </div>
+               </div>
+           </td> 
+     </tr>
+     <tr>  
            <td>Network In </td>  
            <td>
-               <div class="network_traffic_load_text"><%= @network_traffic['in'] %> mb/s </div>
-               <%= render :partial => '/layouts/graph', :locals => { :div_id => 'network_traffic_in',  :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'network_traffic_graph', :target => 'in'  ) } %>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:in] %> mb/s </div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:in] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'net_in_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'snapshot_graph', :target => 'in'  ) } %>
+                  </div>
+               </div>
            </td> 
-           <td><%= @network_errors['in']  == 0 ? 'none' : (image_tag 'network_error.png') + '&nbsp; &nbsp;' + @network_errors['in'].to_s  %></td>
-           <td><%= @network_trends['in']  == 'up' ? (image_tag 'network_trend_up.png') : (@network_trends['in']   == 'down' ? (image_tag 'network_trend_down.png') : (image_tag 'network_trend_check.png')) %></td>
      </tr>
      <tr>  
            <td>Network Out</td>  
            <td>
-               <div class="network_traffic_load_text"><%= @network_traffic['out'] %> mb/s</div>
-               <%= render :partial => '/layouts/graph', :locals => { :div_id => 'network_traffic_out', :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'network_traffic_graph', :target => 'out' ) } %>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:out] %> mb/s</div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:out] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'net_out_snapshot', :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'snapshot_graph', :target => 'out' ) } %>
+                  </div>
+               </div>
            </td> 
-           <td><%= @network_errors['out'] == 0 ? 'none' : (image_tag 'network_error.png') + '&nbsp; &nbsp;' + @network_errors['out'].to_s %></td> 
-           <td><%= @network_trends['out'] == 'up' ? (image_tag 'network_trend_up.png') : (@network_trends['out']  == 'down' ? (image_tag 'network_trend_down.png') : (image_tag 'network_trend_check.png')) %></td>
      </tr>
      <tr>  
            <td>I/O </td>  
            <td>
-               <div class="network_traffic_load_text"><%= @network_traffic['io'] %> mb/s</div>
-               <%= render :partial => '/layouts/graph', :locals => { :div_id => 'network_traffic_io',  :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'network_traffic_graph', :target => 'io'  ) } %> </td> 
-           <td><%= @network_errors['io']  == 0 ? 'none' : (image_tag 'network_error.png') + '&nbsp; &nbsp;' + @network_errors['io'].to_s  %></td> 
-           <td><%= @network_trends['io']  == 'up' ? (image_tag 'network_trend_up.png') : (@network_trends['io']   == 'down' ? (image_tag 'network_trend_down.png') : (image_tag 'network_trend_check.png')) %></td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:io] %> mb/s</div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:io] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'io_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'hardware', :action => 'snapshot_graph', :target => 'io'  ) } %> </td> 
+                  </div>
+               </div>
+           </td>
      </tr>
-
    </table>
   </div>
 </div>
