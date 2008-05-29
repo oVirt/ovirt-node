@@ -20,8 +20,8 @@
 
 require 'socket'
 require 'rubygems'
-require 'kerberos'
-include Kerberos
+require 'krb5_auth'
+include Krb5Auth
 require 'optparse'
 require 'daemons'
 include Daemonize
@@ -29,8 +29,6 @@ include Daemonize
 $logfile = '/var/log/ovirt-wui/host-keyadd.log'
 
 def kadmin_local(command)
-  # FIXME: we really should implement the ruby-kerberos bindings to do the
-  # same thing as kadmin.local
   # FIXME: we should check the return value from the system() call and throw
   # an exception.
   # FIXME: we need to return the output back to the caller here

@@ -1,7 +1,7 @@
 %define pbuild %{_builddir}/%{name}-%{version}
 %define app_root %{_datadir}/%{name}
 
-Summary: Ovirt front end WUI
+Summary: oVirt front end WUI
 Name: ovirt-wui
 Source1: version
 Version: %(echo `awk '{ print $1 }' %{SOURCE1}`)
@@ -17,7 +17,7 @@ Requires: ruby(abi) = 1.8
 Requires: rubygem(activeldap) >= 0.10.0
 Requires: rubygem(rails) >= 2.0.1
 Requires: rubygem(mongrel) >= 1.0.1
-Requires: rubygem(kerberos) >= 0.4
+Requires: rubygem(krb5-auth) >= 0.6
 Requires: ruby-gettext-package
 Requires: postgresql-server
 Requires: ruby-postgres
@@ -38,11 +38,11 @@ BuildRequires: avahi-devel
 Provides: ovirt-wui
 BuildArch: i386 x86_64
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-URL: http://ovirt.et.redhat.com
+URL: http://ovirt.org/
 
 %description
 
-The webapp for Ovirt.
+The webapp for oVirt.
 
 %prep
 %setup -q
@@ -123,7 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 /usr/sbin/groupadd -r ovirt 2>/dev/null || :
-/usr/sbin/useradd -g ovirt -c "Ovirt" \
+/usr/sbin/useradd -g ovirt -c "oVirt" \
     -s /sbin/nologin -r -d /var/ovirt ovirt 2> /dev/null || :
 
 %post
@@ -150,6 +150,9 @@ if [ "$1" = 0 ] ; then
   /sbin/chkconfig --del ovirt-taskomatic
 fi
 %changelog
+* Thu May 29 2008 Alan Pevec <apevec@redhat.com> - 0.0.5-0
+- use rubygem-krb5-auth
+
 * Fri Nov  2 2007  <sseago@redhat.com> - 0.0.1-1
 - Initial build.
 

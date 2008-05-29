@@ -17,8 +17,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 require 'active_record_env'
-require 'kerberos'
-include Kerberos
+require 'krb5_auth'
+include Krb5Auth
 
 ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
 
