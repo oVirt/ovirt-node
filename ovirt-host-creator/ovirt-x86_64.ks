@@ -14,7 +14,6 @@
 -gnutls.i386
 -libstdc++.i386
 -e2fsprogs-libs.i386
--ncurses.i386
 -readline.i386
 -libselinux.i386
 -device-mapper-libs.i386
