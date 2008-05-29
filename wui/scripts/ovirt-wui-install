@@ -184,9 +184,6 @@ mkdir -p log
 rake db:migrate
 cd -
 
-${OVIRT_DIR}/script/grant_admin_privileges admin
-[ $? != 0 ] && echo "Failed to grant admin privileges" && exit 1
-
 if [ -f ${OVIRT_DIR}/ovirtadmin.tab ]; then
     ${OVIRT_DIR}/script/grant_admin_privileges ovirtadmin
     [ $? != 0 ] && echo "Failed to grant ovirtadmin privileges" && exit 1
@@ -199,6 +196,3 @@ for svc in $OVIRT_SVCS $ENABLE_SVCS; do
 done
 
 exit 0
-
-
-

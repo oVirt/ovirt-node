@@ -30,7 +30,9 @@ for i in `seq 3 252` ; do
     echo "192.168.50.$i node$i.priv.ovirt.org" >> /etc/hosts
 done
 
-principal=ovirtadmin@PRIV.OVIRT.ORG
+principal=ovirtadmin
+realm=PRIV.OVIRT.ORG
+password=ovirt
 cron_file=/etc/cron.hourly/ovirtadmin.cron
 ktab_file=/usr/share/ovirt-wui/ovirtadmin.tab
 
@@ -40,7 +42,7 @@ cat > $cron_file << EOF
 #!/bin/bash
 export PATH=/usr/kerberos/bin:$PATH
 kdestroy
-kinit -k -t $ktab_file $principal
+kinit -k -t $ktab_file $principal@$realm
 EOF
 chmod 755 $cron_file
 
@@ -106,6 +108,8 @@ EOF
 first_run_file=/etc/init.d/ovirt-wui-dev-first-run
 sed -e "s,@cron_file@,$cron_file," \
     -e "s,@principal@,$principal," \
+    -e "s,@realm@,$realm," \
+    -e "s,@password@,$password,g" \
     -e "s,@ktab_file@,$ktab_file," \
    > $first_run_file << \EOF
 #!/bin/bash
@@ -119,18 +123,20 @@ sed -e "s,@cron_file@,$cron_file," \
 # Source functions library
 . /etc/init.d/functions
 
-KADMIN=/usr/kerberos/sbin/kadmin.local
+export PATH=/usr/kerberos/bin:$PATH
 
 start() {
 	echo -n "Starting ovirt-dev-wui-first-run: "
 	(
 	# set up freeipa
-	ipa-server-install -r PRIV.OVIRT.ORG -p ovirt -P ovirt -a ovirtwui \
+	ipa-server-install -r PRIV.OVIRT.ORG -p @password@ -P @password@ -a @password@ \
 	  --hostname management.priv.ovirt.org -u dirsrv -U
 
 	# now create the ovirtadmin user
-	$KADMIN -q 'addprinc -randkey @principal@'
-	$KADMIN -q 'ktadd -k @ktab_file@ @principal@'
+	echo @password@|kinit admin
+	ipa-adduser -f Ovirt -l Admin -p @password@ @principal@
+	ipa-moduser --setattr krbPasswordExpiration=19700101000000Z @principal@
+	ipa-getkeytab -s management.priv.ovirt.org -p @principal@ -k @ktab_file@
 	@cron_file@
 
 	) > /var/log/ovirt-wui-dev-first-run.log 2>&1
