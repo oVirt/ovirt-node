@@ -14,6 +14,7 @@ define ks-flatten
   ksflatten $< > $@-t
   chmod a=r $@-t
   mv $@-t $@
+  chcon -t httpd_sys_content_t $@
 endef
 
 wui-rel-%.ks: wui-devel-%.ks
