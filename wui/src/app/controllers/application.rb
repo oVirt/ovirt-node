@@ -84,18 +84,30 @@ class ApplicationController < ActionController::Base
       end
     end
   end
-  def json_list(full_items, attributes)
+
+  # don't define find_opts for array inputs
+  def json_list(full_items, attributes, arg_list=[], find_opts={})
     page = params[:page].to_i
-    item_list = full_items.paginate(:page => page, 
-                                    :order => "#{params[:sortname]} #{params[:sortorder]}", 
-                                    :per_page => params[:rp])
+    paginate_opts = {:page => page, 
+                     :order => "#{params[:sortname]} #{params[:sortorder]}", 
+                     :per_page => params[:rp]}
+    arg_list << find_opts.merge(paginate_opts)
+    item_list = full_items.paginate(*arg_list)
     json_hash = {}
     json_hash[:page] = page
-    json_hash[:total] = full_items.size
+    json_hash[:total] = item_list.total_entries
     json_hash[:rows] = item_list.collect do |item|
       item_hash = {}
       item_hash[:id] = item.id
-      item_hash[:cell] = attributes.collect {|attr| item.send(attr)}
+      item_hash[:cell] = attributes.collect do |attr| 
+        if attr.is_a? Array
+          value = item
+          attr.each { |attr_item| value = value.send(attr_item)}
+          value
+        else
+          item.send(attr)
+        end
+      end
       item_hash
     end
     render :json => json_hash.to_json

@@ -1,12 +1,9 @@
-<div id="window">
+<%- content_for :title do -%>
+  Add Virtual Machine
+<%- end -%>
+<%- content_for :description do -%>
+<%- end -%>
 
-
-  <!-- DIALOG  TITLE -->
-  <div class="dialog_title_small">
-    <div class="header">Add Virtual Machine</div>
-  </div>
-  
-  
   <!-- DIALOG  BODY -->
   <form method="POST" action="<%= url_for :action => 'create' %>" id="vm_form" >
   <div class="dialog_form">
@@ -15,9 +12,6 @@
   <!-- DIALOG  FOOTER -->
   <%= popup_footer("$('#vm_form').submit()", "Add Virtual Machine") %>
   </form>
-</div>
-
-
 
 <script type="text/javascript">
 $(function() {
@@ -25,21 +19,11 @@ $(function() {
         target:        '<%= url_for :action => 'create' %>',   // target element to update
         //beforeSubmit:  showStorageRequest,  // pre-submit callback
 	dataType:      'json',
-        success:       afterNewVm  // post-submit callback
+        success:       afterVm  // post-submit callback
     };
 
     // bind form using 'ajaxForm' 
     $('#vm_form').ajaxForm(vmoptions); 
 });
-function afterNewVm(response, status){
-    ajax_validation(response, status)
-    if (response.success) {
-      jQuery(document).trigger('close.facebox');
-      $("#vms_grid").flexReload()
-    }
-}
 </script>
 
-<%- content_for :title do -%>
-<%= "New Virtual Machine" %>
-<%- end -%>

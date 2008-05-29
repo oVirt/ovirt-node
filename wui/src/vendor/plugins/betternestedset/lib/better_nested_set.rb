@@ -246,24 +246,33 @@ module SymetrieCom
         
         # Returns itself and all nested children.
         # Pass :exclude => item, or id, or [items or id] to exclude one or more items *and* all of their descendants.
-        def full_set(special=nil)
-          if special && special[:exclude]
-            exclude_str = " AND NOT (#{base_set_class.sql_for(special[:exclude])}) "
+        # in addition to the standard find opts
+        def full_set(find_opts={})
+          exclude = find_opts.delete(:exclude)
+          if exclude
+            exclude_str = " AND NOT (#{base_set_class.sql_for(exclude)}) "
           elsif new_record? || self[right_col_name] - self[left_col_name] == 1
             return [self]
           end
-          base_set_class.find(:all, :conditions => "#{scope_condition} #{exclude_str} AND (#{left_col_name} BETWEEN #{self[left_col_name]} AND #{self[right_col_name]})", :order => left_col_name)
+          opts = merge_incoming_opts({:conditions => "#{scope_condition} #{exclude_str} AND (#{left_col_name} BETWEEN #{self[left_col_name]} AND #{self[right_col_name]})", 
+                                       :order => left_col_name},
+                                     find_opts)
+          base_set_class.find(:all, opts)
         end
         
         # Returns all children and nested children.
         # Pass :exclude => item, or id, or [items or id] to exclude one or more items *and* all of their descendants.
-        def all_children(special=nil)
-          full_set(special) - [self]
+        # in addition to the standard find opts
+        def all_children(find_opts=nil)
+          full_set(find_opts) - [self]
         end
         
         # Returns this record's immediate children.
-        def children
-          base_set_class.find(:all, :conditions => "#{scope_condition} AND #{parent_col_name} = #{self.id}", :order => left_col_name)
+        def children(find_opts={})
+          opts = merge_incoming_opts({:conditions => "#{scope_condition} AND #{parent_col_name} = #{self.id}", 
+                                      :order => left_col_name},
+                                     find_opts)
+          base_set_class.find(:all, opts)
         end
         
         # Deprecated
@@ -573,6 +582,14 @@ module SymetrieCom
           # Quote strings appropriately for SQL statements.
           def quote_value(value, column = nil) #:nodoc:
             self.class.connection.quote(value, column)
+          end
+
+          # accept incoming opts to allow filtering of results.
+          # So far only tested in limited use cases encountered in oVirt devel.
+          def merge_incoming_opts(set_opts, incoming_opts)
+            new_conditions = incoming_opts.delete(:conditions)
+            set_opts[:conditions] = "(#{set_opts[:conditions]}) AND (#{new_conditions})" if new_conditions
+            set_opts.merge(incoming_opts)
           end
 
       end

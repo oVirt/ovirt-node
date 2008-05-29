@@ -69,10 +69,10 @@ class Pool < ActiveRecord::Base
   end
 
   def sub_hardware_pools
-    Pool.select_hardware_pools(children)
+    children({:conditions => "type='HardwarePool'"})
   end
   def sub_vm_resource_pools
-    Pool.select_vm_pools(children)
+    children({:conditions => "type='VmResourcePool'"})
   end
   def self_and_like_siblings
     self_and_siblings.select {|pool| pool[:type] == self.class.name}
@@ -156,7 +156,12 @@ class Pool < ActiveRecord::Base
       hash
     end
   end
-    
+
+  def self.call_finder(*args)
+    obj = args.shift
+    method = args.shift
+    obj.send(method, *args)
+  end    
 
   protected
   def traverse_parents

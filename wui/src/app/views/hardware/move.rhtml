@@ -1,3 +1,10 @@
+<%- content_for :title do -%>
+  Move  <%= @resource_type.capitalize %>
+<%- end -%>
+<%- content_for :description do -%>
+  Select an existing hardware pool or create a new pool for selected <%= @resource_type %>. 
+<%- end -%>
+
 <script type="text/javascript">
       $(document).ready(function(){         
         $("#move_tree").treeview({
@@ -34,12 +41,7 @@ $('#move_to_new_pool').click(function(){
 });
 </script>
 
-<div id="window">
 
-<div class="dialog_title_small">
-	<div class="header">Move  <%= @resource_type.capitalize %></div>
-    <div>Select an existing hardware pool or create a new pool for selected <%= @resource_type %>. </div>
-</div>
 
 <div class="dialog_tree">
   <ul id="move_tree" class="filetree treeview-famfamfam treeview"></ul>
@@ -62,5 +64,4 @@ $('#move_to_new_pool').click(function(){
           <div class="button_middle_blue"><a href="#" id="move_to_new_pool">Move to new Hardware Pool</a></div>
           <div class="button_right_blue"></div>
         </div> 
-</div>
 </div>

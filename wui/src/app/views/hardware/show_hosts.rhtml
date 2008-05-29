@@ -51,6 +51,7 @@
     <div class="data_section">
        <%= render :partial => "/host/grid", :locals => { :table_id => "hosts_grid",
                                                          :hwpool_id => @pool.id,
+                                                         :exclude_id => nil,
                                                          :on_select => "hosts_select" } %>
     </div>
 <div class="selection_detail" id="hosts_selection">

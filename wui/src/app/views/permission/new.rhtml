@@ -1,7 +1,9 @@
-<div class="dialog_title_small">
-  <div class="header">Add New User</div>
-  <div>Add a new user to  <%= @permission.pool.name %> pool.</div>
-</div>
+<%- content_for :title do -%>
+  Add New User
+<%- end -%>
+<%- content_for :description do -%>
+  Add a new user to  <%= @permission.pool.name %> pool.
+<%- end -%>
 
 <form method="POST" action="<%= url_for :action => 'create' %>" id="permission_form" >
 <div class="dialog_form">
@@ -9,28 +11,16 @@
 </div>
 <%= popup_footer("$('#permission_form').submit()", "Create User Permission") %>
 </form>
+
   <script type="text/javascript">
 $(function() {
     var permissionoptions = {
         target:        '<%= url_for :action => 'create' %>',   // target element to update
 	dataType:      'json',
-        success:       afterNewPermission  // post-submit callback
+        success:       afterPermission  // post-submit callback
     };
 
     // bind form using 'ajaxForm' 
     $('#permission_form').ajaxForm(permissionoptions); 
 });
-function afterNewPermission(response, status){
-    ajax_validation(response, status)
-    if (response.success) {
-      jQuery(document).trigger('close.facebox');
-      $("#users_grid").flexReload()
-    }
-}
 </script>
-
-<%- content_for :title do -%>
-<%= "Edit Permissions for #{@permission.pool.name}" %>
-<%- end -%>
-
-

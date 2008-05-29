@@ -1,87 +1,9 @@
 
-<div class="panel_header"></div>
-    <div id="data">
-      <div class="inside">
-
-        <%= error_messages_for 'vm_actions' %>
-
-          <div id="dataTableWrapper">
-
-          <div class="dataTable">
-              <div class="inside">
-
-                <div class="data-table-column">
-
-              <% form_tag( {:controller => 'resources', :action => 'vm_actions'}, {:name => "vm_actions", :method => "post"}) do -%>
-              <%= tag :input, { "type" => "hidden", "name" => "vm_actions[vm_resource_pool_id]", "value" => "@vm_resource_pool.id"}  %>
-              <%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_START_VM}]", "value" => "Start"}  %>
-              <%= tag :input, { "type" => "submit", "name" => "vm_actions[#{VmTask::ACTION_SHUTDOWN_VM}]", "value" => "Stop"}  %>
-              <select onchange="return confirm_and_submit(this)" name="vm_actions[other_actions]">
-                <option class="other">Other Actions</option>
-                <option></option>
-              <% for action in @action_values %>
-                <option value="<%= action[1]%>"><%= action[0]%></option>
-              <% end %>
-                <option>-------------------</option>
-                <option class="remove" value="destroy" onSelect="confirm('Are you sure?'">Destroy</option>
-              </select>
-
-              <br/>
-              <%= render :partial => '/layouts/alertbox' %>
-              <br/>
-
-              <%= render :partial => "/vm/list", :locals => { :vms => @vm_resource_pool.vms } %>
-              <% end -%>
-
-                </div>
-
-              </div> <!-- end #data-table.inside -->
-            </div> <!-- end #dataTable -->
-
-            <div class="data-section">
-              <div class="data-section-header"><strong>VM Resource Pool Quota</strong></div>
-              <div class="data-section-stats">Statistics Data</div>
-              <div class="data-section-table">
-                <div class="inside">
-
-                <table>
-                  <tr>
-                  <th></th>
-                  <td> in use / awaiting use / total allowed</td>
-                  </tr>
-                <% resources = @vm_resource_pool.full_resources %>
-                <% for item in resources[:labels] %>
-                <% total_limit = resources[:total][item[1]]
-                   total_limit = "unlimited" if total_limit.nil? %>
-                  <tr>
-                  <th><%= item[0]%>:</th>
-                  <td><%= resources[:allocated][:current][item[1]] %> / <%= resources[:allocated][:pending][item[1]] %> / <%= total_limit %>
-                      <%= item[2]%></td>
-                  </tr>
-                <% end %>
-                </table>
-
-                </div>
-              </div>
-            </div>
-
-
-          </div> <!-- end #dataTableWrapper -->
-
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
   <td id="right">
     <div class="heading">&nbsp;</div>
     <div class="tools">
     <h3>Actions</h3>
 
-  <%if @can_modify -%>
-  <div class="actions create">
-    <%= link_to_if @vm_resource_pool, 'Create New VM', {:controller => "vm", :action => 'new', :vm_resource_pool_id => @vm_resource_pool}, { :class => "create" } %>
-  </div>
-  <% end -%>
   <div class="actions">
     <%if @is_hwpool_admin -%>
     <%= link_to 'Edit VM Resource Pool', { :action => 'edit', :id => @vm_resource_pool }, { :class => "edit" } %>

@@ -1,57 +1,7 @@
-    <div id="data">
-      <div class="inside">
-
-         <div id="dataTableWrapper">
-
-          <%= render :partial => "/layouts/quick_stats", :locals => { :hpool => @default_pool, :vms => @vms } %>
-
-          <div class="dataTable">
-
-              <%= render :partial => "/layouts/hardware_pool_type_list", :locals => { :hardware_pools => @hardware_pools } %>
-
-            </div> <!-- end #dataTable -->
-
-            <div class="data-section">
-              <div class="data-section-header"><strong>Available Hosts (<%= @available_hosts.size %>)</strong></div>
-              <div class="data-section-stats">Statistics Data</div>
-              <div class="data-section-table">
-                <div class="inside">
-                  <%= render :partial => "/host/list", :locals => { :hosts => @available_hosts } %>
-                </div>
-              </div>
-            </div>
-
-            <div class="data-section">
-              <div class="data-section-header"><strong>Available Storage (<%= @available_storage_volumes.size %>)</strong></div>
-              <div class="data-section-header"><strong>Storage Pools (<%= @storage_pools.size %>)</strong></div>
-              <div class="data-section-stats">Statistics Data</div>
-              <div class="data-section-table">
-                <div class="inside">
-                  <%= render :partial => "/storage/list_volumes", :locals => { :storage_volumes => @available_storage_volumes } %>
-                </div>
-              </div>
-            </div>
-
-          </div> <!-- end #dataTableWrapper -->
-
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
   <td id="right">
-          <div class="heading">&nbsp;</div>
           <div class="tools">
 
           <h3>Actions</h3>
-          <%if @can_modify -%>
-          <div class="actions">
-<!--
-              <%= link_to 'Add Storage', { :controller => 'storage', :action => 'new', :hardware_pool_id => @default_pool}, { :class => "create" } %>
-              <hr/>
--->
-              <%= link_to 'Create New Pool', { :controller => "hardware", :action => 'new', :parent_id => @default_pool}, { :class => "create" } %>
-          </div>
-          <% end -%>
 
           <div class="actions">
             <div><%= link_to_if @can_set_perms, 'User Permissions', { :controller => 'permission', :action => 'new', :pool_id => @default_pool }, { :class => "edit" } %></div>
