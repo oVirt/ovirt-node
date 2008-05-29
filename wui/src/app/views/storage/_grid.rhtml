@@ -7,13 +7,14 @@
 	$("#<%= table_id %>").flexigrid
 	(
 	{
-	url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => hwpool_id %>',
+	url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => hwpool_id, :exclude_id => exclude_id %>',
 	dataType: 'json',
 	colModel : [
-		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
-		{display: 'Alias', name : 'display_name', width : 180, sortable : false, align: 'left'},
-	        {display: 'IP', name : 'ip_addr', width : 80, sortable : true, align: 'left'},
-		{display: 'Type', name : 'type', width : 80, sortable : true, align: 'left'}
+		{display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
+		{display: 'Alias', width : 180, align: 'left'},
+		<%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
+	        {display: 'IP', name : 'ip_addr', width : 80, align: 'left'},
+		{display: 'Type', name : 'storage_pools.type', width : 80, align: 'left'}
 		],
 	sortname: "ip_addr",
 	sortorder: "asc",

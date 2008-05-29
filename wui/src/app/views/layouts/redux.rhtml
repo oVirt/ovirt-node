@@ -27,6 +27,9 @@
   <%= javascript_include_tag "ui.slider.js" -%>
   <%= javascript_include_tag "jquery.cookie.js" -%>
   <%= javascript_include_tag "jquery.form.js" -%>
+
+  <!-- ovirt-specific functions defined here
+  <%= javascript_include_tag "ovirt.js" -%>
     <script type="text/javascript">
       $(document).ready(function(){         
         $("#tree").treeview({
@@ -39,67 +42,10 @@
             action_type: "hyperlink"
 	    })
 	}); 
-        
-  function get_selected_checkboxes(obj_form)
-  {
-    var selected_array = new Array()
-    var selected_index = 0
-    var checkboxes
-    if (obj_form.grid_checkbox) {
-      if (obj_form.grid_checkbox.length == undefined) {
-        checkboxes = [obj_form.grid_checkbox]
-      } else {
-        checkboxes = obj_form.grid_checkbox
-      }
-      for(var i=0; i < checkboxes.length; i++){
-      if(checkboxes[i].checked)
-        {
-          selected_array[selected_index]= checkboxes[i].value
-          selected_index++
-        }
-      }
-    }
-    return selected_array
-  }
-  function validate_selected(selected_array, name)
-  {
-    if (selected_array.length == 0) {
-      alert("Please select at least one " + name + "  to continue")
-      return false
-    } else {
-      return true
-    }
-  }
-  function ajax_validation(response, status)
-  {
-    if (response.object) {
-      $(".fieldWithErrors").removeClass("fieldWithErrors");
-      $("div.errorExplanation").remove();
-      if (!response.success) {
-        for(i=0; i<response.errors.length; i++) { 
-          var element = $("div.form_field:has(#"+response.object + "_" + response.errors[i][0]+")");
-          if (element) {
-            element.addClass("fieldWithErrors");
-            for(j=0; j<response.errors[i][1].length; j++) { 
-              element.append('<div class="errorExplanation">'+response.errors[i][1][j]+'</div>');
-            }
-          }
-        }
-      }
-      if (response.alert) {
-        alert(response.alert)
-      }
-    }
-  }
-        
-      </script>
-      <script type="text/javascript">
-       jQuery(document).ready(function($) {
+      $(document).ready(function(){         
         $('a[rel*=facebox]').facebox()
       })
-      </script>
-      <script type="text/javascript">
-       jQuery(document).ready(function($) {
+      $(document).ready(function(){         
         $('a[rel*=close]').trigger('close.facebox')
       })
       </script>

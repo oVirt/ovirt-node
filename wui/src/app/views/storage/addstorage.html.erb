@@ -1,14 +1,17 @@
-<div class="dialog_title">
-	<div class="header">Add Storage</div>
-    <div>Select storage pools from the list below to add to the <%= @hardware_pool.name %> hardware pool.</div>
-</div>
+<%- content_for :title do -%>
+  Add Storage
+<%- end -%>
+<%- content_for :description do -%>
+  Select storage pools from the list below to add to the <%= @hardware_pool.name %> hardware pool.
+<%- end -%>
+
+<!-- we'll need this when we combine add/create for storage
 <div id="toolbar_nav">
 <ul>
     <li class="current" id="unassigned_tab"><a href="#" onClick = "show_unassigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Unassigned Storage (<%= @unassigned %>)</a></li>
     <li id="assigned_tab"><a href="#" onClick = "show_assigned()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Assigned Storage (<%= @assigned %>)</a></li>
 </ul>
 </div>
-<script type="text/javascript">
   function show_unassigned()
   {
       $("#assigned_tab").removeClass('current');
@@ -23,34 +26,17 @@
       $("#addstorage_unassigned_grid_div").hide()
       $("#addstorage_assigned_grid_div").show()
   }
-  function add_storage()
-  {
-    var assigned_selected= get_selected_checkboxes(document.addstorage_assigned_grid_form)
-    var unassigned_selected= get_selected_checkboxes(document.addstorage_unassigned_grid_form)
-    var storage = Array.concat(assigned_selected,unassigned_selected)
-    if (validate_selected(storage, "storage pool")) {
-      $.post('<%= url_for :controller => "hardware", :action => "add_storage", :id => @hardware_pool %>',
-             { storage_pool_ids: storage.toString() },
-              function(data,status){ 
-                jQuery(document).trigger('close.facebox');
-                $("#storage_grid").flexReload()
-		if (data.alert) {
-		  alert(data.alert);
-                }
-               }, 'json');
-    }
-  }
-</script>
+  $("#addstorage_assigned_grid_div").hide()
+-->
   <div class="panel_header"></div>
   <div class="dialog_body">
-       <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_unassigned_grid",
-           :hwpool_id => Pool.root.id, :on_select => "false" } %>
-       <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_assigned_grid",
-           :hwpool_id => nil, :on_select => "false" } %>
+       <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_grid",
+           :hwpool_id => nil, :exclude_id => @hardware_pool.id, 
+           :on_select => "false" } %>
   </div>
 </div>
-<script type="text/javascript">
-  $("#addstorage_assigned_grid_div").hide()
-</script>
-<%= popup_footer("add_storage()", "Add Selected Storage Pools") %>
+<%= popup_footer("add_storage('#{url_for :controller => 'hardware', 
+                                        :action => 'add_storage', 
+                                        :id => @hardware_pool}')", 
+                 "Add Selected Storage Pools") %>
 

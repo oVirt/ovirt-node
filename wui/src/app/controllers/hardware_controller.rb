@@ -229,17 +229,27 @@ class HardwareController < ApplicationController
     if params[:id]
       pre_json
       hosts = @pool.hosts
+      find_opts = {}
+      include_pool = false
     else
-      # FIXME: no permissions checks here yet, no filtering of current pool yet
-      hosts = Host.find(:all)
+      # FIXME: no permissions or usage checks here yet
+      # filtering on which pool to exclude
+      id = params[:exclude_id]
+      hosts = Host
+      find_opts = {:include => :hardware_pool, 
+        :conditions => ["pools.id != ?", id]}
+      include_pool = true
     end
-    json_list(hosts, 
-              [:id, :hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :is_disabled_str])
+    attr_list = [:id, :hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :is_disabled_str]
+    attr_list.insert(2, [:hardware_pool, :name]) if include_pool
+    json_list(hosts, attr_list, [:all], find_opts)
   end
 
   def vm_pools_json
-    json_list(@pool.sub_vm_resource_pools, 
-              [:id, :name])
+    json_list(Pool, 
+              [:id, :name], 
+              [@pool, :children],
+              {:finder => 'call_finder', :conditions => ["type = 'VmResourcePool'"]})
   end
 
   def users_json
@@ -251,12 +261,20 @@ class HardwareController < ApplicationController
     if params[:id]
       pre_json
       storage_pools = @pool.storage_pools
+      find_opts = {}
+      include_pool = false
     else
-      # FIXME: no permissions checks here yet, no filtering of current pool yet
-      storage_pools = StoragePool.find(:all)
+      # FIXME: no permissions or usage checks here yet
+      # filtering on which pool to exclude
+      id = params[:exclude_id]
+      storage_pools = StoragePool
+      find_opts = {:include => :hardware_pool, 
+        :conditions => ["pools.id != ?", id]}
+      include_pool = true
     end
-    json_list(storage_pools, 
-              [:id, :display_name, :ip_addr, :get_type_label])
+    attr_list = [:id, :display_name, :ip_addr, :get_type_label]
+    attr_list.insert(2, [:hardware_pool, :name]) if include_pool
+    json_list(storage_pools, attr_list, [:all], find_opts)
   end
 
   def storage_volumes_json
@@ -283,8 +301,10 @@ class HardwareController < ApplicationController
     resource_ids = resource_ids_str.split(",").collect {|x| x.to_i} if resource_ids_str
     begin
       @pool.create_with_resources(@parent, resource_type, resource_ids)
-      render :json => { :object => "pool", :success => true, 
+      reply = { :object => "pool", :success => true, 
                         :alert => "Hardware Pool was successfully created." }
+      reply[:resource_type] = resource_type if resource_type
+      render :json => reply
     rescue
       render :json => { :object => "pool", :success => false, 
                         :errors => @pool.errors.localize_error_messages.to_a  }
@@ -308,7 +328,7 @@ class HardwareController < ApplicationController
   # in addition to the current pool (which is checked). We also need to fail
   # for hosts that aren't currently empty
   def add_hosts
-    host_ids_str = params[:host_ids]
+    host_ids_str = params[:resource_ids]
     host_ids = host_ids_str.split(",").collect {|x| x.to_i}
 
     begin
@@ -347,7 +367,7 @@ class HardwareController < ApplicationController
   # in addition to the current pool (which is checked). We also need to fail
   # for storage that aren't currently empty
   def add_storage
-    storage_pool_ids_str = params[:storage_pool_ids]
+    storage_pool_ids_str = params[:resource_ids]
     storage_pool_ids = storage_pool_ids_str.split(",").collect {|x| x.to_i}
     
     begin

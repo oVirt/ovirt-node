@@ -68,6 +68,7 @@
 <div class="data_section">
        <%= render :partial => "/storage/grid", :locals => { :table_id => "storage_grid",
                                                             :hwpool_id => @pool.id,
+                                                         :exclude_id => nil,
                                                          :on_select => "storage_select" } %>
 </div>
 

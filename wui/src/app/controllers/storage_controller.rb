@@ -88,7 +88,7 @@ class StorageController < ApplicationController
 
   def new2
     @storage_pools = @storage_pool.hardware_pool.storage_volumes
-    render :layout => 'popup'    
+    render :layout => false
   end
 
   def insert_refresh_task

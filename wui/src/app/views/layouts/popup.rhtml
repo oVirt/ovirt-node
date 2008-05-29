@@ -1,2 +1,7 @@
-<%# currently nothing for popups here. %>
+<div id="window">
+<div class="dialog_title_small">
+  <div class="header"><%= yield :title -%></div>
+  <div><%= yield :description -%></div>
+</div>
 <%= yield  %> 
+</div>

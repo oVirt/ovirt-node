@@ -7,18 +7,19 @@
 	$("#<%= table_id %>").flexigrid
 	(
 	{
-	url: '<%=  url_for :controller => "hardware", :action => "hosts_json", :id => hwpool_id %>',
+	url: '<%=  url_for :controller => "hardware", :action => "hosts_json", :id => hwpool_id, :exclude_id => exclude_id %>',
 	dataType: 'json',
 	colModel : [
-		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
-		{display: 'Hostname', name : 'hostname', width : 60, sortable : true, align: 'left'},
-	        {display: 'UUID', name : 'uuid', width : 180, sortable : true, align: 'left'},
-		{display: 'Hypervisor Type', name : 'hypervisor_type', width : 80, sortable : true, align: 'left'},
-		{display: 'CPUs', name : 'num_cpus', width : 40, sortable : true, align: 'left'},
-		{display: 'Speed (MHz)', name : 'cpu_speed', width : 60, sortable : true, align: 'right'},
-		{display: 'Arch', name : 'arch', width : 50, sortable : true, align: 'right'},
-		{display: 'RAM (MB)', name : 'memory', width : 60, sortable : true, align: 'right'},
-		{display: 'Disabled', name : 'is_disabled', width : 50, sortable : true, align: 'right'}
+		{display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
+		{display: 'Hostname', name : 'hostname', width : 60, align: 'left'},
+		<%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
+	        {display: 'UUID', name : 'uuid', width : 180, align: 'left'},
+		{display: 'Hypervisor Type', name : 'hypervisor_type', width : 80, align: 'left'},
+		{display: 'CPUs', name : 'num_cpus', width : 40, align: 'left'},
+		{display: 'Speed (MHz)', name : 'cpu_speed', width : 60, align: 'right'},
+		{display: 'Arch', name : 'arch', width : 50, align: 'right'},
+		{display: 'RAM (MB)', name : 'memory', width : 60, align: 'right'},
+		{display: 'Disabled', name : 'is_disabled', width : 50, align: 'right'}
 		],
 	sortname: "hostname",
 	sortorder: "asc",

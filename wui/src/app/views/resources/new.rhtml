@@ -1,7 +1,9 @@
-<div class="dialog_title_small">
-  <div class="header">Add New Virtual Machine Pool</div>
-  <div>Add a new Virtual Machine Pool to the <%= @parent.name %> pool.</div>
-</div>
+<%- content_for :title do -%>
+  Add New Virtual Machine Pool
+<%- end -%>
+<%- content_for :description do -%>
+  Add a new Virtual Machine Pool to the <%= @parent.name %> pool.
+<%- end -%>
 
 <form method="POST" action="<%= url_for :action => 'create' %>" id="vm_pool_form" >
 <div class="dialog_form">
@@ -9,27 +11,16 @@
 </div>
 <%= popup_footer("$('#vm_pool_form').submit()", "Create Virtual Machine Pool") %>
 </form>
-  <script type="text/javascript">
+
+<script type="text/javascript">
 $(function() {
     var vmpooloptions = {
         target:        '<%= url_for :action => 'create' %>',   // target element to update
 	dataType:      'json',
-        success:       afterNewVmPool  // post-submit callback
+        success:       afterVmPool  // post-submit callback
     };
 
     // bind form using 'ajaxForm' 
     $('#vm_pool_form').ajaxForm(vmpooloptions); 
 });
-function afterNewVmPool(response, status){
-    ajax_validation(response, status)
-    if (response.success) {
-      jQuery(document).trigger('close.facebox');
-      $("#vmpools_grid").flexReload()
-    }
-}
 </script>
-
-<%- content_for :title do -%>
-<%= _("New VM Resource Pool") %>
-<%- end -%>
-
