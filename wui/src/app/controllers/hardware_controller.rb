@@ -36,7 +36,7 @@ class HardwareController < ApplicationController
       redirect_to :controller => "dashboard"
     end
     if params[:ajax]
-      render :layout => false #:template => 'hardware/show.html.erb'
+      render :layout => 'tabs-and-content'
     end
   end
   

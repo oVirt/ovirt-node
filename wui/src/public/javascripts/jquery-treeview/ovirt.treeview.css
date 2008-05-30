@@ -31,11 +31,13 @@
 .treeview a.selected {
 	background-color: #DEE7EB;
 }
+.treeview a {text-decoration:none;}
 
+.treeview a:visited{color:#0000FF;}
 
 #treecontrol { margin: 1em 0; display: none; }
 
-.treeview .hover { background:#DEE7EB; cursor: pointer; }
+/*.treeview .hover { background:#DEE7EB; cursor: pointer; }*/
 
 .treeview li { background: url(images/treeview-default-line.gif) 0 0 no-repeat; }
 .treeview li.collapsable, .treeview li.expandable { background-position: 0 -176px; }
@@ -67,10 +69,10 @@
 .filetree span.file.hover { background: #DEE7EB url(images/icon_vmpool.png) 0 0 no-repeat; }
 
 .current_folder, .current_folder.hover { padding: 6px 0pt 5px 28px; background:#698FA6 url(images/icon_hdwarepool.png) 4px 2px no-repeat; color:#FFFFFF; display:block; }
-.current_folder a {color:#FFFFFF; }
+.current_folder a, .current_folder a:visited {color:#FFFFFF; }
 
 .current_file, .current_file.hover { padding: 6px 0pt 5px 28px; background:#698FA6 url(images/icon_vmpool.png) 4px 2px no-repeat; color:#FFFFFF; display:block; }
-.current_file a {color:#FFFFFF;}
+.current_file a, .current_file a:visited {color:#FFFFFF;}
 
 .disabled_folder, .disabled_folder.hover { 
     padding: 4px 0pt 5px 24px; 

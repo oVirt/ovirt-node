@@ -54,6 +54,9 @@ class ResourcesController < ApplicationController
       flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
       redirect_to :action => 'list'
     end
+    if params[:ajax]
+      render :layout => 'tabs-and-content' #:template => 'hardware/show.html.erb'
+    end
   end
 
   def quick_summary
