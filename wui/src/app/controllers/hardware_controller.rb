@@ -198,14 +198,17 @@ class HardwareController < ApplicationController
   end
 
   def edit
+    render :layout => 'popup'    
   end
 
   def update
-    if @pool.update_attributes(params[:pool])
-      flash[:notice] = 'Hardware Pool was successfully updated.'
-      redirect_to  :action => 'show', :id => @pool
-    else
-      render :action => "edit"
+    begin
+      @pool.update_attributes!(params[:pool])
+      render :json => { :object => "pool", :success => true, 
+                        :alert => "Hardware Pool was successfully modified." }
+    rescue
+      render :json => { :object => "pool", :success => false, 
+                        :errors => @pool.errors.localize_error_messages.to_a}
     end
   end
 
@@ -290,16 +293,21 @@ class HardwareController < ApplicationController
   def destroy
     parent = @pool.parent
     if not(parent)
-      flash[:notice] = "You can't delete the top level Hardware pool."
-      redirect_to :action => 'show', :id => @pool
+      alert="You can't delete the top level Hardware pool."
+      success=false
     elsif not(@pool.children.empty?)
-      flash[:notice] = "You can't delete a Pool without first deleting its children."
-      redirect_to :action => 'show', :id => @pool
+      alert = "You can't delete a Pool without first deleting its children."
+      success=false
     else
-      @pool.move_contents_and_destroy
-      flash[:notice] = 'Hardware Pool successfully destroyed'
-      redirect_to :action => 'show', :id => @pool.parent_id
+      if @pool.move_contents_and_destroy
+        alert="Hardware Pool was successfully deleted."
+        success=true
+      else
+        alert="Failed to delete hardware pool."
+        success=false
+      end
     end
+    render :json => { :object => "pool", :success => success, :alert => alert }
   end
 
   private

@@ -27,25 +27,6 @@ class HostController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
-  def list
-    @attach_to_pool=params[:attach_to_pool]
-    if @attach_to_pool
-      pool = HardwarePool.find(@attach_to_pool)
-      set_perms(pool)
-      unless @can_view
-        flash[:notice] = 'You do not have permission to view this host list: redirecting to top level'
-        redirect_to :controller => 'dashboard', :action => 'list'
-      else
-        conditions = "hardware_pool_id is null"
-        conditions += " or hardware_pool_id=#{pool.parent_id}" if pool.parent
-        @hosts = Host.find(:all, :conditions => conditions)
-      end
-    else
-      # no permissions here yet -- do we disable raw host list?
-      @hosts = Host.find(:all)
-    end
-  end
-
   def show
     set_perms(@perm_obj)
     unless @can_view
@@ -81,59 +62,33 @@ class HostController < ApplicationController
   end
 
   def disable
-    @host = Host.find(params[:id])
-    set_perms(@host.hardware_pool)
-    unless @can_modify
-      flash[:notice] = 'You do not have permission to edit this host'
-      redirect_to :action => 'show', :id => @host
-    else
-      @host.is_disabled = 1
-      if @host.save
-        flash[:notice] = '<a class="show" href="%s">%s</a> was disabled.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
-      else
-        flash[:notice] = 'Disable failed for <a class="show" href="%s">%s</a>.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
-      end
-      redirect_to :action => 'show', :id => @host
-    end
+    set_disabled(1)
   end
-
   def enable
-    @host = Host.find(params[:id])
-    set_perms(@host.hardware_pool)
-    unless @can_modify
-      flash[:notice] = 'You do not have permission to edit this host'
-      redirect_to :action => 'show', :id => @host
-    else
-      @host.is_disabled = 0
-      if @host.save
-        flash[:notice] = '<a class="show" href="%s">%s</a> was enabled.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
-      else
-        flash[:notice] = 'Enable failed for <a class="show" href="%s">%s</a>.' % [ url_for(:controller => "host", :action => "show", :id => @host), @host.hostname ]
-      end
-      redirect_to :action => 'show', :id => @host
-    end
+    set_disabled(0)
   end
 
-  def attach_to_pool
+  def set_disabled(value)
+    operation = value == 1 ? "diabled" : "enabled"
     @host = Host.find(params[:id])
     set_perms(@host.hardware_pool)
     unless @can_modify
-      flash[:notice] = 'You do not have permission to edit this host'
-      redirect_to :action => 'show', :id => @host
+      alert= 'You do not have permission to edit this host'
+      success=false
     else
-      pool = HardwarePool.find(params[:hardware_pool_id])
-      host_url = url_for(:controller => "host", :action => "show", :id => @host)
-      pool_url = url_for(:controller => pool.get_controller, :action => "show", :id => pool)
-      @host.hardware_pool_id = pool.id
-      if @host.save
-        flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, pool_url, pool.name ]
-        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
-      else
-        flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' %  [ host_url ,@host.hostname, host_url, host.hostname ]
-        redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
+      begin
+        @host.is_disabled = value
+        @host.save
+        alert="Host was successfully #{operation}"
+        success=true
+      rescue
+        alert="Error setting host to #{operation}"
+        success=false
       end
     end
+    render :json => { :object => "host", :success => success, :alert => alert }
   end
+
 
   private
   #filter methods

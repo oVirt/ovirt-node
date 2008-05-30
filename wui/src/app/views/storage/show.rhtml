@@ -1,5 +1,21 @@
-  <div class="selection_left">
-  	<div class="selection_title"><%=h @storage_pool.display_name %></div>
+<%- content_for :title do -%>
+  <%=h @storage_pool.display_name %>
+<%- end -%>
+
+<%- content_for :action_links do -%>
+  <%if @can_modify -%>
+      <%= link_to image_tag("icon_edit.png") + " Edit",
+                            {:controller => 'storage', :action => 'edit', :id => @storage_pool},
+                            :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
+      <a href="#" onClick="refresh_storage_pool()">
+        <%= image_tag "icon_x.png" %> Refresh
+      </a> 
+      <a href="#" onClick="delete_storage_pool()">
+        <%= image_tag "icon_x.png" %> Delete
+      </a> 
+  <%- end -%>
+<%- end -%>
+
     <div class="selection_key">
         IP address: </br>
         <% if @storage_pool[:type] == "IscsiStoragePool" %>
@@ -20,19 +36,20 @@
         <% end %>
         <%=h @storage_pool.get_type_label %></br>
     </div>
-  </div>
-  <div class="selection_right">
+<%- content_for :right do -%>
   <div class="selection_right_title">Volumes</div>
+<!-- hide for now
         	<ul class="selection_tab_nav">
             	<li><a href="#"><%=image_tag "icon_selection_add.gif", :style=>"vertical-align:middle;" %>Add</a></li>
             	<li><a href="#"><%=image_tag "icon_selection_showdetail.gif", :style=>"vertical-align:middle;" %>Show Detail</a></li>
             	<li><a href="#"><%=image_tag "icon_selection_remove.gif", :style=>"vertical-align:middle;" %>Remove</a></li>
             </ul>
+-->
   <div class="selection_right_table">
     <table id="storage_volumes_grid" style="display:none"></table>
   </div>
 
-</div>
+<%- end -%>
 
 <script type="text/javascript">
 	$("#storage_volumes_grid").flexigrid
@@ -53,5 +70,35 @@
 	showTableToggleBtn: true,
 	}
 	);   
+</script>
+<script type="text/javascript">
+      
+  function refresh_storage_pool()
+  {
+      $.post('<%= url_for :controller => "storage", :action => "refresh", :id => @storage_pool %>',
+              function(data,status){
+                refresh_summary('storage_selection', 
+                            '<%= url_for :controller => "storage", 
+                                         :action => "show" %>',
+                            <%= @storage_pool.id %>)
+                $("#storage_grid").flexReload()
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
+  }
+  function delete_storage_pool()
+  {
+    if(confirm("Are you sure?")){
+      $.post('<%= url_for :controller => "storage", :action => "destroy", :id => @storage_pool %>',
+              function(data,status){
+                storage_detail_empty()
+                $("#storage_grid").flexReload()
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
+    }
+  }
 </script>
 

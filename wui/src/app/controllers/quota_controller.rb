@@ -63,7 +63,8 @@ class QuotaController < ApplicationController
         :alert => "Quota was successfully updated." }
     rescue
       render :json => { :object => "quota", :success => false, 
-                   :errors => @quota.errors.localize_error_messages.to_a}
+                   :errors => @quota.errors.localize_error_messages.to_a,
+                   :alert => $!.to_s}
     end
   end
 

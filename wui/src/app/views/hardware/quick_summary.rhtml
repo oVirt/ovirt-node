@@ -3,17 +3,20 @@
 <%- end -%>
 <%- content_for :action_links do -%>
   <%if @can_modify -%>
+    <%= link_to image_tag("icon_edit.png") + " Edit",
+                          {:controller => 'hardware', :action => 'edit', :id => @pool},
+                          :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
     <%if @pool.quota -%>
       <%= link_to image_tag("icon_edit.png") + " Edit Default Quota",
                             {:controller => 'quota', :action => 'edit', :id => @pool.quota},
-                            :rel=>"facebox[.bolder]" %>
+                            :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
       <a href="#" onClick="delete_default_quota()">
         <%= image_tag "icon_x.png" %> Remove Default Quota
       </a> 
     <% else -%>
       <%= link_to image_tag("icon_edit.png") + " Edit Default Quota",
                             {:controller => 'quota', :action => 'new', :pool_id => @pool },
-                            :rel=>"facebox[.bolder]" %>
+                            :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
     <% end -%>
   <% end -%>
 <% end -%>

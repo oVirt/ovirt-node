@@ -1,22 +1,39 @@
-<div id="left">
-<h2><%= _("Editing Virtual Machine") %></h2>
+<%- content_for :title do -%>
+  Edit Virtual Machine
+<%- end -%>
+<%- content_for :description do -%>
+<%- end -%>
 
-<% form_tag :action => 'update', :id => @vm do %>
-  <%= render :partial => 'form', :locals => { :create => false } %>
-  <%= submit_tag 'Edit' %>
-<% end %>
+  <!-- DIALOG  BODY -->
+  <form method="POST" action="<%= url_for :action => 'update' %>" id="vm_form" >
+  <div class="dialog_form">
+    <%= hidden_field_tag 'id', @vm.id %>
+    <%= render :partial => 'form', :locals => { :create => false }  %>
+  </div>
+  <!-- DIALOG  FOOTER -->
+  <%= popup_footer("$('#vm_form').submit()", "Edit Virtual Machine") %>
+  </form>
 
-</div>
+<script type="text/javascript">
+$(function() {
+    var vmoptions = {
+        target:        '<%= url_for :action => 'update' %>',   // target element to update
+	dataType:      'json',
+        success:       function(response, status) {
+          ajax_validation(response, status)
+          if (response.success) {
+            jQuery(document).trigger('close.facebox');
+            $("#vms_grid").flexReload()
+            refresh_summary('vms_selection', 
+                            '<%= url_for :controller => "vm", 
+                                         :action => "show" %>',
+                            <%= @vm.id %>)
+          }
+        }
+    };
 
-<div id="right">
-  <h2>Actions</h2>
-  <ul class="actions">
-    <li class="action"><%= link_to 'Show', { :action => 'show', :id => @vm }, { :class => "show" } %></li>
-    <%if @vm.vm_resource_pool  -%>
-       <li class="action"><%= link_to 'Back to Vm Resource Pool', { :controller => 'resources', :action => 'show', :id => @vm.vm_resource_pool_id }, { :class => "show" } %></li>
-    <% end  -%>
-    <%if @vm.host  -%>
-      <li class="action"><%= link_to 'Back to Host', { :controller => 'host', :action => 'show', :id => @vm.host_id }, { :class => "show"  } %></li>
-    <% end  -%>
-  </ul>
-</div>
+    // bind form using 'ajaxForm' 
+    $('#vm_form').ajaxForm(vmoptions); 
+});
+</script>
+

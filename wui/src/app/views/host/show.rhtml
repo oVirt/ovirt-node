@@ -1,6 +1,39 @@
 <%- content_for :title do -%>
   <%=h @host.hostname %>
 <%- end -%>
+<%- content_for :action_links do -%>
+  <%if @can_modify -%>
+    <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
+      <a href="#" onClick="toggle_host(false)">
+        <%= image_tag "icon_x.png" %> Disable Host
+      </a> 
+    <% else -%>
+      <a href="#" onClick="toggle_host(true)">
+        <%= image_tag "icon_x.png" %> Enable Host
+      </a> 
+    <% end -%>
+  <%- end -%>
+<%- end -%>
+<script type="text/javascript">
+  function toggle_host(enable)
+  {
+    enable_url = '<%= url_for :controller => "host", :action => "enable", :id => @host %>'
+    disable_url = '<%= url_for :controller => "host", :action => "disable", :id => @host %>'
+    if(confirm("Are you sure?")){
+      $.post(enable ? enable_url : disable_url,
+              function(data,status){
+                refresh_summary('hosts_selection', 
+                            '<%= url_for :controller => "host", 
+                                         :action => "show" %>',
+                            <%= @host.id %>)
+                $("#hosts_grid").flexReload()
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
+    }
+  }
+</script>
 
     <div class="selection_key">
         UUID:<br/>            

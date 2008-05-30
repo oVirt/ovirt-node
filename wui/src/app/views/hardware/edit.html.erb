@@ -1,46 +1,37 @@
-<div id="data">
-  <div class="inside">
-
-    <div id="dataTableWrapper">
-
-    <div class="dataTable">
-        <div class="inside">
-
-      <div class="data-table-column">
-      <% form_tag :action => 'update', :id => @pool do %>
-        <%= render :partial => 'form' %>
-        <%= submit_tag 'Edit' %>
-      <% end %>
-      </div>
-
-      <div class="data-table-column">
-        <strong class="header">Existing Pools (<%= @pool.self_and_siblings.size %>)</strong>
-        <%= render :partial => "list", :locals => { :hardware_pools => @pool.self_and_siblings } %>
-      </div>
-
-
-    </div> <!-- end #data-table.inside -->
-  </div> <!-- end #dataTable -->
-
-
-</div> <!-- end #dataTableWrapper -->
-
-      </div> <!-- end #data.inside -->
-      </div> <!-- end #data -->
-
-  </td>
-  <td id="right">
-    <div class="heading">&nbsp;</div>
-
-    <div class="tools">
-    <h3>Actions</h3>
-      <div class="actions">
-        <%= link_to "Back to #{@pool.name}", { :action => 'show', :id => @pool }, { :class => "" } %>
-      </div>
-    </div> <!-- end #tools -->
-
-  </td>
-
 <%- content_for :title do -%>
-<%= "Editing Pool #{@pool.name}" %>
+  Edit Hardware Pool
 <%- end -%>
+<%- content_for :description do -%>
+  Edit this Hardware Pool
+<%- end -%>
+
+<form method="POST" action="<%= url_for :action => 'update' %>" id="pool_form" >
+<div class="dialog_form">
+  <%= hidden_field_tag 'id', @pool.id %>
+  <%= render :partial => 'form' %>
+</div>
+<%= popup_footer("$('#pool_form').submit()", "Edit Hardware Pool") %>
+</form>
+
+<script type="text/javascript">
+$(function() {
+    var hwpooloptions = {
+        target:        '<%= url_for :action => 'update' %>',   // target element to update
+	dataType:      'json',
+        success:       function(response, status) {
+          ajax_validation(response, status)
+          if (response.success) {
+            jQuery(document).trigger('close.facebox');
+            //$("#hwpool_grid").flexReload()
+            refresh_summary('hwpool_selection', 
+                            '<%= url_for :controller => "hardware", 
+                                         :action => "quick_summary" %>',
+                            <%= @pool.id %>)
+          }
+        }
+    };
+
+    // bind form using 'ajaxForm' 
+    $('#pool_form').ajaxForm(hwpooloptions); 
+});
+</script>
