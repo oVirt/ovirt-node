@@ -31,9 +31,10 @@
     }
     if (selected_ids.length == 1)
     {
-      $('#vmpools_selection').load('<%= url_for :controller => "resources", 
-                                                :action => "quick_summary" %>',
-                { id: parseInt(selected_ids[0].substring(3))})
+      refresh_summary('vmpool_selection', 
+                      '<%= url_for :controller => "resources", 
+                                   :action => "quick_summary" %>',
+                      parseInt(selected_ids[0].substring(3)))
     }
   }
 </script>
@@ -45,6 +46,6 @@
                                                          :pool_id => @pool.id,
                                                          :on_select => "vmpools_select" } %>
 </div>
-<div class="selection_detail" id="vmpools_selection">
+<div class="selection_detail" id="vmpool_selection">
   <div>Select a VM pool above.</div>
 </div>
