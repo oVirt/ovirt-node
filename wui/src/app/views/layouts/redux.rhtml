@@ -44,7 +44,6 @@
             action_type: "hyperlink"
 	    })
             $('a[rel*=facebox]').livequery(function(){$(this).facebox();},function(){});
-            $('a[rel*=close]').trigger('close.facebox');
             $('#side a').livequery(function(){
                 $(this).bind('click', function(){ 
                     $('#side span').each(function(){
