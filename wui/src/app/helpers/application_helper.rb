@@ -106,7 +106,6 @@ module ApplicationHelper
      }
   end
 
-
   def timeout_flash(name)
     %{
     <script type="text/javascript">

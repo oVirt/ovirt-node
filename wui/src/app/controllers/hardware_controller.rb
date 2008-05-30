@@ -225,6 +225,16 @@ class HardwareController < ApplicationController
     render :json => graph_object
   end
 
+  def quick_summary
+    pre_show
+    set_perms(@perm_obj)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this Hardware Pool: redirecting to top level'
+      redirect_to :action => 'list'
+    end
+    render :layout => 'selection'    
+  end
+
   def hosts_json
     if params[:id]
       pre_json

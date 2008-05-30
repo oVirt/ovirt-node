@@ -136,3 +136,15 @@ function afterVm(response, status){
       $("#vms_grid").flexReload()
     }
 }
+
+//selection detail refresh 
+function refresh_summary(element_id, url, obj_id){
+  $('#'+element_id+'').load(url, { id: obj_id})
+}
+
+// this must be called again after ajax loading of content with facebox links
+function refresh_facebox(){
+  $('a[rel*=facebox]').facebox()
+  $('a[rel*=close]').trigger('close.facebox')
+}
+

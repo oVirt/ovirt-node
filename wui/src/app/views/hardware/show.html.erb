@@ -1,4 +1,5 @@
 <div class="panel_header"></div>
+  <div class="data_section">
 
 <br/>&nbsp; &nbsp;<b><%= @pool.name %></b><br/><br/>
 
@@ -102,4 +103,18 @@
      </tr>
 
    </table>
+  </div>
 </div>
+<div class="selection_detail" id="hwpool_selection">
+  <div>Hardware pool quota details.</div>
+</div>
+<%- content_for :scripts do -%>
+<script type="text/javascript">
+      $(document).ready(function(){
+         refresh_summary('hwpool_selection', 
+                         '<%= url_for :controller => "hardware", 
+                                      :action => "quick_summary" %>',
+                         <%= @pool.id %>)
+	}); 
+</script>
+<%- end -%>

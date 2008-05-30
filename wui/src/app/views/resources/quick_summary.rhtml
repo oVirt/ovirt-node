@@ -1,6 +1,7 @@
-  <div class="selection_left">
-  	<div class="selection_title"><%=h @vm_resource_pool.name %> quota</div>
-	
+<%- content_for :title do -%>
+  <%=h @vm_resource_pool.name %> quota
+<%- end -%>
+
     <% resources = @vm_resource_pool.full_resources %>
     <div class="selection_key">
         <br/>            
@@ -19,4 +20,3 @@
           <%= item[2]%><br>
         <% end %>
     </div>
-</div>

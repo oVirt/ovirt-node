@@ -1,7 +1,7 @@
 <%= error_messages_for 'quota' %>
 
 <!--[form:quota]-->
-<%= hidden_field_with_label (@quota.pool[:type] == "HardwarePool" ? "Hardware Pool" : "VM Resource Pool"), 'quota', 'pool_id', @quota.pool.name   %>
+<%= hidden_field 'quota', 'pool_id'   %>
 
 <%= text_field_with_label "Total Virtual CPUs", 'quota', 'total_vcpus'  %>
 

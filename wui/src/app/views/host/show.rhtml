@@ -1,5 +1,7 @@
-  <div class="selection_left">
-  	<div class="selection_title"><%=h @host.hostname %></div>
+<%- content_for :title do -%>
+  <%=h @host.hostname %>
+<%- end -%>
+
     <div class="selection_key">
         UUID:<br/>            
 	CPUs:<br/>        
@@ -22,7 +24,7 @@
           disabled
         <% end -%>
         <br/>
-    </div>
+
 <!-- FIXME: need styling
 <h3>Network Interfaces</h3>
 <% if !@host.nics.empty? %>
@@ -33,7 +35,8 @@
 <% end %>
 -->
 </div>
-<div class="selection_right">  
+
+<%- content_for :right do -%>
   <div class="detail-pane-chart-header">
     <span>
       Load
@@ -62,5 +65,5 @@
                           :chartType => 'line', 
                           :yGridLines => 'lightgrey', 
                           :url => (url_for :controller => 'graph', :action => 'graph', :type => 'detail') } %>
-</div>
+<%- end -%>
 
