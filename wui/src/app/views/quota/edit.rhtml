@@ -1,35 +1,37 @@
-<div id="dataTableWrapper">
-
-  <div class="dataTable">
-      <div class="inside">
-
-        <div class="data-table-column">
-          <% form_tag :action => 'update', :id => @quota do %>
-            <%= render :partial => 'form' %>
-            <%= submit_tag 'Edit' %>
-          <% end %>
-       </div>
-
-    </div> <!-- end #data-table.inside -->
-  </div> <!-- end #dataTable -->
-
-</div> <!-- end #dataTableWrapper -->
-
-<div class="tools">
-  <h3>Actions</h3>
-
-  <%if @can_modify -%>
-  <div class="actions remove">
-      <%= link_to 'Remove Quota (unlimited)', { :controller => 'quota', :action => 'destroy', :id => @quota }, { :confirm => 'Are you sure?', :method=> :post, :class => "edit" } %>
-  </div>
-  <%- end -%>
-
-  <div class="actions">
-    <%= link_to "Back to #{@quota.pool.name}", { :controller => @quota.pool.get_controller, :action => 'show', :id => @quota.pool }, { :class => "show" } %>
-  </div>
-
-</div>
-
 <%- content_for :title do -%>
-<%=  _("Editing Quota") %>
+  Edit Quota
 <%- end -%>
+<%- content_for :description do -%>
+  Edit the quota for <%= @quota.pool.name %>.
+<%- end -%>
+
+<form method="POST" action="<%= url_for :action => 'update' %>" id="quota_form" >
+<div class="dialog_form">
+  <%= hidden_field_tag 'id', @quota.id %>
+  <%= render :partial => 'form' %>
+</div>
+<%= popup_footer("$('#quota_form').submit()", "Edit Quota") %>
+</form>
+
+<script type="text/javascript">
+$(function() {
+    var quotaoptions = {
+        target:        '<%= url_for :action => 'update' %>',   // target element to update
+	dataType:      'json',
+        success:       function(response, status) {
+          ajax_validation(response, status)
+          if (response.success) {
+            jQuery(document).trigger('close.facebox');
+            refresh_summary('<%= (@quota.pool.get_controller == "hardware") ? 
+ 	                          "hw" : "vm" %>pool_selection', 
+                            '<%= url_for :controller => @quota.pool.get_controller, 
+                                         :action => "quick_summary" %>',
+                            <%= @quota.pool.id %>)
+          }
+        }
+    };
+
+    // bind form using 'ajaxForm' 
+    $('#quota_form').ajaxForm(quotaoptions); 
+});
+</script>

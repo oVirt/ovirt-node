@@ -43,10 +43,7 @@
 	    })
 	}); 
       $(document).ready(function(){         
-        $('a[rel*=facebox]').facebox()
-      })
-      $(document).ready(function(){         
-        $('a[rel*=close]').trigger('close.facebox')
+        refresh_facebox()
       })
       </script>
    <%= yield :scripts -%>

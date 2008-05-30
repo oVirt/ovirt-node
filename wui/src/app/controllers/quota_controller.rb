@@ -38,39 +38,45 @@ class QuotaController < ApplicationController
   end
 
   def new
+    render :layout => 'popup'    
   end
 
   def create
-    if @quota.save
-      flash[:notice] = 'Quota was successfully created.'
-      redirect_to_parent
-    else
-      render :action => 'new'
+    begin
+      @quota.save!
+      render :json => { :object => "quota", :success => true, 
+                        :alert => "Quota was successfully created." }
+    rescue
+      render :json => { :object => "quota", :success => false, 
+                        :errors => @quota.errors.localize_error_messages.to_a}
     end
   end
 
   def edit
+    render :layout => 'popup'    
   end
 
   def update
-    if @quota.update_attributes(params[:quota])
-      flash[:notice] = 'Quota was successfully updated.'
-      redirect_to_parent
-    else
-      render :action => 'edit'
+    begin
+      @quota.update_attributes!(params[:quota])
+      render :json => { :object => "quota", :success => true, 
+        :alert => "Quota was successfully updated." }
+    rescue
+      render :json => { :object => "quota", :success => false, 
+                   :errors => @quota.errors.localize_error_messages.to_a}
     end
   end
 
   def destroy
     pool = @quota.pool
-    unless @quota.destroy
-      flash[:notice] = 'destroying quota failed '
-    end
-    if pool
-      redirect_to :controller => pool.get_controller, :action => 'show', :id => pool.id
+    if @quota.destroy
+      alert="Quota was successfully deleted."
+      success=true
     else
-      redirect_to :controller => 'dashboard'
+      alert="Failed to delete quota."
+      success=false
     end
+    render :json => { :object => "quota", :success => success, :alert => alert }
   end
 
   protected

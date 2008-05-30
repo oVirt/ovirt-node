@@ -1,6 +1,40 @@
-  <div class="selection_left">
-  	<div class="selection_title"><%=h @vm_resource_pool.name %> quota</div>
-	
+<%- content_for :title do -%>
+  <%=h @vm_resource_pool.name %> quota
+<%- end -%>
+<%- content_for :action_links do -%>
+  <%if @is_hwpool_admin -%>
+    <%if @vm_resource_pool.quota -%>
+      <%= link_to image_tag("icon_edit.png") + " Edit Quota",
+                            {:controller => 'quota', :action => 'edit', :id => @vm_resource_pool.quota},
+                            :rel=>"facebox[.bolder]" %>
+      <a href="#" onClick="delete_vm_quota()">
+        <%= image_tag "icon_x.png" %> Revert to Default Quota
+      </a> 
+    <% else -%>
+      <%= link_to image_tag("icon_edit.png") + " Edit Quota",
+                            {:controller => 'quota', :action => 'new', :pool_id => @vm_resource_pool },
+                            :rel=>"facebox[.bolder]" %>
+    <% end -%>
+  <% end -%>
+<% end -%>
+<script type="text/javascript">
+  function delete_vm_quota()
+  {
+    if(confirm("Are you sure?")){
+      $.post('<%= url_for :controller => "quota", :action => "destroy", :id => @vm_resource_pool.quota %>',
+              function(data,status){
+                refresh_summary('vmpool_selection', 
+                            '<%= url_for :controller => "resources", 
+                                         :action => "quick_summary" %>',
+                            <%= @vm_resource_pool.id %>)
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
+    }
+  }
+</script>
+
     <% resources = @vm_resource_pool.full_resources %>
     <div class="selection_key">
         <br/>            
@@ -19,4 +53,3 @@
           <%= item[2]%><br>
         <% end %>
     </div>
-</div>

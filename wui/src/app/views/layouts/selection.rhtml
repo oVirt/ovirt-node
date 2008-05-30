@@ -1,2 +1,26 @@
-<%# currently nothing for popups here. %>
-<%= yield  %> 
+<div class="selection_left">
+  <div class="selection_title"><%= yield :title -%></div>
+
+  <% tools = yield :action_links -%> 
+  <% if tools %>
+    <ul class="selection_tools">
+      <li>
+        <%= image_tag "icon_separator.png", :style=>"vertical-align: middle;" %>
+      </li>
+      <%= tools -%>
+    </ul>
+  <% end %>
+  <div class="clear_row"/>
+
+  <%= yield  %> 
+
+</div>
+<% right = yield :right -%> 
+<% if right %>
+  <div class="selection_right">  
+    <%= right -%> 
+  </div>
+<% end %>
+<script type="text/javascript">
+  refresh_facebox()
+</script>

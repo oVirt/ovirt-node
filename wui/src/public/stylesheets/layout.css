@@ -233,8 +233,39 @@ textarea:focus, input:focus {
   font-size: 120%; 
   font-weight:bold; 
   padding-bottom: 10px;
+  float: left;
 }
 
+.selection_tools {
+  background:transparent none repeat scroll 0%;
+  color:#000000;
+  float:left;
+  line-height:1.7;
+  list-style-type:none;
+  margin:0pt;
+  padding:0pt 8px;
+  text-align:center;
+  text-decoration:none;
+}
+.selection_tools li {
+  float:left;
+  margin:0pt 1px;
+  padding:0pt;
+}
+.selection_tools img {
+}
+.selection_tools a {
+  background:transparent none repeat scroll 0%;
+  color:#000000;
+  float:left;
+  line-height:1.7;
+  padding:0pt 8px;
+  text-align:center;
+  text-decoration:none;
+}
+.selection_tools a:hover {
+  background:#B0CBDE none repeat scroll 0%;
+}
 .selection_key {
   text-align:right;
   float:left;

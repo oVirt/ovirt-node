@@ -40,7 +40,7 @@
   </td>
 
 <div class="selection_detail" id="vmpool_selection">
-  <div>Select a VM pool above.</div>
+  <div>VM pool quota details.</div>
 </div>
 
 <%- content_for :title do -%>
@@ -50,9 +50,10 @@
 <%- content_for :scripts do -%>
 <script type="text/javascript">
       $(document).ready(function(){         
-        $('#vmpool_selection').load('<%= url_for :controller => "resources", 
-                                                :action => "quick_summary" %>',
-                { id: <%= @vm_resource_pool.id %>})
+         refresh_summary('vmpool_selection', 
+                         '<%= url_for :controller => "resources", 
+                                      :action => "quick_summary" %>',
+                         <%= @vm_resource_pool.id %>)
 	}); 
 </script>
 
