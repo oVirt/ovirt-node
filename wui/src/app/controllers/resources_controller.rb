@@ -89,7 +89,7 @@ class ResourcesController < ApplicationController
 
   def vms_json
     json_list(@vm_resource_pool.vms, 
-              [:id, :description, :uuid, :num_vcpus_allocated, :memory_allocated_in_mb, :vnic_mac_addr, :state])
+              [:id, :description, :uuid, :num_vcpus_allocated, :memory_allocated_in_mb, :vnic_mac_addr, :state, :id])
   end
 
   def users_json

@@ -74,6 +74,12 @@ class Pool < ActiveRecord::Base
   def sub_vm_resource_pools
     children({:conditions => "type='VmResourcePool'"})
   end
+  def all_sub_hardware_pools
+    all_children({:conditions => "type='HardwarePool'"})
+  end
+  def all_sub_vm_resource_pools
+    all_children({:conditions => "type='VmResourcePool'"})
+  end
   def self_and_like_siblings
     self_and_siblings.select {|pool| pool[:type] == self.class.name}
   end

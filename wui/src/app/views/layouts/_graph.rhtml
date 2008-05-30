@@ -12,8 +12,7 @@
             
         $.getJSON("<%= url %>", params, 
                   function(response) { 
-                      var defs = svg.defs();
-                      //svg.graph.noDraw().title('',10);
+                      svg.graph.noDraw()
                       svg.graph.chartFormat('white', 'white').chartType("<%= chartType %>", {explode: [2], explodeDist: 10})
                       $(response.dataset).each(
                            function(){

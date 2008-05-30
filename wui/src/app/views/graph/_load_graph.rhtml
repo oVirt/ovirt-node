@@ -1,0 +1,30 @@
+<script type="text/javascript">
+// generates load graph for specified component
+function load_widget(div, target){
+  // cant partially render here, so do what we can 
+  var id = $(div).html();
+  $(div).html('');
+  $(div).addClass("load_graph");
+  $(div).svg();
+  var svg = svgManager.getSVGFor(div);
+  var params = { id:1, type:"json", timeframe:"7 days", isJSON:true};
+  $.getJSON("<%= url_for :controller => 'graph', :action => 'load_graph_data' %>/" + id + "?target=" + target, params,
+             function(response){
+                  svg.graph.noDraw();
+                   svg.graph.chartFormat('white', 'white').
+                       chartType("stackedRow", {explode: [2], explodeDist: 10});
+                   $(response.dataset).each(
+                         function(){
+                              svg.graph.addSeries(this.name, this.values, this.fill, this.stroke, this.strokeWidth);
+                         }
+                   );
+                   svg.graph.xAxis.line('white', 0);
+                   svg.graph.xAxis.ticks(1, 0).labels(response.timepoints);
+                   svg.graph.yAxis.line('white', 0);
+                   svg.graph.legend.show(false);                      
+                   svg.graph.redraw();
+             }
+   );
+   $(div).children().filter("svg").attr('height', 25).attr('width', 200);
+};
+</script>

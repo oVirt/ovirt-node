@@ -1,3 +1,4 @@
+<%= render :partial => 'graph/load_graph.rhtml' %>
 <div id="<%= table_id %>_div">
 <form name="<%= table_id %>_form">
 <table id="<%= table_id %>" style="display:none"></table>
@@ -19,7 +20,8 @@
 		{display: 'Speed (MHz)', name : 'cpu_speed', width : 60, align: 'right'},
 		{display: 'Arch', name : 'arch', width : 50, align: 'right'},
 		{display: 'RAM (MB)', name : 'memory', width : 60, align: 'right'},
-		{display: 'Disabled', name : 'is_disabled', width : 50, align: 'right'}
+		{display: 'Disabled', name : 'is_disabled', width : 50, align: 'right'},
+        {display: 'Load', name : 'load', width: 180, sortable : false, align: 'left', process: <%= table_id %>_load_widget }
 		],
 	sortname: "hostname",
 	sortorder: "asc",
@@ -34,5 +36,9 @@
 	{
 	       $(celDiv).html('<input type="checkbox" name="grid_checkbox" value="'+$(celDiv).html()+'"/>');
 	} 
+    function <%= table_id %>_load_widget(celDiv)
+    {
+        load_widget(celDiv, "host");
+    };
 
 </script>

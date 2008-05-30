@@ -56,6 +56,10 @@ class HostController < ApplicationController
     render :layout => 'selection'    
   end
 
+  # retrieves data used by snapshot graphs
+  def snapshot_graph
+  end
+
   def addhost
     @hardware_pool = Pool.find(params[:hardware_pool_id])
     render :layout => 'popup'    

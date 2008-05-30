@@ -216,7 +216,7 @@ textarea:focus, input:focus {
   bottom:0px; 
   left: 0px;
   right: 0px;
-  height: 150px;
+  height: 165px;
   background: #DEE7EB;
   border-top: #CCCCCC solid 1px;
   overflow: auto;
@@ -281,7 +281,7 @@ textarea:focus, input:focus {
 .selection_right {
   width:48%;
   float: right;
-   border-left: 1px solid #CCCCCC;
+   padding-top: 5px;
    /*background: #F0F0F0;*/
    height: 148px;
  }

@@ -31,10 +31,7 @@
     }
     if (selected_ids.length == 1)
     {
-      refresh_summary('vmpool_selection', 
-                      '<%= url_for :controller => "resources", 
-                                   :action => "quick_summary" %>',
-                      parseInt(selected_ids[0].substring(3)))
+      $('#vmpools_selection').load('<%= url_for :controller => "resources", :action => "quick_summary" %>/' + parseInt(selected_ids[0].substring(3)));
     }
   }
 </script>

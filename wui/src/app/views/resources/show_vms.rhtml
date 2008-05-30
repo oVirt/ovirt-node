@@ -55,9 +55,7 @@
     }
     if (selected_ids.length == 1)
     {
-      $('#vms_selection').load('<%= url_for :controller => "vm", 
-                                            :action => "show" %>',
-                { id: parseInt(selected_ids[0].substring(3))})
+      $('#vms_selection').load('<%= url_for :controller => "vm", :action => "show" %>/' + parseInt(selected_ids[0].substring(3)));
     }
   }
 </script>

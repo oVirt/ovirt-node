@@ -1,0 +1,69 @@
+<div id="snapshot_graphs">
+   <table>
+     <tr>  
+           <th width="25%">Metric</th>
+           <th width="70%">Load</th>
+     </tr>
+
+     <tr>  
+           <td>Overall Load </td>  
+           <td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:overall_load] %> </div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:overall_load] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                    <%= render :partial => '/layouts/graph', :locals => { :div_id => 'overall_load_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'graph', :action => 'snapshot_graph_data', :id => @id, :target => 'overall_load'  ) } %>
+                  </div>
+               </div>
+           </td> 
+     </tr>
+     <tr>  
+           <td>CPU </td>  
+           <td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:cpu] %> </div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:cpu] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'cpu_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'graph', :action => 'snapshot_graph_data', :target => 'cpu'  ) } %>
+                  </div>
+               </div>
+           </td> 
+     </tr>
+     <tr>  
+           <td>Network In </td>  
+           <td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:in] %> mb/s </div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:in] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'net_in_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'graph', :action => 'snapshot_graph_data', :target => 'in'  ) } %>
+                  </div>
+               </div>
+           </td> 
+     </tr>
+     <tr>  
+           <td>Network Out</td>  
+           <td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:out] %> mb/s</div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:out] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'net_out_snapshot', :chartType => 'stackedRow', :url => (url_for :controller => 'graph', :action => 'snapshot_graph_data', :target => 'out' ) } %>
+                  </div>
+               </div>
+           </td> 
+     </tr>
+     <tr>  
+           <td>I/O </td>  
+           <td>
+               <div class="snapshot_graph_text"><%= @snapshots[:avg][:io] %> mb/s</div>
+               <div class="snapshot_graph_container">
+                  <div class="snapshot_graph_arrow" style="padding-left: <%= @snapshots[:peak][:io] + 28 %>px;"><%= image_tag "icon_menu_arrow.gif" %></div>
+                  <div class="snapshot_graph">
+                      <%= render :partial => '/layouts/graph', :locals => { :div_id => 'io_snapshot',  :chartType => 'stackedRow', :url => (url_for :controller => 'graph', :action => 'snapshot_graph_data', :target => 'io'  ) } %> </td> 
+                  </div>
+               </div>
+           </td>
+     </tr>
+   </table>
+</div>

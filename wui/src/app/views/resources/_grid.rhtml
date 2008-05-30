@@ -1,3 +1,4 @@
+<%= render :partial => 'graph/load_graph.rhtml' %>
 <div id="<%= table_id %>_div">
 <form name="<%= table_id %>_form">
 <table id="<%= table_id %>" style="display:none"></table>
@@ -11,7 +12,8 @@
 	dataType: 'json',
 	colModel : [
 		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
-		{display: 'Name', name : 'name', width : 160, sortable : true, align: 'left'}
+		{display: 'Name', name : 'name', width : 160, sortable : true, align: 'left'},
+        {display: 'Load', name : 'load', width: 180, sortable : false, align: 'left', process: <%= table_id %>_load_widget }
 		],
 	sortname: "name",
 	sortorder: "asc",
@@ -26,5 +28,9 @@
 	{
 	       $(celDiv).html('<input type="checkbox" name="grid_checkbox" value="'+$(celDiv).html()+'"/>');
 	} 
+    function <%= table_id %>_load_widget(celDiv)
+    {
+        load_widget(celDiv, "resource");
+    };
 
 </script>

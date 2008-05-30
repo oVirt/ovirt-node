@@ -53,3 +53,7 @@
           <%= item[2]%><br>
         <% end %>
     </div>
+</div>
+<div class="selection_right">  
+    <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @vm_resource_pool.id, :target => 'resource' %>
+</div>

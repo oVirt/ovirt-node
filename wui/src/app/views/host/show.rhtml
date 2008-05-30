@@ -37,33 +37,5 @@
 </div>
 
 <%- content_for :right do -%>
-  <div class="detail-pane-chart-header">
-    <span>
-      Load
-    </span>
-    <span style="position:absolute;right:5px;">Last 7 Days</span>
-  </div>
-    <%= render :partial => '/layouts/graph', 
-             :locals => { 
-                          :div_id => 'host_load', 
-                          :css_class => 'detail-pane-chart',
-                          :chartType => 'line', 
-                          :yGridLines => 'lightgrey', 
-                          :url => (url_for :controller => 'graph', :action => 'graph', :type => 'detail') } %>
-    <div class="detail-pane-chart-header">
-    <span>
-      RAM
-    </span>
-    <span style="position:absolute;right:5px;">
-      Last 7 Days
-    </span>
-    </div>
-    <%= render :partial => '/layouts/graph', 
-             :locals => { 
-                          :div_id => 'host_ram', 
-                          :css_class => 'detail-pane-chart',
-                          :chartType => 'line', 
-                          :yGridLines => 'lightgrey', 
-                          :url => (url_for :controller => 'graph', :action => 'graph', :type => 'detail') } %>
+    <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @host.id, :target => 'host' %>
 <%- end -%>
-

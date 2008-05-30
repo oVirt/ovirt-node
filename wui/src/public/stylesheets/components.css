@@ -132,7 +132,9 @@
 .availability_graph { float: left; width: 33%;}
 .availability_graph_left { float: left; width: 50px;}
 .availability_graph_right { float: left; margin-top: 10%; margin-left: 125px; min-width: 100px;}
-#available_cpu, #available_memory, #available_vms {margin-left:50px;width:100px;height:100px}
+#available_cpu, #available_memory, #available_vms,
+#available_vcpu, #available_vram, #available_vm_quotas
+{margin-left:50px;width:100px;height:100px}
 
 /* history graphs on hardware / resource summary tab */
 #history_graphs { height: 270px; overflow: hidden; margin-left: 40px; margin-top: 40px; }
@@ -189,7 +191,7 @@
 }
 
 /* snapshot graphs on hardware / resource summary tab */
-#snapshot_graphs { height: 150px; padding-left: 60px; }
+#snapshot_graphs { height: 300px; padding-left: 60px; }
 #snapshot_graphs table { width: 90%; border-spacing: 0;}
 #snapshot_graphs th    { background: #CCCCCC; text-align: left; padding-left: 10px; border: 1px solid #DDDDDD;}
 #snapshot_graphs td    { padding-left: 10px; border: 1px solid #DDDDDD;}
@@ -211,17 +213,19 @@
   float: left;
 }
 
-.detail-pane-chart {
-    height: 50px;
-    width: 375px;
-}
+/* snapshot graphs on detail panes */
+.selection_detail #snapshot_graphs { height: 210px; padding-left: 0; }
+.selection_detail #snapshot_graphs table { width: 100%; }
+.selection_detail #overall_load_snapshot, 
+.selection_detail #cpu_snapshot, 
+.selection_detail #net_in_snapshot, 
+.selection_detail #net_out_snapshot, 
+.selection_detail #io_snapshot { height: 5px; width: 215px; }
+.selection_detail .snapshot_graph_arrow{ height: 15px; }
+.selection_detail .snapshot_graph_text { padding-top: 0; }
+.selection_detail .snapshot_graph_container{ width: 85%; }
+.selection_detail .snapshot_graph{ padding-left: 23px; }
 
-.detail-pane-chart-header {
-    width:252.5px;
-    background: #F0F0F0;
-    position:relative;
-    margin-left:37px;
-    margin-bottom:-4px;
-    padding: 5px;
-    border: 1px solid #CCCCCC;
+/* load graphs in flexigrid */
+.load_graph {
 }
