@@ -38,7 +38,8 @@
   {
     var selected_ids = new Array() 
     for(i=0; i<selected_rows.length; i++) { 
-      selected_ids[i] = selected_rows[i].id
+      load_widget_select(selected_rows[i]);
+      selected_ids[i] = selected_rows[i].id;
     }
     if (selected_ids.length == 1)
     {
@@ -52,7 +53,10 @@
        <%= render :partial => "/host/grid", :locals => { :table_id => "hosts_grid",
                                                          :hwpool_id => @pool.id,
                                                          :exclude_id => nil,
-                                                         :on_select => "hosts_select" } %>
+                                                         :on_select => "hosts_select", 
+                                                         :on_deselect => "load_widget_deselect",
+                                                         :on_hover => "load_widget_hover",
+                                                         :on_unhover => "load_widget_unhover" } %>
     </div>
 <div class="selection_detail" id="hosts_selection">
   <div>Select a host above.</div>

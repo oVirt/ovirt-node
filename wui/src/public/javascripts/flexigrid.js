@@ -50,6 +50,9 @@
 			 onChangeSort: false,
 			 onSuccess: false,
 			 onSelect: false,
+			 onDeselect: false,
+             onHover: false,
+             onUnhover: false,
 			 onSubmit: false, // using a custom populate function
 			 multiselect: false  // allow selection of multiple elements
 		  }, p);
@@ -709,10 +712,15 @@
 									{ 
 									    var obj = (e.target || e.srcElement); if (obj.href || obj.type) return true;
 									    if ( p.multiselect == false ) {
-										$(t).find("tr.trSelected:not(#" + this.id + ")").removeClass('trSelected');
+										    $(t).find("tr.trSelected:not(#" + this.id + ")").each(function(){
+									            if (p.onDeselect) p.onDeselect(this);
+                                                $(this).removeClass('trSelected');
+                                             });
 									    } 
-									    $(this).toggleClass('trSelected');
-									    if (p.onSelect) p.onSelect($(t).find("tr.trSelected"));
+                                        $(this).toggleClass('trSelected');
+                                        if($(this).hasClass('trSelected')){
+									        if (p.onSelect) p.onSelect($(t).find("tr.trSelected"));
+                                        }
 									}
 							)
 							.mousedown(
@@ -740,12 +748,15 @@
 							.hover(
 								function (e) 
 									{ 
+                                    if(p.onHover) p.onHover(this);
 									if (g.multisel) 
 										{
 										$(this).toggleClass('trSelected'); 
 										}
 									},
-								function () {}						
+								function () {
+                                    if(p.onUnhover) p.onUnhover(this);
+                                }						
 							)
 							;
 							

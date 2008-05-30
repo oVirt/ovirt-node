@@ -19,12 +19,47 @@ function load_widget(div, target){
                          }
                    );
                    svg.graph.xAxis.line('white', 0);
-                   svg.graph.xAxis.ticks(1, 0).labels(response.timepoints);
-                   svg.graph.yAxis.line('white', 0);
-                   svg.graph.legend.show(false);                      
+                   svg.graph.xAxis.ticks(1, 0).labels([""])
+                   svg.graph.yAxis.line('white', 0)
+                   svg.graph.yAxis.ticks(0, 0)
+                   svg.graph.legend.show(false);
                    svg.graph.redraw();
              }
    );
    $(div).children().filter("svg").attr('height', 25).attr('width', 200);
 };
+
+// invoked when a row containing a load widgit is selected
+function toggle_load_widget(div, state){
+  var color = 'white';
+  if (state == 1){
+    color = '#D5EFFC'; 
+  }
+    
+  var graph = svgManager.getSVGFor(div).graph;
+  graph.noDraw().chartFormat(color, color);
+  graph.xAxis.line(color, 0);
+  graph.yAxis.line(color, 0);
+  graph.redraw();
+};
+
+function load_widget_select(selected_row)
+{
+   toggle_load_widget(selected_row.lastChild.firstChild, 1);
+}
+function load_widget_deselect(deselected_row)
+{
+    if($(deselected_row).hasClass('trSelected')) toggle_load_widget(deselected_row.lastChild.firstChild, 0);
+}
+function load_widget_hover(hovered_row)
+{
+    //alert('hover');
+    toggle_load_widget(hovered_row.lastChild.firstChild, 1);
+}
+function load_widget_unhover(unhovered_row)
+{
+   //alert('unhover');
+   if(! $(unhovered_row).hasClass('trSelected')) toggle_load_widget(unhovered_row.lastChild.firstChild, 0);
+}
+
 </script>

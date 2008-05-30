@@ -27,6 +27,7 @@
   {
     var selected_ids = new Array() 
     for(i=0; i<selected_rows.length; i++) { 
+      load_widget_select(selected_rows[i]);
       selected_ids[i] = selected_rows[i].id
     }
     if (selected_ids.length == 1)
@@ -41,7 +42,10 @@
        <%= render :partial => "/resources/grid", :locals => { :table_id => "vmpools_grid",
                                                          :parent_controller => "hardware",
                                                          :pool_id => @pool.id,
-                                                         :on_select => "vmpools_select" } %>
+                                                         :on_select => "vmpools_select",
+                                                         :on_deselect => "load_widget_deselect",
+                                                         :on_hover => "load_widget_hover",
+                                                         :on_unhover => "load_widget_unhover" } %>
 </div>
 <div class="selection_detail" id="vmpool_selection">
   <div>Select a VM pool above.</div>
