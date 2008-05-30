@@ -11,6 +11,8 @@
 
 <%= render_component :controller=> 'graph', :action => 'history_graphs', :id => @pool.id %>
 
+<%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @pool.id %>
+
 <div class="selection_detail" id="hwpool_selection">
   <div>Hardware pool quota details.</div>
 </div>
@@ -25,4 +27,3 @@
 </script>
 <%- end -%>
 
-<%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @pool.id %>
