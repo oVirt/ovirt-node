@@ -80,14 +80,14 @@ class HardwareController < ApplicationController
     show
   end
 
-  def show_users
-    show
+  def show_users    
     @roles = Permission::ROLES.keys
+    show
   end
 
-  def show_hosts
-    show
+  def show_hosts    
     @hardware_pools = HardwarePool.find :all
+    show
   end
   
   def show_graphs
