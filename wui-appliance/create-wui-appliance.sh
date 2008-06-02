@@ -10,7 +10,7 @@ IMGSIZE=6
 
 ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
-ARCH_DEFAULT=$(uname -p)
+ARCH_DEFAULT=$(uname -m)
 
 ARCH=$ARCH_DEFAULT
 IMGDIR=$IMGDIR_DEFAULT
