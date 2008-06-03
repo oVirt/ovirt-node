@@ -20,6 +20,26 @@
 class Pool < ActiveRecord::Base
   acts_as_nested_set
 
+  # moved associations here so that nested set :include directives work
+  # TODO: find a way to put this back into vm_resource_pool.rb
+  has_many :vms, :dependent => :nullify, :order => "id ASC", :foreign_key => :vm_resource_pool_id
+  # TODO: find a way to put this back into hardware_pool.rb
+  has_many :hosts, :include => :nics, :dependent => :nullify, :order => "hosts.id ASC", :foreign_key => "hardware_pool_id" do
+    def total_cpus
+      find(:all).inject(0){ |sum, host| sum + host.num_cpus }
+    end
+    def total_memory
+      find(:all).inject(0){ |sum, host| sum + host.memory }
+    end
+  end
+
+  has_many :storage_pools, :dependent => :nullify, :order => "id ASC" do
+    def total_size_in_gb
+      find(:all).inject(0){ |sum, sp| sum + sp.storage_volumes.total_size_in_gb }
+    end
+  end
+
+
   # used to allow parent traversal before obj is saved to the db 
   # (needed for view code 'create' form)
   attr_accessor :tmp_parent

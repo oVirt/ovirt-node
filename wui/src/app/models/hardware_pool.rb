@@ -19,18 +19,6 @@
 
 class HardwarePool < Pool
 
-  has_many :hosts, :include => :nics, :dependent => :nullify, :order => "hosts.id ASC" do
-    def total_cpus
-      find(:all).inject(0){ |sum, host| sum + host.num_cpus }
-    end
-  end
-
-  has_many :storage_pools, :dependent => :nullify, :order => "id ASC" do
-    def total_size_in_gb
-      find(:all).inject(0){ |sum, sp| sum + sp.storage_volumes.total_size_in_gb }
-    end
-  end
-
   def all_storage_volumes
     StorageVolume.find(:all, :include => {:storage_pool => :hardware_pool}, :conditions => "pools.id = #{id}")
   end

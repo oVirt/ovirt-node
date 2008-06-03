@@ -8,55 +8,60 @@ class GraphController < ApplicationController
     @id = params[:id]
     @target = params[:target]
 
-    if @target == 'cpu'
-        pool = HardwarePool.find(@id)
+    # TODO: make this configurable
+    aggregate_subpools = false
+    if ['cpu', 'memory'].include? (@target)
+      pool = HardwarePool.find(@id, :include => :hosts)
+      if (aggregate_subpools)
+        pools = pool.full_set({:include => :hosts, :conditions => "type='HardwarePool'"})
+        vmpools = pool.full_set({:include => :vms, :conditions => "type='VmResourcePool'"})
+      else
+        pools = [pool]
+        vmpools = pool.children({:include => :vms, :conditions => "type='VmResourcePool'"})
+      end
+      if @target == 'cpu'
         @label = "CPUs"
-        @graph_data = { 'Available' => 0, 'Used' => 0, 'Total' => pool.total_resources[:cpus] }
-        pool.all_sub_hardware_pools.each{ |subpool|
-            @graph_data['Total'] += subpool.total_resources[:cpus]
-        }
-        pool.all_sub_vm_resource_pools.each{ |subpool|
-            @graph_data['Used']  += subpool.allocated_resources[:current][:cpus]
-        }
-       @graph_data['Available'] = (@graph_data['Total'] - @graph_data['Used'])
-    elsif @target == 'vcpu'
-        pool = VmResourcePool.find(@id)
+        used= vmpools.inject(0){ |sum, pool| sum+pool.allocated_resources[:current][:cpus] }
+        total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_cpus }
+      elsif @target == 'memory'
+        @label = "MB of Memory"
+        used= vmpools.inject(0){ |sum, pool| sum+pool.allocated_resources[:current][:memory] }
+        total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_memory }
+      end
+    elsif ['vcpu', 'vram'].include? (@target)
+      pool = VmResourcePool.find(@id)
+      pools = aggregate_subpools ? pool.full_set({:include => :hosts}) : [pool]
+      if @target == 'vcpu'
         @label = "VCPUs"
-        @graph_data = { 'Available' => 0, 'Used' => pool.allocated_resources[:current][:cpus], 'Total' => pool.total_resources[:cpus] }
-        pool.all_sub_vm_resource_pools.each{ |subpool|
-            @graph_data['Total'] += subpool.total_resources[:cpus]
-            @graph_data['Used']  += subpool.allocated_resources[:current][:cpus]
-        }
-       @graph_data['Available'] = (@graph_data['Total'] - @graph_data['Used'])
-    elsif @target == 'memory'
-        pool = HardwarePool.find(@id)
-        @label = "GB of Memory"
-        @graph_data = { 'Available' => 0, 'Used' => 0, 'Total' => pool.total_resources[:memory] }
-        pool.all_sub_hardware_pools.each{ |subpool|
-            @graph_data['Total'] += subpool.total_resources[:memory]
-        }
-        pool.all_sub_vm_resource_pools.each{ |subpool|
-            @graph_data['Used']  += subpool.allocated_resources[:current][:memory]
-        }
-        @graph_data['Available'] = (@graph_data['Total'] - @graph_data['Used'])
-    elsif @target == 'vram'
-        pool = VmResourcePool.find(@id)
-        @label = "GB of VMemory"
-        @graph_data = { 'Available' => 0, 'Used' => pool.allocated_resources[:current][:memory], 'Total' => pool.total_resources[:memory] }
-        pool.all_sub_vm_resource_pools.each{ |subpool|
-            @graph_data['Total'] += subpool.total_resources[:memory]
-            @graph_data['Used']  += subpool.allocated_resources[:current][:memory]
-        }
-       @graph_data['Available'] = (@graph_data['Total'] - @graph_data['Used'])
+        resource_key = :cpus
+      elsif @target == 'vram'
+        @label = "MB of VMemory"
+        resource_key = :memory
+      end
+      unlimited = false
+      total=0
+      used= pools.inject(0) { |sum, pool| sum+pool.allocated_resources[:current][resource_key] }
+      pools.each do |pool| 
+        resource = pool.total_resources[resource_key]
+        if resource
+          total +=resource
+        else
+          unlimited = true
+        end
+      end
+      total = 0 if unlimited
     elsif @target == 'vms'
-        @label = "Virtual Machines"
-        @graph_data = { 'Available' => 5, 'Used' => 15, 'Total' => 20 }
-        # TODO
+      @label = "Virtual Machines"
+      used = 15
+      total = 20
+      # TODO
     elsif @target == 'vm_quotas'
-        @label = 'Virtual Machines'
-        @graph_data = { 'Available' => 5, 'Used' => 10, 'Total' => 15 }
-        # TODO
+      @label = 'Virtual Machines'
+      used = 10
+      total = 15
+      # TODO
     end
+    @graph_data = { 'Used' => used, 'Total' => total, 'Available' => total - used}
   end
 
   # retrieves data to be used by availablilty bar graphs
