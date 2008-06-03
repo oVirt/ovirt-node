@@ -49,10 +49,6 @@ The webapp for oVirt.
 
 %build
 
-# make sure we override the DBWRITER_PATH with where it will actually be in
-# the end; yes, this is ugly
-CFLAGS="-DDBWRITER_PATH=\\\"/usr/share/ovirt-wui/host-browser/dbwriter.rb\\\"" make -C src/host-browser
-
 %install
 test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 mkdir %{buildroot}
@@ -86,10 +82,6 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 %{__cp} -a %{pbuild}/src/* %{buildroot}%{app_root}
 
 # remove the files not needed for the installation
-%{__rm} -f %{buildroot}%{app_root}/host-browser/Makefile
-%{__rm} -f %{buildroot}%{app_root}/host-browser/.gitignore
-%{__rm} -f %{buildroot}%{app_root}/host-browser/*.o
-%{__rm} -f %{buildroot}%{app_root}/host-browser/*.c
 %{__rm} -f %{buildroot}%{app_root}/task-omatic/.gitignore
 
 %{__cp} -a %{pbuild}/scripts/ovirt-add-host %{buildroot}%{_bindir}

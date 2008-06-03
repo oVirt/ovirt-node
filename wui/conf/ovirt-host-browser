@@ -8,7 +8,7 @@
 #    ovirt VM manager.
 #
 
-DAEMON=/usr/share/ovirt-wui/host-browser/host-browser
+DAEMON=/usr/share/ovirt-wui/host-browser/host-browser.rb
 
 . /etc/init.d/functions
 
@@ -21,7 +21,7 @@ start() {
 
 stop() {
     echo -n "Shutting down ovirt-host-browser: "
-    killproc host-browser
+    killproc host-browser.rb
     RETVAL=$?
     echo
 }

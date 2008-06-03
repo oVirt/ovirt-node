@@ -12,6 +12,111 @@ cat > /etc/sysconfig/iptables << \EOF
 COMMIT
 EOF
 
+echo "Writing ovirt-identify-node script"
+cat > /sbin/ovirt-identify-node << \EOF
+#!/usr/bin/python -Wall
+# 
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Darryl L. Pierce <dpierce@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
+import socket
+
+
+class IdentifyNode:
+	"""This class allows the managed node to connect to the WUI host
+	and notify it that the node is awake and ready to participate."""
+
+	def __init__(self):
+		self.hostname    = 'management.priv.ovirt.org'
+		self.server_name = 'management.priv.ovirt.org'
+		self.server_port = 12120
+		self.host_info = {
+		  "UUID"     : "1148fdf8-961d-11dc-9387-001558c41534",
+		  "HOSTNAME" : "localhost",
+		  "NUMCPUS"  : "4",
+		  "CPUSPEED" : "2.4",
+		  "ARCH"     : "kvm",
+		  "MEMSIZE"  : "16384" }
+
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.connect((self.server_name,self.server_port))
+		self.input  = self.socket.makefile('rb', 0)
+		self.output = self.socket.makefile('wb', 0)
+
+	def start_conversation(self):
+		print("Connecting to server")
+
+		response = self.input.readline().strip()
+		if response == 'HELLO?':
+			self.output.write("HELLO!\n")
+		else:
+			raise TypeError, "Received invalid conversation starter: %s" % response
+
+	def send_host_info(self):
+		print("Starting information exchange...")
+
+		response = self.input.readline().strip()
+		if response == 'INFO?':
+			for name in self.host_info.keys():
+				self.send_host_info_element(name,self.host_info[name])
+		else:
+			raise TypeError, "Received invalid info marker: %s" % response
+
+		print("Ending information exchange...")
+		self.output.write("ENDINFO\n")
+		response = self.input.readline().strip()
+
+		print 'response is', response
+		print 'response[:4] is', response[:4]
+		if response[:4] == 'KVNO':
+			self.keytab = response[5:]
+			print 'keytab is', self.keytab
+		else:
+			raise TypeError, "Did not receive a keytab response: '%s'" % response
+
+	def send_host_info_element(self,key,value):
+		print("Sending: " + key + "=" + value)
+		self.output.write(key + "=" + value + "\n")
+		response = self.input.readline().strip()
+
+		if response != "ACK " + key:
+			raise TypeError, "Received bad acknolwedgement for field: %s" % key
+
+	def get_keytab(self):
+		print("Retrieving keytab information: %s" % self.keytab)
+
+	def end_conversation(self):
+		print("Disconnecting from server")
+
+
+if __name__ == '__main__':
+	identifier = IdentifyNode()
+
+	identifier.start_conversation()
+	identifier.send_host_info()
+	identifier.get_keytab()
+	identifier.end_conversation()
+
+EOF
+
+chmod +x /sbin/ovirt-identify-node
+
+
 echo "Writing ovirt-functions script"
 # common functions
 cat > /etc/init.d/ovirt-functions << \EOF
