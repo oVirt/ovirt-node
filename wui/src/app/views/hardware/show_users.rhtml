@@ -1,2 +1,14 @@
-<%= render :partial => "/user/show", :locals => { :parent_controller => "hardware",
-                                                  :pool_id => @pool.id } %>
+<% if @pool.permissions.size != 0 %>
+  <%= render :partial => "/user/show", :locals => { :parent_controller => "hardware",
+                                                    :pool => @pool } %>
+<% else %>
+   <div class="data_section">
+       <div class="no-grid-items">
+          <%= image_tag 'no-grid-items.png', :style => 'float: left;' %>
+          
+          <div class="no-grid-items-text">
+            No users found associated with this pool. <br/><br/>
+          </div>
+       </div>
+   </div>
+<% end %>

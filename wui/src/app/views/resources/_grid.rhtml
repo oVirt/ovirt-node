@@ -1,4 +1,6 @@
 <%= render :partial => 'graph/load_graph.rhtml' %>
+
+<% resources_per_page = 10 %>
 <div id="<%= table_id %>_div">
 <form name="<%= table_id %>_form">
 <table id="<%= table_id %>" style="display:none"></table>
@@ -8,7 +10,7 @@
 	$("#<%= table_id %>").flexigrid
 	(
 	{
-	url: '<%=  url_for :controller => parent_controller, :action => "vm_pools_json", :id => pool_id %>',
+	url: '<%=  url_for :controller => parent_controller, :action => "vm_pools_json", :id => pool.id %>',
 	dataType: 'json',
 	colModel : [
 		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
@@ -17,9 +19,9 @@
 		],
 	sortname: "name",
 	sortorder: "asc",
-	usepager: true,
+	usepager: <%= pool.sub_vm_resource_pools.size > resources_per_page ? 'true' : 'false' %>,
 	useRp: true,
-	rp: 10,
+	rp: <%= resources_per_page %>,
 	showTableToggleBtn: true,
 	onSelect: <%= on_select %>,
     onDeselect: <%= on_deselect %>,

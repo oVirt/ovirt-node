@@ -1,3 +1,5 @@
+<% storage_per_page = 10 %>
+
 <div id="<%= table_id %>_div">
 <form name="<%= table_id %>_form">
 <table id="<%= table_id %>" style="display:none"></table>
@@ -7,7 +9,7 @@
 	$("#<%= table_id %>").flexigrid
 	(
 	{
-	url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => hwpool_id, :exclude_id => exclude_id %>',
+	url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => hwpool.id, :exclude_id => exclude_id %>',
 	dataType: 'json',
 	colModel : [
 		{display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
@@ -18,9 +20,9 @@
 		],
 	sortname: "ip_addr",
 	sortorder: "asc",
-	usepager: true,
+	usepager: <%= hwpool.storage_pools.size > storage_per_page ? 'true' : 'false' %>,
 	useRp: true,
-	rp: 10,
+	rp: <%= storage_per_page %>,
 	showTableToggleBtn: true,
 	onSelect: <%= on_select %>
 	}
