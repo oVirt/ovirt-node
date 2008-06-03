@@ -1,5 +1,5 @@
 #!/usr/bin/ruby -Wall
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
 #
@@ -26,7 +26,7 @@ TESTING=true
 
 require 'host-browser'
 
-class TestHostBrowser < Test::Unit::TestCase    
+class TestHostBrowser < Test::Unit::TestCase
 
   def setup
     @session = flexmock('session')
@@ -50,7 +50,7 @@ class TestHostBrowser < Test::Unit::TestCase
     @host_info['DISABLED'] = '0'
   end
 
-  # Ensures that the server raises an exception when it receives an 
+  # Ensures that the server raises an exception when it receives an
   # improper handshake response.
   #
   def test_begin_conversation_with_improper_response_to_greeting
@@ -87,7 +87,7 @@ class TestHostBrowser < Test::Unit::TestCase
   def test_get_info_with_missing_key
     @session.should_receive(:write).with("INFO?\n").once().returns { |request| request.length }
     @session.should_receive(:readline).once().returns { "=value1\n" }
-    
+
     assert_raise(Exception) { @browser.get_remote_info }
   end
 
@@ -129,7 +129,7 @@ class TestHostBrowser < Test::Unit::TestCase
     assert info.include?("IPADDR")
     assert info.include?("key1")
     assert info.include?("key2")
-  end 
+  end
 
   # Ensures the host browser generates a keytab as expected.
   #
@@ -154,7 +154,7 @@ class TestHostBrowser < Test::Unit::TestCase
   #
   def test_write_host_info_with_missing_hostname
     @host_info['HOSTNAME'] = nil
-  
+
     assert_raise(Exception) { @browser.write_host_info(@host_info) }
   end
 
@@ -190,31 +190,15 @@ class TestHostBrowser < Test::Unit::TestCase
     assert_raise(Exception) { @browser.write_host_info(@host_info) }
   end
 
-  # Ensures that the host information is properly moved to a persisted object
-  # and saved.
-  #
-  def test_write_host_info
-    result = @browser.write_host_info(@host_info)
-
-    assert result, "No persisted object returned"
-    assert_match @host_info['UUID'],     result.uuid,           "UUID was not persisted"
-    assert_match @host_info['HOSTNAME'], result.hostname,       "Hostname was not persisted"
-    assert_match @host_info['NUMCPUS'],  "#{result.num_cpus}",  "Number of CPUs was not persisted"
-    assert_match @host_info['CPUSPEED'], "#{result.cpu_speed}", "CPU speed was not persisted"
-    assert_match @host_info['ARCH'],     "#{result.arch}",      "Architecture was not persisted"
-    assert_match @host_info['MEMSIZE'],  "#{result.memory}",    "Memory size was not persisted"      
-  end
-
-  # Ensures that, if a keytab is present and a key version number available, 
+  # Ensures that, if a keytab is present and a key version number available,
   # the server ends the conversation by returning the key version number.
   #
   def test_end_conversation
-    @session.should_receive(:write).with("KVNO 12345\n").once().returns { |request| request.length }
+    @session.should_receive(:write).with("KTAB 12345\n").once().returns { |request| request.length }
     @session.should_receive(:readline).once().returns { "ACK\n" }
     @session.should_receive(:write).with("BYE\n").once().returns { |request| request.length }
-    @session.should_receive(:shutdown).with(2).once()
 
     assert_nothing_raised(Exception) { @browser.end_conversation(12345) }
   end
 
-end    
+end

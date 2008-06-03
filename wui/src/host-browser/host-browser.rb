@@ -32,7 +32,7 @@ include Daemonize
 
 include Socket::Constants
 
-#require 'dutils'
+$logfile = '/var/log/ovirt-wui/host-browser.log'
 
 # +HostBrowser+ communicates with the a managed node. It retrieves specific information
 # about the node and then updates the list of active nodes for the WUI.
@@ -45,7 +45,6 @@ class HostBrowser
     def initialize(session)
         @session = session
         @log_prefix = "[#{session.peeraddr[3]}] "
-        @logfile = '/var/log/ovirt-wui/host-browser.log'
         @keytab_dir = '/usr/share/ipa/html/'
     end
 
@@ -103,17 +102,25 @@ class HostBrowser
                 puts "Creating a new record for #{host_info['HOSTNAME']}..."
             
                 Host.new(
-                    "uuid"          => host_info['UUID'],
-                    "hostname"      => host_info['HOSTNAME'],
-                    "num_cpus"      => host_info['NUMCPUS'],
-                    "cpu_speed"     => host_info['CPUSPEED'],
-                    "arch"          => host_info['ARCH'],
-                    "memory"        => host_info['MEMSIZE'],
-                    "is_disabled"   => 0,
-                    "hardware_pool" => HardwarePool.get_default_pool).save
+                    "uuid"            => host_info['UUID'],
+                    "hostname"        => host_info['HOSTNAME'],
+                    "hypervisor_type" => host_info['HYPERVISOR_TYPE'],
+                    "num_cpus"        => host_info['NUMCPUS'],
+                    "cpu_speed"       => host_info['CPUSPEED'],
+                    "arch"            => host_info['ARCH'],
+                    "memory"          => host_info['MEMSIZE'],
+                    "is_disabled"     => 0,
+                    "hardware_pool"   => HardwarePool.get_default_pool).save
             rescue Exception => error
                 puts "Error while creating record: #{error.message}"
             end
+        else
+            host.uuid      = host_info['UUID']
+            host.hostname  = host_info['HOSTNAME']
+            host.num_cpus  = host_info['NUMCPUS']
+            host.cpu_speed = host_info['CPUSPEED']
+            host.arch      = host_info['ARCH']
+            host.memory    = host_info['MEMSIZE']
         end
     
         return host
@@ -121,10 +128,10 @@ class HostBrowser
 
     # Ends the conversation, notifying the user of the key version number.
     #
-    def end_conversation(kvno)
+    def end_conversation(ktab)
         puts "#{@log_prefix} Ending conversation"
 
-        @session.write("KVNO #{kvno}\n")
+        @session.write("KTAB #{ktab}\n")
 
         response = @session.readline.chomp
 
@@ -144,7 +151,8 @@ class HostBrowser
         @keytab_filename = @keytab_dir + outfile
 
         # TODO need a way to test this portion
-        unless defined? TESTING
+        unless defined? TESTING || File.exists?(@keytab_filename)
+            # TODO replace with Kr5Auth when it supports admin actions
             puts "Writing keytab file: #{@keytab_filename}"
             kadmin_local('addprinc -randkey ' + libvirt_princ)
             kadmin_local('ktadd -k ' + @keytab_filename + ' ' + libvirt_princ)
@@ -152,7 +160,7 @@ class HostBrowser
             File.chmod(0644,@keytab_filename)
         end
 
-        return @keytab_filename
+        return outfile
     end
 
     private
@@ -176,13 +184,13 @@ def entry_point(server)
             remote = session.peeraddr[3]
             
             puts "Connected to #{remote}"
+
+            # This is needed because we just forked a new process
+            # which now needs its own connection to the database.
+            database_connect
       
             begin
                 browser = HostBrowser.new(session)
-
-                # redirect output to the logsg
-                STDOUT.reopen browser.logfile, 'a'
-                STDERR.reopen STDOUT
 
                 browser.begin_conversation
                 host_info = browser.get_remote_info
@@ -194,8 +202,6 @@ def entry_point(server)
                 puts "ERROR #{error.message}"
             end
       
-            # session.shutdown(2) unless session.closed?
-
             puts "Disconnected from #{remote}"
         end
     
@@ -204,17 +210,16 @@ def entry_point(server)
 end
 
 unless defined?(TESTING)
-    server = TCPServer.new("",12120)
   
     # The main entry point.
     #
     unless ARGV[0] == "-n"
         daemonize
-        STDOUT.reopen browser.logfile, 'a'
+        # redirect output to the log
+        STDOUT.reopen $logfile, 'a'
         STDERR.reopen STDOUT
-
-        entry_point(server)
-    else
-        entry_point(server)
     end
+
+    server = TCPServer.new("",12120)
+    entry_point(server)
 end

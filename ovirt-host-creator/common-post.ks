@@ -35,23 +35,25 @@ cat > /sbin/ovirt-identify-node << \EOF
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 import socket
-
+from optparse import OptionParser
 
 class IdentifyNode:
 	"""This class allows the managed node to connect to the WUI host
 	and notify it that the node is awake and ready to participate."""
 
-	def __init__(self):
+	def __init__(self, server, port):
 		self.hostname    = 'management.priv.ovirt.org'
-		self.server_name = 'management.priv.ovirt.org'
-		self.server_port = 12120
+		self.server_name = server
+		self.server_port = port
 		self.host_info = {
-		  "UUID"     : "1148fdf8-961d-11dc-9387-001558c41534",
-		  "HOSTNAME" : "localhost",
-		  "NUMCPUS"  : "4",
-		  "CPUSPEED" : "2.4",
-		  "ARCH"     : "kvm",
-		  "MEMSIZE"  : "16384" }
+                    "UUID"            : "bar",
+                    "ARCH"            : info[0],
+                    "MEMSIZE"         : "%d" % info[1],
+                    "NUMCPUS"         : "%d" % info[2],
+                    "CPUSPEED"        : "%d" % info[3],
+                    "HOSTNAME"        : conn.getHostname(),
+                    "HYPERVISOR_TYPE" : conn.getType()
+                }
 
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.socket.connect((self.server_name,self.server_port))
@@ -105,7 +107,20 @@ class IdentifyNode:
 
 
 if __name__ == '__main__':
-	identifier = IdentifyNode()
+
+	parser = OptionParser()
+	parser.add_option("-s", "--server", dest="server",
+			  help="Server hostname to connect to.", metavar="SERVER")
+	parser.add_option("-p", "--port",
+			  help="Port to connect to.", metavar="PORT")
+
+	(options, args) = parser.parse_args()
+
+	# Set defaults so you can just run it on the command line to see what happens..
+	if options.server == None: options.server = 'management.priv.ovirt.org'
+	if options.port == None: options.port = 12120
+
+	identifier = IdentifyNode(options.server, int(options.port))
 
 	identifier.start_conversation()
 	identifier.send_host_info()
@@ -293,14 +308,6 @@ start() {
         echo -n "Failed generating keytab" ; failure ; echo ; exit 1
     fi
 
-    if [ ! -s /etc/libvirt/krb5.tab ]; then
-        wget -q http://$SRV_HOST:$SRV_PORT/config/$(hostname -i)-libvirt.tab \
-	  -O /etc/libvirt/krb5.tab
-        if [ $? -ne 0 ]; then
-            echo -n "Failed getting keytab" ; failure ; echo ; exit 1
-        fi
-    fi
-
     if [ ! -s /etc/krb5.conf ]; then
         rm -f /etc/krb5.conf
         wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O /etc/krb5.conf
@@ -309,6 +316,14 @@ start() {
         fi
     fi
 
+    find_srv identify tcp
+    if [ ! -s /etc/libvirt/krb5.tab ]; then
+	ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+        if [ $? -ne 0 ]; then
+	    echo -n "Failed to identify node" ; failure ; echo ; exit 1
+	fi
+    fi
+	
     find_srv collectd tcp
     if [ -f /etc/collectd.conf.in -a $SRV_HOST -a $SRV_PORT ]; then
         sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
