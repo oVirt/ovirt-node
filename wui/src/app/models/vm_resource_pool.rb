@@ -18,7 +18,6 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class VmResourcePool < Pool
-  has_many :vms, :dependent => :nullify, :order => "id ASC"
 
   def get_type_label
     "Hardware Pool"
