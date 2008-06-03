@@ -98,7 +98,6 @@ def kick_taskomatic(msg, vm)
 end
 
 loop do
-  puts "Waking up to check host status"
   get_credentials
 
   hosts = Host.find(:all)

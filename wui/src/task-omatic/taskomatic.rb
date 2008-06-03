@@ -66,8 +66,6 @@ require 'task_vm'
 require 'task_storage'
 
 loop do
-  puts 'Checking for tasks...'
-  
   first = true
   tasks = Array.new
   begin
