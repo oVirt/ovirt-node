@@ -24,6 +24,7 @@ collectd
 ruby-libvirt
 ruby-postgres
 ovirt-wui
+ovirt-host-image-pxe
 firefox
 xorg-x11-xauth
 virt-viewer

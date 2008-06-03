@@ -195,7 +195,7 @@ start() {
         -W _ldap._tcp,management.priv.ovirt.org,389 \
         -W _collectd._tcp,management.priv.ovirt.org,25826 \
         -W _identify._tcp,management.priv.ovirt.org,21210 \
-        --enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
+        --enable-tftp --tftp-root=/var/lib/tftpboot -M pxelinux.0 \
         -O option:router,192.168.50.2 -O option:ntp-server,192.168.50.2 \
         -R --local /priv.ovirt.org/ --server 192.168.122.1
     
@@ -260,12 +260,5 @@ esac
 EOF
 chmod +x /etc/init.d/ovirt-wui-dev
 chkconfig ovirt-wui-dev on
-
-# get the PXE boot image; this can take a while
-PXE_URL=http://ovirt.org/download
-IMAGE=ovirt-pxe-host-image-x86_64-0.5.tar.bz2
-wget ${PXE_URL}/$IMAGE -O /tmp/$IMAGE
-tar -C / -jxvf /tmp/$IMAGE
-rm -f /tmp/$IMAGE
 
 %end

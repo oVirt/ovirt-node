@@ -28,6 +28,7 @@ else
     exit 1
 fi
 
+rm -f iso-file
 ISO=`create_iso $ISO` || exit 1
 
 livecd-iso-to-pxeboot $ISO
@@ -36,3 +37,4 @@ livecd-iso-to-pxeboot $ISO
 f=tftpboot/pxelinux.cfg/default
 grep -q 'IPAPPEND 2' $f || sed -i '/KERNEL/a \\tIPAPPEND 2' $f
 
+echo $ISO > iso-file
