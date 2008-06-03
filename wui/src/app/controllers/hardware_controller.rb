@@ -35,6 +35,9 @@ class HardwareController < ApplicationController
       flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
       redirect_to :controller => "dashboard"
     end
+    if params[:ajax]
+      render :layout => 'tabs-and-content'
+    end
   end
   
   def json_view_tree
@@ -77,14 +80,14 @@ class HardwareController < ApplicationController
     show
   end
 
-  def show_users
-    show
+  def show_users    
     @roles = Permission::ROLES.keys
+    show
   end
 
-  def show_hosts
-    show
+  def show_hosts    
     @hardware_pools = HardwarePool.find :all
+    show
   end
   
   def show_graphs

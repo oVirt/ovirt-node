@@ -54,6 +54,9 @@ class ResourcesController < ApplicationController
       flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
       redirect_to :action => 'list'
     end
+    if params[:ajax]
+      render :layout => 'tabs-and-content' #:template => 'hardware/show.html.erb'
+    end
   end
 
   def quick_summary
@@ -68,20 +71,20 @@ class ResourcesController < ApplicationController
   end
 
   # resource's vms list page
-  def show_vms
-    show
+  def show_vms    
     @actions = [VmTask.label_and_action(VmTask::ACTION_START_VM),
                 (VmTask.label_and_action(VmTask::ACTION_SHUTDOWN_VM) << "break"),
                 VmTask.label_and_action(VmTask::ACTION_SUSPEND_VM),
                 VmTask.label_and_action(VmTask::ACTION_RESUME_VM),
                 VmTask.label_and_action(VmTask::ACTION_SAVE_VM),
                 VmTask.label_and_action(VmTask::ACTION_RESTORE_VM)]
+    show
   end
 
   # resource's users list page
-  def show_users
-    show
+  def show_users    
     @roles = Permission::ROLES.keys
+    show
   end
 
   def vms_json

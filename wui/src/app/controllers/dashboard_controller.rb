@@ -18,7 +18,6 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class DashboardController < ApplicationController
-
   def index
     @default_pool = HardwarePool.get_default_pool
     set_perms(@default_pool)
@@ -30,5 +29,8 @@ class DashboardController < ApplicationController
     @hosts = Host.find(:all)
     @storage_volumes = StorageVolume.find(:all)
     @vms = Vm.find(:all)
+    if params[:ajax]
+      render :layout => 'tabs-and-content' #:template => 'hardware/show.html.erb'
+    end
   end
 end

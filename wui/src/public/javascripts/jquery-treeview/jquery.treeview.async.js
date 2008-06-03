@@ -49,6 +49,28 @@ function load(settings, params, child, container) {
                         } else {
                           current.html("<span class=\"" + settings.span_class + "\"" + span_onclick + ">" + link_open + this.text + link_close + "</span>")
                             .appendTo(parent);
+//                          $('li #' + this.id + ' span > a')
+//                            .bind('click', function() { 
+//                              $.ajax({
+//                                url: this.href,
+//                                type: 'GET',
+//                                data: {ajax:true},
+//                                dataType: 'html',
+//                                success: function(data) { 
+//                                  var wrapped_data = $(data).not('div#side-toolbar');//.find('#navigation-tabs');
+//                                  $('#side-toolbar').html($(data).find('div.toolbar'));
+//                                  $('#tabs-and-content-container').html($(data).not('div#side-toolbar'));
+//                                },
+//                                error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
+//                              })
+                              //var new_id = $(this).parent().parent().get(0).id;
+                              //var current_e = $('span[class^=current_]');
+                              //current_e.removeClass(current_e.attr('class'));
+                              //$(this).addClass('current_folder');
+                              //var my_container = $(container);
+//                              return false;
+//                            });
+
                         }
 			if (this.classes) {
 				current.children("span").addClass(this.classes);

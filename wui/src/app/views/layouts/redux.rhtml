@@ -15,7 +15,8 @@
   <%= stylesheet_link_tag '/javascripts/jquery-treeview/ovirt.treeview.css' %>
   <%= stylesheet_link_tag 'flexigrid/flexigrid.css' %>
   <%= stylesheet_link_tag 'facebox' %>
-  <%= javascript_include_tag "jquery.pack.js" -%>
+  <!--%= stylesheet_link_tag 'jquery.ui-1.5b4/themes/flora/flora.tabs.css' %-->
+  <%= javascript_include_tag "jquery-1.2.6.min.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
   <%= javascript_include_tag "flexigrid.js" -%>
@@ -23,12 +24,13 @@
   <%= javascript_include_tag "jquery-svg/jquery.svg.pack.js" -%>
   <!--%= javascript_include_tag "jquery-svg/jquery.svgfilter.js" -%-->
   <%= javascript_include_tag "jquery-svg/jquery.svggraph.js" -%>
-  <%= javascript_include_tag "ui.core.js" -%>
-  <%= javascript_include_tag "ui.slider.js" -%>
+  <!--%= javascript_include_tag "jquery.ui-1.5b4/ui.core.js" -%>
+  < %= javascript_include_tag "jquery.ui-1.5b4/ui.tabs.js" -%-->
   <%= javascript_include_tag "jquery.cookie.js" -%>
+  <%= javascript_include_tag "jquery.livequery.pack.js" -%>
   <%= javascript_include_tag "jquery.form.js" -%>
 
-  <!-- ovirt-specific functions defined here
+  <!-- ovirt-specific functions defined here -->
   <%= javascript_include_tag "ovirt.js" -%>
     <script type="text/javascript">
       $(document).ready(function(){         
@@ -41,10 +43,52 @@
             resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>",
             action_type: "hyperlink"
 	    })
-	}); 
-      $(document).ready(function(){         
+            $('a[rel*=facebox]').livequery(function(){$(this).facebox();},function(){});
+            $('#side a').livequery(function(){
+                $(this).bind('click', function(){ 
+                    $('#side span').each(function(){
+                        var nodeType = $(this).attr('class');
+                        if (nodeType.indexOf('_') != -1){
+                            nodeType = nodeType.substr(nodeType.indexOf('_') +1);
+                            $(this).attr('class', nodeType);
+                        }                        
+                    });
+                    var nodeType = $(this).parent().attr('class');
+                    $(this).parent().attr('class', 'current_' + nodeType);
+                    $.ajax({
+                        url: $(this).attr('href'),
+                        type: 'GET',
+                        data: {ajax:true},
+                        dataType: 'html',
+                        success: function(data) {
+                          $('#side-toolbar').html($(data).find('div.toolbar'));
+                          $('#tabs-and-content-container').html($(data).not('div#side-toolbar'));
+                        },
+                        error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
+                    });
+                    return false;})},function(){});
+            $('.tab_nav a').livequery(function(){
+                $(this).bind('click', function(){
+                    $('.tab_nav li').removeClass('current');
+                    $(this).parent().addClass('current');
+                    $.ajax({
+                        url: $(this).attr('href'),
+                        type: 'GET',
+                        data: {ajax:true},
+                        dataType: 'html',
+                        success: function(data) { 
+                          var wrapped_data = $(data).find('div').filter('[id=content-area]');
+                          var my_parent = $(this).parent();
+                          $('#content-area').html($(data).find('div').filter('[id=content-area]'));
+                        },
+                        error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
+                    });
+                    return false;})},function(){});
+            
+	});
+      /*$(document).ready(function(){         
         refresh_facebox()
-      })
+      })*/
       </script>
    <%= yield :scripts -%>
  </head>
@@ -63,13 +107,15 @@
      <%= render :partial => '/layouts/side_toolbar' %>
    </div>
 
-   <div id="navigation-tabs" style="position:absolute; top:40px; left:231px;">
-     <%= render :partial => '/layouts/navigation_tabs' %>
-   </div> 
-   <div id="main">
-      <div id="content-area">
-        <%= yield  %> <%# the rest of the center and right hand side %>
-      </div>
+   <div id="tabs-and-content-container">
+     <div id="navigation-tabs" style="position:absolute; top:40px; left:231px;">
+       <%= render :partial => '/layouts/navigation_tabs' %>
+     </div> 
+     <div id="main">
+        <div id="content-area">
+          <%= yield  %> <%# the rest of the center and right hand side %>
+        </div>
+     </div>
    </div>
 
  </body>
