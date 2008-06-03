@@ -1,4 +1,4 @@
-require 'util/stats/Stats'
+# require 'util/stats/Stats'
 
 class GraphController < ApplicationController
   layout nil

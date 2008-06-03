@@ -26,7 +26,9 @@ function load_widget(div, target){
                    svg.graph.redraw();
              }
    );
-   $(div).children().filter("svg").attr('height', 25).attr('width', 200);
+//   $(div).children().filter("svg").attr('height', 25).attr('width', 200);
+   $(div).children().filter("svg").attr("height").baseVal.value = 25;
+   $(div).children().filter("svg").attr("width").baseVal.value = 200;
 };
 
 // invoked when a row containing a load widgit is selected
