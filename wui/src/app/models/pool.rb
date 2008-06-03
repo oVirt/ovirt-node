@@ -33,7 +33,7 @@ class Pool < ActiveRecord::Base
     end
   end
 
-  has_many :storage_pools, :dependent => :nullify, :order => "id ASC", :foreign_key => "hardware_pool_id" do
+  has_many :storage_pools, :dependent => :nullify, :order => "id ASC", :foreign_key => 'hardware_pool_id' do
     def total_size_in_gb
       find(:all).inject(0){ |sum, sp| sum + sp.storage_volumes.total_size_in_gb }
     end
