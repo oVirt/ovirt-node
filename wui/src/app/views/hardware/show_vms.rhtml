@@ -38,7 +38,7 @@
 </script>
 
 <div class="panel_header"></div>
-<% if @pool.hosts.size != 0 %>
+<% if @pool.sub_vm_resource_pools.size != 0 %>
   <div class="data_section">
        <%= render :partial => "/resources/grid", :locals => { :table_id => "vmpools_grid",
                                                          :parent_controller => "hardware",
