@@ -263,7 +263,7 @@ module SymetrieCom
         # Returns all children and nested children.
         # Pass :exclude => item, or id, or [items or id] to exclude one or more items *and* all of their descendants.
         # in addition to the standard find opts
-        def all_children(find_opts=nil)
+        def all_children(find_opts={})
           full_set(find_opts) - [self]
         end
         
