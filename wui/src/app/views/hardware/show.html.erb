@@ -20,7 +20,6 @@
   <div>Hardware pool quota details.</div>
 </div>
 
-<%- content_for :scripts do -%>
 
 <script type="text/javascript">
          refresh_summary('hwpool_selection', 
@@ -28,4 +27,3 @@
                                       :action => "quick_summary" %>',
                          <%= @pool.id %>)
 </script>
-<%- end -%>

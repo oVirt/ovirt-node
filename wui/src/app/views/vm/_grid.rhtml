@@ -24,7 +24,7 @@
 	sortname: "description",
 	sortorder: "asc",
 	usepager: <%= pool.vms.size > vms_per_page ? 'true' : 'false' %>,
-	useRp: true,
+	useRp: <%= pool.vms.size > vms_per_page ? 'true' : 'false' %>,
 	rp: <%= vms_per_page %>,
 	showTableToggleBtn: true,
 	onSelect: <%= on_select %>,
