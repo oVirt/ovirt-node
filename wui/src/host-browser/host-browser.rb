@@ -131,7 +131,6 @@ class HostBrowser
         raise Exception.new("ERROR! Malformed response : expected ACK, got #{response}") unless response == "ACK"
 
         @session.write("BYE\n");
-        @session.shutdown(2)
     end
   
     # Creates a keytab if one is needed, returning the filename.
@@ -174,12 +173,16 @@ end
 def entry_point(server)
     while(session = server.accept)
         child = fork do
-            puts "Connected to #{session.peeraddr[3]}"
-     	    
-            database_connect
- 
+            remote = session.peeraddr[3]
+            
+            puts "Connected to #{remote}"
+      
             begin
                 browser = HostBrowser.new(session)
+
+                # redirect output to the logsg
+                STDOUT.reopen browser.logfile, 'a'
+                STDERR.reopen STDOUT
 
                 browser.begin_conversation
                 host_info = browser.get_remote_info
@@ -191,9 +194,9 @@ def entry_point(server)
                 puts "ERROR #{error.message}"
             end
       
-            session.shutdown(2) unless session.closed?
+            # session.shutdown(2) unless session.closed?
 
-            puts "Disconnected from #{session.peeraddr[3]}"
+            puts "Disconnected from #{remote}"
         end
     
         Process.detach(child)        
