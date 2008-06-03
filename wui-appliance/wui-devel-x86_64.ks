@@ -16,6 +16,7 @@ logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64
 %include common-pkgs.ks
 
 %post
+exec > /root/kickstart-post.log 2>&1
 
 %include common-post.ks
 
@@ -29,6 +30,14 @@ echo "192.168.50.2 management.priv.ovirt.org" >> /etc/hosts
 for i in `seq 3 252` ; do
     echo "192.168.50.$i node$i.priv.ovirt.org" >> /etc/hosts
 done
+
+# Enable forwarding so this node can act as a router for the .50 network
+sed -i 's/net.ipv4.ip_forward = .*/net.ipv4.ip_forward = 1/' /etc/sysctl.conf
+cat > /etc/sysconfig/iptables << EOF
+*nat
+-A POSTROUTING -o eth0 -j MASQUERADE
+COMMIT
+EOF
 
 principal=ovirtadmin
 realm=PRIV.OVIRT.ORG
@@ -186,7 +195,7 @@ start() {
         -W _ldap._tcp,management.priv.ovirt.org,389 \
         -W _collectd._tcp,management.priv.ovirt.org,25826 \
         --enable-tftp --tftp-root=/tftpboot -M pxelinux.0 \
-        -O option:router,192.168.50.1 -O option:ntp-server,192.168.50.2 \
+        -O option:router,192.168.50.2 -O option:ntp-server,192.168.50.2 \
         -R --local /priv.ovirt.org/ --server 192.168.122.1
     
     # Set up the fake iscsi target
