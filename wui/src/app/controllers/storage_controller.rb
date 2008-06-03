@@ -136,7 +136,7 @@ class StorageController < ApplicationController
         insert_refresh_task
       end
       render :json => { :object => "storage_pool", :success => true, 
-                        :alert => "Storage Pool was successfully created." }
+                        :alert => "Storage Pool was successfully modified." }
     rescue
       # FIXME: need to distinguish pool vs. task save errors (but should mostly be pool)
       render :json => { :object => "storage_pool", :success => false, 

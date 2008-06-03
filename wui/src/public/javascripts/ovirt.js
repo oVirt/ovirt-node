@@ -152,9 +152,4 @@ function storage_detail_empty(){
 }
 
 
-// this must be called again after ajax loading of content with facebox links
-function refresh_facebox(){
-    $('a[rel*=facebox]').facebox()
-	//$('a[rel*=facebox]').livequery(function(){$(this).facebox();},function(){});
-}
 
