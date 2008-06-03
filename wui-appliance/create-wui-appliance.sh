@@ -104,9 +104,6 @@ cat <<EOF
     <type>hvm</type>
     <boot dev='network'/>
   </os>
-  <features>
-    <acpi/>
-  </features>
   <clock offset='utc'/>
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>
@@ -190,4 +187,4 @@ virsh undefine $NAME > /dev/null 2>&1
 virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
     --accelerate -v --os-type=linux --arch=$ARCH \
     -w network:default -w network:$BRIDGENAME \
-    $location_arg $cdrom_arg $extra_flag "$extra_arg"
+    $location_arg $cdrom_arg $extra_flag "$extra_arg" --noacpi
