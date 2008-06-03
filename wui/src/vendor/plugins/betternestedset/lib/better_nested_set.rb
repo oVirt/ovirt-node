@@ -248,6 +248,7 @@ module SymetrieCom
         # Pass :exclude => item, or id, or [items or id] to exclude one or more items *and* all of their descendants.
         # in addition to the standard find opts
         def full_set(find_opts={})
+          find_opts ||= {}
           exclude = find_opts.delete(:exclude)
           if exclude
             exclude_str = " AND NOT (#{base_set_class.sql_for(exclude)}) "
