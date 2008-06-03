@@ -1,7 +1,8 @@
 all: ks
 
 primary_src = \
-  wui-devel-x86_64.ks
+  wui-devel-x86_64.ks \
+  wui-devel-i386.ks
 
 rel_ks =		\
   wui-rel-i386.ks	\
@@ -20,8 +21,8 @@ endef
 wui-rel-%.ks: wui-devel-%.ks
 	$(ks-flatten)
 
-# Generate each wui-*-i386.ks file from the corresponding x86_64.ks one.
-wui-%-i386.ks: wui-%-x86_64.ks
+# Generate each *-i386.ks file from the corresponding -x86_64.ks one.
+%-i386.ks: %-x86_64.ks
 	rm -f $@ $@-t
 	sed 's/x86_64/i386/' $< > $@-t
 	chmod a=r $@-t
@@ -37,4 +38,4 @@ include .deps
 	mv $@-t $@
 
 clean:
-	rm -f wui-devel-i386.ks $(rel_ks) .deps *~
+	rm -f wui-devel-i386.ks repos-i386.ks $(rel_ks) .deps *~

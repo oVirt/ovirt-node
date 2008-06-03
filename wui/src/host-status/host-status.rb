@@ -98,7 +98,6 @@ def kick_taskomatic(msg, vm)
 end
 
 loop do
-  puts "Waking up to check host status"
   get_credentials
 
   hosts = Host.find(:all)
@@ -109,17 +108,19 @@ loop do
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     rescue
-      # we couldn't contact the host for whatever reason.  Since we can't get to this
-      # host, we have to mark all vms on it as disconnected or stopped or such.
+      # we couldn't contact the host for whatever reason.  Since we can't get
+      # to this host, we have to mark all vms on it as disconnected or stopped
+      # or such.
       puts "Failed to contact host " + host.hostname + "; skipping for now", $!
-      vms = Vm.find(:all, :conditions => [ "host_id = ?", host.id ])
-      vms.each do |vm|
-        # Since we can't reach the host on which the vms reside, we mark these as
-        # STATE_UNREACHABLE.  If they come back up we can mark them as running again,
-        # else they'll be stopped.  At least for now the user will know what's going on.
+      Vm.find(:all, :conditions => [ "host_id = ?", host.id ]).each do |vm|
+        # Since we can't reach the host on which the vms reside, we mark these
+        # as STATE_UNREACHABLE.  If they come back up we can mark them as
+        # running again, else they'll be stopped.  At least for now the user
+	# will know what's going on.
         #
-        # If this causes too much trouble in the UI, this can be changed to STATE_STOPPED
-        # for now until it is resolved of another solution is brought forward.
+        # If this causes too much trouble in the UI, this can be changed to
+        # STATE_STOPPED for now until it is resolved of another solution is
+        # brought forward.
         kick_taskomatic(Vm::STATE_UNREACHABLE, vm)
       end
 
@@ -165,8 +166,7 @@ loop do
 
     # Now we get a list of all vms that should be on this system and see if
     # they are all running.
-    vms = Vm.find(:all, :conditions => [ "host_id = ?", host.id ])
-    vms.each do |vm|
+    Vm.find(:all, :conditions => [ "host_id = ?", host.id ]).each do |vm|
     
       begin
         dom = conn.lookup_domain_by_uuid(vm.uuid)
@@ -188,5 +188,3 @@ loop do
   STDOUT.flush
   sleep sleeptime
 end
-
-

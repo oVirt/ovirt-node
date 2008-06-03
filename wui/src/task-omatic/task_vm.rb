@@ -260,10 +260,6 @@ def start_vm(task)
   vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STARTING)
 
-  # FIXME: the VM might be in an inconsistent state in the database; however, we
-  # should check it out on the remote host, and update the database as
-  # appropriate
-
   errmsg = "Unknown error"
   begin
     if vm.host_id != nil
@@ -280,8 +276,10 @@ def start_vm(task)
     # hosts to see if there is a host that will fit these constraints
     host = nil
 
-    vm.vm_resource_pool.get_hardware_pool.hosts.each do |curr|
-      if curr.num_cpus >= vm.num_vcpus_allocated and curr.memory >= vm.memory_allocated
+    vm.vm_resource_pool.get_hardware_pool.hosts.each do |host|
+      if host.num_cpus >= vm.num_vcpus_allocated \
+        and host.memory >= vm.memory_allocated \
+        and not host.is_disabled
         host = curr
         break
       end
@@ -318,7 +316,7 @@ def start_vm(task)
       end
 
       if storage_pool[:type] == "IscsiStoragePool"
-        thisstorage = Iscsi.new(storage_pool.ip_addr, storage_pool.target)
+        thisstorage = Iscsi.new(storage_pool.ip_addr, storage_pool[:target])
       elsif storage_pool[:type] == "NfsStoragePool"
         thisstorage = NFS.new(storage_pool.ip_addr, storage_pool.export_path)
       else
@@ -350,8 +348,8 @@ def start_vm(task)
 
     if storagedevs.length < 1
       # we couldn't find *any* disk to attach to the VM; we have to quit
-      # FIXME: eventually, we probably want to allow diskless machines that will
-      # boot via NFS or iSCSI or whatever
+      # FIXME: eventually, we probably want to allow diskless machines that
+      # will boot via NFS or iSCSI or whatever
       errmsg = "No valid storage volumes found"
       raise
     elsif storagedevs.length > 4
