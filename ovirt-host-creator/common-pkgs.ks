@@ -8,6 +8,7 @@ chkconfig
 rootfiles
 dhclient
 libvirt
+libvirt-python
 openssh-clients
 openssh-server
 iscsi-initiator-utils
