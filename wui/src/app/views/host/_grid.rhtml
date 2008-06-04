@@ -1,8 +1,8 @@
 <%= render :partial => 'graph/load_graph.rhtml' %>
 
-<% hosts_per_page = 30 %>
+<% hosts_per_page = 40 %>
 <div id="<%= table_id %>_div">
-<form name="<%= table_id %>_form">
+<form id="<%= table_id %>_form">
 <table id="<%= table_id %>" style="display:none"></table>
 </form>
 </div>
@@ -39,7 +39,7 @@
 	);   
 	function <%= table_id %>checkbox(celDiv)
 	{
-	       $(celDiv).html('<input type="checkbox" name="grid_checkbox" value="'+$(celDiv).html()+'"/>');
+	       $(celDiv).html('<input class="grid_checkbox" type="checkbox" name="grid_checkbox'+$(celDiv).html()+'" value="'+$(celDiv).html()+'"/>');
 	} 
     function <%= table_id %>_load_widget(celDiv)
     {

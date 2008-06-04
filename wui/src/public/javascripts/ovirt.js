@@ -5,25 +5,14 @@
 
 
 // returns an array of selected values for flexigrid checkboxes
-function get_selected_checkboxes(obj_form)
+function get_selected_checkboxes(formid)
 {
   var selected_array = new Array()
   var selected_index = 0
-  var checkboxes
-  if (obj_form.grid_checkbox) {
-    if (obj_form.grid_checkbox.length == undefined) {
-      checkboxes = [obj_form.grid_checkbox]
-    } else {
-      checkboxes = obj_form.grid_checkbox
-    }
-    for(var i=0; i < checkboxes.length; i++){
-    if(checkboxes[i].checked)
-      {
-        selected_array[selected_index]= checkboxes[i].value
-        selected_index++
-      }
-    }
-  }
+  var selected = $('#'+formid+' .grid_checkbox:checkbox:checked')
+  selected.each(function(){
+    selected_array.push(this.value)  
+  })
   return selected_array
 }
 
@@ -41,13 +30,18 @@ function validate_selected(selected_array, name)
 
 function add_hosts(url)
 {
-    hosts= get_selected_checkboxes(document.addhosts_grid_form)
+    hosts= get_selected_checkboxes("addhosts_grid_form")
     if (validate_selected(hosts, "host")) {
       $.post(url,
              { resource_ids: hosts.toString() },
               function(data,status){ 
                 jQuery(document).trigger('close.facebox');
-                $("#hosts_grid").flexReload()
+	        grid = $("#hosts_grid")
+                if (grid.size()>0) {
+                  grid.flexReload()
+                } else {
+		  $('.tab_nav li.current a').click()
+                }
 		if (data.alert) {
 		  alert(data.alert);
                 }
@@ -56,13 +50,18 @@ function add_hosts(url)
 }
 function add_storage(url)
 {
-    storage= get_selected_checkboxes(document.addstorage_grid_form)
+    storage= get_selected_checkboxes("addstorage_grid_form")
     if (validate_selected(storage, "storage pool")) {
       $.post(url,
              { resource_ids: storage.toString() },
               function(data,status){ 
                 jQuery(document).trigger('close.facebox');
-                $("#storage_grid").flexReload()
+	        grid = $("#storage_grid")
+                if (grid.size()>0) {
+                  grid.flexReload()
+                } else {
+		  $('.tab_nav li.current a').click()
+                }
 		if (data.alert) {
 		  alert(data.alert);
                 }
@@ -112,28 +111,48 @@ function afterVmPool(response, status){
     ajax_validation(response, status)
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      $("#vmpools_grid").flexReload()
+      grid = $("#vmpools_grid")
+      if (grid.size()>0) {
+        grid.flexReload()
+      } else {
+        $('.tab_nav li.current a').click()
+      }
     }
 }
 function afterStoragePool(response, status){
     ajax_validation(response, status)
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      $("#storage_grid").flexReload()
+      grid = $("#storage_grid")
+      if (grid.size()>0) {
+        grid.flexReload()
+      } else {
+        $('.tab_nav li.current a').click()
+      }
     }
 }
 function afterPermission(response, status){
     ajax_validation(response, status)
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      $("#users_grid").flexReload()
+      grid = $("#users_grid")
+      if (grid.size()>0) {
+        grid.flexReload()
+      } else {
+        $('.tab_nav li.current a').click()
+      }
     }
 }
 function afterVm(response, status){
     ajax_validation(response, status)
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      $("#vms_grid").flexReload()
+      grid = $("#vms_grid")
+      if (grid.size()>0) {
+        grid.flexReload()
+      } else {
+        $('.tab_nav li.current a').click()
+      }
     }
 }
 
