@@ -34,19 +34,33 @@ cat > /sbin/ovirt-identify-node << \EOF
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
+import libvirt
 import socket
+import sys
 from optparse import OptionParser
+
+def log(msg):
+	print >> sys.stderr, msg
 
 class IdentifyNode:
 	"""This class allows the managed node to connect to the WUI host
 	and notify it that the node is awake and ready to participate."""
 
 	def __init__(self, server, port):
+
+                conn = libvirt.openReadOnly(None)
+                if conn == None:
+		    log('Failed to open connection to the hypervisor')
+		    sys.exit(1)
+                info = conn.getInfo()
+
 		self.hostname    = 'management.priv.ovirt.org'
 		self.server_name = server
 		self.server_port = port
 		self.host_info = {
-                    "UUID"            : "bar",
+                    # FIXME: This is the same as we had before I think.. using hostname for the UUID.
+                    # There was a fixme for this before that we should have better UUIDs.
+                    "UUID"            : conn.getHostname(),
                     "ARCH"            : info[0],
                     "MEMSIZE"         : "%d" % info[1],
                     "NUMCPUS"         : "%d" % info[2],
@@ -60,8 +74,9 @@ class IdentifyNode:
 		self.input  = self.socket.makefile('rb', 0)
 		self.output = self.socket.makefile('wb', 0)
 
+
 	def start_conversation(self):
-		print("Connecting to server")
+		log("Connecting to server")
 
 		response = self.input.readline().strip()
 		if response == 'HELLO?':
@@ -70,7 +85,7 @@ class IdentifyNode:
 			raise TypeError, "Received invalid conversation starter: %s" % response
 
 	def send_host_info(self):
-		print("Starting information exchange...")
+		log("Starting information exchange...")
 
 		response = self.input.readline().strip()
 		if response == 'INFO?':
@@ -79,20 +94,20 @@ class IdentifyNode:
 		else:
 			raise TypeError, "Received invalid info marker: %s" % response
 
-		print("Ending information exchange...")
+		log("Ending information exchange...")
 		self.output.write("ENDINFO\n")
 		response = self.input.readline().strip()
 
-		print 'response is', response
-		print 'response[:4] is', response[:4]
+		log("response is %s" % response)
+		log("response[:4] is %s" % response[:4])
+
 		if response[:4] == 'KTAB':
 			self.keytab = response[5:]
-			print 'keytab is', self.keytab
 		else:
 			raise TypeError, "Did not receive a keytab response: '%s'" % response
 
 	def send_host_info_element(self,key,value):
-		print("Sending: " + key + "=" + value)
+		log("Sending: " + key + "=" + value)
 		self.output.write(key + "=" + value + "\n")
 		response = self.input.readline().strip()
 
@@ -100,10 +115,10 @@ class IdentifyNode:
 			raise TypeError, "Received bad acknolwedgement for field: %s" % key
 
 	def get_keytab(self):
-		print("Retrieving keytab information: %s" % self.keytab)
+		log("Retrieving keytab information: %s" % self.keytab)
 
 	def end_conversation(self):
-		print("Disconnecting from server")
+		log("Disconnecting from server")
 
 
 if __name__ == '__main__':
@@ -126,6 +141,7 @@ if __name__ == '__main__':
 	identifier.send_host_info()
 	identifier.get_keytab()
 	identifier.end_conversation()
+	print identifier.keytab
 
 EOF
 
@@ -287,41 +303,29 @@ cat > /etc/init.d/ovirt << \EOF
 
 start() {
     echo -n $"Starting ovirt: "
+
     find_srv ipa tcp
-
-    mkdir -p /etc/libvirt
-    # here, we wait for the "host-keyadd" service to finish adding our
-    # keytab and returning to us; note that we will try 5 times and
-    # then give up
-    tries=0
-    while [ "$VAL" != "SUCCESS" -a $tries -lt 5 ]; do
-        VAL=`echo "KERB" | nc $SRV_HOST 6666`
-        if [ "$VAL" == "SUCCESS" ]; then
-            break
-        fi
-        tries=$(( $tries + 1 ))
-        sleep 1
-        printf .
-    done
-
-    if [ "$VAL" != "SUCCESS" ]; then
-        echo -n "Failed generating keytab" ; failure ; echo ; exit 1
-    fi
-
     if [ ! -s /etc/krb5.conf ]; then
         rm -f /etc/krb5.conf
+        # FIXME this is IPA specific
         wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O /etc/krb5.conf
         if [ "$?" -ne 0 ]; then
             echo "Failed getting krb5.conf" ; failure ; echo ; exit 1
         fi
     fi
+    IPA_HOST=$SRV_HOST
+    IPA_PORT=$SRV_PORT
 
     find_srv identify tcp
     if [ ! -s /etc/libvirt/krb5.tab ]; then
-	ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+        keytab=$(ovirt-identify-node -s $SRV_HOST -p $SRV_PORT)
         if [ $? -ne 0 ]; then
-	    echo -n "Failed to identify node" ; failure ; echo ; exit 1
-	fi
+            echo -n "Failed to identify node" ; failure ; echo ; exit 1
+        fi
+        # FIXME this is IPA specific, host-browser should return full URL
+        wget -q http://$IPA_HOST:$IPA_PORT/config/$keytab \
+          -O /etc/libvirt/krb5.tab
+
     fi
 
     find_srv collectd tcp
