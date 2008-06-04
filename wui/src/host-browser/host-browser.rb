@@ -174,7 +174,7 @@ class HostBrowser
     # Executes an external program to support the keytab function.
     #
     def kadmin_local(command)
-        system("/usr/kerberos/sbin/kadmin -q '" + command + "'")
+        system("/usr/kerberos/sbin/kadmin.local -q '" + command + "'")
     end
 end
 
