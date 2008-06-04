@@ -14,6 +14,7 @@ ARCH_DEFAULT=$(uname -m)
 
 ARCH=$ARCH_DEFAULT
 IMGDIR=$IMGDIR_DEFAULT
+CONSOLE_FLAG=--noautoconsole
 
 # stupid bridge name so that if all of our checks below fail, we will still
 # fail the install
@@ -26,6 +27,7 @@ Usage: $ME -i install_iso | -t install_tree [-d image_dir] [-a x86_64|i686]
   -i: location of installation ISO (required if -t not present)
   -t: location of installation tree (required if -i not present)
   -k: URL of kickstart file for use with installation tree
+  -o: Display virt-viewer window during install (implied by -i option)
   -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
   -a: architecture for the virtual machine (default: $ARCH_DEFAULT)
   -v: Install in developer mode (see http://ovirt.org for details)
@@ -36,13 +38,15 @@ EOF
 
 err=0 help=0
 devel=0 bundled=0
-while getopts :a:d:i:t:k:hvb c; do
+viewer=0
+while getopts :a:d:i:t:k:ohvb c; do
     case $c in
         i) ISO=$OPTARG;;
         t) TREE=$OPTARG;;
         k) KICKSTART=$OPTARG;;
         d) IMGDIR=$OPTARG;;
         a) ARCH=$OPTARG;;
+        o) CONSOLE_FLAG=;;
         h) help=1;;
         v) devel=1;;
         b) bundled=1;;
@@ -61,6 +65,8 @@ if [ -n "$ISO" ]; then
     test -n "$KICKSTART" && usage "-k not valid in conjunction with -i"
     test -r "$ISO" || usage "missing or unreadable ISO file: \`$ISO'"
     cdrom_arg="-c $ISO"
+    # If we're installing from an ISO, we need console to provide kickstart
+    CONSOLE_FLAG=
 elif [ -n "$TREE" ]; then
     location_arg="-l $TREE"
 fi
@@ -68,6 +74,10 @@ fi
 if [ -n "$KICKSTART" ]; then
     extra_flag=-x
     extra_arg="ksdevice=eth0 ks=$KICKSTART"
+else
+    # If we didn't provide a kickstart, we need console access to provide
+    # one at boot time
+    CONSOLE_FLAG=
 fi
 
 test $devel = 1 -a $bundled = 1 && usage "Can only specify one of -v and -b"
@@ -187,4 +197,4 @@ virsh undefine $NAME > /dev/null 2>&1
 virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
     --accelerate -v --os-type=linux --arch=$ARCH \
     -w network:default -w network:$BRIDGENAME \
-    $location_arg $cdrom_arg $extra_flag "$extra_arg" --noacpi
+    $location_arg $cdrom_arg $extra_flag "$extra_arg" --noacpi $CONSOLE_FLAG
