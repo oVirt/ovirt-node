@@ -1,17 +1,21 @@
 <div class="panel_header"></div>
-<br/>&nbsp; &nbsp;<b><%= @vm_resource_pool.name %></b><br/><br/>
+<div class="data_section">
+  <div class="scrollable">
+   <br/>&nbsp; &nbsp;<b><%= @vm_resource_pool.name %></b><br/><br/>
 
-<div id="availability_graphs">
-   <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @vm_resource_pool.id, :params => { :target => 'vcpu' } %>
-   <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @vm_resource_pool.id, :params => { :target => 'vram' } %>
-   <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @vm_resource_pool.id, :params => { :target => 'vm_quotas' } %>
+   <div id="availability_graphs">
+      <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @vm_resource_pool.id, :params => { :target => 'vcpu' } %>
+      <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @vm_resource_pool.id, :params => { :target => 'vram' } %>
+      <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @vm_resource_pool.id, :params => { :target => 'vm_quotas' } %>
+   </div>
+
+   <%= render_component :controller=> 'graph', :action => 'history_graphs', :id => @vm_resource_pool.id %>
+
+   <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @vm_resource_pool.id %>
+
+   <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
+  </div>
 </div>
-
-<%= render_component :controller=> 'graph', :action => 'history_graphs', :id => @vm_resource_pool.id %>
-
-<%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @vm_resource_pool.id %>
-
-  <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
 
 <div class="selection_detail" id="vmpool_selection">
   <div>VM pool quota details.</div>
@@ -21,24 +25,10 @@
 <%= @vm_resource_pool.name %>
 <%- end -%>
 
-<%- content_for :scripts do -%>
 <script type="text/javascript">
-      $(document).ready(function(){         
          refresh_summary('vmpool_selection', 
                          '<%= url_for :controller => "resources", 
                                       :action => "quick_summary" %>',
                          <%= @vm_resource_pool.id %>)
-	}); 
 </script>
-
-<script type="text/javascript">
-function confirm_and_submit(item){
-   c = true
-   if(item.options[item.options.selectedIndex].value == "destroy"){
-      c = confirm('Are you sure you want to destroy these VMs?')
-   }
-   if(c){ item.form.submit(); } else{ item.selectedIndex = 0; }
-}
-</script>
-<%- end -%>
 

@@ -13,9 +13,9 @@
 </div>
 <% end -%>
 <div class="toolbar" style="float:left;">
-   <%= link_to image_tag("icon_delete.gif", :title=>"Delete Selected Pool"), 
-       { :action => 'destroy', :id => pool }, 
-       { :method => :post, :confirm => 'Are you sure you want to delete - %s?' % pool.name} %>
+    <a href="#" onClick="delete_<%=pool[:type]=='HardwarePool' ? 'hw' : 'vm' %>_pool(<%=pool.id%>)">
+      <%= image_tag "icon_delete.gif", :title=>"Delete Selected Pool" %>
+    </a> 
 </div>
 <% end -%>
 

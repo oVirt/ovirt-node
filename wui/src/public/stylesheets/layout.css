@@ -204,10 +204,16 @@ textarea:focus, input:focus {
 }
 
 .data_section {
-  overflow: auto;
+  overflow: hidden;
   position: absolute;
   top: 28px;
   bottom: 171px;
+  height: 65%;
+}
+
+.scrollable {
+    overflow: scroll;
+    height: 100%;
 }
 
 .selection_detail {
@@ -216,7 +222,7 @@ textarea:focus, input:focus {
   bottom:0px; 
   left: 0px;
   right: 0px;
-  height: 165px;
+  height: 30%;
   background: #DEE7EB;
   border-top: #CCCCCC solid 1px;
   overflow: auto;

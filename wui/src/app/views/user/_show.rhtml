@@ -1,6 +1,6 @@
 <div id="toolbar_nav">
 <ul>
-    <li><a href="<%= url_for :controller => 'permission', :action => 'new', :pool_id => pool_id %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add User</a></li>
+    <li><a href="<%= url_for :controller => 'permission', :action => 'new', :pool_id => pool.id %>" rel="facebox[.bolder]"><%= image_tag "icon_addhost.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add User</a></li>
     <li><%= render :partial => 'user/change_role_menu' %></li>
     <li><a href="#" onClick="delete_users()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
 </ul>
@@ -14,7 +14,7 @@
   {
     permissions = get_selected_users()
     if (validate_selected(permissions, "user")) {
-      $.post('<%= url_for :controller => "permission", :action => "delete", :id => pool_id %>',
+      $.post('<%= url_for :controller => "permission", :action => "delete", :id => pool.id %>',
            { permission_ids: permissions.toString() },
             function(data,status){
               $("#users_grid").flexReload()
@@ -43,7 +43,7 @@
   <div class="panel_header"></div>
 <div class="data_section">
   <%= render :partial => "/user/grid", :locals => { :table_id => "users_grid",
-                                                     :parent_controller => parent_controller,
-                                                     :pool_id => pool_id } %>
+                                                    :parent_controller => parent_controller,
+                                                    :pool => pool } %>
 <table id="users_grid" style="display:none"></table>
 </div>

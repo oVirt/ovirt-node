@@ -56,13 +56,14 @@ class VmController < ApplicationController
                                :action  => VmTask::ACTION_START_VM,
                                :state   => Task::STATE_QUEUED})
           @task.save!
-          render :json => { :object => "vm", :success => true, :alert => "VM was successfully created. VM Start action queued." }
+          alert = "VM was successfully created. VM Start action queued."
         else
-          render :json => { :object => "vm", :success => true, :alert => "VM was successfully created. Resources are not available to start VM now." }
+          alert = "VM was successfully created. Resources are not available to start VM now."
         end
       else
-        render :json => { :object => "vm", :success => true, :alert => "VM was successfully created." }
+        alert = "VM was successfully created."
       end
+      render :json => { :object => "vm", :success => true, :alert => alert  }
     rescue
       # FIXME: need to distinguish vm vs. task save errors (but should mostly be vm)
       render :json => { :object => "vm", :success => false, 
@@ -72,34 +73,38 @@ class VmController < ApplicationController
   end
 
   def edit
+    render :layout => 'popup'    
   end
 
   def update
-    #needs restart if certain fields are changed (since those will only take effect the next startup)
-    needs_restart = false
-    unless @vm.get_pending_state == Vm::STATE_STOPPED
-      Vm::NEEDS_RESTART_FIELDS.each do |field|
-        unless @vm[field].to_s == params[:vm][field]
-          needs_restart = true
-          break
+    begin
+      #needs restart if certain fields are changed (since those will only take effect the next startup)
+      needs_restart = false
+      unless @vm.get_pending_state == Vm::STATE_STOPPED
+        Vm::NEEDS_RESTART_FIELDS.each do |field|
+          unless @vm[field].to_s == params[:vm][field]
+            needs_restart = true
+            break
+          end
         end
+        current_storage_ids = @vm.storage_volume_ids.sort
+        new_storage_ids = params[:vm][:storage_volume_ids]
+        new_storage_ids = [] unless new_storage_ids
+        new_storage_ids = new_storage_ids.sort.collect {|x| x.to_i }
+        needs_restart = true unless current_storage_ids == new_storage_ids
       end
-      current_storage_ids = @vm.storage_volume_ids.sort
-      new_storage_ids = params[:vm][:storage_volume_ids]
-      new_storage_ids = [] unless new_storage_ids
-      new_storage_ids = new_storage_ids.sort.collect {|x| x.to_i }
-      needs_restart = true unless current_storage_ids == new_storage_ids
-    end
-    params[:vm][:needs_restart] = 1 if needs_restart
-    if @vm.update_attributes(params[:vm])
-      flash[:notice] = 'Vm was successfully updated.'
-      redirect_to :action => 'show', :id => @vm
-    else
-      render :action => 'edit'
+      params[:vm][:needs_restart] = 1 if needs_restart
+      @vm.update_attributes!(params[:vm])
+      render :json => { :object => "vm", :success => true, 
+                        :alert => 'Vm was successfully updated.'  }
+    rescue
+      # FIXME: need to distinguish vm vs. task save errors (but should mostly be vm)
+      render :json => { :object => "vm", :success => false, 
+                        :errors => @vm.errors.localize_error_messages.to_a }
     end
   end
 
-  #FIXME: we need permissions checks. user must have permission. 
+  #FIXME: we need permissions checks. user must have permission. Also state checks 
   def delete
     vm_ids_str = params[:vm_ids]
     vm_ids = vm_ids_str.split(",").collect {|x| x.to_i}
@@ -124,14 +129,11 @@ class VmController < ApplicationController
     if ((@vm.state == Vm::STATE_STOPPED and @vm.get_pending_state == Vm::STATE_STOPPED) or
         (@vm.state == Vm::STATE_PENDING and @vm.get_pending_state == Vm::STATE_PENDING))
       @vm.destroy
-      if vm_resource_pool
-        redirect_to :controller => 'resources', :action => 'show', :id => vm_resource_pool
-      else
-        redirect_to :controller => 'resources', :controller => 'dashboard'
-      end
+      render :json => { :object => "vm", :success => true, 
+        :alert => "Virtual Machine was successfully deleted." }
     else
-      flash[:notice] = "Vm must be stopped to destroy it."
-      redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
+      render :json => { :object => "vm", :success => false, 
+        :alert => "Vm must be stopped to delete it." }
     end
   end
 
@@ -146,8 +148,9 @@ class VmController < ApplicationController
   end
 
   def vm_action
+    vm_action = params[:vm_action]
     begin
-      if @vm.queue_action(get_login_user, params[:vm_action])
+      if @vm.queue_action(get_login_user, vm_action)
         render :json => { :object => "vm", :success => true, :alert => "#{vm_action} was successfully queued." }
       else
         render :json => { :object => "vm", :success => false, :alert => "#{vm_action} is an invalid action." }
@@ -162,11 +165,10 @@ class VmController < ApplicationController
       Task.transaction do
         @vm.get_queued_tasks.each { |task| task.cancel}
       end
-      flash[:notice] = "queued tasks canceled."
+      render :json => { :object => "vm", :success => true, :alert => "queued tasks were canceled." }
     rescue
-      flash[:notice] = "cancel queued tasks failed."
+      render :json => { :object => "vm", :success => true, :alert => "queued tasks cancel failed." }
     end
-    redirect_to :controller => 'vm', :action => 'show', :id => params[:id]
   end
 
   protected

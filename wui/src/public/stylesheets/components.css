@@ -8,18 +8,6 @@
     left:10px;
 }
 
-.header_info {
-  padding: 40px 10px 0px 10px;
-  float: right;
-  font-size: 100%;
-  color: #B5B5B5;
-}
-
-.header_info a:link    { color: #B5B5B5; text-decoration: none; }   
-.header_info a:active  { color: #B5B5B5; text-decoration: none; }
-.header_info a:visited { color: #B5B5B5; text-decoration: none; }
-.header_info a:hover   { color: #FFFFFF; text-decoration: none; }
-
 .header_menu_wrapper {
   padding: 0;
   margin: 35px 0 0 0;
@@ -122,13 +110,29 @@
     background: #1E99DF;
 }
 
-
+/***  the no grid items block ***/
+.no-grid-items{
+    padding: 45px;
+    margin: 50px;
+    width: 750px;
+    height: 150px;
+    border: 1px solid #E8E8E8;
+    vertical-align: middle;
+}
+.no-grid-items-text {
+  float: left;
+  padding-top: 35px;
+  padding-left: 20px;
+}
 
 /***************************
  *      Graphing Style
  **************************/
-/* availability graphs on hardware / resource summary tab */
-#availability_graphs{ overflow: hidden; }
+/* availability graphs on hardware resource summary tab */
+#availability_graphs{ 
+   overflow: hidden; 
+   height: 100px; 
+}
 .availability_graph { float: left; width: 33%;}
 .availability_graph_left { float: left; width: 50px;}
 .availability_graph_right { float: left; margin-top: 10%; margin-left: 125px; min-width: 100px;}
@@ -137,7 +141,7 @@
 {margin-left:50px;width:100px;height:100px}
 
 /* history graphs on hardware / resource summary tab */
-#history_graphs { height: 270px; overflow: hidden; margin-left: 40px; margin-top: 40px; }
+#history_graphs { position: relative; height: 270px; overflow: hidden; margin-left: 40px; margin-top: 40px; }
 #history_graphs_control { position: absolute; z-index: 1; height: 20px; width: 90%; border: 1px solid black; background: #CCCCCC; }
 .history_graphs_menu { float: left; width: 118px; }
 .history_graphs_legend { float: right; height: 20px; width: 15%; }
@@ -229,3 +233,27 @@
 /* load graphs in flexigrid */
 .load_graph {
 }
+
+/* snapshot graphs on detail panes */
+.selection_detail #snapshot_graphs { height: 210px; padding-left: 0; }
+.selection_detail #snapshot_graphs table { width: 100%; }
+.selection_detail #overall_load_snapshot, 
+.selection_detail #cpu_snapshot, 
+.selection_detail #net_in_snapshot, 
+.selection_detail #net_out_snapshot, 
+.selection_detail #io_snapshot { height: 5px; width: 215px; }
+.selection_detail .snapshot_graph_arrow{ height: 15px; }
+.selection_detail .snapshot_graph_text { padding-top: 0; }
+.selection_detail .snapshot_graph_container{ width: 85%; }
+.selection_detail .snapshot_graph{ padding-left: 23px; }
+
+/* load graphs in flexigrid */
+.load_graph {
+}
+
+/*************************
+ *   details pane style  *
+ *************************/
+.detail-pane-chart {
+    height: 50px;
+    width: 375px;

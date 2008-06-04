@@ -1,5 +1,73 @@
-  <div class="selection_left">
-  	<div class="selection_title"><%=h @vm.description %></div>
+<%- content_for :title do -%>
+  <%=h @vm.description %>
+<%- end -%>
+
+<%- content_for :action_links do -%>
+  <%if @can_modify -%>
+    <%= link_to image_tag("icon_edit.png") + " Edit",
+                          {:controller => 'vm', :action => 'edit', :id => @vm},
+                          :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
+    <% for action in @actions %>
+      <a href="#" onClick="single_vm_action('<%= action[1] %>')">
+        <%= image_tag "icon_x.png" %> <%= action[0] %>
+      </a> 
+    <% end %>
+    <a href="#" onClick="cancel_queued_tasks()">
+      <%= image_tag "icon_x.png" %> Cancel queued tasks
+    </a> 
+    <a href="#" onClick="delete_vm()">
+      <%= image_tag "icon_x.png" %> Delete
+    </a> 
+  <% end -%>
+<% end -%>
+<script type="text/javascript">
+  function cancel_queued_tasks()
+  {
+    if(confirm("Are you sure?")){
+      $.post('<%= url_for :controller => "vm", :action => "cancel_queued_tasks", :id => @vm %>',
+              function(data,status){
+                refresh_summary('vms_selection', 
+                            '<%= url_for :controller => "vm", 
+                                         :action => "show" %>',
+                            <%= @vm.id %>)
+                $("#vms_grid").flexReload()
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
+    }
+  }
+  function delete_vm()
+  {
+    if(confirm("Are you sure?")){
+      $.post('<%= url_for :controller => "vm", :action => "destroy", :id => @vm %>',
+             {x: 1},
+              function(data,status){
+                //storage_detail_empty()
+                $("#vms_grid").flexReload()
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
+    }
+  }
+  function single_vm_action(action)
+  {
+      $.post('<%= url_for :controller => "vm", :action => "vm_action", :id => @vm %>',
+             {vm_action: action},
+              function(data,status){
+                refresh_summary('vms_selection', 
+                            '<%= url_for :controller => "vm", 
+                                         :action => "show" %>',
+                            <%= @vm.id %>)
+                $("#vms_grid").flexReload()
+		if (data.alert) {
+		  alert(data.alert);
+                }
+               }, 'json');
+  }
+</script>
+
     <div class="selection_key">
         Uuid:<br/>                
 	Num vcpus allocated:<br/> 
@@ -25,7 +93,6 @@
        <% end -%><br/>
        <%=h @vm.get_pending_state %>
     </div>
-</div>
 
 <!-- FIXME: show storage volumes
 <% if !@vm.storage_volumes.empty? %>
@@ -38,26 +105,3 @@
 <!-- FIXME: need to show tasks
                   <%= render :partial => "/task/list_table", :locals => { :tasks => @vm.tasks, :type => "VM" } %>
 -->
-
-<!-- FIXME: valid actions here?
-      <%if @can_modify -%>
-        <%- if ! @actions.empty? -%>
-          <div class="actions create">
-            <% for action in @actions %>
-              <%= link_to action[0], { :action => 'vm_action', :id => @vm, :vm_action => action[1] } , {:class => "create" } %>
-            <% end %>
-          </div>
-          <%- end -%>
-        <div class="actions edit">
-          <%= link_to 'Edit', { :action => 'edit', :id => @vm } , {:class => "edit" } %>
-          <%= link_to 'Cancel queued tasks', { :action => 'cancel_queued_tasks', :id => @vm } , {:confirm => 'Are you sure?', :method => :post, :class => "edit" } %>
-        </div>
-        <div class="actions remove">
-          <%= link_to 'Destroy this VM', { :action => 'destroy', :id => @vm }, :confirm => 'Are you sure?', :method => :post, :class => "remove" %>
-        </div>
-      <% end -%>
--->
-<div class="selection_right">  
-    <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @vm.id, :target => 'vm' %>
-</div>
-

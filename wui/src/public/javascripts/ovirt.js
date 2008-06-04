@@ -141,10 +141,15 @@ function afterVm(response, status){
 function refresh_summary(element_id, url, obj_id){
   $('#'+element_id+'').load(url, { id: obj_id})
 }
-
-// this must be called again after ajax loading of content with facebox links
-function refresh_facebox(){
-  $('a[rel*=facebox]').facebox()
-  $('a[rel*=close]').trigger('close.facebox')
+function refresh_summary_static(element_id, content){
+    $('#'+element_id+'').innerHTML = content
 }
+
+function storage_detail_empty(){
+    refresh_summary_static('storage_selection', '<div class="selection_left"> \
+    <div>Select a storage volume.</div> \
+  </div>')
+}
+
+
 

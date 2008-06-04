@@ -37,16 +37,30 @@
   }
 </script>
 
-  <div class="panel_header"></div>
-<div class="data_section">
+<div class="panel_header"></div>
+<% if @pool.sub_vm_resource_pools.size != 0 %>
+  <div class="data_section">
        <%= render :partial => "/resources/grid", :locals => { :table_id => "vmpools_grid",
                                                          :parent_controller => "hardware",
-                                                         :pool_id => @pool.id,
+                                                         :pool => @pool,
                                                          :on_select => "vmpools_select",
                                                          :on_deselect => "load_widget_deselect",
                                                          :on_hover => "load_widget_hover",
                                                          :on_unhover => "load_widget_unhover" } %>
-</div>
-<div class="selection_detail" id="vmpool_selection">
-  <div>Select a VM pool above.</div>
-</div>
+  </div>
+  <div class="selection_detail" id="vmpool_selection">
+     <div>Select a VM pool above.</div>
+  </div>
+<% else %>
+   <div class="data_section">
+       <div class="no-grid-items">
+          <%= image_tag 'no-grid-items.png', :style => 'float: left;' %>
+          
+          <div class="no-grid-items-text">
+            No VM Resource Pools found in this hardware pool. <br/><br/>
+            <%= image_tag "icon_add_vmpool.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;
+            <a href="<%= url_for :controller => 'resources', :action => 'new', :parent_id => @pool %>" rel="facebox[.bolder]">Add first vm resource pool to this hardware pool</a></li>
+          </div>
+       </div>
+   </div>
+<% end %>

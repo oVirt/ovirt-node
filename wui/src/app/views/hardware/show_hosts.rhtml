@@ -48,16 +48,31 @@
     }
   }
 </script>
-  <div class="panel_header"></div>
-    <div class="data_section">
-       <%= render :partial => "/host/grid", :locals => { :table_id => "hosts_grid",
-                                                         :hwpool_id => @pool.id,
-                                                         :exclude_id => nil,
-                                                         :on_select => "hosts_select", 
-                                                         :on_deselect => "load_widget_deselect",
-                                                         :on_hover => "load_widget_hover",
-                                                         :on_unhover => "load_widget_unhover" } %>
-    </div>
-<div class="selection_detail" id="hosts_selection">
-  <div>Select a host above.</div>
-</div>
+
+<div class="panel_header"></div>
+<% if @pool.hosts.size != 0 %>
+   <div class="data_section">
+      <%= render :partial => "/host/grid", :locals => { :table_id => "hosts_grid",
+                                                        :hwpool => @pool,
+                                                        :exclude_id => nil,
+                                                        :on_select => "hosts_select", 
+                                                        :on_deselect => "load_widget_deselect",
+                                                        :on_hover => "load_widget_hover",
+                                                        :on_unhover => "load_widget_unhover" } %>
+   </div>
+   <div class="selection_detail" id="hosts_selection">
+       <div>Select a host above.</div>
+   </div>
+<% else %>
+   <div class="data_section">
+       <div class="no-grid-items">
+          <%= image_tag 'no-grid-items.png', :style => 'float: left;' %>
+          
+          <div class="no-grid-items-text">
+            No hosts found in this pool. <br/><br/>
+            <%= image_tag "icon_addhost.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;
+            <a href="<%= url_for :controller => 'host', :action => 'addhost', :hardware_pool_id => @pool %>" rel="facebox[.bolder]">Add first host to this hardware pool</a>
+          </div>
+       </div>
+   </div>
+<% end %>

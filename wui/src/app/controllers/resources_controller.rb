@@ -109,19 +109,21 @@ class ResourcesController < ApplicationController
     rescue
       render :json => { :object => "vm_resource_pool", :success => false, 
                         :errors => @vm_resource_pool.errors.localize_error_messages.to_a}
-    end
-    
+    end    
   end
 
   def edit
+    render :layout => 'popup'    
   end
 
   def update
-    if @vm_resource_pool.update_attributes(params[:vm_resource_pool])
-      flash[:notice] = 'VM Resource Pool was successfully updated.'
-      redirect_to :action => 'show', :id => @vm_resource_pool
-    else
-      render :action => 'edit'
+    begin
+      @vm_resource_pool.update_attributes!(params[:vm_resource_pool])
+      render :json => { :object => "vm_resource_pool", :success => true, 
+                        :alert => "Virtual Machine Pool was successfully modified." }
+    rescue
+      render :json => { :object => "vm_resource_pool", :success => false, 
+                        :errors => @vm_resource_pool.errors.localize_error_messages.to_a}
     end
   end
 
@@ -148,9 +150,14 @@ class ResourcesController < ApplicationController
   end
 
   def destroy
-    parent = @vm_resource_pool.parent
-    @vm_resource_pool.destroy
-    redirect_to :controller => parent.get_controller, :action => 'show', :id => parent.id
+    if @vm_resource_pool.destroy
+      alert="Virtual Machine Pool was successfully deleted."
+      success=true
+    else
+      alert="Failed to delete virtual machine pool."
+      success=false
+    end
+    render :json => { :object => "vm_resource_pool", :success => success, :alert => alert }
   end
 
   def vm_actions

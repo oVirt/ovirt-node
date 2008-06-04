@@ -19,7 +19,7 @@
 
 class StorageController < ApplicationController
 
-  before_filter :pre_pool_admin, :only => [:attach_to_pool, :remove_from_pool, :refresh]
+  before_filter :pre_pool_admin, :only => [:refresh]
   before_filter :pre_new2, :only => [:new2]
   before_filter :pre_json, :only => [:storage_volumes_json]
 
@@ -126,22 +126,21 @@ class StorageController < ApplicationController
   end
 
   def edit
+    render :layout => 'popup'    
   end
 
   def update
-    # FIXME: handle save! properly, in conjunction w/ update_attributes, json, etc
-    StoragePool.transaction do
-      @storage_pool.update_attributes!(params[:storage_pool])
-      insert_refresh_task
-      transaction_succeeded = true
-    end
-       
-    if transaction_succeeded 
-      storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
-      flash[:notice] = '<a class="show" href="%s">%s</a> was successfully updated.' % [ storage_url ,@storage_pool.ip_addr]
-      redirect_to :action => 'show', :id => @storage_pool
-    else
-      render :action => 'edit'
+    begin
+      StoragePool.transaction do
+        @storage_pool.update_attributes!(params[:storage_pool])
+        insert_refresh_task
+      end
+      render :json => { :object => "storage_pool", :success => true, 
+                        :alert => "Storage Pool was successfully modified." }
+    rescue
+      # FIXME: need to distinguish pool vs. task save errors (but should mostly be pool)
+      render :json => { :object => "storage_pool", :success => false, 
+                        :errors => @storage_pool.errors.localize_error_messages.to_a  }
     end
   end
 
@@ -194,40 +193,14 @@ class StorageController < ApplicationController
 
   def destroy
     pool = @storage_pool.hardware_pool
-    @storage_pool.destroy
-    redirect_to :controller => pool.get_controller, :action => 'show', :id => pool.id
-  end
-
-  def attach_to_pool
-    pool = HardwarePool.find(params[:hardware_pool_id])
-    storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
-    pool_url = url_for(:controller => pool.get_controller, :action => "show", :id => pool)
-    @storage_pool.hardware_pool_id = pool.id
-    if @storage_pool.save
-      flash[:notice] = '<a class="show" href="%s">%s</a> is attached to <a href="%s">%s</a>.' %  [ storage_url ,@storage_pool.ip_addr, pool_url, pool.name ]
-      redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
+    if @storage_pool.destroy
+      alert="Storage Pool was successfully deleted."
+      success=true
     else
-      flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' %  [ storage_url ,@storage_pool.ip_addr, host_url, host.hostname ]
-      redirect_to :controller => pool.get_controller, :action => 'show', :id => pool
+      alert="Failed to delete storage pool."
+      success=false
     end
-  end
-
-  def remove_from_pool
-    pool = HardwarePool.find(params[:hardware_pool_id])
-    storage_url = url_for(:controller => "storage", :action => "show", :id => @storage_pool)
-    pool_url = url_for(:controller => pool.get_controller, :action => "show", :id => pool)
-    if @storage_pool.hardware_pools.include?(pool)
-      if @storage_pool.hardware_pools.delete(pool)
-        flash[:notice] = '<a class="show" href="%s">%s</a> is removed from <a href="%s">%s</a>.' %[ storage_url ,@storage_pool.ip_addr, host_url, host.hostname ]
-        redirect_to :controller => pool.get_controller, :action => 'show', :id => host
-      else
-        flash[:notice] = 'Problem attaching <a class="show" href="%s">%s</a> to <a href="%s">%s</a>.' % [ storage_url ,@storage_pool.ip_addr, pool_url, pool.name ]
-        redirect_to :controller => pool.get_controller, :action => 'show', :id => host
-      end
-    else
-      flash[:notice] = '<a class="show" href="%s">%s</a> is not attached to <a href="%s">%s</a>.' % [ storage_url ,@storage_pool.ip_addr, pool_url, pool.name ]
-      redirect_to :controller => pool.get_controller, :action => 'show', :id => host
-    end
+    render :json => { :object => "storage_pool", :success => success, :alert => alert }
   end
 
   def pre_new
