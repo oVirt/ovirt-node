@@ -204,7 +204,9 @@ class GraphController < ApplicationController
     @id = params[:id]
     @target = params[:target]
     @poolType = params[:poolType]
+    @host   = params[:host]
 
+    pool = Pool.find(@id)
     @snapshots = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
                    :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
 
@@ -218,7 +220,7 @@ class GraphController < ApplicationController
             end
         }
     else
-        Pool.find(@id).hosts.each{ |host|
+        pool.hosts.each{ |host|
             requestList += _create_host_snapshot_requests(host.hostname)
         }
     end
