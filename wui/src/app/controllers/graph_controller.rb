@@ -1,4 +1,4 @@
-# require 'util/stats/Stats'
+require 'util/stats/Stats'
 
 class GraphController < ApplicationController
   layout nil
@@ -94,44 +94,67 @@ class GraphController < ApplicationController
   # generate layout for history graphs
   def history_graphs
     @id = params[:id]
-    @peak_history = { :color => 'red',  :values => [ 100, 99, 98, 93, 95, 12, 92] }
-    @avg_history  = { :color => 'blue', :values => [12, 23, 42, 33, 12, 23, 65] }
+    @peak_history = { :color => 'red',  :values => [0,0,0,0,0,0,0], :dataPoints => [0,0,0,0,0,0,0] }
+    @avg_history  = { :color => 'blue', :values => [0,0,0,0,0,0,0], :dataPoints => [0,0,0,0,0,0,0] }
   end
 
   # retrieves data for history graphs
   def history_graph_data
     history_graphs
     target = params[:target]
+    devclass = DEV_KEY_CLASSES[target]
+    avgcounter  = DEV_KEY_AVGCOUNTERS[target]
+    peakcounter = nil
     @pool = Pool.find(@id)
     
     today = Time.now
-    #requestList = [ ]
+    firstday = today - 6
     dates = [ Date::ABBR_MONTHNAMES[today.month] + ' ' + today.day.to_s ]
     0.upto(6){ |x|  # TODO get # of days from wui
        dte = today - x
        dates.push ( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
-       #requestList.push ( StatsRequest.new (@pool.id.to_s, target, 0, "used", dte.to_i - 3600, 3600, 0), 
-       #                   StatsRequest.new (@pool.id.to_s, target, 0, "peak", dte.to_i - 3600, 3600, 0) )
+    }
+
+    requestList = [ ]
+    @pool.hosts.each { |host|
+        if target == "cpu"
+            0.upto(host.num_cpus - 1){ |x|
+                requestList.push ( StatsRequest.new (host.hostname, devclass, x, avgcounter, 0, 0, RRDResolution::Long) ) #, # one weeks worth of data
+                                  # StatsRequest.new (@pool.id.to_s, devclass, x, peakcounter, firstday.to_i - 3600, 604800, 3600))
+            }
+        else
+            requestList.push ( StatsRequest.new (host.hostname, devclass, 0, avgcounter, 0, 0, RRDResolution::Long) ) #, 
+                           # StatsRequest.new (@pool.id.to_s, devclass, 0, peakcounter, firstday.to_i - 3600, 604800, 3600))
+        end
     }
     dates.reverse! # want in ascending order
-    #requestList.reverse!
 
-    #statsList = getStatsData?( requestList )
-    #statsList.each { |stat|
-    #    devClass = stat.get_devClass?
-    #    counter  = stat.get_counter?
-    #    stat.get_data?.each{ |data|
-    #        value    = data.get_value?.to_i
-    #        if devClass == target
-    #            if counter == "used"
-    #                @avg_history[:values].push value
-    #            else
-    #            #elsif counter == "peak"
-    #                @peak_history[:values].push value
-    #            end
-    #        end
-    #    }
-    #}
+    statsList = getStatsData?( requestList )
+    statsList.each { |stat|
+        counter  = stat.get_counter?
+        stat.get_data?.each{ |data|
+            timestamp = data.get_timestamp?
+            valueindex = ((timestamp.to_i - firstday.to_i) / 86400).to_i  # 86400 secs per day
+            value    = data.get_value?
+            if !value.nan?
+                if counter == avgcounter
+                    @avg_history[:values][valueindex] += value.to_i
+                    @avg_history[:dataPoints][valueindex] += 1
+                elsif counter == peakcounter
+                    @peak_history[:values][valueindex] += value.to_i
+                    @peak_history[:dataPoints][valueindex] += 1
+                end
+            end
+       }
+    }
+
+    # avgerage out history for each day
+    0.upto(@avg_history[:values].size - 1){ |x|
+        (@avg_history[:values][x] /= @avg_history[:dataPoints][x]) if (@avg_history[:dataPoints][x] != 0)
+    }
+    0.upto(@peak_history[:values].size - 1){ |x|
+        (@peak_history[:values][x] /= @peak_history[:dataPoints][x]) if (@peak_history[:dataPoints][x] != 0)
+    }
 
     graph_object = {
        :timepoints => dates,
@@ -192,58 +215,65 @@ class GraphController < ApplicationController
   # generate layout for snapshot graphs
   def snapshot_graph
     @id = params[:id]
-    @target = params[:target]
+    @host   = params[:host]
 
-    #ret_time = Time.now.to_i
-    #@snapshots = { :avg  => { :overall_load => 0, :cpu => 0, :in => 0, :out => 0, :io => 0 },
-    #               :peak => { :overall_load => 0, :cpu => 0, :in => 0, :out => 0, :io => 0 }}
-    #requestList = []
-    #requestList << StatsRequest.new(@id.to_s, "system", 0, "used", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "system", 0, "peak", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "cpu",    0, "used", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "cpu",    0, "peak", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "in",     0, "used", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "in",     0, "peak", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "out",    0, "used", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "out",    0, "peak", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "io",     0, "used", ret_time, 3600, 0)
-    #requestList << StatsRequest.new(@id.to_s, "io",     0, "peak", ret_time, 3600, 0)
-    #statsList = getStatsData?( requestList )
-    #statsList.each { |stat|
-    #    devClass = stat.get_devClass?
-    #    counter  = stat.get_counter?
-    #    stat.get_data?.each{ |data|
-    #        value = data.get_value?.to_i
-    #        if counter == "used"
-    #            if devClass == "system"
-    #                @snapshots[:avg][:overall_load] = value
-    #            elsif devClass == "cpu"
-    #                @snapshots[:avg][:cpu] = value
-    #            elsif devClass == "in"
-    #                @snapshots[:avg][:in]  = value
-    #            elsif devClass == "out"
-    #                @snapshots[:avg][:out] = value
-    #            elsif devClass == "io"
-    #                @snapshots[:avg][:io]  = value
-    #            end
-    #        else
-    #        #elsif counter == "peak"
-    #            if devClass == "system"
-    #                @snapshots[:peak][:overall_load] = value.to_i
-    #            elsif devClass == "cpu"
-    #                @snapshots[:peak][:cpu] = value.to_i
-    #            elsif devClass == "in"
-    #                @snapshots[:peak][:in]  = value.to_i
-    #            elsif devClass == "out"
-    #                @snapshots[:peak][:out] = value.to_i
-    #            elsif devClass == "io"
-    #                @snapshots[:peak][:io]  = value.to_i
-    #            end
-    #        end
-    #    }
-    #}
-    @snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
-                   :peak => { :overall_load => 100, :cpu => 50, :in => 12, :out => 72, :io => 100 } }
+    pool = Pool.find(@id)
+
+    @snapshots = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
+                   :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
+
+    requestList = []
+    if(@host == nil)
+        pool.hosts.each{ |host|
+            requestList += _create_host_snapshot_requests(host.hostname)
+        }
+    else
+        requestList += _create_host_snapshot_requests(@host.hostname)
+    end
+    
+    statsList = getStatsData?( requestList )
+    statsList.each { |stat|
+        devClass = stat.get_devClass?
+        counter  = stat.get_counter?
+        stat.get_data?.each{ |data|
+            value = data.get_value?
+            if !value.nan?
+                if devClass == DEV_KEY_CLASSES["load"]
+                    if counter == DEV_KEY_AVGCOUNTERS["load"]
+                        @snapshots[:avg]["load"] = value.to_i
+                    elsif counter == DEV_KEY_PEAKCOUNTERS["load"]
+                        @snapshots[:peak]["load"] = value.to_i
+                    end
+                elsif devClass == DEV_KEY_CLASSES["cpu"]
+                    if counter == DEV_KEY_AVGCOUNTERS["cpu"]
+                        @snapshots[:avg]["cpu"] = value.to_i
+                    elsif counter == DEV_KEY_PEAKCOUNTERS["cpu"]
+                        @snapshots[:peak]["cpu"] = value.to_i
+                    end
+                elsif devClass == DEV_KEY_CLASSES["netin"]
+                    if counter == DEV_KEY_AVGCOUNTERS["netin"]
+                        @snapshots[:avg]["netin"] = value.to_i
+                    elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
+                        @snapshots[:peak]["netin"] = value.to_i
+                    end
+                elsif devClass == DEV_KEY_CLASSES["netout"]
+                    if counter == DEV_KEY_AVGCOUNTERS["netout"]
+                        @snapshots[:avg]["netout"] = value.to_i
+                    elsif counter == DEV_KEY_PEAKCOUNTERS["netout"]
+                        @snapshots[:peak]["netout"] = value.to_i
+                    end
+                #elsif devClass == DEV_KEY_AVGCOUNTERS["io"]
+                #    if counter == DEV_KEY_AVGCOUNTERS["io"]
+                #        @snapshots[:peak]["io"] = value.to_i
+                #    elsif counter == _dev_key_peak_counters["io"]
+                #        @snapshots[:peak]["io"] = value.to_i
+                #    end
+                end
+            end
+        }
+    }
+    #@snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
+    #               :peak => { :overall_load => 100, :cpu => 50, :in => 12, :out => 72, :io => 100 } }
     
   end
 
@@ -252,18 +282,7 @@ class GraphController < ApplicationController
     snapshot_graph
 
     target =  params[:target]
-    snapshot = nil
-    if target == 'overall_load'
-        snapshot = @snapshots[:avg][:overall_load]
-    elsif target == 'cpu'
-        snapshot = @snapshots[:avg][:cpu]
-    elsif target == 'in'
-        snapshot = @snapshots[:avg][:in]
-    elsif target == 'out'
-        snapshot = @snapshots[:avg][:out]
-    elsif target == 'io'
-        snapshot = @snapshots[:avg][:io]
-    end
+    snapshot = @snapshots[:avg][target]
 
     snapshot_remaining = 1024 - snapshot
 
@@ -293,57 +312,32 @@ class GraphController < ApplicationController
     render :json => graph_object
   end
 
-  #This is static test data to show how we would format whatever we get back from the 
-  #data api.  We can pass that api:
-  #*  node id
-  #*  type of data we want back (things like summary, memory, storage, etc.)
-  #*  timeframe we are interested in.  This one goes into 'timepoints'
-  #   and probably would call some rails helpers to format the date info however we want
+  private
 
-  def graph
-    if params[:type] =="Memory" 
-       graph_object = {
-        :timepoints => [],
-        :dataset => [{
-            :name =>'IE', 
-            :values => [86.64], 
-            :fill => 'lightblue', 
-            :stroke => 'blue', 
-            :strokeWidth => 3
-          }
-        ]
-      } 
-    elsif params[:type] == "detail"
-      graph_object = {
-        :timepoints => ["April 1", "April 2","April 3","April 4","April 5","April 6","April 7"],
-        :dataset => [{
-            :name =>'Peak', 
-            :values => [75.97, 71.80, 68.16, 56.64,95.97, 81.80, 28.16], 
-            :fill => 'lightblue', 
-            :stroke => 'blue', 
-            :strokeWidth => 3
-          }]
-      }
-    else      
-      graph_object = {
-        :timepoints => ["April 1", "April 2","April 3","April 4"],
-        :dataset => [{
-            :name =>'Peak', 
-            :values => [95.97, 91.80, 88.16, 86.64], 
-            :fill => 'lightblue', 
-            :stroke => 'blue', 
-            :strokeWidth => 3
-          },
-          {
-            :name =>'Average', 
-            :values => [3.39, 2.83, 1.61, 0.00], 
-            :fill => 'pink', 
-            :stroke => 'red', 
-            :strokeWidth => 3
-          }
-        ]
-      }
-    end
-    render :json => graph_object
-  end
+      DEV_KEY_CLASSES  = { 'cpu' => DevClass::CPU, 'memory' => DevClass::Memory, 'disk' => DevClass::Disk, 'load' => DevClass::Load, 'netin' => DevClass::NIC, 'netout' => DevClass::NIC }
+      DEV_CLASS_KEYS   = DEV_KEY_CLASSES.invert
+
+      # TODO this needs fixing / completing (cpu: more than user time? disk: ?, load: correct?, nics: correct?)
+      DEV_KEY_AVGCOUNTERS = { 'cpu' => CpuCounter::User, 'memory' => MemCounter::Used, 'disk' => DiskCounter::Ops_read, 'load' => LoadCounter::Load_1min, 'netin' => NicCounter::Packets_Rx, 'netout' => NicCounter::Packets_Tx }
+      DEV_AVGCOUNTER_KEYS = DEV_KEY_AVGCOUNTERS.invert
+
+      # TODO 
+      DEV_KEY_PEAKCOUNTERS = { 'cpu' => nil, 'memory' => nil, 'disk' => nil, 'load' => nil, 'netin' => nil, 'netout' => nil }
+      DEV_PEAKCOUNTER_KEYS = DEV_KEY_PEAKCOUNTERS.invert
+
+      def _create_host_snapshot_requests(hostname)
+        requestList = []
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['load'], 0, DEV_KEY_AVGCOUNTERS['load'], 0, 0, RRDResolution::Default) # RRDResolution::Long ?
+        #requestList << StatsRequest.new(hostname, "system", 0, "peak", ret_time, 3600, 0)
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],  0, DEV_KEY_AVGCOUNTERS['cpu'], 0, 0, RRDResolution::Default)  # TODO instance
+        #requestList << StatsRequest.new(hostname, "cpu",    0, "peak", ret_time, 3600, 0)
+        #requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],0, DEV_KEY_AVGCOUNTERS['netin'], 0, 0, RRDResolution::Default) 
+        #requestList << StatsRequest.new(hostname, "in",     0, "peak", ret_time, 3600, 0)
+        #requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netout'],0, DEV_KEY_AVGCOUNTERS['netout'], 0, 0, RRDResolution::Default) 
+        #requestList << StatsRequest.new(hostname, "out",    0, "peak", ret_time, 3600, 0)
+        #requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES["io"],0, DEV_KEY_AVGCOUNTERS["io"], 0, 0, RRDResolution::Default) 
+        #requestList << StatsRequest.new(hostname, "io",     0, "peak", ret_time, 3600, 0)
+        return requestList
+      end
+
 end

@@ -27,7 +27,7 @@
   </div>
   <div id="history_graphs_graphs">
     <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'cpu_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'graph', :action => 'history_graph_data', :id => @id, :target => 'cpu'         ) } %></div>
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'io_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'graph', :action => 'history_graph_data', :id => @id, :target => 'io' ) } %></div>
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'overall_load_history',  :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'graph', :action => 'history_graph_data', :id => @id, :target => 'system'          ) } %></div> -->
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'memory_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'graph', :action => 'history_graph_data', :id => @id, :target => 'memory' ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'load_history',  :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :controller => 'graph', :action => 'history_graph_data', :id => @id, :target => 'load'          ) } %></div> -->
   </div>
 </div>

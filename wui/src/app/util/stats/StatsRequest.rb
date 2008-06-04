@@ -21,6 +21,8 @@
 # This is the base level request mechanism for the ovirt statistical
 # interface
 
+require 'util/stats/StatsTypes'
+
 #define class StatsRequest  
 class StatsRequest  
   def initialize(node, devClass, instance, counter, starttime, duration, precision)  
