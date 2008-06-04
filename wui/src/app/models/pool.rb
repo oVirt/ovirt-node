@@ -154,15 +154,11 @@ class Pool < ActiveRecord::Base
   end
   def self.pool_hash(pools, open_list, filter_vm_pools=false)
     pools.collect do |pool|
-      hash = {}
-      hash[:id] = pool.id
-      hash[:type] = pool[:type]
-      hash[:text] = pool.name
-      hash[:name] = pool.name
-      children = nil
+      hash = pool.json_hash_element
+      pool_children = nil
       if filter_vm_pools
-        children = select_hardware_pools(pool.children)
-        hash[:hasChildren] = !children.empty?
+        pool_children = pool.sub_hardware_pools
+        hash[:hasChildren] = !pool_children.empty?
       else
         hash[:hasChildren] = pool.hasChildren
       end
@@ -171,8 +167,8 @@ class Pool < ActiveRecord::Base
         if pool.id == open_pool.id
           new_open_list = open_list[(open_list.index(open_pool)+1)..-1]          
           unless new_open_list.empty?
-            children = pool.children unless children
-            hash[:children] = pool_hash(children, new_open_list)
+            pool_children = pool.children unless pool_children
+            hash[:children] = pool_hash(pool_children, new_open_list, filter_vm_pools)
             hash[:expanded] = true
             hash.delete(:hasChildren)
           end
@@ -181,6 +177,43 @@ class Pool < ActiveRecord::Base
       end
       hash
     end
+  end
+
+  def json_hash_element
+    { :id => id, :type => self[:type], :text => name, :name => name}
+  end
+
+  def hash_element
+    { :id => id, :obj => self}
+  end
+
+  def minimal_hash_element
+    { :id => id}
+  end
+
+  # if opts specifies order, this will be removed, since this impl
+  # relies on full_set's ordering
+  # in additon to standard find opts, add :method to the hash to specify
+  # an alternative set of attributes (such as json_hash_element, etc.)
+  # or :current_id to specify which pool gets ":selected => true" set
+  def full_set_nested(opts={})
+    method = opts.delete(:method) {:hash_element}
+    current_id = opts.delete(:current_id)
+    opts.delete(:order)
+    subtree_list = full_set(opts)
+    return_tree = send(method)
+    ref_hash = { id => return_tree}
+    subtree_list.each do |pool|
+      unless pool.id==return_tree[:id]
+        new_element = pool.send(method)
+        ref_hash[pool.id] = new_element
+        parent = ref_hash[pool.parent_id]
+        parent[:children] ||= []
+        parent[:children] << new_element
+      end
+    end
+    ref_hash[current_id][:selected] = true if current_id
+    return_tree
   end
 
   def self.call_finder(*args)
