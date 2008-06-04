@@ -237,7 +237,8 @@
 /* snapshot graphs on detail panes */
 .selection_detail #snapshot_graphs { height: 210px; padding-left: 0; }
 .selection_detail #snapshot_graphs table { width: 100%; }
-.selection_detail #overall_load_snapshot, 
+.selection_detail #load_snapshot, 
+.selection_detail #memory_snapshot, 
 .selection_detail #cpu_snapshot, 
 .selection_detail #net_in_snapshot, 
 .selection_detail #net_out_snapshot, 
