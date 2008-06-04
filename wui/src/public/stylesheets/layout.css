@@ -211,6 +211,25 @@ textarea:focus, input:focus {
   height: 65%;
 }
 
+.data_section_summary {
+  padding: 20px 0 0 20px;
+  overflow: hidden;
+  position: absolute;
+  top: 0px;
+  bottom: 171px;
+  height: 65%;
+  right: 0px;
+  left: 0px;
+  overflow: auto;
+}
+		.summary_title {
+		  font-size: 160%;
+		}
+		
+		.summary_subtitle {
+		  font-size: 130%;
+		}
+
 .scrollable {
     overflow: scroll;
     height: 100%;

@@ -133,30 +133,30 @@
    overflow: hidden; 
    height: 100px; 
 }
-.availability_graph { float: left; width: 33%;}
+.availability_graph { float: left;}
 .availability_graph_left { float: left; width: 50px;}
-.availability_graph_right { float: left; margin-top: 10%; margin-left: 125px; min-width: 100px;}
+.availability_graph_right { float: left; margin-top: 7px; margin-left: 30px; margin-right: 75px; min-width: 100px; color:#666666;}
 #available_cpu, #available_memory, #available_vms,
-#available_vcpu, #available_vram, #available_vm_quotas
-{margin-left:50px;width:100px;height:100px}
+#available_vcpu, #available_vram, #available_vm_quotas {margin-left:0;width:100px;height:100px}
+.availability_total{ font-size: 130%; padding: 40px 0 0 0; color:#000000;}
 
 /* history graphs on hardware / resource summary tab */
-#history_graphs { position: relative; height: 270px; overflow: hidden; margin-left: 40px; margin-top: 40px; }
-#history_graphs_control { position: absolute; z-index: 1; height: 20px; width: 90%; border: 1px solid black; background: #CCCCCC; }
+#history_graphs { position: relative; height: 270px; overflow: hidden; margin-left: 0; margin-top: 0; }
+#history_graphs_control { position: absolute; z-index: 1; height: 20px; width: 98%; border: 1px solid #CCCCCC; background: #EEEEEE; }
 .history_graphs_menu { float: left; width: 118px; }
 .history_graphs_legend { float: right; height: 20px; width: 15%; }
 .history_graphs_legend font { float: right; padding-top: 3px; }
-#history_graphs_graphs {  position: absolute; overflow: hidden; height: 210px; width: 90%; border: 1px solid black; }
+#history_graphs_graphs {  position: absolute; overflow: hidden; height: 210px; width: 98%; border: 1px solid #CCCCCC; }
 #history_graph_menu_header img{ vertical-align: middle; }
 .history_graphs_menu ul {
     padding: 0 0 0 0;
     margin: 0 0 0 0;
     list-style-type: none;
-    border-right: 1px solid black;
+    border-right: 1px solid #CCCCCC;
 }
 .history_graphs_menu ul li {
     height: 17px;
-    background: #CCCCCC;
+    background: #EEEEEE;
     text-align: justify;
     padding-left: 7px;
     padding-top:  3px;
@@ -165,7 +165,7 @@
 }
 .history_graphs_menu .history_graph_menu_item{
     display: none;
-    border-right: 1px solid black;
+    border-right: 1px solid #CCCCCC;
     width: 120px;
 }
 .history_graphs_menu .history_graph_menu_item a{
@@ -173,13 +173,13 @@
     color: black;
 }
 .history_graphs_menu .history_graph_menu_fitem {
-    border-top: 1px solid black;
+    border-top: 1px solid #CCCCCC;
 }
 .history_graphs_menu .history_graph_menu_litem {
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #CCCCCC;
 }
 .history_graphs_menu:hover ul li {
-    background: #999999;
+    background: #CCCCCC;
 }
 .history_graphs_menu:hover .history_graph_menu_item {
     display: block;
@@ -195,10 +195,10 @@
 }
 
 /* snapshot graphs on hardware / resource summary tab */
-#snapshot_graphs { height: 300px; padding-left: 60px; }
-#snapshot_graphs table { width: 90%; border-spacing: 0;}
-#snapshot_graphs th    { background: #CCCCCC; text-align: left; padding-left: 10px; border: 1px solid #DDDDDD;}
-#snapshot_graphs td    { padding-left: 10px; border: 1px solid #DDDDDD;}
+#snapshot_graphs { height: 300px; padding-left: 0; }
+#snapshot_graphs table { width: 98%; border-spacing: 1px; background: #CCCCCC; border-width: 0; border-style:solid;}
+#snapshot_graphs th    { background: #EEEEEE; text-align: left; padding-left: 10px;}
+#snapshot_graphs td    { padding-left: 10px; background: #FFFFFF;}
 #overall_load_snapshot, #cpu_snapshot, #net_in_snapshot, #net_out_snapshot, #io_snapshot {
   width: 350px; height: 20px; float: left;
 }
