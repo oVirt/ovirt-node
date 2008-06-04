@@ -116,11 +116,14 @@ rm -rf $RPM_BUILD_ROOT
     -s /sbin/nologin -r -d /var/ovirt ovirt 2> /dev/null || :
 
 %post
-#removes legacy ovirt-wui script if present
+#removes obsolete services if present
 if [ -e %{_initrddir}/ovirt-wui ] ; then
   /sbin/service ovirt-wui stop > /dev/null 2>&1
+  /sbin/service ovirt-host-keyadd stop > /dev/null 2>&1
   /sbin/chkconfig --del ovirt-wui
+  /sbin/chkconfig --del ovirt-host-keyadd
   %{__rm} %{_initrddir}/ovirt-wui
+  %{__rm} %{_initrddir}/ovirt-host-keyadd
 fi
 
 exit 0
