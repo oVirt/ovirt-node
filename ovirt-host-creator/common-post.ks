@@ -15,7 +15,7 @@ EOF
 echo "Writing ovirt-identify-node script"
 cat > /sbin/ovirt-identify-node << \EOF
 #!/usr/bin/python -Wall
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
 #
@@ -301,38 +301,42 @@ cat > /etc/init.d/ovirt << \EOF
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+die()
+{
+  echo "$@" 1>&2; failure; echo 1>&2; exit 1
+}
+
 start() {
     echo -n $"Starting ovirt: "
 
     find_srv ipa tcp
-    if [ ! -s /etc/krb5.conf ]; then
-        rm -f /etc/krb5.conf
+    krb5_conf=/etc/krb5.conf
+    if [ ! -s $krb5_conf ]; then
+        rm -f $krb5_conf
         # FIXME this is IPA specific
-        wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O /etc/krb5.conf
-        if [ "$?" -ne 0 ]; then
-            echo "Failed getting krb5.conf" ; failure ; echo ; exit 1
-        fi
+        wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O $krb5_conf \
+          || die "Failed to get $krb5_conf"
     fi
     IPA_HOST=$SRV_HOST
     IPA_PORT=$SRV_PORT
 
     find_srv identify tcp
-    if [ ! -s /etc/libvirt/krb5.tab ]; then
-        keytab=$(ovirt-identify-node -s $SRV_HOST -p $SRV_PORT)
-        if [ $? -ne 0 ]; then
-            echo -n "Failed to identify node" ; failure ; echo ; exit 1
-        fi
+    krb5_tab=/etc/libvirt/krb5.tab
+    if [ ! -s $krb5_tab ]; then
+        keytab=$(ovirt-identify-node -s $SRV_HOST -p $SRV_PORT) \
+          || die "Failed to identify node"
         # FIXME this is IPA specific, host-browser should return full URL
-        wget -q http://$IPA_HOST:$IPA_PORT/config/$keytab \
-          -O /etc/libvirt/krb5.tab
-
+        wget -q "http://$IPA_HOST:$IPA_PORT/config/$keytab" -O $krb5_tab \
+          || die "Failed to get $krb5_tab"
     fi
 
     find_srv collectd tcp
-    if [ -f /etc/collectd.conf.in -a $SRV_HOST -a $SRV_PORT ]; then
+    collectd_conf=/etc/collectd.conf
+    if [ -f $collectd_conf.in -a $SRV_HOST -a $SRV_PORT ]; then
         sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
-            -e "s/@COLLECTD_PORT@/$SRV_PORT/" /etc/collectd.conf.in \
-          > /etc/collectd.conf
+            -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
+            > $collectd_conf \
+          || die "Failed to write $collectd_conf"
         service collectd restart
     fi
 
