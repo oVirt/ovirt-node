@@ -354,6 +354,7 @@ textarea:focus, input:focus {
 }
 
 .dialog_body {
+  overflow: scroll;
   height: 350px;
 }
 
