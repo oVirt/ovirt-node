@@ -85,7 +85,7 @@ class IdentifyNode:
 
 		print 'response is', response
 		print 'response[:4] is', response[:4]
-		if response[:4] == 'KVNO':
+		if response[:4] == 'KTAB':
 			self.keytab = response[5:]
 			print 'keytab is', self.keytab
 		else:
@@ -323,7 +323,7 @@ start() {
 	    echo -n "Failed to identify node" ; failure ; echo ; exit 1
 	fi
     fi
-	
+
     find_srv collectd tcp
     if [ -f /etc/collectd.conf.in -a $SRV_HOST -a $SRV_PORT ]; then
         sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
