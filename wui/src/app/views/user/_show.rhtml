@@ -41,9 +41,21 @@
 </script>
 
   <div class="panel_header"></div>
+<% if pool.permissions.size != 0 %>
 <div class="data_section">
-  <%= render :partial => "/user/grid", :locals => { :table_id => "users_grid",
-                                                    :parent_controller => parent_controller,
-                                                    :pool => pool } %>
-<table id="users_grid" style="display:none"></table>
+    <%= render :partial => "/user/grid", :locals => { :table_id => "users_grid",
+                                                      :parent_controller => parent_controller,
+                                                      :pool => pool } %>
+  <table id="users_grid" style="display:none"></table>
 </div>
+<% else %>
+   <div class="data_section">
+       <div class="no-grid-items">
+          <%= image_tag 'no-grid-items.png', :style => 'float: left;' %>
+          
+          <div class="no-grid-items-text">
+            No users found associated with this pool. <br/><br/>
+          </div>
+       </div>
+   </div>
+<% end %>

@@ -65,7 +65,7 @@
 
 </script>
 <div class="panel_header"></div>
-<% if @pool.hosts.size != 0 %>
+<% if @pool.storage_pools.size != 0 %>
   <div class="data_section">
        <%= render :partial => "/storage/grid", :locals => { :table_id => "storage_grid",
                                                             :hwpool => @pool,
