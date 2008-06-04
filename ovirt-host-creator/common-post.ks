@@ -37,6 +37,7 @@ cat > /sbin/ovirt-identify-node << \EOF
 import libvirt
 import socket
 import sys
+import os
 from optparse import OptionParser
 
 def log(msg):
@@ -46,28 +47,34 @@ class IdentifyNode:
 	"""This class allows the managed node to connect to the WUI host
 	and notify it that the node is awake and ready to participate."""
 
+	def cpuspeed(self):
+		speed = 2000
+		f = open('/proc/cpuinfo', 'r')
+		lines = f.readlines()
+		f.close()
+		for line in lines:
+			if line.find('cpu MHz') != -1:
+				speed = line.split(':')[1].split('.')[0].strip()
+				break
+			
+		return speed
+
 	def __init__(self, server, port):
-
-                conn = libvirt.openReadOnly(None)
-                if conn == None:
-		    log('Failed to open connection to the hypervisor')
-		    sys.exit(1)
-                info = conn.getInfo()
-
 		self.hostname    = 'management.priv.ovirt.org'
 		self.server_name = server
 		self.server_port = port
-		self.host_info = {
-                    # FIXME: This is the same as we had before I think.. using hostname for the UUID.
-                    # There was a fixme for this before that we should have better UUIDs.
-                    "UUID"            : conn.getHostname(),
-                    "ARCH"            : info[0],
-                    "MEMSIZE"         : "%d" % info[1],
-                    "NUMCPUS"         : "%d" % info[2],
-                    "CPUSPEED"        : "%d" % info[3],
-                    "HOSTNAME"        : conn.getHostname(),
-                    "HYPERVISOR_TYPE" : conn.getType()
-                }
+
+	    	self.host_info = {
+			# FIXME: we shouldn't use the hostname as the UUID
+			"UUID"            : socket.getfqdn(),
+			"ARCH"            : os.uname()[4],
+			"MEMSIZE"         : str((os.sysconf('SC_PHYS_PAGES') * os.sysconf('SC_PAGESIZE')) / 1024 / 1024),
+			"NUMCPUS"         : str(os.sysconf('SC_NPROCESSORS_ONLN')),
+			"CPUSPEED"        : self.cpuspeed(),
+			"HOSTNAME"        : socket.getfqdn(),
+			"HYPERVISOR_TYPE" : "QEMU"
+		    
+		}
 
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.socket.connect((self.server_name,self.server_port))
