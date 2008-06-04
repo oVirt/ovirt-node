@@ -108,19 +108,19 @@ class HostBrowser
                     "num_cpus"        => host_info['NUMCPUS'],
                     "cpu_speed"       => host_info['CPUSPEED'],
                     "arch"            => host_info['ARCH'],
-                    "memory"          => host_info['MEMSIZE'],
+                    "memory_in_mb"    => host_info['MEMSIZE'],
                     "is_disabled"     => 0,
                     "hardware_pool"   => HardwarePool.get_default_pool).save
             rescue Exception => error
                 puts "Error while creating record: #{error.message}"
             end
         else
-            host.uuid      = host_info['UUID']
-            host.hostname  = host_info['HOSTNAME']
-            host.num_cpus  = host_info['NUMCPUS']
-            host.cpu_speed = host_info['CPUSPEED']
-            host.arch      = host_info['ARCH']
-            host.memory    = host_info['MEMSIZE']
+            host.uuid         = host_info['UUID']
+            host.hostname     = host_info['HOSTNAME']
+            host.num_cpus     = host_info['NUMCPUS']
+            host.cpu_speed    = host_info['CPUSPEED']
+            host.arch         = host_info['ARCH']
+            host.memory_in_mb = host_info['MEMSIZE']
         end
     
         return host
