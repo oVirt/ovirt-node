@@ -344,7 +344,6 @@ start() {
             -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
             > $collectd_conf \
           || die "Failed to write $collectd_conf"
-        service collectd restart
     fi
 
     success
@@ -363,6 +362,10 @@ EOF
 
 chmod +x /etc/init.d/ovirt
 chkconfig ovirt on
+
+mkdir -p /etc/chkconfig.d
+echo "# chkconfig: 345 98 02" > /etc/chkconfig.d/collectd
+chkconfig collectd on
 
 echo "Setting up libvirt interfaces"
 # make libvirtd listen on the external interfaces
