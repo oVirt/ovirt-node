@@ -43,11 +43,11 @@
       $.post('<%= url_for :controller => "vm", :action => "destroy", :id => @vm %>',
              {x: 1},
               function(data,status){
-                //storage_detail_empty()
                 $("#vms_grid").flexReload()
 		if (data.alert) {
 		  alert(data.alert);
                 }
+	        empty_summary('vms_selection', 'Virtual Machine')
                }, 'json');
     }
   }
@@ -68,6 +68,7 @@
   }
 </script>
 
+    <div id="vms_selection_id" style="display:none"><%= @vm.id %></div>
     <div class="selection_key">
         Uuid:<br/>                
 	Num vcpus allocated:<br/> 

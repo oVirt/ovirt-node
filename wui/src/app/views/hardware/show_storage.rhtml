@@ -35,6 +35,9 @@
 		if (data.alert) {
 		  alert(data.alert);
                 }
+		if (storage.indexOf($('#storage_selection_id').html()) != -1){
+		  empty_summary('storage_selection', 'Storage Pool')
+		}   
                }, 'json');
     }
   }
@@ -49,6 +52,9 @@
 		if (data.alert) {
 		  alert(data.alert);
                 }
+		if (storage.indexOf($('#storage_selection_id').html()) != -1){
+		  empty_summary('storage_selection', 'Storage Pool')
+		}   
                }, 'json');
     }
   }

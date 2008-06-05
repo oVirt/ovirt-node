@@ -29,6 +29,9 @@
 	      if (data.alert) {
 	        alert(data.alert);
               }
+ 	      if (get_selected_<%= @resource_type %>().indexOf($('#<%= @resource_type %>_selection_id').html()) != -1){
+	        empty_summary('<%= @resource_type %>_selection', '<%= @resource_type == 'hosts' ? 'Host' : 'Storage Pool' %>')
+	      }   
              }, 'json');
   }
 $('#move_to_new_pool').click(function(){

@@ -103,6 +103,10 @@ function afterHwPool(response, status){
       if (response.resource_type) {
         $('#' + response.resource_type + '_grid').flexReload()
       }
+      
+      if ((response.resource_type == 'hosts' ? get_selected_hosts() : get_selected_storage()).indexOf($('#'+response.resource_type+'_selection_id').html()) != -1){
+	  empty_summary(response.resource_type +'_selection', (response.resource_type == 'hosts' ? 'Host' : 'Storage Pool'))
+      }   
       // do we have HW pools grid?
       //$("#vmpools_grid").flexReload()
     }
@@ -161,12 +165,11 @@ function refresh_summary(element_id, url, obj_id){
   $('#'+element_id+'').load(url, { id: obj_id})
 }
 function refresh_summary_static(element_id, content){
-    $('#'+element_id+'').innerHTML = content
+    $('#'+element_id+'').html(content)
 }
-
-function storage_detail_empty(){
-    refresh_summary_static('storage_selection', '<div class="selection_left"> \
-    <div>Select a storage volume.</div> \
+function empty_summary(element_id, label){
+    refresh_summary_static(element_id, '<div class="selection_left"> \
+    <div>Select a '+label+' above.</div> \
   </div>')
 }
 

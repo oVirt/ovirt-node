@@ -20,6 +20,9 @@
 		if (data.alert) {
 		  alert(data.alert);
                 }
+		if (vm_pools.indexOf($('#vmpool_selection_id').html()) != -1){
+		  empty_summary('vmpool_selection', 'Virtual Machine Pool')
+		}   
                }, 'json');
     }
   }

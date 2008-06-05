@@ -33,6 +33,10 @@
 		if (data.alert) {
 		  alert(data.alert);
                 }
+		if (hosts.indexOf($('#hosts_selection_id').html()) != -1){
+		  empty_summary('hosts_selection', 'Host')
+		}   
+
                }, 'json');
     }
   }
