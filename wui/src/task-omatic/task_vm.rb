@@ -360,13 +360,7 @@ def start_vm(task)
 
     conn.close
 
-    if storagedevs.length < 1
-      # we couldn't find *any* disk to attach to the VM; we have to quit
-      # FIXME: eventually, we probably want to allow diskless machines that
-      # will boot via NFS or iSCSI or whatever
-      errmsg = "No valid storage volumes found"
-      raise
-    elsif storagedevs.length > 4
+    if storagedevs.length > 4
       errmsg = "Too many storage volumes; maximum is 4"
       raise
     end
