@@ -15,8 +15,8 @@
 
 ;(function($) {
 
-function load(settings, params, child, container) {
-        $.getJSON(settings.url, params, function(response) { //{id: root}
+function load(settings, params, child, container) {    
+        $.getJSON(settings.url, params, function(response) { //{id: root}            
 		function createNode(parent) {                  
                         if (this.type=="HardwarePool") {
                             settings.link_to=settings.hardware_url 
@@ -63,11 +63,6 @@ function load(settings, params, child, container) {
 //                                },
 //                                error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
 //                              })
-                              //var new_id = $(this).parent().parent().get(0).id;
-                              //var current_e = $('span[class^=current_]');
-                              //current_e.removeClass(current_e.attr('class'));
-                              //$(this).addClass('current_folder');
-                              //var my_container = $(container);
 //                              return false;
 //                            });
 
@@ -92,20 +87,20 @@ function load(settings, params, child, container) {
 					$.each(this.children, createNode, [branch])
 				}
 			}
-		}                
-		$.each(response, createNode, [child]);
-        $(container).treeview({add: child});
+		} 
+                $.each(response, createNode, [child]);
+                $(container).treeview({add: child});
     });
 }
 
 var proxied = $.fn.treeview;
-$.fn.treeview = function(settings) {
+$.fn.asynch_treeview = function(settings) {
 	if (!settings.url) {
 		return proxied.apply(this, arguments);
 	}
 	var container = this;
         settings.current_pool_id!=""?settings.params={current_id:settings.current_pool_id}:settings.params=null;
-	load(settings, settings.params, this, container);
+	load(settings, settings.params, this, container);        
 	var userToggle = settings.toggle;
 	return proxied.call(this, $.extend({}, settings, {
 		collapsed: true,

@@ -21,6 +21,7 @@
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.async.js" -%>
   <%= javascript_include_tag "flexigrid.js" -%>
   <%= javascript_include_tag "facebox.js" -%>
+  <%= javascript_include_tag "jquery.timers.js" -%>
   <%= javascript_include_tag "jquery-svg/jquery.svg.pack.js" -%>
   <!--%= javascript_include_tag "jquery-svg/jquery.svgfilter.js" -%-->
   <%= javascript_include_tag "jquery-svg/jquery.svggraph.js" -%>
@@ -84,7 +85,6 @@
                         error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
                     });
                     return false;})},function(){});
-            
 	});
 
   function delete_vm_pool(id, parent)

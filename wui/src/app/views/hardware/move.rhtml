@@ -7,7 +7,7 @@
 
 <script type="text/javascript">
       $(document).ready(function(){         
-        $("#move_tree").treeview({
+        $("#move_tree").asynch_treeview({
             //animated: "normal",
             current_pool_id:  <%=@current_pool_id%>,
             url: "<%=  url_for :controller =>'/hardware', :action => 'json_move_tree' %>",
