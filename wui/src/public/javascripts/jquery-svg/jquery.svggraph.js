@@ -1102,7 +1102,7 @@ $.extend(SVGStackedRowChart.prototype, {
 	//	graph._drawAxis(graph._getPercentageAxis(), 'xAxis',
 	//		dims[graph.X], dims[graph.Y] + dims[graph.H],
 	//		dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
-		this._drawYAxis(graph, numVal, barWidth, barGap, dims, yScale);
+	//	this._drawYAxis(graph, numVal, barWidth, barGap, dims, yScale);
 		graph._drawLegend();
 	},
 	

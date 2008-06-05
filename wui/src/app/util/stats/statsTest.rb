@@ -23,43 +23,48 @@
 #  It shows some simple steps to build a request list and then 
 #  request and process the data.
   
-require 'Stats'
+require 'util/stats/Stats'
 
 #  Retrieve the "idle" data for cpu0 from node3, node4, and node5
  
    requestList = []
-   requestList << StatsRequest.new("node3", "cpu", 0, "idle", 1211688000, 3600, 10 )
-   requestList << StatsRequest.new("node4", "cpu", 0, "idle", 0, 3600, 10 )
-   requestList << StatsRequest.new("node5", "cpu", 0, "idle", 1211688000, 3600, 500 )
-   requestList << StatsRequest.new("node5", "memory", 0, "used", 0, 3600, 0 )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Load, 0, LoadCounter::Load_1min, 0, 3600, 10 )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Load, 0, LoadCounter::Load_1min, 0, 0, RRDResolution::Long )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Load, 0, LoadCounter::Load_15min, 0, 0, RRDResolution::Long )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::NIC, 0, NicCounter::Octets_rx, 0, 0, RRDResolution::Long )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::NIC, 0, NicCounter::Octets_tx, 0, 0, RRDResolution::Long )
+   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Disk, 0, DiskCounter::Octets_read, 0, 0, RRDResolution::Long )
+   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Disk, 0, DiskCounter::Octets_write, 0, 0, RRDResolution::Long )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", "cpu", 0, "idle", 1211688000, 3600, 10 )
+#   requestList << StatsRequest.new("node4.priv.ovirt.org", DevClass::CPU, 0, CpuCounter::Idle, 0, 3600, RRDResolution::Short )
+#   requestList << StatsRequest.new("node5.priv.ovirt.org", "cpu", 0, "idle", 1211688000, 3600, 500 )
+#   requestList << StatsRequest.new("node5.priv.ovirt.org", DevClass::Memory, 0, MemCounter::Used, 0, 3600, 10 )
 
    #  Now send the request list and store the results in the statsList.
    statsListBig = getStatsData?( requestList )
    tmp = ""
 
-   #  Now lets loop through the returned list. It is a list of lists so take the first list 
-   # and chomp through it. 
-   #, pull off the statsData object and get the data from it. 
+   #  Now lets loop through the list, pull off the statsData object and get the data from it. 
+   #  Note that there is currently only one list sent back, so you need to check the node, 
+   #  device and counter for each to detect changes.  We can look at using a list of lists 
+   #  if you think it is easier to process the results. 
 
+# puts statsListBig.length
    statsListBig.each do |statsList|
-      # grab the data about this list, this will be consistent for all StatData objects in this list.
-      myNodeName = statsList.get_node?()
-      myDevClass = statsList.get_devClass?()
-      myInstance = statsList.get_instance?()
-      myCounter = statsList.get_counter?()
+   myNodeName = statsList.get_node?()
+   myDevClass = statsList.get_devClass?()
+   myInstance = statsList.get_instance?()
+   myCounter = statsList.get_counter?()
 
-      # add a newline to break up data from different nodes for readability
+
       if tmp != myNodeName then
          puts
       end
-      #  Now grab the data that is stored in the list
-      #  and loop through it.  Note that we print it our directly
-
-      list = statsList.get_data?()
-      list.each do |d|
-         print("\t", myNodeName, "\t", myDevClass, "\t", myInstance, "\t",  myCounter, "\t",d.get_value?, "\t",d.get_timestamp?)
-         puts
-      end  
+   list = statsList.get_data?()
+   list.each do |d|
+      print("\t", myNodeName, "\t", myDevClass, "\t", myInstance, "\t",  myCounter, "\t",d.get_value?, "\t",d.get_timestamp?)
+      puts
+   end  
       tmp = myNodeName
    end  
 

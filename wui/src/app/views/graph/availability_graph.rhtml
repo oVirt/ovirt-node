@@ -1,11 +1,11 @@
 <div class="availability_graph">
   <div class="availability_graph_left">
-    <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_' + @target,  :chartType => 'stackedColumn', :url => (url_for :controller => 'graph', :action => 'availability_graph_data', :escape => false, :target => @target, :available => @graph_data['Available'], :total => @graph_data['Total'],  :used => @graph_data['Used'] ) } %>
+    <%= render :partial => '/layouts/graph', :locals => { :div_id => 'available_' + @target,  :chartType => 'stackedColumn', :graph_data => availability_graph_json(@target, @availability_graph_data['Total'], @availability_graph_data['Available'], @availability_graph_data['Used']) } %>
   </div>
   <div class="availability_graph_right">
     <% i = 0 %>
-    Used: <%= @graph_data['Used'].to_s %><br/>
-    Available: <%= @graph_data['Available'].to_s %> <br/>
-    <div class="availability_total">Total: <%= @graph_data['Total'].to_s + ' ' + @label %></div>
+    Used: <%= @availability_graph_data['Used'].to_s %><br/>
+    Available: <%= @availability_graph_data['Available'].to_s %> <br/>
+    <div class="availability_total">Total: <%= @availability_graph_data['Total'].to_s + ' ' + @label %></div>
   </div>
 </div>

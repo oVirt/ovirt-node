@@ -14,7 +14,7 @@ SASL_FILE=/etc/sasl2/libvirt.conf
 LDAP_CFG=${OVIRT_DIR}/config/ldap.yml
 
 OVIRT_SVCS="ovirt-host-browser ovirt-host-keyadd ovirt-host-status \
-            ovirt-mongrel-rails ovirt-taskomatic"
+            ovirt-host-collect ovirt-mongrel-rails ovirt-taskomatic"
 ENABLE_SVCS="ntpdate ntpd httpd postgresql libvirtd collectd"
 
 # This checks to see if we're running on a bundled/developer install.

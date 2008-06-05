@@ -64,5 +64,5 @@
 </div>
 
 <%- content_for :right do -%>
-    <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @host.id, :target => 'host' %>
+    <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @host.id, :params => { :target => 'host' } %>
 <%- end -%>

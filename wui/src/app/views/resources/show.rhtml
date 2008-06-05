@@ -9,9 +9,9 @@
       <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @vm_resource_pool.id, :params => { :target => 'vm_quotas' } %>
    </div>
 
-   <%= render_component :controller=> 'graph', :action => 'history_graphs', :id => @vm_resource_pool.id %>
+   <%= render_component :controller=> 'graph', :action => 'history_graphs', :id => @vm_resource_pool.id, :params => { :poolType => 'vm' } %>
 
-   <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @vm_resource_pool.id %>
+   <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @vm_resource_pool.id, :params => { :poolType => 'vm' } %>
 
    <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
   </div>

@@ -190,8 +190,8 @@
   position: relative;
   float: left;
 }
-#cpu_history, #io_history, #overall_load_history{
-  height: 200px; width: 1200px; position: absolute; left: -70px;
+#cpu_history, #io_history, #load_history, #memory_history{
+  height: 200px; width: 1200px; position: absolute; left: -90px;
 }
 
 /* snapshot graphs on hardware / resource summary tab */
@@ -199,7 +199,14 @@
 #snapshot_graphs table { width: 98%; border-spacing: 1px; background: #CCCCCC; border-width: 0; border-style:solid;}
 #snapshot_graphs th    { background: #EEEEEE; text-align: left; padding-left: 10px;}
 #snapshot_graphs td    { padding-left: 10px; background: #FFFFFF;}
-#overall_load_snapshot, #cpu_snapshot, #net_in_snapshot, #net_out_snapshot, #io_snapshot {
+#load_snapshot, #cpu_snapshot, #net_in_snapshot, #net_out_snapshot, #io_snapshot, #memory_snapshot {
+/*
+#snapshot_graphs { height: 300px; padding-left: 60px; }
+#snapshot_graphs table { width: 90%; border-spacing: 0;}
+#snapshot_graphs th    { background: #CCCCCC; text-align: left; padding-left: 10px; border: 1px solid #DDDDDD;}
+#snapshot_graphs td    { padding-left: 10px; border: 1px solid #DDDDDD;}
+#load_snapshot, #cpu_snapshot, #net_in_snapshot, #net_out_snapshot, #io_snapshot, #memory_snapshot {
+*/
   width: 350px; height: 20px; float: left;
 }
 .snapshot_graph_text {
@@ -237,7 +244,8 @@
 /* snapshot graphs on detail panes */
 .selection_detail #snapshot_graphs { height: 210px; padding-left: 0; }
 .selection_detail #snapshot_graphs table { width: 100%; }
-.selection_detail #overall_load_snapshot, 
+.selection_detail #load_snapshot, 
+.selection_detail #memory_snapshot, 
 .selection_detail #cpu_snapshot, 
 .selection_detail #net_in_snapshot, 
 .selection_detail #net_out_snapshot, 
@@ -257,3 +265,4 @@
 .detail-pane-chart {
     height: 50px;
     width: 375px;
+};

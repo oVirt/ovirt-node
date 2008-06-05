@@ -21,40 +21,61 @@
 $: << '/usr/lib64/ruby/site_ruby/1.8/x86_64-linux'
 
 require 'RRD'
+require 'util/stats/StatsTypes'
 require 'util/stats/StatsData'
 require 'util/stats/StatsDataList'
 require 'util/stats/StatsRequest'
-require 'util/stats/DummyData' 
 
 def fetchData?(node, devClass, instance, counter, startTime, duration, interval)
 
    if (interval == 0)
-      interval = 10
+      interval = RRDResolution::Default
    end
 
    if (startTime == 0)
-      start = Time.now.to_i - duration
+      if (duration > 0 )
+         sTime = Time.now.to_i - duration
+      else
+         sTime = Time.now.to_i - 86400 
+      end
+      eTime = Time.now.to_i  
    else
-      start = startTime
+      sTime = startTime
+      eTime = sTime + duration
    end 
 
-   endTime = start + duration
+   # Now mangle based on the intervals
 
+   start =  (sTime / interval).to_i * interval 
+   endTime =  (eTime / interval).to_i * interval 
    rrdBase="/var/lib/collectd/rrd/"
-   rrdNode=rrdBase + "/" + node + "/"
+   rrdNode=rrdBase + node + "/"
 
    # Now we need to mess a bit to get the right combos
+   case devClass
+    when DevClass::CPU
+       rrdTail = CpuCounter.getRRDPath(instance, counter)
+       lIndex = CpuCounter.getRRDIndex(counter)
+    when DevClass::Memory
+       rrdTail = MemCounter.getRRDPath(instance, counter)
+       lIndex = MemCounter.getRRDIndex(counter)
+    when DevClass::Load
+       rrdTail = LoadCounter.getRRDPath(instance, counter)
+       lIndex = LoadCounter.getRRDIndex(counter)
+    when DevClass::NIC
+       rrdTail = NicCounter.getRRDPath(instance, counter)
+       lIndex = NicCounter.getRRDIndex(counter)
+    when DevClass::Disk
+       rrdTail = DiskCounter.getRRDPath(instance, counter)
+       lIndex = DiskCounter.getRRDIndex(counter)
+    else
+       puts "Nothing for devClass"
+    end
 
-   if ( devClass <=> "cpu" ) == 0
-       rrdDev = rrdNode + "cpu-" + instance.to_s  
-   else
-       rrdDev = rrdNode + devClass
-   end
-
-   rrd = rrdDev + "/" + devClass + "-" + counter + ".rrd"
+    rrd = rrdNode + rrdTail + ".rrd"
 
    returnList = StatsDataList.new(node,devClass,instance, counter)
-   (fstart, fend, names, data, interval) = RRD.fetch(rrd, "--start", start, "--end", endTime, "AVERAGE", "-r", interval)
+   (fstart, fend, names, data, interval) = RRD.fetch(rrd, "--start", start.to_s, "--end", endTime.to_s, "AVERAGE", "-r", interval.to_s)
    i = 0 
    # For some reason, we get an extra datapoint at the end.  Just chop it off now...
    data.delete_at(-1)
@@ -62,33 +83,24 @@ def fetchData?(node, devClass, instance, counter, startTime, duration, interval)
    # Now, lets walk the returned data and create the ojects, and put them in a list.
    data.each do |vdata|
       i += 1
-      returnList.append_data( StatsData.new(fstart + interval * i, vdata[0] ))
+      returnList.append_data( StatsData.new(fstart + interval * i, vdata[lIndex] ))
    end
  return returnList
 end
 
 
 
-#  This is the Ruby entry point into the world of statistics retrieval 
-#  for ovirt.
-
-
-# This call takes a list of StatRequest objects.  
-# It returns a list of StatsData objects that contain the data
-# that satisifies the request. 
-#
-# ToDo:
-# 1) There is currently no error reporting mechanisms implemented
-# 
 
 def  getStatsData?(statRequestList)
     tmpList = []
+    
     myList = []
-
     statRequestList.each do |request|
        node = request.get_node?
        counter = request.get_counter?
-       tmpList =fetchData?(request.get_node?, request.get_devClass?,request.get_instance?, request.get_counter?,request.get_starttime?, request.get_duration?,request.get_precision?)
+          tmpList =fetchData?(request.get_node?, request.get_devClass?,request.get_instance?, request.get_counter?,request.get_starttime?, request.get_duration?,request.get_precision?)
+ 
+       #  Now copy the array returned into the main array
        myList << tmpList
     end
 
