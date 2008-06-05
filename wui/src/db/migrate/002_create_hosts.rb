@@ -31,6 +31,8 @@ class CreateHosts < ActiveRecord::Migration
       t.integer :hardware_pool_id, :null => false
       t.integer :lock_version,     :default => 0
       t.string  :state
+      t.float   :load_average
+      t.timestamps
     end
 
     execute "alter table hosts add constraint fk_host_pools
