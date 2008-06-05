@@ -25,6 +25,7 @@ Requires: pwgen
 Requires: httpd >= 2.0
 Requires: mod_auth_kerb
 Requires: ruby-libvirt >= 0.0.2
+Requires: rrdtool-ruby
 Requires: iscsi-initiator-utils
 Requires: cyrus-sasl-gssapi
 Requires(post):  /sbin/chkconfig

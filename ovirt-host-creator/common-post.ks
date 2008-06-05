@@ -430,6 +430,9 @@ LoadPlugin network
 LoadPlugin libvirt
 LoadPlugin memory
 LoadPlugin cpu
+LoadPlugin load
+LoadPlugin interface
+LoadPlugin disk
 
 <Plugin libvirt>
         Connection "qemu:///system"
@@ -440,6 +443,12 @@ LoadPlugin cpu
 <Plugin network>
         Server "@COLLECTD_SERVER@" @COLLECTD_PORT@
 </Plugin>
+
+<Plugin interface>
+	Interface "eth0"
+	IgnoreSelected false
+</Plugin>
+
 EOF
 
 echo "Clearing kerberos config"
