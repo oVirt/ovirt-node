@@ -5,7 +5,9 @@
       <a id="move_link" href="#" onClick="return validate_for_move();"><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a>
       <a id="move_link_hidden" href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'hosts' %>" rel="facebox[.bolder]" style="display:none" ></a>
     </li>
-    <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_delete_white.png" %>&nbsp;&nbsp;Delete</a></li>
+    <% if @pool.id != HardwarePool.get_default_pool.id %>
+      <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_delete_white.png" %>&nbsp;&nbsp;Remove</a></li>
+    <% end %>
  </ul>
 </div>
 

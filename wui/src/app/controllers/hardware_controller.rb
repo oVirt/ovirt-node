@@ -125,7 +125,7 @@ class HardwareController < ApplicationController
         :conditions => ["pools.id != ?", id]}
       include_pool = true
     end
-    attr_list = [:id, :hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :is_disabled_str, :id]
+    attr_list = [:id, :hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :status_str, :id]
     attr_list.insert(2, [:hardware_pool, :name]) if include_pool
     json_list(hosts, attr_list, [:all], find_opts)
   end

@@ -19,7 +19,6 @@
   {
     enable_url = '<%= url_for :controller => "host", :action => "enable", :id => @host %>'
     disable_url = '<%= url_for :controller => "host", :action => "disable", :id => @host %>'
-    if(confirm("Are you sure?")){
       $.post(enable ? enable_url : disable_url,
               function(data,status){
                 refresh_summary('hosts_selection', 
@@ -31,7 +30,6 @@
 		  alert(data.alert);
                 }
                }, 'json');
-    }
   }
 </script>
 
@@ -51,12 +49,7 @@
         <%=h @host.memory_in_mb %> MB<br/>
         <%=h @host.arch %><br/>
 	<%=h @host.hypervisor_type %><br/>
-        <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
-          enabled
-        <% else -%>
-          disabled
-        <% end -%>
-        <br/>
+	<%=h @host.status_str %><br/>
 
 <!-- FIXME: need styling
 <h3>Network Interfaces</h3>
