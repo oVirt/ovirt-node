@@ -11,7 +11,7 @@ logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64
 
 %include repos-x86_64.ks
 
-%packages
+%packages --nobase
 
 %include common-pkgs.ks
 

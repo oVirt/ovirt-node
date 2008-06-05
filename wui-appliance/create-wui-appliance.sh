@@ -6,7 +6,7 @@ try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
 die() { warn "$@"; try_h; exit 1; }
 
 RAM=768
-IMGSIZE=6
+IMGSIZE=3000M
 
 ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
@@ -194,7 +194,9 @@ mkdir -p $IMGDIR
 virsh destroy $NAME > /dev/null 2>&1
 virsh undefine $NAME > /dev/null 2>&1
 
-virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" -s $IMGSIZE --vnc \
+rm -f "$IMGDIR/$IMGNAME"
+qemu-img create -f qcow2 "$IMGDIR/$IMGNAME" $IMGSIZE
+virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" --vnc \
     --accelerate -v --os-type=linux --arch=$ARCH \
     -w network:default -w network:$BRIDGENAME \
     $location_arg $cdrom_arg $extra_flag "$extra_arg" --noacpi $CONSOLE_FLAG
