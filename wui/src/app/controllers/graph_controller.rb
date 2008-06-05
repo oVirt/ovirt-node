@@ -61,39 +61,13 @@ class GraphController < ApplicationController
       total = 15
       # TODO
     end
-    @graph_data = { 'Used' => used, 'Total' => total, 'Available' => total - used}
-  end
-
-  # retrieves data to be used by availablilty bar graphs
-  def availability_graph_data
-    target = params[:target]
-    @graph_data = { 'Available' => params[:available].to_i, 'Used' => params[:used].to_i, 'Total' => params[:total].to_i }
-
-
-    color = 'blue'
-    data_sets = []
-    if (@graph_data['Total'] > @graph_data['Used'])
-        # 3/4 is the critical boundry for now
-        color = 'red' if (@graph_data['Used'].to_f / @graph_data['Total'].to_f) > 0.75 
-        data_sets.push ({ :name => target + '_used', :values => [@graph_data['Used']],
-                          :fill => color, :stroke => 'lightgray', :strokeWidth => 1 },
-                        { :name => target + '_available', 
-                          :values => [@graph_data['Available']], :fill => 'white',
-                          :stroke => 'lightgray', :strokeWidth => 1})
-    else
-        data_sets.push ({ :name => target + '_available', :values => [@graph_data['Available']],
-                          :fill => 'white', :stroke => 'lightgray', :strokeWidth => 1 },
-                        { :name => target + '_used', 
-                          :values => [@graph_data['Used']], :fill => 'red',
-                          :stroke => 'lightgray', :strokeWidth => 1})
-    end
-
-    render :json => { :timepoints => [], :dataset => data_sets }
+    @availability_graph_data = { 'Used' => used, 'Total' => total, 'Available' => total - used}
   end
 
   # generate layout for history graphs
   def history_graphs
     @id = params[:id]
+    @poolType = params[:poolType]
     @peak_history = { :color => 'red',  :values => [0,0,0,0,0,0,0], :dataPoints => [0,0,0,0,0,0,0] }
     @avg_history  = { :color => 'blue', :values => [0,0,0,0,0,0,0], :dataPoints => [0,0,0,0,0,0,0] }
   end
@@ -102,6 +76,7 @@ class GraphController < ApplicationController
   def history_graph_data
     history_graphs
     target = params[:target]
+    poolType = params[:poolType]
     devclass = DEV_KEY_CLASSES[target]
     avgcounter  = DEV_KEY_AVGCOUNTERS[target]
     peakcounter = nil
@@ -109,11 +84,24 @@ class GraphController < ApplicationController
     
     today = Time.now
     firstday = today - 6
-    dates = [ Date::ABBR_MONTHNAMES[today.month] + ' ' + today.day.to_s ]
+    dates = []
     0.upto(6){ |x|  # TODO get # of days from wui
-       dte = today - x
+       dte = today - (x * 86400) # num of secs per day
        dates.push ( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
     }
+    dates.reverse! # want in ascending order
+
+    hosts = @pool.hosts
+    # temporary workaround for vm resource history 
+    # graph until we have a more reqs / long term solution
+    if poolType == "vm"
+        hosts = []
+        @pool.vms.each { |vm|
+            if !vm.host.nil?
+                hosts.push vm.host
+            end
+        }
+    end
 
     requestList = [ ]
     @pool.hosts.each { |host|
@@ -127,7 +115,6 @@ class GraphController < ApplicationController
                            # StatsRequest.new (@pool.id.to_s, devclass, 0, peakcounter, firstday.to_i - 3600, 604800, 3600))
         end
     }
-    dates.reverse! # want in ascending order
 
     statsList = getStatsData?( requestList )
     statsList.each { |stat|
@@ -215,20 +202,25 @@ class GraphController < ApplicationController
   # generate layout for snapshot graphs
   def snapshot_graph
     @id = params[:id]
-    @host   = params[:host]
-
-    pool = Pool.find(@id)
+    @target = params[:target]
+    @poolType = params[:poolType]
 
     @snapshots = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
                    :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
 
     requestList = []
-    if(@host == nil)
-        pool.hosts.each{ |host|
-            requestList += _create_host_snapshot_requests(host.hostname)
+    if @target == 'host'
+        requestList += _create_host_snapshot_requests(Host.find(@id).hostname)
+    elsif @poolType == 'vm'
+        Pool.find(@id).vms.each{ |vm|
+            if !vm.host.nil?
+                requestList += _create_host_snapshot_requests(vm.host.hostname)
+            end
         }
     else
-        requestList += _create_host_snapshot_requests(@host.hostname)
+        Pool.find(@id).hosts.each{ |host|
+            requestList += _create_host_snapshot_requests(host.hostname)
+        }
     end
     
     statsList = getStatsData?( requestList )
@@ -275,41 +267,6 @@ class GraphController < ApplicationController
     #@snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
     #               :peak => { :overall_load => 100, :cpu => 50, :in => 12, :out => 72, :io => 100 } }
     
-  end
-
-  # retrieves data used by snapshot graphs
-  def snapshot_graph_data
-    snapshot_graph
-
-    target =  params[:target]
-    snapshot = @snapshots[:avg][target]
-
-    snapshot_remaining = 1024 - snapshot
-
-    color = 'blue'
-    color = 'red' if (snapshot.to_f / 1024.to_f) > 0.75  # 3/4 is the critical boundry for now
-
-    graph_object = {
-       :timepoints => [],
-       :dataset => 
-        [
-            {
-                :name => target,
-                :values => [snapshot],
-                :fill => color,
-                :stroke => 'lightgray',
-                :strokeWidth => 1
-            },
-            {
-                :name => target + "remaining",
-                :values => [snapshot_remaining],
-                :fill => 'white',
-                :stroke => 'lightgray',
-                :strokeWidth => 1
-            }
-       ]
-    }
-    render :json => graph_object
   end
 
   private

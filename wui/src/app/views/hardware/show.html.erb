@@ -11,11 +11,10 @@
 
    <br/><br/>
    <div class="summary_subtitle"><%= image_tag "icon_smry_his.png", :style=>"vertical-align:middle;" %>&nbsp;History</div><br/>
-   <%= render_component :controller=> 'graph', :action => 'history_graphs', :id => @pool.id %>
+   <%= render_component :controller=> 'graph', :action => 'history_graphs', :id => @pool.id, :params => { :poolType => 'hardware' }%>
    
    <div class="summary_subtitle"><%= image_tag "icon_smry_perf.png", :style=>"vertical-align:middle;" %>&nbsp;Performance</div><br/>
-   <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @pool.id %>
-
+   <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @pool.id, :params => { :poolType => 'hardware' }%>
 </div>
 
 <div class="selection_detail" id="hwpool_selection">

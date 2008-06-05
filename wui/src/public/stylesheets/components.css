@@ -191,7 +191,7 @@
   float: left;
 }
 #cpu_history, #io_history, #load_history, #memory_history{
-  height: 200px; width: 1200px; position: absolute; left: -70px;
+  height: 200px; width: 1200px; position: absolute; left: -90px;
 }
 
 /* snapshot graphs on hardware / resource summary tab */
