@@ -339,6 +339,20 @@ def start_vm(task)
         thepool = conn.define_storage_pool_xml(thisstorage.getxml, 0)
         thepool.build(0)
         thepool.create(0)
+      elsif thepool.info.state == Libvirt::StoragePool::INACTIVE
+        # only try to start the pool if it is currently inactive; in all other
+        # states, assume it is already running
+        begin
+          thepool.create(0)
+        rescue
+          # this can fail, for instance, if the remote storage that the user
+          # put in is not actually available.  We just return here with a failure;
+          # there's not a lot more we can do
+          setTaskState(task, Task::STATE_FAILED,"Could not create storage volume")
+          conn.close
+          errmsg = "Unable to activate storage volume"
+          raise
+        end
       end
 
       storagedevs << thepool.lookup_volume_by_name(volume.read_attribute(thisstorage.db_column)).path
