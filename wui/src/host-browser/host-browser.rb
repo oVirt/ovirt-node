@@ -110,7 +110,10 @@ class HostBrowser
                     "arch"            => host_info['ARCH'],
                     "memory_in_mb"    => host_info['MEMSIZE'],
                     "is_disabled"     => 0,
-                    "hardware_pool"   => HardwarePool.get_default_pool).save
+                    "hardware_pool"   => HardwarePool.get_default_pool,
+                    # Let host-status mark it available when it
+                    # successfully connects to it via libvirt.
+                    "state"           => "unavailable").save
             rescue Exception => error
                 puts "Error while creating record: #{error.message}"
             end

@@ -30,6 +30,7 @@ class CreateHosts < ActiveRecord::Migration
       t.integer :is_disabled
       t.integer :hardware_pool_id, :null => false
       t.integer :lock_version,     :default => 0
+      t.string  :state
     end
 
     execute "alter table hosts add constraint fk_host_pools

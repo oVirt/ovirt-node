@@ -103,15 +103,18 @@ loop do
   hosts = Host.find(:all)
   hosts.each do |host|
     
-    puts "checking host" + host.hostname
-
     begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     rescue
       # we couldn't contact the host for whatever reason.  Since we can't get
       # to this host, we have to mark all vms on it as disconnected or stopped
       # or such.
-      puts "Failed to contact host " + host.hostname + "; skipping for now", $!
+      if host.state != "unavailable"
+        puts "Updating host state to unavailable: " + host.hostname
+        host.state = "unavailable"
+        host.save
+      end
+
       Vm.find(:all, :conditions => [ "host_id = ?", host.id ]).each do |vm|
         # Since we can't reach the host on which the vms reside, we mark these
         # as STATE_UNREACHABLE.  If they come back up we can mark them as
@@ -121,10 +124,19 @@ loop do
         # If this causes too much trouble in the UI, this can be changed to
         # STATE_STOPPED for now until it is resolved of another solution is
         # brought forward.
-        kick_taskomatic(Vm::STATE_UNREACHABLE, vm)
+
+        if vm.state != Vm::STATE_UNREACHABLE:
+          kick_taskomatic(Vm::STATE_UNREACHABLE, vm)
+        end
       end
 
       next
+    end
+
+    if host.state != "available"
+      puts "Updating host state to available: " + host.hostname
+      host.state = "available"
+      host.save
     end
 
     begin
@@ -134,8 +146,6 @@ loop do
       conn.close
       next
     end
-
-    puts vm_ids.length
 
     # Here we're going through every vm listed through libvirt.  This
     # really only lets us find ones that are started that shouldn't be.
