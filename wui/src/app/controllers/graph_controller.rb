@@ -171,9 +171,22 @@ class GraphController < ApplicationController
     @id     = params[:id]
     target = params[:target]
 
-    # TODO get load from  id/target
-    # 'host' / 'resource' / 'vm'
-    load_value = rand(10)
+    load_value = 0
+    if target == 'host'
+        load_value = Host.find(@id).load_average
+    elsif target == 'vm'
+        load_value = Vm.find(@id).host.load_average
+    elsif target == 'resource'
+        VmResourcePool.find(@id).vms.each { |vm|
+            load_value += vm.host.load_average
+        }
+    end
+
+    if load_value.nil?
+        load_value = 0
+    elsif load_value > 10 # hack to cap it as we have nothing to compare against
+        load_value = 10 
+    end
     load_remaining = 10 - load_value
     
     graph_object = {
