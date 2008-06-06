@@ -108,7 +108,7 @@ EOF
     echo "anaconda-runtime" >> $PUNGIKS
     echo "%end" >> $PUNGIKS
     cd $PUNGI
-    pungi --ver=$FEDORA -GCB --nosource  -c $PUNGIKS
+    pungi --ver=$FEDORA -GCB --nosource  -c $PUNGIKS --force
     restorecon -r .
 fi
 
