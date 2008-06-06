@@ -134,6 +134,8 @@ class GraphController < ApplicationController
                     end
                 end
             }
+        else
+            RAILS_DEFAULT_LOGGER.warn("unable to find collectd/rrd stats for " + stat.get_node?.to_s)
         end
     }
 
@@ -266,6 +268,8 @@ class GraphController < ApplicationController
                     end
                 end
             }
+        else
+            RAILS_DEFAULT_LOGGER.warn("unable to find collectd/rrd stats for " + stat.get_node?.to_s)
         end
     }
     #@snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
