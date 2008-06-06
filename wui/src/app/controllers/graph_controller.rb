@@ -50,16 +50,6 @@ class GraphController < ApplicationController
         end
       end
       total = 0 if unlimited
-    elsif @target == 'vms'
-      @label = "Virtual Machines"
-      used = 15
-      total = 20
-      # TODO
-    elsif @target == 'vm_quotas'
-      @label = 'Virtual Machines'
-      used = 10
-      total = 15
-      # TODO
     end
 
     # bit of a hack to convert memory from kb to mb

@@ -6,7 +6,6 @@
    <div id="availability_graphs">
       <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @pool.id, :params => { :target => 'cpu' } %>
       <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @pool.id, :params => { :target => 'memory' } %>
-      <%= render_component :controller=> 'graph', :action => 'availability_graph', :id => @pool.id, :params => { :target => 'vms' } %>
    </div>
 
    <br/><br/>
