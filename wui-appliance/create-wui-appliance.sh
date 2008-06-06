@@ -6,7 +6,7 @@ try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
 die() { warn "$@"; try_h; exit 1; }
 
 RAM=768
-IMGSIZE=3000M
+IMGSIZE=6000M
 
 ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
