@@ -81,6 +81,18 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 # copy over all of the src directory...
 %{__cp} -a %{pbuild}/src/* %{buildroot}%{app_root}
 
+# move configs to /etc, keeping symlinks for Rails
+%{__mv} %{buildroot}%{app_root}/config/database.yml %{buildroot}%{_sysconfdir}/%{name}
+%{__mv} %{buildroot}%{app_root}/config/ldap.yml %{buildroot}%{_sysconfdir}/%{name}
+%{__mv} %{buildroot}%{app_root}/config/environments/development.rb %{buildroot}%{_sysconfdir}/%{name}
+%{__mv} %{buildroot}%{app_root}/config/environments/production.rb %{buildroot}%{_sysconfdir}/%{name}
+%{__mv} %{buildroot}%{app_root}/config/environments/test.rb %{buildroot}%{_sysconfdir}/%{name}
+%{__ln_s} %{_sysconfdir}/%{name}/database.yml %{buildroot}%{app_root}/config
+%{__ln_s} %{_sysconfdir}/%{name}/ldap.yml %{buildroot}%{app_root}/config
+%{__ln_s} %{_sysconfdir}/%{name}/development.rb %{buildroot}%{app_root}/config/environments
+%{__ln_s} %{_sysconfdir}/%{name}/production.rb %{buildroot}%{app_root}/config/environments
+%{__ln_s} %{_sysconfdir}/%{name}/test.rb %{buildroot}%{app_root}/config/environments
+
 # remove the files not needed for the installation
 %{__rm} -f %{buildroot}%{app_root}/task-omatic/.gitignore
 
@@ -157,14 +169,13 @@ fi
 %attr(-, ovirt, ovirt) %{_localstatedir}/run/%{name}
 %attr(-, ovirt, ovirt) %{_localstatedir}/log/%{name}
 %{app_root}
-%config(noreplace) %{app_root}/config/database.yml
-%config(noreplace) %{app_root}/config/ldap.yml
-%config(noreplace) %{app_root}/config/environments/development.rb
-%config(noreplace) %{app_root}/config/environments/production.rb
-%config(noreplace) %{app_root}/config/environments/test.rb
-%dir /etc/ovirt-wui
-%defattr(2770,postgres,postgres)
-%dir /etc/ovirt-wui/db
+%dir %{_sysconfdir}/%{name}
+%dir %{_sysconfdir}/%{name}/db
+%config(noreplace) %{_sysconfdir}/%{name}/database.yml
+%config(noreplace) %{_sysconfdir}/%{name}/ldap.yml
+%config(noreplace) %{_sysconfdir}/%{name}/development.rb
+%config(noreplace) %{_sysconfdir}/%{name}/production.rb
+%config(noreplace) %{_sysconfdir}/%{name}/test.rb
 
 %changelog
 * Thu May 29 2008 Alan Pevec <apevec@redhat.com> - 0.0.5-0
