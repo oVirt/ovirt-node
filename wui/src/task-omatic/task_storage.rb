@@ -26,8 +26,7 @@ def refresh_pool(task)
   pool = StoragePool.find(task[:storage_pool_id])
 
   if pool == nil
-    setTaskState(task, Task::STATE_FAILED, "Could not find storage pool")
-    return
+    raise "Could not find storage pool"
   end
 
   if pool[:type] == "IscsiStoragePool"
@@ -35,8 +34,7 @@ def refresh_pool(task)
   elsif pool[:type] == "NfsStoragePool"
     storage = NFS.new(pool.ip_addr, pool.export_path)
   else
-    setTaskState(task, Task::STATE_FAILED, "Unknown storage pool type " + pool[:type].to_s)
-    return
+    raise "Unknown storage pool type " + pool[:type].to_s
   end
 
   # find all of the hosts in the same pool as the storage
@@ -54,15 +52,14 @@ def refresh_pool(task)
 
       # if we didn't raise an exception, we connected; get out of here
       break
-    rescue ArgumentError
+    rescue Libvirt::ConnectionError
       # if we couldn't connect for whatever reason, just try the next host
       next
     end
   end
 
   if conn == nil
-    setTaskState(task, Task::STATE_FAILED, "Could not find a host to scan storage")
-    return
+    raise "Could not find a host to scan storage"
   end
 
   remote_pool_defined = false
@@ -93,16 +90,7 @@ def refresh_pool(task)
   if remote_pool_info.state == Libvirt::StoragePool::INACTIVE
     # only try to start the pool if it is currently inactive; in all other
     # states, assume it is already running
-    begin
-      remote_pool.create(0)
-    rescue
-      # this can fail, for instance, if the remote storage that the user
-      # put in is not actually available.  We just return here with a failure;
-      # there's not a lot more we can do
-      setTaskState(task, Task::STATE_FAILED,"Could not create storage volume")
-      conn.close
-      return
-    end
+    remote_pool.create(0)
     remote_pool_started = true
   end
 
@@ -133,9 +121,4 @@ def refresh_pool(task)
     remote_pool.undefine
   end
   conn.close
-
-  # FIXME: if we encounter errors after defining the pool, we should try to
-  # clean up after ourselves
-
-  setTaskState(task, Task::STATE_FINISHED)
 end

@@ -93,9 +93,7 @@ def findVM(task, fail_on_nil_host_id = true)
   vm = Vm.find(:first, :conditions => [ "id = ?", task.vm_id ])
   
   if vm == nil
-    puts "No VM found"
-    setTaskState(task, Task::STATE_FAILED, "VM id " + task.vm_id + "not found")
-    raise
+    raise "VM id " + task.vm_id + "not found"
   end
 
   if vm.host_id == nil && fail_on_nil_host_id
@@ -109,8 +107,7 @@ def findVM(task, fail_on_nil_host_id = true)
     # can mark it either as off (if we didn't find it), or mark the correct
     # vm.host_id if we did.  However, if you have a large number of hosts
     # out there, this could take a while.
-    setTaskState(task, Task::STATE_FAILED, "No host_id for VM " + task.vm_id.to_s)
-    raise
+    raise "No host_id for VM " + task.vm_id.to_s
   end
 
   return vm
@@ -121,7 +118,7 @@ def findHost(task, host_id)
 
   if host == nil
     # Hm, we didn't find the host_id.  Seems odd.  Return a failure
-    raise
+    raise "Could not find host_id " + host_id
   end
 
   return host
@@ -139,25 +136,18 @@ end
 def create_vm(task)
   puts "create_vm"
 
-  begin
-    vm = findVM(task, false)
-  rescue
-    return
-  end
+  vm = findVM(task, false)
 
   if vm.state != Vm::STATE_PENDING
-    setTaskState(task, Task::STATE_FAILED, "VM not pending")
-    return
+    raise "VM not pending"
   end
 
   setVmState(vm, Vm::STATE_CREATING)
-  setTaskState(task, Task::STATE_RUNNING)
 
   # FIXME: in here, we would do any long running creating tasks (allocating
   # disk, etc.)
 
   setVmState(vm, Vm::STATE_STOPPED)
-  setTaskState(task, Task::STATE_FINISHED)  
 end
 
 def shutdown_vm(task)
@@ -166,23 +156,16 @@ def shutdown_vm(task)
   # here, we are given an id for a VM to shutdown; we have to lookup which
   # physical host it is running on
 
-  begin
-    vm = findVM(task)
-  rescue
-    return
-  end
+  vm = findVM(task)
 
   if vm.state == Vm::STATE_STOPPED
     # the VM is already shutdown; just return success
-    setTaskState(task, Task::STATE_FINISHED)
     setVmShutdown(vm)
     return
   elsif vm.state == Vm::STATE_SUSPENDED
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown suspended domain")
-    return
+    raise "Cannot shutdown suspended domain"
   elsif vm.state == Vm::STATE_SAVED
-    setTaskState(task, Task::STATE_FAILED, "Cannot shutdown saved domain")
-    return    
+    raise "Cannot shutdown saved domain"
   end
 
   vm_orig_state = vm.state
@@ -190,43 +173,25 @@ def shutdown_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    begin
-      host = findHost(task, vm.host_id)
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
-      raise
-    end
+    host = findHost(task, vm.host_id)
     
-    begin
-      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookup_domain_by_uuid(vm.uuid)
-      # FIXME: crappy.  Right now we destroy the domain to make sure it
-      # really went away.  We really want to shutdown the domain to make
-      # sure it gets a chance to cleanly go down, but how can we tell when
-      # it is truly shut off?  And then we probably need a timeout in case
-      # of problems.  Needs more thought
-      #dom.shutdown
-      dom.destroy
-      dom.undefine
-      conn.close
-      # FIXME: hm.  We probably want to undefine the storage pool that this host
-      # was using if and only if it's not in use by another VM.
-    rescue
-      # FIXME: we could get out of sync with the host here, for instance, by the
-      # user typing "shutdown" inside the guest.  That would actually shutdown
-      # the guest, and the host would know about it, but we would not.  The
-      # solution here is to be more selective in which exceptions we handle; a
-      # connection exception we just want to fail, but if we fail to find the
-      # ID on the host, we should probably still mark it shut off to regain
-      # consistency
-      setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
-      raise
-    end
-  rescue
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    dom = conn.lookup_domain_by_uuid(vm.uuid)
+    # FIXME: crappy.  Right now we destroy the domain to make sure it
+    # really went away.  We really want to shutdown the domain to make
+    # sure it gets a chance to cleanly go down, but how can we tell when
+    # it is truly shut off?  And then we probably need a timeout in case
+    # of problems.  Needs more thought
+    #dom.shutdown
+    dom.destroy
+    dom.undefine
+    conn.close
+    # FIXME: hm.  We probably want to undefine the storage pool that this host
+    # was using if and only if it's not in use by another VM.
+  rescue => ex
     setVmState(vm, vm_orig_state)
+    raise ex
   end
-
-  setTaskState(task, Task::STATE_FINISHED)
 
   setVmShutdown(vm)
 end
@@ -236,22 +201,15 @@ def start_vm(task)
 
   # here, we are given an id for a VM to start
 
-  begin
-    vm = findVM(task, false)
-  rescue
-    return
-  end
+  vm = findVM(task, false)
 
   if vm.state == Vm::STATE_RUNNING
     # the VM is already running; just return success
-    setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_SUSPENDED
-    setTaskState(task, Task::STATE_FAILED, "Cannot start suspended domain")
-    return
+    raise "Cannot start suspended domain"
   elsif vm.state == Vm::STATE_SAVED
-    setTaskState(task, Task::STATE_FAILED, "Cannot start saved domain")
-    return
+    raise "Cannot start saved domain"
   end
 
   # FIXME: Validate that the VM is still within quota
@@ -260,7 +218,6 @@ def start_vm(task)
   vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STARTING)
 
-  errmsg = "Unknown error"
   begin
     if vm.host_id != nil
       # OK, marked in the database as already running on a host; for now, we
@@ -268,8 +225,7 @@ def start_vm(task)
       
       # FIXME: we probably want to go out to the host it is marked on and check
       # things out, just to make sure things are consistent
-      errmsg = "VM already running"      
-      raise
+      raise "VM already running"
     end
     
     # OK, now that we found the VM, go looking in the hardware_pool
@@ -287,8 +243,7 @@ def start_vm(task)
 
     if host == nil
       # we couldn't find a host that matches this description; report ERROR
-      errmsg = "No host matching VM parameters could be found"
-      raise
+      raise "No host matching VM parameters could be found"
     end
 
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
@@ -342,17 +297,7 @@ def start_vm(task)
       elsif thepool.info.state == Libvirt::StoragePool::INACTIVE
         # only try to start the pool if it is currently inactive; in all other
         # states, assume it is already running
-        begin
-          thepool.create(0)
-        rescue
-          # this can fail, for instance, if the remote storage that the user
-          # put in is not actually available.  We just return here with a failure;
-          # there's not a lot more we can do
-          setTaskState(task, Task::STATE_FAILED,"Could not create storage volume")
-          conn.close
-          errmsg = "Unable to activate storage volume"
-          raise
-        end
+        thepool.create(0)
       end
 
       storagedevs << thepool.lookup_volume_by_name(volume.read_attribute(thisstorage.db_column)).path
@@ -361,8 +306,7 @@ def start_vm(task)
     conn.close
 
     if storagedevs.length > 4
-      errmsg = "Too many storage volumes; maximum is 4"
-      raise
+      raise "Too many storage volumes; maximum is 4"
     end
 
     # OK, we found a host that will work; now let's build up the XML
@@ -372,25 +316,14 @@ def start_vm(task)
                         vm.memory_used, vm.num_vcpus_allocated, vm.boot_device,
                         vm.vnic_mac_addr, "ovirtbr0", storagedevs)
 
-    begin
-      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.define_domain_xml(xml.to_s)
-      dom.create
-      conn.close
-    rescue
-      # FIXME: these may fail for various reasons:
-      # 1.  The domain is already defined and/or started - update the DB
-      # 2.  We couldn't define the domain for some reason
-      errmsg = "Libvirt error"
-      raise
-    end
-  rescue
-    setTaskState(task, Task::STATE_FAILED, errmsg)
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    dom = conn.define_domain_xml(xml.to_s)
+    dom.create
+    conn.close
+  rescue => ex
     setVmState(vm, vm_orig_state)
-    return
+    raise ex
   end
-
-  setTaskState(task, Task::STATE_FINISHED)
 
   vm.host_id = host.id
   vm.state = Vm::STATE_RUNNING
@@ -405,22 +338,15 @@ def save_vm(task)
 
   # here, we are given an id for a VM to suspend
 
-  begin
-    vm = findVM(task)
-  rescue
-    return
-  end
+  vm = findVM(task)
 
   if vm.state == Vm::STATE_SAVED
     # the VM is already saved; just return success
-    setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_SUSPENDED
-    setTaskState(task, Task::STATE_FAILED, "Cannot save suspended domain")
-    return    
+    raise "Cannot save suspended domain"
   elsif vm.state == Vm::STATE_STOPPED
-    setTaskState(task, Task::STATE_FAILED, "Cannot save shutdown domain")
-    return
+    raise "Cannot save shutdown domain"
   end
 
   vm_orig_state = vm.state
@@ -428,25 +354,15 @@ def save_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    begin
-      host = findHost(task, vm.host_id)
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
-      raise
-    end
-    
-    begin
-      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookup_domain_by_uuid(vm.uuid)
-      dom.save("/tmp/" + vm.uuid + ".save")
-      conn.close
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Save failed")
-      raise
-    end
-  rescue
+    host = findHost(task, vm.host_id)
+
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    dom = conn.lookup_domain_by_uuid(vm.uuid)
+    dom.save("/tmp/" + vm.uuid + ".save")
+    conn.close
+  rescue => ex
     setVmState(vm, vm_orig_state)
-    return
+    raise ex
   end
 
   # note that we do *not* reset the host_id here, since we stored the saved
@@ -457,8 +373,6 @@ def save_vm(task)
   # host later.  This can be done once we have the storage APIs, but it will
   # need more work
 
-  setTaskState(task, Task::STATE_FINISHED)
-
   setVmState(vm, Vm::STATE_SAVED)
 end
 
@@ -466,23 +380,16 @@ def restore_vm(task)
   puts "restore_vm"
 
   # here, we are given an id for a VM to start
-
-  begin
-    vm = findVM(task)
-  rescue
-    return
-  end
+  
+  vm = findVM(task)
 
   if vm.state == Vm::STATE_RUNNING
     # the VM is already saved; just return success
-    setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_SUSPENDED
-    setTaskState(task, Task::STATE_FAILED, "Cannot restore suspended domain")
-    return    
+    raise "Cannot restore suspended domain"
   elsif vm.state == Vm::STATE_STOPPED
-    setTaskState(task, Task::STATE_FAILED, "Cannot restore shutdown domain")
-    return
+    raise "Cannot restore shutdown domain"
   end
 
   vm_orig_state = vm.state
@@ -490,34 +397,19 @@ def restore_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    begin
-      host = findHost(task, vm.host_id)
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
-      raise
-    end
+    host = findHost(task, vm.host_id)
     
     # FIXME: we should probably go out to the host and check what it thinks
     # the state is
     
-    begin
-      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookup_domain_by_uuid(vm.uuid)
-      dom.restore
-      conn.close
-    rescue
-      # FIXME: these may fail for various reasons:
-      # 1.  The domain is already defined and/or started - update the DB
-      # 2.  We couldn't define the domain for some reason
-      setTaskState(task, Task::STATE_FAILED, "Libvirt error")
-      raise
-    end
-  rescue
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    dom = conn.lookup_domain_by_uuid(vm.uuid)
+    dom.restore
+    conn.close
+  rescue => ex
     setVmState(vm, vm_orig_state)
-    return
+    raise ex
   end
-
-  setTaskState(task, Task::STATE_FINISHED)
 
   setVmState(vm, Vm::STATE_RUNNING)
 end
@@ -528,22 +420,15 @@ def suspend_vm(task)
   # here, we are given an id for a VM to suspend; we have to lookup which
   # physical host it is running on
 
-  begin
-    vm = findVM(task)
-  rescue
-    return
-  end
+  vm = findVM(task)
 
   if vm.state == Vm::STATE_SUSPENDED
     # the VM is already suspended; just return success
-    setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_STOPPED
-    setTaskState(task, Task::STATE_FAILED, "Cannot suspend stopped domain")
-    return
+    raise "Cannot suspend stopped domain"
   elsif vm.state == Vm::STATE_SAVED
-    setTaskState(task, Task::STATE_FAILED, "Cannot suspend saved domain")
-    return
+    raise "Cannot suspend saved domain"
   end
 
   vm_orig_state = vm.state
@@ -551,31 +436,19 @@ def suspend_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    begin
-      host = findHost(task, vm.host_id)
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
-      raise
-    end
+    host = findHost(task, vm.host_id)
     
-    begin
-      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookup_domain_by_uuid(vm.uuid)
-      dom.suspend
-      conn.close
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
-      raise
-    end
-  rescue
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    dom = conn.lookup_domain_by_uuid(vm.uuid)
+    dom.suspend
+    conn.close
+  rescue => ex
     setVmState(vm, vm_orig_state)
-    return
+    raise ex
   end
 
   # note that we do *not* reset the host_id here, since we just suspended the VM
   # resume_vm will pick it up from here
-
-  setTaskState(task, Task::STATE_FINISHED)
 
   setVmState(vm, Vm::STATE_SUSPENDED)
 end
@@ -585,24 +458,17 @@ def resume_vm(task)
 
   # here, we are given an id for a VM to start
 
-  begin
-    vm = findVM(task)
-  rescue
-    return
-  end
+  vm = findVM(task)
 
   # OK, marked in the database as already running on a host; let's check it
 
   if vm.state == Vm::STATE_RUNNING
     # the VM is already suspended; just return success
-    setTaskState(task, Task::STATE_FINISHED)
     return
   elsif vm.state == Vm::STATE_STOPPED
-    setTaskState(task, Task::STATE_FAILED, "Cannot resume stopped domain")
-    return
+    raise "Cannot resume stopped domain"
   elsif vm.state == Vm::STATE_SAVED
-    setTaskState(task, Task::STATE_FAILED, "Cannot resume suspended domain")
-    return
+    raise "Cannot resume suspended domain"
   end
 
   vm_orig_state = vm.state
@@ -610,29 +476,17 @@ def resume_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    begin
-      host = findHost(task, vm.host_id)
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Could not find the host that VM is running on")
-      raise
-    end
+    host = findHost(task, vm.host_id)
     
-    begin
       conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
       dom = conn.lookup_domain_by_uuid(vm.uuid)
       dom.resume
       conn.close
-    rescue
-      setTaskState(task, Task::STATE_FAILED, "Error looking up domain " + vm.uuid)
-      raise
-    end
-  rescue
+  rescue => ex
     setVmState(vm, vm_orig_state)
-    return
+    raise ex
   end
 
-  setTaskState(task, Task::STATE_FINISHED)
-  
   setVmState(vm, Vm::STATE_RUNNING)
 end
 
@@ -643,11 +497,7 @@ def update_state_vm(task)
   # in.  So if a vm that we thought was stopped is running, this returns nil
   # and we don't update any information about it.  The tricky part
   # is that we're still not sure what to do in this case :).  - Ian
-  begin
-    vm = findVM(task)
-  rescue
-    return
-  end
+  vm = findVM(task)
 
   vm_effective_state = Vm::EFFECTIVE_STATE[vm.state]
   task_effective_state = Vm::EFFECTIVE_STATE[task.args]
@@ -656,17 +506,9 @@ def update_state_vm(task)
     vm.state = task.args
 
     if task_effective_state == Vm::STATE_STOPPED
-      vm.host_id = nil
-      vm.memory_used = nil
-      vm.num_vcpus_used = nil
-      vm.needs_restart = nil
-      vm.host_id = nil
+      setVmShutdown(vm)
     end
     vm.save
-    msg = "Updated state to " + task.args
-  else
-    msg = nil
+    puts "Updated state to " + task.args
   end
-
-  setTaskState(task, Task::STATE_FINISHED, msg)
 end

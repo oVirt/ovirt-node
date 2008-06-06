@@ -24,7 +24,6 @@ $: << File.join(File.dirname(__FILE__), ".")
 require 'rubygems'
 require 'optparse'
 require 'daemons'
-
 include Daemonize
 
 $logfile = '/var/log/ovirt-wui/taskomatic.log'
@@ -93,6 +92,7 @@ loop do
       first = false
     end
 
+    state = Task::STATE_FINISHED
     begin
       case task.action
       when VmTask::ACTION_CREATE_VM then create_vm(task)
@@ -106,14 +106,19 @@ loop do
       when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
       else
         puts "unknown task " + task.action
-        setTaskState(task, Task::STATE_FAILED, "Unknown task type")
+        state = Task::STATE_FAILED
+        task.message = "Unknown task type"
       end
-      
-      task.time_ended = Time.now
-      task.save
     rescue => ex
       puts "Task action processing failed: #{ex.class}: #{ex.message}"
+      puts ex.backtrace
+      state = Task::STATE_FAILED
+      task.message = ex.message
     end
+
+    task.state = state
+    task.time_ended = Time.now
+    task.save
   end
   
   # we could destroy credentials, but another process might be using them (in

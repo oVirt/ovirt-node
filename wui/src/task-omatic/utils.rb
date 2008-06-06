@@ -3,12 +3,6 @@ include REXML
 
 require 'models/task'
 
-def setTaskState(task, state, msg = nil)
-  task.state = state
-  task.message = msg
-  task.save
-end
-
 def String.random_alphanumeric(size=16)
   s = ""
   size.times { s << (i = Kernel.rand(62); i += ((i < 10) ? 48 : ((i < 36) ? 55 : 61 ))).chr }
