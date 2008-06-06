@@ -20,6 +20,9 @@ endef
 wui-rel-%.ks: wui-devel-%.ks
 	$(ks-flatten)
 
+repos-x86_64.ks: repos-x86_64.ks.in
+	cp repos-x86_64.ks.in repos-x86_64.ks
+
 # Generate each *-i386.ks file from the corresponding -x86_64.ks one.
 %-i386.ks: %-x86_64.ks
 	rm -f $@ $@-t
