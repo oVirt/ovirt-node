@@ -149,6 +149,7 @@ if [ $devel = 1 ]; then
 
     # define the fake managed nodes we will use
     for i in `seq 3 5` ; do
+       virsh destroy node$i >& /dev/null
 	virsh undefine node$i >& /dev/null
 	TMPXML=$(mktemp)
 	gen_fake_managed_node $i > $TMPXML
