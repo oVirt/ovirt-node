@@ -93,6 +93,54 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%pre
+/usr/sbin/groupadd -r ovirt 2>/dev/null || :
+/usr/sbin/useradd -g ovirt -c "oVirt" \
+    -s /sbin/nologin -r -d /var/ovirt ovirt 2> /dev/null || :
+
+%post
+# script
+%define daemon_chkconfig_post(d:) \
+/sbin/chkconfig --list %{-d*} >& /dev/null \
+LISTRET=$? \
+/sbin/chkconfig --add %{-d*} \
+if [ $LISTRET -ne 0 ]; then \
+	/sbin/chkconfig %{-d*} on \
+fi \
+%{nil}
+
+#removes obsolete services if present
+if [ -e %{_initrddir}/ovirt-wui ] ; then
+  /sbin/service ovirt-wui stop > /dev/null 2>&1
+  /sbin/service ovirt-host-keyadd stop > /dev/null 2>&1
+  /sbin/chkconfig --del ovirt-wui
+  /sbin/chkconfig --del ovirt-host-keyadd
+  %{__rm} %{_initrddir}/ovirt-wui
+  %{__rm} %{_initrddir}/ovirt-host-keyadd
+fi
+
+# if this is the initial RPM install, then we want to turn the new services
+# on; otherwise, we respect the choices the administrator already has made.
+# check this by seeing if each daemon is already installed
+%daemon_chkconfig_post -d ovirt-host-browser
+%daemon_chkconfig_post -d ovirt-host-status
+%daemon_chkconfig_post -d ovirt-host-collect
+%daemon_chkconfig_post -d ovirt-mongrel-rails
+%daemon_chkconfig_post -d ovirt-taskomatic
+
+%preun
+if [ "$1" = 0 ] ; then
+  /sbin/service ovirt-host-browser stop > /dev/null 2>&1
+  /sbin/service ovirt-host-status stop > /dev/null 2>&1
+  /sbin/service ovirt-host-collect stop > /dev/null 2>&1
+  /sbin/service ovirt-mongrel-rails stop > /dev/null 2>&1
+  /sbin/service ovirt-taskomatic stop > /dev/null 2>&1
+  /sbin/chkconfig --del ovirt-host-browser
+  /sbin/chkconfig --del ovirt-host-status
+  /sbin/chkconfig --del ovirt-host-collect
+  /sbin/chkconfig --del ovirt-mongrel-rails
+  /sbin/chkconfig --del ovirt-taskomatic
+fi
 
 %files
 %defattr(-,root,root,0755)
@@ -113,37 +161,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(2770,postgres,postgres)
 %dir /etc/ovirt-wui/db
 
-%pre
-/usr/sbin/groupadd -r ovirt 2>/dev/null || :
-/usr/sbin/useradd -g ovirt -c "oVirt" \
-    -s /sbin/nologin -r -d /var/ovirt ovirt 2> /dev/null || :
-
-%post
-#removes obsolete services if present
-if [ -e %{_initrddir}/ovirt-wui ] ; then
-  /sbin/service ovirt-wui stop > /dev/null 2>&1
-  /sbin/service ovirt-host-keyadd stop > /dev/null 2>&1
-  /sbin/chkconfig --del ovirt-wui
-  /sbin/chkconfig --del ovirt-host-keyadd
-  %{__rm} %{_initrddir}/ovirt-wui
-  %{__rm} %{_initrddir}/ovirt-host-keyadd
-fi
-
-exit 0
-
-%preun
-if [ "$1" = 0 ] ; then
-  /sbin/service ovirt-host-browser stop > /dev/null 2>&1
-  /sbin/service ovirt-host-status stop > /dev/null 2>&1
-  /sbin/service ovirt-host-collect stop > /dev/null 2>&1
-  /sbin/service ovirt-mongrel-rails stop > /dev/null 2>&1
-  /sbin/service ovirt-taskomatic stop > /dev/null 2>&1
-  /sbin/chkconfig --del ovirt-host-browser
-  /sbin/chkconfig --del ovirt-host-status
-  /sbin/chkconfig --del ovirt-host-collect
-  /sbin/chkconfig --del ovirt-mongrel-rails
-  /sbin/chkconfig --del ovirt-taskomatic
-fi
 %changelog
 * Thu May 29 2008 Alan Pevec <apevec@redhat.com> - 0.0.5-0
 - use rubygem-krb5-auth
