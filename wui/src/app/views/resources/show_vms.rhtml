@@ -6,10 +6,11 @@
        <ul>
         <% @actions.each_index { |index| %>
             <li onClick="vm_actions('<%=@actions[index][1]%>')"
-            <% if (index == @actions.length - 1) or @actions[index].length == 3 %>
+            <% if (index == @actions.length - 1) or @actions[index].length == 4 %>
                 style="border-bottom: 1px solid black;"
             <% end %>
                >
+                 <%= image_tag @actions[index][2]%>
                  <%=@actions[index][0]%>
             </li>
         <% } %>

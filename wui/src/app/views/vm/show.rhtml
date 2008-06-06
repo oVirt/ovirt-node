@@ -9,7 +9,7 @@
                           :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
     <% for action in @actions %>
       <a href="#" onClick="single_vm_action('<%= action[1] %>')">
-        <%= image_tag "icon_x.png" %> <%= action[0] %>
+        <%= image_tag action[2] %> <%= action[0] %>
       </a> 
     <% end %>
     <a href="#" onClick="cancel_queued_tasks()">

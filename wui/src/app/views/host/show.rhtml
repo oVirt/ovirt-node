@@ -5,11 +5,11 @@
   <%if @can_modify -%>
     <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
       <a href="#" onClick="toggle_host(false)">
-        <%= image_tag "icon_x.png" %> Disable Host
+        <%= image_tag "icon_suspend.png" %> Disable Host
       </a> 
     <% else -%>
       <a href="#" onClick="toggle_host(true)">
-        <%= image_tag "icon_x.png" %> Enable Host
+        <%= image_tag "icon_start.png" %> Enable Host
       </a> 
     <% end -%>
   <%- end -%>

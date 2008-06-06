@@ -146,7 +146,7 @@ class Vm < ActiveRecord::Base
 
   def get_action_and_label_list
     get_action_list.collect do |action|
-      [VmTask::ACTIONS[action][:label], action]
+      VmTask.label_and_action(action)
     end
   end
 

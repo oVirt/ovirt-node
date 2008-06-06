@@ -35,36 +35,43 @@ class VmTask < Task
 
   # a hash of task actions which point to a hash which define valid state transitions
   ACTIONS = { ACTION_CREATE_VM   => { :label => "Create",
+                                      :icon  => "icon_start.png",
                                       :start => Vm::STATE_PENDING,
                                       :running => Vm::STATE_CREATING,
                                       :success => Vm::STATE_STOPPED,
                                       :failure => Vm::STATE_CREATE_FAILED},
               ACTION_START_VM    => { :label => "Start",
+                                      :icon  => "icon_start.png",
                                       :start => Vm::STATE_STOPPED,
                                       :running => Vm::STATE_STARTING,
                                       :success => Vm::STATE_RUNNING,
                                       :failure => Vm::STATE_STOPPED}, 
               ACTION_SHUTDOWN_VM => { :label => "Shutdown",
+                                      :icon  => "icon_x.png",
                                       :start => Vm::STATE_RUNNING,
                                       :running => Vm::STATE_STOPPING,
                                       :success => Vm::STATE_STOPPED,
                                       :failure => Vm::STATE_RUNNING}, 
               ACTION_SUSPEND_VM  => { :label => "Suspend",
+                                      :icon  => "icon_suspend.png",
                                       :start => Vm::STATE_RUNNING,
                                       :running => Vm::STATE_SUSPENDING,
                                       :success => Vm::STATE_SUSPENDED,
                                       :failure => Vm::STATE_RUNNING}, 
               ACTION_RESUME_VM   => { :label => "Resume",
+                                      :icon  => "icon_start.png",
                                       :start => Vm::STATE_SUSPENDED,
                                       :running => Vm::STATE_RESUMING,
                                       :success => Vm::STATE_RUNNING,
                                       :failure => Vm::STATE_SUSPENDED},
               ACTION_SAVE_VM     => { :label => "Save",
+                                      :icon  => "icon_save.png",
                                       :start => Vm::STATE_RUNNING,
                                       :running => Vm::STATE_SAVING,
                                       :success => Vm::STATE_SAVED,
                                       :failure => Vm::STATE_RUNNING},
               ACTION_RESTORE_VM  => { :label => "Restore",
+                                      :icon  => "icon_restore.png",
                                       :start => Vm::STATE_SAVED,
                                       :running => Vm::STATE_RESTORING,
                                       :success => Vm::STATE_RUNNING,
@@ -83,7 +90,10 @@ class VmTask < Task
   def self.action_label(action)
     return ACTIONS[action][:label]
   end
+  def self.action_icon(action)
+    return ACTIONS[action][:icon]
+  end
   def self.label_and_action(action)
-    return [action_label(action), action]
+    return [action_label(action), action, action_icon(action)]
   end
 end
