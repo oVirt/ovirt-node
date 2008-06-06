@@ -34,8 +34,7 @@ class ApplicationController < ActionController::Base
   before_filter :authorize_admin, :only => [:new, :create, :edit, :update, :destroy]
 
   def get_login_user
-    #user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
-    'admin'
+    user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
   end
   
   def user_from_principal(principal)
