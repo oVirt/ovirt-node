@@ -9,6 +9,8 @@
 
 # Requires: createrepo httpd kvm libvirt livecd-tools pungi
 
+PATH=$PATH:/sbin:/usr/sbin
+
 ME=$(basename "$0")
 warn() { printf "$ME: $@\n" >&2; }
 try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
