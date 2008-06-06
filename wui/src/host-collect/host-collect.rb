@@ -27,7 +27,7 @@ require 'dutils'
 require 'models/task'
 require 'socket'
 
-do_daemon = false
+do_daemon = true
 sleeptime = 30
 
 

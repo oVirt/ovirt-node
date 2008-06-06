@@ -95,6 +95,7 @@ cat > /etc/collectd.conf << \EOF
 LoadPlugin network
 LoadPlugin logfile
 LoadPlugin rrdtool
+LoadPlugin unixsock
 
 <Plugin logfile>
         LogLevel info
@@ -109,6 +110,10 @@ LoadPlugin rrdtool
         DataDir "/var/lib/collectd/rrd"
         CacheTimeout 120
         CacheFlush   900
+</Plugin>
+
+<Plugin unixsock>
+        SocketFile "/var/lib/collectd/unixsock"
 </Plugin>
 
 EOF
