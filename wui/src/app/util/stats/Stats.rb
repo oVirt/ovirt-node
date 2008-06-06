@@ -18,8 +18,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-$: << '/usr/lib64/ruby/site_ruby/1.8/x86_64-linux'
-
 require 'RRD'
 require 'util/stats/StatsTypes'
 require 'util/stats/StatsData'
