@@ -330,4 +330,25 @@ class RRDResolution
 end
 
        
+class StatsStatus
+   def StatsStatus.add_item(key,value)
+      @hash ||= {}
+      @hash[key]=value
+   end
 
+   def StatsStatus.const_missing(key)
+      @hash[key]
+   end
+
+   def StatsStatus.each
+      @hash.each {|key,value| yield(key,value)}
+   end
+
+   # Set up the resolutions for our rrd
+   StatsStatus.add_item :SUCCESS, 0
+   StatsStatus.add_item :E_NOSUCHNODE, 1
+   StatsStatus.add_item :E_NOSUCHDEVICE, 2
+   StatsStatus.add_item :E_NOSUCHCOUNTER, 3
+   StatsStatus.add_item :E_UNKNOWN, 99
+
+end

@@ -31,10 +31,11 @@ require 'util/stats/Stats'
 #   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Load, 0, LoadCounter::Load_1min, 0, 3600, 10 )
 #   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Load, 0, LoadCounter::Load_1min, 0, 0, RRDResolution::Long )
 #   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Load, 0, LoadCounter::Load_15min, 0, 0, RRDResolution::Long )
-#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::NIC, 0, NicCounter::Octets_rx, 0, 0, RRDResolution::Long )
-#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::NIC, 0, NicCounter::Octets_tx, 0, 0, RRDResolution::Long )
-   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Disk, 0, DiskCounter::Octets_read, 0, 0, RRDResolution::Long )
-   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Disk, 0, DiskCounter::Octets_write, 0, 0, RRDResolution::Long )
+   requestList << StatsRequest.new("node7.priv.ovirt.org", DevClass::NIC, 0, NicCounter::Octets_rx, 0, 0, RRDResolution::Long )
+   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::NIC, 1, NicCounter::Octets_rx, 0, 0, RRDResolution::Long )
+   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::NIC, 0, NicCounter::Octets_tx, 0, 0, RRDResolution::Long )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Disk, 0, DiskCounter::Octets_read, 0, 0, RRDResolution::Long )
+#   requestList << StatsRequest.new("node3.priv.ovirt.org", DevClass::Disk, 0, DiskCounter::Octets_write, 0, 0, RRDResolution::Long )
 #   requestList << StatsRequest.new("node3.priv.ovirt.org", "cpu", 0, "idle", 1211688000, 3600, 10 )
 #   requestList << StatsRequest.new("node4.priv.ovirt.org", DevClass::CPU, 0, CpuCounter::Idle, 0, 3600, RRDResolution::Short )
 #   requestList << StatsRequest.new("node5.priv.ovirt.org", "cpu", 0, "idle", 1211688000, 3600, 500 )
@@ -55,8 +56,14 @@ require 'util/stats/Stats'
    myDevClass = statsList.get_devClass?()
    myInstance = statsList.get_instance?()
    myCounter = statsList.get_counter?()
+   myStatus = statsList.get_status?()
 
-
+   case myStatus
+      when StatsStatus::E_NOSUCHNODE
+          puts "Can't find data for node " + myNodeName
+      when StatsStatus::E_UNKNOWN
+          puts "Can't find data for requested file path"
+   end
       if tmp != myNodeName then
          puts
       end

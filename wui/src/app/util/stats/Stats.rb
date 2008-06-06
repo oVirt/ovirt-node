@@ -74,17 +74,33 @@ def fetchData?(node, devClass, instance, counter, startTime, duration, interval)
 
     rrd = rrdNode + rrdTail + ".rrd"
 
-   returnList = StatsDataList.new(node,devClass,instance, counter)
-   (fstart, fend, names, data, interval) = RRD.fetch(rrd, "--start", start.to_s, "--end", endTime.to_s, "AVERAGE", "-r", interval.to_s)
-   i = 0 
-   # For some reason, we get an extra datapoint at the end.  Just chop it off now...
-   data.delete_at(-1)
-
-   # Now, lets walk the returned data and create the ojects, and put them in a list.
-   data.each do |vdata|
-      i += 1
-      returnList.append_data( StatsData.new(fstart + interval * i, vdata[lIndex] ))
+    if ( File.exists?(rrd ) )
+       localStatus = StatsStatus::SUCCESS
+    elsif ( File.exists?(rrdNode ))
+       # Check the Node first
+       localStatus = StatsStatus::E_NOSUCHNODE
+    else
+       # Currently can't distinguish between device and counter, so return generic error 
+       localStatus = StatsStatus::E_UNKNOWN
    end
+   
+   returnList = StatsDataList.new(node,devClass,instance, counter, localStatus)
+   
+   # So if the path is bad, no need to continue, it will just thrown an error, just return
+
+   if ( localStatus == StatsStatus::SUCCESS )
+      (fstart, fend, names, data, interval) = RRD.fetch(rrd, "--start", start.to_s, "--end", endTime.to_s, "AVERAGE", "-r", interval.to_s)
+      i = 0 
+      # For some reason, we get an extra datapoint at the end.  Just chop it off now...
+      data.delete_at(-1)
+
+      # Now, lets walk the returned data and create the ojects, and put them in a list.
+      data.each do |vdata|
+         i += 1
+         returnList.append_data( StatsData.new(fstart + interval * i, vdata[lIndex] ))
+      end
+   end
+   
  return returnList
 end
 
