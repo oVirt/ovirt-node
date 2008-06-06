@@ -61,6 +61,13 @@ class GraphController < ApplicationController
       total = 15
       # TODO
     end
+
+    # bit of a hack to convert memory from kb to mb
+    if @target == 'memory' || @target == 'vram'
+        used  /= 1024
+        total /= 1024
+    end
+
     @availability_graph_data = { 'Used' => used, 'Total' => total, 'Available' => total - used}
   end
 
