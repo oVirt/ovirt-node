@@ -47,6 +47,7 @@
             $('a[rel*=facebox]').livequery(function(){$(this).facebox();},function(){});
             $('#side a').livequery(function(){
                 $(this).bind('click', function(){ 
+                    currentNode = $(this).parent().parent()[0].id;
                     $('#side span').each(function(){
                         var nodeType = $(this).attr('class');
                         if (nodeType.indexOf('_') != -1){

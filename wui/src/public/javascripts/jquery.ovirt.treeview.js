@@ -4,7 +4,7 @@
     var container = this;    
     settings.current_pool_id!=""?settings.params={current_id:settings.current_pool_id}:settings.params=null;
     load(settings, settings.params, this, container); 
-    $(this).everyTime(20000,function(){
+    $(this).everyTime(10000,function(){
       load(settings, settings.params, this, container);
     })
     
@@ -67,12 +67,16 @@
                 for (var i = 0; i < selectedNodes.length; i++){
                   $('#test-tree li#' + selectedNodes[i] +' > div').click();
                 }
-               
+                if (currentNode != null) {
+                    var nodeType = $('li#' + currentNode + ' > span').attr('class');
+                    $('li#' + currentNode + ' > span').attr('class', 'current_' + nodeType);
+                }               
     });
   }      
 })(jQuery);
 
 var selectedNodes = [];
+var currentNode;
 $('#test-tree li.collapsable').livequery(
     function(){
         if($.inArray(this.id,selectedNodes) == -1){
