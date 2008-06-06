@@ -32,6 +32,9 @@ setversion:
 clean:
 	-rm -rf ovirt-host-image-* ovirt-pxe.log
 
+repos.ks: repos.ks.in
+	cp repos.ks.in repos.ks
+
 build: ovirt-$(ARCH).ks common-install.ks common-pkgs.ks common-post.ks repos.ks
 	-rm -rf tftpboot/
 	./ovirt-pxe.sh > ovirt-pxe.log 2>&1

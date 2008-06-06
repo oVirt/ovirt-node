@@ -3,3 +3,4 @@ iso-file
 tftpboot
 rpm-build
 ovirt-pxe.log
+repos.ks
