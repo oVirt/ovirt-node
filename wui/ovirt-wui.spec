@@ -157,6 +157,11 @@ fi
 %attr(-, ovirt, ovirt) %{_localstatedir}/run/%{name}
 %attr(-, ovirt, ovirt) %{_localstatedir}/log/%{name}
 %{app_root}
+%config(noreplace) %{app_root}/config/database.yml
+%config(noreplace) %{app_root}/config/ldap.yml
+%config(noreplace) %{app_root}/config/environments/development.rb
+%config(noreplace) %{app_root}/config/environments/production.rb
+%config(noreplace) %{app_root}/config/environments/test.rb
 %dir /etc/ovirt-wui
 %defattr(2770,postgres,postgres)
 %dir /etc/ovirt-wui/db
