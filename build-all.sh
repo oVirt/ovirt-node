@@ -91,6 +91,7 @@ fi
 if [ $update_wui = 1 ]; then
     cd $BASE/wui
     rm -rf rpm-build
+    make bumpgit
     make rpms
     cp rpm-build/ovirt-wui*rpm $OVIRT
     cd $OVIRT
@@ -102,6 +103,7 @@ if [ $update_pungi = 1 ]; then
     cat > $PUNGIKS << EOF
 repo --name=f$FEDORA --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$FEDORA&arch=\$basearch
 repo --name=f$FEDORA-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$FEDORA&arch=\$basearch
+repo --name=ovirt --baseurl=http://localhost/ovirt
 
 %packages
 EOF
@@ -132,6 +134,7 @@ if [ $update_node = 1 ]; then
 repo --name=f9 --baseurl=http://$VIRBR/pungi/$FEDORA/$ARCH/os
 
 EOF
+    make bumpgit
     make rpms
     cp rpm-build/ovirt-host-image-pxe*rpm $OVIRT
     cd $OVIRT
