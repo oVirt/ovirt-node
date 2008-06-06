@@ -119,20 +119,22 @@ class GraphController < ApplicationController
     statsList = getStatsData?( requestList )
     statsList.each { |stat|
         counter  = stat.get_counter?
-        stat.get_data?.each{ |data|
-            timestamp = data.get_timestamp?
-            valueindex = ((timestamp.to_i - firstday.to_i) / 86400).to_i  # 86400 secs per day
-            value    = data.get_value?
-            if !value.nan?
-                if counter == avgcounter
-                    @avg_history[:values][valueindex] += value.to_i
-                    @avg_history[:dataPoints][valueindex] += 1
-                elsif counter == peakcounter
-                    @peak_history[:values][valueindex] += value.to_i
-                    @peak_history[:dataPoints][valueindex] += 1
+        if stat.get_status? == StatsStatus::SUCCESS
+            stat.get_data?.each{ |data|
+                timestamp = data.get_timestamp?
+                valueindex = ((timestamp.to_i - firstday.to_i) / 86400).to_i  # 86400 secs per day
+                value    = data.get_value?
+                if !value.nan?
+                    if counter == avgcounter
+                        @avg_history[:values][valueindex] += value.to_i
+                        @avg_history[:dataPoints][valueindex] += 1
+                    elsif counter == peakcounter
+                        @peak_history[:values][valueindex] += value.to_i
+                        @peak_history[:dataPoints][valueindex] += 1
+                    end
                 end
-            end
-       }
+            }
+        end
     }
 
     # avgerage out history for each day
@@ -227,42 +229,44 @@ class GraphController < ApplicationController
     statsList.each { |stat|
         devClass = stat.get_devClass?
         counter  = stat.get_counter?
-        stat.get_data?.each{ |data|
-            value = data.get_value?
-            if !value.nan?
-                if devClass == DEV_KEY_CLASSES["load"]
-                    if counter == DEV_KEY_AVGCOUNTERS["load"]
-                        @snapshots[:avg]["load"] = value.to_i
-                    elsif counter == DEV_KEY_PEAKCOUNTERS["load"]
-                        @snapshots[:peak]["load"] = value.to_i
+        if stat.get_status? == StatsStatus::SUCCESS
+            stat.get_data?.each{ |data|
+                value = data.get_value?
+                if !value.nan?
+                    if devClass == DEV_KEY_CLASSES["load"]
+                        if counter == DEV_KEY_AVGCOUNTERS["load"]
+                            @snapshots[:avg]["load"] = value.to_i
+                        elsif counter == DEV_KEY_PEAKCOUNTERS["load"]
+                            @snapshots[:peak]["load"] = value.to_i
+                        end
+                    elsif devClass == DEV_KEY_CLASSES["cpu"]
+                        if counter == DEV_KEY_AVGCOUNTERS["cpu"]
+                            @snapshots[:avg]["cpu"] = value.to_i
+                        elsif counter == DEV_KEY_PEAKCOUNTERS["cpu"]
+                            @snapshots[:peak]["cpu"] = value.to_i
+                        end
+                    elsif devClass == DEV_KEY_CLASSES["netin"]
+                        if counter == DEV_KEY_AVGCOUNTERS["netin"]
+                            @snapshots[:avg]["netin"] = value.to_i
+                        elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
+                            @snapshots[:peak]["netin"] = value.to_i
+                        end
+                    elsif devClass == DEV_KEY_CLASSES["netout"]
+                        if counter == DEV_KEY_AVGCOUNTERS["netout"]
+                            @snapshots[:avg]["netout"] = value.to_i
+                        elsif counter == DEV_KEY_PEAKCOUNTERS["netout"]
+                            @snapshots[:peak]["netout"] = value.to_i
+                        end
+                    #elsif devClass == DEV_KEY_AVGCOUNTERS["io"]
+                    #    if counter == DEV_KEY_AVGCOUNTERS["io"]
+                    #        @snapshots[:peak]["io"] = value.to_i
+                    #    elsif counter == _dev_key_peak_counters["io"]
+                    #        @snapshots[:peak]["io"] = value.to_i
+                    #    end
                     end
-                elsif devClass == DEV_KEY_CLASSES["cpu"]
-                    if counter == DEV_KEY_AVGCOUNTERS["cpu"]
-                        @snapshots[:avg]["cpu"] = value.to_i
-                    elsif counter == DEV_KEY_PEAKCOUNTERS["cpu"]
-                        @snapshots[:peak]["cpu"] = value.to_i
-                    end
-                elsif devClass == DEV_KEY_CLASSES["netin"]
-                    if counter == DEV_KEY_AVGCOUNTERS["netin"]
-                        @snapshots[:avg]["netin"] = value.to_i
-                    elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
-                        @snapshots[:peak]["netin"] = value.to_i
-                    end
-                elsif devClass == DEV_KEY_CLASSES["netout"]
-                    if counter == DEV_KEY_AVGCOUNTERS["netout"]
-                        @snapshots[:avg]["netout"] = value.to_i
-                    elsif counter == DEV_KEY_PEAKCOUNTERS["netout"]
-                        @snapshots[:peak]["netout"] = value.to_i
-                    end
-                #elsif devClass == DEV_KEY_AVGCOUNTERS["io"]
-                #    if counter == DEV_KEY_AVGCOUNTERS["io"]
-                #        @snapshots[:peak]["io"] = value.to_i
-                #    elsif counter == _dev_key_peak_counters["io"]
-                #        @snapshots[:peak]["io"] = value.to_i
-                #    end
                 end
-            end
-        }
+            }
+        end
     }
     #@snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
     #               :peak => { :overall_load => 100, :cpu => 50, :in => 12, :out => 72, :io => 100 } }
