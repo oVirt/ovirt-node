@@ -25,8 +25,8 @@ class GraphController < ApplicationController
         total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_cpus }
       elsif @target == 'memory'
         @label = "MB of Memory"
-        used= vmpools.inject(0){ |sum, pool| sum+pool.allocated_resources[:current][:memory] }
-        total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_memory }
+        used= vmpools.inject(0){ |sum, pool| sum+pool.allocated_resources[:current][:memory_in_mb] }
+        total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_memory_in_mb }
       end
     elsif ['vcpu', 'vram'].include? (@target)
       pool = VmResourcePool.find(@id)
@@ -36,7 +36,7 @@ class GraphController < ApplicationController
         resource_key = :cpus
       elsif @target == 'vram'
         @label = "MB of VMemory"
-        resource_key = :memory
+        resource_key = :memory_in_mb
       end
       unlimited = false
       total=0
@@ -50,12 +50,6 @@ class GraphController < ApplicationController
         end
       end
       total = 0 if unlimited
-    end
-
-    # bit of a hack to convert memory from kb to mb
-    if @target == 'memory' || @target == 'vram'
-        used  /= 1024
-        total /= 1024
     end
 
     @availability_graph_data = { 'Used' => used, 'Total' => total, 'Available' => total - used}

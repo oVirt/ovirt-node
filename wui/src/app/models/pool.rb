@@ -31,6 +31,9 @@ class Pool < ActiveRecord::Base
     def total_memory
       find(:all).inject(0){ |sum, host| sum + host.memory }
     end
+    def total_memory_in_mb
+      find(:all).inject(0){ |sum, host| sum + host.memory_in_mb }
+    end
   end
 
   has_many :storage_pools, :dependent => :nullify, :order => "id ASC", :foreign_key => 'hardware_pool_id' do
