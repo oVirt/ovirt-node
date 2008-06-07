@@ -219,24 +219,42 @@ class GraphController < ApplicationController
     @target = params[:target]
     @poolType = params[:poolType]
 
-    @snapshots   = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
-                     :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
-    @data_points = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
-                     :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
+    @snapshots   = { :avg   => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }, # average values to be plotted on the graph
+                     :scale => { 'load' => 10, 'cpu' => 100, 'memory' => 0, 'netin' => 0, 'netout' => 0}, # values which to scale graphs against
+                     :peak  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
+    @data_points = { :avg   => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
+                     :scale => { 'load' => 10, 'cpu' => 100, 'memory' => 0, 'netin' => 0, 'netout' => 0}, 
+                     :peak  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
 
 
     requestList = []
     if @target == 'host'
-        requestList += _create_host_snapshot_requests(Host.find(@id).hostname)
+        host =  Host.find(@id)
+        requestList += _create_host_snapshot_requests(host.hostname)
+        @snapshots[:scale]['memory'] = host.memory_in_mb
+        host.nics.each{ |nic|
+            @snapshots[:scale]['netin']  += nic.bandwidth 
+            @snapshots[:scale]['netout'] += nic.bandwidth
+        }
     elsif @poolType == 'vm'
         Pool.find(@id).vms.each{ |vm|
             if !vm.host.nil?
                 requestList += _create_host_snapshot_requests(vm.host.hostname)
+                @snapshots[:scale]['memory'] = vm.host.memory_in_mb
+                vm.host.nics.each{ |nic|
+                    @snapshots[:scale]['netin']  += nic.bandwidth
+                    @snapshots[:scale]['netout'] += nic.bandwidth
+                }
             end
         }
     else
         Pool.find(@id).hosts.each{ |host|
             requestList += _create_host_snapshot_requests(host.hostname)
+            @snapshots[:scale]['memory'] = host.memory_in_mb
+            host.nics.each{ |nic|
+                @snapshots[:scale]['netin']  += nic.bandwidth
+                @snapshots[:scale]['netout'] += nic.bandwidth
+            }
         }
     end
     
@@ -295,10 +313,10 @@ class GraphController < ApplicationController
     }
     @snapshots.each_key { |k|
         @snapshots[k]['load'] /= @data_points[k]['load']  if @data_points[k]['load'] != 0
-	@snapshots[k]['cpu'] /= @data_points[k]['cpu']  if @data_points[k]['cpu'] != 0
-	@snapshots[k]['memory'] /= @data_points[k]['memory']  if @data_points[k]['memory'] != 0
-	@snapshots[k]['netin'] /= @data_points[k]['netin']  if @data_points[k]['netin'] != 0
-	@snapshots[k]['netout'] /= @data_points[k]['netout']  if @data_points[k]['netout'] != 0
+	    @snapshots[k]['cpu'] /= @data_points[k]['cpu']  if @data_points[k]['cpu'] != 0
+	    @snapshots[k]['memory'] /= @data_points[k]['memory']  if @data_points[k]['memory'] != 0
+	    @snapshots[k]['netin'] /= @data_points[k]['netin']  if @data_points[k]['netin'] != 0
+	    @snapshots[k]['netout'] /= @data_points[k]['netout']  if @data_points[k]['netout'] != 0
     }
     #@snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
     #               :peak => { :overall_load => 100, :cpu => 50, :in => 12, :out => 72, :io => 100 } }
