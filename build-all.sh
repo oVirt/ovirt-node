@@ -93,6 +93,7 @@ if [ $update_wui = 1 ]; then
     rm -rf rpm-build
     make bumpgit
     make rpms
+    rm -f $OVIRT/ovirt-wui*rpm
     cp rpm-build/ovirt-wui*rpm $OVIRT
     cd $OVIRT
     createrepo .
@@ -136,6 +137,7 @@ repo --name=f9 --baseurl=http://$VIRBR/pungi/$FEDORA/$ARCH/os
 EOF
     make bumpgit
     make rpms
+    rm -f $OVIRT/ovirt-host-image-pxe*rpm
     cp rpm-build/ovirt-host-image-pxe*rpm $OVIRT
     cd $OVIRT
     createrepo .
