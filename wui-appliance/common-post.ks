@@ -62,9 +62,9 @@ EOF
 chmod +x /etc/init.d/ovirt-wui-first-run
 chkconfig ovirt-wui-first-run on
 
-cat > /etc/yum.repos.d/ovirt-management.repo << \EOF
-[ovirt-management]
-name=ovirt-management
+cat > /etc/yum.repos.d/ovirt.repo << \EOF
+[ovirt]
+name=ovirt
 baseurl=http://ovirt.org/repos/ovirt/9/$basearch/
 enabled=1
 gpgcheck=0

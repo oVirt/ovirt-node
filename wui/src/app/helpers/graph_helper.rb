@@ -1,21 +1,26 @@
 module GraphHelper
 
     # generate some json for the snapshot graph
-    def snapshot_graph_json(title, snapshot, snapshot_remaining = 0)
+    def snapshot_graph_json(target, snapshots)
+        data = snapshots[:avg][target]
+        data = 10 if target == 'load' && snapshots[:avg]['load'] > 10
+        total = snapshots[:scale][target]
+        remaining = total - data
+
         graph_object = {
             :timepoints => [],
             :dataset =>
             [
                 {
-                    :name => title,
-                    :values => [snapshot],
-                    :fill => snapshot.to_f / (snapshot + snapshot_remaining).to_f > 0.75 ? 'red' : 'blue',
+                    :name => target,
+                    :values => [data],
+                    :fill => data.to_f / total.to_f > 0.75 ? 'red' : 'blue',
                     :stroke => 'lightgray',
                     :strokeWidth => 1
                 },
                 {
-                    :name => title + 'remaining',
-                    :values => [snapshot_remaining],
+                    :name => target + 'remaining',
+                    :values => [remaining],
                     :fill => 'white',
                     :stroke => 'lightgray',
                     :strokeWidth => 1 
@@ -23,12 +28,6 @@ module GraphHelper
             ]
         }
         return ActiveSupport::JSON.encode(graph_object)
-    end
-
-    # figure out a remaining value that will not skew the graph
-    def snapshot_graph_remaining(value)
-        # TODO (adjust with increasing values?, pass in a devClass?)
-        return 1024 - value
     end
 
     # generate some json for availability graph
