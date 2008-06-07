@@ -227,14 +227,18 @@ class GraphController < ApplicationController
                      :peak  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
 
 
+    # XXX DIRTYHACK hard-code nic bandwidth to 1000 to make graphs look decent
+    # until we have real hardware discovery
     requestList = []
     if @target == 'host'
         host =  Host.find(@id)
         requestList += _create_host_snapshot_requests(host.hostname)
         @snapshots[:scale]['memory'] = host.memory_in_mb
         host.nics.each{ |nic|
-            @snapshots[:scale]['netin']  += nic.bandwidth 
-            @snapshots[:scale]['netout'] += nic.bandwidth
+            @snapshots[:scale]['netin'] += 1000
+            @snapshots[:scale]['netout'] += 1000
+            # @snapshots[:scale]['netin']  += nic.bandwidth 
+            # @snapshots[:scale]['netout'] += nic.bandwidth
         }
     elsif @poolType == 'vm'
         Pool.find(@id).vms.each{ |vm|
@@ -242,8 +246,10 @@ class GraphController < ApplicationController
                 requestList += _create_host_snapshot_requests(vm.host.hostname)
                 @snapshots[:scale]['memory'] = vm.host.memory_in_mb
                 vm.host.nics.each{ |nic|
-                    @snapshots[:scale]['netin']  += nic.bandwidth
-                    @snapshots[:scale]['netout'] += nic.bandwidth
+                    @snapshots[:scale]['netin'] += 1000
+                    @snapshots[:scale]['netout'] += 1000
+                    # @snapshots[:scale]['netin']  += nic.bandwidth
+                    # @snapshots[:scale]['netout'] += nic.bandwidth
                 }
             end
         }
@@ -252,8 +258,10 @@ class GraphController < ApplicationController
             requestList += _create_host_snapshot_requests(host.hostname)
             @snapshots[:scale]['memory'] = host.memory_in_mb
             host.nics.each{ |nic|
-                @snapshots[:scale]['netin']  += nic.bandwidth
-                @snapshots[:scale]['netout'] += nic.bandwidth
+              @snapshots[:scale]['netin'] += 1000
+              @snapshots[:scale]['netout'] += 1000
+              # @snapshots[:scale]['netin']  += nic.bandwidth
+              # @snapshots[:scale]['netout'] += nic.bandwidth
             }
         }
     end
@@ -270,39 +278,39 @@ class GraphController < ApplicationController
                         if counter == DEV_KEY_AVGCOUNTERS["load"]
                             @snapshots[:avg]["load"] += value.to_i
                             @data_points[:avg]["load"] += 1
-                        elsif counter == DEV_KEY_PEAKCOUNTERS["load"]
-                            @snapshots[:peak]["load"] += value.to_i
-                            @data_points[:peak]["load"] += 1
+                        # elsif counter == DEV_KEY_PEAKCOUNTERS["load"]
+                        #    @snapshots[:peak]["load"] += value.to_i
+                        #    @data_points[:peak]["load"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["cpu"]
                         if counter == DEV_KEY_AVGCOUNTERS["cpu"]
                             @snapshots[:avg]["cpu"] += 100 - value.to_i
                             @data_points[:avg]["cpu"] += 1
-                        elsif counter == DEV_KEY_PEAKCOUNTERS["cpu"]
-                            @snapshots[:peak]["cpu"] =  100 - value.to_i
-                            @data_points[:peak]["cpu"] += 1
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["cpu"]
+                        #    @snapshots[:peak]["cpu"] =  100 - value.to_i
+                        #    @data_points[:peak]["cpu"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["netout"]
                         if counter == DEV_KEY_AVGCOUNTERS["netout"]
-                            @snapshots[:avg]["netout"] += value.to_i
+                            @snapshots[:avg]["netout"] += (value.to_i * 8 / 1024 / 1024).to_i # mbits
                             @data_points[:avg]["netout"] += 1
-                        elsif counter == DEV_KEY_PEAKCOUNTERS["netout"]
-                            @snapshots[:peak]["netout"] += value.to_i
-                            @data_points[:peak]["netout"] += 1
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["netout"]
+                        #    @snapshots[:peak]["netout"] += (value.to_i * 8 / 1024 / 1024).to_i #mbits
+                        #    @data_points[:peak]["netout"] += 1
                         elsif counter == DEV_KEY_AVGCOUNTERS["netin"]
-                            @snapshots[:avg]["netin"] += value.to_i
+                            @snapshots[:avg]["netin"] += (value.to_i * 8 / 1024 / 1024).to_i # mbits
                             @data_points[:avg]["netin"] += 1
-                        elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
-                            @snapshots[:peak]["netin"] += value.to_i
-                            @data_points[:peak]["netin"] += 1
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
+                        #    @snapshots[:peak]["netin"] += (value.to_i * 8 / 1024 / 1024).to_i # mbits
+                        #    @data_points[:peak]["netin"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["memory"]
                         if counter == DEV_KEY_AVGCOUNTERS["memory"]
                             @snapshots[:avg]["memory"] += (value.to_i / 1000000).to_i
                             @data_points[:avg]["memory"] += 1
-                        elsif counter == DEV_KEY_PEAKCOUNTERS["memory"]
-                            @snapshots[:peak]["memory"] += (value.to_i / 1000000).to_i
-                            @data_points[:peak]["memory"] += 1
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["memory"]
+                        #    @snapshots[:peak]["memory"] += (value.to_i / 1000000).to_i
+                        #    @data_points[:peak]["memory"] += 1
                         end
                     end
                 end
@@ -311,16 +319,11 @@ class GraphController < ApplicationController
             RAILS_DEFAULT_LOGGER.warn("unable to find collectd/rrd stats for " + stat.get_node?.to_s)
         end
     }
-    @snapshots.each_key { |k|
-        @snapshots[k]['load'] /= @data_points[k]['load']  if @data_points[k]['load'] != 0
-	    @snapshots[k]['cpu'] /= @data_points[k]['cpu']  if @data_points[k]['cpu'] != 0
-	    @snapshots[k]['memory'] /= @data_points[k]['memory']  if @data_points[k]['memory'] != 0
-	    @snapshots[k]['netin'] /= @data_points[k]['netin']  if @data_points[k]['netin'] != 0
-	    @snapshots[k]['netout'] /= @data_points[k]['netout']  if @data_points[k]['netout'] != 0
-    }
-    #@snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
-    #               :peak => { :overall_load => 100, :cpu => 50, :in => 12, :out => 72, :io => 100 } }
-    
+    @snapshots[:avg]['load'] /= @data_points[:avg]['load']  if @data_points[:avg]['load'] != 0
+    @snapshots[:avg]['cpu'] /= @data_points[:avg]['cpu']  if @data_points[:avg]['cpu'] != 0
+    @snapshots[:avg]['memory'] /= @data_points[:avg]['memory']  if @data_points[:avg]['memory'] != 0
+    @snapshots[:avg]['netin'] /= @data_points[:avg]['netin']  if @data_points[:avg]['netin'] != 0
+    @snapshots[:avg]['netout'] /= @data_points[:avg]['netout']  if @data_points[:avg]['netout'] != 0
   end
 
   private
