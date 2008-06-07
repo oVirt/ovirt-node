@@ -13,17 +13,11 @@
    
    <div class="summary_subtitle"><%= image_tag "icon_smry_perf.png", :style=>"vertical-align:middle;" %>&nbsp;Performance</div><br/>
    <%= render_component :controller=> 'graph', :action => 'snapshot_graph', :id => @vm_resource_pool.id, :params => { :poolType => 'vm' } %>
-
-   <%= render :partial => "/task/user_list", :locals => { :tasks => Task.working_tasks(@user) } %>
 </div>
 
 <div class="selection_detail" id="vmpool_selection">
   <div>VM pool quota details.</div>
 </div>
-
-<%- content_for :title do -%>
-<%= @vm_resource_pool.name %>
-<%- end -%>
 
 <script type="text/javascript">
          refresh_summary('vmpool_selection', 
