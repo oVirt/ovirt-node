@@ -220,10 +220,10 @@ class GraphController < ApplicationController
     @poolType = params[:poolType]
 
     @snapshots   = { :avg   => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }, # average values to be plotted on the graph
-                     :scale => { 'load' => 10, 'cpu' => 100, 'memory' => 0, 'netin' => 0, 'netout' => 0}, # values which to scale graphs against
+                     :scale => { 'load' => 10, 'cpu' => 100, 'memory' => 0, 'netin' => 1000, 'netout' => 1000}, # values which to scale graphs against
                      :peak  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
     @data_points = { :avg   => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
-                     :scale => { 'load' => 10, 'cpu' => 100, 'memory' => 0, 'netin' => 0, 'netout' => 0}, 
+                     :scale => { 'load' => 10, 'cpu' => 100, 'memory' => 0, 'netin' => 1000, 'netout' => 1000}, 
                      :peak  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
 
 

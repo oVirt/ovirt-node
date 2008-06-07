@@ -16,14 +16,14 @@ module GraphHelper
                     :values => [data],
                     :fill => data.to_f / total.to_f > 0.75 ? 'red' : 'blue',
                     :stroke => 'lightgray',
-                    :strokeWidth => 2
+                    :strokeWidth => 1
                 },
                 {
                     :name => target + 'remaining',
                     :values => [remaining],
                     :fill => 'white',
                     :stroke => 'lightgray',
-                    :strokeWidth => 2 
+                    :strokeWidth => 1 
                 }
             ]
         }
