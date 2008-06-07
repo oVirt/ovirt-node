@@ -17,6 +17,15 @@
   background: #CCCCCC;
 }
 
+.header_titlebar {
+  background: #979797;
+  float: left;
+  height: 25px;
+  margin: 40px 0 0 0;
+  padding: 8px 0 0 10px;
+  width: 220px;
+}
+
 .header_menu {
   padding: 5px 0 0 10px;
   margin: 1px;
@@ -74,7 +83,7 @@
     background: #000000 url(../images/bg_toolbarheader.jpg) repeat-x top;
 }
 #toolbar_nav li:hover {
-    background: #1E99DF;
+    background: #4B95B8;
 }
 #toolbar_nav li, #toolbar_nav li a {
     text-decoration: none;
@@ -91,23 +100,24 @@
 #toolbar_nav ul li:hover ul{
    display: block;
    z-index: 1;
+   background: #D1DDE8;
 }
 #toolbar_nav ul ul li{
    width: 200px;
-   background: #E5F1FD;
+   background: #DEE7EB;
    color: #000000;
    text-align: left;
    cursor: pointer;
 }
 #toolbar_nav ul ul li a{
    width: 200px;
-   background: #E5F1FD;
+   background: #DEE7EB;
    color: #000000;
    text-align: left;
    cursor: pointer;
 }
 #toolbar_nav ul ul li:hover a {
-    background: #1E99DF;
+    background: #D1DDE8;
 }
 
 /***  the no grid items block ***/
@@ -129,19 +139,16 @@
  *      Graphing Style
  **************************/
 /* availability graphs on hardware resource summary tab */
-#availability_graphs{ 
-   overflow: hidden; 
-   height: 100px; 
-}
-.availability_graph { float: left;}
+#availability_graphs{ }
+.availability_graph { float: left;padding: 0 0 20px 0;}
 .availability_graph_left { float: left; width: 50px;}
 .availability_graph_right { float: left; margin-top: 7px; margin-left: 30px; margin-right: 75px; min-width: 100px; color:#666666;}
 #available_cpu, #available_memory, #available_vms,
-#available_vcpu, #available_vram, #available_vm_quotas {margin-left:0;width:100px;height:100px}
-.availability_total{ font-size: 130%; padding: 40px 0 0 0; color:#000000;}
+#available_vcpu, #available_vram, #available_vm_quotas {margin-left:0;width:100px;height:70px}
+.availability_total{ font-size: 130%; padding: 10px 0 0 0; color:#000000;}
 
 /* history graphs on hardware / resource summary tab */
-#history_graphs { position: relative; height: 270px; overflow: hidden; margin-left: 0; margin-top: 0; }
+#history_graphs { position: relative; height: 245px; overflow: hidden; margin-left: 0; margin-top: 0; }
 #history_graphs_control { position: absolute; z-index: 1; height: 20px; width: 98%; border: 1px solid #CCCCCC; background: #EEEEEE; }
 .history_graphs_menu { float: left; width: 118px; }
 .history_graphs_legend { float: right; height: 20px; width: 15%; }
@@ -195,13 +202,13 @@
 }
 
 /* snapshot graphs on hardware / resource summary tab */
-#snapshot_graphs { height: 300px; padding-left: 0; }
+#snapshot_graphs { height: 180px; padding-left: 0; }
 #snapshot_graphs table { width: 98%; border-spacing: 1px; background: #CCCCCC; border-width: 0; border-style:solid;}
 #snapshot_graphs th    { background: #EEEEEE; text-align: left; padding-left: 10px;}
 #snapshot_graphs td    { padding-left: 10px; background: #FFFFFF;}
 #load_snapshot, #cpu_snapshot, #net_in_snapshot, #net_out_snapshot, #io_snapshot, #memory_snapshot {
 /*
-#snapshot_graphs { height: 300px; padding-left: 60px; }
+#snapshot_graphs { height: 180px; padding-left: 60px; }
 #snapshot_graphs table { width: 90%; border-spacing: 0;}
 #snapshot_graphs th    { background: #CCCCCC; text-align: left; padding-left: 10px; border: 1px solid #DDDDDD;}
 #snapshot_graphs td    { padding-left: 10px; border: 1px solid #DDDDDD;}
@@ -225,8 +232,8 @@
 }
 
 /* snapshot graphs on detail panes */
-.selection_detail #snapshot_graphs { height: 210px; padding-left: 0; }
-.selection_detail #snapshot_graphs table { width: 100%; }
+.selection_detail #snapshot_graphs { height: 140px; padding-left: 0; }
+.selection_detail #snapshot_graphs table { width: 98%; }
 .selection_detail #overall_load_snapshot, 
 .selection_detail #cpu_snapshot, 
 .selection_detail #net_in_snapshot, 
@@ -242,8 +249,8 @@
 }
 
 /* snapshot graphs on detail panes */
-.selection_detail #snapshot_graphs { height: 210px; padding-left: 0; }
-.selection_detail #snapshot_graphs table { width: 100%; }
+.selection_detail #snapshot_graphs { height: 140px; padding-left: 0; }
+.selection_detail #snapshot_graphs table { width: 98%; }
 .selection_detail #load_snapshot, 
 .selection_detail #memory_snapshot, 
 .selection_detail #cpu_snapshot, 

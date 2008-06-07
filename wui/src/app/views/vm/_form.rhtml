@@ -16,14 +16,14 @@
     <div class="clear_row"></div>
     <div class="clear_row"></div>
     <div style="float:left;width:150px;" >
-      <%= text_field_with_label "CPUs:", "vm", "num_vcpus_allocated",  {:style=>"width:100px;"}, {:style=>"padding-right: 50px;"} %>
-      <div class="field_title">max to create: <%=create_resources[:cpus]%> </div>
-      <div class="field_title">max to start: <%=start_resources[:cpus]%> </div>
+      <%= text_field_with_label "CPUs:", "vm", "num_vcpus_allocated",  {:style=>"width:100px; margin-bottom:2px;"}, {:style=>"padding-right: 50px;"} %>
+      <div class="field_helptext">max to create: <%=create_resources[:cpus]%> </div>
+      <div class="field_helptext">max to start: <%=start_resources[:cpus]%> </div>
     </div>
     <div style="float:left;">
-      <%= text_field_with_label "Memory:", "vm", "memory_allocated_in_mb",  {:style=>"width:100px;"}, {:afterfield=>"&nbsp;mb"} %>
-      <div class="field_title">max to create: <%=create_resources[:memory_in_mb]%> mb </div>
-      <div class="field_title">max to start: <%=start_resources[:memory_in_mb]%> mb </div>
+      <%= text_field_with_label "Memory:", "vm", "memory_allocated_in_mb",  {:style=>"width:100px; margin-bottom:2px;"}, {:afterfield=>"&nbsp;mb"} %>
+      <div class="field_helptext">max to create: <%=create_resources[:memory_in_mb]%> mb </div>
+      <div class="field_helptext">max to start: <%=start_resources[:memory_in_mb]%> mb </div>
     </div>
     <div style="clear:both;"></div>
     <div class="clear_row"></div>

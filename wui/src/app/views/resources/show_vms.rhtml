@@ -7,7 +7,7 @@
         <% @actions.each_index { |index| %>
             <li onClick="vm_actions('<%=@actions[index][1]%>')"
             <% if (index == @actions.length - 1) or @actions[index].length == 4 %>
-                style="border-bottom: 1px solid black;"
+                style="border-bottom: 1px solid #CCCCCC;"
             <% end %>
                >
                  <%= image_tag @actions[index][2]%>
@@ -76,7 +76,9 @@
                                                        :on_unhover => "load_widget_unhover" } %>
   </div>
   <div class="selection_detail" id="vms_selection">
-    <div>Select a VM above.</div>
+     <div class="selection_left">
+       <div>Select a VM above.</div>
+     </div>
   </div>
 <% else %>
   <div class="data_section">

@@ -6,7 +6,7 @@
       <a id="move_link_hidden" href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'hosts' %>" rel="facebox[.bolder]" style="display:none" ></a>
     </li>
     <% if @pool.id != HardwarePool.get_default_pool.id %>
-      <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_delete_white.png" %>&nbsp;&nbsp;Remove</a></li>
+      <li><a href="#" onClick="remove_hosts()"><%= image_tag "icon_remove.png" %>&nbsp;&nbsp;Remove</a></li>
     <% end %>
  </ul>
 </div>
@@ -67,7 +67,9 @@
                                                         :on_unhover => "load_widget_unhover" } %>
    </div>
    <div class="selection_detail" id="hosts_selection">
-       <div>Select a host above.</div>
+   	<div class="selection_left">
+	     <div>Select a host above.</div>
+        </div>
    </div>
 <% else %>
    <div class="data_section">
