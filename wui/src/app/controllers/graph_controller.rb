@@ -219,8 +219,11 @@ class GraphController < ApplicationController
     @target = params[:target]
     @poolType = params[:poolType]
 
-    @snapshots = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
-                   :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
+    @snapshots   = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
+                     :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
+    @data_points = { :avg  => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 },
+                     :peak => { 'load' => 0, 'cpu' => 0, 'netin' => 0, 'netout' => 0, 'memory' => 0 }}
+
 
     requestList = []
     if @target == 'host'
@@ -247,40 +250,55 @@ class GraphController < ApplicationController
                 if !value.nan?
                     if devClass == DEV_KEY_CLASSES["load"]
                         if counter == DEV_KEY_AVGCOUNTERS["load"]
-                            @snapshots[:avg]["load"] = value.to_i
+                            @snapshots[:avg]["load"] += value.to_i
+                            @data_points[:avg]["load"] += 1
                         elsif counter == DEV_KEY_PEAKCOUNTERS["load"]
-                            @snapshots[:peak]["load"] = value.to_i
+                            @snapshots[:peak]["load"] += value.to_i
+                            @data_points[:peak]["load"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["cpu"]
                         if counter == DEV_KEY_AVGCOUNTERS["cpu"]
-                            @snapshots[:avg]["cpu"] = value.to_i
+                            @snapshots[:avg]["cpu"] += 100 - value.to_i
+                            @data_points[:avg]["cpu"] += 1
                         elsif counter == DEV_KEY_PEAKCOUNTERS["cpu"]
-                            @snapshots[:peak]["cpu"] = value.to_i
-                        end
-                    elsif devClass == DEV_KEY_CLASSES["netin"]
-                        if counter == DEV_KEY_AVGCOUNTERS["netin"]
-                            @snapshots[:avg]["netin"] = value.to_i
-                        elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
-                            @snapshots[:peak]["netin"] = value.to_i
+                            @snapshots[:peak]["cpu"] =  100 - value.to_i
+                            @data_points[:peak]["cpu"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["netout"]
                         if counter == DEV_KEY_AVGCOUNTERS["netout"]
-                            @snapshots[:avg]["netout"] = value.to_i
+                            @snapshots[:avg]["netout"] += value.to_i
+                            @data_points[:avg]["netout"] += 1
                         elsif counter == DEV_KEY_PEAKCOUNTERS["netout"]
-                            @snapshots[:peak]["netout"] = value.to_i
+                            @snapshots[:peak]["netout"] += value.to_i
+                            @data_points[:peak]["netout"] += 1
+                        elsif counter == DEV_KEY_AVGCOUNTERS["netin"]
+                            @snapshots[:avg]["netin"] += value.to_i
+                            @data_points[:avg]["netin"] += 1
+                        elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
+                            @snapshots[:peak]["netin"] += value.to_i
+                            @data_points[:peak]["netin"] += 1
                         end
-                    #elsif devClass == DEV_KEY_AVGCOUNTERS["io"]
-                    #    if counter == DEV_KEY_AVGCOUNTERS["io"]
-                    #        @snapshots[:peak]["io"] = value.to_i
-                    #    elsif counter == _dev_key_peak_counters["io"]
-                    #        @snapshots[:peak]["io"] = value.to_i
-                    #    end
+                    elsif devClass == DEV_KEY_CLASSES["memory"]
+                        if counter == DEV_KEY_AVGCOUNTERS["memory"]
+                            @snapshots[:avg]["memory"] += (value.to_i / 1000000).to_i
+                            @data_points[:avg]["memory"] += 1
+                        elsif counter == DEV_KEY_PEAKCOUNTERS["memory"]
+                            @snapshots[:peak]["memory"] += (value.to_i / 1000000).to_i
+                            @data_points[:peak]["memory"] += 1
+                        end
                     end
                 end
             }
         else
             RAILS_DEFAULT_LOGGER.warn("unable to find collectd/rrd stats for " + stat.get_node?.to_s)
         end
+    }
+    @snapshots.each_key { |k|
+        @snapshots[k]['load'] /= @data_points[k]['load']  if @data_points[k]['load'] != 0
+	@snapshots[k]['cpu'] /= @data_points[k]['cpu']  if @data_points[k]['cpu'] != 0
+	@snapshots[k]['memory'] /= @data_points[k]['memory']  if @data_points[k]['memory'] != 0
+	@snapshots[k]['netin'] /= @data_points[k]['netin']  if @data_points[k]['netin'] != 0
+	@snapshots[k]['netout'] /= @data_points[k]['netout']  if @data_points[k]['netout'] != 0
     }
     #@snapshots = { :avg  => { :overall_load => 500, :cpu => 10, :in => 100, :out => 1024, :io => 200 },
     #               :peak => { :overall_load => 100, :cpu => 50, :in => 12, :out => 72, :io => 100 } }
@@ -293,7 +311,7 @@ class GraphController < ApplicationController
       DEV_CLASS_KEYS   = DEV_KEY_CLASSES.invert
 
       # TODO this needs fixing / completing (cpu: more than user time? disk: ?, load: correct?, nics: correct?)
-      DEV_KEY_AVGCOUNTERS = { 'cpu' => CpuCounter::User, 'memory' => MemCounter::Used, 'disk' => DiskCounter::Ops_read, 'load' => LoadCounter::Load_1min, 'netin' => NicCounter::Packets_Rx, 'netout' => NicCounter::Packets_Tx }
+      DEV_KEY_AVGCOUNTERS = { 'cpu' => CpuCounter::Idle, 'memory' => MemCounter::Used, 'disk' => DiskCounter::Ops_read, 'load' => LoadCounter::Load_1min, 'netin' => NicCounter::Octets_rx, 'netout' => NicCounter::Octets_tx }
       DEV_AVGCOUNTER_KEYS = DEV_KEY_AVGCOUNTERS.invert
 
       # TODO 
@@ -302,16 +320,11 @@ class GraphController < ApplicationController
 
       def _create_host_snapshot_requests(hostname)
         requestList = []
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['load'], 0, DEV_KEY_AVGCOUNTERS['load'], 0, 0, RRDResolution::Default) # RRDResolution::Long ?
-        #requestList << StatsRequest.new(hostname, "system", 0, "peak", ret_time, 3600, 0)
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],  0, DEV_KEY_AVGCOUNTERS['cpu'], 0, 0, RRDResolution::Default)  # TODO instance
-        #requestList << StatsRequest.new(hostname, "cpu",    0, "peak", ret_time, 3600, 0)
-        #requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],0, DEV_KEY_AVGCOUNTERS['netin'], 0, 0, RRDResolution::Default) 
-        #requestList << StatsRequest.new(hostname, "in",     0, "peak", ret_time, 3600, 0)
-        #requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netout'],0, DEV_KEY_AVGCOUNTERS['netout'], 0, 0, RRDResolution::Default) 
-        #requestList << StatsRequest.new(hostname, "out",    0, "peak", ret_time, 3600, 0)
-        #requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES["io"],0, DEV_KEY_AVGCOUNTERS["io"], 0, 0, RRDResolution::Default) 
-        #requestList << StatsRequest.new(hostname, "io",     0, "peak", ret_time, 3600, 0)
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['memory'],0, DEV_KEY_AVGCOUNTERS['memory'], 0, 3600, RRDResolution::Medium) 
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['load'], 0, DEV_KEY_AVGCOUNTERS['load'], 0, 3600, RRDResolution::Medium) # RRDResolution::Long ?
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],  0, DEV_KEY_AVGCOUNTERS['cpu'], 0, 3600, RRDResolution::Medium)  
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netout'],0, DEV_KEY_AVGCOUNTERS['netout'], 0, 3600, RRDResolution::Medium) 
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],0, DEV_KEY_AVGCOUNTERS['netin'], 0, 3600, RRDResolution::Medium) 
         return requestList
       end
 

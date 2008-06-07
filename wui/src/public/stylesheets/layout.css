@@ -30,6 +30,7 @@ textarea:focus, input:focus {
   background-color: #FFFFCC;
 }
 
+a { color:#000000; text-decoration: none;}
 
 /************************** 
     oVirt layout components 
@@ -65,6 +66,7 @@ textarea:focus, input:focus {
   background-color:#FFFFFF;
   border-right: 1px #CCCCCC solid; 
 }
+
 
 #side-toolbar{
   float:none; 
@@ -204,11 +206,12 @@ textarea:focus, input:focus {
 }
 
 .data_section {
-  overflow: hidden;
+  overflow: auto;
   position: absolute;
   top: 28px;
   bottom: 171px;
-  height: 65%;
+  right: 0px;
+  left: 0px;
 }
 
 .data_section_summary {
@@ -216,8 +219,7 @@ textarea:focus, input:focus {
   overflow: hidden;
   position: absolute;
   top: 0px;
-  bottom: 171px;
-  height: 65%;
+  bottom: 170px;
   right: 0px;
   left: 0px;
   overflow: auto;
@@ -227,6 +229,7 @@ textarea:focus, input:focus {
 		}
 		
 		.summary_subtitle {
+		  clear: both;
 		  font-size: 130%;
 		}
 
@@ -241,7 +244,7 @@ textarea:focus, input:focus {
   bottom:0px; 
   left: 0px;
   right: 0px;
-  height: 30%;
+  height: 170px;
   background: #DEE7EB;
   border-top: #CCCCCC solid 1px;
   overflow: auto;
@@ -249,9 +252,9 @@ textarea:focus, input:focus {
 
 .selection_left {
   padding: 10px 10px 10px 15px;
-  width:48%;
   height: 126px;
   float:left;
+  width: 40%;
 }
 
 .selection_title {
@@ -304,11 +307,11 @@ textarea:focus, input:focus {
 }
 
 .selection_right {
-  width:48%;
+  width:55%;
   float: right;
-   padding-top: 5px;
+   padding-top: 10px;
    /*background: #F0F0F0;*/
-   height: 148px;
+   height: 140px;
  }
  
  .selection_right_title {
@@ -397,6 +400,8 @@ textarea:focus, input:focus {
   font-size: 105%;
   /*font-weight:bold;*/
 }
+
+.field_helptext { font-size: 90%; color: #666666; }
 
 .textfield_effect {
     padding: 2px 0 0 2px;
