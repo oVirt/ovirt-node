@@ -1,4 +1,5 @@
 @core
+cronie
 policycoreutils
 chkconfig
 rootfiles
