@@ -29,32 +29,43 @@ DEP_RPMS="createrepo httpd kvm libvirt livecd-tools pungi"
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-w] [-n] [-p] [-d|-b] [-a] [-c]
+Usage: $ME [-w] [-n] [-p init|update] [-d|-b] [-a] [-c] [-v git|release|none]
   -w: update oVirt WUI RPMs
   -n: update oVirt Managed Node RPMs
-  -p: update pungi repository
+  -p: update pungi repository (init or update)
   -d: update developer appliance
   -b: update bundled appliance
   -a: updates all (WUI, Node, App), requires -d or -b
   -c: cleanup old repos (pungi and ovirt)
+  -v: update version type (git, release, none) default is git
   -h: display this help and exit
 EOF
+}
+
+bumpver() {
+    if [[ "$version_type" == "git" ]]; then
+        make bumpgit
+    elif [[ "$version_type" == "release" ]]; then
+        make bumprelease
+    fi
 }
 
 update_wui=0 update_node=0
 update_pungi=0 update_app=0
 cleanup=0
 app_type=
+version_type=git
 err=0 help=0
-while getopts wnpdbahc c; do
+while getopts wnp:dbahcv: c; do
     case $c in
         w) update_wui=1;;
         n) update_node=1;;
-        p) update_pungi=1;;
+        p) update_pungi=$OPTARG;;
         d) update_app=1; app_type="-v";;
         b) update_app=1; app_type="-b";;
         a) update_wui=1; update_node=1; update_app=1; update_pungi=1;;
         c) cleanup=1;;
+        v) version_type=$OPTARG;;
         h) help=1;;
 	    '?') err=1; warn "invalid option: \`-$OPTARG'";;
 	    :) err=1; warn "missing argument to \`-$OPTARG' option";;
@@ -64,6 +75,12 @@ done
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 test $update_app = 1 -a -z "$app_type" && usage "Need to specify -d or -b"
+test "$update_pungi" != 0 -a "$update_pungi" != "init" \
+    -a "$update_pungi" != "update" \
+    && usage "-p must provide either init or update argument"
+test "$version_type" != "git" -a "$version_type" != "release" \
+    -a "$version_type" != "none" \
+    && usage "version type must be git, release or none"
 
 if [ $update_node = 1 -o $update_app = 1 ]; then
     test $( id -u ) -ne 0 && die "Node or Application Update must run as root"
@@ -87,11 +104,19 @@ if [ $cleanup = 1 ]; then
     rm -rf $OVIRT/*
 fi
 
+# If doing either a node or app build, make sure http is running
+if [ $update_app = 1 -o $update_node = 1 -o $update_pungi != 0 ]; then
+    lokkit --service http
+    service httpd status > /dev/null 2>&1 || service httpd start > /dev/null 2>&1
+    service libvirtd status > /dev/null 2>&1 || service libvirtd start > /dev/null 2>&1
+    service libvirtd reload
+fi
+
 # build ovirt-wui RPM
 if [ $update_wui = 1 ]; then
     cd $BASE/wui
     rm -rf rpm-build
-    make bumpgit
+    bumpver
     make rpms
     rm -f $OVIRT/ovirt-wui*rpm
     cp rpm-build/ovirt-wui*rpm $OVIRT
@@ -100,7 +125,13 @@ if [ $update_wui = 1 ]; then
 fi
 
 # build Fedora mirror for oVirt
-if [ $update_pungi = 1 ]; then
+if [ $update_pungi != 0 ]; then
+    if [[ "$update_pungi" == "init" ]]; then
+        pungi_flags="-GCB"
+    elif [[ "$update_pungi" == "update" ]]; then
+        pungi_flags="-GC"
+    fi
+
     cat > $PUNGIKS << EOF
 repo --name=f$FEDORA --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$FEDORA&arch=\$basearch
 repo --name=f$FEDORA-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$FEDORA&arch=\$basearch
@@ -113,29 +144,20 @@ EOF
     echo "anaconda-runtime" >> $PUNGIKS
     echo "%end" >> $PUNGIKS
     cd $PUNGI
-    pungi --ver=$FEDORA -GCB --nosource  -c $PUNGIKS --force
+    pungi --ver=$FEDORA $pungi_flags --nosource  -c $PUNGIKS --force
     restorecon -r .
-fi
-
-# If doing either a node or app build, get the default
-# network ip address
-if [ $update_app = 1 -o $update_node = 1 ]; then
-    VIRBR=$(virsh net-dumpxml default | grep "<ip address=" | sed "s/.*ip address='\(.*\)' .*/\1/")
-    test -z $VIRBR && die "Could not get ip address of default network for app"
 fi
 
 # build oVirt host image
 # NOTE: livecd-tools must run as root
 if [ $update_node = 1 ]; then
-    lokkit --service http
-    service libvirtd reload
     cd $BASE/ovirt-host-creator
     rm -rf rpm-build
     cat > repos.ks << EOF
-repo --name=f9 --baseurl=http://$VIRBR/pungi/$FEDORA/$ARCH/os
+repo --name=f9 --baseurl=http://localhost/pungi/$FEDORA/$ARCH/os
 
 EOF
-    make bumpgit
+    bumpver
     make rpms
     rm -f $OVIRT/ovirt-host-image-pxe*rpm
     cp rpm-build/ovirt-host-image-pxe*rpm $OVIRT
@@ -146,6 +168,10 @@ fi
 # build oVirt admin appliance
 # NOTE: create-wui-appliance.sh must be run as root
 if [ $update_app == 1 ]; then
+    # FIXME: This can go away once we have livecd tools building the appliances
+    VIRBR=$(virsh net-dumpxml default | grep "<ip address=" | sed "s/.*ip address='\(.*\)' .*/\1/")
+    test -z $VIRBR && die "Could not get ip address of default network for app"
+
     cd $BASE/wui-appliance
     make clean
     cat > repos-x86_64.ks << EOF
