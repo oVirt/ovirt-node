@@ -324,7 +324,7 @@ class RRDResolution
    RRDResolution.add_item :Default, 10    # Ten secs
    RRDResolution.add_item :Short, 500     # 500 secs ( 8minute, 20 sec)
    RRDResolution.add_item :Medium, 2230
-   RRDResolution.add_item :Long, 26500
+   RRDResolution.add_item :Long, 26350
 end
 
        
