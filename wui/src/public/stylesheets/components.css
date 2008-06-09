@@ -214,7 +214,7 @@
 #snapshot_graphs td    { padding-left: 10px; border: 1px solid #DDDDDD;}
 #load_snapshot, #cpu_snapshot, #net_in_snapshot, #net_out_snapshot, #io_snapshot, #memory_snapshot {
 */
-  width: 350px; height: 20px; float: left;
+  width: 350px; height: 10px; float: left;
 }
 .snapshot_graph_text {
    float: left;
@@ -225,27 +225,10 @@
     float: left;
 }
 .snapshot_graph_arrow{
-  width: 350px; height: 20px; float: left;
+  width: 350px; height: 6px; float: left;
 }
 .snapshot_graph{
   float: left;
-}
-
-/* snapshot graphs on detail panes */
-.selection_detail #snapshot_graphs { height: 140px; padding-left: 0; }
-.selection_detail #snapshot_graphs table { width: 98%; }
-.selection_detail #overall_load_snapshot, 
-.selection_detail #cpu_snapshot, 
-.selection_detail #net_in_snapshot, 
-.selection_detail #net_out_snapshot, 
-.selection_detail #io_snapshot { height: 5px; width: 215px; }
-.selection_detail .snapshot_graph_arrow{ height: 15px; }
-.selection_detail .snapshot_graph_text { padding-top: 0; }
-.selection_detail .snapshot_graph_container{ width: 85%; }
-.selection_detail .snapshot_graph{ padding-left: 23px; }
-
-/* load graphs in flexigrid */
-.load_graph {
 }
 
 /* snapshot graphs on detail panes */
@@ -257,7 +240,7 @@
 .selection_detail #net_in_snapshot, 
 .selection_detail #net_out_snapshot, 
 .selection_detail #io_snapshot { height: 5px; width: 215px; }
-.selection_detail .snapshot_graph_arrow{ height: 15px; }
+.selection_detail .snapshot_graph_arrow{ height: 6px; }
 .selection_detail .snapshot_graph_text { padding-top: 0; }
 .selection_detail .snapshot_graph_container{ width: 85%; }
 .selection_detail .snapshot_graph{ padding-left: 23px; }
