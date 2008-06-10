@@ -63,7 +63,7 @@ while getopts wnp:dbahcv: c; do
         p) update_pungi=$OPTARG;;
         d) update_app=1; app_type="-v";;
         b) update_app=1; app_type="-b";;
-        a) update_wui=1; update_node=1; update_app=1; update_pungi=1;;
+        a) update_wui=1; update_node=1; update_app=1; update_pungi=init;;
         c) cleanup=1;;
         v) version_type=$OPTARG;;
         h) help=1;;
@@ -100,6 +100,7 @@ mkdir -p $OVIRT
 
 # cleanup repository folders
 if [ $cleanup = 1 ]; then
+    update_pungi=init
     rm -rf $PUNGI/*
     rm -rf $OVIRT/*
 fi
