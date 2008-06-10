@@ -65,8 +65,8 @@ class GraphController < ApplicationController
   def history_graphs
     @id = params[:id]
     @poolType = params[:poolType]
-    @peak_history = { :color => 'red',  :values => [0,0,0,0,0,0,0], :dataPoints => [0,0,0,0,0,0,0] }
-    @avg_history  = { :color => 'blue', :values => [0,0,0,0,0,0,0], :dataPoints => [0,0,0,0,0,0,0] }
+    @peak_history = { :color => 'red',  :values => [], :dataPoints => [] }
+    @avg_history  = { :color => 'blue', :values => [], :dataPoints => [] }
   end
 
   # retrieves data for history graphs
@@ -79,15 +79,6 @@ class GraphController < ApplicationController
     peakcounter = nil
     @pool = Pool.find(@id)
     
-    today = Time.now
-    firstday = today - 6
-    dates = []
-    0.upto(6){ |x|  # TODO get # of days from wui
-       dte = today - (x * 86400) # num of secs per day
-       dates.push ( Date::ABBR_MONTHNAMES[dte.month] + ' ' + dte.day.to_s )
-    }
-    dates.reverse! # want in ascending order
-
     hosts = @pool.hosts
     # temporary workaround for vm resource history 
     # graph until we have a more reqs / long term solution
@@ -104,31 +95,41 @@ class GraphController < ApplicationController
     @pool.hosts.each { |host|
         if target == "cpu"
             0.upto(host.num_cpus - 1){ |x|
-                requestList.push ( StatsRequest.new (host.hostname, devclass, x, avgcounter, 0, 0, RRDResolution::Long) ) #, # one weeks worth of data
+                requestList.push ( StatsRequest.new (host.hostname, devclass, x, avgcounter, 0, 604800, RRDResolution::Medium) ) #, # one weeks worth of data
                                   # StatsRequest.new (@pool.id.to_s, devclass, x, peakcounter, firstday.to_i - 3600, 604800, 3600))
             }
         else
-            requestList.push ( StatsRequest.new (host.hostname, devclass, 0, avgcounter, 0, 0, RRDResolution::Long) ) #, 
+            requestList.push ( StatsRequest.new (host.hostname, devclass, 0, avgcounter, 0, 604800, RRDResolution::Medium) ) #, 
                            # StatsRequest.new (@pool.id.to_s, devclass, 0, peakcounter, firstday.to_i - 3600, 604800, 3600))
         end
     }
 
+    times = []
     statsList = getStatsData?( requestList )
     statsList.each { |stat|
-        counter  = stat.get_counter?
         if stat.get_status? == StatsStatus::SUCCESS
-            stat.get_data?.each{ |data|
-                timestamp = data.get_timestamp?
-                valueindex = ((timestamp.to_i - firstday.to_i) / 86400).to_i  # 86400 secs per day
+            dat = stat.get_data?
+            dat.each{ |data|
                 value    = data.get_value?
-                if !value.nan?
-                    if counter == avgcounter
-                        @avg_history[:values][valueindex] += value.to_i
-                        @avg_history[:dataPoints][valueindex] += 1
-                    elsif counter == peakcounter
-                        @peak_history[:values][valueindex] += value.to_i
-                        @peak_history[:dataPoints][valueindex] += 1
-                    end
+                value = 0 if value.nan?
+                counter  = stat.get_counter?
+                valueindex = ((data.get_timestamp?.to_i - dat[0].get_timestamp?.to_i) / 2230).to_i  # 86400 secs per day / 40 intervals per day = 2160 secs per intervals
+                times.size.upto(valueindex) { |x|
+                    time = Time.at(dat[0].get_timestamp?.to_i + valueindex * 2230)
+                    times.push Date::ABBR_MONTHNAMES[time.month] + ' ' + time.day.to_s 
+                }
+                @avg_history[:values].size.upto(valueindex)  {  |x|  
+                    @avg_history[:values].push 0 
+                    @avg_history[:dataPoints].push 0 
+                    @peak_history[:values].push 0 
+                    @peak_history[:dataPoints].push 0 
+                }
+                if counter == avgcounter
+                    @avg_history[:values][valueindex] += value.to_i
+                    @avg_history[:dataPoints][valueindex] += 1
+                elsif counter == peakcounter
+                    @peak_history[:values][valueindex] += value.to_i
+                    @peak_history[:dataPoints][valueindex] += 1
                 end
             }
         else
@@ -145,7 +146,7 @@ class GraphController < ApplicationController
     }
 
     graph_object = {
-       :timepoints => dates,
+       :timepoints => times,
        :dataset => 
         [
             {
@@ -268,12 +269,12 @@ class GraphController < ApplicationController
     
     statsList = getStatsData?( requestList )
     statsList.each { |stat|
-        devClass = stat.get_devClass?
-        counter  = stat.get_counter?
         if stat.get_status? == StatsStatus::SUCCESS
             stat.get_data?.each{ |data|
                 value = data.get_value?
                 if !value.nan?
+                    devClass = stat.get_devClass?
+                    counter  = stat.get_counter?
                     if devClass == DEV_KEY_CLASSES["load"]
                         if counter == DEV_KEY_AVGCOUNTERS["load"]
                             @snapshots[:avg]["load"] += value.to_i
@@ -343,7 +344,7 @@ class GraphController < ApplicationController
         requestList = []
         requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['memory'],0, DEV_KEY_AVGCOUNTERS['memory'], 0, 3600, RRDResolution::Medium) 
         requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['load'], 0, DEV_KEY_AVGCOUNTERS['load'], 0, 3600, RRDResolution::Medium) # RRDResolution::Long ?
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],  0, DEV_KEY_AVGCOUNTERS['cpu'], 0, 3600, RRDResolution::Medium)  
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],  0, DEV_KEY_AVGCOUNTERS['cpu'], 0, 3600, RRDResolution::Medium)   # TODO more than 1 cpu
         requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netout'],0, DEV_KEY_AVGCOUNTERS['netout'], 0, 3600, RRDResolution::Medium) 
         requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],0, DEV_KEY_AVGCOUNTERS['netin'], 0, 3600, RRDResolution::Medium) 
         return requestList
