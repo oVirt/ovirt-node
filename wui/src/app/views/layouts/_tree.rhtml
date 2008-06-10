@@ -14,6 +14,14 @@
             hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
             resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
 	});
+        var tree_reload = {
+            url: "<%=  url_for :controller =>'/tree', :action => 'fetch_json' %>",
+            hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
+            resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>"
+        }
+        $('#test-tree').everyTime(10000,function(){
+          load(tree_reload, {}, this, this);
+        })
     });
 </script>
 

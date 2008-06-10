@@ -3,16 +3,18 @@
   $.fn.ovirt_treeview = function(settings) {
     var container = this;    
     settings.current_pool_id!=""?settings.params={current_id:settings.current_pool_id}:settings.params=null;
-    load(settings, settings.params, this, container); 
-    $(this).everyTime(10000,function(){
-      load(settings, settings.params, this, container);
-    })
-    
+    load(settings, settings.params, this, container);     
     return proxied.call(this, $.extend({}, settings, {
             toggle: function() {}
     }));
   }
-  function load(settings, params, child, container) {    
+    
+})(jQuery);
+
+var selectedNodes = [];
+var currentNode;
+
+function load(settings, params, child, container) {
         $.getJSON(settings.url, params, function(response) { //{id: root}            
 		function createNode(parent) {                     
                         if (this.type=="HardwarePool") {
@@ -72,11 +74,8 @@
                     $('li#' + currentNode + ' > span').attr('class', 'current_' + nodeType);
                 }               
     });
-  }      
-})(jQuery);
+  }    
 
-var selectedNodes = [];
-var currentNode;
 $('#test-tree li.collapsable').livequery(
     function(){
         if($.inArray(this.id,selectedNodes) == -1){

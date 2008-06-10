@@ -35,15 +35,15 @@
   <%= javascript_include_tag "ovirt.js" -%>
     <script type="text/javascript">
       $(document).ready(function(){         
-        $("#tree").treeview({
+        //$("#tree").treeview({
             //animated: "normal",
-            current_pool_id:  <%if @current_pool_id == nil%>""<%else%><%=@current_pool_id%><%end%>,
-            url: "<%=  url_for :controller =>'/hardware', :action => 'json_view_tree' %>",
-            current: "current",
-            hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
-            resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>",
-            action_type: "hyperlink"
-	    })
+            //current_pool_id:  <%if @current_pool_id == nil%>""<%else%><%=@current_pool_id%><%end%>,
+          //  url: "<%=  url_for :controller =>'/hardware', :action => 'json_view_tree' %>",
+          //  current: "current",
+          //  hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
+          //  resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>",
+          //  action_type: "hyperlink"
+	  //  })
             $('a[rel*=facebox]').livequery(function(){$(this).facebox();},function(){});
             $('#side a').livequery(function(){
                 $(this).bind('click', function(){ 
