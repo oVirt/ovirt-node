@@ -10,7 +10,7 @@ class GraphController < ApplicationController
 
     # TODO: make this configurable
     aggregate_subpools = false
-    if ['cpu', 'memory'].include? (@target)
+    if ['cpu', 'memory'].include?(@target)
       pool = HardwarePool.find(@id, :include => :hosts)
       if (aggregate_subpools)
         pools = pool.full_set({:include => :hosts, :conditions => "type='HardwarePool'"})
@@ -28,7 +28,7 @@ class GraphController < ApplicationController
         used= vmpools.inject(0){ |sum, pool| sum+pool.allocated_resources[:current][:memory_in_mb] }
         total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_memory_in_mb }
       end
-    elsif ['vcpu', 'vram'].include? (@target)
+    elsif ['vcpu', 'vram'].include?(@target)
       pool = VmResourcePool.find(@id)
       pools = aggregate_subpools ? pool.full_set({:include => :hosts}) : [pool]
       if @target == 'vcpu'
@@ -89,11 +89,11 @@ class GraphController < ApplicationController
     @pool.hosts.each { |host|
         if target == "cpu"
             0.upto(host.num_cpus - 1){ |x|
-                requestList.push ( StatsRequest.new (host.hostname, devclass, x, avgcounter, 0, 604800, RRDResolution::Medium) ) #, # one weeks worth of data
+                requestList.push( StatsRequest.new(host.hostname, devclass, x, avgcounter, 0, 604800, RRDResolution::Medium) ) #, # one weeks worth of data
                                   # StatsRequest.new (@pool.id.to_s, devclass, x, peakcounter, firstday.to_i - 3600, 604800, 3600))
             }
         else
-            requestList.push ( StatsRequest.new (host.hostname, devclass, 0, avgcounter, 0, 604800, RRDResolution::Medium) ) #, 
+            requestList.push( StatsRequest.new(host.hostname, devclass, 0, avgcounter, 0, 604800, RRDResolution::Medium) ) #, 
                            # StatsRequest.new (@pool.id.to_s, devclass, 0, peakcounter, firstday.to_i - 3600, 604800, 3600))
         end
     }
@@ -131,16 +131,35 @@ class GraphController < ApplicationController
         end
     }
 
+    total_peak = 200 # TODO set to 0
+
     # avgerage out history for each day
     0.upto(@avg_history[:values].size - 1){ |x|
         (@avg_history[:values][x] /= @avg_history[:dataPoints][x]) if (@avg_history[:dataPoints][x] != 0)
+        total_peak = @avg_history[:values][x] if @avg_history[:values][x] > total_peak # TODO move below, change to peak
     }
     0.upto(@peak_history[:values].size - 1){ |x|
         (@peak_history[:values][x] /= @peak_history[:dataPoints][x]) if (@peak_history[:dataPoints][x] != 0)
     }
 
+    scale = []
+    if target == "cpu"
+        -5.upto(105){ |x|
+            scale.push x.to_s if x % 5 == 0
+        }
+    elsif target == "memory"
+        (@pool.hosts.total_memory / 262144).times { |x| # (1048576 kb / gb) / 4
+            scale.push((x * 262144).to_s)
+        }
+    elsif target == "load"
+        0.upto(total_peak){|x|
+            scale.push x.to_s if x % 5 == 0
+        }
+    end
+
     graph_object = {
        :timepoints => times,
+       :scale => scale,
        :dataset => 
         [
             {

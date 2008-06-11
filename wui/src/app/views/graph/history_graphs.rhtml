@@ -26,8 +26,8 @@
    </div>
   </div>
   <div id="history_graphs_graphs">
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'cpu_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :escape => false, :controller => 'graph', :action => 'history_graph_data', :id => @id, :params => { :target => 'cpu', :poolType => @poolType } ) } %></div>
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'memory_history', :chartType => 'line', :yGridLines => 'lightgrey', :url => (url_for :escape => false, :controller => 'graph', :action => 'history_graph_data', :id => @id, :params => { :target => 'memory', :poolType => @poolType }  ) } %></div>
-    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'load_history',  :chartType => 'line', :yAxisLine => 'lightgrey', :yGridLines => 'lightgrey', :url => (url_for :escape => false, :controller => 'graph', :action => 'history_graph_data', :id => @id, :params => { :target => 'load', :poolType => @poolType } ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'cpu_history',    :chartType => 'line', :yGridLines => 'lightgrey', :xGridLines => 'lightgrey', :ticksY => 2, :scaleY => 23, :url => (url_for :escape => false, :controller => 'graph', :action => 'history_graph_data', :id => @id, :params => { :target => 'cpu',    :poolType => @poolType } ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'memory_history', :chartType => 'line', :yGridLines => 'lightgrey', :xGridLines => 'lightgrey', :ticksY => 3, :scaleY => 35, :url => (url_for :escape => false, :controller => 'graph', :action => 'history_graph_data', :id => @id, :params => { :target => 'memory', :poolType => @poolType } ) } %></div>
+    <div class="history_graph" ><%= render :partial => '/layouts/graph', :locals => { :div_id => 'load_history',   :chartType => 'line', :yGridLines => 'lightgrey', :xGridLines => 'lightgrey', :ticksY => 2, :scaleY => 23, :url => (url_for :escape => false, :controller => 'graph', :action => 'history_graph_data', :id => @id, :params => { :target => 'load',   :poolType => @poolType } ) } %></div>
   </div>
 </div>
