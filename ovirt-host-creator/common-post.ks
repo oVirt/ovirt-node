@@ -481,17 +481,17 @@ EOF
 # here, remove a bunch of files we don't need that are just eating up space.
 # it breaks rpm slightly, but it's not too bad
 
-# FIXME: ug, hard-coded paths.  This is going to break if we change to F-9
-# or upgrade certain packages.  Not quite sure how to handle it better
-
 echo "Removing excess RPMs"
+
+# kernel pulls in mkinitrd which pulls in isomd5sum which pulls in python.
+# However, this is just an install-time dependency for kernel; we can remove
+# it afterwards, which we do here
+rpm -e qemu kpartx mkinitrd isomd5sum dmraid python python-libs
+
 # Sigh.  ntp has a silly dependency on perl because of auxiliary scripts which
 # we don't need to use.  Forcibly remove it here
-rpm -e --nodeps perl perl-libs
-
-# another crappy dependency; rrdtool pulls in dejavu-lgc-fonts for some reason
-# remove it here
-rpm -e --nodeps dejavu-lgc-fonts
+rpm -e --nodeps perl perl-libs perl-Module-Pluggable perl-version \
+    perl-Pod-Simple perl-Pod-Escapes
 
 RM="rm -rf"
 
@@ -522,25 +522,29 @@ $RM /usr/bin/pango*
 echo "Removing excess kernel modules"
 MODULES="/lib/modules/*/kernel"
 
-$RM $MODULES/sound
+# the following are lists of kernel modules we are pretty sure we won't need;
+# note that these can be single files or whole directories.  They are specified
+# starting at $MODULES above; so if you want to remove the NLS stuff from the
+# fs subdir, your mods entry would be "fs/nls"
+fs_mods="fs/nls fs/9p fs/affs fs/autofs fs/autofs4 fs/befs fs/bfs fs/cifs \
+       fs/coda fs/cramfs fs/dlm fs/ecryptfs fs/efs fs/exportfs fs/ext4 \
+       fs/freevxfs fs/fuse fs/gfs2 fs/hfs fs/hfsplus fs/jbd fs/jbd2 fs/jffs \
+       fs/jffs2 fs/jfs fs/minix fs/ncpfs fs/ocfs2 fs/qnx4 fs/reiserfs \
+       fs/romfs fs/sysv fs/udf fs/ufs fs/xfs"
 
-fs_mods="9p affs autofs autofs4 befs bfs cifs coda cramfs dlm \
-         ecryptfs efs exportfs freevxfs fuse gfs2 hfs hfsplus jbd jbd2 \
-         jffs jfs minix ncpfs ocfs2 qnx4 reiserfs romfs sysv udf ufs xfs"
-for dir in $fs_mods ; do
-   $RM $MODULES/fs/$dir
-done
+net_mods="net/802 net/8021q net/9p net/appletalk net/atm net/ax25 \
+       net/bluetooth net/dccp net/decnet net/ieee80211 net/ipx net/irda \
+       net/mac80211 net/netrom net/rfkill net/rose net/sched net/tipc \
+       net/wanrouter net/wireless drivers/auxdisplay drivers/net/appletalk \
+       drivers/net/hamradio drivers/net/pcmcia drivers/net/tokenring \
+       drivers/net/wireless drivers/net/irda drivers/atm drivers/usb/atm"
 
-net_mods="802 8021q 9p appletalk atm ax25 bluetooth dccp decnet \
-          ieee80211 ipx irda mac80211 netrom rfkill rose sched \
-          tipc wanrouter wireless"
-for dir in $net_mods ; do
-   $RM $MODULES/net/$dir
-done
+misc_mods="drivers/bluetooth drivers/firewire drivers/i2c drivers/isdn \
+       drivers/media drivers/misc drivers/leds drivers/mtd drivers/w1 sound \
+       drivers/input drivers/pcmcia drivers/scsi/pcmcia"
 
-driver_mods="bluetooth firewire i2c isdn media"
-for dir in $driver_mods ; do
-   $RM $MODULES/drivers/$dir
+for mods in $fs_mods $net_mods $misc_mods ; do
+    $RM $MODULES/$mods
 done
 
 echo "Finished Kickstart Post"
