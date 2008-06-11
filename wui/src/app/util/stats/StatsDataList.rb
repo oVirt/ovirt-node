@@ -20,7 +20,7 @@
 
 #define class StatsData  List
 class StatsDataList
-  def initialize(node,devClass,instance, counter, status)
+  def initialize(node,devClass,instance, counter, status, function)
     # Instance variables  
     @node = node
     @devClass = devClass
@@ -28,6 +28,7 @@ class StatsDataList
     @counter = counter
     @data=[]
     @status = status
+    @function = function
   end  
   
   def get_node?()  
@@ -52,6 +53,10 @@ class StatsDataList
   
   def get_status?()  
     return @status
+  end  
+  
+  def get_function?()  
+    return @function
   end  
   
   def append_data(incoming)  

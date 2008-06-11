@@ -24,7 +24,7 @@ require 'util/stats/StatsData'
 require 'util/stats/StatsDataList'
 require 'util/stats/StatsRequest'
 
-def fetchData?(node, devClass, instance, counter, startTime, duration, interval)
+def fetchData?(node, devClass, instance, counter, startTime, duration, interval, function)
 
    if (interval == 0)
       interval = RRDResolution::Default
@@ -82,12 +82,22 @@ def fetchData?(node, devClass, instance, counter, startTime, duration, interval)
        localStatus = StatsStatus::E_UNKNOWN
    end
    
-   returnList = StatsDataList.new(node,devClass,instance, counter, localStatus)
+
+    case function
+       when DataFunction::Peak
+          myFunction="MAX"
+       when DataFunction::Min
+          myFunction="MIN"
+       else
+          myFunction="AVERAGE"
+       end
+
+   returnList = StatsDataList.new(node,devClass,instance, counter, localStatus, function)
    
    # So if the path is bad, no need to continue, it will just thrown an error, just return
 
    if ( localStatus == StatsStatus::SUCCESS )
-      (fstart, fend, names, data, interval) = RRD.fetch(rrd, "--start", start.to_s, "--end", endTime.to_s, "AVERAGE", "-r", interval.to_s)
+      (fstart, fend, names, data, interval) = RRD.fetch(rrd, "--start", start.to_s, "--end", endTime.to_s, myFunction, "-r", interval.to_s)
       i = 0 
       # For some reason, we get an extra datapoint at the end.  Just chop it off now...
       data.delete_at(-1)
@@ -112,7 +122,7 @@ def  getStatsData?(statRequestList)
     statRequestList.each do |request|
        node = request.get_node?
        counter = request.get_counter?
-          tmpList =fetchData?(request.get_node?, request.get_devClass?,request.get_instance?, request.get_counter?,request.get_starttime?, request.get_duration?,request.get_precision?)
+          tmpList =fetchData?(request.get_node?, request.get_devClass?,request.get_instance?, request.get_counter?,request.get_starttime?, request.get_duration?,request.get_precision?, request.get_function?)
  
        #  Now copy the array returned into the main array
        myList << tmpList

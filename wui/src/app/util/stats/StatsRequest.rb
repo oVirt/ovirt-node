@@ -25,7 +25,7 @@ require 'util/stats/StatsTypes'
 
 #define class StatsRequest  
 class StatsRequest  
-  def initialize(node, devClass, instance, counter, starttime, duration, precision)  
+  def initialize(node, devClass, instance, counter, starttime, duration, precision, function=0)  
     # Instance variables  
     @node = node
     @devClass = devClass
@@ -34,6 +34,7 @@ class StatsRequest
     @starttime = starttime
     @duration = duration
     @precision = precision
+    @function = function
   end  
   
   def get_node?()  
@@ -62,5 +63,9 @@ class StatsRequest
   
   def get_precision?()  
     return @precision
+  end  
+  
+  def get_function?()  
+    return @function
   end  
 end  

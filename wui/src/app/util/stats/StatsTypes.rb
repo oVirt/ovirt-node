@@ -350,3 +350,28 @@ class StatsStatus
    StatsStatus.add_item :E_UNKNOWN, 99
 
 end
+ 
+#
+#  A class to handle the data type, 
+#
+class DataFunction
+   def DataFunction.add_item(key,value)
+      @hash ||= {}
+      @hash[key]=value
+   end
+
+   def DataFunction.const_missing(key)
+      @hash[key]
+   end
+
+   def DataFunction.each
+      @hash.each {|key,value| yield(key,value)}
+   end
+
+   # Set up the resolutions for our rrd
+   DataFunction.add_item :Average,0
+   DataFunction.add_item :Peak,1
+   DataFunction.add_item :Min,2
+   DataFunction.add_item :RollingAverage,3
+end
+

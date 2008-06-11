@@ -25,8 +25,8 @@ class GraphController < ApplicationController
         total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_cpus }
       elsif @target == 'memory'
         @label = "MB of Memory"
-        used= vmpools.inject(0){ |sum, pool| sum+pool.allocated_resources[:current][:memory_in_mb] }
-        total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_memory_in_mb }
+        used= vmpools.inject(0){ |sum, pool| sum+pool.allocated_resources[:current][:memory] }
+        total= pools.inject(0){ |sum, pool| sum+pool.hosts.total_memory }
       end
     elsif ['vcpu', 'vram'].include?(@target)
       pool = VmResourcePool.find(@id)
@@ -36,7 +36,7 @@ class GraphController < ApplicationController
         resource_key = :cpus
       elsif @target == 'vram'
         @label = "MB of VMemory"
-        resource_key = :memory_in_mb
+        resource_key = :memory
       end
       unlimited = false
       total=0
@@ -50,6 +50,12 @@ class GraphController < ApplicationController
         end
       end
       total = 0 if unlimited
+    end
+
+    # bit of a hack to convert memory from kb to mb
+    if @target == 'memory' || @target == 'vram'
+        used  /= 1024
+        total /= 1024
     end
 
     @availability_graph_data = { 'Used' => used, 'Total' => total, 'Available' => total - used}
@@ -69,7 +75,8 @@ class GraphController < ApplicationController
     target = params[:target]
     poolType = params[:poolType]
     devclass = DEV_KEY_CLASSES[target]
-    counter  = DEV_KEY_COUNTERS[target]
+    avgcounter  = DEV_KEY_AVGCOUNTERS[target]
+    peakcounter = nil
     @pool = Pool.find(@id)
     
     hosts = @pool.hosts
@@ -88,12 +95,14 @@ class GraphController < ApplicationController
     @pool.hosts.each { |host|
         if target == "cpu"
             0.upto(host.num_cpus - 1){ |x|
-                requestList.push( StatsRequest.new(host.hostname, devclass, x, counter, 0, 604800, RRDResolution::Medium, DataFunction::Average), # one weeks worth of data
-                                  StatsRequest.new(host.hostname, devclass, x, counter, 0, 604800, RRDResolution::Medium, DataFunction::Peak))
+                requestList.push( StatsRequest.new(host.hostname, devclass, x, avgcounter, 0, 604800, RRDResolution::Medium, DataFunction::Average) ) #, # one weeks worth of data
+                requestList.push( StatsRequest.new(host.hostname, devclass, x, avgcounter, 0, 604800, RRDResolution::Medium, DataFunction::Peak) ) #, # one weeks worth of data
+                                  # StatsRequest.new (@pool.id.to_s, devclass, x, peakcounter, firstday.to_i - 3600, 604800, 3600))
             }
         else
-            requestList.push( StatsRequest.new(host.hostname, devclass, 0, counter, 0, 604800, RRDResolution::Medium, DataFunction::Average), 
-                              StatsRequest.new(host.hostname, devclass, 0, counter, 0, 604800, RRDResolution::Medium, DataFunction::Peak))
+            requestList.push( StatsRequest.new(host.hostname, devclass, 0, avgcounter, 0, 604800, RRDResolution::Medium, DataFunction::Average) ) #, 
+            requestList.push( StatsRequest.new(host.hostname, devclass, 0, avgcounter, 0, 604800, RRDResolution::Medium, DataFunction::Peak) ) #, 
+                           # StatsRequest.new (@pool.id.to_s, devclass, 0, peakcounter, firstday.to_i - 3600, 604800, 3600))
         end
     }
 
@@ -101,9 +110,9 @@ class GraphController < ApplicationController
     statsList = getStatsData?( requestList )
     statsList.each { |stat|
         if stat.get_status? == StatsStatus::SUCCESS
-            dat = stat.get_data?
+            myfunc = stat.get_function?
             counter  = stat.get_counter?
-            function = stat.get_function?
+            dat = stat.get_data?
             dat.each{ |data|
                 value    = data.get_value?
                 value = 0 if value.nan?
@@ -118,10 +127,12 @@ class GraphController < ApplicationController
                     @peak_history[:values].push 0 
                     @peak_history[:dataPoints].push 0 
                 }
-                if function == DataFunction::Average
+#                if counter == avgcounter
+                if myfunc == DataFunction::Average
                     @avg_history[:values][valueindex] += value.to_i
                     @avg_history[:dataPoints][valueindex] += 1
-                elsif function == DataFunction::Peak
+#                elsif counter == peakcounter
+                elsif myfunc == DataFunction::Peak
                     @peak_history[:values][valueindex] += value.to_i
                     @peak_history[:dataPoints][valueindex] += 1
                 end
@@ -131,15 +142,15 @@ class GraphController < ApplicationController
         end
     }
 
-    total_peak = 0
+    total_peak = 200 # TODO set to 0
 
     # avgerage out history for each day
     0.upto(@avg_history[:values].size - 1){ |x|
         (@avg_history[:values][x] /= @avg_history[:dataPoints][x]) if (@avg_history[:dataPoints][x] != 0)
+        total_peak = @avg_history[:values][x] if @avg_history[:values][x] > total_peak # TODO move below, change to peak
     }
     0.upto(@peak_history[:values].size - 1){ |x|
         (@peak_history[:values][x] /= @peak_history[:dataPoints][x]) if (@peak_history[:dataPoints][x] != 0)
-        total_peak = @peak_history[:values][x] if @peak_history[:values][x] > total_peak 
     }
 
     scale = []
@@ -148,10 +159,8 @@ class GraphController < ApplicationController
             scale.push x.to_s if x % 5 == 0
         }
     elsif target == "memory"
-        increments = @pool.hosts.total_memory / 30
-        scale.push 0.to_s
-        1.upto(30) { |x| 
-            scale.push((increments * x / 1024).to_s) # divide by 1024 to convert to MB
+        (@pool.hosts.total_memory / 262144).times { |x| # (1048576 kb / gb) / 4
+            scale.push((x * 262144).to_s)
         }
     elsif target == "load"
         0.upto(total_peak){|x|
@@ -285,51 +294,48 @@ class GraphController < ApplicationController
     statsList = getStatsData?( requestList )
     statsList.each { |stat|
         if stat.get_status? == StatsStatus::SUCCESS
-            devClass = stat.get_devClass?
-            counter  = stat.get_counter?
-            function = stat.get_function?
             stat.get_data?.each{ |data|
                 value = data.get_value?
                 if !value.nan?
+                    devClass = stat.get_devClass?
+                    counter  = stat.get_counter?
                     if devClass == DEV_KEY_CLASSES["load"]
-                        if function == DataFunction::Average
+                        if counter == DEV_KEY_AVGCOUNTERS["load"]
                             @snapshots[:avg]["load"] += value.to_i
                             @data_points[:avg]["load"] += 1
-                        elsif function == DataFunction::Peak
-                            @snapshots[:peak]["load"] += value.to_i
-                            @data_points[:peak]["load"] += 1
+                        # elsif counter == DEV_KEY_PEAKCOUNTERS["load"]
+                        #    @snapshots[:peak]["load"] += value.to_i
+                        #    @data_points[:peak]["load"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["cpu"]
-                        if function == DataFunction::Average
+                        if counter == DEV_KEY_AVGCOUNTERS["cpu"]
                             @snapshots[:avg]["cpu"] += 100 - value.to_i
                             @data_points[:avg]["cpu"] += 1
-                        elsif function == DataFunction::Peak
-                            @snapshots[:peak]["cpu"] =  100 - value.to_i
-                            @data_points[:peak]["cpu"] += 1
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["cpu"]
+                        #    @snapshots[:peak]["cpu"] =  100 - value.to_i
+                        #    @data_points[:peak]["cpu"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["netout"]
-                        if function == DataFunction::Average
+                        if counter == DEV_KEY_AVGCOUNTERS["netout"]
                             @snapshots[:avg]["netout"] += (value.to_i * 8 / 1024 / 1024).to_i # mbits
                             @data_points[:avg]["netout"] += 1
-                        elsif function == DataFunction::Peak
-                            @snapshots[:peak]["netout"] += (value.to_i * 8 / 1024 / 1024).to_i #mbits
-                            @data_points[:peak]["netout"] += 1
-                        end
-                   elsif devClass == DEV_KEY_CLASSES["netin"]
-                        if function == DataFunction::Average
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["netout"]
+                        #    @snapshots[:peak]["netout"] += (value.to_i * 8 / 1024 / 1024).to_i #mbits
+                        #    @data_points[:peak]["netout"] += 1
+                        elsif counter == DEV_KEY_AVGCOUNTERS["netin"]
                             @snapshots[:avg]["netin"] += (value.to_i * 8 / 1024 / 1024).to_i # mbits
                             @data_points[:avg]["netin"] += 1
-                        elsif function == DataFunction::Peak
-                            @snapshots[:peak]["netin"] += (value.to_i * 8 / 1024 / 1024).to_i # mbits
-                            @data_points[:peak]["netin"] += 1
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["netin"]
+                        #    @snapshots[:peak]["netin"] += (value.to_i * 8 / 1024 / 1024).to_i # mbits
+                        #    @data_points[:peak]["netin"] += 1
                         end
                     elsif devClass == DEV_KEY_CLASSES["memory"]
-                        if function == DataFunction::Average
+                        if counter == DEV_KEY_AVGCOUNTERS["memory"]
                             @snapshots[:avg]["memory"] += (value.to_i / 1000000).to_i
                             @data_points[:avg]["memory"] += 1
-                        elsif function == DataFunction::Peak
-                            @snapshots[:peak]["memory"] += (value.to_i / 1000000).to_i
-                            @data_points[:peak]["memory"] += 1
+                        #elsif counter == DEV_KEY_PEAKCOUNTERS["memory"]
+                        #    @snapshots[:peak]["memory"] += (value.to_i / 1000000).to_i
+                        #    @data_points[:peak]["memory"] += 1
                         end
                     end
                 end
@@ -338,16 +344,11 @@ class GraphController < ApplicationController
             RAILS_DEFAULT_LOGGER.warn("unable to find collectd/rrd stats for " + stat.get_node?.to_s)
         end
     }
-    @snapshots[:avg]['load']    /= @data_points[:avg]['load']    if @data_points[:avg]['load']    != 0
-    @snapshots[:peak]['load']   /= @data_points[:peak]['load']   if @data_points[:peak]['load']   != 0
-    @snapshots[:avg]['cpu']     /= @data_points[:avg]['cpu']     if @data_points[:avg]['cpu']     != 0
-    @snapshots[:peak]['cpu']    /= @data_points[:peak]['cpu']    if @data_points[:peak]['cpu']    != 0
-    @snapshots[:avg]['memory']  /= @data_points[:avg]['memory']  if @data_points[:avg]['memory']  != 0
-    @snapshots[:peak]['memory'] /= @data_points[:peak]['memory'] if @data_points[:peak]['memory'] != 0
-    @snapshots[:avg]['netin']   /= @data_points[:avg]['netin']   if @data_points[:avg]['netin']   != 0
-    @snapshots[:peak]['netin']  /= @data_points[:peak]['netin']  if @data_points[:peak]['netin']  != 0
-    @snapshots[:avg]['netout']  /= @data_points[:avg]['netout']  if @data_points[:avg]['netout']  != 0
-    @snapshots[:peak]['netout'] /= @data_points[:peak]['netout'] if @data_points[:peak]['netout'] != 0
+    @snapshots[:avg]['load'] /= @data_points[:avg]['load']  if @data_points[:avg]['load'] != 0
+    @snapshots[:avg]['cpu'] /= @data_points[:avg]['cpu']  if @data_points[:avg]['cpu'] != 0
+    @snapshots[:avg]['memory'] /= @data_points[:avg]['memory']  if @data_points[:avg]['memory'] != 0
+    @snapshots[:avg]['netin'] /= @data_points[:avg]['netin']  if @data_points[:avg]['netin'] != 0
+    @snapshots[:avg]['netout'] /= @data_points[:avg]['netout']  if @data_points[:avg]['netout'] != 0
   end
 
   private
@@ -356,21 +357,20 @@ class GraphController < ApplicationController
       DEV_CLASS_KEYS   = DEV_KEY_CLASSES.invert
 
       # TODO this needs fixing / completing (cpu: more than user time? disk: ?, load: correct?, nics: correct?)
-      DEV_KEY_COUNTERS = { 'cpu' => CpuCounter::Idle, 'memory' => MemCounter::Used, 'disk' => DiskCounter::Ops_read, 'load' => LoadCounter::Load_1min, 'netin' => NicCounter::Octets_rx, 'netout' => NicCounter::Octets_tx }
-      DEV_COUNTER_KEYS = DEV_KEY_COUNTERS.invert
+      DEV_KEY_AVGCOUNTERS = { 'cpu' => CpuCounter::Idle, 'memory' => MemCounter::Used, 'disk' => DiskCounter::Ops_read, 'load' => LoadCounter::Load_1min, 'netin' => NicCounter::Octets_rx, 'netout' => NicCounter::Octets_tx }
+      DEV_AVGCOUNTER_KEYS = DEV_KEY_AVGCOUNTERS.invert
+
+      # TODO 
+      DEV_KEY_PEAKCOUNTERS = { 'cpu' => nil, 'memory' => nil, 'disk' => nil, 'load' => nil, 'netin' => nil, 'netout' => nil }
+      DEV_PEAKCOUNTER_KEYS = DEV_KEY_PEAKCOUNTERS.invert
 
       def _create_host_snapshot_requests(hostname)
         requestList = []
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['memory'], 0, DEV_KEY_COUNTERS['memory'], 0, 600, RRDResolution::Default, DataFunction::Average) 
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['memory'], 0, DEV_KEY_COUNTERS['memory'], 0, 600, RRDResolution::Default, DataFunction::Peak   ) 
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['load'],   0, DEV_KEY_COUNTERS['load'],   0, 600, RRDResolution::Default, DataFunction::Average)
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['load'],   0, DEV_KEY_COUNTERS['load'],   0, 600, RRDResolution::Default, DataFunction::Peak   )
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],    0, DEV_KEY_COUNTERS['cpu'],    0, 600, RRDResolution::Default, DataFunction::Average) # TODO more than 1 cpu
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],    0, DEV_KEY_COUNTERS['cpu'],    0, 600, RRDResolution::Default, DataFunction::Peak   ) # TODO more than 1 cpu
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netout'], 0, DEV_KEY_COUNTERS['netout'], 0, 600, RRDResolution::Default, DataFunction::Average) 
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netout'], 0, DEV_KEY_COUNTERS['netout'], 0, 600, RRDResolution::Default, DataFunction::Peak   ) 
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],  0, DEV_KEY_COUNTERS['netin'],  0, 600, RRDResolution::Default, DataFunction::Average) 
-        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],  0, DEV_KEY_COUNTERS['netin'],  0, 600, RRDResolution::Default, DataFunction::Peak   ) 
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['memory'],0, DEV_KEY_AVGCOUNTERS['memory'], 0, 600, RRDResolution::Default) 
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['load'], 0, DEV_KEY_AVGCOUNTERS['load'], 0, 600, RRDResolution::Default) # RRDResolution::Long ?
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['cpu'],  0, DEV_KEY_AVGCOUNTERS['cpu'], 0, 600, RRDResolution::Default)   # TODO more than 1 cpu
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netout'],0, DEV_KEY_AVGCOUNTERS['netout'], 0, 600, RRDResolution::Default) 
+        requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],0, DEV_KEY_AVGCOUNTERS['netin'], 0, 600, RRDResolution::Default) 
         return requestList
       end
 
