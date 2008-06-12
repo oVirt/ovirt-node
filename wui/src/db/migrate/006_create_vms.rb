@@ -32,6 +32,7 @@ class CreateVms < ActiveRecord::Migration
       t.integer :vm_resource_pool_id
       t.integer :needs_restart
       t.string  :boot_device,    :null => false
+      t.integer :vnc_port
       t.integer :lock_version,   :default => 0
     end
     execute "alter table vms add constraint fk_vms_hosts

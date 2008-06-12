@@ -376,7 +376,13 @@ a { color:#000000; text-decoration: none;}
 }
 
 .dialog_body {
-  overflow: scroll;
+  overflow: auto;
+  height: 350px;
+}
+
+.popup_body {
+  background: #FFFFFF;
+  overflow: auto;
   height: 350px;
 }
 

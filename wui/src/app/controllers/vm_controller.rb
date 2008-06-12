@@ -22,7 +22,7 @@ class VmController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :controller => 'dashboard' }
 
-  before_filter :pre_vm_action, :only => [:vm_action, :cancel_queued_tasks]
+  before_filter :pre_vm_action, :only => [:vm_action, :cancel_queued_tasks, :console]
 
   def show
     set_perms(@perm_obj)
@@ -169,6 +169,12 @@ class VmController < ApplicationController
     rescue
       render :json => { :object => "vm", :success => true, :alert => "queued tasks cancel failed." }
     end
+  end
+
+
+  def console
+    @show_vnc_error = "Console is unavailable for VM #{@vm.description}" unless @vm.has_console
+    render :layout => false
   end
 
   protected

@@ -180,6 +180,10 @@ class Vm < ActiveRecord::Base
     return true
   end
 
+  def has_console
+    (state == Vm::STATE_RUNNING ) and host and vnc_port
+  end
+
   protected
   def validate
     resources = vm_resource_pool.max_resources_for_vm(self)
