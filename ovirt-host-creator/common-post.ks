@@ -14,10 +14,10 @@ EOF
 
 echo "Writing ovirt-identify-node script"
 cat > /sbin/ovirt-identify-node << \EOF
-#!/usr/bin/python -Wall
+#!/bin/bash
 #
 # Copyright (C) 2008 Red Hat, Inc.
-# Written by Darryl L. Pierce <dpierce@redhat.com>
+# Written by Chris Lalancette <clalance@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,126 +34,93 @@ cat > /sbin/ovirt-identify-node << \EOF
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-import libvirt
-import socket
-import sys
-import os
-from optparse import OptionParser
+ME=$(basename "$0")
+warn() { printf "$ME: $@\n" >&2; }
+try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
+die() { warn "$@"; try_h; exit 1; }
 
-def log(msg):
-	print >> sys.stderr, msg
+usage() {
+    case $# in 1) warn "$1"; try_h; exit 1;; esac
+    cat <<EOF2
+Usage: $ME [-s server] [-p port]
+  -h: display this help and exit
+  -p: Port number the host-browser is listening on
+  -s: Hostname of the server to connect to
+EOF2
+}
 
-class IdentifyNode:
-	"""This class allows the managed node to connect to the WUI host
-	and notify it that the node is awake and ready to participate."""
+send_key_value() {
+	echo "$1=$2" 1>&3
 
-	def cpuspeed(self):
-		speed = 2000
-		f = open('/proc/cpuinfo', 'r')
-		lines = f.readlines()
-		f.close()
-		for line in lines:
-			if line.find('cpu MHz') != -1:
-				speed = line.split(':')[1].split('.')[0].strip()
-				break
-			
-		return speed
+	read 0<&3
+	test "$REPLY" != "ACK $1" && die "Failed acknowledge of key $1"
+}
 
-	def __init__(self, server, port):
-		self.hostname    = 'management.priv.ovirt.org'
-		self.server_name = server
-		self.server_port = port
+############# MAIN ##################
 
-	    	self.host_info = {
-			# FIXME: we shouldn't use the hostname as the UUID
-			"UUID"            : socket.getfqdn(),
-			"ARCH"            : os.uname()[4],
-			"MEMSIZE"         : str((os.sysconf('SC_PHYS_PAGES') * os.sysconf('SC_PAGESIZE')) / 1024 / 1024),
-			"NUMCPUS"         : str(os.sysconf('SC_NPROCESSORS_ONLN')),
-			"CPUSPEED"        : self.cpuspeed(),
-			"HOSTNAME"        : socket.getfqdn(),
-			"HYPERVISOR_TYPE" : "QEMU"
-		    
-		}
+# parse our options
+while getopts ":hs:p:" flag ; do
+	case "$flag" in
+	     	h)
+			usage ; exit 0
+			;;
+		s)
+			server=$OPTARG
+			;;
+		p)
+			port=$OPTARG
+			;;
+		?)
+			usage "Unknown flag $flag"
+			;;
+	esac
+done
 
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.socket.connect((self.server_name,self.server_port))
-		self.input  = self.socket.makefile('rb', 0)
-		self.output = self.socket.makefile('wb', 0)
+test $(( $# - $OPTIND )) -ge 0 && usage "Too many options"
+test -z "$server" && usage "Must specify -s"
+test -z "$port" && usage "Must specify -p"
 
+# gather our information
+all_ok=0
+uuid=$(hostname -f) &&
+  arch=$(uname -i) &&
+  memsize=$(( $(getconf _PHYS_PAGES) * $(getconf PAGESIZE) / 1024 / 1024 )) &&
+  numcpus=$(getconf _NPROCESSORS_ONLN) &&
+  speed=$(sed -n "/cpu MHz/{s/.*://p;q;}" /proc/cpuinfo | tr -dc 0-9.) &&
+  hostname=$(hostname -f) &&
+  hypervisor="QEMU" && all_ok=1
 
-	def start_conversation(self):
-		log("Connecting to server")
+test $all_ok = 1 || die "Information gathering failed...see above"
 
-		response = self.input.readline().strip()
-		if response == 'HELLO?':
-			self.output.write("HELLO!\n")
-		else:
-			raise TypeError, "Received invalid conversation starter: %s" % response
+# open our connection to the remote host
+eval 'exec 3<> /dev/tcp/$server/$port' 2>err
+test $? -ne 0 && die "Connection to $server:$port failed: $(cat err)"
 
-	def send_host_info(self):
-		log("Starting information exchange...")
+# say hello
+read 0<&3
+test "$REPLY" != "HELLO?" && die "Expected response HELLO?, received response $REPLY"
+echo "HELLO!" 1>&3
 
-		response = self.input.readline().strip()
-		if response == 'INFO?':
-			for name in self.host_info.keys():
-				self.send_host_info_element(name,self.host_info[name])
-		else:
-			raise TypeError, "Received invalid info marker: %s" % response
+# OK, start sending our information
+read 0<&3
+test "$REPLY" != "INFO?" && die "Expected response INFO?, received response $REPLY"
 
-		log("Ending information exchange...")
-		self.output.write("ENDINFO\n")
-		response = self.input.readline().strip()
+send_key_value "UUID" "$uuid"
+send_key_value "ARCH" "$arch"
+send_key_value "MEMSIZE" "$memsize"
+send_key_value "NUMCPUS" "$numcpus"
+send_key_value "CPUSPEED" "$speed"
+send_key_value "HOSTNAME" "$hostname"
+send_key_value "HYPERVISOR_TYPE" "$hypervisor"
 
-		log("response is %s" % response)
-		log("response[:4] is %s" % response[:4])
+echo "ENDINFO" 1>&3
 
-		if response[:4] == 'KTAB':
-			self.keytab = response[5:]
-		else:
-			raise TypeError, "Did not receive a keytab response: '%s'" % response
+read 0<&3
 
-	def send_host_info_element(self,key,value):
-		log("Sending: " + key + "=" + value)
-		self.output.write(key + "=" + value + "\n")
-		response = self.input.readline().strip()
-
-		if response != "ACK " + key:
-			raise TypeError, "Received bad acknolwedgement for field: %s" % key
-
-	def get_keytab(self):
-		log("Retrieving keytab information: %s" % self.keytab)
-
-	def end_conversation(self):
-		log("Disconnecting from server")
-
-
-if __name__ == '__main__':
-
-	parser = OptionParser()
-	parser.add_option("-s", "--server", dest="server",
-			  help="Server hostname to connect to.", metavar="SERVER")
-	parser.add_option("-p", "--port",
-			  help="Port to connect to.", metavar="PORT")
-
-	(options, args) = parser.parse_args()
-
-	# Set defaults so you can just run it on the command line to see what happens..
-	if options.server == None: options.server = 'management.priv.ovirt.org'
-	if options.port == None: options.port = 12120
-
-	identifier = IdentifyNode(options.server, int(options.port))
-
-	identifier.start_conversation()
-	identifier.send_host_info()
-	identifier.get_keytab()
-	identifier.end_conversation()
-	print identifier.keytab
-
+test "${REPLY:0:4}" != "KTAB" && die "Expected response KTAB <filename>, received response $REPLY"
+echo "${REPLY:5}"
 EOF
-
 chmod +x /sbin/ovirt-identify-node
-
 
 echo "Writing ovirt-functions script"
 # common functions
