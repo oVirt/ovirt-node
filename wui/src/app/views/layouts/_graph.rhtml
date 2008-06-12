@@ -1,19 +1,24 @@
 <script type="text/javascript">
+        <%  lMethodName  = "draw_" + div_id + "_graph" %>
+        <%  lDrawMe      = true         %>
+        <%  lHideDiv     = false        %>
+        <%  lIncludeDiv  = true         %>
+        <%  lDataType    = "summary"    %>
+        <%  lChartType   = "line"       %>
+        <%  lXGridLines  = "null"       %>
+        <%  lYGridLines  = "null"       %>
+        <%  lXAxisLine   = ""           %>
+        <%  lYAxisLine   = ""           %>
+        <%  lScaleY      = 0            %>
+        <%  lTicksY      = 0            %>
+        <%  lCss_class   = ""           %>
+        <%  lUrl         = ""           %>
 
-    $(document).ready(function(){ 
-
-        <%  lDataType    = "summary" %>
-        <%  lChartType   = "line"    %>
-        <%  lXGridLines  = "null"    %>
-        <%  lYGridLines  = "null"    %>
-        <%  lXAxisLine   = ""        %>
-        <%  lYAxisLine   = ""        %>
-        <%  lScaleY      = 0         %>
-        <%  lTicksY      = 0         %>
-        <%  lCss_class   = ""        %>
-        <%  lUrl         = ""        %>
-
-        <%  lDataTpe     = dataType      if defined? dataType   and !dataType.nil?   %>
+        <%  lMethodName  = methodName    if defined? methodName and !methodName.nil? %>
+        <%  lDrawMe      = drawMe        if defined? drawMe     and !drawMe.nil?     %>
+        <%  lHideDiv     = hideDiv       if defined? hideDiv    and !hideDiv.nil?    %>
+        <%  lIncludeDiv  = includeDiv    if defined? includeDiv and !includeDiv.nil? %>
+        <%  lDataType    = dataType      if defined? dataType   and !dataType.nil?   %>
         <%  lChartType   = chartType     if defined? chartType  and !chartType.nil?  %>
         <%  lXGridLines  = xGridLines    if defined? xGridLines and !xGridLines.nil? %>
         <%  lYGridLines  = yGridLines    if defined? yGridLines and !yGridLines.nil? %>
@@ -24,10 +29,9 @@
         <%  lCss_class   = css_class     if defined? css_class  and !css_class.nil?  %>
         <%  lUrl         = url           if defined? url        and !url.nil?        %>
 
-        $("#<%= div_id %>").svg();
-        var svg = svgManager.getSVGFor("#<%= div_id %>");
-
-        function draw_graph(graph_data){
+        function <%= lMethodName %>(graph_data){
+            $("#<%= div_id %>").svg();
+            var svg = svgManager.getSVGFor("#<%= div_id %>");
             svg.graph.noDraw();
             svg.graph.chartFormat('white', 'white').chartType("<%= lChartType %>", {explode: [2], explodeDist: 10});
             $(graph_data.dataset).each(
@@ -50,17 +54,31 @@
              svg.graph.redraw();
         };
 
-        if('<%= graph_data.to_s %>' != ""){
-            draw_graph(<%= graph_data %>);
-        }else{
+        function <%= lMethodName %>_get_data(){
             var params = { id:1, type:"<%= lDataType %>", timeframe:"7 days", isJSON:true};
             $.getJSON("<%= lUrl %>", params, 
-                       function(response) { 
-                          draw_graph(response);
-                        }
-                      );
-        }
+                      function(response) { 
+                            <%= lMethodName %>(response);
+                      });
+        };
+
+
+    $(document).ready(function(){ 
+
+        <% if lDrawMe %>
+            if('<%= graph_data.to_s %>' != ""){
+                <%= lMethodName %>(<%= graph_data %>);
+            }else{
+                <%= lMethodName %>_get_data();
+            }
+        <% end %>
+
+        <% if lHideDiv %>
+            $("#<%= div_id %>").parent().hide();
+        <% end %>
     });  
 </script>
 
-<div id="<%= div_id %>" class="<%= lCss_class %>"></div>
+<% if lIncludeDiv %>
+    <div id="<%= div_id %>" class="<%= lCss_class %>"></div>
+<% end %>

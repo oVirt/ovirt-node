@@ -68,10 +68,11 @@ class GraphController < ApplicationController
     history_graphs
     target = params[:target]
     poolType = params[:poolType]
+    days = params[:days]
     devclass = DEV_KEY_CLASSES[target]
     counter  = DEV_KEY_COUNTERS[target]
     @pool = Pool.find(@id)
-    
+
     hosts = @pool.hosts
     # temporary workaround for vm resource history 
     # graph until we have a more reqs / long term solution
@@ -128,7 +129,7 @@ class GraphController < ApplicationController
             }
         else
             RAILS_DEFAULT_LOGGER.warn("unable to find collectd/rrd stats for " + stat.get_node?.to_s)
-        end
+       end
     }
 
     total_peak = 0

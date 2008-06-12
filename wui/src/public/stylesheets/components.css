@@ -197,7 +197,10 @@
   position: relative;
   float: left;
 }
-#cpu_history, #io_history, #load_history, #memory_history{
+#cpu_history_1,  #load_history_1,  #memory_history_1,
+#cpu_history_7,  #load_history_7,  #memory_history_7,
+#cpu_history_30, #load_history_30, #memory_history_30
+{
   height: 250px; width: 1200px; position: absolute; left: -50px;
 }
 
