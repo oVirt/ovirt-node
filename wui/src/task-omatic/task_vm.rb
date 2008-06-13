@@ -26,38 +26,38 @@ def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
   doc = Document.new
 
   doc.add_element("domain", {"type" => "kvm"})
-  
+
   doc.root.add_element("name")
   doc.root.elements["name"].text = name
-  
+
   doc.root.add_element("uuid")
   doc.root.elements["uuid"].text = uuid
-  
+
   doc.root.add_element("memory")
   doc.root.elements["memory"].text = memAllocated
-  
+
   doc.root.add_element("currentMemory")
   doc.root.elements["currentMemory"].text = memUsed
-  
+
   doc.root.add_element("vcpu")
   doc.root.elements["vcpu"].text = vcpus
-  
+
   doc.root.add_element("os")
   doc.root.elements["os"].add_element("type")
   doc.root.elements["os"].elements["type"].text = "hvm"
   doc.root.elements["os"].add_element("boot", {"dev" => bootDevice})
-  
+
   doc.root.add_element("clock", {"offset" => "utc"})
-  
+
   doc.root.add_element("on_poweroff")
   doc.root.elements["on_poweroff"].text = "destroy"
-  
+
   doc.root.add_element("on_reboot")
   doc.root.elements["on_reboot"].text = "restart"
-  
+
   doc.root.add_element("on_crash")
   doc.root.elements["on_crash"].text = "destroy"
-  
+
   doc.root.add_element("devices")
   doc.root.elements["devices"].add_element("emulator")
   doc.root.elements["devices"].elements["emulator"].text = "/usr/bin/qemu-kvm"
@@ -91,7 +91,7 @@ end
 def findVM(task, fail_on_nil_host_id = true)
   # find the matching VM in the vms table
   vm = Vm.find(:first, :conditions => [ "id = ?", task.vm_id ])
-  
+
   if vm == nil
     raise "VM id " + task.vm_id + "not found"
   end
@@ -130,6 +130,7 @@ def setVmShutdown(vm)
   vm.num_vcpus_used = nil
   vm.state = Vm::STATE_STOPPED
   vm.needs_restart = nil
+  vm.vnc_port = nil
   vm.save
 end
 
@@ -174,7 +175,7 @@ def shutdown_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     host = findHost(task, vm.host_id)
-    
+
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookup_domain_by_uuid(vm.uuid)
     # FIXME: crappy.  Right now we destroy the domain to make sure it
@@ -218,16 +219,18 @@ def start_vm(task)
   vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STARTING)
 
+  vnc_port = nil
+
   begin
     if vm.host_id != nil
       # OK, marked in the database as already running on a host; for now, we
       # will just fail the operation
-      
+
       # FIXME: we probably want to go out to the host it is marked on and check
       # things out, just to make sure things are consistent
       raise "VM already running"
     end
-    
+
     # OK, now that we found the VM, go looking in the hardware_pool
     # hosts to see if there is a host that will fit these constraints
     host = nil
@@ -319,6 +322,13 @@ def start_vm(task)
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.define_domain_xml(xml.to_s)
     dom.create
+
+    doc = REXML::Document.new(dom.xml_desc)
+    attrib = REXML::XPath.match(doc, "//graphics/@port")
+    if not attrib.empty?:
+      vm.vnc_port = attrib.to_s.to_i
+    end
+
     conn.close
   rescue => ex
     setVmState(vm, vm_orig_state)
@@ -380,7 +390,7 @@ def restore_vm(task)
   puts "restore_vm"
 
   # here, we are given an id for a VM to start
-  
+
   vm = findVM(task)
 
   if vm.state == Vm::STATE_RUNNING
@@ -398,13 +408,21 @@ def restore_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     host = findHost(task, vm.host_id)
-    
+
     # FIXME: we should probably go out to the host and check what it thinks
     # the state is
-    
+
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookup_domain_by_uuid(vm.uuid)
     dom.restore
+
+    doc = REXML::Document.new(dom.xml_desc)
+    attrib = REXML::XPath.match(doc, "//graphics/@port")
+    if not attrib.empty?:
+      vm.vnc_port = attrib.to_s.to_i
+      vm.save
+    end
+
     conn.close
   rescue => ex
     setVmState(vm, vm_orig_state)
@@ -437,7 +455,7 @@ def suspend_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     host = findHost(task, vm.host_id)
-    
+
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookup_domain_by_uuid(vm.uuid)
     dom.suspend
@@ -477,11 +495,11 @@ def resume_vm(task)
   begin
     # OK, now that we found the VM, go looking in the hosts table
     host = findHost(task, vm.host_id)
-    
-      conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
-      dom = conn.lookup_domain_by_uuid(vm.uuid)
-      dom.resume
-      conn.close
+
+    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
+    dom = conn.lookup_domain_by_uuid(vm.uuid)
+    dom.resume
+    conn.close
   rescue => ex
     setVmState(vm, vm_orig_state)
     raise ex
