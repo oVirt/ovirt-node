@@ -1,0 +1,35 @@
+  <html>
+<%if @show_vnc_error -%>
+    <head>
+  <%= stylesheet_link_tag 'layout' %>
+  <%= stylesheet_link_tag 'components' %>
+  <!--[if IE]>
+    <%= stylesheet_link_tag 'ie' %>
+  <![endif]-->
+  <%= javascript_include_tag "jquery-1.2.6.min.js" -%>
+      <title>No Console Available</title>
+    </head>
+    <body>
+<div class="dialog_title_small">
+  <div class="header">No Console Available</div>
+</div>
+<div class="popup_body" style="height: 100%;">
+  <!-- FIXME: need to work out confirmation/popup dialog layouts to include this stuff -->
+      <%= @show_vnc_error %>
+      <div style="background: url(#{image_path "fb_footer.jpg"}) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
+        <div class="button">
+          <div class="button_left_grey"></div>
+          <div class="button_middle_grey"><a href="#" onclick="window.close()">Close</a></div>
+          <div class="button_right_grey"></div>
+        </div>
+      </div>
+</div>
+    </body>
+<%else -%>
+<embed type="application/x-gtk-vnc"
+    width="800"
+    height="600"
+    host="<%= @vm.host.hostname%>" port="<%= @vm.vnc_port%>">
+</embed>
+<%end -%>
+  </html>

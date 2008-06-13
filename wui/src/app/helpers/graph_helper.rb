@@ -37,17 +37,17 @@ module GraphHelper
         if (total > used)
             # 3/4 is the critical boundry for now
             color = 'red' if (used.to_f / total.to_f) > 0.75 
-            data_sets.push ({ :name => title + '_used', :values => [used],
-                              :fill => color, :stroke => 'lightgray', :strokeWidth => 1 },
-                            { :name => title + '_available', 
-                              :values => [available], :fill => 'white',
-                              :stroke => 'lightgray', :strokeWidth => 1})
+            data_sets.push({ :name => title + '_used', :values => [used],
+                             :fill => color, :stroke => 'lightgray', :strokeWidth => 1 },
+                           { :name => title + '_available', 
+                             :values => [available], :fill => 'white',
+                             :stroke => 'lightgray', :strokeWidth => 1})
         else
-            data_sets.push ({ :name => title + '_available', :values => [available],
-                              :fill => 'white', :stroke => 'lightgray', :strokeWidth => 1 },
-                            { :name => title + '_used', 
-                              :values => [used], :fill => 'red',
-                              :stroke => 'lightgray', :strokeWidth => 1})
+            data_sets.push({ :name => title + '_available', :values => [available],
+                             :fill => 'white', :stroke => 'lightgray', :strokeWidth => 1 },
+                           { :name => title + '_used', 
+                             :values => [used], :fill => 'red',
+                             :stroke => 'lightgray', :strokeWidth => 1})
         end
         return ActiveSupport::JSON.encode({:timepoints => [], :dataset => data_sets})
     end

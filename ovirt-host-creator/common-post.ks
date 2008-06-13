@@ -171,7 +171,7 @@ configure_from_network() {
                 find_srv ovirt tcp
                 printf .
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-                    curl -s "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)" \
+                    wget --quiet -O - "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)" \
                         | augtool > /dev/null 2>&1
                     if [ $? -eq 0 ]; then
                         return
