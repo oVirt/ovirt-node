@@ -219,8 +219,6 @@ def start_vm(task)
   vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STARTING)
 
-  vnc_port = nil
-
   begin
     if vm.host_id != nil
       # OK, marked in the database as already running on a host; for now, we
