@@ -151,9 +151,9 @@
 #history_graphs { position: relative; height: 315px; overflow: hidden; margin-left: 0; margin-top: 0; }
 #history_graphs_control { position: absolute; z-index: 1; height: 20px; width: 98%; border: 1px solid #CCCCCC; background: #EEEEEE; }
 .history_graphs_menu { float: left; width: 118px; }
-.history_graphs_legend { float: right; height: 20px; width: 15%; }
+.history_graphs_legend { float: right; height: 20px; width: 45%; }
 .history_graphs_legend font { float: right; padding-top: 3px; }
-#history_graphs_graphs {  position: absolute; overflow: hidden; height: 265px; width: 98%; border: 1px solid #CCCCCC; }
+#history_graphs_graphs {  position: absolute; overflow: hidden; height: 260px; width: 98%; border: 1px solid #CCCCCC; }
 #history_graph_menu_header img{ vertical-align: middle; }
 .history_graphs_menu ul {
     padding: 0 0 0 0;
@@ -201,7 +201,7 @@
 #cpu_history_7,  #load_history_7,  #memory_history_7,
 #cpu_history_30, #load_history_30, #memory_history_30
 {
-  height: 250px; width: 1200px; position: absolute; left: -50px;
+  height: 250px; width: 1200px; position: absolute; left: -70px;
 }
 
 /* snapshot graphs on hardware / resource summary tab */

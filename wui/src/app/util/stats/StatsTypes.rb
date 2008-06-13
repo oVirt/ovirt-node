@@ -121,6 +121,8 @@ class CpuCounter
         case counter
            when CpuCounter::Idle
               path += "idle"
+           when CpuCounter::CalcUsed
+              path += "idle"
            when CpuCounter::Interrupt
               path += "interrupt"
            when CpuCounter::Nice
@@ -156,6 +158,7 @@ class CpuCounter
    CpuCounter.add_item :System, 6
    CpuCounter.add_item :User, 7
    CpuCounter.add_item :Wait, 8
+   CpuCounter.add_item :CalcUsed, 8
 end   
        
 class MemCounter
@@ -373,5 +376,7 @@ class DataFunction
    DataFunction.add_item :Peak,1
    DataFunction.add_item :Min,2
    DataFunction.add_item :RollingAverage,3
+   DataFunction.add_item :RollingPeak,4
+   DataFunction.add_item :RollingMin,5
 end
 
