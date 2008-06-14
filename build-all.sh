@@ -29,7 +29,7 @@ DEP_RPMS="createrepo httpd kvm libvirt livecd-tools pungi"
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-w] [-n] [-p init|update] [-d|-b] [-a] [-c] [-v git|release|none]
+Usage: $ME [-w] [-n] [-p init|update] [-s] [-d|-b] [-a] [-c] [-v git|release|none]
   -w: update oVirt WUI RPMs
   -n: update oVirt Managed Node RPMs
   -p: update pungi repository (init or update)
@@ -70,8 +70,8 @@ while getopts wnp:sdbahcv: c; do
         c) cleanup=1;;
         v) version_type=$OPTARG;;
         h) help=1;;
-	    '?') err=1; warn "invalid option: \`-$OPTARG'";;
-	    :) err=1; warn "missing argument to \`-$OPTARG' option";;
+      '?') err=1; warn "invalid option: \`-$OPTARG'";;
+        :) err=1; warn "missing argument to \`-$OPTARG' option";;
         *) err=1; warn "internal error: \`-$OPTARG' not handled";;
     esac
 done
@@ -140,19 +140,29 @@ if [ $update_pungi != 0 ]; then
         pungi_flags="-GC"
     fi
 
-    # use Fedora + updates + ovirt.org repo for updates not yet in Fedora
-    # + local ovirt repo with locally rebuilt ovirt* RPMs
+    # use Fedora + updates
     cat > $PUNGIKS << EOF
 repo --name=f$FEDORA --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$FEDORA&arch=\$basearch
 repo --name=f$FEDORA-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$FEDORA&arch=\$basearch
-repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/\$basearch --excludepkgs=ovirt*
+EOF
+    # + ovirt.org repo for updates not yet in Fedora
+    # + local ovirt repo with locally rebuilt ovirt* RPMs ( options -w and -n )
+    #   if not available, ovirt* RPMs from ovirt.org will be used
+    excludepkgs=
+    if [[ -f $OVIRT/repodata/repomd.xml ]]; then
+        excludepkgs='--excludepkgs=ovirt*'
+        cat >> $PUNGIKS << EOF
 repo --name=ovirt --baseurl=http://localhost/ovirt
+EOF
+    fi
+    cat >> $PUNGIKS << EOF
+repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/\$basearch $excludepkgs
 EOF
     if [ $include_src != 0 ]; then
         cat >> $PUNGIKS << EOF
 repo --name=f$FEDORA-src --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-source-$FEDORA&arch=\$basearch
 repo --name=f$FEDORA-updates-src --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-source-f$FEDORA&arch=\$basearch
-repo --name=ovirt-org-src --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/src --excludepkgs=ovirt*
+repo --name=ovirt-org-src --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/src $excludepkgs
 EOF
     else
         pungi_flags+=" --nosource"
@@ -210,7 +220,16 @@ if [ $update_app == 1 ]; then
     make clean
     cat > repos-x86_64.ks << EOF
 url --url http://$VIRBR/pungi/$FEDORA/$ARCH/os
+EOF
+    excludepkgs=
+    if [[ -f $OVIRT/repodata/repomd.xml ]]; then
+        excludepkgs='--excludepkgs=ovirt*'
+        cat >> repos-x86_64.ks << EOF
 repo --name=ovirt --baseurl=http://$VIRBR/ovirt
+EOF
+    fi
+    cat >> repos-x86_64.ks << EOF
+repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/x86_64 $excludepkgs
 
 EOF
     make
@@ -219,6 +238,12 @@ EOF
 
     set +x
     echo "oVirt appliance setup started, check progress with:"
-    echo "  virt-viewer developer"
+    echo -n "  virt-viewer "
+    if [[ "$app_type" == "-b" ]]; then
+        echo "bundled"
+    else
+        echo "developer"
+    fi
+
 fi
 
