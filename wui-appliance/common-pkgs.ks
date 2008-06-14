@@ -8,6 +8,7 @@ libvirt-python
 openssh-server
 nfs-utils
 collectd
+collectd-rrdtool
 ipa-server
 ipa-admintools
 scsi-target-utils
