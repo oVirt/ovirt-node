@@ -33,6 +33,7 @@ Usage: $ME [-w] [-n] [-p init|update] [-d|-b] [-a] [-c] [-v git|release|none]
   -w: update oVirt WUI RPMs
   -n: update oVirt Managed Node RPMs
   -p: update pungi repository (init or update)
+  -s: include SRPMs and produce source ISO
   -d: update developer appliance
   -b: update bundled appliance
   -a: updates all (WUI, Node, App), requires -d or -b
@@ -52,15 +53,17 @@ bumpver() {
 
 update_wui=0 update_node=0
 update_pungi=0 update_app=0
+include_src=0
 cleanup=0
 app_type=
 version_type=git
 err=0 help=0
-while getopts wnp:dbahcv: c; do
+while getopts wnp:sdbahcv: c; do
     case $c in
         w) update_wui=1;;
         n) update_node=1;;
         p) update_pungi=$OPTARG;;
+        s) include_src=1;;
         d) update_app=1; app_type="-v";;
         b) update_app=1; app_type="-b";;
         a) update_wui=1; update_node=1; update_app=1; update_pungi=init;;
@@ -75,6 +78,7 @@ done
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 test $update_app = 1 -a -z "$app_type" && usage "Need to specify -d or -b"
+test $include_src = 1 -a "$update_pungi" = 0 && usage "Need to specify -p when including source"
 test "$update_pungi" != 0 -a "$update_pungi" != "init" \
     -a "$update_pungi" != "update" \
     && usage "-p must provide either init or update argument"
@@ -113,6 +117,9 @@ if [ $update_app = 1 -o $update_node = 1 -o $update_pungi != 0 ]; then
     service libvirtd reload
 fi
 
+# stop execution on any error
+set -e
+
 # build ovirt-wui RPM
 if [ $update_wui = 1 ]; then
     cd $BASE/wui
@@ -125,7 +132,7 @@ if [ $update_wui = 1 ]; then
     createrepo .
 fi
 
-# build Fedora mirror for oVirt
+# build Fedora subset required for oVirt
 if [ $update_pungi != 0 ]; then
     if [[ "$update_pungi" == "init" ]]; then
         pungi_flags="-GCB"
@@ -133,19 +140,45 @@ if [ $update_pungi != 0 ]; then
         pungi_flags="-GC"
     fi
 
+    # use Fedora + updates + ovirt.org repo for updates not yet in Fedora
+    # + local ovirt repo with locally rebuilt ovirt* RPMs
     cat > $PUNGIKS << EOF
 repo --name=f$FEDORA --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$FEDORA&arch=\$basearch
 repo --name=f$FEDORA-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$FEDORA&arch=\$basearch
+repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/\$basearch --excludepkgs=ovirt*
 repo --name=ovirt --baseurl=http://localhost/ovirt
+EOF
+    if [ $include_src != 0 ]; then
+        cat >> $PUNGIKS << EOF
+repo --name=f$FEDORA-src --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-source-$FEDORA&arch=\$basearch
+repo --name=f$FEDORA-updates-src --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-source-f$FEDORA&arch=\$basearch
+repo --name=ovirt-org-src --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/src --excludepkgs=ovirt*
+EOF
+    else
+        pungi_flags+=" --nosource"
+    fi
+
+    cd $BASE
+    cat >> $PUNGIKS << EOF
 
 %packages
 EOF
-    cd $BASE
-    grep -hv "^-" ovirt-host-creator/common-pkgs.ks wui-appliance/common-pkgs.ks >> $PUNGIKS
-    echo "anaconda-runtime" >> $PUNGIKS
-    echo "%end" >> $PUNGIKS
+    # merge package lists from all oVirt kickstarts
+    # exclude ovirt-host-image* (chicken-egg: built at the next step using repo created here)
+    egrep -hv "^-|^ovirt-host-image" \
+        ovirt-host-creator/common-pkgs.ks \
+        wui-appliance/common-pkgs.ks \
+        | sort -u >> $PUNGIKS
+    cat >> $PUNGIKS << EOF
+
+anaconda-runtime
+%end
+EOF
     cd $PUNGI
-    pungi --ver=$FEDORA $pungi_flags --nosource  -c $PUNGIKS --force
+    pungi --ver=$FEDORA $pungi_flags -c $PUNGIKS --force
+    if [ $include_src != 0 ]; then
+        pungi --ver=$FEDORA -I  --sourceisos --nosplitmedia -c $PUNGIKS --force
+    fi
     restorecon -r .
 fi
 
@@ -155,7 +188,7 @@ if [ $update_node = 1 ]; then
     cd $BASE/ovirt-host-creator
     rm -rf rpm-build
     cat > repos.ks << EOF
-repo --name=f9 --baseurl=http://localhost/pungi/$FEDORA/$ARCH/os
+repo --name=f$FEDORA --baseurl=http://localhost/pungi/$FEDORA/$ARCH/os
 
 EOF
     bumpver
@@ -183,9 +216,9 @@ EOF
     make
     cp wui-rel-*.ks $OVIRT
     ./create-wui-appliance.sh -t http://$VIRBR/pungi/$FEDORA/$ARCH/os -k http://$VIRBR/ovirt/wui-rel-$ARCH.ks $app_type
-    
+
+    set +x
     echo "oVirt appliance setup started, check progress with:"
     echo "  virt-viewer developer"
 fi
 
-set +x
