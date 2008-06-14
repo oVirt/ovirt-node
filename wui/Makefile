@@ -1,8 +1,8 @@
 VERSION		= $(shell echo `awk '{ print $$1 }' version`)
 RELEASE		= $(shell echo `awk '{ print $$2 }' version`)
 NEWRELEASE	= $(shell echo $$(($(RELEASE) + 1)))
-X		= $(shell echo `awk '{ if (split($$2,r,".") >= 2) { if (r[1]=="0") {print r[2]+1} else print 1 } else print 1 }' version`)
-GITRELEASE	= $(shell echo 0.$(X).`date --utc +%Y%m%d%H%M`git`git show-ref --heads --hash=7 $$(git branch|awk '$$1="*" {print $$2}')`)
+X		= $(shell echo `awk '{ if (split($$2,r,".") >= 2) { printf("%d.%d\n", r[1], r[2]+1) } else printf("%d.%d", r[1], 1) }' version`)
+GITRELEASE	= $(shell echo $(X).`date --utc +%Y%m%d%H%M`git`git show-ref --heads --hash=7 $$(git branch|awk '$$1="*" {print $$2}')`)
 DIST		= $(shell rpm --eval '%{dist}')
 ARCH		= $(shell uname -i)
 
