@@ -44,7 +44,9 @@ EOF
 }
 
 bumpver() {
+    git checkout version
     if [[ "$version_type" == "git" ]]; then
+        make bumpversion
         make bumpgit
     elif [[ "$version_type" == "release" ]]; then
         make bumprelease

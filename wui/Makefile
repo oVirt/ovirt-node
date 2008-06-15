@@ -1,4 +1,5 @@
 VERSION		= $(shell echo `awk '{ print $$1 }' version`)
+NEWVERSION	= $(shell printf "%.2f" `dc -e "$(VERSION) .01 + p"`)
 RELEASE		= $(shell echo `awk '{ print $$2 }' version`)
 NEWRELEASE	= $(shell echo $$(($(RELEASE) + 1)))
 X		= $(shell echo `awk '{ if (split($$2,r,".") >= 2) { if (r[1]=="0") {print r[2]+1} else print 1 } else print 1 }' version`)
@@ -31,6 +32,8 @@ bumprelease:
 setversion: 
 	-echo "$(VERSION) $(RELEASE)" > version
 
+bumpversion:
+	-echo "$(NEWVERSION) 0" > version
 
 clean:
 	-rm -f ovirt*.gz ovirt*.rpm 
