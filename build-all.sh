@@ -18,7 +18,7 @@ die() { warn "$@"; try_h; exit 1; }
 
 cd $(dirname $0)
 BASE=$(pwd)
-FEDORA=9
+F_REL=9
 ARCH=$(uname -i)
 HTDOCS=/var/www/html
 OVIRT=$HTDOCS/ovirt
@@ -148,10 +148,10 @@ if [ $update_pungi != 0 ]; then
     fedora_mirror=http://mirrors.fedoraproject.org/mirrorlist
     # use Fedora + updates
     cat > $PUNGIKS << EOF
-repo --name=f$FEDORA \
-  --mirrorlist=$fedora_mirror?repo=fedora-$FEDORA&arch=\$basearch
-repo --name=f$FEDORA-updates \
-  --mirrorlist=$fedora_mirror?repo=updates-released-f$FEDORA&arch=\$basearch
+repo --name=f$F_REL \
+  --mirrorlist=$fedora_mirror?repo=fedora-$F_REL&arch=\$basearch
+repo --name=f$F_REL-updates \
+  --mirrorlist=$fedora_mirror?repo=updates-released-f$F_REL&arch=\$basearch
 EOF
     # + ovirt.org repo for updates not yet in Fedora
     # + local ovirt repo with locally rebuilt ovirt* RPMs ( options -w and -n )
@@ -165,16 +165,16 @@ EOF
     fi
     cat >> $PUNGIKS << EOF
 repo --name=ovirt-org \
-  --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/\$basearch $excludepkgs
+  --baseurl=http://ovirt.org/repos/ovirt/$F_REL/\$basearch $excludepkgs
 EOF
     if [ $include_src != 0 ]; then
         cat >> $PUNGIKS << EOF
-repo --name=f$FEDORA-src \
-  --mirrorlist=$fedora_mirror?repo=fedora-source-$FEDORA&arch=\$basearch
-repo --name=f$FEDORA-updates-src \
-  --mirrorlist=$fedora_mirror?repo=updates-released-source-f$FEDORA&arch=\$basearch
+repo --name=f$F_REL-src \
+  --mirrorlist=$fedora_mirror?repo=fedora-source-$F_REL&arch=\$basearch
+repo --name=f$F_REL-updates-src \
+  --mirrorlist=$fedora_mirror?repo=updates-released-source-f$F_REL&arch=\$basearch
 repo --name=ovirt-org-src \
-  --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/src $excludepkgs
+  --baseurl=http://ovirt.org/repos/ovirt/$F_REL/src $excludepkgs
 EOF
     else
         pungi_flags+=" --nosource"
@@ -198,9 +198,9 @@ anaconda-runtime
 %end
 EOF
     cd $PUNGI
-    pungi --ver=$FEDORA $pungi_flags -c $PUNGIKS --force
+    pungi --ver=$F_REL $pungi_flags -c $PUNGIKS --force
     if [ $include_src != 0 ]; then
-        pungi --ver=$FEDORA -I  --sourceisos --nosplitmedia -c $PUNGIKS --force
+        pungi --ver=$F_REL -I  --sourceisos --nosplitmedia -c $PUNGIKS --force
     fi
     restorecon -r .
 fi
@@ -211,7 +211,7 @@ if [ $update_node = 1 ]; then
     cd $BASE/ovirt-host-creator
     rm -rf rpm-build
     cat > repos.ks << EOF
-repo --name=f$FEDORA --baseurl=http://localhost/pungi/$FEDORA/$ARCH/os
+repo --name=f$F_REL --baseurl=http://localhost/pungi/$F_REL/$ARCH/os
 
 EOF
     bumpver
@@ -232,7 +232,7 @@ if [ $update_app == 1 ]; then
     cd $BASE/wui-appliance
     make clean
     cat > repos-x86_64.ks << EOF
-url --url http://$VIRBR/pungi/$FEDORA/$ARCH/os
+url --url http://$VIRBR/pungi/$F_REL/$ARCH/os
 EOF
     excludepkgs=
     if [[ -f $OVIRT/repodata/repomd.xml ]]; then
@@ -242,13 +242,13 @@ repo --name=ovirt --baseurl=http://$VIRBR/ovirt
 EOF
     fi
     cat >> repos-x86_64.ks << EOF
-repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/x86_64 $excludepkgs
+repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$F_REL/x86_64 $excludepkgs
 
 EOF
     make
     cp wui-rel-*.ks $OVIRT
     ./create-wui-appliance.sh \
-      -t http://$VIRBR/pungi/$FEDORA/$ARCH/os \
+      -t http://$VIRBR/pungi/$F_REL/$ARCH/os \
       -k http://$VIRBR/ovirt/wui-rel-$ARCH.ks $app_type
 
     set +x
