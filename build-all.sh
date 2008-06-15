@@ -226,7 +226,8 @@ fi
 # NOTE: create-wui-appliance.sh must be run as root
 if [ $update_app == 1 ]; then
     # FIXME: This can go away once we have livecd tools building the appliances
-    VIRBR=$(virsh net-dumpxml default | grep "<ip address=" | sed "s/.*ip address='\(.*\)' .*/\1/")
+    VIRBR=$(virsh net-dumpxml default \
+	    | sed -n "s/^ *<ip address='\([^.]*\)' .*/\1/p")
     test -z $VIRBR && die "Could not get ip address of default network for app"
 
     cd $BASE/wui-appliance
