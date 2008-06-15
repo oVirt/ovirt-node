@@ -80,7 +80,8 @@ done
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 test $update_app = 1 -a -z "$app_type" && usage "Need to specify -d or -b"
-test $include_src = 1 -a "$update_pungi" = 0 && usage "Need to specify -p when including source"
+test $include_src = 1 -a "$update_pungi" = 0 &&
+  usage "Need to specify -p when including source"
 test "$update_pungi" != 0 -a "$update_pungi" != "init" \
     -a "$update_pungi" != "update" \
     && usage "-p must provide either init or update argument"
@@ -114,8 +115,10 @@ fi
 # If doing either a node or app build, make sure http is running
 if [ $update_app = 1 -o $update_node = 1 -o $update_pungi != 0 ]; then
     lokkit --service http
-    service httpd status > /dev/null 2>&1 || service httpd start > /dev/null 2>&1
-    service libvirtd status > /dev/null 2>&1 || service libvirtd start > /dev/null 2>&1
+    service httpd status > /dev/null 2>&1 ||
+      service httpd start > /dev/null 2>&1
+    service libvirtd status > /dev/null 2>&1 ||
+      service libvirtd start > /dev/null 2>&1
     service libvirtd reload
 fi
 
@@ -142,10 +145,13 @@ if [ $update_pungi != 0 ]; then
         pungi_flags="-GC"
     fi
 
+    fedora_mirror=http://mirrors.fedoraproject.org/mirrorlist
     # use Fedora + updates
     cat > $PUNGIKS << EOF
-repo --name=f$FEDORA --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$FEDORA&arch=\$basearch
-repo --name=f$FEDORA-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$FEDORA&arch=\$basearch
+repo --name=f$FEDORA \
+  --mirrorlist=$fedora_mirror?repo=fedora-$FEDORA&arch=\$basearch
+repo --name=f$FEDORA-updates \
+  --mirrorlist=$fedora_mirror?repo=updates-released-f$FEDORA&arch=\$basearch
 EOF
     # + ovirt.org repo for updates not yet in Fedora
     # + local ovirt repo with locally rebuilt ovirt* RPMs ( options -w and -n )
@@ -158,13 +164,17 @@ repo --name=ovirt --baseurl=http://localhost/ovirt
 EOF
     fi
     cat >> $PUNGIKS << EOF
-repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/\$basearch $excludepkgs
+repo --name=ovirt-org \
+  --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/\$basearch $excludepkgs
 EOF
     if [ $include_src != 0 ]; then
         cat >> $PUNGIKS << EOF
-repo --name=f$FEDORA-src --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-source-$FEDORA&arch=\$basearch
-repo --name=f$FEDORA-updates-src --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-source-f$FEDORA&arch=\$basearch
-repo --name=ovirt-org-src --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/src $excludepkgs
+repo --name=f$FEDORA-src \
+  --mirrorlist=$fedora_mirror?repo=fedora-source-$FEDORA&arch=\$basearch
+repo --name=f$FEDORA-updates-src \
+  --mirrorlist=$fedora_mirror?repo=updates-released-source-f$FEDORA&arch=\$basearch
+repo --name=ovirt-org-src \
+  --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/src $excludepkgs
 EOF
     else
         pungi_flags+=" --nosource"
@@ -176,7 +186,8 @@ EOF
 %packages
 EOF
     # merge package lists from all oVirt kickstarts
-    # exclude ovirt-host-image* (chicken-egg: built at the next step using repo created here)
+    # exclude ovirt-host-image* (chicken-egg: built at the next step
+    # using repo created here)
     egrep -hv "^-|^ovirt-host-image" \
         ovirt-host-creator/common-pkgs.ks \
         wui-appliance/common-pkgs.ks \
@@ -236,7 +247,9 @@ repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$FEDORA/x86_64 $exc
 EOF
     make
     cp wui-rel-*.ks $OVIRT
-    ./create-wui-appliance.sh -t http://$VIRBR/pungi/$FEDORA/$ARCH/os -k http://$VIRBR/ovirt/wui-rel-$ARCH.ks $app_type
+    ./create-wui-appliance.sh \
+      -t http://$VIRBR/pungi/$FEDORA/$ARCH/os \
+      -k http://$VIRBR/ovirt/wui-rel-$ARCH.ks $app_type
 
     set +x
     echo "oVirt appliance setup started, check progress with:"
@@ -248,4 +261,3 @@ EOF
     fi
 
 fi
-
