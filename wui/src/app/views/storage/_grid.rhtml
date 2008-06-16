@@ -20,8 +20,8 @@
 		],
 	sortname: "ip_addr",
 	sortorder: "asc",
-    usepager: <%= (!hwpool.nil? and hwpool.storage_pools.size > storage_per_page) ? 'true' : 'false' %>,
-    useRp: <%= (!hwpool.nil? and hwpool.storage_pools.size > storage_per_page) ? 'true' : 'false' %>,
+    usepager: <%= (hwpool.nil? or hwpool.storage_pools.size > storage_per_page) ? 'true' : 'false' %>,
+    useRp: <%= (hwpool.nil? or hwpool.storage_pools.size > storage_per_page) ? 'true' : 'false' %>,
 	rp: <%= storage_per_page %>,
 	showTableToggleBtn: true,
 	onSelect: <%= on_select %>
