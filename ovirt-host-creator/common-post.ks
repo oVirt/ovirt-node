@@ -450,9 +450,12 @@ EOF
 
 echo "Removing excess RPMs"
 
-# kernel pulls in mkinitrd which pulls in isomd5sum which pulls in python.
-# However, this is just an install-time dependency for kernel; we can remove
+# kernel pulls in mkinitrd which pulls in isomd5sum which pulls in python,
+# and livecd-tools needs lokkit to disable SELinux.
+# However, this is just an install-time dependency; we can remove
 # it afterwards, which we do here
+rpm -e system-config-firewall-tui system-config-network-tui rhpl \
+    rpm-python dbus-python kudzu newt-python newt
 rpm -e qemu kpartx mkinitrd isomd5sum dmraid python python-libs
 
 # Sigh.  ntp has a silly dependency on perl because of auxiliary scripts which

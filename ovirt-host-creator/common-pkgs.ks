@@ -62,3 +62,4 @@ syslinux
 -file
 -qemu
 -libvirt-python
+/usr/sbin/lokkit
