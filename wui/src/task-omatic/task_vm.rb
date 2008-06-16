@@ -88,6 +88,16 @@ def setVmState(vm, state)
   vm.save
 end
 
+def setVmVncPort(vm, domain)
+  doc = REXML::Document.new(domain.xml_desc)
+  attrib = REXML::XPath.match(doc, "//graphics/@port")
+  if not attrib.empty?:
+    vm.vnc_port = attrib.to_s.to_i
+  end
+  vm.save
+end
+
+
 def findVM(task, fail_on_nil_host_id = true)
   # find the matching VM in the vms table
   vm = Vm.find(:first, :conditions => [ "id = ?", task.vm_id ])
@@ -321,11 +331,7 @@ def start_vm(task)
     dom = conn.define_domain_xml(xml.to_s)
     dom.create
 
-    doc = REXML::Document.new(dom.xml_desc)
-    attrib = REXML::XPath.match(doc, "//graphics/@port")
-    if not attrib.empty?:
-      vm.vnc_port = attrib.to_s.to_i
-    end
+    setVmVncPort(vm, dom)
 
     conn.close
   rescue => ex
@@ -414,12 +420,7 @@ def restore_vm(task)
     dom = conn.lookup_domain_by_uuid(vm.uuid)
     dom.restore
 
-    doc = REXML::Document.new(dom.xml_desc)
-    attrib = REXML::XPath.match(doc, "//graphics/@port")
-    if not attrib.empty?:
-      vm.vnc_port = attrib.to_s.to_i
-      vm.save
-    end
+    setVmVncPort(vm, dom)
 
     conn.close
   rescue => ex
