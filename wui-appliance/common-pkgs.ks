@@ -16,6 +16,7 @@ iscsi-initiator-utils
 ovirt-wui
 ovirt-host-image-pxe
 firefox
+gtk-vnc-plugin
 xorg-x11-xauth
 virt-viewer
 cobbler
