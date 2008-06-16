@@ -24,7 +24,7 @@ HTDOCS=/var/www/html
 OVIRT=$HTDOCS/ovirt
 PUNGI=$HTDOCS/pungi
 PUNGIKS=$PUNGI/pungi.ks
-DEP_RPMS="createrepo httpd kvm libvirt livecd-tools pungi"
+DEP_RPMS="createrepo httpd kvm libvirt livecd-tools pungi-1.2.18.1"
 
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
