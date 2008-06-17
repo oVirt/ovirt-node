@@ -68,6 +68,7 @@ class GraphController < ApplicationController
   # retrieves data for history graphs
   def history_graph_data
     history_graphs
+    myDays = params[:days]
     target = params[:target]
     poolType = params[:poolType]
     devclass = DEV_KEY_CLASSES[target]
@@ -86,28 +87,8 @@ class GraphController < ApplicationController
         }
     end
 
-    # Add in the timescale and resolution
     startTime = 0
-
-    myDays = params[:days]
-    case myDays.to_i
-        when 1
-           duration = 86400
-           resolution = RRDResolution::Short
-	   time_interval = 2230 # 37 min intervals
-        when 7
-           duration = 604800
-           resolution = RRDResolution::Short
-	   time_interval = 2230
-        when 30
-           duration = 2592000
-           resolution = RRDResolution::Medium
- 	   time_interval = 25645 # roughly a 1/4 day 
-        else
-           duration = 604800
-           resolution = RRDResolution::Default
-	   time_interval = 2230
-    end
+    duration, resolution = _get_snapshot_time_params(myDays.to_i)
     
     requestList = [ ]
     @pool.hosts.each { |host|
@@ -135,89 +116,63 @@ class GraphController < ApplicationController
             function = stat.get_function?
             devClass = stat.get_devClass?
             dat.each{ |data|
-                value    = data.get_value?
-                if ( (devClass != DEV_KEY_CLASSES["cpu"]) && 
-                    ( function != DataFunction::RollingAverage)  &&
-                    ( function != DataFunction::RollingPeak)) 
-                   value = 0 if value.nan?
-                end
-                # now we need to massage some of the data:
-
-                if devClass == DEV_KEY_CLASSES["cpu"]
-                   value  =  value.to_i
-                elsif devClass == DEV_KEY_CLASSES["netout"] && counter == DEV_KEY_COUNTER["netout"]
-                   value  = (value.to_i * 8 / 1024 / 1024).to_i #mbits
-                elsif devClass == DEV_KEY_CLASSES["netin"] && counter == DEV_KEY_COUNTER["netin"]
-                   value  = (value.to_i * 8 / 1024 / 1024).to_i # mbits 
-                elsif devClass == DEV_KEY_CLASSES["memory"]
-                   value  = (value.to_i / 1000000).to_i
-                end
-
-                valueindex = ((data.get_timestamp?.to_i - dat[0].get_timestamp?.to_i) / time_interval).to_i
+	        value = _get_snapshot_value(data.get_value?, devClass, function)
+                valueindex = (data.get_timestamp?.to_i - dat[0].get_timestamp?.to_i) / resolution
                 times.size.upto(valueindex) { |x|
-                    time = Time.at(dat[0].get_timestamp?.to_i + valueindex * time_interval)
+                    time = Time.at(dat[0].get_timestamp?.to_i + valueindex * resolution)
                     ts   = Date::ABBR_MONTHNAMES[time.month] + ' ' + time.day.to_s 
                     ts  += ' ' + time.hour.to_s + ':' + time.min.to_s if myDays.to_i == 1
                     times.push ts
                 }
-                @avg_history[:values].size.upto(valueindex)  {  |x|  
-                    @avg_history[:values].push 0 
-                    @avg_history[:dataPoints].push 0 
-                    @peak_history[:values].push 0 
-                    @peak_history[:dataPoints].push 0 
-                    @roll_avg_history[:values].push 0 
-                    @roll_avg_history[:dataPoints].push 0 
-                    @roll_peak_history[:values].push 0 
-                    @roll_peak_history[:dataPoints].push 0 
-                }
-                if function == DataFunction::Average
-                    @avg_history[:values][valueindex] += value.to_i
-                    @avg_history[:dataPoints][valueindex] += 1
+		[@avg_history, @peak_history, @roll_avg_history, @roll_peak_history].each { |valuearray|
+			valuearray[:values].size.upto(valueindex) { |x|
+				valuearray[:values].push 0
+				valuearray[:dataPoints].push 0
+			}
+		}
+		if function == DataFunction::Average
+		    valuearray = @avg_history
                 elsif function == DataFunction::Peak
-                    @peak_history[:values][valueindex] += value.to_i
-                    @peak_history[:dataPoints][valueindex] += 1
+		    valuearray = @peak_history
                 elsif function == DataFunction::RollingAverage
-                    @roll_avg_history[:values][valueindex] += value.to_i
-                    @roll_avg_history[:dataPoints][valueindex] += 1
+		    valuearray = @roll_avg_history
                 elsif function == DataFunction::RollingPeak
-                    @roll_peak_history[:values][valueindex] += value.to_i
-                    @roll_peak_history[:dataPoints][valueindex] += 1
+		    valuearray = @roll_peak_history
                 end
+
+		valuearray[:values][valueindex] = value.to_i
+		valuearray[:dataPoints][valueindex] += 1
             }
         else
             RAILS_DEFAULT_LOGGER.warn("unable to find collectd/rrd stats for " + stat.get_node?.to_s)
-        end
+	end
     }
+
+    # need to average cpu instances
+    if target == "cpu"
+        [@avg_history, @peak_history, @roll_avg_history, @roll_peak_history].each { |valuearray|
+	    0.upto(valuearray[:values].size - 1){ |x|
+                valuearray[:values][x] /= valuearray[:dataPoints][x] if valuearray[:dataPoints][x] > 0
+	    }
+	}
+    end
 
     total_peak = 0
     total_roll_peak = 0
-
-    # avgerage out history for each day
-    0.upto(@avg_history[:values].size - 1){ |x|
-        (@avg_history[:values][x] /= @avg_history[:dataPoints][x]) if (@avg_history[:dataPoints][x] != 0)
-    }
-    0.upto(@peak_history[:values].size - 1){ |x|
-        (@peak_history[:values][x] /= @peak_history[:dataPoints][x]) if (@peak_history[:dataPoints][x] != 0)
-        total_peak = @peak_history[:values][x] if @peak_history[:values][x] > total_peak 
-    }
-    0.upto(@roll_avg_history[:values].size - 1){ |x|
-        (@roll_avg_history[:values][x] /= @roll_avg_history[:dataPoints][x]) if (@roll_avg_history[:dataPoints][x] != 0)
-    }
-    0.upto(@roll_peak_history[:values].size - 1){ |x|
-        (@roll_peak_history[:values][x] /= @roll_peak_history[:dataPoints][x]) if (@roll_peak_history[:dataPoints][x] != 0)
-        total_roll_peak = @roll_peak_history[:values][x] if @roll_peak_history[:values][x] > total_roll_peak 
-    }
+    0.upto(@peak_history[:values].size - 1){ |x| total_peak = @peak_history[:values][x] if @peak_history[:values][x] > total_peak }
+    0.upto(@roll_peak_history[:values].size - 1){ |x| total_roll_peak = @roll_peak_history[:values][x] if @roll_peak_history[:values][x] > total_roll_peak  }
 
     scale = []
     if target == "cpu"
         0.upto(100){ |x|
-            scale.push x.to_s if x % 1 == 0
+            scale.push x.to_s
         }
     elsif target == "memory"
-        increments = @pool.hosts.total_memory / 100
-        scale.push 0.to_s
-        1.upto(1000) { |x| 
-            scale.push((increments * x / 1024).to_s) # divide by 1024 to convert to MB
+        #increments = @pool.hosts.total_memory / 512
+        0.upto(@pool.hosts.total_memory) { |x| 
+	    if x % 1024 == 0
+            	scale.push((x / 1024).to_s) # divide by 1024 to convert to MB
+	    end
         }
     elsif target == "load"
         0.upto(total_peak){|x|
@@ -226,21 +181,7 @@ class GraphController < ApplicationController
     end
 
     # if no data is found, we wont have a time axis
-    if times.size == 0
-    	now = Time.now
-    	if myDays.to_i == 1
-	    0.upto(152){|x|
-	    	time = now - 568 * x # 568 = 24 * 60 * 60 / 152 = secs / interval
-	    	times.push Date::ABBR_MONTHNAMES[time.month] + ' ' + time.day.to_s + ' ' + time.hour.to_s + ':' + time.min.to_s 
-	    }
-	elsif
-	    1.upto(myDays.to_i * 3){|x|
-	    	time = now - x * 28800 # 24 * 60 * 60 / ~2
-	    	times.push Date::ABBR_MONTHNAMES[time.month] + ' ' + time.day.to_s
-	    }
-	end
-	times.reverse!
-    end
+    times = _generate_default_time_axis(myDays) if times.size == 0
 
     graph_object = {
        :timepoints => times,
@@ -481,6 +422,56 @@ class GraphController < ApplicationController
         requestList << StatsRequest.new(hostname, DEV_KEY_CLASSES['netin'],  0, DEV_KEY_COUNTERS['netin'], 
                                                     0, duration, resolution, DataFunction::Peak   ) 
         return requestList
+      end
+
+      def _get_snapshot_time_params(days)
+          case days.to_i
+              when 1
+	      	return 86400,   RRDResolution::Short
+              when 7
+	      	return 604800,  RRDResolution::Medium
+              when 30
+	        return 2592000, RRDResolution::Medium
+              else
+	        return 604800,  RRDResolution::Default
+          end
+      end
+
+      def _get_snapshot_value(value, devClass, function)
+          if ( ( devClass != DEV_KEY_CLASSES["cpu"]) && 
+               ( function != DataFunction::RollingAverage)  &&
+               ( function != DataFunction::RollingPeak) &&
+	       ( value.nan?) ) 
+                   return 0 
+          end
+
+          # massage some of the data:
+          if devClass == DEV_KEY_CLASSES["cpu"]
+              return value.to_i
+          elsif devClass == DEV_KEY_CLASSES["netout"] && counter == DEV_KEY_COUNTER["netout"]
+              return (value.to_i * 8 / 1024 / 1024).to_i #mbits
+          elsif devClass == DEV_KEY_CLASSES["netin"] && counter == DEV_KEY_COUNTER["netin"]
+              return (value.to_i * 8 / 1024 / 1024).to_i # mbits 
+          elsif devClass == DEV_KEY_CLASSES["memory"]
+              return (value.to_i / 1000000).to_i
+          end
+      end
+
+      def _generated_default_time_axis(myDays)
+          times = []
+          now = Time.now
+          if myDays.to_i == 1
+              0.upto(152){|x|
+                  time = now - 568 * x # 568 = 24 * 60 * 60 / 152 = secs / interval
+	    	  times.push Date::ABBR_MONTHNAMES[time.month] + ' ' + time.day.to_s + ' ' + time.hour.to_s + ':' + time.min.to_s 
+	      }
+	  elsif
+	      1.upto(myDays.to_i * 3){|x|
+	    	  time = now - x * 28800 # 24 * 60 * 60 / ~2
+	    	  times.push Date::ABBR_MONTHNAMES[time.month] + ' ' + time.day.to_s
+	      }
+	  end
+	  times.reverse!
       end
 
 end

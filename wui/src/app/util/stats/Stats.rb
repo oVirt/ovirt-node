@@ -27,7 +27,7 @@ require 'util/stats/StatsRequest'
 
 # This fetches a rolling average, basically average points before and after.
 
-def fetchRollingAve?(rrdPath, start, endTime, interval, myFunction, lIndex, returnList, aveLen=19)
+def fetchRollingAve?(rrdPath, start, endTime, interval, myFunction, lIndex, returnList, aveLen=7)
    final = 0
 
    #  OK, first thing we need to do is to move the start time back in order to 
@@ -76,7 +76,7 @@ def fetchRollingAve?(rrdPath, start, endTime, interval, myFunction, lIndex, retu
 end
 
 
-def fetchRollingCalcUsedData?(rrdPath, start, endTime, interval, myFunction, lIndex, returnList, aveLen=19)
+def fetchRollingCalcUsedData?(rrdPath, start, endTime, interval, myFunction, lIndex, returnList, aveLen=7)
 
    # OK, first thing we need to do is to move the start time back in order to have data to average.
       
