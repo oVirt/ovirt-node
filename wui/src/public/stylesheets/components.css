@@ -85,6 +85,9 @@
 #toolbar_nav li:hover {
     background: #4B95B8;
 }
+#toolbar_nav li.current {
+    background: #4B95B8;
+}
 #toolbar_nav li, #toolbar_nav li a {
     text-decoration: none;
     text-align: center;

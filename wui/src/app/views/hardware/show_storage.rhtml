@@ -1,29 +1,18 @@
 <div id="toolbar_nav">
 <ul>
     <li><a href="<%= url_for :controller => 'storage', :action => 'addstorage', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Add Storage Server</a></li>
-    <li><a href="<%= url_for :controller => 'storage', :action => 'new', :hardware_pool_id => @pool %>" rel="facebox[.bolder]"><%= image_tag "icon_addstorage.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Create Storage Server</a></li>
     <li>
-      <a href="#" onClick="return validate_for_move();" ><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a>
+      <a href="#" onClick="return validate_storage_for_move();" ><%= image_tag "icon_move.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Move</a>
       <a id="move_link_hidden" href="<%= url_for :controller => 'hardware', :action => 'move', :id => @pool, :resource_type=>'storage' %>" rel="facebox[.bolder]"  style="display:none" ></a>
     </li>
-    <li><a href="#" onClick="remove_storage()"><%= image_tag "icon_remove.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Remove</a></li>
-    <% if @pool.id != HardwarePool.get_default_pool.id %>
-      <li><a href="#" onClick="delete_storage()"><%= image_tag "icon_delete_white.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Delete</a></li>
-    <% end %>
+    <li>
+      <a href="#" onClick="return validate_storage_for_remove();" ><%= image_tag "icon_remove.png", :style=>"vertical-align:middle;" %>&nbsp;&nbsp;Remove</a>
+      <a id="remove_link_hidden" href="<%= url_for :controller => 'hardware', :action => 'removestorage', :id => @pool %>" rel="facebox[.bolder]"  style="display:none" ></a>
+    </li>
   </ul>
 </div>
 
 <script type="text/javascript">
-  function get_selected_storage()
-  {
-    return get_selected_checkboxes("storage_grid_form")
-  }
-  function validate_for_move()
-  {
-    if (validate_selected(get_selected_storage(), 'storage pool')) {
-      $('#move_link_hidden').click()
-    }
-  }
   function remove_storage()
   {
     storage = get_selected_storage()

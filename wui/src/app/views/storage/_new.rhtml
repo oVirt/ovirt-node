@@ -1,17 +1,10 @@
-<%- content_for :title do -%>
-  Add New Storage Pool
-<%- end -%>
-<%- content_for :description do -%>
-  Add a new Storage Pool to this oVirt server.
-<%- end -%>
-
 <div class="dialog_form">
     <%= error_messages_for 'storage_pool' %>
 
   <% form_tag  do %>
     <!--[form:storage_pool]-->
-    <%= hidden_field_tag 'hardware_pool_id', @hardware_pool.id %>
-    <%= select_tag_with_label "Storage Type:", 'storage_type', @storage_types, :onChange => "load_storage_subform()"  %>
+    <%= hidden_field_tag 'hardware_pool_id', hardware_pool.id %>
+    <%= select_tag_with_label "Storage Type:", 'storage_type', storage_types, :onChange => "load_storage_subform()"  %>
     <!--[eoform:storage_pool]-->
   <% end %>
 

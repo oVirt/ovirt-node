@@ -81,9 +81,6 @@ class StorageController < ApplicationController
   end
 
   def new
-    @storage_pools = @hardware_pool.storage_volumes
-    @storage_types = StoragePool::STORAGE_TYPES.keys
-    render :layout => 'popup'    
   end
 
   def new2
@@ -145,10 +142,12 @@ class StorageController < ApplicationController
   end
 
   def addstorage
-    @hardware_pool = Pool.find(params[:hardware_pool_id])
-    @unassigned = Pool.root.storage_pools.size
-    # FIXME: @assigned should match  the updated assigned storage pools query when that's done
-    @assigned = StoragePool.find(:all).size
+    @hardware_pool = HardwarePool.find(params[:hardware_pool_id])
+    @perm_obj = @hardware_pool
+    @redir_controller = @perm_obj.get_controller
+    authorize_admin
+    @storage_pools = @hardware_pool.storage_volumes
+    @storage_types = StoragePool::STORAGE_TYPES.keys
     render :layout => 'popup'    
   end
 

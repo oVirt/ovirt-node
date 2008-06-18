@@ -1,0 +1,25 @@
+<%- content_for :title do -%>
+  Remove Storage Pool
+<%- end -%>
+<%- content_for :description do -%>
+  Please confirm your choice to remove this storage pool.
+<%- end -%>
+
+<form id="remove_storage_selection" >
+<div class="dialog_form">
+    <%= error_messages_for 'remove_storage_pool' %>
+
+  <% form_tag  do %>
+    <!--[form:storage_pool]-->
+    <%= hidden_field_tag 'hardware_pool_id', @pool.id %>
+    <% if @pool.id != HardwarePool.get_default_pool.id %>
+      <%= radio_button_tag_with_label "Remove this Storage Pool from #{@pool.name} (moving it to #{HardwarePool.get_default_pool.name})", "remove_selection", "remove", true %>
+      <%= radio_button_tag_with_label "Delete this Storage Pool (making its storage volumes unavailable)", "remove_selection", "delete", false %>
+    <% else %>
+      <%= radio_button_tag_with_label "Delete this Storage Pool (making its storage volumes unavailable)", "remove_selection", "delete", true %>
+    <% end %>
+    <!--[eoform:storage_pool]-->
+  <% end %>
+</div>
+</form>
+<%= popup_footer("delete_or_remove_storage()", "Remove Storage Pool") %>

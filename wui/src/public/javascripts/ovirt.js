@@ -174,4 +174,31 @@ function empty_summary(element_id, label){
 }
 
 
+  function get_selected_storage()
+  {
+    return get_selected_checkboxes("storage_grid_form")
+  }
+  function validate_storage_for_move()
+  {
+    if (validate_selected(get_selected_storage(), 'storage pool')) {
+      $('#move_link_hidden').click()
+    }
+  }
+  function validate_storage_for_remove()
+  {
+    if (validate_selected(get_selected_storage(), 'storage pool')) {
+      $('#remove_link_hidden').click()
+    }
+  }
+  function delete_or_remove_storage()
+  {
+    var selected = $('#remove_storage_selection :radio:checked')
+    if (selected[0].value == "remove") {
+      remove_storage()
+    } else if (selected[0].value == "delete") {
+      delete_storage()
+    }
+    jQuery(document).trigger('close.facebox')
+  }
+
 

@@ -77,6 +77,13 @@ module ApplicationHelper
      }
   end
 
+  def radio_button_tag_with_label(label, name, value = "1", checked = false) 
+    %{ 
+      <div class="i"><label for="#{name}">#{_(label)}</label>
+      #{radio_button_tag name, value, checked}</div>
+     }
+  end
+
   def popup_footer(action, label)
     %{ 
       <div style="background: url(#{image_path "fb_footer.jpg"}) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">

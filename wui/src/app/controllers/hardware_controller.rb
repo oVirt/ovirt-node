@@ -290,6 +290,11 @@ class HardwareController < ApplicationController
     end
   end
 
+  def removestorage
+    pre_modify
+    render :layout => 'popup'    
+  end
+
   def destroy
     parent = @pool.parent
     if not(parent)
