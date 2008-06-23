@@ -227,7 +227,7 @@ fi
 if [ $update_app == 1 ]; then
     # FIXME: This can go away once we have livecd tools building the appliances
     VIRBR=$(virsh net-dumpxml default \
-	    | sed -n "s/^ *<ip address='\([^.]*\)' .*/\1/p")
+	    | sed -n "s/^ *<ip address='\([^']*\)' .*/\1/p")
     test -z $VIRBR && die "Could not get ip address of default network for app"
 
     cd $BASE/wui-appliance
