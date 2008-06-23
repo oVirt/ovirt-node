@@ -4,22 +4,24 @@
 <%- content_for :action_links do -%>
   <%if @can_modify -%>
     <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
-      <a href="#" onClick="toggle_host(false)">
+      <a href="#" onClick="host_action('disable')">
         <%= image_tag "icon_suspend.png" %> Disable Host
       </a> 
     <% else -%>
-      <a href="#" onClick="toggle_host(true)">
+      <a href="#" onClick="host_action('enable')">
         <%= image_tag "icon_start.png" %> Enable Host
       </a> 
     <% end -%>
+    <a href="#" onClick="host_action('clear_vms')">
+      <%= image_tag "icon_x.png" %> Clear VMs
+    </a> 
   <%- end -%>
 <%- end -%>
 <script type="text/javascript">
-  function toggle_host(enable)
+  function host_action(action)
   {
-    enable_url = '<%= url_for :controller => "host", :action => "enable", :id => @host %>'
-    disable_url = '<%= url_for :controller => "host", :action => "disable", :id => @host %>'
-      $.post(enable ? enable_url : disable_url,
+      $.post('<%= url_for :controller => "host", :action => 'host_action', :id => @host%>',
+             { action_type: action },
               function(data,status){
                 refresh_summary('hosts_selection', 
                             '<%= url_for :controller => "host", 

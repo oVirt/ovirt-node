@@ -74,7 +74,11 @@ class ApplicationController < ActionController::Base
       unless (is_modify_action ? @can_modify : @can_control_vms)
         @redir_obj = @perm_obj unless @redir_obj
         flash[:notice] = 'You do not have permission to create or modify this item '
-        if @redir_controller
+        if @json_hash
+          @json_hash[:success] = false
+          @json_hash[:alert] = flash[:notice]
+          render :json => @json_hash
+        elsif @redir_controller
           redirect_to :controller => @redir_controller, :action => 'show', :id => @redir_obj
         else
           redirect_to :action => 'show', :id => @redir_obj

@@ -23,6 +23,8 @@ class HostController < ApplicationController
     render :action => 'list'
   end
 
+  before_filter :pre_action, :only => [:host_action, :enable, :disable, :clear_vms]
+
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
@@ -61,6 +63,17 @@ class HostController < ApplicationController
   def destroy
   end
 
+  def host_action
+    action = params[:action_type]
+    if["disable", "enable", "clear_vms"].include?(action)
+      self.send(action)
+    else
+      @json_hash[:alert]="invalid operation #{action}"
+      @json_hash[:success]=false
+      render :json => @json_hash
+    end
+  end
+
   def disable
     set_disabled(1)
   end
@@ -70,23 +83,36 @@ class HostController < ApplicationController
 
   def set_disabled(value)
     operation = value == 1 ? "diabled" : "enabled"
-    @host = Host.find(params[:id])
-    set_perms(@host.hardware_pool)
-    unless @can_modify
-      alert= 'You do not have permission to edit this host'
-      success=false
-    else
-      begin
-        @host.is_disabled = value
-        @host.save
-        alert="Host was successfully #{operation}"
-        success=true
-      rescue
-        alert="Error setting host to #{operation}"
-        success=false
-      end
+    begin
+      @host.is_disabled = value
+      @host.save!
+      @json_hash[:alert]="Host was successfully #{operation}"
+      @json_hash[:success]=true
+    rescue
+      @json_hash[:alert]="Error setting host to #{operation}"
+      @json_hash[:success]=false
     end
-    render :json => { :object => "host", :success => success, :alert => alert }
+    render :json => @json_hash
+  end
+
+  def clear_vms
+    begin
+      Host.transaction do
+        task = HostTask.new({ :user    => get_login_user,
+                              :host_id   => @host.id,
+                              :action  => HostTask::ACTION_CLEAR_VMS,
+                              :state   => Task::STATE_QUEUED})
+        task.save!
+        @host.is_disabled = true
+        @host.save!
+      end
+      @json_hash[:alert]="Clear VMs action was successfully queued."
+      @json_hash[:success]=true
+    rescue
+      @json_hash[:alert]="Error in queueing Clear VMs action."
+      @json_hash[:success]=false
+    end
+    render :json => @json_hash
   end
 
 
@@ -104,6 +130,12 @@ class HostController < ApplicationController
     @host = Host.find(params[:id])
     flash[:notice] = 'Hosts may not be edited via the web UI'
     redirect_to :action=> 'show', :id => @host
+  end
+  def pre_action
+    @host = Host.find(params[:id])
+    @perm_obj = @host.hardware_pool
+    @json_hash = { :object => :host }
+    authorize_admin
   end
   def pre_show
     @host = Host.find(params[:id])
