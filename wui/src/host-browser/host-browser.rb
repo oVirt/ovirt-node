@@ -124,7 +124,7 @@ class HostBrowser
                     "hardware_pool"   => HardwarePool.get_default_pool,
                     # Let host-status mark it available when it
                     # successfully connects to it via libvirt.
-                    "state"           => "unavailable").save
+                    "state"           => Host::STATE_UNAVAILABLE).save
             rescue Exception => error
                 puts "Error while creating record: #{error.message}" unless defined?(TESTING)
             end

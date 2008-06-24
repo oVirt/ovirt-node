@@ -110,9 +110,9 @@ def check_status(host)
     # we couldn't contact the host for whatever reason.  Since we can't get
     # to this host, we have to mark all vms on it as disconnected or stopped
     # or such.
-    if host.state != "unavailable"
+    if host.state != Host::STATE_UNAVAILABLE
       puts "Updating host state to unavailable: " + host.hostname
-      host.state = "unavailable"
+      host.state = Host::STATE_UNAVAILABLE
       host.save
     end
 
@@ -135,9 +135,9 @@ def check_status(host)
     return
   end
 
-  if host.state != "available"
+  if host.state != Host::STATE_AVAILABLE
     puts "Updating host state to available: " + host.hostname
-    host.state = "available"
+    host.state = Host::STATE_AVAILABLE
     host.save
   end
 

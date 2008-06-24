@@ -3,18 +3,20 @@
 <%- end -%>
 <%- content_for :action_links do -%>
   <%if @can_modify -%>
-    <%if @host.is_disabled.nil? or @host.is_disabled == 0  -%>
-      <a href="#" onClick="host_action('disable')">
-        <%= image_tag "icon_suspend.png" %> Disable Host
-      </a> 
-    <% else -%>
+    <%if @host.disabled?  -%>
       <a href="#" onClick="host_action('enable')">
         <%= image_tag "icon_start.png" %> Enable Host
       </a> 
+    <% else -%>
+      <a href="#" onClick="host_action('disable')">
+        <%= image_tag "icon_suspend.png" %> Disable Host
+      </a> 
     <% end -%>
-    <a href="#" onClick="host_action('clear_vms')">
-      <%= image_tag "icon_x.png" %> Clear VMs
-    </a> 
+    <%if @host.is_clear_task_valid? -%>
+      <a href="#" onClick="host_action('clear_vms')">
+        <%= image_tag "icon_x.png" %> Clear VMs
+      </a> 
+    <% end -%>
   <%- end -%>
 <%- end -%>
 <script type="text/javascript">

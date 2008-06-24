@@ -22,10 +22,26 @@ require 'util/ovirt'
 class Host < ActiveRecord::Base
   belongs_to :hardware_pool
   has_many :nics, :dependent => :destroy
-  has_many :vms, :dependent => :nullify
+  has_many :vms, :dependent => :nullify do
+    def consuming_resources
+      find(:all, :conditions=>{:state=>Vm::RUNNING_STATES})
+    end
+  end
+  has_many :tasks, :class_name => "HostTask", :dependent => :destroy, :order => "id DESC" do
+    def queued
+      find(:all, :conditions=>{:state=>Task::STATE_QUEUED})
+    end
+    def pending_clear_tasks
+      find(:all, :conditions=>{:state=>Task::WORKING_STATES, 
+                               :action=>HostTask::ACTION_CLEAR_VMS})
+    end
+  end
 
   KVM_HYPERVISOR_TYPE = "KVM"
   HYPERVISOR_TYPES = [KVM_HYPERVISOR_TYPE]
+  STATE_UNAVAILABLE = "unavailable"
+  STATE_AVAILABLE   = "available"
+  STATES = [STATE_UNAVAILABLE, STATE_AVAILABLE]
   def memory_in_mb
     kb_to_mb(memory)
   end
@@ -33,6 +49,16 @@ class Host < ActiveRecord::Base
     self[:memory]=(mb_to_kb(mem))
   end
   def status_str
-    "#{state} (#{(is_disabled.nil? or is_disabled==0) ? 'enabled':'disabled'})"
+    "#{state} (#{disabled? ? 'disabled':'enabled'})"
+  end
+
+  def disabled?
+    not(is_disabled.nil? or is_disabled==0)
+  end
+
+  def is_clear_task_valid?
+    state==STATE_AVAILABLE and
+      not(disabled? and vms.consuming_resources.empty?) and
+      tasks.pending_clear_tasks.empty?
   end
 end

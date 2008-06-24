@@ -19,7 +19,11 @@
 
 class StoragePool < ActiveRecord::Base
   belongs_to              :hardware_pool
-  has_many                :storage_tasks, :dependent => :destroy, :order => "id DESC"
+  has_many :tasks, :class_name => "StorageTask", :dependent => :destroy, :order => "id DESC" do
+    def queued
+      find(:all, :conditions=>{:state=>Task::STATE_QUEUED})
+    end
+  end
   has_many                :storage_volumes, :dependent => :destroy, :include => :storage_pool do
     def total_size_in_gb
       find(:all).inject(0){ |sum, sv| sum + sv.size_in_gb }
@@ -50,9 +54,5 @@ class StoragePool < ActiveRecord::Base
 
   def get_type_label
     STORAGE_TYPES.invert[self.class.name.gsub("StoragePool", "")]
-  end
-
-  def tasks
-    storage_tasks
   end
 end

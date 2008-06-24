@@ -22,7 +22,11 @@ require 'util/ovirt'
 class Vm < ActiveRecord::Base
   belongs_to :vm_resource_pool
   belongs_to :host
-  has_many :vm_tasks, :dependent => :destroy, :order => "id DESC"
+  has_many :tasks, :class_name => "VmTask", :dependent => :destroy, :order => "id DESC" do
+    def queued
+      find(:all, :conditions=>{:state=>Task::STATE_QUEUED})
+    end
+  end
   has_and_belongs_to_many :storage_volumes
   validates_presence_of :uuid, :description, :num_vcpus_allocated,
                         :memory_allocated_in_mb, :memory_allocated, :vnic_mac_addr
@@ -107,7 +111,7 @@ class Vm < ActiveRecord::Base
   def get_pending_state
     pending_state = state
     pending_state = EFFECTIVE_STATE[state] if pending_state
-    get_queued_tasks.each do |task|
+    tasks.queued.each do |task|
       return STATE_INVALID unless VmTask::ACTIONS[task.action][:start] == pending_state
       pending_state = VmTask::ACTIONS[task.action][:success]
     end
@@ -121,18 +125,6 @@ class Vm < ActiveRecord::Base
   def pending_resource_consumption?
     RUNNING_STATES.include?(get_pending_state)
   end
-
-  def get_queued_tasks(state=nil)
-    get_tasks(Task::STATE_QUEUED)
-  end
-
-  def get_tasks(state=nil)
-    conditions = "vm_id = '#{id}'"
-    conditions += " AND state = '#{Task::STATE_QUEUED}'" if state
-    VmTask.find(:all, 
-              :conditions => conditions,
-              :order => "id")
-  end    
 
   def get_action_list
     # return empty list rather than nil
@@ -164,10 +156,6 @@ class Vm < ActiveRecord::Base
 
     # no need to enforce storage here since starting doesn't increase storage allocation
     return return_val
-  end
-
-  def tasks
-    vm_tasks
   end
 
   def queue_action(user, action)

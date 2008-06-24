@@ -163,7 +163,7 @@ class VmController < ApplicationController
   def cancel_queued_tasks
     begin
       Task.transaction do
-        @vm.get_queued_tasks.each { |task| task.cancel}
+        @vm.tasks.queued.each { |task| task.cancel}
       end
       render :json => { :object => "vm", :success => true, :alert => "queued tasks were canceled." }
     rescue
