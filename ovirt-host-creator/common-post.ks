@@ -288,7 +288,7 @@ start() {
     if [ ! -s $krb5_conf ]; then
         rm -f $krb5_conf
         # FIXME this is IPA specific
-        wget -q http://$SRV_HOST:$SRV_PORT/config/krb5.ini -O $krb5_conf \
+        wget -q http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf \
           || die "Failed to get $krb5_conf"
     fi
     IPA_HOST=$SRV_HOST
@@ -300,7 +300,7 @@ start() {
         keytab=$(ovirt-identify-node -s $SRV_HOST -p $SRV_PORT) \
           || die "Failed to identify node"
         # FIXME this is IPA specific, host-browser should return full URL
-        wget -q "http://$IPA_HOST:$IPA_PORT/config/$keytab" -O $krb5_tab \
+        wget -q "http://$IPA_HOST:$IPA_PORT/ipa/config/$keytab" -O $krb5_tab \
           || die "Failed to get $krb5_tab"
     fi
 
