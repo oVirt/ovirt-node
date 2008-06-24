@@ -1,5 +1,5 @@
 #!/usr/bin/ruby -Wall
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
 #
@@ -41,7 +41,7 @@ class HostBrowser
     attr_accessor :logfile
     attr_accessor :keytab_dir
     attr_accessor :keytab_filename
-  
+
     def initialize(session)
         @session = session
         @log_prefix = "[#{session.peeraddr[3]}] "
@@ -51,19 +51,31 @@ class HostBrowser
     # Ensures the conversation starts properly.
     #
     def begin_conversation
-        puts "#{@log_prefix} Begin conversation"
+        puts "#{@log_prefix} Begin conversation" unless defined?(TESTING)
         @session.write("HELLO?\n")
 
         response = @session.readline.chomp
         raise Exception.new("received #{response}, expected HELLO!") unless response == "HELLO!"
     end
 
+    # Retrieves the mode request from the remote system.
+    #
+    def get_mode
+        puts "#{@log_prefix} Determining the runtime mode." unless defined?(TESTING)
+        @session.write("MODE?\n")
+        response = @session.readline.chomp
+        puts "#{@log_prefix} MODE=#{response}" unless defined?(TESTING)
+
+        response
+    end
+
     # Requests node information from the remote system.
     #
     def get_remote_info
-        puts "#{@log_prefix} Begin remote info collection"
+        puts "#{@log_prefix} Begin remote info collection" unless defined?(TESTING)
         result = {}
-        result['IPADDR'] = @session.peeraddr[3]
+        result['HOSTNAME'] = @session.peeraddr[2]
+        result['IPADDR']   = @session.peeraddr[3]
         @session.write("INFO?\n")
 
         loop do
@@ -75,9 +87,9 @@ class HostBrowser
 
             key, value = info.split("=")
 
-            puts "#{@log_prefix} ::Received - #{key}:#{value}"
+            puts "#{@log_prefix} ::Received - #{key}:#{value}" unless defined?(TESTING)
             result[key] = value
-        
+
             @session.write("ACK #{key}\n")
         end
 
@@ -94,13 +106,13 @@ class HostBrowser
         ensure_present(host_info,'ARCH')
         ensure_present(host_info,'MEMSIZE')
 
-        puts "Searching for existing host record..."
+        puts "Searching for existing host record..." unless defined?(TESTING)
         host = Host.find(:first, :conditions => ["uuid = ?", host_info['UUID']])
 
         if host == nil
             begin
-                puts "Creating a new record for #{host_info['HOSTNAME']}..."
-            
+                puts "Creating a new record for #{host_info['HOSTNAME']}..." unless defined?(TESTING)
+
                 Host.new(
                     "uuid"            => host_info['UUID'],
                     "hostname"        => host_info['HOSTNAME'],
@@ -115,7 +127,7 @@ class HostBrowser
                     # successfully connects to it via libvirt.
                     "state"           => "unavailable").save
             rescue Exception => error
-                puts "Error while creating record: #{error.message}"
+                puts "Error while creating record: #{error.message}" unless defined?(TESTING)
             end
         else
             host.uuid         = host_info['UUID']
@@ -125,45 +137,45 @@ class HostBrowser
             host.arch         = host_info['ARCH']
             host.memory_in_mb = host_info['MEMSIZE']
         end
-    
+
         return host
     end
 
-    # Ends the conversation, notifying the user of the key version number.
-    #
-    def end_conversation(ktab)
-        puts "#{@log_prefix} Ending conversation"
-
-        @session.write("KTAB #{ktab}\n")
-
-        response = @session.readline.chomp
-
-        raise Exception.new("ERROR! Malformed response : expected ACK, got #{response}") unless response == "ACK"
-
-        @session.write("BYE\n");
-    end
-  
     # Creates a keytab if one is needed, returning the filename.
     #
-    def create_keytab(host_info, krb5_arg = nil)
+    def create_keytab(hostname, ipaddress, krb5_arg = nil)
         krb5 = krb5_arg || Krb5.new
-  
+
         default_realm = krb5.get_default_realm
-        libvirt_princ = 'libvirt/' + host_info['HOSTNAME'] + '@' + default_realm
-        outfile = host_info['IPADDR'] + '-libvirt.tab'
+        libvirt_princ = 'libvirt/' + hostname + '@' + default_realm
+        outfile = ipaddress + '-libvirt.tab'
         @keytab_filename = @keytab_dir + outfile
 
         # TODO need a way to test this portion
         unless defined? TESTING || File.exists?(@keytab_filename)
             # TODO replace with Kr5Auth when it supports admin actions
-            puts "Writing keytab file: #{@keytab_filename}"
+            puts "Writing keytab file: #{@keytab_filename}" unless defined?(TESTING)
             kadmin_local('addprinc -randkey ' + libvirt_princ)
             kadmin_local('ktadd -k ' + @keytab_filename + ' ' + libvirt_princ)
 
             File.chmod(0644,@keytab_filename)
         end
 
-        return outfile
+        hostname = `hostname -f`.chomp
+
+        @session.write("KTAB http://#{hostname}/ipa/config/#{outfile}\n")
+
+        response = @session.readline.chomp
+
+        raise Exception.new("ERRINFO! No keytab acknowledgement") unless response == "ACK"
+    end
+
+    # Ends the conversation, notifying the user of the key version number.
+    #
+    def end_conversation
+        puts "#{@log_prefix} Ending conversation" unless defined?(TESTING)
+
+        @session.write("BYE\n");
     end
 
     private
@@ -185,35 +197,37 @@ def entry_point(server)
     while(session = server.accept)
         child = fork do
             remote = session.peeraddr[3]
-            
-            puts "Connected to #{remote}"
+
+            puts "Connected to #{remote}" unless defined?(TESTING)
 
             # This is needed because we just forked a new process
             # which now needs its own connection to the database.
             database_connect
-      
+
             begin
                 browser = HostBrowser.new(session)
 
                 browser.begin_conversation
-                host_info = browser.get_remote_info
-                browser.write_host_info(host_info)
-                keytab = browser.create_keytab(host_info)
-                browser.end_conversation(keytab)
+                case browser.get_mode
+                    when "AWAKEN": browser.create_keytab(remote,session.peeraddr[3])
+                    when "IDENTIFY": browser.write_host_info(browser.get_remote_info)
+                end
+
+                browser.end_conversation
             rescue Exception => error
                 session.write("ERROR #{error.message}\n")
-                puts "ERROR #{error.message}"
+                puts "ERROR #{error.message}" unless defined?(TESTING)
             end
-      
-            puts "Disconnected from #{remote}"
+
+            puts "Disconnected from #{remote}" unless defined?(TESTING)
         end
-    
-        Process.detach(child)        
-    end      
+
+        Process.detach(child)
+    end
 end
 
 unless defined?(TESTING)
-  
+
     # The main entry point.
     #
     unless ARGV[0] == "-n"

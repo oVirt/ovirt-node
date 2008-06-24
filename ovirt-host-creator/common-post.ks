@@ -12,116 +12,6 @@ cat > /etc/sysconfig/iptables << \EOF
 COMMIT
 EOF
 
-echo "Writing ovirt-identify-node script"
-cat > /sbin/ovirt-identify-node << \EOF
-#!/bin/bash
-#
-# Copyright (C) 2008 Red Hat, Inc.
-# Written by Chris Lalancette <clalance@redhat.com>
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; version 2 of the License.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-# MA  02110-1301, USA.  A copy of the GNU General Public License is
-# also available at http://www.gnu.org/copyleft/gpl.html.
-
-ME=$(basename "$0")
-warn() { printf "$ME: $@\n" >&2; }
-try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
-die() { warn "$@"; try_h; exit 1; }
-
-usage() {
-    case $# in 1) warn "$1"; try_h; exit 1;; esac
-    cat <<EOF2
-Usage: $ME [-s server] [-p port]
-  -h: display this help and exit
-  -p: Port number the host-browser is listening on
-  -s: Hostname of the server to connect to
-EOF2
-}
-
-send_key_value() {
-	echo "$1=$2" 1>&3
-
-	read 0<&3
-	test "$REPLY" != "ACK $1" && die "Failed acknowledge of key $1"
-}
-
-############# MAIN ##################
-
-# parse our options
-while getopts ":hs:p:" flag ; do
-	case "$flag" in
-	     	h)
-			usage ; exit 0
-			;;
-		s)
-			server=$OPTARG
-			;;
-		p)
-			port=$OPTARG
-			;;
-		?)
-			usage "Unknown flag $flag"
-			;;
-	esac
-done
-
-test $(( $# - $OPTIND )) -ge 0 && usage "Too many options"
-test -z "$server" && usage "Must specify -s"
-test -z "$port" && usage "Must specify -p"
-
-# gather our information
-all_ok=0
-uuid=$(hostname -f) &&
-  arch=$(uname -i) &&
-  memsize=$(( $(getconf _PHYS_PAGES) * $(getconf PAGESIZE) / 1024 / 1024 )) &&
-  numcpus=$(getconf _NPROCESSORS_ONLN) &&
-  speed=$(sed -n "/cpu MHz/{s/.*://p;q;}" /proc/cpuinfo | tr -dc 0-9.) &&
-  hostname=$(hostname -f) &&
-  hypervisor="QEMU" && all_ok=1
-
-test $all_ok = 1 || die "Information gathering failed...see above"
-
-# open our connection to the remote host
-eval 'exec 3<> /dev/tcp/$server/$port' 2>err
-test $? -ne 0 && die "Connection to $server:$port failed: $(cat err)"
-
-# say hello
-read 0<&3
-test "$REPLY" != "HELLO?" && die "Expected response HELLO?, received response $REPLY"
-echo "HELLO!" 1>&3
-
-# OK, start sending our information
-read 0<&3
-test "$REPLY" != "INFO?" && die "Expected response INFO?, received response $REPLY"
-
-send_key_value "UUID" "$uuid"
-send_key_value "ARCH" "$arch"
-send_key_value "MEMSIZE" "$memsize"
-send_key_value "NUMCPUS" "$numcpus"
-send_key_value "CPUSPEED" "$speed"
-send_key_value "HOSTNAME" "$hostname"
-send_key_value "HYPERVISOR_TYPE" "$hypervisor"
-
-echo "ENDINFO" 1>&3
-
-read 0<&3
-
-test "${REPLY:0:4}" != "KTAB" && die "Expected response KTAB <filename>, received response $REPLY"
-echo "${REPLY:5}"
-EOF
-chmod +x /sbin/ovirt-identify-node
-
 echo "Writing ovirt-functions script"
 # common functions
 cat > /etc/init.d/ovirt-functions << \EOF
@@ -137,6 +27,12 @@ find_srv() {
             SRV_HOST=; SRV_PORT=
         fi
 }
+
+die()
+{
+  echo "$@" 1>&2; failure; echo 1>&2; exit 1
+}
+
 EOF
 
 echo "Writing ovirt-early init script"
@@ -174,6 +70,7 @@ configure_from_network() {
                     wget --quiet -O - "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)" \
                         | augtool > /dev/null 2>&1
                     if [ $? -eq 0 ]; then
+                        printf "remote config applied."
                         return
                     fi
                 fi
@@ -191,6 +88,7 @@ configure_from_network() {
             ONBOOT=yes TYPE=Bridge PEERNTP=yes \
           > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
     done
+    printf "default config applied."
 }
 
 start() {
@@ -233,6 +131,7 @@ start() {
                 swapon $device
             fi
         done
+
 }
 
 case "$1" in
@@ -275,11 +174,6 @@ cat > /etc/init.d/ovirt << \EOF
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
-die()
-{
-  echo "$@" 1>&2; failure; echo 1>&2; exit 1
-}
-
 start() {
     echo -n $"Starting ovirt: "
 
@@ -296,13 +190,7 @@ start() {
 
     find_srv identify tcp
     krb5_tab=/etc/libvirt/krb5.tab
-    if [ ! -s $krb5_tab ]; then
-        keytab=$(ovirt-identify-node -s $SRV_HOST -p $SRV_PORT) \
-          || die "Failed to identify node"
-        # FIXME this is IPA specific, host-browser should return full URL
-        wget -q "http://$IPA_HOST:$IPA_PORT/ipa/config/$keytab" -O $krb5_tab \
-          || die "Failed to get $krb5_tab"
-    fi
+    ovirt-awake start $krb5_tab $SRV_HOST $SRV_PORT
 
     find_srv collectd tcp
     collectd_conf=/etc/collectd.conf
@@ -329,6 +217,44 @@ EOF
 
 chmod +x /etc/init.d/ovirt
 chkconfig ovirt on
+
+echo "Writing ovirt-post init script"
+# ovirt startup script to finish init, started after libvirt
+cat > /etc/init.d/ovirt-post << \EOF
+#!/bin/bash
+#
+# ovirt Start ovirt services
+#
+# chkconfig: 3 98 02
+# description: ovirt-post services
+#
+
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+start() {
+    echo -n $"Starting ovirt-post: "
+
+    find_srv identify tcp
+    ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+
+    success
+    echo
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  *)
+    echo "Usage: ovirt-post {start}"
+    exit 2
+esac
+EOF
+
+chmod +x /etc/init.d/ovirt-post
+chkconfig ovirt-post on
 
 mkdir -p /etc/chkconfig.d
 echo "# chkconfig: 345 98 02" > /etc/chkconfig.d/collectd

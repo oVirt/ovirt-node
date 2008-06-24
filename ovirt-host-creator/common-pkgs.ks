@@ -26,6 +26,7 @@ augeas
 nc
 bind-utils
 syslinux
+ovirt-managed-node
 -policycoreutils
 -audit-libs-python
 -hdparm

@@ -126,13 +126,22 @@ fi
 set -e
 
 # build ovirt-wui RPM
+# also build the ovirt-managed-node RPM
 if [ $update_wui = 1 ]; then
+    cd $BASE/ovirt-managed-node
+    rm -rf rpm-build
+    bumpver
+    make rpms
+    rm -f $OVIRT/ovirt-managed-node*rpm
+    cp rpm-build/ovirt-managed-node*rpm $OVIRT
+
     cd $BASE/wui
     rm -rf rpm-build
     bumpver
     make rpms
     rm -f $OVIRT/ovirt-wui*rpm
     cp rpm-build/ovirt-wui*rpm $OVIRT
+
     cd $OVIRT
     createrepo .
 fi
@@ -212,6 +221,7 @@ if [ $update_node = 1 ]; then
     rm -rf rpm-build
     cat > repos.ks << EOF
 repo --name=f$F_REL --baseurl=http://localhost/pungi/$F_REL/$ARCH/os
+repo --name=ovirt --baseurl=http://localhost/ovirt
 
 EOF
     bumpver

@@ -32,11 +32,8 @@ class TestHostBrowser < Test::Unit::TestCase
     @session = flexmock('session')
     @session.should_receive(:peeraddr).at_least.once.returns { [nil,nil,nil,"192.168.2.255"] }
 
-    @krb5 = flexmock('krb5')
-
     @browser = HostBrowser.new(@session)
     @browser.logfile = './unit-test.log'
-    @browser.keytab_dir = '/var/temp/'
 
     # default host info
     @host_info = {}
@@ -50,35 +47,16 @@ class TestHostBrowser < Test::Unit::TestCase
     @host_info['DISABLED'] = '0'
   end
 
-  # Ensures that the server raises an exception when it receives an
-  # improper handshake response.
+  # Ensures that the server is satisfied if the remote system is
+  # making a wakeup call.
   #
-  def test_begin_conversation_with_improper_response_to_greeting
-    @session.should_receive(:write).with("HELLO?\n").once().returns { |greeting| greeting.length }
-    @session.should_receive(:readline).once().returns { "SUP?" }
+  def test_get_mode_with_awaken_request
+    @session.should_receive(:write).with("MODE?\n").once().returns { |request| request.length }
+    @session.should_receive(:readline).once().returns { "IDENTIFY\n" }
 
-    assert_raise(Exception) { @browser.begin_conversation }
-  end
+    result = @browser.get_mode()
 
-  # Ensures the server accepts a proper response from the remote system.
-  #
-  def test_begin_conversation
-    @session.should_receive(:write).with("HELLO?\n").once().returns { |greeting| greeting.length }
-    @session.should_receive(:readline).once().returns { "HELLO!\n" }
-
-    assert_nothing_raised(Exception) { @browser.begin_conversation }
-  end
-
-  # Ensures that the server raises an exception when it receives
-  # poorly formed data while exchanging system information.
-  #
-  def test_get_info_with_bad_handshake
-    @session.should_receive(:write).with("INFO?\n").once().returns { |request| request.length }
-    @session.should_receive(:readline).once().returns { "key1=value1\n" }
-    @session.should_receive(:write).with("ACK key1\n").once().returns { |request| request.length }
-    @session.should_receive(:readline).once().returns { "farkledina\n" }
-
-    assert_raise(Exception) { @browser.get_remote_info }
+    assert_equal "IDENTIFY", result, "method did not return the right value"
   end
 
   # Ensures that, if an info field is missing a key, the server raises
@@ -125,20 +103,11 @@ class TestHostBrowser < Test::Unit::TestCase
 
     info = @browser.get_remote_info
 
-    assert_equal 3,info.keys.size, "Should contain two keys"
+    assert_equal 4,info.keys.size, "Should contain two keys"
     assert info.include?("IPADDR")
+    assert info.include?("HOSTNAME")
     assert info.include?("key1")
     assert info.include?("key2")
-  end
-
-  # Ensures the host browser generates a keytab as expected.
-  #
-  def test_create_keytab
-    @krb5.should_receive(:get_default_realm).once().returns { "ovirt-test-realm" }
-
-    result = @browser.create_keytab(@host_info,@krb5)
-
-    assert_equal @browser.keytab_filename, result, "Should have returned the keytab filename"
   end
 
   # Ensures that, if no UUID is present, the server raises an exception.
@@ -188,17 +157,6 @@ class TestHostBrowser < Test::Unit::TestCase
     @host_info['MEMSIZE'] = nil
 
     assert_raise(Exception) { @browser.write_host_info(@host_info) }
-  end
-
-  # Ensures that, if a keytab is present and a key version number available,
-  # the server ends the conversation by returning the key version number.
-  #
-  def test_end_conversation
-    @session.should_receive(:write).with("KTAB 12345\n").once().returns { |request| request.length }
-    @session.should_receive(:readline).once().returns { "ACK\n" }
-    @session.should_receive(:write).with("BYE\n").once().returns { |request| request.length }
-
-    assert_nothing_raised(Exception) { @browser.end_conversation(12345) }
   end
 
 end

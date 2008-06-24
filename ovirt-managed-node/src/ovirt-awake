@@ -1,0 +1,100 @@
+#!/bin/bash
+#
+# ovirt-awake   Notifies the oVirt server that a managed node is
+#               starting up.
+#
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Darryl L. Pierce <dpierce@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
+# Source function library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+function connect-to-server () {
+    echo "Connecting to $SRV_HOST:$SRV_PORT"
+    exec 3<> /dev/tcp/$SRV_HOST/$SRV_PORT
+}
+
+function disconnect-from-server () {
+    <&3-
+}
+
+function send-text () {
+    echo "$1" 1>&3
+}
+
+function receive-text () {
+    read 0<&3
+}
+
+start () {
+#    find-server identify tcp
+
+    connect-to-server
+
+    receive-text
+
+    if [ $REPLY == "HELLO?" ]; then
+        echo "Starting wakeup conversation."
+
+        send-text "HELLO!"
+
+        read 0<&3
+
+        if [ $REPLY == "MODE?" ]; then
+            send-text "AWAKEN"
+
+            receive-text
+
+            KEYTAB=`echo $REPLY | awk '{ print $2 }'`
+
+            if [ -n $KEYTAB ]; then
+                echo "Retrieving keytab: '$KEYTAB'"
+
+                wget $KEYTAB --output-document=$KEYTAB_FILE
+            else
+                echo "No keytab to retrieve"
+            fi
+        else
+            echo "Did not get a mode request."
+        fi
+    else
+        echo "Did not get a proper startup marker."
+    fi
+
+    echo "Disconnecting."
+
+    disconnect-from-server
+}
+
+case "$1" in
+    start)
+        KEYTAB_FILE=$2
+        SRV_HOST=$3
+        SRV_PORT=$4
+        start
+        RETVAL=$?
+    ;;
+
+    *)
+        echo "Usage: $0 start"
+        RETVAL=2
+    ;;
+esac
+
+exit $RETVAL
