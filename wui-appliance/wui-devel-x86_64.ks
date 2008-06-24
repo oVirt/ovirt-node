@@ -142,12 +142,21 @@ export PATH=/usr/kerberos/bin:$PATH
 start() {
 	echo -n "Starting ovirt-dev-wui-first-run: "
 	(
+	# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=451936
+	sed -i '/\[kdcdefaults\]/a \ kdc_ports = 88' /usr/share/ipa/kdc.conf.template
 	# set up freeipa
 	ipa-server-install -r PRIV.OVIRT.ORG -p @password@ -P @password@ -a @password@ \
 	  --hostname management.priv.ovirt.org -u dirsrv -U
 
 	# now create the ovirtadmin user
 	echo @password@|kinit admin
+	# change max username length policy
+	ldapmodify -h management.priv.ovirt.org -p 389 -Y GSSAPI <<LDAP
+dn: cn=ipaConfig,cn=etc,dc=priv,dc=ovirt,dc=org
+changetype: modify
+replace: ipaMaxUsernameLength
+ipaMaxUsernameLength: 12
+LDAP
 	ipa-adduser -f Ovirt -l Admin -p @password@ @principal@
 	ipa-moduser --setattr krbPasswordExpiration=19700101000000Z @principal@
 	ipa-getkeytab -s management.priv.ovirt.org -p @principal@ -k @ktab_file@
