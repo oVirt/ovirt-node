@@ -122,7 +122,7 @@ gen_fake_managed_node() {
   <on_reboot>restart</on_reboot>
   <on_crash>destroy</on_crash>
   <devices>
-    <emulator>/usr/bin/qemu-kvm</emulator>
+    <emulator>$KVM_BINARY</emulator>
     <interface type='network'>
       <mac address='00:16:3e:12:34:$last_mac'/>
       <source network='dummybridge'/>
@@ -155,7 +155,7 @@ gen_app() {
   <on_reboot>restart</on_reboot>
   <on_crash>destroy</on_crash>
   <devices>
-    <emulator>/usr/bin/qemu-kvm</emulator>
+    <emulator>$KVM_BINARY</emulator>
     <disk type='file' device='disk'>
       <source file='$disk'/>
       <target dev='hda'/>
@@ -179,8 +179,20 @@ if [ $( id -u ) -ne 0 ]; then
 fi
 
 # now make sure the packages we need are installed
-rpm -q libvirt -q kvm -q virt-manager -q virt-viewer >& /dev/null
-if [ $? -ne 0 ]; then
+if [ -e /etc/redhat-release ]; then
+    PACKAGES="libvirt kvm virt-manager virt-viewer"
+    CHECK=$(rpm $(printf " -q %s " "$PACKAGES")  &> /dev/null; echo $?)
+    KVM_BINARY=/usr/bin/qemu-kvm
+elif [ -e /etc/debian_version ]; then
+    # Works in Ubuntu 8.04. Still needs testing in Debian
+    PACKAGES="libvirt0 libvirt-bin kvm qemu virt-manager virt-viewer"
+    CHECK=$(dpkg -l $PACKAGES &> /dev/null; echo $?)
+    KVM_BINARY=/usr/bin/kvm
+else
+    die "Not a supported system"
+fi
+
+if [ $CHECK -ne 0 ]; then
     # one of the previous packages wasn't installed; bail out
     die "Must have the libvirt, kvm, virt-manager, and virt-viewer packages installed"
 fi
