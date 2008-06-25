@@ -156,11 +156,12 @@ if [ $update_pungi != 0 ]; then
 
     fedora_mirror=http://mirrors.fedoraproject.org/mirrorlist
     # use Fedora + updates
+    currentbadupdates='--excludepkgs=ruby,ruby-devel,ruby-docs,ruby-irb,ruby-libs,ruby-mode,ruby-rdoc,ruby-ri,ruby-tcltk'
     cat > $PUNGIKS << EOF
 repo --name=f$F_REL \
   --mirrorlist=$fedora_mirror?repo=fedora-$F_REL&arch=\$basearch
 repo --name=f$F_REL-updates \
-  --mirrorlist=$fedora_mirror?repo=updates-released-f$F_REL&arch=\$basearch
+  --mirrorlist=$fedora_mirror?repo=updates-released-f$F_REL&arch=\$basearch $currentbadupdates
 EOF
     # + ovirt.org repo for updates not yet in Fedora
     # + local ovirt repo with locally rebuilt ovirt* RPMs ( options -w and -n )
@@ -181,7 +182,7 @@ EOF
 repo --name=f$F_REL-src \
   --mirrorlist=$fedora_mirror?repo=fedora-source-$F_REL&arch=\$basearch
 repo --name=f$F_REL-updates-src \
-  --mirrorlist=$fedora_mirror?repo=updates-released-source-f$F_REL&arch=\$basearch
+  --mirrorlist=$fedora_mirror?repo=updates-released-source-f$F_REL&arch=\$basearch $currentbadupdates
 repo --name=ovirt-org-src \
   --baseurl=http://ovirt.org/repos/ovirt/$F_REL/src $excludepkgs
 EOF
