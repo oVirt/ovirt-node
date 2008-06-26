@@ -6,6 +6,9 @@ include ../common/release.mk
 clean:
 	rm -rf ovirt-host-image-* ovirt-pxe.log
 
+distclean: clean
+	rm -rf *.iso tftpboot repos.ks rpm-build iso-file
+
 repos.ks: repos.ks.in
 	cp repos.ks.in repos.ks
 
@@ -22,4 +25,4 @@ tar: clean build
 	cp version rpm-build/
 	rm -rf $(NV)
 
-.PHONY: all clean build tar
+.PHONY: all clean build tar distclean
