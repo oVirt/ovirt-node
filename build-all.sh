@@ -126,14 +126,7 @@ fi
 set -e
 
 # build ovirt-wui RPM
-# also build the ovirt-managed-node RPM
 if [ $update_wui = 1 ]; then
-    cd $BASE/ovirt-managed-node
-    rm -rf rpm-build
-    bumpver
-    make rpms
-    rm -f $OVIRT/ovirt-managed-node*rpm
-    cp rpm-build/ovirt-managed-node*rpm $OVIRT
 
     cd $BASE/wui
     rm -rf rpm-build
@@ -215,9 +208,19 @@ EOF
     restorecon -r .
 fi
 
-# build oVirt host image
+# build oVirt host image; note that we unconditionally rebuild the
+# ovirt-managed-node RPM, since it is now needed for the managed node
 # NOTE: livecd-tools must run as root
 if [ $update_node = 1 ]; then
+    cd $BASE/ovirt-managed-node
+    rm -rf rpm-build
+    bumpver
+    make rpms
+    rm -f $OVIRT/ovirt-managed-node*rpm
+    cp rpm-build/ovirt-managed-node*rpm $OVIRT
+    cd $OVIRT
+    createrepo .
+
     cd $BASE/ovirt-host-creator
     rm -rf rpm-build
     cat > repos.ks << EOF
