@@ -99,7 +99,6 @@ class HostBrowser
     # Writes the supplied host information to the database.
     #
     def write_host_info(host_info)
-        ensure_present(host_info,'UUID')
         ensure_present(host_info,'HOSTNAME')
         ensure_present(host_info,'NUMCPUS')
         ensure_present(host_info,'CPUSPEED')
@@ -107,7 +106,7 @@ class HostBrowser
         ensure_present(host_info,'MEMSIZE')
 
         puts "Searching for existing host record..." unless defined?(TESTING)
-        host = Host.find(:first, :conditions => ["uuid = ?", host_info['UUID']])
+        host = Host.find(:first, :conditions => ["hostname = ?", host_info['HOSTNAME']])
 
         if host == nil
             begin

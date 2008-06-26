@@ -110,12 +110,12 @@ class TestHostBrowser < Test::Unit::TestCase
     assert info.include?("key2")
   end
 
-  # Ensures that, if no UUID is present, the server raises an exception.
+  # Ensures that the server is fine when no UUID is present.
   #
   def test_write_host_info_with_missing_uuid
     @host_info['UUID'] = nil
 
-    assert_raise(Exception) { @browser.write_host_info(@host_info) }
+    assert_nothing_raised { @browser.write_host_info(@host_info) }
   end
 
   # Ensures that, if the hostname is missing, the server

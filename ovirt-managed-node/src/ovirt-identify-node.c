@@ -39,7 +39,7 @@ int send_details(void);
 int end_conversation(void);
 
 int send_text(char* text);
-int get_text(char* response,int maxlength);
+int get_text(const char *const expected);
 int create_connection(void);
 
 int debug   = 1;
@@ -53,36 +53,36 @@ char uuid[VIR_UUID_BUFLEN];
 char memsize[BUFFER_LENGTH];
 char numcpus[BUFFER_LENGTH];
 char cpuspeed[BUFFER_LENGTH];
-char hostname[256];
+char *hostname;
 int  hostport = -1;
 int  socketfd;
 
 int main(int argc,char** argv)
 {
     int result = 1;
+    virConnectPtr connection;
+    virNodeInfo info;
 
     if(!config(argc,argv))
     {
         fprintf(stdout,"Connecting to libvirt.\n");
 
-        virConnectPtr connection = virConnectOpenReadOnly(testing ? "test:///default" : NULL);
+        connection = virConnectOpenReadOnly(testing ? "test:///default" : NULL);
 
-        if(debug) fprintf(stderr,"connection=%x\n",(unsigned int )connection);
+        if(debug) fprintf(stderr,"connection=%p\n",connection);
 
         if(connection)
         {
             if(debug) fprintf(stdout,"Getting hostname: %s\n", uuid);
             if(!strlen(uuid)) gethostname(uuid,sizeof uuid);
 
-            virNodeInfo info;
-
             if(debug) fprintf(stdout,"Retrieving node information.\n");
             if(!virNodeGetInfo(connection,&info))
             {
-                sprintf(arch,    "%s",  info.model);
-                sprintf(memsize, "%ld", info.memory);
-                sprintf(numcpus, "%d",  info.cpus);
-                sprintf(cpuspeed,"%d",  info.mhz);
+                snprintf(arch, BUFFER_LENGTH, "%s", info.model);
+                snprintf(memsize, BUFFER_LENGTH, "%ld", info.memory);
+                snprintf(numcpus, BUFFER_LENGTH, "%d", info.cpus);
+                snprintf(cpuspeed, BUFFER_LENGTH, "%d",  info.mhz);
 
                 if(debug)
                 {
@@ -124,14 +124,15 @@ int config(int argc,char** argv)
     int result = 0;
     int option;
 
-    while((option = getopt(argc,argv,"s:p:dvth")) != -1)
+    while((option = getopt(argc,argv,"s:p:u:dvth")) != -1)
     {
         if(debug) fprintf(stdout,"Processing argument: %c (optarg:%s)\n",option,optarg);
 
         switch(option)
         {
-            case 's': strcpy(hostname,optarg); break;
+            case 's': hostname = optarg; break;
             case 'p': hostport = atoi(optarg); break;
+            case 'u': snprintf(uuid,VIR_UUID_BUFLEN,"%s",optarg); break;
             case 't': testing  = 1; break;
             case 'd': debug    = 1; break;
             case 'v': verbose  = 1; break;
@@ -180,25 +181,19 @@ int start_conversation(void)
     {
         if(debug || verbose) fprintf(stdout,"Connected.\n");
 
-        char buffer[BUFFER_LENGTH];
-
-        get_text(buffer,sizeof buffer);
-
-        if(!strcmp(buffer,"HELLO?"))
+        if (!get_text("HELLO?\n"))
         {
             if(debug) fprintf(stdout,"Checking for handshake.\n");
 
-            if(!send_text("HELLO!"))
+            if(!send_text("HELLO!\n"))
             {
                 if(debug) fprintf(stdout,"Handshake received. Starting conversation.\n");
 
-                get_text(buffer,sizeof buffer);
-
-                if(!strcmp(buffer,"MODE?"))
+                if(!get_text("MODE?\n"))
                 {
                     if(debug) fprintf(stdout,"Shifting to IDENTIFY mode.\n");
 
-                    if(!send_text("IDENTIFY")) result = 0;
+                    if(!send_text("IDENTIFY\n")) result = 0;
                 }
                 else
                 {
@@ -225,30 +220,22 @@ int start_conversation(void)
 int send_value(char* label,char* value)
 {
     char buffer[BUFFER_LENGTH];
-
-    bzero(buffer,sizeof buffer);
-
-    sprintf(buffer,"%s=%s", label, value);
-
     int result = 1;
+    char expected[BUFFER_LENGTH];
+
+    snprintf(buffer,BUFFER_LENGTH,"%s=%s\n", label, value);
 
     if(!send_text(buffer))
     {
-        char expected[BUFFER_LENGTH];
+        snprintf(expected, BUFFER_LENGTH, "ACK %s\n", label);
 
-        bzero(expected,sizeof buffer);
-        bzero(buffer,sizeof buffer);
+        if(debug) fprintf(stdout,"Expecting \"%s\"\n", expected);
 
-        get_text(buffer,sizeof buffer);
-
-        sprintf(expected, "ACK %s", label);
-
-        if(debug) fprintf(stdout,"Expecting \"%s\" : Received \"%s\"\n", expected, buffer);
-
-        if(!strcmp(expected,buffer))
+        if (!get_text(expected))
         {
             result = 0;
         }
+
     }
 
     return result;
@@ -260,11 +247,7 @@ int send_details(void)
 
     fprintf(stdout,"Sending node details.\n");
 
-    char buffer[BUFFER_LENGTH];
-
-    get_text(buffer,sizeof buffer);
-
-    if(!strcmp(buffer,"INFO?"))
+    if (!get_text("INFO?\n"))
     {
         if((!send_value("ARCH",     arch))     &&
            (!send_value("UUID",     uuid))     &&
@@ -272,7 +255,7 @@ int send_details(void)
            (!send_value("CPUSPEED", cpuspeed)) &&
            (!send_value("MEMSIZE",  memsize)))
         {
-            if(!send_text("ENDINFO")) result = 0;
+            if(!send_text("ENDINFO\n")) result = 0;
         }
     }
     else
@@ -289,7 +272,7 @@ int end_conversation(void)
 
     fprintf(stdout,"Ending conversation.\n");
 
-    send_text("ENDINFO");
+    send_text("ENDINFO\n");
 
     close(socketfd);
 
@@ -300,7 +283,7 @@ ssize_t safewrite(int fd, const void *buf, size_t count)
 {
         size_t nwritten = 0;
         while (count > 0) {
-                ssize_t r = write(fd, buf, count);
+                ssize_t r = write(fd, buf+nwritten, count);
 
                 if (r < 0 && errno == EINTR)
                         continue;
@@ -318,16 +301,11 @@ ssize_t safewrite(int fd, const void *buf, size_t count)
 int send_text(char* text)
 {
     int result = 1;
+    int sent;
 
     if(debug || verbose) fprintf(stdout,"\"%s\" -> %s:%d\n", text, hostname, hostport);
 
-    char buffer[strlen(text) + 2];
-
-    sprintf(buffer,"%s\n",text);
-
-    // int sent = write(socketfd,buffer,strlen(buffer));
-
-    int sent = safewrite(socketfd, buffer, strlen(buffer));
+    sent = safewrite(socketfd, text, strlen(text));
 
     if(sent >= 0)
     {
@@ -341,37 +319,67 @@ int send_text(char* text)
 
 int saferead(int fd, void *buf, size_t count)
 {
-    if(debug) fprintf(stdout,"Begin saferead(%d, %x, %d)\n", fd, (unsigned int)buf, count);
+    ssize_t bytes,offset;
+    int len_left;
 
-    while (1)
-    {
-        ssize_t r = read (fd, buf, count);
-        if (r < 0 && errno == EINTR) continue;
-        return r;
+    if(debug) fprintf(stdout,"Begin saferead(%d, %p, %ld)\n", fd, buf, count);
+
+    offset = 0;
+    len_left = count;
+
+    while(len_left > 0) {
+      bytes = read(fd, buf+offset, len_left);
+      fprintf(stderr,"After read, bytes is %ld\n",bytes);
+      if (bytes < 0) {
+	if (errno == EINTR) {
+	  continue;
+	}
+	else {
+	  offset = -1;
+	  break;
+	}
+      }
+      else if (bytes == 0) {
+	// reached EOF; break out of here
+	break;
+      }
+
+      offset += bytes;
+      len_left -= bytes;
     }
+
+    return offset;
 }
 
-int get_text(char* response,int maxlength)
+int get_text(const char *const expected)
 {
-    if(debug) fprintf(stdout,"Reading up to %d bytes from socket.\n", maxlength);
-    // int received = read(socketfd,response,maxlength);
-    int received = saferead(socketfd,response,maxlength);
+    int received;
+    char buffer[BUFFER_LENGTH];
 
-    response[received - 1] = 0;
+    if(debug) fprintf(stdout, "Looking to receive %s\n", expected);
 
-    if(debug) fprintf(stdout,"Received \"%s\": size=%d (trimmed ending carriage return)\n", response, received);
+    received = saferead(socketfd, buffer, strlen(expected));
 
-    return received;
+    buffer[received - 1] = 0;
+
+    if(debug) fprintf(stdout,"Received \"%s\": size=%d (trimmed ending carriage return)\n", buffer, received);
+
+    if (strncmp(expected, buffer, strlen(expected)) != 0) {
+      return 0;
+    }
+
+    return 1;
 }
 
 int create_connection(void)
 {
     int result = 1;
-
-    if(debug) fprintf(stdout,"Creating the socket connection.\n");
-
     struct addrinfo hints;
     struct addrinfo* results;
+    char port[6];
+    struct addrinfo* rptr;
+
+    if(debug) fprintf(stdout,"Creating the socket connection.\n");
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;
@@ -381,14 +389,11 @@ int create_connection(void)
 
     if(debug) fprintf(stdout,"Searching for host candidates.\n");
 
-    char port[6];
-
-    sprintf(port,"%d", hostport);
+    snprintf(port, 6, "%d", hostport);
 
     if(!getaddrinfo(hostname, port, &hints, &results))
     {
         if(debug) fprintf(stdout,"Got address information. Searching for a proper entry.\n");
-        struct addrinfo* rptr;
 
         for(rptr = results; rptr != NULL; rptr = rptr->ai_next)
         {

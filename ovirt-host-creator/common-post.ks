@@ -237,7 +237,14 @@ start() {
     echo -n $"Starting ovirt-post: "
 
     find_srv identify tcp
-    ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+    UUID=`hal-get-property --udi \
+        /org/freedesktop/Hal/devices/computer --key system.hardware.uuid`
+
+    if [ -z $UUID ]; then
+        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+    else
+        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT -u $UUID
+    fi
 
     success
     echo
