@@ -26,6 +26,7 @@ augeas
 nc
 bind-utils
 syslinux
+cronie
 hal
 ovirt-managed-node
 -policycoreutils

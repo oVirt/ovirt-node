@@ -36,6 +36,8 @@ make
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/chkconfig.d
 %{__install} -d -m0755 %{buildroot}%{_initrddir}
 %{__install} -d -m0755 %{buildroot}%{app_root}
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.hourly
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node %{buildroot}%{_sbindir}
@@ -51,6 +53,9 @@ make
 %{__install} -p -m0755 scripts/dhclient-exit-hooks %{buildroot}%{_sysconfdir}
 
 %{__install} -p -m0755 scripts/ovirt-setup %{buildroot}%{app_root}
+
+%{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.hourly
+%{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -81,6 +86,8 @@ fi
 %{_initrddir}/ovirt-post
 %{_sysconfdir}/kvm-ifup
 %{_sysconfdir}/dhclient-exit-hooks
+%config %{_sysconfdir}/logrotate.d/ovirt-logrotate.conf
+%config %{_sysconfdir}/cron.hourly/ovirt-logrotate
 %{app_root}/ovirt-setup
 %defattr(-,root,root,0644)
 %{_initrddir}/ovirt-functions
@@ -89,5 +96,8 @@ fi
 %doc README NEWS AUTHOR ChangeLog
 
 %changelog
+* Wed Jul 02 2008 Darryl Pierce <dpierce@redhat.com> - 0.92 0.2
+- Added log rotation to limit file system writes.
+
 * Mon Jun 30 2008 Perry Myers <pmyers@redhat.com> - 0.92 0.1
 - Add in sections of kickstart post, general cleanup
