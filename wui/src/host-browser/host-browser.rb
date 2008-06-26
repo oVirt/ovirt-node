@@ -196,7 +196,7 @@ end
 def entry_point(server)
     while(session = server.accept)
         child = fork do
-            remote = session.peeraddr[3]
+            remote = session.peeraddr[2]
 
             puts "Connected to #{remote}" unless defined?(TESTING)
 
