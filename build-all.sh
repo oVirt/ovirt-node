@@ -29,16 +29,15 @@ DEP_RPMS="createrepo httpd kvm libvirt livecd-tools pungi-1.2.18.1"
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-w] [-n] [-p init|update] [-s] [-d|-b] [-a] [-c] [-v git|release|none]
+Usage: $ME [-w] [-n] [-p init|update] [-s] [-a] [-c] [-v git|release|none] [-e eth]
   -w: update oVirt WUI RPMs
   -n: update oVirt Managed Node RPMs
   -p: update pungi repository (init or update)
   -s: include SRPMs and produce source ISO
-  -d: update developer appliance
-  -b: update bundled appliance
-  -a: updates all (WUI, Node, App), requires -d or -b
+  -a: updates all (WUI, Node, Appliance)
   -c: cleanup old repos (pungi and ovirt)
   -v: update version type (git, release, none) default is git
+  -e: ethernet device to use as bridge (i.e. eth1)
   -h: display this help and exit
 EOF
 }
@@ -57,19 +56,18 @@ update_wui=0 update_node=0
 update_pungi=0 update_app=0
 include_src=0
 cleanup=0
-app_type=
 version_type=git
+bridge=
 err=0 help=0
-while getopts wnp:sdbahcv: c; do
+while getopts wnp:sahcv:e: c; do
     case $c in
         w) update_wui=1;;
         n) update_node=1;;
         p) update_pungi=$OPTARG;;
         s) include_src=1;;
-        d) update_app=1; app_type="-v";;
-        b) update_app=1; app_type="-b";;
         a) update_wui=1; update_node=1; update_app=1; update_pungi=init;;
         c) cleanup=1;;
+        e) bridge=$OPTARG;;
         v) version_type=$OPTARG;;
         h) help=1;;
       '?') err=1; warn "invalid option: \`-$OPTARG'";;
@@ -79,7 +77,6 @@ while getopts wnp:sdbahcv: c; do
 done
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
-test $update_app = 1 -a -z "$app_type" && usage "Need to specify -d or -b"
 test $include_src = 1 -a "$update_pungi" = 0 &&
   usage "Need to specify -p when including source"
 test "$update_pungi" != 0 -a "$update_pungi" != "init" \
@@ -262,17 +259,18 @@ repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$F_REL/x86_64 $excl
 EOF
     make
     cp wui-rel-*.ks $OVIRT
+
+    bridge_flag=
+    if [ -n "$bridge" ]; then
+        bridge_flag="-e $bridge"
+    fi
+
     ./create-wui-appliance.sh \
-      -t http://$VIRBR/pungi/$F_REL/$ARCH/os \
-      -k http://$VIRBR/ovirt/wui-rel-$ARCH.ks $app_type
+        -t http://$VIRBR/pungi/$F_REL/$ARCH/os \
+        -k http://$VIRBR/ovirt/wui-rel-$ARCH.ks \
+        $bridge_flag
 
     set +x
     echo "oVirt appliance setup started, check progress with:"
-    echo -n "  virt-viewer "
-    if [[ "$app_type" == "-b" ]]; then
-        echo "bundled"
-    else
-        echo "developer"
-    fi
-
+    echo -n "  virt-viewer ovirt-appliance"
 fi

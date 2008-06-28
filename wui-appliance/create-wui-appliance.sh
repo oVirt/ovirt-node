@@ -10,36 +10,34 @@ IMGSIZE=6000M
 
 ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
+NET_SCRIPTS=/etc/sysconfig/network-scripts
 ARCH_DEFAULT=$(uname -m)
+NAME=ovirt-appliance
+BRIDGENAME=ovirtbr
 
 ARCH=$ARCH_DEFAULT
 IMGDIR=$IMGDIR_DEFAULT
 CONSOLE_FLAG=--noautoconsole
 
-# stupid bridge name so that if all of our checks below fail, we will still
-# fail the install
-BRIDGENAME=failme
-
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-i install_iso | -t install_tree] [-d image_dir] [-a x86_64|i686] [-k kickstart] -v -b
+Usage: $ME [-i install_iso | -t install_tree] [-d image_dir] [-a x86_64|i686] [-k kickstart] [-e eth]
   -i: location of installation ISO
   -t: location of installation tree
   -k: URL of kickstart file for use with installation tree
   -o: Display virt-viewer window during install (implied by -i option)
   -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
   -a: architecture for the virtual machine (default: $ARCH_DEFAULT)
-  -v: Install in developer mode (see http://ovirt.org for details)
-  -b: Install in bundled mode (see http://ovirt.org for details)
+  -e: ethernet device to use as bridge (i.e. eth1)
   -h: display this help and exit
 EOF
 }
 
 err=0 help=0
-devel=0 bundled=0
 viewer=0
-while getopts :a:d:i:t:k:ohvb c; do
+bridge=
+while getopts :a:d:i:t:k:ohe: c; do
     case $c in
         i) ISO=$OPTARG;;
         t) TREE=$OPTARG;;
@@ -47,9 +45,8 @@ while getopts :a:d:i:t:k:ohvb c; do
         d) IMGDIR=$OPTARG;;
         a) ARCH=$OPTARG;;
         o) CONSOLE_FLAG=;;
+        e) bridge=$OPTARG;;
         h) help=1;;
-        v) devel=1;;
-        b) bundled=1;;
         '?') err=1; warn "invalid option: \`-$OPTARG'";;
         :) err=1; warn "missing argument to \`-$OPTARG' option";;
         *) err=1; warn "internal error: \`-$OPTARG' not handled";;
@@ -82,9 +79,6 @@ else
     # one at boot time
     CONSOLE_FLAG=
 fi
-
-test $devel = 1 -a $bundled = 1 && usage "Can only specify one of -v and -b"
-test $devel = 0 -a $bundled = 0 && usage "Must specify one of -v or -b"
 
 case $ARCH in
     i686|x86_64);;
@@ -125,7 +119,7 @@ gen_fake_managed_node() {
     <emulator>$KVM_BINARY</emulator>
     <interface type='network'>
       <mac address='00:16:3e:12:34:$last_mac'/>
-      <source network='dummybridge'/>
+      <source network='$BRIDGENAME'/>
     </interface>
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' listen='127.0.0.1'/>
@@ -135,14 +129,12 @@ EOF
 }
 
 gen_app() {
-    local name=$1
-    local disk=$2
-    local bridge=$3
-    local ram=$4
+    local disk=$1
+    local ram=$2
 
     cat<<EOF
 <domain type='kvm'>
-  <name>$name</name>
+  <name>$NAME</name>
   <memory>$(( $ram * 1024 ))</memory>
   <currentMemory>$(( $ram * 1024 ))</currentMemory>
   <vcpu>1</vcpu>
@@ -164,7 +156,7 @@ gen_app() {
       <source network='default'/>
     </interface>
     <interface type='network'>
-      <source network='$bridge'/>
+      <source network='$BRIDGENAME'/>
     </interface>
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' listen='127.0.0.1'/>
@@ -194,26 +186,57 @@ fi
 
 if [ $CHECK -ne 0 ]; then
     # one of the previous packages wasn't installed; bail out
-    die "Must have the libvirt, kvm, virt-manager, and virt-viewer packages installed"
+    die "Must have the $PACKAGES packages installed"
 fi
 
-if [ $devel = 1 ]; then
-    NAME=developer
-    BRIDGENAME=dummybridge
+service libvirtd status > /dev/null 2>&1 \
+    || service libvirtd start > /dev/null 2>&1
+chkconfig libvirtd on
 
-    # define the fake managed nodes we will use
-    for i in `seq 3 5` ; do
-        virsh destroy node$i >& /dev/null
-        virsh undefine node$i >& /dev/null
-        TMPXML=$(mktemp)
-        gen_fake_managed_node $i > $TMPXML
-        virsh define $TMPXML
-        rm $TMPXML
-    done
-elif [ $bundled = 1 ]; then
-    NAME=bundled
-    BRIDGENAME=eth1bridge
+# Cleanup to handle older version of script that used these bridge names
+{
+    virsh net-destroy dummybridge
+    virsh net-undefine dummybridge
+    brctl delif eth1bridge eth1
+    virsh net-destroy eth1bridge
+    virsh net-undefine eth1bridge
+} > /dev/null 2>&1
+
+# If we're bridging to a physical network, run some checks to make sure the
+# choice of physical eth device is sane
+if [ -n "$bridge" ]; then
+    # Check to see if the physical device is present
+    ifconfig $bridge > /dev/null 2>&1 ; bridge_dev_present=$?
+    test $bridge_dev_present != 0 \
+        && die "$bridge device not present, aborting!"
+
+    # Check to make sure that the system is not already using the interface
+    test -f $NET_SCRIPTS/ifcfg-$bridge \
+        && die "$bridge defined in $NET_SCRIPTS, aborting!"
+
+    # Check to see if the eth device is already tied to a non oVirt bridge
+    attached_bridge=$(brctl show \
+        | awk -v BRIDGE=$bridge '$4~BRIDGE {print $1}')
+    test -n "$attached_bridge" -a "$attached_bridge" != "$BRIDGENAME" \
+        && die "$bridge already attached to other bridge $attached_bridge"
+
+    # Check to see if the eth device does not have an active inet address
+    ip address show dev $bridge \
+        | grep "inet.*$bridge" > /dev/null 2>&1 ; bridge_dev_active=$?
+    test $bridge_dev_active == 0 \
+        && die "$bridge device active with ip address, aborting!"
 fi
+
+# define the fake managed nodes we will use. These can be used for both
+# developer and bundled, since the bridge name/network config is the same
+for i in `seq 3 5` ; do
+    virsh destroy node$i >& /dev/null
+    virsh undefine node$i >& /dev/null
+    TMPXML=$(mktemp)
+    gen_fake_managed_node $i > $TMPXML
+    virsh define $TMPXML
+    rm $TMPXML
+done
 
 virsh net-dumpxml $BRIDGENAME >& /dev/null
 RETVAL=$?
@@ -225,10 +248,20 @@ if [ $( brctl show | grep -c $BRIDGENAME ) -ne 0 -a $RETVAL -ne 0 ]; then
 	exit 1
 fi
 
+# Remove old bridge device if it exists
+sed -i "/# $BRIDGENAME/d" /etc/rc.d/rc.local
+old_bridge=$(brctl show \
+    | awk -v BRIDGENAME=$BRIDGENAME '$1~BRIDGENAME {print $4}')
+if [ -n "$old_bridge" ]; then
+    echo "Removing old bridge $old_bridge"
+    ifconfig $old_bridge down
+    brctl delif $BRIDGENAME $old_bridge
+fi
+
 # TODO when virFileReadAll is fixed for stdin
 #virsh net-define <(gen_dummy)
-virsh net-destroy $BRIDGENAME
-virsh net-undefine $BRIDGENAME
+virsh net-destroy $BRIDGENAME > /dev/null 2>&1
+virsh net-undefine $BRIDGENAME > /dev/null 2>&1
 TMPXML=$(mktemp) || exit 1
 gen_bridge $BRIDGENAME > $TMPXML
 virsh net-define $TMPXML
@@ -236,13 +269,31 @@ rm $TMPXML
 virsh net-start $BRIDGENAME
 virsh net-autostart $BRIDGENAME
 
-if [ $bundled = 1 ]; then
-    # unfortunately, these two can't be done by libvirt at the moment, so
-    # we do them by hand here
-    # FIXME: how do we make this persistent, so that we survive reboots?
-    /usr/sbin/brctl addif $BRIDGENAME eth1
-    /sbin/ifconfig eth1 up
+if [ -n "$bridge" ]; then
+    # FIXME: unfortunately, these two can't be done by libvirt at the
+    # moment, so we do them by hand here and persist the config by
+    # by adding to rc.local
+    echo "Adding new bridge $bridge"
+    TMPBRCTL=$(mktemp) || exit 1
+    cat > $TMPBRCTL << EOF
+brctl addif $BRIDGENAME $bridge # $BRIDGENAME
+ifconfig $bridge up # $BRIDGENAME
+EOF
+    chmod a+x $TMPBRCTL /etc/rc.d/rc.local
+
+    cat $TMPBRCTL >> /etc/rc.d/rc.local
+
+    $TMPBRCTL
+    rm $TMPBRCTL
 fi
+
+# Cleanup to handle older version of script that used these domain names
+{
+    virsh destroy developer
+    virsh undefine developer
+    virsh destroy bundled
+    virsh undefine bundled
+} > /dev/null 2>&1
 
 IMGNAME=$NAME.img
 mkdir -p $IMGDIR
@@ -259,8 +310,8 @@ if [ $do_install = 1 ]; then
 else
     test ! -r $IMGDIR/$IMGNAME && die "Disk image not found at $IMGDIR/$IMGNAME"
 
-    TMPXML=$(mktemp)
-    gen_app $NAME $IMGDIR/$IMGNAME $BRIDGENAME $RAM > $TMPXML
+    TMPXML=$(mktemp) || exit 1
+    gen_app $IMGDIR/$IMGNAME $RAM > $TMPXML
     virsh define $TMPXML
     rm $TMPXML
     echo "Application defined using disk located at $IMGDIR/$IMGNAME."
