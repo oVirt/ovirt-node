@@ -230,8 +230,8 @@ repo --name=ovirt --baseurl=http://localhost/ovirt
 EOF
     bumpver
     make rpms
-    rm -f $OVIRT/ovirt-host-image-pxe*rpm
-    cp rpm-build/ovirt-host-image-pxe*rpm $OVIRT
+    rm -f $OVIRT/ovirt-host-image*rpm
+    cp rpm-build/ovirt-host-image*rpm $OVIRT
     cd $OVIRT
     createrepo .
 fi
