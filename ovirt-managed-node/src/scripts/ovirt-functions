@@ -1,0 +1,17 @@
+# -*-Shell-script-*-
+
+find_srv() {
+    local dnsreply
+    dnsreply=$(dig +short -t srv _$1._$2.$(dnsdomainname))
+    if [ $? -eq 0 ]; then
+        set _ $dnsreply; shift
+        SRV_HOST=$4; SRV_PORT=$3
+    else
+        SRV_HOST=; SRV_PORT=
+    fi
+}
+
+die()
+{
+    echo "$@" 1>&2; failure; echo 1>&2; exit 1
+}

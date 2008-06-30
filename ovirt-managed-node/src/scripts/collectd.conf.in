@@ -1,0 +1,23 @@
+LoadPlugin logfile
+LoadPlugin network
+LoadPlugin libvirt
+LoadPlugin memory
+LoadPlugin cpu
+LoadPlugin load
+LoadPlugin interface
+LoadPlugin disk
+
+<Plugin libvirt>
+        Connection "qemu:///system"
+        RefreshInterval "10"
+        HostnameFormat "hostname"
+</Plugin>
+
+<Plugin network>
+        Server "@COLLECTD_SERVER@" @COLLECTD_PORT@
+</Plugin>
+
+<Plugin interface>
+        Interface "eth0"
+        IgnoreSelected false
+</Plugin>

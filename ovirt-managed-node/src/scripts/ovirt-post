@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# ovirt Start ovirt services
+#
+# chkconfig: 3 98 02
+# description: ovirt-post services
+#
+
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+start() {
+    echo -n $"Starting ovirt-post: "
+
+    find_srv identify tcp
+    UUID=`hal-get-property --udi \
+        /org/freedesktop/Hal/devices/computer --key system.hardware.uuid`
+
+    if [ -z $UUID ]; then
+        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+    else
+        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT -u $UUID
+    fi
+
+    success
+    echo
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    *)
+        echo "Usage: ovirt-post {start}"
+        exit 2
+esac

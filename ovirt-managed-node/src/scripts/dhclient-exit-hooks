@@ -1,0 +1,5 @@
+if [ -n "$new_ntp_servers" ]; then
+    for ntp_server in $new_ntp_servers; do
+        echo "$ntp_server" >> /etc/ntp/step-tickers
+    done
+fi

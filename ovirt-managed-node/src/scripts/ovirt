@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# ovirt Start ovirt services
+#
+# chkconfig: 3 11 99
+# description: ovirt services
+#
+
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+start() {
+    echo -n $"Starting ovirt: "
+
+    find_srv ipa tcp
+    krb5_conf=/etc/krb5.conf
+    if [ ! -s $krb5_conf ]; then
+        rm -f $krb5_conf
+        # FIXME this is IPA specific
+        wget -q http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf \
+            || die "Failed to get $krb5_conf"
+    fi
+    IPA_HOST=$SRV_HOST
+    IPA_PORT=$SRV_PORT
+
+    find_srv identify tcp
+    krb5_tab=/etc/libvirt/krb5.tab
+    ovirt-awake start $krb5_tab $SRV_HOST $SRV_PORT
+
+    find_srv collectd tcp
+    collectd_conf=/etc/collectd.conf
+    if [ -f $collectd_conf.in -a $SRV_HOST -a $SRV_PORT ]; then
+        sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
+            -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
+            > $collectd_conf \
+            || die "Failed to write $collectd_conf"
+    fi
+
+    success
+    echo
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    *)
+        echo "Usage: ovirt {start}"
+        exit 2
+esac
