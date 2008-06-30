@@ -1,6 +1,9 @@
 # -*-Shell-script-*-
 
-find_srv() {
+OVIRT_LOGFILE=/var/log/ovirt.log
+
+find_srv()
+{
     local dnsreply
     dnsreply=$(dig +short -t srv _$1._$2.$(dnsdomainname))
     if [ $? -eq 0 ]; then

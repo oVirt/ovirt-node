@@ -11,8 +11,6 @@
 . /etc/init.d/ovirt-functions
 
 start() {
-    echo -n $"Starting ovirt-post: "
-
     find_srv identify tcp
     UUID=`hal-get-property --udi \
         /org/freedesktop/Hal/devices/computer --key system.hardware.uuid`
@@ -22,14 +20,18 @@ start() {
     else
         ovirt-identify-node -s $SRV_HOST -p $SRV_PORT -u $UUID
     fi
-
-    success
-    echo
 }
 
 case "$1" in
     start)
-        start
+        echo -n $"Starting ovirt-post: "
+
+        {
+            start
+        } >> $OVIRT_LOGFILE 2>&1
+
+        test $? -eq 0 &&  success || failure
+        echo
         ;;
     *)
         echo "Usage: ovirt-post {start}"
