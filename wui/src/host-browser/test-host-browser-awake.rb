@@ -76,7 +76,7 @@ class TestHostBrowserAwaken < Test::Unit::TestCase
   def test_create_keytab
     @krb5.should_receive(:get_default_realm).once().returns { "ovirt-test-realm" }
     servername = `hostname -f`.chomp
-    @session.should_receive(:write).with("KTAB http://#{servername}/config/127.0.0.1-libvirt.tab\n").once().returns { |request| request.length }
+    @session.should_receive(:write).with("KTAB http://#{servername}/ipa/config/127.0.0.1-libvirt.tab\n").once().returns { |request| request.length }
     @session.should_receive(:readline).once().returns { "ACK\n" }
 
     assert_nothing_raised(Exception) { @browser.create_keytab('localhost','127.0.0.1',@krb5) }

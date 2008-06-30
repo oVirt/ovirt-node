@@ -19,6 +19,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 $: << File.join(File.dirname(__FILE__), "../dutils")
+$: << File.join(File.dirname(__FILE__), "../")
 
 require 'rubygems'
 require 'libvirt'
@@ -73,15 +74,60 @@ class HostBrowser
     #
     def get_remote_info
         puts "#{@log_prefix} Begin remote info collection" unless defined?(TESTING)
-        result = {}
+        result = Hash.new
         result['HOSTNAME'] = @session.peeraddr[2]
         result['IPADDR']   = @session.peeraddr[3]
+
         @session.write("INFO?\n")
 
         loop do
             info = @session.readline.chomp
 
+            puts "Received info='#{info}'"
+
             break if info == "ENDINFO"
+
+            # if we got the start of a CPU details marker, then process it
+            if info == "CPU"
+                cpu = get_cpu_info
+                cpu_info = result['CPUINFO']
+
+                if(cpu_info == nil)
+                    cpu_info = Array.new
+                    result['CPUINFO'] = cpu_info
+                end
+
+                cpu_info << cpu
+
+            else
+
+                raise Exception.new("ERRINFO! Excepted key=value : #{info}\n") unless info =~ /[\w]+[\s]*=[\w]/
+
+                key, value = info.split("=")
+
+                puts "#{@log_prefix} ::Received - #{key}:#{value}" unless defined?(TESTING)
+                result[key] = value
+
+                @session.write("ACK #{key}\n")
+            end
+        end
+
+        return result
+    end
+
+    # Extracts CPU details from the managed node.
+    #
+    def get_cpu_info
+        puts "Begin receiving CPU details"
+
+        result = Hash.new
+
+        @session.write("CPUINFO?\n")
+
+        loop do
+            info = @session.readline.chomp
+
+            break if info == "ENDCPU"
 
             raise Exception.new("ERRINFO! Excepted key=value : #{info}\n") unless info =~ /[\w]+[\s]*=[\w]/
 
@@ -93,6 +139,8 @@ class HostBrowser
             @session.write("ACK #{key}\n")
         end
 
+        @session.write("ACK CPU\n");
+
         return result
     end
 
@@ -100,10 +148,24 @@ class HostBrowser
     #
     def write_host_info(host_info)
         ensure_present(host_info,'HOSTNAME')
-        ensure_present(host_info,'NUMCPUS')
-        ensure_present(host_info,'CPUSPEED')
         ensure_present(host_info,'ARCH')
         ensure_present(host_info,'MEMSIZE')
+        ensure_present(host_info,'CPUINFO')
+
+        cpu_info = host_info['CPUINFO']
+
+        cpu_info.each do |cpu|
+            ensure_present(cpu,'CPUNUM')
+            ensure_present(cpu,'CORENUM')
+            ensure_present(cpu,'NUMCORES')
+            ensure_present(cpu,'VENDOR')
+            ensure_present(cpu,'MODEL')
+            ensure_present(cpu,'FAMILY')
+            ensure_present(cpu,'CPUIDLVL')
+            ensure_present(cpu,'SPEED')
+            ensure_present(cpu,'CACHE')
+            ensure_present(cpu,'FLAGS')
+        end
 
         puts "Searching for existing host record..." unless defined?(TESTING)
         host = Host.find(:first, :conditions => ["hostname = ?", host_info['HOSTNAME']])
@@ -112,30 +174,48 @@ class HostBrowser
             begin
                 puts "Creating a new record for #{host_info['HOSTNAME']}..." unless defined?(TESTING)
 
-                Host.new(
+                host = Host.create(
                     "uuid"            => host_info['UUID'],
                     "hostname"        => host_info['HOSTNAME'],
                     "hypervisor_type" => host_info['HYPERVISOR_TYPE'],
-                    "num_cpus"        => host_info['NUMCPUS'],
-                    "cpu_speed"       => host_info['CPUSPEED'],
                     "arch"            => host_info['ARCH'],
                     "memory_in_mb"    => host_info['MEMSIZE'],
                     "is_disabled"     => 0,
                     "hardware_pool"   => HardwarePool.get_default_pool,
                     # Let host-status mark it available when it
                     # successfully connects to it via libvirt.
-                    "state"           => Host::STATE_UNAVAILABLE).save
+                    "state"           => Host::STATE_UNAVAILABLE)
+                host.save!
             rescue Exception => error
                 puts "Error while creating record: #{error.message}" unless defined?(TESTING)
             end
         else
             host.uuid         = host_info['UUID']
             host.hostname     = host_info['HOSTNAME']
-            host.num_cpus     = host_info['NUMCPUS']
-            host.cpu_speed    = host_info['CPUSPEED']
             host.arch         = host_info['ARCH']
             host.memory_in_mb = host_info['MEMSIZE']
         end
+
+        # delete an existing CPUs and create new ones based on the data
+        puts "Deleting any existing CPUs"
+        Cpu.delete_all(['host_id = ?', host.id])
+
+        puts "Saving new CPU records"
+        cpu_info.collect do |cpu|
+            detail = Cpu.new(
+                "cpu_number"      => cpu['CPUNUM'],
+                "core_number"     => cpu['CORENUM]'],
+                "number_of_cores" => cpu['NUMCORES'],
+                "vendor"          => cpu['VENDOR'],
+                "model"           => cpu['MODEL'],
+                "family"          => cpu['FAMILY'],
+                "cpuid_level"     => cpu['CPUIDLVL'],
+                "speed"           => cpu['SPEED'],
+                "cache"           => cpu['CACHE'],
+                "flags"           => cpu['FLAGS'])
+
+            host.cpus << detail
+         end
 
         return host
     end
@@ -181,8 +261,8 @@ class HostBrowser
 
     # Private method to ensure that a required field is present.
     #
-    def ensure_present(host_info,key)
-        raise Exception.new("ERROR! Missing '#{key}'...") if host_info[key] == nil
+    def ensure_present(info,key)
+        raise Exception.new("ERROR! Missing '#{key}'...") if info[key] == nil
     end
 
     # Executes an external program to support the keytab function.
@@ -226,7 +306,6 @@ def entry_point(server)
 end
 
 unless defined?(TESTING)
-
     # The main entry point.
     #
     unless ARGV[0] == "-n"

@@ -1,5 +1,5 @@
 #!/usr/bin/ruby
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Scott Seago <sseago@redhat.com>
 #
@@ -23,7 +23,7 @@ $: << File.join(File.dirname(__FILE__), "../vendor/plugins/betternestedset/lib")
 
 require 'rubygems'
 
-gem 'activeldap' 
+gem 'activeldap'
 
 require 'active_ldap'
 require 'active_support'
@@ -58,6 +58,7 @@ require 'models/quota.rb'
 
 require 'models/hardware_pool.rb'
 require 'models/host.rb'
+require 'models/cpu.rb'
 require 'models/nic.rb'
 
 require 'models/vm_resource_pool.rb'

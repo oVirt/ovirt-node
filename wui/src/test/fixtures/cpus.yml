@@ -1,0 +1,21 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  cpu_number: 1
+  core_number: 1
+  cpu_id_level: 1
+  vendor: 1
+  family: 1
+  model: 1
+  family: MyString
+  flags: MyString
+
+two:
+  cpu_number: 1
+  core_number: 1
+  cpu_id_level: 1
+  vendor: 1
+  family: 1
+  model: 1
+  family: MyString
+  flags: MyString
