@@ -9,7 +9,7 @@ logvol /iscsi3 --name=iSCSI3 --vgname=VolGroup00 --size=64
 logvol /iscsi4 --name=iSCSI4 --vgname=VolGroup00 --size=64
 logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64
 
-%include repos-x86_64.ks
+%include repos.ks
 
 %packages --nobase
 

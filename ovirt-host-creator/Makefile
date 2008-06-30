@@ -10,9 +10,9 @@ distclean: clean
 	rm -rf *.iso tftpboot repos.ks rpm-build iso-file
 
 repos.ks: repos.ks.in
-	cp repos.ks.in repos.ks
+	sed "s/@@ARCH@@/$(ARCH)/" repos.ks.in > repos.ks
 
-build: ovirt-$(ARCH).ks common-install.ks common-pkgs.ks common-post.ks repos.ks
+build: ovirt.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
 	rm -rf tftpboot/
 	./ovirt-pxe.sh > ovirt-pxe.log 2>&1
 

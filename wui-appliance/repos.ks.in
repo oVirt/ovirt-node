@@ -1,3 +1,6 @@
+url --url http://download.fedora.redhat.com/pub/fedora/linux/releases/9/Fedora/@@ARCH@@/os/
+
 repo --name=f9 --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-9&arch=@@ARCH@@
 repo --name=f9-updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f9&arch=@@ARCH@@
 repo --name=ovirt --baseurl=http://ovirt.org/repos/ovirt/9/@@ARCH@@
+

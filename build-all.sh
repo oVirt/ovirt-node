@@ -243,22 +243,22 @@ if [ $update_app == 1 ]; then
 
     cd $BASE/wui-appliance
     make clean
-    cat > repos-x86_64.ks << EOF
+    cat > repos.ks << EOF
 url --url http://$VIRBR/pungi/$F_REL/$ARCH/os
 EOF
     excludepkgs=
     if [[ -f $OVIRT/repodata/repomd.xml ]]; then
         excludepkgs='--excludepkgs=ovirt*'
-        cat >> repos-x86_64.ks << EOF
+        cat >> repos.ks << EOF
 repo --name=ovirt --baseurl=http://$VIRBR/ovirt
 EOF
     fi
-    cat >> repos-x86_64.ks << EOF
-repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$F_REL/x86_64 $excludepkgs
+    cat >> repos.ks << EOF
+repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$F_REL/$ARCH $excludepkgs
 
 EOF
     make
-    cp wui-rel-*.ks $OVIRT
+    cp wui-rel.ks $OVIRT
 
     bridge_flag=
     if [ -n "$bridge" ]; then
@@ -267,7 +267,7 @@ EOF
 
     ./create-wui-appliance.sh \
         -t http://$VIRBR/pungi/$F_REL/$ARCH/os \
-        -k http://$VIRBR/ovirt/wui-rel-$ARCH.ks \
+        -k http://$VIRBR/ovirt/wui-rel.ks \
         $bridge_flag
 
     set +x
