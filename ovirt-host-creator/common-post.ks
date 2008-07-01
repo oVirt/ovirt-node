@@ -1,3 +1,4 @@
+# -*-Shell-script-*-
 echo "Starting Kickstart Post"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 export PATH

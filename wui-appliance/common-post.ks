@@ -1,3 +1,4 @@
+# -*-Shell-script-*-
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 export PATH
 
