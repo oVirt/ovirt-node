@@ -86,6 +86,23 @@
                         error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
                     });
                     return false;})},function(){});
+            $('.dialog_tab_nav a').livequery(function(){
+                $(this).bind('click', function(){
+                    $('.dialog_tab_nav li').removeClass('current');
+                    $(this).parent().addClass('current');
+                    $.ajax({
+                        url: $(this).attr('href'),
+                        type: 'GET',
+                        data: {ajax:true},
+                        dataType: 'html',
+                        success: function(data) { 
+                          var wrapped_data = $(data).find('div').filter('[id=dialog-content-area]');
+                          var my_parent = $(this).parent();
+                          $('#dialog-content-area').html($(data));
+                        },
+                        error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
+                    });
+                    return false;})},function(){});
 	});
 
   function delete_vm_pool(id, parent)

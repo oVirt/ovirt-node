@@ -1,0 +1,9 @@
+<div id="dialog-content-area">
+  <%= render :partial => '/storage/nav' %>
+</div>
+<div class="panel_header"></div>
+  <%= render :partial => "/storage/new", 
+             :locals => { :hardware_pool => @hardware_pool,
+                          :storage_types => @storage_types} %>
+
+</div>

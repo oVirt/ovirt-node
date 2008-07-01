@@ -7,41 +7,40 @@
 </form>
 </div>
 <script type="text/javascript">
-	$("#<%= table_id %>").flexigrid
-	(
-	{
-	url: '<%=  url_for :controller => "hardware", :action => "hosts_json", :id => (hwpool.nil? ? nil : hwpool.id), :exclude_id => exclude_id %>',
+    $("#<%= table_id %>").flexigrid
+    (
+    {
     url: '<%=  url_for :controller => "hardware", :action => "hosts_json", :id => (hwpool.nil? ? nil : hwpool.id), :exclude_id => exclude_id %>',
-	dataType: 'json',
-	colModel : [
-		{display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
-		{display: 'Hostname', name : 'hostname', width : 60, align: 'left'},
-		<%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
-	        {display: 'UUID', name : 'uuid', width : 180, align: 'left'},
-		{display: 'Hypervisor', name : 'hypervisor_type', width : 60, align: 'left'},
-		{display: 'CPUs', name : 'num_cpus', width : 30, align: 'left'},
-		{display: 'Speed (MHz)', name : 'cpu_speed', width : 70, align: 'right'},
-		{display: 'Arch', name : 'arch', width : 50, align: 'right'},
-		{display: 'RAM (MB)', name : 'memory', width : 60, align: 'right'},
-		{display: 'Status', name : 'is_disabled', width : 110, align: 'right'},
+    dataType: 'json',
+    colModel : [
+        {display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
+        {display: 'Hostname', name : 'hostname', width : 60, align: 'left'},
+        <%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
+        {display: 'UUID', name : 'uuid', width : 180, align: 'left'},
+        {display: 'Hypervisor', name : 'hypervisor_type', width : 60, align: 'left'},
+        {display: 'CPUs', name : 'num_cpus', width : 30, align: 'left'},
+        {display: 'Speed (MHz)', name : 'cpu_speed', width : 70, align: 'right'},
+        {display: 'Arch', name : 'arch', width : 50, align: 'right'},
+        {display: 'RAM (MB)', name : 'memory', width : 60, align: 'right'},
+        {display: 'Status', name : 'is_disabled', width : 110, align: 'right'},
         {display: 'Load', name : 'load', width: 180, sortable : false, align: 'left', process: <%= table_id %>_load_widget }
-		],
-	sortname: "hostname",
-	sortorder: "asc",
+	],
+    sortname: "hostname",
+    sortorder: "asc",
     usepager: <%= (hwpool.nil? or hwpool.hosts.size > hosts_per_page) ? 'true' : 'false' %>,
     useRp: <%= (hwpool.nil? or hwpool.hosts.size > hosts_per_page) ? 'true' : 'false' %>,
-	rp: <%= hosts_per_page %>,
-	showTableToggleBtn: true,
-	onSelect: <%= on_select %>,
+    rp: <%= hosts_per_page %>,
+    showTableToggleBtn: true,
+    onSelect: <%= on_select %>,
     onDeselect: <%= on_deselect %>,
     onHover: <%= on_hover %>,
     onUnhover: <%= on_unhover %>
-	}
-	);   
-	function <%= table_id %>checkbox(celDiv)
-	{
-	       $(celDiv).html('<input class="grid_checkbox" type="checkbox" name="grid_checkbox'+$(celDiv).html()+'" value="'+$(celDiv).html()+'"/>');
-	} 
+    }
+    );
+    function <%= table_id %>checkbox(celDiv)
+    {
+        $(celDiv).html('<input class="grid_checkbox" type="checkbox" name="grid_checkbox'+$(celDiv).html()+'" value="'+$(celDiv).html()+'"/>');
+    }
     function <%= table_id %>_load_widget(celDiv)
     {
         load_widget(celDiv, "host");

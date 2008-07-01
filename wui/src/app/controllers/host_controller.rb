@@ -82,7 +82,7 @@ class HostController < ApplicationController
   end
 
   def set_disabled(value)
-    operation = value == 1 ? "diabled" : "enabled"
+    operation = value == 1 ? "disabled" : "enabled"
     begin
       @host.is_disabled = value
       @host.save!

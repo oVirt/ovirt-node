@@ -6,30 +6,30 @@
 </form>
 </div>
 <script type="text/javascript">
-	$("#<%= table_id %>").flexigrid
-	(
-	{
+    $("#<%= table_id %>").flexigrid
+    (
+    {
     url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => (hwpool.nil? ? nil : hwpool.id), :exclude_id => exclude_id %>',
-	dataType: 'json',
-	colModel : [
-		{display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
-		{display: 'Alias', width : 180, align: 'left'},
-		<%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
-	        {display: 'IP', name : 'ip_addr', width : 80, align: 'left'},
-		{display: 'Type', name : 'storage_pools.type', width : 80, align: 'left'}
-		],
-	sortname: "ip_addr",
-	sortorder: "asc",
+    dataType: 'json',
+    colModel : [
+        {display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
+        {display: 'Alias', width : 180, align: 'left'},
+        <%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
+        {display: 'IP', name : 'ip_addr', width : 80, align: 'left'},
+        {display: 'Type', name : 'storage_pools.type', width : 80, align: 'left'}
+        ],
+    sortname: "ip_addr",
+    sortorder: "asc",
     usepager: <%= (hwpool.nil? or hwpool.storage_pools.size > storage_per_page) ? 'true' : 'false' %>,
     useRp: <%= (hwpool.nil? or hwpool.storage_pools.size > storage_per_page) ? 'true' : 'false' %>,
-	rp: <%= storage_per_page %>,
-	showTableToggleBtn: true,
-	onSelect: <%= on_select %>
-	}
-	);   
-	function <%= table_id %>checkbox(celDiv)
-	{
-	       $(celDiv).html('<input type="checkbox" name="grid_checkbox'+$(celDiv).html()+'" class="grid_checkbox" value="'+$(celDiv).html()+'"/>');
-	} 
+    rp: <%= storage_per_page %>,
+    showTableToggleBtn: true,
+    onSelect: <%= on_select %>
+    }
+    );
+    function <%= table_id %>checkbox(celDiv)
+    {
+        $(celDiv).html('<input type="checkbox" name="grid_checkbox'+$(celDiv).html()+'" class="grid_checkbox" value="'+$(celDiv).html()+'"/>');
+    }
 
 </script>

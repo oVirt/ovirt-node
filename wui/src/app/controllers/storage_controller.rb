@@ -141,14 +141,28 @@ class StorageController < ApplicationController
     end
   end
 
-  def addstorage
+  def add_internal
     @hardware_pool = HardwarePool.find(params[:hardware_pool_id])
     @perm_obj = @hardware_pool
     @redir_controller = @perm_obj.get_controller
     authorize_admin
     @storage_pools = @hardware_pool.storage_volumes
     @storage_types = StoragePool::STORAGE_TYPES.keys
+  end
+
+  def addstorage
+    add_internal
     render :layout => 'popup'    
+  end
+
+  def add
+    add_internal
+    render :layout => false
+  end
+
+  def new
+    add_internal
+    render :layout => false
   end
 
   #FIXME: we need permissions checks. user must have permission on src pool

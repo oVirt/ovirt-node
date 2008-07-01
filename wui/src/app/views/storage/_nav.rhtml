@@ -1,0 +1,12 @@
+<div id="toolbar_nav">
+<ul class="dialog_tab_nav">
+    <li id="nav_new" <%= 'class="current"' if controller.action_name == "addstorage" or 
+                                              controller.action_name == "new" %> >
+      <%= link_to "Add New Pool", {:action => 'new', :hardware_pool_id => @hardware_pool.id} %>
+    </li>
+    <li id="nav_add" <%= 'class="current"' if controller.action_name == "add" %> >
+      <%= link_to "Import Existing Pool(s)", {:action => 'add', :hardware_pool_id => @hardware_pool.id} %>
+    </li>
+</ul>
+</div>
+

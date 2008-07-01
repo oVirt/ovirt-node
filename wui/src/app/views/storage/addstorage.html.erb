@@ -5,47 +5,12 @@
   Choose a storage pool selection below
 <%- end -%>
 
-<div id="toolbar_nav">
-<ul>
-    <li class="current" id="new_tab"><a href="#" onClick = "show_new()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Add New Pool</a></li>
-    <li id="add_tab"><a href="#" onClick = "show_add()"><img style="vertical-align:middle;" src="" />&nbsp;&nbsp;Import Existing Pool(s)</a></li>
-</ul>
-</div>
+<div id="dialog-content-area">
+  <%= render :partial => '/storage/nav' %>
 
 <div class="panel_header"></div>
-<div id="add_panel">
-  <div class="dialog_body_small">
-    <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_grid",
-               :hwpool => nil, :exclude_id => @hardware_pool.id,
-               :on_select => "false" } %>
-  </div>
-  <%= popup_footer("add_storage('#{url_for :controller => 'hardware', 
-                                           :action => 'add_storage', 
-                                          :id => @hardware_pool}')", 
-                   "Add Storage Pool(s)") %>
-</div>
-
-<div id="new_panel">
     <%= render :partial => "/storage/new", 
                :locals => { :hardware_pool => @hardware_pool,
                             :storage_types => @storage_types} %>
+
 </div>
-
-<script type="text/javascript">
-  function show_new()
-  {
-      $("#add_tab").removeClass('current');
-      $("#new_tab").addClass('current');
-      $("#add_panel").hide()
-      $("#new_panel").show()
-
-  }
-  function show_add()
-  {
-      $("#new_tab").removeClass('current');
-      $("#add_tab").addClass('current');
-      $("#new_panel").hide()
-      $("#add_panel").show()
-  }
-  $("#add_panel").hide()
-</script>
