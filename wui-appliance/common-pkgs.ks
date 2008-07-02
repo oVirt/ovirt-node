@@ -13,7 +13,7 @@ ipa-server
 ipa-admintools
 scsi-target-utils
 iscsi-initiator-utils
-ovirt-wui
+ovirt-wui.noarch
 ovirt-host-image-pxe
 firefox
 gtk-vnc-plugin
