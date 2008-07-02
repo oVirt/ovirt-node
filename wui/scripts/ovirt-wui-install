@@ -71,6 +71,24 @@ find_ldap_base() {
     fi   
 }
 
+# wait_for_service 'test command' max_retries seconds_to_sleep_between_retries
+wait_for_service() {
+  local testcmd=$1; shift
+  local n_retries=$1; shift
+  local sleep_seconds=$1; shift
+  local total=$((n_retries*sleep_seconds))
+
+  while [ $n_retries -gt 0 ]
+  do
+    eval "$testcmd" > /dev/null 2>&1 && return 0
+    echo service not ready yet, retrying...
+    n_retries=$((n_retries-1))
+    sleep $sleep_seconds
+  done
+  printf 'service not ready after %d seconds, giving up\n' $total 1>&2
+  return 1
+}
+
 PASSWD=
 for i ; do
     case $1 in
@@ -124,6 +142,7 @@ fi
 # dnsmasq
 if [[ "$PROD_INST" == "false" ]]; then
     service libvirtd status > /dev/null 2&>1 || service libvirtd start > /dev/null 2>&1
+    wait_for_service 'virsh connect' 10 2 || exit 1
     virsh net-destroy default
     virsh net-undefine default
 fi
@@ -135,21 +154,7 @@ echo "host all all 127.0.0.1 255.255.255.0 trust" >> /var/lib/pgsql/data/pg_hba.
 service postgresql stop > /dev/null 2>&1
 service postgresql start
 [ $? != 0 ] && echo "Failed to start database" && exit 1
-declare -i timeout=10
-while [[ timeout -gt 0 ]]
-do
-  psql -l -U postgres > /dev/null 2>&1
-  rc=$?
-  if [[ rc -eq 0 ]]
-  then
-     break
-  else
-     echo Database not ready yet, retrying...
-  fi
-  let timeout--
-  sleep 2
-done
-[[ timeout -eq 0 ]] && echo "Failed to start database" && exit 1
+wait_for_service 'psql -l -U postgres' 10 2 || exit 1
 
 if [ -z $PASSWD ]; then
     # generate random pg user password
