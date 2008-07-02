@@ -37,7 +37,7 @@ BuildRequires: ruby-gettext-package
 BuildRequires: rubygem(rake) >= 0.7
 BuildRequires: avahi-devel
 Provides: ovirt-wui
-BuildArch: i386 x86_64
+BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL: http://ovirt.org/
 
