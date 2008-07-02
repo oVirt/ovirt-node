@@ -2,5 +2,5 @@ iso-file
 *.iso
 tftpboot
 rpm-build
-ovirt-pxe.log
+ovirt-cd.log
 repos.ks

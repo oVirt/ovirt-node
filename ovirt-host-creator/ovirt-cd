@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Create an Ovirt Host USB device (stateless)
+# Create an Ovirt Host LiveCD
 # Copyright 2008 Red Hat, Inc.
 # Written by Chris Lalancette <clalance@redhat.com>
 #
@@ -17,29 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-. ./ovirt-common.sh
+PATH=/sbin:/bin:/usr/bin
 
-if [ $# -eq 1 ]; then
-    ISO=
-elif [ $# -eq 2 ]; then
-    ISO=$2
-else
-    echo "Usage: ovirt-flash.sh <usbdevice> [iso-image]"
-    exit 1
-fi
+KICKSTART=ovirt.ks
 
-USBDEVICE=$1
+LABEL=ovirt-`date +%Y%m%d%H%M`
+livecd-creator --skip-minimize -c $KICKSTART -f $LABEL 1>&2 &&
 
-if [ ! -b "$USBDEVICE" ]; then
-    echo "USB device $USBDEVICE doesn't seem to exist"
-    exit 2
-fi
-
-ISO=`create_iso $ISO` || exit 1
-
-# clear out the old partition table
-dd if=/dev/zero of=$USBDEVICE bs=4096 count=1
-printf 'n\np\n1\n\n\nt\n6\na\n1\nw\n' | fdisk $USBDEVICE
-mkdosfs -n ovirt ${USBDEVICE}1
-cat /usr/lib/syslinux/mbr.bin > $USBDEVICE
-livecd-iso-to-disk $ISO ${USBDEVICE}1
+echo $LABEL.iso > iso-file

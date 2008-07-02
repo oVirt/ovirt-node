@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Create an Ovirt Host LiveCD
+# Create an Ovirt Host PXE boot
 # Copyright 2008 Red Hat, Inc.
 # Written by Chris Lalancette <clalance@redhat.com>
 #
@@ -17,15 +17,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-. ./ovirt-common.sh
+ME=$(basename "$0")
+warn() { printf "$ME: $@\n" >&2; }
+die() { warn "$@"; exit 1; }
 
-if [ $# -eq 0 ]; then
-    ISO=
-elif [ $# -eq 1 ]; then
-    ISO=$1
-else
-    echo "Usage: ovirt-cd.sh [iso-image]"
-    exit 1
-fi
+test $# != 1 && die "Usage: $ME <iso-image>"
 
-ISO=`create_iso $ISO`
+ISO=$1
+test ! -r $ISO && die "$ISO is not a readable file"
+test $( id -u ) -ne 0 && die "$ME must run as root"
+
+livecd-iso-to-pxeboot $ISO
+
+# append BOOTIF with PXE MAC info
+f=tftpboot/pxelinux.cfg/default
+grep -q 'IPAPPEND 2' $f || sed -i '/KERNEL/a \\tIPAPPEND 2' $f

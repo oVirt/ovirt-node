@@ -17,28 +17,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-. ./ovirt-common.sh
+ME=$(basename "$0")
+warn() { printf "$ME: $@\n" >&2; }
+die() { warn "$@"; exit 1; }
 
-if [ $# -eq 1 ]; then
-    ISO=
-elif [ $# -eq 2 ]; then
-    ISO=$2
-else
-    echo "Usage: ovirt-flash.sh <usbdevice> [iso-image]"
-    exit 1
-fi
+test $# != 2 && die "Usage: $ME <usbdevice> <iso-image>"
 
 USBDEVICE=$1
+ISO=$2
+
+test ! -r $ISO && die "$ISO is not a readable file"
+test ! -b $USBDEVICE && die "$USBDEVICE is not a valid block device"
+test $( id -u ) -ne 0 && die "$ME must run as root"
+
 IMGTMP=/var/tmp/ovirt-$$
 SQUASHTMP=/var/tmp/ovirt-squash-$$
 USBTMP=/var/tmp/ovirt-usb-$$
-
-if [ ! -b "$USBDEVICE" ]; then
-    echo "USB device $USBDEVICE doesn't seem to exist"
-    exit 2
-fi
-
-ISO=`create_iso $ISO` || exit 1
 
 # do setup
 mkdir -p $IMGTMP $SQUASHTMP $USBTMP

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Create an Ovirt Host PXE boot
+# Create an Ovirt Host USB device (stateless)
 # Copyright 2008 Red Hat, Inc.
 # Written by Chris Lalancette <clalance@redhat.com>
 #
@@ -17,24 +17,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-. ./ovirt-common.sh
+ME=$(basename "$0")
+warn() { printf "$ME: $@\n" >&2; }
+die() { warn "$@"; exit 1; }
 
-if [ $# -eq 0 ]; then
-    ISO=
-elif [ $# -eq 1 ]; then
-    ISO=$1
-else
-    echo "Usage: ovirt-pxe.sh [iso-image]"
-    exit 1
-fi
+test $# != 2 && die "Usage: $ME <usbdevice> <iso-image>"
 
-rm -f iso-file
-ISO=`create_iso $ISO` || exit 1
+USBDEVICE=$1
+ISO=$2
 
-livecd-iso-to-pxeboot $ISO
+test ! -r $ISO && die "$ISO is not a readable file"
+test ! -b $USBDEVICE && die "$USBDEVICE is not a valid block device"
+test $( id -u ) -ne 0 && die "$ME must run as root"
 
-# append BOOTIF with PXE MAC info
-f=tftpboot/pxelinux.cfg/default
-grep -q 'IPAPPEND 2' $f || sed -i '/KERNEL/a \\tIPAPPEND 2' $f
-
-echo $ISO > iso-file
+# clear out the old partition table
+dd if=/dev/zero of=$USBDEVICE bs=4096 count=1
+printf 'n\np\n1\n\n\nt\n6\na\n1\nw\n' | fdisk $USBDEVICE
+mkdosfs -n ovirt ${USBDEVICE}1
+cat /usr/lib/syslinux/mbr.bin > $USBDEVICE
+livecd-iso-to-disk $ISO ${USBDEVICE}1
