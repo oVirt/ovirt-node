@@ -146,7 +146,7 @@ if [ $update_pungi != 0 ]; then
 
     fedora_mirror=http://mirrors.fedoraproject.org/mirrorlist
     # use Fedora + updates
-    currentbadupdates='--excludepkgs=ruby,ruby-devel,ruby-docs,ruby-irb,ruby-libs,ruby-mode,ruby-rdoc,ruby-ri,ruby-tcltk'
+    currentbadupdates=''
     cat > $PUNGIKS << EOF
 repo --name=f$F_REL \
   --mirrorlist=$fedora_mirror?repo=fedora-$F_REL&arch=\$basearch
