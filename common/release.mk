@@ -11,7 +11,7 @@ NEWVERSION	= $$(awk 'BEGIN { printf "%.2f", $(VERSION) + .01 }')
 NEWRELEASE	= $$(($(RELEASE) + 1))
 X		= $$(awk '{ split($$2,r,"."); \
                             printf("%d.%d\n", r[1], r[2]+1) }' version)
-git_head	= $$(git show-ref --hash=7 HEAD)
+git_head	= $$(git log -1 --pretty=format:%h)
 GITRELEASE	= $(X).$$(date --utc +%Y%m%d%H%M)git$(git_head)
 DIST		= $$(rpm --eval '%{dist}')
 
