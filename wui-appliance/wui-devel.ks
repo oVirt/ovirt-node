@@ -158,6 +158,8 @@ replace: ipaMaxUsernameLength
 ipaMaxUsernameLength: 12
 LDAP
 	ipa-adduser -f Ovirt -l Admin -p @password@ @principal@
+	# make ovitadmin also an IPA admin
+	ipa-modgroup -a ovirtadmin admins
 	ipa-moduser --setattr krbPasswordExpiration=19700101000000Z @principal@
 	ipa-getkeytab -s management.priv.ovirt.org -p @principal@ -k @ktab_file@
 	@cron_file@
