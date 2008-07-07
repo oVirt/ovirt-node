@@ -1,0 +1,22 @@
+# root directory of the oVirt WUI Rails application
+#OVIRT_DIR=/usr/share/ovirt-wui
+
+# location of the logfile
+#MONGREL_LOG=/var/log/ovirt-wui/mongrel.log
+
+# location of the lockfile
+#MONGREL_LOCKFILE=/var/lock/subsys/ovirt-wui
+
+# location of the file containing running process ID
+#MONGREL_PID=/var/run/ovirt-wui/mongrel.pid
+
+# sets ruby on Rails environment / mode of operation
+# http://wiki.rubyonrails.org/rails/pages/Environments
+#RAILS_ENVIRONMENT=production
+
+# user and group under which Rails application runs
+#USER=ovirt
+#GROUP=ovirt
+
+# URL prefix for Rails application
+#PREFIX=/ovirt

@@ -8,16 +8,19 @@
 #    ovirt VM manager.
 #
 
-OVIRT_DIR=/usr/share/ovirt-wui
+[ -r /etc/sysconfig/ovirt-mongrel-rails ] && . /etc/sysconfig/ovirt-mongrel-rails
+
+OVIRT_DIR="${OVIRT_DIR:-/usr/share/ovirt-wui}"
+MONGREL_LOG="${MONGREL_LOG:-/var/log/ovirt-wui/mongrel.log}"
+MONGREL_PID="${MONGREL_PID:-/var/run/ovirt-wui/mongrel.pid}"
+MONGREL_LOCKFILE="${MONGREL_LOCKFILE:-/var/lock/subsys/ovirt-wui}"
+RAILS_ENVIRONMENT="${RAILS_ENVIRONMENT:-production}"
+USER="${USER:-ovirt}"
+GROUP="${GROUP:-ovirt}"
+PREFIX="${PREFIX:-/ovirt}"
+
 MONGREL_PROG=mongrel_rails
-MONGREL_LOG=/var/log/ovirt-wui/mongrel.log
-MONGREL_PID=/var/run/ovirt-wui/mongrel.pid
-MONGREL_LOCKFILE=/var/lock/subsys/ovirt-wui
 ADDR=127.0.0.1
-RAILS_ENVIRONMENT=production
-USER=ovirt
-GROUP=ovirt
-PREFIX=/ovirt
 
 RETVAL=0
 

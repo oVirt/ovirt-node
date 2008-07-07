@@ -57,8 +57,8 @@ mkdir %{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_bindir}
 %{__install} -d -m0755 %{buildroot}%{_sbindir}
 %{__install} -d -m0755 %{buildroot}%{_initrddir}
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/httpd/conf.d
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/%{name}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/%{name}/db
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
@@ -76,6 +76,7 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-host-status %{buildroot}%{_initrddir}
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-host-collect %{buildroot}%{_initrddir}
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-mongrel-rails %{buildroot}%{_initrddir}
+%{__install} -Dp -m0755 %{pbuild}/conf/ovirt-mongrel-rails.sysconf %{buildroot}%{_sysconfdir}/sysconfig/ovirt-mongrel-rails
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-taskomatic %{buildroot}%{_initrddir}
 
 # copy over all of the src directory...
@@ -163,6 +164,7 @@ fi
 %{_initrddir}/ovirt-host-collect
 %{_initrddir}/ovirt-mongrel-rails
 %{_initrddir}/ovirt-taskomatic
+%config(noreplace) %{_sysconfdir}/sysconfig/ovirt-mongrel-rails
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %doc
 %attr(-, ovirt, ovirt) %{_localstatedir}/lib/%{name}
