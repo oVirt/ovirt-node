@@ -56,10 +56,9 @@ class VmControllerTest < Test::Unit::TestCase
   def test_create
     num_vms = Vm.count
 
-    post :create, :vm_resource_pool_name => 'foobar', :hardware_pool_id => 1, :vm => { :uuid => 'f43b298c-1e65-46fa-965f-0f6fb9ffaa10', :description => 'descript', :num_vcpus_allocated => 4, :memory_allocated => 1024, :vnic_mac_addr => 'AA:BB:CC:DD:EE:FF' }
+    post :create, :vm_resource_pool_name => 'foobar', :hardware_pool_id => 1, :vm => { :uuid => 'f43b298c-1e65-46fa-965f-0f6fb9ffaa10', :description =>     'descript', :num_vcpus_allocated => 4, :memory_allocated => 262144, :vnic_mac_addr => 'AA:BB:CC:DD:EE:FF' }
 
-    assert_response :redirect
-    assert_redirected_to :controller => 'resources', :action => 'show', :id => 12
+    assert_response :success
 
     assert_equal num_vms + 1, Vm.count
   end
@@ -76,8 +75,7 @@ class VmControllerTest < Test::Unit::TestCase
 
   def test_update
     post :update, :id => @first_id, :vm => {}
-    assert_response :redirect
-    assert_redirected_to :action => 'show', :id => @first_id
+    assert_response :success
   end
 
   def test_destroy
@@ -87,8 +85,7 @@ class VmControllerTest < Test::Unit::TestCase
     }
 
     post :destroy, :id => @first_id
-    assert_response :redirect
-    assert_redirected_to :controller=>'resources', :action => 'show', :id => pool
+    assert_response :success
 
     assert_raise(ActiveRecord::RecordNotFound) {
       Vm.find(@first_id)

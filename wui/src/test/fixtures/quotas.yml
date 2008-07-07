@@ -2,7 +2,7 @@
 one:
   id: 1
   total_vcpus: 8
-  total_vmemory: 4096
+  total_vmemory: 2097152
   total_vnics: 3
   total_storage: 500
   total_vms: 2
@@ -30,7 +30,7 @@ four:
   total_vnics: 
   total_storage:
   total_vms: 2
-  pool_id: 4
+  pool_id: 6
 five:
   id: 5
   total_vcpus: 3
@@ -58,7 +58,7 @@ seven:
 eight:
   id: 8
   total_vcpus: 20
-  total_vmemory: 200000
+  total_vmemory: 2097152
   total_vnics: 30
   total_storage: 1111111111
   total_vms: 20

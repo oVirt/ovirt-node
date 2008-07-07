@@ -72,10 +72,9 @@ class StorageControllerTest < Test::Unit::TestCase
     hw_pool = HardwarePool.get_default_pool
     num_storage_volumes = StoragePool.count
 
-    post :create, :storage_type => 'NFS', :storage_pool => { :hardware_pool => hw_pool, :ip_addr => '111.121.131.141'}
+    post :create, :storage_type => 'NFS', :storage_pool => { :hardware_pool => hw_pool, :ip_addr => '111.121.131.141', :export_path => '/tmp/path' }
 
-    assert_response :redirect
-    assert_redirected_to :controller => 'hardware', :action => 'show', :id => hw_pool.id  
+    assert_response :success
 
     assert_equal num_storage_volumes + 1, StoragePool.count
   end
@@ -92,8 +91,7 @@ class StorageControllerTest < Test::Unit::TestCase
 
   def test_update
     post :update, :id => @first_id
-    assert_response :redirect
-    assert_redirected_to :action => 'show', :id => @first_id
+    assert_response :success
   end
 
   def test_destroy
@@ -104,8 +102,7 @@ class StorageControllerTest < Test::Unit::TestCase
     }
 
     post :destroy, :id => @first_id
-    assert_response :redirect
-    assert_redirected_to :controller => 'hardware', :action => 'show', :id => hw_pool_id
+    assert_response :success
 
     assert_raise(ActiveRecord::RecordNotFound) {
       StoragePool.find(@first_id)

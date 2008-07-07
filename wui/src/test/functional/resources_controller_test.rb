@@ -33,11 +33,10 @@ class ResourcesControllerTest < ActionController::TestCase
 
   def test_create
     assert_difference('VmResourcePool.count') do
-      post :create, :vm_resource_pool => { }, :parent_id => 1
+      post :create, :vm_resource_pool => { :name => 'foo_resource_pool' }, :parent_id => 1
     end
 
-    assert_response :redirect
-    assert_redirected_to :controller => 'hardware', :action => 'show', :id => 1
+    assert_response :success
   end
 
   def test_show
@@ -63,8 +62,7 @@ class ResourcesControllerTest < ActionController::TestCase
     }
 
     post :destroy, :id => 2
-    assert_response :redirect
-    assert_redirected_to :controller => 'hardware', :action => 'show', :id => pool
+    assert_response :success
 
     assert_raise(ActiveRecord::RecordNotFound) {
       VmResourcePool.find(2)

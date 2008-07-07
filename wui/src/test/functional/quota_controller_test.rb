@@ -56,10 +56,9 @@ class QuotaControllerTest < Test::Unit::TestCase
   def test_create
     num_quotas = Quota.count
 
-    post :create, :quota => { :pool_id => 1 }
+    post :create, :quota => { :pool_id => 8 }
 
-    assert_response :redirect
-    assert_redirected_to :controller=> 'hardware', :action => 'show', :id => 1
+    assert_response :success
 
     assert_equal num_quotas + 1, Quota.count
   end
@@ -76,8 +75,7 @@ class QuotaControllerTest < Test::Unit::TestCase
 
   def test_update
     post :update, :id => @first_id
-    assert_response :redirect
-    assert_redirected_to :action => 'show', :id => @first_id
+    assert_response :success
   end
 
   def test_destroy
@@ -88,8 +86,7 @@ class QuotaControllerTest < Test::Unit::TestCase
     }
 
     post :destroy, :id => @first_id
-    assert_response :redirect
-    assert_redirected_to :controller => 'hardware', :action => 'show', :id => pool.id
+    assert_response :success
 
     assert_raise(ActiveRecord::RecordNotFound) {
       Quota.find(@first_id)

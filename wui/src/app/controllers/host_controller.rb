@@ -29,6 +29,11 @@ class HostController < ApplicationController
   verify :method => :post, :only => [ :destroy, :create, :update ],
          :redirect_to => { :action => :list }
 
+   def list
+       @hosts = Host.find(:all) if @hosts.nil? 
+   end
+
+
   def show
     set_perms(@perm_obj)
     unless @can_view

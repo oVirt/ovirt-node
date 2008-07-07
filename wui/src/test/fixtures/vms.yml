@@ -4,7 +4,7 @@ one:
   description: 'production httpd appliance'
   num_vcpus_allocated: 2
   num_vcpus_used: 2
-  memory_allocated: 2048
+  memory_allocated: 262144
   memory_used: 1024
   vnic_mac_addr: '23:51:90:A1:13:37'
   state: 'stopped'

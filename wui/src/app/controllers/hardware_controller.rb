@@ -35,6 +35,7 @@ class HardwareController < ApplicationController
     unless @can_view
       flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
       redirect_to :controller => "dashboard"
+      return
     end
     if params[:ajax]
       render :layout => 'tabs-and-content'

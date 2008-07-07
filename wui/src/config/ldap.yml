@@ -1,14 +1,14 @@
 development:
-  host: ldap.for.your.domain.com
+  host: management.priv.ovirt.org
   port: 389
-  base: dc=domain,dc=com
+  base: dc=priv,dc=ovirt,dc=org
 
 test:
-  host: ldap.for.your.domain.com
+  host: management.priv.ovirt.org
   port: 389
-  base: dc=domain,dc=com
+  base: dc=priv,dc=ovirt,dc=org
 
 production:
-  host: ldap.for.your.domain.com
+  host: management.priv.ovirt.org
   port: 389
-  base: dc=domain,dc=com
+  base: dc=priv,dc=ovirt,dc=org

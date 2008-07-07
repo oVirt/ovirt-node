@@ -34,8 +34,7 @@ development:
 test:
   adapter: postgresql
   database: ovirt_test
-  username: ovirt
-  password: v23zj59an
+  username: postgres
   host: localhost
 
 production:

@@ -56,10 +56,9 @@ class PermissionControllerTest < Test::Unit::TestCase
   def test_create
     num_permissions = Permission.count
 
-    post :create, :permission => { :user_role => 'Administrator', :uid => 'admin', :pool_id => 1}
+    post :create, :permission => { :user_role => 'Administrator', :uid => 'admin', :pool_id => 2}
 
-    assert_response :redirect
-    assert_redirected_to :controller => 'hardware', :action => 'show', :id => 1
+    assert_response :success
 
     assert_equal num_permissions + 1, Permission.count
   end
