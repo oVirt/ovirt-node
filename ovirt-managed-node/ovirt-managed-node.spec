@@ -54,7 +54,7 @@ make
 
 %{__install} -p -m0755 scripts/ovirt-setup %{buildroot}%{app_root}
 
-%{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.hourly
+%{__install} -p -m0755 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.hourly
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d
 
 %clean
