@@ -72,7 +72,7 @@ class Host < ActiveRecord::Base
   end
 
   def num_cpus
-    return cpu_details.size
+    return cpus.size
   end
 
   def cpu_speed
