@@ -185,7 +185,6 @@ class HostBrowser
                     # Let host-status mark it available when it
                     # successfully connects to it via libvirt.
                     "state"           => Host::STATE_UNAVAILABLE)
-                host.save!
             rescue Exception => error
                 puts "Error while creating record: #{error.message}" unless defined?(TESTING)
             end
@@ -216,6 +215,8 @@ class HostBrowser
 
             host.cpus << detail
          end
+
+         host.save!
 
         return host
     end
