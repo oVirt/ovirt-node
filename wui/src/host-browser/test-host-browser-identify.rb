@@ -38,7 +38,7 @@ class TestHostBrowser < Test::Unit::TestCase
         @host_info = {}
         @host_info['UUID']     = 'node1'
         @host_info['IPADDR']   = '192.168.2.2'
-        @host_info['HOSTNAME'] = 'node1.ovirt.redhat.com'
+        @host_info['HOSTNAME'] = 'prod.corp.com'
         @host_info['ARCH']     = 'x86_64'
         @host_info['MEMSIZE']  = '16384'
         @host_info['DISABLED'] = '0'
@@ -75,6 +75,15 @@ class TestHostBrowser < Test::Unit::TestCase
             mce cx8 apic mtrr pge mca cmov pat pse36 clflush dts acpi mmx \
             fxsr sse sse2 ss ht tm pbe nx lm constant_tsc arch_perfmon pebs \
             bts pni monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr lahf_lm'
+
+        @host_info['NICINFO'] = Array.new
+        @host_info['NICINFO'][0] = {}
+        @host_info['NICINFO'][0]['MAC']       = '00:11:22:33:44:55'
+        @host_info['NICINFO'][0]['BANDWIDTH'] = '100'
+
+        @host_info['NICINFO'][1] = {}
+        @host_info['NICINFO'][1]['MAC']       = '00:77:11:77:19:65'
+        @host_info['NICINFO'][1]['BANDWIDTH'] = '100'
     end
 
     # Ensures that the server is satisfied if the remote system is
@@ -184,6 +193,15 @@ class TestHostBrowser < Test::Unit::TestCase
         assert_raise(Exception) { @browser.write_host_info(@host_info) }
     end
 
+    # Ensures that, if no NIC info was available, the server raises an
+    # exception.
+    #
+    def test_write_host_info_with_missing_nicinfo
+        @host_info['NICINFO'] = nil
+
+        assert_raise(Exception) { @browser.write_host_info(@host_info) }
+    end
+
     # Ensures the browser can properly parse the CPU details.
     #
     def test_parse_cpu_info
@@ -206,7 +224,7 @@ class TestHostBrowser < Test::Unit::TestCase
 
     # Ensures the browser can properly parse the CPU details of two CPUs.
     #
-    def test_parse_cpu_info
+    def test_parse_cpu_info_with_two_entries
         @session.should_receive(:write).with("INFO?\n").once().returns { |request| request.length }
 
         # CPU 0
@@ -240,6 +258,26 @@ class TestHostBrowser < Test::Unit::TestCase
         assert_not_nil info['CPUINFO'][0]['key2']
         assert_not_nil info['CPUINFO'][1]['key3']
         assert_not_nil info['CPUINFO'][1]['key4']
+    end
+
+    # Ensures the browser can properly parse the details for a NIC.
+    #
+    def test_parse_nic_info
+        @session.should_receive(:write).with("INFO?\n").once().returns { |request| request.length }
+        @session.should_receive(:readline).once().returns { "NIC\n" }
+        @session.should_receive(:write).with("NICINFO?\n").once().returns { |request| request.length }
+        @session.should_receive(:readline).once().returns { "key1=value1\n" }
+        @session.should_receive(:write).with("ACK key1\n").once().returns { |request| request.length }
+        @session.should_receive(:readline).once().returns { "key2=value2\n" }
+        @session.should_receive(:write).with("ACK key2\n").once().returns { |request| request.length }
+        @session.should_receive(:readline).once().returns { "ENDNIC\n" }
+        @session.should_receive(:write).with("ACK NIC\n").once().returns { |request| request.length }
+        @session.should_receive(:readline).once().returns { "ENDINFO\n" }
+
+        info = @browser.get_remote_info
+
+        assert_equal 3,info.keys.size, "Should contain four keys"
+        assert info.include?("NICINFO")
     end
 
 end

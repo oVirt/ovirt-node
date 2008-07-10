@@ -12,7 +12,9 @@ URL:            http://www.ovirt.org/
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 BuildRequires:  libvirt-devel
+BuildRequires:  dbus-devel hal-devel
 Requires:       libvirt
+Requires:       hal
 ExclusiveArch:  %{ix86} x86_64
 
 %define app_root %{_datadir}/%{name}

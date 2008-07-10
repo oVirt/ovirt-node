@@ -12,14 +12,8 @@
 
 start() {
     find_srv identify tcp
-    UUID=`hal-get-property --udi \
-        /org/freedesktop/Hal/devices/computer --key system.hardware.uuid`
 
-    if [ -z $UUID ]; then
-        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
-    else
-        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT -u $UUID
-    fi
+    ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
 }
 
 case "$1" in

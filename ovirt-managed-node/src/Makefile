@@ -17,9 +17,9 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 CC=gcc
-CFLAGS=-Wall -c -g
-LFLAGS=-lvirt
-OBJECTS=ovirt-identify-node.o
+CFLAGS=-Wall -c -g $(shell pkg-config --cflags dbus-1)
+LFLAGS=-lhal -lvirt
+OBJECTS=comm.o gather.o hal_support.o main.o protocol.o
 TARGET=ovirt-identify-node
 SOURCES=\
 	ovirt-identify-node.c

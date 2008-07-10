@@ -87,8 +87,8 @@ class HostBrowser
 
             break if info == "ENDINFO"
 
-            # if we got the start of a CPU details marker, then process it
-            if info == "CPU"
+            case info
+            when "CPU"
                 cpu = get_cpu_info
                 cpu_info = result['CPUINFO']
 
@@ -98,7 +98,16 @@ class HostBrowser
                 end
 
                 cpu_info << cpu
+            when "NIC"
+                nic = get_nic_info
+                nic_info = result['NICINFO']
 
+                if(nic_info == nil)
+                    nic_info = Array.new
+                    result['NICINFO'] = nic_info
+                end
+
+                nic_info << nic
             else
 
                 raise Exception.new("ERRINFO! Excepted key=value : #{info}\n") unless info =~ /[\w]+[\s]*=[\w]/
@@ -144,6 +153,35 @@ class HostBrowser
         return result
     end
 
+    # Extracts NIC details from the managed node.
+    #
+    def get_nic_info
+        puts "Begin receiving NIC details"
+
+        result = Hash.new
+
+        @session.write("NICINFO?\n")
+
+        loop do
+            info = @session.readline.chomp
+
+            break if info == "ENDNIC"
+
+            raise Exception.new("ERRINFO! Excepted key=value : #{info}\n") unless info =~ /[\w]+[\s]*=[\w]/
+
+            key, value = info.split("=")
+
+            puts "#{@log_prefix} ::Received - #{key}:#{value}" unless defined?(TESTING)
+            result[key] = value
+
+            @session.write("ACK #{key}\n")
+        end
+
+        @session.write("ACK NIC\n");
+
+        return result
+    end
+
     # Writes the supplied host information to the database.
     #
     def write_host_info(host_info)
@@ -151,8 +189,10 @@ class HostBrowser
         ensure_present(host_info,'ARCH')
         ensure_present(host_info,'MEMSIZE')
         ensure_present(host_info,'CPUINFO')
+        ensure_present(host_info,'NICINFO')
 
         cpu_info = host_info['CPUINFO']
+        nic_info = host_info['NICINFO']
 
         cpu_info.each do |cpu|
             ensure_present(cpu,'CPUNUM')
@@ -216,7 +256,45 @@ class HostBrowser
             host.cpus << detail
          end
 
-         host.save!
+        # Update the NIC details for this host:
+        # -if the NIC exists, then update the IP address
+        # -if the NIC does not exist, create it
+        # -any nic not in this list is deleted
+
+        puts "Updating NIC records for the node"
+        nics = Array.new
+
+        host.nics.collect do |nic|
+            found = false
+
+            nic_info.collect do |detail|
+                # if we have a match, then update the database and remove
+                # the received data to avoid creating a dupe later
+                if detail['MAC'] == nic.mac
+                    nic_info.delete(detail)
+                end
+            end
+
+            # if the record wasn't found, then remove it from the database
+            unless found
+                host.nics.delete(nic)
+                nic.destroy
+            end
+        end
+
+        # iterate over any nics left and create new records for them.
+
+        nic_info.collect do |nic|
+            puts "Creating a new nic..."
+            detail = Nic.new(
+                'mac'        => nic['MAC'],
+                'bandwidth'  => nic['BANDWIDTH'],
+                'usage_type' => 1)
+
+            host.nics << detail
+        end
+
+        host.save!
 
         return host
     end
