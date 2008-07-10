@@ -97,6 +97,9 @@ class VmResourcePool < Pool
                         :conditions => "hardware_pool_id = #{hw_pool.id}")
     host_mem_limit = (memhost.nil? ? 0 : memhost.memory)
     cpuhost = Host.find(:first, :order => "num_cpus DESC",
+                        :select => "hosts.id, count (cpus) as num_cpus",
+                        :joins => "LEFT OUTER JOIN cpus ON hosts.id = cpus.host_id",
+                        :group => "hosts.id",
                         :conditions => "hardware_pool_id = #{hw_pool.id}")
     host_cpu_limit = cpuhost.nil? ? 0 : cpuhost.num_cpus
     resources[:memory] = host_mem_limit if resources[:memory].nil? or host_mem_limit < resources[:memory]
