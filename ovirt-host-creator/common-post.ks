@@ -9,13 +9,6 @@ echo "Creating shadow files"
 pwconv
 grpconv
 
-echo "Re-creating cracklib dicts"
-# cracklib-dicts is 8MB.  We probably don't need to have strict password
-# checking on the ovirt host
-# unfortunately we can't create an empty cracklib dict, so we create it
-# with a single entry "1"
-echo 1 | packer >& /dev/null
-
 echo "Forcing C locale"
 # force logins (via ssh, etc) to use C locale, since we remove locales
 cat >> /etc/profile << \EOF
@@ -41,9 +34,6 @@ cat > /etc/sysconfig/iptables << \EOF
 COMMIT
 EOF
 
-# here, remove a bunch of files we don't need that are just eating up space.
-# it breaks rpm slightly, but it's not too bad
-
 echo "Removing excess RPMs"
 
 # kernel pulls in mkinitrd which pulls in isomd5sum which pulls in python,
@@ -54,36 +44,30 @@ rpm -e system-config-firewall-tui system-config-network-tui rhpl \
     rpm-python dbus-python kudzu newt-python newt
 rpm -e qemu kpartx mkinitrd isomd5sum dmraid python python-libs
 
+RPM="rpm -v -e --nodeps"
+
 # Sigh.  ntp has a silly dependency on perl because of auxiliary scripts which
 # we don't need to use.  Forcibly remove it here
-rpm -e --nodeps perl perl-libs perl-Module-Pluggable perl-version \
+$RPM perl perl-libs perl-Module-Pluggable perl-version \
     perl-Pod-Simple perl-Pod-Escapes
 
+# Remove additional RPMs forcefully
+$RPM gamin pm-utils kbd libuser passwd usermode \
+    openssh-clients vbetool ConsoleKit hdparm \
+    efibootmgr krb5-workstation linux-atm-libs fedora-release-notes \
+    slang psmisc gdbm cryptsetup-luks pciutils mtools syslinux db4 \
+    wireless-tools radeontool cracklib-dicts cracklib
+
+# Things we could probably remove if libvirt didn't link against them
+#$RPM avahi PolicyKit xen-libs
+
+# Things we could probably remove if qemu-kvm didn't link against them
+#$RPM SDL alsa-lib
+
+# Pam complains when this is missing
+#$RPM ConsoleKit-libs
+
 RM="rm -rf"
-
-echo "Removing docs and internationalization"
-$RM /usr/share/omf
-$RM /usr/share/gnome
-$RM /usr/share/doc
-$RM /usr/share/locale
-$RM /usr/share/libthai
-$RM /usr/share/man
-$RM /usr/share/terminfo
-$RM /usr/share/X11
-$RM /usr/share/i18n
-
-find /usr/share/zoneinfo -regextype egrep -type f \
-  ! -regex ".*/UTC" -exec $RM {} \;
-# XXX anaconda/timezone.py does it, missing in imgcreate/kickstart.py
-cp /usr/share/zoneinfo/UTC /etc/localtime
-
-$RM /usr/lib/locale
-$RM /usr/lib/syslinux
-$RM /usr/lib64/gconv
-$RM /usr/lib64/pango
-$RM /usr/lib64/libpango*
-$RM /etc/pango
-$RM /usr/bin/pango*
 
 echo "Removing excess kernel modules"
 MODULES="/lib/modules/*/kernel"
@@ -101,16 +85,55 @@ fs_mods="fs/nls fs/9p fs/affs fs/autofs fs/autofs4 fs/befs fs/bfs fs/cifs \
 net_mods="net/802 net/8021q net/9p net/appletalk net/atm net/ax25 \
        net/bluetooth net/dccp net/decnet net/ieee80211 net/ipx net/irda \
        net/mac80211 net/netrom net/rfkill net/rose net/sched net/tipc \
-       net/wanrouter net/wireless drivers/auxdisplay drivers/net/appletalk \
+       net/wanrouter net/wireless"
+
+driver_mods="drivers/auxdisplay drivers/net/appletalk \
        drivers/net/hamradio drivers/net/pcmcia drivers/net/tokenring \
-       drivers/net/wireless drivers/net/irda drivers/atm drivers/usb/atm"
+       drivers/net/wireless drivers/net/irda drivers/atm drivers/usb/atm \
+       drivers/acpi drivers/char/drm drivers/char/mwave \
+       drivers/char/ipmp drivers/char/pcmcia drivers/crypto drivers/dca \
+       drivers/firmware drivers/memstick drivers/mmc drivers/mfs \
+       drivers/parport drivers/video drivers/watchdog drivers/net/ppp* \
+       drivers/usb/serial drivers/usb/misc drivers/usb/class \
+       drivers/usb/image drivers/rtc"
 
 misc_mods="drivers/bluetooth drivers/firewire drivers/i2c drivers/isdn \
        drivers/media drivers/misc drivers/leds drivers/mtd drivers/w1 sound \
-       drivers/input drivers/pcmcia drivers/scsi/pcmcia"
+       drivers/input drivers/pcmcia drivers/scsi/pcmcia crypto lib"
 
-for mods in $fs_mods $net_mods $misc_mods ; do
+for mods in $fs_mods $net_mods $misc_mods $driver_mods ; do
     $RM $MODULES/$mods
 done
+
+echo "Removing all timezones except for UTC"
+find /usr/share/zoneinfo -regextype egrep -type f \
+  ! -regex ".*/UTC|.*/GMT" -exec $RM {} \;
+
+echo "Removing blacklisted files and directories"
+blacklist="/boot /etc/alsa /etc/pki /usr/share/hwdata/MonitorsDB \
+    /usr/share/hwdata/oui.txt /usr/share/hwdata/videoaliases \
+    /usr/share/hwdata/videodrivers /usr/share/fedora-release \
+    /usr/share/tabset /usr/share/libvirt /usr/share/augeas/lenses/tests \
+    /usr/share/tc /usr/share/emacs /usr/share/info /usr/kerberos \
+    /usr/src /usr/etc /usr/games /usr/include /usr/local /usr/lib{,64}/python2.5 \
+    /usr/{,lib64}/tc /usr/lib{,64}/tls /usr/lib{,64}/sse2 /usr/lib{,64}/pkgconfig \
+    /usr/lib{,64}/nss /usr/lib{,64}/X11 /usr/lib{,64}/games /usr/lib{,64}/alsa-lib \
+    /usr/lib{,64}/fs/reiserfs /usr/lib{,64}/krb5 /usr/lib{,64}/hal /usr/lib{,64}/gio \
+    /usr/bin/hal-device /usr/bin/hal-disable-polling \
+    /usr/bin/hal-find-by-capability /usr/bin/hal-find-by-property \
+    /usr/bin/hal-is-caller-locked-out /usr/bin/hal-is-caller-privileged \
+    /usr/bin/hal-lock /usr/bin/hal-set-property /usr/bin/hal-setup-keymap \
+    /usr/sbin/dell* /lib/terminfo/d /lib/terminfo/v /lib/terminfo/a \
+    /lib/firmware /usr/lib/locale /usr/lib/syslinux /usr/lib{,64}/gconv \
+    /usr/lib{,64}/pango /usr/lib{,64}/libpango* /etc/pango /usr/bin/pango*"
+
+docs_blacklist="/usr/share/omf /usr/share/gnome /usr/share/doc \
+    /usr/share/locale /usr/share/libthai /usr/share/man /usr/share/terminfo \
+    /usr/share/X11 /usr/share/i18n"
+
+$RM $blacklist $docs_blacklist
+
+echo "Cleanup empty directory structures in /usr/share"
+find /usr/share -type d -exec rmdir {} \; > /dev/null 2>&1
 
 echo "Finished Kickstart Post"
