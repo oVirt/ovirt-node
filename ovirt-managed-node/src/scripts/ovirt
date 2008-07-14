@@ -18,7 +18,7 @@ start() {
         # FIXME this is IPA specific
         wget -q \
             http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf \
-            || echo "Failed to get $krb5_conf" && return 1
+            || (echo "Failed to get $krb5_conf" && return 1)
     fi
     IPA_HOST=$SRV_HOST
     IPA_PORT=$SRV_PORT
@@ -33,7 +33,7 @@ start() {
         sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
             -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
             > $collectd_conf \
-            || echo "Failed to write $collectd_conf" && return 1
+            || (echo "Failed to write $collectd_conf" && return 1)
     fi
 }
 
