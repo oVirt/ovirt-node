@@ -1,0 +1,81 @@
+<%- content_for :title do -%>
+  Migrate Virtual Machine
+<%- end -%>
+<%- content_for :description do -%>
+  Please choose migration destination. Leave the selection blank to allow oVirt to choose the most appropriate destination host.
+<%- end -%>
+<script type="text/javascript">
+<%= popup_footer("migrate_vm()", "Migrate") %>
+  function migrate_vm_select(selected_rows)
+  {
+    var selected_ids = new Array();
+    for(i=0; i<selected_rows.length; i++) {
+      load_widget_select(selected_rows[i]);
+      selected_ids[i] = selected_rows[i].id;
+    }
+    if (selected_ids.length == 1)
+    {
+      $('#selected_migration_target').load('<%= url_for :controller => "host", :action => "quick_summary" %>',
+                { id: parseInt(selected_ids[0].substring(3))});
+      $('#vm_action_data').val(selected_ids[0].substring(3));
+    }
+  }
+  function migrate_vm_deselect(selected_rows)
+  {
+    var selected_ids = new Array()
+    for(i=0; i<selected_rows.length; i++) {
+      load_widget_deselect(selected_rows[i]);
+      selected_ids[i] = selected_rows[i].id;
+    }
+    refresh_summary_static('selected_migration_target', '<div class="selection_left"> \
+    <div>No migration target selected.</div> \
+    </div>')
+    $('#vm_action_data').val('')
+  }
+</script>
+<div class="panel_header"></div>
+
+
+<form method="POST" id="migrate_vm_form" action="<%= url_for :action => 'vm_action' %>" >
+<div class="dialog_form">
+    <%= error_messages_for 'migrate_vm' %>
+
+  <%= render :partial => "/host/grid", :locals => { :table_id => "migrate_vm_grid",
+             :hwpool => @vm.get_hardware_pool,
+             :exclude_pool => nil,
+             :exclude_host => @vm.host_id,
+             :checkboxes => false,
+             :on_select => "migrate_vm_select",
+             :on_deselect => "migrate_vm_deselect",
+             :on_hover => "load_widget_hover",
+             :on_unhover => "load_widget_unhover"  } %>
+
+  <% form_tag  do %>
+    <!--[form:migrate_vm]-->
+    <%= hidden_field_tag 'id', @vm.id %>
+    <%= hidden_field_tag 'vm_action', VmTask::ACTION_MIGRATE_VM %>
+    Selected Migration Target:
+    <div id='selected_migration_target'>
+      <div class="selection_left">
+        <div>No migration target selected.</div>
+      </div>
+    </div>
+    <%= hidden_field_tag 'vm_action_data', "" %>
+  <% end %>
+</div>
+<%= popup_footer("$('#migrate_vm_form').submit()", "Migrate Virtual Machine") %>
+</form>
+<script type="text/javascript">
+$(function() {
+    var vmoptions = {
+        target:        '<%= url_for :action => 'create' %>',   // target element to update
+        //beforeSubmit:  showStorageRequest,  // pre-submit callback
+	dataType:      'json',
+        success:       afterVm  // post-submit callback
+    };
+
+    // bind form using 'ajaxForm'
+    $('#migrate_vm_form').ajaxForm(vmoptions);
+});
+</script>
+

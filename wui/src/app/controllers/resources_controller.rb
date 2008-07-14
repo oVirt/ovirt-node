@@ -184,31 +184,6 @@ class ResourcesController < ApplicationController
       @failure_list = []
     end
     render :layout => 'confirmation'    
-        
-    #if params[:vm_actions][:vms]
-    #  vms = params[:vm_actions][:vms]
-    #  if params[:vm_actions][VmTask::ACTION_START_VM]
-    #    flash[:notice] = "Starting Machines #{vms.join(',')}."
-    #  elsif params[:vm_actions][VmTask::ACTION_SHUTDOWN_VM]
-    #    flash[:notice] = "Stopping Machines #{vms.join(',')}."
-    #  elsif params[:vm_actions][:other_actions]
-    #    case params[:vm_actions][:other_actions]
-    #    when VmTask::ACTION_SHUTDOWN_VM then flash[:notice] = "Stopping Machines #{vms.join(',')}."
-    #    when VmTask::ACTION_START_VM then flash[:notice] = "Starting Machines #{vms.join(',')}."
-    #    when VmTask::ACTION_SUSPEND_VM then flash[:notice] = "Suspending Machines #{vms.join(',')}."
-    #    when VmTask::ACTION_RESUME_VM then flash[:notice] = "Resuming Machines #{vms.join(',')}."
-    #    when VmTask::ACTION_SAVE_VM then flash[:notice] = "Saving Machines #{vms.join(',')}."
-    #    when VmTask::ACTION_RESTORE_VM then flash[:notice] = "Restoring Machines #{vms.join(',')}."
-    #    when "destroy" then flash[:notice] = "Destroying Machines #{vms.join(',')}."
-    #    else
-    #      flash[:notice] = 'No Action Chosen.'
-    #    end
-    #  else
-    #    flash[:notice] = 'No Action Chosen.'
-    #  end
-    #else
-    #  flash[:notice] = 'No Virtual Machines Selected.'
-    #end
   end
 
   protected

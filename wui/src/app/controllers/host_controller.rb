@@ -44,6 +44,17 @@ class HostController < ApplicationController
     render :layout => 'selection'    
   end
 
+  def quick_summary
+    pre_show
+    set_perms(@perm_obj)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this host: redirecting to top level'
+      #perm errors for ajax should be done differently
+      redirect_to :controller => 'dashboard', :action => 'list'
+    end
+    render :layout => false
+  end
+
   # retrieves data used by snapshot graphs
   def snapshot_graph
   end

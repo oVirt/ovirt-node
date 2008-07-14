@@ -60,7 +60,10 @@
    <div class="data_section">
       <%= render :partial => "/host/grid", :locals => { :table_id => "hosts_grid",
                                                         :hwpool => @pool,
-                                                        :exclude_id => nil,
+                                                        :exclude_pool => nil,
+                                                        :exclude_host => nil,
+                                                        :show_pool => false,
+                                                        :checkboxes => true,
                                                         :on_select => "hosts_select", 
                                                         :on_deselect => "load_widget_deselect",
                                                         :on_hover => "load_widget_hover",

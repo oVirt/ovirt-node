@@ -2,20 +2,25 @@
 
 <% hosts_per_page = 40 %>
 <div id="<%= table_id %>_div">
-<form id="<%= table_id %>_form">
+<%= '<form id="#{table_id}_form">' if checkboxes %>
 <table id="<%= table_id %>" style="display:none"></table>
-</form>
+<%= '</form>' if checkboxes %>
 </div>
 <script type="text/javascript">
     $("#<%= table_id %>").flexigrid
     (
     {
-    url: '<%=  url_for :controller => "hardware", :action => "hosts_json", :id => (hwpool.nil? ? nil : hwpool.id), :exclude_id => exclude_id %>',
+    url: '<%=  url_for :controller => "hardware",
+                       :action => "hosts_json",
+                       :id => (hwpool.nil? ? nil : hwpool.id),
+                       :exclude_pool => exclude_pool,
+                       :exclude_host => exclude_host,
+                       :checkboxes => checkboxes %>',
     dataType: 'json',
     colModel : [
-        {display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
+        <%= "{display: '', width : 20, align: 'left', process: #{table_id}checkbox}," if checkboxes %>
         {display: 'Hostname', name : 'hostname', width : 60, align: 'left'},
-        <%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
+        <%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_pool %>
         {display: 'UUID', name : 'uuid', width : 180, align: 'left'},
         {display: 'Hypervisor', name : 'hypervisor_type', width : 60, align: 'left'},
         {display: 'CPUs', name : 'num_cpus', width : 30, align: 'left'},

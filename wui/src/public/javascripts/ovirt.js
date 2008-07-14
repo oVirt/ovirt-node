@@ -74,7 +74,7 @@ function ajax_validation(response, status)
   if (response.object) {
     $(".fieldWithErrors").removeClass("fieldWithErrors");
     $("div.errorExplanation").remove();
-    if (!response.success) {
+    if (!response.success && response.errors ) {
       for(i=0; i<response.errors.length; i++) { 
         var element = $("div.form_field:has(#"+response.object + "_" + response.errors[i][0]+")");
         if (element) {

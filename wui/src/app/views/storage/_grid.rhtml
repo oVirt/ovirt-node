@@ -9,12 +9,12 @@
     $("#<%= table_id %>").flexigrid
     (
     {
-    url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => (hwpool.nil? ? nil : hwpool.id), :exclude_id => exclude_id %>',
+    url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => (hwpool.nil? ? nil : hwpool.id), :exclude_pool => exclude_pool %>',
     dataType: 'json',
     colModel : [
         {display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
         {display: 'Alias', width : 180, align: 'left'},
-        <%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_id %>
+        <%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_pool %>
         {display: 'IP', name : 'ip_addr', width : 80, align: 'left'},
         {display: 'Type', name : 'storage_pools.type', width : 80, align: 'left'}
         ],

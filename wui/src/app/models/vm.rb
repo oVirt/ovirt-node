@@ -22,7 +22,7 @@ require 'util/ovirt'
 class Vm < ActiveRecord::Base
   belongs_to :vm_resource_pool
   belongs_to :host
-  has_many :tasks, :class_name => "VmTask", :dependent => :destroy, :order => "id DESC" do
+  has_many :tasks, :class_name => "VmTask", :dependent => :destroy, :order => "id ASC" do
     def queued
       find(:all, :conditions=>{:state=>Task::STATE_QUEUED})
     end
@@ -58,6 +58,9 @@ class Vm < ActiveRecord::Base
   STATE_SAVING         = "saving"
   STATE_SAVED          = "saved"
   STATE_RESTORING      = "restoring"
+
+  STATE_MIGRATING      = "migrating"
+
   STATE_CREATE_FAILED  = "create_failed"
   STATE_INVALID        = "invalid"
 
@@ -68,7 +71,8 @@ class Vm < ActiveRecord::Base
                           STATE_SUSPENDING,
                           STATE_RESUMING,
                           STATE_SAVING,
-                          STATE_RESTORING]
+                          STATE_RESTORING,
+                          STATE_MIGRATING]
 
   EFFECTIVE_STATE = {  STATE_PENDING       => STATE_PENDING,
                        STATE_UNREACHABLE   => STATE_UNREACHABLE,
@@ -83,9 +87,15 @@ class Vm < ActiveRecord::Base
                        STATE_SAVING        => STATE_SAVED,
                        STATE_SAVED         => STATE_SAVED,
                        STATE_RESTORING     => STATE_RUNNING,
+                       STATE_MIGRATING     => STATE_RUNNING,
                        STATE_CREATE_FAILED => STATE_CREATE_FAILED}
   TASK_STATE_TRANSITIONS = []
 
+  def get_hardware_pool
+    pool = vm_resource_pool
+    pool = pool.get_hardware_pool if pool
+    pool
+  end
   def storage_volume_ids
     storage_volumes.collect {|x| x.id }
   end
@@ -126,9 +136,9 @@ class Vm < ActiveRecord::Base
     RUNNING_STATES.include?(get_pending_state)
   end
 
-  def get_action_list
+  def get_action_list(user=nil)
     # return empty list rather than nil
-    return_val = VmTask::VALID_ACTIONS_PER_VM_STATE[get_pending_state] || []
+    return_val = VmTask.valid_actions_for_vm_state(get_pending_state, self, user) || []
     # filter actions based on quota
     unless resources_for_start?
       return_val = return_val - [VmTask::ACTION_START_VM, VmTask::ACTION_RESTORE_VM]
@@ -136,10 +146,12 @@ class Vm < ActiveRecord::Base
     return_val
   end
 
-  def get_action_and_label_list
-    get_action_list.collect do |action|
-      VmTask.label_and_action(action)
+  def get_action_hash(user=nil)
+    actions = {}
+    get_action_list(user).each do |action|
+      actions[action] = VmTask::ACTIONS[action]
     end
+    actions
   end
 
   # these resource checks are made at VM start/restore time
@@ -158,11 +170,12 @@ class Vm < ActiveRecord::Base
     return return_val
   end
 
-  def queue_action(user, action)
+  def queue_action(user, action, data = nil)
     return false unless get_action_list.include?(action)
     task = VmTask.new({ :user    => user,
                         :vm_id   => id,
-                         :action  => action,
+                        :action  => action,
+                        :args    => data,
                         :state   => Task::STATE_QUEUED})
     task.save!
     return true

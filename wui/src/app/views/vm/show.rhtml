@@ -17,10 +17,17 @@
     <%= link_to image_tag("icon_edit.png") + " Edit",
                           {:controller => 'vm', :action => 'edit', :id => @vm},
                           :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
-    <% for action in @actions %>
-      <a href="#" onClick="single_vm_action('<%= action[1] %>')">
-        <%= image_tag action[2] %> <%= action[0] %>
-      </a> 
+    <% for name, action in @actions %>
+      <% if action[:popup_action] -%>
+        <%= link_to image_tag(action[:icon]) + action[:label],
+                          {:controller => 'vm',
+                           :action => action[:popup_action], :id => @vm},
+                          :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
+      <% else -%>
+        <a href="#" onClick="single_vm_action('<%= name %>')">
+          <%= image_tag action[:icon] %> <%= action[:label] %>
+        </a>
+      <% end -%>
     <% end %>
     <a href="#" onClick="cancel_queued_tasks()">
       <%= image_tag "icon_x.png" %> Cancel queued tasks

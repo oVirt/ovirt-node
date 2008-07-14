@@ -26,7 +26,7 @@ class VmController < ApplicationController
 
   def show
     set_perms(@perm_obj)
-    @actions = @vm.get_action_and_label_list
+    @actions = @vm.get_action_hash(@user)
     unless @can_view
       flash[:notice] = 'You do not have permission to view this vm: redirecting to top level'
       redirect_to :controller => 'resources', :controller => 'dashboard'
@@ -149,8 +149,9 @@ class VmController < ApplicationController
 
   def vm_action
     vm_action = params[:vm_action]
+    data = params[:vm_action_data]
     begin
-      if @vm.queue_action(get_login_user, vm_action)
+      if @vm.queue_action(get_login_user, vm_action, data)
         render :json => { :object => "vm", :success => true, :alert => "#{vm_action} was successfully queued." }
       else
         render :json => { :object => "vm", :success => false, :alert => "#{vm_action} is an invalid action." }
@@ -171,6 +172,14 @@ class VmController < ApplicationController
     end
   end
 
+  def migrate
+    @vm = Vm.find(params[:id])
+    @perm_obj = @vm.get_hardware_pool
+    @redir_obj = @vm
+    @current_pool_id=@vm.vm_resource_pool.id
+    authorize_admin
+    render :layout => 'popup'
+  end
 
   def console
     @show_vnc_error = "Console is unavailable for VM #{@vm.description}" unless @vm.has_console

@@ -719,7 +719,9 @@
 									    } 
                                         $(this).toggleClass('trSelected');
                                         if($(this).hasClass('trSelected')){
-									        if (p.onSelect) p.onSelect($(t).find("tr.trSelected"));
+                                            if (p.onSelect) p.onSelect($(t).find("tr.trSelected"));
+                                        } else {
+                                            if (p.onDeselect) p.onDeselect(this);
                                         }
 									}
 							)

@@ -112,7 +112,12 @@ class HardwareController < ApplicationController
   end
 
   def hosts_json
-    if params[:id]
+    if params[:exclude_host]
+      pre_json
+      hosts = @pool.hosts
+      find_opts = {:conditions => ["id != ?", params[:exclude_host]]}
+      include_pool = false
+    elsif params[:id]
       pre_json
       hosts = @pool.hosts
       find_opts = {}
@@ -120,14 +125,17 @@ class HardwareController < ApplicationController
     else
       # FIXME: no permissions or usage checks here yet
       # filtering on which pool to exclude
-      id = params[:exclude_id]
+      id = params[:exclude_pool]
       hosts = Host
       find_opts = {:include => :hardware_pool, 
         :conditions => ["pools.id != ?", id]}
       include_pool = true
     end
-    attr_list = [:id, :hostname, :uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :status_str, :id]
-    attr_list.insert(2, [:hardware_pool, :name]) if include_pool
+    attr_list = []
+    attr_list << :id if params[:checkboxes]
+    attr_list << :hostname
+    attr_list << [:hardware_pool, :name] if include_pool
+    attr_list += [:uuid, :hypervisor_type, :num_cpus, :cpu_speed, :arch, :memory_in_mb, :status_str, :id]
     json_list(hosts, attr_list, [:all], find_opts)
   end
 
@@ -152,7 +160,7 @@ class HardwareController < ApplicationController
     else
       # FIXME: no permissions or usage checks here yet
       # filtering on which pool to exclude
-      id = params[:exclude_id]
+      id = params[:exclude_pool]
       storage_pools = StoragePool
       find_opts = {:include => :hardware_pool, 
         :conditions => ["pools.id != ?", id]}
