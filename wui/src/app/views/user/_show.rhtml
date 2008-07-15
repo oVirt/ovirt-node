@@ -19,7 +19,7 @@
             function(data,status){
               $("#users_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
              }, 'json');
     }
@@ -33,7 +33,7 @@
               function(data,status){
                 $("#users_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
     }

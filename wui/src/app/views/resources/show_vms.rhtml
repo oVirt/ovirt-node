@@ -33,7 +33,7 @@
               function(data,status){
                 $("#vms_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
 		if (vms.indexOf($('#vms_selection_id').html()) != -1){
 		  empty_summary('vms_selection', 'Virtual Machine')

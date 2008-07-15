@@ -21,7 +21,7 @@ function get_selected_checkboxes(formid)
 function validate_selected(selected_array, name)
 {
   if (selected_array.length == 0) {
-    alert("Please select at least one " + name + "  to continue")
+    $.jGrowl("Please select at least one " + name + "  to continue")
     return false
   } else {
     return true
@@ -43,7 +43,7 @@ function add_hosts(url)
 		  $('.tab_nav li.current a').click()
                 }
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
     }
@@ -63,7 +63,7 @@ function add_storage(url)
 		  $('.tab_nav li.current a').click()
                 }
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
     }
@@ -86,7 +86,7 @@ function ajax_validation(response, status)
       }
     }
     if (response.alert) {
-      alert(response.alert)
+      $.jGrowl(response.alert)
     }
   }
 }

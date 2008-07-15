@@ -84,7 +84,7 @@
                             <%= @storage_pool.id %>)
                 $("#storage_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
   }
@@ -95,7 +95,7 @@
               function(data,status){
                 $("#storage_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
 	        empty_summary('storage_selection', 'Storage Pool')
                }, 'json');

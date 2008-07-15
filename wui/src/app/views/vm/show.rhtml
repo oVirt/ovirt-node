@@ -49,7 +49,7 @@
                             <%= @vm.id %>)
                 $("#vms_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
     }
@@ -62,7 +62,7 @@
               function(data,status){
                 $("#vms_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
 	        empty_summary('vms_selection', 'Virtual Machine')
                }, 'json');
@@ -79,7 +79,7 @@
                             <%= @vm.id %>)
                 $("#vms_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
   }

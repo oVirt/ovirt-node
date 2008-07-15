@@ -27,7 +27,7 @@
               $("#<%= @resource_type %>_grid").flexReload()
 	      jQuery(document).trigger('close.facebox');
 	      if (data.alert) {
-	        alert(data.alert);
+	        $.jGrowl(data.alert);
               }
  	      if (get_selected_<%= @resource_type %>().indexOf($('#<%= @resource_type %>_selection_id').html()) != -1){
 	        empty_summary('<%= @resource_type %>_selection', '<%= @resource_type == 'hosts' ? 'Host' : 'Storage Pool' %>')

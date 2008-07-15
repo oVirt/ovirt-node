@@ -15,6 +15,7 @@
   <%= stylesheet_link_tag '/javascripts/jquery-treeview/ovirt.treeview.css' %>
   <%= stylesheet_link_tag 'flexigrid/flexigrid.css' %>
   <%= stylesheet_link_tag 'facebox' %>
+  <%= stylesheet_link_tag 'jquery.jgrowl.css' %>
   <!--%= stylesheet_link_tag 'jquery.ui-1.5b4/themes/flora/flora.tabs.css' %-->
   <%= javascript_include_tag "jquery-1.2.6.min.js" -%>
   <%= javascript_include_tag "jquery-treeview/jquery.treeview.js" -%>
@@ -30,6 +31,7 @@
   <%= javascript_include_tag "jquery.cookie.js" -%>
   <%= javascript_include_tag "jquery.livequery.pack.js" -%>
   <%= javascript_include_tag "jquery.form.js" -%>
+  <%= javascript_include_tag "jquery.jgrowl.js" -%>
 
   <!-- ovirt-specific functions defined here -->
   <%= javascript_include_tag "ovirt.js" -%>
@@ -66,7 +68,7 @@
                           $('#side-toolbar').html($(data).find('div.toolbar'));
                           $('#tabs-and-content-container').html($(data).not('div#side-toolbar'));
                         },
-                        error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
+                        error: function(xhr) {$.jGrowl(xhr.status + ' ' + xhr.statusText);}
                     });
                     return false;})},function(){});
             $('.tab_nav a').livequery(function(){
@@ -83,7 +85,7 @@
                           var my_parent = $(this).parent();
                           $('#content-area').html($(data).find('div').filter('[id=content-area]'));
                         },
-                        error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
+                        error: function(xhr) {$.jGrowl(xhr.status + ' ' + xhr.statusText);}
                     });
                     return false;})},function(){});
             $('.dialog_tab_nav a').livequery(function(){
@@ -100,7 +102,7 @@
                           var my_parent = $(this).parent();
                           $('#dialog-content-area').html($(data));
                         },
-                        error: function(xhr) {alert(xhr.status + ' ' + xhr.statusText);}
+                        error: function(xhr) {$.jGrowl(xhr.status + ' ' + xhr.statusText);}
                     });
                     return false;})},function(){});
 	});
@@ -114,7 +116,7 @@
                 // need to redirect to the parent using the new ajax reload stuff
                 $("#vmpools_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
     }
@@ -127,7 +129,7 @@
               function(data,status){
                 // need to redirect to the parent using the new ajax reload stuff
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
     }

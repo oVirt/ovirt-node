@@ -22,7 +22,7 @@
               function(data,status){
                 $("#storage_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
 		if (storage.indexOf($('#storage_selection_id').html()) != -1){
 		  empty_summary('storage_selection', 'Storage Pool')
@@ -39,7 +39,7 @@
               function(data,status){
                 $("#storage_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
 		if (storage.indexOf($('#storage_selection_id').html()) != -1){
 		  empty_summary('storage_selection', 'Storage Pool')

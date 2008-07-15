@@ -31,7 +31,7 @@
                             <%= @host.id %>)
                 $("#hosts_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
   }

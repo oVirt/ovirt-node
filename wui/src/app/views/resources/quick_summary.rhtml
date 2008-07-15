@@ -32,7 +32,7 @@
                                          :action => "quick_summary" %>',
                             <%= @vm_resource_pool.id %>)
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
                }, 'json');
     }

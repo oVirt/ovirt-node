@@ -31,7 +31,7 @@
               function(data,status){
                 $("#hosts_grid").flexReload()
 		if (data.alert) {
-		  alert(data.alert);
+		  $.jGrowl(data.alert);
                 }
 		if (hosts.indexOf($('#hosts_selection_id').html()) != -1){
 		  empty_summary('hosts_selection', 'Host')
