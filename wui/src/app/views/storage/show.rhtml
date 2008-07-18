@@ -10,7 +10,7 @@
       <a href="#" onClick="refresh_storage_pool()">
         <%= image_tag "icon_refresh.png" %> Refresh
       </a> 
-      <a href="#" onClick="delete_storage_pool()">
+      <a href="#confirm_delete_storage" rel="facebox[.bolder]">
         <%= image_tag "icon_x.png" %> Delete
       </a> 
   <%- end -%>
@@ -52,6 +52,7 @@
 
 <%- end -%>
 
+<%= confirmation_dialog("confirm_delete_storage", "Are you sure?", "delete_storage_pool()") %>
 <script type="text/javascript">
 	$("#storage_volumes_grid").flexigrid
 	(
@@ -82,7 +83,7 @@
                             '<%= url_for :controller => "storage", 
                                          :action => "show" %>',
                             <%= @storage_pool.id %>)
-                $("#storage_grid").flexReload()
+                $("#storage_grid").flexReload();
 		if (data.alert) {
 		  $.jGrowl(data.alert);
                 }
@@ -90,16 +91,15 @@
   }
   function delete_storage_pool()
   {
-    if(confirm("Are you sure?")){
-      $.post('<%= url_for :controller => "storage", :action => "destroy", :id => @storage_pool %>',
-              function(data,status){
-                $("#storage_grid").flexReload()
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-	        empty_summary('storage_selection', 'Storage Pool')
-               }, 'json');
-    }
+    $(document).trigger('close.facebox');
+    $.post('<%= url_for :controller => "storage", :action => "destroy", :id => @storage_pool %>',
+            function(data,status){
+              $("#storage_grid").flexReload();
+              if (data.alert) {
+                $.jGrowl(data.alert);
+              }
+	      empty_summary('storage_selection', 'Storage Pool');
+             }, 'json');
   }
 </script>
 

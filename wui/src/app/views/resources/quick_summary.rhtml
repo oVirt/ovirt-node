@@ -10,7 +10,7 @@
       <%= link_to image_tag("icon_edit.png") + " Edit Quota",
                             {:controller => 'quota', :action => 'edit', :id => @vm_resource_pool.quota},
                             :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
-      <a href="#" onClick="delete_vm_quota()">
+      <a href="#confirm_delete_quota"  rel="facebox[.bolder]">
         <%= image_tag "icon_x.png" %> Revert to Default Quota
       </a> 
     <% else -%>
@@ -20,22 +20,22 @@
     <% end -%>
   <% end -%>
 <% end -%>
+<%= confirmation_dialog("confirm_delete_quota", "Are you sure?", "delete_vm_quota()") %>
 <script type="text/javascript">
-  function delete_vm_quota(id)
+  function delete_vm_quota()
   {
-    if(confirm("Are you sure?")){
-      $.post('<%= url_for :controller => "quota", :action => "destroy", :id => @vm_resource_pool.quota %>',
-             {x: 1},
-              function(data,status){
-                refresh_summary('vmpool_selection', 
-                            '<%= url_for :controller => "resources", 
-                                         :action => "quick_summary" %>',
-                            <%= @vm_resource_pool.id %>)
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-               }, 'json');
-    }
+    $(document).trigger('close.facebox');
+    $.post('<%= url_for :controller => "quota", :action => "destroy", :id => @vm_resource_pool.quota %>',
+           {x: 1},
+            function(data,status){
+              refresh_summary('vmpool_selection',
+                          '<%= url_for :controller => "resources",
+                                       :action => "quick_summary" %>',
+                          <%= @vm_resource_pool.id %>);
+              if (data.alert) {
+                $.jGrowl(data.alert);
+              }
+             }, 'json');
   }
 </script>
 

@@ -10,7 +10,7 @@
       <%= link_to image_tag("icon_edit.png") + " Edit Default Quota",
                             {:controller => 'quota', :action => 'edit', :id => @pool.quota},
                             :rel=>"facebox[.bolder]", :class=>"selection_facebox" %>
-      <a href="#" onClick="delete_default_quota()">
+      <a href="#confirm_delete_default_quota"  rel="facebox[.bolder]">
         <%= image_tag "icon_x.png" %> Remove Default Quota
       </a> 
     <% else -%>
@@ -20,21 +20,21 @@
     <% end -%>
   <% end -%>
 <% end -%>
+<%= confirmation_dialog("confirm_delete_default_quota", "Are you sure?", "delete_default_quota()") %>
 <script type="text/javascript">
   function delete_default_quota()
   {
-    if(confirm("Are you sure?")){
-      $.post('<%= url_for :controller => "quota", :action => "destroy", :id => @pool.quota %>',
-              function(data,status){
-                refresh_summary('hwpool_selection', 
-                            '<%= url_for :controller => "hardware", 
-                                         :action => "quick_summary" %>',
-                            <%= @pool.id %>)
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-               }, 'json');
-    }
+    $(document).trigger('close.facebox');
+    $.post('<%= url_for :controller => "quota", :action => "destroy", :id => @pool.quota %>',
+            function(data,status){
+              refresh_summary('hwpool_selection',
+                          '<%= url_for :controller => "hardware",
+                                       :action => "quick_summary" %>',
+                          <%= @pool.id %>);
+              if (data.alert) {
+                $.jGrowl(data.alert);
+              }
+             }, 'json');
   }
 </script>
 

@@ -386,6 +386,24 @@ a { color:#000000; text-decoration: none;}
   height: 350px;
 }
 
+.confirm_dialog_title {
+  width:400px;
+  padding: 15px;
+  font-size: 110%;
+  background:url(../images/bg_warningMessage.png) top repeat-x;
+}
+.confirm_dialog_header {
+  background:url(../images/icon_warning.png) top left no-repeat;
+  padding: 0 0 0 45px;
+  min-height:36px;
+
+}
+.confirm_dialog_footer {
+  height: 37px;
+  text-align:right;
+  padding: 5px 9px 0 0;
+}
+
 .dialog_form {
   margin: 15px;
   background: #FFFFFF

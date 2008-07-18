@@ -29,44 +29,44 @@
         </a>
       <% end -%>
     <% end %>
-    <a href="#" onClick="cancel_queued_tasks()">
+    <a href="#confirm_cancel"  rel="facebox[.bolder]">
       <%= image_tag "icon_x.png" %> Cancel queued tasks
     </a> 
-    <a href="#" onClick="delete_vm()">
+    <a href="#confirm_delete"  rel="facebox[.bolder]">
       <%= image_tag "icon_x.png" %> Delete
     </a> 
   <% end -%>
 <% end -%>
+<%= confirmation_dialog("confirm_cancel", "Are you sure?", "cancel_queued_tasks()") %>
+<%= confirmation_dialog("confirm_delete", "Are you sure?", "delete_vm()") %>
 <script type="text/javascript">
   function cancel_queued_tasks()
   {
-    if(confirm("Are you sure?")){
-      $.post('<%= url_for :controller => "vm", :action => "cancel_queued_tasks", :id => @vm %>',
-              function(data,status){
-                refresh_summary('vms_selection', 
-                            '<%= url_for :controller => "vm", 
-                                         :action => "show" %>',
-                            <%= @vm.id %>)
-                $("#vms_grid").flexReload()
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-               }, 'json');
-    }
+    $(document).trigger('close.facebox');
+    $.post('<%= url_for :controller => "vm", :action => "cancel_queued_tasks", :id => @vm %>',
+          function(data,status){
+            refresh_summary('vms_selection',
+                        '<%= url_for :controller => "vm",
+                                     :action => "show" %>',
+                        <%= @vm.id %>);
+            $("#vms_grid").flexReload();
+            if (data.alert) {
+              $.jGrowl(data.alert);
+            }
+          }, 'json');
   }
   function delete_vm()
   {
-    if(confirm("Are you sure?")){
-      $.post('<%= url_for :controller => "vm", :action => "destroy", :id => @vm %>',
-             {x: 1},
-              function(data,status){
-                $("#vms_grid").flexReload()
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-	        empty_summary('vms_selection', 'Virtual Machine')
-               }, 'json');
-    }
+    $(document).trigger('close.facebox');
+    $.post('<%= url_for :controller => "vm", :action => "destroy", :id => @vm %>',
+           {x: 1},
+            function(data,status){
+              $("#vms_grid").flexReload();
+              if (data.alert) {
+                $.jGrowl(data.alert);
+              }
+	      empty_summary('vms_selection', 'Virtual Machine');
+            }, 'json');
   }
   function single_vm_action(action)
   {

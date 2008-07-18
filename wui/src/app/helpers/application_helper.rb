@@ -89,7 +89,7 @@ module ApplicationHelper
       <div style="background: url(#{image_path "fb_footer.jpg"}) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
         <div class="button">
           <div class="button_left_grey"></div>
-          <div class="button_middle_grey"><a href="#" onclick="jQuery(document).trigger('close.facebox')">Cancel</a></div>
+          <div class="button_middle_grey"><a href="#" onclick="$(document).trigger('close.facebox')">Cancel</a></div>
           <div class="button_right_grey"></div>
         </div>
         <div class="button">
@@ -106,8 +106,32 @@ module ApplicationHelper
       <div style="background: url(#{image_path "fb_footer.jpg"}) repeat-x; height: 37px; text-align:right; padding: 9px 9px 0 0;">
         <div class="button">
           <div class="button_left_grey"></div>
-          <div class="button_middle_grey"><a href="#" onclick="jQuery(document).trigger('close.facebox')">OK</a></div>
+          <div class="button_middle_grey"><a href="#" onclick="$(document).trigger('close.facebox')">OK</a></div>
           <div class="button_right_grey"></div>
+        </div>
+      </div>
+     }
+  end
+
+  def confirmation_dialog(div_id, text, action)
+    %{
+      <div id="#{div_id}" style="display:none;">
+        <div class="confirm_dialog_title">
+          <div class="confirm_dialog_header">#{text}</div>
+          <div style="clear:both;"></div>
+        </div>
+
+        <div class="confirm_dialog_footer">
+          <div class="button">
+            <div class="button_left_grey"></div>
+            <div class="button_middle_grey"><a href="#" onclick="$(document).trigger('close.facebox')">Cancel</a></div>
+            <div class="button_right_grey"></div>
+          </div>
+          <div class="button">
+            <div class="button_left_blue"></div>
+            <div class="button_middle_blue"><a href="#" onclick="#{action}">OK</a></div>
+            <div class="button_right_blue"></div>
+          </div>
         </div>
       </div>
      }

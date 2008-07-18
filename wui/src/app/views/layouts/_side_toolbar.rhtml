@@ -13,10 +13,12 @@
 </div>
 <% end -%>
 <div class="toolbar" style="float:left;">
-    <a href="#" onClick="delete_<%=pool[:type]=='HardwarePool' ? 'hw' : 'vm' %>_pool(<%=pool.id%>)">
+    <a href="#conf_nav_delete_pool" rel="facebox[.bolder]">
       <%= image_tag "icon_delete.gif", :title=>"Delete Selected Pool" %>
     </a> 
 </div>
 <% end -%>
-
+<div class="toolbar" style="display:none;">
+  <%= confirmation_dialog("conf_nav_delete_pool", "Are you sure?", "delete_#{pool[:type]=='HardwarePool' ? 'hw' : 'vm'}_pool(#{pool.id})") %>
+</div>
 <div class="toolbar"></div>

@@ -109,30 +109,28 @@
 
   function delete_vm_pool(id, parent)
   {
-    if(confirm("Are you sure?")){
-      $.post('<%= url_for :controller => "resources", :action => "destroy" %>',
-             {id: id},
-              function(data,status){
-                // need to redirect to the parent using the new ajax reload stuff
-                $("#vmpools_grid").flexReload()
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-               }, 'json');
-    }
+    $(document).trigger('close.facebox');
+    $.post('<%= url_for :controller => "resources", :action => "destroy" %>',
+           {id: id},
+            function(data,status){
+              // need to redirect to the parent using the new ajax reload stuff
+              $("#vmpools_grid").flexReload();
+              if (data.alert) {
+                $.jGrowl(data.alert);
+              }
+             }, 'json');
   }
   function delete_hw_pool(id, parent)
   {
-    if(confirm("Are you sure?")){
-      $.post('<%= url_for :controller => "hardware", :action => "destroy" %>',
-             {id: id},
-              function(data,status){
-                // need to redirect to the parent using the new ajax reload stuff
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-               }, 'json');
-    }
+    $(document).trigger('close.facebox');
+    $.post('<%= url_for :controller => "hardware", :action => "destroy" %>',
+           {id: id},
+            function(data,status){
+              // need to redirect to the parent using the new ajax reload stuff
+              if (data.alert) {
+                $.jGrowl(data.alert);
+              }
+             }, 'json');
   }
       </script>
    <%= yield :scripts -%>
