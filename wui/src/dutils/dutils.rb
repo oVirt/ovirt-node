@@ -22,19 +22,37 @@ include Krb5Auth
 
 ENV['KRB5CCNAME'] = '/usr/share/ovirt-wui/ovirt-cc'
 
-
 def get_credentials
+  krb5 = Krb5.new
+  default_realm = krb5.get_default_realm
+  princ = 'libvirt/' + Socket::gethostname + '@' + default_realm
+
+  now = Time.now
+  renew = true
   begin
-    krb5 = Krb5.new
-    default_realm = krb5.get_default_realm
-    krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
-    krb5.cache(ENV['KRB5CCNAME'])
+    krb5.list_cache(ENV['KRB5CCNAME']).each do |cred|
+      endobj = Time.at(cred.endtime)
+      if cred.client == princ and ((endobj.to_i - now.to_i) > 3600)
+        # OK, we found our principal, and it expires more than an hour from
+        # now; we don't need to renew credentials
+        renew = false
+        break
+      end
+    end
   rescue
-    # well, if we run into an error here, there's not much we can do.  Just
-    # print a warning, and blindly go on in the hopes that this was some sort
-    # of temporary error
-    puts "Error caching credentials; attempting to continue..."
-    return
+    # in this case, there may not be a cache; just try to renew anyway
+  end
+
+  if renew
+    begin
+      krb5.get_init_creds_keytab('libvirt/' + Socket::gethostname + '@' + default_realm, '/usr/share/ovirt-wui/ovirt.keytab')
+      krb5.cache(ENV['KRB5CCNAME'])
+    rescue
+      # well, if we run into an error here, there's not much we can do.  Just
+      # print a warning, and blindly go on in the hopes that this was some sort
+      # of temporary error
+      puts "Error caching credentials; attempting to continue..."
+      return
+    end
   end
 end
-
