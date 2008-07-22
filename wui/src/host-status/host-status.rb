@@ -210,17 +210,17 @@ loop do
 
     p_count += 1
 
+    fork do
+      check_status(host)
+      exit 0
+    end
+
     # Only allow up to n_hosts / 5 processes running at a time.  If we go above this
     # Then we wait for one to exit before continuing.  This guarantees it will take
     # at most 5 timeouts to check all hosts.
     if p_count > hosts.length / 5
       Process.wait
       p_count -= 1
-    end
-
-    fork do
-      check_status(host)
-      exit 0
     end
 
   end
