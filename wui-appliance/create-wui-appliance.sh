@@ -11,40 +11,31 @@ IMGSIZE=6000M
 ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
 NET_SCRIPTS=/etc/sysconfig/network-scripts
-ARCH_DEFAULT=$(uname -m)
 NAME=ovirt-appliance
 BRIDGENAME=ovirtbr
 
-ARCH=$ARCH_DEFAULT
 IMGDIR=$IMGDIR_DEFAULT
-CONSOLE_FLAG=--noautoconsole
 
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-i install_iso | -t install_tree] [-d image_dir] [-a x86_64|i686] [-k kickstart] [-e eth]
-  -i: location of installation ISO
-  -t: location of installation tree
-  -k: URL of kickstart file for use with installation tree
-  -o: Display virt-viewer window during install (implied by -i option)
+Usage: $ME [-c] [-d image_dir] [-k kickstart] [-e eth]
   -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
-  -a: architecture for the virtual machine (default: $ARCH_DEFAULT)
+  -c: compress the image (qcow2 compressed)
+  -k: appliance kickstart file
   -e: ethernet device to use as bridge (i.e. eth1)
   -h: display this help and exit
 EOF
 }
 
 err=0 help=0
-viewer=0
+compress=0
 bridge=
-while getopts :a:d:i:t:k:ohe: c; do
+while getopts :d:k:he: c; do
     case $c in
-        i) ISO=$OPTARG;;
-        t) TREE=$OPTARG;;
-        k) KICKSTART=$OPTARG;;
         d) IMGDIR=$OPTARG;;
-        a) ARCH=$OPTARG;;
-        o) CONSOLE_FLAG=;;
+        c) compress=1;;
+        k) KICKSTART=$OPTARG;;
         e) bridge=$OPTARG;;
         h) help=1;;
         '?') err=1; warn "invalid option: \`-$OPTARG'";;
@@ -54,36 +45,6 @@ while getopts :a:d:i:t:k:ohe: c; do
 done
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
-
-test -n "$ISO" -a -n "$TREE" && usage "Can only specify one of -i and -t"
-
-if [ -n "$ISO" ]; then
-    test -n "$KICKSTART" && usage "-k not valid in conjunction with -i"
-    test -r "$ISO" || usage "missing or unreadable ISO file: \`$ISO'"
-    cdrom_arg="-c $ISO"
-    # If we're installing from an ISO, we need console to provide kickstart
-    CONSOLE_FLAG=
-    do_install=1
-elif [ -n "$TREE" ]; then
-    location_arg="-l $TREE"
-    do_install=1
-else
-    do_install=0
-fi
-
-if [ -n "$KICKSTART" ]; then
-    extra_flag=-x
-    extra_arg="ksdevice=eth0 ks=$KICKSTART"
-else
-    # If we didn't provide a kickstart, we need console access to provide
-    # one at boot time
-    CONSOLE_FLAG=
-fi
-
-case $ARCH in
-    i686|x86_64);;
-    *) usage "invalid architecture: \`$ARCH'";;
-esac
 
 gen_bridge() {
     name=$1
@@ -121,6 +82,12 @@ gen_fake_managed_node() {
       <mac address='00:16:3e:12:34:$last_mac'/>
       <source network='$BRIDGENAME'/>
     </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target port='0'/>
+    </console>
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' listen='127.0.0.1'/>
   </devices>
@@ -158,6 +125,12 @@ gen_app() {
     <interface type='network'>
       <source network='$BRIDGENAME'/>
     </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target port='0'/>
+    </console>
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' listen='127.0.0.1'/>
   </devices>
@@ -241,11 +214,11 @@ done
 virsh net-dumpxml $BRIDGENAME >& /dev/null
 RETVAL=$?
 if [ $( brctl show | grep -c $BRIDGENAME ) -ne 0 -a $RETVAL -ne 0 ]; then
-	# in this case, the bridge exists, but isn't managed by libvirt
-	# abort, since the user will have to clean up themselves
-	echo "Bridge $BRIDGENAME already exists.  Please make sure you"
-	echo "unconfigure $BRIDGENAME, and then try the command again"
-	exit 1
+    # in this case, the bridge exists, but isn't managed by libvirt
+    # abort, since the user will have to clean up themselves
+    echo "Bridge $BRIDGENAME already exists.  Please make sure you"
+    echo "unconfigure $BRIDGENAME, and then try the command again"
+    exit 1
 fi
 
 # Remove old bridge device if it exists
@@ -258,8 +231,6 @@ if [ -n "$old_bridge" ]; then
     brctl delif $BRIDGENAME $old_bridge
 fi
 
-# TODO when virFileReadAll is fixed for stdin
-#virsh net-define <(gen_dummy)
 virsh net-destroy $BRIDGENAME > /dev/null 2>&1
 virsh net-undefine $BRIDGENAME > /dev/null 2>&1
 TMPXML=$(mktemp) || exit 1
@@ -300,20 +271,29 @@ mkdir -p $IMGDIR
 virsh destroy $NAME > /dev/null 2>&1
 virsh undefine $NAME > /dev/null 2>&1
 
-if [ $do_install = 1 ]; then
-    rm -f "$IMGDIR/$IMGNAME"
-    qemu-img create -f qcow2 "$IMGDIR/$IMGNAME" $IMGSIZE
-    virt-install -n $NAME -r $RAM -f "$IMGDIR/$IMGNAME" --vnc \
-        --accelerate -v --os-type=linux --arch=$ARCH \
-        -w network:default -w network:$BRIDGENAME \
-        $location_arg $cdrom_arg $extra_flag "$extra_arg" --noacpi $CONSOLE_FLAG
-else
-    test ! -r $IMGDIR/$IMGNAME && die "Disk image not found at $IMGDIR/$IMGNAME"
-
-    TMPXML=$(mktemp) || exit 1
-    gen_app $IMGDIR/$IMGNAME $RAM > $TMPXML
-    virsh define $TMPXML
-    rm $TMPXML
-    echo "Application defined using disk located at $IMGDIR/$IMGNAME."
-    echo "Run virsh start $NAME to start the appliance"
+if [ -n "$KICKSTART" ]; then
+    mkdir -p tmp
+    appliance-creator --config $KICKSTART --name $NAME --tmpdir $(pwd)/tmp
+    # FIXME add --compress option to appliance-creator
+    if [ $compress -ne 0 ]; then
+        echo -n "Compressing the image..."
+        qemu-img convert -c $NAME-sda.raw -O qcow2 "$IMGDIR/$IMGNAME"
+        rm ovirt-appliance-sda.raw
+        echo "done"
+    else
+        echo -n "Moving the image..."
+        mv ovirt-appliance-sda.raw "$IMGDIR/$IMGNAME"
+        restorecon -v "$IMGDIR/$IMGNAME"
+        echo "done"
+    fi
 fi
+
+test ! -r $IMGDIR/$IMGNAME && die "Disk image not found at $IMGDIR/$IMGNAME"
+
+TMPXML=$(mktemp) || exit 1
+# FIXME virt-image to define the appliance instance
+gen_app $IMGDIR/$IMGNAME $RAM > $TMPXML
+virsh define $TMPXML
+rm $TMPXML
+echo "Application defined using disk located at $IMGDIR/$IMGNAME."
+echo "Run virsh start $NAME to start the appliance"

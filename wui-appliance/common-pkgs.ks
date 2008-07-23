@@ -1,4 +1,5 @@
 @core
+kernel
 cronie
 policycoreutils
 chkconfig
@@ -19,6 +20,8 @@ firefox
 gtk-vnc-plugin
 xorg-x11-xauth
 virt-viewer
+rhpl
 cobbler
 bind-utils
-
+augeas
+/usr/sbin/lokkit

@@ -2,12 +2,7 @@ install
 
 %include common-install.ks
 
-network --device=eth1 --bootproto=static --ip=192.168.50.2 --netmask=255.255.255.0 --onboot=on --nameserver=192.168.50.2
-
-# Create some fake iSCSI partitions
-logvol /iscsi3 --name=iSCSI3 --vgname=VolGroup00 --size=64
-logvol /iscsi4 --name=iSCSI4 --vgname=VolGroup00 --size=64
-logvol /iscsi5 --name=iSCSI5 --vgname=VolGroup00 --size=64
+network --device=eth1 --bootproto=static --ip=192.168.50.2 --netmask=255.255.255.0 --onboot=on --nameserver=192.168.50.2 --hostname=management.priv.ovirt.org
 
 %include repos.ks
 
@@ -20,12 +15,19 @@ exec > /root/kickstart-post.log 2>&1
 
 %include common-post.ks
 
-# make sure our "hostname" resolves to management.priv.ovirt.org
-sed -i -e 's/^HOSTNAME.*/HOSTNAME=management.priv.ovirt.org/' \
-  /etc/sysconfig/network
+# FIXME [PATCH] fix SelinuxConfig firewall side-effect
+lokkit -f --nostart --disabled
+# FIXME imgcreate.kickstart.NetworkConfig doesn't store nameserver into ifcfg-*
+#       only in resolv.conf which gets overwritten by dhclient-script
+augtool <<EOF
+set /files/etc/sysconfig/network-scripts/ifcfg-eth0/PEERDNS no
+set /files/etc/sysconfig/network-scripts/ifcfg-eth1/DNS1 192.168.50.2
+save
+EOF
 
 # make sure to update the /etc/hosts with the list of all possible DHCP
 # addresses we can hand out; dnsmasq uses this
+sed -i -e 's/management\.priv\.ovirt\.org//' /etc/hosts
 echo "192.168.50.2 management.priv.ovirt.org" >> /etc/hosts
 for i in `seq 3 252` ; do
     echo "192.168.50.$i node$i.priv.ovirt.org" >> /etc/hosts
@@ -75,9 +77,11 @@ IsRelative=1
 Path=$ff_profile_dir
 EOF
 
-# make sure we don't mount the "fake" iSCSI LUNs, since they are meant to
-# be exported
-sed -i -e '/\/dev\/VolGroup00\/iSCSI[0-9].*/d' /etc/fstab
+# Create sparse files for iSCSI backing stores
+mkdir -p /ovirtiscsi
+for i in `seq 3 5`; do
+    dd if=/dev/null of=/ovirtiscsi/iSCSI$i bs=1 count=1 seek=64M
+done
 
 # make an NFS directory with some small, fake disks and export them via NFS
 # to show off the NFS part of the WUI
@@ -193,7 +197,7 @@ cat > /etc/init.d/ovirt-wui-dev << \EOF
 #
 # ovirt-wui-dev oVirt WUI Dev appliance service
 #
-# chkconfig: 3 60 40 
+# chkconfig: 3 60 40
 # description: ovirt dev wui appliance service
 #
 
@@ -215,22 +219,22 @@ start() {
         -O option:router,192.168.50.2 -O option:ntp-server,192.168.50.2 \
         --dhcp-option=12 \
         -R --local /priv.ovirt.org/ --server 192.168.122.1
-    
+
     # Set up the fake iscsi target
     tgtadm --lld iscsi --op new --mode target --tid 1 \
         -T ovirtpriv:storage
-    
-    #
-    # Now associate them to the LVs
-    # 
-    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-        --lun 1 -b /dev/VolGroup00/iSCSI3
-    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-        --lun 2 -b /dev/VolGroup00/iSCSI4
-    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
-        --lun 3 -b /dev/VolGroup00/iSCSI5
 
-    # 
+    #
+    # Now associate them to the backing stores
+    #
+    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
+        --lun 1 -b /ovirtiscsi/iSCSI3
+    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
+        --lun 2 -b /ovirtiscsi/iSCSI4
+    tgtadm --lld iscsi --op new --mode logicalunit --tid 1 \
+        --lun 3 -b /ovirtiscsi/iSCSI5
+
+    #
     # Now make them available
     #
     tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL

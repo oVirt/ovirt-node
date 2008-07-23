@@ -24,18 +24,18 @@ HTDOCS=/var/www/html
 OVIRT=$HTDOCS/ovirt
 PUNGI=$HTDOCS/pungi
 PUNGIKS=$PUNGI/pungi.ks
-DEP_RPMS="createrepo httpd kvm libvirt livecd-tools pungi-1.2.18.1"
+DEP_RPMS="createrepo httpd kvm libvirt livecd-tools pungi appliance-tools"
 
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-w] [-n] [-p init|update] [-s] [-a] [-c] [-v git|release|none] [-e eth]
+Usage: $ME [-w] [-n] [-p] [-s] [-a] [-c] [-v git|release|none] [-e eth]
   -w: update oVirt WUI RPMs
   -n: update oVirt Managed Node RPMs
-  -p: update pungi repository (init or update)
+  -p: update pungi repository
   -s: include SRPMs and produce source ISO
   -a: updates all (WUI, Node, Appliance)
-  -c: cleanup old repos (pungi and ovirt)
+  -c: cleanup local repos (pungi and ovirt)
   -v: update version type (git, release, none) default is git
   -e: ethernet device to use as bridge (i.e. eth1)
   -h: display this help and exit
@@ -63,12 +63,12 @@ while getopts wnp:sahcv:e: c; do
     case $c in
         w) update_wui=1;;
         n) update_node=1;;
-        p) update_pungi=$OPTARG;;
+        p) update_pungi=1;;
         s) include_src=1;;
-        a) update_wui=1; update_node=1; update_app=1; update_pungi=init;;
+        a) update_wui=1; update_node=1; update_app=1;;
         c) cleanup=1;;
-        e) bridge=$OPTARG;;
         v) version_type=$OPTARG;;
+        e) bridge=$OPTARG;;
         h) help=1;;
       '?') err=1; warn "invalid option: \`-$OPTARG'";;
         :) err=1; warn "missing argument to \`-$OPTARG' option";;
@@ -79,9 +79,6 @@ test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 test $include_src = 1 -a "$update_pungi" = 0 &&
   usage "Need to specify -p when including source"
-test "$update_pungi" != 0 -a "$update_pungi" != "init" \
-    -a "$update_pungi" != "update" \
-    && usage "-p must provide either init or update argument"
 test "$version_type" != "git" -a "$version_type" != "release" \
     -a "$version_type" != "none" \
     && usage "version type must be git, release or none"
@@ -98,13 +95,21 @@ if [ $? -ne 0 ]; then
     # one of the previous packages wasn't installed; bail out
     die "Must have $DEP_RPMS installed"
 fi
+set -e
+echo -n "pungi-1.2.18.1-1 or newer "
+$BASE/ovirt-host-creator/rpm-compare.py GE 0 pungi 1.2.18.1 1
+echo ok
+echo -n "appliance-tools-002-1 or newer "
+$BASE/ovirt-host-creator/rpm-compare.py GE 0 appliance-tools 002 1
+echo ok
+set +e
 
 mkdir -p $PUNGI
 mkdir -p $OVIRT
 
 # cleanup repository folders
 if [ $cleanup = 1 ]; then
-    update_pungi=init
+    update_pungi=1
     rm -rf $PUNGI/*
     rm -rf $OVIRT/*
 fi
@@ -138,11 +143,7 @@ fi
 
 # build Fedora subset required for oVirt
 if [ $update_pungi != 0 ]; then
-    if [[ "$update_pungi" == "init" ]]; then
-        pungi_flags="-GCB"
-    elif [[ "$update_pungi" == "update" ]]; then
-        pungi_flags="-GC"
-    fi
+    pungi_flags="-GC"
 
     fedora_mirror=http://mirrors.fedoraproject.org/mirrorlist
     # use Fedora + updates
@@ -192,11 +193,6 @@ EOF
         ovirt-host-creator/common-pkgs.ks \
         wui-appliance/common-pkgs.ks \
         | sort -u >> $PUNGIKS
-    cat >> $PUNGIKS << EOF
-
-anaconda-runtime
-%end
-EOF
     cd $PUNGI
     pungi --ver=$F_REL $pungi_flags -c $PUNGIKS --force
     if [ $include_src != 0 ]; then
@@ -234,23 +230,17 @@ EOF
 fi
 
 # build oVirt admin appliance
-# NOTE: create-wui-appliance.sh must be run as root
 if [ $update_app == 1 ]; then
-    # FIXME: This can go away once we have livecd tools building the appliances
-    VIRBR=$(virsh net-dumpxml default \
-	    | sed -n "s/^ *<ip address='\([^']*\)' .*/\1/p")
-    test -z $VIRBR && die "Could not get ip address of default network for app"
-
     cd $BASE/wui-appliance
     make clean
     cat > repos.ks << EOF
-url --url http://$VIRBR/pungi/$F_REL/$ARCH/os
+url --url http://localhost/pungi/$F_REL/$ARCH/os
 EOF
     excludepkgs=
     if [[ -f $OVIRT/repodata/repomd.xml ]]; then
         excludepkgs='--excludepkgs=ovirt*'
         cat >> repos.ks << EOF
-repo --name=ovirt --baseurl=http://$VIRBR/ovirt
+repo --name=ovirt --baseurl=http://localhost/ovirt
 EOF
     fi
     cat >> repos.ks << EOF
@@ -258,7 +248,6 @@ repo --name=ovirt-org --baseurl=http://ovirt.org/repos/ovirt/$F_REL/$ARCH $exclu
 
 EOF
     make
-    cp wui-rel.ks $OVIRT
 
     bridge_flag=
     if [ -n "$bridge" ]; then
@@ -266,11 +255,7 @@ EOF
     fi
 
     ./create-wui-appliance.sh \
-        -t http://$VIRBR/pungi/$F_REL/$ARCH/os \
-        -k http://$VIRBR/ovirt/wui-rel.ks \
+        -k wui-rel.ks \
         $bridge_flag
 
-    set +x
-    echo "oVirt appliance setup started, check progress with:"
-    echo -n "  virt-viewer ovirt-appliance"
 fi
