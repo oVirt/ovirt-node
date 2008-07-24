@@ -457,7 +457,7 @@ class GraphController < ApplicationController
           end
       end
 
-      def _generated_default_time_axis(myDays)
+      def _generate_default_time_axis(myDays)
           times = []
           now = Time.now
           if myDays.to_i == 1
