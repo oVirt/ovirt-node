@@ -46,9 +46,6 @@ class Host < ActiveRecord::Base
   STATE_AVAILABLE   = "available"
   STATES = [STATE_UNAVAILABLE, STATE_AVAILABLE]
 
-  KVM_HYPERVISOR_TYPE = "KVM"
-  HYPERVISOR_TYPES = [KVM_HYPERVISOR_TYPE]
-
   def memory_in_mb
     kb_to_mb(memory)
   end
