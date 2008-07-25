@@ -169,7 +169,7 @@ a { color:#000000; text-decoration: none;}
 
 
 /*  ----- Blue Tabbed Navigation --------  */
-.tab_nav {
+.ui-tabs-nav {
 	margin:0;
 	padding: 0;
 	background: none;
@@ -177,12 +177,12 @@ a { color:#000000; text-decoration: none;}
 	float: left;
 	font-size: 110%;
 }
-.tab_nav li {
+.ui-tabs-nav li {
 	margin: 0 1px 0 1px;
 	padding: 0;
 	float: left;
 }
-.tab_nav a {
+.ui-tabs-nav a {
 	float:left;
 	padding: 0 15px 0 15px;
 	color: #CCCCCC;
@@ -193,8 +193,10 @@ a { color:#000000; text-decoration: none;}
 	background: none;
 
 }
-.tab_nav a:hover {color:#FFFFFF; border-bottom: 5px solid #5599B8;}
-.tab_nav li.current a {color:#FFFFFF; font-weight: bold; height: 24px; line-height:1.6; border-bottom: 5px solid #5599B8;}
+.ui-tabs-nav a:hover {color:#FFFFFF; border-bottom: 5px solid #5599B8;}
+.ui-tabs-selected a {color:#FFFFFF; font-weight: bold; height: 24px; line-height:1.6; border-bottom: 5px solid #5599B8;}
+
+.ui-tabs-hide {/*display:none;*/}
 
 /*  ----- Panel Contents --------  */
 

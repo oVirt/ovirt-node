@@ -55,7 +55,10 @@ class ResourcesController < ApplicationController
       redirect_to :action => 'list'
     end
     if params[:ajax]
-      render :layout => 'tabs-and-content' #:template => 'hardware/show.html.erb'
+      render :layout => 'tabs-and-content'
+    end
+    if params[:nolayout]
+      render :layout => false
     end
   end
 

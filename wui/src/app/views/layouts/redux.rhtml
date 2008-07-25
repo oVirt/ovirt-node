@@ -33,23 +33,22 @@
   <%= javascript_include_tag "jquery.form.js" -%>
   <%= javascript_include_tag "jquery.jgrowl.js" -%>
 
+  <%= javascript_include_tag "jquery.ui-1.5.2/ui/packed/ui.core.packed.js" -%>
+  <%= javascript_include_tag "jquery.ui-1.5.2/ui/packed/ui.tabs.packed.js" -%>
+
   <!-- ovirt-specific functions defined here -->
   <%= javascript_include_tag "ovirt.js" -%>
     <script type="text/javascript">
-      $(document).ready(function(){         
-        //$("#tree").treeview({
-            //animated: "normal",
-            //current_pool_id:  <%if @current_pool_id == nil%>""<%else%><%=@current_pool_id%><%end%>,
-          //  url: "<%=  url_for :controller =>'/hardware', :action => 'json_view_tree' %>",
-          //  current: "current",
-          //  hardware_url: "<%=  url_for :controller =>'/hardware', :action => 'show' %>",
-          //  resource_url: "<%=  url_for :controller =>'/resources', :action => 'show' %>",
-          //  action_type: "hyperlink"
-	  //  })
+      var $tabs, selected_tab;
+      $(document).ready(function(){  
             $('a[rel*=facebox]').livequery(function(){$(this).facebox();},function(){});
             $('#side a').livequery(function(){
                 $(this).bind('click', function(){ 
                     currentNode = $(this).parent().parent()[0].id;
+                    if ($tabs != null) {
+                    var tabType = $tabs.data("pool_type.tabs");
+                    ($(this).attr('href').indexOf(tabType) == -1) ?selected_tab = 0 :selected_tab = $tabs.data("selected.tabs");
+                    }
                     $('#side span').each(function(){
                         var nodeType = $(this).attr('class');
                         if (nodeType.indexOf('_') != -1){
@@ -62,28 +61,12 @@
                     $.ajax({
                         url: $(this).attr('href'),
                         type: 'GET',
-                        data: {ajax:true},
+                        data: {ajax:true,tab:selected_tab},
+                        //data: {nolayout:true},
                         dataType: 'html',
                         success: function(data) {
                           $('#side-toolbar').html($(data).find('div.toolbar'));
                           $('#tabs-and-content-container').html($(data).not('div#side-toolbar'));
-                        },
-                        error: function(xhr) {$.jGrowl(xhr.status + ' ' + xhr.statusText);}
-                    });
-                    return false;})},function(){});
-            $('.tab_nav a').livequery(function(){
-                $(this).bind('click', function(){
-                    $('.tab_nav li').removeClass('current');
-                    $(this).parent().addClass('current');
-                    $.ajax({
-                        url: $(this).attr('href'),
-                        type: 'GET',
-                        data: {ajax:true},
-                        dataType: 'html',
-                        success: function(data) { 
-                          var wrapped_data = $(data).find('div').filter('[id=content-area]');
-                          var my_parent = $(this).parent();
-                          $('#content-area').html($(data).find('div').filter('[id=content-area]'));
                         },
                         error: function(xhr) {$.jGrowl(xhr.status + ' ' + xhr.statusText);}
                     });
@@ -155,7 +138,7 @@
        <%= render :partial => '/layouts/navigation_tabs' %>
      </div> 
      <div id="main">
-        <div id="content-area">
+        <div id="content_area">
           <%= yield  %> <%# the rest of the center and right hand side %>
         </div>
      </div>

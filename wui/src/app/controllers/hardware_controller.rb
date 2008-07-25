@@ -40,6 +40,9 @@ class HardwareController < ApplicationController
     if params[:ajax]
       render :layout => 'tabs-and-content'
     end
+    if params[:nolayout]
+      render :layout => false
+    end
   end
   
   def json_view_tree
