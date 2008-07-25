@@ -25,3 +25,4 @@ cobbler
 bind-utils
 augeas
 /usr/sbin/lokkit
+curl

@@ -34,7 +34,11 @@ class ApplicationController < ActionController::Base
   before_filter :authorize_admin, :only => [:new, :create, :edit, :update, :destroy]
 
   def get_login_user
-    user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
+    if ENV["RAILS_ENV"] != 'test'
+        user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
+    else
+        'ovirtadmin'
+    end
   end
   
   def user_from_principal(principal)
