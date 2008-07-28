@@ -49,12 +49,16 @@ KS
 
 # create appliance
 ./build-all.sh -ac
+if [ $? -ne 0 ]; then
+  echo "./build-all.sh failed, appliance not created"
+  exit 1
+fi
 
 # start appliance
 virsh start ovirt-appliance
 
 # wait until started
-while : ; do
+for i in $(seq 1 60); do
    $ssh_cmd "exit"
    if [ $? -eq 0 ]; then
       break
