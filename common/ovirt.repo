@@ -1,0 +1,5 @@
+[ovirt]
+name=ovirt
+baseurl=http://ovirt.org/repos/ovirt/9/$basearch/
+enabled=1
+gpgcheck=0
