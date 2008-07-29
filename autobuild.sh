@@ -1,3 +1,4 @@
+#!/bin/sh
 #oVirt autobuild script
 #
 # Copyright (C) 2008 Red Hat, Inc.
@@ -24,18 +25,19 @@ die() { warn "$@"; exit 1; }
 
 echo "Running oVirt Autobuild"
 
-ssh_cmd="ssh -o StrictHostKeyChecking=no \
+SSHKEY=~/.ssh/id_autobuild
+ssh_cmd="ssh -i $SSHKEY -o StrictHostKeyChecking=no \
              -o UserKnownHostsFile=/dev/null root@192.168.50.2"
 
-# implant local ssh key into appliance for autobuild only
-if [ ! -r ~/.ssh/id_rsa.pub ]; then
-  die "requires default SSH key to be generated. Please run ssh-keygen -t rsa"
+# implant Autobuild SSH key into appliance
+if [ ! -r $SSHKEY ]; then
+  ssh-keygen -q -t rsa -N "" -f $SSHKEY
 fi
 cat >> wui-appliance/common-post.ks << KS
 mkdir -p /root/.ssh
 chmod 700 /root/.ssh
 cat > /root/.ssh/authorized_keys << \EOF
-$(cat ~/.ssh/id_rsa.pub)
+$(ssh-keygen -y -f $SSHKEY)
 EOF
 chmod 600 /root/.ssh/authorized_keys
 KS
@@ -54,7 +56,8 @@ KS
   || die "./build-all.sh failed, appliance not created"
 
 # start appliance
-virsh start ovirt-appliance
+virsh start ovirt-appliance \
+  || die "virsh start failed, appliance not started"
 
 # wait until started
 for i in $(seq 1 60); do
