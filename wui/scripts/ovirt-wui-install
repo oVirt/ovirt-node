@@ -141,7 +141,7 @@ fi
 # so dnsmasq from libvirt doesn't interfere with the dev/bundled
 # dnsmasq
 if [[ "$PROD_INST" == "false" ]]; then
-    service libvirtd status > /dev/null 2&>1 || service libvirtd start > /dev/null 2>&1
+    service libvirtd status > /dev/null 2>&1 || service libvirtd start > /dev/null 2>&1
     wait_for_service 'virsh connect' 10 2 || exit 1
     virsh net-destroy default
     virsh net-undefine default
