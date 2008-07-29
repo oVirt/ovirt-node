@@ -11,6 +11,10 @@
 . /etc/init.d/ovirt-functions
 
 start() {
+    # Regardless of how iptables is configured, we always need the physdev bridge,
+    # and it needs to be at the front of the forward chain
+    iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
+
     find_srv ipa tcp
     krb5_conf=/etc/krb5.conf
     if [ ! -s $krb5_conf ]; then

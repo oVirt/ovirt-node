@@ -26,13 +26,12 @@ oVirt managed node to interact with the oVirt server.
 %prep
 
 %setup -q
-%{__rm} -rf %{buildroot}
-mkdir %{buildroot}
 
 %build
 make
 
 %install
+%{__rm} -rf %{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sbindir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/chkconfig.d
@@ -54,10 +53,29 @@ make
 %{__install} -p -m0755 scripts/kvm-ifup %{buildroot}%{_sysconfdir}
 %{__install} -p -m0755 scripts/dhclient-exit-hooks %{buildroot}%{_sysconfdir}
 
-%{__install} -p -m0755 scripts/ovirt-setup %{buildroot}%{app_root}
-
 %{__install} -p -m0755 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.hourly
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d
+
+echo "oVirt Managed Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
+g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
+n=$(printf '\33[m')            # similar to n=$(tput sgr0)
+cat <<EOF > %{buildroot}%{_sysconfdir}/issue
+
+           888     888 ${g}d8b$n         888
+           888     888 ${g}Y8P$n         888
+           888     888             888
+   .d88b.  Y88b   d88P 888 888d888 888888
+  d88''88b  Y88b d88P  888 888P'   888
+  888  888   Y88o88P   888 888     888
+  Y88..88P    Y888P    888 888     Y88b.
+   'Y88P'      Y8P     888 888      'Y888
+
+  Managed Node release %{version}-%{release}
+
+  Virtualization just got the ${g}Green Light$n
+
+EOF
+cp -p %{buildroot}%{_sysconfdir}/issue %{buildroot}%{_sysconfdir}/issue.net
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -69,8 +87,35 @@ make
 /sbin/chkconfig ovirt on
 /sbin/chkconfig --add ovirt-post
 /sbin/chkconfig ovirt-post on
+/sbin/chkconfig --add collectd
+/sbin/chkconfig collectd on
 
-%{app_root}/ovirt-setup
+# just to get a boot warning to shut up
+touch /etc/resolv.conf
+
+# make libvirtd listen on the external interfaces
+sed -i -e "s/^#\(LIBVIRTD_ARGS=\"--listen\"\).*/\1/" /etc/sysconfig/libvirtd
+
+# set up qemu daemon to allow outside VNC connections
+sed -i -e "s/^[[:space:]]*#[[:space:]]*\(vnc_listen = \"0.0.0.0\"\).*/\1/" \
+    /etc/libvirt/qemu.conf
+
+# set up libvirtd to listen on TCP (for kerberos)
+sed -i -e "s/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/" \
+    -e "s/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/" \
+    /etc/libvirt/libvirtd.conf
+
+# make sure we don't autostart virbr0 on libvirtd startup
+rm -f /etc/libvirt/qemu/networks/autostart/default.xml
+
+# with the new libvirt (0.4.0), make sure we we setup gssapi in the mech_list
+if [ `egrep -c "^mech_list: gssapi" /etc/sasl2/libvirt.conf` -eq 0 ]; then
+    sed -i -e "s/^\([[:space:]]*mech_list.*\)/#\1/" /etc/sasl2/libvirt.conf
+    echo "mech_list: gssapi" >> /etc/sasl2/libvirt.conf
+fi
+
+# remove the /etc/krb5.conf file; it will be fetched on bootup
+rm -f /etc/krb5.conf
 
 %preun
 if [ "$1" = 0 ] ; then
@@ -90,14 +135,19 @@ fi
 %{_sysconfdir}/dhclient-exit-hooks
 %config %{_sysconfdir}/logrotate.d/ovirt-logrotate.conf
 %config %{_sysconfdir}/cron.hourly/ovirt-logrotate
-%{app_root}/ovirt-setup
 %defattr(-,root,root,0644)
 %{_initrddir}/ovirt-functions
 %{_sysconfdir}/collectd.conf.in
 %{_sysconfdir}/chkconfig.d/collectd
+%config %attr(0644,root,root) %{_sysconfdir}/ovirt-release
+%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/issue
+%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/issue.net
 %doc README NEWS AUTHOR ChangeLog
 
 %changelog
+* Tue Jul 29 2008 Perry Myers <pmyers@redhat.com> - 0.92 0.2
+- Added /etc/ovirt-release and merged ovirt-setup into spec file
+
 * Wed Jul 02 2008 Darryl Pierce <dpierce@redhat.com> - 0.92 0.2
 - Added log rotation to limit file system writes.
 
