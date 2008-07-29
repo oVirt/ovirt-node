@@ -273,6 +273,7 @@ virsh undefine $NAME > /dev/null 2>&1
 
 if [ -n "$KICKSTART" ]; then
     mkdir -p tmp
+    set -e
     appliance-creator --config $KICKSTART --name $NAME --tmpdir $(pwd)/tmp
     # FIXME add --compress option to appliance-creator
     if [ $compress -ne 0 ]; then
@@ -286,6 +287,7 @@ if [ -n "$KICKSTART" ]; then
         restorecon -v "$IMGDIR/$IMGNAME"
         echo "done"
     fi
+    set +e
 fi
 
 test ! -r $IMGDIR/$IMGNAME && die "Disk image not found at $IMGDIR/$IMGNAME"
