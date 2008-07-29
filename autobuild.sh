@@ -31,16 +31,15 @@ ssh_cmd="ssh -o StrictHostKeyChecking=no \
 if [ ! -r ~/.ssh/id_rsa.pub ]; then
   die "requires default SSH key to be generated. Please run ssh-keygen -t rsa"
 fi
-cat >> wui-appliance/common-post.ks << \KS
+cat >> wui-appliance/common-post.ks << KS
 mkdir -p /root/.ssh
 chmod 700 /root/.ssh
 cat > /root/.ssh/authorized_keys << \EOF
-KS
-cat ~/.ssh/id_rsa.pub >> wui-appliance/common-post.ks
-cat >> wui-appliance/common-post.ks << \KS
+$(cat ~/.ssh/id_rsa.pub)
 EOF
 chmod 600 /root/.ssh/authorized_keys
 KS
+
 # move sshd to start last (after ovirt*first-run scripts)
 cat >> wui-appliance/common-post.ks << \KS
 mkdir -p /etc/chkconfig.d
