@@ -10,7 +10,7 @@ LoadPlugin disk
 <Plugin libvirt>
         Connection "qemu:///system"
         RefreshInterval "10"
-        HostnameFormat "hostname"
+        HostnameFormat "uuid"
 </Plugin>
 
 <Plugin network>
