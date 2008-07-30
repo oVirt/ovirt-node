@@ -32,6 +32,7 @@ class StoragePool < ActiveRecord::Base
 
   validates_presence_of :ip_addr, :hardware_pool_id
 
+  acts_as_xapian :texts => [ :ip_addr, :target, :export_path, :type ]
   ISCSI = "iSCSI"
   NFS   = "NFS"
   STORAGE_TYPES = { ISCSI => "Iscsi",
@@ -55,4 +56,8 @@ class StoragePool < ActiveRecord::Base
   def get_type_label
     STORAGE_TYPES.invert[self.class.name.gsub("StoragePool", "")]
   end
+  def display_class
+    "Storage Pool"
+  end
+
 end

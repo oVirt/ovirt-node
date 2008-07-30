@@ -21,7 +21,7 @@ PREFIX="${PREFIX:-/ovirt}"
 
 MONGREL_PROG=mongrel_rails
 ADDR=127.0.0.1
-
+REINDEX_PROG=/usr/sbin/ovirt-reindex-search
 RETVAL=0
 
 . /etc/init.d/functions
@@ -29,6 +29,7 @@ RETVAL=0
 start() {
     echo -n "Starting ovirt-mongrel-rails: "
 
+    RAILS_ENV=$RAILS_ENVIRONMENT $REINDEX_PROG
     $MONGREL_PROG start -c $OVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID \
 	-a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP \
 	-d --prefix=$PREFIX

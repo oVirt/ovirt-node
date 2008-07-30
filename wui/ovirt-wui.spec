@@ -21,6 +21,8 @@ Requires: rubygem(krb5-auth) >= 0.6
 Requires: ruby-gettext-package
 Requires: postgresql-server
 Requires: ruby-postgres
+Requires: xapian-bindings-ruby
+Requires: xapian-core
 Requires: pwgen
 Requires: httpd >= 2.0
 Requires: mod_auth_kerb
@@ -99,6 +101,8 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 
 %{__cp} -a %{pbuild}/scripts/ovirt-add-host %{buildroot}%{_bindir}
 %{__cp} -a %{pbuild}/scripts/ovirt-wui-install %{buildroot}%{_sbindir}
+%{__cp} -a %{pbuild}/scripts/ovirt-reindex-search %{buildroot}%{_sbindir}
+%{__cp} -a %{pbuild}/scripts/ovirt-update-search %{buildroot}%{_sbindir}
 %{__rm} -rf %{buildroot}%{app_root}/tmp 
 %{__mkdir} %{buildroot}%{_localstatedir}/lib/%{name}/tmp
 %{__ln_s} %{_localstatedir}/lib/%{name}/tmp %{buildroot}%{app_root}/tmp
@@ -158,6 +162,8 @@ fi
 %files
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-wui-install
+%{_sbindir}/ovirt-reindex-search
+%{_sbindir}/ovirt-update-search
 %{_bindir}/ovirt-add-host
 %{_initrddir}/ovirt-host-browser
 %{_initrddir}/ovirt-host-status

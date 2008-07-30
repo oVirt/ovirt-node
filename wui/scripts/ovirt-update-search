@@ -1,0 +1,4 @@
+#!/bin/bash
+RAKEFILE=/usr/share/ovirt-wui/Rakefile
+MODELS="Host Vm IscsiStoragePool NfsStoragePool HardwarePool VmResourcePool"
+rake -f $RAKEFILE xapian:update_index models="$MODELS"

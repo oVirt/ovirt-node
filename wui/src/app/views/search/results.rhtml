@@ -1,0 +1,68 @@
+<div id="toolbar_nav">
+<form method="POST" id="search-form" action="<%= url_for :controller => "search", :action => 'results' %>">
+<ul>
+    <li>
+      <input id="searchform-field" name="terms" value="<%=@terms%>" onkeypress="" type="text">
+      <input id="searchform-button" src="<%= image_path "icon_search.png"%>" title="Search" type="image">
+      <input id="searchform-model" type="hidden" name="model" value="<%=@model_param%>">
+    </li>
+    <li>
+       <%= image_tag "icon_move.png", :style => "vertical-align:middle;" %>&nbsp;&nbsp;Actions &nbsp;&nbsp;&nbsp;<%= image_tag "icon_toolbar_arrow.gif", :style => "vertical-align:middle;" %>
+       <ul>
+        <% @types.each_index { |index| %>
+<!-- for each button we need to submit current form with "model" set to @types[index][1] --!>
+            <li onclick="$('#searchform-model').val('<%=@types[index][1]%>'); $('#searchform-button').click();"
+            <% if (index == @types.length - 1) or @types[index].length == 3 %>
+                style="border-bottom: 1px solid #CCCCCC;"
+            <% end %>
+               >
+<!--                 < % = image_tag ... -->
+                 <%=  @model_param == @types[index][1] ? "X" : "&nbsp;&nbsp;" %>
+                 <%=@types[index][0]%>
+            </li>
+        <% } %>
+       </ul>
+    </li>
+</ul>
+</form>
+</div>
+
+<script type="text/javascript">
+  function results_select(selected_rows)
+  {
+    var selected_ids = new Array()
+    for(i=0; i<selected_rows.length; i++) {
+      selected_ids[i] = selected_rows[i].id;
+    }
+    if (selected_ids.length == 1)
+    {
+      $('#results_selection').load('<%= url_for :controller => "search", :action => "single_result" %>',
+                { class_and_id: selected_ids[0].substring(3)})
+    }
+  }
+</script>
+
+<div class="panel_header"></div>
+ <% if @results.matches_estimated != 0 %>
+   <div class="data_section">
+      <%= render :partial => "/search/grid", :locals => { :table_id => "search_grid",
+                                                        :terms => @terms,
+                                                        :model => @model_param,
+                                                        :checkboxes => false,
+                                                        :on_select => "results_select" } %>
+   </div>
+   <div class="selection_detail" id="results_selection">
+     <div class="selection_left">
+       <div>Select an item above.</div>
+     </div>
+   </div>
+<% else %>
+   <div class="data_section">
+       <div class="no-grid-items">
+          <%= image_tag 'no-grid-items.png', :style => 'float: left;' %>
+          <div class="no-grid-items-text">
+            No results found. <br/><br/>
+          </div>
+       </div>
+   </div>
+<% end %>

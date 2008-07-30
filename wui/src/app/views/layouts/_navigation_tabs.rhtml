@@ -28,4 +28,8 @@
     <li id="nav_vmpool"> <%= link_to "Virtual Machines", {:action => 'show_vms', :id => @vm_resource_pool.id, :nolayout => :true}, :title => "content area" %></li>
     <li id="nav_access"> <%= link_to "User Access", {:action => 'show_users', :id => @vm_resource_pool.id, :nolayout => :true}, :title => "content area" %></li>
   </ul>
+<% elsif controller.controller_name == "search"  %>
+  <ul id="resources_nav_tabs" class="ui-tabs-nav">
+    <li id="nav_search" class="ui-tabs-selected"><a href="#">Search Results</a></li>
+  </ul>
 <% end %>

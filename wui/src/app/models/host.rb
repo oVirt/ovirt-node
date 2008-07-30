@@ -40,6 +40,12 @@ class Host < ActiveRecord::Base
     end
   end
 
+  acts_as_xapian :texts => [ :hostname, :uuid, :hypervisor_type, :arch ],
+                 :values => [ [ :created_at, 0, "created_at", :date ],
+                              [ :updated_at, 1, "updated_at", :date ] ],
+                 :terms => [ [ :hostname, 'H', "hostname" ] ]
+
+
   KVM_HYPERVISOR_TYPE = "KVM"
   HYPERVISOR_TYPES = [KVM_HYPERVISOR_TYPE]
   STATE_UNAVAILABLE = "unavailable"
@@ -74,5 +80,12 @@ class Host < ActiveRecord::Base
 
   def cpu_speed
     "FIX ME!"
+  end
+
+  def display_name
+    hostname
+  end
+  def display_class
+    "Host"
   end
 end

@@ -20,7 +20,7 @@
 class VmResourcePool < Pool
 
   def get_type_label
-    "Hardware Pool"
+    "Virtual Machine Pool"
   end
   def get_controller
     return 'resources' 

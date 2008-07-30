@@ -36,6 +36,7 @@ require 'erb'
 OVIRT_DIR = "/usr/share/ovirt-wui"
 
 require "#{OVIRT_DIR}/vendor/plugins/betternestedset/init.rb"
+require "#{OVIRT_DIR}/vendor/plugins/acts_as_xapian/lib/acts_as_xapian"
 
 def database_connect
   $dbconfig = YAML::load(ERB.new(IO.read("#{OVIRT_DIR}/config/database.yml")).result)

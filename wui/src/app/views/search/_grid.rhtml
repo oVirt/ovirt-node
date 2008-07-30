@@ -1,0 +1,40 @@
+<% per_page = 40 %>
+<div id="<%= table_id %>_div">
+<%= '<form id="#{table_id}_form">' if checkboxes %>
+<table id="<%= table_id %>" style="display:none"></table>
+<%= '</form>' if checkboxes %>
+</div>
+<script type="text/javascript">
+    $("#<%= table_id %>").flexigrid
+    (
+    {
+    url: '<%=  url_for :controller => "search",
+                       :action => "results_json" %>',
+    params: [{name: "terms", value: '<%=terms%>'},
+             {name: "model", value: '<%=model%>'},
+             {name: "checkboxes", value: <%=checkboxes%>}],
+    dataType: 'json',
+    colModel : [
+        <%= "{display: '', width : 20, align: 'left', process: #{table_id}checkbox}," if checkboxes %>
+        {display: 'Name', width : 200, align: 'left'},
+        {display: 'Type', width : 120, align: 'left'},
+        {display: '% Match', width : 60, align: 'left'}
+	],
+    //sortname: "hostname",
+    //sortorder: "asc",
+    usepager: true,
+    useRp: true,
+    rp: <%= per_page %>,
+    showTableToggleBtn: true,
+    onSelect: <%= on_select %>,
+    onDeselect: false,
+    onHover: false,
+    onUnhover: false
+    }
+    );
+    function <%= table_id %>checkbox(celDiv)
+    {
+        $(celDiv).html('<input class="grid_checkbox" type="checkbox" name="grid_checkbox'+$(celDiv).html()+'" value="'+$(celDiv).html()+'"/>');
+    }
+
+</script>

@@ -75,6 +75,8 @@ class Pool < ActiveRecord::Base
     end
   end
 
+  acts_as_xapian :texts => [ :name ]
+
   # this method lists pools with direct permission grants, but does not 
   # include implied permissions (i.e. subtrees)
   def self.list_for_user(user, privilege)
@@ -225,6 +227,12 @@ class Pool < ActiveRecord::Base
     obj.send(method, *args)
   end    
 
+  def display_name
+    name
+  end
+  def display_class
+    get_type_label
+  end
   protected
   def traverse_parents
     if id

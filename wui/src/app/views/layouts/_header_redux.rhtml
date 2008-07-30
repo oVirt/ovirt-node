@@ -2,8 +2,8 @@
 
 <div class="header_info">
   <div id="hi-username">Hi, <%= @user %></div>
-  <form id="search-form" action="globalSearch.jspa">
-    <input id="textfield_effect" name="q" value="Search" onkeypress="" onfocus="if( this.value == this.defaultValue ) this.value='';" type="text">
+  <form method="POST" id="search-form" action="<%= url_for :controller => "search", :action => 'results' %>">
+    <input id="textfield_effect" name="terms" value="Search" onkeypress="" onfocus="if( this.value == this.defaultValue ) this.value='';" type="text">
     <input id="searchbox-button" src="<%= image_path "icon_search.png"%>" title="Search" type="image">&nbsp;&nbsp;|
   </form>
   <a id="help-link" href="#" ><%= image_tag "icon_help.png" %></a> <!-- FIXME wire link correctly -->

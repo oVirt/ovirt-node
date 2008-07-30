@@ -31,6 +31,8 @@ class Vm < ActiveRecord::Base
   validates_presence_of :uuid, :description, :num_vcpus_allocated,
                         :memory_allocated_in_mb, :memory_allocated, :vnic_mac_addr
 
+  acts_as_xapian :texts => [ :uuid, :description, :vnic_mac_addr, :state ]
+
   BOOT_DEV_HD          = "hd"
   BOOT_DEV_NETWORK     = "network"
   BOOT_DEV_CDROM       = "cdrom"
@@ -185,6 +187,12 @@ class Vm < ActiveRecord::Base
     (state == Vm::STATE_RUNNING ) and host and vnc_port
   end
 
+  def display_name
+    description
+  end
+  def display_class
+    "VM"
+  end
   protected
   def validate
     resources = vm_resource_pool.max_resources_for_vm(self)
