@@ -18,19 +18,36 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class HostController < ApplicationController
+
+  EQ_ATTRIBUTES = [ :state, :arch, :hostname, :uuid,
+                    :hardware_pool_id ]
+
   def index
     list
-    render :action => 'list'
+    respond_to do |format|
+      format.html { render :action => 'list' }
+      format.xml  { render :xml => @hosts.to_xml }
+    end
   end
 
   before_filter :pre_action, :only => [:host_action, :enable, :disable, :clear_vms]
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, :create, :update ],
+  verify :method => [:post, :put], :only => [ :create, :update ],
+         :redirect_to => { :action => :list }
+  verify :method => [:post, :delete], :only => :destroy,
          :redirect_to => { :action => :list }
 
    def list
-       @hosts = Host.find(:all) if @hosts.nil? 
+     conditions = []
+     EQ_ATTRIBUTES.each do |attr|
+       if params[attr]
+         conditions << "#{attr} = :#{attr}"
+       end
+     end
+     @hosts = Host.find(:all,
+                        :conditions => [conditions.join(" and "), params],
+                        :order => "id")
    end
 
 
@@ -41,7 +58,10 @@ class HostController < ApplicationController
       #perm errors for ajax should be done differently
       redirect_to :controller => 'dashboard', :action => 'list'
     end
-    render :layout => 'selection'    
+    respond_to do |format|
+      format.html { render :layout => 'selection' }
+      format.xml { render :xml => @host.to_xml }
+    end
   end
 
   def quick_summary

@@ -43,4 +43,11 @@ ActionController::Routing::Routes.draw do |map|
   # Install the default route as the lowest priority.
   map.connect ':controller/:action/:id.:format'
   map.connect ':controller/:action/:id'
+
+  # We put routes for the REST API _after_ the default routes so that we
+  # don't disturb existing routes for the WUI
+  # FIXME: Eventually, we want to rename the controllers in a way that makes
+  # REST work out of the box, and use these as the default routes
+  map.resources :hosts, :controller => 'host'
+
 end
