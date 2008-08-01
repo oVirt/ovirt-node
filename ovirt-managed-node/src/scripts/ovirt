@@ -16,28 +16,38 @@ start() {
     iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
 
     find_srv ipa tcp
-    krb5_conf=/etc/krb5.conf
-    if [ ! -s $krb5_conf ]; then
-        rm -f $krb5_conf
-        # FIXME this is IPA specific
-        wget -q \
-            http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf \
-            || (echo "Failed to get $krb5_conf" && return 1)
+    if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+        krb5_conf=/etc/krb5.conf
+        if [ ! -s $krb5_conf ]; then
+            rm -f $krb5_conf
+            # FIXME this is IPA specific
+            wget -q \
+                http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf \
+                || (echo "Failed to get $krb5_conf" && return 1)
+        fi
+    else
+        echo "skipping Kerberos configuration, IPA service not available"
     fi
-    IPA_HOST=$SRV_HOST
-    IPA_PORT=$SRV_PORT
 
     find_srv identify tcp
-    krb5_tab=/etc/libvirt/krb5.tab
-    ovirt-awake start $krb5_tab $SRV_HOST $SRV_PORT
+    if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+        krb5_tab=/etc/libvirt/krb5.tab
+        ovirt-awake start $krb5_tab $SRV_HOST $SRV_PORT
+    else
+        echo "skipping ovirt-awake, oVirt registration service not available"
+    fi
 
     find_srv collectd tcp
-    collectd_conf=/etc/collectd.conf
-    if [ -f $collectd_conf.in -a $SRV_HOST -a $SRV_PORT ]; then
-        sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
-            -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
-            > $collectd_conf \
-            || (echo "Failed to write $collectd_conf" && return 1)
+    if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+        if [ -f $collectd_conf.in ]; then
+            collectd_conf=/etc/collectd.conf
+            sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
+                -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
+                > $collectd_conf \
+                || (echo "Failed to write $collectd_conf" && return 1)
+        fi
+    else
+        echo "skipping collectd configuration, collectd service not available"
     fi
 }
 
