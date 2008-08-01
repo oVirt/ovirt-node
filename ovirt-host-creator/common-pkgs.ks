@@ -48,7 +48,6 @@ ovirt-managed-node
 -rhpl
 -kbd
 -usermode
--grub
 -fedora-logos
 -kpartx
 -dmraid

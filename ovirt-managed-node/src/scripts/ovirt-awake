@@ -63,10 +63,10 @@ start () {
 
             KEYTAB=`echo $REPLY | awk '{ print $2 }'`
 
-            if [ -n $KEYTAB ]; then
+            if [ -n "$KEYTAB" -a -n "$KEYTAB_FILE" ]; then
                 echo "Retrieving keytab: '$KEYTAB'"
 
-                wget -q $KEYTAB --output-document=$KEYTAB_FILE
+                wget -q "$KEYTAB" --output-document="$KEYTAB_FILE"
             else
                 echo "No keytab to retrieve"
             fi
@@ -84,9 +84,9 @@ start () {
 
 case "$1" in
     start)
-        KEYTAB_FILE=$2
-        SRV_HOST=$3
-        SRV_PORT=$4
+        SRV_HOST=$2
+        SRV_PORT=$3
+        KEYTAB_FILE=$4
         start
         RETVAL=$?
     ;;

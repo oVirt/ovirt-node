@@ -2,6 +2,9 @@
 
 OVIRT_LOGFILE=/var/log/ovirt.log
 
+# label of the oVirt partition
+OVIRT_LABEL=OVIRT
+
 find_srv()
 {
     local dnsreply

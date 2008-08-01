@@ -15,27 +15,63 @@ start() {
     # and it needs to be at the front of the forward chain
     iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
 
+    krb5_conf=/etc/krb5.conf
+    krb5_tab=/etc/libvirt/krb5.tab
+    # retrieve config from local oVirt partition if available
+    #   krb5.conf krb5.tab
+    #   TODO local admin password, ssh server key - what else?
+    ovirt=$(mktemp -d)
+    cfg=$ovirt/config
+    if [ -e /dev/disk/by-label/$OVIRT_LABEL ]; then
+      mount -r /dev/disk/by-label/$OVIRT_LABEL $ovirt
+    else
+      mount -r /dev/live $ovirt
+    fi
+    if [ -e $cfg/krb5.conf ]; then
+      cp -a $cfg/krb5.conf $krb5_conf
+    fi
+    if [ -e $cfg/krb5.tab ]; then
+      cp -a $cfg/krb5.tab $krb5_tab
+    fi
+    if [ -s $krb5_tab ]; then
+      krb5_tab=
+    fi
+
     find_srv ipa tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-        krb5_conf=/etc/krb5.conf
-        if [ ! -s $krb5_conf ]; then
-            rm -f $krb5_conf
-            # FIXME this is IPA specific
-            wget -q \
-                http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf \
-                || (echo "Failed to get $krb5_conf" && return 1)
+        # FIXME this is IPA specific
+        wget -q \
+            http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf.tmp
+        if [ $? -ne 0 ]; then
+            echo "Failed to get $krb5_conf"; return 1
+        fi
+        mv $krb5_conf.tmp $krb5_conf
+        # store config in oVirt partition
+        if [ -e $cfg ]; then
+            mount -o remount,rw $ovirt
+            cp -a $krb5_conf $cfg/krb5.conf
         fi
     else
-        echo "skipping Kerberos configuration, IPA service not available"
+        echo "skipping Kerberos configuration"
     fi
 
     find_srv identify tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-        krb5_tab=/etc/libvirt/krb5.tab
-        ovirt-awake start $krb5_tab $SRV_HOST $SRV_PORT
+        ovirt-awake start $SRV_HOST $SRV_PORT $krb5_tab
+        if [ $? -ne 0 ]; then
+            echo "ovirt-awake failed"; return 1
+        fi
+        # store config in oVirt partition
+        if [ -n "$krb_tab" -a -e $cfg ]; then
+            mount -o remount,rw $ovirt
+            cp -a $krb5_tab $cfg/krb5.tab
+        fi
     else
-        echo "skipping ovirt-awake, oVirt registration service not available"
+        echo "skipping ovirt-awake, oVirt identify service not available"
     fi
+
+    # cleanup
+    umount $ovirt && rmdir $ovirt
 
     find_srv collectd tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
@@ -43,8 +79,10 @@ start() {
         if [ -f $collectd_conf.in ]; then
             sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
                 -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
-                > $collectd_conf \
-                || (echo "Failed to write $collectd_conf" && return 1)
+                > $collectd_conf
+            if [ $? -ne 0 ]; then
+                echo "Failed to write $collectd_conf"; return 1
+            fi
         fi
     else
         echo "skipping collectd configuration, collectd service not available"
@@ -53,7 +91,7 @@ start() {
 
 case "$1" in
     start)
-        echo -n $"Starting ovirt: "
+        printf "Starting ovirt: "
 
         {
             start

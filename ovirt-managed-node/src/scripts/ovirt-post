@@ -22,7 +22,7 @@ start() {
 
 case "$1" in
     start)
-        echo -n $"Starting ovirt-post: "
+        printf "Starting ovirt-post: "
 
         {
             start
