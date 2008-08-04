@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ME=$(basename "$0")
+ME=$(basename "$0") 
 warn() { printf "$ME: $@\n" >&2; }
 try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
 die() { warn "$@"; try_h; exit 1; }
@@ -8,13 +8,12 @@ die() { warn "$@"; try_h; exit 1; }
 RAM=768
 IMGSIZE=6000M
 
-ISO=
 IMGDIR_DEFAULT=/var/lib/libvirt/images
 NET_SCRIPTS=/etc/sysconfig/network-scripts
 NAME=ovirt-appliance
 BRIDGENAME=ovirtbr
 
-IMGDIR=$IMGDIR_DEFAULT
+imgdir=$IMGDIR_DEFAULT
 
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
@@ -31,11 +30,12 @@ EOF
 err=0 help=0
 compress=0
 bridge=
+kickstart=
 while getopts :d:k:he: c; do
     case $c in
-        d) IMGDIR=$OPTARG;;
+        d) imgdir=$OPTARG;;
         c) compress=1;;
-        k) KICKSTART=$OPTARG;;
+        k) kickstart=$OPTARG;;
         e) bridge=$OPTARG;;
         h) help=1;;
         '?') err=1; warn "invalid option: \`-$OPTARG'";;
@@ -267,35 +267,34 @@ fi
 } > /dev/null 2>&1
 
 IMGNAME=$NAME.img
-mkdir -p $IMGDIR
+mkdir -p $imgdir
 virsh destroy $NAME > /dev/null 2>&1
 virsh undefine $NAME > /dev/null 2>&1
 
-if [ -n "$KICKSTART" ]; then
+if [ -n "$kickstart" ]; then
     mkdir -p tmp
     set -e
-    appliance-creator --config $KICKSTART --name $NAME --tmpdir $(pwd)/tmp
+    appliance-creator --config $kickstart --name $NAME --tmpdir $(pwd)/tmp
     # FIXME add --compress option to appliance-creator
     if [ $compress -ne 0 ]; then
-        echo -n "Compressing the image..."
-        qemu-img convert -c $NAME-sda.raw -O qcow2 "$IMGDIR/$IMGNAME"
+        printf "Compressing the image..."
+        qemu-img convert -c $NAME-sda.raw -O qcow2 "$imgdir/$IMGNAME"
         rm ovirt-appliance-sda.raw
-        echo "done"
     else
-        echo -n "Moving the image..."
-        mv ovirt-appliance-sda.raw "$IMGDIR/$IMGNAME"
-        restorecon -v "$IMGDIR/$IMGNAME"
-        echo "done"
+        printf "Moving the image..."
+        mv ovirt-appliance-sda.raw "$imgdir/$IMGNAME"
+        restorecon -v "$imgdir/$IMGNAME"
     fi
+    echo done
     set +e
 fi
 
-test ! -r $IMGDIR/$IMGNAME && die "Disk image not found at $IMGDIR/$IMGNAME"
+test ! -r $imgdir/$IMGNAME && die "Disk image not found at $imgdir/$IMGNAME"
 
 TMPXML=$(mktemp) || exit 1
 # FIXME virt-image to define the appliance instance
-gen_app $IMGDIR/$IMGNAME $RAM > $TMPXML
+gen_app $imgdir/$IMGNAME $RAM > $TMPXML
 virsh define $TMPXML
 rm $TMPXML
-echo "Application defined using disk located at $IMGDIR/$IMGNAME."
+echo "Application defined using disk located at $imgdir/$IMGNAME."
 echo "Run virsh start $NAME to start the appliance"
