@@ -5,27 +5,32 @@
 </form>
 </div>
 <script type="text/javascript">
-	$("#<%= table_id %>").flexigrid
-	(
-	{
-	url: '<%=  url_for :controller => parent_controller, :action => "users_json", :id => pool.id %>',
-	dataType: 'json',
-	colModel : [
-		{display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
-		{display: 'Name', name : 'uid', width : 180, sortable : true, align: 'left'},
-	        {display: 'Role', name : 'user_role', width : 80, sortable : true, align: 'left'}
-		],
-	sortname: "user",
-	sortorder: "asc",
-	usepager: <%= pool.permissions.size > users_per_page ? 'true' : 'false' %>,
-	useRp: true,
-	rp: <%= users_per_page %>,
-	showTableToggleBtn: true
-	}
-	);   
-	function <%= table_id %>checkbox(celDiv)
-	{
-	       $(celDiv).html('<input type="checkbox" name="grid_checkbox'+$(celDiv).html()+'" class="grid_checkbox" value="'+$(celDiv).html()+'"/>');
-	} 
-
+    $("#<%= table_id %>").flexigrid
+    (
+    {
+    url: '<%=  url_for :controller => parent_controller, :action => "users_json", :id => pool.id %>',
+    dataType: 'json',
+    colModel : [
+        {display: '', name : 'id', width : 20, sortable : false, align: 'left', process: <%= table_id %>checkbox},
+        {display: 'Name', name : 'uid', width : 180, sortable : true, align: 'left'},
+        {display: 'Role', name : 'user_role', width : 80, sortable : true, align: 'left'},
+        {display: '', width : 80, sortable : true, align: 'left'}
+        ],
+    sortname: "user",
+    sortorder: "asc",
+    usepager: <%= pool.permissions.size > users_per_page ? 'true' : 'false' %>,
+    useRp: true,
+    rp: <%= users_per_page %>,
+    showTableToggleBtn: true
+    }
+    );
+    function <%= table_id %>checkbox(celDiv)
+    {
+        var grid_id = $(celDiv).html().split("_");
+        if (grid_id[1] == 1) {
+            $(celDiv).html('<input type="checkbox" name="grid_checkbox'+grid_id[0]+'" class="grid_checkbox" value="'+grid_id[0]+'"/>');
+	} else {
+            $(celDiv).html('')
+        }
+     }
 </script>

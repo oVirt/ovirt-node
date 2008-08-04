@@ -19,8 +19,13 @@
 
 class Permission < ActiveRecord::Base
   belongs_to :pool
+  belongs_to :parent_permission, :class_name => "Permission",
+             :foreign_key => "inherited_from_id"
+  has_many   :child_permissions, :dependent => :destroy,
+             :class_name => "Permission", :foreign_key => "inherited_from_id"
 
-  validates_uniqueness_of :uid, :scope => "pool_id"
+
+  validates_uniqueness_of :uid, :scope => [:pool_id, :inherited_from_id]
 
   ROLE_SUPER_ADMIN = "Super Admin"
   ROLE_ADMIN       = "Administrator"
@@ -68,5 +73,38 @@ class Permission < ActiveRecord::Base
     PRIVILEGES[privilege]
   end
 
-
+  def is_primary?
+    inherited_from_id.nil?
+  end
+  def is_inherited?
+    !is_primary?
+  end
+  def source
+    is_primary? ? "Direct" : "Inherited"
+  end
+  def grid_id
+    id.to_s + "_" + (is_primary? ? "1" : "0")
+  end
+  def update_role(new_role)
+    self.transaction do
+      self.user_role = new_role
+      self.save!
+      child_permissions.each do |permission|
+        permission.user_role = new_role
+        permission.save!
+      end
+    end
+  end
+  def save_with_new_children
+    self.transaction do
+      self.save!
+      pool.all_children.each do |subpool|
+          new_permission = Permission.new({:pool_id     => subpool.id,
+                                           :uid         => uid,
+                                           :user_role   => user_role,
+                                           :inherited_from_id => id})
+          new_permission.save!
+      end
+    end
+  end
 end

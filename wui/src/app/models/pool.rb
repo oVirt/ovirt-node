@@ -71,18 +71,33 @@ class Pool < ActiveRecord::Base
     transaction do
       save!
       move_to_child_of(parent)
+      parent.permissions.each do |permission|
+        new_permission = Permission.new({:pool_id     => id,
+                                         :uid         => permission.uid,
+                                         :user_role   => permission.user_role,
+                                         :inherited_from_id =>
+                                          permission.inherited_from_id.nil? ?
+                                          permission.id :
+                                          permission.inherited_from_id})
+        new_permission.save!
+      end
       yield other_actions if other_actions
     end
   end
 
   acts_as_xapian :texts => [ :name ]
 
-  # this method lists pools with direct permission grants, but does not 
-  # include implied permissions (i.e. subtrees)
-  def self.list_for_user(user, privilege)
-    pools = find(:all, :include => "permissions", 
-                 :conditions => "permissions.uid='#{user}' and 
-                       permissions.user_role in 
+  # this method lists pools with direct permission grants, but by default does
+  #  not include implied permissions (i.e. subtrees)
+  def self.list_for_user(user, privilege, include_indirect = false)
+    if include_indirect
+      inherited_clause = ""
+    else
+      inherited_clause = "and permissions.inherited_from_id is null"
+    end
+    pools = find(:all, :include => "permissions",
+                 :conditions => "permissions.uid='#{user}' #{inherited_clause} and
+                       permissions.user_role in
                        ('#{Permission.roles_for_privilege(privilege).join("', '")}')")
   end
 
@@ -126,12 +141,10 @@ class Pool < ActiveRecord::Base
   end
 
   def has_privilege(user, privilege)
-    traverse_parents do |pool|
-      pool.permissions.find(:first, 
-                            :conditions => "permissions.uid='#{user}' and 
-                         permissions.user_role in 
+    permissions.find(:first,
+                          :conditions => "permissions.uid='#{user}' and
+                         permissions.user_role in
                          ('#{Permission.roles_for_privilege(privilege).join("', '")}')")
-    end
   end
 
   def total_resources

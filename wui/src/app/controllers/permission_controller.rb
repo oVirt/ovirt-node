@@ -59,10 +59,11 @@ class PermissionController < ApplicationController
       flash[:notice] = 'You do not have permission to create this permission record'
       redirect_to_parent
     else
-      if @permission.save
+      begin
+        @permission.save_with_new_children
         render :json => "created User Permissions for  #{@permission.uid}".to_json
-      else
-      # FIXME: need to handle proper error messages w/ ajax
+      rescue
+        # FIXME: need to handle proper error messages w/ ajax
         render :action => 'new'
       end
     end
@@ -79,13 +80,12 @@ class PermissionController < ApplicationController
       Permission.transaction do
         permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
         permissions.each do |permission|
-          permission.user_role = role
-          permission.save!
+          permission.update_role(role) if permission.is_primary?
         end
       end
       render :json => { :object => "permission", :success => true, 
         :alert => "User roles were successfully updated." }
-    rescue 
+    rescue
       render :json => { :object => "permission", :success => false, 
         :alert => "Error updating user roles: #{$!}" }
     end
@@ -101,7 +101,7 @@ class PermissionController < ApplicationController
       Permission.transaction do
         permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
         permissions.each do |permission|
-          permission.destroy
+          permission.destroy if permission.is_primary?
         end
       end
       render :json => { :object => "permission", :success => true, 

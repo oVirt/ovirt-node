@@ -151,7 +151,7 @@ class HardwareController < ApplicationController
 
   def users_json
     json_list(@pool.permissions, 
-              [:id, :uid, :user_role])
+              [:grid_id, :uid, :user_role, :source])
   end
 
   def storage_pools_json

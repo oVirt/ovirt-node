@@ -97,7 +97,7 @@ class ResourcesController < ApplicationController
 
   def users_json
     json_list(@vm_resource_pool.permissions, 
-              [:id, :uid, :user_role])
+              [:grid_id, :uid, :user_role, :source])
   end
 
   def new
