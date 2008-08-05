@@ -10,10 +10,6 @@
 # location of the file containing running process ID
 #MONGREL_PID=/var/run/ovirt-wui/mongrel.pid
 
-# sets ruby on Rails environment / mode of operation
-# http://wiki.rubyonrails.org/rails/pages/Environments
-#RAILS_ENVIRONMENT=production
-
 # user and group under which Rails application runs
 #USER=ovirt
 #GROUP=ovirt

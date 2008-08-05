@@ -8,6 +8,10 @@
 #    ovirt VM manager.
 #
 
+[ -r /etc/sysconfig/ovirt-rails ] && . /etc/sysconfig/ovirt-rails
+
+export RAILS_ENV="${RAILS_ENV:-production}"
+
 DAEMON=/usr/share/ovirt-wui/host-status/host-status.rb
 
 . /etc/init.d/functions

@@ -8,13 +8,15 @@
 #    ovirt VM manager.
 #
 
+[ -r /etc/sysconfig/ovirt-rails ] && . /etc/sysconfig/ovirt-rails
+
 [ -r /etc/sysconfig/ovirt-mongrel-rails ] && . /etc/sysconfig/ovirt-mongrel-rails
 
+RAILS_ENV="${RAILS_ENV:-production}"
 OVIRT_DIR="${OVIRT_DIR:-/usr/share/ovirt-wui}"
 MONGREL_LOG="${MONGREL_LOG:-/var/log/ovirt-wui/mongrel.log}"
 MONGREL_PID="${MONGREL_PID:-/var/run/ovirt-wui/mongrel.pid}"
 MONGREL_LOCKFILE="${MONGREL_LOCKFILE:-/var/lock/subsys/ovirt-wui}"
-RAILS_ENVIRONMENT="${RAILS_ENVIRONMENT:-production}"
 USER="${USER:-ovirt}"
 GROUP="${GROUP:-ovirt}"
 PREFIX="${PREFIX:-/ovirt}"
@@ -29,9 +31,9 @@ RETVAL=0
 start() {
     echo -n "Starting ovirt-mongrel-rails: "
 
-    RAILS_ENV=$RAILS_ENVIRONMENT $REINDEX_PROG
+    RAILS_ENV=$RAILS_ENV $REINDEX_PROG
     $MONGREL_PROG start -c $OVIRT_DIR -l $MONGREL_LOG -P $MONGREL_PID \
-	-a $ADDR -e $RAILS_ENVIRONMENT --user $USER --group $GROUP \
+	-a $ADDR -e $RAILS_ENV --user $USER --group $GROUP \
 	-d --prefix=$PREFIX
     RETVAL=$?
     if [ $RETVAL -eq 0 ] && touch $MONGREL_LOCKFILE ; then

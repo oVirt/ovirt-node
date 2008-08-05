@@ -1,0 +1,3 @@
+# sets ruby on Rails environment / mode of operation
+# http://wiki.rubyonrails.org/rails/pages/Environments
+#RAILS_ENV=production

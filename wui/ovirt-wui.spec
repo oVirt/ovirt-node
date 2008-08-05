@@ -79,6 +79,7 @@ touch %{buildroot}%{_localstatedir}/log/%{name}/host-status.log
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-host-collect %{buildroot}%{_initrddir}
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-mongrel-rails %{buildroot}%{_initrddir}
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-mongrel-rails.sysconf %{buildroot}%{_sysconfdir}/sysconfig/ovirt-mongrel-rails
+%{__install} -Dp -m0755 %{pbuild}/conf/ovirt-rails.sysconf %{buildroot}%{_sysconfdir}/sysconfig/ovirt-rails
 %{__install} -Dp -m0755 %{pbuild}/conf/ovirt-taskomatic %{buildroot}%{_initrddir}
 
 # copy over all of the src directory...
@@ -171,6 +172,7 @@ fi
 %{_initrddir}/ovirt-mongrel-rails
 %{_initrddir}/ovirt-taskomatic
 %config(noreplace) %{_sysconfdir}/sysconfig/ovirt-mongrel-rails
+%config(noreplace) %{_sysconfdir}/sysconfig/ovirt-rails
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %doc
 %attr(-, ovirt, ovirt) %{_localstatedir}/lib/%{name}
