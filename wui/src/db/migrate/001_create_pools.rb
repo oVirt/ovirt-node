@@ -31,7 +31,6 @@ class CreatePools < ActiveRecord::Migration
 
     execute "alter table pools add constraint fk_pool_parent
              foreign key (parent_id) references pools(id)"
-    mp = HardwarePool.create( :name=>'default')
   end
 
   def self.down

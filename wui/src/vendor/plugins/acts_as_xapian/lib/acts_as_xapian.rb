@@ -74,7 +74,8 @@ module ActsAsXapian
         # make the directory for the xapian databases to go in
         db_parent_path = File.join(File.dirname(__FILE__), '../xapiandbs/')
         Dir.mkdir(db_parent_path) unless File.exists?(db_parent_path)
-        raise "Set RAILS_ENV, so acts_as_xapian can find the right Xapian database" if not ENV['RAILS_ENV']
+        #raise "Set RAILS_ENV, so acts_as_xapian can find the right Xapian database" if not ENV['RAILS_ENV']
+        ENV['RAILS_ENV'] = 'production' if not ENV['RAILS_ENV']
         @@db_path = File.join(db_parent_path, ENV['RAILS_ENV'])
 
         # make some things that don't depend on the db
