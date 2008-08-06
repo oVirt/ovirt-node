@@ -32,7 +32,8 @@ class StoragePool < ActiveRecord::Base
 
   validates_presence_of :ip_addr, :hardware_pool_id
 
-  acts_as_xapian :texts => [ :ip_addr, :target, :export_path, :type ]
+  acts_as_xapian :texts => [ :ip_addr, :target, :export_path, :type ],
+                 :terms => [ [ :search_users, 'U', "search_users" ] ]
   ISCSI = "iSCSI"
   NFS   = "NFS"
   STORAGE_TYPES = { ISCSI => "Iscsi",
@@ -60,4 +61,7 @@ class StoragePool < ActiveRecord::Base
     "Storage Pool"
   end
 
+  def search_users
+    hardware_pool.search_users
+  end
 end

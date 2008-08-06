@@ -43,7 +43,8 @@ class Host < ActiveRecord::Base
   acts_as_xapian :texts => [ :hostname, :uuid, :hypervisor_type, :arch ],
                  :values => [ [ :created_at, 0, "created_at", :date ],
                               [ :updated_at, 1, "updated_at", :date ] ],
-                 :terms => [ [ :hostname, 'H', "hostname" ] ]
+                 :terms => [ [ :hostname, 'H', "hostname" ],
+                             [ :search_users, 'U', "search_users" ] ]
 
 
   KVM_HYPERVISOR_TYPE = "KVM"
@@ -88,4 +89,9 @@ class Host < ActiveRecord::Base
   def display_class
     "Host"
   end
+
+  def search_users
+    hardware_pool.search_users
+  end
+
 end

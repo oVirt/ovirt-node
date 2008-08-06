@@ -110,6 +110,7 @@ class HardwareController < ApplicationController
     unless @can_view
       flash[:notice] = 'You do not have permission to view this Hardware Pool: redirecting to top level'
       redirect_to :action => 'list'
+      return
     end
     render :layout => 'selection'    
   end

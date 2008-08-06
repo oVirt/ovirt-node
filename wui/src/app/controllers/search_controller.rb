@@ -56,6 +56,11 @@ class SearchController < ApplicationController
       @models ||= [@model_param]
     end
     @user = get_login_user
+    #filter terms on permissions
+    filtered_terms = "search_users:#{@user}"
+    if @terms and !@terms.empty?
+      filtered_terms = "(#{@terms}) AND #{filtered_terms}"
+    end
 
     @page = params[:page].to_i
     @page ||= 1
@@ -63,12 +68,11 @@ class SearchController < ApplicationController
     @per_page ||= 20
     @offset = (@page-1)*@per_page
     @results = ActsAsXapian::Search.new(@models,
-                                        @terms,
-                                       :offset => @offset,
-                                       :limit => @per_page,
-                                       :sort_by_prefix => nil,
-                                       :collapse_by_prefix => nil)
-    #FIXME filter on permissions
+                                        filtered_terms,
+                                        :offset => @offset,
+                                        :limit => @per_page,
+                                        :sort_by_prefix => nil,
+                                        :collapse_by_prefix => nil)
   end
 
   def results

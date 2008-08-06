@@ -85,7 +85,8 @@ class Pool < ActiveRecord::Base
     end
   end
 
-  acts_as_xapian :texts => [ :name ]
+  acts_as_xapian :texts => [ :name ],
+                 :terms => [ [ :search_users, 'U', "search_users" ] ]
 
   # this method lists pools with direct permission grants, but by default does
   #  not include implied permissions (i.e. subtrees)
@@ -246,6 +247,11 @@ class Pool < ActiveRecord::Base
   def display_class
     get_type_label
   end
+
+  def search_users
+    permissions.collect {|perm| perm.uid}
+  end
+
   protected
   def traverse_parents
     if id

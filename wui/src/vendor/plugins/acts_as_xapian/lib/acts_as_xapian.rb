@@ -523,6 +523,8 @@ module ActsAsXapian
                 value.utc.strftime("%Y%m%d")
             elsif type == :boolean
                 value ? true : false
+            elsif type == :array
+                (value.class == Array) ? value.collect {|x| x.to_s} : value.to_s
             else
                 value.to_s
             end
@@ -549,7 +551,9 @@ module ActsAsXapian
             doc.add_term("I" + doc.data)
             if self.xapian_options[:terms]
               for term in self.xapian_options[:terms]
-                  doc.add_term(term[1] + xapian_value(term[0]))
+                  xapian_value(term[0], :array).each do |val|
+                    doc.add_term(term[1] + val)
+                  end
               end
             end
             if self.xapian_options[:values]

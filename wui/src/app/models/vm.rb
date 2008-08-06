@@ -31,7 +31,8 @@ class Vm < ActiveRecord::Base
   validates_presence_of :uuid, :description, :num_vcpus_allocated,
                         :memory_allocated_in_mb, :memory_allocated, :vnic_mac_addr
 
-  acts_as_xapian :texts => [ :uuid, :description, :vnic_mac_addr, :state ]
+  acts_as_xapian :texts => [ :uuid, :description, :vnic_mac_addr, :state ],
+                 :terms => [ [ :search_users, 'U', "search_users" ] ]
 
   BOOT_DEV_HD          = "hd"
   BOOT_DEV_NETWORK     = "network"
@@ -193,6 +194,11 @@ class Vm < ActiveRecord::Base
   def display_class
     "VM"
   end
+
+  def search_users
+    vm_resource_pool.search_users
+  end
+
   protected
   def validate
     resources = vm_resource_pool.max_resources_for_vm(self)
