@@ -20,7 +20,15 @@
 
 class HardwareController < ApplicationController
 
-  verify :method => :post, :only => [ :destroy, :create, :update ],
+  XML_OPTS  = {
+    :include => [ :storage_pools, :hosts, :quota ]
+  }
+
+  EQ_ATTRIBUTES = [ :name, :parent_id ]
+
+  verify :method => [:post, :put], :only => [ :create, :update ],
+         :redirect_to => { :action => :list }
+  verify :method => [:post, :delete], :only => :destroy,
          :redirect_to => { :action => :list }
 
   before_filter :pre_json, :only => [:vm_pools_json, :users_json, 
@@ -29,13 +37,47 @@ class HardwareController < ApplicationController
                                        :add_storage, :move_storage, 
                                        :create_storage, :delete_storage]
 
+  def index
+    if params[:path]
+      @pools = []
+      pool = HardwarePool.find_by_path(params[:path])
+      @pools << pool if pool
+    else
+      conditions = []
+      EQ_ATTRIBUTES.each do |attr|
+        if params[attr]
+          conditions << "#{attr} = :#{attr}"
+        end
+      end
+
+      @pools = HardwarePool.find(:all,
+                 :conditions => [conditions.join(" and "), params],
+                 :order => "id")
+    end
+
+    respond_to do |format|
+      format.xml { render :xml => @pools.to_xml(XML_OPTS) }
+    end
+  end
 
   def show
-    if params[:ajax]
-      render :layout => 'tabs-and-content'
+    set_perms(@perm_obj)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
+      respond_to do |format|
+        format.html { redirect_to :controller => "dashboard" }
+        format.xml { head :forbidden }
+      end
+      return
     end
-    if params[:nolayout]
-      render :layout => false
+    respond_to do |format|
+      format.html {
+        render :layout => 'tabs-and-content' if params[:ajax]
+        render :layout => false if params[:nolayout]
+      }
+      format.xml {
+        render :xml => @pool.to_xml(XML_OPTS)
+      }
     end
   end
   
@@ -226,15 +268,29 @@ class HardwareController < ApplicationController
     resource_ids = resource_ids_str.split(",").collect {|x| x.to_i} if resource_ids_str
     begin
       @pool.create_with_resources(@parent, resource_type, resource_ids)
-      reply = { :object => "pool", :success => true, 
-                        :alert => "Hardware Pool was successfully created." }
-      reply[:resource_type] = resource_type if resource_type
-      render :json => reply
+      respond_to do |format|
+        format.html {
+          reply = { :object => "pool", :success => true,
+            :alert => "Hardware Pool was successfully created." }
+          reply[:resource_type] = resource_type if resource_type
+          render :json => reply
+        }
+        format.xml {
+          render :xml => @pool.to_xml(XML_OPTS),
+          :status => :created,
+          :location => hardware_pool_url(@pool)
+        }
+      end
     rescue
-      render :json => { :object => "pool", :success => false, 
-                        :errors => @pool.errors.localize_error_messages.to_a  }
+      respond_to do |format|
+        format.json {
+          render :json => { :object => "pool", :success => false,
+            :errors => @pool.errors.localize_error_messages.to_a  }
+        }
+        format.xml  { render :xml => @pool.errors,
+          :status => :unprocessable_entity }
+      end
     end
-
   end
 
   def edit
@@ -242,13 +298,51 @@ class HardwareController < ApplicationController
   end
 
   def update
+    if params[:hardware_pool]
+      # FIXME: For the REST API, we allow moving hosts/storage through
+      # update.  It makes that operation convenient for clients, though makes
+      # the implementation here somewhat ugly.
+      [:hosts, :storage_pools].each do |k|
+        objs = params[:hardware_pool].delete(k)
+        ids = objs.reject{ |obj| obj[:hardware_pool_id] == @pool.id}.
+          collect{ |obj| obj[:id] }
+        if ids.size > 0
+          # FIXME: use self.move_hosts/self.move_storage
+          if k == :hosts
+            @pool.move_hosts(ids, @pool.id)
+          else
+            @pool.move_storage(ids, @pool.id)
+          end
+        end
+      end
+      # FIXME: HTML views should use :hardware_pool
+      params[:pool] = params.delete(:hardware_pool)
+    end
+
     begin
       @pool.update_attributes!(params[:pool])
-      render :json => { :object => "pool", :success => true, 
-                        :alert => "Hardware Pool was successfully modified." }
+      respond_to do |format|
+        format.json {
+          render :json => { :object => "pool", :success => true,
+            :alert => "Hardware Pool was successfully modified." }
+        }
+        format.xml {
+          render :xml => @pool.to_xml(XML_OPTS),
+          :status => :created,
+          :location => hardware_pool_url(@pool)
+        }
+      end
     rescue
-      render :json => { :object => "pool", :success => false, 
-                        :errors => @pool.errors.localize_error_messages.to_a}
+      respond_to do |format|
+        format.json {
+          render :json => { :object => "pool", :success => false,
+            :errors => @pool.errors.localize_error_messages.to_a}
+        }
+        format.xml {
+          render :xml => @pool.errors,
+          :status => :unprocessable_entity
+        }
+      end
     end
   end
 
@@ -340,19 +434,27 @@ class HardwareController < ApplicationController
     if not(parent)
       alert="You can't delete the top level Hardware pool."
       success=false
+      status=:method_not_allowed
     elsif not(@pool.children.empty?)
       alert = "You can't delete a Pool without first deleting its children."
       success=false
+      status=:conflict
     else
       if @pool.move_contents_and_destroy
         alert="Hardware Pool was successfully deleted."
         success=true
+        status=:ok
       else
         alert="Failed to delete hardware pool."
         success=false
+        status=:internal_server_error
       end
     end
-    render :json => { :object => "pool", :success => success, :alert => alert }
+    respond_to do |format|
+      format.json { render :json => { :object => "pool", :success => success,
+                                      :alert => alert } }
+      format.xml { head status }
+    end
   end
 
   private
@@ -364,8 +466,15 @@ class HardwareController < ApplicationController
     @current_pool_id=@parent.id
   end
   def pre_create
-    @pool = HardwarePool.new(params[:pool])
-    @parent = Pool.find(params[:parent_id])
+    # FIXME: REST and browsers send params differently. Should be fixed
+    # in the views
+    if params[:pool]
+      @pool = HardwarePool.new(params[:pool])
+      @parent = Pool.find(params[:parent_id])
+    else
+      @pool = HardwarePool.new(params[:hardware_pool])
+      @parent = Pool.find(params[:hardware_pool][:parent_id])
+    end
     @perm_obj = @parent
     @current_pool_id=@parent.id
   end

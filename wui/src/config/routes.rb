@@ -50,5 +50,9 @@ ActionController::Routing::Routes.draw do |map|
   # REST work out of the box, and use these as the default routes
   map.resources :hosts, :controller => 'host'
   map.resources :storage_pools, :controller => 'storage'
+  map.resources :hardware_pools, :controller => 'hardware' do |hardware_pools|
+    hardware_pools.resources :hosts, :controller => 'host'
+    hardware_pools.resources :storage_pools, :controller => 'storage'
+  end
 
 end
