@@ -53,7 +53,7 @@ $RPM perl perl-libs perl-Module-Pluggable perl-version \
 
 # Remove additional RPMs forcefully
 $RPM gamin pm-utils kbd libuser passwd usermode \
-    openssh-clients vbetool ConsoleKit hdparm \
+    vbetool ConsoleKit hdparm \
     efibootmgr krb5-workstation linux-atm-libs fedora-release-notes \
     slang psmisc gdbm cryptsetup-luks pciutils mtools syslinux db4 \
     wireless-tools radeontool cracklib-dicts cracklib
@@ -115,23 +115,29 @@ blacklist="/boot /etc/alsa /etc/pki /usr/share/hwdata/MonitorsDB \
     /usr/share/hwdata/videodrivers /usr/share/fedora-release \
     /usr/share/tabset /usr/share/libvirt /usr/share/augeas/lenses/tests \
     /usr/share/tc /usr/share/emacs /usr/share/info /usr/kerberos \
-    /usr/src /usr/etc /usr/games /usr/include /usr/local /usr/lib{,64}/python2.5 \
-    /usr/{,lib64}/tc /usr/lib{,64}/tls /usr/lib{,64}/sse2 /usr/lib{,64}/pkgconfig \
-    /usr/lib{,64}/nss /usr/lib{,64}/X11 /usr/lib{,64}/games /usr/lib{,64}/alsa-lib \
-    /usr/lib{,64}/fs/reiserfs /usr/lib{,64}/krb5 /usr/lib{,64}/hal /usr/lib{,64}/gio \
-    /usr/bin/hal-device /usr/bin/hal-disable-polling \
+    /usr/src /usr/etc /usr/games /usr/include /usr/local \
+    /usr/sbin/dell*"
+blacklist_lib="/usr/lib{,64}/python2.5 /usr/lib{,64}/gconv \
+    /usr/{,lib64}/tc /usr/lib{,64}/tls /usr/lib{,64}/sse2 \
+    /usr/lib{,64}/pkgconfig /usr/lib{,64}/nss /usr/lib{,64}/X11 \
+    /usr/lib{,64}/games /usr/lib{,64}/alsa-lib /usr/lib{,64}/fs/reiserfs \
+    /usr/lib{,64}/krb5 /usr/lib{,64}/hal /usr/lib{,64}/gio \
+    /lib/terminfo/d /lib/terminfo/v /lib/terminfo/a \
+    /lib/firmware /usr/lib/locale /usr/lib/syslinux"
+blacklist_pango="/usr/lib{,64}/pango /usr/lib{,64}/libpango* \
+    /etc/pango /usr/bin/pango*"
+blacklist_hal="/usr/bin/hal-device /usr/bin/hal-disable-polling \
     /usr/bin/hal-find-by-capability /usr/bin/hal-find-by-property \
     /usr/bin/hal-is-caller-locked-out /usr/bin/hal-is-caller-privileged \
-    /usr/bin/hal-lock /usr/bin/hal-set-property /usr/bin/hal-setup-keymap \
-    /usr/sbin/dell* /lib/terminfo/d /lib/terminfo/v /lib/terminfo/a \
-    /lib/firmware /usr/lib/locale /usr/lib/syslinux /usr/lib{,64}/gconv \
-    /usr/lib{,64}/pango /usr/lib{,64}/libpango* /etc/pango /usr/bin/pango*"
-
+    /usr/bin/hal-lock /usr/bin/hal-set-property /usr/bin/hal-setup-keymap"
+blacklist_ssh="/usr/bin/sftp /usr/bin/slogin /usr/bin/ssh /usr/bin/ssh-add \
+    /usr/bin/ssh-agent /usr/bin/ssh-copy-id /usr/bin/ssh-keyscan"
 docs_blacklist="/usr/share/omf /usr/share/gnome /usr/share/doc \
     /usr/share/locale /usr/share/libthai /usr/share/man /usr/share/terminfo \
     /usr/share/X11 /usr/share/i18n"
 
-$RM $blacklist $docs_blacklist
+$RM $blacklist $blacklist_lib $blacklist_pango $blacklist_hal $blacklist_ssh \
+    $docs_blacklist
 
 echo "Cleanup empty directory structures in /usr/share"
 find /usr/share -type d -exec rmdir {} \; > /dev/null 2>&1
