@@ -49,5 +49,6 @@ ActionController::Routing::Routes.draw do |map|
   # FIXME: Eventually, we want to rename the controllers in a way that makes
   # REST work out of the box, and use these as the default routes
   map.resources :hosts, :controller => 'host'
+  map.resources :storage_pools, :controller => 'storage'
 
 end

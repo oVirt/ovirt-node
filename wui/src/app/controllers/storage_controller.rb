@@ -19,17 +19,25 @@
 
 class StorageController < ApplicationController
 
+  EQ_ATTRIBUTES = [ :ip_addr, :export_path, :target,
+                    :hardware_pool_id ]
+
   before_filter :pre_pool_admin, :only => [:refresh]
   before_filter :pre_new2, :only => [:new2]
   before_filter :pre_json, :only => [:storage_volumes_json]
 
   def index
     list
-    render :action => 'list'
+    respond_to do |format|
+      format.html { render :action => 'list' }
+      format.xml { render :xml => @storage_pools.to_xml }
+    end
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, :create, :update ],
+  verify :method => [:post, :put], :only => [ :create, :update ],
+         :redirect_to => { :action => :list }
+  verify :method => [:post, :delete], :only => :destroy,
          :redirect_to => { :action => :list }
 
   def list
@@ -47,7 +55,14 @@ class StorageController < ApplicationController
       end
     else
       #no permissions here yet -- do we disable raw volume list
-      @storage_pools = StoragePool.find(:all)
+      conditions = []
+      EQ_ATTRIBUTES.each { |attr|
+        conditions << "#{attr} = :#{attr}" if params[attr]
+      }
+
+      @storage_pools = StoragePool.find(:all,
+              :conditions => [conditions.join(" and "), params],
+              :order => "id")
     end
   end
 
@@ -56,9 +71,16 @@ class StorageController < ApplicationController
     set_perms(@storage_pool.hardware_pool)
     unless @can_view
       flash[:notice] = 'You do not have permission to view this storage pool: redirecting to top level'
-      redirect_to :controller => 'dashboard'
+      respond_to do |format|
+        format.html { redirect_to :controller => 'dashboard' }
+        format.xml { head :forbidden }
+      end
+    else
+      respond_to do |format|
+        format.html { render :layout => 'selection' }
+        format.xml { render :xml => @storage_pool.to_xml }
+      end
     end
-    render :layout => 'selection'    
   end
 
   def storage_volumes_json
@@ -113,12 +135,24 @@ class StorageController < ApplicationController
         @storage_pool.save!
         insert_refresh_task
       end
-      render :json => { :object => "storage_pool", :success => true, 
-                        :alert => "Storage Pool was successfully created." }
+      respond_to do |format|
+        format.json { render :json => { :object => "storage_pool",
+            :success => true,
+            :alert => "Storage Pool was successfully created." } }
+        format.xml { render :xml => @storage_pool,
+            :status => :created,
+            :location => storage_pool_url(@storage_pool)
+        }
+      end
     rescue
       # FIXME: need to distinguish pool vs. task save errors (but should mostly be pool)
-      render :json => { :object => "storage_pool", :success => false, 
-                        :errors => @storage_pool.errors.localize_error_messages.to_a  }
+      respond_to do |format|
+        format.json {
+          render :json => { :object => "storage_pool", :success => false,
+            :errors => @storage_pool.errors.localize_error_messages.to_a  } }
+        format.xml { render :xml => @storage_pool.errors,
+          :status => :unprocessable_entity }
+      end
     end
   end
 
@@ -213,7 +247,11 @@ class StorageController < ApplicationController
       alert="Failed to delete storage pool."
       success=false
     end
-    render :json => { :object => "storage_pool", :success => success, :alert => alert }
+    respond_to do |format|
+      format.json { render :json => { :object => "storage_pool",
+          :success => success, :alert => alert } }
+      format.xml { head (success ? :ok : :method_not_allowed) }
+    end
   end
 
   def pre_new
@@ -233,7 +271,11 @@ class StorageController < ApplicationController
     authorize_admin
   end
   def pre_create
-    @storage_pool = StoragePool.factory(params[:storage_type], params[:storage_pool])
+    pool = params[:storage_pool]
+    unless type = params[:storage_type]
+      type = pool.delete(:storage_type)
+    end
+    @storage_pool = StoragePool.factory(type, pool)
     @perm_obj = @storage_pool.hardware_pool
     @redir_controller = @storage_pool.hardware_pool.get_controller
   end
