@@ -2,7 +2,7 @@
 
 <% hosts_per_page = 40 %>
 <div id="<%= table_id %>_div">
-<%= '<form id="#{table_id}_form">' if checkboxes %>
+<%= "<form id=\"#{table_id}_form\">" if checkboxes %>
 <table id="<%= table_id %>" style="display:none"></table>
 <%= '</form>' if checkboxes %>
 </div>
