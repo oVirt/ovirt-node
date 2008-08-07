@@ -59,7 +59,7 @@ cleanup=0
 version_type=git
 bridge=
 err=0 help=0
-while getopts wnp:sahcv:e: c; do
+while getopts wnpsahcv:e: c; do
     case $c in
         w) update_wui=1;;
         n) update_node=1;;
