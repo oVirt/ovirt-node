@@ -310,7 +310,7 @@ class HostBrowser
         @keytab_filename = @keytab_dir + outfile
 
         # TODO need a way to test this portion
-        unless defined? TESTING || File.exists?(@keytab_filename)
+        unless (defined? TESTING) || File.exists?(@keytab_filename)
             # TODO replace with Kr5Auth when it supports admin actions
             puts "Writing keytab file: #{@keytab_filename}" unless defined?(TESTING)
             kadmin_local('addprinc -randkey ' + libvirt_princ)
