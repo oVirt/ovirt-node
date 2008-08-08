@@ -247,6 +247,7 @@ if [ -n "$bridge" ]; then
     echo "Adding new bridge $bridge"
     TMPBRCTL=$(mktemp) || exit 1
     cat > $TMPBRCTL << EOF
+brctl setfd $BRIDGENAME 0
 brctl addif $BRIDGENAME $bridge # $BRIDGENAME
 ifconfig $bridge up # $BRIDGENAME
 EOF
