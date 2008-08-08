@@ -14,7 +14,7 @@ repos.ks: repos.ks.in
 
 build: ovirt.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
 	./rpm-compare.py GE 0 livecd-tools 017.1 1
-	./ovirt-cd > ovirt-cd.log 2>&1
+	./ovirt-cd
 
 tar: clean build
 	mv $$(cat iso-file) ovirt.iso
