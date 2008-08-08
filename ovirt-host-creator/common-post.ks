@@ -99,7 +99,7 @@ driver_mods="drivers/auxdisplay drivers/net/appletalk \
 
 misc_mods="drivers/bluetooth drivers/firewire drivers/i2c drivers/isdn \
        drivers/media drivers/misc drivers/leds drivers/mtd drivers/w1 sound \
-       drivers/input drivers/pcmcia drivers/scsi/pcmcia crypto lib"
+       drivers/input drivers/pcmcia drivers/scsi/pcmcia"
 
 for mods in $fs_mods $net_mods $misc_mods $driver_mods ; do
     $RM $MODULES/$mods
