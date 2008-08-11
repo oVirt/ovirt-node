@@ -219,7 +219,7 @@ class HostBrowser
                     "hostname"        => host_info['HOSTNAME'],
                     "hypervisor_type" => host_info['HYPERVISOR_TYPE'],
                     "arch"            => host_info['ARCH'],
-                    "memory_in_mb"    => host_info['MEMSIZE'],
+                    "memory"          => host_info['MEMSIZE'],
                     "is_disabled"     => 0,
                     "hardware_pool"   => HardwarePool.get_default_pool,
                     # Let host-status mark it available when it
@@ -232,7 +232,7 @@ class HostBrowser
             host.uuid         = host_info['UUID']
             host.hostname     = host_info['HOSTNAME']
             host.arch         = host_info['ARCH']
-            host.memory_in_mb = host_info['MEMSIZE']
+            host.memory       = host_info['MEMSIZE']
         end
 
         # delete an existing CPUs and create new ones based on the data
