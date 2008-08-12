@@ -128,17 +128,6 @@ def findVM(task, fail_on_nil_host_id = true)
   return vm
 end
 
-def findHost(task, host_id)
-  host = Host.find(:first, :conditions => [ "id = ?", host_id])
-
-  if host == nil
-    # Hm, we didn't find the host_id.  Seems odd.  Return a failure
-    raise "Could not find host_id " + host_id
-  end
-
-  return host
-end
-
 def setVmShutdown(vm)
   vm.host_id = nil
   vm.memory_used = nil
@@ -189,7 +178,7 @@ def shutdown_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    host = findHost(task, vm.host_id)
+    host = findHost(vm.host_id)
 
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookup_domain_by_uuid(vm.uuid)
@@ -200,10 +189,21 @@ def shutdown_vm(task)
     # of problems.  Needs more thought
     #dom.shutdown
     dom.destroy
-    dom.undefine
+
+    begin
+      dom.undefine
+    rescue
+      # undefine can fail, for instance, if we live migrated from A -> B, and
+      # then we are shutting down the VM on B (because it only has "transient"
+      # XML).  Therefore, just ignore undefine errors so we do the rest
+      # FIXME: we really should have a marker in the database somehow so that
+      # we can tell if this domain was migrated; that way, we can tell the
+      # difference between a real undefine failure and one because of migration
+    end
+
+    teardown_storage_pools(conn)
+
     conn.close
-    # FIXME: hm.  We probably want to undefine the storage pool that this host
-    # was using if and only if it's not in use by another VM.
   rescue => ex
     setVmState(vm, vm_orig_state)
     raise ex
@@ -229,7 +229,6 @@ def start_vm(task)
   end
 
   # FIXME: Validate that the VM is still within quota
-  #vm.validate
 
   vm_orig_state = vm.state
   setVmState(vm, Vm::STATE_STARTING)
@@ -246,93 +245,17 @@ def start_vm(task)
 
     # OK, now that we found the VM, go looking in the hardware_pool
     # hosts to see if there is a host that will fit these constraints
-    host = nil
-
-    vm.vm_resource_pool.get_hardware_pool.hosts.each do |host|
-      if host.num_cpus >= vm.num_vcpus_allocated \
-        and host.memory >= vm.memory_allocated \
-        and not host.is_disabled
-        host = curr
-        break
-      end
-    end
-
-    if host == nil
-      # we couldn't find a host that matches this description; report ERROR
-      raise "No host matching VM parameters could be found"
-    end
+    host = findHostSLA(vm)
 
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
 
-    # here, build up a list of already defined pools.  We'll use it
-    # later to see if we need to define new pools for the storage or just
-    # keep using existing ones
-
-    defined_pools = []
-    all_storage_pools(conn).each do |remote_pool_name|
-      tmppool = conn.lookup_storage_pool_by_name(remote_pool_name)
-      defined_pools << tmppool
-    end
-
-    storagedevs = []
-    vm.storage_volumes.each do |volume|
-      # here, we need to iterate through each volume and possibly attach it
-      # to the host we are going to be using
-      storage_pool = volume.storage_pool
-
-      if storage_pool == nil
-        # Hum.  Specified by the VM description, but not in the storage pool?
-        # continue on and hope for the best
-        next
-      end
-
-      if storage_pool[:type] == "IscsiStoragePool"
-        thisstorage = Iscsi.new(storage_pool.ip_addr, storage_pool[:target])
-      elsif storage_pool[:type] == "NfsStoragePool"
-        thisstorage = NFS.new(storage_pool.ip_addr, storage_pool.export_path)
-      else
-        # Hm, a storage type we don't understand; skip it
-        next
-      end
-
-      thepool = nil
-      defined_pools.each do |pool|
-         doc = Document.new(pool.xml_desc(0))
-         root = doc.root
-
-         if thisstorage.xmlequal?(doc.root)
-           thepool = pool
-           break
-         end
-      end
-
-      if thepool == nil
-        thepool = conn.define_storage_pool_xml(thisstorage.getxml, 0)
-        thepool.build(0)
-        thepool.create(0)
-      elsif thepool.info.state == Libvirt::StoragePool::INACTIVE
-        # only try to start the pool if it is currently inactive; in all other
-        # states, assume it is already running
-        thepool.create(0)
-      end
-
-      storagedevs << thepool.lookup_volume_by_name(volume.read_attribute(thisstorage.db_column)).path
-    end
-
-    conn.close
-
-    if storagedevs.length > 4
-      raise "Too many storage volumes; maximum is 4"
-    end
-
-    # OK, we found a host that will work; now let's build up the XML
+    storagedevs = connect_storage_pools(conn, vm)
 
     # FIXME: get rid of the hardcoded bridge
     xml = create_vm_xml(vm.description, vm.uuid, vm.memory_allocated,
                         vm.memory_used, vm.num_vcpus_allocated, vm.boot_device,
                         vm.vnic_mac_addr, "ovirtbr0", storagedevs)
 
-    conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.define_domain_xml(xml.to_s)
     dom.create
 
@@ -373,7 +296,7 @@ def save_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    host = findHost(task, vm.host_id)
+    host = findHost(vm.host_id)
 
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookup_domain_by_uuid(vm.uuid)
@@ -416,7 +339,7 @@ def restore_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    host = findHost(task, vm.host_id)
+    host = findHost(vm.host_id)
 
     # FIXME: we should probably go out to the host and check what it thinks
     # the state is
@@ -458,7 +381,7 @@ def suspend_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    host = findHost(task, vm.host_id)
+    host = findHost(vm.host_id)
 
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookup_domain_by_uuid(vm.uuid)
@@ -498,7 +421,7 @@ def resume_vm(task)
 
   begin
     # OK, now that we found the VM, go looking in the hosts table
-    host = findHost(task, vm.host_id)
+    host = findHost(vm.host_id)
 
     conn = Libvirt::open("qemu+tcp://" + host.hostname + "/system")
     dom = conn.lookup_domain_by_uuid(vm.uuid)
@@ -519,7 +442,18 @@ def update_state_vm(task)
   # in.  So if a vm that we thought was stopped is running, this returns nil
   # and we don't update any information about it.  The tricky part
   # is that we're still not sure what to do in this case :).  - Ian
-  vm = findVM(task)
+  #
+  # Actually for migration it is necessary that it be able to update
+  # the host and state of the VM once it is migrated.
+  vm = findVM(task, fail_on_nil_host_id = false)
+  if vm == nil
+    raise "VM id " + task.vm_id + "not found"
+  end
+
+  if vm.host_id == nil
+    vm.host_id = task.host_id
+  end
+
 
   vm_effective_state = Vm::EFFECTIVE_STATE[vm.state]
   task_effective_state = Vm::EFFECTIVE_STATE[task.args]
@@ -533,4 +467,75 @@ def update_state_vm(task)
     vm.save
     puts "Updated state to " + task.args
   end
+end
+
+def migrate(vm, dest = nil)
+  if vm.state == Vm::STATE_STOPPED
+    raise "Cannot migrate stopped domain"
+  elsif vm.state == Vm::STATE_SUSPENDED
+    raise "Cannot migrate suspended domain"
+  elsif vm.state == Vm::STATE_SAVED
+    raise "Cannot migrate saved domain"
+  end
+
+  vm_orig_state = vm.state
+  setVmState(vm, Vm::STATE_MIGRATING)
+
+  begin
+    src_host = findHost(vm.host_id)
+    unless dest.nil? or dest.empty?
+      if dest.to_i == vm.host_id
+        raise "Cannot migrate from host " + src_host.hostname + " to itself!"
+      end
+      dst_host = findHost(dest.to_i)
+    else
+      dst_host = findHostSLA(vm)
+    end
+
+    src_conn = Libvirt::open("qemu+tcp://" + src_host.hostname + "/system")
+    dst_conn = Libvirt::open("qemu+tcp://" + dst_host.hostname + "/system")
+
+    connect_storage_pools(dst_conn, vm)
+
+    dom = src_conn.lookup_domain_by_uuid(vm.uuid)
+    dom.migrate(dst_conn, Libvirt::Domain::MIGRATE_LIVE)
+
+    # if we didn't raise an exception, then the migration was successful.  We
+    # still have a pointer to the now-shutdown domain on the source side, so
+    # undefine it
+    begin
+      dom.undefine
+    rescue
+      # undefine can fail, for instance, if we live migrated from A -> B, and
+      # then we are shutting down the VM on B (because it only has "transient"
+      # XML).  Therefore, just ignore undefine errors so we do the rest
+      # FIXME: we really should have a marker in the database somehow so that
+      # we can tell if this domain was migrated; that way, we can tell the
+      # difference between a real undefine failure and one because of migration
+    end
+
+    teardown_storage_pools(src_conn)
+    dst_conn.close
+    src_conn.close
+  rescue => ex
+    # FIXME: ug.  We may have open connections that we need to close; not
+    # sure how to handle that
+    setVmState(vm, vm_orig_state)
+    raise ex
+  end
+
+  setVmState(vm, Vm::STATE_RUNNING)
+  vm.host_id = dst_host.id
+  vm.save
+end
+
+def migrate_vm(task)
+  puts "migrate_vm"
+
+  # here, we are given an id for a VM to migrate; we have to lookup which
+  # physical host it is running on
+
+  vm = findVM(task)
+
+  migrate(vm, task.args)
 end

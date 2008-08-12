@@ -63,9 +63,9 @@ end
 
 require 'task_vm'
 require 'task_storage'
+require 'task_host'
 
 loop do
-  first = true
   tasks = Array.new
   begin
     tasks = Task.find(:all, :conditions => [ "state = ?", Task::STATE_QUEUED ])
@@ -86,11 +86,10 @@ loop do
     end
   end
   tasks.each do |task|
-    if first
-      # make sure we get our credentials up-front
-      get_credentials
-      first = false
-    end
+    # make sure we get our credentials up-front
+    get_credentials
+
+    task.time_started = Time.now
 
     state = Task::STATE_FINISHED
     begin
@@ -103,7 +102,9 @@ loop do
       when VmTask::ACTION_SAVE_VM then save_vm(task)
       when VmTask::ACTION_RESTORE_VM then restore_vm(task)
       when VmTask::ACTION_UPDATE_STATE_VM then update_state_vm(task)
+      when VmTask::ACTION_MIGRATE_VM then migrate_vm(task)
       when StorageTask::ACTION_REFRESH_POOL then refresh_pool(task)
+      when HostTask::ACTION_CLEAR_VMS then clear_vms_host(task)
       else
         puts "unknown task " + task.action
         state = Task::STATE_FAILED

@@ -58,7 +58,9 @@ end
 # connects to the db in here
 require 'dutils'
 
-def check_state(vm, dom_info)
+def check_state(vm, dom_info, host)
+  puts 'checking state of vm', vm.description
+
   case dom_info.state
 
   when Libvirt::Domain::NOSTATE, Libvirt::Domain::SHUTDOWN,
@@ -66,17 +68,17 @@ def check_state(vm, dom_info)
     if Vm::RUNNING_STATES.include?(vm.state)
       # OK, the host thinks this VM is off, while the database thinks it
       # is running; we have to kick taskomatic
-      kick_taskomatic(Vm::STATE_STOPPED, vm)
+      kick_taskomatic(Vm::STATE_STOPPED, vm, host.id)
     end
   when Libvirt::Domain::RUNNING, Libvirt::Domain::BLOCKED then
     if not Vm::RUNNING_STATES.include?(vm.state)
       # OK, the host thinks this VM is running, but it's not marked as running
       # in the database; kick taskomatic
-      kick_taskomatic(Vm::STATE_RUNNING, vm)
+      kick_taskomatic(Vm::STATE_RUNNING, vm, host.id)
     end
   when Libvirt::Domain::PAUSED then
     if vm.state != Vm::STATE_SUSPENDING and vm.state != Vm::STATE_SUSPENDED
-      kick_taskomatic(Vm::STATE_SUSPENDED, vm)
+      kick_taskomatic(Vm::STATE_SUSPENDED, vm, host.id)
     end
   else
     puts "Unknown vm state...skipping"
@@ -84,13 +86,14 @@ def check_state(vm, dom_info)
 end
 
 
-def kick_taskomatic(msg, vm)
+def kick_taskomatic(msg, vm, host_id = nil)
   print "Kicking taskomatic, state is %s\n" % msg
   task = VmTask.new
   task.user = "host-status"
   task.action = VmTask::ACTION_UPDATE_STATE_VM
   task.state = Task::STATE_QUEUED
   task.args = msg
+  task.host_id = host_id
   task.created_at = Time.now
   task.time_started = Time.now
   task.vm_id = vm.id
@@ -172,7 +175,7 @@ def check_status(host)
       next
     end
 
-    check_state(vm, info)
+    check_state(vm, info, host)
   end
 
   # Now we get a list of all vms that should be on this system and see if
@@ -189,7 +192,7 @@ def check_status(host)
       next
     end
     info = dom.info
-    check_state(vm, info)
+    check_state(vm, info, host)
 
     conn.close
 
