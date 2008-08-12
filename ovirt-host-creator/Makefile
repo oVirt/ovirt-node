@@ -13,8 +13,8 @@ repos.ks: repos.ks.in
 	sed "s/@@ARCH@@/$(ARCH)/" repos.ks.in > repos.ks
 
 build: ovirt.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
-	./rpm-compare.py GE 0 livecd-tools 017.1 1
-	./ovirt-cd
+	../common/rpm-compare.py GE 0 livecd-tools 017.1 1
+	./ovirt-cd $(YUMCACHE)
 
 tar: clean build
 	mv $$(cat iso-file) ovirt.iso

@@ -20,8 +20,12 @@
 PATH=/sbin:/bin:/usr/bin
 
 KICKSTART=ovirt.ks
+CACHE=
+if [ -n "$1" ]; then
+  CACHE=--cache=$1
+fi
 
 LABEL=ovirt-`date +%Y%m%d%H%M`
-livecd-creator --skip-minimize -c $KICKSTART -f $LABEL 1>&2 &&
+livecd-creator $CACHE --skip-minimize -c $KICKSTART -f $LABEL 1>&2 &&
 
 echo $LABEL.iso > iso-file

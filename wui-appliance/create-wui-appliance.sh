@@ -18,9 +18,10 @@ imgdir=$IMGDIR_DEFAULT
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-c] [-d image_dir] [-k kickstart] [-e eth]
-  -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
+Usage: $ME [-c] [-d image_dir] [-y yumcachedir] [-k kickstart] [-e eth]
   -c: compress the image (qcow2 compressed)
+  -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
+  -y: YUM cache directory to use
   -k: appliance kickstart file
   -e: ethernet device to use as bridge (i.e. eth1)
   -h: display this help and exit
@@ -31,10 +32,12 @@ err=0 help=0
 compress=0
 bridge=
 kickstart=
-while getopts :d:k:he: c; do
+yumcache=
+while getopts :cd:y:k:e:h c; do
     case $c in
-        d) imgdir=$OPTARG;;
         c) compress=1;;
+        d) imgdir=$OPTARG;;
+        y) yumcache=--cache=$OPTARG;;
         k) kickstart=$OPTARG;;
         e) bridge=$OPTARG;;
         h) help=1;;
@@ -43,6 +46,9 @@ while getopts :d:k:he: c; do
         *) err=1; warn "internal error: \`-$OPTARG' not handled";;
     esac
 done
+if [ -n "$1" ]; then
+  name=$1
+fi
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 
@@ -275,15 +281,16 @@ virsh undefine $NAME > /dev/null 2>&1
 if [ -n "$kickstart" ]; then
     mkdir -p tmp
     set -e
-    appliance-creator --config $kickstart --name $NAME --tmpdir $(pwd)/tmp
+    appliance-creator --config $kickstart --name $NAME \
+      --tmpdir=$(pwd)/tmp $yumcache
     # FIXME add --compress option to appliance-creator
     if [ $compress -ne 0 ]; then
         printf "Compressing the image..."
         qemu-img convert -c $NAME-sda.raw -O qcow2 "$imgdir/$IMGNAME"
-        rm ovirt-appliance-sda.raw
+        rm $NAME-sda.raw
     else
         printf "Moving the image..."
-        mv ovirt-appliance-sda.raw "$imgdir/$IMGNAME"
+        mv $NAME-sda.raw "$imgdir/$IMGNAME"
         restorecon -v "$imgdir/$IMGNAME"
     fi
     echo done
