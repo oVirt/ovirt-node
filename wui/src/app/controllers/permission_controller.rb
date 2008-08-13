@@ -61,10 +61,11 @@ class PermissionController < ApplicationController
     else
       begin
         @permission.save_with_new_children
-        render :json => "created User Permissions for  #{@permission.uid}".to_json
+        render :json => { :object => "permission", :success => true,
+                :alert => "created User Permissions for  #{@permission.uid}." }
       rescue
-        # FIXME: need to handle proper error messages w/ ajax
-        render :action => 'new'
+        render :json => { :object => "permission", :success => false,
+                          :alert => "Error adding user: #{$!}" }
       end
     end
   end
