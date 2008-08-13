@@ -26,8 +26,10 @@ die() { warn "$@"; exit 1; }
 echo "Running oVirt Autobuild"
 
 SSHKEY=~/.ssh/id_autobuild
+remote_target="root@192.168.50.2"
 ssh_cmd="ssh -i $SSHKEY -o StrictHostKeyChecking=no \
-             -o UserKnownHostsFile=/dev/null root@192.168.50.2"
+             -o UserKnownHostsFile=/dev/null $remote_target"
+scp_cmd="scp -i $SSHKEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
 # implant Autobuild SSH key into appliance
 if [ ! -r $SSHKEY ]; then
@@ -64,6 +66,18 @@ for i in $(seq 1 60); do
    $ssh_cmd exit && break
    sleep 10
 done
+
+SELENIUM_RB=/var/selenium/selenium.rb
+if [ -f $SELENIUM_RB ]; then
+  $scp_cmd $SELENIUM_RB $remote_target:/usr/share/ovirt-wui/test/
+else
+  echo "$SELENIUM_RB not found, will not run interface tests"
+fi
+
+$ssh_cmd \
+  "sed -i -e \"s/KrbMethodNegotiate on/KrbMethodNegotiate off/g\" \
+          -e \"s/KrbMethodK5Passwd off/KrbMethodK5Passwd on/g\" \
+          /etc/httpd/conf.d/ovirt-wui.conf"
 
 echo "Running the wui tests"
 $ssh_cmd \
