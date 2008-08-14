@@ -98,8 +98,8 @@ set -e
 echo -n "appliance-tools-002-1 or newer "
 $COMMON/rpm-compare.py GE 0 appliance-tools 002 1
 echo ok
-echo -n "livecd-tools-017.1-2ovirt or newer "
-$COMMON/rpm-compare.py GE 0 livecd-tools 017.1 2ovirt
+echo -n "livecd-tools-017.1-2ovirt1 or newer "
+$COMMON/rpm-compare.py GE 0 livecd-tools 017.1 2ovirt1
 echo ok
 echo -n "libvirt-0.4.4-2ovirt2 or newer "
 $COMMON/rpm-compare.py GE 0 libvirt 0.4.4 2ovirt2
