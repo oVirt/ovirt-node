@@ -223,6 +223,7 @@ class VmController < ApplicationController
     @perm_obj = @vm.vm_resource_pool
     @redir_controller = 'resources'
     @current_pool_id=@perm_obj.id
+    @cobbler_profiles = Cobbler::Profile.find.collect {|profile| profile.name }
   end
   def pre_create
     params[:vm][:state] = Vm::STATE_PENDING

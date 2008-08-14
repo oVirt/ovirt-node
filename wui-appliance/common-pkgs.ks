@@ -22,6 +22,7 @@ xorg-x11-xauth
 virt-viewer
 rhpl
 cobbler
+rubygem-cobbler
 bind-utils
 augeas
 /usr/sbin/lokkit

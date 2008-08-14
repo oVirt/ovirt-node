@@ -18,6 +18,7 @@ Requires: rubygem(activeldap) >= 0.10.0
 Requires: rubygem(rails) >= 2.0.1
 Requires: rubygem(mongrel) >= 1.0.1
 Requires: rubygem(krb5-auth) >= 0.6
+Requires: rubygem(cobbler) >= 0.0.1
 Requires: ruby-gettext-package
 Requires: postgresql-server
 Requires: ruby-postgres

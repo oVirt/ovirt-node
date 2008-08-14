@@ -1,0 +1,5 @@
+# Cobbler connection details
+
+hostname: localhost
+username: ovirt
+password: ovirt

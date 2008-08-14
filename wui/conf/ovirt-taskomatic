@@ -11,6 +11,7 @@
 [ -r /etc/sysconfig/ovirt-rails ] && . /etc/sysconfig/ovirt-rails
 
 export RAILS_ENV="${RAILS_ENV:-production}"
+export COBBLER_YML="${COBBLER_YML:-/usr/share/ovirt-wui/config/cobbler.yml}"
 
 DAEMON=/usr/share/ovirt-wui/task-omatic/taskomatic.rb
 

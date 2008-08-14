@@ -87,24 +87,26 @@
 
     <div id="vms_selection_id" style="display:none"><%= @vm.id %></div>
     <div class="selection_key">
-        Uuid:<br/>                
-	Num vcpus allocated:<br/> 
-	Num vcpus used:<br/>      
-	Memory allocated:<br/>    
-	Memory used:<br/>         
-	vNIC MAC address:<br/>    
-	Boot device:<br/>         
-	State:<br/>    
-	Pending State:<br/>    
+        Uuid:<br/>
+	Num vcpus allocated:<br/>
+	Num vcpus used:<br/>
+	Memory allocated:<br/>
+	Memory used:<br/>
+	vNIC MAC address:<br/>
+	Boot device:<br/>
+        Cobbler profile:<br/>
+	State:<br/>
+	Pending State:<br/>
     </div>
     <div class="selection_value">
        <%=h @vm.uuid %><br/>
        <%=h @vm.num_vcpus_allocated %><br/>
-       <%=h @vm.num_vcpus_used %><br/> 
+       <%=h @vm.num_vcpus_used %><br/>
        <%=h @vm.memory_allocated_in_mb %> MB<br/>
        <%=h @vm.memory_used_in_mb %> MB<br/>
        <%=h @vm.vnic_mac_addr %><br/>
        <%=h @vm.boot_device %><br/>
+       <%=h @vm.cobbler_profile %><br/>
        <%=h @vm.state %>
        <%unless @vm.needs_restart.nil? or @vm.needs_restart == 0  -%>
          (needs restart)

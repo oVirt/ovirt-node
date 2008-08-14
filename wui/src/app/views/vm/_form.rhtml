@@ -8,8 +8,7 @@
 <%= hidden_field_tag 'hardware_pool_id', @hardware_pool.id if @hardware_pool %>
 
     <%= text_field_with_label "Name:", "vm", "description", {:style=>"width:250px;"}  %>
-    <!-- FIXME: cobbler stuff here. what do we do now? -->	
-    <%= select_tag_with_label "Operating System:", 'cobbler_profile', {"Fedora 9" => "fedora9"}, :style=>"width:250px;" %>
+    <%= select_with_label "Operating System:", 'vm', 'cobbler_profile', @cobbler_profiles, :style=>"width:250px;"  if create %>
     <div class="clear_row" style="height:15px;"></div>
 
     <div class="form_heading">Resources</div>

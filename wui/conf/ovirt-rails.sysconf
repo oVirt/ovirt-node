@@ -1,3 +1,6 @@
 # sets ruby on Rails environment / mode of operation
 # http://wiki.rubyonrails.org/rails/pages/Environments
 #RAILS_ENV=production
+
+#sets the path of the cobbler.yml file for cobbler access
+#COBBLER_YML=/usr/share/ovirt-wui/config/cobbler.yml

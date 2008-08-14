@@ -21,6 +21,9 @@ include REXML
 
 require 'utils'
 
+gem 'cobbler'
+require 'cobbler'
+
 def create_vm_xml(name, uuid, memAllocated, memUsed, vcpus, bootDevice,
                   macAddr, bridge, diskDevices)
   doc = Document.new
@@ -146,13 +149,25 @@ def create_vm(task)
   if vm.state != Vm::STATE_PENDING
     raise "VM not pending"
   end
-
   setVmState(vm, Vm::STATE_CREATING)
 
-  # FIXME: in here, we would do any long running creating tasks (allocating
-  # disk, etc.)
+  # create cobbler system profile
+  begin
+    if !vm.cobbler_profile or vm.cobbler_profile.empty?
+      raise "Cobbler profile not specified"
+    end
 
-  setVmState(vm, Vm::STATE_STOPPED)
+    system = Cobbler::System.new('name' => vm.uuid,
+                                 'profile' => vm.cobbler_profile)
+    system.interfaces=[Cobbler::NetworkInterface.new(
+          ["intf",{'mac_address' => vm.vnic_mac_addr}]
+      )]
+    system.save
+    setVmState(vm, Vm::STATE_STOPPED)
+  rescue Exception => error
+    setVmState(vm, Vm::STATE_CREATE_FAILED)
+    raise "Unable to create system: #{error.message}"
+  end
 end
 
 def shutdown_vm(task)
