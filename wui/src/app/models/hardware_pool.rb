@@ -98,5 +98,17 @@ class HardwarePool < Pool
     return {:total => total, :labels => labels}
   end
 
+  def self.find_by_path(path)
+    segs = path.split("/")
+    unless segs.shift.empty?
+      raise "Path must be absolute, but is #{path}"
+    end
+    default_pool = get_default_pool
+    if segs.shift == default_pool.name
+      segs.inject(default_pool) do |pool, seg|
+        pool.sub_hardware_pools.find { |p| p.name == seg } if pool
+      end
+    end
+  end
 
 end
