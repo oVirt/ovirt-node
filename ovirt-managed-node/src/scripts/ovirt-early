@@ -27,11 +27,16 @@ configure_from_network() {
                 find_srv ovirt tcp
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
                     printf .
-                    wget -q -O - "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)" \
-                        | augtool > /dev/null 2>&1
+                    cfgdb=$(mktemp)
+                    wget -q -O $cfgdb \
+                      "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)"
                     if [ $? -eq 0 ]; then
-                        printf "remote config applied."
-                        return
+                        printf .
+                        augtool < $cfgdb > /dev/null 2>&1
+                        if [ $? -eq 0 ]; then
+                            printf "remote config applied."
+                            return
+                        fi
                     fi
                 fi
             fi
