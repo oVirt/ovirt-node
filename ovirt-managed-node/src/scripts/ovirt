@@ -39,8 +39,8 @@ start() {
 
     find_srv collectd tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+        collectd_conf=/etc/collectd.conf
         if [ -f $collectd_conf.in ]; then
-            collectd_conf=/etc/collectd.conf
             sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
                 -e "s/@COLLECTD_PORT@/$SRV_PORT/" $collectd_conf.in \
                 > $collectd_conf \
