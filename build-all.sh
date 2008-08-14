@@ -85,12 +85,15 @@ if [ $update_node = 1 -o $update_app = 1 ]; then
 fi
 
 # now make sure the packages we need are installed
-rpm -Uvh http://ovirt.org/repos/ovirt/9/ovirt-release-0.91-1.fc9.noarch.rpm
 rpm -q $DEP_RPMS >& /dev/null
 if [ $? -ne 0 ]; then
     # one of the previous packages wasn't installed; bail out
     die "Must have $DEP_RPMS installed"
 fi
+
+echo "To get latest RPMs from ovirt.org YUM repo:"
+echo "# rpm -Uvh http://ovirt.org/repos/ovirt/9/ovirt-release-0.91-1.fc9.noarch.rpm"
+echo "# yum update"
 set -e
 echo -n "appliance-tools-002-1 or newer "
 $COMMON/rpm-compare.py GE 0 appliance-tools 002 1
@@ -172,29 +175,6 @@ repo --name=ovirt-org \
   --baseurl=http://ovirt.org/repos/ovirt/$F_REL/\$basearch $excludepkgs
 EOF
 
-# build sources tarball
-if [ $include_src != 0 ]; then
-    cat $NODE/repos.ks - > $BUILD/src.ks << EOF
-repo --name=f$F_REL-src \
-  --mirrorlist=$fedora_mirror?repo=fedora-source-$F_REL&arch=src
-repo --name=f$F_REL-updates-src \
-  --mirrorlist=$fedora_mirror?repo=updates-released-source-f$F_REL&arch=src \
-  $currentbadupdates
-repo --name=ovirt-org-src \
-  --baseurl=http://ovirt.org/repos/ovirt/$F_REL/src $excludepkgs
-
-%packages --nobase
-EOF
-    egrep -hv "^-|^ovirt-host-image" \
-      $NODE/common-pkgs.ks \
-      $WUI/common-pkgs.ks | sort -u >> $BUILD/src.ks
-    echo '%end' >> $BUILD/src.ks
-    cd $BUILD
-    $BASE/common/getsrpms.py $BUILD/src.ks $CACHE
-    cd source
-    tar cf ovirt-source.tar SRPMS
-fi
-
 # build oVirt host image; note that we unconditionally rebuild the
 # ovirt-managed-node RPM, since it is now needed for the managed node
 # NOTE: livecd-tools must run as root
@@ -216,6 +196,29 @@ if [ $update_node = 1 ]; then
     cp rpm-build/ovirt-host-image*rpm $OVIRT
     cd $OVIRT
     createrepo .
+fi
+
+# build sources tarball
+if [ $include_src != 0 ]; then
+    cat $NODE/repos.ks - > $BUILD/src.ks << EOF
+repo --name=f$F_REL-src \
+  --mirrorlist=$fedora_mirror?repo=fedora-source-$F_REL&arch=src
+repo --name=f$F_REL-updates-src \
+  --mirrorlist=$fedora_mirror?repo=updates-released-source-f$F_REL&arch=src \
+  $currentbadupdates
+repo --name=ovirt-org-src \
+  --baseurl=http://ovirt.org/repos/ovirt/$F_REL/src $excludepkgs
+
+%packages --nobase
+EOF
+    egrep -hv "^-|^ovirt-host-image" \
+      $NODE/common-pkgs.ks \
+      $WUI/common-pkgs.ks | sort -u >> $BUILD/src.ks
+    echo '%end' >> $BUILD/src.ks
+    cd $BUILD
+    $BASE/common/getsrpms.py $BUILD/src.ks $CACHE
+    cd source
+    tar cf ovirt-source.tar SRPMS
 fi
 
 # build oVirt admin appliance
