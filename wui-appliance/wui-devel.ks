@@ -135,7 +135,7 @@ sed -e "s,@cron_file@,$cron_file," \
 # ovirt-wui-dev-first-run First run configuration for oVirt WUI Dev appliance
 #
 # chkconfig: 3 95 01
-# description: ovirt dev wui appliance first run configuration
+# description: ovirt wui dev appliance first run configuration
 #
 
 # Source functions library
@@ -144,7 +144,7 @@ sed -e "s,@cron_file@,$cron_file," \
 export PATH=/usr/kerberos/bin:$PATH
 
 start() {
-	echo -n "Starting ovirt-dev-wui-first-run: "
+	echo -n "Starting ovirt-wui-dev-first-run: "
 	(
 	# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=451936
 	sed -i '/\[kdcdefaults\]/a \ kdc_ports = 88' /usr/share/ipa/kdc.conf.template
@@ -198,7 +198,7 @@ cat > /etc/init.d/ovirt-wui-dev << \EOF
 # ovirt-wui-dev oVirt WUI Dev appliance service
 #
 # chkconfig: 3 60 40
-# description: ovirt dev wui appliance service
+# description: ovirt wui dev appliance service
 #
 
 # Source functions library
