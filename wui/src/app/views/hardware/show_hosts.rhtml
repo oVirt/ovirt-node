@@ -49,8 +49,7 @@
     }
     if (selected_ids.length == 1)
     {
-      $('#hosts_selection').load('<%= url_for :controller => "host", :action => "show" %>',
-                { id: parseInt(selected_ids[0].substring(3))})
+      $('#hosts_selection').load('<%= url_for :controller => "host", :action => "show", :id => nil %>/' + parseInt(selected_ids[0].substring(3)))
     }
   }
 </script>
