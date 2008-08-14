@@ -5,10 +5,10 @@ function load_widget(div, target){
   var id = $(div).html();
   $(div).html('');
   $(div).addClass("load_graph");
-  $(div).svg();
-  var svg = svgManager.getSVGFor(div);
+  //$(div).svg();
+  //var svg = svgManager.getSVGFor(div);
   var params = { id:1, type:"json", timeframe:"7 days", isJSON:true};
-  $.getJSON("<%= url_for :controller => 'graph', :action => 'load_graph_data' %>/" + id + "?target=" + target, params,
+  /*$.getJSON("<%= url_for :controller => 'graph', :action => 'load_graph_data' %>/" + id + "?target=" + target, params,
              function(response){
                   svg.graph.noDraw();
                    svg.graph.chartFormat('white', 'white').
@@ -25,10 +25,10 @@ function load_widget(div, target){
                    svg.graph.legend.show(false);
                    svg.graph.redraw();
              }
-   );
+   );*/
 //   $(div).children().filter("svg").attr('height', 25).attr('width', 200);
-   $(div).children().filter("svg").attr("height").baseVal.value = 25;
-   $(div).children().filter("svg").attr("width").baseVal.value = 200;
+   //$(div).children().filter("svg").attr("height").baseVal.value = 25;
+   //$(div).children().filter("svg").attr("width").baseVal.value = 200;
 };
 
 // invoked when a row containing a load widgit is selected
@@ -38,11 +38,11 @@ function toggle_load_widget(div, state){
     color = '#D5EFFC'; 
   }
     
-  var graph = svgManager.getSVGFor(div).graph;
+  /*var graph = svgManager.getSVGFor(div).graph;
   graph.noDraw().chartFormat(color, color);
   graph.xAxis.line(color, 0);
   graph.yAxis.line(color, 0);
-  graph.redraw();
+  graph.redraw();*/
 };
 
 function load_widget_select(selected_row)
