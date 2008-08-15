@@ -10,5 +10,8 @@ The server is specified with a URL of the form
   http://USER:PASSWORD@HOST/ovirt
 
 This requires that the server is configured to allow HTTP authentication,
-since there are no mechanisms in the API to forward krb5 tickets. You can
-also try and connect to Mongrel running on HOST:3000 directly.
+since there are no mechanisms in the API to forward krb5 tickets.
+
+Before calling any other method on the API, you need to call
+  OVirt::Base::site = "http://USER:PASSWORD@HOST/ovirt"
+  OVirt::Base::login

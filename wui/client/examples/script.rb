@@ -58,6 +58,8 @@ EOF
     exit 1
 end
 
+OVirt::Base.login
+
 # Get a single host by name
 host = OVirt::Host.find_by_hostname("node3.priv.ovirt.org")
 puts "#{host.uuid} has id #{host.id}"

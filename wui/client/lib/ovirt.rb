@@ -2,8 +2,47 @@ require 'pp'
 require 'rubygems'
 require 'activeresource'
 
+class ActiveResource::Connection
+  attr_accessor :session
+
+  alias_method :old_default_header, :default_header
+
+  def default_header
+    old_default_header
+    @default_header ||= {}
+    if session
+      @default_header["Cookie"] = session
+    end
+    @default_header
+  end
+end
+
 module OVirt
-    class Base < ActiveResource::Base ; end
+    class Base < ActiveResource::Base
+      LOGIN_PATH = "login/login"
+
+      def self.login
+        response = nil
+        begin
+          response = connection.get(prefix + LOGIN_PATH)
+        rescue ActiveResource::Redirection => e
+          response = e.response
+        end
+        unless connection.session = session_cookie(response)
+          raise "Authentication failed"
+        end
+      end
+
+      private
+      def self.session_cookie(response)
+        if cookies = response.get_fields("Set-Cookie")
+          cookies.find { |cookie|
+            cookie.split(";")[0].split("=")[0] == "_ovirt_session_id"
+          }
+        end
+      end
+
+    end
 
     class HardwarePool < Base
         def self.find_by_path(path)
