@@ -25,13 +25,14 @@ if File.exists? File.dirname(__FILE__) + '/../selenium.rb'
          def setup
             @browser = Selenium::SeleniumDriver.new("192.168.50.1", 4444,
                            "*firefox /usr/lib64/firefox-3.0.1/firefox",
-                           "http://admin:ovirt@192.168.50.2/ovirt/", 15000)
+                           "http://192.168.50.2/ovirt/", 15000)
             @browser.start
          end
 
          def test_ovirt
-            @browser.open("http://admin:ovirt@192.168.50.2/ovirt/")
+            @browser.open("http://192.168.50.2/ovirt/")
             assert_equal("Dashboard", @browser.get_title())
+	    @browser.close
          end
 
          def teardown

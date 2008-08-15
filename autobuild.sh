@@ -74,13 +74,10 @@ else
   echo "$SELENIUM_RB not found, will not run interface tests"
 fi
 
-$ssh_cmd \
-  "sed -i -e \"s/KrbMethodNegotiate on/KrbMethodNegotiate off/g\" \
-          -e \"s/KrbMethodK5Passwd off/KrbMethodK5Passwd on/g\" \
-          /etc/httpd/conf.d/ovirt-wui.conf"
-
 echo "Running the wui tests"
 $ssh_cmd \
-    "curl -i --negotiate -u : management.priv.ovirt.org/ovirt/ | \
+  "sed -i \"s/#RAILS_ENV=production/RAILS_ENV=test/g\" /etc/sysconfig/ovirt-rails && \
+   service ovirt-mongrel-rails restart && service httpd restart && \
+   curl -i http://management.priv.ovirt.org/ovirt/ | \
        grep 'HTTP/1.1 200 OK' && \
-     cd /usr/share/ovirt-wui && rake test"
+   cd /usr/share/ovirt-wui && rake test"
