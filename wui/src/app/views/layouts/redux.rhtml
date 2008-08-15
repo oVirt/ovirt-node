@@ -84,6 +84,7 @@
                           var wrapped_data = $(data).find('div').filter('[id=dialog-content-area]');
                           var my_parent = $(this).parent();
                           $('#dialog-content-area').html($(data));
+                          $('#facebox').css('left', $(window).width() / 2 - ($('#facebox table').width() / 2));
                         },
                         error: function(xhr) {$.jGrowl(xhr.status + ' ' + xhr.statusText);}
                     });
