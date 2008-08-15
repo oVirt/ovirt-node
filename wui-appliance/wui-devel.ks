@@ -152,6 +152,16 @@ start() {
 	ipa-server-install -r PRIV.OVIRT.ORG -p @password@ -P @password@ -a @password@ \
 	  --hostname management.priv.ovirt.org -u dirsrv -U
 
+        # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=459061
+        # note: this has to happen after ipa-server-install or the templating
+	# feature in ipa-server-install chokes on the characters in the regexp
+	# we add here.
+        sed -i -e 's#<Proxy \*>#<ProxyMatch ^.*/ipa/ui.*$>#' \
+          /etc/httpd/conf.d/ipa.conf
+        sed -i -e 's#</Proxy>#</ProxyMatch>#' /etc/httpd/conf.d/ipa.conf
+        # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=459209
+        sed -i -e 's/^/#/' /etc/httpd/conf.d/ipa-rewrite.conf
+	service httpd restart
 	# now create the ovirtadmin user
 	echo @password@|kinit admin
 	# change max username length policy

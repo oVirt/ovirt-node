@@ -32,19 +32,16 @@ class ApplicationController < ActionController::Base
   before_filter :pre_show, :only => [:show, :show_vms, :show_users, 
                                      :show_hosts, :show_storage]
   before_filter :authorize_admin, :only => [:new, :create, :edit, :update, :destroy]
+  before_filter :is_logged_in
+
+  def is_logged_in
+    redirect_to (:controller => "login", :action => "login") unless get_login_user
+  end
 
   def get_login_user
-    if ENV["RAILS_ENV"] != 'test'
-        user_from_principal(request.env["HTTP_X_FORWARDED_USER"])
-    else
-        'ovirtadmin'
-    end
+    (ENV["RAILS_ENV"] == "production") ? session[:user] : "ovirtadmin"
   end
   
-  def user_from_principal(principal)
-    principal.split('@')[0]
-  end
-
   def set_perms(hwpool)
     @user = get_login_user
     @can_view = hwpool.can_view(@user)
