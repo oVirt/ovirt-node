@@ -12,12 +12,12 @@ three:
   id: 3
   user_role: 'User'
   uid: 'buser'
-  pool_id: 3
+  pool_id: 10
 four:
   id: 4
   user_role: 'Monitor'
   uid: 'auser'
-  pool_id: 3
+  pool_id: 10
 five:
   id: 5
   user_role: 'Administrator'
@@ -63,3 +63,99 @@ thirteen:
   user_role: 'User'
   uid: 'yuser'
   pool_id: 9
+fourteen:
+  id: 14
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 2
+  inherited_from_id: 1
+fifteen:
+  id: 15
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 3
+  inherited_from_id: 1
+sixteen:
+  id: 16
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 4
+  inherited_from_id: 1
+seventeen:
+  id: 17
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 5
+  inherited_from_id: 1
+eighteen:
+  id: 18
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 6
+  inherited_from_id: 1
+nineteen:
+  id: 19
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 7
+  inherited_from_id: 1
+twenty:
+  id: 20
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 8
+  inherited_from_id: 1
+twentyone:
+  id: 21
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 9
+  inherited_from_id: 1
+twentytwo:
+  id: 22
+  user_role: 'Super Admin'
+  uid: 'ovirtadmin'
+  pool_id: 10
+  inherited_from_id: 1
+twentythree:
+  id: 23
+  user_role: 'Administrator'
+  uid: 'jadmin'
+  pool_id: 4
+  inherited_from_id: 2
+twentyfour:
+  id: 24
+  user_role: 'Administrator'
+  uid: 'jadmin'
+  pool_id: 5
+  inherited_from_id: 2
+twentyfive:
+  id: 25
+  user_role: 'Administrator'
+  uid: 'jadmin'
+  pool_id: 6
+  inherited_from_id: 2
+twentysix:
+  id: 26
+  user_role: 'Administrator'
+  uid: 'jadmin'
+  pool_id: 7
+  inherited_from_id: 2
+twentyseven:
+  id: 27
+  user_role: 'Administrator'
+  uid: 'jadmin'
+  pool_id: 8
+  inherited_from_id: 2
+twentyeight:
+  id: 28
+  user_role: 'Administrator'
+  uid: 'jadmin'
+  pool_id: 9
+  inherited_from_id: 2
+twentynine:
+  id: 29
+  user_role: 'Administrator'
+  uid: 'jadmin'
+  pool_id: 10
+  inherited_from_id: 2

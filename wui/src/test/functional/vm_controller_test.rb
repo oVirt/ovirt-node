@@ -47,8 +47,8 @@ class VmControllerTest < Test::Unit::TestCase
   def test_new
     get :new, :hardware_pool_id => 1
 
-    assert_response :success
-    assert_template 'new'
+    assert_response :redirect
+    assert_redirected_to :controller => 'resources', :action => 'show'
 
     assert_not_nil assigns(:vm)
   end
