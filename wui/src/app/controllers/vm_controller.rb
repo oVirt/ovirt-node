@@ -228,8 +228,8 @@ class VmController < ApplicationController
     params[:vm][:state] = Vm::STATE_PENDING
     vm_resource_pool_name = params[:vm_resource_pool_name]
     hardware_pool_id = params[:hardware_pool_id]
-    hardware_pool = HardwarePool.find(hardware_pool_id)
     if vm_resource_pool_name and hardware_pool_id
+      hardware_pool = HardwarePool.find(hardware_pool_id)
       vm_resource_pool = VmResourcePool.new({:name => vm_resource_pool_name})
       vm_resource_pool.create_with_parent(hardware_pool)
       params[:vm][:vm_resource_pool_id] = vm_resource_pool.id
