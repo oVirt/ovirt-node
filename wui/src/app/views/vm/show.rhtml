@@ -9,7 +9,7 @@
                           :id=>"vnc_console_link" %>
     <script type="text/javascript">
       $('#vnc_console_link').bind('click', function(){
-              window.open($(this).attr('href'),'_blank','toolbar=no,height=600,width=800, resizable=yes,status=no');
+              window.open($(this).attr('href'),'console','toolbar=no,height=300,width=400,resizable=no,status=no,scrollbars=no,menubar=no,location=no');
               return false;})
     </script>
   <% end -%>

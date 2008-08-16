@@ -17,9 +17,8 @@ iscsi-initiator-utils
 ovirt-wui.noarch
 ovirt-host-image-pxe
 firefox
-gtk-vnc-plugin
 xorg-x11-xauth
-virt-viewer
+virt-viewer-plugin
 rhpl
 cobbler
 rubygem-cobbler

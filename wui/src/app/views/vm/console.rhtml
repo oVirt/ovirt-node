@@ -26,10 +26,13 @@
 </div>
     </body>
 <%else -%>
-<embed type="application/x-gtk-vnc"
-    width="800"
-    height="600"
-    host="<%= @vm.host.hostname%>" port="<%= @vm.vnc_port%>">
+<embed type="application/x-virt-viewer"
+    hidden="1"
+    uri="qemu+tcp://<%= @vm.host.hostname%>/system"
+    name="<%= @vm.uuid%>">
 </embed>
+virt-viewer started<br/>
+hypervisor qemu+tcp://<%= @vm.host.hostname%>/system<br/>
+virtual machine <%= @vm.uuid%> <br/>
 <%end -%>
   </html>
