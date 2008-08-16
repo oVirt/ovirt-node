@@ -1,3 +1,5 @@
+YUMCACHE=$$(pwd)/../tmp/cache
+
 pkg_name = ovirt-host-image
 
 all: rpms
@@ -7,17 +9,16 @@ clean:
 	rm -rf ovirt-host-image-* ovirt-cd.log
 
 distclean: clean
-	rm -rf *.iso repos.ks rpm-build iso-file
+	rm -rf *.iso repos.ks rpm-build
 
 repos.ks: repos.ks.in
-	sed "s/@@ARCH@@/$(ARCH)/" repos.ks.in > repos.ks
+	cp repos.ks.in repos.ks
 
-build: ovirt.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
+ovirt.iso: ovirt.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
 	../common/rpm-compare.py GE 0 livecd-tools 017.1 1
-	./ovirt-cd $(YUMCACHE)
+	livecd-creator --cache=$(YUMCACHE) --skip-minimize -c ovirt.ks -f ovirt
 
-tar: clean build
-	mv $$(cat iso-file) ovirt.iso
+tar: clean ovirt.iso
 	mkdir -p $(NV)
 	cp -a ovirt-host-image.spec ovirt-pxe ovirt-flash ovirt-flash-static ovirt.iso $(NV)
 	mkdir -p rpm-build
@@ -25,4 +26,4 @@ tar: clean build
 	cp version rpm-build/
 	rm -rf $(NV)
 
-.PHONY: all clean build tar distclean
+.PHONY: all clean tar distclean

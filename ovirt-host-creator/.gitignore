@@ -1,6 +1,4 @@
-iso-file
-*.iso
+ovirt.iso
 tftpboot
 rpm-build
-ovirt-cd.log
 repos.ks

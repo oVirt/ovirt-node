@@ -6,54 +6,44 @@ try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
 die() { warn "$@"; try_h; exit 1; }
 
 RAM=768
-IMGSIZE=6000M
 
 IMGDIR_DEFAULT=/var/lib/libvirt/images
+NAME_DEFAULT=ovirt-appliance
 NET_SCRIPTS=/etc/sysconfig/network-scripts
-NAME=ovirt-appliance
 BRIDGENAME=ovirtbr
 
 imgdir=$IMGDIR_DEFAULT
+name=$NAME_DEFAULT
 
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-c] [-d image_dir] [-y yumcachedir] [-k kickstart] [-e eth]
-  -c: compress the image (qcow2 compressed)
+Usage: $ME [-d image_dir] [-n name] [-e eth]
   -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
-  -y: YUM cache directory to use
-  -k: appliance kickstart file
+  -n: appliance name (default: $NAME_DEFAULT)
   -e: ethernet device to use as bridge (i.e. eth1)
   -h: display this help and exit
 EOF
 }
 
 err=0 help=0
-compress=0
 bridge=
-kickstart=
-yumcache=
-while getopts :cd:y:k:e:h c; do
+while getopts :d:e:n:h c; do
     case $c in
-        c) compress=1;;
         d) imgdir=$OPTARG;;
-        y) yumcache=--cache=$OPTARG;;
-        k) kickstart=$OPTARG;;
         e) bridge=$OPTARG;;
+        n) name=$OPTARG;;
         h) help=1;;
         '?') err=1; warn "invalid option: \`-$OPTARG'";;
         :) err=1; warn "missing argument to \`-$OPTARG' option";;
         *) err=1; warn "internal error: \`-$OPTARG' not handled";;
     esac
 done
-if [ -n "$1" ]; then
-  name=$1
-fi
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 
 gen_bridge() {
-    name=$1
+    local name=$1
     cat << EOF
 <network>
   <name>$name</name>
@@ -64,8 +54,8 @@ EOF
 }
 
 gen_fake_managed_node() {
-    num=$1
-    last_mac=$(( 54 + $num ))
+    local num=$1
+    local last_mac=$(( 54 + $num ))
 
     cat <<EOF
 <domain type='kvm'>
@@ -102,12 +92,13 @@ EOF
 }
 
 gen_app() {
-    local disk=$1
-    local ram=$2
+    local name=$1
+    local disk=$2
+    local ram=$3
 
     cat<<EOF
 <domain type='kvm'>
-  <name>$NAME</name>
+  <name>$name</name>
   <memory>$(( $ram * 1024 ))</memory>
   <currentMemory>$(( $ram * 1024 ))</currentMemory>
   <vcpu>1</vcpu>
@@ -273,36 +264,16 @@ fi
     virsh undefine bundled
 } > /dev/null 2>&1
 
-IMGNAME=$NAME.img
 mkdir -p $imgdir
-virsh destroy $NAME > /dev/null 2>&1
-virsh undefine $NAME > /dev/null 2>&1
-
-if [ -n "$kickstart" ]; then
-    mkdir -p tmp
-    set -e
-    appliance-creator --config $kickstart --name $NAME \
-      --tmpdir=$(pwd)/tmp $yumcache
-    # FIXME add --compress option to appliance-creator
-    if [ $compress -ne 0 ]; then
-        printf "Compressing the image..."
-        qemu-img convert -c $NAME-sda.raw -O qcow2 "$imgdir/$IMGNAME"
-        rm $NAME-sda.raw
-    else
-        printf "Moving the image..."
-        mv $NAME-sda.raw "$imgdir/$IMGNAME"
-        restorecon -v "$imgdir/$IMGNAME"
-    fi
-    echo done
-    set +e
-fi
-
-test ! -r $imgdir/$IMGNAME && die "Disk image not found at $imgdir/$IMGNAME"
+imgname=$name.img
+test ! -r $imgdir/$imgname && die "Disk image not found at $imgdir/$imgname"
+virsh destroy $name > /dev/null 2>&1
+virsh undefine $name > /dev/null 2>&1
 
 TMPXML=$(mktemp) || exit 1
 # FIXME virt-image to define the appliance instance
-gen_app $imgdir/$IMGNAME $RAM > $TMPXML
+gen_app $name $imgdir/$imgname $RAM > $TMPXML
 virsh define $TMPXML
 rm $TMPXML
-echo "Application defined using disk located at $imgdir/$IMGNAME."
-echo "Run virsh start $NAME to start the appliance"
+echo "Application defined using disk located at $imgdir/$imgname."
+echo "Run virsh start $name to start the appliance"

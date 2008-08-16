@@ -2,8 +2,10 @@
 
 %include repos.ks
 
-%packages --excludedocs
+%packages --excludedocs --nobase
 %include common-pkgs.ks
+
+%end
 
 %post
 %include common-post.ks
