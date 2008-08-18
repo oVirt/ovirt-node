@@ -189,10 +189,8 @@ mkdir -p log
 rake db:migrate
 cd -
 
-if [ -f ${OVIRT_DIR}/ovirtadmin.tab ]; then
-    ${OVIRT_DIR}/script/grant_admin_privileges ovirtadmin
-    [ $? != 0 ] && echo "Failed to grant ovirtadmin privileges" && exit 1
-fi
+${OVIRT_DIR}/script/grant_admin_privileges ovirtadmin
+[ $? != 0 ] && echo "Failed to grant ovirtadmin privileges" && exit 1
 
 ovirt-add-host $(hostname) ${OVIRT_DIR}/ovirt.keytab
 

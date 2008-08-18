@@ -45,7 +45,6 @@ principal=ovirtadmin
 realm=PRIV.OVIRT.ORG
 password=ovirt
 cron_file=/etc/cron.hourly/ovirtadmin.cron
-ktab_file=/usr/share/ovirt-wui/ovirtadmin.tab
 
 # automatically refresh the kerberos ticket every hour (we'll create the
 # principal on first-boot)
@@ -53,7 +52,7 @@ cat > $cron_file << EOF
 #!/bin/bash
 export PATH=/usr/kerberos/bin:$PATH
 kdestroy
-kinit -k -t $ktab_file $principal@$realm
+echo $password | kinit $principal@$realm
 EOF
 chmod 755 $cron_file
 
@@ -128,7 +127,6 @@ sed -e "s,@cron_file@,$cron_file," \
     -e "s,@principal@,$principal," \
     -e "s,@realm@,$realm," \
     -e "s,@password@,$password,g" \
-    -e "s,@ktab_file@,$ktab_file," \
    > $first_run_file << \EOF
 #!/bin/bash
 #
@@ -175,7 +173,6 @@ LDAP
 	# make ovitadmin also an IPA admin
 	ipa-modgroup -a ovirtadmin admins
 	ipa-moduser --setattr krbPasswordExpiration=19700101000000Z @principal@
-	ipa-getkeytab -s management.priv.ovirt.org -p @principal@ -k @ktab_file@
 	@cron_file@
 
 	) > /var/log/ovirt-wui-dev-first-run.log 2>&1
