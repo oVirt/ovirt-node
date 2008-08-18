@@ -16,7 +16,9 @@ repos.ks: repos.ks.in
 
 ovirt.iso: ovirt.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
 	../common/rpm-compare.py GE 0 livecd-tools 017.1 1
-	livecd-creator --cache=$(YUMCACHE) --skip-minimize -c ovirt.ks -f ovirt
+	mkdir -p tmp
+	livecd-creator --skip-minimize -c ovirt.ks -f ovirt \
+	  --tmpdir=$$(pwd)/tmp --cache=$(YUMCACHE)
 
 tar: clean ovirt.iso
 	mkdir -p $(NV)

@@ -6,6 +6,7 @@ appliance: $(NAME)-sda.raw
 appliance-compressed: $(NAME)-sda.qcow
 
 $(NAME)-sda.raw: wui-devel.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
+	mkdir -p tmp
 	appliance-creator --config wui-devel.ks --name $(NAME) \
 	  --tmpdir=$$(pwd)/tmp --cache=$(YUMCACHE)
 
