@@ -33,6 +33,7 @@ scp_cmd="scp -i $SSHKEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/n
 
 # implant Autobuild SSH key into appliance
 if [ ! -r $SSHKEY ]; then
+  mkdir -p $(dirname "$SSHKEY")
   ssh-keygen -q -t rsa -N "" -f $SSHKEY
 fi
 cat >> wui-appliance/common-post.ks << KS
