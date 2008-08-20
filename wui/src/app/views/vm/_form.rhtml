@@ -8,7 +8,7 @@
 <%= hidden_field_tag 'hardware_pool_id', @hardware_pool.id if @hardware_pool %>
 
     <%= text_field_with_label "Name:", "vm", "description", {:style=>"width:250px;"}  %>
-    <%= select_with_label "Operating System:", 'vm', 'cobbler_profile', @cobbler_profiles, :style=>"width:250px;"  if create %>
+    <%= select_with_label "Operating System:", 'vm', 'provisioning_and_boot_settings', @provisioning_options, :style=>"width:250px;"  if create %>
     <div class="clear_row" style="height:15px;"></div>
 
     <div class="form_heading">Resources</div>

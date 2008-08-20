@@ -223,7 +223,18 @@ class VmController < ApplicationController
     @perm_obj = @vm.vm_resource_pool
     @redir_controller = 'resources'
     @current_pool_id=@perm_obj.id
-    @cobbler_profiles = Cobbler::Profile.find.collect {|profile| profile.name }
+    @provisioning_options = [[Vm::PXE_OPTION_LABEL, Vm::PXE_OPTION_VALUE],
+                             [Vm::HD_OPTION_LABEL, Vm::HD_OPTION_VALUE]]
+    # FIXME add cobbler images too
+    begin
+      @provisioning_options += Cobbler::Profile.find.collect do |profile|
+        [profile.name + Vm::COBBLER_PROFILE_SUFFIX,
+         Vm::COBBLER_PREFIX + Vm::PROVISIONING_DELIMITER +
+         Vm::PROFILE_PREFIX + Vm::PROVISIONING_DELIMITER + profile.name]
+      end
+    rescue
+      #if cobbler doesn't respond/is misconfigured/etc just don't add profiles
+    end
   end
   def pre_create
     params[:vm][:state] = Vm::STATE_PENDING
@@ -235,8 +246,6 @@ class VmController < ApplicationController
       vm_resource_pool.create_with_parent(hardware_pool)
       params[:vm][:vm_resource_pool_id] = vm_resource_pool.id
     end
-    #set boot device to network for first boot (install)
-    params[:vm][:boot_device] = Vm::BOOT_DEV_NETWORK unless params[:vm][:boot_device]
     @vm = Vm.new(params[:vm])
     @perm_obj = @vm.vm_resource_pool
     @redir_controller = 'resources'

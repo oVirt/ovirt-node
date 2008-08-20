@@ -153,16 +153,22 @@ def create_vm(task)
 
   # create cobbler system profile
   begin
-    if !vm.cobbler_profile or vm.cobbler_profile.empty?
-      raise "Cobbler profile not specified"
+    if vm.provisioning and !vm.provisioning.empty?
+      provisioning_arr = vm.provisioning.split(Vm::PROVISIONING_DELIMITER)
+      if provisioning_arr[0]==Vm::COBBLER_PREFIX
+        if provisioning_arr[1]==Vm::PROFILE_PREFIX
+          system = Cobbler::System.new('name' => vm.uuid,
+                                       'profile' => provisioning_arr[2])
+          system.interfaces=[Cobbler::NetworkInterface.new(
+               ["intf",{'mac_address' => vm.vnic_mac_addr}]
+          )]
+          system.save
+        elsif provisioning_arr[1]==Vm::IMAGE_PREFIX
+          #FIXME handle cobbler images
+        end
+      end
     end
 
-    system = Cobbler::System.new('name' => vm.uuid,
-                                 'profile' => vm.cobbler_profile)
-    system.interfaces=[Cobbler::NetworkInterface.new(
-          ["intf",{'mac_address' => vm.vnic_mac_addr}]
-      )]
-    system.save
     setVmState(vm, Vm::STATE_STOPPED)
   rescue Exception => error
     setVmState(vm, Vm::STATE_CREATE_FAILED)

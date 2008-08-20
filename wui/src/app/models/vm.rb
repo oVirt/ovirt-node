@@ -34,10 +34,22 @@ class Vm < ActiveRecord::Base
   acts_as_xapian :texts => [ :uuid, :description, :vnic_mac_addr, :state ],
                  :terms => [ [ :search_users, 'U', "search_users" ] ]
 
-  BOOT_DEV_HD          = "hd"
-  BOOT_DEV_NETWORK     = "network"
-  BOOT_DEV_CDROM       = "cdrom"
-  BOOT_DEV_FIELDS      = [ BOOT_DEV_HD, BOOT_DEV_NETWORK, BOOT_DEV_CDROM ]
+  BOOT_DEV_HD            = "hd"
+  BOOT_DEV_NETWORK       = "network"
+  BOOT_DEV_CDROM         = "cdrom"
+  BOOT_DEV_FIELDS        = [ BOOT_DEV_HD, BOOT_DEV_NETWORK, BOOT_DEV_CDROM ]
+
+  PROVISIONING_DELIMITER = ":"
+  COBBLER_PREFIX         = "cobbler"
+  PROFILE_PREFIX         = "profile"
+  IMAGE_PREFIX           = "image"
+  COBBLER_PROFILE_SUFFIX = " (Cobbler Profile)"
+  COBBLER_IMAGE_SUFFIX   = " (Cobbler Profile)"
+
+  PXE_OPTION_LABEL       = "PXE Boot"
+  PXE_OPTION_VALUE       = "pxe"
+  HD_OPTION_LABEL        = "Boot from HD"
+  HD_OPTION_VALUE        = "hd"
 
   NEEDS_RESTART_FIELDS = [:uuid, 
                           :num_vcpus_allocated,
@@ -119,6 +131,32 @@ class Vm < ActiveRecord::Base
   end
   def memory_used_in_mb=(mem)
     self[:memory_used]=(mb_to_kb(mem))
+  end
+
+  def provisioning_and_boot_settings=(settings)
+    if settings==PXE_OPTION_VALUE
+      self[:boot_device]= BOOT_DEV_NETWORK
+      self[:provisioning]= nil
+    elsif settings==HD_OPTION_VALUE
+      self[:boot_device]= BOOT_DEV_HD
+      self[:provisioning]= nil
+    else
+      self[:boot_device]= BOOT_DEV_NETWORK
+      self[:provisioning]= settings
+    end
+  end
+  def provisioning_and_boot_settings
+    if provisioning == nil
+      if boot_device==BOOT_DEV_NETWORK
+        PXE_OPTION_VALUE
+      elsif boot_device==BOOT_DEV_HD
+        HD_OPTION_VALUE
+      else
+        PXE_OPTION_VALUE
+      end
+    else
+      provisioning
+    end
   end
 
   def get_pending_state

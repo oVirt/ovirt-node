@@ -94,7 +94,7 @@
 	Memory used:<br/>
 	vNIC MAC address:<br/>
 	Boot device:<br/>
-        Cobbler profile:<br/>
+        Provisioning source:<br/>
 	State:<br/>
 	Pending State:<br/>
     </div>
@@ -106,7 +106,7 @@
        <%=h @vm.memory_used_in_mb %> MB<br/>
        <%=h @vm.vnic_mac_addr %><br/>
        <%=h @vm.boot_device %><br/>
-       <%=h @vm.cobbler_profile %><br/>
+       <%=h @vm.provisioning_and_boot_settings %><br/>
        <%=h @vm.state %>
        <%unless @vm.needs_restart.nil? or @vm.needs_restart == 0  -%>
          (needs restart)
