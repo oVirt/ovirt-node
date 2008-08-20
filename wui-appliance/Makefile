@@ -14,8 +14,8 @@ $(NAME)-sda.qcow: $(NAME)-sda.raw
 	# FIXME add --compress option to appliance-creator
 	qemu-img convert -c $(NAME)-sda.raw -O qcow2 $(NAME)-sda.qcow
 
-repos.ks: repos.ks.in
-	cp repos.ks.in repos.ks
+repos.ks: ../common/repos.ks.in
+	cp ../common/repos.ks.in repos.ks
 
 clean:
 	rm -f repos.ks

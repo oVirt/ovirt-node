@@ -11,8 +11,8 @@ clean:
 distclean: clean
 	rm -rf *.iso repos.ks rpm-build
 
-repos.ks: repos.ks.in
-	cp repos.ks.in repos.ks
+repos.ks: ../common/repos.ks.in
+	cp ../common/repos.ks.in repos.ks
 
 ovirt.iso: ovirt.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
 	../common/rpm-compare.py GE 0 livecd-tools 017.1 1
