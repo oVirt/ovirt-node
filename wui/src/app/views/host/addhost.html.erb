@@ -4,9 +4,9 @@
 <%- content_for :description do -%>
   Select hosts from the list below to add to the <%= @hardware_pool.name %> hardware pool.  <a href="#">Learn how to manage hosts</a>
 <%- end -%>
-
+<div id="dialog-content-area">
+<div class="dialog_body_small">
 <div class="panel_header"></div>
-<div class="dialog_body">
   <%= render :partial => "/host/grid", :locals => { :table_id => "addhosts_grid",
              :hwpool => nil,
              :exclude_pool => @hardware_pool.id,
@@ -15,10 +15,13 @@
              :on_select => "load_widget_select",
              :on_deselect => "load_widget_deselect",
              :on_hover => "load_widget_hover",
-             :on_unhover => "load_widget_unhover"  } %>
+             :on_unhover => "load_widget_unhover",
+             :is_popup => true,
+             :hosts_per_page => 10} %>
 </div>
 
 <%= popup_footer("add_hosts('#{url_for :controller => "hardware", 
                                       :action => "add_hosts", 
                                       :id => @hardware_pool}')", 
                  "Add Hosts") %>
+</div>

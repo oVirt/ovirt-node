@@ -4,7 +4,7 @@
 <div class="panel_header"></div>
   <%= render :partial => "/storage/grid", :locals => { :table_id => "addstorage_grid",
              :hwpool => nil, :exclude_pool => @hardware_pool.id,
-             :on_select => "false" } %>
+             :on_select => "false", :is_popup => true } %>
 </div>
 <%= popup_footer("add_storage('#{url_for :controller => 'hardware', 
                                          :action => 'add_storage', 

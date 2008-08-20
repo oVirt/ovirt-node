@@ -67,7 +67,8 @@
        <%= render :partial => "/storage/grid", :locals => { :table_id => "storage_grid",
                                                             :hwpool => @pool,
                                                             :exclude_pool => nil,
-                                                            :on_select => "storage_select" } %>
+                                                            :on_select => "storage_select",
+                                                            :is_popup => false} %>
   </div>
 
   <div class="selection_detail" id="storage_selection">

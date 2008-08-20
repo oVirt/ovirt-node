@@ -1,6 +1,6 @@
 <%= render :partial => 'graph/load_graph.rhtml' %>
 
-<% hosts_per_page = 40 %>
+<% hosts_per_page.nil? ? hosts_per_page = 40: hosts_per_page = hosts_per_page %>
 <div id="<%= table_id %>_div">
 <%= "<form id=\"#{table_id}_form\">" if checkboxes %>
 <table id="<%= table_id %>" style="display:none"></table>
@@ -17,18 +17,23 @@
                        :exclude_host => exclude_host,
                        :checkboxes => checkboxes %>',
     dataType: 'json',
+    <% if is_popup%>
+        width: 700,
+    <% end %>
     colModel : [
         <%= "{display: '', width : 20, align: 'left', process: #{table_id}checkbox}," if checkboxes %>
         {display: 'Hostname', name : 'hostname', width : 60, align: 'left'},
         <%= "{display: 'Hardware Pool', name : 'pools.name', width : 100, align: 'left'}," if exclude_pool %>
-        {display: 'UUID', name : 'uuid', width : 180, align: 'left'},
-        {display: 'Hypervisor', name : 'hypervisor_type', width : 60, align: 'left'},
-        {display: 'CPUs', name : 'num_cpus', width : 30, align: 'left'},
-        {display: 'Speed (MHz)', name : 'cpu_speed', width : 70, align: 'right'},
-        {display: 'Arch', name : 'arch', width : 50, align: 'right'},
-        {display: 'RAM (MB)', name : 'memory', width : 60, align: 'right'},
-        {display: 'Status', name : 'is_disabled', width : 110, align: 'right'},
-        {display: 'Load', name : 'load', width: 180, sortable : false, align: 'left', process: <%= table_id %>_load_widget }
+        {display: 'UUID', name : 'uuid', width : 180, align: 'left'}<% if !is_popup %>,<% end %>
+        <% if !is_popup %>
+            {display: 'Hypervisor', name : 'hypervisor_type', width : 60, align: 'left'},
+            {display: 'CPUs', name : 'num_cpus', width : 30, align: 'left'},
+            {display: 'Speed (MHz)', name : 'cpu_speed', width : 70, align: 'right'},
+            {display: 'Arch', name : 'arch', width : 50, align: 'right'},
+            {display: 'RAM (MB)', name : 'memory', width : 60, align: 'right'},
+            {display: 'Status', name : 'is_disabled', width : 110, align: 'right'},
+            {display: 'Load', name : 'load', width: 180, sortable : false, align: 'left', process: <%= table_id %>_load_widget }
+        <% end %>
 	],
     sortname: "hostname",
     sortorder: "asc",

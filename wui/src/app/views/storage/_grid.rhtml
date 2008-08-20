@@ -11,6 +11,9 @@
     {
     url: '<%=  url_for :controller => "hardware", :action => "storage_pools_json", :id => (hwpool.nil? ? nil : hwpool.id), :exclude_pool => exclude_pool %>',
     dataType: 'json',
+    <% if is_popup %>
+        width: 700,
+    <% end %>
     colModel : [
         {display: '', width : 20, align: 'left', process: <%= table_id %>checkbox},
         {display: 'Alias', width : 180, align: 'left'},
