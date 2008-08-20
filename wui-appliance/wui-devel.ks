@@ -290,3 +290,79 @@ chmod +x /etc/init.d/ovirt-wui-dev
 chkconfig ovirt-wui-dev on
 
 %end
+
+%post --nochroot
+  # distribution tree is ready in tmp/tree
+  set -e
+  python -c '
+from iniparse.ini import INIConfig
+ini = INIConfig()
+fp = open("tmp/tree/.treeinfo")
+ini.readfp(fp)
+fp.close()
+family = ini.general.family
+version = ini.general.version
+arch = ini.general.arch
+print "%s %s %s" % (family, version, arch)' | ( read os ver arch
+      dest=$INSTALL_ROOT/var/www/cobbler/ks_mirror/$os-$ver-$arch
+      printf "Importing $os-$ver-$arch ..."
+      cp -a tmp/tree $dest
+      cat >> $INSTALL_ROOT/etc/rc.d/rc.cobbler-import << EOF
+#!/bin/sh
+# Import Cobbler profiles on first boot
+
+exec > /root/cobbler-import.log 2>&1
+
+# run only once
+chmod -x \$0
+set -x
+cobbler import --name=$os-$ver --arch=$arch \
+  --path=/var/www/cobbler/ks_mirror/$os-$ver-$arch
+cobbler repo add --name=f9-$arch --arch=$arch --mirror-locally=0 \
+  --mirror=http://download.fedoraproject.org/pub/fedora/linux/releases/9/Everything/$arch/os
+cobbler repo add --name=f9-$arch-updates --arch=$arch --mirror-locally=0 \
+  --mirror=http://download.fedoraproject.org/pub/fedora/linux/updates/9/$arch
+cobbler profile edit --name=$os-$ver-$arch --repos="f9-$arch f9-$arch-updates"
+
+# TODO extract Node boot params from /var/lib/tftboot/pxelinux.cfg/default
+# before Cobbler overwrites it
+cobbler distro add --name="oVirt-Node-$arch" --arch=$arch \
+  --initrd=/var/lib/tftpboot/initrd0.img --kernel=/var/lib/tftpboot/vmlinuz0 \
+  --kopts="rootflags=loop root=/ovirt.iso rootfstype=iso9660 ro console=tty0 console=ttyS0,115200n8"
+cobbler profile add --name=oVirt-Node-$arch --distro=oVirt-Node-$arch
+cobbler system add --netboot-enabled=1 --profile=oVirt-Node-$arch \
+  --name=node3 --mac=00:16:3e:12:34:57
+cobbler system add --netboot-enabled=1 --profile=oVirt-Node-$arch \
+  --name=node4 --mac=00:16:3e:12:34:58
+cobbler system add --netboot-enabled=1 --profile=oVirt-Node-$arch \
+  --name=node5 --mac=00:16:3e:12:34:59
+service cobblerd restart
+set +x
+echo "Add new oVirt Nodes as Cobbler systems to make them PXE boot oVirt Node image directly."
+echo "Alternatively, choose oVirt-Node-$arch in default Cobbler boot menu."
+EOF
+      chmod +x $INSTALL_ROOT/etc/rc.d/rc.cobbler-import
+      echo "[ -x /etc/rc.d/rc.cobbler-import ] && /etc/rc.d/rc.cobbler-import" \
+            >> $INSTALL_ROOT/etc/rc.d/rc.local
+  echo done
+  )
+%end
+
+# Cobbler configuration
+%post
+  exec >> /root/kickstart-post.log 2>&1
+  # ovirt/ovirt
+  echo ovirt:Cobbler:68db208a546dcedf34edf0b4fe0ab1f2 > /etc/cobbler/users.digest
+  # make cobbler check happier
+  mkdir -p /etc/vsftpd
+  touch /etc/vsftpd/vsftpd.conf
+  mkdir -p /usr/lib/syslinux
+  cp /var/lib/tftpboot/pxelinux.0 /usr/lib/syslinux/pxelinux.0
+  # TODO use Augeas 0.3.0 Inifile lens
+  sed -i -e "s/^module = authn_denyall.*/module = authn_configfile/" \
+      /etc/cobbler/modules.conf
+  sed -i -e "s/^server:.*/server: '192.168.50.2'/" \
+         -e "s/^next_server:.*/next_server: '192.168.50.2'/" \
+      /etc/cobbler/settings
+  sed -i -e '/kernel /a \\tIPAPPEND 2' /etc/cobbler/pxesystem.template
+%end

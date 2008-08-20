@@ -1,11 +1,13 @@
 NAME=ovirt-appliance
 YUMCACHE=$$(pwd)/../tmp/cache
+F_REL := $(shell rpm -q --qf '%{VERSION}' fedora-release)
+ARCH  := $(shell uname -i)
 
 appliance: $(NAME)-sda.raw
 
 appliance-compressed: $(NAME)-sda.qcow
 
-$(NAME)-sda.raw: wui-devel.ks common-install.ks common-pkgs.ks common-post.ks repos.ks
+$(NAME)-sda.raw: *.ks tmp/tree/.treeinfo
 	mkdir -p tmp
 	appliance-creator --config wui-devel.ks --name $(NAME) \
 	  --tmpdir="$$(pwd)/tmp" --cache="$(YUMCACHE)"
@@ -16,6 +18,11 @@ $(NAME)-sda.qcow: $(NAME)-sda.raw
 
 repos.ks: ../common/repos.ks.in
 	cp ../common/repos.ks.in repos.ks
+
+tmp/tree/.treeinfo:
+	mkdir -p tmp/tree
+	cd tmp/tree; ../../gettree.sh \
+	  http://download.fedoraproject.org/pub/fedora/linux/releases/$(F_REL)/Fedora/$(ARCH)/os
 
 clean:
 	rm -f repos.ks
