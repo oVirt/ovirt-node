@@ -12,6 +12,7 @@
     {
     url: '<%=  url_for :controller => "hardware",
                        :action => "hosts_json",
+                       :escape => false,
                        :id => (hwpool.nil? ? nil : hwpool.id),
                        :exclude_pool => exclude_pool,
                        :exclude_host => exclude_host,
