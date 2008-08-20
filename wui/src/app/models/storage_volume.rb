@@ -53,7 +53,7 @@ class StorageVolume < ActiveRecord::Base
   def self.find_for_vm(include_vm, vm_pool)
     if vm_pool
       condition =  "(vms.id is null and storage_pools.hardware_pool_id=#{vm_pool.get_hardware_pool.id})"
-      condition += " or vms.id=#{include_vm.id}" if (include_vm.id)
+      condition += " or vms.id=#{include_vm.id}" if (include_vm and include_vm.id)
       self.find(:all, :include => [:vms, :storage_pool], :conditions => condition)
     else
       return []
