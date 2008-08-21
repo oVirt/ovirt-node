@@ -82,3 +82,7 @@ $ssh_cmd \
    curl -i http://management.priv.ovirt.org/ovirt/ | \
        grep 'HTTP/1.1 200 OK' && \
    cd /usr/share/ovirt-wui && rake test"
+
+# make oVirt RPMs available as autobuild output
+# TODO fix oVirt Makefiles to honour ~/.rpmmacros (autobuild sets that up)
+ln tmp/ovirt/*.rpm $AUTOBUILD_PACKAGE_ROOT/rpm
