@@ -328,7 +328,7 @@ cobbler profile edit --name=$os-$ver-$arch --repos="f9-$arch f9-$arch-updates"
 # before Cobbler overwrites it
 cobbler distro add --name="oVirt-Node-$arch" --arch=$arch \
   --initrd=/var/lib/tftpboot/initrd0.img --kernel=/var/lib/tftpboot/vmlinuz0 \
-  --kopts="rootflags=loop root=/ovirt.iso rootfstype=iso9660 ro console=tty0 console=ttyS0,115200n8"
+  --kopts="rootflags=loop root=/ovirt.iso rootfstype=iso9660 ro console=ttyS0,115200n8 console=tty0"
 cobbler profile add --name=oVirt-Node-$arch --distro=oVirt-Node-$arch
 cobbler system add --netboot-enabled=1 --profile=oVirt-Node-$arch \
   --name=node3 --mac=00:16:3e:12:34:57
