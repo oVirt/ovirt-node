@@ -339,12 +339,13 @@ cobbler system add --netboot-enabled=1 --profile=oVirt-Node-$arch \
 service cobblerd restart
 set +x
 echo "Add new oVirt Nodes as Cobbler systems to make them PXE boot oVirt Node image directly."
-echo "Alternatively, choose oVirt-Node-$arch in default Cobbler boot menu."
+echo "oVirt-Node-$arch is also default boot option in Cobbler menu"
 EOF
       chmod +x $INSTALL_ROOT/etc/rc.d/rc.cobbler-import
       echo "[ -x /etc/rc.d/rc.cobbler-import ] && /etc/rc.d/rc.cobbler-import" \
             >> $INSTALL_ROOT/etc/rc.d/rc.local
-  echo done
+      printf "oVirt-Node-$arch" > $INSTALL_ROOT/tmp/cobbler-default
+      echo done
   )
 %end
 
@@ -365,4 +366,6 @@ EOF
          -e "s/^next_server:.*/next_server: '192.168.50.2'/" \
       /etc/cobbler/settings
   sed -i -e '/kernel /a \\tIPAPPEND 2' /etc/cobbler/pxesystem.template
+  sed -i -e "s/^ONTIMEOUT.*/ONTIMEOUT $(cat /tmp/cobbler-default)/" \
+      /etc/cobbler/pxedefault.template
 %end
