@@ -23,6 +23,8 @@ ME=$(basename "$0")
 warn() { printf "$ME: $@\n" >&2; }
 die() { warn "$@"; exit 1; }
 
+test -n "$1" && RESULTS=$1 || RESULTS=results.log
+
 echo "Running oVirt Autobuild"
 
 SSHKEY=~/.ssh/id_autobuild
@@ -81,7 +83,8 @@ $ssh_cmd \
    service ovirt-mongrel-rails restart && service httpd restart && \
    curl -i http://management.priv.ovirt.org/ovirt/ | \
        grep 'HTTP/1.1 200 OK' && \
-   cd /usr/share/ovirt-wui && rake test"
+   cd /usr/share/ovirt-wui && rake test" > "$RESULTS" 2>&1 \
+  || die "wui tests failed"
 
 # make oVirt RPMs available as autobuild output
 # TODO fix oVirt Makefiles to honour ~/.rpmmacros (autobuild sets that up)
