@@ -1,4 +1,9 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+mailserver_nic_one:
+    mac:        '00:11:22:33:44:55'
+    usage_type: '1'
+    bandwidth:  100
+    host_id:    <%= Fixtures.identify(:mailservers_managed_node) %>
+
 one:
   id: 1
   mac: '00:11:22:33:44:55'
