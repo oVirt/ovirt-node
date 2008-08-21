@@ -1,3 +1,7 @@
+prodops_pool:
+    name: 'Production Operations'
+    type: 'HardwarePool'
+
 one:
   id: 1
   name: 'master pool'
