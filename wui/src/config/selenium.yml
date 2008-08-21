@@ -1,0 +1,8 @@
+# oVirt selenium configuration
+
+selenium_server:
+  address: "192.168.50.1"
+  port: 4444
+  browser: "*firefox /usr/lib64/firefox-3.0.1/firefox"
+ovirt_wui_server:
+  address: 192.168.50.2

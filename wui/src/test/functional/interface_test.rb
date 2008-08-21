@@ -17,25 +17,33 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 if File.exists? File.dirname(__FILE__) + '/../selenium.rb'
+ require 'yaml'
 
  require File.dirname(__FILE__) + '/../test_helper'
  require File.dirname(__FILE__) + '/../selenium'
 
  class InterfaceTest < Test::Unit::TestCase
          def setup
-            @browser = Selenium::SeleniumDriver.new("192.168.50.1", 4444,
-                           "*firefox /usr/lib64/firefox-3.0.1/firefox",
-                           "http://192.168.50.2/ovirt/", 15000)
-            @browser.start
+          @config = YAML::load(File.open("#{RAILS_ROOT}/config/selenium.yml"))
+          @site_url = "http://"+
+                      @config["ovirt_wui_server"]["address"] + "/ovirt/"
+
+          @browser = Selenium::SeleniumDriver.new(
+                          @config["selenium_server"]["address"],
+                          @config["selenium_server"]["port"],
+                          @config["selenium_server"]["browser"],
+                          @site_url,
+		          15000)
+          @browser.start
+          @browser.open(@site_url)
          end
 
          def test_ovirt
-            @browser.open("http://192.168.50.2/ovirt/")
             assert_equal("Dashboard", @browser.get_title())
-	    @browser.close
          end
 
          def teardown
+	        @browser.close
             @browser.stop
          end
  end
