@@ -9,36 +9,44 @@ two:
   id: 2
   hardware_pool_id: 4
   type: 'NfsStoragePool'
+  ip_addr: '127.0.0.1'
   export_path: '/tmp/foopath'
 three:
   id: 3
   hardware_pool_id: 4
   type: 'NfsStoragePool'
+  ip_addr: '192.168.50.1'
   export_path: '/tmp/barpath'
 four:
   id: 4
   hardware_pool_id: 9
   type: 'IscsiStoragePool'
   port: 121
+  ip_addr: '192.168.50.1'
   target: 'rubarb'
+  hardware_pool_id: 1
 five:
   id: 5
   hardware_pool_id: 9
   type: 'NfsStoragePool'
+  ip_addr: '192.168.50.2'
   export_path: '/tmp/thepath'
 six:
   id: 6
   hardware_pool_id: 9
   type: 'NfsStoragePool'
+  ip_addr: '192.168.50.3'
   export_path: '/tmp/anotherpath'
 seven:
   id: 7
   hardware_pool_id: 9
   type: 'NfsStoragePool'
+  ip_addr: '192.168.50.4'
   export_path: '/tmp/apath'
 eight:
   id: 8
   hardware_pool_id: 6
+  ip_addr: '192.168.50.2'
   type: 'IscsiStoragePool'
   port: 531
   target: 'bartarget'
@@ -52,5 +60,6 @@ ten:
   id: 10
   hardware_pool_id: 6
   type: 'IscsiStoragePool'
+  ip_addr: '192.168.50.3'
   port: 539
   target: 'stayontarget'

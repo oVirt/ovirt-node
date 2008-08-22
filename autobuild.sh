@@ -80,7 +80,10 @@ fi
 echo "Running the wui tests"
 $ssh_cmd \
   "sed -i \"s/#RAILS_ENV=production/RAILS_ENV=test/g\" /etc/sysconfig/ovirt-rails && \
-   service ovirt-mongrel-rails restart && service httpd restart && \
+   sed -i \"s/development/test/\" /usr/share/ovirt-wui/dutils/active_record_env.rb && \
+   service ovirt-taskomatic restart && \
+   service ovirt-mongrel-rails restart && \
+   service httpd restart && \
    curl -i http://management.priv.ovirt.org/ovirt/ | \
        grep 'HTTP/1.1 200 OK' && \
    cd /usr/share/ovirt-wui && rake test" > "$RESULTS" 2>&1 \

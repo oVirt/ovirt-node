@@ -1,21 +1,65 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 
 one:
+  id: 1
+  host_id: 10
   cpu_number: 1
   core_number: 1
-  cpu_id_level: 1
-  vendor: 1
-  family: 1
-  model: 1
-  family: MyString
-  flags: MyString
+  number_of_cores: 2
+  vendor: 'intel'
 
 two:
+  id: 2
+  host_id: 10
   cpu_number: 1
+  core_number: 2
+  number_of_cores: 2
+  vendor: 'intel'
+
+three:
+  id: 3
+  host_id: 10
+  cpu_number: 2
   core_number: 1
-  cpu_id_level: 1
-  vendor: 1
-  family: 1
-  model: 1
-  family: MyString
-  flags: MyString
+  number_of_cores: 4
+  vendor: 'intel'
+
+four:
+  id: 4
+  host_id: 10
+  cpu_number: 2
+  core_number: 2
+  number_of_cores: 4
+  vendor: 'intel'
+
+five:
+  id: 5
+  host_id: 10
+  cpu_number: 2
+  core_number: 3
+  number_of_cores: 4
+  vendor: 'intel'
+
+six:
+  id: 6
+  host_id: 10
+  cpu_number: 2
+  core_number: 4
+  number_of_cores: 4
+  vendor: 'intel'
+
+seven:
+  id: 7
+  host_id: 10
+  cpu_number: 3
+  core_number: 1
+  number_of_cores: 1
+  vendor: 'intel'
+
+seven:
+  id: 8
+  host_id: 10
+  cpu_number: 4
+  core_number: 1
+  number_of_cores: 1
+  vendor: 'intel'

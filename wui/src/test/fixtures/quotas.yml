@@ -1,11 +1,11 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 one:
   id: 1
-  total_vcpus: 8
+  total_vcpus: 30
   total_vmemory: 2097152
-  total_vnics: 3
-  total_storage: 500
-  total_vms: 2
+  total_vnics: 20
+  total_storage: 104857600
+  total_vms: 20
   pool_id: 1
 two:
   id: 2
