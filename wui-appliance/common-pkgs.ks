@@ -24,5 +24,6 @@ cobbler
 rubygem-cobbler
 bind-utils
 augeas
+syslinux
 /usr/sbin/lokkit
 curl
