@@ -5,7 +5,7 @@ rootpw --iscrypted Xa8QeYfWrtscM
 firewall --disabled
 authconfig --enableshadow --enablemd5
 selinux --disabled
-services --disabled=libvirtd,postgresql,yum-updatesd,bluetooth,cups,gpm,pcscd,NetworkManager,NetworkManagerDispatcher --enabled=network,tgtd,nfs,iptables
+services --disabled=libvirtd,postgresql --enabled=network,tgtd,nfs,iptables
 timezone --utc UTC
 text
 
@@ -17,6 +17,6 @@ bootloader --location=mbr --driveorder=sda
 zerombr
 clearpart --all --drives=sda
 part /boot  --ondisk=sda --fstype=ext3 --size=100
-part /      --ondisk=sda --fstype=ext3 --size=5000
+part /      --ondisk=sda --fstype=ext3 --size=20000
 part swap   --ondisk=sda --fstype=swap --size=512
 reboot

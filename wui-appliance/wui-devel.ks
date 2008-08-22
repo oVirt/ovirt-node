@@ -41,57 +41,19 @@ cat > /etc/sysconfig/iptables << EOF
 COMMIT
 EOF
 
-principal=ovirtadmin
-realm=PRIV.OVIRT.ORG
-password=ovirt
-cron_file=/etc/cron.hourly/ovirtadmin.cron
-
-# automatically refresh the kerberos ticket every hour (we'll create the
-# principal on first-boot)
-cat > $cron_file << EOF
-#!/bin/bash
-export PATH=/usr/kerberos/bin:$PATH
-kdestroy
-echo $password | kinit $principal@$realm
-EOF
-chmod 755 $cron_file
-
-ff_profile_dir=uxssq4qb.ovirtadmin
-
-# for firefox, we need to make some subdirs and add some preferences
-mkdir -p /root/.mozilla/firefox/$ff_profile_dir
-cat >> /root/.mozilla/firefox/$ff_profile_dir/prefs.js << \EOF
-user_pref("network.negotiate-auth.delegation-uris", "priv.ovirt.org");
-user_pref("network.negotiate-auth.trusted-uris", "priv.ovirt.org");
-user_pref("browser.startup.homepage", "http://management.priv.ovirt.org/ovirt");
-EOF
-
-cat >> /root/.mozilla/firefox/profiles.ini << EOF
-[General]
-StartWithLastProfile=1
-
-[Profile0]
-Name=ovirtadmin
-IsRelative=1
-Path=$ff_profile_dir
-EOF
-
 # Create sparse files for iSCSI backing stores
 mkdir -p /ovirtiscsi
 for i in `seq 3 5`; do
-    dd if=/dev/null of=/ovirtiscsi/iSCSI$i bs=1 count=1 seek=64M
+    dd if=/dev/null of=/ovirtiscsi/iSCSI$i bs=1 count=1 seek=3G
 done
 
 # make an NFS directory with some small, fake disks and export them via NFS
 # to show off the NFS part of the WUI
 mkdir -p /ovirtnfs
-for i in `seq 1 5`; do
-    dd if=/dev/zero of=/ovirtnfs/disk$i.dsk bs=1 count=1 seek=1G
+for i in `seq 1 3`; do
+    dd if=/dev/zero of=/ovirtnfs/disk$i.dsk bs=1 count=1 seek=3G
 done
 echo "/ovirtnfs 192.168.50.0/24(rw,no_root_squash)" >> /etc/exports
-
-# make sure that we get a kerberos principal on every boot
-echo "$cron_file" >> /etc/rc.d/rc.local
 
 # make collectd.conf.
 cat > /etc/collectd.conf << \EOF
@@ -122,10 +84,10 @@ LoadPlugin unixsock
 EOF
 
 
+principal=ovirtadmin
+password=ovirt
 first_run_file=/etc/init.d/ovirt-wui-dev-first-run
-sed -e "s,@cron_file@,$cron_file," \
-    -e "s,@principal@,$principal," \
-    -e "s,@realm@,$realm," \
+sed -e "s,@principal@,$principal," \
     -e "s,@password@,$password,g" \
    > $first_run_file << \EOF
 #!/bin/bash
@@ -173,7 +135,6 @@ LDAP
 	# make ovitadmin also an IPA admin
 	ipa-modgroup -a ovirtadmin admins
 	ipa-moduser --setattr krbPasswordExpiration=19700101000000Z @principal@
-	@cron_file@
 
 	) > /var/log/ovirt-wui-dev-first-run.log 2>&1
 	RETVAL=$?

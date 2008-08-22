@@ -17,9 +17,6 @@ scsi-target-utils
 iscsi-initiator-utils
 ovirt-wui.noarch
 ovirt-host-image-pxe
-firefox
-xorg-x11-xauth
-virt-viewer-plugin
 rhpl
 cobbler
 rubygem-cobbler
