@@ -357,8 +357,6 @@ EOF
   # make cobbler check happier
   mkdir -p /etc/vsftpd
   touch /etc/vsftpd/vsftpd.conf
-  mkdir -p /usr/lib/syslinux
-  cp /var/lib/tftpboot/pxelinux.0 /usr/lib/syslinux/pxelinux.0
   # TODO use Augeas 0.3.0 Inifile lens
   sed -i -e "s/^module = authn_denyall.*/module = authn_configfile/" \
       /etc/cobbler/modules.conf
