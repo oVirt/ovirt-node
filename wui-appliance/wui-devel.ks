@@ -336,7 +336,6 @@ cobbler system add --netboot-enabled=1 --profile=oVirt-Node-$arch \
   --name=node4 --mac=00:16:3e:12:34:58
 cobbler system add --netboot-enabled=1 --profile=oVirt-Node-$arch \
   --name=node5 --mac=00:16:3e:12:34:59
-service cobblerd restart
 set +x
 echo "Add new oVirt Nodes as Cobbler systems to make them PXE boot oVirt Node image directly."
 echo "oVirt-Node-$arch is also default boot option in Cobbler menu"

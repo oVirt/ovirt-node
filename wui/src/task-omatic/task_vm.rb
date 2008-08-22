@@ -159,9 +159,7 @@ def create_vm(task)
         if provisioning_arr[1]==Vm::PROFILE_PREFIX
           system = Cobbler::System.new('name' => vm.uuid,
                                        'profile' => provisioning_arr[2])
-          system.interfaces=[Cobbler::NetworkInterface.new(
-               ["intf",{'mac_address' => vm.vnic_mac_addr}]
-          )]
+          system.interfaces=[Cobbler::NetworkInterface.new({'mac_address' => vm.vnic_mac_addr})]
           system.save
         elsif provisioning_arr[1]==Vm::IMAGE_PREFIX
           #FIXME handle cobbler images
