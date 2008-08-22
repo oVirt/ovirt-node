@@ -188,8 +188,8 @@ echo ok
 echo -n "libvirt-0.4.4-2ovirt2 or newer "
 $COMMON/rpm-compare.py GE 0 libvirt 0.4.4 2ovirt2
 echo ok
-echo -n "kvm-72-3ovirt2 or newer "
-$COMMON/rpm-compare.py GE 0 kvm 72 3ovirt2
+echo -n "kvm-72-3ovirt3 or newer "
+$COMMON/rpm-compare.py GE 0 kvm 72 3ovirt3
 echo ok
 if [ $include_src != 0 ]; then
     echo -n "pungi-1.2.18.1-1 or newer "
