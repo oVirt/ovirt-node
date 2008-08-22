@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+require 'socket'
 
 class VmController < ApplicationController
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
@@ -183,6 +184,11 @@ class VmController < ApplicationController
 
   def console
     @show_vnc_error = "Console is unavailable for VM #{@vm.description}" unless @vm.has_console
+    if @vm.host.hostname.match("priv\.ovirt\.org$")
+      @vnc_hostname =  IPSocket.getaddress(@vm.host.hostname)
+    else
+      @vnc_hostname =  @vm.host.hostname
+    end
     render :layout => false
   end
 

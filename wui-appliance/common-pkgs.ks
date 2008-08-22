@@ -6,6 +6,7 @@ chkconfig
 rootfiles
 dhclient
 libvirt-python
+openssh-clients
 openssh-server
 nfs-utils
 collectd

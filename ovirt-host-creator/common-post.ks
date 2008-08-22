@@ -27,8 +27,13 @@ cat > /etc/sysconfig/iptables << \EOF
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT -p icmp -j ACCEPT
 -A INPUT -i lo -j ACCEPT
+# libvirt
 -A INPUT -p tcp --dport 16509 -j ACCEPT
+# SSH
 -A INPUT -p tcp --dport 22 -j ACCEPT
+# VNC consoles
+-A INPUT -p tcp -m multiport --dports 5900:6000 -j ACCEPT
+# migration
 -A INPUT -p tcp -m multiport --dports 49152:49216 -j ACCEPT
 -A INPUT -j REJECT --reject-with icmp-host-prohibited
 -A FORWARD -m physdev ! --physdev-is-bridged -j REJECT --reject-with icmp-host-prohibited

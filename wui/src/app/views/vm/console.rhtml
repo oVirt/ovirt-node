@@ -28,11 +28,11 @@
 <%else -%>
 <embed type="application/x-virt-viewer"
     hidden="1"
-    uri="qemu+tcp://<%= @vm.host.hostname%>/system"
+    uri="<%= @vnc_hostname%>:<%= @vm.vnc_port%>"
     name="<%= @vm.uuid%>">
 </embed>
-virt-viewer started<br/>
-hypervisor qemu+tcp://<%= @vm.host.hostname%>/system<br/>
-virtual machine <%= @vm.uuid%> <br/>
+Console started for virtual machine <%= @vm.uuid%> <br/>
+host <%= @vm.host.hostname%><br/>
+VNC port <%= @vm.vnc_port%><br/>
 <%end -%>
   </html>
