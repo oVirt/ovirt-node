@@ -29,7 +29,12 @@
       $.post('<%= url_for :controller => "hardware", :action => "move_hosts", :id => @pool %>',
              { resource_ids: hosts.toString(), target_pool_id: <%= Pool.root.id %> },
               function(data,status){
-                $("#hosts_grid").flexReload()
+                grid = $("#hosts_grid");
+                if (grid.size()>0 && grid != null) {
+                  grid.flexReload();
+                } else {
+                  $tabs.tabs("load",$tabs.data('selected.tabs'));
+                }
 		if (data.alert) {
 		  $.jGrowl(data.alert);
                 }
@@ -68,7 +73,8 @@
                                                         :on_deselect => "load_widget_deselect",
                                                         :on_hover => "load_widget_hover",
                                                         :on_unhover => "load_widget_unhover",
-                                                        :is_popup => false} %>
+                                                        :is_popup => false,
+                                                        :hosts_per_page => 40} %>
    </div>
    <div class="selection_detail" id="hosts_selection">
    	<div class="selection_left">
