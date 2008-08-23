@@ -11,3 +11,9 @@
 %include common-post.ks
 
 %end
+
+%post --nochroot
+# remove quiet from Node bootparams, added by livecd-creator
+sed -i -e 's/ quiet//' $LIVE_ROOT/isolinux/isolinux.cfg
+
+%end
