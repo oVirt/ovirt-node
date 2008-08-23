@@ -194,7 +194,7 @@ ${OVIRT_DIR}/script/grant_admin_privileges ovirtadmin
 
 ovirt-add-host $(hostname) ${OVIRT_DIR}/ovirt.keytab
 
-for svc in $OVIRT_SVCS $ENABLE_SVCS; do
+for svc in $ENABLE_SVCS; do
     service $svc start
 done
 
