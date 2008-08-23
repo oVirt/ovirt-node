@@ -268,6 +268,7 @@ print "%s %s %s" % (family, version, arch)' | ( read os ver arch
       dest=$INSTALL_ROOT/var/www/cobbler/ks_mirror/$os-$ver-$arch
       printf "Importing $os-$ver-$arch ..."
       cp -a tmp/tree $dest
+      url=http://download.fedoraproject.org/pub/fedora/linux
       cat >> $INSTALL_ROOT/etc/rc.d/rc.cobbler-import << EOF
 #!/bin/sh
 # Import Cobbler profiles on first boot
@@ -277,13 +278,19 @@ exec > /root/cobbler-import.log 2>&1
 # run only once
 chmod -x \$0
 set -x
+
 cobbler import --name=$os-$ver --arch=$arch \
   --path=/var/www/cobbler/ks_mirror/$os-$ver-$arch
 cobbler repo add --name=f9-$arch --arch=$arch --mirror-locally=0 \
-  --mirror=http://download.fedoraproject.org/pub/fedora/linux/releases/9/Everything/$arch/os
+  --mirror=$url/releases/9/Everything/$arch/os
 cobbler repo add --name=f9-$arch-updates --arch=$arch --mirror-locally=0 \
-  --mirror=http://download.fedoraproject.org/pub/fedora/linux/updates/9/$arch
-cobbler profile edit --name=$os-$ver-$arch --repos="f9-$arch f9-$arch-updates"
+  --mirror=$url/updates/9/$arch
+sed -e 's#^url .*#url --url=$url/releases/$ver/$os/$arch/os#' \
+    -e 's#^reboot.*#poweroff#' /etc/cobbler/sample_end.ks \
+    > /etc/cobbler/sample-$os-$ver-$arch.ks
+cobbler profile edit --name=$os-$ver-$arch \
+  --repos="f9-$arch f9-$arch-updates" \
+  --kickstart=/etc/cobbler/sample-$os-$ver-$arch.ks
 
 # TODO extract Node boot params from /var/lib/tftboot/pxelinux.cfg/default
 # before Cobbler overwrites it
