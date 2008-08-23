@@ -52,11 +52,6 @@ rpm -e qemu kpartx mkinitrd isomd5sum dmraid python python-libs
 
 RPM="rpm -v -e --nodeps"
 
-# Sigh.  ntp has a silly dependency on perl because of auxiliary scripts which
-# we don't need to use.  Forcibly remove it here
-$RPM perl perl-libs perl-Module-Pluggable perl-version \
-    perl-Pod-Simple perl-Pod-Escapes
-
 # Remove additional RPMs forcefully
 $RPM gamin pm-utils kbd libuser passwd usermode \
     vbetool ConsoleKit hdparm \
