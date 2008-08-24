@@ -32,7 +32,7 @@ DEP_RPMS="createrepo kvm libvirt livecd-tools appliance-tools"
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-w] [-n] [-s] [-a] [-c] [-u] [-m baseurl] [-v git|release|none] [-e eth]
+Usage: $ME [-w] [-n] [-s] [-a] [-c] [-u] [-m baseurl] [-v git|release|version|none] [-e eth]
   -w: update oVirt WUI RPMs
   -n: update oVirt Node RPMs
   -s: download SRPMs and produce sources tarball
@@ -41,7 +41,7 @@ Usage: $ME [-w] [-n] [-s] [-a] [-c] [-u] [-m baseurl] [-v git|release|none] [-e 
   -u: update running oVirt appliance
   -m: baseurl of a Fedora mirror, default is to use mirrorlist
       e.g. -m http://download.fedora.redhat.com/pub/fedora/linux
-  -v: update version type (git, release, none) default is git
+  -v: update version type (git, release, version, none) default is git
   -e: ethernet device to use as bridge (i.e. eth1)
   -h: display this help and exit
 EOF
@@ -54,6 +54,8 @@ bumpver() {
         make bumpgit
     elif [[ "$version_type" == "release" ]]; then
         make bumprelease
+    elif [[ "$version_type" == "version" ]]; then
+        make bumpversion
     fi
 }
 
@@ -158,8 +160,8 @@ done
 test $err = 1 && { try_h; exit 1; }
 test $help = 1 && { usage; exit 0; }
 test "$version_type" != "git" -a "$version_type" != "release" \
-    -a "$version_type" != "none" \
-    && usage "version type must be git, release or none"
+    -a "$version_type" != "none" -a "$version_type" != "version" \
+    && usage "version type must be git, release, version or none"
 
 if [ $update_node = 1 -o $update_app = 1 ]; then
     test $( id -u ) -ne 0 && die "Node or Appliance update must run as root"

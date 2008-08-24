@@ -34,7 +34,7 @@ bumprelease:
 	echo "$(VERSION) $(NEWRELEASE)" > version
 
 bumpversion:
-	echo "$(NEWVERSION) 0" > version
+	echo "$(NEWVERSION) 1" > version
 
 setversion:
 	echo "$(VERSION) $(RELEASE)" > version
