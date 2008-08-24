@@ -57,25 +57,6 @@ make
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d
 
 echo "oVirt Managed Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
-g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
-n=$(printf '\33[m')            # similar to n=$(tput sgr0)
-cat <<EOF > %{buildroot}%{_sysconfdir}/issue
-
-           888     888 ${g}d8b$n         888
-           888     888 ${g}Y8P$n         888
-           888     888             888
-   .d88b.  Y88b   d88P 888 888d888 888888
-  d88''88b  Y88b d88P  888 888P'   888
-  888  888   Y88o88P   888 888     888
-  Y88..88P    Y888P    888 888     Y88b.
-   'Y88P'      Y8P     888 888      'Y888
-
-  Managed Node release %{version}-%{release}
-
-  Virtualization just got the ${g}Green Light$n
-
-EOF
-cp -p %{buildroot}%{_sysconfdir}/issue %{buildroot}%{_sysconfdir}/issue.net
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -117,6 +98,26 @@ fi
 # remove the /etc/krb5.conf file; it will be fetched on bootup
 rm -f /etc/krb5.conf
 
+g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
+n=$(printf '\33[m')            # similar to n=$(tput sgr0)
+cat <<EOF > %{buildroot}%{_sysconfdir}/issue
+
+           888     888 ${g}d8b$n         888
+           888     888 ${g}Y8P$n         888
+           888     888             888
+   .d88b.  Y88b   d88P 888 888d888 888888
+  d88''88b  Y88b d88P  888 888P'   888
+  888  888   Y88o88P   888 888     888
+  Y88..88P    Y888P    888 888     Y88b.
+   'Y88P'      Y8P     888 888      'Y888
+
+  Managed Node release %{version}-%{release}
+
+  Virtualization just got the ${g}Green Light$n
+
+EOF
+cp -p %{buildroot}%{_sysconfdir}/issue %{buildroot}%{_sysconfdir}/issue.net
+
 %preun
 if [ "$1" = 0 ] ; then
   /sbin/chkconfig --del ovirt-early
@@ -140,8 +141,6 @@ fi
 %{_sysconfdir}/collectd.conf.in
 %{_sysconfdir}/chkconfig.d/collectd
 %config %attr(0644,root,root) %{_sysconfdir}/ovirt-release
-%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/issue
-%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/issue.net
 %doc README NEWS AUTHOR ChangeLog
 
 %changelog
