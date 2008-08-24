@@ -32,7 +32,7 @@ DEP_RPMS="createrepo kvm libvirt livecd-tools appliance-tools"
 usage() {
     case $# in 1) warn "$1"; try_h; exit 1;; esac
     cat <<EOF
-Usage: $ME [-w] [-n] [-s] [-a] [-c] [-u] [-m baseurl] [-v git|release|version|none] [-e eth]
+Usage: $ME [-w] [-n] [-s] [-a] [-c] [-u] [-q] [-m baseurl] [-v git|release|version|none] [-e eth]
   -w: update oVirt WUI RPMs
   -n: update oVirt Node RPMs
   -s: download SRPMs and produce sources tarball
@@ -43,6 +43,7 @@ Usage: $ME [-w] [-n] [-s] [-a] [-c] [-u] [-m baseurl] [-v git|release|version|no
       e.g. -m http://download.fedora.redhat.com/pub/fedora/linux
   -v: update version type (git, release, version, none) default is git
   -e: ethernet device to use as bridge (i.e. eth1)
+  -q: compress appliance image using qcow2
   -h: display this help and exit
 EOF
 }
@@ -139,8 +140,9 @@ fedora_url=
 cleanup=0
 version_type=git
 bridge=
+compress=0
 err=0 help=0
-while getopts wnsacum:v:e:h c; do
+while getopts wnsacum:v:e:qh c; do
     case $c in
         w) update_wui=1;;
         n) update_node=1;;
@@ -151,6 +153,7 @@ while getopts wnsacum:v:e:h c; do
         m) fedora_url=$OPTARG;;
         v) version_type=$OPTARG;;
         e) bridge=$OPTARG;;
+        q) compress=1;;
         h) help=1;;
       '?') err=1; warn "invalid option: \`-$OPTARG'";;
         :) err=1; warn "missing argument to \`-$OPTARG' option";;
@@ -304,8 +307,16 @@ if [ $update_app == 1 ]; then
     cd $WUI
     make distclean
     setup_repos $WUI/repos.ks
-    make appliance YUMCACHE=$CACHE NAME=$NAME
-    mv $NAME-sda.raw $IMGDIR/$NAME.img
+
+    if [ $compress = 1 ]; then
+        img_ext=qcow
+        make appliance-compressed YUMCACHE=$CACHE NAME=$NAME
+    else
+        img_ext=raw
+        make appliance YUMCACHE=$CACHE NAME=$NAME
+    fi
+
+    mv $NAME-sda.$img_ext $IMGDIR/$NAME.img
     restorecon -v $IMGDIR/$NAME.img
 
     bridge_flag=
