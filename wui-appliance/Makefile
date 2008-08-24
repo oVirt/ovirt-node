@@ -28,6 +28,6 @@ clean:
 	rm -f repos.ks
 
 distclean: clean
-	rm -rf $(NAME)-sda.raw $(NAME)-sda.qcow
+	rm -rf $(NAME)-sda.raw $(NAME)-sda.qcow tmp
 
 .PHONY: appliance appliance-compressed clean distclean

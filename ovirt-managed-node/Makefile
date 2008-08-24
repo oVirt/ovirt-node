@@ -23,7 +23,10 @@ include ../common/release.mk
 
 clean:
 	make -C src clean
-	rm -rf $(NV) rpm-build
+	rm -rf $(NV)
+
+distclean: clean
+	rm -rf rpm-build
 
 tar: clean
 	mkdir -p $(NV)

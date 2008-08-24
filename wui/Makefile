@@ -7,6 +7,9 @@ clean:
 	rm -f ovirt*.gz ovirt*.rpm
 	rm -rf ovirt-wui-* dist build
 
+distclean: clean
+	rm -rf rpm-build
+
 genlangs:
 	cd src; rake updatepo; rake makemo
 
