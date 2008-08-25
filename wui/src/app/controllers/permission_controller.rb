@@ -102,7 +102,7 @@ class PermissionController < ApplicationController
       Permission.transaction do
         permissions = Permission.find(:all, :conditions => "id in (#{permission_ids.join(', ')})")
         permissions.each do |permission|
-          permission.destroy if permission.is_primary?
+          permission.destroy unless permission.is_primary?
         end
       end
       render :json => { :object => "permission", :success => true, 
