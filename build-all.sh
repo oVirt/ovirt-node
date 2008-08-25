@@ -181,7 +181,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "To get latest RPMs from ovirt.org YUM repo:"
-echo "# rpm -Uvh http://ovirt.org/repos/ovirt/9/ovirt-release-0.91-1.fc9.noarch.rpm"
+echo "# rpm -Uvh http://ovirt.org/repos/ovirt/9/ovirt-release-0.92-1.fc9.noarch.rpm"
 echo "# yum update"
 set -e
 echo -n "appliance-tools-002-1 or newer "
