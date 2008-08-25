@@ -100,7 +100,7 @@ rm -f /etc/krb5.conf
 
 g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
 n=$(printf '\33[m')            # similar to n=$(tput sgr0)
-cat <<EOF > %{buildroot}%{_sysconfdir}/issue
+cat <<EOF > /etc/issue
 
            888     888 ${g}d8b$n         888
            888     888 ${g}Y8P$n         888
@@ -116,7 +116,7 @@ cat <<EOF > %{buildroot}%{_sysconfdir}/issue
   Virtualization just got the ${g}Green Light$n
 
 EOF
-cp -p %{buildroot}%{_sysconfdir}/issue %{buildroot}%{_sysconfdir}/issue.net
+cp -p /etc/issue /etc/issue.net
 
 %preun
 if [ "$1" = 0 ] ; then
