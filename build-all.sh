@@ -251,7 +251,7 @@ if [ $update_node = 1 ]; then
     cd $NODE
     rm -rf rpm-build
     bumpver
-    make distclean
+    make clean
     setup_repos $NODE/repos.ks
     make rpms YUMCACHE=$CACHE
     rm -f $OVIRT/ovirt-host-image*rpm
@@ -305,7 +305,7 @@ fi
 # build oVirt Server Suite appliance
 if [ $update_app == 1 ]; then
     cd $WUI
-    make distclean
+    make clean
     setup_repos $WUI/repos.ks
 
     if [ $compress = 1 ]; then

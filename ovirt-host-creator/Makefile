@@ -6,10 +6,10 @@ all: rpms
 include ../common/release.mk
 
 clean:
-	rm -rf ovirt-host-image-* ovirt-cd.log
+	rm -rf ovirt-host-image-* ovirt-cd.log *.iso
 
 distclean: clean
-	rm -rf *.iso repos.ks rpm-build
+	rm -rf repos.ks rpm-build
 
 repos.ks: ../common/repos.ks.in
 	cp ../common/repos.ks.in repos.ks

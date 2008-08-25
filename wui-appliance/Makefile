@@ -25,9 +25,9 @@ tmp/tree/.treeinfo:
 	  http://download.fedoraproject.org/pub/fedora/linux/releases/$(F_REL)/Fedora/$(ARCH)/os
 
 clean:
-	rm -f repos.ks
+	rm -f $(NAME)-sda.raw $(NAME)-sda.qcow
 
 distclean: clean
-	rm -rf $(NAME)-sda.raw $(NAME)-sda.qcow tmp
+	rm -rf tmp repos.ks
 
 .PHONY: appliance appliance-compressed clean distclean
