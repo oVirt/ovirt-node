@@ -107,6 +107,13 @@ class VmTask < Task
                                                      PRIV_OBJECT_HW_POOL],
                                       :popup_action => 'migrate'} }
 
+  def after_initialize
+    if self.vm
+      self.vm_resource_pool = vm.vm_resource_pool
+      self.hardware_pool = vm.get_hardware_pool
+    end
+  end
+
   def self.valid_actions_for_vm_state(state, vm=nil, user=nil)
     actions = []
     ACTIONS.each do |action, hash|

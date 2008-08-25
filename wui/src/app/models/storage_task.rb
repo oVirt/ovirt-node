@@ -21,4 +21,8 @@ class StorageTask < Task
   belongs_to :storage_pool
 
   ACTION_REFRESH_POOL = "refresh_pool"
+
+  def after_initialize
+    self.hardware_pool = storage_pool.hardware_pool if self.storage_pool
+  end
 end

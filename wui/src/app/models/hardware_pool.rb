@@ -19,6 +19,7 @@
 
 class HardwarePool < Pool
 
+  has_many :tasks, :dependent => :nullify, :order => "id ASC"
   def all_storage_volumes
     StorageVolume.find(:all, :include => {:storage_pool => :hardware_pool}, :conditions => "pools.id = #{id}")
   end

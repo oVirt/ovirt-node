@@ -21,4 +21,8 @@ class HostTask < Task
   belongs_to :host
 
   ACTION_CLEAR_VMS = "clear_vms"
+
+  def after_initialize
+    self.hardware_pool = host.hardware_pool if self.host
+  end
 end

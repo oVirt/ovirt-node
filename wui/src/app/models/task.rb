@@ -18,6 +18,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class Task < ActiveRecord::Base
+  belongs_to :hardware_pool
+  belongs_to :vm_resource_pool
 
   STATE_QUEUED       = "queued"
   STATE_RUNNING      = "running"

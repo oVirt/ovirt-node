@@ -19,6 +19,7 @@
 
 class VmResourcePool < Pool
 
+  has_many :tasks, :dependent => :nullify, :order => "id ASC"
   def get_type_label
     "Virtual Machine Pool"
   end
