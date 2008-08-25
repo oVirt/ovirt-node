@@ -22,7 +22,7 @@
 <script type="text/javascript">
   function get_selected_vms()
   {
-    return get_selected_checkboxes("vms_grid_form")
+    return get_selected_checkboxes("vms_grid_form");
   }
   function delete_vms()
   {
@@ -31,12 +31,12 @@
       $.post('<%= url_for :controller => "vm", :action => "delete", :id => @vm_resource_pool %>',
              { vm_ids: vms.toString() },
               function(data,status){
-                $("#vms_grid").flexReload()
+                $tabs.tabs("load",$tabs.data('selected.tabs'));
 		if (data.alert) {
 		  $.jGrowl(data.alert);
                 }
 		if (vms.indexOf($('#vms_selection_id').html()) != -1){
-		  empty_summary('vms_selection', 'Virtual Machine')
+		  empty_summary('vms_selection', 'Virtual Machine');
 		}   
                }, 'json');
     }
@@ -45,7 +45,7 @@
   {
     vms = get_selected_vms()
     if (validate_selected(vms, "vm")) {
-      jQuery.facebox('<div id="vm_action_results">')
+      jQuery.facebox('<div id="vm_action_results">');
       $('#vm_action_results').load('<%= url_for :controller => "resources", 
              :action => "vm_actions", :id => @vm_resource_pool %>',
              { vm_ids: vms.toString(), vm_action: action });
@@ -53,10 +53,10 @@
   }
   function vms_select(selected_rows)
   {
-    var selected_ids = new Array() 
+    var selected_ids = new Array();
     for(i=0; i<selected_rows.length; i++) { 
       load_widget_select(selected_rows[i]);
-      selected_ids[i] = selected_rows[i].id
+      selected_ids[i] = selected_rows[i].id;
     }
     if (selected_ids.length == 1)
     {

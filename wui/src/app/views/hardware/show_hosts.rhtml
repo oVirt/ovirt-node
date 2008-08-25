@@ -29,12 +29,7 @@
       $.post('<%= url_for :controller => "hardware", :action => "move_hosts", :id => @pool %>',
              { resource_ids: hosts.toString(), target_pool_id: <%= Pool.root.id %> },
               function(data,status){
-                grid = $("#hosts_grid");
-                if (grid.size()>0 && grid != null) {
-                  grid.flexReload();
-                } else {
-                  $tabs.tabs("load",$tabs.data('selected.tabs'));
-                }
+                $tabs.tabs("load",$tabs.data('selected.tabs'));
 		if (data.alert) {
 		  $.jGrowl(data.alert);
                 }

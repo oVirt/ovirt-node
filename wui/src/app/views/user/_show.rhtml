@@ -12,16 +12,16 @@
   }
   function delete_users()
   {
-    permissions = get_selected_users()
+    permissions = get_selected_users();
     if (validate_selected(permissions, "user")) {
       $.post('<%= url_for :controller => "permission", :action => "delete", :id => pool.id %>',
            { permission_ids: permissions.toString() },
-            function(data,status){
-              $("#users_grid").flexReload()
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-             }, 'json');
+           function(data,status){
+             $tabs.tabs("load",$tabs.data('selected.tabs'));
+             if (data.alert) {
+               $.jGrowl(data.alert);
+             }
+           }, 'json');
     }
   }
   function update_users(role)
@@ -30,12 +30,12 @@
     if (validate_selected(permissions, "users")) {
       $.post('<%= url_for :controller => "permission", :action => "update_roles" %>',
              { permission_ids: permissions.toString(), user_role: role },
-              function(data,status){
-                $("#users_grid").flexReload()
-		if (data.alert) {
-		  $.jGrowl(data.alert);
-                }
-               }, 'json');
+             function(data,status){
+               $tabs.tabs("load",$tabs.data('selected.tabs'));
+               if (data.alert) {
+                 $.jGrowl(data.alert);
+               }
+             }, 'json');
     }
   }
 </script>

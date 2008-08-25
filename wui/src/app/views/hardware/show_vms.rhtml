@@ -7,7 +7,7 @@
 <script type="text/javascript">
   function get_selected_vm_pools()
   {
-    return get_selected_checkboxes("vmpools_grid_form")
+    return get_selected_checkboxes("vmpools_grid_form");
   }
   function delete_vm_pools()
   {
@@ -16,12 +16,12 @@
       $.post('<%= url_for :controller => "resources", :action => "delete", :id => @pool %>',
              { vm_pool_ids: vm_pools.toString() },
               function(data,status){
-                $("#vmpools_grid").flexReload()
+                $tabs.tabs("load",$tabs.data('selected.tabs'));
 		if (data.alert) {
 		  $.jGrowl(data.alert);
                 }
 		if (vm_pools.indexOf($('#vmpool_selection_id').html()) != -1){
-		  empty_summary('vmpool_selection', 'Virtual Machine Pool')
+		  empty_summary('vmpool_selection', 'Virtual Machine Pool');
 		}   
                }, 'json');
     }
@@ -31,7 +31,7 @@
     var selected_ids = new Array() 
     for(i=0; i<selected_rows.length; i++) { 
       load_widget_select(selected_rows[i]);
-      selected_ids[i] = selected_rows[i].id
+      selected_ids[i] = selected_rows[i].id;
     }
     if (selected_ids.length == 1)
     {

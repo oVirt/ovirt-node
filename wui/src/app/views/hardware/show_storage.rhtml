@@ -20,7 +20,7 @@
       $.post('<%= url_for :controller => "hardware", :action => "move_storage", :id => @pool %>',
              { resource_ids: storage.toString(), target_pool_id: <%= Pool.root.id %> },
               function(data,status){
-                $("#storage_grid").flexReload()
+                $tabs.tabs("load",$tabs.data('selected.tabs'));
 		if (data.alert) {
 		  $.jGrowl(data.alert);
                 }
@@ -37,7 +37,7 @@
       $.post('<%= url_for :controller => "storage", :action => "delete_pools", :id => @pool %>',
              { storage_pool_ids: storage.toString() },
               function(data,status){
-                $("#storage_grid").flexReload()
+                $tabs.tabs("load",$tabs.data('selected.tabs'));
 		if (data.alert) {
 		  $.jGrowl(data.alert);
                 }
@@ -49,14 +49,14 @@
   }
   function storage_select(selected_rows)
   {
-    var selected_ids = new Array() 
+    var selected_ids = new Array() ;
     for(i=0; i<selected_rows.length; i++) { 
-      selected_ids[i] = selected_rows[i].id
+      selected_ids[i] = selected_rows[i].id;
     }
     if (selected_ids.length == 1)
     {
       $('#storage_selection').load('<%= url_for :controller => "storage", :action => "show" %>',
-                { id: parseInt(selected_ids[0].substring(3))})
+                { id: parseInt(selected_ids[0].substring(3))});
     }
   }
 

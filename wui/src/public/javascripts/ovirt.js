@@ -7,13 +7,13 @@
 // returns an array of selected values for flexigrid checkboxes
 function get_selected_checkboxes(formid)
 {
-  var selected_array = new Array()
-  var selected_index = 0
-  var selected = $('#'+formid+' .grid_checkbox:checkbox:checked')
+  var selected_array = new Array();
+  var selected_index = 0;
+  var selected = $('#'+formid+' .grid_checkbox:checkbox:checked');
   selected.each(function(){
-    selected_array.push(this.value)  
+    selected_array.push(this.value);
   })
-  return selected_array
+  return selected_array;
 }
 
 
@@ -21,26 +21,26 @@ function get_selected_checkboxes(formid)
 function validate_selected(selected_array, name)
 {
   if (selected_array.length == 0) {
-    $.jGrowl("Please select at least one " + name + "  to continue")
-    return false
+    $.jGrowl("Please select at least one " + name + "  to continue");
+    return false;
   } else {
-    return true
+    return true;
   }
 }
 
 function add_hosts(url)
 {
-    hosts= get_selected_checkboxes("addhosts_grid_form")
+    hosts= get_selected_checkboxes("addhosts_grid_form");
     if (validate_selected(hosts, "host")) {
       $.post(url,
              { resource_ids: hosts.toString() },
               function(data,status){ 
                 jQuery(document).trigger('close.facebox');
-	        grid = $("#hosts_grid")
-                if (grid.size()>0) {
-                  grid.flexReload()
+	        grid = $("#hosts_grid");
+                if (grid.size()>0 && grid != null) {
+                  grid.flexReload();
                 } else {
-		  $('.tab_nav li.current a').click()
+		  $tabs.tabs("load",$tabs.data('selected.tabs'));
                 }
 		if (data.alert) {
 		  $.jGrowl(data.alert);
@@ -50,17 +50,17 @@ function add_hosts(url)
 }
 function add_storage(url)
 {
-    storage= get_selected_checkboxes("addstorage_grid_form")
+    storage= get_selected_checkboxes("addstorage_grid_form");
     if (validate_selected(storage, "storage pool")) {
       $.post(url,
              { resource_ids: storage.toString() },
-              function(data,status){ 
+              function(data,status){;
                 jQuery(document).trigger('close.facebox');
-	        grid = $("#storage_grid")
-                if (grid.size()>0) {
-                  grid.flexReload()
+	        grid = $("#storage_grid");
+                if (grid.size()>0 && grid != null) {
+                  grid.flexReload();
                 } else {
-		  $('.tab_nav li.current a').click()
+                   $tabs.tabs("load",$tabs.data('selected.tabs'));
                 }
 		if (data.alert) {
 		  $.jGrowl(data.alert);
@@ -86,76 +86,83 @@ function ajax_validation(response, status)
       }
     }
     if (response.alert) {
-      $.jGrowl(response.alert)
+      $.jGrowl(response.alert);
     }
   }
 }
 
 // callback actions for dialog submissions
 function afterHwPool(response, status){
-    ajax_validation(response, status)
+    ajax_validation(response, status);
     if (response.success) {
       jQuery(document).trigger('close.facebox');
       // FIXME do we need to reload the tree here
 
       // this is for reloading the host/storage grid when 
       // adding hosts/storage to a new HW pool
+      alert(response.resource_type);
       if (response.resource_type) {
-        $('#' + response.resource_type + '_grid').flexReload()
+        grid = $('#' + response.resource_type + '_grid');
+        alert(response.resource_type);
+        if (grid.size()>0 && grid != null) {
+          grid.flexReload();
+        } else {
+          $tabs.tabs("load",$tabs.data('selected.tabs'));
+        }
       }
       
       if ((response.resource_type == 'hosts' ? get_selected_hosts() : get_selected_storage()).indexOf($('#'+response.resource_type+'_selection_id').html()) != -1){
-	  empty_summary(response.resource_type +'_selection', (response.resource_type == 'hosts' ? 'Host' : 'Storage Pool'))
+	  empty_summary(response.resource_type +'_selection', (response.resource_type == 'hosts' ? 'Host' : 'Storage Pool'));
       }   
       // do we have HW pools grid?
       //$("#vmpools_grid").flexReload()
     }
 }
 function afterVmPool(response, status){
-    ajax_validation(response, status)
+    ajax_validation(response, status);
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      grid = $("#vmpools_grid")
-      if (grid.size()>0) {
-        grid.flexReload()
+      grid = $("#vmpools_grid");
+      if (grid.size()>0 && grid != null) {
+        grid.flexReload();
       } else {
-        $('.tab_nav li.current a').click()
+        $tabs.tabs("load",$tabs.data('selected.tabs'));
       }
     }
 }
 function afterStoragePool(response, status){
-    ajax_validation(response, status)
+    ajax_validation(response, status);
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      grid = $("#storage_grid")
-      if (grid.size()>0) {
-        grid.flexReload()
-      } else {
-        $('.tab_nav li.current a').click()
+      grid = $("#storage_grid");
+      if (grid.size()>0 && grid != null) {
+        grid.flexReload();
+      } else {;
+        $tabs.tabs("load",$tabs.data('selected.tabs'));
       }
     }
 }
 function afterPermission(response, status){
-    ajax_validation(response, status)
+    ajax_validation(response, status);
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      grid = $("#users_grid")
-      if (grid.size()>0) {
-        grid.flexReload()
+      grid = $("#users_grid");
+      if (grid.size()>0 && grid!= null) {
+        grid.flexReload();
       } else {
-        $('.tab_nav li.current a').click()
+        $tabs.tabs("load",$tabs.data('selected.tabs'));
       }
     }
 }
 function afterVm(response, status){
-    ajax_validation(response, status)
+    ajax_validation(response, status);
     if (response.success) {
       jQuery(document).trigger('close.facebox');
-      grid = $("#vms_grid")
-      if (grid.size()>0) {
-        grid.flexReload()
+      grid = $("#vms_grid");
+      if (grid.size()>0 && grid != null) {
+        grid.flexReload();
       } else {
-        $('.tab_nav li.current a').click()
+        $tabs.tabs("load",$tabs.data('selected.tabs'));
       }
     }
 }
