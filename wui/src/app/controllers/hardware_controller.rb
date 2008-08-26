@@ -24,19 +24,13 @@ class HardwareController < ApplicationController
          :redirect_to => { :action => :list }
 
   before_filter :pre_json, :only => [:vm_pools_json, :users_json, 
-                                     :storage_volumes_json]
+                                     :storage_volumes_json, :show_tasks, :tasks]
   before_filter :pre_modify, :only => [:add_hosts, :move_hosts, 
                                        :add_storage, :move_storage, 
                                        :create_storage, :delete_storage]
 
 
   def show
-    set_perms(@perm_obj)
-    unless @can_view
-      flash[:notice] = 'You do not have permission to view this hardware pool: redirecting to top level'
-      redirect_to :controller => "dashboard"
-      return
-    end
     if params[:ajax]
       render :layout => 'tabs-and-content'
     end
@@ -104,14 +98,47 @@ class HardwareController < ApplicationController
     @hardware_pools = HardwarePool.find :all
   end
 
+  def show_tasks
+    @task_types = [["VM Task", "VmTask"],
+                   ["Host Task", "HostTask"],
+                   ["Storage Task", "StorageTask", "break"],
+                   ["Show All", ""]]
+    @task_states = [["Queued", Task::STATE_QUEUED],
+                    ["Running", Task::STATE_RUNNING],
+                    ["Paused", Task::STATE_PAUSED],
+                    ["Finished", Task::STATE_FINISHED],
+                    ["Failed", Task::STATE_FAILED],
+                    ["Canceled", Task::STATE_CANCELED, "break"],
+                    ["Show All", ""]]
+    params[:page]=1
+    params[:sortname]="tasks.created_at"
+    params[:sortorder]="desc"
+    @tasks = tasks_internal
+    show
+  end
+
+  def tasks
+    render :json => tasks_internal.to_json
+  end
+
+  def tasks_internal
+    @task_type = params[:task_type]
+    @task_type ||=""
+    @task_state = params[:task_state]
+    @task_state ||=Task::STATE_QUEUED
+    conditions = {}
+    conditions[:type] = @task_type unless @task_type.empty?
+    conditions[:state] = @task_state unless @task_state.empty?
+    find_opts = {:include => [:storage_pool, :host, :vm]}
+    find_opts[:conditions] = conditions unless conditions.empty?
+    attr_list = []
+    attr_list << :id if params[:checkboxes]
+    attr_list += [:type_label, :task_obj, :action, :state, :user, :created_at, :args, :message]
+    json_hash(@pool.tasks, attr_list, [:all], find_opts)
+  end
+
   def quick_summary
     pre_show
-    set_perms(@perm_obj)
-    unless @can_view
-      flash[:notice] = 'You do not have permission to view this Hardware Pool: redirecting to top level'
-      redirect_to :action => 'list'
-      return
-    end
     render :layout => 'selection'    
   end
 
@@ -352,10 +379,16 @@ class HardwareController < ApplicationController
     @pool = HardwarePool.find(params[:id])
     @perm_obj = @pool
     @current_pool_id=@pool.id
+    set_perms(@perm_obj)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this Hardware Pool: redirecting to top level'
+      # FIXME: figure out the return type and render appropriately
+      redirect_to :action => 'list'
+      return
+    end
   end
   def pre_json
     pre_show
-    show
   end
   def pre_modify
     pre_edit

@@ -19,7 +19,7 @@
 
 class HardwarePool < Pool
 
-  has_many :tasks, :dependent => :nullify, :order => "id ASC"
+  has_many :tasks, :dependent => :nullify
   def all_storage_volumes
     StorageVolume.find(:all, :include => {:storage_pool => :hardware_pool}, :conditions => "pools.id = #{id}")
   end
@@ -97,5 +97,6 @@ class HardwarePool < Pool
     labels = RESOURCE_LABELS
     return {:total => total, :labels => labels}
   end
+
 
 end

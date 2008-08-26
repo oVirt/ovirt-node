@@ -18,7 +18,6 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class VmTask < Task
-  belongs_to :vm
 
   ACTION_CREATE_VM   = "create_vm"
 
@@ -112,6 +111,10 @@ class VmTask < Task
       self.vm_resource_pool = vm.vm_resource_pool
       self.hardware_pool = vm.get_hardware_pool
     end
+  end
+
+  def task_obj
+    "Vm;;;#{self.vm.id};;;#{self.vm.description}"
   end
 
   def self.valid_actions_for_vm_state(state, vm=nil, user=nil)

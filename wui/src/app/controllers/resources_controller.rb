@@ -23,7 +23,8 @@ class ResourcesController < ApplicationController
     render :action => 'list'
   end
 
-  before_filter :pre_json, :only => [:vms_json, :users_json]
+  before_filter :pre_json, :only => [:vms_json, :users_json,
+                                     :show_tasks, :tasks]
   before_filter :pre_vm_actions, :only => [:vm_actions]
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
@@ -44,16 +45,10 @@ class ResourcesController < ApplicationController
 
   # resource's summary page
   def show
-    set_perms(@perm_obj)
-    @is_hwpool_admin = @vm_resource_pool.parent.can_modify(@user)
     @action_values = [["Suspend", VmTask::ACTION_SUSPEND_VM],
                       ["Resume", VmTask::ACTION_RESUME_VM],
                       ["Save", VmTask::ACTION_SAVE_VM],
                       ["Restore", VmTask::ACTION_RESTORE_VM]]
-    unless @can_view
-      flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
-      redirect_to :action => 'list'
-    end
     if params[:ajax]
       render :layout => 'tabs-and-content'
     end
@@ -64,12 +59,6 @@ class ResourcesController < ApplicationController
 
   def quick_summary
     pre_show
-    set_perms(@perm_obj)
-    @is_hwpool_admin = @vm_resource_pool.parent.can_modify(@user)
-    unless @can_view
-      flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
-      redirect_to :action => 'list'
-    end
     render :layout => 'selection'    
   end
 
@@ -88,6 +77,38 @@ class ResourcesController < ApplicationController
   def show_users    
     @roles = Permission::ROLES.keys
     show
+  end
+
+  def show_tasks
+    @task_states = [["Queued", Task::STATE_QUEUED],
+                    ["Running", Task::STATE_RUNNING],
+                    ["Paused", Task::STATE_PAUSED],
+                    ["Finished", Task::STATE_FINISHED],
+                    ["Failed", Task::STATE_FAILED],
+                    ["Canceled", Task::STATE_CANCELED, "break"],
+                    ["Show All", ""]]
+    params[:page]=1
+    params[:sortname]="tasks.created_at"
+    params[:sortorder]="desc"
+    @tasks = tasks_internal
+    show
+  end
+
+  def tasks
+    render :json => tasks_internal.to_json
+  end
+
+  def tasks_internal
+    @task_state = params[:task_state]
+    @task_state ||=Task::STATE_QUEUED
+    conditions = {}
+    conditions[:state] = @task_state unless @task_state.empty?
+    find_opts = {:include => [:storage_pool, :host, :vm]}
+    find_opts[:conditions] = conditions unless conditions.empty?
+    attr_list = []
+    attr_list << :id if params[:checkboxes]
+    attr_list += [:type_label, :task_obj, :action, :state, :user, :created_at, :args, :message]
+    json_hash(@vm_resource_pool.tasks, attr_list, [:all], find_opts)
   end
 
   def vms_json
@@ -208,6 +229,12 @@ class ResourcesController < ApplicationController
     @vm_resource_pool = VmResourcePool.find(params[:id])
     @perm_obj = @vm_resource_pool
     @current_pool_id=@vm_resource_pool.id
+    set_perms(@perm_obj)
+    @is_hwpool_admin = @vm_resource_pool.parent.can_modify(@user)
+    unless @can_view
+      flash[:notice] = 'You do not have permission to view this VM Resource Pool: redirecting to top level'
+      redirect_to :action => 'dashboard'
+    end
   end
   def pre_edit
     @vm_resource_pool = VmResourcePool.find(params[:id])
@@ -218,7 +245,6 @@ class ResourcesController < ApplicationController
   end
   def pre_json
     pre_show
-    show
   end
   def pre_vm_actions
     @vm_resource_pool = VmResourcePool.find(params[:id])

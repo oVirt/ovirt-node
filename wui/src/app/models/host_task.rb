@@ -18,11 +18,15 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 class HostTask < Task
-  belongs_to :host
 
   ACTION_CLEAR_VMS = "clear_vms"
 
   def after_initialize
     self.hardware_pool = host.hardware_pool if self.host
   end
+
+  def task_obj
+    "Host;;;#{self.host.id};;;#{self.host.hostname}"
+  end
+
 end

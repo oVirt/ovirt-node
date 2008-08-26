@@ -90,7 +90,7 @@ class ApplicationController < ActionController::Base
   end
 
   # don't define find_opts for array inputs
-  def json_list(full_items, attributes, arg_list=[], find_opts={})
+  def json_hash(full_items, attributes, arg_list=[], find_opts={})
     page = params[:page].to_i
     paginate_opts = {:page => page, 
                      :order => "#{params[:sortname]} #{params[:sortorder]}", 
@@ -114,7 +114,11 @@ class ApplicationController < ActionController::Base
       end
       item_hash
     end
-    render :json => json_hash.to_json
+    json_hash
+  end
+  # don't define find_opts for array inputs
+  def json_list(full_items, attributes, arg_list=[], find_opts={})
+    render :json => json_hash(full_items, attributes, arg_list, find_opts).to_json
   end
 
 

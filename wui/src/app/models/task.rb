@@ -20,6 +20,13 @@
 class Task < ActiveRecord::Base
   belongs_to :hardware_pool
   belongs_to :vm_resource_pool
+  # moved associations here so that nested set :include directives work
+  # StorageTask association
+  belongs_to :storage_pool
+  # HostTask association
+  belongs_to :host
+  # VmTask association
+  belongs_to :vm
 
   STATE_QUEUED       = "queued"
   STATE_RUNNING      = "running"
@@ -48,6 +55,13 @@ class Task < ActiveRecord::Base
     conditions = state_array.collect {|x| "state='#{x}'"}.join(" or ")
     conditions = "(#{conditions}) and user='#{user}'"
     Task.find(:all, :conditions => conditions)
+  end
+
+  def type_label
+    self.class.name[0..-5]
+  end
+  def task_obj
+    ""
   end
 
 end
