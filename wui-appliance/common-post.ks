@@ -83,6 +83,5 @@ set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/BOOTPROTO dhcp
 set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/ONBOOT y
 set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/TYPE Bridge
 set /files/etc/sysconfig/network-scripts/ifcfg-ovirtbr0/PEERNTP yes
-save
 EOF
 

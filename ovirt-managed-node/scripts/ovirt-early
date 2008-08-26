@@ -35,6 +35,7 @@ configure_from_network() {
                       "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)"
                     if [ $? -eq 0 ]; then
                         printf .
+                        echo "save" >> $cfgdb
                         augtool < $cfgdb > /dev/null 2>&1
                         if [ $? -eq 0 ]; then
                             printf "remote config applied."
