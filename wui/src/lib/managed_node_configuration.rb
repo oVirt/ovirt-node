@@ -24,9 +24,6 @@
 
 require 'stringio'
 
-$: << File.join(File.dirname(__FILE__), "../dutils")
-$: << File.join(File.dirname(__FILE__), "../")
-
 class ManagedNodeConfiguration
   NIC_ENTRY_PREFIX='/files/etc/sysconfig/network-scripts'
 
