@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>.
 #
@@ -25,11 +25,11 @@ require 'managed_node_configuration'
 #
 class ManagedNodeConfigurationTest < Test::Unit::TestCase
   def setup
-    @host   = Host.new    
-    @nic    = Nic.new(:mac => '00:11:22:33:44:55')    
+    @host   = Host.new
+    @nic    = Nic.new(:mac => '00:11:22:33:44:55')
     @host.nics << @nic
   end
-  
+
   # Ensures that network interfaces uses DHCP when no IP address is specified.
   #
   def test_generate_with_no_ip_address
@@ -38,61 +38,61 @@ rm /files/etc/sysconfig/network-scripts/ifcfg-eth0
 set /files/etc/sysconfig/network-scripts/ifcfg-eth0/DEVICE eth0
 set /files/etc/sysconfig/network-scripts/ifcfg-eth0/BOOTPROTO dhcp
     HERE
-    
+
     result = ManagedNodeConfiguration.generate(
-      @host, 
+      @host,
       {'00:11:22:33:44:55' => 'eth0'}
     )
-    
+
     assert_equal expected, result
   end
-  
+
   # Ensures that network interfaces use the IP address when it's provided.
   #
-  def test_generate_with_ip_address  
+  def test_generate_with_ip_address
     @nic.ip_addr = '192.168.2.1'
-    
+
     expected = <<-HERE
 rm /files/etc/sysconfig/network-scripts/ifcfg-eth0
 set /files/etc/sysconfig/network-scripts/ifcfg-eth0/DEVICE eth0
 set /files/etc/sysconfig/network-scripts/ifcfg-eth0/IPADDR 192.168.2.1
     HERE
-    
+
     result = ManagedNodeConfiguration.generate(
       @host,
       {'00:11:22:33:44:55' => 'eth0'}
     )
-    
+
     assert_equal expected, result
   end
-  
+
   # Ensures the bridge is added to the configuration if one is defined.
   #
   def test_generate_with_bridge
     @nic.bridge = 'ovirtbr0'
-  
+
     expected = <<-HERE
 rm /files/etc/sysconfig/network-scripts/ifcfg-eth0
 set /files/etc/sysconfig/network-scripts/ifcfg-eth0/DEVICE eth0
 set /files/etc/sysconfig/network-scripts/ifcfg-eth0/BOOTPROTO dhcp
 set /files/etc/sysconfig/network-scripts/ifcfg-eth0/BRIDGE ovirtbr0
     HERE
-    
+
     result = ManagedNodeConfiguration.generate(
       @host,
       {'00:11:22:33:44:55' => 'eth0'}
     )
-    
+
     assert_equal expected, result
   end
-  
+
   # Ensures that more than one NIC is successfully processed.
   #
   def test_generate_with_multiple_nics
     @host.nics << Nic.new(:mac => '11:22:33:44:55:66', :ip_addr => '172.31.0.15')
     @host.nics << Nic.new(:mac => '22:33:44:55:66:77', :ip_addr => '172.31.0.100')
     @host.nics << Nic.new(:mac => '33:44:55:66:77:88')
-    
+
 
     expected = <<-HERE
 rm /files/etc/sysconfig/network-scripts/ifcfg-eth0
@@ -108,7 +108,7 @@ rm /files/etc/sysconfig/network-scripts/ifcfg-eth3
 set /files/etc/sysconfig/network-scripts/ifcfg-eth3/DEVICE eth3
 set /files/etc/sysconfig/network-scripts/ifcfg-eth3/BOOTPROTO dhcp
     HERE
-    
+
     result = ManagedNodeConfiguration.generate(
       @host,
       {
@@ -117,7 +117,7 @@ set /files/etc/sysconfig/network-scripts/ifcfg-eth3/BOOTPROTO dhcp
         '22:33:44:55:66:77' => 'eth2',
         '33:44:55:66:77:88' => 'eth3'
       })
-    
-    assert_equal expected, result      
+
+    assert_equal expected, result
   end
 end

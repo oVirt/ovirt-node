@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2008 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>.
 #
@@ -32,16 +32,16 @@ class ManagedNodeConfiguration
 
   def self.generate(host, macs)
     result = StringIO.new
-    
-    host.nics.each do |nic| 
+
+    host.nics.each do |nic|
       iface_name = macs[nic.mac]
-      
+
       if iface_name
         result.puts "rm #{NIC_ENTRY_PREFIX}/ifcfg-#{iface_name}"
         result.puts "set #{NIC_ENTRY_PREFIX}/ifcfg-#{iface_name}/DEVICE #{iface_name}"
         result.puts "set #{NIC_ENTRY_PREFIX}/ifcfg-#{iface_name}/IPADDR #{nic.ip_addr}"    if nic.ip_addr
-        result.puts "set #{NIC_ENTRY_PREFIX}/ifcfg-#{iface_name}/BOOTPROTO dhcp"           if nic.ip_addr == nil            
-        result.puts "set #{NIC_ENTRY_PREFIX}/ifcfg-#{iface_name}/BRIDGE #{nic.bridge}"     if nic.bridge       
+        result.puts "set #{NIC_ENTRY_PREFIX}/ifcfg-#{iface_name}/BOOTPROTO dhcp"           if nic.ip_addr == nil
+        result.puts "set #{NIC_ENTRY_PREFIX}/ifcfg-#{iface_name}/BRIDGE #{nic.bridge}"     if nic.bridge
       end
     end
 
