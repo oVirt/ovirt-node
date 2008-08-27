@@ -1,7 +1,3 @@
-prodops_pool:
-    name: 'Production Operations'
-    type: 'HardwarePool'
-
 one:
   id: 1
   name: 'master pool'
@@ -73,3 +69,9 @@ ten:
   parent_id: 5
   lft: 14
   rgt: 15
+prodops_pool:
+    id: 11
+    name: 'Production Operations'
+    type: 'HardwarePool'
+    parent_id: 5
+
