@@ -28,7 +28,7 @@ oVirt managed node to interact with the oVirt server.
 %setup -q
 
 %build
-make
+make -C ovirt-identify-node
 
 %install
 %{__rm} -rf %{buildroot}
@@ -41,7 +41,7 @@ make
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
-%{__install} -p -m0755 ovirt-identify-node %{buildroot}%{_sbindir}
+%{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
 
 %{__install} -p -m0644 scripts/ovirt-functions %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
@@ -141,9 +141,14 @@ fi
 %{_sysconfdir}/collectd.conf.in
 %{_sysconfdir}/chkconfig.d/collectd
 %config %attr(0644,root,root) %{_sysconfdir}/ovirt-release
-%doc README NEWS AUTHOR ChangeLog
+%doc ovirt-identify-node/README ovirt-identify-node/NEWS
+%doc ovirt-identify-node/AUTHOR ovirt-identify-node/ChangeLog
+%doc ovirt-identify-node/COPYING
 
 %changelog
+* Fri Aug 22 2008 Chris Lalancette <clalance@redhat.com> - 0.92 0.4
+- Re-arrange the directory layout, in preparation for ovirt-listen-awake
+
 * Tue Jul 29 2008 Perry Myers <pmyers@redhat.com> - 0.92 0.2
 - Added /etc/ovirt-release and merged ovirt-setup into spec file
 

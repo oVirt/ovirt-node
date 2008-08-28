@@ -22,7 +22,7 @@ all: rpms
 include ../common/release.mk
 
 clean:
-	make -C src clean
+	make -C ovirt-identify-node clean
 	rm -rf $(NV)
 
 distclean: clean
@@ -30,7 +30,7 @@ distclean: clean
 
 tar: clean
 	mkdir -p $(NV)
-	cp -a src/* $(NV)
+	cp -a logrotate ovirt-identify-node scripts $(NV)
 	mkdir -p rpm-build
 	tar zcvf rpm-build/$(NV).tar.gz $(NV)
 	cp version rpm-build/
