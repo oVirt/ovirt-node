@@ -142,12 +142,12 @@ fi
 
 # now make sure the packages we need are installed
 if [ -e /etc/redhat-release ]; then
-    PACKAGES="libvirt kvm virt-manager virt-viewer"
+    PACKAGES="libvirt kvm"
     CHECK=$(rpm $(printf " -q %s " "$PACKAGES")  &> /dev/null; echo $?)
     KVM_BINARY=/usr/bin/qemu-kvm
 elif [ -e /etc/debian_version ]; then
     # Works in Ubuntu 8.04. Still needs testing in Debian
-    PACKAGES="libvirt0 libvirt-bin kvm qemu virt-manager virt-viewer"
+    PACKAGES="libvirt0 libvirt-bin kvm qemu"
     CHECK=$(dpkg -l $PACKAGES &> /dev/null; echo $?)
     KVM_BINARY=/usr/bin/kvm
 else
