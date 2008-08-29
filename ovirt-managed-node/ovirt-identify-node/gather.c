@@ -214,6 +214,7 @@ get_nic_data(char *nic, nic_info_ptr nic_info)
         ifr.ifr_addr.sa_family = AF_INET;
         strncpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
 
+        ifr.ifr_data = (caddr_t)&ecmd;
         ioctl(sockfd, SIOCETHTOOL, &ifr);
         close(sockfd);
 
