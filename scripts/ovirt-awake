@@ -43,8 +43,6 @@ function receive-text () {
 }
 
 start () {
-#    find-server identify tcp
-
     connect-to-server
 
     receive-text
