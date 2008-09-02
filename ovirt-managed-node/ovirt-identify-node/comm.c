@@ -35,14 +35,14 @@ saferead(int fd, char *buf, size_t count)
 
     len_left = count;
 
-    DEBUG("Begin saferead(%d, %p, %d)\n", fd, buf, count);
+    DEBUG("Begin saferead(%d, %p, %zd)\n", fd, buf, count);
 
     while (!done) {
         DEBUG("Before read(%d,%p,%d)\n", fd, buf + offset, len_left);
 
         bytes = read(fd, buf + offset, len_left);
 
-        DEBUG("After read: bytes=%d\n", bytes);
+        DEBUG("After read: bytes=%zd\n", bytes);
 
         if (bytes == 0) {
             done = 1;
@@ -56,7 +56,7 @@ saferead(int fd, char *buf, size_t count)
             done = 1;
         }
 
-        DEBUG("End of decision loop: offset=%d, len_left=%dl, done=%d\n",
+        DEBUG("End of decision loop: offset=%zd, len_left=%dl, done=%d\n",
               offset, len_left, done);
     }
 
