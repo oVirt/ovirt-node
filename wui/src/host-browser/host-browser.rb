@@ -110,7 +110,7 @@ class HostBrowser
                 nic_info << nic
             else
 
-                raise Exception.new("ERRINFO! Excepted key=value : #{info}\n") unless info =~ /[\w]+[\s]*=[\w]/
+                raise Exception.new("ERRINFO! Expected key=value : #{info}\n") unless info =~ /[\w]+[\s]*=[\w]*/
 
                 key, value = info.split("=")
 
