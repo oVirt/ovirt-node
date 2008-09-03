@@ -36,4 +36,4 @@ tar: clean
 	cp version rpm-build/
 	rm -rf $(NV)
 
-.PHONY: all clean tar
+.PHONY: all distclean clean tar
