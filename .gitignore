@@ -1,4 +1,1 @@
-wui/src/log/*
-wui/src/tmp/*
-wui/src/db/schema.rb
-tmp
+rpm-build

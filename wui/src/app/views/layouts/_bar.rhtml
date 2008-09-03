@@ -1,9 +1,0 @@
-<div id="top_bar">
-<% if false %>
-<span class="hello_message">Hello current_user.display_name</span>
-<span class="account_message"><span class="login">current_user.login</span> | <%= link_to "home", '/users/user' %> | <%= link_to "log out", logout_url %></span>
-<% else %>
-<span class="hello_message">Hello there <%= @controller.get_login_user %>!</span>
-<span class="account_message"><%= link_to "hardware pools", :controller => 'hardware' %> | <%= link_to "VM resource pools", :controller => "resources" %></span>
-<% end %>
-</div>

@@ -1,6 +1,0 @@
-<% for pool in hardware_pools %>
-<div class="hardware-item"><%= link_to pool.name, { :controller => "hardware", :action => "show", :id => pool }, { } %></div>
-<% end %>
-<%- if hardware_pools.empty? -%>
-<div class="hardware-item"><em>none</em></div>
-<%- end -%>
