@@ -49,6 +49,7 @@ rpms: tar
 
 publish: rpms
 	rm -f $(OVIRT_CACHE_DIR)/yum/ovirt/$(pkg_name)*
+	mkdir -p $(OVIRT_CACHE_DIR)/yum/ovirt
 	cp -a rpm-build/$(pkg_name)*.rpm $(OVIRT_CACHE_DIR)/yum/ovirt
 	createrepo $(OVIRT_CACHE_DIR)/yum/ovirt
 
