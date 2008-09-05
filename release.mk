@@ -48,9 +48,9 @@ rpms: tar
 	rpmbuild $(RPM_FLAGS) -ba $(SPEC_FILE)
 
 publish: rpms
-	rm -f $(OVIRT_CACHE_DIR)/yum/ovirt/$(pkg_name)*
-	mkdir -p $(OVIRT_CACHE_DIR)/yum/ovirt
-	cp -a rpm-build/$(pkg_name)*.rpm $(OVIRT_CACHE_DIR)/yum/ovirt
-	createrepo $(OVIRT_CACHE_DIR)/yum/ovirt
+	rm -f $(OVIRT_CACHE_DIR)/ovirt/$(pkg_name)*
+	mkdir -p $(OVIRT_CACHE_DIR)/ovirt
+	cp -a rpm-build/$(pkg_name)*.rpm $(OVIRT_CACHE_DIR)/ovirt
+	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
 .PHONY: rpms new-rpms publish setversion bumprelease bumpversion bumpgit
