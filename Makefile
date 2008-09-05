@@ -22,7 +22,7 @@ all: rpms
 include release.mk
 
 clean:
-	make -C ovirt-identify-node clean
+	+$(MAKE) -C ovirt-identify-node clean
 	rm -rf $(NV)
 
 distclean: clean
