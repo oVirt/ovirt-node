@@ -43,8 +43,6 @@ setversion:
 new-rpms: bumprelease rpms
 
 rpms: tar
-	echo $(RPM_FLAGS)
-	exit
 	rpmbuild $(RPM_FLAGS) -ba $(SPEC_FILE)
 
 publish: rpms
