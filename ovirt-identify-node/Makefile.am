@@ -1,5 +1,4 @@
 # Copyright (C) 2008 Red Hat, Inc.
-# Written by Darryl L. Pierce <dpierce@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,23 +15,19 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-CC=gcc
-CFLAGS=-Wall -c -g $(shell pkg-config --cflags dbus-1)
-LFLAGS=-lhal -lvirt
-OBJECTS=comm.o gather.o hal_support.o main.o protocol.o
-TARGET=ovirt-identify-node
-SOURCES=\
-	ovirt-identify-node.c
+bin_PROGRAMS = ovirt-identify-node
 
-all: $(TARGET)
+EXTRA_DIST = AUTHOR
 
-.c.o:
-	$(CC) $(CFLAGS) $< -o $@
+ovirt_identify_node_SOURCES = \
+  ovirt-identify-node.h \
+  comm.c \
+  gather.c \
+  hal_support.c \
+  main.c \
+  protocol.c
 
-clean:
-	rm -rf $(OBJECTS) $(TARGET)
-
-$(TARGET): $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) $(LFLAGS)
-
-.PHONY: all clean
+ovirt_identify_node_LDADD = \
+  $(LDADD) $(DBUS_LIBS) $(HAL_LIBS) $(VIRT_LIBS)
+ovirt_identify_node_CPPFLAGS = \
+  $(AM_CPPFLAGS) $(DBUS_CFLAGS) $(HAL_CFLAGS) $(VIRT_CFLAGS)

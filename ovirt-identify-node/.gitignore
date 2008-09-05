@@ -1,13 +1,11 @@
+*.o
+.deps
 Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
-config.h
-config.h.in
-config.log
-config.status
-configure
 depcomp
 install-sh
 missing
+ovirt-identify-node
 stamp-h1

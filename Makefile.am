@@ -1,5 +1,4 @@
 # Copyright (C) 2008 Red Hat, Inc.
-# Written by Darryl L. Pierce <dpierce@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,24 +15,29 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-pkg_name = ovirt-node
+SUBDIRS = ovirt-identify-node
 
-all: rpms
+EXTRA_DIST =			\
+  .gitignore			\
+  ovirt-node.spec		\
+  release.mk			\
+  version			\
+  scripts/collectd		\
+  scripts/collectd.conf.in	\
+  scripts/dhclient-exit-hooks	\
+  scripts/kvm-ifup		\
+  scripts/ovirt			\
+  scripts/ovirt-awake		\
+  scripts/ovirt-early		\
+  scripts/ovirt-functions	\
+  scripts/ovirt-post		\
+  logrotate/ovirt-logrotate	\
+  logrotate/ovirt-logrotate.conf
+
 include release.mk
 
-clean:
-	+$(MAKE) -C ovirt-identify-node clean
-	rm -rf $(NV)
-
-distclean: clean
-	rm -rf rpm-build
-
-tar: clean
-	mkdir -p $(NV)
-	cp -a logrotate ovirt-identify-node scripts $(NV)
-	mkdir -p rpm-build
-	tar zcvf rpm-build/$(NV).tar.gz $(NV)
-	cp version rpm-build/
-	rm -rf $(NV)
-
-.PHONY: all distclean clean tar
+pkg_name = ovirt-node
+.PHONY: tar
+tar: dist
+	mkdir -p rpm-build/BUILDROOT
+	cp version $(distdir).tar.gz rpm-build

@@ -28,7 +28,8 @@ oVirt Node to interact with the oVirt server.
 %setup -q
 
 %build
-make -C ovirt-identify-node
+%configure
+make
 
 %install
 %{__rm} -rf %{buildroot}
@@ -146,6 +147,9 @@ fi
 %doc ovirt-identify-node/COPYING
 
 %changelog
+* Mon Sep  8 2008 Jim Meyering <meyering@redhat.com> - 0.92 0.4
+- Update ovirt-identify-node's build rule.
+
 * Fri Aug 22 2008 Chris Lalancette <clalance@redhat.com> - 0.92 0.4
 - Re-arrange the directory layout, in preparation for ovirt-listen-awake
 
