@@ -192,7 +192,7 @@ create_nic_info(void)
 /* Determines the speed of the network interface.
  */
 void
-get_nic_data(char *nic, nic_info_ptr nic_info)
+get_nic_data(char *nic, nic_info_ptr nic_info_p)
 {
     char *interface;
 
@@ -233,7 +233,7 @@ get_nic_data(char *nic, nic_info_ptr nic_info)
                                    SUPPORTED_10baseT_Full))
             bandwidth = 10;
 
-        snprintf(nic_info->bandwidth, BUFFER_LENGTH, "%d", bandwidth);
+        snprintf(nic_info_p->bandwidth, BUFFER_LENGTH, "%d", bandwidth);
     }
 }
 
@@ -250,15 +250,15 @@ get_nic_info(void)
 
     int num_results;
 
-    int index;
+    int i;
 
     nics = libhal_find_device_by_capability(hal_ctx, "net",
                                             &num_results, &dbus_error);
 
     DEBUG("Found %d NICs\n", num_results);
 
-    for (index = 0; index < num_results; index++) {
-        char *nic = nics[index];
+    for (i = 0; i < num_results; i++) {
+        char *nic = nics[i];
 
         VERBOSE("Starting new NIC.\n");
 
