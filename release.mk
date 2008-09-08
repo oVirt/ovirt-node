@@ -2,13 +2,14 @@
 # It expects the including Makefile to define the "pkg_name" 
 # variable, as well as a file named "version" in the current directory.
 
-ARCH		:= $(shell uname -i)
-VERSION		:= $(shell awk '{ print $$1 }' version)
-RELEASE		:= $(shell awk '{ print $$2 }' version)
+srcdir		?= .
+ARCH		= $(shell uname -i)
+VERSION		= $(shell awk '{ print $$1 }' $(srcdir)/version)
+RELEASE		= $(shell awk '{ print $$2 }' $(srcdir)/version)
 NEWVERSION	= $$(awk 'BEGIN { printf "%.2f", $(VERSION) + .01 }')
 NEWRELEASE	= $$(($(RELEASE) + 1))
 X		= $$(awk '{ split($$2,r,"."); \
-                            printf("%d.%d\n", r[1], r[2]+1) }' version)
+			  printf("%d.%d\n", r[1], r[2]+1) }' $(srcdir)/version)
 git_head	= $$(git log -1 --pretty=format:%h)
 GITRELEASE	= $(X).$$(date --utc +%Y%m%d%H%M)git$(git_head)
 DIST		= $$(rpm --eval '%{dist}')
