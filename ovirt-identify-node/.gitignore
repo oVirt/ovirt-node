@@ -1,11 +1,3 @@
 *.o
 .deps
-Makefile
-Makefile.in
-aclocal.m4
-autom4te.cache
-depcomp
-install-sh
-missing
 ovirt-identify-node
-stamp-h1
