@@ -15,29 +15,8 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-SUBDIRS = ovirt-identify-node ovirt-listen-awake
+bin_PROGRAMS = ovirt-listen-awake
 
-EXTRA_DIST =			\
-  .gitignore			\
-  ovirt-node.spec		\
-  release.mk			\
-  version			\
-  scripts/collectd		\
-  scripts/collectd.conf.in	\
-  scripts/dhclient-exit-hooks	\
-  scripts/kvm-ifup		\
-  scripts/ovirt			\
-  scripts/ovirt-awake		\
-  scripts/ovirt-early		\
-  scripts/ovirt-functions	\
-  scripts/ovirt-post		\
-  logrotate/ovirt-logrotate	\
-  logrotate/ovirt-logrotate.conf
+EXTRA_DIST = ovirt-listen-awake.init ovirt-convert-host ovirt-unconvert-host
 
-include release.mk
-
-pkg_name = ovirt-node
-.PHONY: tar
-tar: dist
-	mkdir -p rpm-build/BUILDROOT
-	cp version $(distdir).tar.gz rpm-build
+ovirt_listen_awake_SOURCES = ovirt-listen-awake.c

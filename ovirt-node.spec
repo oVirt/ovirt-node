@@ -43,6 +43,7 @@ make
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
+%{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
 
 %{__install} -p -m0644 scripts/ovirt-functions %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
@@ -130,6 +131,7 @@ fi
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
 %{_sbindir}/ovirt-identify-node
+%{_sbindir}/ovirt-listen-awake
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
@@ -147,8 +149,11 @@ fi
 %doc ovirt-identify-node/COPYING
 
 %changelog
-* Mon Sep  8 2008 Jim Meyering <meyering@redhat.com> - 0.92 0.4
+* Mon Sep  8 2008 Jim Meyering <meyering@redhat.com> - 0.92 0.6
 - Update ovirt-identify-node's build rule.
+
+* Fri Aug 22 2008 Chris Lalancette <clalance@redhat.com> - 0.92 0.5
+- Add the ovirt-listen-awake daemon to the RPM
 
 * Fri Aug 22 2008 Chris Lalancette <clalance@redhat.com> - 0.92 0.4
 - Re-arrange the directory layout, in preparation for ovirt-listen-awake
