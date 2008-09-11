@@ -17,6 +17,4 @@
 
 bin_PROGRAMS = ovirt-listen-awake
 
-EXTRA_DIST = ovirt-listen-awake.init ovirt-convert-host ovirt-unconvert-host
-
 ovirt_listen_awake_SOURCES = ovirt-listen-awake.c
