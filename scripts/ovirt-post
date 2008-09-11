@@ -2,7 +2,7 @@
 #
 # ovirt Start ovirt services
 #
-# chkconfig: 3 98 02
+# chkconfig: - 98 02
 # description: ovirt-post services
 #
 

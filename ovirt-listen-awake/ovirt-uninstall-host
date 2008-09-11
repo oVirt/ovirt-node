@@ -1,0 +1,33 @@
+#!/bin/bash
+
+. /etc/init.d/ovirt-functions
+
+PATH=$PATH:/sbin:/usr/sbin
+
+if [ $# -ne 0 ]; then
+    echo "Usage: ovirt-uninstall-host"
+    exit 1
+fi
+
+if [ ! -d $OVIRT_BACKUP_DIR ]; then
+    echo "The oVirt backup directory $OVIRT_BACKUP_DIR doesn't exist; can't"
+    echo "uninstall the host"
+    exit 2
+fi
+
+unbackup_file() {
+    # note that $1 will have a / on the front, so we don't need to add our own
+    cp -pf "$OVIRT_BACKUP_DIR$1" "$1"
+}
+
+chkconfig ovirt-listen-awake off
+chkconfig collectd off
+
+unbackup_file /etc/sysconfig/network
+unbackup_file /etc/hosts
+unbackup_file /etc/sysconfig/libvirtd
+unbackup_file /etc/libvirt/qemu.conf
+unbackup_file /etc/libvirt/libvirtd.conf
+unbackup_file /etc/sasl2/libvirt.conf
+unbackup_file /etc/sysconfig/iptables
+unbackup_file /etc/krb5.conf

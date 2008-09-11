@@ -2,7 +2,7 @@
 #
 # ovirt Start ovirt services
 #
-# chkconfig: 3 11 99
+# chkconfig: - 11 99
 # description: ovirt services
 #
 

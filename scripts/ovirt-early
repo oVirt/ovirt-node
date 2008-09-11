@@ -2,7 +2,7 @@
 #
 # ovirt-early Start early ovirt services
 #
-# chkconfig: 3 01 99
+# chkconfig: - 01 99
 # description: ovirt-early services
 #
 

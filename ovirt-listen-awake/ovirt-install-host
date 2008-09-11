@@ -1,0 +1,102 @@
+#!/bin/bash
+
+. /etc/init.d/ovirt-functions
+
+PATH=$PATH:/sbin:/usr/sbin
+
+usage() {
+    echo "Usage: ovirt-install-host <stateless|stateful>"
+    exit 1    
+}
+
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+backup_file() {
+    dir=$(dirname "$1")
+    case $dir in /*);; *) die "unexpected non-absolute dir: $dir";; esac
+    mkdir -p "$OVIRT_BACKUP_DIR/${dir:1}"
+    cp -pf "$1" "$OVIRT_BACKUP_DIR/${dir:1}"
+}
+
+add_if_not_exist() {
+    string="$1"
+    file="$2"
+
+    grep -qE "^[[:space:]]*$string($|#|[[:space:]])" "$file" \
+	|| echo "$string" >> "$file"
+}
+
+if [ "$1" = "stateless" ]; then
+    chkconfig --level 3 ovirt-early on
+    chkconfig --level 3 ovirt on
+    chkconfig --level 3 ovirt-post on
+    chkconfig --level 3 collectd on
+
+    ovirt_setup_libvirtd
+
+    # make sure we don't autostart virbr0 on libvirtd startup
+    rm -f /etc/libvirt/qemu/networks/autostart/default.xml
+
+    # remove the /etc/krb5.conf file; it will be fetched on bootup
+    rm -f /etc/krb5.conf
+
+    g=$(printf '\33[1m\33[32m')    # similar to g=$(tput bold; tput setaf 2)
+    n=$(printf '\33[m')            # similar to n=$(tput sgr0)
+    version=$(rpm -q --qf '%{version}' ovirt-node)
+    release=$(rpm -q --qf '%{release}' ovirt-node)
+    cat <<EOF > /etc/issue
+
+           888     888 ${g}d8b$n         888
+           888     888 ${g}Y8P$n         888
+           888     888             888
+   .d88b.  Y88b   d88P 888 888d888 888888
+  d88''88b  Y88b d88P  888 888P'   888
+  888  888   Y88o88P   888 888     888
+  Y88..88P    Y888P    888 888     Y88b.
+   'Y88P'      Y8P     888 888      'Y888
+
+  oVirt Node release ${version}-${release}
+
+  Virtualization just got the ${g}Green Light$n
+
+EOF
+    cp -p /etc/issue /etc/issue.net
+elif [ "$1" = "stateful" ]; then
+    echo "This script will make a number of changes to your system to enable it"
+    echo "to work as an oVirt node.  You can later undo these changes by"
+    echo "running /usr/sbin/ovirt-uninstall-host.  Do you want to proceed? [y/N]?"
+    read yesno
+
+    if [ "$yesno" != "y" -a "$yesno" != "Y" ]; then
+	exit 2
+    fi
+
+    mkdir -p $OVIRT_BACKUP_DIR
+
+    backup_file /etc/sysconfig/network
+    sed -i -e 's/^HOSTNAME=.*/HOSTNAME=physical.priv.ovirt.org/' /etc/sysconfig/network
+
+    backup_file /etc/hosts
+    add_if_not_exist "192.168.50.1 physical.priv.ovirt.org" /etc/hosts
+    add_if_not_exist "192.168.50.2 management.priv.ovirt.org" /etc/hosts
+
+    chkconfig ovirt-listen-awake on
+    chkconfig collectd on
+
+    backup_file /etc/sysconfig/libvirtd
+    backup_file /etc/libvirt/qemu.conf
+    backup_file /etc/libvirt/libvirtd.conf
+    backup_file /etc/sasl2/libvirt.conf
+    backup_file /etc/krb5.conf
+    ovirt_setup_libvirtd
+
+    backup_file /etc/sysconfig/iptables
+    lokkit -n -t ovirtbr0
+
+    echo "Setup complete.  To make the changes take effect, shut down any"
+    echo "running guests and reboot the host"
+else
+    usage
+fi
