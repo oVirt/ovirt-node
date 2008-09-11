@@ -36,7 +36,7 @@ EXTRA_DIST =			\
 
 include release.mk
 
-pkg_name = ovirt-node
+pkg_name = $(PACKAGE_NAME)
 .PHONY: tar
 tar: dist
 	mkdir -p rpm-build/BUILDROOT
