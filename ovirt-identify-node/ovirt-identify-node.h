@@ -67,6 +67,9 @@ typedef struct _nic_info {
     char mac_address[BUFFER_LENGTH];
     char bandwidth[BUFFER_LENGTH];
     char ip_address[BUFFER_LENGTH];
+    char netmask[BUFFER_LENGTH];
+    char iface_name[BUFFER_LENGTH];
+    char broadcast[BUFFER_LENGTH];
     struct _nic_info* next;
 } t_nic_info;
 

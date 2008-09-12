@@ -22,6 +22,10 @@
 
 #include "ovirt-identify-node.h"
 
+struct sockaddr_in sa;
+
+#define inaddrr(x) (*(struct in_addr *) &ifr.x[sizeof sa.sin_port])
+
 int
 init_gather(void)
 {
@@ -205,6 +209,7 @@ get_nic_data(char *nic, nic_info_ptr nic_info_p)
     interface =
         libhal_device_get_property_string(hal_ctx, nic, "net.interface",
                                           &dbus_error);
+    snprintf(nic_info_p->iface_name, BUFFER_LENGTH, "%s", interface);
     bzero(&ifr, sizeof(struct ifreq));
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -214,10 +219,34 @@ get_nic_data(char *nic, nic_info_ptr nic_info_p)
         ifr.ifr_addr.sa_family = AF_INET;
         strncpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
 
+        if(!ioctl(sockfd,SIOCGIFADDR,&ifr)) {
+
+            DEBUG("ip_address=%s\n",inet_ntoa(inaddrr(ifr_addr.sa_data)));
+
+            snprintf(nic_info_p->ip_address, BUFFER_LENGTH, "%s",
+                    inet_ntoa(inaddrr(ifr_addr.sa_data)));
+        }
+
+        if(!ioctl(sockfd,SIOCGIFNETMASK,&ifr) &&
+                strcmp("255.255.255.255", inet_ntoa(inaddrr(ifr_addr.sa_data)))) {
+
+            DEBUG("netmask=%s",inet_ntoa(inaddrr(ifr_addr.sa_data)));
+
+            snprintf(nic_info_p->netmask, BUFFER_LENGTH, "%s",
+                    inet_ntoa(inaddrr(ifr_addr.sa_data)));
+        }
+
+        if(!ioctl(sockfd,SIOCGIFBRDADDR,&ifr)) {
+
+            DEBUG("broadcast=%s",inet_ntoa(inaddrr(ifr_addr.sa_data)));
+
+            snprintf(nic_info_p->broadcast, BUFFER_LENGTH, "%s",
+                    inet_ntoa(inaddrr(ifr_addr.sa_data)));
+        }
+
         ecmd.cmd = ETHTOOL_GSET;
         ifr.ifr_data = (caddr_t)&ecmd;
         ioctl(sockfd, SIOCETHTOOL, &ifr);
-        close(sockfd);
 
         bandwidth = 10;
         if (ecmd.supported & SUPPORTED_10000baseT_Full)
@@ -235,6 +264,8 @@ get_nic_data(char *nic, nic_info_ptr nic_info_p)
             bandwidth = 10;
 
         snprintf(nic_info_p->bandwidth, BUFFER_LENGTH, "%d", bandwidth);
+
+        close(sockfd);
     }
 }
 
