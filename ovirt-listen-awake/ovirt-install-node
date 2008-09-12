@@ -5,7 +5,7 @@
 PATH=$PATH:/sbin:/usr/sbin
 
 usage() {
-    echo "Usage: ovirt-install-host <stateless|stateful>"
+    echo "Usage: ovirt-install-node <stateless|stateful>"
     exit 1    
 }
 

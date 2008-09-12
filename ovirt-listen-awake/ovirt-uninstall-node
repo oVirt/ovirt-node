@@ -5,7 +5,7 @@
 PATH=$PATH:/sbin:/usr/sbin
 
 if [ $# -ne 0 ]; then
-    echo "Usage: ovirt-uninstall-host"
+    echo "Usage: ovirt-uninstall-node"
     exit 1
 fi
 

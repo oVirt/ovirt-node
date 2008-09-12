@@ -47,8 +47,8 @@ make
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-listen-awake.init %{buildroot}%{_initrddir}/ovirt-listen-awake
-%{__install} -Dp -m0755 ovirt-listen-awake/ovirt-install-host %{buildroot}%{_sbindir}
-%{__install} -Dp -m0755 ovirt-listen-awake/ovirt-uninstall-host %{buildroot}%{_sbindir}
+%{__install} -Dp -m0755 ovirt-listen-awake/ovirt-install-node %{buildroot}%{_sbindir}
+%{__install} -Dp -m0755 ovirt-listen-awake/ovirt-uninstall-node %{buildroot}%{_sbindir}
 
 
 %{__install} -p -m0644 scripts/ovirt-functions %{buildroot}%{_initrddir}
@@ -89,8 +89,8 @@ fi
 %{_sbindir}/ovirt-awake
 %{_sbindir}/ovirt-identify-node
 %{_sbindir}/ovirt-listen-awake
-%{_sbindir}/ovirt-install-host
-%{_sbindir}/ovirt-uninstall-host
+%{_sbindir}/ovirt-install-node
+%{_sbindir}/ovirt-uninstall-node
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
@@ -108,7 +108,7 @@ fi
 
 %changelog
 * Thu Sep 11 2008 Chris Lalancette <clalance@redhat.com> - 0.92 0.7
-- Add the ovirt-install- and ovirt-uninstall-host scripts, and refactor
+- Add the ovirt-install- and ovirt-uninstall-node scripts, and refactor
   post to accomodate
 
 * Mon Sep  8 2008 Jim Meyering <meyering@redhat.com> - 0.92 0.6
