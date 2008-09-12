@@ -1,12 +1,12 @@
 # note: the version number here is overridden by the one in release.mk
 AC_INIT([ovirt-node], [0.1], [ovirt-devel@redhat.com])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
 
 # for ovirt-identify-node
-PKG_CHECK_MODULES([DBUS], [dbus-1 >= 1.2.1])
-PKG_CHECK_MODULES([HAL], [hal >= 0.5.11])
+PKG_CHECK_MODULES([DBUS], [dbus-1 >= 1.0.0])
+PKG_CHECK_MODULES([HAL], [hal >= 0.5.8])
 PKG_CHECK_MODULES([VIRT], [libvirt >= 0.4.4])
 
 # If using gcc and default CFLAGS, enable some warnings.
