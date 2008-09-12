@@ -24,8 +24,6 @@ EXTRA_DIST =			\
   version			\
   scripts/collectd		\
   scripts/collectd.conf.in	\
-  scripts/dhclient-exit-hooks	\
-  scripts/kvm-ifup		\
   scripts/ovirt			\
   scripts/ovirt-awake		\
   scripts/ovirt-early		\
