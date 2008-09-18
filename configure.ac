@@ -1,5 +1,4 @@
-# note: the version number here is overridden by the one in release.mk
-AC_INIT([ovirt-node], [0.1], [ovirt-devel@redhat.com])
+AC_INIT([ovirt-node], [0.93], [ovirt-devel@redhat.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
@@ -14,4 +13,4 @@ test x"$ac_ct_CC:$CFLAGS" = 'xgcc:-g -O2' \
   && CFLAGS="$CFLAGS -Wshadow -Wall -Werror"
 
 AC_CONFIG_FILES([Makefile ovirt-identify-node/Makefile ovirt-listen-awake/Makefile])
-AC_OUTPUT
+AC_OUTPUT(ovirt-node.spec)

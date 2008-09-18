@@ -15,16 +15,16 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
+OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
 SUBDIRS = ovirt-identify-node ovirt-listen-awake
 
 EXTRA_DIST =			\
   .gitignore			\
   ovirt-node.spec		\
-  release.mk			\
-  version			\
+  ovirt-node.spec.in	\
   scripts/collectd		\
   scripts/collectd.conf.in	\
-  scripts/ovirt			\
+  scripts/ovirt				\
   scripts/ovirt-awake		\
   scripts/ovirt-early		\
   scripts/ovirt-functions	\
@@ -32,10 +32,17 @@ EXTRA_DIST =			\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
 
-include release.mk
+git_head	= $$(git log -1 --pretty=format:%h)
+GIT_RELEASE	= $$(date --utc +%Y%m%d%H%M%S)git$(git_head)
+RPMDIR		= $$(rpm --eval '%{_rpmdir}')
+RPM_FLAGS	= --define "ovirt_cache_dir $(OVIRT_CACHE_DIR)"
+RPM_FLAGS	+= $(if $(OVIRT_DEV),--define "git_release .$(GIT_RELEASE)")
 
-pkg_name = $(PACKAGE_NAME)
-.PHONY: tar
-tar: dist
-	mkdir -p rpm-build/BUILDROOT
-	cp version $(distdir).tar.gz rpm-build
+rpms: dist
+	rpmbuild $(RPM_FLAGS) -ta $(distdir).tar.gz
+
+publish: rpms
+	rsync -aq --delete $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
+	createrepo $(OVIRT_CACHE_DIR)/ovirt
+
+.PHONY: rpms publish

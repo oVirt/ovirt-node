@@ -1,10 +1,9 @@
 Summary:        The oVirt Node daemons/scripts
 Name:           ovirt-node
-Source1:        version
-Version:        %(echo `awk '{ print $1 }' %{SOURCE1}`)
-Release:        %(echo `awk '{ print $2 }' %{SOURCE1}`)%{?dist}%{?extra_release}
+Version:        @VERSION@
+Release:        0%{?git_release}%{?dist}%{?extra_release}
 Source0:        %{name}-%{version}.tar.gz
-License:        GPL
+License:        GPLv2+
 Group:          Applications/System
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot

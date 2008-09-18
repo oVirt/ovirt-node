@@ -11,5 +11,5 @@ depcomp
 install-sh
 missing
 stamp-h1
-rpm-build
 ovirt-node*.gz
+ovirt-node.spec
