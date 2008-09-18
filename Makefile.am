@@ -45,4 +45,9 @@ publish: rpms
 	rsync -aq $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
+# This target is a placeholder so that ovirt.mk will work correctly until
+# all remaining projects are autoconfiscated
+bumpgit:
+	:
+
 .PHONY: rpms publish
