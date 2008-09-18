@@ -54,7 +54,7 @@ configure_from_network() {
         printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
             > /etc/sysconfig/network-scripts/ifcfg-$eth
         printf '%s\n' "DEVICE=$BRIDGE" BOOTPROTO=dhcp \
-            ONBOOT=yes TYPE=Bridge PEERNTP=yes \
+            ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
             > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
     done
     printf "default config applied."
