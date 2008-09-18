@@ -42,7 +42,7 @@ rpms: dist
 	rpmbuild $(RPM_FLAGS) -ta $(distdir).tar.gz
 
 publish: rpms
-	rsync -aq --delete $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
+	rsync -aq $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
 .PHONY: rpms publish
