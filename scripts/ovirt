@@ -11,30 +11,31 @@
 . /etc/init.d/ovirt-functions
 
 start() {
-    krb5_conf=/etc/krb5.conf
-    krb5_tab=/etc/libvirt/krb5.tab
-    # retrieve config from local oVirt partition if available
-    #   krb5.conf krb5.tab
-    #   TODO local admin password, ssh server key - what else?
+    # retrieve config from local OVIRT partition if available
     ovirt=$(mktemp -d)
+    ovirt_mount $ovirt
+    # /config on OVIRT partition contains persisted /etc files
     cfg=$ovirt/config
-    if [ -e /dev/disk/by-label/$OVIRT_LABEL ]; then
-      mount -r /dev/disk/by-label/$OVIRT_LABEL $ovirt
-    else
-      mount -r /dev/live $ovirt
+    if [ -d $cfg/etc ]; then
+      cp -rv $cfg/etc/* /etc
+      restorecon -r /etc
     fi
-    if [ -e $cfg/krb5.conf ]; then
-      cp -a $cfg/krb5.conf $krb5_conf
+    # and optional Augeas augtool script
+    aug=$cfg/config.aug
+    if [ -f $aug ]; then
+      tmpaug=$(mktemp)
+      cp $aug $tmpaug
+      echo "save" >> $tmpaug
+      augtool < $tmpaug > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+        printf "$aug applied."
+      fi
     fi
-    if [ -e $cfg/krb5.tab ]; then
-      cp -a $cfg/krb5.tab $krb5_tab
-    fi
-    if [ -s $krb5_tab ]; then
-      krb5_tab=
-    fi
+    umount $ovirt && rmdir $ovirt
 
     find_srv ipa tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+        krb5_conf=/etc/krb5.conf
         # FIXME this is IPA specific
         wget -q \
             http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf.tmp
@@ -42,32 +43,24 @@ start() {
             echo "Failed to get $krb5_conf"; return 1
         fi
         mv $krb5_conf.tmp $krb5_conf
-        # store config in oVirt partition
-        if [ -e $cfg ]; then
-            mount -o remount,rw $ovirt
-            cp -a $krb5_conf $cfg/krb5.conf
-        fi
     else
         echo "skipping Kerberos configuration"
     fi
 
     find_srv identify tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+        krb5_tab=/etc/libvirt/krb5.tab
+        # skip ktab download if we got it from /config
+        if [ -s $krb5_tab ]; then
+          krb5_tab=
+        fi
         ovirt-awake start $SRV_HOST $SRV_PORT $krb5_tab
         if [ $? -ne 0 ]; then
             echo "ovirt-awake failed"; return 1
         fi
-        # store config in oVirt partition
-        if [ -n "$krb_tab" -a -e $cfg ]; then
-            mount -o remount,rw $ovirt
-            cp -a $krb5_tab $cfg/krb5.tab
-        fi
     else
         echo "skipping ovirt-awake, oVirt identify service not available"
     fi
-
-    # cleanup
-    umount $ovirt && rmdir $ovirt
 
     find_srv collectd tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then

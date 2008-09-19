@@ -217,13 +217,9 @@ local_install() {
     mkdir -p $ovirt/config
     # update local config using the one embedded in livecd image
     # TODO admin tool for adding /config into livecd image
-    if [ -e $live/config/krb5.conf ]; then
-      cp -a $live/config/krb5.conf $ovirt/config \
-      || echo "krb5.conf copy failed"
-    fi
-    if [ -e $live/config/krb5.tab ]; then
-      cp -a $live/config/krb5.tab $ovirt/config \
-      || echo "krb5.tab copy failed"
+    if [ -d $live/config ]; then
+      cp -rv $live/config/* $ovirt/config \
+      || echo "config copy failed"
     fi
 
     if [ $local_os = 0 ]; then

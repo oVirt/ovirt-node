@@ -11,8 +11,13 @@
 . /etc/init.d/ovirt-functions
 
 start() {
-    find_srv identify tcp
+    # persist selected configuration files
+    ovirt_store_config \
+      /etc/krb5.conf \
+      /etc/libvirt/krb5.tab \
+      /etc/ssh/ssh_host*_key*
 
+    find_srv identify tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
         ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
     else

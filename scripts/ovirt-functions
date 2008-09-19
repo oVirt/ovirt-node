@@ -47,3 +47,41 @@ ovirt_setup_libvirtd() {
        echo "mech_list: gssapi" >> $sasl_conf
     fi
 }
+
+ovirt_mount() {
+    if [ -e /dev/disk/by-label/$OVIRT_LABEL ]; then
+      mount -r /dev/disk/by-label/$OVIRT_LABEL $1
+    else
+      mount -r /dev/live $1
+    fi
+}
+
+md5() {
+  md5sum $1 2>/dev/null | (read MD5 filename; echo $MD5)
+}
+
+# persist configuration to /config on OVIRT partition
+#   ovirt_store_config /etc/config /etc/config2 ...
+ovirt_store_config() {
+    ovirt=$(mktemp -d)
+    ovirt_mount $ovirt
+    cfg=$ovirt/config
+    rw=0
+    printf "store config:"
+    for f in "$@"; do
+       # ignore non-/etc paths
+       if [ $f != ${f#/etc/} ]; then
+           # check if changed
+           if [ "$(md5 $f)" != "$(md5 $cfg$f)" ]; then
+               if [ $rw = 0 ]; then
+                   mount -o remount,rw $ovirt
+                   rw=1
+               fi
+               mkdir -p $cfg$(dirname $f)
+               cp $f $cfg$f
+               printf " $f"
+           fi
+       fi
+    done
+    umount $ovirt && rmdir $ovirt
+}

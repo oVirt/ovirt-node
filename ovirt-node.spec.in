@@ -12,6 +12,7 @@ Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 BuildRequires:  libvirt-devel
 BuildRequires:  dbus-devel hal-devel
+Requires:       augeas
 Requires:       libvirt
 Requires:       hal
 Requires:       collectd
