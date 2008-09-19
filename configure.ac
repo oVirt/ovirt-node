@@ -12,5 +12,9 @@ PKG_CHECK_MODULES([VIRT], [libvirt >= 0.4.4])
 test x"$ac_ct_CC:$CFLAGS" = 'xgcc:-g -O2' \
   && CFLAGS="$CFLAGS -Wshadow -Wall -Werror"
 
-AC_CONFIG_FILES([Makefile ovirt-identify-node/Makefile ovirt-listen-awake/Makefile])
-AC_OUTPUT(ovirt-node.spec)
+AC_CONFIG_FILES([Makefile
+  ovirt-identify-node/Makefile
+  ovirt-listen-awake/Makefile
+  ovirt-node.spec
+  ])
+AC_OUTPUT
