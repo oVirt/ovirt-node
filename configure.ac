@@ -1,5 +1,5 @@
 AC_INIT([ovirt-node], [0.93], [ovirt-devel@redhat.com])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability tar-pax])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
 
