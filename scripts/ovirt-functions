@@ -83,5 +83,6 @@ ovirt_store_config() {
            fi
        fi
     done
+    echo
     umount $ovirt && rmdir $ovirt
 }

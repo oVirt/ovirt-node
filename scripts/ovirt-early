@@ -21,38 +21,49 @@ get_mac_addresses() {
 configure_from_network() {
     DEVICE=$1
     if [ -n "$DEVICE" ]; then
-        printf .
+        echo "Configuring network Using interface $DEVICE"
         # setup temporary interface to retrieve configuration
         echo "network --device $DEVICE --bootproto dhcp" | nash
         if [ $? -eq 0 ]; then
-            printf .
             # from network-scripts/ifup-post
             IPADDR=$(LC_ALL=C ip -o -4 addr ls dev ${DEVICE} | awk '{ print $4 ; exit }')
+            echo "Interface brought up with $IPADDR"
             eval $(ipcalc --silent --hostname ${IPADDR} ; echo "status=$?")
             if [ "$status" = "0" ]; then
                 hostname $HOSTNAME
+                echo "Hostname resolved to $HOSTNAME"
                 # retrieve remote config
                 find_srv ovirt tcp
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-                    printf .
+                    echo "oVirt Server found at: $SRV_HOST:$SRV_PORT"
                     cfgdb=$(mktemp)
                     get_mac_addresses
-                    wget -q -O $cfgdb \
+                    echo "MACs to use: $macs"
+                    wget -O $cfgdb \
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
                     if [ $? -eq 0 ]; then
-                        printf .
+                        echo "Remote configuration bundle retrieved to $cfgdb"
                         bash $cfgdb
                         if [ -f /var/tmp/pre-config-script ]; then
-                            printf "loading kernel modules"
-                            bash /var/tmp/pre-config-script
+                            echo "Loading kernel modules"
+                            bash /var/tmp/pre-config-script \
+                                && echo "Kernel modules loaded" \
+                                || echo "Failed loading kernel modules"
                         fi
                         if [ -f /var/tmp/node-augtool ]; then
-                            augtool < /var/tmp/node-augtool
+                            echo "Loading remote config"
+                            augtool < /var/tmp/node-augtool \
+                                && echo "Remote config applied" \
+                                || echo "Failed applying remote config"
                         fi
-                        if [ $? -eq 0 ]; then
-                            printf "remote config applied."
+                        if ls /etc/sysconfig/network-scripts/ifcfg-eth* > /dev/null 2>&1; then
+                            echo "Network interfaces created from remote config"
                             return
+                        else
+                            echo "Remote config contained no network interfaces"
                         fi
+                    else
+                        echo "Failed to retrieve configuration bundle"
                     fi
                 fi
             fi
@@ -63,13 +74,14 @@ configure_from_network() {
     ETHDEVS=$(cd /sys/class/net && ls -d eth*)
     for eth in $ETHDEVS; do
         BRIDGE=ovirtbr`echo $eth | cut -b4-`
+        echo "Applying default configuration to $eth and $BRIDGE"
         printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
             > /etc/sysconfig/network-scripts/ifcfg-$eth
         printf '%s\n' "DEVICE=$BRIDGE" BOOTPROTO=dhcp \
             ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
             > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
     done
-    printf "default config applied."
+    echo "Default config applied"
 }
 
 # find_disk $bus $serial $live_disk
