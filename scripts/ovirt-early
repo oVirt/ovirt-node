@@ -13,6 +13,11 @@
 # size of the oVirt partition in megabytes
 OVIRT_SIZE=64
 
+get_mac_addresses() {
+    macs=$(ifconfig | awk '/HWaddr/ { print $5"="$1 }' \
+                    | tr '\n' ' ' | sed 's/ /%2C/g;s/:/%3A/g')
+}
+
 configure_from_network() {
     DEVICE=$1
     if [ -n "$DEVICE" ]; then
@@ -31,12 +36,19 @@ configure_from_network() {
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
                     printf .
                     cfgdb=$(mktemp)
+                    get_mac_addresses
                     wget -q -O $cfgdb \
-                      "http://$SRV_HOST:$SRV_PORT/ovirt/cfgdb/$(hostname)"
+                      "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
                     if [ $? -eq 0 ]; then
                         printf .
-                        echo "save" >> $cfgdb
-                        augtool < $cfgdb > /dev/null 2>&1
+                        bash $cfgdb
+                        if [ -f /var/tmp/pre-config-script ]; then
+                            printf "loading kernel modules"
+                            bash /var/tmp/pre-config-script
+                        fi
+                        if [ -f /var/tmp/node-augtool ]; then
+                            augtool < /var/tmp/node-augtool
+                        fi
                         if [ $? -eq 0 ]; then
                             printf "remote config applied."
                             return
