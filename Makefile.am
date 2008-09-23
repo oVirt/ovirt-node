@@ -43,6 +43,7 @@ rpms: dist
 
 publish: rpms
 	rsync -aq $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
+	rsync -aq $(shell rpm --eval '%{_srcrpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/src
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
 .PHONY: rpms publish
