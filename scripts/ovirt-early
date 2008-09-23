@@ -232,11 +232,16 @@ local_install() {
     live=$(mktemp -d)
     mount -r $live_dev $live
     if [ $? -ne 0 ]; then
-      echo "source image mount failed"; return 1
+      echo "source image mount failed"
+      rmdir $live
+      return 1
     fi
     mount $part $ovirt
     if [ $? -ne 0 ]; then
-      echo "target mount failed"; return 1
+      echo "target mount failed"
+      umount $live && rmdir $live
+      rmdir $ovirt
+      return 1
     fi
     mkdir -p $ovirt/config
     # update local config using the one embedded in livecd image
@@ -267,7 +272,10 @@ local_install() {
       && cp -p $live/$syslinux/initrd0.img $ovirt/boot \
       && cp -p $live/$syslinux/vmlinuz0 $ovirt/boot
       if [ $? -ne 0 ]; then
-        echo "image copy failed"; return 1
+        echo "image copy failed"
+        umount $ovirt && rmdir $ovirt
+        umount $live && rmdir $live
+        return 1
       fi
       part_num=$(( ${part#$disk} - 1 ))
       cat > $ovirt/boot/grub/grub.conf << EOF
@@ -281,7 +289,10 @@ title oVirt Node
 EOF
       grub-install --root-directory=$ovirt $disk >&2
       if [ $? -ne 0 ]; then
-        echo "boot loader install failed"; return 1
+        echo "boot loader install failed"
+        umount $ovirt && rmdir $ovirt
+        umount $live && rmdir $live
+        return 1
       fi
       # remove 1.5 stages we don't need
       find $ovirt/boot/grub -name '*_stage1_5' ! -name e2fs_stage1_5 \
