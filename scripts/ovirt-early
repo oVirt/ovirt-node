@@ -263,9 +263,9 @@ local_install() {
       rm -rf $ovirt/LiveOS
       mkdir -p $ovirt/boot/grub
       mkdir -p $ovirt/LiveOS
-      cp -a $live/LiveOS/squashfs.img $ovirt/LiveOS \
-      && cp -a $live/$syslinux/initrd0.img $ovirt/boot \
-      && cp -a $live/$syslinux/vmlinuz0 $ovirt/boot
+      cp -p $live/LiveOS/squashfs.img $ovirt/LiveOS \
+      && cp -p $live/$syslinux/initrd0.img $ovirt/boot \
+      && cp -p $live/$syslinux/vmlinuz0 $ovirt/boot
       if [ $? -ne 0 ]; then
         echo "image copy failed"; return 1
       fi
