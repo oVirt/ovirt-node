@@ -50,9 +50,11 @@ ovirt_setup_libvirtd() {
 
 ovirt_mount() {
     if [ -e /dev/disk/by-label/$OVIRT_LABEL ]; then
-      mount -r /dev/disk/by-label/$OVIRT_LABEL $1
+      mount -r /dev/disk/by-label/$OVIRT_LABEL $1 \
+        || mount /dev/disk/by-label/$OVIRT_LABEL $1
     else
-      mount -r /dev/live $1
+      mount -r /dev/live $1 \
+        || mount /dev/live $1
     fi
 }
 
