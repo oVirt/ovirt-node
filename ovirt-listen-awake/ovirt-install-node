@@ -46,7 +46,7 @@ if [ "$1" = "stateless" ]; then
     n=$(printf '\33[m')            # similar to n=$(tput sgr0)
     version=$(rpm -q --qf '%{version}' ovirt-node)
     release=$(rpm -q --qf '%{release}' ovirt-node)
-    cat <<\EOF > /etc/issue
+    cat <<EOF > /etc/issue
 
            888     888 ${g}d8b$n         888
            888     888 ${g}Y8P$n         888
