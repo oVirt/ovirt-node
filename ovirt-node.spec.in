@@ -14,6 +14,7 @@ BuildRequires:  libvirt-devel
 BuildRequires:  dbus-devel hal-devel
 Requires:       augeas
 Requires:       libvirt
+Requires:       libvirt-qpid
 Requires:       hal
 Requires:       collectd
 Requires:       cyrus-sasl-gssapi
