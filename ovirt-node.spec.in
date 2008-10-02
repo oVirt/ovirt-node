@@ -87,6 +87,7 @@ cd -
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-process-config %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-listen-awake.init %{buildroot}%{_initrddir}/ovirt-listen-awake
@@ -158,6 +159,7 @@ fi
 %files
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
+%{_sbindir}/ovirt-process-config
 %{_sbindir}/ovirt-identify-node
 %{_sbindir}/ovirt-listen-awake
 %{_sbindir}/ovirt-install-node
