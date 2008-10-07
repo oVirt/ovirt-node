@@ -21,10 +21,11 @@ SUBDIRS = ovirt-identify-node ovirt-listen-awake
 EXTRA_DIST =			\
   .gitignore			\
   ovirt-node.spec		\
-  ovirt-node.spec.in	\
+  ovirt-node.spec.in		\
+  ovirt-node-selinux.te		\
   scripts/collectd		\
   scripts/collectd.conf.in	\
-  scripts/ovirt				\
+  scripts/ovirt			\
   scripts/ovirt-awake		\
   scripts/ovirt-early		\
   scripts/ovirt-functions	\
@@ -48,4 +49,3 @@ publish: rpms
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
 .PHONY: rpms publish
-

@@ -100,22 +100,3 @@ elif [ "$1" = "stateful" ]; then
 else
     usage
 fi
-
-# Common to both stateless and stateful Nodes
-
-if selinuxenabled ; then
-    # make disks available to VMs
-    t=$(mktemp -d)
-    cat > $t/te <<\EOF
-module ovirt 1.0.0;
-require {
-    type fixed_disk_device_t;
-    type qemu_t;
-    class blk_file { ioctl getattr setattr read write };
-}
-allow qemu_t fixed_disk_device_t:blk_file { ioctl getattr setattr read write };
-EOF
-    checkmodule -M -m -o $t/mod $t/te
-    semodule_package -o $t/pp -m $t/mod
-    semodule -i $t/pp
-fi

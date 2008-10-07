@@ -1,0 +1,8 @@
+module ovirt 1.0.0;
+require {
+    type fixed_disk_device_t;
+    type qemu_t;
+    class blk_file { ioctl getattr setattr read write };
+}
+# Give qemu_t access to any block device
+allow qemu_t fixed_disk_device_t:blk_file { ioctl getattr setattr read write };

@@ -6,6 +6,11 @@ Source0:        %{name}-%{version}.tar.gz
 License:        GPLv2+
 Group:          Applications/System
 
+%define selinux_variants mls strict targeted
+%define selinux_policyver %(sed -n 's,.*selinux-policy-\([^/]*\)/.*,\1,p' /usr/share/selinux/devel/policyhelp)
+%define modulename %{name}-selinux
+Source1:        %{modulename}.te
+
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
 Requires(post):  /sbin/chkconfig
@@ -26,13 +31,37 @@ ExclusiveArch:  %{ix86} x86_64
 Provides a series of daemons and support utilities to allow an
 oVirt Node to interact with the oVirt server.
 
-%prep
+%package selinux
+Summary:        SELinux policy module supporting ovirt-node
+Group:          System Environment/Base
+BuildRequires:  checkpolicy, selinux-policy-devel, hardlink
+%if "%{selinux_policyver}" != ""
+Requires:       selinux-policy >= %{selinux_policyver}
+%endif
+Requires:       %{name} = %{version}-%{release}
+Requires(post):   /usr/sbin/semodule, /sbin/restorecon
+Requires(postun): /usr/sbin/semodule, /sbin/restorecon
 
+%description selinux
+SELinux policy module supporting ovirt-node
+
+%prep
 %setup -q
+
+mkdir SELinux
+cp -p %{SOURCE1} SELinux
 
 %build
 %configure
 make
+
+cd SELinux
+for selinuxvariant in %{selinux_variants}; do
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile
+  mv %{modulename}.pp %{modulename}.pp.${selinuxvariant}
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile clean
+done
+cd -
 
 %install
 %{__rm} -rf %{buildroot}
@@ -65,6 +94,16 @@ make
 
 echo "oVirt Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
 
+cd SELinux
+for selinuxvariant in %{selinux_variants}; do
+  install -d %{buildroot}%{_datadir}/selinux/${selinuxvariant}
+  install -p -m 644 %{modulename}.pp.${selinuxvariant} \
+  %{buildroot}%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
+done
+cd -
+
+/usr/sbin/hardlink -cv %{buildroot}%{_datadir}/selinux
+
 %clean
 %{__rm} -rf %{buildroot}
 
@@ -84,6 +123,24 @@ if [ "$1" = 0 ] ; then
   /sbin/chkconfig --del ovirt-post
   /sbin/chkconfig --del ovirt-listen-awake
 fi
+
+%post selinux
+for selinuxvariant in %{selinux_variants}; do
+  /usr/sbin/semodule -s ${selinuxvariant} -i \
+    %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
+done
+
+%postun selinux
+if [ $1 -eq 0 ] ; then
+  for selinuxvariant in %{selinux_variants}; do
+    /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
+  done
+fi
+
+%files selinux
+%defattr(-,root,root,0755)
+%doc SELinux/*
+%{_datadir}/selinux/*/%{modulename}.pp
 
 %files
 %defattr(-,root,root,0755)
