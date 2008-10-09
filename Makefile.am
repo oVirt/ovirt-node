@@ -33,11 +33,17 @@ EXTRA_DIST =			\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
 
+# For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
+# annotated rpm version strings.
+_ovirt_dev = \
+ $(shell grep -q '^[[:space:]]*Release:[[:space:]]*0' \
+   $(srcdir)/*.spec.in && echo 1 || :)
+
 git_head	= $$(git log -1 --pretty=format:%h)
 GIT_RELEASE	= $$(date --utc +%Y%m%d%H%M%S)git$(git_head)
 RPMDIR		= $$(rpm --eval '%{_rpmdir}')
 RPM_FLAGS	= --define "ovirt_cache_dir $(OVIRT_CACHE_DIR)"
-RPM_FLAGS	+= $(if $(OVIRT_DEV),--define "extra_release .$(GIT_RELEASE)")
+RPM_FLAGS	+= $(if $(_ovirt_dev),--define "extra_release .$(GIT_RELEASE)")
 
 rpms: dist
 	rpmbuild $(RPM_FLAGS) -ta $(distdir).tar.gz
