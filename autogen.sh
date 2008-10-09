@@ -17,12 +17,17 @@ THEDIR=`pwd`
 	  die=1
   }
 
-  (libtool --version) < /dev/null > /dev/null 2>&1 || {
+  # Require libtool only if one of of LT_INIT,
+  # AC_PROG_LIBTOOL, AM_PROG_LIBTOOL is used in configure.ac.
+  grep -E '^[[:blank:]]*(LT_INIT|A[CM]_PROG_LIBTOOL)' configure.ac >/dev/null \
+      && {
+    (libtool --version) < /dev/null > /dev/null 2>&1 || {
 	  echo
 	  echo "You must have libtool installed."
 	  echo "Download the appropriate package for your distribution,"
 	  echo "or see http://www.gnu.org/software/libtool"
 	  die=1
+    }
   }
 
   (automake --version) < /dev/null > /dev/null 2>&1 || {
@@ -46,7 +51,10 @@ THEDIR=`pwd`
   fi
 
   aclocal
-  autoheader
+
+  # Run autoheader only if needed
+  grep '^[[:blank:]]*AC_CONFIG_HEADERS' configure.ac >/dev/null && autoheader
+
   automake --add-missing
   autoconf
   ./configure "$@"
