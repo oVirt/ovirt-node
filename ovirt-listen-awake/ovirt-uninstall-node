@@ -3,9 +3,17 @@
 . /etc/init.d/ovirt-functions
 
 PATH=$PATH:/sbin:/usr/sbin
+ME=$(basename "$0")
+warn() { printf "$ME: $@\n" >&2; }
+die() { warn "$@"; exit 1; }
+
+# first, check to see we are root
+if [ $( id -u ) -ne 0 ]; then
+    die "Must run as root"
+fi
 
 if [ $# -ne 0 ]; then
-    echo "Usage: ovirt-uninstall-node"
+    echo "Usage: $ME"
     exit 1
 fi
 
@@ -31,3 +39,4 @@ unbackup_file /etc/libvirt/libvirtd.conf
 unbackup_file /etc/sasl2/libvirt.conf
 unbackup_file /etc/sysconfig/iptables
 unbackup_file /etc/krb5.conf
+rm -Rf $OVIRT_BACKUP_DIR

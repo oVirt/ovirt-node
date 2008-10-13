@@ -1,16 +1,27 @@
 #!/bin/bash
 
+PHYS_HOST=physical.priv.ovirt.org
+MGMT_HOST=management.priv.ovirt.org
+
 . /etc/init.d/ovirt-functions
 
 PATH=$PATH:/sbin:/usr/sbin
+ME=$(basename "$0")
+warn() { printf "$ME: $@\n" >&2; }
+die() { warn "$@"; exit 1; }
 
 usage() {
-    echo "Usage: ovirt-install-node <stateless|stateful>"
-    exit 1
+    echo "Usage: $ME <stateless|stateful>"
 }
+
+# first, check to see we are root
+if [ $( id -u ) -ne 0 ]; then
+    die "Must run as root"
+fi
 
 if [ $# -ne 1 ]; then
     usage
+    exit 1
 fi
 
 backup_file() {
@@ -73,14 +84,28 @@ elif [ "$1" = "stateful" ]; then
         exit 2
     fi
 
+    # Always try to uninstall first, that way the original pristine files are
+    # in place before re-installing, this prevents OVIRT_BACKUP_DIR from
+    # being overwritten with an older version of the node config files
+    ovirt-uninstall-node > /dev/null 2>&1
+
+    # Remove old keytab if it exists in case we have a new appliance to work with
+    rm -f /etc/libvirt/krb5.tab
+
+    rm -Rf $OVIRT_BACKUP_DIR
     mkdir -p $OVIRT_BACKUP_DIR
 
     backup_file /etc/sysconfig/network
-    sed -i -e 's/^HOSTNAME=.*/HOSTNAME=physical.priv.ovirt.org/' /etc/sysconfig/network
+    if grep "^HOSTNAME=" /etc/sysconfig/network > /dev/null 2>&1 ; then
+        sed -i -e "s/^HOSTNAME=.*/HOSTNAME=$PHYS_HOST/" /etc/sysconfig/network
+    else
+        echo "HOSTNAME=$PHYS_HOST" >> /etc/sysconfig/network
+    fi
+    hostname $PHYS_HOST
 
     backup_file /etc/hosts
-    add_if_not_exist "192.168.50.1 physical.priv.ovirt.org" /etc/hosts
-    add_if_not_exist "192.168.50.2 management.priv.ovirt.org" /etc/hosts
+    add_if_not_exist "192.168.50.1 $PHYS_HOST" /etc/hosts
+    add_if_not_exist "192.168.50.2 $MGMT_HOST" /etc/hosts
 
     chkconfig ovirt-listen-awake on
     chkconfig collectd on
@@ -93,10 +118,28 @@ elif [ "$1" = "stateful" ]; then
     ovirt_setup_libvirtd
 
     backup_file /etc/sysconfig/iptables
-    lokkit -n -t ovirtbr0
+    # We open up anything coming from ovirtbr0 to this node, since it
+    # is only intended for demo purposes.  For reference, here are the
+    # ports that need to be opened:
+    # 7777:tcp (ovirt-listen-awake), 16509:tcp (libvirtd), 5900-6000:tcp (vnc),
+    # 49152-49216:tcp (libvirt migration)
+    lokkit -t ovirtbr0
 
-    echo "Setup complete.  To make the changes take effect, shut down any"
-    echo "running guests and reboot the host"
+    service collectd restart
+    service ovirt-listen-awake restart
+
+    # Check if any domains are active before restarting libvirtd, since it will
+    # kill them.  Header information from virsh list is 2 lines, and 1 line for
+    # footer.  So > 3 lines means domains are running
+    running_domains=$(( $(virsh -c qemu:///system list 2> /dev/null | wc -l) - 3 ))
+    if [ $running_domains -gt 0 ]; then
+        echo "Cannot restart libvirtd because domains are active."
+        echo "Please shutdown all domains and restart libvirtd with:"
+        echo "service libvirtd restart"
+    else
+        service libvirtd restart
+    fi
 else
     usage
+    exit 1
 fi
