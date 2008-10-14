@@ -25,7 +25,7 @@ fi
 
 unbackup_file() {
     # note that $1 will have a / on the front, so we don't need to add our own
-    cp -pf "$OVIRT_BACKUP_DIR$1" "$1"
+    test -f "$OVIRT_BACKUP_DIR$1" && cp -pf "$OVIRT_BACKUP_DIR$1" "$1"
 }
 
 chkconfig ovirt-listen-awake off
@@ -39,4 +39,6 @@ unbackup_file /etc/libvirt/libvirtd.conf
 unbackup_file /etc/sasl2/libvirt.conf
 unbackup_file /etc/sysconfig/iptables
 unbackup_file /etc/krb5.conf
+unbackup_file /etc/collectd.conf
+unbackup_file /etc/sysconfig/libvirt-qpid
 rm -Rf $OVIRT_BACKUP_DIR
