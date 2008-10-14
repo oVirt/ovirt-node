@@ -7,7 +7,7 @@ MGMT_HOST=management.priv.ovirt.org
 
 PATH=$PATH:/sbin:/usr/sbin
 ME=$(basename "$0")
-warn() { printf "$ME: $@\n" >&2; }
+warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 die() { warn "$@"; exit 1; }
 
 usage() {
