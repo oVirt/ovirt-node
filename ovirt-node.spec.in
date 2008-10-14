@@ -18,11 +18,24 @@ Requires(preun): /sbin/chkconfig
 BuildRequires:  libvirt-devel
 BuildRequires:  dbus-devel hal-devel
 Requires:       augeas
-Requires:       libvirt
 Requires:       libvirt-qpid
 Requires:       hal
-Requires:       collectd
-Requires:       cyrus-sasl-gssapi
+Requires:       collectd-virt
+Requires:       wget
+Requires:       cyrus-sasl-gssapi cyrus-sasl cyrus-sasl-lib
+Requires:       iscsi-initiator-utils
+Requires:       ntp
+Requires:       nfs-utils
+Requires:       krb5-workstation
+Requires:       bash
+Requires:       chkconfig
+Requires:       bind-utils
+# Stupid yum dep solver pulls in older 'qemu' to resolve
+# /usr/bin/qemu-img dep. This forces it to pick the new
+# qemu-img RPM.
+Requires:       qemu-img
+Requires:       nc
+Requires:       cronie
 ExclusiveArch:  %{ix86} x86_64
 
 %define app_root %{_datadir}/%{name}
