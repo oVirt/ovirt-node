@@ -164,7 +164,9 @@ elif [ "$1" = "stateful" ]; then
     service collectd restart
     service ovirt-listen-awake restart
     service libvirt-qpid restart
-    service ntpd restart
+    service ntpd stop
+    service ntpdate start
+    service ntp start
 else
     usage
     exit 1
