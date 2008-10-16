@@ -166,7 +166,7 @@ elif [ "$1" = "stateful" ]; then
     service libvirt-qpid restart
     service ntpd stop
     service ntpdate start
-    service ntp start
+    service ntpd start
 else
     usage
     exit 1
