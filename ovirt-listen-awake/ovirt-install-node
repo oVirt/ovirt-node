@@ -128,6 +128,9 @@ elif [ "$1" = "stateful" ]; then
     chkconfig ovirt-listen-awake on
     chkconfig collectd on
     chkconfig libvirt-qpid on
+    chkconfig iptables on
+    chkconfig ntpdate on
+    chkconfig ntpd on
 
     backup_file /etc/sysconfig/libvirtd
     backup_file /etc/libvirt/qemu.conf
@@ -144,6 +147,8 @@ elif [ "$1" = "stateful" ]; then
     # 49152-49216:tcp (libvirt migration)
     lokkit -t ovirtbr0
 
+    service iptables restart
+
     # Check if any domains are active before restarting libvirtd, since it will
     # kill them.  Header information from virsh list is 2 lines, and 1 line for
     # footer.  So > 3 lines means domains are running
@@ -159,6 +164,7 @@ elif [ "$1" = "stateful" ]; then
     service collectd restart
     service ovirt-listen-awake restart
     service libvirt-qpid restart
+    service ntpd restart
 else
     usage
     exit 1
