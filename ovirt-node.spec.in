@@ -35,7 +35,7 @@ Requires:       bind-utils
 # qemu-img RPM.
 Requires:       qemu-img
 Requires:       nc
-Requires:       cronie
+Requires:       /usr/sbin/crond
 ExclusiveArch:  %{ix86} x86_64
 
 %define app_root %{_datadir}/%{name}
