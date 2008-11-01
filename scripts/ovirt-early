@@ -85,15 +85,17 @@ find_disk() {
     local bus=$1
     local serial=$2
     local live=$3
-    for d in /dev/sd?; do
+    for d in /dev/disk/by-id/{scsi,usb}*; do
+      ID_FS_USAGE=
       eval $(udevinfo --query env --name $d)
-      if [ "$ID_BUS" = "$bus" ]; then
+      # ID_FS_USAGE is set for partitions
+      if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
         if [ -z "$serial" -o "$ID_SERIAL" = "$serial" ]; then
           if [ -n "$live" -a "$d" = "$live" ]; then
             # cannot install LiveOS over itself
             continue
           else
-            echo $d
+            echo $(readlink -e $d)
             return 0
           fi
         fi
