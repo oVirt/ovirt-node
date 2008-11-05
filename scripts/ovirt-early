@@ -12,6 +12,8 @@
 
 # size of the oVirt partition in megabytes
 OVIRT_SIZE=64
+BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
+AUGTOOL_CONFIG=/var/tmp/augtool-config
 
 get_mac_addresses() {
     macs=$(ifconfig | awk '/HWaddr/ { print $5"="$1 }' \
@@ -43,16 +45,10 @@ configure_from_network() {
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
                     if [ $? -eq 0 ]; then
                         echo "Remote configuration bundle retrieved to $cfgdb"
-                        bash $cfgdb
-                        if [ -f /var/tmp/pre-config-script ]; then
-                            echo "Loading kernel modules"
-                            bash /var/tmp/pre-config-script \
-                                && echo "Kernel modules loaded" \
-                                || echo "Failed loading kernel modules"
-                        fi
-                        if [ -f /var/tmp/node-augtool ]; then
+                        ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
+                        if [ -f $AUGTOOL_CONFIG ]; then
                             echo "Loading remote config"
-                            augtool < /var/tmp/node-augtool \
+                            augtool < $AUGTOOL_CONFIG \
                                 && echo "Remote config applied" \
                                 || echo "Failed applying remote config"
                         fi
@@ -89,15 +85,17 @@ find_disk() {
     local bus=$1
     local serial=$2
     local live=$3
-    for d in /dev/sd?; do
+    for d in /dev/disk/by-id/{scsi,usb}*; do
+      ID_FS_USAGE=
       eval $(udevinfo --query env --name $d)
-      if [ "$ID_BUS" = "$bus" ]; then
+      # ID_FS_USAGE is set for partitions
+      if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
         if [ -z "$serial" -o "$ID_SERIAL" = "$serial" ]; then
           if [ -n "$live" -a "$d" = "$live" ]; then
             # cannot install LiveOS over itself
             continue
           else
-            echo $d
+            echo $(readlink -e $d)
             return 0
           fi
         fi

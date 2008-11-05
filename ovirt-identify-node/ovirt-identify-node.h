@@ -34,6 +34,7 @@
 
 #include <libvirt/libvirt.h>
 
+#include <linux/types.h>
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
 #include <linux/if.h>

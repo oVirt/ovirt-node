@@ -30,6 +30,7 @@ EXTRA_DIST =			\
   scripts/ovirt-early		\
   scripts/ovirt-functions	\
   scripts/ovirt-post		\
+  scripts/ovirt-process-config  \
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
 

@@ -145,7 +145,9 @@ elif [ "$1" = "stateful" ]; then
     # ports that need to be opened:
     # 7777:tcp (ovirt-listen-awake), 16509:tcp (libvirtd), 5900-6000:tcp (vnc),
     # 49152-49216:tcp (libvirt migration)
-    lokkit -t ovirtbr0
+    lokkit -q -t ovirtbr0
+
+    service iptables restart
 
     service iptables restart
 
