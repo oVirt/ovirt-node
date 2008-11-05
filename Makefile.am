@@ -34,6 +34,8 @@ EXTRA_DIST =			\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
 
+DISTCLEANFILES = $(PACKAGE)-$(VERSION).tar.gz
+
 # For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
 # annotated rpm version strings.
 _ovirt_dev = \
