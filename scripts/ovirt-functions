@@ -4,8 +4,27 @@ OVIRT_LOGFILE=/var/log/ovirt.log
 
 # label of the oVirt partition
 OVIRT_LABEL=OVIRT
+# configuration defaults
+OVIRT_DEFAULTS=/etc/sysconfig/ovirt
+if [ -f $OVIRT_DEFAULTS ]; then
+    . $OVIRT_DEFAULTS
+fi
+# fallback defaults when sysconfig is empty
+OVIRT_STANDALONE=${OVIRT_STANDALONE:-0}
 
 OVIRT_BACKUP_DIR=/var/lib/ovirt-backup
+
+# is_managed
+# return 1 if oVirt Node is running in standalone mode
+# return 0 if oVirt Node is managed by the oVirt Server
+is_managed() {
+    return $OVIRT_STANDALONE
+}
+
+# is_standalone = not is_managed
+is_standalone() {
+    if is_managed; then return 1; else return 0; fi
+}
 
 # find_srv SERVICE PROTO
 #

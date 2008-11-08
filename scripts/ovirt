@@ -33,6 +33,9 @@ start() {
     fi
     umount $ovirt && rmdir $ovirt
 
+    if is_standalone; then
+        exit 0
+    fi
     find_srv ipa tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
         krb5_conf=/etc/krb5.conf

@@ -104,10 +104,11 @@ find_disk() {
     return 1
 }
 
-# local_install $local_os $target
-#  local_os - 1=install LiveOS and boot loader
-#             0=initialize oVirt partition only
-#  target - target disk to hold the oVirt partition
+# TODO move to ovirt-config-storage
+# local_install $local_boot $local_disk $bootparams
+#  local_boot - 1=install LiveOS and boot loader
+#               0=initialize oVirt partition only
+#  local_disk - local disk to hold the oVirt partition
 #           =usb|scsi[:serial#]
 #  bootparams - extra boot parameters like console=
 #
@@ -118,8 +119,8 @@ find_disk() {
 #  /LiveOS - oVirt Node compressed livecd image
 
 local_install() {
-    local local_os=$1
-    local target=$2
+    local local_boot=$1
+    local local_disk=$2
     local bootparams=$3
     local disk
     local part
@@ -140,7 +141,7 @@ local_install() {
     if [ "$ovirt_disk" = "$ovirt_part" ]; then
       ovirt_disk=
     fi
-    if [ -z "$target" ]; then
+    if [ -z "$local_disk" ]; then
         if [ -z "$ovirt_disk" ]; then
           return 1
         fi
@@ -149,7 +150,7 @@ local_install() {
         disk=$ovirt_disk
         part=$ovirt_part
     else
-      case "$target" in
+      case "$local_disk" in
           =)
           # empty ovirt_init, use current live image device
           mode=update
@@ -158,12 +159,12 @@ local_install() {
           ;;
           =scsi*)
           bus=scsi
-          serial=${target#=scsi:}
+          serial=${local_disk#=scsi:}
           mode=install
           ;;
           =usb*)
           bus=usb
-          serial=${target#=usb:}
+          serial=${local_disk#=usb:}
           mode=install
           ;;
           *)
@@ -177,12 +178,12 @@ local_install() {
         disk=$(find_disk $bus $serial $live_disk)
         rc=$?
         if [ $rc -ne 0 ]; then
-          echo "target disk '$target' not available"
+          echo "local disk '$local_disk' not available"
           return 1
         fi
         if [ -n "$ovirt_disk" ]; then
           if [ "$disk" = "$ovirt_disk" ]; then
-            # target disk contains oVirt partition, select it for update
+            # local disk contains oVirt partition, select it for update
             # TODO force reinstall option
             mode=update
             part=$ovirt_part
@@ -219,7 +220,7 @@ local_install() {
     fi
     ovirt=$(mktemp -d)
     if [ "$part" = "$live_part" ]; then
-      # ovirt_init w/o specified target
+      # ovirt_init w/o local disk specified
       # setup /config on live disk, if writeable
       # TODO mlabel/e2label (check fs2 type or just blindly try?)
       mount -r $part $ovirt && mount -o remount,rw $ovirt \
@@ -236,7 +237,7 @@ local_install() {
     fi
     mount $part $ovirt
     if [ $? -ne 0 ]; then
-      echo "target mount failed"
+      echo "local disk mount failed"
       umount $live && rmdir $live
       rmdir $ovirt
       return 1
@@ -249,7 +250,7 @@ local_install() {
       || echo "config copy failed"
     fi
 
-    if [ $local_os = 0 ]; then
+    if [ $local_boot = 0 ]; then
       # config update only, cleanup and continue booting
       umount $ovirt && rmdir $ovirt
       umount $live && rmdir $live
@@ -314,7 +315,14 @@ start() {
     # oVirt boot parameters
     #   BOOTIF=<MAC> (appended by pxelinux)
     #   ovirt_init=usb|scsi[:serial#]
+    #   ovirt_vol=BOOT_GB:SWAP_GB:INSTALL_GB:CONFIG_GB:LOGGING_GB
     #   ovirt_local_boot
+    #   ovirt_standalone
+    #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
+    #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
+    #   ipv6=dhcp|auto
+    #   syslog=server[:port]
+    #   TBD logrotate maxsize
 
     #   BOOTIF=<MAC> (appended by pxelinux)
     # network boot interface is assumed to be on management network where
@@ -329,11 +337,38 @@ start() {
     # serial# - select exact disk using serial number, as reported by
     #           udev ID_SERIAL
     # e.g. ovirt_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
-    target=
+    ovirt_init=
+
+    #   ovirt_vol=BOOT_GB:SWAP_GB:INSTALL_GB:CONFIG_GB:LOGGING_GB
+    # local partition sizes in GB
+    ovirt_vol_boot=
+    ovirt_vol_install=
+    ovirt_vol_config=
+    ovirt_vol_logging=
 
     #   ovirt_local_boot
     # install/update oVirt Node image on the local installation target disk
-    local_os=0
+    ovirt_local_boot=0
+
+    #   ovirt_standalone
+    # force oVirt Node standalone mode
+    ovirt_standalone=0
+
+    #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
+    #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
+    #   ipv6=dhcp|auto
+    # static network configuration
+    ip_address=
+    ip_gateway=
+    ip_netmask=
+    netmask=
+    gateway=
+    ipv6=
+
+    #   syslog=server[:port]
+    # default syslog server
+    syslog_server=
+    syslog_port=
 
     # save boot parameters like console= for local disk boot menu
     bootparams=
@@ -345,31 +380,82 @@ start() {
             bootif=$(grep -il $(echo $i|sed 's/-/:/g') /sys/class/net/eth*/address|rev|cut -d/ -f2|rev)
             ;;
             ovirt_init*)
-            target=${i#ovirt_init}
-            if [ -z "$target" ]; then
-              target='='
+            ovirt_init=${i#ovirt_init}
+            if [ -z "$ovirt_init" ]; then
+              ovirt_init='='
             fi
             ;;
+            ovirt_vol=*)
+            i=${i#ovirt_vol=}
+            eval $(printf $i|awk -F: '{print "ovirt_vol_boot="$1; print "ovirt_vol_install="$2; print "ovirt_vol_config="$3; print "ovirt_vol_logging="$4;}')
+            ;;
             ovirt_local_boot*)
-            local_os=1
+            ovirt_local_boot=1
+            ;;
+            ovirt_standalone*)
+            ovirt_standalone=1
+            ;;
+            ip=*)
+            i=${i#ip=}
+            eval $(printf $i|awk -F: '{print "ip_address="$1; print "ip_gateway="$3; print "ip_netmask="$4}')
+            ;;
+            netmask=*)
+            netmask=${i#netmask=}
+            ;;
+            gateway=*)
+            gateway=${i#gateway=}
+            ;;
+            ipv6=*)
+            ipv6=${i#ipv6=}
+            ;;
+            syslog=*)
+            i=${i#syslog=}
+            eval $(printf $i|awk -F: '{print "syslog_server="$1; print "syslog_port="$2;}')
             ;;
             console=*)
             bootparams="$bootparams $i"
             ;;
         esac
     done
+    # save boot parameters as defaults for ovirt-config-*
+    if [ -z "$ip_netmask" ]; then
+        ip_netmask=$netmask
+    fi
+    if [ -z "$ip_gateway" ]; then
+        ip_gateway=$gateway
+    fi
+    cat > $OVIRT_DEFAULTS <<EOF
+# configuration defaults from oVirt Node boot parameters
+OVIRT_BOOTIF=$bootif
+OVIRT_INIT=$ovirt_init
+OVIRT_VOL_BOOT=$ovirt_vol_boot
+OVIRT_VOL_INSTALL=$ovirt_vol_install
+OVIRT_VOL_CONFIG=$ovirt_vol_config
+OVIRT_VOL_LOGGING=$ovirt_vol_logging
+OVIRT_LOCAL_BOOT=$ovirt_local_boot
+OVIRT_STANDALONE=$ovirt_standalone
+OVIRT_IP_ADDRESS=$ip_address
+OVIRT_IP_NETMASK=$ip_netmask
+OVIRT_IP_GATEWAY=$ip_gateway
+OVIRT_IPV6=$ipv6
+OVIRT_SYSLOG_SERVER=$syslog_server
+OVIRT_SYSLOG_PORT=$syslog_port
+EOF
 
     set -x
-    local_install "$local_os" "$target" "$bootparams"
+    local_install "$ovirt_local_boot" "$ovirt_init" "$bootparams"
     set +x
-    configure_from_network $bootif
+    if [ $ovirt_standalone = 0 ]; then
+        configure_from_network $bootif
+    fi
 
+# BEGIN - move to ovirt-config-storage
     # find all of the partitions on the system
 
     # get the system pagesize
     PAGESIZE=`getconf PAGESIZE`
 
-    # look first at raw partitions
+    # look first at raw partitions XXX disk/by-id or HAL? (for cciss)
     BLOCKDEVS=`ls /dev/sd? /dev/hd? 2>/dev/null`
 
     # now LVM partitions
@@ -389,6 +475,7 @@ start() {
             swapon $device
         fi
     done
+# END - move to ovirt-config-storage
 }
 
 case "$1" in
