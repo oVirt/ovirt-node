@@ -87,6 +87,11 @@ cd -
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-logging %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-networking %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-password %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-setup %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-storage %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-process-config %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
@@ -94,9 +99,9 @@ cd -
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-install-node %{buildroot}%{_sbindir}
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-uninstall-node %{buildroot}%{_sbindir}
 
-
 %{__install} -p -m0644 scripts/ovirt-functions %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
+%{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-post %{buildroot}%{_initrddir}
 
@@ -123,6 +128,7 @@ cd -
 
 %post
 /sbin/chkconfig --add ovirt-early
+/sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
 /sbin/chkconfig --add ovirt-post
 # this is ugly; we need collectd to start *after* libvirtd, so we own the
@@ -133,6 +139,7 @@ cd -
 %preun
 if [ "$1" = 0 ] ; then
   /sbin/chkconfig --del ovirt-early
+  /sbin/chkconfig --del ovirt-firstboot
   /sbin/chkconfig --del ovirt
   /sbin/chkconfig --del ovirt-post
   /sbin/chkconfig --del ovirt-listen-awake
@@ -159,12 +166,18 @@ fi
 %files
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
+%{_sbindir}/ovirt-config-logging
+%{_sbindir}/ovirt-config-networking
+%{_sbindir}/ovirt-config-password
+%{_sbindir}/ovirt-config-setup
+%{_sbindir}/ovirt-config-storage
 %{_sbindir}/ovirt-process-config
 %{_sbindir}/ovirt-identify-node
 %{_sbindir}/ovirt-listen-awake
 %{_sbindir}/ovirt-install-node
 %{_sbindir}/ovirt-uninstall-node
 %{_initrddir}/ovirt-early
+%{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
 %{_initrddir}/ovirt-listen-awake
