@@ -1,2 +1,152 @@
 #!/bin/bash
 #
+# Configures the rsyslog daemon.
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+
+RSYSLOG_FILE="/etc/rsyslog.conf"
+
+# Creates the rsyslog file based on the following inputs
+# $1 ipaddress of remote syslog server
+# $2 port of remote syslog server
+# $3 protocol (tcp or udp)
+# TODO implement and use Augeas lens
+function ovirt_rsyslog {
+
+if [ "$3" = "tcp" ]; then
+    DELIM="@@"
+else DELIM="@"
+fi
+
+cat > $RSYSLOG_FILE << EOF
+#ovirt rsyslog config file
+
+#### MODULES ####
+\$ModLoad imuxsock.so    # provides support for local system logging (e.g. via logger command)
+\$ModLoad imklog.so      # provides kernel logging support (previously done by rklogd)
+
+#### GLOBAL DIRECTIVES ####
+# Use default timestamp format
+\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+#### RULES ####
+# Log anything (except mail) of level info or higher.
+# Don't log private authentication messages!
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+
+# The authpriv file has restricted access.
+authpriv.*                                              /var/log/secure
+
+# Log all the mail messages in one place.
+mail.*                                                  -/var/log/maillog
+
+# Log cron stuff
+cron.*                                                  /var/log/cron
+
+# Everybody gets emergency messages
+*.emerg                                                 *
+
+# Save news errors of level crit and higher in a special file.
+uucp,news.crit                                          /var/log/spooler
+
+# Save boot messages also to boot.log
+local7.*                                                /var/log/boot.log
+
+\$WorkDirectory /var/spool/rsyslog
+\$ActionQueueFileName ovirtNode
+\$ActionQueueMaxDiskSpace 10m
+\$ActionQueueSaveOnShutdown on
+\$ActionQueueType LinkedList
+\$ActionResumeRetryCount -1
+*.* $DELIM$1:$2
+EOF
+
+/sbin/service rsyslog restart
+}
+
+function is_numeric {
+    printf "$1" | grep -q -E '^[0-9]+$'
+}
+
+function prompt_user {
+    while true ; do
+        max_log_size="10k"
+        printf "\nWhat is the max size for log files on this machine [10k]? "
+        read
+        if [ -n "$REPLY" ]; then
+            max_log_size=$REPLY
+        fi
+        printf "\nWhat is the IP address or server name for the syslog server? "
+        read
+        syslog_server_ip=$REPLY
+        printf "\nWhat port does the syslog daemon run on? "
+        read
+        if is_numeric "$REPLY"; then
+            syslog_server_port=$REPLY
+
+            PROTOCOLS="udp tcp"
+            PS3="Please select the protocol to use: "
+            select syslog_server_protocol in $PROTOCOLS;
+            do
+                case $syslog_server_protocol in
+                    "tcp")
+                        break ;;
+                    "udp")
+                        break;;
+                esac
+            done
+
+            printf "\n"
+            printf "\nLogging will be configured as follows:"
+            printf "\n======================================"
+            printf "\n Max Logfile Size: $max_log_size"
+            printf "\n    Remote Server: $syslog_server_ip"
+            printf "\n      Remote Port: $syslog_server_port"
+            printf "\n Logging Protocol: $syslog_server_protocol"
+            printf "\n"
+            printf "\nPlease confirm these changes (Y/N)"
+            read
+            case $REPLY in
+                Y|y)
+                    ovirt_rsyslog $syslog_server_ip \
+                                  $syslog_server_port \
+                                  $syslog_server_protocol
+                    sed -i -e "s/^size=.*/size=$max_log_size/" \
+                              /etc/logrotate.d/ovirt-logrotate.conf
+                    break
+                    ;;
+                N|n)
+                    printf "Discarding settings\n"
+                    break
+                    ;;
+            esac
+        else
+            printf "Invalid port number\n"
+        fi
+    done
+
+}
+
+# check if we were called to attempt to default
+# to remote logging
+if [ "$1" = "default" ]; then
+    if [ -z "$OVIRT_SYSLOG_SERVER" -o -z "$OVIRT_SYSLOG_PORT" ]; then
+        printf "\nAttempting to locate remote syslog server..."
+        find_srv syslog udp
+        if [ -n "$SRV_SERVER" -a -n "$SRV_PORT" ]; then
+            printf "found! Using syslog server '$SRV_SERVER:$SRV_PORT'.\n"
+            ovirt_rsyslog $SRV_SERVER $SRV_PORT udp
+        else
+            printf "not found!\n"
+        fi
+    else
+        printf "\nUsing default syslog server '$OVIRT_SYSLOG_SERVER:$OVIRT_SYSLOG_PORT'.\n"
+        ovirt_rsyslog $OVIRT_SYSLOG_SERVER $OVIRT_SYSLOG_PORT udp
+    fi
+else
+    prompt_user
+fi
+
+exit 0
