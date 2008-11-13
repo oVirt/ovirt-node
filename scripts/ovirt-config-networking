@@ -1,2 +1,97 @@
 #!/bin/bash
 #
+# Iterates over the list of network devices on the node and prompts the user
+# to configure each.
+
+CONFIG_FILE_ROOT="/file/etc/sysconfig/network-scripts/ifcfg"
+CONFIG_LOG_FILE="/var/log/ovirt-network-setup.log"
+
+function configure_interface
+{
+    NIC=$1
+    BRIDGE=ovirtbr`echo $NIC | cut -b4-`
+    IF_FILENAME="/var/tmp/augtool-$NIC"
+    BR_FILENAME="/var/tmp/augtool-$BRIDGE"
+
+    printf "\nConfigure $BRIDGE for use by $NIC..\n\n"
+
+    IF_ROOT="$CONFIG_FILE_ROOT-$NIC"
+    IF_CONFIG="rm $IF_ROOT\nset $IF_ROOT/DEVICE $NIC"
+
+    BR_ROOT="$CONFIG_FILE_ROOT-$BRIDGE"
+    BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
+    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE bridge"
+    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/PEERNTP yes"
+    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DELAY 0"
+    IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/BRIDGE $BRIDGE"
+
+    # how do you want to configure this device? (dhcp, static IP)
+    while true; do
+        printf "Will $BRIDGE use dynamic addressing? (Y/N) "
+        read
+        case $REPLY in
+            Y|y) BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"; break ;;
+            N|n)
+                printf "\nPlease enter the network details for $BRIDGE:\n"
+                printf "\tIP Address: "; read; IPADDR=$REPLY
+                printf "\t   Netmask: "; read; NETMASK=$REPLY
+                printf "\t Broadcast: "; read; BROADCAST=$REPLY
+                printf "\t   Gateway: "; read; GATEWAY=$REPLY
+
+                printf "\nPlease review the details for $BRIDGE:\n"
+                printf "\tIP Address: $IPADDR\n \t   Netmask: $NETMASK\n\t Broadcast: $BROADCAST\n\t   Gateway: $GATEWAY\n"
+                printf "Is this correct? (Y/N) "
+                read
+                case $REPLY in
+                    Y|y)
+                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
+                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BROADCAST $BROADCAST"
+                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
+                        break
+                        ;;
+                esac
+                ;;
+        esac
+    done
+
+    IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
+    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
+
+    printf "$IF_CONFIG\n" > $IF_FILENAME
+    printf "$BR_CONFIG\n" > $BR_FILENAME
+
+    echo
+}
+
+function setup_menu
+{
+    NICS=$(hal-device | awk '/net.interface/ {match($0, "= '"'"'(.*)'"'"' ", nic); printf("%s ", nic[1]); }')
+    NICS="$NICS Quit"
+    PS3="Please select a network interface to configure:"
+}
+
+# clean up any left over configurations
+rm -f /var/tmp/config-augtool
+rm -f /var/tmp/augtool-*
+
+setup_menu
+
+select NIC in $NICS
+do
+    printf "\n"
+    case "$NIC" in
+        "Quit") break ;;
+        *) configure_interface $NIC $IFACE_NUMBER ;;
+    esac
+    setup_menu
+done
+
+# Merge together all generated files and run augtool
+
+cat /var/tmp/augtool-* > /var/tmp/config-augtool
+printf "save\n" >> /var/tmp/config-augtool
+{
+augtool < /var/tmp/config-augtool
+service network restart
+} > $CONFIG_LOG_FILE 2>> $CONFIG_LOG_FILE
+
