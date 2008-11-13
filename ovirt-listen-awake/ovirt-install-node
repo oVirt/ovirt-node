@@ -126,6 +126,10 @@ elif [ "$1" = "stateful" ]; then
     add_if_not_exist "192.168.50.2 $MGMT_HOST" /etc/hosts
 
     chkconfig ovirt-listen-awake on
+    chkconfig ovirt-early off
+    chkconfig ovirt off
+    chkconfig ovirt-post off
+    chkconfig ovirt-firstboot off
     chkconfig collectd on
     chkconfig libvirt-qpid on
     chkconfig iptables on
