@@ -134,7 +134,7 @@ function do_partitioning
                 tune2fs -c 0 -i 0 /dev/HostVG/Logging
                 mke2fs -j -T ext3 /dev/HostVG/Data    -L "DATA"
                 tune2fs -c 0 -i 0 /dev/HostVG/Data
-                } > /var/log/ovirt-partition.log 2>&1
+                } > partition.log 2>&1
 
                 printf "Completed!\n\n"
                 break ;;
