@@ -315,7 +315,7 @@ start() {
     # oVirt boot parameters
     #   BOOTIF=<MAC> (appended by pxelinux)
     #   ovirt_init=usb|scsi[:serial#]
-    #   ovirt_vol=BOOT_GB:SWAP_GB:INSTALL_GB:CONFIG_GB:LOGGING_GB
+    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
     #   ovirt_local_boot
     #   ovirt_standalone
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
@@ -339,10 +339,11 @@ start() {
     # e.g. ovirt_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
     ovirt_init=
 
-    #   ovirt_vol=BOOT_GB:SWAP_GB:INSTALL_GB:CONFIG_GB:LOGGING_GB
+    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
     # local partition sizes in GB
     ovirt_vol_boot=
-    ovirt_vol_install=
+    ovirt_vol_swap=
+    ovirt_vol_root=
     ovirt_vol_config=
     ovirt_vol_logging=
 
@@ -387,7 +388,7 @@ start() {
             ;;
             ovirt_vol=*)
             i=${i#ovirt_vol=}
-            eval $(printf $i|awk -F: '{print "ovirt_vol_boot="$1; print "ovirt_vol_install="$2; print "ovirt_vol_config="$3; print "ovirt_vol_logging="$4;}')
+            eval $(printf $i|awk -F: '{print "ovirt_vol_boot="$1; ovirt_vol_swap="$2; print "ovirt_vol_root="$3; print "ovirt_vol_config="$4; print "ovirt_vol_logging="$5;}')
             ;;
             ovirt_local_boot*)
             ovirt_local_boot=1
@@ -424,14 +425,16 @@ start() {
     if [ -z "$ip_gateway" ]; then
         ip_gateway=$gateway
     fi
+
     cat > $OVIRT_DEFAULTS <<EOF
 # configuration defaults from oVirt Node boot parameters
 OVIRT_BOOTIF=$bootif
 OVIRT_INIT=$ovirt_init
-OVIRT_VOL_BOOT=$ovirt_vol_boot
-OVIRT_VOL_INSTALL=$ovirt_vol_install
-OVIRT_VOL_CONFIG=$ovirt_vol_config
-OVIRT_VOL_LOGGING=$ovirt_vol_logging
+OVIRT_VOL_BOOT_SIZE=$ovirt_vol_boot
+OVIRT_VOL_SWAP_SIZE=$ovirt_vol_swap
+OVIRT_VOL_ROOT_SIZE=$ovirt_vol_root
+OVIRT_VOL_CONFIG_SIZE=$ovirt_vol_config
+OVIRT_VOL_LOGGING_SIZE=$ovirt_vol_logging
 OVIRT_LOCAL_BOOT=$ovirt_local_boot
 OVIRT_STANDALONE=$ovirt_standalone
 OVIRT_IP_ADDRESS=$ip_address

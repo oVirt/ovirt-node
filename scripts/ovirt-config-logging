@@ -129,9 +129,8 @@ function prompt_user {
 
 }
 
-# check if we were called to attempt to default
-# to remote logging
-if [ "$1" = "default" ]; then
+# AUTO for auto-install
+if [ "$1" = "AUTO" ]; then
     if [ -z "$OVIRT_SYSLOG_SERVER" -o -z "$OVIRT_SYSLOG_PORT" ]; then
         printf "\nAttempting to locate remote syslog server..."
         find_srv syslog udp

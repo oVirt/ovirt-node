@@ -26,6 +26,19 @@ is_standalone() {
     if is_managed; then return 1; else return 0; fi
 }
 
+# is_auto_install
+# return 0 if all required oVirt boot parameters are present
+is_auto_install() {
+    test -n "$OVIRT_BOOTIF" \
+        -a -n "$OVIRT_OVIRT_STANDALONE" \
+        -a -n "$OVIRT_INIT" \
+        -a -n "$OVIRT_VOL_BOOT_SIZE" \
+        -a -n "$OVIRT_VOL_SWAP_SIZE" \
+        -a -n "$OVIRT_VOL_ROOT_SIZE" \
+        -a -n "$OVIRT_VOL_CONFIG_SIZE" \
+        -a -n "$OVIRT_VOL_LOGGING_SIZE"
+}
+
 # find_srv SERVICE PROTO
 #
 # reads DNS SRV record
