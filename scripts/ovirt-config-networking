@@ -3,95 +3,183 @@
 # Iterates over the list of network devices on the node and prompts the user
 # to configure each.
 
-CONFIG_FILE_ROOT="/file/etc/sysconfig/network-scripts/ifcfg"
+ME=$(basename "$0")
+warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
+die() { warn "$*"; exit 1; }
+
+WORKDIR=$(mktemp -d) || exit 1
+
+# Remove $WORKDIR upon interrupt (and HUP, PIPE, TERM) and upon normal
+# termination, being careful not to change the exit status.
+trap '__st=$?; rm -rf "$WORKDIR"; exit $__st' 0
+trap 'exit $?' 1 2 13 15
+
+CONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
 CONFIG_LOG_FILE="/var/log/ovirt-network-setup.log"
 
 function configure_interface
 {
-    NIC=$1
-    BRIDGE=ovirtbr`echo $NIC | cut -b4-`
-    IF_FILENAME="/var/tmp/augtool-$NIC"
-    BR_FILENAME="/var/tmp/augtool-$BRIDGE"
+    local NIC=$1
+    local AUTO=$2
+    if [[   "$AUTO" == "AUTO"    &&
+         -n "$OVIRT_IP_ADDRESS" ]]; then
+        IPADDR=$OVIRT_IP_ADDRESS
+        NETMASK=$OVIRT_IP_NETMASK
+        GATEWAY=$OVIRT_IP_GATEWAY
+        PREFIX=$OVIRT_IP_PREFIX
+    fi
+
+    local BRIDGE=ovirtbr$NIC
+    local IF_FILENAME="$WORKDIR/augtool-$NIC"
+    local BR_FILENAME="$WORKDIR/augtool-$BRIDGE"
 
     printf "\nConfigure $BRIDGE for use by $NIC..\n\n"
 
-    IF_ROOT="$CONFIG_FILE_ROOT-$NIC"
-    IF_CONFIG="rm $IF_ROOT\nset $IF_ROOT/DEVICE $NIC"
+    local IF_ROOT="$CONFIG_FILE_ROOT-$NIC"
+    local IF_CONFIG="rm $IF_ROOT\nset $IF_ROOT/DEVICE $NIC"
 
-    BR_ROOT="$CONFIG_FILE_ROOT-$BRIDGE"
-    BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
+    local BR_ROOT="$CONFIG_FILE_ROOT-$BRIDGE"
+    local BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE bridge"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/PEERNTP yes"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DELAY 0"
     IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/BRIDGE $BRIDGE"
 
-    # how do you want to configure this device? (dhcp, static IP)
-    while true; do
-        printf "Will $BRIDGE use dynamic addressing? (Y/N) "
-        read
-        case $REPLY in
-            Y|y) BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"; break ;;
-            N|n)
-                printf "\nPlease enter the network details for $BRIDGE:\n"
-                printf "\tIP Address: "; read; IPADDR=$REPLY
-                printf "\t   Netmask: "; read; NETMASK=$REPLY
-                printf "\t Broadcast: "; read; BROADCAST=$REPLY
-                printf "\t   Gateway: "; read; GATEWAY=$REPLY
+    local BR_CONFIG_BASE=$BR_CONFIG
 
-                printf "\nPlease review the details for $BRIDGE:\n"
-                printf "\tIP Address: $IPADDR\n \t   Netmask: $NETMASK\n\t Broadcast: $BROADCAST\n\t   Gateway: $GATEWAY\n"
-                printf "Is this correct? (Y/N) "
-                read
-                case $REPLY in
-                    Y|y)
-                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
-                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BROADCAST $BROADCAST"
-                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
+    if [ -z "$AUTO" ]; then
+        while true; do
+            printf "\n"
+            read -p "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
+            case $REPLY in
+                D|d)
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"
+                    ;;
+                S|s)
+                    printf "\n"
+                    read -p "IP Address: "; IPADDR=$REPLY
+                    read -p "   Netmask: "; NETMASK=$REPLY
+                    read -p "   Gateway: "; GATEWAY=$REPLY
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO none"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $GATEWAY"
+                    ;;
+                A|a) return ;;
+            esac
+
+            printf "\n"
+            read -p "Enable IPv6 supprt ([S]tatic, [D]HCPv6, A[u]to, [N]o)? "
+            case $REPLY in
+                S|s)
+                    read -p "IPv6 Address: "; IPADDR=$REPLY
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IP6ADDR $IPADDR"
+                    ;;
+                D|d)
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6AUTCONF no"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DHCPV6C yes"
+                    ;;
+                U|u)
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6AUTOCONF yes"
+                    ;;
+                A|a) return ;;
+            esac
+
+            printf "\n"
+            read -p "Is this correct (Y/N/A)? "
+            case $REPLY in
+                Y|y)
+                        IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
+                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
+
+                        printf "$IF_CONFIG\n" > $IF_FILENAME
+                        printf "$BR_CONFIG\n" > $BR_FILENAME
                         break
-                        ;;
-                esac
-                ;;
-        esac
-    done
+                    ;;
+                N|n) BR_CONFIG=$BR_CONFIG_BASE ;;
+                A|a) return ;;
+            esac
+        done
+    else
+        if [ -n "$OVIRT_IPV6" ]; then
+            case "$OVIRT_IPV6" in
+                "auto")
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6_AUTOCONF yes"
+                    ;;
+                "dhcp")
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6_AUTOCONF no"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DHCPV6C yes"
+                    ;;
+                *)
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6ADDR $OVIRT_IPV6"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6_AUTOCONF no"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
+            esac
+        fi
 
-    IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
-    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
+        if [ -z "$OVIRT_IP_ADDRESS" ]; then
+            BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"
+        else
+            if [ "$OVIRT_IP_ADDRESS" != "off" ]; then
+                BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $OVIRT_IP_ADDRESS"
+                if [ -n "$OVIRT_IP_NETMASK" ]; then
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $OVIRT_IP_NETMASK"
+                fi
+                if [ -n "$OVIRT_IP_GATEWAY" ]; then
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $OVIRT_IP_GATEWAY"
+                fi
+            fi
+        fi
 
-    printf "$IF_CONFIG\n" > $IF_FILENAME
-    printf "$BR_CONFIG\n" > $BR_FILENAME
+        IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
+        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
 
-    echo
+        printf "$IF_CONFIG\n" > $IF_FILENAME
+        printf "$BR_CONFIG\n" > $BR_FILENAME
+    fi
 }
 
 function setup_menu
 {
     NICS=$(hal-device | awk '/net.interface/ {match($0, "= '"'"'(.*)'"'"' ", nic); printf("%s ", nic[1]); }')
-    NICS="$NICS Quit"
-    PS3="Please select a network interface to configure:"
+    NICS="$NICS Save Quit"
+    PS3="Please select a network interface to configure: "
 }
 
-# clean up any left over configurations
-rm -f /var/tmp/config-augtool
-rm -f /var/tmp/augtool-*
-
-setup_menu
-
-select NIC in $NICS
-do
-    printf "\n"
-    case "$NIC" in
-        "Quit") break ;;
-        *) configure_interface $NIC $IFACE_NUMBER ;;
-    esac
+if [ "$1" == "AUTO" ]; then
+    configure_interface $OVIRT_BOOTIF AUTO
+    RESTART="Y"
+else
     setup_menu
-done
 
-# Merge together all generated files and run augtool
+    select NIC in $NICS
+    do
+        printf "\n"
+        case "$NIC" in
+            "Save") RESTART="Y"; break ;;
+            "Quit") exit 0; break ;;
+            *) configure_interface $NIC $IFACE_NUMBER ;;
+        esac
+        setup_menu
+    done
+fi
 
-cat /var/tmp/augtool-* > /var/tmp/config-augtool
-printf "save\n" >> /var/tmp/config-augtool
-{
-augtool < /var/tmp/config-augtool
-service network restart
-} > $CONFIG_LOG_FILE 2>> $CONFIG_LOG_FILE
-
+if [ "$RESTART" == "Y" ]; then
+    {
+    printf "Configuring network.\n"
+    config="$WORKDIR"/config-augtool
+    { cat "$WORKDIR"/augtool-* && printf "save\n"; } > $config \
+    && augtool < $config  \
+    && service network restart
+    } >> $CONFIG_LOG_FILE 2>&1
+fi
