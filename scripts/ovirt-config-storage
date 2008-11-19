@@ -10,6 +10,11 @@ ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 die() { warn "$*"; exit 1; }
 
+default_boot_size=256
+default_root_size=256
+default_config_size=5
+default_logging_size=256
+
 check_partition_sizes()
 {
     # FIXME: use this function before performing any partitioning, auto or not
@@ -21,58 +26,88 @@ check_partition_sizes()
     # or just let the mke2fs failure suffice.
 }
 
+# Find a usable/selected storage device along with its size in bytes.
+# If there are none, give a diagnostic and return nonzero.
+# If there is just one, e.g., /dev/sda, treat it as selected (see below).
+# and return 0.  If there are two or more, make the user select one
+# or decline.  Upon decline, return nonzero. Otherwise, print the
+# selected name, a space, and its size, then return 0.
+# Sample output: "/dev/sda 320072933376"
+get_dev_name()
+{
+    local udi_list=$(hal-find-by-capability --capability storage)
+    if test -z "$udi_list"; then
+        warn "ERROR: no usable storage devices detected"
+        return 1
+    fi
+
+    local d devices sizes
+    for d in $udi_list; do
+        local drive_type=$(hal-get-property --udi "$d" --key storage.drive_type)
+        test "X$drive_type" = Xdisk || continue
+        local block_dev=$(hal-get-property --udi "$d" --key block.device)
+        # Must start with a '/'.
+        case $block_dev in
+            *' '*)
+                # we use space as separator
+                warn "block device name '$block_dev' contains space; skipping";
+                continue;;
+            /*) ;;
+            *) warn "block device name $block_dev doesn't start with '/';" \
+                " skipping"; continue;;
+        esac
+        size=$(hal-get-property --udi "$d" --key storage.size)
+        test -z "$devices" \
+            && devices=$block_dev \
+            || devices="$devices $block_dev"
+        test -z "$sizes" \
+            && sizes=$size \
+            || sizes="$sizes $size"
+    done
+
+    # If there's only one device, use it.
+    case $devices in
+        '') warn "ERROR: found no usable block device"; return 1;;
+        *' '*) ;; # found more than one
+        *) echo "$devices $sizes"; return 0;; # just one
+    esac
+
+    # There are two or more; make the user choose.
+    local choices="$devices Abort"
+    select device in $choices
+    do
+        test "$device" = Abort && return 1
+        test -z "$device" && continue
+        # $REPLY is the selected number;
+        # use that to map to the corresponding size.
+        size=$(echo "$sizes"|cut -d' ' -f "$REPLY")
+        echo "$device $size"
+        return 0
+    done
+}
+
 do_configure()
 {
-    DEVICES=$(for drive in `hal-find-by-capability --capability storage`; do
-        info=$(lshal -u $drive -s)
-        if [[ $info =~ "storage.drive_type = 'disk'" ]]; then
-             lshal -u $drive -s | awk ' /block.device/ {
-                    match($0, "block.device = *'"'"'(.*)'"'"'", device)
-                    printf "%s", device[1]
-            }'
+    local name_and_size=$(get_dev_name) || exit 1
+    set -- $name_and_size
+    DRIVE=$1
+    local n_bytes=$2
+
+    SPACE=$(echo "scale=0; $n_bytes / (1024 * 1024)" | bc -l)
+    echo "selected device: $device ($SPACE MB)"
+
+    for i in swap boot root logging config; do
+        uc=$(echo $i|tr '[[:lower:]]' '[[:upper:]]')
+        var=${uc}_SIZE
+        eval "size=\$$var"
+        read -p "Change $i partition size (Currently $size MB)? "
+        r=$REPLY
+        test -z "$r" && r=$size
+        if [[ $r =~ ^[0-9]+$ ]] && [[ $r -gt 0 ]]; then
+            eval "$var=$r"
+        else
+            printf "invalid $i size: '$r' retaining $size MB.\n"
         fi
-    done)
-
-    DEVICES="$DEVICES Abort"
-
-    select DEVICE in $DEVICES
-    do
-        case "$DEVICE" in
-            "Abort") return ;;
-
-            *)
-                DRIVE=$DEVICE
-                SPACE=$(for drive in `hal-find-by-capability --capability storage`; do
-                    info=$(lshal -u $drive -s)
-                    if [[ $info =~ $DRIVE ]]; then
-                         lshal -u $drive -s | awk ' /storage.size/ {
-                                match($0, "storage.size *= *([0-9]+)", device)
-                                printf "%s", device[1]
-                        }'
-                    fi
-                done)
-
-                SPACE=$(echo "scale=0; $SPACE / (1024 * 1024)" | bc -l)
-                BOOT_SIZE="256"
-                ROOT_SIZE="256"
-                CONFIG_SIZE="5"
-                LOGGING_SIZE="256"
-
-                for i in swap boot root logging config; do
-                    uc=$(echo $i|tr '[[:lower:]]' '[[:upper:]]')
-                    var=${uc}_SIZE
-                    eval "size=\$$var"
-                    read -p "Change $i partition size (Currently $size MB)? "
-                    if [[ $REPLY =~ ^[0-9]+$ ]] && [[ $REPLY -gt 0 ]]; then
-                        eval "$var=$REPLY"
-                    else
-                        printf "invalid value: '$i'.  retaining $size MB.\n"
-                    fi
-                done
-
-                return
-                ;;
-        esac
     done
 }
 
@@ -114,6 +149,7 @@ perform_partitioning()
     # Exit upon any failure.
     set -e
 
+    # FIXME: save a backup copy, just in case?
     dd if=/dev/zero of=$DRIVE bs=1K count=1
     blockdev --rereadpt $DRIVE
     partprobe -s $DRIVE
@@ -181,6 +217,7 @@ do_confirm()
                 break
                 ;;
             N|n)  return ;;
+            *) ;;
         esac
     done
 }
@@ -194,24 +231,23 @@ esac
 MEM_SIZE=$(echo "scale=0; $MEM_SIZE / 1024" | bc -l)
 SWAP_SIZE=$MEM_SIZE
 
+BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE=$default_boot_size}
+ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE=$default_root_size}
+LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE=$default_logging_size}
+CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE=$default_config_size}
+
 if [ "$1" == "AUTO" ]; then
+    # In "AUTO" mode, OVIRT_INIT should be defined in the environment.
     DRIVE=$OVIRT_INIT
-    if [ -n "$OVIRT_BOOT_SIZE" ]; then BOOT_SIZE=$OVIRT_BOOT_SIZE; else BOOT_SIZE=256; fi
-    if [ -n "$OVIRT_ROOT_SIZE" ]; then ROOT_SIZE=$OVIRT_ROOT_SIZE; else ROOT_SIZE=256; fi
-    if [ -n "$OVIRT_LOGGING_SIZE" ]; then LOGGING_SIZE=$OVIRT_LOGGING_SIZE; else LOGGING_SIZE=512; fi
-    if [ -n "$OVIRT_CONFIG_SIZE" ]; then CONFIG_SIZE=$OVIRT_CONFIG_SIZE; else CONFIG_SIZE=5; fi
     check_partition_sizes
     printf "Partitioning hard disk..."
     perform_partitioning
-    printf "[DONE]\n"
     exit 0
 else
     while true; do
 
         OPTIONS="Configure Review Partition Quit"
         PS3="Choose an option: "
-
-        printf "\n"
 
         select OPTION in $OPTIONS
         do
