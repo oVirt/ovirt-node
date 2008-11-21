@@ -3,21 +3,23 @@
 # Entry point for configuring an oVirt node when running in standalone mode.
 
 while true; do
+    printf "\n"
+
     PS3="Please select an option: "
     # TODO should we make this optional, based on whether the password was already set?
     PASSWORD_OPTION="Password"
-    OPTIONS="Networking Storage Logging ${PASSWORD_OPTION} Quit"
+    OPTIONS="Networking Storage Logging ${PASSWORD_OPTION} Continue"
 
     select OPTION in $OPTIONS
     do
-        printf "\n"
-
         case "$OPTION" in
             "Networking") ovirt-config-networking ; break ;;
             "Storage")    ovirt-config-storage    ; break ;;
             "Logging")    ovirt-config-logging    ; break ;;
             "Password")   ovirt-config-password   ; break ;;
-            "Quit")       exit 0 ;;
+            "Continue")   exit 0 ;;
         esac
+
+        printf "\n"
     done
 done
