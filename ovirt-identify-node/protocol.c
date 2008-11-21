@@ -241,15 +241,18 @@ send_value(char *label, char *value)
 
     char expected[BUFFER_LENGTH];
 
-    snprintf(buffer, BUFFER_LENGTH, "%s=%s", label, value);
+    if (value != NULL && strlen(value) > 0) {
 
-    if (!send_text(buffer)) {
-        snprintf(expected, BUFFER_LENGTH, "ACK %s", label);
+        snprintf(buffer, BUFFER_LENGTH, "%s=%s", label, value);
 
-        VERBOSE("Expecting \"%s\"\n", expected);
+        if (!send_text(buffer)) {
+            snprintf(expected, BUFFER_LENGTH, "ACK %s", label);
 
-        result = get_text(expected);
-    }
+            VERBOSE("Expecting \"%s\"\n", expected);
+
+            result = get_text(expected);
+        }
+    } else { result = 0; }
 
     return result;
 }
