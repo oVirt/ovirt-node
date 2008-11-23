@@ -31,7 +31,7 @@ start ()
 {
     if is_auto_install; then
         ovirt-config-networking AUTO
-        ovirt-config-storage AUTO
+        newrole -r system_r -t virtd_t -- -c 'ovirt-config-storage AUTO'
         ovirt-config-logging AUTO
     else
         ovirt-config-setup
