@@ -6,6 +6,7 @@ NETWORK="Networking Setup"
 STORAGE="Disk Partitioning"
 LOGGING="Logging Setup"
 PASSWORD="Administrator Password"
+DEBUG_SHELL="Shell"
 CONTINUE="Continue"
 
 declare -a OPTIONS
@@ -15,6 +16,7 @@ OPTIONS[${#OPTIONS[*]}]="$STORAGE"
 OPTIONS[${#OPTIONS[*]}]="$LOGGING"
 OPTIONS[${#OPTIONS[*]}]="$PASSWORD"
 OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
+OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
 
 while true; do
     printf "\n"
@@ -28,6 +30,7 @@ while true; do
             "$STORAGE")  ovirt-config-storage    ; break ;;
             "$LOGGING")  ovirt-config-logging    ; break ;;
             "$PASSWORD") ovirt-config-password   ; break ;;
+            "$DEBUG_SHELL") bash                 ; break ;;
             "$CONTINUE") exit 0 ;;
         esac
 
