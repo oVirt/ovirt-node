@@ -17,6 +17,8 @@ OPTIONS[${#OPTIONS[*]}]="$LOGGING"
 OPTIONS[${#OPTIONS[*]}]="$PASSWORD"
 OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
+# reset tty, otherwise serial console is broken
+reset
 
 while true; do
     printf "\n"
