@@ -6,6 +6,8 @@
 # All sizes are in megabytes
 #
 
+. /etc/init.d/ovirt-functions
+
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 die() { warn "$*"; exit 1; }
@@ -103,12 +105,21 @@ do_configure()
         read -ep "Change $i partition size (Currently $size MB)? "
         r=$REPLY
         test -z "$r" && r=$size
-        if [[ $r =~ ^[0-9]+$ ]] && [[ $r -gt 0 ]]; then
+        if [[ $r =~ ^[0-9]+$ ]] && [[ $r -ge 0 ]]; then
             eval "$var=$r"
         else
             printf "invalid $i size: '$r' retaining $size MB.\n"
         fi
     done
+    # save input variables
+    augtool <<EOF
+set /files$OVIRT_DEFAULTS/OVIRT_VOL_BOOT_SIZE $BOOT_SIZE
+set /files$OVIRT_DEFAULTS/OVIRT_VOL_SWAP_SIZE $SWAP_SIZE
+set /files$OVIRT_DEFAULTS/OVIRT_VOL_ROOT_SIZE $ROOT_SIZE
+set /files$OVIRT_DEFAULTS/OVIRT_VOL_CONFIG_SIZE $CONFIG_SIZE
+set /files$OVIRT_DEFAULTS/OVIRT_VOL_LOGGING_SIZE $LOGGING_SIZE
+save
+EOF
 }
 
 do_review()
@@ -163,10 +174,18 @@ perform_partitioning()
     pvck
     vgcreate /dev/HostVG "${DRIVE}2"
 
-    lvcreate --name Swap    --size ${SWAP_SIZE}M    /dev/HostVG
-    lvcreate --name Root    --size ${ROOT_SIZE}M    /dev/HostVG
-    lvcreate --name Config  --size ${CONFIG_SIZE}M  /dev/HostVG
-    lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
+    if [ "$SWAP_SIZE" -gt 0 ]; then
+        lvcreate --name Swap    --size ${SWAP_SIZE}M    /dev/HostVG
+    fi
+    if [ "$ROOT_SIZE" -gt 0 ]; then
+        lvcreate --name Root    --size ${ROOT_SIZE}M    /dev/HostVG
+    fi
+    if [ "$CONFIG_SIZE" -gt 0 ]; then
+        lvcreate --name Config  --size ${CONFIG_SIZE}M  /dev/HostVG
+    fi
+    if [ "$LOGGING_SIZE" -gt 0 ]; then
+        lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
+    fi
     lvcreate --name Data    -l 100%FREE             /dev/HostVG
 
     mke2fs -T ext3 "${DRIVE}1"         -L "BOOT"
@@ -229,12 +248,13 @@ case $MEM_SIZE in
 esac
 
 MEM_SIZE=$(echo "scale=0; $MEM_SIZE / 1024" | bc -l)
-SWAP_SIZE=$MEM_SIZE
+SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-MEM_SIZE}
 
-BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE=$default_boot_size}
-ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE=$default_root_size}
-LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE=$default_logging_size}
-CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE=$default_config_size}
+BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-default_boot_size}
+ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-default_root_size}
+CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-default_config_size}
+LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-default_logging_size}
+
 
 if [ "$1" == "AUTO" ]; then
     # In "AUTO" mode, OVIRT_INIT should be defined in the environment.
