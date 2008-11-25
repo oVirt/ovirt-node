@@ -50,16 +50,16 @@ function configure_interface
     if [ -z "$AUTO" ]; then
         while true; do
             printf "\n"
-            read -p "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
+            read -ep "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
             case $REPLY in
                 D|d)
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"
                     ;;
                 S|s)
                     printf "\n"
-                    read -p "IP Address: "; IPADDR=$REPLY
-                    read -p "   Netmask: "; NETMASK=$REPLY
-                    read -p "   Gateway: "; GATEWAY=$REPLY
+                    read -ep "IP Address: "; IPADDR=$REPLY
+                    read -ep "   Netmask: "; NETMASK=$REPLY
+                    read -ep "   Gateway: "; GATEWAY=$REPLY
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO none"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
@@ -69,10 +69,10 @@ function configure_interface
             esac
 
             printf "\n"
-            read -p "Enable IPv6 supprt ([S]tatic, [D]HCPv6, A[u]to, [N]o)? "
+            read -ep "Enable IPv6 supprt ([S]tatic, [D]HCPv6, A[u]to, [N]o)? "
             case $REPLY in
                 S|s)
-                    read -p "IPv6 Address: "; IPADDR=$REPLY
+                    read -ep "IPv6 Address: "; IPADDR=$REPLY
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IP6ADDR $IPADDR"
                     ;;
@@ -91,7 +91,7 @@ function configure_interface
             esac
 
             printf "\n"
-            read -p "Is this correct (Y/N/A)? "
+            read -ep "Is this correct (Y/N/A)? "
             case $REPLY in
                 Y|y)
                         IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"

@@ -74,15 +74,15 @@ function prompt_user {
     while true ; do
         max_log_size="10k"
         printf "\nWhat is the max size for log files on this machine [10k]? "
-        read
+        read -e
         if [ -n "$REPLY" ]; then
             max_log_size=$REPLY
         fi
         printf "\nWhat is the IP address or server name for the syslog server? "
-        read
+        read -e
         syslog_server_ip=$REPLY
         printf "\nWhat port does the syslog daemon run on? "
-        read
+        read -e
         if is_numeric "$REPLY"; then
             syslog_server_port=$REPLY
 
@@ -107,7 +107,7 @@ function prompt_user {
             printf "\n Logging Protocol: $syslog_server_protocol"
             printf "\n"
             printf "\nPlease confirm these changes (Y/N)"
-            read
+            read -e
             case $REPLY in
                 Y|y)
                     ovirt_rsyslog $syslog_server_ip \

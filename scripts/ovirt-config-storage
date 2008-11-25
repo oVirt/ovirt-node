@@ -100,7 +100,7 @@ do_configure()
         uc=$(echo $i|tr '[[:lower:]]' '[[:upper:]]')
         var=${uc}_SIZE
         eval "size=\$$var"
-        read -p "Change $i partition size (Currently $size MB)? "
+        read -ep "Change $i partition size (Currently $size MB)? "
         r=$REPLY
         test -z "$r" && r=$size
         if [[ $r =~ ^[0-9]+$ ]] && [[ $r -gt 0 ]]; then
@@ -209,7 +209,7 @@ do_confirm()
         "$w8" \
         "$w8"
         printf "\n\tContinue? (Y/n) "
-        read
+        read -e
         case $REPLY in
             Y|y)
                 check_partition_sizes
