@@ -5,7 +5,7 @@ OVIRT_LOGFILE=/var/log/ovirt.log
 # label of the oVirt partition
 OVIRT_LABEL=OVIRT
 # configuration defaults
-OVIRT_DEFAULTS=/etc/sysconfig/ovirt
+OVIRT_DEFAULTS=/etc/default/ovirt
 if [ -f $OVIRT_DEFAULTS ]; then
     . $OVIRT_DEFAULTS
 fi
