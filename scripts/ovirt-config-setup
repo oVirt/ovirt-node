@@ -18,10 +18,11 @@ OPTIONS[${#OPTIONS[*]}]="$PASSWORD"
 OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
 # reset tty, otherwise serial console is broken
-reset
+reset > /dev/null
+clear
 
 while true; do
-    printf "\n"
+    printf "\n oVirt Node Standalone Configuration\n\n"
 
     PS3="Please select an option: "
 
