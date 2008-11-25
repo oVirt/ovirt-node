@@ -170,6 +170,7 @@ perform_partitioning()
     parted $DRIVE -s "mkpart primary ext2 0M ${BOOT_SIZE}M"
     parted $DRIVE -s "mkpart primary ext2 ${BOOT_SIZE}M ${SPACE}M"
     parted $DRIVE -s "set 2 lvm on"
+    udevsettle
 
     pvcreate "${DRIVE}2"
     pvck
