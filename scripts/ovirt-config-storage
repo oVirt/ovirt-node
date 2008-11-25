@@ -153,6 +153,7 @@ perform_partitioning()
 
     printf "Preparing local storage. Please wait..."
 
+    LOG=/var/log/ovirt-partition.log
     {
     vgroups=$(vgdisplay -C | awk '{ print $1" "; }')
     vgremove -f $vgroups
@@ -199,9 +200,13 @@ perform_partitioning()
     tune2fs -c 0 -i 0 /dev/HostVG/Logging
     mke2fs -T ext3 /dev/HostVG/Data    -L "DATA"
     tune2fs -c 0 -i 0 /dev/HostVG/Data
-    } > /var/log/ovirt-partition.log 2>&1
+    } 2>&1 | tee $LOG
 
-    printf "Completed!\n\n"
+    if [ $? -eq 0 ]; then
+        printf "Completed!\n\n"
+    else
+        printf "FAILED! See $LOG\n\n"
+    fi
 }
 
 do_confirm()
@@ -262,7 +267,6 @@ if [ "$1" == "AUTO" ]; then
     check_partition_sizes
     printf "Partitioning hard disk..."
     perform_partitioning
-    exit 0
 else
     while true; do
 
