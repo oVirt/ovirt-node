@@ -16,7 +16,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
-SUBDIRS = ovirt-identify-node ovirt-listen-awake
+SUBDIRS = ovirt-identify-node ovirt-listen-awake gptsync
 
 EXTRA_DIST =			\
   .gitignore			\

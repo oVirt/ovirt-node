@@ -99,6 +99,11 @@ cd -
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-install-node %{buildroot}%{_sbindir}
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-uninstall-node %{buildroot}%{_sbindir}
 
+# gptsync
+%{__install} -p -m0755 gptsync/gptsync %{buildroot}%{_sbindir}
+%{__install} -p -m0755 gptsync/showpart %{buildroot}%{_sbindir}
+#
+
 %{__install} -p -m0644 scripts/ovirt-functions %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
@@ -176,6 +181,8 @@ fi
 %{_sbindir}/ovirt-listen-awake
 %{_sbindir}/ovirt-install-node
 %{_sbindir}/ovirt-uninstall-node
+%{_sbindir}/gptsync
+%{_sbindir}/showpart
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt

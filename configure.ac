@@ -15,6 +15,7 @@ test x"$ac_ct_CC:$CFLAGS" = 'xgcc:-g -O2' \
 AC_CONFIG_FILES([Makefile
   ovirt-identify-node/Makefile
   ovirt-listen-awake/Makefile
+  gptsync/Makefile
   ovirt-node.spec
   ])
 AC_OUTPUT
