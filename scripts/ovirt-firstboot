@@ -29,6 +29,12 @@
 
 start ()
 {
+    # We need to exit plymouth so that interactive prompts read correctly
+    # This means that ovirt-firstboot will only work on the last console
+    # selected on the kernel (ttyS0 or tty0 but not both)
+    plymouth --quit
+    plymouth --wait
+
     if is_auto_install; then
         ovirt-config-networking AUTO
         newrole -r system_r -t virtd_t -- -c 'ovirt-config-storage AUTO'
