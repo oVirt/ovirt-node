@@ -254,12 +254,12 @@ case $MEM_SIZE in
 esac
 
 MEM_SIZE=$(echo "scale=0; $MEM_SIZE / 1024" | bc -l)
-SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-MEM_SIZE}
+SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$MEM_SIZE}
 
-BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-default_boot_size}
-ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-default_root_size}
-CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-default_config_size}
-LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-default_logging_size}
+BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
+ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-$default_root_size}
+CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
+LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-$default_logging_size}
 
 
 if [ "$1" == "AUTO" ]; then
