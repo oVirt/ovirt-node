@@ -195,7 +195,7 @@ perform_partitioning()
 
     mke2fs -T ext3 "${DRIVE}1"         -L "BOOT"
     tune2fs -c 0 -i 0 "${DRIVE}1"
-    mkswap /dev/HostVG/Swap
+    mkswap -L "SWAP" /dev/HostVG/Swap
     mke2fs -T ext3 /dev/HostVG/Root    -L "ROOT"
     tune2fs -c 0 -i 0 /dev/HostVG/Root
     mke2fs -T ext3 /dev/HostVG/Config  -L "CONFIG"
