@@ -99,7 +99,7 @@ do_configure()
     SPACE=$(echo "scale=0; $n_bytes / (1024 * 1024)" | bc -l)
     echo "selected device: $DRIVE ($SPACE MB)"
 
-    for i in swap boot root logging config; do
+    for i in boot swap root config logging ; do
         uc=$(echo $i|tr '[[:lower:]]' '[[:upper:]]')
         var=${uc}_SIZE
         eval "size=\$$var"
@@ -136,8 +136,8 @@ The local disk will be repartitioned as follows:
 ================================================
            Physical Hard Disk: $DRIVE
       Total storage available: $SPACE MB
-          Swap partition size: $SWAP_SIZE MB
           Boot partition size: $BOOT_SIZE MB
+          Swap partition size: $SWAP_SIZE MB
   Installation partition size: $ROOT_SIZE MB
  Configuration partition size: $CONFIG_SIZE MB
        Logging partition size: $LOGGING_SIZE MB
