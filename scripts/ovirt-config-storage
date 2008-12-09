@@ -97,7 +97,7 @@ do_configure()
     local n_bytes=$2
 
     SPACE=$(echo "scale=0; $n_bytes / (1024 * 1024)" | bc -l)
-    echo "selected device: $device ($SPACE MB)"
+    echo "selected device: $DRIVE ($SPACE MB)"
 
     for i in swap boot root logging config; do
         uc=$(echo $i|tr '[[:lower:]]' '[[:upper:]]')
