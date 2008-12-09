@@ -12,7 +12,7 @@ ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 die() { warn "$*"; exit 1; }
 
-default_boot_size=256
+default_boot_size=50
 default_root_size=256
 default_config_size=5
 default_logging_size=256
