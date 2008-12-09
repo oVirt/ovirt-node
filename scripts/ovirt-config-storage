@@ -185,27 +185,27 @@ perform_partitioning()
 
     if [ "$SWAP_SIZE" -gt 0 ]; then
         lvcreate --name Swap    --size ${SWAP_SIZE}M    /dev/HostVG
+        mkswap -L "SWAP" /dev/HostVG/Swap
     fi
     if [ "$ROOT_SIZE" -gt 0 ]; then
         lvcreate --name Root    --size ${ROOT_SIZE}M    /dev/HostVG
+        mke2fs -T ext3 /dev/HostVG/Root    -L "ROOT"
+        tune2fs -c 0 -i 0 /dev/HostVG/Root
     fi
     if [ "$CONFIG_SIZE" -gt 0 ]; then
         lvcreate --name Config  --size ${CONFIG_SIZE}M  /dev/HostVG
+        mke2fs -T ext3 /dev/HostVG/Config  -L "CONFIG"
+        tune2fs -c 0 -i 0 /dev/HostVG/Config
     fi
     if [ "$LOGGING_SIZE" -gt 0 ]; then
         lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
+        mke2fs -T ext3 /dev/HostVG/Logging -L "LOGGING"
+        tune2fs -c 0 -i 0 /dev/HostVG/Logging
     fi
     lvcreate --name Data    -l 100%FREE             /dev/HostVG
 
     mke2fs -T ext3 "${DRIVE}1"         -L "BOOT"
     tune2fs -c 0 -i 0 "${DRIVE}1"
-    mkswap -L "SWAP" /dev/HostVG/Swap
-    mke2fs -T ext3 /dev/HostVG/Root    -L "ROOT"
-    tune2fs -c 0 -i 0 /dev/HostVG/Root
-    mke2fs -T ext3 /dev/HostVG/Config  -L "CONFIG"
-    tune2fs -c 0 -i 0 /dev/HostVG/Config
-    mke2fs -T ext3 /dev/HostVG/Logging -L "LOGGING"
-    tune2fs -c 0 -i 0 /dev/HostVG/Logging
     mke2fs -T ext3 /dev/HostVG/Data    -L "DATA"
     tune2fs -c 0 -i 0 /dev/HostVG/Data
     } 2>&1 | tee $LOG
