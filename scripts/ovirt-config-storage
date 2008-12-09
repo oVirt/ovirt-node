@@ -90,7 +90,8 @@ get_dev_name()
 
 do_configure()
 {
-    local name_and_size=$(get_dev_name) || exit 1
+    local name_and_size
+    name_and_size=$(get_dev_name) || exit 1
     set -- $name_and_size
     DRIVE=$1
     local n_bytes=$2
