@@ -10,8 +10,6 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
-# size of the oVirt partition in megabytes
-OVIRT_SIZE=64
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 
@@ -48,12 +46,15 @@ configure_from_network() {
                         ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
                         if [ -f $AUGTOOL_CONFIG ]; then
                             echo "Loading remote config"
+                            # avoid bindmount issues with augeas
+                            umount_config /etc/sysconfig/network-scripts/ifcfg-eth*
                             augtool < $AUGTOOL_CONFIG \
                                 && echo "Remote config applied" \
                                 || echo "Failed applying remote config"
                         fi
                         if ls /etc/sysconfig/network-scripts/ifcfg-eth* > /dev/null 2>&1; then
                             echo "Network interfaces created from remote config"
+                            ovirt_store_config /etc/sysconfig/network-scripts/ifcfg-eth*
                             return
                         else
                             echo "Remote config contained no network interfaces"
@@ -61,6 +62,7 @@ configure_from_network() {
                     else
                         echo "Failed to retrieve configuration bundle"
                     fi
+                    rm $cfgdb
                 fi
             fi
         fi
@@ -80,14 +82,29 @@ configure_from_network() {
     echo "Default config applied"
 }
 
-# find_disk $bus $serial $live_disk
+# $(get_live_disk)
+# livecd boot disk
+get_live_disk() {
+    local live_dev=/dev/live
+    if [ ! -e $live_dev ]; then
+      # PXE boot
+      live_dev=/dev/loop0
+      live_disk=
+    else
+      live_part=$(readlink -e $live_dev)
+      live_disk=$(basename $(dirname $(udev_info $live_part path)))
+    fi
+    echo $live_disk
+}
+
+# find_disk $bus $serial
 find_disk() {
     local bus=$1
     local serial=$2
-    local live=$3
+    local live=$(get_live_disk)
     for d in /dev/disk/by-id/{scsi,usb}*; do
       ID_FS_USAGE=
-      eval $(udevinfo --query env --name $d)
+      eval $(udev_info $d env)
       # ID_FS_USAGE is set for partitions
       if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
         if [ -z "$serial" -o "$ID_SERIAL" = "$serial" ]; then
@@ -104,216 +121,10 @@ find_disk() {
     return 1
 }
 
-# TODO move to ovirt-config-storage
-# local_install $local_boot $local_disk $bootparams
-#  local_boot - 1=install LiveOS and boot loader
-#               0=initialize oVirt partition only
-#  local_disk - local disk to hold the oVirt partition
-#           =usb|scsi[:serial#]
-#  bootparams - extra boot parameters like console=
-#
-# oVirt partition is a local primary ext2 partition, labeled OVIRT
-# content:
-#  /config - local oVirt configuration (ktab, local admin password)
-#  /boot - boot loader, kernel and initramfs
-#  /LiveOS - oVirt Node compressed livecd image
-
-local_install() {
-    local local_boot=$1
-    local local_disk=$2
-    local bootparams=$3
-    local disk
-    local part
-    local live_part
-    local live_disk
-    local live_dev=/dev/live
-    if [ ! -e $live_dev ]; then
-      # PXE boot
-      live_dev=/dev/loop0
-      live_part=$live_dev
-      live_disk=
-    else
-      live_part=$(readlink -e $live_dev)
-      live_disk=${live_disk%[1-9]}
-    fi
-    local ovirt_part=$(readlink -e /dev/disk/by-label/$OVIRT_LABEL)
-    local ovirt_disk=${ovirt_part%[1-9]}
-    if [ "$ovirt_disk" = "$ovirt_part" ]; then
-      ovirt_disk=
-    fi
-    if [ -z "$local_disk" ]; then
-        if [ -z "$ovirt_disk" ]; then
-          return 1
-        fi
-        # ovirt_init not specified, use pre-labeled oVirt partition
-        mode=update
-        disk=$ovirt_disk
-        part=$ovirt_part
-    else
-      case "$local_disk" in
-          =)
-          # empty ovirt_init, use current live image device
-          mode=update
-          disk=$live_disk
-          part=$live_part
-          ;;
-          =scsi*)
-          bus=scsi
-          serial=${local_disk#=scsi:}
-          mode=install
-          ;;
-          =usb*)
-          bus=usb
-          serial=${local_disk#=usb:}
-          mode=install
-          ;;
-          *)
-          return 1
-          ;;
-      esac
-      if [ $mode = "install" ]; then
-        if [ "$serial" = "=$bus" ]; then
-          serial=
-        fi
-        disk=$(find_disk $bus $serial $live_disk)
-        rc=$?
-        if [ $rc -ne 0 ]; then
-          echo "local disk '$local_disk' not available"
-          return 1
-        fi
-        if [ -n "$ovirt_disk" ]; then
-          if [ "$disk" = "$ovirt_disk" ]; then
-            # local disk contains oVirt partition, select it for update
-            # TODO force reinstall option
-            mode=update
-            part=$ovirt_part
-          else
-            # remove label from oVirt partition, there can be only one
-            e2label $ovirt_part ""
-          fi
-        fi
-      fi
-      if [ "$mode" = "install" ]; then
-        printf "installing $disk..." | tee /dev/console
-        dd if=/dev/zero bs=4096 count=1 of=$disk \
-        && parted -s $disk mklabel msdos \
-        && parted -s $disk mkpart primary ext2 0.0 $OVIRT_SIZE \
-        && partprobe -s $disk
-        if [ $? -ne 0 ]; then
-          echo "$disk partition creation failed"; return 1
-        fi
-        part=${disk}1
-        udevsettle
-        mkfs.ext2 -L $OVIRT_LABEL $part \
-        && tune2fs -c0 -i0 $part
-        if [ $? -ne 0 ]; then
-          echo "$disk ext2 creation failed"; return 1
-        fi
-        # update by-label link manually, mkfs won't trigger udev
-        mkdir -p /dev/disk/by-label
-        ln -sf $part /dev/disk/by-label/$OVIRT_LABEL
-      fi
-    fi
-
-    if [ "$mode" = "update" ]; then
-      printf "updating $disk..." | tee /dev/console
-    fi
-    ovirt=$(mktemp -d)
-    if [ "$part" = "$live_part" ]; then
-      # ovirt_init w/o local disk specified
-      # setup /config on live disk, if writeable
-      # TODO mlabel/e2label (check fs2 type or just blindly try?)
-      mount -r $part $ovirt && mount -o remount,rw $ovirt \
-      && mkdir -p $ovirt/config
-      umount $ovirt && rmdir $ovirt
-      return 0
-    fi
-    live=$(mktemp -d)
-    mount -r $live_dev $live
-    if [ $? -ne 0 ]; then
-      echo "source image mount failed"
-      rmdir $live
-      return 1
-    fi
-    mount $part $ovirt
-    if [ $? -ne 0 ]; then
-      echo "local disk mount failed"
-      umount $live && rmdir $live
-      rmdir $ovirt
-      return 1
-    fi
-    mkdir -p $ovirt/config
-    # update local config using the one embedded in livecd image
-    # TODO admin tool for adding /config into livecd image
-    if [ -d $live/config ]; then
-      cp -rv $live/config/* $ovirt/config \
-      || echo "config copy failed"
-    fi
-
-    if [ $local_boot = 0 ]; then
-      # config update only, cleanup and continue booting
-      umount $ovirt && rmdir $ovirt
-      umount $live && rmdir $live
-    else
-      # install oVirt Node image for local boot
-      if [ -e "$live/syslinux" ]; then
-        syslinux=syslinux
-      elif [ -e "$live/isolinux" ]; then
-        syslinux=isolinux
-      else
-        syslinux=
-      fi
-      rm -rf $ovirt/boot
-      rm -rf $ovirt/LiveOS
-      mkdir -p $ovirt/boot/grub
-      mkdir -p $ovirt/LiveOS
-      cp -p $live/LiveOS/squashfs.img $ovirt/LiveOS \
-      && cp -p $live/$syslinux/initrd0.img $ovirt/boot \
-      && cp -p $live/$syslinux/vmlinuz0 $ovirt/boot
-      if [ $? -ne 0 ]; then
-        echo "image copy failed"
-        umount $ovirt && rmdir $ovirt
-        umount $live && rmdir $live
-        return 1
-      fi
-      part_num=$(( ${part#$disk} - 1 ))
-      cat > $ovirt/boot/grub/grub.conf << EOF
-default=0
-timeout=2
-hiddenmenu
-title oVirt Node
-    root (hd0,$part_num)
-    kernel /boot/vmlinuz0 ro root=LABEL=OVIRT roottypefs=ext2 liveimg $bootparams
-    initrd /boot/initrd0.img
-EOF
-      grub-install --root-directory=$ovirt $disk >&2
-      if [ $? -ne 0 ]; then
-        echo "boot loader install failed"
-        umount $ovirt && rmdir $ovirt
-        umount $live && rmdir $live
-        return 1
-      fi
-      # remove 1.5 stages we don't need
-      find $ovirt/boot/grub -name '*_stage1_5' ! -name e2fs_stage1_5 \
-        -exec rm {} \;
-      umount $ovirt && rmdir $ovirt
-      umount $live && rmdir $live
-      # FIXME avoid reboot loops
-      # temp. workaround: sync and wait
-      sync; sync; sync
-      printf "oVirt local installation finished, press Enter to reboot." \
-        > /dev/console
-      read key
-      if [ "$key" = "debug" ]; then
-        sh > /dev/console 2>&1
-      fi
-      reboot
-    fi
-}
 
 start() {
     # oVirt boot parameters
-    #   BOOTIF=<MAC> (appended by pxelinux)
+    #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     #   ovirt_init=usb|scsi[:serial#]
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
     #   ovirt_local_boot
@@ -324,11 +135,14 @@ start() {
     #   syslog=server[:port]
     #   TBD logrotate maxsize
 
-    #   BOOTIF=<MAC> (appended by pxelinux)
+    #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     # network boot interface is assumed to be on management network where
     # oVirt Server is reachable
-    # IPAPPEND 2 in pxelinux.cfg appends MAC address of the booting node
-    # e.g. BOOTIF=01-00-16-3e-12-34-57
+    # BOOTIF=<MAC> e.g. BOOTIF=01-00-16-3e-12-34-57
+    # PXELINUX option IPAPPEND 2 in pxelinux.cfg appends MAC address
+    # of the booting node
+    # BOOTIF=link - take first eth for which ethtool reports link
+    # BOOTIF=eth* e.g. BOOTIF=eth0 - use given interface
     bootif=
 
     #   ovirt_init=usb|scsi[:serial#]
@@ -337,23 +151,23 @@ start() {
     # serial# - select exact disk using serial number, as reported by
     #           udev ID_SERIAL
     # e.g. ovirt_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
-    ovirt_init=
+    init=
 
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
     # local partition sizes in GB
-    ovirt_vol_boot=
-    ovirt_vol_swap=
-    ovirt_vol_root=
-    ovirt_vol_config=
-    ovirt_vol_logging=
+    vol_boot_size=
+    vol_swap_size=
+    vol_root_size=
+    vol_config_size=
+    vol_logging_size=
 
     #   ovirt_local_boot
     # install/update oVirt Node image on the local installation target disk
-    ovirt_local_boot=0
+    local_boot=0
 
     #   ovirt_standalone
     # force oVirt Node standalone mode
-    ovirt_standalone=0
+    standalone=0
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
@@ -376,25 +190,65 @@ start() {
 
     for i in $(cat /proc/cmdline); do
         case $i in
-            BOOTIF=??-??-??-??-??-??-??)
-            i=${i#BOOTIF=??-}
-            bootif=$(grep -il $(echo $i|sed 's/-/:/g') /sys/class/net/eth*/address|rev|cut -d/ -f2|rev)
+            BOOTIF=*)
+            i=${i#BOOTIF=}
+            case "$i" in
+                eth*)
+                bootif=$i
+                ;;
+                link)
+                for eth in $(cd /sys/class/net; echo eth*); do
+                    if ethtool $eth 2>/dev/null|grep -q "Link detected: yes"
+                    then
+                        bootif=$eth
+                        break
+                    fi
+                done
+                ;;
+                ??-??-??-??-??-??-??)
+                i=${i#??-}
+                bootif=$(grep -il $(echo $i|sed 's/-/:/g') /sys/class/net/eth*/address|rev|cut -d/ -f2|rev)
+                ;;
+            esac
             ;;
             ovirt_init*)
-            ovirt_init=${i#ovirt_init}
-            if [ -z "$ovirt_init" ]; then
-              ovirt_init='='
+            i=${i#ovirt_init}
+            if [ -n "$i" ]; then
+                # resolve to disk device
+                case "$i" in
+                    =scsi*)
+                    bus=scsi
+                    i=${i#=scsi}
+                    serial=${i#:}
+                    ;;
+                    =usb*)
+                    bus=usb
+                    i=${i#=usb}
+                    serial=${i#:}
+                    ;;
+                    *)
+                    bus=
+                    serial=
+                    ;;
+                esac
+                if [ -n "$bus" ]; then
+                    init=$(find_disk $bus $serial)
+                fi
+            else
+                # 'ovirt_init' without value: grab first disk
+                init=/dev/?da
             fi
             ;;
             ovirt_vol=*)
             i=${i#ovirt_vol=}
-            eval $(printf $i|awk -F: '{print "ovirt_vol_boot="$1; ovirt_vol_swap="$2; print "ovirt_vol_root="$3; print "ovirt_vol_config="$4; print "ovirt_vol_logging="$5;}')
+            eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5;}')
             ;;
             ovirt_local_boot*)
-            ovirt_local_boot=1
+            local_boot=1
             ;;
             ovirt_standalone*)
-            ovirt_standalone=1
+            standalone=1
+            bootparams="$bootparams $i"
             ;;
             ip=*)
             i=${i#ip=}
@@ -418,41 +272,63 @@ start() {
             ;;
         esac
     done
-    # save boot parameters as defaults for ovirt-config-*
+
     if [ -z "$ip_netmask" ]; then
         ip_netmask=$netmask
     fi
     if [ -z "$ip_gateway" ]; then
         ip_gateway=$gateway
     fi
-
-    cat > $OVIRT_DEFAULTS <<EOF
-# configuration defaults from oVirt Node boot parameters
-OVIRT_BOOTIF=$bootif
-OVIRT_INIT=$ovirt_init
-OVIRT_VOL_BOOT_SIZE=$ovirt_vol_boot
-OVIRT_VOL_SWAP_SIZE=$ovirt_vol_swap
-OVIRT_VOL_ROOT_SIZE=$ovirt_vol_root
-OVIRT_VOL_CONFIG_SIZE=$ovirt_vol_config
-OVIRT_VOL_LOGGING_SIZE=$ovirt_vol_logging
-OVIRT_LOCAL_BOOT=$ovirt_local_boot
-OVIRT_STANDALONE=$ovirt_standalone
-OVIRT_IP_ADDRESS=$ip_address
-OVIRT_IP_NETMASK=$ip_netmask
-OVIRT_IP_GATEWAY=$ip_gateway
-OVIRT_IPV6=$ipv6
-OVIRT_SYSLOG_SERVER=$syslog_server
-OVIRT_SYSLOG_PORT=$syslog_port
-EOF
-
-    set -x
-    local_install "$ovirt_local_boot" "$ovirt_init" "$bootparams"
-    set +x
-    if [ $ovirt_standalone = 0 ]; then
-        configure_from_network $bootif
+    # save boot parameters as defaults for ovirt-config-*
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port bootparams"
+    mount_config
+    if [ -e $OVIRT_DEFAULTS ]; then
+        echo "update ovirt defaults"
+        tmpaug=$(mktemp)
+        for p in $params; do
+            PARAM=$(uc $p)
+            value=$(ptr $p)
+            echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" \
+                >> $tmpaug
+        done
+        echo "save" >> $tmpaug
+        # augtool on bindmounted files fails
+        umount_config $OVIRT_DEFAULTS
+        augtool < $tmpaug > /dev/null
+        ovirt_store_config $OVIRT_DEFAULTS
+        rm $tmpaug
+    else
+        echo "initial startup"
+        # dump all ovirt bootparams
+        mkdir -p $(dirname $OVIRT_DEFAULTS)
+        echo > $OVIRT_DEFAULTS
+        for p in $params; do
+            PARAM=$(uc $p)
+            echo "OVIRT_$PARAM='$(ptr $p)'" >> $OVIRT_DEFAULTS
+        done
+        ovirt_store_config $OVIRT_DEFAULTS
     fi
 
-# BEGIN - move to ovirt-config-storage
+    if [ $standalone = 0 ]; then
+        configure_from_network $bootif
+        if [ -n "$init" ]; then
+            ovirt-config-storage AUTO
+            # initial configuration storage, after /config creation
+            ovirt_store_config \
+                /etc/sysconfig/network-scripts/ifcfg-* \
+                $BONDING_MODCONF_FILE
+            if [ $local_boot = 1 ]; then
+                # local disk installation for managed mode
+                mount_live
+                ovirt-config-boot $init /live "$bootparams"
+                reboot
+            fi
+        fi
+    fi
+}
+
+scan_for_swap() {
+    # swap partition activation
     # find all of the partitions on the system
 
     # get the system pagesize
@@ -478,7 +354,6 @@ EOF
             swapon $device
         fi
     done
-# END - move to ovirt-config-storage
 }
 
 case "$1" in
