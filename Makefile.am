@@ -27,6 +27,7 @@ EXTRA_DIST =			\
   scripts/collectd.conf.in	\
   scripts/ovirt			\
   scripts/ovirt-awake		\
+  scripts/ovirt-config-boot  \
   scripts/ovirt-config-logging  \
   scripts/ovirt-config-networking \
   scripts/ovirt-config-password \

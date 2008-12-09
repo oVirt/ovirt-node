@@ -36,6 +36,7 @@ Requires:       bind-utils
 # qemu-img RPM.
 Requires:       qemu-img
 Requires:       nc
+Requires:       grub
 Requires:       /usr/sbin/crond
 ExclusiveArch:  %{ix86} x86_64
 
@@ -112,6 +113,7 @@ cd -
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-boot %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-logging %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-networking %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-password %{buildroot}%{_sbindir}
@@ -203,6 +205,8 @@ fi
 
 %files stateless
 %defattr(-,root,root,0755)
+%{_sbindir}/ovirt-awake
+%{_sbindir}/ovirt-config-boot
 %{_sbindir}/ovirt-config-logging
 %{_sbindir}/ovirt-config-networking
 %{_sbindir}/ovirt-config-password
@@ -243,6 +247,7 @@ fi
 * Thu Dec 11 2008 Perry Myers <pmyers@redhat.com> - 0.96
 - Subpackage stateful/stateless to separate out functionality for
   embedded Node and Node running as part of already installed OS
+- ovirt-config-* setup scripts for standalone mode
 
 * Thu Sep 11 2008 Chris Lalancette <clalance@redhat.com> - 0.92 0.7
 - Add the ovirt-install- and ovirt-uninstall-node scripts, and refactor
