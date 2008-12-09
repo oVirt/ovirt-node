@@ -167,6 +167,10 @@ perform_partitioning()
     blockdev --rereadpt $DRIVE
     partprobe -s $DRIVE
 
+    if [ "$BOOT_SIZE" -lt 10 ]; then
+        # ensure minimal BOOT partition
+        BOOT_SIZE=10
+    fi
     parted $DRIVE -s "mklabel gpt"
     parted $DRIVE -s "mkpart primary ext2 0M ${BOOT_SIZE}M"
     parted $DRIVE -s "mkpart primary ext2 ${BOOT_SIZE}M ${SPACE}M"
