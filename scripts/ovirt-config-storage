@@ -113,7 +113,7 @@ do_configure()
         fi
     done
     # save input variables
-    augtool <<EOF
+    augtool <<EOF > /dev/null
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_BOOT_SIZE $BOOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_SWAP_SIZE $SWAP_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_ROOT_SIZE $ROOT_SIZE
