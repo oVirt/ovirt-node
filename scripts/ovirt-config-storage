@@ -186,7 +186,7 @@ perform_partitioning()
     mke2fs -T ext3 "${DRIVE}1"         -L "BOOT"
     tune2fs -c 0 -i 0 "${DRIVE}1"
     mkdir -p /dev/disk/by-label
-    ln -s "${DRIVE}1" /dev/disk/by-label/BOOT
+    ln -snf "${DRIVE}1" /dev/disk/by-label/BOOT
 
     if [ "$SWAP_SIZE" -gt 0 ]; then
         lvcreate --name Swap    --size ${SWAP_SIZE}M    /dev/HostVG
