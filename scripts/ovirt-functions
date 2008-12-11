@@ -131,3 +131,18 @@ ovirt_store_config() {
     echo
     umount $ovirt && rmdir $ovirt
 }
+
+backup_file() {
+    dir=$(dirname "$1")
+    case $dir in /*);; *) die "unexpected non-absolute dir: $dir";; esac
+    mkdir -p "$OVIRT_BACKUP_DIR/${dir:1}"
+    test -f "$1" && cp -pf "$1" "$OVIRT_BACKUP_DIR/${dir:1}"
+}
+
+add_if_not_exist() {
+    string="$1"
+    file="$2"
+
+    grep -qE "^[[:space:]]*$string($|#|[[:space:]])" "$file" \
+        || echo "$string" >> "$file"
+}

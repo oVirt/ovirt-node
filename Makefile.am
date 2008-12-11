@@ -35,8 +35,11 @@ EXTRA_DIST =			\
   scripts/ovirt-early		\
   scripts/ovirt-firstboot       \
   scripts/ovirt-functions	\
+  scripts/ovirt-install-node-stateful	\
+  scripts/ovirt-install-node-stateless	\
   scripts/ovirt-post		\
   scripts/ovirt-process-config  \
+  scripts/ovirt-uninstall-node-stateful	\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
 
