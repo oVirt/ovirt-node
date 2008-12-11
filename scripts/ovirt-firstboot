@@ -29,11 +29,7 @@
 
 start ()
 {
-    # We need to exit plymouth so that interactive prompts read correctly
-    # This means that ovirt-firstboot will only work on the last console
-    # selected on the kernel (ttyS0 or tty0 but not both)
-    plymouth --quit
-    plymouth --wait
+    plymouth --hide-splash
 
     if is_auto_install; then
         ovirt-config-networking AUTO
@@ -42,6 +38,8 @@ start ()
     else
         ovirt-config-setup
     fi
+
+    plymouth --show-splash
 }
 
 case "$1" in
