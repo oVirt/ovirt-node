@@ -261,7 +261,7 @@ case $MEM_SIZE in
     ''|*[^0-9]*) die failed to get system memory size;;
 esac
 
-MEM_SIZE=$(echo "scale=0; $MEM_SIZE / 1024" | bc -l)
+MEM_SIZE=$(echo "scale=0; m=($MEM_SIZE / 1024 * 2); if (m < 2048) { m } else { 2048 }" | bc -l)
 SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$MEM_SIZE}
 
 BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
