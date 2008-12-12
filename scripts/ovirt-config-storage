@@ -256,8 +256,7 @@ do_confirm()
     done
 }
 
-MEM_SIZE=$(virsh --readonly -c qemu:///system nodeinfo \
-           | awk '/Memory size/ { print $3 }')
+MEM_SIZE=$(cat /proc/meminfo | awk '/MemTotal:/ { print $2 }')
 case $MEM_SIZE in
     ''|*[^0-9]*) die failed to get system memory size;;
 esac

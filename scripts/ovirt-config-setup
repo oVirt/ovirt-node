@@ -31,7 +31,7 @@ while true; do
         case "$OPTION" in
             "$NETWORK")  ovirt-config-networking ; break ;;
             "$STORAGE")
-                newrole -r system_r -t virtd_t -- -c ovirt-config-storage ;
+                ovirt-config-storage ;
                 break ;;
             "$LOGGING")  ovirt-config-logging    ; break ;;
             "$PASSWORD") ovirt-config-password   ; break ;;
