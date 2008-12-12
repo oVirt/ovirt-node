@@ -5,7 +5,6 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
-
 RSYSLOG_FILE="/etc/rsyslog.conf"
 
 # Creates the rsyslog file based on the following inputs
@@ -72,61 +71,94 @@ function is_numeric {
 
 function prompt_user {
     while true ; do
-        max_log_size="10k"
-        printf "\nWhat is the max size for log files on this machine [10k]? "
-        read -e
-        if [ -n "$REPLY" ]; then
-            max_log_size=$REPLY
-        fi
-        printf "\nWhat is the IP address or server name for the syslog server? "
-        read -e
-        syslog_server_ip=$REPLY
-        printf "\nWhat port does the syslog daemon run on? "
-        read -e
-        if is_numeric "$REPLY"; then
-            syslog_server_port=$REPLY
+	max_log_size="10"
+	syslog_server_ip=""
+	syslog_server_port=""
 
-            PROTOCOLS="udp tcp"
-            PS3="Please select the protocol to use: "
-            select syslog_server_protocol in $PROTOCOLS;
-            do
-                case $syslog_server_protocol in
-                    "tcp")
-                        break ;;
-                    "udp")
-                        break;;
-                esac
-            done
+	while true; do
+	    printf "\n"
+	    read -p "What is the max size, in kilobytes, for local log files (def. ${max_log_size}k)? "
 
-            printf "\n"
-            printf "\nLogging will be configured as follows:"
-            printf "\n======================================"
-            printf "\n Max Logfile Size: $max_log_size"
-            printf "\n    Remote Server: $syslog_server_ip"
-            printf "\n      Remote Port: $syslog_server_port"
-            printf "\n Logging Protocol: $syslog_server_protocol"
-            printf "\n"
-            printf "\nPlease confirm these changes (Y/N)"
-            read -e
-            case $REPLY in
-                Y|y)
-                    ovirt_rsyslog $syslog_server_ip \
-                                  $syslog_server_port \
-                                  $syslog_server_protocol
-                    sed -i -e "s/^size=.*/size=$max_log_size/" \
-                              /etc/logrotate.d/ovirt-logrotate.conf
-                    break
-                    ;;
-                N|n)
-                    printf "Discarding settings\n"
-                    break
-                    ;;
-            esac
-        else
-            printf "Invalid port number\n"
-        fi
+	    if [ -n "$REPLY" ]; then
+		r=$REPLY
+		if [[ $r =~ ^[0-9]+$ ]] && [[ $r -gt 0 ]]; then
+		    max_log_size=$r
+		    printf "\nMaximum logging size will be ${max_log_size}k.\n"
+		    break
+		else
+		    printf "\nInvalid input.\n"
+		fi
+	    else
+		printf "\nLeaving log size as ${max_log_size}k.\n"
+		break
+	    fi
+	done
+
+	printf "\n"
+	read -p "What is the IP address for the syslog server, hit Enter to skip? "
+	if [ -n "$REPLY" ]; then
+	    syslog_server_ip=$REPLY
+	    while true; do
+		read -p "Please enter the remote logging port used:  "
+		r=$REPLY
+		if [ -n "$r" ]; then
+		    if [[ $r =~ ^[0-9]+$ ]] && [[ $r -gt 0 ]]; then
+			syslog_server_port=$REPLY
+			break
+		    else
+			printf "Invalid port.\n"
+		    fi
+		fi
+	    done
+
+	    printf "\n"
+	    while true; do
+		read -p "Remote logging uses [t]cp or [u]dp? "
+		r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
+		if [ "$r" == "T" ]; then syslog_server_protocol="tcp"; break; fi
+		if [ "$r" == "U" ]; then syslog_server_protocol="udp"; break; fi
+		# else
+		printf "Invalid input.\n"
+	    done
+	else
+	    printf "\nDisabling remote logging.\n"
+	fi
+
+	printf "\n"
+	printf "\nLogging will be configured as follows:"
+	printf "\n======================================"
+	printf "\n Max Logfile Size: $max_log_size"
+	if [ -n "$syslog_server_ip" ]; then
+	    printf "\n    Remote Server: $syslog_server_ip"
+	    printf "\n      Remote Port: $syslog_server_port"
+	    printf "\n Logging Protocol: $syslog_server_protocol"
+	fi
+	printf "\n"
+	printf "\n"
+	while true; do
+	    read -p "Is this correct (Y/N/A)? "
+	    r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
+	    if [ "$r" == "Y" ]; then
+		printf "\nSaving configuration.\n"
+		if [[ -n "$syslog_server_ip" ]] &&
+		    [[ -n "$syslog_server_port" ]] &&
+		    [[ -n "$syslog_server_protocol" ]]; then
+		    ovirt_rsyslog $syslog_server_ip \
+			$syslog_server_port \
+			$syslog_server_protocol
+		fi
+		sed -i -e "s/^size=.*/size=${max_log_size}k/" \
+		    /etc/logrotate.d/ovirt-logrotate.conf
+		return
+	    elif [ "$r" == "N" ]; then
+		printf "\nRestarting logging configuration.\n"
+		break
+	    elif [ "$r" == "A" ]; then
+		printf "\nAborting logging configuration.\n"
+		return
+	    fi
+	done
     done
-
 }
 
 # AUTO for auto-install
