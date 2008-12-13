@@ -15,10 +15,11 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
-BuildRequires:  libvirt-devel
+BuildRequires:  libvirt-devel >= 0.5.1
 BuildRequires:  dbus-devel hal-devel
+Requires:       libvirt >= 0.5.1
 Requires:       augeas
-Requires:       libvirt-qpid
+Requires:       libvirt-qpid >= 0.2.3
 Requires:       hal
 Requires:       collectd-virt
 Requires:       wget
