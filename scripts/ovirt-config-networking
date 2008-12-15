@@ -3,6 +3,8 @@
 # Iterates over the list of network devices on the node and prompts the user
 # to configure each.
 
+. /etc/init.d/ovirt-functions
+
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 die() { warn "$*"; exit 1; }
@@ -157,7 +159,7 @@ function setup_menu
 }
 
 if [ "$1" == "AUTO" ]; then
-    configure_interface $OVIRT_BOOTIF AUTO
+    configure_interface "$OVIRT_BOOTIF" AUTO
     RESTART="Y"
 else
     setup_menu
@@ -181,5 +183,6 @@ if [ "$RESTART" == "Y" ]; then
     { cat "$WORKDIR"/augtool-* && printf "save\n"; } > $config \
     && augtool < $config  \
     && service network restart
-    } >> $CONFIG_LOG_FILE 2>&1
+    } 2>&1 | tee $CONFIG_LOG_FILE
+
 fi
