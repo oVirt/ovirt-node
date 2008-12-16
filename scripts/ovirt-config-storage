@@ -28,13 +28,25 @@ check_partition_sizes()
     # or just let the mke2fs failure suffice.
 }
 
-# Find a usable/selected storage device along with its size in bytes.
+get_selected_drive_size()
+{
+    local udi=$(hal-find-by-property --key block.device --string $DRIVE)
+    if [ -z "$udi" ]; then
+        warn "ERROR: selected storage device is not available"
+        return 1
+    fi
+    size=$(hal-get-property --udi "$udi" --key storage.size)
+    SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
+    echo "selected device: $DRIVE ($SPACE MB)"
+}
+
+# Find a usable/selected storage device.
 # If there are none, give a diagnostic and return nonzero.
 # If there is just one, e.g., /dev/sda, treat it as selected (see below).
 # and return 0.  If there are two or more, make the user select one
 # or decline.  Upon decline, return nonzero. Otherwise, print the
-# selected name, a space, and its size, then return 0.
-# Sample output: "/dev/sda 320072933376"
+# selected name, then return 0.
+# Sample output: /dev/sda
 get_dev_name()
 {
     local udi_list=$(hal-find-by-capability --capability storage)
@@ -58,20 +70,16 @@ get_dev_name()
             *) warn "block device name $block_dev doesn't start with '/';" \
                 " skipping"; continue;;
         esac
-        size=$(hal-get-property --udi "$d" --key storage.size)
         test -z "$devices" \
             && devices=$block_dev \
             || devices="$devices $block_dev"
-        test -z "$sizes" \
-            && sizes=$size \
-            || sizes="$sizes $size"
     done
 
     # If there's only one device, use it.
     case $devices in
         '') warn "ERROR: found no usable block device"; return 1;;
         *' '*) ;; # found more than one
-        *) echo "$devices $sizes"; return 0;; # just one
+        *) echo "$devices"; return 0;; # just one
     esac
 
     # There are two or more; make the user choose.
@@ -80,10 +88,7 @@ get_dev_name()
     do
         test "$device" = Abort && return 1
         test -z "$device" && continue
-        # $REPLY is the selected number;
-        # use that to map to the corresponding size.
-        size=$(echo "$sizes"|cut -d' ' -f "$REPLY")
-        echo "$device $size"
+        echo "$device"
         return 0
     done
 }
@@ -91,13 +96,8 @@ get_dev_name()
 do_configure()
 {
     local name_and_size
-    name_and_size=$(get_dev_name) || exit 1
-    set -- $name_and_size
-    DRIVE=$1
-    local n_bytes=$2
-
-    SPACE=$(echo "scale=0; $n_bytes / (1024 * 1024)" | bc -l)
-    echo "selected device: $DRIVE ($SPACE MB)"
+    DRIVE=$(get_dev_name) || exit 1
+    get_selected_drive_size
 
     for i in boot swap root config logging ; do
         uc=$(echo $i|tr '[[:lower:]]' '[[:upper:]]')
@@ -145,6 +145,22 @@ The local disk will be repartitioned as follows:
 EOF
 }
 
+# cleanup lvms on selected disk
+# - remove mounted filesystems
+# - remove LVM volumes and groups
+wipe_lvm_on_disk()
+{
+    for vg in $(pvdisplay -c $DRIVE* 2>/dev/null|awk -F: '{print $2}'|sort -u); do
+        for d in $(grep $vg /proc/mounts|awk '{print $2}'); do
+            umount $d
+        done
+        for lv in $(lvdisplay -c $vg|awk -F: '{print $1}'); do
+            lvremove -f $lv
+        done
+        vgremove -f $vg
+    done
+}
+
 perform_partitioning()
 {
     if [ -z "$DRIVE" ]; then
@@ -156,14 +172,13 @@ perform_partitioning()
 
     LOG=/var/log/ovirt-partition.log
     {
-    vgroups=$(vgdisplay -C | awk '{ print $1" "; }')
-    vgremove -f $vgroups
+    wipe_lvm_on_disk
 
     # Exit upon any failure.
     set -e
 
     # FIXME: save a backup copy, just in case?
-    dd if=/dev/zero of=$DRIVE bs=1K count=1
+    dd if=/dev/zero of=$DRIVE bs=1024K count=1
     blockdev --rereadpt $DRIVE
     partprobe -s $DRIVE
 
@@ -172,9 +187,11 @@ perform_partitioning()
         BOOT_SIZE=10
     fi
     parted $DRIVE -s "mklabel gpt"
-    parted $DRIVE -s "mkpart primary ext2 0M ${BOOT_SIZE}M"
+    parted $DRIVE -s "mkpartfs primary ext2 0M ${BOOT_SIZE}M"
     parted $DRIVE -s "mkpart primary ext2 ${BOOT_SIZE}M ${SPACE}M"
+    parted $DRIVE -s "set 1 boot on"
     parted $DRIVE -s "set 2 lvm on"
+    parted $DRIVE -s "print"
     udevadm settle 2> /dev/null || udevsettle
     # sync GPT to the legacy MBR partitions
     gptsync $DRIVE
@@ -269,10 +286,13 @@ ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-$default_root_size}
 CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
 LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-$default_logging_size}
 
+if [ -n "$OVIRT_INIT" ]; then
+    # if present, use the drive selected with 'ovirt_init' boot parameter
+    DRIVE=$OVIRT_INIT
+    get_selected_drive_size
+fi
 
 if [ "$1" == "AUTO" ]; then
-    # In "AUTO" mode, OVIRT_INIT should be defined in the environment.
-    DRIVE=$OVIRT_INIT
     check_partition_sizes
     printf "Partitioning hard disk..."
     perform_partitioning
