@@ -1,8 +1,14 @@
 module ovirt 1.0.0;
 require {
     type fixed_disk_device_t;
+    attribute file_type;
+    type mount_t;
     type qemu_t;
     class blk_file { ioctl getattr setattr read write };
+    class file mounton;
 }
 # Give qemu_t access to any block device
 allow qemu_t fixed_disk_device_t:blk_file { ioctl getattr setattr read write };
+# allow any file to be bindmounted (for /config)
+allow mount_t file_type:file mounton;
+
