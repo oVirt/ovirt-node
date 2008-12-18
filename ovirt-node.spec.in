@@ -70,6 +70,23 @@ Provides the oVirt Node functionality needed to convert an existing
 host into a Node in a stateful manner.  Presently intended for use on
 the host running the oVirt Appliance.
 
+%package logos
+Summary:        oVirt Node Logos
+Group:          System Environment/Base
+BuildArch:      noarch
+Obsoletes:      redhat-logos
+Provides:       redhat-logos = 10.0.1-1
+Provides:       system-logos = 10.0.1-1
+Conflicts:      fedora-logos
+Conflicts:      generic-logos
+Conflicts:      fedora-logos
+Conflicts:      anaconda-images <= 10
+Conflicts:      redhat-artwork <= 5.0.5
+
+%description logos
+The ovirt-logos package contains various image files which can be
+used by the bootloader, anaconda, and other related tools.
+
 %package selinux
 Summary:        SELinux policy module supporting ovirt-node
 Group:          System Environment/Base
@@ -156,6 +173,15 @@ cd -
 
 /usr/sbin/hardlink -cv %{buildroot}%{_datadir}/selinux
 
+# ovirt-logos
+# should be ifarch i386
+mkdir -p %{buildroot}/boot/grub
+install -p -m 644 images/grub-splash.xpm.gz %{buildroot}/boot/grub/splash.xpm.gz
+# end i386 bits
+mkdir -p %{buildroot}/usr/lib/anaconda-runtime
+install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-runtime
+# ovirt-logos
+
 %clean
 %{__rm} -rf %{buildroot}
 
@@ -202,6 +228,14 @@ fi
 %defattr(-,root,root,0755)
 %doc SELinux/*
 %{_datadir}/selinux/*/%{modulename}.pp
+
+%files logos
+%defattr(-, root, root)
+%doc COPYING
+# should be ifarch i386
+/boot/grub/splash.xpm.gz
+# end i386 bits
+/usr/lib/anaconda-runtime/*.jpg
 
 %files stateless
 %defattr(-,root,root,0755)

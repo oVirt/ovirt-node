@@ -23,6 +23,8 @@ EXTRA_DIST =			\
   ovirt-node.spec		\
   ovirt-node.spec.in		\
   ovirt-node-selinux.te		\
+  images/grub-splash.xpm.gz	\
+  images/syslinux-vesa-splash.jpg	\
   scripts/collectd		\
   scripts/collectd.conf.in	\
   scripts/ovirt			\
