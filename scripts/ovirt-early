@@ -44,21 +44,11 @@ configure_from_network() {
                     if [ $? -eq 0 ]; then
                         echo "Remote configuration bundle retrieved to $cfgdb"
                         ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
-                        if [ -f $AUGTOOL_CONFIG ]; then
-                            echo "Loading remote config"
-                            # avoid bindmount issues with augeas
-                            umount_config /etc/sysconfig/network-scripts/ifcfg-eth*
-                            augtool < $AUGTOOL_CONFIG \
-                                && echo "Remote config applied" \
-                                || echo "Failed applying remote config"
-                        fi
-                        if ls /etc/sysconfig/network-scripts/ifcfg-eth* > /dev/null 2>&1; then
-                            echo "Network interfaces created from remote config"
-                            ovirt_store_config /etc/sysconfig/network-scripts/ifcfg-eth*
-                            return
-                        else
-                            echo "Remote config contained no network interfaces"
-                        fi
+			if [ $? -eq 0 ]; then
+			    echo "Remote configuration retrieved and applied"
+			else
+			    echo "Failure to retrieve or apply remote configuration"
+			fi
                     else
                         echo "Failed to retrieve configuration bundle"
                     fi
