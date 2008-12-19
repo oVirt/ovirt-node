@@ -63,10 +63,13 @@ RPM_FLAGS	+= $(if $(_ovirt_dev),--define "extra_release .$(GIT_RELEASE)")
 rpms: dist
 	rpmbuild $(RPM_FLAGS) -ta $(distdir).tar.gz
 
+srpms: dist
+	rpmbuild $(RPM_FLAGS) -ts $(distdir).tar.gz
+
 publish: rpms
 	mkdir -p $(OVIRT_CACHE_DIR)
 	rsync -aq $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
 	rsync -aq $(shell rpm --eval '%{_srcrpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/src
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
-.PHONY: rpms publish
+.PHONY: rpms publish srpms
