@@ -1,0 +1,131 @@
+#!/bin/bash
+#
+# ovirt-config-boot - configure local boot disk partition
+
+# SYNOPSIS
+# ovirt-config-boot livecd_path bootparams
+#
+#       boot_disk   - boot disk device e.g. /dev/sda
+#
+#       livecd_path - where livecd media is mounted,
+#                     parent of LiveOS and isolinux folders
+#
+#       bootparams  - extra boot parameters like console=...
+#
+
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+
+# local_boot_install livecd_path bootparams
+#  livecd_path -livecd media
+#  bootparams - extra boot parameters like console=...
+#
+#  copy oVirt Node image to the local LVM /dev/HostVG
+ovirt_boot_setup() {
+    local disk=$1
+    local live=$2
+    local bootparams=$3
+    printf "installing oVirt Node image ... "
+    mount_boot
+    # check that /boot mounted ok and find partition number for GRUB
+    BOOT=$(mount|awk '$3 == "/boot" {print $1}')
+    BOOT=$(( ${BOOT#$disk} - 1 ))
+    rc=$?
+    if [ $rc -ne 0 -o $BOOT -lt 0 ]; then
+      printf "boot partition not available\n"
+      return $rc
+    fi
+    mount_liveos
+    # install oVirt Node image for local boot
+    if [ -e "$live/syslinux" ]; then
+      syslinux=syslinux
+    elif [ -e "$live/isolinux" ]; then
+      syslinux=isolinux
+    else
+      syslinux=
+    fi
+    rm -rf /boot/grub
+    rm -rf /liveos/LiveOS
+    mkdir -p /boot/grub
+    mkdir -p /liveos/LiveOS
+    cp -p $live/LiveOS/squashfs.img /liveos/LiveOS \
+    && cp -p $live/$syslinux/vmlinuz0 /boot
+    rc=$?
+    if [ $rc -ne 0 ]; then
+      printf "image copy failed\n"
+      return $rc
+    fi
+    # append LVM support to the livecd initramfs
+    tmpdir=$(mktemp -d)
+    cd $tmpdir
+    gzip -dc $live/$syslinux/initrd0.img |
+        cpio -id init sbin/real-init 2> /dev/null
+    init_script=init
+    if [ -e sbin/real-init ]; then
+        # Fedora 10 mkliveinitrd
+        init_script=sbin/real-init
+    fi
+    sed -i '/^\/sbin\/udev.*settle/ a \echo Scanning logical volumes\
+lvm vgscan --ignorelockingfailure\
+echo Activating logical volumes\
+lvm vgchange -ay --ignorelockingfailure HostVG \
+' $init_script
+    # fix emergency shell
+    sed -i 's/^    bash$/    bash < \/dev\/console/' $init_script
+    # do not fail if device node already exists
+    sed -i 's/mknod.*$/& || :/' $init_script
+    mkdir -p bin
+    bit=
+    if [ -e /lib64 ]; then
+        bit=64
+    fi
+    mkdir -p lib$bit
+    if [ -e /sbin/lvm.static ]; then
+        cp /sbin/lvm.static bin/lvm
+    else
+        cp /sbin/lvm bin
+        # lvm is not static in Fedora
+        cp /lib$bit/libreadline.so.5 /lib$bit/libncurses.so.5 lib$bit
+    fi
+    find $init_script bin/lvm lib$bit -type f |
+        cpio -H newc --quiet -o |
+        gzip -9 |
+        cat $live/$syslinux/initrd0.img - > /boot/initrd0.img
+
+    cat > /boot/grub/grub.conf << EOF
+default=0
+timeout=5
+hiddenmenu
+title oVirt Node
+    root (hd0,$BOOT)
+    kernel /vmlinuz0 ro root=/dev/HostVG/Root roottypefs=ext3 liveimg $bootparams
+    initrd /initrd0.img
+EOF
+    echo "(hd0) $disk" > /boot/grub/device.map
+    ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 /boot/grub )
+    grub --device-map=/boot/grub/device.map > /dev/null <<EOF
+root (hd0,$BOOT)
+setup --prefix=/grub (hd0)
+EOF
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        printf "boot loader install failed\n"
+        return $rc
+    fi
+    umount /liveos
+    umount /boot
+
+    # caller decides when to reboot
+    rm -rf $tmpdir
+    printf "done.\n"
+    # avoid reboot loops using Cobbler PXE only once
+    # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
+    # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
+    #   -O /dev/null
+}
+
+
+ovirt_boot_setup "$1" "$2" "$3"
+

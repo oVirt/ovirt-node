@@ -16,23 +16,37 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
-SUBDIRS = ovirt-identify-node ovirt-listen-awake
+SUBDIRS = ovirt-identify-node ovirt-listen-awake gptsync
 
 EXTRA_DIST =			\
   .gitignore			\
   ovirt-node.spec		\
   ovirt-node.spec.in		\
   ovirt-node-selinux.te		\
+  images/grub-splash.xpm.gz	\
+  images/syslinux-vesa-splash.jpg	\
   scripts/collectd		\
   scripts/collectd.conf.in	\
   scripts/ovirt			\
   scripts/ovirt-awake		\
+  scripts/ovirt-config-boot  \
+  scripts/ovirt-config-logging  \
+  scripts/ovirt-config-networking \
+  scripts/ovirt-config-password \
+  scripts/ovirt-config-setup    \
+  scripts/ovirt-config-storage  \
   scripts/ovirt-early		\
+  scripts/ovirt-firstboot       \
   scripts/ovirt-functions	\
+  scripts/ovirt-install-node-stateful	\
+  scripts/ovirt-install-node-stateless	\
   scripts/ovirt-post		\
   scripts/ovirt-process-config  \
+  scripts/ovirt-uninstall-node-stateful	\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
+
+DISTCLEANFILES = $(PACKAGE)-$(VERSION).tar.gz
 
 # For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
 # annotated rpm version strings.
@@ -49,10 +63,13 @@ RPM_FLAGS	+= $(if $(_ovirt_dev),--define "extra_release .$(GIT_RELEASE)")
 rpms: dist
 	rpmbuild $(RPM_FLAGS) -ta $(distdir).tar.gz
 
+srpms: dist
+	rpmbuild $(RPM_FLAGS) -ts $(distdir).tar.gz
+
 publish: rpms
 	mkdir -p $(OVIRT_CACHE_DIR)
 	rsync -aq $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
 	rsync -aq $(shell rpm --eval '%{_srcrpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/src
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
-.PHONY: rpms publish
+.PHONY: rpms publish srpms

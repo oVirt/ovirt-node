@@ -4,9 +4,62 @@ OVIRT_LOGFILE=/var/log/ovirt.log
 
 # label of the oVirt partition
 OVIRT_LABEL=OVIRT
+# configuration defaults
+OVIRT_DEFAULTS=/etc/default/ovirt
+if [ -f $OVIRT_DEFAULTS ]; then
+    . $OVIRT_DEFAULTS
+fi
+# fallback when default is empty
+OVIRT_STANDALONE=${OVIRT_STANDALONE:-0}
 
 OVIRT_BACKUP_DIR=/var/lib/ovirt-backup
 
+# return 1 if oVirt Node is running in standalone mode
+# return 0 if oVirt Node is managed by the oVirt Server
+is_managed() {
+    return $OVIRT_STANDALONE
+}
+
+# oVirt Node in standalone mode does not try to contact the oVirt Server
+is_standalone() {
+    if is_managed; then return 1; else return 0; fi
+}
+
+# perform automatic local disk installation
+# when at least following boot parameters are present:
+# for networking - OVIRT_BOOTIF, management NIC
+#       if other ip bootparams are not specified, IPv4 DHCP is assumed
+# for storage - OVIRT_INIT, local disk to use
+#       if ovirt_vol is not specified, default volume sizes are set
+is_auto_install() {
+    if [ -n "$OVIRT_BOOTIF" -a -n "$OVIRT_INIT" ] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# was firstboot menu already shown?
+# state is stored in persistent config partition
+is_firstboot() {
+    if [ -z "$OVIRT_FIRSTBOOT" -o "$OVIRT_FIRSTBOOT" = "1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# find_srv SERVICE PROTO
+#
+# reads DNS SRV record
+# sets SRV_HOST and SRV_PORT if DNS SRV record found, clears them if not
+# Example usage:
+# find_srv ovirt tcp
+# if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+#   echo "oVirt Server found"
+# else
+#   echo "no oVirt Server available, running standalone"
+# fi
 find_srv()
 {
     local dnsreply
@@ -48,43 +101,164 @@ ovirt_setup_libvirtd() {
     fi
 }
 
-ovirt_mount() {
-    if [ -e /dev/disk/by-label/$OVIRT_LABEL ]; then
-      mount -r /dev/disk/by-label/$OVIRT_LABEL $1 \
-        || mount /dev/disk/by-label/$OVIRT_LABEL $1
-    else
-      mount -r /dev/live $1 \
-        || mount /dev/live $1
-    fi
-}
-
 md5() {
   md5sum $1 2>/dev/null | (read MD5 filename; echo $MD5)
 }
 
-# persist configuration to /config on OVIRT partition
+# return uppercase value
+uc() {
+    echo $(echo $1|tr '[[:lower:]]' '[[:upper:]]')
+}
+
+# return indirect value
+# non-bashism for ${!var}
+ptr() {
+    local v=$1
+    eval "v=\$$v"
+    echo $v
+}
+
+# mount livecd media
+# e.g. CD /dev/sr0, USB /dev/sda1,
+# PXE /dev/loop0 (loopback ISO)
+mount_live() {
+    if grep -q " /live " /proc/mounts; then
+        return 0
+    fi
+    local live_dev=/dev/live
+    if [ ! -e $live_dev ]; then
+      # PXE boot
+      live_dev=/dev/loop0
+    fi
+    mkdir -p /live
+    mount $live_dev /live
+}
+
+# mount boot partition
+# boot loader + kernel + initrd
+mount_boot() {
+    if grep -q " /boot " /proc/mounts; then
+        return 0
+    fi
+    mkdir -p /boot
+    mount /dev/disk/by-label/BOOT /boot
+}
+
+# mount liveos partition
+# LiveOS/
+mount_liveos() {
+    if grep -q " /liveos " /proc/mounts; then
+        return 0
+    fi
+    mkdir -p /liveos
+    mount /dev/HostVG/Root /liveos
+}
+
+# mount config partition
+# /config for persistance
+mount_config() {
+    if grep -q " /config " /proc/mounts; then
+        return 0
+    fi
+    mkdir -p /config
+    mount /dev/HostVG/Config /config
+    if grep -q " /config " /proc/mounts; then
+        # optional config embedded in the livecd image
+        if [ -e /live/config ]; then
+            cp -rv --update /live/config/* /config
+        fi
+        # bind mount all persisted configs to rootfs
+        for f in $(find /config -type f); do
+            target=${f#/config}
+            if grep -q " $target " /proc/mounts ; then
+                # skip if already bind-mounted
+                true
+            else
+                mkdir -p "$(dirname $target)"
+                touch "$target"
+                mount -n --bind $f "$target"
+            fi
+        done
+    else
+        # /config is not available
+        return 1
+    fi
+}
+
+# unmount bindmounted config files
+#       umount_config /etc/config /etc/config2 ...
+#
+# Use before running sed -i or augeas against the bindmounted file,
+# Otherwise save fails: https://fedorahosted.org/augeas/ticket/32
+# After file is replaced, call ovirt_store_config /etc/config /etc/config2 ...
+# to bindmount the config file again.
+#
+umount_config() {
+    if grep -q " /config " /proc/mounts; then
+        for f in "$@"; do
+            if grep -q " $f " /proc/mounts ; then
+                umount -n $f
+                # refresh rootfs copy
+                cp /config$f $f
+            fi
+        done
+    fi
+}
+
+# persist configuration to /config
 #   ovirt_store_config /etc/config /etc/config2 ...
+#   copy to /config and bind-mount back
 ovirt_store_config() {
-    ovirt=$(mktemp -d)
-    ovirt_mount $ovirt
-    cfg=$ovirt/config
-    rw=0
-    printf "store config:"
-    for f in "$@"; do
-       # ignore non-/etc paths
-       if [ $f != ${f#/etc/} ]; then
-           # check if changed
-           if [ "$(md5 $f)" != "$(md5 $cfg$f)" ]; then
-               if [ $rw = 0 ]; then
-                   mount -o remount,rw $ovirt
-                   rw=1
-               fi
-               mkdir -p $cfg$(dirname $f)
-               cp $f $cfg$f
-               printf " $f"
-           fi
-       fi
-    done
-    echo
-    umount $ovirt && rmdir $ovirt
+    if grep -q " /config " /proc/mounts; then
+        printf "storing to /config :"
+        for f in "$@"; do
+            printf " $f"
+            # skip if already bind-mounted
+            if grep -q " $f " /proc/mounts ; then
+                printf " already persisted\n"
+            else
+                mkdir -p /config$(dirname $f)
+                cp -a $f /config$f \
+                && mount -n --bind /config$f $f \
+                || printf " failed to persist\n"
+            fi
+        done
+        echo
+    else
+        printf "warning: persistent config storage not available\n"
+    fi
+}
+
+# compat function to handle different udev versions
+udev_info() {
+    local name=$1
+    local query=$2
+    local out
+
+    # old udev command with shortopts
+    out=$(udevinfo -n $name -q $query)
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        out=$(udevadm info --name=$name --query=$query)
+        rc=$?
+    fi
+    if [ $rc -eq 0 ]; then
+        echo $out
+    fi
+    return $rc
+}
+
+backup_file() {
+    dir=$(dirname "$1")
+    case $dir in /*);; *) die "unexpected non-absolute dir: $dir";; esac
+    mkdir -p "$OVIRT_BACKUP_DIR/${dir:1}"
+    test -f "$1" && cp -pf "$1" "$OVIRT_BACKUP_DIR/${dir:1}"
+}
+
+add_if_not_exist() {
+    string="$1"
+    file="$2"
+
+    grep -qE "^[[:space:]]*$string($|#|[[:space:]])" "$file" \
+        || echo "$string" >> "$file"
 }

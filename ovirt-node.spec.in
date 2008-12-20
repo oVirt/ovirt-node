@@ -6,7 +6,7 @@ Source0:        %{name}-%{version}.tar.gz
 License:        GPLv2+
 Group:          Applications/System
 
-%define selinux_variants mls strict targeted
+%define selinux_variants mls strict targeted minimum
 %define selinux_policyver %(sed -n 's,.*selinux-policy-\([^/]*\)/.*,\1,p' /usr/share/selinux/devel/policyhelp)
 %define modulename %{name}-selinux
 Source1:        %{modulename}.te
@@ -15,10 +15,11 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
-BuildRequires:  libvirt-devel
+BuildRequires:  libvirt-devel >= 0.5.1
 BuildRequires:  dbus-devel hal-devel
+Requires:       libvirt >= 0.5.1
 Requires:       augeas
-Requires:       libvirt-qpid
+Requires:       libvirt-qpid >= 0.2.3
 Requires:       hal
 Requires:       collectd-virt
 Requires:       wget
@@ -35,6 +36,7 @@ Requires:       bind-utils
 # qemu-img RPM.
 Requires:       qemu-img
 Requires:       nc
+Requires:       grub
 Requires:       /usr/sbin/crond
 ExclusiveArch:  %{ix86} x86_64
 
@@ -42,7 +44,48 @@ ExclusiveArch:  %{ix86} x86_64
 
 %description
 Provides a series of daemons and support utilities to allow an
-oVirt Node to interact with the oVirt server.
+oVirt Node to interact with the oVirt Server.
+
+%package stateless
+Summary:        oVirt Node for running as embedded hypervisor
+Group:          Applications/System
+Requires:       %{name} = %{version}-%{release}
+Conflicts:      %{name}-stateful
+ExclusiveArch:  %{ix86} x86_64
+
+%description stateless
+Provides the oVirt Node functionality needed as part of the
+ovirt-node-image creation.  This provides a stateless oVirt Node
+that runs as a livecd.
+
+%package stateful
+Summary:        oVirt Node for running on Fedora Hosts
+Group:          Applications/System
+Requires:       %{name} = %{version}-%{release}
+Conflicts:      %{name}-stateless
+ExclusiveArch:  %{ix86} x86_64
+
+%description stateful
+Provides the oVirt Node functionality needed to convert an existing
+host into a Node in a stateful manner.  Presently intended for use on
+the host running the oVirt Appliance.
+
+%package logos
+Summary:        oVirt Node Logos
+Group:          System Environment/Base
+BuildArch:      noarch
+Obsoletes:      redhat-logos
+Provides:       redhat-logos = 10.0.1-1
+Provides:       system-logos = 10.0.1-1
+Conflicts:      fedora-logos
+Conflicts:      generic-logos
+Conflicts:      fedora-logos
+Conflicts:      anaconda-images <= 10
+Conflicts:      redhat-artwork <= 5.0.5
+
+%description logos
+The ovirt-logos package contains various image files which can be
+used by the bootloader, anaconda, and other related tools.
 
 %package selinux
 Summary:        SELinux policy module supporting ovirt-node
@@ -87,16 +130,28 @@ cd -
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-boot %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-logging %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-networking %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-password %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-setup %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-storage %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-process-config %{buildroot}%{_sbindir}
+%{__install} -D -m0755 scripts/ovirt-install-node-stateful %{buildroot}%{_sbindir}
+%{__install} -D -m0755 scripts/ovirt-install-node-stateless %{buildroot}%{_sbindir}
+%{__install} -D -m0755 scripts/ovirt-uninstall-node-stateful %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-listen-awake.init %{buildroot}%{_initrddir}/ovirt-listen-awake
-%{__install} -Dp -m0755 ovirt-listen-awake/ovirt-install-node %{buildroot}%{_sbindir}
-%{__install} -Dp -m0755 ovirt-listen-awake/ovirt-uninstall-node %{buildroot}%{_sbindir}
 
+# gptsync
+%{__install} -p -m0755 gptsync/gptsync %{buildroot}%{_sbindir}
+%{__install} -p -m0755 gptsync/showpart %{buildroot}%{_sbindir}
+#
 
 %{__install} -p -m0644 scripts/ovirt-functions %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
+%{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-post %{buildroot}%{_initrddir}
 
@@ -118,23 +173,41 @@ cd -
 
 /usr/sbin/hardlink -cv %{buildroot}%{_datadir}/selinux
 
+# ovirt-logos
+# should be ifarch i386
+mkdir -p %{buildroot}/boot/grub
+install -p -m 644 images/grub-splash.xpm.gz %{buildroot}/boot/grub/splash.xpm.gz
+# end i386 bits
+mkdir -p %{buildroot}/usr/lib/anaconda-runtime
+install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-runtime
+# ovirt-logos
+
 %clean
 %{__rm} -rf %{buildroot}
 
-%post
+%post stateless
 /sbin/chkconfig --add ovirt-early
+/sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
 /sbin/chkconfig --add ovirt-post
 # this is ugly; we need collectd to start *after* libvirtd, so we own the
 # /etc/chkconfig.d/collectd file, and then have to re-define collectd here
 /sbin/chkconfig --add collectd
-/sbin/chkconfig --add ovirt-listen-awake
 
-%preun
+%preun stateless
 if [ "$1" = 0 ] ; then
   /sbin/chkconfig --del ovirt-early
+  /sbin/chkconfig --del ovirt-firstboot
   /sbin/chkconfig --del ovirt
   /sbin/chkconfig --del ovirt-post
+fi
+
+%post stateful
+/sbin/chkconfig --add collectd
+/sbin/chkconfig --add ovirt-listen-awake
+
+%preun stateful
+if [ "$1" = 0 ] ; then
   /sbin/chkconfig --del ovirt-listen-awake
 fi
 
@@ -156,20 +229,45 @@ fi
 %doc SELinux/*
 %{_datadir}/selinux/*/%{modulename}.pp
 
+%files logos
+%defattr(-, root, root)
+%doc COPYING
+# should be ifarch i386
+/boot/grub/splash.xpm.gz
+# end i386 bits
+/usr/lib/anaconda-runtime/*.jpg
+
+%files stateless
+%defattr(-,root,root,0755)
+%{_sbindir}/ovirt-awake
+%{_sbindir}/ovirt-config-boot
+%{_sbindir}/ovirt-config-logging
+%{_sbindir}/ovirt-config-networking
+%{_sbindir}/ovirt-config-password
+%{_sbindir}/ovirt-config-setup
+%{_sbindir}/ovirt-config-storage
+%{_sbindir}/ovirt-process-config
+%{_sbindir}/ovirt-install-node-stateless
+%{_sbindir}/gptsync
+%{_sbindir}/showpart
+%{_initrddir}/ovirt-early
+%{_initrddir}/ovirt-firstboot
+%{_initrddir}/ovirt
+%{_initrddir}/ovirt-post
+%config %{_sysconfdir}/logrotate.d/ovirt-logrotate.conf
+%config %{_sysconfdir}/cron.hourly/ovirt-logrotate
+
+%files stateful
+%defattr(-,root,root,0755)
+%{_sbindir}/ovirt-listen-awake
+%{_sbindir}/ovirt-install-node-stateful
+%{_sbindir}/ovirt-uninstall-node-stateful
+%{_initrddir}/ovirt-listen-awake
+
 %files
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
-%{_sbindir}/ovirt-process-config
 %{_sbindir}/ovirt-identify-node
-%{_sbindir}/ovirt-listen-awake
-%{_sbindir}/ovirt-install-node
-%{_sbindir}/ovirt-uninstall-node
-%{_initrddir}/ovirt-early
-%{_initrddir}/ovirt
-%{_initrddir}/ovirt-post
-%{_initrddir}/ovirt-listen-awake
-%config %{_sysconfdir}/logrotate.d/ovirt-logrotate.conf
-%config %{_sysconfdir}/cron.hourly/ovirt-logrotate
 %defattr(-,root,root,0644)
 %{_initrddir}/ovirt-functions
 %{_sysconfdir}/collectd.conf.in
@@ -180,6 +278,11 @@ fi
 %doc ovirt-identify-node/COPYING
 
 %changelog
+* Thu Dec 11 2008 Perry Myers <pmyers@redhat.com> - 0.96
+- Subpackage stateful/stateless to separate out functionality for
+  embedded Node and Node running as part of already installed OS
+- ovirt-config-* setup scripts for standalone mode
+
 * Thu Sep 11 2008 Chris Lalancette <clalance@redhat.com> - 0.92 0.7
 - Add the ovirt-install- and ovirt-uninstall-node scripts, and refactor
   post to accomodate

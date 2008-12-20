@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Entry point for configuring an oVirt node when running in standalone mode.
+
+NETWORK="Networking Setup"
+STORAGE="Disk Partitioning"
+LOGGING="Logging Setup"
+PASSWORD="Administrator Password"
+DEBUG_SHELL="Shell"
+CONTINUE="Continue"
+
+declare -a OPTIONS
+
+OPTIONS[${#OPTIONS[*]}]="$NETWORK"
+OPTIONS[${#OPTIONS[*]}]="$STORAGE"
+OPTIONS[${#OPTIONS[*]}]="$LOGGING"
+OPTIONS[${#OPTIONS[*]}]="$PASSWORD"
+OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
+OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
+# reset tty, otherwise serial console is broken
+reset > /dev/null
+clear
+
+while true; do
+    printf "\n oVirt Node Standalone Configuration\n\n"
+
+    PS3="Please select an option: "
+
+    select OPTION in "${OPTIONS[@]}"
+    do
+        case "$OPTION" in
+            "$NETWORK")  ovirt-config-networking ; break ;;
+            "$STORAGE")
+                ovirt-config-storage ;
+                break ;;
+            "$LOGGING")  ovirt-config-logging    ; break ;;
+            "$PASSWORD") ovirt-config-password   ; break ;;
+            "$DEBUG_SHELL") bash                 ; break ;;
+            "$CONTINUE") exit 0 ;;
+        esac
+
+        printf "\n"
+    done
+done

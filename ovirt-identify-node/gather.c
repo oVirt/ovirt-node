@@ -68,6 +68,8 @@ get_uuid(void)
         DEBUG("UUID=%s\n", uuid);
 
         result = 0;
+    } else {
+        uuid[0] = 0;
     }
 
     return result;

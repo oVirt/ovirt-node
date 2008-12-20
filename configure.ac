@@ -1,4 +1,4 @@
-AC_INIT([ovirt-node], [0.95], [ovirt-devel@redhat.com])
+AC_INIT([ovirt-node], [0.96], [ovirt-devel@redhat.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability tar-pax])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
@@ -15,6 +15,7 @@ test x"$ac_ct_CC:$CFLAGS" = 'xgcc:-g -O2' \
 AC_CONFIG_FILES([Makefile
   ovirt-identify-node/Makefile
   ovirt-listen-awake/Makefile
+  gptsync/Makefile
   ovirt-node.spec
   ])
 AC_OUTPUT
