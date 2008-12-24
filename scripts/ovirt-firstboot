@@ -27,18 +27,6 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
-disable_firstboot ()
-{
-    if mount_config; then
-        umount_config $OVIRT_DEFAULTS
-        augtool > /dev/null <<EOF
-set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT no
-save
-EOF
-        ovirt_store_config $OVIRT_DEFAULTS
-    fi
-}
-
 start ()
 {
     if is_auto_install; then
@@ -46,9 +34,8 @@ start ()
         ovirt-config-storage AUTO
         ovirt-config-logging AUTO
         if [ "$OVIRT_LOCAL_BOOT" = 1 ]; then
-            mount_live
-            ovirt-config-boot $OVIRT_INIT /live "$OVIRT_BOOTPARAMS"
-            disable_firstboot
+            ovirt-config-boot $OVIRT_INIT "" "$OVIRT_BOOTPARAMS" no
+            disable_firstbot
             reboot
         fi
     elif is_firstboot; then

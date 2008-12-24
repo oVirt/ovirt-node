@@ -49,6 +49,17 @@ is_firstboot() {
     fi
 }
 
+disable_firstboot() {
+    if mount_config; then
+        umount_config $OVIRT_DEFAULTS
+        augtool > /dev/null <<EOF
+set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT no
+save
+EOF
+        ovirt_store_config $OVIRT_DEFAULTS
+    fi
+}
+
 # find_srv SERVICE PROTO
 #
 # reads DNS SRV record

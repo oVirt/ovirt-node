@@ -1,28 +1,28 @@
 #!/bin/bash
 #
-# ovirt-config-boot - configure local boot disk partition
+# ovirt-config-boot - configure local boot/root disk partitions
 
 # SYNOPSIS
-# ovirt-config-boot livecd_path bootparams
+# ovirt-config-boot boot_disk livecd_path bootparams reboot
 #
 #       boot_disk   - boot disk device e.g. /dev/sda
+#                     default is $OVIRT_INIT
 #
 #       livecd_path - where livecd media is mounted,
 #                     parent of LiveOS and isolinux folders
+#                     default is /live
 #
 #       bootparams  - extra boot parameters like console=...
+#                     default is $OVIRT_BOOTPARAMS
 #
+#       reboot      - reboot after install
+#                     default is yes
 
 # Source functions library
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
 
-# local_boot_install livecd_path bootparams
-#  livecd_path -livecd media
-#  bootparams - extra boot parameters like console=...
-#
-#  copy oVirt Node image to the local LVM /dev/HostVG
 ovirt_boot_setup() {
     local disk=$1
     local live=$2
@@ -127,5 +127,24 @@ EOF
 }
 
 
-ovirt_boot_setup "$1" "$2" "$3"
+disk=$1
+live=$2
+bootparams=$3
+doreboot=$4
+if [ -z "$disk" ]; then
+    disk=$OVIRT_INIT
+fi
+if [ -z "$live" ]; then
+    mount_live
+    live=/live
+fi
+if [ -z "$bootparams" ]; then
+    bootparams="$OVIRT_BOOTPARAMS"
+fi
 
+ovirt_boot_setup "$disk" "$live" "$bootparams"
+
+if [ -z "$doreboot" -o "$doreboot" = "yes" ]; then
+    disable_firstboot
+    reboot
+fi

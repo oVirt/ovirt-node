@@ -189,6 +189,7 @@ install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-
 %{__ln_s} ../..%{_sbindir}/ovirt-config-storage %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"Disk Partitioning"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"Logging Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-password %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"Administrator Password"
+%{__ln_s} ../..%{_sbindir}/ovirt-config-boot %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"Local install and reboot"
 
 
 %clean
