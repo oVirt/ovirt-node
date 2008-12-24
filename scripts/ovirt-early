@@ -146,7 +146,7 @@ start() {
     init=
 
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
-    # local partition sizes in GB
+    # local partition sizes in MB
     vol_boot_size=
     vol_swap_size=
     vol_root_size=
