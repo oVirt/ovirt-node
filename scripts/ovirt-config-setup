@@ -2,21 +2,23 @@
 #
 # Entry point for configuring an oVirt node when running in standalone mode.
 
-NETWORK="Networking Setup"
-STORAGE="Disk Partitioning"
-LOGGING="Logging Setup"
-PASSWORD="Administrator Password"
+# symlinked scripts for menu options, link name is menu label
+CONFIG_DIR=/etc/ovirt-config-setup.d
+
+# special options, all others execute the symlinked script in CONFIG_DIR
 DEBUG_SHELL="Shell"
 CONTINUE="Continue"
 
 declare -a OPTIONS
 
-OPTIONS[${#OPTIONS[*]}]="$NETWORK"
-OPTIONS[${#OPTIONS[*]}]="$STORAGE"
-OPTIONS[${#OPTIONS[*]}]="$LOGGING"
-OPTIONS[${#OPTIONS[*]}]="$PASSWORD"
+for cfg in $CONFIG_DIR/*; do
+    label=$(basename "$cfg")
+    OPTIONS[${#OPTIONS[*]}]="$label"
+done
 OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
+
+
 # reset tty, otherwise serial console is broken
 reset > /dev/null
 clear
@@ -29,14 +31,9 @@ while true; do
     select OPTION in "${OPTIONS[@]}"
     do
         case "$OPTION" in
-            "$NETWORK")  ovirt-config-networking ; break ;;
-            "$STORAGE")
-                ovirt-config-storage ;
-                break ;;
-            "$LOGGING")  ovirt-config-logging    ; break ;;
-            "$PASSWORD") ovirt-config-password   ; break ;;
             "$DEBUG_SHELL") bash                 ; break ;;
             "$CONTINUE") exit 0 ;;
+            *) $CONFIG_DIR/"$OPTION" ;;
         esac
 
         printf "\n"
