@@ -142,7 +142,16 @@ if [ -z "$bootparams" ]; then
     bootparams="$OVIRT_BOOTPARAMS"
 fi
 
-ovirt_boot_setup "$disk" "$live" "$bootparams"
+# ensure the disk is not blank
+parted $disk -s "print all" > /dev/null
+
+if [ 0 -eq $? ]; then
+    ovirt_boot_setup "$disk" "$live" "$bootparams"
+else
+    printf "Please configure $disk before attempting to install the node image.\n"
+    printf "Use the option 'Disk Partitioning' from the main menu.\n"
+    doreboot="no"
+fi
 
 if [ -z "$doreboot" -o "$doreboot" = "yes" ]; then
     disable_firstboot
