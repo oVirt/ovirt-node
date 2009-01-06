@@ -75,6 +75,9 @@ get_dev_name()
             || devices="$devices $block_dev"
     done
 
+    # if we didn't find any devices using HAL, so check for virtual devices
+    if [ -z $devices ]; then devices=$(ls -l /dev/[shv]d?);  fi
+
     # If there's only one device, use it.
     case $devices in
         '') warn "ERROR: found no usable block device"; return 1;;
