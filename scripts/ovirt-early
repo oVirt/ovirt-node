@@ -123,6 +123,7 @@ start() {
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
     #   syslog=server[:port]
+    #   hostname=fqdn
     #   TBD logrotate maxsize
 
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
@@ -169,6 +170,10 @@ start() {
     netmask=
     gateway=
     ipv6=
+
+    # hostname=fqdn
+    # hostname
+    hostname=
 
     #   syslog=server[:port]
     # default syslog server
@@ -253,6 +258,9 @@ start() {
             ipv6=*)
             ipv6=${i#ipv6=}
             ;;
+            hostname=*)
+            hostname=${i#hostname=}
+            ;;
             syslog=*)
             i=${i#syslog=}
             eval $(printf $i|awk -F: '{print "syslog_server="$1; print "syslog_port="$2;}')
@@ -270,7 +278,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port bootparams"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port bootparams hostname"
     mount_config
     if [ -e $OVIRT_DEFAULTS ]; then
         echo "update ovirt defaults"

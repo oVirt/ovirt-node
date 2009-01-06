@@ -1,0 +1,60 @@
+#!/bin/bash
+#
+# Configures the hostname file based on kernel cmdline or user prompt
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+HOSTNAME_FILE="/etc/sysconfig/network"
+
+function set_hostname {
+    augtool > /dev/null <<EOF
+    set /files$HOSTNAME_FILE/HOSTNAME "$1"
+    save
+EOF
+}
+
+function remove_hostname {
+    augtool > /dev/null <<EOF
+    rm /files$HOSTNAME_FILE/HOSTNAME
+    save
+EOF
+}
+
+function prompt_user {
+    printf "\n"
+    read -p "What is the hostname for this node? "
+
+    if [ -n "$REPLY" ]; then
+        set_hostname "$REPLY"
+        printf "\nHostname has been set\n"
+    else
+        printf "\n"
+        read -p "Enter (Y|y) to blank out the hostname, or (N|n) to skip. "
+        case $REPLY in
+            Y|y)
+                remove_hostname
+                printf "\nHostname was removed.\n"
+                return
+                ;;
+            N|n)
+                printf "\nNo changes made.\n"
+                return
+                ;;
+            *) ;;
+        esac
+    fi
+}
+
+# AUTO for auto-install
+if [ "$1" = "AUTO" ]; then
+    if [ -n "$OVIRT_HOSTNAME" ]; then
+        set_hostname "$OVIRT_HOSTNAME"
+    else
+        printf "\nHostname not provided. Skipping.\n"
+    fi
+else
+    prompt_user
+fi
+
+exit 0

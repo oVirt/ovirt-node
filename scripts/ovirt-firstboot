@@ -33,6 +33,7 @@ start ()
         ovirt-config-networking AUTO
         ovirt-config-storage AUTO
         ovirt-config-logging AUTO
+        ovirt-config-hostname AUTO
         if [ "$OVIRT_LOCAL_BOOT" = 1 ]; then
             ovirt-config-boot $OVIRT_INIT "" "$OVIRT_BOOTPARAMS" no
             disable_firstbot
