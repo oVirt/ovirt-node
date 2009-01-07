@@ -153,7 +153,15 @@ function configure_interface
 
 function setup_menu
 {
-    NICS=$(hal-device | awk '/net.interface/ {match($0, "= '"'"'(.*)'"'"' ", nic); printf("%s ", nic[1]); }')
+    udi_list=$(hal-find-by-capability --capability net.80203)
+    if [ -z "$udi_list" ]; then
+	warn "ERROR: no usable network devices were found"
+	exit 1
+    fi
+
+    NICS=""
+    for d in $udi_list; do NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"; done
+
     NICS="$NICS Save Quit"
     PS3="Please select a network interface to configure: "
 }
