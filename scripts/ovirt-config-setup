@@ -13,10 +13,12 @@ declare -a OPTIONS
 
 for cfg in $CONFIG_DIR/*; do
     label=$(basename "$cfg")
+    # Assume label is actually XX_Some Text. So strip of the first 3 characters
+    label=${label:3}
     OPTIONS[${#OPTIONS[*]}]="$label"
 done
-OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
+OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 
 
 # reset tty, otherwise serial console is broken
@@ -33,7 +35,7 @@ while true; do
         case "$OPTION" in
             "$DEBUG_SHELL") bash                 ; break ;;
             "$CONTINUE") exit 0 ;;
-            *) $CONFIG_DIR/"$OPTION" ;;
+            *) $CONFIG_DIR/*"$OPTION" ;;
         esac
 
         printf "\n"
