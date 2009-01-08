@@ -132,6 +132,7 @@ cd -
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-boot %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-boot-wrapper %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-hostname %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-logging %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-networking %{buildroot}%{_sbindir}
@@ -191,7 +192,7 @@ install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-
 %{__ln_s} ../..%{_sbindir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-storage %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"20_Disk Partitioning"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
-%{__ln_s} ../..%{_sbindir}/ovirt-config-boot %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Local install and reboot"
+%{__ln_s} ../..%{_sbindir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Local install and reboot"
 
 
 %clean
@@ -253,6 +254,7 @@ fi
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
 %{_sbindir}/ovirt-config-boot
+%{_sbindir}/ovirt-config-boot-wrapper
 %{_sbindir}/ovirt-config-hostname
 %{_sbindir}/ovirt-config-logging
 %{_sbindir}/ovirt-config-networking

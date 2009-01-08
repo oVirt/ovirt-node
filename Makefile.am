@@ -30,6 +30,7 @@ EXTRA_DIST =			\
   scripts/ovirt			\
   scripts/ovirt-awake		\
   scripts/ovirt-config-boot  \
+  scripts/ovirt-config-boot-wrapper  \
   scripts/ovirt-config-hostname  \
   scripts/ovirt-config-logging  \
   scripts/ovirt-config-networking \

@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# Wrapper function to make sure the user wishes to continue before
+# rebooting the system
+
+while true; do
+    printf "\nThis option will exit the menu, and require a reboot. \n\
+Please ensure that you have configured the local storage \n\
+and networking correctly on the previous menu before \n\
+continuing."
+    printf "\n\n"
+    read -p "Do you wish to continue? (Y|N)? "
+    r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
+    if [ "$r" == "Y" ]; then
+        /usr/sbin/ovirt-config-boot
+        break
+    elif [ "$r" == "N" ]; then
+        printf "\nExiting back to the menu\n"
+        break
+    fi
+done
