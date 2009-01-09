@@ -36,7 +36,7 @@ start ()
         ovirt-config-hostname AUTO
         if [ "$OVIRT_LOCAL_BOOT" = 1 ]; then
             ovirt-config-boot $OVIRT_INIT "" "$OVIRT_BOOTPARAMS" no
-            disable_firstbot
+            disable_firstboot
             reboot
         fi
     elif is_firstboot; then
