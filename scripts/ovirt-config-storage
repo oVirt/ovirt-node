@@ -36,6 +36,10 @@ get_selected_drive_size()
         return 1
     fi
     size=$(hal-get-property --udi "$udi" --key storage.size)
+    if [ $size -eq 0 ]; then
+        # disk is probably hot-swappable, use different HAL key
+        size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
+    fi
     SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
     echo "selected device: $DRIVE ($SPACE MB)"
 }
