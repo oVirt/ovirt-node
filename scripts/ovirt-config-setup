@@ -7,7 +7,7 @@ CONFIG_DIR=/etc/ovirt-config-setup.d
 
 # special options, all others execute the symlinked script in CONFIG_DIR
 DEBUG_SHELL="Shell"
-CONTINUE="Continue"
+CONTINUE="Continue Stateless Boot"
 
 declare -a OPTIONS
 
