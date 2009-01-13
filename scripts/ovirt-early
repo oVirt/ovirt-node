@@ -117,6 +117,7 @@ start() {
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     #   ovirt_init=usb|scsi[:serial#]
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
+    #   ovirt_overcommit
     #   ovirt_local_boot
     #   ovirt_standalone
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
@@ -155,6 +156,10 @@ start() {
     #   ovirt_local_boot
     # install/update oVirt Node image on the local installation target disk
     local_boot=0
+
+    #   ovirt_overcommit
+    # set the swap size coefficient
+    overcommit=0.5
 
     #   ovirt_standalone
     # force oVirt Node standalone mode
@@ -245,6 +250,12 @@ start() {
             standalone=1
             bootparams="$bootparams $i"
             ;;
+
+	    ovirt_overcommit*)
+	    i=${i#ovirt_overcommit=}
+	    eval $(printf $i|awk -F: '{print "overcommit="$1;}')
+	    ;;
+
             ip=*)
             i=${i#ip=}
             eval $(printf $i|awk -F: '{print "ip_address="$1; print "ip_gateway="$3; print "ip_netmask="$4}')
@@ -278,7 +289,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port bootparams hostname"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port bootparams hostname"
     mount_config
     if [ -e $OVIRT_DEFAULTS ]; then
         echo "update ovirt defaults"

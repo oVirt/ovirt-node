@@ -285,14 +285,30 @@ do_confirm()
     done
 }
 
-MEM_SIZE=$(cat /proc/meminfo | awk '/MemTotal:/ { print $2 }')
-case $MEM_SIZE in
+MEM_SIZE_MB=$(cat /proc/meminfo | awk '/MemTotal:/ { print $2 }')
+case $MEM_SIZE_MB in
     ''|*[^0-9]*) die failed to get system memory size;;
 esac
+MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
+# we multiply the overcommit coefficient by 10 then divide the
+# product by 10 to avoid decimals in the result
+OVERCOMMIT_SWAP_SIZE=$(echo "scale=0; (${MEM_SIZE_MB} * (${OVIRT_OVERCOMMIT} * 10))/10;" | bc -l)
 
-MEM_SIZE=$(echo "scale=0; m=($MEM_SIZE / 1024 * 2); if (m < 2048) { m } else { 2048 }" | bc -l)
-SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$MEM_SIZE}
+# add to the swap the amounts from http://kbase.redhat.com/faq/docs/DOC-15252
+MEM_SIZE_GB=$(echo "scale=0; $MEM_SIZE_MB/1024;" | bc -l)
+if [ $MEM_SIZE_GB -le 4 ]; then
+    BASE_SWAP_SIZE=2
+elif [ $MEM_SIZE_GB -le 16 ]; then
+    BASE_SWAP_SIZE=4
+elif [ $MEM_SIZE_GB -le 64 ]; then
+    BASE_SWAP_SIZE=8
+else
+    BASE_SWAP_SIZE=16
+fi
 
+CALC_SWAP_SIZE=$(echo "scale=0; (${BASE_SWAP_SIZE} + ${OVERCOMMIT_SWAP_SIZE}) * 1024;" | bc -l)
+
+SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$CALC_SWAP_SIZE}
 BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
 ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-$default_root_size}
 CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
