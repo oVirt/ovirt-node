@@ -276,6 +276,7 @@ do_confirm()
             Y|y)
                 check_partition_sizes
                 perform_partitioning
+		exit 0
                 break
                 ;;
             N|n)  return ;;
