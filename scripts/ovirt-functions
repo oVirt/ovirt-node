@@ -148,6 +148,7 @@ ptr() {
 # mount livecd media
 # e.g. CD /dev/sr0, USB /dev/sda1,
 # PXE /dev/loop0 (loopback ISO)
+# not available when booted from local disk installation
 mount_live() {
     if grep -q " /live " /proc/mounts; then
         return 0
@@ -158,7 +159,7 @@ mount_live() {
       live_dev=/dev/loop0
     fi
     mkdir -p /live
-    mount $live_dev /live
+    mount -r $live_dev /live || mount $live_dev /live
 }
 
 # mount boot partition
