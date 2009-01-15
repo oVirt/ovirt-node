@@ -7,6 +7,25 @@
 
 RSYSLOG_FILE="/etc/rsyslog.conf"
 
+function enable_local_logging {
+    if grep -q "/dev/mapper/HostVG-Logging " /proc/mounts; then
+        return 0
+    else
+        while true; do
+            printf "\n"
+            read -p "Would you like to enable logging to the local disk? (Y/N)? "
+            r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
+            if [ "$r" == "Y" ]; then
+                mount_logging
+                return
+            elif [ "$r" == "N" ]; then
+                printf "\nNot mounting the local disk. All logs will be lost\n"
+                return
+            fi
+        done
+    fi
+}
+
 # Creates the rsyslog file based on the following inputs
 # $1 ipaddress of remote syslog server
 # $2 port of remote syslog server
@@ -178,6 +197,7 @@ if [ "$1" = "AUTO" ]; then
     fi
 else
     prompt_user
+    enable_local_logging
 fi
 
 exit 0

@@ -193,6 +193,33 @@ mount_config() {
     fi
 }
 
+# mount logging partition
+mount_logging() {
+    if grep -q "/dev/mapper/HostVG-Logging " /proc/mounts; then
+        return 0
+    fi
+
+    if [ -e /dev/HostVG/Logging ] ; then
+        #  backup the logs
+        if [ -e /var/log.bak ]; then
+            rm -rf /var/log.bak
+        fi
+        cp -a /var/log /var/log.bak
+
+        mount /dev/HostVG/Logging /var/log
+        restorecon -rv /var/log
+        mv /var/log.bak/* /var/log
+        rm -Rf /var/log.bak
+        service rsyslog restart
+
+        return 0
+    else
+        # /var/log is not available
+        printf "\nThe logging partion has not been created. Please create it at the main menu.\n"
+        return 1
+    fi
+}
+
 # augtool wrapper
 #   workaround for bind-mounted files
 #   see https://fedorahosted.org/augeas/ticket/32
