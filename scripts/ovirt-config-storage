@@ -297,16 +297,16 @@ OVERCOMMIT_SWAP_SIZE=$(echo "scale=0; (${MEM_SIZE_MB} * (${OVIRT_OVERCOMMIT} * 1
 # add to the swap the amounts from http://kbase.redhat.com/faq/docs/DOC-15252
 MEM_SIZE_GB=$(echo "scale=0; $MEM_SIZE_MB/1024;" | bc -l)
 if [ $MEM_SIZE_GB -le 4 ]; then
-    BASE_SWAP_SIZE=2
+    BASE_SWAP_SIZE=2048
 elif [ $MEM_SIZE_GB -le 16 ]; then
-    BASE_SWAP_SIZE=4
+    BASE_SWAP_SIZE=4096
 elif [ $MEM_SIZE_GB -le 64 ]; then
-    BASE_SWAP_SIZE=8
+    BASE_SWAP_SIZE=8192
 else
-    BASE_SWAP_SIZE=16
+    BASE_SWAP_SIZE=16384
 fi
 
-CALC_SWAP_SIZE=$(echo "scale=0; (${BASE_SWAP_SIZE} + ${OVERCOMMIT_SWAP_SIZE}) * 1024;" | bc -l)
+CALC_SWAP_SIZE=$(echo "scale=0; ${BASE_SWAP_SIZE} + ${OVERCOMMIT_SWAP_SIZE};" | bc -l)
 
 SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$CALC_SWAP_SIZE}
 BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
