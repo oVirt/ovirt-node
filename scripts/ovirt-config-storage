@@ -218,6 +218,7 @@ perform_partitioning()
     if [ "$SWAP_SIZE" -gt 0 ]; then
         lvcreate --name Swap    --size ${SWAP_SIZE}M    /dev/HostVG
         mkswap -L "SWAP" /dev/HostVG/Swap
+        echo "/dev/HostVG/Swap swap swap defaults 0 0" >> /etc/fstab
     fi
     if [ "$ROOT_SIZE" -gt 0 ]; then
         lvcreate --name Root    --size ${ROOT_SIZE}M    /dev/HostVG
@@ -233,10 +234,15 @@ perform_partitioning()
         lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
         mke2fs -T ext3 /dev/HostVG/Logging -L "LOGGING"
         tune2fs -c 0 -i 0 /dev/HostVG/Logging
+        echo "/dev/HostVG/Logging /var/log ext3 defaults 0 0" >> /etc/fstab
     fi
     lvcreate --name Data    -l 100%FREE             /dev/HostVG
     mke2fs -T ext3 /dev/HostVG/Data    -L "DATA"
     tune2fs -c 0 -i 0 /dev/HostVG/Data
+    echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
+    if mount_config; then
+        ovirt_store_config /etc/fstab
+    fi
     } 2>&1 | tee $LOG
 
     if [ $? -eq 0 ]; then
