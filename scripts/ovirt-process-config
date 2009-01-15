@@ -5,6 +5,8 @@
 # configuration file. It then restarts the networking service
 # and saves the configuration files.
 
+. /etc/init.d/ovirt-functions
+
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 try_h() { printf "Try \`$ME -h' for more information.\n" >&2; exit 1;}
@@ -57,17 +59,14 @@ networking=$(awk '/^[ \t]*ifcfg=/ {
         }
     }
 
-
-    printf("save\n")
-
 }' $CONFIG)
 
 echo "$networking" > $OVIRT_CONFIG_OUTPUT_FILE
 
 if [ -f $OVIRT_CONFIG_OUTPUT_FILE ]; then
-    umount_config /etc/sysconfig/network-scripts/ifcfg*
-    augtool < $OVIRT_CONFIG_OUTPUT_FILE \
+    augtool $OVIRT_CONFIG_OUTPUT_FILE \
 	&& RESULT=0 || RESULT=1
+    # FIXME do not store ifcfg-lo
     if ls /etc/sysconfig/network-scripts/ifcfg* > /dev/null >2&1; then
 	ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
     fi

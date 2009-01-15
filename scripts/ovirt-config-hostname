@@ -8,16 +8,14 @@
 HOSTNAME_FILE="/etc/sysconfig/network"
 
 function set_hostname {
-    augtool > /dev/null <<EOF
-    set /files$HOSTNAME_FILE/HOSTNAME "$1"
-    save
+    augtool <<EOF
+set /files$HOSTNAME_FILE/HOSTNAME "$1"
 EOF
 }
 
 function remove_hostname {
-    augtool > /dev/null <<EOF
-    rm /files$HOSTNAME_FILE/HOSTNAME
-    save
+    augtool <<EOF
+rm /files$HOSTNAME_FILE/HOSTNAME
 EOF
 }
 

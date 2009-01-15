@@ -18,7 +18,7 @@ Requires(preun): /sbin/chkconfig
 BuildRequires:  libvirt-devel >= 0.5.1
 BuildRequires:  dbus-devel hal-devel
 Requires:       libvirt >= 0.5.1
-Requires:       augeas
+Requires:       augeas >= 0.3.5
 Requires:       libvirt-qpid >= 0.2.3
 Requires:       hal
 Requires:       collectd-virt

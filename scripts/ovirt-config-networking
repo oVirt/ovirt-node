@@ -188,8 +188,8 @@ if [ "$RESTART" == "Y" ]; then
     {
     printf "Configuring network.\n"
     config="$WORKDIR"/config-augtool
-    { cat "$WORKDIR"/augtool-* && printf "save\n"; } > $config \
-    && augtool < $config  \
+    cat "$WORKDIR"/augtool-* > $config \
+    && augtool $config  \
     && service network restart
     ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
     } 2>&1 | tee $CONFIG_LOG_FILE

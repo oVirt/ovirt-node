@@ -300,12 +300,7 @@ start() {
             echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" \
                 >> $tmpaug
         done
-        echo "save" >> $tmpaug
-        # augtool on bindmounted files fails
-        umount_config $OVIRT_DEFAULTS
-        augtool < $tmpaug > /dev/null
-        ovirt_store_config $OVIRT_DEFAULTS
-        rm $tmpaug
+        augtool $tmpaug
     else
         echo "initial startup"
         # dump all ovirt bootparams

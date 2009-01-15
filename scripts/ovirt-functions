@@ -51,12 +51,9 @@ is_firstboot() {
 
 disable_firstboot() {
     if mount_config; then
-        umount_config $OVIRT_DEFAULTS
-        augtool > /dev/null <<EOF
+        augtool <<EOF
 set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT no
-save
 EOF
-        ovirt_store_config $OVIRT_DEFAULTS
     fi
 }
 
@@ -196,24 +193,31 @@ mount_config() {
     fi
 }
 
-# unmount bindmounted config files
-#       umount_config /etc/config /etc/config2 ...
-#
-# Use before running sed -i or augeas against the bindmounted file,
-# Otherwise save fails: https://fedorahosted.org/augeas/ticket/32
-# After file is replaced, call ovirt_store_config /etc/config /etc/config2 ...
-# to bindmount the config file again.
-#
-umount_config() {
-    if grep -q " /config " /proc/mounts; then
-        for f in "$@"; do
-            if grep -q " $f " /proc/mounts ; then
-                umount -n $f
-                # refresh rootfs copy
-                cp /config$f $f
-            fi
-        done
+# augtool wrapper
+#   workaround for bind-mounted files
+#   see https://fedorahosted.org/augeas/ticket/32
+# augtool [tmpaugscript]
+# script MUST NOT include save, it is added by the wrapper
+# with copy_if_rename_fails flag set
+# 'tmpaugscript' is removed after successfull execution
+# without a parameter, augtool commands are expected on standard input
+augtool() {
+    local tmpaug=$1
+    if [ -z "$1" ]; then
+        # read from stdin
+        tmpaug=$(mktemp)
+        cat > $tmpaug
     fi
+    cat >> $tmpaug <<EOF
+clear /augeas/save/copy_if_rename_fails
+save
+EOF
+    /usr/bin/augtool < $tmpaug > /dev/null
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        rm $tmpaug
+    fi
+    return $rc
 }
 
 # persist configuration to /config
