@@ -230,12 +230,18 @@ ovirt_store_config() {
             printf " $f"
             # skip if already bind-mounted
             if grep -q " $f " /proc/mounts ; then
-                printf " already persisted\n"
+                printf ""
             else
                 mkdir -p /config$(dirname $f)
                 cp -a $f /config$f \
                 && mount -n --bind /config$f $f \
-                || printf " failed to persist\n"
+                || printf " failed to persist"
+            fi
+            # register in /config/files used by rc.sysinit
+            if grep -q "^$f" /config/files 2> /dev/null ; then
+                printf ""
+            else
+                printf "$f\n" >> /config/files
             fi
         done
         echo
