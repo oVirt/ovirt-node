@@ -270,22 +270,26 @@ EOF
 #   copy to /config and bind-mount back
 ovirt_store_config() {
     if grep -q " /config " /proc/mounts; then
-        printf "storing to /config :"
+        printf "storing to /config :\n"
         for f in "$@"; do
-            printf " $f"
+            printf "$f"
+            # skip if file does not exist
+            if [ ! -e $f ]; then
+                printf " Skipping, file does not exist\n"
+                continue
+            fi
             # skip if already bind-mounted
             if grep -q " $f " /proc/mounts ; then
-                printf ""
+                printf " Skipping, file already persisted\n"
             else
                 mkdir -p /config$(dirname $f)
                 cp -a $f /config$f \
                 && mount -n --bind /config$f $f \
-                || printf " failed to persist"
+                || printf " Failed to persist\n"
+                printf " File persisted\n"
             fi
             # register in /config/files used by rc.sysinit
-            if grep -q "^$f" /config/files 2> /dev/null ; then
-                printf ""
-            else
+            if ! grep -q "^$f$" /config/files 2> /dev/null ; then
                 printf "$f\n" >> /config/files
             fi
         done
