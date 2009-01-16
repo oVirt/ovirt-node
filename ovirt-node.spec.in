@@ -165,6 +165,8 @@ cd -
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d
 
 echo "oVirt Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
+mkdir -p %{buildroot}/%{_sysconfdir}/default
+touch %{buildroot}/%{_sysconfdir}/default/ovirt
 
 cd SELinux
 for selinuxvariant in %{selinux_variants}; do
@@ -289,6 +291,7 @@ fi
 %{_sysconfdir}/collectd.conf.in
 %{_sysconfdir}/chkconfig.d/collectd
 %config %attr(0644,root,root) %{_sysconfdir}/ovirt-release
+%config %attr(0644,root,root) %{_sysconfdir}/default/ovirt
 %doc ovirt-identify-node/README ovirt-identify-node/NEWS
 %doc ovirt-identify-node/AUTHOR ovirt-identify-node/ChangeLog
 %doc ovirt-identify-node/COPYING
