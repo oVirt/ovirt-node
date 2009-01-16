@@ -48,16 +48,7 @@ start ()
     fi
     disable_firstboot
 
-    # persist config for standalone
-    ovirt_store_config \
-        /etc/sysconfig/network-scripts/ifcfg-* \
-        /etc/rsyslog.conf \
-        /etc/libvirt/libvirtd.conf \
-        /etc/sasl2/libvirt.conf \
-        /etc/libvirt/passwd.db \
-        /etc/passwd \
-        /etc/shadow \
-        /etc/ssh/ssh_host*_key*
+    ovirt_store_firstboot_config
 }
 
 case "$1" in

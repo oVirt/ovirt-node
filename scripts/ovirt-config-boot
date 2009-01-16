@@ -155,5 +155,6 @@ fi
 
 if [ -z "$doreboot" -o "$doreboot" = "yes" ]; then
     disable_firstboot
+    ovirt_store_firstboot_config
     reboot
 fi

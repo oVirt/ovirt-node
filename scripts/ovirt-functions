@@ -14,6 +14,24 @@ OVIRT_STANDALONE=${OVIRT_STANDALONE:-0}
 
 OVIRT_BACKUP_DIR=/var/lib/ovirt-backup
 
+OVIRT_CONFIG_FILES="\
+ /etc/sysconfig/network-scripts/ifcfg-* \
+ /etc/rsyslog.conf \
+ /etc/libvirt/libvirtd.conf \
+ /etc/sasl2/libvirt.conf \
+ /etc/libvirt/passwd.db \
+ /etc/passwd \
+ /etc/shadow \
+ /etc/ssh/ssh_host*_key* \
+ /etc/default/ovirt \
+ /etc/sysconfig/network
+"
+
+ovirt_store_firstboot_config() {
+    # persist config for standalone
+    ovirt_store_config $OVIRT_CONFIG_FILES
+}
+
 # return 1 if oVirt Node is running in standalone mode
 # return 0 if oVirt Node is managed by the oVirt Server
 is_managed() {
