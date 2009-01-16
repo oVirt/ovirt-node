@@ -183,11 +183,11 @@ mount_liveos() {
 # mount config partition
 # /config for persistance
 mount_config() {
-    if grep -q " /config " /proc/mounts; then
-        return 0
+    if ! grep -q " /config " /proc/mounts; then
+        mkdir -p /config
+        mount /dev/HostVG/Config /config
     fi
-    mkdir -p /config
-    mount /dev/HostVG/Config /config
+
     if grep -q " /config " /proc/mounts; then
         # optional config embedded in the livecd image
         if [ -e /live/config ]; then
