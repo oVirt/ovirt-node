@@ -313,6 +313,11 @@ start() {
         ovirt_store_config $OVIRT_DEFAULTS
     fi
 
+    if [ -f /etc/sysconfig/network ]; then
+        . /etc/sysconfig/network
+        hostname $HOSTNAME
+    fi
+
     if [ $standalone = 0 ]; then
         configure_from_network $bootif
         if [ -n "$init" ]; then
