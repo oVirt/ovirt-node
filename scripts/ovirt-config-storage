@@ -241,6 +241,9 @@ perform_partitioning()
     mke2fs -T ext3 /dev/HostVG/Data    -L "DATA"
     tune2fs -c 0 -i 0 /dev/HostVG/Data
     echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
+    echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
+    mount_data
+
     if mount_config; then
         ovirt_store_config /etc/fstab
     fi

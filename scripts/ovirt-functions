@@ -239,6 +239,27 @@ mount_logging() {
     fi
 }
 
+# mount data partition
+mount_data() {
+    if grep -q "/dev/mapper/HostVG-Data " /proc/mounts; then
+        return 0
+    fi
+
+    if [ -e /dev/HostVG/Data ] ; then
+        mkdir -p /data
+        mount /data
+        mkdir -p /data/images
+        mount /var/lib/libvirt/images
+        restorecon -rv /var/lib/libvirt/images
+
+        return 0
+    else
+        # /data is not available
+        printf "\nThe data partion has not been created. Please create it at the main menu.\n"
+        return 1
+    fi
+}
+
 # augtool wrapper
 #   workaround for bind-mounted files
 #   see https://fedorahosted.org/augeas/ticket/32
