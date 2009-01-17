@@ -26,18 +26,21 @@ reset > /dev/null
 clear
 
 while true; do
-    printf "\n oVirt Node Standalone Configuration\n\n"
-
     PS3="Please select an option: "
 
-    select OPTION in "${OPTIONS[@]}"
-    do
-        case "$OPTION" in
-            "$DEBUG_SHELL") bash                 ; break ;;
-            "$CONTINUE") exit 0 ;;
-            *) $CONFIG_DIR/*"$OPTION" ;;
-        esac
+    while true ; do
+        printf " oVirt Node Standalone Configuration\n\n"
 
-        printf "\n"
+        select OPTION in "${OPTIONS[@]}"
+        do
+            case "$OPTION" in
+                "$DEBUG_SHELL") clear; bash; break ;;
+                "$CONTINUE") exit 0 ;;
+                *)
+                    clear;
+                    $CONFIG_DIR/*"$OPTION";
+                    break ;;
+            esac
+        done
     done
 done
