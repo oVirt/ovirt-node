@@ -270,8 +270,9 @@ do_confirm()
           "$w8" \
           "$wb$sp$w" \
           "$wb$sp$w" \
-          "$wb    If you proceed, this will destroy all data on your local" \
-          "$wb    system, and your hard disk will be irreversably reconfigured" \
+          "$wb    If you proceed, this will destroy all data on   $w" \
+          "$wb    your local system, and your hard disk will be   $w" \
+          "$wb    irreversably reconfigured                       $w" \
           "$wb$sp$w" \
           "$wb$sp$w" \
         "$w8" \
