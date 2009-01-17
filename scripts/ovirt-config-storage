@@ -235,6 +235,7 @@ perform_partitioning()
         mke2fs -T ext3 /dev/HostVG/Logging -L "LOGGING"
         tune2fs -c 0 -i 0 /dev/HostVG/Logging
         echo "/dev/HostVG/Logging /var/log ext3 defaults 0 0" >> /etc/fstab
+        mount_logging
     fi
     lvcreate --name Data    -l 100%FREE             /dev/HostVG
     mke2fs -T ext3 /dev/HostVG/Data    -L "DATA"
