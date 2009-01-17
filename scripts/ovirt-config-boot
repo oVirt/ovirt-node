@@ -94,6 +94,8 @@ lvm vgchange -ay --ignorelockingfailure HostVG \
         gzip -9 |
         cat $live/$syslinux/initrd0.img - > /boot/initrd0.img
 
+    # reorder tty0 to allow both serial and phys console after installation
+    bootparams="console=tty0 $(echo $bootparams | sed s/console=tty0//g)"
     cat > /boot/grub/grub.conf << EOF
 default=0
 timeout=5
