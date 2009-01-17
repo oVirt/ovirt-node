@@ -348,10 +348,13 @@ start() {
             fi
         fi
     else
-        #In standalone mode, fix libvirt to not use gssapi
-        sed -i s/^keytab/#keytab/ /etc/sasl2/libvirt.conf
-        sed -i "s/^mech_list: .*/mech_list: digest-md5/" /etc/sasl2/libvirt.conf
+        # In standalone mode, fix libvirt to not use gssapi
+        sed -c -i -e s/^keytab/#keytab/ \
+            -e "s/^mech_list: .*gssapi.*/mech_list: digest-md5/" \
+            /etc/sasl2/libvirt.conf
     fi
+
+    return 0
 }
 
 scan_for_swap() {
