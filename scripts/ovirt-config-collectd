@@ -99,6 +99,7 @@ if [ "$1" = "AUTO" ]; then
         ovirt_collectd $OVIRT_COLLECTD_SERVER $OVIRT_COLLECTD_PORT
     fi
 else
+    printf "\n\n oVirt Node Collectd Configuration\n\n"
     prompt_user
 fi
 

@@ -220,7 +220,7 @@ else
     setup_menu
 
     while true; do
-        printf " oVirt Node Networking Configuration\n\n"
+        printf "\n\n oVirt Node Networking Configuration\n\n"
 
         select NIC in $NICS
         do

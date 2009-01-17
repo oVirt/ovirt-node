@@ -29,7 +29,7 @@ while true; do
     PS3="Please select an option: "
 
     while true ; do
-        printf " oVirt Node Standalone Configuration\n\n"
+        printf "\n\n oVirt Node Standalone Configuration\n\n"
 
         select OPTION in "${OPTIONS[@]}"
         do

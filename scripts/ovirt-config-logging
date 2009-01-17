@@ -177,6 +177,7 @@ if [ "$1" = "AUTO" ]; then
         ovirt_rsyslog $OVIRT_SYSLOG_SERVER $OVIRT_SYSLOG_PORT udp
     fi
 else
+    printf "\n\n oVirt Node Logging Configuration\n\n"
     prompt_user
 fi
 

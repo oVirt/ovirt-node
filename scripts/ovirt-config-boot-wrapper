@@ -4,6 +4,9 @@
 # rebooting the system
 
 while true; do
+    clear
+    printf "\n\n oVirt Node Local Installation and Reboot\n\n"
+
     printf "\nThis option will exit the menu, and require a reboot. \n\
 Please ensure that you have configured the local storage \n\
 and networking correctly on the previous menu before \n\
