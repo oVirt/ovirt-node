@@ -219,15 +219,18 @@ if [ "$1" == "AUTO" ]; then
 else
     setup_menu
 
-    select NIC in $NICS
-    do
-        printf "\n"
-        case "$NIC" in
-            "DNS") configure_dns "$OVIRT_DNS" ;;
-            "Quit") break ;;
-            *) configure_interface $NIC $IFACE_NUMBER ;;
-        esac
-        setup_menu
+    while true; do
+        printf " oVirt Node Networking Configuration\n\n"
+
+        select NIC in $NICS
+        do
+            printf "\n"
+            case "$NIC" in
+                "DNS") configure_dns "$OVIRT_DNS"; break ;;
+                "Quit") break 2;;
+                *) configure_interface $NIC $IFACE_NUMBER; break ;;
+            esac
+        done
     done
 fi
 

@@ -342,10 +342,11 @@ if [ "$1" == "AUTO" ]; then
     printf "Partitioning hard disk..."
     perform_partitioning
 else
-    while true; do
+    OPTIONS="Configure Review Partition Quit"
+    PS3="Choose an option: "
 
-        OPTIONS="Configure Review Partition Quit"
-        PS3="Choose an option: "
+    while true; do
+        printf " oVirt Node Storage Configuration\n\n"
 
         select OPTION in $OPTIONS
         do
