@@ -36,7 +36,7 @@ case "$1" in
             start
         } >> $OVIRT_LOGFILE 2>&1
 
-        test $? -eq 0 &&  success || failure
+        test $? == 0 && success || failure
         echo
         ;;
     *)
