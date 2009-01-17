@@ -124,6 +124,7 @@ start() {
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
     #   syslog=server[:port]
+    #   collectd=server[:port]
     #   hostname=fqdn
     #   TBD logrotate maxsize
 
@@ -184,6 +185,11 @@ start() {
     # default syslog server
     syslog_server=
     syslog_port=
+
+    #   collectd=server[:port]
+    # default collectd server
+    collectd_server=
+    collectd_port=
 
     # save boot parameters like console= for local disk boot menu
     bootparams=
@@ -276,6 +282,10 @@ start() {
             i=${i#syslog=}
             eval $(printf $i|awk -F: '{print "syslog_server="$1; print "syslog_port="$2;}')
             ;;
+            collectd=*)
+            i=${i#collectd=}
+            eval $(printf $i|awk -F: '{print "collectd_server="$1; print "collectd_port="$2;}')
+            ;;
             console=*)
             bootparams="$bootparams $i"
             ;;
@@ -289,7 +299,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port bootparams hostname"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port collectd_server collectd_port bootparams hostname"
     mount_config
     if [ -e $OVIRT_DEFAULTS ]; then
         echo "update ovirt defaults"

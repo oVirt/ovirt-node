@@ -1,0 +1,105 @@
+#!/bin/bash
+#
+# Configures the collectd daemon.
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+collectd_conf="/etc/collectd.conf"
+
+# Creates the collectd file based on the following inputs
+# $1 ipaddress of remote collectd server
+# $2 port of remote collectd server
+# TODO implement and use Augeas lens
+ovirt_collectd() {
+    local collectd_server=$1
+    local collectd_port=$2
+
+    if [ -f $collectd_conf.in ]; then
+        sed -e "s/@COLLECTD_SERVER@/$collectd_server/" \
+            -e "s/@COLLECTD_PORT@/$collectd_port/" $collectd_conf.in \
+            > $collectd_conf
+        if [ $? -ne 0 ]; then
+            echo "Failed to write $collectd_conf"; return 1
+        fi
+    fi
+
+    chkconfig collectd on
+    service collectd restart
+}
+
+prompt_user() {
+    while true ; do
+        collectd_server_ip=""
+        collectd_server_port=""
+
+        read -p "Please enter the IP address for the collectd server: "
+        if [ -n "$REPLY" ]; then
+            collectd_server_ip=$REPLY
+            while true; do
+                read -p "Please enter the collectd port used: "
+                r=$REPLY
+                if [ -n "$r" ]; then
+                    if [[ $r =~ ^[0-9]+$ ]] && [[ $r -gt 0 ]]; then
+	                    collectd_server_port=$REPLY
+	                    break
+                    else
+                        printf "Invalid port.\n"
+                    fi
+                fi
+            done
+        else
+            printf "\nDisabling remote collectd.\n"
+        fi
+
+        printf "\n"
+        printf "\nCollectd will be configured as follows:"
+        printf "\n======================================"
+        if [ -n "$collectd_server_ip" ]; then
+            printf "\n    Remote Server: $collectd_server_ip"
+            printf "\n      Remote Port: $collectd_server_port"
+        fi
+        printf "\n"
+        printf "\n"
+        while true; do
+            read -p "Is this correct (Y/N/A)? "
+            r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
+            if [ "$r" == "Y" ]; then
+                printf "\nSaving configuration.\n"
+                if [[ -n "$collectd_server_ip" ]] &&
+                    [[ -n "$collectd_server_port" ]]; then
+                    ovirt_collectd $collectd_server_ip \
+                        $collectd_server_port
+                fi
+                return
+            elif [ "$r" == "N" ]; then
+                printf "\nRestarting collectd configuration.\n"
+                break
+            elif [ "$r" == "A" ]; then
+                printf "\nAborting collectd configuration.\n"
+                return
+            fi
+        done
+    done
+}
+
+# AUTO for auto-install
+if [ "$1" = "AUTO" ]; then
+    if [ -z "$OVIRT_COLLECTD_SERVER" -o -z "$OVIRT_COLLECTD_PORT" ]; then
+        printf "\nAttempting to locate remote collectd server..."
+        find_srv collectd tcp
+        if [ -n "$SRV_SERVER" -a -n "$SRV_PORT" ]; then
+            printf "found! Using collectd server '$SRV_SERVER:$SRV_PORT'.\n"
+            ovirt_collectd $SRV_SERVER $SRV_PORT
+        else
+            printf "not found!\n"
+        fi
+    else
+        printf "\nUsing default collectd server '$OVIRT_COLLECTD_SERVER:$OVIRT_COLLECTD_PORT'.\n"
+        ovirt_collectd $OVIRT_COLLECTD_SERVER $OVIRT_COLLECTD_PORT
+    fi
+else
+    prompt_user
+fi
+
+exit 0

@@ -24,7 +24,8 @@ OVIRT_CONFIG_FILES="\
  /etc/shadow \
  /etc/ssh/ssh_host*_key* \
  /etc/default/ovirt \
- /etc/sysconfig/network
+ /etc/sysconfig/network \
+ /etc/collectd.conf
 "
 
 ovirt_store_firstboot_config() {
@@ -331,4 +332,8 @@ add_if_not_exist() {
 
     grep -qE "^[[:space:]]*$string($|#|[[:space:]])" "$file" \
         || echo "$string" >> "$file"
+}
+
+is_numeric() {
+    printf "$1" | grep -q -E '^[0-9]+$'
 }
