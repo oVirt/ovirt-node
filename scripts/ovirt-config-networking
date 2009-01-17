@@ -151,6 +151,53 @@ function configure_interface
     fi
 }
 
+function configure_dns
+{
+    local DNS=$1
+    local AUTO=$2
+    if [[   "$AUTO" == "AUTO"    &&
+         -n "$OVIRT_DNS" ]]; then
+        DNS=$OVIRT_DNS
+    fi
+
+    local IF_FILENAME="$WORKDIR/augtool-lo"
+    local IF_ROOT="$CONFIG_FILE_ROOT-lo"
+    local IF_CONFIG=
+
+    if [ -z "$AUTO" ]; then
+        while true; do
+            printf "\n"
+            echo "Enter up to two DNS servers separated by commas:"
+            if [ -n "$OVIRT_DNS" ]; then
+                echo "Press Enter for defaults: ($OVIRT_DNS)"
+            fi
+            read -ep ": "
+            DNS=$REPLY
+
+            if [ -z "$DNS" ]; then
+                DNS=$OVIRT_DNS
+            fi
+
+            printf "\n"
+            read -ep "Is this correct (Y/N/A)? "
+            case $REPLY in
+                Y|y) break ;;
+                N|n) ;;
+                A|a) return ;;
+            esac
+        done
+    fi
+
+    if [ -n "$DNS" ]; then
+        DNS1=$(echo "$DNS" | awk -F, '{print $1}')
+        DNS2=$(echo "$DNS" | awk -F, '{print $2}')
+
+        test -n "$DNS1" && IF_CONFIG="set $IF_ROOT/DNS1 $DNS1"
+        test -n "$DNS2" && IF_CONFIG="set $IF_ROOT/DNS2 $DNS2"
+        printf "$IF_CONFIG\n" > $IF_FILENAME
+    fi
+}
+
 function setup_menu
 {
     udi_list=$(hal-find-by-capability --capability net.80203)
@@ -162,13 +209,13 @@ function setup_menu
     NICS=""
     for d in $udi_list; do NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"; done
 
-    NICS="$NICS Save Quit"
-    PS3="Please select a network interface to configure: "
+    NICS="$NICS DNS Quit"
+    PS3="Please select an interface or configuration option: "
 }
 
 if [ "$1" == "AUTO" ]; then
     configure_interface "$OVIRT_BOOTIF" AUTO
-    RESTART="Y"
+    configure_dns "$OVIRT_DNS" AUTO
 else
     setup_menu
 
@@ -176,22 +223,21 @@ else
     do
         printf "\n"
         case "$NIC" in
-            "Save") RESTART="Y"; break ;;
-            "Quit") exit 0; break ;;
+            "DNS") configure_dns "$OVIRT_DNS" ;;
+            "Quit") break ;;
             *) configure_interface $NIC $IFACE_NUMBER ;;
         esac
         setup_menu
     done
 fi
 
-if [ "$RESTART" == "Y" ]; then
-    {
+{
     printf "Configuring network.\n"
-    config="$WORKDIR"/config-augtool
-    cat "$WORKDIR"/augtool-* > $config \
-    && augtool $config  \
-    && service network restart
+    if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
+        config="$WORKDIR"/config-augtool
+        cat "$WORKDIR"/augtool-* > $config \
+            && augtool $config  \
+            && service network restart
+    fi
     ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
-    } 2>&1 | tee $CONFIG_LOG_FILE
-
-fi
+} 2>&1 | tee $CONFIG_LOG_FILE
