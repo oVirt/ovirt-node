@@ -175,6 +175,17 @@ perform_partitioning()
         return
     fi
 
+    DRIVE_FILE=$(echo $DRIVE | tr '/' '_')
+    if [ -f /tmp/ovirt-config-storage-$DRIVE_FILE ]; then
+        printf "\n\nERROR:\n"
+        printf "\nStorage Configuration has already been run for $DRIVE_FILE.\n"
+        printf "To run it again, please reboot the Node from\n USB/cdrom/PXE\n"
+        printf "in stand-alone mode.\n\n\n"
+        return 1
+    fi
+
+    touch /tmp/ovirt-config-storage-$DRIVE_FILE
+
     printf "Preparing local storage. Please wait..."
 
     LOG=/var/log/ovirt-partition.log
