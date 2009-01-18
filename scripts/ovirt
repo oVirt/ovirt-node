@@ -75,7 +75,9 @@ case "$1" in
         printf "Starting ovirt: "
 
         {
+            log "Starting ovirt"
             start
+            log "Completed ovirt"
         } >> $OVIRT_LOGFILE 2>&1
 
         test $? == 0 && success || failure

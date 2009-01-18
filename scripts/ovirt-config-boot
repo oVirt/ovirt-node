@@ -22,19 +22,21 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+trap '__st=$?; stop_log; exit $__st' 0
+trap 'exit $?' 1 2 13 15
 
 ovirt_boot_setup() {
     local disk=$1
     local live=$2
     local bootparams=$3
-    printf "installing oVirt Node image ... "
+    log "installing oVirt Node image."
     mount_boot
     # check that /boot mounted ok and find partition number for GRUB
     BOOT=$(mount|awk '$3 == "/boot" {print $1}')
     BOOT=$(( ${BOOT#$disk} - 1 ))
     rc=$?
     if [ $rc -ne 0 -o $BOOT -lt 0 ]; then
-      printf "boot partition not available\n"
+      log "boot partition not available."
       return $rc
     fi
     mount_liveos
@@ -54,7 +56,7 @@ ovirt_boot_setup() {
     && cp -p $live/$syslinux/vmlinuz0 /boot
     rc=$?
     if [ $rc -ne 0 ]; then
-      printf "image copy failed\n"
+      log "image copy failed."
       return $rc
     fi
     # append LVM support to the livecd initramfs
@@ -113,7 +115,7 @@ setup --prefix=/grub (hd0)
 EOF
     rc=$?
     if [ $rc -ne 0 ]; then
-        printf "boot loader install failed\n"
+        log "boot loader install failed."
         return $rc
     fi
     umount /liveos
@@ -121,14 +123,14 @@ EOF
 
     # caller decides when to reboot
     rm -rf $tmpdir
-    printf "done.\n"
+    log "done."
     # avoid reboot loops using Cobbler PXE only once
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
     # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
     #   -O /dev/null
 }
 
-
+start_log
 disk=$1
 live=$2
 bootparams=$3
@@ -150,13 +152,15 @@ parted $disk -s "print all" > /dev/null
 if [ 0 -eq $? ]; then
     ovirt_boot_setup "$disk" "$live" "$bootparams"
 else
-    printf "Please configure $disk before attempting to install the node image.\n"
-    printf "Use the option 'Disk Partitioning' from the main menu.\n"
+    log "Please configure $disk before attempting to install the node image."
+    log "Use the option 'Disk Partitioning' from the main menu."
     doreboot="no"
 fi
 
 if [ -z "$doreboot" -o "$doreboot" = "yes" ]; then
     disable_firstboot
     ovirt_store_firstboot_config
+    stop_log
     reboot
 fi
+stop_log

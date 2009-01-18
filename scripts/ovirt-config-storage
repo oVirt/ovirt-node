@@ -12,6 +12,9 @@ ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 die() { warn "$*"; exit 1; }
 
+trap '__st=$?; stop_log; exit $__st' 0
+trap 'exit $?' 1 2 13 15
+
 default_boot_size=50
 default_root_size=256
 default_config_size=5
@@ -178,24 +181,25 @@ perform_partitioning()
     DRIVE_FILE=$(echo $DRIVE | tr '/' '_')
     if [ -f /tmp/ovirt-config-storage-$DRIVE_FILE ]; then
         printf "\n\nERROR:\n"
-        printf "\nStorage Configuration has already been run for $DRIVE_FILE.\n"
-        printf "To run it again, please reboot the Node from\n USB/cdrom/PXE\n"
+        printf "Storage Configuration has already been run for $DRIVE.\n"
+        printf "To run it again, please reboot the Node from USB/cdrom/PXE\n"
         printf "in stand-alone mode.\n\n\n"
         return 1
     fi
 
     touch /tmp/ovirt-config-storage-$DRIVE_FILE
 
-    printf "Preparing local storage. Please wait..."
+    start_log
+    log "Starting partitioning of $DRIVE"
 
-    LOG=/var/log/ovirt-partition.log
-    {
+    log "Removing old LVM partitions"
     wipe_lvm_on_disk
 
     # Exit upon any failure.
     set -e
 
     # FIXME: save a backup copy, just in case?
+    log "Wiping old boot sector"
     dd if=/dev/zero of=$DRIVE bs=1024K count=1
     blockdev --rereadpt $DRIVE
     partprobe -s $DRIVE
@@ -204,6 +208,7 @@ perform_partitioning()
         # ensure minimal BOOT partition
         BOOT_SIZE=10
     fi
+    log "Creating boot partition"
     parted $DRIVE -s "mklabel ${LABEL_TYPE}"
     parted $DRIVE -s "mkpartfs primary ext2 0M ${BOOT_SIZE}M"
     parted $DRIVE -s "mkpart primary ext2 ${BOOT_SIZE}M ${SPACE}M"
@@ -214,57 +219,65 @@ perform_partitioning()
 
     # sync GPT to the legacy MBR partitions
     if [ "gpt" == "$LABEL_TYPE" ]; then
-	gptsync $DRIVE
+        log "Running gptsync to create legacy mbr"
+        gptsync $DRIVE
     fi
 
+    log "Creating physical volume"
     pvcreate "${DRIVE}2"
     pvck
+    log "Creating volume group"
     vgcreate /dev/HostVG "${DRIVE}2"
 
+    log "Creating boot filesystem"
     mke2fs -T ext3 "${DRIVE}1"         -L "BOOT"
     tune2fs -c 0 -i 0 "${DRIVE}1"
     mkdir -p /dev/disk/by-label
     ln -snf "${DRIVE}1" /dev/disk/by-label/BOOT
 
     if [ "$SWAP_SIZE" -gt 0 ]; then
+        log "Creating swap partition"
         lvcreate --name Swap    --size ${SWAP_SIZE}M    /dev/HostVG
         mkswap -L "SWAP" /dev/HostVG/Swap
         echo "/dev/HostVG/Swap swap swap defaults 0 0" >> /etc/fstab
     fi
     if [ "$ROOT_SIZE" -gt 0 ]; then
+        log "Creating root partition"
         lvcreate --name Root    --size ${ROOT_SIZE}M    /dev/HostVG
         mke2fs -T ext3 /dev/HostVG/Root    -L "ROOT"
         tune2fs -c 0 -i 0 /dev/HostVG/Root
     fi
     if [ "$CONFIG_SIZE" -gt 0 ]; then
+        log "Creating config partition"
         lvcreate --name Config  --size ${CONFIG_SIZE}M  /dev/HostVG
         mke2fs -T ext3 /dev/HostVG/Config  -L "CONFIG"
         tune2fs -c 0 -i 0 /dev/HostVG/Config
     fi
     if [ "$LOGGING_SIZE" -gt 0 ]; then
+        log "Creating log partition"
         lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
         mke2fs -T ext3 /dev/HostVG/Logging -L "LOGGING"
         tune2fs -c 0 -i 0 /dev/HostVG/Logging
         echo "/dev/HostVG/Logging /var/log ext3 defaults 0 0" >> /etc/fstab
-        mount_logging
     fi
+    log "Creating data partition"
     lvcreate --name Data    -l 100%FREE             /dev/HostVG
     mke2fs -T ext3 /dev/HostVG/Data    -L "DATA"
     tune2fs -c 0 -i 0 /dev/HostVG/Data
     echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
     echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
+    log "Mounting data partition"
     mount_data
 
+    log "Mounting config partition"
     if mount_config; then
         ovirt_store_config /etc/fstab
     fi
-    } 2>&1 | tee $LOG
 
-    if [ $? -eq 0 ]; then
-        printf "Completed!\n\n"
-    else
-        printf "FAILED! See $LOG\n\n"
-    fi
+    mount_logging
+    log "Completed!"
+
+    stop_log
 }
 
 do_confirm()
@@ -357,7 +370,7 @@ else
     PS3="Choose an option: "
 
     while true; do
-        printf "\n\n oVirt Node Storage Configuration\n\n"
+        printf "\n\n oVirt Node Storage Configuration\n\n" >&2
 
         select OPTION in $OPTIONS
         do

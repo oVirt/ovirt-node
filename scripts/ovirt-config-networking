@@ -13,11 +13,10 @@ WORKDIR=$(mktemp -d) || exit 1
 
 # Remove $WORKDIR upon interrupt (and HUP, PIPE, TERM) and upon normal
 # termination, being careful not to change the exit status.
-trap '__st=$?; rm -rf "$WORKDIR"; exit $__st' 0
+trap '__st=$?; rm -rf "$WORKDIR"; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
 CONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
-CONFIG_LOG_FILE="/var/log/ovirt-network-setup.log"
 
 function configure_interface
 {
@@ -220,7 +219,7 @@ else
     setup_menu
 
     while true; do
-        printf "\n\n oVirt Node Networking Configuration\n\n"
+        printf "\n\n oVirt Node Networking Configuration\n\n" >&2
 
         select NIC in $NICS
         do
@@ -234,13 +233,18 @@ else
     done
 fi
 
-{
-    printf "Configuring network.\n"
-    if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
-        config="$WORKDIR"/config-augtool
-        cat "$WORKDIR"/augtool-* > $config \
-            && augtool $config  \
-            && service network restart
+start_log
+if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
+    log "Configuring network"
+    config="$WORKDIR"/config-augtool
+    cat "$WORKDIR"/augtool-* > $config \
+        && augtool $config  \
+        && service network restart
+    if [ $? = 0 ]; then
+        log "Network configured successfully"
+    else
+        log "Error configuring network, see $OVIRT_LOGFILE"
     fi
-    ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
-} 2>&1 | tee $CONFIG_LOG_FILE
+fi
+ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
+stop_log

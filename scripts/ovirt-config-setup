@@ -2,6 +2,8 @@
 #
 # Entry point for configuring an oVirt node when running in standalone mode.
 
+. /etc/init.d/ovirt-functions
+
 # symlinked scripts for menu options, link name is menu label
 CONFIG_DIR=/etc/ovirt-config-setup.d
 
@@ -29,7 +31,7 @@ while true; do
     PS3="Please select an option: "
 
     while true ; do
-        printf "\n\n oVirt Node Standalone Configuration\n\n"
+        printf "\n\n oVirt Node Standalone Configuration\n\n" >&2
 
         select OPTION in "${OPTIONS[@]}"
         do
@@ -38,7 +40,7 @@ while true; do
                 "$CONTINUE") exit 0 ;;
                 *)
                     clear;
-                    $CONFIG_DIR/*"$OPTION";
+                    $CONFIG_DIR/*"$OPTION" 2>&1 | $TEE;
                     break ;;
             esac
         done

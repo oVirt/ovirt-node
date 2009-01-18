@@ -34,7 +34,9 @@ case "$1" in
         printf "Starting ovirt-post: "
 
         {
+            log "Starting ovirt-post"
             start
+            log "Completed ovirt-post"
         } >> $OVIRT_LOGFILE 2>&1
 
         test $? == 0 && success || failure

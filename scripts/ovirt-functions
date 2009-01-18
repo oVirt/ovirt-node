@@ -1,6 +1,8 @@
 # -*-Shell-script-*-
 
 OVIRT_LOGFILE=/var/log/ovirt.log
+TEE="tee -a $OVIRT_LOGFILE"
+_log_status=1
 
 # label of the oVirt partition
 OVIRT_LABEL=OVIRT
@@ -27,6 +29,37 @@ OVIRT_CONFIG_FILES="\
  /etc/sysconfig/network \
  /etc/collectd.conf
 "
+
+# Save stdout to fd 6 and stderr to fd 7.  Redirect normal stdout/stderr
+# to log file
+start_log() {
+    if [ "$_log_status" = 1 ]; then
+        exec 6>&1
+        exec 7>&2
+        exec 1>>$OVIRT_LOGFILE
+        exec 2>&1
+        _log_status=0
+    fi
+}
+
+# Restore stdout/stderr from fd 6 and 7, respectively.  Close fd 6 and 7
+stop_log() {
+    if [ "$_log_status" != 1 ]; then
+        exec 1>&6 6>&-
+        exec 2>&7 7>&-
+        _log_status=1
+    fi
+}
+
+log() {
+    printf "$(date +'%b %d %H:%M:%S') "
+
+    if [ "$_log_status" = 1 ]; then
+        echo "$@"
+    else
+        echo "$@" >&6
+    fi
+}
 
 ovirt_store_firstboot_config() {
     # persist config for standalone
@@ -220,15 +253,16 @@ mount_logging() {
     fi
 
     if [ -e /dev/HostVG/Logging ] ; then
+        log "Mounting log partition"
         #  backup the logs
         if [ -e /var/log.bak ]; then
             rm -rf /var/log.bak
         fi
-        cp -a /var/log /var/log.bak
+        cp -av /var/log /var/log.bak
 
         mount /dev/HostVG/Logging /var/log
+        cp -av /var/log.bak/* /var/log
         restorecon -rv /var/log
-        mv /var/log.bak/* /var/log
         rm -Rf /var/log.bak
         service rsyslog restart
 

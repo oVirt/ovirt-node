@@ -5,6 +5,9 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+trap '__st=$?; stop_log; exit $__st' 0
+trap 'exit $?' 1 2 13 15
+
 RSYSLOG_FILE="/etc/rsyslog.conf"
 
 # Creates the rsyslog file based on the following inputs
@@ -62,7 +65,9 @@ local7.*                                                /var/log/boot.log
 *.* $DELIM$1:$2
 EOF
 
+start_log
 /sbin/service rsyslog restart
+stop_log
 }
 
 function is_numeric {

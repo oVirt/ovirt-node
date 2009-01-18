@@ -391,7 +391,9 @@ case "$1" in
         printf "Starting ovirt-early: "
 
         {
+            log "Starting ovirt-early"
             start
+            log "Completed ovirt-early"
         } >> $OVIRT_LOGFILE 2>&1
 
         test $? == 0 && success || failure
