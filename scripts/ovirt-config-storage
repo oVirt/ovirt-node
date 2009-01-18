@@ -20,17 +20,6 @@ default_root_size=256
 default_config_size=5
 default_logging_size=256
 
-check_partition_sizes()
-{
-    # FIXME: use this function before performing any partitioning, auto or not
-    :
-    # Perform some sanity checks.  E.g.,
-    # What if DATA_SIZE ends up zero or negative?
-    # What if any of those partition sizes is smaller than
-    # the minimum size for an ext3 partition?  Diagnose it here
-    # or just let the mke2fs failure suffice.
-}
-
 get_selected_drive_size()
 {
     local udi=$(hal-find-by-property --key block.device --string $DRIVE)
@@ -45,6 +34,34 @@ get_selected_drive_size()
     fi
     SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
     echo "selected device: $DRIVE ($SPACE MB)"
+}
+
+check_partition_sizes()
+{
+    local disk_size need_size
+
+    get_selected_drive_size
+    disk_size=$SPACE
+    need_size=$(echo "scale=0;" \
+                     "$BOOT_SIZE + $SWAP_SIZE + $ROOT_SIZE" \
+                     "+ $CONFIG_SIZE + $LOGGING_SIZE" | bc -l)
+    printf "disk_size=$disk_size\n"
+    printf "need_size=$need_size\n"
+
+    if [ $need_size -gt $disk_size ]; then
+        gap_size=$(echo "scale=0; $need_size-$disk_size;" | bc -l)
+        printf "\n"
+        printf "=============================================================\n"
+        printf "The target storage device is too small for the desired sizes:\n"
+        printf " Size of target storage device: $disk_size MB\n"
+        printf " Total storage size to be used: $need_size MB\n"
+        printf "\n"
+        printf "You need an addition $gap_size MB of storage.\n"
+        printf "\n"
+        return 1
+    fi
+
+    return 0
 }
 
 # Find a usable/selected storage device.
@@ -308,9 +325,10 @@ do_confirm()
         read -e
         case $REPLY in
             Y|y)
-                check_partition_sizes
-                perform_partitioning
-		exit 0
+                if check_partition_sizes; then
+                    perform_partitioning
+                    exit 0
+                fi
                 break
                 ;;
             N|n)  return ;;
@@ -362,9 +380,10 @@ else
 fi
 
 if [ "$1" == "AUTO" ]; then
-    check_partition_sizes
-    printf "Partitioning hard disk..."
-    perform_partitioning
+    if check_partition_sizes; then
+        printf "Partitioning hard disk..."
+        perform_partitioning
+    fi
 else
     OPTIONS="Configure Review Partition Quit"
     PS3="Choose an option: "
