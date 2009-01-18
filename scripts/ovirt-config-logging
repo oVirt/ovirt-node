@@ -76,7 +76,7 @@ function is_numeric {
 
 function prompt_user {
     while true ; do
-        max_log_size="10"
+        max_log_size="1024"
         syslog_server_ip=""
         syslog_server_port=""
 

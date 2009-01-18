@@ -27,7 +27,8 @@ OVIRT_CONFIG_FILES="\
  /etc/ssh/ssh_host*_key* \
  /etc/default/ovirt \
  /etc/sysconfig/network \
- /etc/collectd.conf
+ /etc/collectd.conf \
+ /etc/logrotate.d/ovirt-logrotate.conf
 "
 
 # Save stdout to fd 6 and stderr to fd 7.  Redirect normal stdout/stderr
