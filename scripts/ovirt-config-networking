@@ -225,7 +225,7 @@ else
             printf "\n"
             case "$NIC" in
                 "DNS") configure_dns "$OVIRT_DNS"; break ;;
-                "Quit") break 2;;
+                "Save & Exit") break 2;;
                 *) configure_interface $NIC $IFACE_NUMBER; break ;;
             esac
         done
