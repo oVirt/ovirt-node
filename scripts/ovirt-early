@@ -116,7 +116,7 @@ start() {
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     #   ovirt_init=usb|scsi[:serial#]
-    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
+    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
     #   ovirt_overcommit
     #   ovirt_local_boot
     #   ovirt_standalone
@@ -147,13 +147,17 @@ start() {
     # e.g. ovirt_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
     init=
 
-    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
+    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
     # local partition sizes in MB
     vol_boot_size=
     vol_swap_size=
     vol_root_size=
     vol_config_size=
     vol_logging_size=
+    # data size can be set to 0 to disable data partition, -1 to use
+    # remaining free space after the other above partitions are defined
+    # or a specific positive number in MB
+    vol_data_size=
 
     #   ovirt_local_boot
     # install/update oVirt Node image on the local installation target disk
@@ -250,7 +254,7 @@ start() {
             ;;
             ovirt_vol=*)
             i=${i#ovirt_vol=}
-            eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5;}')
+            eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5; print "vol_data_size="$6;}')
             ;;
             ovirt_local_boot*)
             local_boot=1
@@ -305,7 +309,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns syslog_server syslog_port collectd_server collectd_port bootparams hostname"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns syslog_server syslog_port collectd_server collectd_port bootparams hostname"
     mount_config
     if [ -e $OVIRT_DEFAULTS ]; then
         echo "update ovirt defaults"
