@@ -40,7 +40,14 @@ while true; do
                 "$CONTINUE") exit 0 ;;
                 *)
                     clear;
-                    $CONFIG_DIR/*"$OPTION" 2>&1 | $TEE;
+                    {
+                        if $CONFIG_DIR/*"$OPTION" ; then
+                            printf "\n$OPTION Completed Successfully\n\n"
+                        else
+                            printf "\nERROR: $OPTION FAILED. "
+                            printf "See $OVIRT_LOGFILE\n\n"
+                        fi
+                    } 2>&1 | $TEE;
                     break ;;
             esac
         done
