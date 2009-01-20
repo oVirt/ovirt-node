@@ -31,18 +31,24 @@ swap_min_size=5
 
 get_selected_drive_size()
 {
+    start_log
     local udi=$(hal-find-by-property --key block.device --string $DRIVE)
     if [ -z "$udi" ]; then
-        warn "ERROR: selected storage device is not available"
-        return 1
+        # If hal didn't find the device, it could be a virtio block device
+        # In this case, use sfdisk -s to get the size
+        size=$(sfdisk -s $DRIVE)
+        SPACE=$(echo "scale=0; $size / 1024" | bc -l)
+    else
+        size=$(hal-get-property --udi "$udi" --key storage.size)
+        if [ $size -eq 0 ]; then
+            # disk is probably hot-swappable, use different HAL key
+            size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
+        fi
+        SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
     fi
-    size=$(hal-get-property --udi "$udi" --key storage.size)
-    if [ $size -eq 0 ]; then
-        # disk is probably hot-swappable, use different HAL key
-        size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
-    fi
-    SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
-    echo "Selected Device: $DRIVE ($SPACE MB)"
+
+    log "Selected Device: $DRIVE ($SPACE MB)"
+    stop_log
 }
 
 check_partition_sizes()
@@ -110,18 +116,20 @@ get_dev_name()
                 " skipping"; continue;;
         esac
         test -z "$devices" \
-            && devices=$block_dev \
+            && devices="$block_dev" \
             || devices="$devices $block_dev"
     done
 
-    # if we didn't find any devices using HAL, so check for virtual devices
-    if [ -z "$devices" ]; then devices=$(ls -l /dev/[shv]d?);  fi
+    # FIXME: workaround for detecting virtio block devices
+    devices="$devices $(ls /dev/vd? | xargs)"
+    devices=$(echo $devices | tr ' ' '\n' | sort -u | xargs)
 
+    local num_devices=$(echo "$devices" | wc -w)
     # If there's only one device, use it.
-    case $devices in
-        '') warn "ERROR: found no usable block device"; return 1;;
-        *' '*) ;; # found more than one
-        *) echo "$devices"; return 0;; # just one
+    case $num_devices in
+        0) warn "ERROR: found no usable block device"; return 1;;
+        1) echo "$devices"; return 0;;
+        *) ;; # found more than one
     esac
 
     # There are two or more; make the user choose.
@@ -138,7 +146,7 @@ get_dev_name()
 do_configure()
 {
     local name_and_size
-    DRIVE=$(get_dev_name) || exit 1
+    DRIVE=$(get_dev_name) || return 0
     get_selected_drive_size
 
     printf "\n\nPlease configure storage partitions.\n\n"
