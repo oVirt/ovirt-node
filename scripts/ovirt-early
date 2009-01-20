@@ -117,7 +117,7 @@ start() {
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     #   ovirt_init=usb|scsi[:serial#]
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
-    #   ovirt_overcommit
+    #   ovirt_overcommit=<overcommit_ratio>
     #   ovirt_local_boot
     #   ovirt_standalone
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
@@ -163,7 +163,7 @@ start() {
     # install/update oVirt Node image on the local installation target disk
     local_boot=0
 
-    #   ovirt_overcommit
+    #   ovirt_overcommit=<overcommit_ratio>
     # set the swap size coefficient
     overcommit=0.5
 
