@@ -63,7 +63,7 @@ ovirt_boot_setup() {
     tmpdir=$(mktemp -d)
     cd $tmpdir
     gzip -dc $live/$syslinux/initrd0.img |
-        cpio -id init sbin/real-init 2> /dev/null
+        cpio -id init sbin/real-init
     init_script=init
     if [ -e sbin/real-init ]; then
         # Fedora 10 mkliveinitrd
@@ -109,7 +109,7 @@ title oVirt Node
 EOF
     echo "(hd0) $disk" > /boot/grub/device.map
     ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 /boot/grub )
-    grub --device-map=/boot/grub/device.map > /dev/null <<EOF
+    grub --device-map=/boot/grub/device.map <<EOF
 root (hd0,$BOOT)
 setup --prefix=/grub (hd0)
 EOF
@@ -147,7 +147,7 @@ if [ -z "$bootparams" ]; then
 fi
 
 # ensure the disk is not blank
-parted $disk -s "print all" > /dev/null
+parted $disk -s "print all"
 
 if [ 0 -eq $? ]; then
     ovirt_boot_setup "$disk" "$live" "$bootparams"
