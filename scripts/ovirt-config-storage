@@ -300,7 +300,7 @@ perform_partitioning()
     vgcreate /dev/HostVG "${DRIVE}2"
 
     log "Creating boot filesystem"
-    mke2fs -T ext3 "${DRIVE}1"         -L "BOOT"
+    mke2fs -j "${DRIVE}1" -L "BOOT"
     tune2fs -c 0 -i 0 "${DRIVE}1"
     mkdir -p /dev/disk/by-label
     ln -snf "${DRIVE}1" /dev/disk/by-label/BOOT
@@ -314,19 +314,19 @@ perform_partitioning()
     if [ "$ROOT_SIZE" -gt 0 ]; then
         log "Creating root partition"
         lvcreate --name Root    --size ${ROOT_SIZE}M    /dev/HostVG
-        mke2fs -T ext3 /dev/HostVG/Root    -L "ROOT"
+        mke2fs -j /dev/HostVG/Root -L "ROOT"
         tune2fs -c 0 -i 0 /dev/HostVG/Root
     fi
     if [ "$CONFIG_SIZE" -gt 0 ]; then
         log "Creating config partition"
         lvcreate --name Config  --size ${CONFIG_SIZE}M  /dev/HostVG
-        mke2fs -T ext3 /dev/HostVG/Config  -L "CONFIG"
+        mke2fs -j /dev/HostVG/Config -L "CONFIG"
         tune2fs -c 0 -i 0 /dev/HostVG/Config
     fi
     if [ "$LOGGING_SIZE" -gt 0 ]; then
         log "Creating log partition"
         lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
-        mke2fs -T ext3 /dev/HostVG/Logging -L "LOGGING"
+        mke2fs -j /dev/HostVG/Logging -L "LOGGING"
         tune2fs -c 0 -i 0 /dev/HostVG/Logging
         echo "/dev/HostVG/Logging /var/log ext3 defaults 0 0" >> /etc/fstab
     fi
@@ -343,7 +343,7 @@ perform_partitioning()
     fi
 
     if [ "$use_data" = 0 ]; then
-        mke2fs -T ext3 /dev/HostVG/Data -L "DATA"
+        mke2fs -j /dev/HostVG/Data -L "DATA"
         tune2fs -c 0 -i 0 /dev/HostVG/Data
         echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
         echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
