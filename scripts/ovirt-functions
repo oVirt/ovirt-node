@@ -222,7 +222,7 @@ mount_config() {
     # Only try to mount /config if the persistent storage exists
     if [ -e /dev/HostVG/Config ] ; then
         mkdir -p /config
-        if ! grep -q "/dev/mapper/HostVG-Config " /proc/mounts; then
+        if ! grep -q " /config ext3 " /proc/mounts; then
             mount /dev/HostVG/Config /config || return 1
         fi
 
@@ -233,7 +233,7 @@ mount_config() {
         # bind mount all persisted configs to rootfs
         for f in $(find /config -type f); do
             target=${f#/config}
-            if grep -q " $target " /proc/mounts ; then
+            if grep -q " $target ext3" /proc/mounts ; then
                 # skip if already bind-mounted
                 true
             else
@@ -252,7 +252,7 @@ mount_config() {
 
 # mount logging partition
 mount_logging() {
-    if grep -q "/dev/mapper/HostVG-Logging " /proc/mounts; then
+    if grep -q " /var/log ext3" /proc/mounts; then
         return 0
     fi
 
@@ -280,7 +280,7 @@ mount_logging() {
 
 # mount data partition
 mount_data() {
-    if grep -q "/dev/mapper/HostVG-Data " /proc/mounts; then
+    if grep -q " /data ext3" /proc/mounts; then
         return 0
     fi
 
@@ -330,7 +330,7 @@ EOF
 #   ovirt_store_config /etc/config /etc/config2 ...
 #   copy to /config and bind-mount back
 ovirt_store_config() {
-    if grep -q " /config " /proc/mounts; then
+    if grep -q " /config ext3" /proc/mounts; then
         printf "storing to /config :\n"
         for f in "$@"; do
             printf "$f"
@@ -340,7 +340,7 @@ ovirt_store_config() {
                 continue
             fi
             # skip if already bind-mounted
-            if grep -q " $f " /proc/mounts ; then
+            if grep -q " $f ext3" /proc/mounts ; then
                 printf " Skipping, file already persisted\n"
             else
                 mkdir -p /config$(dirname $f)
