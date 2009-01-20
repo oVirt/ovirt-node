@@ -199,14 +199,17 @@ function configure_dns
 
 function setup_menu
 {
+    NICS=""
     udi_list=$(hal-find-by-capability --capability net.80203)
-    if [ -z "$udi_list" ]; then
-	warn "ERROR: no usable network devices were found"
-	exit 1
+    if [ -n "$udi_list" ]; then
+        for d in $udi_list; do
+            NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"
+        done
     fi
 
-    NICS=""
-    for d in $udi_list; do NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"; done
+    # Add virtio NICs that were possibly not detected by hal
+    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | xargs)"
+    NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
 
     PS3="Please select an interface or configuration option: "
 }
