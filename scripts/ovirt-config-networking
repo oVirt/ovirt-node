@@ -236,7 +236,7 @@ else
 fi
 
 start_log
-net_configured=1
+net_configured=0
 if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
     log "Configuring network"
     config="$WORKDIR"/config-augtool
@@ -244,7 +244,7 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
         && augtool $config
     if [ $? = 0 ]; then
         log "Network configured successfully"
-        net_configured=0
+        net_configured=1
         ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
     else
         log "Error configuring network, see $OVIRT_LOGFILE"
@@ -254,7 +254,7 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
 fi
 stop_log
 
-if [ "$net_configured" = 0 ]; then
+if [ "$net_configured" = 1 ]; then
     service network stop > /dev/null 2>&1
     service network start
 fi
