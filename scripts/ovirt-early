@@ -21,36 +21,36 @@ get_mac_addresses() {
 configure_from_network() {
     DEVICE=$1
     if [ -n "$DEVICE" ]; then
-        echo "Configuring network Using interface $DEVICE"
+        log "Configuring network Using interface $DEVICE"
         # setup temporary interface to retrieve configuration
         echo "network --device $DEVICE --bootproto dhcp" | nash
         if [ $? -eq 0 ]; then
             # from network-scripts/ifup-post
             IPADDR=$(LC_ALL=C ip -o -4 addr ls dev ${DEVICE} | awk '{ print $4 ; exit }')
-            echo "Interface brought up with $IPADDR"
+            log "Interface brought up with $IPADDR"
             eval $(ipcalc --silent --hostname ${IPADDR} ; echo "status=$?")
             if [ "$status" = "0" ]; then
                 hostname $HOSTNAME
-                echo "Hostname resolved to $HOSTNAME"
+                log "Hostname resolved to $HOSTNAME"
                 # retrieve remote config
                 find_srv ovirt tcp
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-                    echo "oVirt Server found at: $SRV_HOST:$SRV_PORT"
+                    log "oVirt Server found at: $SRV_HOST:$SRV_PORT"
                     cfgdb=$(mktemp)
                     get_mac_addresses
-                    echo "MACs to use: $macs"
+                    log "MACs to use: $macs"
                     wget -O $cfgdb \
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
                     if [ $? -eq 0 ]; then
-                        echo "Remote configuration bundle retrieved to $cfgdb"
+                        log "Remote configuration bundle retrieved to $cfgdb"
                         ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
 			if [ $? -eq 0 ]; then
-			    echo "Remote configuration retrieved and applied"
+			    log "Remote configuration retrieved and applied"
 			else
-			    echo "Failure to retrieve or apply remote configuration"
+			    log "Failure to retrieve or apply remote configuration"
 			fi
                     else
-                        echo "Failed to retrieve configuration bundle"
+                        log "Failed to retrieve configuration bundle"
                     fi
                     rm $cfgdb
                 fi
@@ -62,14 +62,14 @@ configure_from_network() {
     ETHDEVS=$(cd /sys/class/net && ls -d eth*)
     for eth in $ETHDEVS; do
         BRIDGE=ovirtbr`echo $eth | cut -b4-`
-        echo "Applying default configuration to $eth and $BRIDGE"
+        log "Applying default configuration to $eth and $BRIDGE"
         printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
             > /etc/sysconfig/network-scripts/ifcfg-$eth
         printf '%s\n' "DEVICE=$BRIDGE" BOOTPROTO=dhcp \
             ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
             > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
     done
-    echo "Default config applied"
+    log "Default config applied"
 }
 
 # $(get_live_disk)
@@ -312,7 +312,7 @@ start() {
     params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns syslog_server syslog_port collectd_server collectd_port bootparams hostname"
     mount_config
     if [ -e $OVIRT_DEFAULTS ]; then
-        echo "update ovirt defaults"
+        log "update ovirt defaults"
         tmpaug=$(mktemp)
         for p in $params; do
             PARAM=$(uc $p)
@@ -322,7 +322,7 @@ start() {
         done
         augtool $tmpaug
     else
-        echo "initial startup"
+        log "initial startup"
         # dump all ovirt bootparams
         mkdir -p $(dirname $OVIRT_DEFAULTS)
         echo > $OVIRT_DEFAULTS

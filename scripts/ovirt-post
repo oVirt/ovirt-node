@@ -25,7 +25,7 @@ start() {
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
         ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
     else
-        echo "skipping ovirt-identify-node, oVirt registration service not available"
+        log "skipping ovirt-identify-node, oVirt registration service not available"
     fi
 }
 

@@ -21,11 +21,11 @@ start() {
         wget -q \
             http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf.tmp
         if [ $? -ne 0 ]; then
-            echo "Failed to get $krb5_conf"; return 1
+            log "Failed to get $krb5_conf"; return 1
         fi
         mv $krb5_conf.tmp $krb5_conf
     else
-        echo "skipping Kerberos configuration"
+        log "skipping Kerberos configuration"
     fi
 
     find_srv identify tcp
@@ -37,10 +37,10 @@ start() {
         fi
         ovirt-awake start $SRV_HOST $SRV_PORT $krb5_tab
         if [ $? -ne 0 ]; then
-            echo "ovirt-awake failed"; return 1
+            log "ovirt-awake failed"; return 1
         fi
     else
-        echo "skipping ovirt-awake, oVirt identify service not available"
+        log "skipping ovirt-awake, oVirt identify service not available"
     fi
 
     find_srv collectd tcp
@@ -52,11 +52,11 @@ start() {
                 -e /<Plugin rrdtool>/,/<\/Plugin>/d $collectd_conf.in \
                 > $collectd_conf
             if [ $? -ne 0 ]; then
-                echo "Failed to write $collectd_conf"; return 1
+                log "Failed to write $collectd_conf"; return 1
             fi
         fi
     else
-        echo "skipping collectd configuration, collectd service not available"
+        log "skipping collectd configuration, collectd service not available"
     fi
 
     find_srv qpidd tcp
@@ -66,7 +66,7 @@ start() {
             echo "LIBVIRT_QPID_ARGS=\"--broker $SRV_HOST --port $SRV_PORT\"" >> $libvirt_qpid_conf
         fi
     else
-        echo "skipping libvirt-qpid configuration, could not find $libvirt_qpid_conf"
+        log "skipping libvirt-qpid configuration, could not find $libvirt_qpid_conf"
     fi
 }
 
