@@ -219,12 +219,13 @@ mount_liveos() {
 # mount config partition
 # /config for persistance
 mount_config() {
-    if ! grep -q " /config " /proc/mounts; then
+    # Only try to mount /config if the persistent storage exists
+    if [ -e /dev/HostVG/Config ] ; then
         mkdir -p /config
-        mount /dev/HostVG/Config /config
-    fi
+        if ! grep -q "/dev/mapper/HostVG-Config " /proc/mounts; then
+            mount /dev/HostVG/Config /config || return 1
+        fi
 
-    if grep -q " /config " /proc/mounts; then
         # optional config embedded in the livecd image
         if [ -e /live/config ]; then
             cp -rv --update /live/config/* /config
@@ -241,6 +242,8 @@ mount_config() {
                 mount -n --bind $f "$target"
             fi
         done
+
+        return 0
     else
         # /config is not available
         return 1
