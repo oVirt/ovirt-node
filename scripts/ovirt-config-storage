@@ -121,7 +121,7 @@ get_dev_name()
     done
 
     # FIXME: workaround for detecting virtio block devices
-    devices="$devices $(ls /dev/vd? | xargs)"
+    devices="$devices $(ls /dev/vd? 2> /dev/null | xargs)"
     devices=$(echo $devices | tr ' ' '\n' | sort -u | xargs)
 
     local num_devices=$(echo "$devices" | wc -w)
