@@ -60,9 +60,7 @@ start ()
     fi
     disable_firstboot
 
-    start_log
-    ovirt_store_firstboot_config
-    stop_log
+    ovirt_store_firstboot_config > $OVIRT_LOGFILE 2>&1
 }
 
 case "$1" in

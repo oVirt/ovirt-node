@@ -1,7 +1,7 @@
 # -*-Shell-script-*-
 
 OVIRT_LOGFILE=/var/log/ovirt.log
-TEE="tee -a $OVIRT_LOGFILE"
+OVIRT_TMP_LOGFILE=/tmp/ovirt.log
 _log_status=1
 
 # label of the oVirt partition
@@ -37,7 +37,7 @@ start_log() {
     if [ "$_log_status" = 1 ]; then
         exec 6>&1
         exec 7>&2
-        exec 1>>$OVIRT_LOGFILE
+        exec 1>>$OVIRT_TMP_LOGFILE
         exec 2>&1
         _log_status=0
     fi
@@ -276,6 +276,27 @@ mount_logging() {
         printf "\nThe logging partion has not been created. Please create it at the main menu.\n"
         return 1
     fi
+}
+
+unmount_logging() {
+    if ! grep -q " /var/log ext3" /proc/mounts; then
+        return 0
+    fi
+
+    log "Unmounting log partition"
+    service rsyslog stop
+    if [ -e /var/log.bak ]; then
+        rm -rf /var/log.bak
+    fi
+    cp -av /var/log /var/log.bak
+
+    umount /var/log
+    cp -av /var/log.bak/* /var/log
+    restorecon -rv /var/log
+    rm -Rf /var/log.bak
+    service rsyslog start
+
+    return 0
 }
 
 # mount data partition

@@ -47,7 +47,11 @@ while true; do
                             printf "\nERROR: $OPTION FAILED. "
                             printf "See $OVIRT_LOGFILE\n\n"
                         fi
-                    } 2>&1 | $TEE;
+                    } 2>&1 | tee -a $OVIRT_TMP_LOGFILE;
+                    if [ -f $OVIRT_TMP_LOGFILE ]; then
+                        cat $OVIRT_TMP_LOGFILE >> $OVIRT_LOGFILE
+                        rm -f $OVIRT_TMP_LOGFILE
+                    fi
                     break ;;
             esac
         done
