@@ -255,6 +255,10 @@ wipe_lvm_on_disk()
             log "Unmounting $d"
             umount $d
         done
+        for d in $(grep $vg /proc/swaps|awk '{print $1}'); do
+            log "Turning off $d"
+            swapoff $d
+        done
         for lv in $(lvdisplay -c $vg|awk -F: '{print $1}'); do
             log "Removing $lv"
             lvremove -f $lv
