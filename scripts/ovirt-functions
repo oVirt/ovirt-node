@@ -285,6 +285,9 @@ unmount_logging() {
 
     log "Unmounting log partition"
     service rsyslog stop
+    # plymouthd keeps /var/log/boot.log
+    plymouth --quit
+    plymouth --wait
     if [ -e /var/log.bak ]; then
         rm -rf /var/log.bak
     fi
