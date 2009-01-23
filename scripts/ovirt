@@ -49,7 +49,7 @@ start() {
         if [ -f $collectd_conf.in ]; then
             sed -e "s/@COLLECTD_SERVER@/$SRV_HOST/" \
                 -e "s/@COLLECTD_PORT@/$SRV_PORT/" \
-                -e /<Plugin rrdtool>/,/<\/Plugin>/d $collectd_conf.in \
+                -e "/<Plugin rrdtool>/,/<\/Plugin>/d" $collectd_conf.in \
                 > $collectd_conf
             if [ $? -ne 0 ]; then
                 log "Failed to write $collectd_conf"; return 1
