@@ -259,4 +259,3 @@ if [ "$net_configured" = 1 ]; then
     service network start
 fi
 
-exit 0
