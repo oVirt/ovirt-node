@@ -30,7 +30,7 @@ function configure_interface
         PREFIX=$OVIRT_IP_PREFIX
     fi
 
-    local BRIDGE=ovirtbr$NIC
+    local BRIDGE=br$NIC
     local IF_FILENAME="$WORKDIR/augtool-$NIC"
     local BR_FILENAME="$WORKDIR/augtool-$BRIDGE"
 
@@ -208,7 +208,7 @@ function setup_menu
     fi
 
     # Add virtio NICs that were possibly not detected by hal
-    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v "^ovirtbr" | xargs)"
+    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v "^br" | xargs)"
     NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
 
     PS3="Please select an interface or configuration option: "

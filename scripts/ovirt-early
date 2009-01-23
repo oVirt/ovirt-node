@@ -61,7 +61,7 @@ configure_from_network() {
     # bridge each ethernet device in the system
     ETHDEVS=$(cd /sys/class/net && ls -d eth*)
     for eth in $ETHDEVS; do
-        BRIDGE=ovirtbr$eth
+        BRIDGE=br$eth
         log "Applying default configuration to $eth and $BRIDGE"
         printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
             > /etc/sysconfig/network-scripts/ifcfg-$eth
