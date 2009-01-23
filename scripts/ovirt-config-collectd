@@ -108,4 +108,3 @@ else
     prompt_user
 fi
 
-exit 0
