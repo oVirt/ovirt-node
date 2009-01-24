@@ -41,7 +41,7 @@ function configure_interface
 
     local BR_ROOT="$CONFIG_FILE_ROOT-$BRIDGE"
     local BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
-    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE bridge"
+    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE Bridge"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/PEERNTP yes"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DELAY 0"
     IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/BRIDGE $BRIDGE"
