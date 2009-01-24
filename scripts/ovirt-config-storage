@@ -278,11 +278,11 @@ perform_partitioning()
     start_log
     log "Starting partitioning of $DRIVE"
 
-    # Exit upon any failure.
-    set -e
-
     log "Removing old LVM partitions"
     wipe_lvm_on_disk
+
+    # Exit upon any failure.
+    set -e
 
     # FIXME: save a backup copy, just in case?
     log "Wiping old boot sector"
