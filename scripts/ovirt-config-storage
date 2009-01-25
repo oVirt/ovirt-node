@@ -290,13 +290,17 @@ perform_partitioning()
     blockdev --rereadpt $DRIVE
     partprobe -s $DRIVE
 
-    log "Creating boot partition"
     MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
     local boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
+    log "Labeling Drive"
     parted $DRIVE -s "mklabel ${LABEL_TYPE}"
+    log "Creating boot partition"
     parted $DRIVE -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+    log "Creating LVM partition"
     parted $DRIVE -s "mkpart primary ext2 ${boot_size_si}M -1"
+    log "Toggling boot on"
     parted $DRIVE -s "set 1 boot on"
+    log "Toggling LVM on"
     parted $DRIVE -s "set 2 lvm on"
     parted $DRIVE -s "print"
     udevadm settle 2> /dev/null || udevsettle
