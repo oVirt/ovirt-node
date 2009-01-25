@@ -312,8 +312,9 @@ perform_partitioning()
     fi
 
     log "Creating physical volume"
-    pvcreate "${DRIVE}2"
-    pvck
+    dd if=/dev/zero of=${DRIVE}2 bs=1024k count=1
+    pvcreate -f "${DRIVE}2"
+    pvck -v
     log "Creating volume group"
     vgcreate /dev/HostVG "${DRIVE}2"
 
