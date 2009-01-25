@@ -120,6 +120,7 @@ start() {
     #   ovirt_overcommit=<overcommit_ratio>
     #   ovirt_local_boot
     #   ovirt_standalone
+    #   ovirt_firstboot
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
@@ -170,6 +171,10 @@ start() {
     #   ovirt_standalone
     # force oVirt Node standalone mode
     standalone=0
+
+    #   ovirt_firstboot
+    # force firstboot configuration even if it has already been run
+    firstboot=
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
@@ -263,6 +268,9 @@ start() {
             standalone=1
             bootparams="$bootparams $i"
             ;;
+            ovirt_firstboot*)
+            firstboot=1
+            ;;
 
             ovirt_overcommit*)
             i=${i#ovirt_overcommit=}
@@ -309,7 +317,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns syslog_server syslog_port collectd_server collectd_port bootparams hostname"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
     mount_config
     if [ -e $OVIRT_DEFAULTS ]; then
         log "update ovirt defaults"
