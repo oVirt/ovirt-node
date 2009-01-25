@@ -162,15 +162,15 @@ start() {
 
     #   ovirt_local_boot
     # install/update oVirt Node image on the local installation target disk
-    local_boot=0
+    local_boot=
 
     #   ovirt_overcommit=<overcommit_ratio>
     # set the swap size coefficient
-    overcommit=0.5
+    overcommit=
 
     #   ovirt_standalone
     # force oVirt Node standalone mode
-    standalone=0
+    standalone=
 
     #   ovirt_firstboot
     # force firstboot configuration even if it has already been run
@@ -319,34 +319,25 @@ start() {
     # save boot parameters as defaults for ovirt-config-*
     params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
     mount_config
-    if [ -e $OVIRT_DEFAULTS ]; then
-        log "update ovirt defaults"
-        tmpaug=$(mktemp)
-        for p in $params; do
-            PARAM=$(uc $p)
-            value=$(ptr $p)
+    log "Updating $OVIRT_DEFAULTS"
+    tmpaug=$(mktemp)
+    for p in $params; do
+        PARAM=$(uc $p)
+        value=$(ptr $p)
+        if [ -n "$value" ]; then
+            log "Updating OVIRT_$PARAM to '$value'"
             echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" \
                 >> $tmpaug
-        done
-        augtool $tmpaug
-    else
-        log "initial startup"
-        # dump all ovirt bootparams
-        mkdir -p $(dirname $OVIRT_DEFAULTS)
-        echo > $OVIRT_DEFAULTS
-        for p in $params; do
-            PARAM=$(uc $p)
-            echo "OVIRT_$PARAM='$(ptr $p)'" >> $OVIRT_DEFAULTS
-        done
-        ovirt_store_config $OVIRT_DEFAULTS
-    fi
+        fi
+    done
+    augtool $tmpaug
 
     if [ -f /etc/sysconfig/network ]; then
         . /etc/sysconfig/network
         hostname $HOSTNAME
     fi
 
-    if [ $standalone = 0 ]; then
+    if [ ! $standalone = 1 ]; then
         configure_from_network $bootif
         if [ -n "$init" ]; then
             ovirt-config-storage AUTO

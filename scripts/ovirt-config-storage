@@ -15,6 +15,8 @@ die() { warn "$*"; exit 1; }
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
+default_overcommit=0.5
+
 default_boot_size=50
 default_root_size=256
 default_config_size=5
@@ -427,9 +429,11 @@ case $MEM_SIZE_MB in
     ''|*[^0-9]*) die failed to get system memory size;;
 esac
 MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
+
+overcommit=${OVIRT_OVERCOMMIT:-$default_overcommit}
 # we multiply the overcommit coefficient by 10 then divide the
 # product by 10 to avoid decimals in the result
-OVERCOMMIT_SWAP_SIZE=$(echo "scale=0; (${MEM_SIZE_MB} * (${OVIRT_OVERCOMMIT} * 10))/10;" | bc -l)
+OVERCOMMIT_SWAP_SIZE=$(echo "scale=0; (${MEM_SIZE_MB} * (${overcommit} * 10))/10;" | bc -l)
 
 # add to the swap the amounts from http://kbase.redhat.com/faq/docs/DOC-15252
 MEM_SIZE_GB=$(echo "scale=0; $MEM_SIZE_MB/1024;" | bc -l)
