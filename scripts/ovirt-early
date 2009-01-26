@@ -115,7 +115,7 @@ find_disk() {
 start() {
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
-    #   ovirt_init=usb|scsi[:serial#]
+    #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
     #   ovirt_overcommit=<overcommit_ratio>
     #   ovirt_local_boot
@@ -140,12 +140,15 @@ start() {
     # BOOTIF=eth* e.g. BOOTIF=eth0 - use given interface
     bootif=
 
-    #   ovirt_init=usb|scsi[:serial#]
+    #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
     # local installation target disk
     # usb|scsi - select disk type, as reported by udev ID_BUS
     # serial# - select exact disk using serial number, as reported by
     #           udev ID_SERIAL
     # e.g. ovirt_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
+    # /dev/... - use specified disk device
+    #            (for cases when HAL doesn't handle it)
+    # w/o value - grab the first disk (/dev/?da)
     init=
 
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
@@ -174,6 +177,7 @@ start() {
 
     #   ovirt_firstboot
     # force firstboot configuration even if it has already been run
+    # in auto-install mode, overwrite the disk chosen by ovirt_init parameter
     firstboot=
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
@@ -244,9 +248,16 @@ start() {
                     i=${i#=usb}
                     serial=${i#:}
                     ;;
+                    =/dev/*)
+                    bus=
+                    serial=
+                    i=${i#=}
+                    init=$(ls -1 "$i" 2>/dev/null | head -n1)
+                    ;;
                     *)
                     bus=
                     serial=
+                    init=
                     ;;
                 esac
                 if [ -n "$bus" ]; then
@@ -254,7 +265,10 @@ start() {
                 fi
             else
                 # 'ovirt_init' without value: grab first disk
-                init=/dev/?da
+                init=$(ls -1 /dev/?da 2>/dev/null |head -n1)
+            fi
+            if [ -z "$init" ]; then
+                log "Selected disk $i is not valid."
             fi
             ;;
             ovirt_vol=*)

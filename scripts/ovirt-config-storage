@@ -468,9 +468,16 @@ else
 fi
 
 if [ "$1" == "AUTO" ]; then
-    if check_partition_sizes; then
-        printf "Partitioning hard disk..."
-        perform_partitioning
+    # do not format if HostVG exists on selected disk...
+    existingVG=$(pvdisplay -c ${DRIVE}2 2>/dev/null|awk -F: '{print $2}')
+    # ... unless overridden by ovirt_firstboot parameter
+    if is_firstboot || [ "$existingVG" != "HostVG" ]; then
+        if check_partition_sizes; then
+            printf "Partitioning hard disk..."
+            perform_partitioning
+        fi
+    else
+        log "Skip disk partitioning, HostVG exists"
     fi
 else
     OPTIONS="Configure Review Partition Quit"
