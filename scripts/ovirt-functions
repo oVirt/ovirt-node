@@ -105,7 +105,9 @@ is_firstboot() {
 disable_firstboot() {
     if mount_config; then
         augtool <<EOF
-set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT no
+set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT 0
+set /files$OVIRT_DEFAULTS/OVIRT_INIT '""'
+set /files$OVIRT_DEFAULTS/OVIRT_LOCAL_BOOT 0
 EOF
     fi
 }
