@@ -46,6 +46,7 @@ EXTRA_DIST =			\
   scripts/ovirt-post		\
   scripts/ovirt-process-config  \
   scripts/ovirt-uninstall-node-stateful	\
+  kinit/ovirt-kinit		\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
 

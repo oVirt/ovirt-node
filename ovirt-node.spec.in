@@ -162,6 +162,8 @@ cd -
 %{__install} -p -m0644 scripts/collectd %{buildroot}%{_sysconfdir}/chkconfig.d
 %{__install} -p -m0644 scripts/collectd.conf.in %{buildroot}%{_sysconfdir}
 
+%{__install} -p -m0755 kinit/ovirt-kinit %{buildroot}%{_sysconfdir}/cron.hourly
+
 %{__install} -p -m0755 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.hourly
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d
 
@@ -278,6 +280,7 @@ fi
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
+%config %{_sysconfdir}/cron.hourly/ovirt-kinit
 %config %{_sysconfdir}/logrotate.d/ovirt-logrotate.conf
 %config %{_sysconfdir}/cron.hourly/ovirt-logrotate
 %{_sysconfdir}/ovirt-config-setup.d
