@@ -175,7 +175,7 @@ do_configure()
 
         while true; do
 	    printf "\n"
-            read -ep "Change $part partition size. (Def. $}{size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? "
+            read -ep "Change $part partition size. (Def. ${size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? "
             mb_input=$REPLY
             test -z "$mb_input" && mb_input=$size
             local size_used=0
