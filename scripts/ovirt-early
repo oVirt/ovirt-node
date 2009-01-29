@@ -351,7 +351,12 @@ start() {
         hostname $HOSTNAME
     fi
 
-    if [ ! $standalone = 1 ]; then
+    if [ "$standalone" = 1 ]; then
+        # In standalone mode, fix libvirt to not use gssapi
+        sed -c -i -e s/^keytab/#keytab/ \
+            -e "s/^mech_list: .*gssapi.*/mech_list: digest-md5/" \
+            /etc/sasl2/libvirt.conf
+    else
         configure_from_network $bootif
         if [ -n "$init" ]; then
             ovirt-config-storage AUTO
@@ -364,11 +369,6 @@ start() {
                 ovirt-config-boot $init "" "$bootparams"
             fi
         fi
-    else
-        # In standalone mode, fix libvirt to not use gssapi
-        sed -c -i -e s/^keytab/#keytab/ \
-            -e "s/^mech_list: .*gssapi.*/mech_list: digest-md5/" \
-            /etc/sasl2/libvirt.conf
     fi
 
     return 0
