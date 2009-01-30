@@ -360,9 +360,9 @@ ovirt_store_config() {
         printf "storing to /config :\n"
         for f in "$@"; do
             printf "$f"
-            # skip if file does not exist
-            if [ ! -e $f ]; then
-                printf " Skipping, file does not exist\n"
+            # skip if file does not exist or is empty
+            if [ ! -s $f ]; then
+                printf " Skipping, file does not exist or is empty\n"
                 continue
             fi
             # skip if already bind-mounted
