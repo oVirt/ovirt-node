@@ -278,6 +278,9 @@ perform_partitioning()
     start_log
     log "Starting partitioning of $DRIVE"
 
+    log "Saving parameters"
+    unmount_config /etc/default/ovirt
+
     log "Removing old LVM partitions"
     wipe_lvm_on_disk
 

@@ -386,6 +386,25 @@ ovirt_store_config() {
     fi
 }
 
+# unmount bindmounted config files
+#       unmount_config /etc/config /etc/config2 ...
+#
+# Use before running commands which fail on bindmounted files.
+# After the file is replaced, call ovirt_store_config /etc/config ...
+# to bindmount the config file again.
+#
+unmount_config() {
+    if grep -q " /config ext3" /proc/mounts; then
+        for f in "$@"; do
+            if grep -q " $f ext3" /proc/mounts ; then
+                umount -n $f
+                # refresh rootfs copy
+                cp -a /config$f $f
+            fi
+        done
+    fi
+}
+
 # compat function to handle different udev versions
 udev_info() {
     local name=$1
