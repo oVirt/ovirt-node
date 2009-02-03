@@ -3,6 +3,8 @@
 # Wrapper function to make sure the user wishes to continue before
 # rebooting the system
 
+. /etc/init.d/ovirt-functions
+
 while true; do
     clear
     printf "\n\n oVirt Node Local Installation and Reboot\n\n"
@@ -15,7 +17,8 @@ continuing."
     read -p "Do you wish to continue? (Y|N)? "
     r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
     if [ "$r" == "Y" ]; then
-        /usr/sbin/ovirt-config-boot
+        mount_live
+        /usr/sbin/ovirt-config-boot /live
         break
     elif [ "$r" == "N" ]; then
         printf "\nExiting back to the menu\n"

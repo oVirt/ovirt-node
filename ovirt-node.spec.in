@@ -190,6 +190,9 @@ mkdir -p %{buildroot}/usr/lib/anaconda-runtime
 install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-runtime
 # ovirt-logos
 
+# ovirt-config-boot post-install hooks
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
+
 # default ovirt-config-setup menu options
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-setup.d
 %{__ln_s} ../..%{_sbindir}/ovirt-config-storage %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"00_Disk Partitioning"
@@ -283,6 +286,7 @@ fi
 %config %{_sysconfdir}/cron.hourly/ovirt-kinit
 %config %{_sysconfdir}/logrotate.d/ovirt-logrotate.conf
 %config %{_sysconfdir}/cron.hourly/ovirt-logrotate
+%{_sysconfdir}/ovirt-config-boot.d
 %{_sysconfdir}/ovirt-config-setup.d
 
 %files stateful

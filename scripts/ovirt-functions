@@ -208,16 +208,6 @@ mount_boot() {
     mount /dev/disk/by-label/BOOT /boot
 }
 
-# mount liveos partition
-# LiveOS/
-mount_liveos() {
-    if grep -q " /liveos " /proc/mounts; then
-        return 0
-    fi
-    mkdir -p /liveos
-    mount /dev/HostVG/Root /liveos
-}
-
 # mount config partition
 # /config for persistance
 mount_config() {
@@ -441,4 +431,23 @@ add_if_not_exist() {
 
 is_numeric() {
     printf "$1" | grep -q -E '^[0-9]+$'
+}
+
+# reboot wrapper
+#   cleanup before reboot
+reboot() {
+    # setup new Root if update is prepared
+    if [ -e /dev/HostVG/RootUpdate ]; then
+        lvrename HostVG Root RootBackup
+        lvrename HostVG RootUpdate Root
+    fi
+    # run post-install hooks
+    # e.g. to avoid reboot loops using Cobbler PXE only once
+    # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
+    # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
+    #   -O /dev/null
+    for hook in $(ls /etc/ovirt-config-boot.d/* 2>/dev/null); do
+        $hook
+    done
+    /sbin/reboot
 }

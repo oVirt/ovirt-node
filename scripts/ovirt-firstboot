@@ -47,7 +47,8 @@ start ()
         ovirt-config-logging AUTO
         ovirt-config-collectd AUTO
         if [ "$OVIRT_LOCAL_BOOT" = 1 ]; then
-            ovirt-config-boot $OVIRT_INIT "" "$OVIRT_BOOTPARAMS" no
+            mount_live
+            ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
             disable_firstboot
             reboot
         fi

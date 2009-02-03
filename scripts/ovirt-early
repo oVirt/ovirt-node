@@ -366,7 +366,8 @@ start() {
                 $BONDING_MODCONF_FILE
             if [ $local_boot = 1 ]; then
                 # local disk installation for managed mode
-                ovirt-config-boot $init "" "$bootparams"
+                mount_live
+                ovirt-config-boot /live "$bootparams"
             fi
         fi
     fi

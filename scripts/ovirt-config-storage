@@ -67,7 +67,7 @@ check_partition_sizes()
     get_selected_drive_size
     disk_size=$SPACE
     need_size=$(echo "scale=0;" \
-                     "$BOOT_SIZE + $SWAP_SIZE + $ROOT_SIZE" \
+                     "$BOOT_SIZE + $SWAP_SIZE + $ROOT_SIZE * 2" \
                      "+ $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
 
     if [ $need_size -gt $disk_size ]; then
@@ -224,7 +224,7 @@ do_review()
     local data_size_display="$DATA_SIZE MB"
     if [ "$DATA_SIZE" = -1 ]; then
         local remaining_mb=$(( $SPACE - $BOOT_SIZE - $SWAP_SIZE \
-                - $ROOT_SIZE - $CONFIG_SIZE - $LOGGING_SIZE ))
+                - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
         data_size_display="$remaining_mb MB"
     fi
 
@@ -236,7 +236,7 @@ The local disk will be repartitioned as follows:
       Total storage available: $SPACE MB
           Boot partition size: $BOOT_SIZE MB
           Swap partition size: $SWAP_SIZE MB
-  Installation partition size: $ROOT_SIZE MB
+  Installation partition size: $ROOT_SIZE * 2 MB
  Configuration partition size: $CONFIG_SIZE MB
        Logging partition size: $LOGGING_SIZE MB
           Data partition size: $data_size_display
@@ -334,10 +334,13 @@ perform_partitioning()
         echo "/dev/HostVG/Swap swap swap defaults 0 0" >> /etc/fstab
     fi
     if [ "$ROOT_SIZE" -gt 0 ]; then
-        log "Creating root partition"
+        log "Creating root and root backup partitions"
         lvcreate --name Root --size ${ROOT_SIZE}M /dev/HostVG
         mke2fs -j /dev/HostVG/Root -L "ROOT"
         tune2fs -c 0 -i 0 /dev/HostVG/Root
+        lvcreate --name RootBackup --size ${ROOT_SIZE}M /dev/HostVG
+        mke2fs -j /dev/HostVG/RootBackup -L "ROOT2"
+        tune2fs -c 0 -i 0 /dev/HostVG/RootBackup
     fi
     if [ "$CONFIG_SIZE" -gt 0 ]; then
         log "Creating config partition"
