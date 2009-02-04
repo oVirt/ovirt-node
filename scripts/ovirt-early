@@ -348,7 +348,9 @@ start() {
 
     if [ -f /etc/sysconfig/network ]; then
         . /etc/sysconfig/network
-        hostname $HOSTNAME
+        if [ -n "$HOSTNAME" ]; then
+            hostname $HOSTNAME
+        fi
     fi
 
     if [ "$standalone" = 1 ]; then
