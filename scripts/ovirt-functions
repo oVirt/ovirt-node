@@ -126,13 +126,26 @@ EOF
 find_srv()
 {
     local dnsreply
-    dnsreply=$(dig +short -t srv _$1._$2.$(dnsdomainname))
-    if [ $? -eq 0 ]; then
-        set _ $dnsreply; shift
-        SRV_HOST=$4; SRV_PORT=$3
-    else
-        SRV_HOST=; SRV_PORT=
+    local domain=$(dnsdomainname 2>/dev/null)
+    if [ "$domain" = "localdomain" ]; then
+        domain=""
     fi
+    # FIXME dig +search does not seem to work with -t srv
+    # dnsreply=$(dig +short +search -t srv _$1._$2)
+    # This is workaround:
+    local search=$(grep search /etc/resolv.conf)
+    search=${search#search }
+    for d in $domain $search; do
+        dnsreply=$(dig +short -t srv _$1._$2.$d)
+        rc=$?
+        if [ $rc -eq 0 ]; then
+            set _ $dnsreply; shift
+            SRV_HOST=$4; SRV_PORT=$3
+            return 0
+        fi
+    done
+    SRV_HOST=; SRV_PORT=
+    return 1
 }
 
 die()
