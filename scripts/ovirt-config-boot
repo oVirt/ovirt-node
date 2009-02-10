@@ -78,7 +78,11 @@ ovirt_boot_setup() {
         # Fedora 10 mkliveinitrd
         init_script=sbin/real-init
     fi
-    sed -i '/^\/sbin\/udev.*settle/ a \echo Scanning logical volumes\
+    sed -i '/^\/sbin\/udev.*settle/ a \
+echo SCSI wait for scans\
+/sbin/modprobe scsi_wait_scan\
+/sbin/modprobe -r scsi_wait_scan\
+echo Scanning logical volumes\
 lvm vgscan --ignorelockingfailure\
 echo Activating logical volumes\
 lvm vgchange -ay --ignorelockingfailure HostVG \
