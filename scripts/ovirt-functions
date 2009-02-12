@@ -415,6 +415,35 @@ unmount_config() {
     fi
 }
 
+# ovirt_safe_delete_config
+#       ovirt_safe_delete_config /etc/config /etc/config2 ...
+#
+# Use to *permanently* remove persisted configuration file.
+# WARNING: file is scrubbed before removal
+#
+ovirt_safe_delete_config() {
+    if grep -q " /config ext3" /proc/mounts; then
+        for f in "$@"; do
+            if grep -q " $f ext3" /proc/mounts ; then
+                umount -n $f
+            fi
+            scrub $f /config$f
+            rm -f $f /config$f
+            # unregister in /config/files used by rc.sysinit
+            sed --copy -i "\|^$f$|d" /config/files
+        done
+    fi
+}
+
+
+# scrub the file contnet
+#
+scrub() {
+    for f in "$@"; do
+        dd if=/dev/zero of="$f"
+    fi
+}
+
 # compat function to handle different udev versions
 udev_info() {
     local name=$1
