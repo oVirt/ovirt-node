@@ -153,7 +153,7 @@ cd -
 %{__install} -p -m0755 gptsync/showpart %{buildroot}%{_sbindir}
 #
 
-%{__install} -p -m0644 scripts/ovirt-functions %{buildroot}%{_initrddir}
+%{__install} -p -m0755 scripts/ovirt-functions %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt %{buildroot}%{_initrddir}
@@ -300,8 +300,8 @@ fi
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
 %{_sbindir}/ovirt-identify-node
-%defattr(-,root,root,0644)
 %{_initrddir}/ovirt-functions
+%defattr(-,root,root,0644)
 %{_sysconfdir}/collectd.conf.in
 %{_sysconfdir}/chkconfig.d/collectd
 %config %attr(0644,root,root) %{_sysconfdir}/ovirt-release

@@ -464,3 +464,11 @@ reboot() {
     done
     /sbin/reboot
 }
+
+# execute a function if called as a script, e.g.
+#   ovirt-functions ovirt_store_config /etc/hosts
+
+if [ $(basename "$0") = "ovirt-functions" ]; then
+    "$@"
+fi
+
