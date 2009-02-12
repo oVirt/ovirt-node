@@ -5,6 +5,7 @@
 
 . /etc/init.d/ovirt-functions
 
+rc=0
 while true; do
     clear
     printf "\n\n oVirt Node Local Installation and Reboot\n\n"
@@ -17,11 +18,14 @@ continuing."
     read -p "Do you wish to continue? (Y|N)? "
     r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
     if [ "$r" == "Y" ]; then
-        mount_live
-        /usr/sbin/ovirt-config-boot /live
+        mount_live \
+        && /usr/sbin/ovirt-config-boot /live
+        rc=$?
         break
     elif [ "$r" == "N" ]; then
         printf "\nExiting back to the menu\n"
+        rc=1
         break
     fi
 done
+exit $rc
