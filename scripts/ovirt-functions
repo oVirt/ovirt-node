@@ -441,7 +441,7 @@ ovirt_safe_delete_config() {
 scrub() {
     for f in "$@"; do
         dd if=/dev/zero of="$f"
-    fi
+    done
 }
 
 # compat function to handle different udev versions
