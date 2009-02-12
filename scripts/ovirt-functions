@@ -359,6 +359,7 @@ EOF
 #   ovirt_store_config /etc/config /etc/config2 ...
 #   copy to /config and bind-mount back
 ovirt_store_config() {
+    rc=0
     if grep -q " /config ext3" /proc/mounts; then
         printf "storing to /config :\n"
         for f in "$@"; do
@@ -374,9 +375,13 @@ ovirt_store_config() {
             else
                 mkdir -p /config$(dirname $f)
                 cp -a $f /config$f \
-                && mount -n --bind /config$f $f \
-                || printf " Failed to persist\n"
-                printf " File persisted\n"
+                && mount -n --bind /config$f $f
+                if [ $? -ne 0 ]; then
+                    printf " Failed to persist\n"
+                    rc=1
+                else
+                    printf " File persisted\n"
+                fi
             fi
             # register in /config/files used by rc.sysinit
             if ! grep -q "^$f$" /config/files 2> /dev/null ; then
@@ -386,7 +391,9 @@ ovirt_store_config() {
         echo
     else
         printf "warning: persistent config storage not available\n"
+        rc=2
     fi
+    return $rc
 }
 
 # unmount bindmounted config files
