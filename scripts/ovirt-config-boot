@@ -42,13 +42,24 @@ ovirt_boot_setup() {
     fi
     mkdir -p /liveos
     # prepare Root partition update
-    lvrename HostVG RootBackup RootNew \
-    && mount /dev/HostVG/RootNew /liveos
+    candidate=RootNew
+    if [ -e /dev/HostVG/RootBackup ]; then
+        candidate=RootBackup
+    elif [ -e /dev/HostVG/RootUpdate ]; then
+        candidate=RootUpdate
+    fi
+    if [ $candidate = "RootNew" ]; then
+        umount /liveos
+    else
+        lvrename HostVG $candidate RootNew
+    fi
     rc=$?
     if [ $rc -ne 0 ]; then
       log "root partition not available."
+      log "$(lvdisplay -c)"
       return $rc
     fi
+    mount /dev/HostVG/RootNew /liveos
     # install oVirt Node image for local boot
     if [ -e "$live/syslinux" ]; then
       syslinux=syslinux
