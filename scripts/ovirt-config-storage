@@ -85,6 +85,24 @@ check_partition_sizes()
         printf "Required Space : $need_size MB\n\n"
     fi
 
+    # check if an existing HostVG exists on a device other than the target
+    for vg in $(pvdisplay -c); do
+	eval $(echo $vg | awk '{match($0, "^([^:]*):([^:]*)", data); print "device="data[1]" name="data[2]}')
+	if [ "$name" == "HostVG" -a "${device:0:8}" != "$DRIVE" ]; then
+	    udi=$(hal-find-by-property --key block.device --string $device)
+	    name=$(hal-get-property --udi $udi --key storage.serial)
+	    printf "\n"
+	    printf "There appears to already be an installation of oVirt on another device:\n"
+	    printf "\t$device ($name)\n"
+	    printf "We cannot proceed until either this device is removed from the system\n"
+	    printf "or until the volume group is removed.\n"
+	    printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
+	    printf "menu and then try to partition.\n"
+	    printf "\n"
+	    return 1
+	fi
+    done
+
     return 0
 }
 
