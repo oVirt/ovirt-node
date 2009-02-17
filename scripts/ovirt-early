@@ -125,6 +125,7 @@ start() {
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
     #   dns=server[,server]
+    #   ntp=server[,server]
     #   syslog=server[:port]
     #   collectd=server[:port]
     #   hostname=fqdn
@@ -184,6 +185,7 @@ start() {
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
     #   dns=server[,server]
+    #   ntp=server[,server]
     # static network configuration
     ip_address=
     ip_gateway=
@@ -192,6 +194,7 @@ start() {
     gateway=
     ipv6=
     dns=
+    ntp=
 
     # hostname=fqdn
     # hostname
@@ -307,6 +310,9 @@ start() {
             dns=*)
             dns=${i#dns=}
             ;;
+	    ntp=*)
+	    ntp=$(i#ntp=}
+	    ;;
             hostname=*)
             hostname=${i#hostname=}
             ;;
@@ -331,7 +337,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
     mount_config
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
