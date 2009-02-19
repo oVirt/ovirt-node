@@ -67,7 +67,7 @@ if [ -f $OVIRT_CONFIG_OUTPUT_FILE ]; then
     augtool $OVIRT_CONFIG_OUTPUT_FILE \
 	&& RESULT=0 || RESULT=1
     # FIXME do not store ifcfg-lo
-    if ls /etc/sysconfig/network-scripts/ifcfg* > /dev/null >2&1; then
+    if ls /etc/sysconfig/network-scripts/ifcfg* >/dev/null 2>/dev/null; then
 	ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
     fi
 fi
