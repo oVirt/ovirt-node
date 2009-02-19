@@ -140,6 +140,7 @@ cd -
 %{__install} -p -m0755 scripts/ovirt-config-password %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-setup %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-storage %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-uninstall %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-process-config %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-install-node-stateful %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-install-node-stateless %{buildroot}%{_sbindir}
@@ -201,7 +202,8 @@ install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-
 %{__ln_s} ../..%{_sbindir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-collectd %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"35_Collectd Setup"
-%{__ln_s} ../..%{_sbindir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Local install and reboot"
+%{__ln_s} ../..%{_sbindir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
+%{__ln_s} ../..%{_sbindir}/ovirt-config-uninstall %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Uninstall_node"
 
 
 %clean
@@ -275,6 +277,7 @@ fi
 %{_sbindir}/ovirt-config-password
 %{_sbindir}/ovirt-config-setup
 %{_sbindir}/ovirt-config-storage
+%{_sbindir}/ovirt-config-uninstall
 %{_sbindir}/ovirt-process-config
 %{_sbindir}/ovirt-install-node-stateless
 %{_sbindir}/gptsync

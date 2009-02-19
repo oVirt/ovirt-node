@@ -251,20 +251,7 @@ wipe_lvm_on_disk()
 {
     unmount_logging
     for vg in $(pvdisplay -c $DRIVE* 2>/dev/null|awk -F: '{print $2}'|sort -u); do
-        for d in $(grep $vg /proc/mounts|awk '{print $2}'); do
-            log "Unmounting $d"
-            umount $d
-        done
-        for d in $(grep $vg /proc/swaps|awk '{print $1}'); do
-            log "Turning off $d"
-            swapoff $d
-        done
-        for lv in $(lvdisplay -c $vg|awk -F: '{print $1}'); do
-            log "Removing $lv"
-            lvremove -f $lv
-        done
-        log "Removing $vg"
-        vgremove -f $vg
+	wipe_volume_group $vg
     done
 }
 
