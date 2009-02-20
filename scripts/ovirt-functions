@@ -285,16 +285,11 @@ mount_logging() {
 
     if [ -e /dev/HostVG/Logging ] ; then
         log "Mounting log partition"
-        #  backup the logs
-        if [ -e /var/log.bak ]; then
-            rm -rf /var/log.bak
-        fi
-        cp -av /var/log /var/log.bak
 
         mount /dev/HostVG/Logging /var/log
-        cp -av /var/log.bak/* /var/log
+        # save temporary log
+        cp /tmp/ovirt.log /var/log/ovirt.log-tmp
         restorecon -rv /var/log
-        rm -Rf /var/log.bak
         service rsyslog restart
 
         return 0
@@ -315,15 +310,8 @@ unmount_logging() {
     # plymouthd keeps /var/log/boot.log
     plymouth --quit
     plymouth --wait
-    if [ -e /var/log.bak ]; then
-        rm -rf /var/log.bak
-    fi
-    cp -av /var/log /var/log.bak
 
     umount /var/log
-    cp -av /var/log.bak/* /var/log
-    restorecon -rv /var/log
-    rm -Rf /var/log.bak
     service rsyslog start
 
     return 0
