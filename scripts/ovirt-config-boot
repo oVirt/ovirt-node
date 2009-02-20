@@ -42,18 +42,23 @@ ovirt_boot_setup() {
     fi
     mkdir -p /liveos
     # prepare Root partition update
-    candidate=RootNew
+    candidate=
     if [ -e /dev/HostVG/RootBackup ]; then
         candidate=RootBackup
     elif [ -e /dev/HostVG/RootUpdate ]; then
         candidate=RootUpdate
+    elif [ -e /dev/HostVG/RootNew ]; then
+        candidate=RootNew
     fi
-    if [ $candidate = "RootNew" ]; then
+    if [ -z "$candidate" ]; then
+        rc=1
+    elif [ "$candidate" = "RootNew" ]; then
         umount /liveos
+        rc=0
     else
         lvrename HostVG $candidate RootNew
+        rc=$?
     fi
-    rc=$?
     if [ $rc -ne 0 ]; then
       log "root partition not available."
       log "$(lvdisplay -c)"
@@ -154,12 +159,12 @@ EOF
     log "done."
 }
 
-start_log
 live=$1
 bootparams=$2
 doreboot=$3
 if [ -z "$live" -o "$live" = "-h" -o "$live" = "--help" ]; then
     echo "Usasge: $0 livecd_path bootparams reboot(yes/no)"
+    exit 1
 fi
 if [ -z "$bootparams" ]; then
     bootparams="$OVIRT_BOOTPARAMS"
@@ -168,6 +173,7 @@ if [ -z "$doreboot" ]; then
     doreboot="yes"
 fi
 
+start_log
 ovirt_boot_setup "$live" "$bootparams"
 rc=$?
 if [ $rc -eq 0 -a "$doreboot" = "yes" ]; then
