@@ -503,7 +503,7 @@ else
                 "Configure") do_configure ; break ;;
                 "Review")    do_review    ; break ;;
                 "Partition") do_confirm   ; break ;;
-                "Quit")      exit ;;
+                "Quit")      printf "\nExiting.\n"; exit ;;
             esac
         done
     done

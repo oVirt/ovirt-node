@@ -42,7 +42,7 @@ while true; do
                     clear;
                     {
                         if $CONFIG_DIR/*"$OPTION" ; then
-                            printf "\n$OPTION Completed Successfully\n\n"
+                            printf "\n"
                         else
                             printf "\nERROR: $OPTION FAILED. "
                             printf "See $OVIRT_LOGFILE\n\n"
