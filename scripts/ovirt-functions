@@ -277,7 +277,23 @@ mount_config() {
     fi
 }
 
+# stop any service which keeps /var/log busy
+# keep the list of services
+unmount_logging_services() {
+    # mapping command->service is lame, but works for most initscripts
+    services=
+    cd /etc/init.d
+    for prg in $(lsof -Fc +D /var/log|grep ^c|sort -u); do
+        srv=$(grep -l ${prg#c}$ *)
+        service $srv stop
+        services="$services $srv"
+    done
+    # debugging help
+    lsof +D /var/log
+}
+
 # mount logging partition
+# this only gets executed when disk is re-partitioned, HostVG/Logging is empty
 mount_logging() {
     if grep -q " /var/log ext3" /proc/mounts; then
         return 0
@@ -286,11 +302,23 @@ mount_logging() {
     if [ -e /dev/HostVG/Logging ] ; then
         log "Mounting log partition"
 
-        mount /dev/HostVG/Logging /var/log
+        # temporary mount-point
+        log2=$(mktemp -d)
+        mkdir -p $log2
+        mount /dev/HostVG/Logging $log2
+        unmount_logging_services
+        # save logs from tmpfs
+        cp -av /var/log/* $log2
         # save temporary log
-        cp /tmp/ovirt.log /var/log/ovirt.log-tmp
+        if [ -e /tmp/ovirt.log ]; then
+            cp /tmp/ovirt.log $log2/ovirt.log-tmp
+        fi
+        mount --move $log2 /var/log
+        rmdir $log2
         restorecon -rv /var/log
-        service rsyslog restart
+        for srv in $services; do
+            service $srv start
+        done
 
         return 0
     else
@@ -306,13 +334,19 @@ unmount_logging() {
     fi
 
     log "Unmounting log partition"
-    service rsyslog stop
     # plymouthd keeps /var/log/boot.log
     plymouth --quit
     plymouth --wait
+    unmount_logging_services
 
     umount /var/log
-    service rsyslog start
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        return $rc
+    fi
+    for srv in $services; do
+        service $srv start
+    done
 
     return 0
 }
