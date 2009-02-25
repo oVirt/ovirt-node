@@ -31,15 +31,26 @@ read -ep "Do you wish to continue and uninstall this node (Y/N)? "
 
 if [ "$REPLY" == "Y" -o "$REPLY" == "y" ]; then
     if [ -d /dev/HostVG ]; then
-	printf "\nUNINSTALLING NODE...\n\n"
+	log "Uninstalling node"
+	log "Detaching logging"
 	unmount_logging
+	log "Removing volume group"
 	wipe_volume_group "HostVG"
-	printf "\nDONE!\n"
+	partition=$(findfs LABEL=BOOT)
+	if [ -n "$partition" ]; then
+	    log "Unmounting boot partition"
+	    umount $partition
+	    log "Removing partitions"
+	    drive=$(echo $partition | awk '{ print substr($0, 1, length($0) - 1) }')
+	    parted -s $drive "rm 1"
+	    parted -s $drive "rm 2"
+	fi
+	printf "Finished uninstalling node."
     else
-	printf "\nThere is no installed node instance to remove.\n"
-	printf "\nAborting...\n"
-	return 1
+	log "There is no installed node instance to remove."
+	log "Aborting"
+	exit 1
     fi
 else
-    printf "\nABORTED!\n"
+    log "Aborted"
 fi
