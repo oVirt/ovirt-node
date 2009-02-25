@@ -64,7 +64,7 @@ start () {
             if [ -n "$KEYTAB" -a -n "$KEYTAB_FILE" ]; then
                 echo "Retrieving keytab: '$KEYTAB'"
 
-                wget -q "$KEYTAB" --output-document="$KEYTAB_FILE"
+                wget -q "$KEYTAB" --no-check-certificate --output-document="$KEYTAB_FILE"
             else
                 echo "No keytab to retrieve"
             fi

@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
       // (in particular, which DNS server to use to resolve, and which
       // domainname).  Until I come up with a good solution for that, I'll
       // have to leave this as-is.
-      system("wget -q http://192.168.50.2:80/ipa/config/krb5.ini -O /etc/krb5.conf");
+      system("wget -q --no-check-certificate http://192.168.50.2:80/ipa/config/krb5.ini -O /etc/krb5.conf");
       system("ovirt-awake start 192.168.50.2 12120 /etc/libvirt/krb5.tab");
     }
     else {

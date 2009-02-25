@@ -39,7 +39,7 @@ configure_from_network() {
                     cfgdb=$(mktemp)
                     get_mac_addresses
                     log "MACs to use: $macs"
-                    wget -O $cfgdb \
+                    wget -O $cfgdb --no-check-certificate \
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
                     if [ $? -eq 0 ]; then
                         log "Remote configuration bundle retrieved to $cfgdb"

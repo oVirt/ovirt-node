@@ -18,7 +18,7 @@ start() {
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
         krb5_conf=/etc/krb5.conf
         # FIXME this is IPA specific
-        wget -q \
+        wget -q --no-check-certificate \
             http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf.tmp
         if [ $? -ne 0 ]; then
             log "Failed to get $krb5_conf"; return 1
