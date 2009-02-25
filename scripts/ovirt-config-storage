@@ -289,7 +289,7 @@ perform_partitioning()
     log "Removing old LVM partitions"
     wipe_lvm_on_disk
 
-    # Exit upon any failure.
+    # begin critical section
     set -e
 
     # FIXME: save a backup copy, just in case?
@@ -381,6 +381,9 @@ perform_partitioning()
         mount_data
     fi
 
+    # end critical section
+    set +e
+
     log "Mounting config partition"
     if mount_config; then
         ovirt_store_config /etc/fstab
@@ -389,7 +392,6 @@ perform_partitioning()
     mount_logging
     log "Completed!"
 
-    set +e
     stop_log
 }
 
