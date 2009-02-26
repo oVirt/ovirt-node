@@ -1,3 +1,6 @@
+%define product_family oVirt Node
+%define beta Beta
+
 Summary:        The oVirt Node daemons/scripts
 Name:           ovirt-node
 Version:        @VERSION@
@@ -86,6 +89,14 @@ Conflicts:      redhat-artwork <= 5.0.5
 %description logos
 The ovirt-logos package contains various image files which can be
 used by the bootloader, anaconda, and other related tools.
+
+%package release
+Summary:	%{product_family} release file
+Group:		System Environment/Base
+Obsoletes:	redhat-release
+Provides:	redhat-release
+%description release
+%{product_family} release files.
 
 %package selinux
 Summary:        SELinux policy module supporting ovirt-node
@@ -191,6 +202,15 @@ mkdir -p %{buildroot}/usr/lib/anaconda-runtime
 install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-runtime
 # ovirt-logos
 
+# release files
+echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{buildroot}/etc/ovirt-release
+cp %{buildroot}/etc/ovirt-release %{buildroot}/etc/issue
+echo "Kernel \r on an \m (\l)" >> %{buildroot}/etc/issue
+cp %{buildroot}/etc/issue %{buildroot}/etc/issue.net
+echo >> %{buildroot}/etc/issue
+ln -s ovirt-release %{buildroot}/etc/redhat-release
+ln -s ovirt-release %{buildroot}/etc/system-release
+
 # ovirt-config-boot post-install hooks
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
 
@@ -251,6 +271,14 @@ if [ $1 -eq 0 ] ; then
     /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
   done
 fi
+
+%files release
+%defattr(-,root,root)
+%attr(0644,root,root) /etc/ovirt-release
+/etc/redhat-release
+/etc/system-release
+%config(noreplace) %attr(0644,root,root) /etc/issue
+%config(noreplace) %attr(0644,root,root) /etc/issue.net
 
 %files selinux
 %defattr(-,root,root,0755)
