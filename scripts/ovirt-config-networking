@@ -240,7 +240,7 @@ function setup_menu
     fi
 
     # Add virtio NICs that were possibly not detected by hal
-    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v "^br" | xargs)"
+    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v -E "^br|^bond" | xargs)"
     NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
 
     PS3="Please select an interface or configuration option: "
