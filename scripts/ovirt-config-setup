@@ -38,6 +38,7 @@ while true; do
             case "$OPTION" in
                 "$DEBUG_SHELL") clear; bash; break ;;
                 "$CONTINUE") exit 0 ;;
+                "") break ;;
                 *)
                     clear;
                     {
