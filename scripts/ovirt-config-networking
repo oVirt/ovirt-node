@@ -71,7 +71,7 @@ function configure_interface
             esac
 
             printf "\n"
-            read -ep "Enable IPv6 support ([S]tatic, [D]HCPv6, A[u]to, [N]o)? "
+            read -ep "Enable IPv6 support ([S]tatic, [D]HCPv6, A[u]to, [N]o, or [A]bort)? "
             case $REPLY in
                 S|s)
                     read -ep "IPv6 Address: "; IPADDR=$REPLY
