@@ -163,7 +163,18 @@ live=$1
 bootparams=$2
 doreboot=$3
 if [ -z "$live" -o "$live" = "-h" -o "$live" = "--help" ]; then
-    echo "Usasge: $0 livecd_path bootparams reboot(yes/no)"
+    cat <<EOF
+Usage: $0 [livecd_path] [bootparams] [reboot(yes/no)]
+       livecd_path - where livecd media is mounted,
+                     parent of LiveOS and isolinux folders
+                     default is /live
+
+       bootparams  - extra boot parameters like console=...
+                     default is "$OVIRT_BOOTPARAMS"
+
+       reboot      - reboot after install
+                     default is yes
+EOF
     exit 1
 fi
 if [ -z "$bootparams" ]; then
