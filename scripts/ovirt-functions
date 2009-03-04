@@ -92,6 +92,12 @@ is_auto_install() {
     fi
 }
 
+# return 0 if booted from local disk
+# return 1 if booted from other media
+is_booted_from_local_disk() {
+    grep -q /dev/HostVG/ /proc/cmdline
+}
+
 # was firstboot menu already shown?
 # state is stored in persistent config partition
 is_firstboot() {

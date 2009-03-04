@@ -15,6 +15,11 @@ die() { warn "$*"; exit 1; }
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
+# check that we're not booted from local storage; if so then exit with an error
+if is_booted_from_local_disk; then
+    die "You cannot configure storage on a running system. Please boot from CD/USB to configure local storage."
+fi
+
 default_overcommit=0.5
 
 default_boot_size=50
