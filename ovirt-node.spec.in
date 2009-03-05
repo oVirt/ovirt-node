@@ -223,7 +223,7 @@ ln -s ovirt-release %{buildroot}/etc/system-release
 %{__ln_s} ../..%{_sbindir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-collectd %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"35_Collectd Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
-%{__ln_s} ../..%{_sbindir}/ovirt-config-uninstall %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Uninstall_node"
+%{__ln_s} ../..%{_sbindir}/ovirt-config-uninstall %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Uninstall node"
 
 
 %clean
