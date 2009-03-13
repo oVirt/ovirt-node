@@ -26,12 +26,14 @@ ovirt_boot_setup() {
     local live=$1
     local bootparams=$2
     local disk
+    local disk2
     local partN=-1
     log "installing oVirt Node image."
     mount_boot
     # check that /boot mounted ok and find partition number for GRUB
     eval $(mount|awk '$3 == "/boot" {
         print "disk=" substr($1,1,length($1)-1);
+        print "disk2=" substr($1,1,length($1)-2);
         partN=substr($1,length($1),1); partN--;
         print "partN=" partN;
     }')
@@ -39,6 +41,10 @@ ovirt_boot_setup() {
     if [ $rc -ne 0 -o $partN -lt 0 ]; then
       log "boot partition not available."
       return 1
+    fi
+    if [ ! -e "$disk" ]; then
+        # e.g. c0d0p1
+        disk="$disk2"
     fi
     mkdir -p /liveos
     # prepare Root partition update

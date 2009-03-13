@@ -92,8 +92,14 @@ check_partition_sizes()
 
     # check if an existing HostVG exists on a device other than the target
     for vg in $(pvdisplay -c); do
-	eval $(echo $vg | awk '{match($0, "^([^:]*):([^:]*)", data); print "device="data[1]" name="data[2]}')
-	if [ "$name" == "HostVG" -a "${device:0:8}" != "$DRIVE" ]; then
+        device=
+        name=
+        eval $(echo $vg | awk -F: '
+/'$DRIVE'/ !~ $1 && $2=="HostVG" {
+    gsub("^ *","",$1);
+    print "device="$1" name="$2
+}')
+	if [ "$name" == "HostVG" ]; then
 	    udi=$(hal-find-by-property --key block.device --string $device)
 	    name=$(hal-get-property --udi $udi --key storage.serial)
 	    printf "\n"
@@ -324,18 +330,32 @@ perform_partitioning()
         gptsync $DRIVE
     fi
 
+    partboot=${DRIVE}1
+    partpv=${DRIVE}2
+    if [ ! -e "$partpv" ]; then
+        # e.g. /dev/cciss/c0d0p2
+        partboot=${DRIVE}p1
+        partpv=${DRIVE}p2
+    fi
     log "Creating physical volume"
-    dd if=/dev/zero of=${DRIVE}2 bs=1024k count=1
-    pvcreate -f "${DRIVE}2"
-    pvck -v
+    if [ ! -e "$partpv" ]; then
+        log "$partpv is not available!"
+        exit 1
+    fi
+    dd if=/dev/zero of=${partpv} bs=1024k count=1
+    pvcreate -f "${partpv}"
     log "Creating volume group"
-    vgcreate /dev/HostVG "${DRIVE}2"
+    vgcreate /dev/HostVG "${partpv}"
 
     log "Creating boot filesystem"
-    mke2fs -j "${DRIVE}1" -L "BOOT"
-    tune2fs -c 0 -i 0 "${DRIVE}1"
+    if [ ! -e "$partboot" ]; then
+        log "$partboot is not available!"
+        exit 1
+    fi
+    mke2fs -j "${partboot}" -L "BOOT"
+    tune2fs -c 0 -i 0 "${partboot}"
     mkdir -p /dev/disk/by-label
-    ln -snf "${DRIVE}1" /dev/disk/by-label/BOOT
+    ln -snf "${partboot}" /dev/disk/by-label/BOOT
 
     if [ "$SWAP_SIZE" -gt 0 ]; then
         log "Creating swap partition"
