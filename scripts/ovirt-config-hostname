@@ -15,7 +15,9 @@ function set_hostname {
     augtool <<EOF
 set /files$HOSTNAME_FILE/HOSTNAME "$1"
 EOF
+    rc=$?
     stop_log
+    return $rc
 }
 
 function remove_hostname {
@@ -23,7 +25,9 @@ function remove_hostname {
     augtool <<EOF
 rm /files$HOSTNAME_FILE/HOSTNAME
 EOF
+    rc=$?
     stop_log
+    return $rc
 }
 
 function prompt_user {
@@ -31,20 +35,28 @@ function prompt_user {
     read -p "What is the hostname for this node? "
 
     if [ -n "$REPLY" ]; then
-        set_hostname "$REPLY"
-        printf "\nHostname has been set\n"
+        if set_hostname $REPLY; then
+            printf "\nHostname has been set\n"
+        else
+            printf "\nSetting hostname failed\n"
+            return 1
+        fi
     else
         printf "\n"
         read -p "Enter (Y|y) to blank out the hostname, or (N|n) to skip. "
         case $REPLY in
             Y|y)
-                remove_hostname
-                printf "\nHostname was removed.\n"
-                return
+                if remove_hostname; then
+                    printf "\nHostname was removed.\n"
+                    return 0
+                else
+                    printf "\nRemoving hostname failed\n"
+                    return 1
+                fi
                 ;;
             N|n)
                 printf "\nNo changes made.\n"
-                return
+                return 0
                 ;;
             *) ;;
         esac
@@ -54,7 +66,11 @@ function prompt_user {
 # AUTO for auto-install
 if [ "$1" = "AUTO" ]; then
     if [ -n "$OVIRT_HOSTNAME" ]; then
-        set_hostname "$OVIRT_HOSTNAME"
+        if set_hostname $OVIRT_HOSTNAME; then
+            printf "\nHostname has been set\n"
+        else
+            printf "\nSetting hostname failed\n"
+        fi
     else
         printf "\nHostname not provided. Skipping.\n"
     fi
