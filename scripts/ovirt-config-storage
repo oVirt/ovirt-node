@@ -91,29 +91,25 @@ check_partition_sizes()
     fi
 
     # check if an existing HostVG exists on a device other than the target
-    for vg in $(pvdisplay -c); do
-        device=
-        name=
-        eval $(echo $vg | awk -F: '
-/'$DRIVE'/ !~ $1 && $2=="HostVG" {
-    gsub("^ *","",$1);
-    print "device="$1" name="$2
-}')
-	if [ "$name" == "HostVG" ]; then
-	    udi=$(hal-find-by-property --key block.device --string $device)
-	    printf "\n"
-	    printf "There appears to already be an installation of oVirt on another device:\n"
-	    printf "\t$device ($(basename "$udi"))\n"
-	    printf "We cannot proceed until either this device is removed from the system\n"
-	    printf "or until the volume group is removed.\n"
-	    printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
-	    printf "menu and then try to partition.\n"
-	    printf "\n"
-	    return 1
-	fi
-    done
+    devices="$(pvs -o pv_name,vg_name --noheadings | \
+        grep "HostVG"|grep -v $DRIVE|awk '{ print $1 }')"
+    rc=0
+    if [ -n "$devices" ]; then
+        printf "\n"
+        printf "There appears to already be an installation on another device:\n"
+        for device in $devices; do
+            udi=$(hal-find-by-property --key block.device --string $device)
+            printf "\t$device ($(basename "$udi"))\n"
+        done
+        printf "We cannot proceed until either device is removed from the system\n"
+        printf "or until the HostVG volume group is removed.\n"
+        printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
+        printf "menu and then try to partition.\n"
+        printf "\n"
+        rc=1
+    fi
 
-    return 0
+    return $rc
 }
 
 # Find a usable/selected storage device.
@@ -202,7 +198,7 @@ do_configure()
         eval "min_size=\$$min_size_var"
 
         while true; do
-	    printf "\n"
+            printf "\n"
             read -ep "Change $part partition size. (Def. ${size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? "
             mb_input=$REPLY
             test -z "$mb_input" && mb_input=$size
@@ -278,8 +274,8 @@ EOF
 wipe_lvm_on_disk()
 {
     unmount_logging
-    for vg in $(pvdisplay -c $DRIVE* 2>/dev/null|awk -F: '{print $2}'|sort -u); do
-	wipe_volume_group $vg
+    for vg in $(pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|sort -u); do
+        wipe_volume_group $vg
     done
 }
 
@@ -342,7 +338,7 @@ perform_partitioning()
         exit 1
     fi
     dd if=/dev/zero of=${partpv} bs=1024k count=1
-    pvcreate -f "${partpv}"
+    pvcreate -ff -y "${partpv}"
     log "Creating volume group"
     vgcreate /dev/HostVG "${partpv}"
 
@@ -506,9 +502,10 @@ fi
 
 if [ "$1" == "AUTO" ]; then
     # do not format if HostVG exists on selected disk...
-    existingVG=$(pvdisplay -c ${DRIVE}2 2>/dev/null|awk -F: '{print $2}')
+    pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|grep -q -m1 "HostVG"
+    existingHostVG=$?
     # ... unless overridden by ovirt_firstboot parameter
-    if is_firstboot || [ "$existingVG" != "HostVG" ]; then
+    if is_firstboot || [ $existingHostVG -ne 0 ]; then
         if check_partition_sizes; then
             printf "Partitioning hard disk..."
             perform_partitioning

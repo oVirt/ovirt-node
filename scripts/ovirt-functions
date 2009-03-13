@@ -132,10 +132,6 @@ wipe_volume_group()
         log "Turning off $d"
         swapoff $d
     done
-    for lv in $(lvdisplay -c $vg|awk -F: '{print $1}'); do
-        log "Removing $lv"
-        lvremove -f $lv
-    done
     log "Removing $vg"
     vgremove -f $vg
 }
@@ -521,6 +517,42 @@ add_if_not_exist() {
 
 is_numeric() {
     printf "$1" | grep -q -E '^[0-9]+$'
+}
+
+# LVM2 tools wrapper
+# to avoid warnings like:
+# File descriptor 6 (pipe:[20637]) leaked on lvrename invocation.
+# File descriptor 7 (pipe:[20637]) leaked on lvrename invocation.
+lvrename() {
+    /sbin/lvrename "$@" 6>&- 7>&-
+}
+
+pvs() {
+    /sbin/pvs "$@" 6>&- 7>&-
+}
+
+pvcreate() {
+    /sbin/pvcreate "$@" 6>&- 7>&-
+}
+
+pvremove() {
+    /sbin/pvremove "$@" 6>&- 7>&-
+}
+
+vgcreate() {
+    /sbin/vgcreate "$@" 6>&- 7>&-
+}
+
+vgremove() {
+    /sbin/vgremove "$@" 6>&- 7>&-
+}
+
+lvcreate() {
+    /sbin/lvcreate "$@" 6>&- 7>&-
+}
+
+lvremove() {
+    /sbin/lvremove "$@" 6>&- 7>&-
 }
 
 # reboot wrapper
