@@ -55,7 +55,7 @@ get_selected_drive_size()
     fi
 
     SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
-    log "Selected Device: $DRIVE ($SPACE MB)"
+    log "Selected Device: $DRIVE ($SPACE MB) $(basename "$udi")"
     stop_log
 }
 
@@ -101,10 +101,9 @@ check_partition_sizes()
 }')
 	if [ "$name" == "HostVG" ]; then
 	    udi=$(hal-find-by-property --key block.device --string $device)
-	    name=$(hal-get-property --udi $udi --key storage.serial)
 	    printf "\n"
 	    printf "There appears to already be an installation of oVirt on another device:\n"
-	    printf "\t$device ($name)\n"
+	    printf "\t$device ($(basename "$udi"))\n"
 	    printf "We cannot proceed until either this device is removed from the system\n"
 	    printf "or until the volume group is removed.\n"
 	    printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
