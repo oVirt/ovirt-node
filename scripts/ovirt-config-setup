@@ -2,6 +2,7 @@
 #
 # Entry point for configuring an oVirt node when running in standalone mode.
 
+
 . /etc/init.d/ovirt-functions
 
 # symlinked scripts for menu options, link name is menu label
@@ -36,13 +37,14 @@ OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 
 # reset tty, otherwise serial console is broken
 reset > /dev/null
-clear
 
 while true; do
     PS3="Please select an option: "
 
     while true ; do
-        printf "\n\n oVirt Node Stand-alone Configuration\n\n" >&2
+        clear
+        grep -v ^Kernel /etc/issue
+        printf "\n\n Stand-alone Configuration\n\n" >&2
 
         select OPTION in "${OPTIONS[@]}"
         do
@@ -51,8 +53,8 @@ while true; do
                 "$CONTINUE") exit 0 ;;
                 "") break ;;
                 *)
-                    clear;
                     {
+                        printf "\n\n"
                         if $CONFIG_DIR/*"$OPTION" ; then
                             printf "\n"
                         else

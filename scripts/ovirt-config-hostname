@@ -75,7 +75,7 @@ if [ "$1" = "AUTO" ]; then
         printf "\nHostname not provided. Skipping.\n"
     fi
 else
-    printf "\n\n oVirt Node Hostname Configuration\n\n"
+    printf "\n\n Hostname Configuration\n\n"
     prompt_user
 fi
 

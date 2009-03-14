@@ -254,7 +254,7 @@ else
     setup_menu
 
     while true; do
-        printf "\n\n oVirt Node Networking Configuration\n\n" >&2
+        printf "\n\n Networking Configuration\n\n" >&2
 
         select NIC in $NICS "DNS" "NTP" "Save & Exit"
         do

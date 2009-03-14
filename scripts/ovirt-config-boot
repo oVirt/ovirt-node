@@ -28,7 +28,7 @@ ovirt_boot_setup() {
     local disk
     local disk2
     local partN=-1
-    log "installing oVirt Node image."
+    log "installing the image."
     mount_boot
     # check that /boot mounted ok and find partition number for GRUB
     eval $(mount|awk '$3 == "/boot" {

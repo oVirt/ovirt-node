@@ -518,7 +518,7 @@ else
     PS3="Choose an option: "
 
     while true; do
-        printf "\n\n oVirt Node Storage Configuration\n\n" >&2
+        printf "\n\n Storage Configuration\n\n" >&2
 
         select OPTION in $OPTIONS
         do
