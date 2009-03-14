@@ -37,12 +37,12 @@ OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 
 # reset tty, otherwise serial console is broken
 reset > /dev/null
+clear
 
 while true; do
     PS3="Please select an option: "
 
     while true ; do
-        clear
         grep -v ^Kernel /etc/issue
         printf "\n\n Stand-alone Configuration\n\n" >&2
 
