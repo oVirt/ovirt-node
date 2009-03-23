@@ -1,9 +1,3 @@
-#!/bin/sh
-
-/usr/sbin/logrotate /etc/logrotate.d/ovirt-logrotate.conf
-
-EXITVALUE=$?
-if [ $EXITVALUE != 0 ]; then
-    /usr/bin/logger -t logrotate "ALERT exited abnormally with [$EXITVALUE]"
-fi
-exit $EXITVALUE
+# Run each log rotation every 10 minutes
+*/10 * * * * root /usr/sbin/logrotate /etc/logrotate.d/ovirt-logrotate.conf
+*/10 * * * * root /usr/sbin/logrotate /etc/logrotate.d/syslog

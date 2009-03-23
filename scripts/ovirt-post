@@ -11,20 +11,45 @@
 . /etc/init.d/ovirt-functions
 
 start() {
-    # persist selected configuration files
-    ovirt_store_config \
-      /etc/krb5.conf \
-      /etc/libvirt/krb5.tab \
-      /etc/ssh/ssh_host*_key*
+    BACKUP=$(mktemp)
+    ISSUE=/etc/issue
+    ISSUE_NET=/etc/issue.net
+    egrep -v "[Vv]irtualization hardware" $ISSUE > $BACKUP
+    cp -f $BACKUP $ISSUE
+    hwvirt=$(virsh capabilities)
+    if [[ $hwvirt =~ kvm ]]; then
+	log "Hardware virtualization detected"
+    else
+	log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	log "!!! Hardware Virtualization Is Unavailable !!!"
+	log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+	echo "Virtualization hardware is unavailable." >> $ISSUE
+
+	flags=$(cat /proc/cpuinfo | grep "^flags")
+	if [[ $flags =~ vmx ]] || [[ $flags =~ svm ]]; then
+	    echo "(Virtualization hardware was detected but is disabled)" >> $ISSUE
+	else
+	    echo "(No virtualization hardware was detected on this system)" >> $ISSUE
+	fi
+    fi
+    cp -f $ISSUE $ISSUE_NET
 
     if is_standalone; then
-        exit 0
+        return 0
     fi
+
+    # persist selected configuration files
+    ovirt_store_config \
+        /etc/krb5.conf \
+        /etc/libvirt/krb5.tab \
+        /etc/ssh/ssh_host*_key*
+
     find_srv identify tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
         ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
     else
-        echo "skipping ovirt-identify-node, oVirt registration service not available"
+        log "skipping ovirt-identify-node, oVirt registration service not available"
     fi
 }
 
@@ -33,10 +58,12 @@ case "$1" in
         printf "Starting ovirt-post: "
 
         {
+            log "Starting ovirt-post"
             start
+            log "Completed ovirt-post"
         } >> $OVIRT_LOGFILE 2>&1
 
-        test $? -eq 0 &&  success || failure
+        test $? == 0 && success || failure
         echo
         ;;
     *)

@@ -1,43 +1,76 @@
 #!/bin/bash
 #
-# ovirt-config-boot - configure local boot disk partition
+# ovirt-config-boot - configure local boot/root disk partitions
 
 # SYNOPSIS
-# ovirt-config-boot livecd_path bootparams
-#
-#       boot_disk   - boot disk device e.g. /dev/sda
+# ovirt-config-boot livecd_path bootparams reboot
 #
 #       livecd_path - where livecd media is mounted,
 #                     parent of LiveOS and isolinux folders
+#                     default is /live
 #
 #       bootparams  - extra boot parameters like console=...
+#                     default is $OVIRT_BOOTPARAMS
 #
+#       reboot      - reboot after install
+#                     default is yes
 
 # Source functions library
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+trap '__st=$?; stop_log; exit $__st' 0
+trap 'exit $?' 1 2 13 15
 
-# local_boot_install livecd_path bootparams
-#  livecd_path -livecd media
-#  bootparams - extra boot parameters like console=...
-#
-#  copy oVirt Node image to the local LVM /dev/HostVG
 ovirt_boot_setup() {
-    local disk=$1
-    local live=$2
-    local bootparams=$3
-    printf "installing oVirt Node image ... "
+    local live=$1
+    local bootparams=$2
+    local disk
+    local disk2
+    local partN=-1
+    log "installing the image."
     mount_boot
     # check that /boot mounted ok and find partition number for GRUB
-    BOOT=$(mount|awk '$3 == "/boot" {print $1}')
-    BOOT=$(( ${BOOT#$disk} - 1 ))
+    eval $(mount|awk '$3 == "/boot" {
+        print "disk=" substr($1,1,length($1)-1);
+        print "disk2=" substr($1,1,length($1)-2);
+        partN=substr($1,length($1),1); partN--;
+        print "partN=" partN;
+    }')
     rc=$?
-    if [ $rc -ne 0 -o $BOOT -lt 0 ]; then
-      printf "boot partition not available\n"
+    if [ $rc -ne 0 -o $partN -lt 0 ]; then
+      log "boot partition not available."
+      return 1
+    fi
+    if [ ! -e "$disk" ]; then
+        # e.g. c0d0p1
+        disk="$disk2"
+    fi
+    mkdir -p /liveos
+    # prepare Root partition update
+    candidate=
+    if [ -e /dev/HostVG/RootBackup ]; then
+        candidate=RootBackup
+    elif [ -e /dev/HostVG/RootUpdate ]; then
+        candidate=RootUpdate
+    elif [ -e /dev/HostVG/RootNew ]; then
+        candidate=RootNew
+    fi
+    if [ -z "$candidate" ]; then
+        rc=1
+    elif [ "$candidate" = "RootNew" ]; then
+        umount /liveos
+        rc=0
+    else
+        lvrename HostVG $candidate RootNew
+        rc=$?
+    fi
+    if [ $rc -ne 0 ]; then
+      log "root partition not available."
+      log "$(lvdisplay -c)"
       return $rc
     fi
-    mount_liveos
+    mount /dev/HostVG/RootNew /liveos
     # install oVirt Node image for local boot
     if [ -e "$live/syslinux" ]; then
       syslinux=syslinux
@@ -54,20 +87,24 @@ ovirt_boot_setup() {
     && cp -p $live/$syslinux/vmlinuz0 /boot
     rc=$?
     if [ $rc -ne 0 ]; then
-      printf "image copy failed\n"
+      log "image copy failed."
       return $rc
     fi
     # append LVM support to the livecd initramfs
     tmpdir=$(mktemp -d)
     cd $tmpdir
     gzip -dc $live/$syslinux/initrd0.img |
-        cpio -id init sbin/real-init 2> /dev/null
+        cpio -id init sbin/real-init
     init_script=init
     if [ -e sbin/real-init ]; then
         # Fedora 10 mkliveinitrd
         init_script=sbin/real-init
     fi
-    sed -i '/^\/sbin\/udev.*settle/ a \echo Scanning logical volumes\
+    sed -i '/^\/sbin\/udev.*settle/ a \
+echo SCSI wait for scans\
+/sbin/modprobe scsi_wait_scan\
+/sbin/modprobe -r scsi_wait_scan\
+echo Scanning logical volumes\
 lvm vgscan --ignorelockingfailure\
 echo Activating logical volumes\
 lvm vgchange -ay --ignorelockingfailure HostVG \
@@ -94,38 +131,73 @@ lvm vgchange -ay --ignorelockingfailure HostVG \
         gzip -9 |
         cat $live/$syslinux/initrd0.img - > /boot/initrd0.img
 
+    version=$(rpm -q --qf '%{version}' ovirt-node)
+    release=$(rpm -q --qf '%{release}' ovirt-node)
+    # reorder tty0 to allow both serial and phys console after installation
+    bootparams="ro root=/dev/HostVG/Root roottypefs=ext3 console=tty0 \
+                $(echo $bootparams | sed s/console=tty0//g)"
     cat > /boot/grub/grub.conf << EOF
 default=0
 timeout=5
 hiddenmenu
-title oVirt Node
-    root (hd0,$BOOT)
-    kernel /vmlinuz0 ro root=/dev/HostVG/Root roottypefs=ext3 liveimg $bootparams
+title oVirt Node (${version}-${release})
+    root (hd0,$partN)
+    kernel /vmlinuz0 $bootparams
     initrd /initrd0.img
 EOF
     echo "(hd0) $disk" > /boot/grub/device.map
     ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 /boot/grub )
-    grub --device-map=/boot/grub/device.map > /dev/null <<EOF
-root (hd0,$BOOT)
+    grub --device-map=/boot/grub/device.map <<EOF
+root (hd0,$partN)
 setup --prefix=/grub (hd0)
 EOF
     rc=$?
     if [ $rc -ne 0 ]; then
-        printf "boot loader install failed\n"
+        log "boot loader install failed."
         return $rc
     fi
     umount /liveos
     umount /boot
+    # mark new Root ready to go, reboot() in ovirt-function switches it to active
+    lvrename HostVG RootNew RootUpdate
 
-    # caller decides when to reboot
     rm -rf $tmpdir
-    printf "done.\n"
-    # avoid reboot loops using Cobbler PXE only once
-    # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
-    # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
-    #   -O /dev/null
+    log "done."
 }
 
+live=$1
+bootparams=$2
+doreboot=$3
+if [ -z "$live" -o "$live" = "-h" -o "$live" = "--help" ]; then
+    cat <<EOF
+Usage: $0 [livecd_path] [bootparams] [reboot(yes/no)]
+       livecd_path - where livecd media is mounted,
+                     parent of LiveOS and isolinux folders
+                     default is /live
 
-ovirt_boot_setup "$1" "$2" "$3"
+       bootparams  - extra boot parameters like console=...
+                     default is "$OVIRT_BOOTPARAMS"
 
+       reboot      - reboot after install
+                     default is yes
+EOF
+    exit 1
+fi
+if [ -z "$bootparams" ]; then
+    bootparams="$OVIRT_BOOTPARAMS"
+fi
+if [ -z "$doreboot" ]; then
+    doreboot="yes"
+fi
+
+start_log
+ovirt_boot_setup "$live" "$bootparams"
+rc=$?
+if [ $rc -eq 0 -a "$doreboot" = "yes" ]; then
+    disable_firstboot
+    ovirt_store_firstboot_config
+    stop_log
+    reboot
+fi
+stop_log
+exit $rc

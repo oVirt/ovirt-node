@@ -1,6 +1,8 @@
 # -*-Shell-script-*-
 
 OVIRT_LOGFILE=/var/log/ovirt.log
+OVIRT_TMP_LOGFILE=/tmp/ovirt.log
+_log_status=1
 
 # label of the oVirt partition
 OVIRT_LABEL=OVIRT
@@ -13,6 +15,57 @@ fi
 OVIRT_STANDALONE=${OVIRT_STANDALONE:-0}
 
 OVIRT_BACKUP_DIR=/var/lib/ovirt-backup
+
+OVIRT_CONFIG_FILES="\
+ /etc/sysconfig/network-scripts/ifcfg-*         \
+ /etc/rsyslog.conf                              \
+ /etc/libvirt/libvirtd.conf                     \
+ /etc/sasl2/libvirt.conf                        \
+ /etc/libvirt/passwd.db                         \
+ /etc/passwd                                    \
+ /etc/shadow                                    \
+ /etc/ssh/ssh_host*_key*                        \
+ /etc/default/ovirt                             \
+ /etc/sysconfig/network                         \
+ /etc/collectd.conf                             \
+ /etc/logrotate.d/ovirt-logrotate.conf
+"
+
+# Save stdout to fd 6 and stderr to fd 7.  Redirect normal stdout/stderr
+# to log file
+start_log() {
+    if [ "$_log_status" = 1 ]; then
+        exec 6>&1
+        exec 7>&2
+        exec 1>>$OVIRT_TMP_LOGFILE
+        exec 2>&1
+        _log_status=0
+    fi
+}
+
+# Restore stdout/stderr from fd 6 and 7, respectively.  Close fd 6 and 7
+stop_log() {
+    if [ "$_log_status" != 1 ]; then
+        exec 1>&6 6>&-
+        exec 2>&7 7>&-
+        _log_status=1
+    fi
+}
+
+log() {
+    printf "$(date +'%b %d %H:%M:%S') "
+
+    if [ "$_log_status" = 1 ]; then
+        echo "$@"
+    else
+        echo "$@" >&6
+    fi
+}
+
+ovirt_store_firstboot_config() {
+    # persist config for standalone
+    ovirt_store_config $OVIRT_CONFIG_FILES
+}
 
 # return 1 if oVirt Node is running in standalone mode
 # return 0 if oVirt Node is managed by the oVirt Server
@@ -39,6 +92,12 @@ is_auto_install() {
     fi
 }
 
+# return 0 if booted from local disk
+# return 1 if booted from other media
+is_booted_from_local_disk() {
+    grep -q /dev/HostVG/ /proc/cmdline
+}
+
 # was firstboot menu already shown?
 # state is stored in persistent config partition
 is_firstboot() {
@@ -47,6 +106,34 @@ is_firstboot() {
     else
         return 1
     fi
+}
+
+disable_firstboot() {
+    if mount_config; then
+        augtool <<EOF
+set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT 0
+set /files$OVIRT_DEFAULTS/OVIRT_INIT '""'
+set /files$OVIRT_DEFAULTS/OVIRT_LOCAL_BOOT 0
+EOF
+    fi
+}
+
+# Destroys a particular volume group and its logical volumes.
+#
+wipe_volume_group()
+{
+    vg=$1
+
+    for d in $(grep $vg /proc/mounts|awk '{print $2}'); do
+        log "Unmounting $d"
+        umount $d
+    done
+    for d in $(grep $vg /proc/swaps|awk '{print $1}'); do
+        log "Turning off $d"
+        swapoff $d
+    done
+    log "Removing $vg"
+    vgremove -f $vg
 }
 
 # find_srv SERVICE PROTO
@@ -63,13 +150,26 @@ is_firstboot() {
 find_srv()
 {
     local dnsreply
-    dnsreply=$(dig +short -t srv _$1._$2.$(dnsdomainname))
-    if [ $? -eq 0 ]; then
-        set _ $dnsreply; shift
-        SRV_HOST=$4; SRV_PORT=$3
-    else
-        SRV_HOST=; SRV_PORT=
+    local domain=$(dnsdomainname 2>/dev/null)
+    if [ "$domain" = "localdomain" ]; then
+        domain=""
     fi
+    # FIXME dig +search does not seem to work with -t srv
+    # dnsreply=$(dig +short +search -t srv _$1._$2)
+    # This is workaround:
+    local search=$(grep search /etc/resolv.conf)
+    search=${search#search }
+    for d in $domain $search; do
+        dnsreply=$(dig +short -t srv _$1._$2.$d)
+        rc=$?
+        if [ $rc -eq 0 ]; then
+            set _ $dnsreply; shift
+            SRV_HOST=$4; SRV_PORT=$3
+            return 0
+        fi
+    done
+    SRV_HOST=; SRV_PORT=
+    return 1
 }
 
 die()
@@ -121,6 +221,7 @@ ptr() {
 # mount livecd media
 # e.g. CD /dev/sr0, USB /dev/sda1,
 # PXE /dev/loop0 (loopback ISO)
+# not available when booted from local disk installation
 mount_live() {
     if grep -q " /live " /proc/mounts; then
         return 0
@@ -131,7 +232,7 @@ mount_live() {
       live_dev=/dev/loop0
     fi
     mkdir -p /live
-    mount $live_dev /live
+    mount -r $live_dev /live || mount $live_dev /live
 }
 
 # mount boot partition
@@ -144,25 +245,16 @@ mount_boot() {
     mount /dev/disk/by-label/BOOT /boot
 }
 
-# mount liveos partition
-# LiveOS/
-mount_liveos() {
-    if grep -q " /liveos " /proc/mounts; then
-        return 0
-    fi
-    mkdir -p /liveos
-    mount /dev/HostVG/Root /liveos
-}
-
 # mount config partition
 # /config for persistance
 mount_config() {
-    if grep -q " /config " /proc/mounts; then
-        return 0
-    fi
-    mkdir -p /config
-    mount /dev/HostVG/Config /config
-    if grep -q " /config " /proc/mounts; then
+    # Only try to mount /config if the persistent storage exists
+    if [ -e /dev/HostVG/Config ] ; then
+        mkdir -p /config
+        if ! grep -q " /config ext3 " /proc/mounts; then
+            mount /dev/HostVG/Config /config || return 1
+        fi
+
         # optional config embedded in the livecd image
         if [ -e /live/config ]; then
             cp -rv --update /live/config/* /config
@@ -170,7 +262,7 @@ mount_config() {
         # bind mount all persisted configs to rootfs
         for f in $(find /config -type f); do
             target=${f#/config}
-            if grep -q " $target " /proc/mounts ; then
+            if grep -q " $target ext3" /proc/mounts ; then
                 # skip if already bind-mounted
                 true
             else
@@ -179,55 +271,215 @@ mount_config() {
                 mount -n --bind $f "$target"
             fi
         done
+
+        return 0
     else
         # /config is not available
         return 1
     fi
 }
 
-# unmount bindmounted config files
-#       umount_config /etc/config /etc/config2 ...
-#
-# Use before running sed -i or augeas against the bindmounted file,
-# Otherwise save fails: https://fedorahosted.org/augeas/ticket/32
-# After file is replaced, call ovirt_store_config /etc/config /etc/config2 ...
-# to bindmount the config file again.
-#
-umount_config() {
-    if grep -q " /config " /proc/mounts; then
-        for f in "$@"; do
-            if grep -q " $f " /proc/mounts ; then
-                umount -n $f
-                # refresh rootfs copy
-                cp /config$f $f
-            fi
-        done
+# stop any service which keeps /var/log busy
+# keep the list of services
+unmount_logging_services() {
+    # mapping command->service is lame, but works for most initscripts
+    services=
+    cd /etc/init.d
+    for prg in $(lsof -Fc +D /var/log|grep ^c|sort -u); do
+        srv=$(grep -l ${prg#c}$ *)
+        service $srv stop
+        services="$services $srv"
+    done
+    # debugging help
+    lsof +D /var/log
+}
+
+# mount logging partition
+# this only gets executed when disk is re-partitioned, HostVG/Logging is empty
+mount_logging() {
+    if grep -q " /var/log ext3" /proc/mounts; then
+        return 0
     fi
+
+    if [ -e /dev/HostVG/Logging ] ; then
+        log "Mounting log partition"
+
+        # temporary mount-point
+        log2=$(mktemp -d)
+        mkdir -p $log2
+        mount /dev/HostVG/Logging $log2
+        unmount_logging_services
+        # save logs from tmpfs
+        cp -av /var/log/* $log2
+        # save temporary log
+        if [ -e /tmp/ovirt.log ]; then
+            cp /tmp/ovirt.log $log2/ovirt.log-tmp
+        fi
+        mount --move $log2 /var/log
+        rmdir $log2
+        restorecon -rv /var/log
+        for srv in $services; do
+            service $srv start
+        done
+
+        return 0
+    else
+        # /var/log is not available
+        printf "\nThe logging partion has not been created. Please create it at the main menu.\n"
+        return 1
+    fi
+}
+
+unmount_logging() {
+    if ! grep -q " /var/log ext3" /proc/mounts; then
+        return 0
+    fi
+
+    log "Unmounting log partition"
+    # plymouthd keeps /var/log/boot.log
+    plymouth --quit
+    plymouth --wait
+    unmount_logging_services
+
+    umount /var/log
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        return $rc
+    fi
+    for srv in $services; do
+        service $srv start
+    done
+
+    return 0
+}
+
+# mount data partition
+mount_data() {
+    if grep -q " /data ext3" /proc/mounts; then
+        return 0
+    fi
+
+    if [ -e /dev/HostVG/Data ] ; then
+        mkdir -p /data
+        mount /data
+        mkdir -p /data/images
+        mount /var/lib/libvirt/images
+        restorecon -rv /var/lib/libvirt/images
+
+        return 0
+    else
+        # /data is not available
+        printf "\nThe data partion has not been created. Please create it at the main menu.\n"
+        return 1
+    fi
+}
+
+# augtool wrapper
+#   workaround for bind-mounted files
+#   see https://fedorahosted.org/augeas/ticket/32
+# augtool [tmpaugscript]
+# script MUST NOT include save, it is added by the wrapper
+# with copy_if_rename_fails flag set
+# 'tmpaugscript' is removed after successfull execution
+# without a parameter, augtool commands are expected on standard input
+augtool() {
+    local tmpaug=$1
+    if [ -z "$1" ]; then
+        # read from stdin
+        tmpaug=$(mktemp)
+        cat > $tmpaug
+    fi
+    cat >> $tmpaug <<EOF
+clear /augeas/save/copy_if_rename_fails
+save
+EOF
+    /usr/bin/augtool < $tmpaug > /dev/null
+    rc=$?
+    if [ $rc -eq 0 ]; then
+        rm $tmpaug
+    fi
+    return $rc
 }
 
 # persist configuration to /config
 #   ovirt_store_config /etc/config /etc/config2 ...
 #   copy to /config and bind-mount back
 ovirt_store_config() {
-    if grep -q " /config " /proc/mounts; then
-        printf "storing to /config :"
+    rc=0
+    if grep -q " /config ext3" /proc/mounts; then
+        printf "storing to /config :\n"
         for f in "$@"; do
-            printf " $f"
+            printf "$f"
+            # skip if file does not exist or is empty
+            if [ ! -s $f ]; then
+                printf " Skipping, file does not exist or is empty\n"
+                continue
+            fi
             # skip if already bind-mounted
-            if grep -q " $f " /proc/mounts ; then
-                printf " already persisted\n"
+            if grep -q " $f ext3" /proc/mounts ; then
+                printf " Skipping, file already persisted\n"
             else
                 mkdir -p /config$(dirname $f)
                 cp -a $f /config$f \
-                && mount -n --bind /config$f $f \
-                || printf " failed to persist\n"
+                && mount -n --bind /config$f $f
+                if [ $? -ne 0 ]; then
+                    printf " Failed to persist\n"
+                    rc=1
+                else
+                    printf " File persisted\n"
+                fi
+            fi
+            # register in /config/files used by rc.sysinit
+            if ! grep -q "^$f$" /config/files 2> /dev/null ; then
+                printf "$f\n" >> /config/files
             fi
         done
         echo
     else
         printf "warning: persistent config storage not available\n"
+        rc=2
+    fi
+    return $rc
+}
+
+# unmount bindmounted config files
+#       unmount_config /etc/config /etc/config2 ...
+#
+# Use before running commands which fail on bindmounted files.
+# After the file is replaced, call ovirt_store_config /etc/config ...
+# to bindmount the config file again.
+#
+unmount_config() {
+    if grep -q " /config ext3" /proc/mounts; then
+        for f in "$@"; do
+            if grep -q " $f ext3" /proc/mounts ; then
+                umount -n $f
+                # refresh rootfs copy
+                cp -a /config$f $f
+            fi
+        done
     fi
 }
+
+# ovirt_safe_delete_config
+#       ovirt_safe_delete_config /etc/config /etc/config2 ...
+#
+# Use to *permanently* remove persisted configuration file.
+# WARNING: file is shredded and removed
+#
+ovirt_safe_delete_config() {
+    if grep -q " /config ext3" /proc/mounts; then
+        for f in "$@"; do
+            if grep -q " $f ext3" /proc/mounts ; then
+                umount -n $f
+            fi
+            # unregister in /config/files used by rc.sysinit
+            sed --copy -i "\|^$f$|d" /config/files
+            shred -u $f /config$f
+        done
+    fi
+}
+
 
 # compat function to handle different udev versions
 udev_info() {
@@ -262,3 +514,70 @@ add_if_not_exist() {
     grep -qE "^[[:space:]]*$string($|#|[[:space:]])" "$file" \
         || echo "$string" >> "$file"
 }
+
+is_numeric() {
+    printf "$1" | grep -q -E '^[0-9]+$'
+}
+
+# LVM2 tools wrapper
+# to avoid warnings like:
+# File descriptor 6 (pipe:[20637]) leaked on lvrename invocation.
+# File descriptor 7 (pipe:[20637]) leaked on lvrename invocation.
+lvrename() {
+    /sbin/lvrename "$@" 6>&- 7>&-
+}
+
+pvs() {
+    /sbin/pvs "$@" 6>&- 7>&-
+}
+
+pvcreate() {
+    /sbin/pvcreate "$@" 6>&- 7>&-
+}
+
+pvremove() {
+    /sbin/pvremove "$@" 6>&- 7>&-
+}
+
+vgcreate() {
+    /sbin/vgcreate "$@" 6>&- 7>&-
+}
+
+vgremove() {
+    /sbin/vgremove "$@" 6>&- 7>&-
+}
+
+lvcreate() {
+    /sbin/lvcreate "$@" 6>&- 7>&-
+}
+
+lvremove() {
+    /sbin/lvremove "$@" 6>&- 7>&-
+}
+
+# reboot wrapper
+#   cleanup before reboot
+reboot() {
+    # setup new Root if update is prepared
+    if [ -e /dev/HostVG/RootUpdate ]; then
+        lvrename HostVG Root RootBackup
+        lvrename HostVG RootUpdate Root
+    fi
+    # run post-install hooks
+    # e.g. to avoid reboot loops using Cobbler PXE only once
+    # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
+    # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
+    #   -O /dev/null
+    for hook in $(ls /etc/ovirt-config-boot.d/* 2>/dev/null); do
+        $hook
+    done
+    /sbin/reboot
+}
+
+# execute a function if called as a script, e.g.
+#   ovirt-functions ovirt_store_config /etc/hosts
+
+if [ "$(basename "$0")" = "ovirt-functions" ]; then
+    "$@"
+fi
+

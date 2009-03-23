@@ -30,11 +30,15 @@ EXTRA_DIST =			\
   scripts/ovirt			\
   scripts/ovirt-awake		\
   scripts/ovirt-config-boot  \
+  scripts/ovirt-config-boot-wrapper  \
+  scripts/ovirt-config-collectd  \
+  scripts/ovirt-config-hostname  \
   scripts/ovirt-config-logging  \
   scripts/ovirt-config-networking \
   scripts/ovirt-config-password \
   scripts/ovirt-config-setup    \
   scripts/ovirt-config-storage  \
+  scripts/ovirt-config-uninstall \
   scripts/ovirt-early		\
   scripts/ovirt-firstboot       \
   scripts/ovirt-functions	\
@@ -43,6 +47,7 @@ EXTRA_DIST =			\
   scripts/ovirt-post		\
   scripts/ovirt-process-config  \
   scripts/ovirt-uninstall-node-stateful	\
+  kinit/ovirt-kinit		\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf
 

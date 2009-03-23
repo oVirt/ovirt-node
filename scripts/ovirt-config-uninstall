@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# ovirt-config-uninstall - destroys an installed copy of the oVirt node
+
+# SYNOPSIS
+# Destroys the HostVG volume group and logical volumes.
+#
+
+. /etc/init.d/ovirt-functions
+
+ME=$(basename "$0")
+warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
+die() { warn "$*"; exit 1; }
+
+trap '__st=$?; stop_log; exit $__st' 0
+trap 'exit $?' 1 2 13 15
+
+cat <<EOF
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!                                                                           !!
+!! WARNING !! WARNING !! WARNING !! WARNING !! WARNING !! WARNING !! WARNING !!
+!!                                                                           !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+   If you proceed, you will DESTROY any existing data relating to the oVirt
+   installation on this machine.
+
+EOF
+
+read -ep "Do you wish to continue and uninstall this node (Y/N)? "
+
+if [ "$REPLY" == "Y" -o "$REPLY" == "y" ]; then
+    if [ -d /dev/HostVG ]; then
+	log "Uninstalling node"
+	log "Detaching logging"
+	unmount_logging
+	log "Removing volume group"
+	wipe_volume_group "HostVG"
+	partition=$(findfs LABEL=BOOT)
+	if [ -n "$partition" ]; then
+	    log "Unmounting boot partition"
+	    umount $partition
+	    log "Removing partitions"
+	    drive=$(echo $partition | awk '{ print substr($0, 1, length($0) - 1) }')
+	    parted -s $drive "rm 1"
+	    parted -s $drive "rm 2"
+	fi
+	printf "Finished uninstalling node."
+    else
+	log "There is no installed node instance to remove."
+	log "Aborting"
+	exit 1
+    fi
+else
+    log "Aborted"
+fi

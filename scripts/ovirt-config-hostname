@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# Configures the hostname file based on kernel cmdline or user prompt
+# Source functions library
+. /etc/init.d/functions
+. /etc/init.d/ovirt-functions
+
+trap '__st=$?; stop_log; exit $__st' 0
+trap 'exit $?' 1 2 13 15
+
+HOSTNAME_FILE="/etc/sysconfig/network"
+
+function set_hostname {
+    start_log
+    augtool <<EOF
+set /files$HOSTNAME_FILE/HOSTNAME "$1"
+EOF
+    rc=$?
+    stop_log
+    return $rc
+}
+
+function remove_hostname {
+    start_log
+    augtool <<EOF
+rm /files$HOSTNAME_FILE/HOSTNAME
+EOF
+    rc=$?
+    stop_log
+    return $rc
+}
+
+function prompt_user {
+    printf "\n"
+    read -p "What is the hostname for this node? "
+
+    if [ -n "$REPLY" ]; then
+        if set_hostname $REPLY; then
+            printf "\nHostname has been set\n"
+        else
+            printf "\nSetting hostname failed\n"
+            return 1
+        fi
+    else
+        printf "\n"
+        read -p "Enter (Y|y) to blank out the hostname, or (N|n) to skip. "
+        case $REPLY in
+            Y|y)
+                if remove_hostname; then
+                    printf "\nHostname was removed.\n"
+                    return 0
+                else
+                    printf "\nRemoving hostname failed\n"
+                    return 1
+                fi
+                ;;
+            N|n)
+                printf "\nNo changes made.\n"
+                return 0
+                ;;
+            *) ;;
+        esac
+    fi
+}
+
+# AUTO for auto-install
+if [ "$1" = "AUTO" ]; then
+    if [ -n "$OVIRT_HOSTNAME" ]; then
+        if set_hostname $OVIRT_HOSTNAME; then
+            printf "\nHostname has been set\n"
+        else
+            printf "\nSetting hostname failed\n"
+        fi
+    else
+        printf "\nHostname not provided. Skipping.\n"
+    fi
+else
+    printf "\n\n Hostname Configuration\n\n"
+    prompt_user
+fi
+

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+/usr/kerberos/bin/kinit -k -t /etc/libvirt/krb5.tab qpidd/`hostname`
+
+EXITVALUE=$?
+if [ $EXITVALUE != 0 ]; then
+    /usr/bin/logger -t kinit "ALERT kinit failed abnormally with [$EXITVALUE]"
+fi
+exit $EXITVALUE
+

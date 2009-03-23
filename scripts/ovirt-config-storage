@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # To automate the partitioning, pass in the specific fields in this order
-# ovirt-config-storage [swap size] [boot size] [root size] [logging size]
+# ovirt-config-storage [swap size] [boot size] [root size] [logging size] [data size]
 #
 # All sizes are in megabytes
 #
@@ -12,32 +12,104 @@ ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
 die() { warn "$*"; exit 1; }
 
+trap '__st=$?; stop_log; exit $__st' 0
+trap 'exit $?' 1 2 13 15
+
+# check that we're not booted from local storage; if so then exit with an error
+if is_booted_from_local_disk; then
+    die "You cannot configure storage on a running system. Please boot from CD/USB to configure local storage."
+fi
+
+default_overcommit=0.5
+
 default_boot_size=50
 default_root_size=256
 default_config_size=5
 default_logging_size=256
+# -1 indicates data partition should use remaining disk
+default_data_size=-1
 
-check_partition_sizes()
-{
-    # FIXME: use this function before performing any partitioning, auto or not
-    :
-    # Perform some sanity checks.  E.g.,
-    # What if DATA_SIZE ends up zero or negative?
-    # What if any of those partition sizes is smaller than
-    # the minimum size for an ext3 partition?  Diagnose it here
-    # or just let the mke2fs failure suffice.
-}
+boot_min_size=50
+root_min_size=256
+config_min_size=5
+logging_min_size=5
+data_min_size=5
+swap_min_size=5
 
 get_selected_drive_size()
 {
+    start_log
+    local size=
     local udi=$(hal-find-by-property --key block.device --string $DRIVE)
     if [ -z "$udi" ]; then
-        warn "ERROR: selected storage device is not available"
-        return 1
+        # If hal didn't find the device, it could be a virtio block device
+        # In this case, use sfdisk -s to get the size
+        size=$(sfdisk -s $DRIVE)
+        size=$(echo "scale=0; $size * 1024" | bc -l)
+    else
+        size=$(hal-get-property --udi "$udi" --key storage.size)
+        if [ $size -eq 0 ]; then
+            # disk is probably hot-swappable, use different HAL key
+            size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
+        fi
     fi
-    size=$(hal-get-property --udi "$udi" --key storage.size)
+
     SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
-    echo "selected device: $DRIVE ($SPACE MB)"
+    log "Selected Device: $DRIVE ($SPACE MB) $(basename "$udi")"
+    stop_log
+}
+
+check_partition_sizes()
+{
+    local disk_size need_size
+
+    local min_data_size=$DATA_SIZE
+    if [ "$DATA_SIZE" = -1 ]; then
+        min_data_size=5
+    fi
+
+    printf "\n"
+    get_selected_drive_size
+    disk_size=$SPACE
+    need_size=$(echo "scale=0;" \
+                     "$BOOT_SIZE + $SWAP_SIZE + $ROOT_SIZE * 2" \
+                     "+ $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
+
+    if [ $need_size -gt $disk_size ]; then
+        local gap_size=$(echo "scale=0; $need_size-$disk_size;" | bc -l)
+        printf "\n"
+        printf "=============================================================\n"
+        printf "The target storage device is too small for the desired sizes:\n"
+        printf " Size of target storage device: $disk_size MB\n"
+        printf " Total storage size to be used: $need_size MB\n"
+        printf "\n"
+        printf "You need an addition $gap_size MB of storage.\n"
+        printf "\n"
+        return 1
+    else
+        printf "Required Space : $need_size MB\n\n"
+    fi
+
+    # check if an existing HostVG exists on a device other than the target
+    devices="$(pvs -o pv_name,vg_name --noheadings | \
+        grep "HostVG"|grep -v $DRIVE|awk '{ print $1 }')"
+    rc=0
+    if [ -n "$devices" ]; then
+        printf "\n"
+        printf "There appears to already be an installation on another device:\n"
+        for device in $devices; do
+            udi=$(hal-find-by-property --key block.device --string $device)
+            printf "\t$device ($(basename "$udi"))\n"
+        done
+        printf "We cannot proceed until either device is removed from the system\n"
+        printf "or until the HostVG volume group is removed.\n"
+        printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
+        printf "menu and then try to partition.\n"
+        printf "\n"
+        rc=1
+    fi
+
+    return $rc
 }
 
 # Find a usable/selected storage device.
@@ -71,15 +143,20 @@ get_dev_name()
                 " skipping"; continue;;
         esac
         test -z "$devices" \
-            && devices=$block_dev \
+            && devices="$block_dev" \
             || devices="$devices $block_dev"
     done
 
+    # FIXME: workaround for detecting virtio block devices
+    devices="$devices $(ls /dev/vd? 2> /dev/null | xargs)"
+    devices=$(echo $devices | tr ' ' '\n' | sort -u | xargs)
+
+    local num_devices=$(echo "$devices" | wc -w)
     # If there's only one device, use it.
-    case $devices in
-        '') warn "ERROR: found no usable block device"; return 1;;
-        *' '*) ;; # found more than one
-        *) echo "$devices"; return 0;; # just one
+    case $num_devices in
+        0) warn "ERROR: found no usable block device"; return 1;;
+        1) echo "$devices"; return 0;;
+        *) ;; # found more than one
     esac
 
     # There are two or more; make the user choose.
@@ -96,30 +173,68 @@ get_dev_name()
 do_configure()
 {
     local name_and_size
-    DRIVE=$(get_dev_name) || exit 1
+    DRIVE=$(get_dev_name) || return 0
     get_selected_drive_size
 
-    for i in boot swap root config logging ; do
-        uc=$(echo $i|tr '[[:lower:]]' '[[:upper:]]')
-        var=${uc}_SIZE
-        eval "size=\$$var"
-        read -ep "Change $i partition size (Currently $size MB)? "
-        r=$REPLY
-        test -z "$r" && r=$size
-        if [[ $r =~ ^[0-9]+$ ]] && [[ $r -ge 0 ]]; then
-            eval "$var=$r"
-        else
-            printf "invalid $i size: '$r' retaining $size MB.\n"
+    printf "\n\nPlease configure storage partitions.\n\n"
+    printf "* Enter partition sizes in MB.\n"
+    printf "* A value of 0 indicates the partition should be disabled.\n"
+    printf "* If the partition is enabled, it will have a minimum valid size.\n"
+    printf "* Size remaining value is approximate due to cylinder rounding\n"
+    printf "  during partitioning.\n"
+    printf "* For the Data partition, a size of -1 indicates that the\n"
+    printf "  partition should use up the remaining space on the disk.\n\n"
+
+    local space_left=$SPACE
+    for part in boot swap root config logging data ; do
+        part_regexp="^0$"
+        if [ "$part" = "data" ]; then
+            part_regexp="^\-1|0$"
         fi
+        uc=$(echo $part|tr '[[:lower:]]' '[[:upper:]]')
+        size_var=${uc}_SIZE
+        eval "size=\$$size_var"
+        min_size_var=${part}_min_size
+        eval "min_size=\$$min_size_var"
+
+        while true; do
+            printf "\n"
+            read -ep "Change $part partition size. (Def. ${size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? "
+            mb_input=$REPLY
+            test -z "$mb_input" && mb_input=$size
+            local size_used=0
+            if [[ $mb_input =~ ^-*[0-9]+$ ]]; then
+                if [[ $mb_input -ge $min_size || $mb_input =~ $part_regexp ]] \
+                    && [[ $mb_input -le $space_left ]] ; then
+                    eval "$size_var=$mb_input"
+                    size_used=$mb_input
+                    break;
+                else
+                    printf "invalid $part size: $mb_input.  "
+                    printf "Does not fall into specified range.\n"
+                fi
+            else
+                printf "invalid $part size: '$mb_input'.\n"
+            fi
+        done
+        space_left=$(echo "scale=0;$space_left - $size_used" | bc -l)
     done
+
+    if ! check_partition_sizes; then
+        printf "Please try partitioning again.\n"
+        DRIVE=
+        return 1
+    fi
+
     # save input variables
-    augtool <<EOF > /dev/null
+    augtool <<EOF
+set /files$OVIRT_DEFAULTS/OVIRT_INIT $DRIVE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_BOOT_SIZE $BOOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_SWAP_SIZE $SWAP_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_ROOT_SIZE $ROOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_CONFIG_SIZE $CONFIG_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_LOGGING_SIZE $LOGGING_SIZE
-save
+set /files$OVIRT_DEFAULTS/OVIRT_VOL_DATA_SIZE $DATA_SIZE
 EOF
 }
 
@@ -130,6 +245,13 @@ do_review()
         return
     fi
 
+    local data_size_display="$DATA_SIZE MB"
+    if [ "$DATA_SIZE" = -1 ]; then
+        local remaining_mb=$(( $SPACE - $BOOT_SIZE - $SWAP_SIZE \
+                - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
+        data_size_display="$remaining_mb MB"
+    fi
+
     cat <<EOF
 
 The local disk will be repartitioned as follows:
@@ -138,9 +260,10 @@ The local disk will be repartitioned as follows:
       Total storage available: $SPACE MB
           Boot partition size: $BOOT_SIZE MB
           Swap partition size: $SWAP_SIZE MB
-  Installation partition size: $ROOT_SIZE MB
+  Installation partition size: $ROOT_SIZE * 2 MB
  Configuration partition size: $CONFIG_SIZE MB
        Logging partition size: $LOGGING_SIZE MB
+          Data partition size: $data_size_display
 
 EOF
 }
@@ -150,14 +273,9 @@ EOF
 # - remove LVM volumes and groups
 wipe_lvm_on_disk()
 {
-    for vg in $(pvdisplay -c $DRIVE* 2>/dev/null|awk -F: '{print $2}'|sort -u); do
-        for d in $(grep $vg /proc/mounts|awk '{print $2}'); do
-            umount $d
-        done
-        for lv in $(lvdisplay -c $vg|awk -F: '{print $1}'); do
-            lvremove -f $lv
-        done
-        vgremove -f $vg
+    unmount_logging
+    for vg in $(pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|sort -u); do
+        wipe_volume_group $vg
     done
 }
 
@@ -168,72 +286,133 @@ perform_partitioning()
         return
     fi
 
-    printf "Preparing local storage. Please wait..."
+    start_log
+    log "Starting partitioning of $DRIVE"
 
-    LOG=/var/log/ovirt-partition.log
-    {
+    log "Saving parameters"
+    unmount_config /etc/default/ovirt
+
+    log "Removing old LVM partitions"
     wipe_lvm_on_disk
 
-    # Exit upon any failure.
+    # begin critical section
     set -e
 
     # FIXME: save a backup copy, just in case?
+    log "Wiping old boot sector"
     dd if=/dev/zero of=$DRIVE bs=1024K count=1
     blockdev --rereadpt $DRIVE
     partprobe -s $DRIVE
 
-    if [ "$BOOT_SIZE" -lt 10 ]; then
-        # ensure minimal BOOT partition
-        BOOT_SIZE=10
-    fi
-    parted $DRIVE -s "mklabel gpt"
-    parted $DRIVE -s "mkpartfs primary ext2 0M ${BOOT_SIZE}M"
-    parted $DRIVE -s "mkpart primary ext2 ${BOOT_SIZE}M ${SPACE}M"
+    MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
+    local boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
+    log "Labeling Drive"
+    parted $DRIVE -s "mklabel ${LABEL_TYPE}"
+    log "Creating boot partition"
+    parted $DRIVE -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+    log "Creating LVM partition"
+    parted $DRIVE -s "mkpart primary ext2 ${boot_size_si}M -1"
+    log "Toggling boot on"
     parted $DRIVE -s "set 1 boot on"
+    log "Toggling LVM on"
     parted $DRIVE -s "set 2 lvm on"
     parted $DRIVE -s "print"
     udevadm settle 2> /dev/null || udevsettle
+
     # sync GPT to the legacy MBR partitions
-    gptsync $DRIVE
+    if [ "gpt" == "$LABEL_TYPE" ]; then
+        log "Running gptsync to create legacy mbr"
+        gptsync $DRIVE
+    fi
 
-    pvcreate "${DRIVE}2"
-    pvck
-    vgcreate /dev/HostVG "${DRIVE}2"
+    partboot=${DRIVE}1
+    partpv=${DRIVE}2
+    if [ ! -e "$partpv" ]; then
+        # e.g. /dev/cciss/c0d0p2
+        partboot=${DRIVE}p1
+        partpv=${DRIVE}p2
+    fi
+    log "Creating physical volume"
+    if [ ! -e "$partpv" ]; then
+        log "$partpv is not available!"
+        exit 1
+    fi
+    dd if=/dev/zero of=${partpv} bs=1024k count=1
+    pvcreate -ff -y "${partpv}"
+    log "Creating volume group"
+    vgcreate /dev/HostVG "${partpv}"
 
-    mke2fs -T ext3 "${DRIVE}1"         -L "BOOT"
-    tune2fs -c 0 -i 0 "${DRIVE}1"
+    log "Creating boot filesystem"
+    if [ ! -e "$partboot" ]; then
+        log "$partboot is not available!"
+        exit 1
+    fi
+    mke2fs -j "${partboot}" -L "BOOT"
+    tune2fs -c 0 -i 0 "${partboot}"
     mkdir -p /dev/disk/by-label
-    ln -snf "${DRIVE}1" /dev/disk/by-label/BOOT
+    ln -snf "${partboot}" /dev/disk/by-label/BOOT
 
     if [ "$SWAP_SIZE" -gt 0 ]; then
-        lvcreate --name Swap    --size ${SWAP_SIZE}M    /dev/HostVG
+        log "Creating swap partition"
+        lvcreate --name Swap --size ${SWAP_SIZE}M /dev/HostVG
         mkswap -L "SWAP" /dev/HostVG/Swap
+        echo "/dev/HostVG/Swap swap swap defaults 0 0" >> /etc/fstab
     fi
     if [ "$ROOT_SIZE" -gt 0 ]; then
-        lvcreate --name Root    --size ${ROOT_SIZE}M    /dev/HostVG
-        mke2fs -T ext3 /dev/HostVG/Root    -L "ROOT"
+        log "Creating root and root backup partitions"
+        lvcreate --name Root --size ${ROOT_SIZE}M /dev/HostVG
+        mke2fs -j /dev/HostVG/Root -L "ROOT"
         tune2fs -c 0 -i 0 /dev/HostVG/Root
+        lvcreate --name RootBackup --size ${ROOT_SIZE}M /dev/HostVG
+        mke2fs -j /dev/HostVG/RootBackup -L "ROOT2"
+        tune2fs -c 0 -i 0 /dev/HostVG/RootBackup
     fi
     if [ "$CONFIG_SIZE" -gt 0 ]; then
-        lvcreate --name Config  --size ${CONFIG_SIZE}M  /dev/HostVG
-        mke2fs -T ext3 /dev/HostVG/Config  -L "CONFIG"
+        log "Creating config partition"
+        lvcreate --name Config --size ${CONFIG_SIZE}M /dev/HostVG
+        mke2fs -j /dev/HostVG/Config -L "CONFIG"
         tune2fs -c 0 -i 0 /dev/HostVG/Config
     fi
     if [ "$LOGGING_SIZE" -gt 0 ]; then
+        log "Creating log partition"
         lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
-        mke2fs -T ext3 /dev/HostVG/Logging -L "LOGGING"
+        mke2fs -j /dev/HostVG/Logging -L "LOGGING"
         tune2fs -c 0 -i 0 /dev/HostVG/Logging
+        echo "/dev/HostVG/Logging /var/log ext3 defaults 0 0" >> /etc/fstab
     fi
-    lvcreate --name Data    -l 100%FREE             /dev/HostVG
-    mke2fs -T ext3 /dev/HostVG/Data    -L "DATA"
-    tune2fs -c 0 -i 0 /dev/HostVG/Data
-    } 2>&1 | tee $LOG
 
-    if [ $? -eq 0 ]; then
-        printf "Completed!\n\n"
-    else
-        printf "FAILED! See $LOG\n\n"
+    local use_data=1
+    if [ "$DATA_SIZE" -eq -1 ]; then
+        log "Creating data partition with remaining free space"
+        lvcreate --name Data -l 100%FREE /dev/HostVG
+        use_data=0
+    elif [ "$DATA_SIZE" -gt 0 ]; then
+        log "Creating data partition"
+        lvcreate --name Data --size ${DATA_SIZE}M /dev/HostVG
+        use_data=0
     fi
+
+    if [ "$use_data" = 0 ]; then
+        mke2fs -j /dev/HostVG/Data -L "DATA"
+        tune2fs -c 0 -i 0 /dev/HostVG/Data
+        echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
+        echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
+        log "Mounting data partition"
+        mount_data
+    fi
+
+    # end critical section
+    set +e
+
+    log "Mounting config partition"
+    if mount_config; then
+        ovirt_store_config /etc/fstab
+    fi
+
+    mount_logging
+    log "Completed!"
+
+    stop_log
 }
 
 do_confirm()
@@ -253,8 +432,9 @@ do_confirm()
           "$w8" \
           "$wb$sp$w" \
           "$wb$sp$w" \
-          "$wb    If you proceed, this will destroy all data on your local" \
-          "$wb    system, and your hard disk will be irreversably reconfigured" \
+          "$wb    If you proceed, this will destroy all data on   $w" \
+          "$wb    your local system, and your hard disk will be   $w" \
+          "$wb    irreversably reconfigured                       $w" \
           "$wb$sp$w" \
           "$wb$sp$w" \
         "$w8" \
@@ -263,8 +443,10 @@ do_confirm()
         read -e
         case $REPLY in
             Y|y)
-                check_partition_sizes
-                perform_partitioning
+                if check_partition_sizes; then
+                    perform_partitioning
+                    exit 0
+                fi
                 break
                 ;;
             N|n)  return ;;
@@ -273,18 +455,37 @@ do_confirm()
     done
 }
 
-MEM_SIZE=$(cat /proc/meminfo | awk '/MemTotal:/ { print $2 }')
-case $MEM_SIZE in
+MEM_SIZE_MB=$(awk '/MemTotal:/ { print $2 }' /proc/meminfo)
+case $MEM_SIZE_MB in
     ''|*[^0-9]*) die failed to get system memory size;;
 esac
+MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
 
-MEM_SIZE=$(echo "scale=0; m=($MEM_SIZE / 1024 * 2); if (m < 2048) { m } else { 2048 }" | bc -l)
-SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$MEM_SIZE}
+overcommit=${OVIRT_OVERCOMMIT:-$default_overcommit}
+# we multiply the overcommit coefficient by 10 then divide the
+# product by 10 to avoid decimals in the result
+OVERCOMMIT_SWAP_SIZE=$(echo "scale=0; (${MEM_SIZE_MB} * (${overcommit} * 10))/10;" | bc -l)
 
+# add to the swap the amounts from http://kbase.redhat.com/faq/docs/DOC-15252
+MEM_SIZE_GB=$(echo "scale=0; $MEM_SIZE_MB/1024;" | bc -l)
+if [ $MEM_SIZE_GB -le 4 ]; then
+    BASE_SWAP_SIZE=2048
+elif [ $MEM_SIZE_GB -le 16 ]; then
+    BASE_SWAP_SIZE=4096
+elif [ $MEM_SIZE_GB -le 64 ]; then
+    BASE_SWAP_SIZE=8192
+else
+    BASE_SWAP_SIZE=16384
+fi
+
+CALC_SWAP_SIZE=$(echo "scale=0; ${BASE_SWAP_SIZE} + ${OVERCOMMIT_SWAP_SIZE};" | bc -l)
+
+SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$CALC_SWAP_SIZE}
 BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
 ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-$default_root_size}
 CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
 LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-$default_logging_size}
+DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use the drive selected with 'ovirt_init' boot parameter
@@ -292,15 +493,32 @@ if [ -n "$OVIRT_INIT" ]; then
     get_selected_drive_size
 fi
 
-if [ "$1" == "AUTO" ]; then
-    check_partition_sizes
-    printf "Partitioning hard disk..."
-    perform_partitioning
+# if the node is Fedora then use GPT, otherwise use MBR
+if [ -f /etc/fedora-release ]; then
+    LABEL_TYPE="gpt"
 else
-    while true; do
+    LABEL_TYPE="msdos"
+fi
 
-        OPTIONS="Configure Review Partition Quit"
-        PS3="Choose an option: "
+if [ "$1" == "AUTO" ]; then
+    # do not format if HostVG exists on selected disk...
+    pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|grep -q -m1 "HostVG"
+    existingHostVG=$?
+    # ... unless overridden by ovirt_firstboot parameter
+    if is_firstboot || [ $existingHostVG -ne 0 ]; then
+        if check_partition_sizes; then
+            printf "Partitioning hard disk..."
+            perform_partitioning
+        fi
+    else
+        log "Skip disk partitioning, HostVG exists"
+    fi
+else
+    OPTIONS="Configure Review Partition Quit"
+    PS3="Choose an option: "
+
+    while true; do
+        printf "\n\n Storage Configuration\n\n" >&2
 
         select OPTION in $OPTIONS
         do
@@ -308,7 +526,7 @@ else
                 "Configure") do_configure ; break ;;
                 "Review")    do_review    ; break ;;
                 "Partition") do_confirm   ; break ;;
-                "Quit")      exit ;;
+                "Quit")      printf "\nExiting.\n"; exit ;;
             esac
         done
     done

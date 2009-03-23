@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# Wrapper function to make sure the user wishes to continue before
+# rebooting the system
+
+. /etc/init.d/ovirt-functions
+
+rc=0
+while true; do
+    printf "\n\n Local Installation and Reboot\n\n"
+
+    printf "\nThis option will exit the menu, and require a reboot. \n\
+Please ensure that you have configured the local storage \n\
+and networking correctly on the previous menu before \n\
+continuing."
+    printf "\n\n"
+    read -p "Do you wish to continue (Y/n)? "
+    r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
+    if [ "$r" == "Y" ]; then
+        mount_live \
+        && /usr/sbin/ovirt-config-boot /live
+        rc=$?
+        break
+    elif [ "$r" == "N" ]; then
+        printf "\nExiting back to the menu\n"
+        rc=1
+        break
+    fi
+done
+exit $rc

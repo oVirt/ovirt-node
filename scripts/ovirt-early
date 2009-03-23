@@ -21,46 +21,36 @@ get_mac_addresses() {
 configure_from_network() {
     DEVICE=$1
     if [ -n "$DEVICE" ]; then
-        echo "Configuring network Using interface $DEVICE"
+        log "Configuring network Using interface $DEVICE"
         # setup temporary interface to retrieve configuration
         echo "network --device $DEVICE --bootproto dhcp" | nash
         if [ $? -eq 0 ]; then
             # from network-scripts/ifup-post
             IPADDR=$(LC_ALL=C ip -o -4 addr ls dev ${DEVICE} | awk '{ print $4 ; exit }')
-            echo "Interface brought up with $IPADDR"
+            log "Interface brought up with $IPADDR"
             eval $(ipcalc --silent --hostname ${IPADDR} ; echo "status=$?")
             if [ "$status" = "0" ]; then
                 hostname $HOSTNAME
-                echo "Hostname resolved to $HOSTNAME"
+                log "Hostname resolved to $HOSTNAME"
                 # retrieve remote config
                 find_srv ovirt tcp
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-                    echo "oVirt Server found at: $SRV_HOST:$SRV_PORT"
+                    log "oVirt Server found at: $SRV_HOST:$SRV_PORT"
                     cfgdb=$(mktemp)
                     get_mac_addresses
-                    echo "MACs to use: $macs"
-                    wget -O $cfgdb \
+                    log "MACs to use: $macs"
+                    wget -O $cfgdb --no-check-certificate \
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
                     if [ $? -eq 0 ]; then
-                        echo "Remote configuration bundle retrieved to $cfgdb"
+                        log "Remote configuration bundle retrieved to $cfgdb"
                         ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
-                        if [ -f $AUGTOOL_CONFIG ]; then
-                            echo "Loading remote config"
-                            # avoid bindmount issues with augeas
-                            umount_config /etc/sysconfig/network-scripts/ifcfg-eth*
-                            augtool < $AUGTOOL_CONFIG \
-                                && echo "Remote config applied" \
-                                || echo "Failed applying remote config"
-                        fi
-                        if ls /etc/sysconfig/network-scripts/ifcfg-eth* > /dev/null 2>&1; then
-                            echo "Network interfaces created from remote config"
-                            ovirt_store_config /etc/sysconfig/network-scripts/ifcfg-eth*
-                            return
-                        else
-                            echo "Remote config contained no network interfaces"
-                        fi
+			if [ $? -eq 0 ]; then
+			    log "Remote configuration retrieved and applied"
+			else
+			    log "Failure to retrieve or apply remote configuration"
+			fi
                     else
-                        echo "Failed to retrieve configuration bundle"
+                        log "Failed to retrieve configuration bundle"
                     fi
                     rm $cfgdb
                 fi
@@ -71,15 +61,20 @@ configure_from_network() {
     # bridge each ethernet device in the system
     ETHDEVS=$(cd /sys/class/net && ls -d eth*)
     for eth in $ETHDEVS; do
-        BRIDGE=ovirtbr`echo $eth | cut -b4-`
-        echo "Applying default configuration to $eth and $BRIDGE"
+        BRIDGE=br$eth
+        log "Applying default configuration to $eth and $BRIDGE"
         printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
             > /etc/sysconfig/network-scripts/ifcfg-$eth
-        printf '%s\n' "DEVICE=$BRIDGE" BOOTPROTO=dhcp \
+        if [ -z "$DEVICE" -o "$DEVICE" = "$eth" ]; then
+            dhcp="BOOTPROTO=dhcp"
+        else
+            dhcp=""
+        fi
+        printf '%s\n' "DEVICE=$BRIDGE" "$dhcp" \
             ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
             > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
     done
-    echo "Default config applied"
+    log "Default config applied"
 }
 
 # $(get_live_disk)
@@ -125,14 +120,20 @@ find_disk() {
 start() {
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
-    #   ovirt_init=usb|scsi[:serial#]
-    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
+    #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
+    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
+    #   ovirt_overcommit=<overcommit_ratio>
     #   ovirt_local_boot
     #   ovirt_standalone
+    #   ovirt_firstboot
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
+    #   dns=server[,server]
+    #   ntp=server[,server]
     #   syslog=server[:port]
+    #   collectd=server[:port]
+    #   hostname=fqdn
     #   TBD logrotate maxsize
 
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
@@ -145,33 +146,51 @@ start() {
     # BOOTIF=eth* e.g. BOOTIF=eth0 - use given interface
     bootif=
 
-    #   ovirt_init=usb|scsi[:serial#]
+    #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
     # local installation target disk
     # usb|scsi - select disk type, as reported by udev ID_BUS
     # serial# - select exact disk using serial number, as reported by
     #           udev ID_SERIAL
     # e.g. ovirt_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
+    # /dev/... - use specified disk device
+    #            (for cases when HAL doesn't handle it)
+    # w/o value - grab the first disk (/dev/?da)
     init=
 
-    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB
-    # local partition sizes in GB
+    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
+    # local partition sizes in MB
     vol_boot_size=
     vol_swap_size=
     vol_root_size=
     vol_config_size=
     vol_logging_size=
+    # data size can be set to 0 to disable data partition, -1 to use
+    # remaining free space after the other above partitions are defined
+    # or a specific positive number in MB
+    vol_data_size=
 
     #   ovirt_local_boot
     # install/update oVirt Node image on the local installation target disk
-    local_boot=0
+    local_boot=
+
+    #   ovirt_overcommit=<overcommit_ratio>
+    # set the swap size coefficient
+    overcommit=
 
     #   ovirt_standalone
     # force oVirt Node standalone mode
-    standalone=0
+    standalone=
+
+    #   ovirt_firstboot
+    # force firstboot configuration even if it has already been run
+    # in auto-install mode, overwrite the disk chosen by ovirt_init parameter
+    firstboot=
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
+    #   dns=server[,server]
+    #   ntp=server[,server]
     # static network configuration
     ip_address=
     ip_gateway=
@@ -179,11 +198,22 @@ start() {
     netmask=
     gateway=
     ipv6=
+    dns=
+    ntp=
+
+    # hostname=fqdn
+    # hostname
+    hostname=
 
     #   syslog=server[:port]
     # default syslog server
     syslog_server=
     syslog_port=
+
+    #   collectd=server[:port]
+    # default collectd server
+    collectd_server=
+    collectd_port=
 
     # save boot parameters like console= for local disk boot menu
     bootparams=
@@ -226,9 +256,16 @@ start() {
                     i=${i#=usb}
                     serial=${i#:}
                     ;;
+                    =/dev/*)
+                    bus=
+                    serial=
+                    i=${i#=}
+                    init=$(ls -1 "$i" 2>/dev/null | head -n1)
+                    ;;
                     *)
                     bus=
                     serial=
+                    init=
                     ;;
                 esac
                 if [ -n "$bus" ]; then
@@ -236,12 +273,15 @@ start() {
                 fi
             else
                 # 'ovirt_init' without value: grab first disk
-                init=/dev/?da
+                init=$(ls -1 /dev/?da 2>/dev/null |head -n1)
+            fi
+            if [ -z "$init" ]; then
+                log "Selected disk $i is not valid."
             fi
             ;;
             ovirt_vol=*)
             i=${i#ovirt_vol=}
-            eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5;}')
+            eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5; print "vol_data_size="$6;}')
             ;;
             ovirt_local_boot*)
             local_boot=1
@@ -250,6 +290,15 @@ start() {
             standalone=1
             bootparams="$bootparams $i"
             ;;
+            ovirt_firstboot*)
+            firstboot=1
+            ;;
+
+            ovirt_overcommit*)
+            i=${i#ovirt_overcommit=}
+            eval $(printf $i|awk -F: '{print "overcommit="$1;}')
+            ;;
+
             ip=*)
             i=${i#ip=}
             eval $(printf $i|awk -F: '{print "ip_address="$1; print "ip_gateway="$3; print "ip_netmask="$4}')
@@ -263,9 +312,22 @@ start() {
             ipv6=*)
             ipv6=${i#ipv6=}
             ;;
+            dns=*)
+            dns=${i#dns=}
+            ;;
+	    ntp=*)
+	    ntp=$(i#ntp=}
+	    ;;
+            hostname=*)
+            hostname=${i#hostname=}
+            ;;
             syslog=*)
             i=${i#syslog=}
             eval $(printf $i|awk -F: '{print "syslog_server="$1; print "syslog_port="$2;}')
+            ;;
+            collectd=*)
+            i=${i#collectd=}
+            eval $(printf $i|awk -F: '{print "collectd_server="$1; print "collectd_port="$2;}')
             ;;
             console=*)
             bootparams="$bootparams $i"
@@ -280,36 +342,34 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size local_boot standalone ip_address ip_netmask ip_gateway ipv6 syslog_server syslog_port bootparams"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
     mount_config
-    if [ -e $OVIRT_DEFAULTS ]; then
-        echo "update ovirt defaults"
-        tmpaug=$(mktemp)
-        for p in $params; do
-            PARAM=$(uc $p)
-            value=$(ptr $p)
+    log "Updating $OVIRT_DEFAULTS"
+    tmpaug=$(mktemp)
+    for p in $params; do
+        PARAM=$(uc $p)
+        value=$(ptr $p)
+        if [ -n "$value" ]; then
+            log "Updating OVIRT_$PARAM to '$value'"
             echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" \
                 >> $tmpaug
-        done
-        echo "save" >> $tmpaug
-        # augtool on bindmounted files fails
-        umount_config $OVIRT_DEFAULTS
-        augtool < $tmpaug > /dev/null
-        ovirt_store_config $OVIRT_DEFAULTS
-        rm $tmpaug
-    else
-        echo "initial startup"
-        # dump all ovirt bootparams
-        mkdir -p $(dirname $OVIRT_DEFAULTS)
-        echo > $OVIRT_DEFAULTS
-        for p in $params; do
-            PARAM=$(uc $p)
-            echo "OVIRT_$PARAM='$(ptr $p)'" >> $OVIRT_DEFAULTS
-        done
-        ovirt_store_config $OVIRT_DEFAULTS
+        fi
+    done
+    augtool $tmpaug
+
+    if [ -f /etc/sysconfig/network ]; then
+        . /etc/sysconfig/network
+        if [ -n "$HOSTNAME" ]; then
+            hostname $HOSTNAME
+        fi
     fi
 
-    if [ $standalone = 0 ]; then
+    if [ "$standalone" = 1 ]; then
+        # In standalone mode, fix libvirt to not use gssapi
+        sed -c -i -e s/^keytab/#keytab/ \
+            -e "s/^mech_list: .*gssapi.*/mech_list: digest-md5/" \
+            /etc/sasl2/libvirt.conf
+    else
         configure_from_network $bootif
         if [ -n "$init" ]; then
             ovirt-config-storage AUTO
@@ -320,11 +380,12 @@ start() {
             if [ $local_boot = 1 ]; then
                 # local disk installation for managed mode
                 mount_live
-                ovirt-config-boot $init /live "$bootparams"
-                reboot
+                ovirt-config-boot /live "$bootparams"
             fi
         fi
     fi
+
+    return 0
 }
 
 scan_for_swap() {
@@ -361,7 +422,9 @@ case "$1" in
         printf "Starting ovirt-early: "
 
         {
+            log "Starting ovirt-early"
             start
+            log "Completed ovirt-early"
         } >> $OVIRT_LOGFILE 2>&1
 
         test $? == 0 && success || failure

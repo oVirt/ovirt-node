@@ -13,11 +13,11 @@ WORKDIR=$(mktemp -d) || exit 1
 
 # Remove $WORKDIR upon interrupt (and HUP, PIPE, TERM) and upon normal
 # termination, being careful not to change the exit status.
-trap '__st=$?; rm -rf "$WORKDIR"; exit $__st' 0
+trap '__st=$?; rm -rf "$WORKDIR"; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
 CONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
-CONFIG_LOG_FILE="/var/log/ovirt-network-setup.log"
+NTP_CONFIG_FILE="/etc/ntp.conf"
 
 function configure_interface
 {
@@ -31,7 +31,7 @@ function configure_interface
         PREFIX=$OVIRT_IP_PREFIX
     fi
 
-    local BRIDGE=ovirtbr$NIC
+    local BRIDGE=br$NIC
     local IF_FILENAME="$WORKDIR/augtool-$NIC"
     local BR_FILENAME="$WORKDIR/augtool-$BRIDGE"
 
@@ -42,7 +42,7 @@ function configure_interface
 
     local BR_ROOT="$CONFIG_FILE_ROOT-$BRIDGE"
     local BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
-    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE bridge"
+    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE Bridge"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/PEERNTP yes"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DELAY 0"
     IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/BRIDGE $BRIDGE"
@@ -71,7 +71,7 @@ function configure_interface
             esac
 
             printf "\n"
-            read -ep "Enable IPv6 support ([S]tatic, [D]HCPv6, A[u]to, [N]o)? "
+            read -ep "Enable IPv6 support ([S]tatic, [D]HCPv6, A[u]to, [N]o or [A]bort)? "
             case $REPLY in
                 S|s)
                     read -ep "IPv6 Address: "; IPADDR=$REPLY
@@ -151,38 +151,145 @@ function configure_interface
     fi
 }
 
+function configure_dns
+{
+    local DNS=$1
+    local AUTO=$2
+    if [[   "$AUTO" == "AUTO"    &&
+         -n "$OVIRT_DNS" ]]; then
+        DNS=$OVIRT_DNS
+    fi
+
+    local IF_FILENAME="$WORKDIR/augtool-lo"
+    local IF_ROOT="$CONFIG_FILE_ROOT-lo"
+    local IF_CONFIG=
+
+    if [ -z "$AUTO" ]; then
+        while true; do
+            printf "\n"
+            echo "Enter up to two DNS servers separated by commas:"
+            if [ -n "$OVIRT_DNS" ]; then
+                echo "Press Enter for defaults: ($OVIRT_DNS)"
+            fi
+            read -ep ": "
+            DNS=$REPLY
+
+            if [ -z "$DNS" ]; then
+                DNS=$OVIRT_DNS
+            fi
+
+            printf "\n"
+            read -ep "Is this correct (Y/N/A)? "
+            case $REPLY in
+                Y|y) break ;;
+                N|n) ;;
+                A|a) return ;;
+            esac
+        done
+    fi
+
+    if [ -n "$DNS" ]; then
+        DNS1=$(echo "$DNS" | awk -F, '{print $1}')
+        DNS2=$(echo "$DNS" | awk -F, '{print $2}')
+
+        test -n "$DNS1" && IF_CONFIG="set $IF_ROOT/DNS1 $DNS1"
+        test -n "$DNS2" && IF_CONFIG="set $IF_ROOT/DNS2 $DNS2"
+        printf "$IF_CONFIG\n" > $IF_FILENAME
+    fi
+}
+
+function configure_ntp
+{
+    local NTP=$1
+    local AUTO=$2
+    if [[ "$AUTO" == "AUTO" && -n "$OVIRT_NTP" ]]; then
+	NTP=$OVIRT_NTP
+    else
+	NTP=""
+    fi
+
+    if [ -z "$AUTO" ]; then
+	while true; do
+	    read -ep "Enter an NTP server (hit return when finished): "
+
+	    if [ -z "$REPLY" ]; then break; fi
+
+	    NTP="$NTP $REPLY"
+	done
+    fi
+
+    if [ -n "$NTP" ]; then
+	# strip out all current servers from /etc/npt.conf and insert our own
+	BACKUP="${WORKDIR}/ntp.conf-backup"
+	egrep -v '^server .* # added by ovirt-config-network' < $NTP_CONFIG_FILE > $BACKUP
+	for server in $NTP; do
+	    echo "server $server # added by ovirt-config-network" >> $BACKUP
+	done
+	cp -f $BACKUP $NTP_CONFIG_FILE
+    fi
+}
+
 function setup_menu
 {
-    NICS=$(hal-device | awk '/net.interface/ {match($0, "= '"'"'(.*)'"'"' ", nic); printf("%s ", nic[1]); }')
-    NICS="$NICS Save Quit"
-    PS3="Please select a network interface to configure: "
+    NICS=""
+    udi_list=$(hal-find-by-capability --capability net.80203)
+    if [ -n "$udi_list" ]; then
+        for d in $udi_list; do
+            NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"
+        done
+    fi
+
+    # Add virtio NICs that were possibly not detected by hal
+    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v -E "^br|^bond|^vnet|^virbr" | xargs)"
+    NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
+
+    PS3="Please select an interface or configuration option: "
 }
 
 if [ "$1" == "AUTO" ]; then
     configure_interface "$OVIRT_BOOTIF" AUTO
-    RESTART="Y"
+    configure_dns "$OVIRT_DNS" AUTO
+    configure_ntp "$OVIRT_NTP" AUTO
 else
     setup_menu
 
-    select NIC in $NICS
-    do
-        printf "\n"
-        case "$NIC" in
-            "Save") RESTART="Y"; break ;;
-            "Quit") exit 0; break ;;
-            *) configure_interface $NIC $IFACE_NUMBER ;;
-        esac
-        setup_menu
+    while true; do
+        printf "\n\n Networking Configuration\n\n" >&2
+
+        select NIC in $NICS "DNS" "NTP" "Save & Exit"
+        do
+            printf "\n"
+            case "$NIC" in
+                "DNS") configure_dns "$OVIRT_DNS"; break ;;
+		"NTP") configure_ntp "$OVIRT_NTP"; break ;;
+                "Save & Exit") break 2;;
+                *) configure_interface $NIC $IFACE_NUMBER; break ;;
+            esac
+        done
     done
 fi
 
-if [ "$RESTART" == "Y" ]; then
-    {
-    printf "Configuring network.\n"
+start_log
+net_configured=0
+if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
+    log "Configuring network"
     config="$WORKDIR"/config-augtool
-    { cat "$WORKDIR"/augtool-* && printf "save\n"; } > $config \
-    && augtool < $config  \
-    && service network restart
-    } 2>&1 | tee $CONFIG_LOG_FILE
-
+    cat "$WORKDIR"/augtool-* > $config \
+        && augtool $config
+    if [ $? = 0 ]; then
+        log "Network configured successfully"
+        net_configured=1
+        ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
+    else
+        log "Error configuring network, see $OVIRT_LOGFILE"
+        stop_log
+        exit 1
+    fi
 fi
+stop_log
+
+if [ "$net_configured" = 1 ]; then
+    service network stop > /dev/null 2>&1
+    service network start
+fi
+

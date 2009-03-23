@@ -2,43 +2,72 @@
 #
 # Entry point for configuring an oVirt node when running in standalone mode.
 
-NETWORK="Networking Setup"
-STORAGE="Disk Partitioning"
-LOGGING="Logging Setup"
-PASSWORD="Administrator Password"
+
+. /etc/init.d/ovirt-functions
+
+# symlinked scripts for menu options, link name is menu label
+CONFIG_DIR=/etc/ovirt-config-setup.d
+
+# special options, all others execute the symlinked script in CONFIG_DIR
 DEBUG_SHELL="Shell"
-CONTINUE="Continue"
+CONTINUE="Continue Stateless Boot"
 
 declare -a OPTIONS
 
-OPTIONS[${#OPTIONS[*]}]="$NETWORK"
-OPTIONS[${#OPTIONS[*]}]="$STORAGE"
-OPTIONS[${#OPTIONS[*]}]="$LOGGING"
-OPTIONS[${#OPTIONS[*]}]="$PASSWORD"
-OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
+can_include_item() {
+    if is_booted_from_local_disk; then
+	if [[ $1 =~ Partitioning ]]; then
+	    return 1
+	fi
+    fi
+    return 0
+}
+
+for cfg in $CONFIG_DIR/*; do
+    label=$(basename "$cfg")
+    if can_include_item "$label" ; then
+	# Assume label is actually XX_Some Text. So strip of the first 3 characters
+	label=${label:3}
+	OPTIONS[${#OPTIONS[*]}]="$label"
+    fi
+done
 OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
+OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
+
+
 # reset tty, otherwise serial console is broken
 reset > /dev/null
 clear
 
 while true; do
-    printf "\n oVirt Node Standalone Configuration\n\n"
-
     PS3="Please select an option: "
 
-    select OPTION in "${OPTIONS[@]}"
-    do
-        case "$OPTION" in
-            "$NETWORK")  ovirt-config-networking ; break ;;
-            "$STORAGE")
-                ovirt-config-storage ;
-                break ;;
-            "$LOGGING")  ovirt-config-logging    ; break ;;
-            "$PASSWORD") ovirt-config-password   ; break ;;
-            "$DEBUG_SHELL") bash                 ; break ;;
-            "$CONTINUE") exit 0 ;;
-        esac
+    while true ; do
+        grep -v ^Kernel /etc/issue
+        printf "\n\n Stand-alone Configuration\n\n" >&2
 
-        printf "\n"
+        select OPTION in "${OPTIONS[@]}"
+        do
+            case "$OPTION" in
+                "$DEBUG_SHELL") clear; bash; break ;;
+                "$CONTINUE") exit 0 ;;
+                "") break ;;
+                *)
+                    {
+                        printf "\n\n"
+                        if $CONFIG_DIR/*"$OPTION" ; then
+                            printf "\n"
+                        else
+                            printf "\nERROR: $OPTION FAILED. "
+                            printf "See $OVIRT_LOGFILE\n\n"
+                        fi
+                    } 2>&1 | tee -a $OVIRT_TMP_LOGFILE;
+                    if [ -f $OVIRT_TMP_LOGFILE ]; then
+                        cat $OVIRT_TMP_LOGFILE >> $OVIRT_LOGFILE
+                        rm -f $OVIRT_TMP_LOGFILE
+                    fi
+                    break ;;
+            esac
+        done
     done
 done

@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# Takes as input a reference to an encoded configuration file
+# and produces from that a kernel module file and a network
+# configuration file. It then restarts the networking service
+# and saves the configuration files.
+
+. /etc/init.d/ovirt-functions
 
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
@@ -52,9 +59,17 @@ networking=$(awk '/^[ \t]*ifcfg=/ {
         }
     }
 
-
-    printf("save\n")
-
 }' $CONFIG)
 
 echo "$networking" > $OVIRT_CONFIG_OUTPUT_FILE
+
+if [ -f $OVIRT_CONFIG_OUTPUT_FILE ]; then
+    augtool $OVIRT_CONFIG_OUTPUT_FILE \
+	&& RESULT=0 || RESULT=1
+    # FIXME do not store ifcfg-lo
+    if ls /etc/sysconfig/network-scripts/ifcfg* >/dev/null 2>/dev/null; then
+	ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
+    fi
+fi
+
+exit $RESULT
