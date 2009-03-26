@@ -21,7 +21,7 @@ start() {
 	    exit 1
 	else
 	    log "Waiting for libvirt to finish initializing..."
-	    count=$(xpr $count + 1)
+	    count=$(expr $count + 1)
 	    sleep 1
 	fi
     done
