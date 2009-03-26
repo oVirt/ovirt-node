@@ -18,7 +18,7 @@ start() {
 	    break
 	elif [ "$count" == "100" ]; then
 	    log "Libvirt did not initialize in time..."
-	    exit 1
+	    return 1
 	else
 	    log "Waiting for libvirt to finish initializing..."
 	    count=$(expr $count + 1)
