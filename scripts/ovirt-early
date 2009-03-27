@@ -58,7 +58,6 @@ configure_from_network() {
 			if [ $? -eq 0 ]; then
 			    log "Remote configuration retrieved and applied"
                             rm $cfgdb
-			    return
 			else
 			    log "Failure to retrieve or apply remote configuration"
 			fi
@@ -71,27 +70,19 @@ configure_from_network() {
     fi
     # default oVirt network configuration:
     # bridge each ethernet device in the system
-    ETHDEVS=$(cd /sys/class/net && ls -d eth*)
-    for eth in $ETHDEVS; do
-        BRIDGE=br$eth
-	local ifcfg=/etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+    BRIDGE=br$DEVICE
+    local ifcfg=/etc/sysconfig/network-scripts/ifcfg-$BRIDGE
 
-	# only write a default file if one does not exist
-	if [ ! -f $ifcfg ]; then
-            log "Applying default configuration to $eth and $BRIDGE"
-            printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
-		> /etc/sysconfig/network-scripts/ifcfg-$eth
-            if [ -z "$DEVICE" -o "$DEVICE" = "$eth" ]; then
-		dhcp="BOOTPROTO=dhcp"
-            else
-		dhcp=""
-            fi
-            printf '%s\n' "DEVICE=$BRIDGE" "$dhcp" \
-		ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
-		> /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-	fi
-    done
-    log "Default config applied"
+    # only write a default file if one does not exist
+    if [ ! -f $ifcfg ]; then
+        log "Applying default configuration to $DEVICE and $BRIDGE"
+        printf '%s\n' "DEVICE=$DEVICE" ONBOOT=yes "BRIDGE=$BRIDGE" \
+	    > /etc/sysconfig/network-scripts/ifcfg-$DEVICE
+        printf '%s\n' "DEVICE=$BRIDGE" "BOOTPROTO=dhcp" \
+	    ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
+	    > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+	log "Default config applied"
+    fi
 }
 
 # $(get_live_disk)
