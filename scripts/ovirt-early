@@ -14,8 +14,20 @@ BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 
 get_mac_addresses() {
-    macs=$(ifconfig | awk '/HWaddr/ { print $5"="$1 }' \
-                    | tr '\n' ' ' | sed 's/ /%2C/g;s/:/%3A/g')
+    local DEVICE=$1
+
+    macs=""
+    devices=$(ls -b /sys/class/net/)
+    for device in $devices; do
+	if [ "$device" != "$DEVICE" ]; then
+	    mac=$(cat /sys/class/net/$device/address 2>/dev/null)
+	    if [ -n "$mac" -a "$mac" != "00:00:00:00:00:00" ]; then
+		iface=$device
+		macs="${macs}${mac}=${iface} "
+	    fi
+	fi
+    done
+    macs=$(echo $macs | sed 's/ /%2C/g;s/:/%3A/g;s/=/%3D/g')
 }
 
 configure_from_network() {
@@ -37,7 +49,7 @@ configure_from_network() {
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
                     log "oVirt Server found at: $SRV_HOST:$SRV_PORT"
                     cfgdb=$(mktemp)
-                    get_mac_addresses
+                    get_mac_addresses $DEVICE
                     log "MACs to use: $macs"
                     wget -O $cfgdb --no-check-certificate \
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
