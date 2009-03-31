@@ -22,8 +22,7 @@ get_mac_addresses() {
 	if [ "$device" != "$DEVICE" ]; then
 	    mac=$(cat /sys/class/net/$device/address 2>/dev/null)
 	    if [ -n "$mac" -a "$mac" != "00:00:00:00:00:00" ]; then
-		iface=$device
-		macs="${macs}${mac}=${iface} "
+		macs="${macs}${mac}=${device} "
 	    fi
 	fi
     done
