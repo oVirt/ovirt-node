@@ -22,11 +22,10 @@ get_mac_addresses() {
 	if [ "$device" != "$DEVICE" ]; then
 	    mac=$(cat /sys/class/net/$device/address 2>/dev/null)
 	    if [ -n "$mac" -a "$mac" != "00:00:00:00:00:00" ]; then
-		macs="${macs}${mac}=${device} "
+		macs="${macs}${mac}=${device},"
 	    fi
 	fi
     done
-    macs=$(echo $macs | sed 's/ /%2C/g;s/:/%3A/g;s/=/%3D/g')
 }
 
 configure_from_network() {
