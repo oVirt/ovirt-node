@@ -61,7 +61,11 @@ start() {
 
     find_srv identify tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+	if [ -n "$OVIRT_BOOTIF" ]; then
+            ovirt-identify-node -s $SRV_HOST -p $SRV_PORT -m $OVIRT_BOOTIF
+	else
+	    ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+	fi
     else
         log "skipping ovirt-identify-node, oVirt registration service not available"
     fi

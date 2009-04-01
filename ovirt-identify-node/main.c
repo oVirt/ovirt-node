@@ -42,6 +42,8 @@ char *hostname;
 
 int hostport = -1;
 
+char *management_interface;
+
 int socketfd;
 
 cpu_info_ptr cpu_info;
@@ -108,7 +110,7 @@ config(int argc, char **argv)
 
     int option;
 
-    while ((option = getopt(argc, argv, "s:p:dvth")) != -1) {
+    while ((option = getopt(argc, argv, "s:p:m:dvth")) != -1) {
         DEBUG("Processing argument: %c (optarg:%s)\n", option, optarg);
 
         switch (option) {
@@ -117,6 +119,9 @@ config(int argc, char **argv)
                 break;
             case 'p':
                 hostport = atoi(optarg);
+                break;
+            case 'm':
+                management_interface = optarg;
                 break;
             case 't':
                 testing = 1;
@@ -159,6 +164,7 @@ usage()
     fprintf(stdout, "\n");
     fprintf(stdout, "\t-s [server]\t\tThe remote server's hostname.\n");
     fprintf(stdout, "\t-p [port]\t\tThe remote server's port.\n");
+    fprintf(stdout, "\t-m [iface]\t\tThe management interface.\n");
     fprintf(stdout,
             "\t-d\t\tDisplays debug information during execution.\n");
     fprintf(stdout,

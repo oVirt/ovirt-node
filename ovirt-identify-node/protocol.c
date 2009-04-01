@@ -177,20 +177,24 @@ send_nic_details(void)
     nic_info_ptr current = nic_info;
 
     while (current != NULL) {
-        send_text("NIC");
+      if((!management_interface) || (strcmp(management_interface, current->iface_name))) {
+	send_text("NIC");
 
-        if (!(get_text("NICINFO?")) &&
-            (!send_value("MAC", current->mac_address)) &&
-            (!send_value("BANDWIDTH", current->bandwidth)) &&
+	if (!(get_text("NICINFO?")) &&
+	    (!send_value("MAC", current->mac_address)) &&
+	    (!send_value("BANDWIDTH", current->bandwidth)) &&
             (!send_value("IFACE_NAME", current->iface_name)) &&
             (!send_value("IP_ADDRESS", current->ip_address)) &&
             (!send_value("NETMASK", current->netmask)) &&
             (!send_value("BROADCAST", current->broadcast))) {
-            send_text("ENDNIC");
-            result = get_text("ACK NIC");
+	  send_text("ENDNIC");
+	  result = get_text("ACK NIC");
         }
 
         current = current->next;
+      } else {
+	current = current->next;
+      }
     }
 
     return result;
