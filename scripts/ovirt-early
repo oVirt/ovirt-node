@@ -360,7 +360,10 @@ start() {
     fi
     # save boot parameters as defaults for ovirt-config-*
     params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
-    mount_config
+    # mount /config unless firstboot is forced
+    if [ "$firstboot" != "1" ]; then
+        mount_config
+    fi
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
     for p in $params; do
