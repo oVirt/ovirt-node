@@ -104,10 +104,17 @@ ovirt_boot_setup() {
 echo SCSI wait for scans\
 /sbin/modprobe scsi_wait_scan\
 /sbin/modprobe -r scsi_wait_scan\
-echo Scanning logical volumes\
-lvm vgscan --ignorelockingfailure\
-echo Activating logical volumes\
-lvm vgchange -ay --ignorelockingfailure HostVG \
+set +e\
+while true; do\
+  echo Scanning logical volumes\
+  lvm vgscan --ignorelockingfailure\
+  echo Activating logical volumes\
+  if lvm vgchange -ay --ignorelockingfailure HostVG; then\
+    break\
+  fi\
+  sleep 1\
+done\
+set -e\
 ' $init_script
     # fix emergency shell
     sed -i 's/^    bash$/    bash < \/dev\/console/' $init_script

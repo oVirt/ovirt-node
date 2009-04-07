@@ -286,7 +286,7 @@ get_nic_info(void)
 
     int i;
 
-    nics = libhal_find_device_by_capability(hal_ctx, "net",
+    nics = libhal_find_device_by_capability(hal_ctx, "net.80203",
                                             &num_results, &dbus_error);
 
     DEBUG("Found %d NICs\n", num_results);
@@ -294,7 +294,7 @@ get_nic_info(void)
     for (i = 0; i < num_results; i++) {
         char *nic = nics[i];
 
-        VERBOSE("Starting new NIC.\n");
+        DEBUG("Starting new NIC; %s.\n", nic);
 
         if (current != NULL) {
             last = current;
@@ -311,8 +311,8 @@ get_nic_info(void)
         get_nic_data(nic, current);
 
         DEBUG("NIC details: MAC:%s, speed:%s, IP:%s\n",
-              nic_info->mac_address, nic_info->bandwidth,
-              nic_info->ip_address);
+              current->mac_address, current->bandwidth,
+              current->ip_address);
     }
 
     return result;

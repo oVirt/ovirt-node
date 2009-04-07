@@ -11,6 +11,20 @@
 . /etc/init.d/ovirt-functions
 
 start() {
+    # wait for libvirt to finish initializing
+    local count=0
+    while true; do
+	if [ -r /var/run/libvirt/libvirt-sock ]; then
+	    break
+	elif [ "$count" == "100" ]; then
+	    log "Libvirt did not initialize in time..."
+	    return 1
+	else
+	    log "Waiting for libvirt to finish initializing..."
+	    count=$(expr $count + 1)
+	    sleep 1
+	fi
+    done
     BACKUP=$(mktemp)
     ISSUE=/etc/issue
     ISSUE_NET=/etc/issue.net
@@ -47,7 +61,11 @@ start() {
 
     find_srv identify tcp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-        ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+	if [ -n "$OVIRT_BOOTIF" ]; then
+            ovirt-identify-node -s $SRV_HOST -p $SRV_PORT -m $OVIRT_BOOTIF
+	else
+	    ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
+	fi
     else
         log "skipping ovirt-identify-node, oVirt registration service not available"
     fi

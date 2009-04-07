@@ -14,12 +14,23 @@ BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 
 get_mac_addresses() {
-    macs=$(ifconfig | awk '/HWaddr/ { print $5"="$1 }' \
-                    | tr '\n' ' ' | sed 's/ /%2C/g;s/:/%3A/g')
+    local DEVICE=$1
+
+    macs=""
+    devices=$(ls -b /sys/class/net/)
+    for device in $devices; do
+	if [ "$device" != "$DEVICE" ]; then
+	    mac=$(cat /sys/class/net/$device/address 2>/dev/null)
+	    if [ -n "$mac" -a "$mac" != "00:00:00:00:00:00" ]; then
+		macs="${macs}${mac}=${device},"
+	    fi
+	fi
+    done
 }
 
 configure_from_network() {
     DEVICE=$1
+
     if [ -n "$DEVICE" ]; then
         log "Configuring network Using interface $DEVICE"
         # setup temporary interface to retrieve configuration
@@ -37,7 +48,7 @@ configure_from_network() {
                 if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
                     log "oVirt Server found at: $SRV_HOST:$SRV_PORT"
                     cfgdb=$(mktemp)
-                    get_mac_addresses
+                    get_mac_addresses $DEVICE
                     log "MACs to use: $macs"
                     wget -O $cfgdb --no-check-certificate \
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
@@ -46,35 +57,32 @@ configure_from_network() {
                         ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
 			if [ $? -eq 0 ]; then
 			    log "Remote configuration retrieved and applied"
+                            rm $cfgdb
 			else
 			    log "Failure to retrieve or apply remote configuration"
 			fi
                     else
                         log "Failed to retrieve configuration bundle"
                     fi
-                    rm $cfgdb
                 fi
             fi
         fi
     fi
     # default oVirt network configuration:
     # bridge each ethernet device in the system
-    ETHDEVS=$(cd /sys/class/net && ls -d eth*)
-    for eth in $ETHDEVS; do
-        BRIDGE=br$eth
-        log "Applying default configuration to $eth and $BRIDGE"
-        printf '%s\n' "DEVICE=$eth" ONBOOT=yes "BRIDGE=$BRIDGE" \
-            > /etc/sysconfig/network-scripts/ifcfg-$eth
-        if [ -z "$DEVICE" -o "$DEVICE" = "$eth" ]; then
-            dhcp="BOOTPROTO=dhcp"
-        else
-            dhcp=""
-        fi
-        printf '%s\n' "DEVICE=$BRIDGE" "$dhcp" \
-            ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
-            > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-    done
-    log "Default config applied"
+    BRIDGE=br$DEVICE
+    local ifcfg=/etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+
+    # only write a default file if one does not exist
+    if [ ! -f $ifcfg ]; then
+        log "Applying default configuration to $DEVICE and $BRIDGE"
+        printf '%s\n' "DEVICE=$DEVICE" ONBOOT=yes "BRIDGE=$BRIDGE" \
+	    > /etc/sysconfig/network-scripts/ifcfg-$DEVICE
+        printf '%s\n' "DEVICE=$BRIDGE" "BOOTPROTO=dhcp" \
+	    ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
+	    > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+	log "Default config applied"
+    fi
 }
 
 # $(get_live_disk)
@@ -343,7 +351,10 @@ start() {
     fi
     # save boot parameters as defaults for ovirt-config-*
     params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
-    mount_config
+    # mount /config unless firstboot is forced
+    if [ "$firstboot" != "1" ]; then
+        mount_config
+    fi
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
     for p in $params; do

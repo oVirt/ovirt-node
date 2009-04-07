@@ -14,11 +14,21 @@ Please ensure that you have configured the local storage \n\
 and networking correctly on the previous menu before \n\
 continuing."
     printf "\n\n"
+    bootparams="${OVIRT_BOOTPARAMS}"
+    printf "Current kernel boot parameters are:\n"
+    printf "${bootparams}\n"
+    printf "\n"
+    read -p "Please enter kernel boot arguments (hit return to use the above): "
+    if [[ -n "$REPLY" ]]; then
+	bootparams="${REPLY}"
+    else
+	bootparams="${OVIRT_BOOTPARAMS}"
+    fi
     read -p "Do you wish to continue (Y/n)? "
     r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
     if [ "$r" == "Y" ]; then
         mount_live \
-        && /usr/sbin/ovirt-config-boot /live
+        && /usr/sbin/ovirt-config-boot /live "${bootparams}"
         rc=$?
         break
     elif [ "$r" == "N" ]; then

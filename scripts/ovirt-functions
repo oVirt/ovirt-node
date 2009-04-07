@@ -574,6 +574,31 @@ reboot() {
     /sbin/reboot
 }
 
+# chkconfig_persist <servicename>
+#   since symlinks cannot be persisted, replace symlinks with hardlinks and persist
+chkconfig_persist() {
+    local service=$1
+    if [ -z "$service" ]; then
+        return 1
+    fi
+    cd /etc/rc.d
+    local to_persist=""
+    for f in rc*.d/[S,K]??$service ; do
+        local dir=$(dirname $f)
+        local name=$(basename $f)
+        cd $dir
+        link=$(readlink $name)
+        if [ -e "$link" ]; then
+            rm -f $name
+            ln $link $name
+            to_persist="$to_persist /etc/rc.d/$f"
+        fi
+        cd ..
+    done
+    ovirt_store_config $to_persist
+}
+
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 

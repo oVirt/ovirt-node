@@ -122,6 +122,7 @@ extern char numcpus[BUFFER_LENGTH];
 extern char cpuspeed[BUFFER_LENGTH];
 extern char *hostname;
 extern int  hostport;
+extern char *management_interface;
 extern int  socketfd;
 extern cpu_info_ptr cpu_info;
 extern nic_info_ptr nic_info;

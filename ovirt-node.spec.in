@@ -13,6 +13,7 @@ Group:          Applications/System
 %define selinux_policyver %(sed -n 's,.*selinux-policy-\([^/]*\)/.*,\1,p' /usr/share/selinux/devel/policyhelp)
 %define modulename %{name}-selinux
 Source1:        %{modulename}.te
+Source2:        %{modulename}.fc
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
@@ -116,7 +117,7 @@ SELinux policy module supporting ovirt-node
 %setup -q
 
 mkdir SELinux
-cp -p %{SOURCE1} SELinux
+cp -p %{SOURCE1} %{SOURCE2} SELinux
 
 %build
 %configure
