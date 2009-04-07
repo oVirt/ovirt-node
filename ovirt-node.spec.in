@@ -158,6 +158,8 @@ cd -
 %{__install} -D -m0755 scripts/ovirt-install-node-stateful %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-install-node-stateless %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-uninstall-node-stateful %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/persist %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/unpersist %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-listen-awake.init %{buildroot}%{_initrddir}/ovirt-listen-awake
@@ -312,6 +314,8 @@ fi
 %{_sbindir}/ovirt-install-node-stateless
 %{_sbindir}/gptsync
 %{_sbindir}/showpart
+%{_sbindir}/persist
+%{_sbindir}/unpersist
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
