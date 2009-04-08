@@ -452,7 +452,8 @@ ovirt_store_config() {
 #
 unmount_config() {
     if grep -q " /config ext3" /proc/mounts; then
-        for f in "$@"; do
+        for p in "$@"; do
+            f=$(readlink -f $p)
             if grep -q " $f ext3" /proc/mounts ; then
                 umount -n $f
                 # refresh rootfs copy
