@@ -408,11 +408,12 @@ ovirt_store_config() {
     rc=0
     if grep -q " /config ext3" /proc/mounts; then
         printf "storing to /config :\n"
-        for f in "$@"; do
+        for p in "$@"; do
+            f=$(readlink -f $p)
             printf "$f"
             # skip if file does not exist or is empty
-            if [ ! -s $f ]; then
-                printf " Skipping, file does not exist or is empty\n"
+            if [ ! -s "$f" ]; then
+                printf " Skipping, file '%s' does not exist or is empty\n" $p
                 continue
             fi
             # skip if already bind-mounted
