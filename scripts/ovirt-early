@@ -298,6 +298,9 @@ start() {
             standalone=1
             bootparams="$bootparams $i"
             ;;
+            ovirt_firstboot=no | ovirt_firstboot=0)
+            firstboot=0
+            ;;
             ovirt_firstboot*)
             firstboot=1
             ;;
