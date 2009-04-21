@@ -281,6 +281,7 @@ wipe_lvm_on_disk()
 
 perform_partitioning()
 {
+    log "Partitioning drive: $DRIVE"
     if [ -z "$DRIVE" ]; then
         printf "\nNo storage device selected.\n"
         return
@@ -501,17 +502,22 @@ else
 fi
 
 if [ "$1" == "AUTO" ]; then
-    # do not format if HostVG exists on selected disk...
-    pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|grep -q -m1 "HostVG"
-    existingHostVG=$?
-    # ... unless overridden by ovirt_firstboot parameter
-    if is_firstboot || [ $existingHostVG -ne 0 ]; then
-        if check_partition_sizes; then
-            printf "Partitioning hard disk..."
-            perform_partitioning
-        fi
+    log "Beginning automatic disk partitioning.\n"
+    if [ -n "$OVIRT_INIT" ]; then
+        # do not format if HostVG exists on selected disk...
+	pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|grep -q -m1 "HostVG"
+	existingHostVG=$?
+        # ... unless overridden by ovirt_firstboot parameter
+	if is_firstboot || [ $existingHostVG -ne 0 ]; then
+            if check_partition_sizes; then
+		log "Partitioning hard disk..."
+		perform_partitioning
+            fi
+	else
+            log "Skip disk partitioning, HostVG exists"
+	fi
     else
-        log "Skip disk partitioning, HostVG exists"
+	log "Missing device parameter: unable to partition any disk"
     fi
 else
     OPTIONS="Configure Review Partition Quit"

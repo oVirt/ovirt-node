@@ -247,9 +247,14 @@ function setup_menu
 }
 
 if [ "$1" == "AUTO" ]; then
-    configure_interface "$OVIRT_BOOTIF" AUTO
-    configure_dns "$OVIRT_DNS" AUTO
-    configure_ntp "$OVIRT_NTP" AUTO
+    if [ -n "$OVIRT_BOOTIF" ]; then
+	configure_interface "$OVIRT_BOOTIF" AUTO
+	configure_dns "$OVIRT_DNS" AUTO
+	configure_ntp "$OVIRT_NTP" AUTO
+    else
+	printf "No network interface specified. Unable to configure networking."
+	exit 0
+    fi
 else
     setup_menu
 
