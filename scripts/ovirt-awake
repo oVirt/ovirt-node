@@ -68,6 +68,7 @@ start () {
             else
                 echo "No keytab to retrieve"
             fi
+            send-text ACK
         else
             echo "Did not get a mode request."
         fi
