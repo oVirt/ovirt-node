@@ -16,9 +16,9 @@ declare -a OPTIONS
 
 can_include_item() {
     if is_booted_from_local_disk; then
-	if [[ $1 =~ Partitioning ]]; then
-	    return 1
-	fi
+        if [[ $1 =~ Partitioning ]]; then
+            return 1
+        fi
     fi
     return 0
 }
@@ -26,9 +26,9 @@ can_include_item() {
 for cfg in $CONFIG_DIR/*; do
     label=$(basename "$cfg")
     if can_include_item "$label" ; then
-	# Assume label is actually XX_Some Text. So strip of the first 3 characters
-	label=${label:3}
-	OPTIONS[${#OPTIONS[*]}]="$label"
+        # Assume label is actually XX_Some Text. So strip of the first 3 characters
+        label=${label:3}
+        OPTIONS[${#OPTIONS[*]}]="$label"
     fi
 done
 OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
@@ -55,12 +55,15 @@ while true; do
                 *)
                     {
                         printf "\n\n"
-                        if $CONFIG_DIR/*"$OPTION" ; then
-                            printf "\n"
-                        else
-                            printf "\nERROR: $OPTION FAILED. "
-                            printf "See $OVIRT_LOGFILE\n\n"
-                        fi
+                        $CONFIG_DIR/*"$OPTION"
+                        rc=$?
+                        case $rc in
+                            0) printf "\n";;
+                            99) printf "\n$OPTION ABORTED.\n\n";;
+                            *) printf "\nERROR: $OPTION FAILED. "
+                                printf "See $OVIRT_LOGFILE\n\n"
+                                ;;
+                        esac
                     } 2>&1 | tee -a $OVIRT_TMP_LOGFILE;
                     if [ -f $OVIRT_TMP_LOGFILE ]; then
                         cat $OVIRT_TMP_LOGFILE >> $OVIRT_LOGFILE
