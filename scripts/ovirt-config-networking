@@ -268,7 +268,14 @@ else
                 "DNS") configure_dns "$OVIRT_DNS"; break ;;
 		"NTP") configure_ntp "$OVIRT_NTP"; break ;;
                 "Save & Exit") break 2;;
-                *) configure_interface $NIC $IFACE_NUMBER; break ;;
+                *)
+                    if [[ -n "${NIC}" ]] && [[ "${NICS}" =~ "${NIC}" ]]; then
+                        configure_interface $NIC $IFACE_NUMBER
+                    else
+                        printf "\nInvalid option selected.\n"
+                    fi
+                    break
+                    ;;
             esac
         done
     done
