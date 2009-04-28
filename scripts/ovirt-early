@@ -327,7 +327,7 @@ start() {
             dns=${i#dns=}
             ;;
 	    ntp=*)
-	    ntp=$(i#ntp=}
+	    ntp=${i#ntp=}
 	    ;;
             hostname=*)
             hostname=${i#hostname=}
