@@ -65,7 +65,9 @@ function configure_interface
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO none"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
-                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $GATEWAY"
+                    if [ -n "${GATEWAY}" ]; then
+                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $GATEWAY"
+                    fi
                     ;;
                 A|a) return ;;
             esac
