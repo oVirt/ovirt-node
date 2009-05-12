@@ -75,6 +75,7 @@ chkconfig libvirt-qpid on
 chkconfig iptables on
 chkconfig ntpdate on
 chkconfig ntpd on
+chkconfig anyterm on
 
 backup_file /etc/sysconfig/libvirtd
 backup_file /etc/libvirt/qemu.conf
@@ -82,6 +83,7 @@ backup_file /etc/libvirt/libvirtd.conf
 backup_file /etc/sasl2/libvirt.conf
 backup_file /etc/krb5.conf
 ovirt_setup_libvirtd
+ovirt_setup_anyterm
 
 backup_file /etc/sysconfig/iptables
 # We open up anything coming from ovirtbr0 to this node, since it

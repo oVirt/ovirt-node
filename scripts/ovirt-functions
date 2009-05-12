@@ -201,6 +201,18 @@ ovirt_setup_libvirtd() {
     fi
 }
 
+ovirt_setup_anyterm() {
+   # configure anyterm
+   sed -i -e 's/^# ANYTERM_CMD=\/usr\/bin\/anyterm-cmd/ANYTERM_CMD="sudo \/usr\/bin\/virsh console %p"/' \
+        /etc/sysconfig/anyterm
+
+   sed -i -e 's/^# ANYTERM_LOCAL_ONLY=true/ANYTERM_LOCAL_ONLY=false/' \
+        /etc/sysconfig/anyterm
+
+   # permit it to run the virsh console
+   echo "anyterm ALL=NOPASSWD: /usr/bin/virsh console *" >> /etc/sudoers
+}
+
 md5() {
   md5sum $1 2>/dev/null | (read MD5 filename; echo $MD5)
 }
