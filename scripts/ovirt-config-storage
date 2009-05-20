@@ -25,7 +25,7 @@ default_overcommit=0.5
 default_boot_size=50
 default_root_size=256
 default_config_size=5
-default_logging_size=256
+default_logging_size=2048
 # -1 indicates data partition should use remaining disk
 default_data_size=-1
 
@@ -398,8 +398,7 @@ perform_partitioning()
         tune2fs -c 0 -i 0 /dev/HostVG/Data
         echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
         echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
-        log "Mounting data partition"
-        mount_data
+        echo "/data/core /var/log/core bind bind 0 0" >> /etc/fstab
     fi
 
     # end critical section
@@ -411,6 +410,10 @@ perform_partitioning()
     fi
 
     mount_logging
+    if [ "$use_data" = 0 ]; then
+        log "Mounting data partition"
+        mount_data
+    fi
     log "Completed!"
 
     stop_log
