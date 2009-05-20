@@ -36,15 +36,17 @@ logging_min_size=5
 data_min_size=5
 swap_min_size=5
 
-get_selected_drive_size()
+get_drive_size()
 {
-    start_log
+    local drive=$1
+    local space_var=$2
+
     local size=
-    local udi=$(hal-find-by-property --key block.device --string $DRIVE)
+    local udi=$(hal-find-by-property --key block.device --string $drive)
     if [ -z "$udi" ]; then
         # If hal didn't find the device, it could be a virtio block device
         # In this case, use sfdisk -s to get the size
-        size=$(sfdisk -s $DRIVE)
+        size=$(sfdisk -s $drive)
         size=$(echo "scale=0; $size * 1024" | bc -l)
     else
         size=$(hal-get-property --udi "$udi" --key storage.size)
@@ -54,9 +56,12 @@ get_selected_drive_size()
         fi
     fi
 
-    SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
-    log "Selected Device: $DRIVE ($SPACE MB) $(basename "$udi")"
-    stop_log
+    size=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
+    echo "$drive ($size MB)"
+    echo "Disk Identifier: $(basename "$udi")"
+    if [ -n "$space_var" ]; then
+        eval $space_var=$size
+    fi
 }
 
 check_partition_sizes()
@@ -69,7 +74,7 @@ check_partition_sizes()
     fi
 
     printf "\n"
-    get_selected_drive_size
+    get_drive_size $DRIVE SPACE
     disk_size=$SPACE
     need_size=$(echo "scale=0;" \
                      "$BOOT_SIZE + $SWAP_SIZE + $ROOT_SIZE * 2" \
@@ -160,6 +165,10 @@ get_dev_name()
     esac
 
     # There are two or more; make the user choose.
+    # display description for each disk
+    for d in $devices; do
+        get_drive_size $d >&2
+    done
     local choices="$devices Abort"
     select device in $choices
     do
@@ -174,7 +183,7 @@ do_configure()
 {
     local name_and_size
     DRIVE=$(get_dev_name) || return 0
-    get_selected_drive_size
+    get_drive_size $DRIVE SPACE
 
     printf "\n\nPlease configure storage partitions.\n\n"
     printf "* Enter partition sizes in MB.\n"
@@ -256,8 +265,7 @@ do_review()
 
 The local disk will be repartitioned as follows:
 ================================================
-           Physical Hard Disk: $DRIVE
-      Total storage available: $SPACE MB
+           Physical Hard Disk: $(get_drive_size $DRIVE)
           Boot partition size: $BOOT_SIZE MB
           Swap partition size: $SWAP_SIZE MB
   Installation partition size: $ROOT_SIZE * 2 MB
@@ -494,7 +502,7 @@ DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use the drive selected with 'ovirt_init' boot parameter
     DRIVE=$OVIRT_INIT
-    get_selected_drive_size
+    get_drive_size $DRIVE SPACE
 fi
 
 # if the node is Fedora then use GPT, otherwise use MBR
