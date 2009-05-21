@@ -52,6 +52,22 @@ function configure_interface
     if [ -z "$AUTO" ]; then
         while true; do
             printf "\n"
+            LINK=`ethtool $NIC| grep "Link detected"`:u
+            [ -z "$LINK" ] && return
+            if echo $LINK | grep -q "Link detected: yes" ; then
+                NICSTATUS="ACTIVE"
+            else
+                NICSTATUS="INACTIVE"
+            fi
+            echo "NIC is: $NICSTATUS"
+
+            read -ep "Help identify $NIC by blinking lights for 10 seconds ([Y]es/[N]o)?"
+            case $REPLY in
+                Y|y)
+                    ethtool --identify $NIC 10
+                    ;;
+            esac
+
             read -ep "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
             case $REPLY in
                 D|d)
