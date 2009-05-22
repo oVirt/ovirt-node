@@ -531,19 +531,20 @@ if [ "$1" == "AUTO" ]; then
 	log "Missing device parameter: unable to partition any disk"
     fi
 else
-    OPTIONS="Configure Review Partition Quit"
+    OPTIONS="\"Configure\" \"Review\" \"Commit Changes And Quit\" \"Return To Menu\""
+    eval set $OPTIONS
     PS3="Choose an option: "
 
     while true; do
         printf "\n\n Storage Configuration\n\n" >&2
 
-        select OPTION in $OPTIONS
+        select OPTION in "$@"
         do
             case "$OPTION" in
                 "Configure") do_configure ; break ;;
                 "Review")    do_review    ; break ;;
-                "Partition") do_confirm   ; break ;;
-                "Quit")      printf "\nExiting.\n"; exit ;;
+                "Commit Changes And Quit") do_confirm   ; break ;;
+                "Return To Menu")      printf "\nExiting.\n"; exit ;;
             esac
         done
     done

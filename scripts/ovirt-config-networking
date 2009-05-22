@@ -279,13 +279,13 @@ else
     while true; do
         printf "\n\n Networking Configuration\n\n" >&2
 
-        select NIC in $NICS "DNS" "NTP" "Save & Exit"
+        select NIC in $NICS "DNS" "NTP" "Save And Return To Menu"
         do
             printf "\n"
             case "$NIC" in
                 "DNS") configure_dns "$OVIRT_DNS"; break ;;
 		"NTP") configure_ntp "$OVIRT_NTP"; break ;;
-                "Save & Exit") break 2;;
+                "Save And Return To Menu") break 2;;
                 *)
                     if [[ -n "${NIC}" ]] && [[ "${NICS}" =~ "${NIC}" ]]; then
                         configure_interface $NIC $IFACE_NUMBER
