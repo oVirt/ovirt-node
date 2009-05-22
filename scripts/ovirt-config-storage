@@ -218,11 +218,14 @@ do_configure()
 
         while true; do
             printf "\n"
-            read -ep "Change $part partition size. (Def. ${size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? "
+            read -ep "Change $part partition size. (Def. ${size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? or Q to quit "
             mb_input=$REPLY
             test -z "$mb_input" && mb_input=$size
             local size_used=0
-            if [[ $mb_input =~ ^-*[0-9]+$ ]]; then
+            if [[ $mb_input == "q" || $mb_input == "Q" ]]; then
+                printf "Aborting"
+                return
+            elif [[ $mb_input =~ ^-*[0-9]+$ ]]; then
                 if [[ $mb_input -ge $min_size || $mb_input =~ $part_regexp ]] \
                     && [[ $mb_input -le $space_left ]] ; then
                     eval "$size_var=$mb_input"
