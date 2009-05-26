@@ -43,6 +43,16 @@ get_drive_size()
 
     local size=
     local udi=$(hal-find-by-property --key block.device --string $drive)
+    # if more than one UDI was found then iterate over them to find the base device
+    if [[ "${udi}" =~ \$  ]]; then
+        udi=$(echo $udi | sed 's/\$/ /g')
+        for found in ${udi}; do
+            if [[ "false" == $(hal-get-property --udi $found --key block.is_volume) ]]; then
+                udi=$found
+                break
+            fi
+        done
+    fi
     if [ -z "$udi" ]; then
         # If hal didn't find the device, it could be a virtio block device
         # In this case, use sfdisk -s to get the size
@@ -50,7 +60,7 @@ get_drive_size()
         size=$(echo "scale=0; $size * 1024" | bc -l)
     else
         size=$(hal-get-property --udi "$udi" --key storage.size)
-        if [ $size -eq 0 ]; then
+        if [[ "${size}" == "0" ]]; then
             # disk is probably hot-swappable, use different HAL key
             size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
         fi
