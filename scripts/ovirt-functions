@@ -435,9 +435,7 @@ ovirt_store_config() {
                 continue
             fi
             # skip if already bind-mounted
-            if grep -q " $f ext3" /proc/mounts ; then
-                printf " Skipping, file already persisted\n"
-            else
+            if ! grep -q " $f ext3" /proc/mounts ; then
                 mkdir -p /config$(dirname $f)
                 cp -a $f /config$f \
                 && mount -n --bind /config$f $f
