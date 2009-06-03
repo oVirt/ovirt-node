@@ -204,6 +204,13 @@ do_configure()
     printf "* For the Data partition, a size of -1 indicates that the\n"
     printf "  partition should use up the remaining space on the disk.\n\n"
 
+    do_review
+    read -ep "Use these default values? (Y/n) "
+
+    case $REPLY in
+        Y|y) return;;
+    esac
+
     local space_left=$SPACE
     for part in boot swap root config logging data ; do
         part_regexp="^0$"
