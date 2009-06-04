@@ -33,7 +33,7 @@ continuing."
         break
     elif [ "$r" == "N" ]; then
         printf "\nExiting back to the menu\n"
-        rc=1
+        rc=99
         break
     fi
 done

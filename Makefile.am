@@ -45,6 +45,8 @@ EXTRA_DIST =			\
   scripts/ovirt-functions	\
   scripts/ovirt-install-node-stateful	\
   scripts/ovirt-install-node-stateless	\
+  scripts/persist                       \
+  scripts/unpersist                     \
   scripts/ovirt-post		\
   scripts/ovirt-process-config  \
   scripts/ovirt-uninstall-node-stateful	\

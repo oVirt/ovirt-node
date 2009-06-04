@@ -201,6 +201,18 @@ ovirt_setup_libvirtd() {
     fi
 }
 
+ovirt_setup_anyterm() {
+   # configure anyterm
+   sed -i -e 's/^# ANYTERM_CMD=\/usr\/bin\/anyterm-cmd/ANYTERM_CMD="sudo \/usr\/bin\/virsh console %p"/' \
+        /etc/sysconfig/anyterm
+
+   sed -i -e 's/^# ANYTERM_LOCAL_ONLY=true/ANYTERM_LOCAL_ONLY=false/' \
+        /etc/sysconfig/anyterm
+
+   # permit it to run the virsh console
+   echo "anyterm ALL=NOPASSWD: /usr/bin/virsh console *" >> /etc/sudoers
+}
+
 md5() {
   md5sum $1 2>/dev/null | (read MD5 filename; echo $MD5)
 }
@@ -363,8 +375,14 @@ mount_data() {
         mkdir -p /data
         mount /data
         mkdir -p /data/images
+        mount -p /var/lib/libvirt/images
         mount /var/lib/libvirt/images
         restorecon -rv /var/lib/libvirt/images
+
+        mkdir -p /data/core
+        mkdir -p /var/log/core
+        mount /var/log/core
+        restorecon -rv /var/log/core
 
         return 0
     else
@@ -408,17 +426,16 @@ ovirt_store_config() {
     rc=0
     if grep -q " /config ext3" /proc/mounts; then
         printf "storing to /config :\n"
-        for f in "$@"; do
+        for p in "$@"; do
+            f=$(readlink -f $p)
             printf "$f"
             # skip if file does not exist or is empty
-            if [ ! -s $f ]; then
-                printf " Skipping, file does not exist or is empty\n"
+            if [ ! -s "$f" ]; then
+                printf " Skipping, file '%s' does not exist or is empty\n" $p
                 continue
             fi
             # skip if already bind-mounted
-            if grep -q " $f ext3" /proc/mounts ; then
-                printf " Skipping, file already persisted\n"
-            else
+            if ! grep -q " $f ext3" /proc/mounts ; then
                 mkdir -p /config$(dirname $f)
                 cp -a $f /config$f \
                 && mount -n --bind /config$f $f
@@ -451,7 +468,8 @@ ovirt_store_config() {
 #
 unmount_config() {
     if grep -q " /config ext3" /proc/mounts; then
-        for f in "$@"; do
+        for p in "$@"; do
+            f=$(readlink -f $p)
             if grep -q " $f ext3" /proc/mounts ; then
                 umount -n $f
                 # refresh rootfs copy
@@ -558,6 +576,7 @@ lvremove() {
 # reboot wrapper
 #   cleanup before reboot
 reboot() {
+    cd /
     # setup new Root if update is prepared
     if [ -e /dev/HostVG/RootUpdate ]; then
         lvrename HostVG Root RootBackup

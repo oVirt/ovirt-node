@@ -176,26 +176,36 @@ send_nic_details(void)
 
     nic_info_ptr current = nic_info;
 
-    while (current != NULL) {
-      if((!management_interface) || (strcmp(management_interface, current->iface_name))) {
-	send_text("NIC");
+    /* only send NIC details if we found NICs to process */
+    if(current) {
+      int sent_count = 0;
+      while (current != NULL) {
+	if((!management_interface) || (strcmp(management_interface, current->iface_name))) {
+	  send_text("NIC");
 
-	if (!(get_text("NICINFO?")) &&
-	    (!send_value("MAC", current->mac_address)) &&
-	    (!send_value("BANDWIDTH", current->bandwidth)) &&
-            (!send_value("IFACE_NAME", current->iface_name)) &&
-            (!send_value("IP_ADDRESS", current->ip_address)) &&
-            (!send_value("NETMASK", current->netmask)) &&
-            (!send_value("BROADCAST", current->broadcast))) {
-	  send_text("ENDNIC");
-	  result = get_text("ACK NIC");
-        }
+	  if (!(get_text("NICINFO?")) &&
+	      (!send_value("MAC", current->mac_address)) &&
+	      (!send_value("BANDWIDTH", current->bandwidth)) &&
+	      (!send_value("IFACE_NAME", current->iface_name)) &&
+	      (!send_value("IP_ADDRESS", current->ip_address)) &&
+	      (!send_value("NETMASK", current->netmask)) &&
+	      (!send_value("BROADCAST", current->broadcast))) {
+	    send_text("ENDNIC");
+	    result = get_text("ACK NIC");
+	    sent_count++;
+	  }
 
-        current = current->next;
-      } else {
-	current = current->next;
+	  current = current->next;
+	} else {
+	  current = current->next;
+	}
       }
-    }
+
+      /* if no nics were sent, then set default success */
+      if( sent_count == 0)
+	result = 0;
+
+    } else { result = 0; }
 
     return result;
 }

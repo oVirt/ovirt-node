@@ -18,6 +18,7 @@ trap 'exit $?' 1 2 13 15
 
 CONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
 NTP_CONFIG_FILE="/etc/ntp.conf"
+CONFIGURED_NIC=""
 
 function configure_interface
 {
@@ -30,6 +31,17 @@ function configure_interface
         GATEWAY=$OVIRT_IP_GATEWAY
         PREFIX=$OVIRT_IP_PREFIX
     fi
+
+    if [[ -n "${CONFIGURED_NIC}" ]]; then
+        printf "This will delete the current configuration for ${CONFIGURED_NIC}.\n"
+        read -ep "Continue? (y/N) "
+        case $REPLY in
+            N|n) printf "\nAborting...\n"; return;;
+        esac
+    fi
+
+    rm -rf $WORKDIR/*
+    CONFIGURED_NIC=$NIC
 
     local BRIDGE=br$NIC
     local IF_FILENAME="$WORKDIR/augtool-$NIC"
@@ -52,6 +64,22 @@ function configure_interface
     if [ -z "$AUTO" ]; then
         while true; do
             printf "\n"
+            LINK=`ethtool $NIC| grep "Link detected"`:u
+            [ -z "$LINK" ] && return
+            if echo $LINK | grep -q "Link detected: yes" ; then
+                NICSTATUS="ACTIVE"
+            else
+                NICSTATUS="INACTIVE"
+            fi
+            echo "NIC is: $NICSTATUS"
+
+            read -ep "Help identify $NIC by blinking lights for 10 seconds ([Y]es/[N]o)?"
+            case $REPLY in
+                Y|y)
+                    ethtool --identify $NIC 10
+                    ;;
+            esac
+
             read -ep "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
             case $REPLY in
                 D|d)
@@ -65,9 +93,11 @@ function configure_interface
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO none"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
-                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $GATEWAY"
+                    if [ -n "${GATEWAY}" ]; then
+                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $GATEWAY"
+                    fi
                     ;;
-                A|a) return ;;
+                A|a) CONFIGURED_NIC=""; return ;;
             esac
 
             printf "\n"
@@ -89,7 +119,7 @@ function configure_interface
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6AUTOCONF yes"
                     ;;
-                A|a) return ;;
+                A|a) CONFIGURED_NIC=""; return;;
             esac
 
             printf "\n"
@@ -104,7 +134,7 @@ function configure_interface
                         break
                     ;;
                 N|n) BR_CONFIG=$BR_CONFIG_BASE ;;
-                A|a) return ;;
+                A|a) CONFIGURED_NIC=""; return;;
             esac
         done
     else
@@ -247,23 +277,44 @@ function setup_menu
 }
 
 if [ "$1" == "AUTO" ]; then
-    configure_interface "$OVIRT_BOOTIF" AUTO
-    configure_dns "$OVIRT_DNS" AUTO
-    configure_ntp "$OVIRT_NTP" AUTO
+    if [ -n "$OVIRT_BOOTIF" ]; then
+	configure_interface "$OVIRT_BOOTIF" AUTO
+	configure_dns "$OVIRT_DNS" AUTO
+	configure_ntp "$OVIRT_NTP" AUTO
+    else
+	printf "No network interface specified. Unable to configure networking."
+	exit 0
+    fi
 else
     setup_menu
 
     while true; do
         printf "\n\n Networking Configuration\n\n" >&2
+        printf "***** WARNING *****\n"
+        printf "Configuring the network will destroy any existing networking\n"
+        printf "configuration on this system.\n"
+        printf "***** WARNING *****\n"
 
-        select NIC in $NICS "DNS" "NTP" "Save & Exit"
+        DNS="DNS"
+        NTP="NTP"
+        Abort="Abort"
+        Save="Save And Return To Menu"
+        select NIC in $NICS "$DNS" "$NTP" "$Abort" "$Save"
         do
             printf "\n"
             case "$NIC" in
-                "DNS") configure_dns "$OVIRT_DNS"; break ;;
-		"NTP") configure_ntp "$OVIRT_NTP"; break ;;
-                "Save & Exit") break 2;;
-                *) configure_interface $NIC $IFACE_NUMBER; break ;;
+                "$DNS") configure_dns "$OVIRT_DNS"; break ;;
+                "$NTP") configure_ntp "$OVIRT_NTP"; break ;;
+                "$Abort") rm -f "${WORKDIR}"/augtool-*; exit 99;;
+                "$Save") break 2;;
+                *)
+                    if [[ -n "${NIC}" ]] && [[ "${NICS}" =~ "${NIC}" ]]; then
+                        configure_interface $NIC $IFACE_NUMBER
+                    else
+                        printf "\nInvalid option selected.\n"
+                    fi
+                    break
+                    ;;
             esac
         done
     done
@@ -273,6 +324,14 @@ start_log
 net_configured=0
 if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
     log "Configuring network"
+
+    # delete existing scripts
+    for script in /etc/sysconfig/network-scripts/ifcfg-*; do
+        if [[ ! "${script}" =~ ifcfg-lo ]]; then
+            ovirt_safe_delete_config $script
+        fi
+    done
+
     config="$WORKDIR"/config-augtool
     cat "$WORKDIR"/augtool-* > $config \
         && augtool $config

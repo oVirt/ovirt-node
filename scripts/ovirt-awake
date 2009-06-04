@@ -42,6 +42,12 @@ function receive-text () {
     read 0<&3
 }
 
+function error () {
+  errmsg="ERR: (ovirt-awake) $1"
+  send-text "$errmsg"
+  log "$errmsg"
+}
+
 start () {
     connect-to-server
 
@@ -68,11 +74,12 @@ start () {
             else
                 echo "No keytab to retrieve"
             fi
+            send-text ACK
         else
-            echo "Did not get a mode request."
+            error "Did not get a mode request."
         fi
     else
-        echo "Did not get a proper startup marker."
+        error "Did not get a proper startup marker."
     fi
 
     echo "Disconnecting."

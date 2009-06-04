@@ -1,4 +1,4 @@
-module ovirt 1.0.1;
+policy_module(ovirt, 1.0.1);
 require {
     type fixed_disk_device_t;
     attribute file_type;

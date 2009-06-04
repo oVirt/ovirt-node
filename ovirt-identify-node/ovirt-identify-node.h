@@ -45,8 +45,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#define BUFFER_LENGTH 128
-#define CPU_FLAGS_BUFFER_LENGTH 256
+#define BUFFER_LENGTH 768
 
 typedef struct _cpu_info {
     char cpu_num[BUFFER_LENGTH];
@@ -58,7 +57,7 @@ typedef struct _cpu_info {
     char cpuid_level[BUFFER_LENGTH];
     char speed[BUFFER_LENGTH];
     char cache[BUFFER_LENGTH];
-    char flags[CPU_FLAGS_BUFFER_LENGTH];
+    char flags[BUFFER_LENGTH];
     struct _cpu_info* next;
 } t_cpu_info;
 

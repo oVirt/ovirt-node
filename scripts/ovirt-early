@@ -134,6 +134,7 @@ start() {
     #   ovirt_local_boot
     #   ovirt_standalone
     #   ovirt_firstboot
+    #   rescue
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
@@ -193,6 +194,10 @@ start() {
     # force firstboot configuration even if it has already been run
     # in auto-install mode, overwrite the disk chosen by ovirt_init parameter
     firstboot=
+
+    #   rescue
+    # enter emergency shell for fixing configuration issues
+    rescue=
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
@@ -298,8 +303,14 @@ start() {
             standalone=1
             bootparams="$bootparams $i"
             ;;
+            ovirt_firstboot=no | ovirt_firstboot=0)
+            firstboot=0
+            ;;
             ovirt_firstboot*)
             firstboot=1
+            ;;
+            rescue)
+            rescue=1
             ;;
 
             ovirt_overcommit*)
@@ -324,7 +335,7 @@ start() {
             dns=${i#dns=}
             ;;
 	    ntp=*)
-	    ntp=$(i#ntp=}
+	    ntp=${i#ntp=}
 	    ;;
             hostname=*)
             hostname=${i#hostname=}
@@ -373,6 +384,15 @@ start() {
         if [ -n "$HOSTNAME" ]; then
             hostname $HOSTNAME
         fi
+    fi
+
+    if [ "$rescue" = 1 ]; then
+        log "Rescue mode requested, starting emergency shell"
+        stop_log
+        plymouth --hide-splash
+        bash < /dev/console
+        plymouth --show-splash
+        start_log
     fi
 
     if [ "$standalone" = 1 ]; then
@@ -433,10 +453,12 @@ case "$1" in
         printf "Starting ovirt-early: "
 
         {
+            start_log
             log "Starting ovirt-early"
             start
             log "Completed ovirt-early"
-        } >> $OVIRT_LOGFILE 2>&1
+            stop_log
+        }
 
         test $? == 0 && success || failure
         echo

@@ -16,6 +16,10 @@ function set_hostname {
 set /files$HOSTNAME_FILE/HOSTNAME "$1"
 EOF
     rc=$?
+    if [ $rc = 0 ]; then
+    /bin/hostname "$1"
+    rc=$?
+    fi
     stop_log
     return $rc
 }

@@ -25,7 +25,7 @@ default_overcommit=0.5
 default_boot_size=50
 default_root_size=256
 default_config_size=5
-default_logging_size=256
+default_logging_size=2048
 # -1 indicates data partition should use remaining disk
 default_data_size=-1
 
@@ -36,27 +36,42 @@ logging_min_size=5
 data_min_size=5
 swap_min_size=5
 
-get_selected_drive_size()
+get_drive_size()
 {
-    start_log
+    local drive=$1
+    local space_var=$2
+
     local size=
-    local udi=$(hal-find-by-property --key block.device --string $DRIVE)
+    local udi=$(hal-find-by-property --key block.device --string $drive)
+    # if more than one UDI was found then iterate over them to find the base device
+    if [[ "${udi}" =~ \$  ]]; then
+        udi=$(echo $udi | sed 's/\$/ /g')
+        for found in ${udi}; do
+            if [[ "false" == $(hal-get-property --udi $found --key block.is_volume) ]]; then
+                udi=$found
+                break
+            fi
+        done
+    fi
     if [ -z "$udi" ]; then
         # If hal didn't find the device, it could be a virtio block device
         # In this case, use sfdisk -s to get the size
-        size=$(sfdisk -s $DRIVE)
+        size=$(sfdisk -s $drive)
         size=$(echo "scale=0; $size * 1024" | bc -l)
     else
         size=$(hal-get-property --udi "$udi" --key storage.size)
-        if [ $size -eq 0 ]; then
+        if [[ "${size}" == "0" ]]; then
             # disk is probably hot-swappable, use different HAL key
             size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
         fi
     fi
 
-    SPACE=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
-    log "Selected Device: $DRIVE ($SPACE MB) $(basename "$udi")"
-    stop_log
+    size=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
+    echo "$drive ($size MB)"
+    echo "Disk Identifier: $(basename "$udi")"
+    if [ -n "$space_var" ]; then
+        eval $space_var=$size
+    fi
 }
 
 check_partition_sizes()
@@ -69,7 +84,7 @@ check_partition_sizes()
     fi
 
     printf "\n"
-    get_selected_drive_size
+    get_drive_size $DRIVE SPACE
     disk_size=$SPACE
     need_size=$(echo "scale=0;" \
                      "$BOOT_SIZE + $SWAP_SIZE + $ROOT_SIZE * 2" \
@@ -160,6 +175,10 @@ get_dev_name()
     esac
 
     # There are two or more; make the user choose.
+    # display description for each disk
+    for d in $devices; do
+        get_drive_size $d >&2
+    done
     local choices="$devices Abort"
     select device in $choices
     do
@@ -174,7 +193,7 @@ do_configure()
 {
     local name_and_size
     DRIVE=$(get_dev_name) || return 0
-    get_selected_drive_size
+    get_drive_size $DRIVE SPACE
 
     printf "\n\nPlease configure storage partitions.\n\n"
     printf "* Enter partition sizes in MB.\n"
@@ -184,6 +203,13 @@ do_configure()
     printf "  during partitioning.\n"
     printf "* For the Data partition, a size of -1 indicates that the\n"
     printf "  partition should use up the remaining space on the disk.\n\n"
+
+    do_review
+    read -ep "Use these default values? (Y/n) "
+
+    case $REPLY in
+        Y|y) return;;
+    esac
 
     local space_left=$SPACE
     for part in boot swap root config logging data ; do
@@ -199,11 +225,14 @@ do_configure()
 
         while true; do
             printf "\n"
-            read -ep "Change $part partition size. (Def. ${size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? "
+            read -ep "Change $part partition size. (Def. ${size}MB), Min. ${min_size}MB, Max. ~${space_left}MB? or Q to quit "
             mb_input=$REPLY
             test -z "$mb_input" && mb_input=$size
             local size_used=0
-            if [[ $mb_input =~ ^-*[0-9]+$ ]]; then
+            if [[ $mb_input == "q" || $mb_input == "Q" ]]; then
+                printf "Aborting"
+                return
+            elif [[ $mb_input =~ ^-*[0-9]+$ ]]; then
                 if [[ $mb_input -ge $min_size || $mb_input =~ $part_regexp ]] \
                     && [[ $mb_input -le $space_left ]] ; then
                     eval "$size_var=$mb_input"
@@ -256,8 +285,7 @@ do_review()
 
 The local disk will be repartitioned as follows:
 ================================================
-           Physical Hard Disk: $DRIVE
-      Total storage available: $SPACE MB
+           Physical Hard Disk: $(get_drive_size $DRIVE)
           Boot partition size: $BOOT_SIZE MB
           Swap partition size: $SWAP_SIZE MB
   Installation partition size: $ROOT_SIZE * 2 MB
@@ -281,6 +309,7 @@ wipe_lvm_on_disk()
 
 perform_partitioning()
 {
+    log "Partitioning drive: $DRIVE"
     if [ -z "$DRIVE" ]; then
         printf "\nNo storage device selected.\n"
         return
@@ -397,8 +426,7 @@ perform_partitioning()
         tune2fs -c 0 -i 0 /dev/HostVG/Data
         echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
         echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
-        log "Mounting data partition"
-        mount_data
+        echo "/data/core /var/log/core bind bind 0 0" >> /etc/fstab
     fi
 
     # end critical section
@@ -410,6 +438,10 @@ perform_partitioning()
     fi
 
     mount_logging
+    if [ "$use_data" = 0 ]; then
+        log "Mounting data partition"
+        mount_data
+    fi
     log "Completed!"
 
     stop_log
@@ -490,7 +522,7 @@ DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use the drive selected with 'ovirt_init' boot parameter
     DRIVE=$OVIRT_INIT
-    get_selected_drive_size
+    get_drive_size $DRIVE SPACE
 fi
 
 # if the node is Fedora then use GPT, otherwise use MBR
@@ -501,32 +533,38 @@ else
 fi
 
 if [ "$1" == "AUTO" ]; then
-    # do not format if HostVG exists on selected disk...
-    pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|grep -q -m1 "HostVG"
-    existingHostVG=$?
-    # ... unless overridden by ovirt_firstboot parameter
-    if is_firstboot || [ $existingHostVG -ne 0 ]; then
-        if check_partition_sizes; then
-            printf "Partitioning hard disk..."
-            perform_partitioning
-        fi
+    log "Beginning automatic disk partitioning.\n"
+    if [ -n "$OVIRT_INIT" ]; then
+        # do not format if HostVG exists on selected disk...
+	pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|grep -q -m1 "HostVG"
+	existingHostVG=$?
+        # ... unless overridden by ovirt_firstboot parameter
+	if is_firstboot || [ $existingHostVG -ne 0 ]; then
+            if check_partition_sizes; then
+		log "Partitioning hard disk..."
+		perform_partitioning
+            fi
+	else
+            log "Skip disk partitioning, HostVG exists"
+	fi
     else
-        log "Skip disk partitioning, HostVG exists"
+	log "Missing device parameter: unable to partition any disk"
     fi
 else
-    OPTIONS="Configure Review Partition Quit"
+    OPTIONS="\"Configure\" \"Review\" \"Commit Changes And Quit\" \"Return To Menu\""
+    eval set $OPTIONS
     PS3="Choose an option: "
 
     while true; do
         printf "\n\n Storage Configuration\n\n" >&2
 
-        select OPTION in $OPTIONS
+        select OPTION in "$@"
         do
             case "$OPTION" in
                 "Configure") do_configure ; break ;;
                 "Review")    do_review    ; break ;;
-                "Partition") do_confirm   ; break ;;
-                "Quit")      printf "\nExiting.\n"; exit ;;
+                "Commit Changes And Quit") do_confirm   ; break ;;
+                "Return To Menu")      printf "\nExiting.\n"; exit ;;
             esac
         done
     done

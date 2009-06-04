@@ -23,7 +23,7 @@ BuildRequires:  libvirt-devel >= 0.5.1
 BuildRequires:  dbus-devel hal-devel
 Requires:       libvirt >= 0.5.1
 Requires:       augeas >= 0.3.5
-Requires:       libvirt-qpid >= 0.2.3
+Requires:       libvirt-qpid >= 0.2.14-3
 Requires:       hal
 Requires:       collectd-virt
 Requires:       wget
@@ -42,6 +42,7 @@ Requires:       qemu-img
 Requires:       nc
 Requires:       grub
 Requires:       /usr/sbin/crond
+Requires:       anyterm
 ExclusiveArch:  %{ix86} x86_64
 
 %define app_root %{_datadir}/%{name}
@@ -158,6 +159,8 @@ cd -
 %{__install} -D -m0755 scripts/ovirt-install-node-stateful %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-install-node-stateless %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-uninstall-node-stateful %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/persist %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/unpersist %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
 %{__install} -Dp -m0755 ovirt-listen-awake/ovirt-listen-awake.init %{buildroot}%{_initrddir}/ovirt-listen-awake
@@ -312,6 +315,8 @@ fi
 %{_sbindir}/ovirt-install-node-stateless
 %{_sbindir}/gptsync
 %{_sbindir}/showpart
+%{_sbindir}/persist
+%{_sbindir}/unpersist
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
