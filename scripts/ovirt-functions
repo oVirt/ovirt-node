@@ -345,15 +345,33 @@ unmount_logging_services() {
     # mapping command->service is lame, but works for most initscripts
     services=
     cd /etc/init.d
+    # fixup for vdsm-reg intscript
+    if ! grep  "processname: vdsm-reg-setup" /etc/init.d/vdsm-reg; then
+        echo "# processname: vdsm-reg-setup" >> /etc/init.d/vdsm-reg
+    fi
     for prg in $(lsof -Fc +D /var/log|grep ^c|sort -u); do
-        srv=$(grep -l ${prg#c}$ *)
-        for svc in $srv; do
-            service $svc stop 6>&- 7>&-
-            services="$services $svc"
-        done
+        prog=${prg#c}
+        srv=$(grep -l "processname: .*$prog"$ *)
+        if [ -z "$srv" ]; then
+            # for scripts without chkconfig init header
+            srv=$(grep -l '^prog=["]*'$prog'["]*$' *)
+        fi
+        if [ -z "$srv" ]; then
+            # fallback for scripts without correct prog=
+            srv=$(grep -l '^DAEMON=["]*'$prog'["]*$' *)
+        fi
+        if [ -n "$srv" ]; then
+            service $srv stop 6>&- 7>&-
+            services="$services $srv"
+        fi
     done
     # debugging help
     lsof +D /var/log
+    # unmount all under /var/log/
+    for d in $(grep /var/log/ /proc/mounts|awk '{print $2}'); do
+        log "Unmounting $d"
+        umount $d
+    done
 }
 
 # mount logging partition
@@ -418,21 +436,25 @@ unmount_logging() {
 
 # mount data partition
 mount_data() {
-    if grep -q " /data ext4" /proc/mounts; then
-        return 0
-    fi
-
+    udevsettle
     if [ -e /dev/HostVG/Data ] ; then
         mkdir -p /data
-        mount /data
+        if ! grep -q " /data ext4" /proc/mounts; then
+            mount /data
+        fi
+
         mkdir -p /data/images
         mkdir -p /var/lib/libvirt/images
-        mount /var/lib/libvirt/images
+        if ! grep -q "/var/lib/libvirt/images ext4" /proc/mounts; then
+            mount /var/lib/libvirt/images
+        fi
         restorecon -rv /var/lib/libvirt/images
 
         mkdir -p /data/core
         mkdir -p /var/log/core
-        mount /var/log/core
+        if ! grep -q "/var/log/core ext4" /proc/mounts; then
+            mount /var/log/core
+        fi
         restorecon -rv /var/log/core
         chmod 1777 /var/log/core
         # configure kdump
