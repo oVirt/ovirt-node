@@ -8,6 +8,13 @@
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
+warn() { printf '%s\n' "$*" >&2; }
+
+if ! is_local_storage_configured; then
+    warn "Local storage must be configured prior to setting the hostname."
+    exit 99
+fi
+
 HOSTNAME_FILE="/etc/sysconfig/network"
 
 function set_hostname {
@@ -17,8 +24,9 @@ set /files$HOSTNAME_FILE/HOSTNAME "$1"
 EOF
     rc=$?
     if [ $rc = 0 ]; then
-    /bin/hostname "$1"
-    rc=$?
+        /bin/hostname "$1"
+        rc=$?
+        if [ $rc -eq 0 ]; then /usr/sbin/persist $HOSTNAME_FILE; fi
     fi
     stop_log
     return $rc
@@ -82,4 +90,3 @@ else
     printf "\n\n Hostname Configuration\n\n"
     prompt_user
 fi
-
