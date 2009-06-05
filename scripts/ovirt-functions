@@ -78,6 +78,16 @@ is_standalone() {
     if is_managed; then return 1; else return 0; fi
 }
 
+# return 0 if local storage is configured
+# return 1 if local storage is not configured
+is_local_storage_configured () {
+    if lvs HostVG/Config >/dev/null >&1; then
+        return 0
+    fi
+
+    return 1
+}
+
 # perform automatic local disk installation
 # when at least following boot parameters are present:
 # for networking - OVIRT_BOOTIF, management NIC
