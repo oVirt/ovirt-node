@@ -289,7 +289,7 @@ else
     setup_menu
 
     while true; do
-        printf "\n\n Networking Configuration\n\n" >&2
+        printf "\n\nManagement Network Configuration\n\n" >&2
         printf "***** WARNING *****\n"
         printf "Configuring the network will destroy any existing networking\n"
         printf "configuration on this system.\n"
@@ -351,4 +351,3 @@ if [ "$net_configured" = 1 ]; then
     service network stop > /dev/null 2>&1
     service network start
 fi
-
