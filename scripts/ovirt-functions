@@ -634,4 +634,3 @@ chkconfig_persist() {
 if [ "$(basename "$0")" = "ovirt-functions" ]; then
     "$@"
 fi
-
