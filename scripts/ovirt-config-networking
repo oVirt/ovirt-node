@@ -189,6 +189,11 @@ function configure_interface
 
 function configure_dns
 {
+    if [[ -z "${CONFIGURED_NIC}" ]]; then
+        printf "\nYou must configure a network interface first.\n\n"
+        return
+    fi
+
     local DNS=$1
     local AUTO=$2
     if [[   "$AUTO" == "AUTO"    &&
@@ -196,8 +201,8 @@ function configure_dns
         DNS=$OVIRT_DNS
     fi
 
-    local IF_FILENAME="$WORKDIR/augtool-lo"
-    local IF_ROOT="$CONFIG_FILE_ROOT-lo"
+    local IF_FILENAME="$WORKDIR/augtool-br${CONFIGURED_NIC}"
+    local IF_ROOT="$CONFIG_FILE_ROOT-br${CONFIGURED_NIC}"
     local IF_CONFIG=
 
     if [ -z "$AUTO" ]; then
@@ -344,7 +349,9 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
     if [ $? = 0 ]; then
         log "Network configured successfully"
         net_configured=1
-        ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
+        ovirt_store_config \
+            /etc/sysconfig/network-scripts/ifcfg* \
+            $NTP_CONFIG_FILE
     else
         log "Error configuring network, see $OVIRT_LOGFILE"
         stop_log
