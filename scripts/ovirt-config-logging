@@ -8,6 +8,11 @@
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
+if ! is_local_storage_configured; then
+    printf "Local storage must be configured prior to configuring the logging system.\n"
+    exit 99
+fi
+
 RSYSLOG_FILE="/etc/rsyslog.conf"
 
 # Creates the rsyslog file based on the following inputs
@@ -185,4 +190,3 @@ else
     printf "\n\n Logging Configuration\n\n"
     prompt_user
 fi
-
