@@ -235,7 +235,7 @@ function configure_dns
 
         test -n "$DNS1" && IF_CONFIG="set $IF_ROOT/DNS1 $DNS1"
         test -n "$DNS2" && IF_CONFIG="set $IF_ROOT/DNS2 $DNS2"
-        printf "$IF_CONFIG\n" > $IF_FILENAME
+        printf "$IF_CONFIG\n" >> $IF_FILENAME
     fi
 }
 
