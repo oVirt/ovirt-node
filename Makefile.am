@@ -40,6 +40,7 @@ EXTRA_DIST =			\
   scripts/ovirt-config-setup    \
   scripts/ovirt-config-storage  \
   scripts/ovirt-config-uninstall \
+  scripts/ovirt-config-view-logs \
   scripts/ovirt-early		\
   scripts/ovirt-firstboot       \
   scripts/ovirt-functions	\

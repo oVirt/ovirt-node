@@ -159,6 +159,7 @@ cd -
 %{__install} -D -m0755 scripts/ovirt-install-node-stateful %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-install-node-stateless %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-uninstall-node-stateful %{buildroot}%{_sbindir}
+%{__install} -D -m0755 scripts/ovirt-config-view-logs %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/persist %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/unpersist %{buildroot}%{_sbindir}
 %{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
@@ -227,6 +228,7 @@ ln -s ovirt-release %{buildroot}/etc/system-release
 %{__ln_s} ../..%{_sbindir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-collectd %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"35_Collectd Setup"
+%{__ln_s} ../..%{_sbindir}/ovirt-config-view-logs %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"90_View logs"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-uninstall %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Uninstall node"
 
@@ -311,6 +313,7 @@ fi
 %{_sbindir}/ovirt-config-setup
 %{_sbindir}/ovirt-config-storage
 %{_sbindir}/ovirt-config-uninstall
+%{_sbindir}/ovirt-config-view-logs
 %{_sbindir}/ovirt-process-config
 %{_sbindir}/ovirt-install-node-stateless
 %{_sbindir}/gptsync
