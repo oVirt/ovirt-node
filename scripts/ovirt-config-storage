@@ -62,7 +62,10 @@ get_drive_size()
         size=$(hal-get-property --udi "$udi" --key storage.size)
         if [[ "${size}" == "0" ]]; then
             # disk is probably hot-swappable, use different HAL key
-            size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
+            # but first check that it is removeable media and that  media is present
+            if [[ "true" == "$(hal-get-property --udi "$udi" --key storage.removable.media_available)" ]]; then
+                size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
+            fi
         fi
     fi
 
