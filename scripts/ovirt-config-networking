@@ -16,8 +16,10 @@ WORKDIR=$(mktemp -d) || exit 1
 trap '__st=$?; rm -rf "$WORKDIR"; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
-CONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
+IFCONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
+NTPCONF_FILE_ROOT="/files/etc/ntp"
 NTP_CONFIG_FILE="/etc/ntp.conf"
+NTPSERVERS=""
 CONFIGURED_NIC=""
 
 # if local storage is not configured, then exit the script
@@ -55,10 +57,10 @@ function configure_interface
 
     printf "\nConfigure $BRIDGE for use by $NIC..\n\n"
 
-    local IF_ROOT="$CONFIG_FILE_ROOT-$NIC"
+    local IF_ROOT="$IFCONFIG_FILE_ROOT-$NIC"
     local IF_CONFIG="rm $IF_ROOT\nset $IF_ROOT/DEVICE $NIC"
 
-    local BR_ROOT="$CONFIG_FILE_ROOT-$BRIDGE"
+    local BR_ROOT="$IFCONFIG_FILE_ROOT-$BRIDGE"
     local BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE Bridge"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/PEERNTP yes"
@@ -202,7 +204,7 @@ function configure_dns
     fi
 
     local IF_FILENAME="$WORKDIR/augtool-br${CONFIGURED_NIC}"
-    local IF_ROOT="$CONFIG_FILE_ROOT-br${CONFIGURED_NIC}"
+    local IF_ROOT="$IFCONFIG_FILE_ROOT-br${CONFIGURED_NIC}"
     local IF_CONFIG=
 
     if [ -z "$AUTO" ]; then
@@ -241,12 +243,11 @@ function configure_dns
 
 function configure_ntp
 {
-    local NTP=$1
     local AUTO=$2
     if [[ "$AUTO" == "AUTO" && -n "$OVIRT_NTP" ]]; then
-	NTP=$OVIRT_NTP
+	NTPSERVERS=$OVIRT_NTP
     else
-	NTP=""
+	NTPSERVERS=""
     fi
 
     if [ -z "$AUTO" ]; then
@@ -255,18 +256,29 @@ function configure_ntp
 
 	    if [ -z "$REPLY" ]; then break; fi
 
-	    NTP="$NTP $REPLY"
+	    NTPSERVERS="$NTPSERVERS $REPLY"
 	done
     fi
+}
 
-    if [ -n "$NTP" ]; then
-	# strip out all current servers from /etc/npt.conf and insert our own
-	BACKUP="${WORKDIR}/ntp.conf-backup"
-	egrep -v '^server .* # added by ovirt-config-network' < $NTP_CONFIG_FILE > $BACKUP
-	for server in $NTP; do
-	    echo "server $server # added by ovirt-config-network" >> $BACKUP
+function save_ntp_configuration
+{
+    local ntpconf="$WORKDIR/augtool-ntp"
+    local ntproot="/files/etc/ntp.conf"
+
+    printf "\
+rm ${ntproot}\n\n
+set ${ntproot}/driftfile /var/lib/ntp/drift\n\
+set ${ntproot}/includefile /etc/ntp/crypto/pw\n\
+set ${ntproot}/keys /etc/ntp/keys\n\
+save\n" > $ntpconf
+
+    if [ -n "$NTPSERVERS" ]; then
+        offset=1
+	for server in $NTPSERVERS; do
+            printf "set /files/etc/ntp.conf/server[${offset}] ${server}\n" >> $ntpconf
+            offset=$(echo "$offset+1" | bc)
 	done
-	cp -f $BACKUP $NTP_CONFIG_FILE
     fi
 }
 
@@ -317,7 +329,9 @@ else
                 "$DNS") configure_dns "$OVIRT_DNS"; break ;;
                 "$NTP") configure_ntp "$OVIRT_NTP"; break ;;
                 "$Abort") rm -f "${WORKDIR}"/augtool-*; exit 99;;
-                "$Save") break 2;;
+                "$Save")
+                    save_ntp_configuration
+                    break 2;;
                 *)
                     if [[ -n "${NIC}" ]] && [[ "${NICS}" =~ "${NIC}" ]]; then
                         configure_interface $NIC $IFACE_NUMBER
