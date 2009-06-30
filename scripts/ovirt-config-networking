@@ -42,10 +42,12 @@ function configure_interface
 
     if [[ -n "${CONFIGURED_NIC}" ]]; then
         printf "This will delete the current configuration for ${CONFIGURED_NIC}.\n"
-        read -ep "Continue? (y/N) "
-        case $REPLY in
-            N|n) printf "\nAborting...\n"; return;;
-        esac
+        if ask_yes_or_no "Do you wish to continue (y/n)?"; then
+            printf "\nDeleting existing network configuration...\n"
+        else
+            printf "\nAborting...\n"
+            return
+        fi
     fi
 
     rm -rf $WORKDIR/*
@@ -81,12 +83,9 @@ function configure_interface
             fi
             echo "NIC is: $NICSTATUS"
 
-            read -ep "Help identify $NIC by blinking lights for 10 seconds ([Y]es/[N]o)?"
-            case $REPLY in
-                Y|y)
-                    ethtool --identify $NIC 10
-                    ;;
-            esac
+            if ask_yes_or_no "Help identify ${NIC} by blinking lights for 10 seconds (y/n)?"; then
+                ethtool --identify $NIC 10
+            fi
 
             read -ep "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
             case $REPLY in
@@ -131,18 +130,22 @@ function configure_interface
             esac
 
             printf "\n"
-            read -ep "Is this correct (Y/N/A)? "
-            case $REPLY in
-                Y|y)
-                        IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
-                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
-
-                        printf "$IF_CONFIG\n" > $IF_FILENAME
-                        printf "$BR_CONFIG\n" > $BR_FILENAME
-                        break
+            ask_yes_or_no "Is this correct (y/n/a)?" true true
+            case $? in
+                0)
+                    IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
+                    printf "$IF_CONFIG\n" > $IF_FILENAME
+                    printf "$BR_CONFIG\n" > $BR_FILENAME
+                    break
                     ;;
-                N|n) BR_CONFIG=$BR_CONFIG_BASE ;;
-                A|a) CONFIGURED_NIC=""; return;;
+                1)
+                    BR_CONFIG=$BR_CONFIG_BASE
+                    ;;
+                2)
+                    CONFIGURED_NIC=""
+                    return
+                    ;;
             esac
         done
     else
@@ -222,11 +225,11 @@ function configure_dns
             fi
 
             printf "\n"
-            read -ep "Is this correct (Y/N/A)? "
-            case $REPLY in
-                Y|y) break ;;
-                N|n) ;;
-                A|a) return ;;
+            ask_yes_or_no "Is this correct (y/n/a)?" true true
+            case $? in
+                0) break ;;
+                1) ;;
+                2) return ;;
             esac
         done
     fi

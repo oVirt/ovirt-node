@@ -55,9 +55,9 @@ function prompt_user {
         fi
     else
         printf "\n"
-        read -p "Enter (Y|y) to blank out the hostname, or (N|n) to skip. "
-        case $REPLY in
-            Y|y)
+        ask_yes_or_no "Blank out the hostnames (y/n)?"
+        case $? in
+            0)
                 if remove_hostname; then
                     printf "\nHostname was removed.\n"
                     return 0
@@ -66,11 +66,10 @@ function prompt_user {
                     return 1
                 fi
                 ;;
-            N|n)
+            1)
                 printf "\nNo changes made.\n"
                 return 0
                 ;;
-            *) ;;
         esac
     fi
 }

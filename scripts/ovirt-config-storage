@@ -208,11 +208,9 @@ do_configure()
     printf "  partition should use up the remaining space on the disk.\n\n"
 
     do_review
-    read -ep "Use these default values? (Y/n) "
-
-    case $REPLY in
-        Y|y) return;;
-    esac
+    if ask_yes_or_no "Use these default values (y/n)?"; then
+        return
+    fi
 
     local space_left=$SPACE
     for part in boot swap root config logging data ; do
@@ -474,19 +472,15 @@ do_confirm()
           "$wb$sp$w" \
         "$w8" \
         "$w8"
-        printf "\n\tContinue? (Y/n) "
-        read -e
-        case $REPLY in
-            Y|y)
-                if check_partition_sizes; then
-                    perform_partitioning
-                    exit 0
-                fi
-                break
-                ;;
-            N|n)  return ;;
-            *) ;;
-        esac
+
+        if ask_yes_or_no "Do you wish to proceed (y/n)?"; then
+            if check_partition_sizes; then
+                perform_partitioning
+                exit 0
+            fi
+        else
+            return
+        fi
     done
 }
 

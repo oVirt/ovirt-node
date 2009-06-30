@@ -146,27 +146,30 @@ function prompt_user {
         printf "\n"
         printf "\n"
         while true; do
-            read -p "Is this correct (Y/N/A)? "
-            r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
-            if [ "$r" == "Y" ]; then
-                printf "\nSaving configuration.\n"
-                if [[ -n "$syslog_server_ip" ]] &&
-                    [[ -n "$syslog_server_port" ]] &&
-                    [[ -n "$syslog_server_protocol" ]]; then
-                    ovirt_rsyslog $syslog_server_ip \
-                        $syslog_server_port \
-                        $syslog_server_protocol
-                fi
-                sed -c -i -e "s/^size=.*/size=${max_log_size}k/" \
-                    /etc/logrotate.d/ovirt-logrotate.conf
-                return
-            elif [ "$r" == "N" ]; then
-                printf "\nRestarting logging configuration.\n"
-                break
-            elif [ "$r" == "A" ]; then
-                printf "\nAborting logging configuration.\n"
-                return
-            fi
+            ask_yes_or_no "Is this correct (y/n/a)?" true true
+            case $? in
+                0)
+                    printf "\nSaving configuration.\n"
+                    if [[ -n "$syslog_server_ip" ]] &&
+                        [[ -n "$syslog_server_port" ]] &&
+                        [[ -n "$syslog_server_protocol" ]]; then
+                        ovirt_rsyslog $syslog_server_ip \
+                            $syslog_server_port \
+                            $syslog_server_protocol
+                    fi
+                    sed -c -i -e "s/^size=.*/size=${max_log_size}k/" \
+                        /etc/logrotate.d/ovirt-logrotate.conf
+                    return
+                    ;;
+                1)
+                    printf "\nRestarting logging configuration.\n"
+                    break
+                    ;;
+                2)
+                    printf "\nAborting logging configuration.\n"
+                    return
+                    ;;
+            esac
         done
     done
 }

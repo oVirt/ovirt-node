@@ -627,6 +627,32 @@ chkconfig_persist() {
     ovirt_store_config $to_persist
 }
 
+# Asks a yes or no question. Accepts Y/N/A so users can abort.
+# RC=0 - Y/y entered
+# RC=1 - N/n entered
+# RC=2 - A/a entered
+# $1 - the prompt to use
+# $2 - require a response (def. true)
+# $3 - allow aborting (def. false)
+ask_yes_or_no () {
+    local prompt=${1}
+    local required=${2-true}
+    local allow_abort=${3-false}
+
+    while true; do
+        read -ep "${prompt} "
+        case $REPLY in
+            Y|y) return 0;;
+            N|n) return 1;;
+            A|a) if $allow_abort; then return 2; fi ;;
+            *)
+                if [ $required == false ]; then
+                    return 99
+                fi
+                ;;
+        esac
+    done
+}
 
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
