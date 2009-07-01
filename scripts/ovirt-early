@@ -67,6 +67,10 @@ configure_from_network() {
                 fi
             fi
         fi
+    else
+        # for non-PXE boot when BOOTIF parameter is not specified
+        # otherwise default network config is invalid
+        DEVICE=eth0
     fi
     # default oVirt network configuration:
     # bridge each ethernet device in the system
