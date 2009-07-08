@@ -21,6 +21,8 @@ NTPCONF_FILE_ROOT="/files/etc/ntp"
 NTP_CONFIG_FILE="/etc/ntp.conf"
 NTPSERVERS=""
 CONFIGURED_NIC=""
+VLAN_ID=""
+VL_ROOT=""
 
 # if local storage is not configured, then exit the script
 if ! is_local_storage_configured; then
@@ -59,6 +61,10 @@ function configure_interface
         printf "This will delete the current configuration for ${CONFIGURED_NIC}.\n"
         if ask_yes_or_no "Do you wish to continue (y/n)?"; then
             printf "\nDeleting existing network configuration...\n"
+            cp -a  /etc/sysconfig/network-scripts/ifcfg-lo /etc/sysconfig/network-scripts/backup.log
+            unmount_config /etc/sysconfig/network-scripts/ifcfg-*
+            rm -rf /etc/sysconfig/network-scripts/ifcfg-*
+            cp -a  /etc/sysconfig/network-scripts/backup.lo /etc/sysconfig/network-scripts/ifcfg-lo
         else
             printf "\nAborting...\n"
             return
@@ -79,15 +85,16 @@ function configure_interface
 
     local BR_ROOT="$IFCONFIG_FILE_ROOT-$BRIDGE"
     local BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
+
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE Bridge"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/PEERNTP yes"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DELAY 0"
-    IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/BRIDGE $BRIDGE"
-
     local BR_CONFIG_BASE=$BR_CONFIG
 
     if [ -z "$AUTO" ]; then
         while true; do
+            local VL_CONFIG=""
+
             printf "\n"
             LINK=`ethtool $NIC| grep "Link detected"`:u
             [ -z "$LINK" ] && return
@@ -102,6 +109,34 @@ function configure_interface
                 ethtool --identify $NIC 10
             fi
 
+            ask_yes_or_no "Include VLAN support (y/n/a)? " true true
+            case $? in
+                0)
+                    while true; do
+                        read -ep "What is the VLAN ID for this device (a=abort) "
+                        case $REPLY in
+                            A|a) CONFIGURED_NIC=""; return;;
+                            *)
+                                if [[ -n "$REPLY" ]] && [[ "$REPLY" =~ "^[0-9]{1,}$" ]]; then
+                                    VLAN_ID=$REPLY
+                                    VL_ROOT="${IF_ROOT}.${VLAN_ID}"
+                                    VL_CONFIG="rm ${VL_ROOT}\nset ${VL_ROOT}/DEVICE ${NIC}.${VLAN_ID}"
+                                    VL_CONFIG="${VL_CONFIG}\nset ${VL_ROOT}/BRIDGE ${BRIDGE}"
+                                    VL_CONFIG="${VL_CONFIG}\nset ${VL_ROOT}/VLAN yes"
+                                    VL_FILENAME="${IF_FILENAME}.${VLAN_ID}"
+                                    break
+                                fi
+                                ;;
+                        esac
+                    done
+                    ;;
+                1)  IF_CONFIG="${IF_CONFIG}\nset ${IF_ROOT}/BRIDGE ${BRIDGE}" ;;
+                2)
+                    CONFIGURED_NIC=""
+                    VLAN_ID=""
+                    return;;
+            esac
+
             read -ep "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
             case $REPLY in
                 D|d)
@@ -112,6 +147,7 @@ function configure_interface
                     read -ep "IP Address: "; IPADDR=$REPLY
                     read -ep "   Netmask: "; NETMASK=$REPLY
                     read -ep "   Gateway: "; GATEWAY=$REPLY
+
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO none"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
@@ -119,7 +155,11 @@ function configure_interface
                         BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $GATEWAY"
                     fi
                     ;;
-                A|a) CONFIGURED_NIC=""; return ;;
+                A|a)
+                    CONFIGURED_NIC=""
+                    VLAN_ID=""
+                    return
+                    ;;
             esac
 
             printf "\n"
@@ -141,7 +181,11 @@ function configure_interface
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6AUTOCONF yes"
                     ;;
-                A|a) CONFIGURED_NIC=""; return;;
+                A|a)
+                    CONFIGURED_NIC=""
+                    VLAN_ID=""
+                    return
+                    ;;
             esac
 
             printf "\n"
@@ -150,8 +194,14 @@ function configure_interface
                 0)
                     IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
+                    if [[ -n "$VLAN_ID" ]]; then
+                        VL_CONFIG="$VL_CONFIG\nset $VL_ROOT/ONBOOT yes"
+                    fi
                     printf "$IF_CONFIG\n" > $IF_FILENAME
                     printf "$BR_CONFIG\n" > $BR_FILENAME
+                    if [[ -n "$VLAN_ID" ]]; then
+                        printf "$VL_CONFIG\n" > $VL_FILENAME
+                    fi
                     break
                     ;;
                 1)
@@ -159,6 +209,7 @@ function configure_interface
                     ;;
                 2)
                     CONFIGURED_NIC=""
+                    VLAN_ID=""
                     return
                     ;;
             esac
