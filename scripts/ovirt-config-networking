@@ -223,17 +223,30 @@ function configure_dns
     if [ -z "$AUTO" ]; then
         if has_configured_interface true; then
             while true; do
-                printf "\n"
-                echo "Enter up to two DNS servers separated by commas:"
-                if [ -n "$OVIRT_DNS" ]; then
-                    echo "Press Enter for defaults: ($OVIRT_DNS)"
-                fi
-                read -ep ": "
-                DNS=$REPLY
-
-                if [ -z "$DNS" ]; then
-                    DNS=$OVIRT_DNS
-                fi
+                for dns in first second; do
+                    while true; do
+                        printf "\n"
+                        read -ep "Please enter the ${dns} DNS server (or ENTER to exit): "
+                        if [[ -z "${REPLY}" ]]; then
+                            if [[ -z "${DNS}" ]]; then
+                                printf "\nAborted...\n"
+                                return
+                            else
+                                break
+                            fi
+                        fi
+                        if is_valid_ipv4 $REPLY; then
+                            if [[ -z "${DNS}" ]]; then
+                                DNS="${REPLY}"
+                            elif [[ -n "${REPLY}" ]]; then
+                                DNS="${DNS}:${REPLY}"
+                            fi
+                            break
+                        else
+                            printf "${REPLY} is an invalid address.\n"
+                        fi
+                    done
+                done
 
                 printf "\n"
                 ask_yes_or_no "Is this correct (y/n/a)?" true true
@@ -247,12 +260,11 @@ function configure_dns
     fi
 
     if [ -n "$DNS" ]; then
-        DNS1=$(echo "$DNS" | awk -F, '{print $1}')
-        DNS2=$(echo "$DNS" | awk -F, '{print $2}')
+        DNS1=$(echo "$DNS" | awk -F\: '{print $1}')
+        DNS2=$(echo "$DNS" | awk -F\: '{print $2}')
 
-        test -n "$DNS1" && IF_CONFIG="set $IF_ROOT/DNS1 $DNS1"
-        test -n "$DNS2" && IF_CONFIG="set $IF_ROOT/DNS2 $DNS2"
-        printf "$IF_CONFIG\n" >> $IF_FILENAME
+        test -n "$DNS1" && printf "set $IF_ROOT/DNS1 $DNS1\n" >> $IF_FILENAME
+        test -n "$DNS2" && printf "set $IF_ROOT/DNS2 $DNS2\n" >> $IF_FILENAME
     fi
 }
 
@@ -272,7 +284,11 @@ function configure_ntp
 
 	        if [ -z "$REPLY" ]; then break; fi
 
-	        NTPSERVERS="$NTPSERVERS $REPLY"
+                if is_valid_ipv4 $REPLY; then
+                    NTPSERVERS="${NTPSERVERS}:${REPLY}"
+                else
+                    printf "${REPLY} is an invalid address.\n"
+                fi
 	    done
         fi
     fi
@@ -292,10 +308,11 @@ save\n" > $ntpconf
 
     if [ -n "$NTPSERVERS" ]; then
         offset=1
-	for server in $NTPSERVERS; do
+        SERVERS=$(echo $NTPSERVERS | awk 'BEGIN{FS=":"}{for (i=1; i<=NF; i++) print $i}')
+        for server in $SERVERS; do
             printf "set /files/etc/ntp.conf/server[${offset}] ${server}\n" >> $ntpconf
             offset=$(echo "$offset+1" | bc)
-	done
+        done
     fi
 }
 

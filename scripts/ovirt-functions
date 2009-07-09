@@ -654,6 +654,24 @@ ask_yes_or_no () {
     done
 }
 
+# Verifies the address entered is a valid IPv4 address.
+is_valid_ipv4 () {
+    local address=${1}
+    local result=1
+
+    if [[ "$address" =~ "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($address)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        result=$?
+    fi
+
+    return $result
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
