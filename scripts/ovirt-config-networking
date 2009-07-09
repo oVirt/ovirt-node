@@ -28,6 +28,21 @@ if ! is_local_storage_configured; then
     exit 99
 fi
 
+# Checks that a network interface was already configured.
+function has_configured_interface
+{
+    local show_message=${1-false}
+
+    if [[ -n "${CONFIGURED_NIC}" ]]; then
+        return 0
+    else
+        if $show_message; then
+            printf "\nYou must configure a network interface first.\n\n"
+        fi
+        return 1
+    fi
+}
+
 function configure_interface
 {
     local NIC=$1
@@ -40,7 +55,7 @@ function configure_interface
         PREFIX=$OVIRT_IP_PREFIX
     fi
 
-    if [[ -n "${CONFIGURED_NIC}" ]]; then
+    if has_configured_interface; then
         printf "This will delete the current configuration for ${CONFIGURED_NIC}.\n"
         if ask_yes_or_no "Do you wish to continue (y/n)?"; then
             printf "\nDeleting existing network configuration...\n"
@@ -194,11 +209,6 @@ function configure_interface
 
 function configure_dns
 {
-    if [[ -z "${CONFIGURED_NIC}" ]]; then
-        printf "\nYou must configure a network interface first.\n\n"
-        return
-    fi
-
     local DNS=$1
     local AUTO=$2
     if [[   "$AUTO" == "AUTO"    &&
@@ -211,27 +221,29 @@ function configure_dns
     local IF_CONFIG=
 
     if [ -z "$AUTO" ]; then
-        while true; do
-            printf "\n"
-            echo "Enter up to two DNS servers separated by commas:"
-            if [ -n "$OVIRT_DNS" ]; then
-                echo "Press Enter for defaults: ($OVIRT_DNS)"
-            fi
-            read -ep ": "
-            DNS=$REPLY
+        if has_configured_interface true; then
+            while true; do
+                printf "\n"
+                echo "Enter up to two DNS servers separated by commas:"
+                if [ -n "$OVIRT_DNS" ]; then
+                    echo "Press Enter for defaults: ($OVIRT_DNS)"
+                fi
+                read -ep ": "
+                DNS=$REPLY
 
-            if [ -z "$DNS" ]; then
-                DNS=$OVIRT_DNS
-            fi
+                if [ -z "$DNS" ]; then
+                    DNS=$OVIRT_DNS
+                fi
 
-            printf "\n"
-            ask_yes_or_no "Is this correct (y/n/a)?" true true
-            case $? in
-                0) break ;;
-                1) ;;
-                2) return ;;
-            esac
-        done
+                printf "\n"
+                ask_yes_or_no "Is this correct (y/n/a)?" true true
+                case $? in
+                    0) break ;;
+                    1) ;;
+                    2) return ;;
+                esac
+            done
+        fi
     fi
 
     if [ -n "$DNS" ]; then
@@ -254,13 +266,15 @@ function configure_ntp
     fi
 
     if [ -z "$AUTO" ]; then
-	while true; do
-	    read -ep "Enter an NTP server (hit return when finished): "
+        if has_configured_interface true; then
+	    while true; do
+	        read -ep "Enter an NTP server (hit return when finished): "
 
-	    if [ -z "$REPLY" ]; then break; fi
+	        if [ -z "$REPLY" ]; then break; fi
 
-	    NTPSERVERS="$NTPSERVERS $REPLY"
-	done
+	        NTPSERVERS="$NTPSERVERS $REPLY"
+	    done
+        fi
     fi
 }
 
