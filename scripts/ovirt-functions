@@ -249,9 +249,11 @@ mount_live() {
         return 0
     fi
     local live_dev=/dev/live
-    if [ ! -e $live_dev ]; then
+    if [ ! -e $live_dev ] && losetup /dev/loop0|grep -q '\.iso'; then
       # PXE boot
       live_dev=/dev/loop0
+    else
+      return 1
     fi
     mkdir -p /live
     mount -r $live_dev /live || mount $live_dev /live
