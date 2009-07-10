@@ -351,6 +351,19 @@ else
         printf "Configuring the network will destroy any existing networking\n"
         printf "configuration on this system.\n"
         printf "***** WARNING *****\n"
+        pixied=false
+        for nic in $NICS; do
+            driver=$(basename $(readlink /sys/class/net/$nic/device/driver))
+            mac=$(cat /sys/class/net/$nic/address)
+            if [ "$nic" = "$OVIRT_BOOTIF" ]; then
+                nic="*$nic"
+                pixied=true
+            fi
+            printf "%s\t%s\t%s\n" $nic $driver $mac
+        done
+        if $pixied; then
+            printf "*=PXE boot interface\n"
+        fi
 
         DNS="DNS"
         NTP="NTP"
