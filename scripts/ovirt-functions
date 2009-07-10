@@ -483,10 +483,17 @@ unmount_config() {
         for p in "$@"; do
             f=$(readlink -f $p)
             if grep -q " $f ext3" /proc/mounts ; then
-                umount -n $f
-                # refresh rootfs copy
-                cp -a /config$f $f
+                if umount -n $f; then
+                    if [ -f /config$f ]; then
+                        # refresh the file in rootfs if it was mounted over
+                        cp -a /config$f $f
+                    fi
+                fi
             fi
+            # clean up the persistent store
+            rm -f /config$f
+            # unregister in /config/files used by rc.sysinit
+            sed --copy -i "\|^$f$|d" /config/files
         done
     fi
 }
@@ -505,9 +512,10 @@ ovirt_safe_delete_config() {
             fi
             # unregister in /config/files used by rc.sysinit
             sed --copy -i "\|^$f$|d" /config/files
-            shred -u $f /config$f
+            shred -u /config$f
         done
     fi
+    shred -u $f
 }
 
 
