@@ -304,7 +304,7 @@ rm ${ntproot}\n\n
 set ${ntproot}/driftfile /var/lib/ntp/drift\n\
 set ${ntproot}/includefile /etc/ntp/crypto/pw\n\
 set ${ntproot}/keys /etc/ntp/keys\n\
-save\n" > $ntpconf
+" > $ntpconf
 
     if [ -n "$NTPSERVERS" ]; then
         offset=1
