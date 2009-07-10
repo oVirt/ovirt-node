@@ -28,7 +28,6 @@ unbackup_file() {
     test -f "$OVIRT_BACKUP_DIR$1" && cp -pf "$OVIRT_BACKUP_DIR$1" "$1"
 }
 
-chkconfig ovirt-listen-awake off
 chkconfig collectd off
 
 unbackup_file /etc/sysconfig/network

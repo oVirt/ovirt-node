@@ -162,9 +162,6 @@ cd -
 %{__install} -D -m0755 scripts/ovirt-config-view-logs %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/persist %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/unpersist %{buildroot}%{_sbindir}
-%{__install} -p -m0755 ovirt-identify-node/ovirt-identify-node %{buildroot}%{_sbindir}
-%{__install} -p -m0755 ovirt-listen-awake/ovirt-listen-awake %{buildroot}%{_sbindir}
-%{__install} -Dp -m0755 ovirt-listen-awake/ovirt-listen-awake.init %{buildroot}%{_initrddir}/ovirt-listen-awake
 
 # gptsync
 %{__install} -p -m0755 gptsync/gptsync %{buildroot}%{_sbindir}
@@ -259,12 +256,8 @@ fi
 
 %post stateful
 /sbin/chkconfig --add collectd
-/sbin/chkconfig --add ovirt-listen-awake
 
 %preun stateful
-if [ "$1" = 0 ] ; then
-  /sbin/chkconfig --del ovirt-listen-awake
-fi
 
 %post selinux
 for selinuxvariant in %{selinux_variants}; do
@@ -332,24 +325,18 @@ fi
 
 %files stateful
 %defattr(-,root,root,0755)
-%{_sbindir}/ovirt-listen-awake
 %{_sbindir}/ovirt-install-node-stateful
 %{_sbindir}/ovirt-uninstall-node-stateful
-%{_initrddir}/ovirt-listen-awake
 
 %files
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
-%{_sbindir}/ovirt-identify-node
 %{_initrddir}/ovirt-functions
 %defattr(-,root,root,0644)
 %{_sysconfdir}/collectd.conf.in
 %{_sysconfdir}/chkconfig.d/collectd
 %config %attr(0644,root,root) %{_sysconfdir}/ovirt-release
 %config %attr(0644,root,root) %{_sysconfdir}/default/ovirt
-%doc ovirt-identify-node/README ovirt-identify-node/NEWS
-%doc ovirt-identify-node/AUTHOR ovirt-identify-node/ChangeLog
-%doc ovirt-identify-node/COPYING
 
 %changelog
 * Thu Dec 11 2008 Perry Myers <pmyers@redhat.com> - 0.96

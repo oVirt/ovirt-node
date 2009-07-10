@@ -69,7 +69,6 @@ backup_file /etc/hosts
 add_if_not_exist "192.168.50.1 $PHYS_HOST" /etc/hosts
 add_if_not_exist "192.168.50.2 $MGMT_HOST" /etc/hosts
 
-chkconfig ovirt-listen-awake on
 chkconfig collectd on
 chkconfig libvirt-qpid on
 chkconfig iptables on
@@ -89,7 +88,7 @@ backup_file /etc/sysconfig/iptables
 # We open up anything coming from ovirtbr0 to this node, since it
 # is only intended for demo purposes.  For reference, here are the
 # ports that need to be opened:
-# 7777:tcp (ovirt-listen-awake), 16509:tcp (libvirtd), 5900-6000:tcp (vnc),
+# 16509:tcp (libvirtd), 5900-6000:tcp (vnc),
 # 49152-49216:tcp (libvirt migration)
 lokkit -q -t ovirtbr0
 
@@ -108,7 +107,6 @@ else
 fi
 
 service collectd restart
-service ovirt-listen-awake restart
 service libvirt-qpid restart
 service ntpd stop
 service ntpdate start

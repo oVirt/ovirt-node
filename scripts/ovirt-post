@@ -59,16 +59,8 @@ start() {
         /etc/libvirt/krb5.tab \
         /etc/ssh/ssh_host*_key*
 
-    find_srv identify tcp
-    if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-	if [ -n "$OVIRT_BOOTIF" ]; then
-            ovirt-identify-node -s $SRV_HOST -p $SRV_PORT -m $OVIRT_BOOTIF
-	else
-	    ovirt-identify-node -s $SRV_HOST -p $SRV_PORT
-	fi
-    else
-        log "skipping ovirt-identify-node, oVirt registration service not available"
-    fi
+    # Removed ovirt-identify-node since it has now
+    # been replaced with the matahari qmf agent.
 }
 
 case "$1" in
