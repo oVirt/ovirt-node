@@ -403,7 +403,7 @@ else
         printf "configuration on this system.\n"
         printf "***** WARNING *****\n"
         printf "\nPhysical Networking Devices (*=PXE boot interface)\n"
-        printf "Name\tDriver\tMAC\n"
+        printf " %-10s %-12s %-18s\n" "Name" "Driver" "MAC"
         for nic in $NICS; do
             driver=$(basename $(readlink /sys/class/net/$nic/device/driver))
             mac=$(cat /sys/class/net/$nic/address)
@@ -412,7 +412,7 @@ else
             else
                 pxe=" "
             fi
-            printf "%s%s\t%s\t%s\n" $pxe $nic $driver $mac
+            printf "%s%-10s %-12s %-18s\n" "$pxe" "$nic" "$driver" "$mac"
         done
 
         DNS="DNS"
