@@ -405,7 +405,7 @@ else
         printf "\nPhysical Networking Devices (*=PXE boot interface)\n"
         printf " %-10s %-12s %-18s\n" "Name" "Driver" "MAC"
         for nic in $NICS; do
-            driver=$(basename $(readlink /sys/class/net/$nic/device/driver))
+            driver=$(basename $(readlink /sys/class/net/$nic/device/driver) 2>/dev/null)
             mac=$(cat /sys/class/net/$nic/address)
             if [ "$nic" = "$OVIRT_BOOTIF" ]; then
                 pxe="*"
