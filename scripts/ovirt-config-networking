@@ -237,9 +237,11 @@ function configure_interface
         fi
 
         if [ -z "$OVIRT_IP_ADDRESS" ]; then
+            IF_CONFIG="${IF_CONFIG}\nset ${IF_ROOT}/BRIDGE ${BRIDGE}"
             BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"
         else
             if [ "$OVIRT_IP_ADDRESS" != "off" ]; then
+                IF_CONFIG="${IF_CONFIG}\nset ${IF_ROOT}/BRIDGE ${BRIDGE}"
                 BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $OVIRT_IP_ADDRESS"
                 if [ -n "$OVIRT_IP_NETMASK" ]; then
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $OVIRT_IP_NETMASK"
