@@ -492,6 +492,25 @@ unmount_config() {
                     fi
                 fi
             fi
+        done
+    fi
+}
+
+# remove persistent config files
+#       remove_config /etc/config /etc/config2 ...
+#
+remove_config() {
+    if grep -q " /config ext3" /proc/mounts; then
+        for p in "$@"; do
+            f=$(readlink -f $p)
+            if grep -q " $f ext3" /proc/mounts ; then
+                if umount -n $f; then
+                    if [ -f /config$f ]; then
+                        # refresh the file in rootfs if it was mounted over
+                        cp -a /config$f $f
+                    fi
+                fi
+            fi
             # clean up the persistent store
             rm -f /config$f
             # unregister in /config/files used by rc.sysinit

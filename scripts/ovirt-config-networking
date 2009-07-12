@@ -62,7 +62,7 @@ function configure_interface
         if ask_yes_or_no "Do you wish to continue (y/n)?"; then
             printf "\nDeleting existing network configuration...\n"
             cp -a  /etc/sysconfig/network-scripts/ifcfg-lo /etc/sysconfig/network-scripts/backup.log
-            unmount_config /etc/sysconfig/network-scripts/ifcfg-*
+            remove_config /etc/sysconfig/network-scripts/ifcfg-*
             rm -rf /etc/sysconfig/network-scripts/ifcfg-*
             cp -a  /etc/sysconfig/network-scripts/backup.lo /etc/sysconfig/network-scripts/ifcfg-lo
         else
