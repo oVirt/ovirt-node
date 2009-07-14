@@ -413,12 +413,14 @@ function setup_menu
     udi_list=$(hal-find-by-capability --capability net.80203)
     if [ -n "$udi_list" ]; then
         for d in $udi_list; do
-            NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"
+	    if [[ ! "$(hal-get-property --udi $d --key net.physical_device)" =~ computer ]]; then
+		NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"
+	    fi
         done
     fi
 
     # Add virtio NICs that were possibly not detected by hal
-    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v -E "^br|^bond|^vnet|^virbr" | xargs)"
+    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v -E "^br|^bond|^vnet|^virbr|\." | xargs)"
     NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
 
     PS3="Please select an interface or configuration option: "
