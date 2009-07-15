@@ -55,7 +55,7 @@ start ()
     elif is_firstboot; then
         plymouth --hide-splash
 
-        ovirt-config-setup < /dev/console
+        ovirt-config-setup -x < /dev/console
 
         plymouth --show-splash
     fi
