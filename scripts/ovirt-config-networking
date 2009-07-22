@@ -88,7 +88,7 @@ function configure_interface
         printf "This will delete the current configuration for ${CONFIGURED_NIC}.\n"
         if ask_yes_or_no "Do you wish to continue (y/n)?"; then
             printf "\nDeleting existing network configuration...\n"
-            cp -a  /etc/sysconfig/network-scripts/ifcfg-lo /etc/sysconfig/network-scripts/backup.log
+            cp -a  /etc/sysconfig/network-scripts/ifcfg-lo /etc/sysconfig/network-scripts/backup.lo
             remove_config /etc/sysconfig/network-scripts/ifcfg-*
             rm -rf /etc/sysconfig/network-scripts/ifcfg-*
             cp -a  /etc/sysconfig/network-scripts/backup.lo /etc/sysconfig/network-scripts/ifcfg-lo
