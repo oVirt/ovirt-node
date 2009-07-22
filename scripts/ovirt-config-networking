@@ -515,5 +515,10 @@ stop_log
 
 if [ "$net_configured" = 1 ]; then
     service network stop > /dev/null 2>&1
+    for i in `brctl show | grep breth | awk '{print $1}'`
+    do
+      ifconfig $i down
+      brctl delbr $i
+    done
     service network start
 fi
