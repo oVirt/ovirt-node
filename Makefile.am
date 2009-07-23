@@ -26,6 +26,22 @@ EXTRA_DIST =			\
   ovirt-node-selinux.fc		\
   images/grub-splash.xpm.gz	\
   images/syslinux-vesa-splash.jpg	\
+  nodeadmin/__init__.py         \
+  nodeadmin/configscreen.py     \
+  nodeadmin/createuser.py       \
+  nodeadmin/destroydomain.py    \
+  nodeadmin/halworker.py        \
+  nodeadmin/libvirtworker.py    \
+  nodeadmin/userworker.py       \
+  nodeadmin/mainmenu.py         \
+  nodeadmin/undefinedomain.py   \
+  nodeadmin/createdomain.py     \
+  nodeadmin/definedomain.py     \
+  nodeadmin/domainconfig.py     \
+  nodeadmin/listdomains.py      \
+  nodeadmin/nodeadmin.py        \
+  nodeadmin/setup.py            \
+  nodeadmin/utils.py            \
   scripts/collectd.conf.in	\
   scripts/ovirt			\
   scripts/ovirt-awake		\

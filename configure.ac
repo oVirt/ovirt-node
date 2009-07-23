@@ -8,6 +8,7 @@ test x"$ac_ct_CC:$CFLAGS" = 'xgcc:-g -O2' \
   && CFLAGS="$CFLAGS -Wshadow -Wall -Werror"
 
 AC_CONFIG_FILES([Makefile
+  nodeadmin/setup.py
   gptsync/Makefile
   ovirt-node.spec
   ])

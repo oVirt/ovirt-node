@@ -13,3 +13,4 @@ missing
 stamp-h1
 ovirt-node*.gz
 ovirt-node.spec
+*.pyc
