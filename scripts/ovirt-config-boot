@@ -163,6 +163,11 @@ EOF
         log "boot loader install failed."
         return $rc
     fi
+
+    # install iscsi initiator name for this machine
+    echo "InitiatorName=$(iscsi-iname)" > /etc/iscsi/initiatorname.iscsi
+    ovirt_store_config /etc/iscsi/initiatorname.iscsi
+
     umount /liveos
     umount /boot
     # mark new Root ready to go, reboot() in ovirt-function switches it to active
