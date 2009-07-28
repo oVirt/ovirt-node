@@ -21,7 +21,7 @@ Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 BuildRequires:  libvirt-devel >= 0.5.1
 BuildRequires:  dbus-devel hal-devel
-Requires:       libvirt >= 0.5.1
+Requires:       libvirt >= 0.6.3
 Requires:       augeas >= 0.3.5
 Requires:       libvirt-qpid >= 0.2.14-3
 Requires:       hal
@@ -31,6 +31,7 @@ Requires:       cyrus-sasl-gssapi cyrus-sasl cyrus-sasl-lib
 Requires:       iscsi-initiator-utils
 Requires:       ntp
 Requires:       nfs-utils
+Requires:       glusterfs-client >= 2.0.1
 Requires:       krb5-workstation
 Requires:       bash
 Requires:       chkconfig
