@@ -31,7 +31,7 @@ ovirt_boot_setup() {
     log "installing the image."
     mount_boot
     # check that /boot mounted ok and find partition number for GRUB
-    eval $(mount|awk '$3 == "/boot" {
+    eval $(readlink -f /dev/disk/by-label/BOOT|awk {'
         print "disk=" substr($1,1,length($1)-1);
         print "disk2=" substr($1,1,length($1)-2);
         partN=substr($1,length($1),1); partN--;
@@ -39,9 +39,16 @@ ovirt_boot_setup() {
     }')
     rc=$?
     if [ $rc -ne 0 -o $partN -lt 0 ]; then
-      log "boot partition not available."
+      log "unable to determine boot partition"
       return 1
     fi
+
+    mountpoint /boot
+    if [ $? -ne 0 ] ; then
+      log "boot partition not available"
+      return 1
+    fi
+
     if [ ! -e "$disk" ]; then
         # e.g. c0d0p1
         disk="$disk2"
