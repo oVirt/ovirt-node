@@ -213,11 +213,10 @@ ovirt_setup_libvirtd() {
 
 ovirt_setup_anyterm() {
    # configure anyterm
-   sed -i -e 's/^# ANYTERM_CMD=\/usr\/bin\/anyterm-cmd/ANYTERM_CMD="sudo \/usr\/bin\/virsh console %p"/' \
-        /etc/sysconfig/anyterm
-
-   sed -i -e 's/^# ANYTERM_LOCAL_ONLY=true/ANYTERM_LOCAL_ONLY=false/' \
-        /etc/sysconfig/anyterm
+   cat >> /etc/sysconfig/anyterm << EOF
+ANYTERM_CMD="sudo /usr/bin/virsh console %p"
+ANYTERM_LOCAL_ONLY=false
+EOF
 
    # permit it to run the virsh console
    echo "anyterm ALL=NOPASSWD: /usr/bin/virsh console *" >> /etc/sudoers
