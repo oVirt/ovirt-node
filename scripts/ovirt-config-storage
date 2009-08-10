@@ -208,7 +208,7 @@ do_configure()
     printf "  partition should use up the remaining space on the disk.\n\n"
 
     do_review
-    if ask_yes_or_no "Use these default values (y/n)?"; then
+    if ask_yes_or_no "Use these default values ([Y]es/[N]o)?"; then
         return
     fi
 
@@ -473,7 +473,7 @@ do_confirm()
         "$w8" \
         "$w8"
 
-        if ask_yes_or_no "Do you wish to proceed (y/n)?"; then
+        if ask_yes_or_no "Do you wish to proceed ([Y]es/[N]o)?"; then
             if check_partition_sizes; then
                 perform_partitioning
                 exit 0

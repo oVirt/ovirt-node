@@ -27,7 +27,7 @@ cat <<EOF
 
 EOF
 
-if ask_yes_or_no "Do you wish to continue and uninstall this node (y/n)?"; then
+if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"; then
     if [ -d /dev/HostVG ]; then
 	log "Uninstalling node"
 	log "Detaching logging"

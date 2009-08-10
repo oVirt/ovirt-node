@@ -86,7 +86,7 @@ function configure_interface
 
     if has_configured_interface; then
         printf "This will delete the current configuration for ${CONFIGURED_NIC}.\n"
-        if ask_yes_or_no "Do you wish to continue (y/n)?"; then
+        if ask_yes_or_no "Do you wish to continue ([Y]es/[N]o)?"; then
             printf "\nDeleting existing network configuration...\n"
             cp -a  /etc/sysconfig/network-scripts/ifcfg-lo /etc/sysconfig/network-scripts/backup.lo
             remove_config /etc/sysconfig/network-scripts/ifcfg-*
@@ -132,11 +132,11 @@ function configure_interface
             fi
             echo "NIC is: $NICSTATUS"
 
-            if ask_yes_or_no "Help identify ${NIC} by blinking lights for 10 seconds (y/n)?"; then
+            if ask_yes_or_no "Help identify ${NIC} by blinking lights for 10 seconds ([Y]es/[N]o)?"; then
                 ethtool --identify $NIC 10
             fi
 
-            ask_yes_or_no "Include VLAN support (y/n/a)? " true true
+            ask_yes_or_no "Include VLAN support ([Y]es/[N]o/[A]bort)? " true true
             case $? in
                 0)
                     while true; do
@@ -212,7 +212,7 @@ function configure_interface
             esac
 
             printf "\n"
-            ask_yes_or_no "Is this correct (y/n/a)?" true true
+            ask_yes_or_no "Is this correct ([Y]es/[N]o/[A]bort)?" true true
             case $? in
                 0)
                     IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
@@ -340,7 +340,7 @@ function configure_dns
                 done
 
                 printf "\n"
-                ask_yes_or_no "Is this correct (y/n/a)?" true true
+                ask_yes_or_no "Is this correct ([Y]es/[N]o/[A]bort)?" true true
                 case $? in
                     0) break ;;
                     1) ;;

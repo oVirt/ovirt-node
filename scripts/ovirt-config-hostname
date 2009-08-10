@@ -55,7 +55,7 @@ function prompt_user {
         fi
     else
         printf "\n"
-        ask_yes_or_no "Blank out the hostnames (y/n)?"
+        ask_yes_or_no "Blank out the hostnames ([Y]es/[N]o)?"
         case $? in
             0)
                 if remove_hostname; then

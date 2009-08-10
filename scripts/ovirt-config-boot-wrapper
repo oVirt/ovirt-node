@@ -24,7 +24,7 @@ continuing."
     else
 	bootparams="${OVIRT_BOOTPARAMS}"
     fi
-    if ask_yes_or_no "Do you wish to continue (y/n)?"; then
+    if ask_yes_or_no "Do you wish to continue ([Y]es/[N]o)?"; then
         mount_live \
             && /usr/sbin/ovirt-config-boot /live "${bootparams}"
         rc=$?

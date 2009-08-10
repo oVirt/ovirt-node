@@ -146,7 +146,7 @@ function prompt_user {
         printf "\n"
         printf "\n"
         while true; do
-            ask_yes_or_no "Is this correct (y/n/a)?" true true
+            ask_yes_or_no "Is this correct ([Y]es/[N]o/[A]bort)?" true true
             case $? in
                 0)
                     printf "\nSaving configuration.\n"
