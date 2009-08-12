@@ -26,7 +26,6 @@ EXTRA_DIST =			\
   ovirt-node-selinux.fc		\
   images/grub-splash.xpm.gz	\
   images/syslinux-vesa-splash.jpg	\
-  scripts/collectd		\
   scripts/collectd.conf.in	\
   scripts/ovirt			\
   scripts/ovirt-awake		\
