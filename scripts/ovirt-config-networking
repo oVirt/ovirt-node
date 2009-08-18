@@ -343,7 +343,7 @@ function configure_dns
                 ask_yes_or_no "Is this correct ([Y]es/[N]o/[A]bort)?" true true
                 case $? in
                     0) break ;;
-                    1) ;;
+                    1) DNS="";;
                     2) return ;;
                 esac
             done
