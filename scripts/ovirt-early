@@ -255,6 +255,7 @@ start_ovirt_early () {
     #   rescue
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
+    #   or               ip=dhcp|off
     #   ipv6=dhcp|auto
     #   dns=server[,server]
     #   ntp=server[,server]
@@ -363,6 +364,7 @@ start_ovirt_early () {
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
+    #   or               ip=dhcp|off
     #   ipv6=dhcp|auto
     #   dns=server[,server]
     #   ntp=server[,server]
@@ -590,7 +592,11 @@ start_ovirt_early () {
 
             ip=*)
             i=${i#ip=}
-            eval $(printf $i|awk -F: '{print "ip_address="$1; print "ip_gateway="$3; print "ip_netmask="$4}')
+            if [ "$i" = "dhcp" ]; then
+                ip_address=
+            else
+                eval $(printf $i|awk -F: '{print "ip_address="$1; print "ip_gateway="$3; print "ip_netmask="$4}')
+            fi
             ;;
             netmask=*)
             netmask=${i#netmask=}
