@@ -247,6 +247,12 @@ start() {
     # enter emergency shell for fixing configuration issues
     rescue=
 
+    #   rootpw=<encrypted_password>
+    # sets a temporary root password, change is forced on first login
+    # password is crypted, same as Kickstart option rootpw --iscrypted
+    # WARNING: use for debugging only, this is not secure!
+    rootpw=
+
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   ipv6=dhcp|auto
@@ -365,6 +371,9 @@ start() {
             rescue)
             rescue=1
             ;;
+            rootpw=*)
+            rootpw=${i#rootpw=}
+            ;;
 
             ovirt_overcommit*)
             i=${i#ovirt_overcommit=}
@@ -457,6 +466,19 @@ start() {
         if [ -n "$HOSTNAME" ]; then
             hostname $HOSTNAME
         fi
+    fi
+
+    if [ -n "$rootpw" ]; then
+        log "Setting temporary root password: $rootpw"
+        unmount_config /etc/passwd /etc/shadow
+        /usr/sbin/usermod -p $rootpw root
+        chage -d 0 root
+        # PAM will force password change at first login
+        # so make sure we persist it after a successful login
+        cat >> /root/.bash_profile << EOF
+# added by ovirt-early
+persist /etc/passwd /etc/shadow
+EOF
     fi
 
     if [ "$rescue" = 1 ]; then
