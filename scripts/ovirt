@@ -66,8 +66,13 @@ start() {
             echo "LIBVIRT_QPID_ARGS=\"--broker $SRV_HOST --port $SRV_PORT\"" >> $libvirt_qpid_conf
             echo "/usr/kerberos/bin/kinit -k -t /etc/libvirt/krb5.tab qpidd/`hostname`" >> $libvirt_qpid_conf
         fi
+	matahari_conf=/etc/sysconfig/matahari
+        if [ -f $matahari_conf ]; then
+            echo "MATAHARI_ARGS=\"--broker $SRV_HOST --port $SRV_PORT\"" >> $matahari_conf
+            echo "/usr/kerberos/bin/kinit -k -t /etc/libvirt/krb5.tab qpidd/`hostname`" >> $matahari_conf
+        fi
     else
-        log "skipping libvirt-qpid configuration, could not find $libvirt_qpid_conf"
+        log "skipping libvirt-qpid and matahari configuration, could not find $libvirt_qpid_conf"
     fi
 }
 

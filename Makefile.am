@@ -16,7 +16,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
-SUBDIRS = ovirt-identify-node ovirt-listen-awake gptsync
+SUBDIRS = gptsync
 
 EXTRA_DIST =			\
   .gitignore			\
@@ -26,7 +26,6 @@ EXTRA_DIST =			\
   ovirt-node-selinux.fc		\
   images/grub-splash.xpm.gz	\
   images/syslinux-vesa-splash.jpg	\
-  scripts/collectd		\
   scripts/collectd.conf.in	\
   scripts/ovirt			\
   scripts/ovirt-awake		\
@@ -40,6 +39,7 @@ EXTRA_DIST =			\
   scripts/ovirt-config-setup    \
   scripts/ovirt-config-storage  \
   scripts/ovirt-config-uninstall \
+  scripts/ovirt-config-view-logs \
   scripts/ovirt-early		\
   scripts/ovirt-firstboot       \
   scripts/ovirt-functions	\

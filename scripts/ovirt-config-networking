@@ -16,9 +16,61 @@ WORKDIR=$(mktemp -d) || exit 1
 trap '__st=$?; rm -rf "$WORKDIR"; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
-CONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
+IFCONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
+NTPCONF_FILE_ROOT="/files/etc/ntp"
 NTP_CONFIG_FILE="/etc/ntp.conf"
+NTPSERVERS=""
 CONFIGURED_NIC=""
+VLAN_ID=""
+VL_ROOT=""
+
+# if local storage is not configured, then exit the script
+if ! is_local_storage_configured; then
+    printf "Local storage must be configured prior to configuring the management interface.\n\n"
+    exit 99
+fi
+
+# Checks that a network interface was already configured.
+function has_configured_interface
+{
+    local show_message=${1-false}
+
+    if [[ -n "${CONFIGURED_NIC}" ]]; then
+        return 0
+    else
+        if $show_message; then
+            printf "\nYou must configure a network interface first.\n\n"
+        fi
+        return 1
+    fi
+}
+
+# Configures vlan for the node.
+# $1 - the nic
+# $2 - the network bridge name
+# $3 - the vlan id
+# $4 - the VL_ROOT variable
+# $5 - the VL_CONFIG variable
+# $6 - the IF_ROOT value
+# $7 - the vlan config filename variable
+# $8 - the NIC config filename
+function setup_vlan
+{
+    local nic=$1
+    local bridge=$2
+    local vlan_id=$3
+    local vlroot=$4
+    local vlconfig=$5
+    local ifroot=$6
+    local vlfilename=$7
+    local iffilename=$8
+
+    eval $vlroot="${ifroot}.${vlan_id}"
+    eval $vlconfig=\"rm \$${vlroot}\\nset \$${vlroot}/DEVICE ${nic}.${vlan_id}\"
+    eval $vlconfig=\"\$${vlconfig}\\nset \$${vlroot}/BRIDGE ${bridge}\"
+    eval $vlconfig=\"\$${vlconfig}\\nset \$${vlroot}/VLAN yes\"
+    eval $vlfilename="${iffilename}.${vlan_id}"
+}
 
 function configure_interface
 {
@@ -32,12 +84,18 @@ function configure_interface
         PREFIX=$OVIRT_IP_PREFIX
     fi
 
-    if [[ -n "${CONFIGURED_NIC}" ]]; then
+    if has_configured_interface; then
         printf "This will delete the current configuration for ${CONFIGURED_NIC}.\n"
-        read -ep "Continue? (y/N) "
-        case $REPLY in
-            N|n) printf "\nAborting...\n"; return;;
-        esac
+        if ask_yes_or_no "Do you wish to continue ([Y]es/[N]o)?"; then
+            printf "\nDeleting existing network configuration...\n"
+            cp -a  /etc/sysconfig/network-scripts/ifcfg-lo /etc/sysconfig/network-scripts/backup.lo
+            remove_config /etc/sysconfig/network-scripts/ifcfg-*
+            rm -rf /etc/sysconfig/network-scripts/ifcfg-*
+            cp -a  /etc/sysconfig/network-scripts/backup.lo /etc/sysconfig/network-scripts/ifcfg-lo
+        else
+            printf "\nAborting...\n"
+            return
+        fi
     fi
 
     rm -rf $WORKDIR/*
@@ -49,20 +107,21 @@ function configure_interface
 
     printf "\nConfigure $BRIDGE for use by $NIC..\n\n"
 
-    local IF_ROOT="$CONFIG_FILE_ROOT-$NIC"
+    local IF_ROOT="$IFCONFIG_FILE_ROOT-$NIC"
     local IF_CONFIG="rm $IF_ROOT\nset $IF_ROOT/DEVICE $NIC"
 
-    local BR_ROOT="$CONFIG_FILE_ROOT-$BRIDGE"
+    local BR_ROOT="$IFCONFIG_FILE_ROOT-$BRIDGE"
     local BR_CONFIG="rm $BR_ROOT\nset $BR_ROOT/DEVICE $BRIDGE"
+
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/TYPE Bridge"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/PEERNTP yes"
     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/DELAY 0"
-    IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/BRIDGE $BRIDGE"
-
     local BR_CONFIG_BASE=$BR_CONFIG
 
     if [ -z "$AUTO" ]; then
         while true; do
+            local VL_CONFIG=""
+
             printf "\n"
             LINK=`ethtool $NIC| grep "Link detected"`:u
             [ -z "$LINK" ] && return
@@ -73,11 +132,32 @@ function configure_interface
             fi
             echo "NIC is: $NICSTATUS"
 
-            read -ep "Help identify $NIC by blinking lights for 10 seconds ([Y]es/[N]o)?"
-            case $REPLY in
-                Y|y)
-                    ethtool --identify $NIC 10
+            if ask_yes_or_no "Help identify ${NIC} by blinking lights for 10 seconds ([Y]es/[N]o)?"; then
+                ethtool --identify $NIC 10
+            fi
+
+            ask_yes_or_no "Include VLAN support ([Y]es/[N]o/[A]bort)? " true true
+            case $? in
+                0)
+                    while true; do
+                        read -ep "What is the VLAN ID for this device (a=abort) "
+                        case $REPLY in
+                            A|a) CONFIGURED_NIC=""; return;;
+                            *)
+                                if [[ -n "$REPLY" ]] && [[ "$REPLY" =~ "^[0-9]{1,}$" ]]; then
+				    VLAN_ID=$REPLY
+				    setup_vlan $NIC $BRIDGE $VLAN_ID VL_ROOT VL_CONFIG $IF_ROOT VL_FILENAME $IF_FILENAME
+                                    break
+                                fi
+                                ;;
+                        esac
+                    done
                     ;;
+                1)  IF_CONFIG="${IF_CONFIG}\nset ${IF_ROOT}/BRIDGE ${BRIDGE}" ;;
+                2)
+                    CONFIGURED_NIC=""
+                    VLAN_ID=""
+                    return;;
             esac
 
             read -ep "Enable IPv4 support ([S]tatic IP, [D]HCP, [N]o or [A]bort)? "
@@ -90,6 +170,7 @@ function configure_interface
                     read -ep "IP Address: "; IPADDR=$REPLY
                     read -ep "   Netmask: "; NETMASK=$REPLY
                     read -ep "   Gateway: "; GATEWAY=$REPLY
+
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO none"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $IPADDR"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $NETMASK"
@@ -97,7 +178,11 @@ function configure_interface
                         BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/GATEWAY $GATEWAY"
                     fi
                     ;;
-                A|a) CONFIGURED_NIC=""; return ;;
+                A|a)
+                    CONFIGURED_NIC=""
+                    VLAN_ID=""
+                    return
+                    ;;
             esac
 
             printf "\n"
@@ -119,22 +204,37 @@ function configure_interface
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6FORWARDING no"
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6AUTOCONF yes"
                     ;;
-                A|a) CONFIGURED_NIC=""; return;;
+                A|a)
+                    CONFIGURED_NIC=""
+                    VLAN_ID=""
+                    return
+                    ;;
             esac
 
             printf "\n"
-            read -ep "Is this correct (Y/N/A)? "
-            case $REPLY in
-                Y|y)
-                        IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
-                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
-
-                        printf "$IF_CONFIG\n" > $IF_FILENAME
-                        printf "$BR_CONFIG\n" > $BR_FILENAME
-                        break
+            ask_yes_or_no "Is this correct ([Y]es/[N]o/[A]bort)?" true true
+            case $? in
+                0)
+                    IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
+                    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
+                    if [[ -n "$VLAN_ID" ]]; then
+                        VL_CONFIG="$VL_CONFIG\nset $VL_ROOT/ONBOOT yes"
+                    fi
+                    printf "$IF_CONFIG\n" > $IF_FILENAME
+                    printf "$BR_CONFIG\n" > $BR_FILENAME
+                    if [[ -n "$VLAN_ID" ]]; then
+                        printf "$VL_CONFIG\n" > $VL_FILENAME
+                    fi
+                    break
                     ;;
-                N|n) BR_CONFIG=$BR_CONFIG_BASE ;;
-                A|a) CONFIGURED_NIC=""; return;;
+                1)
+                    BR_CONFIG=$BR_CONFIG_BASE
+                    ;;
+                2)
+                    CONFIGURED_NIC=""
+                    VLAN_ID=""
+                    return
+                    ;;
             esac
         done
     else
@@ -159,10 +259,21 @@ function configure_interface
             esac
         fi
 
+        if [ -n "$OVIRT_VLAN" ]; then
+	    VLAN_ID=$OVIRT_VLAN
+	    setup_vlan $NIC $BRIDGE $VLAN_ID VL_ROOT VL_CONFIG $IF_ROOT VL_FILENAME $IF_FILENAME
+        fi
+
         if [ -z "$OVIRT_IP_ADDRESS" ]; then
-            BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"
+	    if [ -z "$VL_CONFIG" ]; then
+		IF_CONFIG="${IF_CONFIG}\nset ${IF_ROOT}/BRIDGE ${BRIDGE}"
+	    fi
+	    BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/BOOTPROTO dhcp"
         else
             if [ "$OVIRT_IP_ADDRESS" != "off" ]; then
+		if [ -z "$VL_CONFIG" ]; then
+                    IF_CONFIG="${IF_CONFIG}\nset ${IF_ROOT}/BRIDGE ${BRIDGE}"
+		fi
                 BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $OVIRT_IP_ADDRESS"
                 if [ -n "$OVIRT_IP_NETMASK" ]; then
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $OVIRT_IP_NETMASK"
@@ -175,9 +286,15 @@ function configure_interface
 
         IF_CONFIG="$IF_CONFIG\nset $IF_ROOT/ONBOOT yes"
         BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/ONBOOT yes"
+	if [ -n "${VL_CONFIG}" ]; then
+	    VL_CONFIG="$VL_CONFIG\nset $VL_ROOT/ONBOOT yes"
+	fi
 
         printf "$IF_CONFIG\n" > $IF_FILENAME
         printf "$BR_CONFIG\n" > $BR_FILENAME
+	if [ -n "$VL_CONFIG" ]; then
+	    printf "$VL_CONFIG\n" > $VL_FILENAME
+	fi
     fi
 }
 
@@ -190,72 +307,103 @@ function configure_dns
         DNS=$OVIRT_DNS
     fi
 
-    local IF_FILENAME="$WORKDIR/augtool-lo"
-    local IF_ROOT="$CONFIG_FILE_ROOT-lo"
+    local IF_FILENAME="$WORKDIR/augtool-br${CONFIGURED_NIC}"
+    local IF_ROOT="$IFCONFIG_FILE_ROOT-br${CONFIGURED_NIC}"
     local IF_CONFIG=
 
     if [ -z "$AUTO" ]; then
-        while true; do
-            printf "\n"
-            echo "Enter up to two DNS servers separated by commas:"
-            if [ -n "$OVIRT_DNS" ]; then
-                echo "Press Enter for defaults: ($OVIRT_DNS)"
-            fi
-            read -ep ": "
-            DNS=$REPLY
+        if has_configured_interface true; then
+            while true; do
+                for dns in first second; do
+                    while true; do
+                        printf "\n"
+                        read -ep "Please enter the ${dns} DNS server (or ENTER to exit): "
+                        if [[ -z "${REPLY}" ]]; then
+                            if [[ -z "${DNS}" ]]; then
+                                printf "\nAborted...\n"
+                                return
+                            else
+                                break
+                            fi
+                        fi
+                        if is_valid_ipv4 $REPLY; then
+                            if [[ -z "${DNS}" ]]; then
+                                DNS="${REPLY}"
+                            elif [[ -n "${REPLY}" ]]; then
+                                DNS="${DNS}:${REPLY}"
+                            fi
+                            break
+                        else
+                            printf "${REPLY} is an invalid address.\n"
+                        fi
+                    done
+                done
 
-            if [ -z "$DNS" ]; then
-                DNS=$OVIRT_DNS
-            fi
-
-            printf "\n"
-            read -ep "Is this correct (Y/N/A)? "
-            case $REPLY in
-                Y|y) break ;;
-                N|n) ;;
-                A|a) return ;;
-            esac
-        done
+                printf "\n"
+                ask_yes_or_no "Is this correct ([Y]es/[N]o/[A]bort)?" true true
+                case $? in
+                    0) break ;;
+                    1) DNS="";;
+                    2) return ;;
+                esac
+            done
+        fi
     fi
 
     if [ -n "$DNS" ]; then
-        DNS1=$(echo "$DNS" | awk -F, '{print $1}')
-        DNS2=$(echo "$DNS" | awk -F, '{print $2}')
+        DNS1=$(echo "$DNS" | awk -F\: '{print $1}')
+        DNS2=$(echo "$DNS" | awk -F\: '{print $2}')
 
-        test -n "$DNS1" && IF_CONFIG="set $IF_ROOT/DNS1 $DNS1"
-        test -n "$DNS2" && IF_CONFIG="set $IF_ROOT/DNS2 $DNS2"
-        printf "$IF_CONFIG\n" > $IF_FILENAME
+        test -n "$DNS1" && printf "set $IF_ROOT/DNS1 $DNS1\n" >> $IF_FILENAME
+        test -n "$DNS2" && printf "set $IF_ROOT/DNS2 $DNS2\n" >> $IF_FILENAME
     fi
 }
 
 function configure_ntp
 {
-    local NTP=$1
     local AUTO=$2
     if [[ "$AUTO" == "AUTO" && -n "$OVIRT_NTP" ]]; then
-	NTP=$OVIRT_NTP
+	NTPSERVERS=$OVIRT_NTP
     else
-	NTP=""
+	NTPSERVERS=""
     fi
 
     if [ -z "$AUTO" ]; then
-	while true; do
-	    read -ep "Enter an NTP server (hit return when finished): "
+        if has_configured_interface true; then
+	    while true; do
+	        read -ep "Enter an NTP server (hit return when finished): "
 
-	    if [ -z "$REPLY" ]; then break; fi
+	        if [ -z "$REPLY" ]; then break; fi
 
-	    NTP="$NTP $REPLY"
-	done
+                if is_valid_ipv4 $REPLY; then
+                    NTPSERVERS="${NTPSERVERS}:${REPLY}"
+                else
+                    printf "${REPLY} is an invalid address.\n"
+                fi
+	    done
+        fi
     fi
+}
 
-    if [ -n "$NTP" ]; then
-	# strip out all current servers from /etc/npt.conf and insert our own
-	BACKUP="${WORKDIR}/ntp.conf-backup"
-	egrep -v '^server .* # added by ovirt-config-network' < $NTP_CONFIG_FILE > $BACKUP
-	for server in $NTP; do
-	    echo "server $server # added by ovirt-config-network" >> $BACKUP
-	done
-	cp -f $BACKUP $NTP_CONFIG_FILE
+function save_ntp_configuration
+{
+    local ntpconf="$WORKDIR/augtool-ntp"
+    local ntproot="/files/etc/ntp.conf"
+
+    printf "\
+rm ${ntproot}\n\n
+set ${ntproot}/driftfile /var/lib/ntp/drift\n\
+set ${ntproot}/includefile /etc/ntp/crypto/pw\n\
+set ${ntproot}/keys /etc/ntp/keys\n\
+" > $ntpconf
+
+    if [ -n "$NTPSERVERS" ]; then
+        offset=1
+        SERVERS=$(echo $NTPSERVERS | awk 'BEGIN{FS=":"}{for (i=1; i<=NF; i++) print $i}')
+        for server in $SERVERS; do
+            printf "set /files/etc/ntp.conf/server[${offset}] ${server}\n" >> $ntpconf
+            offset=$(echo "$offset+1" | bc)
+        done
     fi
 }
 
@@ -265,12 +413,14 @@ function setup_menu
     udi_list=$(hal-find-by-capability --capability net.80203)
     if [ -n "$udi_list" ]; then
         for d in $udi_list; do
-            NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"
+	    if [[ ! "$(hal-get-property --udi $d --key net.physical_device)" =~ computer ]]; then
+		NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"
+	    fi
         done
     fi
 
     # Add virtio NICs that were possibly not detected by hal
-    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v -E "^br|^bond|^vnet|^virbr" | xargs)"
+    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v -E "^br|^bond|^vnet|^virbr|\." | xargs)"
     NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
 
     PS3="Please select an interface or configuration option: "
@@ -289,11 +439,23 @@ else
     setup_menu
 
     while true; do
-        printf "\n\n Networking Configuration\n\n" >&2
+        printf "\n\nManagement Network Configuration\n\n" >&2
         printf "***** WARNING *****\n"
         printf "Configuring the network will destroy any existing networking\n"
         printf "configuration on this system.\n"
         printf "***** WARNING *****\n"
+        printf "\nPhysical Networking Devices (*=PXE boot interface)\n"
+        printf " %-10s %-12s %-18s\n" "Name" "Driver" "MAC"
+        for nic in $NICS; do
+            driver=$(basename $(readlink /sys/class/net/$nic/device/driver) 2>/dev/null)
+            mac=$(cat /sys/class/net/$nic/address)
+            if [ "$nic" = "$OVIRT_BOOTIF" ]; then
+                pxe="*"
+            else
+                pxe=" "
+            fi
+            printf "%s%-10s %-12s %-18s\n" "$pxe" "$nic" "$driver" "$mac"
+        done
 
         DNS="DNS"
         NTP="NTP"
@@ -306,7 +468,9 @@ else
                 "$DNS") configure_dns "$OVIRT_DNS"; break ;;
                 "$NTP") configure_ntp "$OVIRT_NTP"; break ;;
                 "$Abort") rm -f "${WORKDIR}"/augtool-*; exit 99;;
-                "$Save") break 2;;
+                "$Save")
+                    save_ntp_configuration
+                    break 2;;
                 *)
                     if [[ -n "${NIC}" ]] && [[ "${NICS}" =~ "${NIC}" ]]; then
                         configure_interface $NIC $IFACE_NUMBER
@@ -338,7 +502,9 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
     if [ $? = 0 ]; then
         log "Network configured successfully"
         net_configured=1
-        ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
+        ovirt_store_config \
+            /etc/sysconfig/network-scripts/ifcfg* \
+            $NTP_CONFIG_FILE
     else
         log "Error configuring network, see $OVIRT_LOGFILE"
         stop_log
@@ -349,6 +515,10 @@ stop_log
 
 if [ "$net_configured" = 1 ]; then
     service network stop > /dev/null 2>&1
+    for i in `brctl show | grep breth | awk '{print $1}'`
+    do
+      ifconfig $i down
+      brctl delbr $i
+    done
     service network start
 fi
-

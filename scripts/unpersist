@@ -33,5 +33,5 @@ die() { warn "$*"; help; exit 1; }
 
 if [ $# -eq 0 ]; then die "You need to specify at least one file."; fi
 
-unmount_config $*
+remove_config $*
 

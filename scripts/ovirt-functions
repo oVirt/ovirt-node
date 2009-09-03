@@ -78,6 +78,16 @@ is_standalone() {
     if is_managed; then return 1; else return 0; fi
 }
 
+# return 0 if local storage is configured
+# return 1 if local storage is not configured
+is_local_storage_configured () {
+    if lvs HostVG/Config >/dev/null >&1; then
+        return 0
+    fi
+
+    return 1
+}
+
 # perform automatic local disk installation
 # when at least following boot parameters are present:
 # for networking - OVIRT_BOOTIF, management NIC
@@ -203,11 +213,10 @@ ovirt_setup_libvirtd() {
 
 ovirt_setup_anyterm() {
    # configure anyterm
-   sed -i -e 's/^# ANYTERM_CMD=\/usr\/bin\/anyterm-cmd/ANYTERM_CMD="sudo \/usr\/bin\/virsh console %p"/' \
-        /etc/sysconfig/anyterm
-
-   sed -i -e 's/^# ANYTERM_LOCAL_ONLY=true/ANYTERM_LOCAL_ONLY=false/' \
-        /etc/sysconfig/anyterm
+   cat >> /etc/sysconfig/anyterm << EOF
+ANYTERM_CMD="sudo /usr/bin/virsh console %p"
+ANYTERM_LOCAL_ONLY=false
+EOF
 
    # permit it to run the virsh console
    echo "anyterm ALL=NOPASSWD: /usr/bin/virsh console *" >> /etc/sudoers
@@ -240,8 +249,12 @@ mount_live() {
     fi
     local live_dev=/dev/live
     if [ ! -e $live_dev ]; then
-      # PXE boot
-      live_dev=/dev/loop0
+        if losetup /dev/loop0|grep -q '\.iso'; then
+            # PXE boot
+            live_dev=/dev/loop0
+        else
+            return 1
+        fi
     fi
     mkdir -p /live
     mount -r $live_dev /live || mount $live_dev /live
@@ -471,10 +484,43 @@ unmount_config() {
         for p in "$@"; do
             f=$(readlink -f $p)
             if grep -q " $f ext3" /proc/mounts ; then
-                umount -n $f
-                # refresh rootfs copy
-                cp -a /config$f $f
+                if umount -n $f; then
+                    if [ -f /config$f ]; then
+                        # refresh the file in rootfs if it was mounted over
+                        cp -a /config$f $f
+                    fi
+                fi
             fi
+        done
+    fi
+}
+
+# remove persistent config files
+#       remove_config /etc/config /etc/config2 ...
+#
+remove_config() {
+    if grep -q " /config ext3" /proc/mounts; then
+        for p in "$@"; do
+            f=$(readlink -f $p)
+            if grep -q " $f ext3" /proc/mounts ; then
+                if umount -n $f; then
+                    if [ -f /config$f ]; then
+                        # refresh the file in rootfs if it was mounted over
+                        cp -a /config$f $f
+                        if [ $? -ne 0 ]; then
+                            printf " Failed to unpersist %s\n" $f
+                        else
+                            printf " %s successully unpersisted\n" $f
+                        fi
+                    fi
+                fi
+            else
+                printf " %s is not in persistent storage" $f
+            fi
+            # clean up the persistent store
+            rm -f /config$f
+            # unregister in /config/files used by rc.sysinit
+            sed --copy -i "\|^$f$|d" /config/files
         done
     fi
 }
@@ -493,9 +539,10 @@ ovirt_safe_delete_config() {
             fi
             # unregister in /config/files used by rc.sysinit
             sed --copy -i "\|^$f$|d" /config/files
-            shred -u $f /config$f
+            shred -u /config$f
         done
     fi
+    shred -u $f
 }
 
 
@@ -617,6 +664,50 @@ chkconfig_persist() {
     ovirt_store_config $to_persist
 }
 
+# Asks a yes or no question. Accepts Y/N/A so users can abort.
+# RC=0 - Y/y entered
+# RC=1 - N/n entered
+# RC=2 - A/a entered
+# $1 - the prompt to use
+# $2 - require a response (def. true)
+# $3 - allow aborting (def. false)
+ask_yes_or_no () {
+    local prompt=${1}
+    local required=${2-true}
+    local allow_abort=${3-false}
+
+    while true; do
+        read -ep "${prompt} "
+        case $REPLY in
+            Y|y) return 0;;
+            N|n) return 1;;
+            A|a) if $allow_abort; then return 2; fi ;;
+            *)
+                if [ $required == false ]; then
+                    return 99
+                fi
+                ;;
+        esac
+    done
+}
+
+# Verifies the address entered is a valid IPv4 address.
+is_valid_ipv4 () {
+    local address=${1}
+    local result=1
+
+    if [[ "$address" =~ "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($address)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        result=$?
+    fi
+
+    return $result
+}
 
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
@@ -624,4 +715,3 @@ chkconfig_persist() {
 if [ "$(basename "$0")" = "ovirt-functions" ]; then
     "$@"
 fi
-

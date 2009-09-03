@@ -10,7 +10,6 @@ CONFIG_DIR=/etc/ovirt-config-setup.d
 
 # special options, all others execute the symlinked script in CONFIG_DIR
 DEBUG_SHELL="Shell"
-CONTINUE="Continue Stateless Boot"
 
 declare -a OPTIONS
 
@@ -32,12 +31,31 @@ for cfg in $CONFIG_DIR/*; do
     fi
 done
 OPTIONS[${#OPTIONS[*]}]="$DEBUG_SHELL"
-OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
 
 
 # reset tty, otherwise serial console is broken
 reset > /dev/null
 clear
+
+# set defaults
+has_continue_option=false
+
+while getopts x c; do
+    case $c in
+        x) has_continue_option=true;;
+        '?') die "invalid option \`-$OPTARG'";;
+        :) die "missing argument to \`-$OPTARG' option";;
+        *) die "internal error";;
+    esac
+done
+
+if $has_continue_option; then
+    CONTINUE="Continue Stateless Boot"
+else
+    CONTINUE="Quit And Exit"
+fi
+OPTIONS[${#OPTIONS[*]}]="$CONTINUE"
+
 
 while true; do
     PS3="Please select an option: "

@@ -67,23 +67,28 @@ prompt_user() {
         printf "\n"
         printf "\n"
         while true; do
-            read -p "Is this correct (Y/N/A)? "
-            r=$(echo $REPLY|tr '[[:lower:]]' '[[:upper:]]')
-            if [ "$r" == "Y" ]; then
-                printf "\nSaving configuration.\n"
-                if [[ -n "$collectd_server_ip" ]] &&
-                    [[ -n "$collectd_server_port" ]]; then
-                    ovirt_collectd $collectd_server_ip \
-                        $collectd_server_port
-                fi
-                return
-            elif [ "$r" == "N" ]; then
-                printf "\nRestarting collectd configuration.\n"
-                break
-            elif [ "$r" == "A" ]; then
-                printf "\nAborting collectd configuration.\n"
-                return
-            fi
+            ask_yes_or_no "Is this correct ([Y]es/[N]o/[A]bort)?" true true
+            rc=$?
+            case $rc in
+                0)
+                    printf "\nSaving configuration.\n"
+                    if [[ -n "$collectd_server_ip" ]] &&
+                        [[ -n "$collectd_server_port" ]]; then
+                        ovirt_collectd $collectd_server_ip \
+                            $collectd_server_port
+                    fi
+                    return
+                    ;;
+
+                1)
+                    printf "\nRestarting collectd configuration.\n"
+                    break
+                    ;;
+                2)
+                    printf "\nAborting collectd configuration.\n"
+                    return
+                    ;;
+            esac
         done
     done
 }
@@ -107,4 +112,3 @@ else
     printf "\n\n Collectd Configuration\n\n"
     prompt_user
 fi
-

@@ -46,6 +46,7 @@ start ()
         ovirt-config-networking AUTO
         ovirt-config-logging AUTO
         ovirt-config-collectd AUTO
+	ovirt-config-password AUTO
         if [ "$OVIRT_LOCAL_BOOT" = 1 ]; then
             mount_live
             ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
@@ -55,7 +56,7 @@ start ()
     elif is_firstboot; then
         plymouth --hide-splash
 
-        ovirt-config-setup < /dev/console
+        ovirt-config-setup -x < /dev/console
 
         plymouth --show-splash
     fi

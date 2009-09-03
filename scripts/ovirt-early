@@ -67,6 +67,10 @@ configure_from_network() {
                 fi
             fi
         fi
+    else
+        # for non-PXE boot when BOOTIF parameter is not specified
+        # otherwise default network config is invalid
+        DEVICE=eth0
     fi
     # default oVirt network configuration:
     # bridge each ethernet device in the system
@@ -204,15 +208,19 @@ start() {
     #   ipv6=dhcp|auto
     #   dns=server[,server]
     #   ntp=server[,server]
+    #   vlan=id
+    #   ssh_pwauth=[0|1]
     # static network configuration
     ip_address=
     ip_gateway=
     ip_netmask=
+    vlan=
     netmask=
     gateway=
     ipv6=
     dns=
     ntp=
+    ssh_pwauth=
 
     # hostname=fqdn
     # hostname
@@ -230,6 +238,7 @@ start() {
 
     # save boot parameters like console= for local disk boot menu
     bootparams=
+    cat /etc/system-release >> $OVIRT_LOGFILE
 
     for i in $(cat /proc/cmdline); do
         case $i in
@@ -340,6 +349,15 @@ start() {
             hostname=*)
             hostname=${i#hostname=}
             ;;
+            vlan=*)
+            vlan=${i#vlan=}
+            ;;
+	    ssh_pwauth=1 | ssh_pwauth=true)
+	    ssh_pwauth=true
+	    ;;
+	    ssh_pwauth=0 | ssh_pwauth=false)
+	    ssh_pwauth=false
+	    ;;
             syslog=*)
             i=${i#syslog=}
             eval $(printf $i|awk -F: '{print "syslog_server="$1; print "syslog_port="$2;}')
@@ -361,7 +379,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
