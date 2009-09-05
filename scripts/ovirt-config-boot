@@ -107,7 +107,7 @@ ovirt_boot_setup() {
         # Fedora 10 mkliveinitrd
         init_script=sbin/real-init
     fi
-    sed -i '/^\/sbin\/udev.*settle/ a \
+    sed -i '/^\/sbin\/udev.*trigger/ a \
 echo SCSI wait for scans\
 /sbin/modprobe scsi_wait_scan\
 /sbin/modprobe -r scsi_wait_scan\
@@ -125,8 +125,6 @@ set -e\
 ' $init_script
     # fix emergency shell
     sed -i 's/^    bash$/    bash < \/dev\/console/' $init_script
-    # do not fail if device node already exists
-    sed -i 's/mknod.*$/& || :/' $init_script
     mkdir -p bin
     bit=
     if [ -e /lib64 ]; then
