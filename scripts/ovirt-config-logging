@@ -179,9 +179,9 @@ if [ "$1" = "AUTO" ]; then
     if [ -z "$OVIRT_SYSLOG_SERVER" -o -z "$OVIRT_SYSLOG_PORT" ]; then
         printf "\nAttempting to locate remote syslog server..."
         find_srv syslog udp
-        if [ -n "$SRV_SERVER" -a -n "$SRV_PORT" ]; then
-            printf "found! Using syslog server '$SRV_SERVER:$SRV_PORT'.\n"
-            ovirt_rsyslog $SRV_SERVER $SRV_PORT udp
+        if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+            printf "found! Using syslog server '$SRV_HOST:$SRV_PORT'.\n"
+            ovirt_rsyslog $SRV_HOST $SRV_PORT udp
         else
             printf "not found!\n"
         fi

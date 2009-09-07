@@ -98,9 +98,9 @@ if [ "$1" = "AUTO" ]; then
     if [ -z "$OVIRT_COLLECTD_SERVER" -o -z "$OVIRT_COLLECTD_PORT" ]; then
         printf "\nAttempting to locate remote collectd server..."
         find_srv collectd udp
-        if [ -n "$SRV_SERVER" -a -n "$SRV_PORT" ]; then
-            printf "found! Using collectd server '$SRV_SERVER:$SRV_PORT'.\n"
-            ovirt_collectd $SRV_SERVER $SRV_PORT
+        if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
+            printf "found! Using collectd server '$SRV_HOST:$SRV_PORT'.\n"
+            ovirt_collectd $SRV_HOST $SRV_PORT
         else
             printf "not found!\n"
         fi
