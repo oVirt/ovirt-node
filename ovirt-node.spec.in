@@ -51,6 +51,7 @@ Requires:       anyterm
 Requires:       newt-python
 Requires:       libuser-python
 Requires:       dbus-python
+Requires:       python-IPy
 
 ExclusiveArch:  %{ix86} x86_64
 
@@ -175,19 +176,32 @@ cd -
 
 %{__install} -p -m0644 nodeadmin/__init__.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0644 nodeadmin/configscreen.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/createdomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/createuser.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/menuscreen.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/utils.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0755 nodeadmin/nodeadmin.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/mainmenu.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0644 nodeadmin/nodemenu.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0755 nodeadmin/definedomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/createdomain.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0755 nodeadmin/destroydomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/undefinedomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/listdomains.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0644 nodeadmin/domainconfig.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0644 nodeadmin/netmenu.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/networkconfig.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/definenet.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/createnetwork.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/destroynetwork.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/undefinenetwork.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0755 nodeadmin/createuser.py %{buildroot}%{python_sitelib}/nodeadmin
+
 %{__install} -p -m0644 nodeadmin/halworker.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0644 nodeadmin/libvirtworker.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0644 nodeadmin/userworker.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/listdomains.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/mainmenu.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/nodeadmin.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/undefinedomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/utils.py %{buildroot}%{python_sitelib}/nodeadmin
 
 # gptsync
 %{__install} -p -m0755 gptsync/gptsync %{buildroot}%{_sbindir}
@@ -360,6 +374,11 @@ fi
 %{_bindir}/destroydom
 %{_bindir}/undefinedom
 %{_bindir}/listdoms
+%{_bindir}/definenet
+%{_bindir}/createnet
+%{_bindir}/destroynet
+%{_bindir}/undefinenet
+%{_bindir}/listnets
 %{_bindir}/createuser
 %{_sysconfdir}/collectd.conf.in
 %{python_sitelib}/nodeadmin

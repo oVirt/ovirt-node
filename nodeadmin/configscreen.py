@@ -77,8 +77,9 @@ class ConfigScreen:
         active = True
         while active and (self.__finished == False):
             screen = SnackScreen()
-            gridform = GridForm(screen, self.__title, 1, 4)
             elements = self.get_elements_for_page(screen, self.__current_page)
+            # TODO: need to set the form height to the number of elements on the page
+            gridform = GridForm(screen, self.__title, 1, 10)
             current_element = 0
             for element in elements:
                 gridform.add(element, 0, current_element)
@@ -133,7 +134,7 @@ class DomainListConfigScreen(ConfigScreen):
         if len(domains) > 0:
             self.__has_domains = True
             self.__domain_list = Listbox(0)
-            for name in self.get_libvirt().list_domains(defined, created):
+            for name in domains:
                 self.__domain_list.append(name, name)
             result = [self.__domain_list]
         else:
@@ -148,3 +149,33 @@ class DomainListConfigScreen(ConfigScreen):
 
     def has_selectable_domains(self):
         return self.__has_domains
+
+class NetworkListConfigScreen(ConfigScreen):
+    '''Provides a base class for all config screens that require a network list.'''
+
+    def __init__(self, title):
+        ConfigScreen.__init__(self, title)
+
+    def get_network_list_page(self, screen, defined=True, created=True):
+        networks = self.get_libvirt().list_networks(defined, created)
+        result = None
+
+        if len(networks) > 0:
+            self.__has_networks = True
+            self.__network_list = Listbox(0)
+            for name in networks:
+                self.__network_list.append(name, name)
+            result = self.__network_list
+        else:
+            self.__has_networks = False
+            result = Label("There are no networks available.")
+        grid = Grid(1, 1)
+        grid.setField(result, 0, 0)
+        return [Label("Network List"),
+                grid]
+
+    def get_selected_network(self):
+        return self.__network_list.current()
+
+    def has_selectable_networks(self):
+        return self.__has_networks

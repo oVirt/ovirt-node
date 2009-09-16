@@ -28,17 +28,26 @@ EXTRA_DIST =			\
   images/syslinux-vesa-splash.jpg	\
   nodeadmin/__init__.py         \
   nodeadmin/configscreen.py     \
+  nodeadmin/createnetwork.py    \
   nodeadmin/createuser.py       \
   nodeadmin/destroydomain.py    \
+  nodeadmin/destroynetwork.py   \
   nodeadmin/halworker.py        \
   nodeadmin/libvirtworker.py    \
   nodeadmin/userworker.py       \
   nodeadmin/mainmenu.py         \
+  nodeadmin/menuscreen.py       \
+  nodeadmin/netmenu.py          \
+  nodeadmin/nodemenu.py         \
   nodeadmin/undefinedomain.py   \
+  nodeadmin/undefinenetwork.py  \
   nodeadmin/createdomain.py     \
   nodeadmin/definedomain.py     \
+  nodeadmin/definenet.py        \
   nodeadmin/domainconfig.py     \
+  nodeadmin/networkconfig.py    \
   nodeadmin/listdomains.py      \
+  nodeadmin/listnetworks.py     \
   nodeadmin/nodeadmin.py        \
   nodeadmin/setup.py            \
   nodeadmin/utils.py            \

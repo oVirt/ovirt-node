@@ -35,3 +35,11 @@ class HALWorker:
                 if info.GetProperty("volume.disc.has_data"):
                     result[str(info.GetProperty("block.device"))] = info.GetProperty("volume.label")
         return result
+
+    def list_network_devices(self):
+        result = []
+        for udi in self.__conn.FindDeviceByCapability("net"):
+            device = self.__bus.get_object("org.freedesktop.Hal", udi)
+            info = dbus.Interface(device, "org.freedesktop.Hal.Device")
+            result.append(info.GetProperty("net.interface"))
+        return result

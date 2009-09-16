@@ -73,6 +73,67 @@ class LibvirtWorker:
         domain = self.get_domain(name)
         domain.undefine()
 
+    def list_networks(self, defined = True, started = True):
+        '''Lists all networks.'''
+        result = []
+        if defined: result.extend(self.__conn.listDefinedNetworks())
+        if started: result.extend(self.__conn.listNetworks())
+        return result
+
+    def get_network(self, name):
+        '''Returns the specified network.'''
+        result = self.__conn.networkLookupByName(name)
+        if result is None: raise Exception("No such network exists: %s" % name)
+
+        return result
+
+    def network_exists(self, name):
+        '''Returns if a network with the given name already exists.'''
+        networks = self.list_networks()
+        if name in networks: return True
+        return False
+
+    def define_network(self, config):
+        '''Defines a new network.'''
+        # since there's no other way currently, we'll have to use XML
+        name = config.get_name()
+        ip = config.get_ipv4_address_raw()
+        start = config.get_ipv4_start_address()
+        end = config.get_ipv4_end_address()
+        fw = config.get_physical_device()
+
+        xml = "<network>" + \
+              "  <name>%s</name>\n" % name
+        if not config.is_public_ipv4_network():
+            if fw is not "":
+                xml += "  <forward dev='%s'/>\n" % fw[1]
+            else:
+                xml += "  <forward/>\n"
+
+        xml += "  <ip address='%s' netmask='%s'>\n" % (str(ip[1]), str(ip.netmask()))
+        xml += "    <dhcp>\n"
+        xml += "      <range start='%s' end='%s'/>\n" % (str(start), str(end))
+        xml += "    </dhcp>\n"
+        xml += "  </ip>\n"
+        xml += "</network>\n"
+
+        self.__conn.networkDefineXML(xml)
+
+    def create_network(self, name):
+        '''Creates a defined network.'''
+        network = self.get_network(name)
+        network.create()
+
+    def destroy_network(self, name):
+        '''Destroys the specified network.'''
+        network = self.get_network(name)
+        network.destroy()
+
+    def undefine_network(self, name):
+        '''Undefines the specified network.'''
+        network = self.get_network(name)
+        network.undefine()
+
     def list_storage_pools(self):
         '''Returns the list of all defined storage pools.'''
         return self.__conn.listStoragePools()

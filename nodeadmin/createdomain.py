@@ -55,9 +55,6 @@ class CreateDomainConfigScreen(DomainListConfigScreen):
             else:
                 errors.append("You must first select a domain to create.")
 
-    def process_input(self, page):
-        print "foo"
-
     def get_create_domain_page(self, screen):
         grid = Grid(1, 1)
         grid.setField(Label("%s was successfully created." % self.get_selected_domain()), 0, 0)

@@ -30,5 +30,10 @@ setup(name = "nodeadmin",
             'destroydom  = nodeadmin.destroydomain:DestroyDomain',
             'undefinedom = nodeadmin.undefinedomain:UndefineDomain',
             'createuser  = nodeadmin.createuser:CreateUser',
-            'listdoms    = nodeadmin.listdomains:ListDomains']
+            'listdoms    = nodeadmin.listdomains:ListDomains',
+            'definenet   = nodeadmin.definenet:DefineNetwork',
+            'createnet   = nodeadmin.createnetwork:CreateNetwork',
+            'destroynet  = nodeadmin.destroynetwork:DestroyNetwork',
+            'undefinenet = nodeadmin.undefinenetwork:UndefineNetwork',
+            'listnets    = nodeadmin.listnetworks:ListNetworks']
         })

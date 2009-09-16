@@ -18,57 +18,30 @@
 
 from snack import *
 import traceback
-from configscreen   import ConfigScreen
-from definedomain   import DefineDomain
-from createdomain   import CreateDomain
-from destroydomain  import DestroyDomain
-from undefinedomain import UndefineDomain
-from listdomains    import ListDomains
-from createuser     import CreateUser
+
+from menuscreen     import MenuScreen
+from nodemenu       import NodeMenu
+from netmenu        import NetworkMenu
+
 import utils
 import logging
 
-DEFINE_DOMAIN    = 1
-CREATE_DOMAIN    = 2
-DESTROY_DOMAIN   = 3
-UNDEFINE_DOMAIN  = 4
-LIST_DOMAINS     = 5
-CREATE_USER      = 6
-EXIT_CONSOLE     = 99
+NODE_MENU    = 1
+NETWORK_MENU = 2
+EXIT_CONSOLE = 99
+
+class MainMenuScreen(MenuScreen):
+    def __init__(self):
+        MenuScreen.__init__(self, "Main Menu")
+
+    def get_menu_items(self):
+        return (("Node Administration", NODE_MENU),
+                ("Network Administration", NETWORK_MENU))
+
+    def handle_selection(self, page):
+        if   page is NODE_MENU:    NodeMenu()
+        elif page is NETWORK_MENU: NetworkMenu()
 
 def MainMenu():
-    finished = False
-    while finished == False:
-        screen = SnackScreen()
-        menu = Listbox(height = 0, width = 0, returnExit = 1)
-        menu.append("Define A Domain",     DEFINE_DOMAIN)
-        menu.append("Create A Domain",     CREATE_DOMAIN)
-        menu.append("Destroy A Domain",    DESTROY_DOMAIN)
-        menu.append("Undefine A Domain",   UNDEFINE_DOMAIN)
-        menu.append("List All Domains",    LIST_DOMAINS)
-        menu.append("Create A User",       CREATE_USER)
-        menu.append("Exit Administration", EXIT_CONSOLE)
-        gridform = GridForm(screen, "Node Administration Console", 1, 4)
-        gridform.add(menu, 0, 0)
-        result = gridform.run();
-        screen.popWindow()
-        screen.finish()
-
-        try:
-            if   result.current() == DEFINE_DOMAIN:   DefineDomain()
-            elif result.current() == CREATE_DOMAIN:   CreateDomain()
-            elif result.current() == DESTROY_DOMAIN:  DestroyDomain()
-            elif result.current() == UNDEFINE_DOMAIN: UndefineDomain()
-            elif result.current() == LIST_DOMAINS:    ListDomains()
-            elif result.current() == CREATE_USER:     CreateUser()
-            elif result.current() == EXIT_CONSOLE:    finished = True
-        except Exception, error:
-            screen = SnackScreen()
-            logging.info("An exception occurred: %s" % str(error))
-            ButtonChoiceWindow(screen,
-                               "An Exception Has Occurred",
-                               str(error) + "\n" + traceback.format_exc(),
-                               buttons = ["OK"])
-            screen.popWindow()
-            screen.finish()
-            finished = True
+    screen = MainMenuScreen()
+    screen.start()
