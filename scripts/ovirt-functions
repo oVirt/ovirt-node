@@ -244,7 +244,7 @@ ptr() {
 # PXE /dev/loop0 (loopback ISO)
 # not available when booted from local disk installation
 mount_live() {
-    if grep -q " /live " /proc/mounts; then
+    if grep -q " /live " /etc/mtab; then
         return 0
     fi
     local live_dev=/dev/live
