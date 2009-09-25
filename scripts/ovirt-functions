@@ -263,7 +263,7 @@ mount_live() {
 # mount boot partition
 # boot loader + kernel + initrd
 mount_boot() {
-    if grep -q " /boot " /proc/mounts; then
+    if grep -q " /boot " /etc/mtab; then
         return 0
     fi
     mkdir -p /boot
