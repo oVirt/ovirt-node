@@ -625,9 +625,11 @@ lvremove() {
 reboot() {
     cd /
     # setup new Root if update is prepared
-    if [ -e /dev/HostVG/RootUpdate ]; then
-        lvrename HostVG Root RootBackup
-        lvrename HostVG RootUpdate Root
+    if [ -e "/dev/disk/by-label/RootUpdate" ]; then
+        root_update_dev=$(readlink -f /dev/disk/by-label/RootUpdate)
+        root_dev=$(readlink -f /dev/disk/by-label/Root)
+        e2label $root_dev RootBackup
+        e2label $root_update_dev Root
     fi
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once

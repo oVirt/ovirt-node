@@ -56,11 +56,11 @@ ovirt_boot_setup() {
     mkdir -p /liveos
     # prepare Root partition update
     candidate=
-    if [ -e /dev/HostVG/RootBackup ]; then
+    if [ -e /dev/disk/by-label/RootBackup ]; then
         candidate=RootBackup
-    elif [ -e /dev/HostVG/RootUpdate ]; then
+    elif [ -e /dev/disk/by-label/RootUpdate ]; then
         candidate=RootUpdate
-    elif [ -e /dev/HostVG/RootNew ]; then
+    elif [ -e /dev/disk/by-label/RootNew ]; then
         candidate=RootNew
     fi
     if [ -z "$candidate" ]; then
@@ -69,7 +69,8 @@ ovirt_boot_setup() {
         umount /liveos
         rc=0
     else
-        lvrename HostVG $candidate RootNew
+        candidate_dev=$(readlink -f /dev/disk/by-label/$candidate)
+        e2label $candidate_dev RootNew
         rc=$?
     fi
     if [ $rc -ne 0 ]; then
@@ -77,7 +78,7 @@ ovirt_boot_setup() {
       log "$(lvdisplay -c)"
       return $rc
     fi
-    mount /dev/HostVG/RootNew /liveos
+    mount $candidate_dev /liveos
     # install oVirt Node image for local boot
     if [ -e "$live/syslinux" ]; then
       syslinux=syslinux
@@ -146,7 +147,7 @@ set -e\
     version=$(rpm -q --qf '%{version}' ovirt-node)
     release=$(rpm -q --qf '%{release}' ovirt-node)
     # reorder tty0 to allow both serial and phys console after installation
-    bootparams="ro root=/dev/HostVG/Root roottypefs=ext3 console=tty0 \
+    bootparams="ro root=LABEL=Root roottypefs=ext3 console=tty0 \
                 $(echo $bootparams | sed s/console=tty0//g)"
     cat > /boot/grub/grub.conf << EOF
 default=0
@@ -172,7 +173,7 @@ EOF
     umount /liveos
     umount /boot
     # mark new Root ready to go, reboot() in ovirt-function switches it to active
-    lvrename HostVG RootNew RootUpdate
+    e2label $candidate_dev RootUpdate
 
     rm -rf $tmpdir
     log "done."

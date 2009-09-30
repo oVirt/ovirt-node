@@ -340,12 +340,23 @@ perform_partitioning()
     parted $DRIVE -s "mklabel ${LABEL_TYPE}"
     log "Creating boot partition"
     parted $DRIVE -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+    log "Creating Root and RootBackup Partitions"
+    let root1_end=${boot_size_si}+${ROOT_SIZE}
+    let root2_end=${root1_end}+${ROOT_SIZE}
+    parted $DRIVE -s "mkpartfs primary ext2 ${boot_size_si}M ${root1_end}M"
+    parted $DRIVE -s "mkpartfs primary ext2 ${root1_end}M ${root2_end}M"
+    # sleep to ensure filesystems are created before continuing
+    sleep 10
+    e2label ${DRIVE}2 Root
+    e2label ${DRIVE}3 RootBackup
+    tune2fs -c 0 -i 0 ${DRIVE}2
+    tune2fs -c 0 -i 0 ${DRIVE}3
     log "Creating LVM partition"
-    parted $DRIVE -s "mkpart primary ext2 ${boot_size_si}M -1"
+    parted $DRIVE -s "mkpart primary ext2 ${root2_end}M -1"
     log "Toggling boot on"
     parted $DRIVE -s "set 1 boot on"
     log "Toggling LVM on"
-    parted $DRIVE -s "set 2 lvm on"
+    parted $DRIVE -s "set 4 lvm on"
     parted $DRIVE -s "print"
     udevadm settle 2> /dev/null || udevsettle
 
@@ -356,11 +367,11 @@ perform_partitioning()
     fi
 
     partboot=${DRIVE}1
-    partpv=${DRIVE}2
+    partpv=${DRIVE}4
     if [ ! -e "$partpv" ]; then
         # e.g. /dev/cciss/c0d0p2
         partboot=${DRIVE}p1
-        partpv=${DRIVE}p2
+        partpv=${DRIVE}p4
     fi
     log "Creating physical volume"
     if [ ! -e "$partpv" ]; then
@@ -387,15 +398,6 @@ perform_partitioning()
         lvcreate --name Swap --size ${SWAP_SIZE}M /dev/HostVG
         mkswap -L "SWAP" /dev/HostVG/Swap
         echo "/dev/HostVG/Swap swap swap defaults 0 0" >> /etc/fstab
-    fi
-    if [ "$ROOT_SIZE" -gt 0 ]; then
-        log "Creating root and root backup partitions"
-        lvcreate --name Root --size ${ROOT_SIZE}M /dev/HostVG
-        mke2fs -j /dev/HostVG/Root -L "ROOT"
-        tune2fs -c 0 -i 0 /dev/HostVG/Root
-        lvcreate --name RootBackup --size ${ROOT_SIZE}M /dev/HostVG
-        mke2fs -j /dev/HostVG/RootBackup -L "ROOT2"
-        tune2fs -c 0 -i 0 /dev/HostVG/RootBackup
     fi
     if [ "$CONFIG_SIZE" -gt 0 ]; then
         log "Creating config partition"
