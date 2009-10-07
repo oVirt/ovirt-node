@@ -16,7 +16,10 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
-SUBDIRS = gptsync
+
+SUBDIRS = \
+  gptsync	\
+  recipe
 
 EXTRA_DIST =			\
   .gitignore			\
@@ -92,6 +95,11 @@ EXTRA_DIST =			\
   scripts/ovirt-post		\
   scripts/ovirt-process-config  \
   scripts/ovirt-uninstall-node-stateful	\
+  tools/create-ovirt-iso-nodes	\
+  tools/edit-livecd	\
+  tools/livecd-iso-to-iscsi	\
+  tools/livecd-rpms	\
+  tools/livecd-setauth	\
   kinit/ovirt-kinit		\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf

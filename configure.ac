@@ -10,6 +10,7 @@ test x"$ac_ct_CC:$CFLAGS" = 'xgcc:-g -O2' \
 AC_CONFIG_FILES([Makefile
   nodeadmin/setup.py
   gptsync/Makefile
+  recipe/Makefile
   ovirt-node.spec
   ])
 AC_OUTPUT

@@ -1,4 +1,4 @@
-bin_PROGRAMS = gptsync showpart
+sbin_PROGRAMS = gptsync showpart
 
 EXTRA_DIST = README.gptsync
 
