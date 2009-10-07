@@ -1,0 +1,135 @@
+#!/bin/bash
+#
+# Create fake oVirt Nodes for testing CDROM boot
+# Copyright 2008 Red Hat, Inc.
+# Written by Perry Myers <pmyers@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+PATH=$PATH:/sbin:/usr/sbin
+
+ME=$(basename "$0")
+warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
+try_h() { printf "Try \`$ME -h' for more information.\n" >&2; }
+die() { warn "$@"; try_h; exit 1; }
+
+NET_DEFAULT=network:default
+IMGDIR_DEFAULT=/var/lib/libvirt/images
+imgdir=$IMGDIR_DEFAULT
+NODEIMG_DEFAULT=/usr/share/ovirt-node-image/ovirt-node-image.iso
+nodeimg=$NODEIMG_DEFAULT
+NUM_DISKS_DEFAULT=1
+RANGE_DEFAULT="6-9"
+RAM_DEFAULT=512
+VCPUS_DEFAULT=1
+
+NODE_DISK_FMT=qcow2
+NODE_DISK_SIZE=6144M
+
+gen_fake_managed_node() {
+    local num=$1
+    local src_nodeimg=$2
+    local last_mac=$(( 54 + $num ))
+
+    local os_variant=fedora10
+    if [ "$no_virtio" = 1 ]; then
+        os_variant=fedora8
+    fi
+
+    echo "Creating fake node$num using $nodeimg..."
+    local dest_nodeimg="$imgdir/node${num}-$(basename $src_nodeimg)"
+    echo "$src_nodeimg -> $dest_nodeimg"
+    rsync -av $src_nodeimg $dest_nodeimg
+
+    virsh destroy node$num > /dev/null 2>&1
+    virsh undefine node$num > /dev/null 2>&1
+
+    local disks=
+    for ((i=0;i<$num_disks;i+=1)); do
+        qemu-img create -f $NODE_DISK_FMT \
+            $imgdir/node${num}-${i}.$NODE_DISK_FMT $NODE_DISK_SIZE
+        disks="$disks --disk path=$imgdir/node${num}-${i}.$NODE_DISK_FMT"
+    done
+
+    # FIXME: virt-install should be changed to have a --nostart parameter
+    # that just defines the VM w/o starting it.
+    virt-install --name=node$num --ram=$ram --vcpus=$vcpus $disks \
+        --cdrom=$dest_nodeimg --livecd \
+        --network=$net --mac=00:16:3e:12:34:$last_mac \
+        --vnc --accelerate --hvm --noautoconsole \
+        --os-type=linux --os-variant=$os_variant \
+        --force --noreboot
+    virsh destroy node$num > /dev/null 2>&1
+    echo "node$num created"
+}
+
+usage() {
+    case $# in 1) warn "$1"; try_h; exit 1;; esac
+    cat <<EOF
+Usage: $ME [-d image_dir] [-n node.iso] [-c num_disks] [-s start-stop]
+           [-v vcpus] [-r ram] [-x] [-b network]
+  -n: node.iso to boot (default: $NODEIMG_DEFAULT)
+  -b: network name (default: $NET_DEFAULT)
+  -d: directory to place virtual disk (default: $IMGDIR_DEFAULT)
+  -c: number of disks per fake node (default: $NUM_DISKS_DEFAULT)
+  -s: node range (default: $RANGE_DEFAULT)
+  -v: vcpus per node (default: $VCPUS_DEFAULT)
+  -r: ram in MB per node (default: $RAM_DEFAULT)
+  -x: toggle virtio devices off
+  -h: display this help and exit
+EOF
+}
+
+err=0 help=0
+no_virtio=0
+num_disks=$NUM_DISKS_DEFAULT
+range=$RANGE_DEFAULT
+ram=$RAM_DEFAULT
+vcpus=$VCPUS_DEFAULT
+net=$NET_DEFAULT
+while getopts :d:n:b:s:c:v:r:xh c; do
+    case $c in
+        n) nodeimg=$OPTARG;;
+        d) imgdir=$OPTARG;;
+        b) net=$OPTARG;;
+        c) num_disks=$OPTARG;;
+        s) range=$OPTARG;;
+        v) vcpus=$OPTARG;;
+        r) ram=$OPTARG;;
+        x) no_virtio=1;;
+        h) help=1;;
+        '?') err=1; warn "invalid option: \`-$OPTARG'";;
+        :) err=1; warn "missing argument to \`-$OPTARG' option";;
+        *) err=1; warn "internal error: \`-$OPTARG' not handled";;
+    esac
+done
+test $err = 1 && { try_h; exit 1; }
+test $help = 1 && { usage; exit 0; }
+
+# first, check to see we are root
+if [ $( id -u ) -ne 0 ]; then
+    die "Must run as root"
+fi
+
+mkdir -p $imgdir
+
+test -f $nodeimg || die "could not find $nodeimg"
+
+# define the fake managed nodes we will use.
+range_start=$(echo $range | cut -d '-' -f 1)
+range_stop=$(echo $range | cut -d '-' -f 2)
+
+for i in `seq $range_start $range_stop` ; do
+    gen_fake_managed_node $i $nodeimg
+done

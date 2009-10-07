@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# Script to interactively add root password and authorized_keys file
+# to a livecd
+# Copyright 2008 Red Hat, Inc.
+# Written by Perry Myers <pmyers@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+DEFAULT_AUTH=~/.ssh/authorized_keys
+
+printf "Do you want to set a root password? [y/N]: "
+read yesno
+if [ "$yesno" = "y" -o "$yesno" = "Y" ]; then
+    chroot . passwd root
+fi
+
+printf "Do you want to set an authorized_keys file? [y/N]: "
+read yesno
+if [ "$yesno" = "y" -o "$yesno" = "Y" ]; then
+    echo "Enter the location of the authorized_keys file [default: $DEFAULT_AUTH]: "
+    read -e authkeys
+    if [ -z "$authkeys" ]; then
+        authkeys=$DEFAULT_AUTH
+    fi
+
+    authkeys=$(eval echo $authkeys)
+    if [ -f $authkeys ]; then
+        SSH=root/.ssh
+        AUTH=$SSH/authorized_keys
+
+        mkdir -p $SSH
+        chmod 755 $SSH
+        cp -v $authkeys $AUTH
+        chmod 644 $AUTH
+    else
+        echo "$authkeys not found, skipping"
+    fi
+fi
