@@ -27,6 +27,9 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+prog=ovirt-firstboot
+lockfile=/var/lock/subsys/$prog
+
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
@@ -35,6 +38,8 @@ start ()
     if ! is_firstboot && ! is_auto_install; then
         return
     fi
+	
+	touch $lockfile
 
     # by default in standalone, disable collectd until server is configured
     service collectd stop > /dev/null 2>&1
@@ -63,6 +68,8 @@ start ()
     disable_firstboot
 
     ovirt_store_firstboot_config >> $OVIRT_LOGFILE 2>&1
+
+    rm -f $lockfile
 }
 
 case "$1" in
@@ -78,7 +85,16 @@ case "$1" in
         test $? == 0 && success || failure
         echo
         ;;
-
+    status)
+        status $prog
+        ;;
+    reload)
+        stop
+        start
+        ;;
+    stop)
+        stop
+        ;;
     *)
         echo "Usage: ovirt-firstboot {start}"
         exit 2

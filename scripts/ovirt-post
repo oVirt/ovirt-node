@@ -10,6 +10,9 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+prog=ovirt-post
+lockfile=/var/lock/subsys/$prog
+
 start() {
     # wait for libvirt to finish initializing
     local count=0
@@ -24,6 +27,9 @@ start() {
 	    count=$(expr $count + 1)
 	    sleep 1
 	fi
+	
+	touch $lockfile
+	
     done
     BACKUP=$(mktemp)
     ISSUE=/etc/issue
@@ -61,6 +67,8 @@ start() {
 
     # Removed ovirt-identify-node since it has now
     # been replaced with the matahari qmf agent.
+
+    rm -f $lockfile
 }
 
 case "$1" in
@@ -75,6 +83,16 @@ case "$1" in
 
         test $? == 0 && success || failure
         echo
+        ;;
+    status)
+        status $prog
+        ;;
+    reload)
+        stop
+        start
+        ;;
+    stop)
+        stop
         ;;
     *)
         echo "Usage: ovirt-post {start}"
