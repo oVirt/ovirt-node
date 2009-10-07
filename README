@@ -1,0 +1,45 @@
+Some notes on node image deployment
+
+Nodes are provided in ISO format.  These ISO images can be deployed by either:
+1. Writing the image to a CD
+2. Writing the image to USB flash using livecd-iso-to-disk utility
+3. Creating pxe bootable files using livecd-iso-to-pxeboot utility
+
+To burn a Node image to a usb stick accessible as /dev/sdb:
+livecd-iso-to-disk --format /usr/share/ovirt-node-image/ovirt-node-image.iso /dev/sdb
+
+To create vmlinuz and initrd images suitable for pxe booting:
+livecd-iso-to-pxeboot /usr/share/ovirt-node-image/ovirt-node-image.iso
+
+The output of livecd-iso-to-pxeboot is a directory called tftpboot that has the
+following files in it:
+./pxelinux.0
+./pxelinux.cfg/default
+./vmlinuz0
+./initrd0.img
+
+The vmlinuz0/initrd0.img files can be imported into a cobbler server or any
+other PXE/tftp server.  pxelinux.cfg/default provides a template for
+configuring the pxe server to export the Node image:
+
+DEFAULT pxeboot
+TIMEOUT 20
+PROMPT 0
+LABEL pxeboot
+      KERNEL vmlinuz0
+      APPEND rootflags=loop initrd=initrd0.img root=/ovirt-node-image.iso rootfstype=auto ro liveimg check rootfstype=iso9660 elevator=deadline
+ONERROR LOCALBOOT 0
+
+In addition, PXE booted Nodes rely on the PXE server passing the mac address
+of the pxe interface to the kernel.  This is provided by using the IPAPPEND 2
+parameter as follows:
+
+DEFAULT pxeboot
+TIMEOUT 20
+PROMPT 0
+LABEL pxeboot
+      KERNEL vmlinuz0
+      IPAPPEND 2
+      APPEND rootflags=loop initrd=initrd0.img root=/ovirt-node-image.iso rootfstype=auto ro liveimg check rootfstype=iso9660 elevator=deadline
+ONERROR LOCALBOOT 0
+
