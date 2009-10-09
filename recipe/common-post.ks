@@ -6,11 +6,12 @@ export PATH
 # Import SELinux Modules
 echo "Enabling selinux modules"
 SEMODULES="base automount avahi consolekit cyrus dhcp dnsmasq guest hal ipsec \
-iscsi kerberos kerneloops ldap lockdev logadm mozilla ntp ovirt-node-selinux \
-polkit portmap qemu rpcbind sasl snmp stunnel sysstat tcpd unprivuser \
+iscsi kerberos kerneloops ldap lockdev logadm mozilla ntp \
+portmap qemu rpcbind sasl snmp stunnel sysstat tcpd unprivuser \
 unconfined usbmodules userhelper virt"
 
 lokkit -v --selinuxtype=minimum
+
 tmpdir=$(mktemp -d)
 
 for semodule in $SEMODULES; do

@@ -25,8 +25,6 @@ EXTRA_DIST =			\
   .gitignore			\
   ovirt-node.spec		\
   ovirt-node.spec.in		\
-  ovirt-node-selinux.te		\
-  ovirt-node-selinux.fc		\
   images/grub-splash.xpm.gz	\
   images/syslinux-vesa-splash.jpg	\
   nodeadmin/__init__.py         \
