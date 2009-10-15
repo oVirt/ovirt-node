@@ -197,7 +197,7 @@ class DomainConfigScreen(ConfigScreen):
             self.__config.set_enable_storage(self.__enable_storage.value())
             if self.__storage_type.getSelection() == DomainConfig.NEW_STORAGE:
                 self.__config.set_use_local_storage(True)
-            elif self.__storage_type.getSelection() == Node.STORAGE_TYPE_EXISTING:
+            elif self.__storage_type.getSelection() == DomainConfig.EXISTING_STORAGE:
                 self.__config.set_use_local_storage(False)
         elif page == LOCAL_STORAGE_PAGE:
             self.__config.set_storage_size(float(self.__storage_size.value()))
