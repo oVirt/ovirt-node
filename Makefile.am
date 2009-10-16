@@ -27,10 +27,10 @@ EXTRA_DIST =			\
   images/grub-splash.xpm.gz	\
   images/syslinux-vesa-splash.jpg	\
   nodeadmin/__init__.py         \
+  nodeadmin/adddomain.py        \
   nodeadmin/configscreen.py     \
   nodeadmin/createnetwork.py    \
   nodeadmin/createuser.py       \
-  nodeadmin/destroydomain.py    \
   nodeadmin/destroynetwork.py   \
   nodeadmin/halworker.py        \
   nodeadmin/libvirtworker.py    \
@@ -39,10 +39,10 @@ EXTRA_DIST =			\
   nodeadmin/menuscreen.py       \
   nodeadmin/netmenu.py          \
   nodeadmin/nodemenu.py         \
-  nodeadmin/undefinedomain.py   \
+  nodeadmin/removedomain.py     \
   nodeadmin/undefinenetwork.py  \
-  nodeadmin/createdomain.py     \
-  nodeadmin/definedomain.py     \
+  nodeadmin/startdomain.py      \
+  nodeadmin/stopdomain.py       \
   nodeadmin/definenet.py        \
   nodeadmin/domainconfig.py     \
   nodeadmin/networkconfig.py    \

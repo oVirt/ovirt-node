@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# createdomain.py - Copyright (C) 2009 Red Hat, Inc.
+# stopdomain.py - Copyright (C) 2009 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -21,25 +21,25 @@
 from snack import *
 from configscreen import *
 
-class CreateDomainConfigScreen(DomainListConfigScreen):
-    LIST_PAGE  = 1
-    CREATE_PAGE = 2
+class StopDomainConfigScreen(DomainListConfigScreen):
+    LIST_PAGE    = 1
+    STOP_PAGE = 2
 
     def __init__(self):
-        DomainListConfigScreen.__init__(self, "Create A Domain")
+        DomainListConfigScreen.__init__(self, "Stop A Domain")
 
     def get_elements_for_page(self, screen, page):
         if page is self.LIST_PAGE:
-            return self.get_domain_list_page(screen, created = False)
-        elif page is self.CREATE_PAGE:
-            return self.get_create_domain_page(screen)
+            return self.get_domain_list_page(screen, defined = False)
+        elif page is self.STOP_PAGE:
+            return self.get_stop_page(screen)
 
     def page_has_next(self, page):
         if page is self.LIST_PAGE: return self.has_selectable_domains()
         return False
 
     def page_has_back(self, page):
-        if page is self.CREATE_PAGE: return True
+        if page is self.STOP_PAGE: return True
         return False
 
     def validate_input(self, page, errors):
@@ -47,19 +47,20 @@ class CreateDomainConfigScreen(DomainListConfigScreen):
             if self.get_selected_domain() is not None:
                 domain = self.get_selected_domain()
                 try:
-                    self.get_libvirt().create_domain(domain)
+                    self.get_libvirt().stop_domain(domain)
                     return True
                 except Exception, error:
-                    errors.append("There was an error creating the domain: %s" % domain)
+                    errors.append("There was an error stop the domain: %s" % domain)
                     errors.append(str(error))
             else:
-                errors.append("You must first select a domain to create.")
+                errors.append("You must first select a domain to stop.")
+        return False
 
-    def get_create_domain_page(self, screen):
+    def get_stop_page(self, screen):
         grid = Grid(1, 1)
-        grid.setField(Label("%s was successfully created." % self.get_selected_domain()), 0, 0)
+        grid.setField(Label("%s was successfully stoped." % self.get_selected_domain()), 0, 0)
         return [grid]
 
-def CreateDomain():
-    screen = CreateDomainConfigScreen()
+def StopDomain():
+    screen = StopDomainConfigScreen()
     screen.start()

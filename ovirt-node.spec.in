@@ -183,12 +183,12 @@ cd -
 %{__install} -p -m0644 nodeadmin/mainmenu.py %{buildroot}%{python_sitelib}/nodeadmin
 
 %{__install} -p -m0644 nodeadmin/nodemenu.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/definedomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/createdomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/destroydomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/undefinedomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/listdomains.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/adddomain.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0644 nodeadmin/domainconfig.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/listdomains.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/removedomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/startdomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/stopdomain.py %{buildroot}%{python_sitelib}/nodeadmin
 
 %{__install} -p -m0644 nodeadmin/netmenu.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0644 nodeadmin/networkconfig.py %{buildroot}%{python_sitelib}/nodeadmin
@@ -369,11 +369,11 @@ fi
 %{_initrddir}/ovirt-functions
 %defattr(-,root,root,0644)
 %{_bindir}/nodeadmin
-%{_bindir}/definedom
-%{_bindir}/createdom
-%{_bindir}/destroydom
-%{_bindir}/undefinedom
-%{_bindir}/listdoms
+%{_bindir}/addvm
+%{_bindir}/startvm
+%{_bindir}/stopvm
+%{_bindir}/rmvm
+%{_bindir}/listvms
 %{_bindir}/definenet
 %{_bindir}/createnet
 %{_bindir}/destroynet

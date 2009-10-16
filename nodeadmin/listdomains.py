@@ -27,7 +27,7 @@ class ListDomainsConfigScreen(DomainListConfigScreen):
     DETAIL_PAGE = 2
 
     def __init__(self):
-        DomainListConfigScreen.__init__(self, 'List Domains')
+        DomainListConfigScreen.__init__(self, 'List Virtual Machines')
 
     def page_has_next(self, page):
         return (page == self.LIST_PAGE)
@@ -38,7 +38,7 @@ class ListDomainsConfigScreen(DomainListConfigScreen):
     def validate_input(self, page, errors):
         if page == self.LIST_PAGE:
             if self.get_selected_domain() is None:
-                errors.append("Please select a domain to view.")
+                errors.append("Please select a virtual machine to view.")
             else:
                 return True
 

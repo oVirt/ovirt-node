@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# definedomain.py - Copyright (C) 2009 Red Hat, Inc.
+# adddomain.py - Copyright (C) 2009 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -465,6 +465,6 @@ class DomainConfigScreen(ConfigScreen):
         return [Label("Ready to begin installation of %s" % self.__config.get_guest_name()),
                 grid]
 
-def DefineDomain():
+def AddDomain():
     screen = DomainConfigScreen()
     screen.start()
