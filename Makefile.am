@@ -58,6 +58,7 @@ EXTRA_DIST =			\
   scripts/ovirt-config-boot-wrapper  \
   scripts/ovirt-config-collectd  \
   scripts/ovirt-config-hostname  \
+  scripts/ovirt-config-iscsi	\
   scripts/ovirt-config-logging  \
   scripts/ovirt-config-networking \
   scripts/ovirt-config-password \
