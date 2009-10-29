@@ -58,7 +58,7 @@ class RemoveDomainConfigScreen(DomainListConfigScreen):
             if self.__confirm_remove.value():
                 domain = self.get_selected_domain()
                 try:
-                    self.get_libvirt().remove_domain(domain)
+                    self.get_libvirt().undefine_domain(domain)
                     return True
                 except Exception, error:
                     errors.append("Failed to remove %s." % domain)
