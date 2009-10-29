@@ -47,7 +47,7 @@ class StopDomainConfigScreen(DomainListConfigScreen):
             if self.get_selected_domain() is not None:
                 domain = self.get_selected_domain()
                 try:
-                    self.get_libvirt().stop_domain(domain)
+                    self.get_libvirt().destroy_domain(domain)
                     return True
                 except Exception, error:
                     errors.append("There was an error stop the domain: %s" % domain)

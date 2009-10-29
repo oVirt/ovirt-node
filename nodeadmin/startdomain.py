@@ -47,7 +47,7 @@ class StartDomainConfigScreen(DomainListConfigScreen):
             if self.get_selected_domain() is not None:
                 domain = self.get_selected_domain()
                 try:
-                    self.get_libvirt().start_domain(domain)
+                    self.get_libvirt().create_domain(domain)
                     return True
                 except Exception, error:
                     errors.append("There was an error creating the domain: %s" % domain)
