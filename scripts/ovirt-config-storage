@@ -85,30 +85,43 @@ check_partition_sizes()
     fi
 
     printf "\n"
-    get_drive_size $DRIVE SPACE
-    disk_size=$SPACE
-    need_size=$(echo "scale=0;" \
-                     "$SWAP_SIZE + $ROOT_SIZE * 2" \
-                     "+ $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
+    get_drive_size $ROOTDRIVE ROOTDRIVESPACE
+    get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
+    ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2"| bc -l)
+    HOSTVG_NEED_SIZE=$(echo "scale=0;" \
+                     "$SWAP_SIZE + $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
 
-    if [ $need_size -gt $disk_size ]; then
-        local gap_size=$(echo "scale=0; $need_size-$disk_size;" | bc -l)
-        printf "\n"
-        printf "=============================================================\n"
-        printf "The target storage device is too small for the desired sizes:\n"
-        printf " Size of target storage device: $disk_size MB\n"
-        printf " Total storage size to be used: $need_size MB\n"
-        printf "\n"
-        printf "You need an addition $gap_size MB of storage.\n"
-        printf "\n"
-        return 1
+    if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
+        drive_list="ROOT"
+        ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2 + $HOSTVG_NEED_SIZE"| bc -l)
     else
-        printf "Required Space : $need_size MB\n\n"
+        drive_list="ROOT HOSTVG"
     fi
+
+    for drive in $drive_list; do
+        drive_need_size=$(eval "echo \${$(echo ${drive}_NEED_SIZE)"})
+        drive_disk_size=$(eval "echo \${$(echo ${drive}DRIVESPACE)"})
+
+        if [ $drive_need_size -gt $drive_disk_size ]; then
+            local gap_size=$(echo "scale=0; $drive_need_size-$drive_disk_size;" | bc -l)
+            printf "\n"
+            printf "=============================================================\n"
+            printf "The target storage device is too small for the desired sizes:\n"
+            printf " Disk Target: $drive \n"
+            printf " Size of target storage device: $drive_disk_size MB\n"
+            printf " Total storage size to be used: $drive_need_size MB\n"
+            printf "\n"
+            printf "You need an additional $gap_size MB of storage.\n"
+            printf "\n"
+            return 1
+        else
+            printf "Required Space : $drive_need_size MB\n\n"
+        fi
+    done
 
     # check if an existing HostVG exists on a device other than the target
     devices="$(pvs -o pv_name,vg_name --noheadings | \
-        grep "HostVG"|grep -v $DRIVE|awk '{ print $1 }')"
+        grep "HostVG"|grep -v $HOSTVGDRIVE|awk '{ print $1 }')"
     rc=0
     if [ -n "$devices" ]; then
         printf "\n"
@@ -193,8 +206,14 @@ get_dev_name()
 do_configure()
 {
     local name_and_size
-    DRIVE=$(get_dev_name) || return 0
-    get_drive_size $DRIVE SPACE
+    printf "\n\nPlease select the disk to use for the Root.\n\n"
+    ROOTDRIVE=$(get_dev_name) || return 0
+    get_drive_size $ROOTDRIVE ROOTDRIVESPACE
+
+    printf "\n\nPlease select the disk to use for the HostVG.\n\n"
+    HOSTVGDRIVE=$(get_dev_name) || return 0
+    get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
+    echo $HOSTVGDRIVESPACE
 
     printf "\n\nPlease configure storage partitions.\n\n"
     printf "* Enter partition sizes in MB.\n"
@@ -210,7 +229,7 @@ do_configure()
         return
     fi
 
-    local space_left=$SPACE
+    local space_left=$HOSTVGDRIVESPACE
     for part in swap root config logging data ; do
         part_regexp="^0$"
         if [ "$part" = "data" ]; then
@@ -250,13 +269,13 @@ do_configure()
 
     if ! check_partition_sizes; then
         printf "Please try partitioning again.\n"
-        DRIVE=
+        ROOTDRIVE=
         return 1
     fi
 
     # save input variables
     augtool <<EOF
-set /files$OVIRT_DEFAULTS/OVIRT_INIT $DRIVE
+set /files$OVIRT_DEFAULTS/OVIRT_INIT $ROOTDRIVE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_SWAP_SIZE $SWAP_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_ROOT_SIZE $ROOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_CONFIG_SIZE $CONFIG_SIZE
@@ -267,15 +286,20 @@ EOF
 
 do_review()
 {
-    if [ -z "$DRIVE" ]; then
-        printf "\nNo storage device selected.\n"
+    if [ -z "$ROOTDRIVE" ]; then
+        printf "\nNo Root storage device selected.\n"
         return
     fi
 
     local data_size_display="$DATA_SIZE MB"
     if [ "$DATA_SIZE" = -1 ]; then
-        local remaining_mb=$(( $SPACE - $SWAP_SIZE \
-                - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
+
+        if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
+            local remaining_mb=$(( $ROOTDRIVESPACE - $SWAP_SIZE \
+                    - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
+        else
+            local remaining_mb=$(( $HOSTVGDRIVESPACE - $SWAP_SIZE - $CONFIG_SIZE - $LOGGING_SIZE ))
+        fi
         data_size_display="$remaining_mb MB"
     fi
 
@@ -283,7 +307,8 @@ do_review()
 
 The local disk will be repartitioned as follows:
 ================================================
-           Physical Hard Disk: $(get_drive_size $DRIVE)
+                   Root Drive: $(get_drive_size $ROOTDRIVE)
+                 HostVG Drive: $(get_drive_size $HOSTVGDRIVE)
           Swap partition size: $SWAP_SIZE MB
   Installation partition size: $ROOT_SIZE * 2 MB
  Configuration partition size: $CONFIG_SIZE MB
@@ -299,21 +324,21 @@ EOF
 wipe_lvm_on_disk()
 {
     unmount_logging
-    for vg in $(pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|sort -u); do
+    for vg in $(pvs -o vg_name --noheadings $HOSTVGDRIVE* 2>/dev/null|sort -u); do
         wipe_volume_group $vg
     done
 }
 
 perform_partitioning()
 {
-    log "Partitioning drive: $DRIVE"
-    if [ -z "$DRIVE" ]; then
+    log "Partitioning drive: $ROOTDRIVE"
+    if [ -z "$HOSTVGDRIVE" ]; then
         printf "\nNo storage device selected.\n"
         return
     fi
 
     start_log
-    log "Starting partitioning of $DRIVE"
+    log "Starting partitioning of $ROOTDRIVE"
 
     log "Saving parameters"
     unmount_config /etc/default/ovirt
@@ -326,40 +351,51 @@ perform_partitioning()
 
     # FIXME: save a backup copy, just in case?
     log "Wiping old boot sector"
-    dd if=/dev/zero of=$DRIVE bs=1024K count=1
-    blockdev --rereadpt $DRIVE
-    partprobe -s $DRIVE
+    dd if=/dev/zero of=$ROOTDRIVE bs=1024K count=1
+    blockdev --rereadpt $ROOTDRIVE
+    partprobe -s $ROOTDRIVE
 
     MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
-    log "Labeling Drive"
-    parted $DRIVE -s "mklabel ${LABEL_TYPE}"
+    log "Labeling Drive: $ROOTDRIVE"
+    parted $ROOTDRIVE -s "mklabel ${LABEL_TYPE}"
+    if [ $ROOTDRIVE != $HOSTVGDRIVE ]; then
+        log "Labeling Drive: $HOSTVGDRIVE"
+        parted $HOSTVGDRIVE -s "mklabel ${LABEL_TYPE}"
+    fi
     log "Creating Root and RootBackup Partitions"
     let RootBackup_end=${ROOT_SIZE}*2
-    parted $DRIVE -s "mkpartfs primary ext2 0M ${ROOT_SIZE}M"
-    parted $DRIVE -s "mkpartfs primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+    parted $ROOTDRIVE -s "mkpartfs primary ext2 0M ${ROOT_SIZE}M"
+    parted $ROOTDRIVE -s "mkpartfs primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
     # sleep to ensure filesystems are created before continuing
     sleep 10
-    e2label ${DRIVE}1 Root
-    e2label ${DRIVE}2 RootBackup
-    tune2fs -c 0 -i 0 ${DRIVE}1
-    tune2fs -c 0 -i 0 ${DRIVE}2
+    e2label ${ROOTDRIVE}1 Root
+    e2label ${ROOTDRIVE}2 RootBackup
+    tune2fs -c 0 -i 0 ${ROOTDRIVE}1
+    tune2fs -c 0 -i 0 ${ROOTDRIVE}2
     log "Creating LVM partition"
-    parted $DRIVE -s "mkpart primary ext2 ${RootBackup_end}M -1"
+
+    if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
+        parted $HOSTVGDRIVE -s "mkpart primary ext2 ${RootBackup_end}M -1"
+        hostvgpart="3"
+    else
+        parted $HOSTVGDRIVE -s "mkpart primary ext2 0M -1"
+        hostvgpart="1"
+    fi
     log "Toggling LVM on"
-    parted $DRIVE -s "set 3 lvm on"
-    parted $DRIVE -s "print"
+    parted $HOSTVGDRIVE -s "set $hostvgpart lvm on"
+    parted $ROOTDRIVE -s "print"
     udevadm settle 2> /dev/null || udevsettle
 
     # sync GPT to the legacy MBR partitions
     if [ "gpt" == "$LABEL_TYPE" ]; then
         log "Running gptsync to create legacy mbr"
-        gptsync $DRIVE
+        gptsync $ROOTDRIVE
     fi
 
-    partpv=${DRIVE}3
+    partpv=${HOSTVGDRIVE}${hostvgpart}
     if [ ! -e "$partpv" ]; then
         # e.g. /dev/cciss/c0d0p2
-        partpv=${DRIVE}p3
+        partpv=${HOSTVGDRIVE}p${hostvgpart}
     fi
     log "Creating physical volume"
     if [ ! -e "$partpv" ]; then
@@ -432,7 +468,7 @@ perform_partitioning()
 
 do_confirm()
 {
-    if [ -z "$DRIVE" ]; then
+    if [ -z "$ROOTDRIVE" ]; then
         printf "\nNo storage device selected.\n"
         return
     fi
@@ -499,8 +535,10 @@ DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use the drive selected with 'ovirt_init' boot parameter
-    DRIVE=$OVIRT_INIT
-    get_drive_size $DRIVE SPACE
+    # setting these the same until kernel cmdline argument implemented
+    ROOTDRIVE=$OVIRT_INIT
+    HOSTVGDRIVE=$OVIRT_INIT
+    get_drive_size $ROOTDRIVE ROOTDRIVESPACE
 fi
 
 # if the node is Fedora then use GPT, otherwise use MBR
@@ -514,7 +552,7 @@ if [ "$1" == "AUTO" ]; then
     log "Beginning automatic disk partitioning.\n"
     if [ -n "$OVIRT_INIT" ]; then
         # do not format if HostVG exists on selected disk...
-	pvs -o vg_name --noheadings $DRIVE* 2>/dev/null|grep -q -m1 "HostVG"
+	pvs -o vg_name --noheadings $HOSTVGDRIVE* 2>/dev/null|grep -q -m1 "HostVG"
 	existingHostVG=$?
         # ... unless overridden by ovirt_firstboot parameter
 	if is_firstboot || [ $existingHostVG -ne 0 ]; then
@@ -529,7 +567,7 @@ if [ "$1" == "AUTO" ]; then
 	log "Missing device parameter: unable to partition any disk"
     fi
 else
-    OPTIONS="\"Configure\" \"Review\" \"Commit Changes And Quit\" \"Return To Menu\""
+    OPTIONS="\"Configure Storage\" \"Review\" \"Commit Changes And Quit\" \"Return To Menu\""
     eval set $OPTIONS
     PS3="Choose an option: "
 
@@ -539,7 +577,7 @@ else
         select OPTION in "$@"
         do
             case "$OPTION" in
-                "Configure") do_configure ; break ;;
+                "Configure Storage") do_configure ; break ;;
                 "Review")    do_review    ; break ;;
                 "Commit Changes And Quit") do_confirm   ; break ;;
                 "Return To Menu")      printf "\nExiting.\n"; exit ;;
