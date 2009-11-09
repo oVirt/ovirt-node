@@ -388,7 +388,7 @@ mount_data() {
         mkdir -p /data
         mount /data
         mkdir -p /data/images
-        mount -p /var/lib/libvirt/images
+        mkdir -p /var/lib/libvirt/images
         mount /var/lib/libvirt/images
         restorecon -rv /var/lib/libvirt/images
 
