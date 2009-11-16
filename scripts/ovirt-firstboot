@@ -35,7 +35,7 @@ trap 'exit $?' 1 2 13 15
 
 start ()
 {
-    if ! is_firstboot && ! is_auto_install; then
+    if ! is_firstboot && ! is_auto_install && ! is_upgrade; then
         return
     fi
 	
@@ -51,14 +51,18 @@ start ()
         ovirt-config-networking AUTO
         ovirt-config-logging AUTO
         ovirt-config-collectd AUTO
-	ovirt-config-password AUTO
-        if [ "$OVIRT_LOCAL_BOOT" = 1 ]; then
-            mount_live
-            ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
-            disable_firstboot
-            reboot
-        fi
-    elif is_firstboot; then
+        ovirt-config-password AUTO
+    fi
+
+    if is_upgrade; then
+        mount_live
+        ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
+        disable_firstboot
+        reboot
+        return
+    fi
+
+    if is_firstboot; then
         plymouth --hide-splash
 
         ovirt-config-setup -x < /dev/console

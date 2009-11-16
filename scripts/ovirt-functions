@@ -102,6 +102,16 @@ is_auto_install() {
     fi
 }
 
+# return 0 if this is an upgrade
+# return 1 otherwise
+is_upgrade() {
+    if [ "$OVIRT_UPGRADE" = "1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # return 0 if booted from local disk
 # return 1 if booted from other media
 is_booted_from_local_disk() {
@@ -123,7 +133,7 @@ disable_firstboot() {
         augtool <<EOF
 set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT 0
 set /files$OVIRT_DEFAULTS/OVIRT_INIT '""'
-set /files$OVIRT_DEFAULTS/OVIRT_LOCAL_BOOT 0
+set /files$OVIRT_DEFAULTS/OVIRT_UPGRADE 0
 EOF
     fi
 }
