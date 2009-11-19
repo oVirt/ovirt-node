@@ -12,6 +12,7 @@
 
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
+EARLY_DIR=/etc/ovirt-early.d
 
 get_mac_addresses() {
     local DEVICE=$1
@@ -369,7 +370,18 @@ start() {
             console=*)
             bootparams="$bootparams $i"
             ;;
+            ovirt_early=*)
+            i=${i#ovirt_early=}
+            ovirt_early=$(echo $i|tr ",:;" " ")
+            ;;
         esac
+    done
+
+    for hook in $ovirt_early; do
+        pre="$EARLY_DIR/pre-$hook"
+        if [ -e "$pre" ]; then
+            . "$pre"
+        fi
     done
 
     if [ -z "$ip_netmask" ]; then
@@ -433,6 +445,13 @@ start() {
             fi
         fi
     fi
+
+    for hook in $ovirt_early; do
+        post="$EARLY_DIR/post-$hook"
+        if [ -e "$post" ]; then
+            . "$post"
+        fi
+    done
 
     return 0
 }

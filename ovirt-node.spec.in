@@ -274,6 +274,8 @@ ln -s ovirt-release %{buildroot}/etc/system-release
 %{__ln_s} ../..%{_sbindir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-uninstall %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Uninstall node"
 
+# ovirt-early vendor hook dir
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-early.d
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -360,6 +362,7 @@ fi
 %config %{_sysconfdir}/cron.d/ovirt-logrotate
 %{_sysconfdir}/ovirt-config-boot.d
 %{_sysconfdir}/ovirt-config-setup.d
+%{_sysconfdir}/ovirt-early.d
 
 %files stateful
 %defattr(-,root,root,0755)
