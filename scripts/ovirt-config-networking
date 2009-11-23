@@ -530,6 +530,13 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
     log "Configuring network"
 
     # delete existing scripts
+    for vlan in /proc/net/vlan/*; do
+        if [[ ! "${vlan}" =~ config ]]; then
+            vlan=$(echo $vlan|awk -F "/" {'print $5'})
+            vconfig rem $vlan
+        fi
+    done
+
     for script in /etc/sysconfig/network-scripts/ifcfg-*; do
         if [[ ! "${script}" =~ ifcfg-lo ]]; then
             ovirt_safe_delete_config $script
