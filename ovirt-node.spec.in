@@ -385,7 +385,7 @@ fi
 %{_bindir}/createuser
 %{_sysconfdir}/collectd.conf.in
 %{python_sitelib}/nodeadmin
-%{python_sitelib}/nodeadmin-@VERSION@-py2.6.egg-info
+%{python_sitelib}/nodeadmin-@VERSION@*
 %config %attr(0644,root,root) %{_sysconfdir}/ovirt-release
 %config %attr(0644,root,root) %{_sysconfdir}/default/ovirt
 
