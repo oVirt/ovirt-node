@@ -460,7 +460,7 @@ function setup_menu
     fi
 
     # Add virtio NICs that were possibly not detected by hal
-    NICS="$NICS $(ifconfig -a | awk '/Ethernet/ {print $1}' | grep -v -E "^br|^bond|^vnet|^virbr|\." | xargs)"
+    NICS="$(ifconfig -a | awk '/Ethernet/ {print $1}'|xargs)"
     NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
 
     PS3="Please select an interface or configuration option: "
@@ -486,6 +486,7 @@ else
         printf "***** WARNING *****\n"
         printf "\nPhysical Networking Devices (*=PXE boot interface)\n"
         printf " %-10s %-12s %-18s\n" "Name" "Driver" "MAC"
+        PHY_NICS=""
         for nic in $NICS; do
             driver=$(basename $(readlink /sys/class/net/$nic/device/driver) 2>/dev/null)
             mac=$(cat /sys/class/net/$nic/address)
@@ -494,14 +495,17 @@ else
             else
                 pxe=" "
             fi
-            printf "%s%-10s %-12s %-18s\n" "$pxe" "$nic" "$driver" "$mac"
+            if [ -n "$driver" ]; then
+                PHY_NICS="$PHY_NICS $nic"
+                printf "%s%-10s %-12s %-18s\n" "$pxe" "$nic" "$driver" "$mac"
+            fi
         done
 
         DNS="DNS"
         NTP="NTP"
         Abort="Abort"
         Save="Save And Return To Menu"
-        select NIC in $NICS "$DNS" "$NTP" "$Abort" "$Save"
+        select NIC in $PHY_NICS "$DNS" "$NTP" "$Abort" "$Save"
         do
             printf "\n"
             case "$NIC" in
