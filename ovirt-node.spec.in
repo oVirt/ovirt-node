@@ -370,7 +370,6 @@ fi
 %defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
 %{_initrddir}/ovirt-functions
-%defattr(-,root,root,0644)
 %{_bindir}/nodeadmin
 %{_bindir}/addvm
 %{_bindir}/startvm
