@@ -48,6 +48,7 @@ EXTRA_DIST =			\
   nodeadmin/netmenu.py          \
   nodeadmin/nodeadmin.py        \
   nodeadmin/nodemenu.py         \
+  nodeadmin/poolconfig.py       \
   nodeadmin/removedomain.py     \
   nodeadmin/removepool.py       \
   nodeadmin/removevolume.py     \

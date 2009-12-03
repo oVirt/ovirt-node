@@ -196,6 +196,11 @@ class LibvirtWorker:
         '''Returns the storage pool with the specified name.'''
         return self.__conn.storagePoolLookupByName(name)
 
+    def list_storage_volumes(self, poolname):
+        '''Returns the list of all defined storage volumes for a given pool.'''
+        pool = self.get_storage_pool(poolname)
+        return pool.listVolumes()
+
     def define_storage_volume(self, config, meter):
         '''Defines a new storage volume.'''
         self.create_storage_pool(config.get_pool().name())
@@ -204,9 +209,14 @@ class LibvirtWorker:
 
     def remove_storage_volume(self, poolname, volumename):
         '''Removes the specified storage volume.'''
-        pool = self.get_storage_pool(poolname)
-        volume = pool.storageVolLookupByName(volumename)
+        volume = self.get_storage_volume(poolname, volumename)
         volume.delete(0)
+
+    def get_storage_volume(self, poolname, volumename):
+        '''Returns a reference to the specified storage volume.'''
+        pool =self.get_storage_pool(poolname)
+        volume = pool.storageVolLookupByName(volumename)
+        return volume
 
     def list_bridges(self):
         '''Lists all defined and active bridges.'''
@@ -221,21 +231,9 @@ class LibvirtWorker:
     def generate_mac_address(self):
         return self.__net.macaddr
 
-    def list_storage_volumes(self):
-        '''Lists all defined storage volumes.'''
-        pools = self.__conn.listStoragePools()
-        pools.extend(self.__conn.listDefinedStoragePools())
-        result = []
-        for name in pools:
-            pool = self.__conn.storagePoolLookupByName(name)
-            for volname in pool.listVolumes():
-                volume = self.__conn.storageVolLookupByPath("/var/lib/libvirt/images/%s" % volname)
-                result.append(volume)
-        return result
-
-    def get_storage_size(self, name):
+    def get_storage_size(self, poolname, volumename):
         '''Returns the size of the specified storage volume.'''
-        volume = self.__conn.storageVolLookupByPath("/var/lib/libvirt/images/%s" % name)
+        volume = self.get_storage_volume(poolname, volumename)
         return volume.info()[1] / (1024.0 ** 3)
 
     def get_virt_types(self):
@@ -381,6 +379,10 @@ class LibvirtWorker:
                                                                      pool_object = pool,
                                                                      suffix = ".img")
                 path = os.path.join(DEFAULT_POOL_TARGET_PATH, path)
+            else:
+                volume = self.get_storage_volume(config.get_storage_pool(),
+                                                 config.get_storage_volume())
+                path = volume.path()
 
             if path is not None:
                 storage= virtinst.VirtualDisk(conn = self.__conn,

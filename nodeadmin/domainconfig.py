@@ -50,7 +50,8 @@ class DomainConfig:
         self.__use_local_storage = True
         self.__storage_size = 8.0
         self.__allocate_storage = True
-        self.__existing_storage = ""
+        self.__storage_pool = ""
+        self.__storage_volume = ""
         self.__network_bridge = None
         self.__mac_address = None
         self.__virt_type = None
@@ -177,11 +178,17 @@ class DomainConfig:
     def get_allocate_storage(self):
         return self.__allocate_storage
 
-    def set_existing_storage(self, storage):
-        self.__existing_storage = storage
+    def set_storage_pool(self, pool):
+        self.__storage_pool = pool
 
-    def get_existing_storage(self):
-        return self.__existing_storage
+    def get_storage_pool(self):
+        return self.__storage_pool
+
+    def set_storage_volume(self, volume):
+        self.__storage_volume = volume
+
+    def get_storage_volume(self):
+        return self.__storage_volume
 
     def is_existing_storage(self, storage):
         return self.__existing_storage == storage

@@ -37,10 +37,11 @@ OS_VARIANT_PAGE      = 12
 RAM_CPU_PAGE         = 13
 ENABLE_STORAGE_PAGE  = 14
 LOCAL_STORAGE_PAGE   = 15
-MANAGED_STORAGE_PAGE = 16
-BRIDGE_PAGE          = 17
-VIRT_DETAILS_PAGE    = 18
-CONFIRM_PAGE         = 19
+SELECT_POOL_PAGE     = 16
+SELECT_VOLUME_PAGE   = 17
+BRIDGE_PAGE          = 18
+VIRT_DETAILS_PAGE    = 19
+CONFIRM_PAGE         = 20
 
 LOCATION="location"
 KICKSTART="kickstart"
@@ -58,24 +59,25 @@ class DomainConfigScreen(ConfigScreen):
         self.__config.set_virt_type(self.get_libvirt().get_default_virt_type())
 
     def get_elements_for_page(self, screen, page):
-        if page == VM_DETAILS_PAGE:        return self.get_vm_details_page(screen)
-        elif page == LOCAL_INSTALL_PAGE:   return self.get_local_install_page(screen)
-        elif page == SELECT_CDROM_PAGE:    return self.get_select_cdrom_page(screen)
-        elif page == SELECT_ISO_PAGE:      return self.get_select_iso_page(screen)
-        elif page == NETWORK_INSTALL_PAGE: return self.get_network_install_page(screen)
-        elif page == OS_TYPE_PAGE:         return self.get_os_type_page(screen)
-        elif page == OS_VARIANT_PAGE:      return self.get_os_variant_page(screen)
-        elif page == RAM_CPU_PAGE:         return self.get_ram_and_cpu_page(screen)
-        elif page == ENABLE_STORAGE_PAGE:  return self.get_enable_storage_page(screen)
-        elif page == LOCAL_STORAGE_PAGE:   return self.get_local_storage_page(screen)
-        elif page == MANAGED_STORAGE_PAGE: return self.get_managed_storage_page(screen)
-        elif page == BRIDGE_PAGE:          return self.get_bridge_page(screen)
-        elif page == VIRT_DETAILS_PAGE:    return self.get_virt_details_page(screen)
-        elif page == CONFIRM_PAGE:         return self.get_confirm_page(screen)
+        if page is VM_DETAILS_PAGE:        return self.get_vm_details_page(screen)
+        elif page is LOCAL_INSTALL_PAGE:   return self.get_local_install_page(screen)
+        elif page is SELECT_CDROM_PAGE:    return self.get_select_cdrom_page(screen)
+        elif page is SELECT_ISO_PAGE:      return self.get_select_iso_page(screen)
+        elif page is NETWORK_INSTALL_PAGE: return self.get_network_install_page(screen)
+        elif page is OS_TYPE_PAGE:         return self.get_os_type_page(screen)
+        elif page is OS_VARIANT_PAGE:      return self.get_os_variant_page(screen)
+        elif page is RAM_CPU_PAGE:         return self.get_ram_and_cpu_page(screen)
+        elif page is ENABLE_STORAGE_PAGE:  return self.get_enable_storage_page(screen)
+        elif page is LOCAL_STORAGE_PAGE:   return self.get_local_storage_page(screen)
+        elif page is SELECT_POOL_PAGE:     return self.get_select_pool_page(screen)
+        elif page is SELECT_VOLUME_PAGE:   return self.get_select_volume_page(screen)
+        elif page is BRIDGE_PAGE:          return self.get_bridge_page(screen)
+        elif page is VIRT_DETAILS_PAGE:    return self.get_virt_details_page(screen)
+        elif page is CONFIRM_PAGE:         return self.get_confirm_page(screen)
         return []
 
     def validate_input(self, page, errors):
-        if page == VM_DETAILS_PAGE:
+        if page is VM_DETAILS_PAGE:
             if len(self.__guest_name.value()) > 0:
                 if self.get_libvirt().domain_exists(self.__guest_name.value()):
                     errors.append("Guest name '%s' is already in use." % self.__guest_name.value())
@@ -83,12 +85,12 @@ class DomainConfigScreen(ConfigScreen):
                     return True
             else:
                 errors.append("Guest name must be a string between 0 and 50 characters.")
-        elif page == LOCAL_INSTALL_PAGE:
+        elif page is LOCAL_INSTALL_PAGE:
             if self.__install_source.getSelection() == DomainConfig.INSTALL_SOURCE_CDROM:
                 return True
             elif self.__install_source.getSelection() == DomainConfig.INSTALL_SOURCE_ISO:
                 return True
-        elif page == SELECT_CDROM_PAGE:
+        elif page is SELECT_CDROM_PAGE:
             if self.__install_media.getSelection() != None:
                 if len(self.get_hal().list_installable_volumes()) == 0:
                     errors.append("No installable media is available.")
@@ -96,7 +98,7 @@ class DomainConfigScreen(ConfigScreen):
                     return True
             else:
                 errors.append("You must select an install media.")
-        elif page == SELECT_ISO_PAGE:
+        elif page is SELECT_ISO_PAGE:
             if len(self.__iso_path.value()) > 0:
                 if os.path.exists(self.__iso_path.value()):
                     if os.path.isfile(self.__iso_path.value()):
@@ -108,14 +110,14 @@ class DomainConfigScreen(ConfigScreen):
                     errors.append(self.__iso_path.value())
             else:
                 errors.append("An install media selection is required.")
-        elif page == NETWORK_INSTALL_PAGE:
+        elif page is NETWORK_INSTALL_PAGE:
             if len(self.__install_url.value()) > 0:
                 return True
             else:
                 errors.append("An install tree is required.")
-        elif page == OS_TYPE_PAGE: return True
-        elif page == OS_VARIANT_PAGE: return True
-        elif page == RAM_CPU_PAGE:
+        elif page is OS_TYPE_PAGE: return True
+        elif page is OS_VARIANT_PAGE: return True
+        elif page is RAM_CPU_PAGE:
             if (len(self.__memory.value()) > 0 and len(self.__cpus.value()) > 0) \
                     and  (int(self.__memory.value()) > 0 and int(self.__cpus.value()) > 0):
                 return True
@@ -128,8 +130,8 @@ class DomainConfigScreen(ConfigScreen):
                     errors.append("A value must be entered for CPUs.")
                 elif int(self.__cpus.value()) <= 0:
                     errors.append("A positive integer value must be entered for memory.")
-        elif page == ENABLE_STORAGE_PAGE: return True
-        elif page == LOCAL_STORAGE_PAGE:
+        elif page is ENABLE_STORAGE_PAGE: return True
+        elif page is LOCAL_STORAGE_PAGE:
             if len(self.__storage_size.value()) > 0:
                 if float(self.__storage_size.value()) > 0:
                     return True
@@ -137,12 +139,17 @@ class DomainConfigScreen(ConfigScreen):
                     errors.append("A positive value must be entered for the storage size.")
             else:
                 errors.append("A value must be entered for the storage size.")
-        elif page == MANAGED_STORAGE_PAGE:
-            if self.__existing_storage.getSelection() is not None:
+        elif page is SELECT_POOL_PAGE:
+            if self.__storage_pool.getSelection() is not None:
+                return True
+            else:
+                errors.append("Please select a storage pool.")
+        elif page is SELECT_VOLUME_PAGE:
+            if self.__storage_volume.getSelection() is not None:
                 return True
             else:
                 errors.append("Please select a storage volume.")
-        elif page == BRIDGE_PAGE:
+        elif page is BRIDGE_PAGE:
             if self.__network_bridges.getSelection() != None:
                 if len(self.__mac_address.value()) > 0:
                     # TODO: regex check the format
@@ -151,62 +158,66 @@ class DomainConfigScreen(ConfigScreen):
                     errors.append("MAC address must be supplied.")
             else:
                 errors.append("A network bridge must be selected.")
-        elif page == VIRT_DETAILS_PAGE:
+        elif page is VIRT_DETAILS_PAGE:
             if self.__virt_types.getSelection() != None and self.__architectures.getSelection() != None:
                 return True
             if self.__virt_types.getSelection() is None:
                 errors.append("Please select a virtualization type.")
             if self.__architectures.getSelection() is None:
                 errors.append("Please selection an architecture.")
-        elif page == CONFIRM_PAGE: return True
+        elif page is CONFIRM_PAGE: return True
         return False
 
     def process_input(self, page):
-        if page == VM_DETAILS_PAGE:
+        if page is VM_DETAILS_PAGE:
             self.__config.set_guest_name(self.__guest_name.value())
             self.__config.set_install_type(self.__install_type.getSelection())
-        elif page == LOCAL_INSTALL_PAGE:
+        elif page is LOCAL_INSTALL_PAGE:
             self.__config.set_use_cdrom_source(self.__install_source.getSelection() == DomainConfig.INSTALL_SOURCE_CDROM)
-        elif page == SELECT_CDROM_PAGE:
+        elif page is SELECT_CDROM_PAGE:
             self.__config.set_install_media(self.__install_media.getSelection())
-        elif page == SELECT_ISO_PAGE:
+        elif page is SELECT_ISO_PAGE:
             self.__config.set_iso_path(self.__iso_path.value())
-        elif page == NETWORK_INSTALL_PAGE:
+        elif page is NETWORK_INSTALL_PAGE:
             self.__config.set_install_url(self.__install_url.value())
             self.__config.set_kickstart_url(self.__kickstart_url.value())
             self.__config.set_kernel_options(self.__kernel_options.value())
-        elif page == OS_TYPE_PAGE:
+        elif page is OS_TYPE_PAGE:
             self.__config.set_os_type(self.__os_types.getSelection())
-        elif page == OS_VARIANT_PAGE:
+        elif page is OS_VARIANT_PAGE:
             self.__config.set_os_variant(self.__os_variants.getSelection())
-        elif page == RAM_CPU_PAGE:
+        elif page is RAM_CPU_PAGE:
             self.__config.set_memory(int(self.__memory.value()))
             self.__config.set_cpus(int(self.__cpus.value()))
-        elif page == ENABLE_STORAGE_PAGE:
+        elif page is ENABLE_STORAGE_PAGE:
             self.__config.set_enable_storage(self.__enable_storage.value())
             if self.__storage_type.getSelection() == DomainConfig.NEW_STORAGE:
                 self.__config.set_use_local_storage(True)
             elif self.__storage_type.getSelection() == DomainConfig.EXISTING_STORAGE:
                 self.__config.set_use_local_storage(False)
-        elif page == LOCAL_STORAGE_PAGE:
+        elif page is LOCAL_STORAGE_PAGE:
             self.__config.set_storage_size(float(self.__storage_size.value()))
             self.__config.set_allocate_storage(self.__allocate_storage.value())
-        elif page == MANAGED_STORAGE_PAGE:
+        elif page is SELECT_POOL_PAGE:
             self.__config.set_use_local_storage(False)
-            self.__config.set_existing_storage(self.__existing_storage.getSelection())
-            self.__config.set_storage_size(self.get_libvirt().get_storage_size(self.__existing_storage.getSelection()))
-        elif page == BRIDGE_PAGE:
+            self.__config.set_storage_pool(self.__storage_pool.getSelection())
+        elif page is SELECT_VOLUME_PAGE:
+            self.__config.set_storage_volume(self.__storage_volume.getSelection())
+            volume = self.get_libvirt().get_storage_volume(self.__config.get_storage_pool(),
+                                                           self.__config.get_storage_volume())
+            self.__config.set_storage_size(volume.info()[1] / 1024.0 ** 3)
+        elif page is BRIDGE_PAGE:
             self.__config.set_network_bridge(self.__network_bridges.getSelection())
-        elif page == VIRT_DETAILS_PAGE:
+        elif page is VIRT_DETAILS_PAGE:
             self.__config.set_virt_type(self.__virt_types.getSelection())
             self.__config.set_architecture(self.__architectures.getSelection())
-        elif page == CONFIRM_PAGE:
+        elif page is CONFIRM_PAGE:
             self.get_libvirt().define_domain(self.__config, CreateMeter())
             self.set_finished()
 
     def get_back_page(self, page):
         result = page
-        if page == OS_TYPE_PAGE:
+        if page is OS_TYPE_PAGE:
             install_type = self.__config.get_install_type()
             if install_type == DomainConfig.LOCAL_INSTALL:
                 if self.__config.get_use_cdrom_source():
@@ -217,24 +228,26 @@ class DomainConfigScreen(ConfigScreen):
                 result = NETWORK_INSTALL_PAGE
             elif install_type == DomainConfig.PXE_INSTALL:
                 result = VM_DETAILS_PAGE
-        elif page == LOCAL_STORAGE_PAGE or page ==  MANAGED_STORAGE_PAGE:
+        elif page is LOCAL_STORAGE_PAGE or page is SELECT_VOLUME_PAGE:
             result = ENABLE_STORAGE_PAGE
-        elif page == NETWORK_INSTALL_PAGE:
+        elif page is SELECT_POOL_PAGE:
+            result = ENABLE_STORAGE_PAGE
+        elif page is NETWORK_INSTALL_PAGE:
             result = VM_DETAILS_PAGE
-        elif page == SELECT_CDROM_PAGE or page == SELECT_ISO_PAGE:
+        elif page is SELECT_CDROM_PAGE or page == SELECT_ISO_PAGE:
             result = LOCAL_INSTALL_PAGE
-        elif page == BRIDGE_PAGE:
+        elif page is BRIDGE_PAGE:
             if self.__config.get_use_local_storage():
                 result = LOCAL_STORAGE_PAGE
             else:
-                result = MANAGED_STORAGE_PAGE
+                result = SELECT_VOLUME_PAGE
         else:
             if page > 1: result = page - 1
         return result
 
     def get_next_page(self, page):
         result = page
-        if page == VM_DETAILS_PAGE:
+        if page is VM_DETAILS_PAGE:
             install_type = self.__config.get_install_type()
             if install_type == DomainConfig.LOCAL_INSTALL:
                 result = LOCAL_INSTALL_PAGE
@@ -242,34 +255,36 @@ class DomainConfigScreen(ConfigScreen):
                 result = NETWORK_INSTALL_PAGE
             elif install_type == DomainConfig.PXE_INSTALL:
                 result = OS_TYPE_PAGE
-        elif page == LOCAL_INSTALL_PAGE:
+        elif page is LOCAL_INSTALL_PAGE:
             if self.__config.get_use_cdrom_source():
                 result = SELECT_CDROM_PAGE
             else:
                 result = SELECT_ISO_PAGE
-        elif page == SELECT_CDROM_PAGE or page == SELECT_ISO_PAGE:
+        elif page is SELECT_CDROM_PAGE or page == SELECT_ISO_PAGE:
             result = OS_TYPE_PAGE
-        elif page == NETWORK_INSTALL_PAGE:
+        elif page is NETWORK_INSTALL_PAGE:
             result = OS_TYPE_PAGE
-        elif page == ENABLE_STORAGE_PAGE:
+        elif page is ENABLE_STORAGE_PAGE:
             result = BRIDGE_PAGE
             if self.__config.get_enable_storage():
                 if self.__config.get_use_local_storage():
                     result = LOCAL_STORAGE_PAGE
                 else:
-                    result = MANAGED_STORAGE_PAGE
-        elif page == LOCAL_STORAGE_PAGE or page == MANAGED_STORAGE_PAGE:
+                    result = SELECT_POOL_PAGE
+        elif page is LOCAL_STORAGE_PAGE:
             result = BRIDGE_PAGE
         else:
             result = page + 1
         return result
 
     def page_has_finish(self, page):
-        if page == CONFIRM_PAGE: return True
+        if page is CONFIRM_PAGE: return True
         return False
 
     def page_has_next(self, page):
-        if page < CONFIRM_PAGE:
+        if   page is SELECT_POOL_PAGE: return self.__has_pools
+        elif page is SELECT_VOLUME_PAGE: return self.__has_volumes
+        elif page < CONFIRM_PAGE:
             return True
 
     def get_vm_details_page(self, screen):
@@ -393,25 +408,44 @@ class DomainConfigScreen(ConfigScreen):
         return [Label("Configure local storage"),
                 grid]
 
-    def get_managed_storage_page(self, screen):
-        volumes = []
-        for volume in self.get_libvirt().list_storage_volumes():
-            volumes.append(["%s (%d GB)" % (volume.name(), volume.info()[1] / (1024 ** 3)),
-                            volume.name(),
-                            self.__config.is_existing_storage(volume.name())])
-        self.__existing_storage = RadioBar(screen, (volumes))
-        grid = Grid(2, 1)
-        grid.setField(Label("Existing storage:"), 0, 0)
-        grid.setField(self.__existing_storage, 1, 0)
-        return [Label("Configure managed storage"),
+    def get_select_pool_page(self, screen):
+        pools = []
+        for pool in self.get_libvirt().list_storage_pools():
+            pools.append([pool, pool, pool == self.__config.get_storage_pool()])
+        if len(pools) > 0:
+            self.__storage_pool = RadioBar(screen, (pools))
+            grid = Grid(2, 1)
+            grid.setField(Label("Storage pool:"), 0, 0, anchorTop = 1)
+            grid.setField(self.__storage_pool, 1, 0)
+            self.__has_pools = True
+        else:
+            grid = Label("There are no storage pools available.")
+            self.__has_pools = False
+        return [Label("Configure Managed Storage: Select A Pool"),
                 grid]
+
+    def get_select_volume_page(self, screen):
+       volumes = []
+       for volume in self.get_libvirt().list_storage_volumes(self.__config.get_storage_pool()):
+           volumes.append([volume, volume, volume == self.__config.get_storage_volume()])
+       if len(volumes) > 0:
+           self.__storage_volume = RadioBar(screen, (volumes))
+           grid = Grid(2, 1)
+           grid.setField(Label("Storage volumes:"), 0, 0, anchorTop = 1)
+           grid.setField(self.__storage_volume, 1, 0)
+           self.__has_volumes = True
+       else:
+           grid = Label("This storage pool has no defined volumes.")
+           self.__has_volumes = False
+       return [Label("Configure Managed Storage: Select A Volume"),
+               grid]
 
     def get_bridge_page(self, screen):
         bridges = []
         for bridge in self.get_libvirt().list_bridges():
-            bridges.append(["Virtual network '%s'" % bridge.name(), bridge.name(), self.__config.get_network_bridge() == bridge.name()])
+            bridges.append(["Virtual network '%s'" % bridge.name(), bridge.name(), self.__config.get_network_bridge() is bridge.name()])
         self.__network_bridges = RadioBar(screen, (bridges))
-        if self.__config.get_mac_address() == None:
+        if self.__config.get_mac_address() is None:
             self.__config.set_mac_address(self.get_libvirt().generate_mac_address())
         self.__mac_address = Entry(20, self.__config.get_mac_address())
         grid = Grid(1, 1)
@@ -448,7 +482,9 @@ class DomainConfigScreen(ConfigScreen):
         grid.setField(Label("CPUs:"), 0, 3, anchorRight = 1)
         grid.setField(Label("%d" % self.__config.get_cpus()), 1, 3, anchorLeft = 1)
         grid.setField(Label("Storage:"), 0, 4, anchorRight = 1)
-        grid.setField(Label(self.__config.get_existing_storage()), 1, 4, anchorLeft = 1)
+        grid.setField(Label("%s (on %s)" % (self.__config.get_storage_volume(),
+                                            self.__config.get_storage_pool())),
+                      1, 4, anchorLeft = 1)
         grid.setField(Label("Network:"), 0, 5, anchorRight = 1)
         grid.setField(Label(self.__config.get_network_bridge()), 1, 5, anchorLeft = 1)
         return [Label("Ready to begin installation of %s" % self.__config.get_guest_name()),
