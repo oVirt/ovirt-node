@@ -179,3 +179,55 @@ class NetworkListConfigScreen(ConfigScreen):
 
     def has_selectable_networks(self):
         return self.__has_networks
+
+class StorageListConfigScreen(ConfigScreen):
+    '''Provides a base class for any configuration screen that deals with storage pool lists.'''
+
+    def __init__(self, title):
+        ConfigScreen.__init__(self, title)
+
+    def get_storage_pool_list_page(self, screen, defined=True, created=True):
+        pools = self.get_libvirt().list_storage_pools(defined=defined, created=created)
+        if len(pools) > 0:
+            self.__has_pools = True
+            self.__pools_list = Listbox(0)
+            for pool in pools:
+                self.__pools_list.append(pool, pool)
+            result = self.__pools_list
+        else:
+            self.__has_pools = False
+            result = Label("There are no storage pools available.")
+        grid = Grid(1, 1)
+        grid.setField(result, 0, 0)
+        return [Label("Storage Pool List"),
+                grid]
+
+    def get_selected_pool(self):
+        return self.__pools_list.current()
+
+    def has_selectable_pools(self):
+        return self.__has_pools
+
+    def get_storage_volume_list_page(self, screen):
+        '''Requires that self.__pools_list have a selected element.'''
+        pool = self.get_libvirt().get_storage_pool(self.get_selected_pool())
+        if len(pool.listVolumes()) > 0:
+            self.__has_volumes = True
+            self.__volumes_list = Listbox(0)
+            for volname in pool.listVolumes():
+                volume = pool.storageVolLookupByName(volname)
+                self.__volumes_list.append("%s (%0.2f GB)" % (volume.name(), volume.info()[2] / 1024**3), volume.name())
+            result = self.__volumes_list
+        else:
+            self.__has_volumes = False
+            result = Label("There are no storage volumes available.")
+        grid = Grid(1, 1)
+        grid.setField(result, 0, 0)
+        return [Label("Storage Volume List"),
+                grid]
+
+    def get_selected_volume(self):
+        return self.__volumes_list.current()
+
+    def has_selectable_volumes(self):
+        return self.__has_volumes

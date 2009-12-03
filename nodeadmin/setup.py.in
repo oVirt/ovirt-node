@@ -35,5 +35,12 @@ setup(name = "nodeadmin",
             'createnet   = nodeadmin.createnetwork:CreateNetwork',
             'destroynet  = nodeadmin.destroynetwork:DestroyNetwork',
             'undefinenet = nodeadmin.undefinenetwork:UndefineNetwork',
-            'listnets    = nodeadmin.listnetworks:ListNetworks']
+            'listnets    = nodeadmin.listnetworks:ListNetworks',
+            'addpool     = nodeadmin.addpool:AddStoragePool',
+            'rmpool      = nodeadmin.removepool:RemoveStoragePool',
+            'startpool   = nodeadmin.startpool:StartStoragePool',
+            'stoppool    = nodeadmin.stoppool:StopStoragePool',
+            'addvolume   = nodeadmin.addvolume:AddStorageVolume',
+            'rmvolume    = nodeadmin.removevolume:RemoveStorageVolume',
+            'listpools   = nodeadmin.listpools:ListPools']
         })

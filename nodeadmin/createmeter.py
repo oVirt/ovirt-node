@@ -1,4 +1,4 @@
-# definedomain.py - Copyright (C) 2009 Red Hat, Inc.
+# createmeter.py - Copyright (C) 2009 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -16,29 +16,15 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
+import urlgrabber.progress as progress
 import logging
-import re
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    datefmt='%a, %d %b %Y %H:%M:%S',
-                    filename='/var/log/ovirt-nodeadmin.log',
-                    filemode='w')
+class CreateMeter(progress.BaseMeter):
+    def _do_start(self, now = None):
+        logging.info("Starting...")
 
-def string_is_not_blank(value):
-    if len(value) > 0: return True
-    return False
+    def _do_end(self, amount_read, now = None):
+        logging.info("Ending: read=%d" % amount_read)
 
-def string_has_no_spaces(value):
-    if re.match("^[a-zA-Z0-9_]*$", value):
-        return True
-    return False
-
-def size_as_mb_or_gb(size):
-    '''Takes a size value in bytes and returns it as either a
-    value in megabytes or gigabytes.'''
-    if size / 1024.0**3 < 1.0:
-        result = "%0.2f MB" % (size / 1024.0**2)
-    else:
-        result = "%0.2f GB" % (size / 1024.0**3)
-    return result
+    def _do_update(self, amount_read, now = None):
+        logging.info("Update: read=%d" % amount_read)

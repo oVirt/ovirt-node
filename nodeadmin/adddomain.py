@@ -20,11 +20,10 @@
 
 from snack import *
 import os
+from createmeter  import CreateMeter
 from domainconfig import DomainConfig
 from configscreen import ConfigScreen
-import urlgrabber.progress as progress
 import utils
-import logging
 
 from virtinst import *
 
@@ -50,16 +49,6 @@ OS_TYPE="os.type"
 OS_VARIANT="os.variant"
 MEMORY="memory"
 CPUS="cpus"
-
-class DummyMeter(progress.BaseMeter):
-    def _do_start(self, now = None):
-        logging.info("Starting...")
-
-    def _do_end(self, amount_read, now = None):
-        logging.info("Ending: read=%d" % amount_read)
-
-    def _do_update(self, amount_read, now = None):
-        logging.info("Update: read=%d" % amount_read)
 
 class DomainConfigScreen(ConfigScreen):
     def __init__(self):
@@ -212,7 +201,7 @@ class DomainConfigScreen(ConfigScreen):
             self.__config.set_virt_type(self.__virt_types.getSelection())
             self.__config.set_architecture(self.__architectures.getSelection())
         elif page == CONFIRM_PAGE:
-            self.get_libvirt().define_domain(self.__config, DummyMeter())
+            self.get_libvirt().define_domain(self.__config, CreateMeter())
             self.set_finished()
 
     def get_back_page(self, page):

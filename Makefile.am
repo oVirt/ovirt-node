@@ -28,29 +28,38 @@ EXTRA_DIST =			\
   images/syslinux-vesa-splash.jpg	\
   nodeadmin/__init__.py         \
   nodeadmin/adddomain.py        \
+  nodeadmin/addpool.py          \
+  nodeadmin/addvolume.py        \
   nodeadmin/configscreen.py     \
+  nodeadmin/createmeter.py      \
   nodeadmin/createnetwork.py    \
   nodeadmin/createuser.py       \
+  nodeadmin/definenet.py        \
   nodeadmin/destroynetwork.py   \
+  nodeadmin/domainconfig.py     \
   nodeadmin/halworker.py        \
   nodeadmin/libvirtworker.py    \
-  nodeadmin/userworker.py       \
-  nodeadmin/mainmenu.py         \
-  nodeadmin/menuscreen.py       \
-  nodeadmin/netmenu.py          \
-  nodeadmin/nodemenu.py         \
-  nodeadmin/removedomain.py     \
-  nodeadmin/undefinenetwork.py  \
-  nodeadmin/startdomain.py      \
-  nodeadmin/stopdomain.py       \
-  nodeadmin/definenet.py        \
-  nodeadmin/domainconfig.py     \
-  nodeadmin/networkconfig.py    \
   nodeadmin/listdomains.py      \
   nodeadmin/listnetworks.py     \
+  nodeadmin/listpools.py        \
+  nodeadmin/mainmenu.py         \
+  nodeadmin/menuscreen.py       \
+  nodeadmin/networkconfig.py    \
+  nodeadmin/netmenu.py          \
   nodeadmin/nodeadmin.py        \
-  nodeadmin/setup.py            \
+  nodeadmin/nodemenu.py         \
+  nodeadmin/removedomain.py     \
+  nodeadmin/removepool.py       \
+  nodeadmin/removevolume.py     \
+  nodeadmin/startdomain.py      \
+  nodeadmin/startpool.py        \
+  nodeadmin/stopdomain.py       \
+  nodeadmin/stoppool.py         \
+  nodeadmin/storagemenu.py      \
+  nodeadmin/undefinenetwork.py  \
+  nodeadmin/userworker.py       \
   nodeadmin/utils.py            \
+  nodeadmin/volumeconfig.py     \
   scripts/collectd.conf.in	\
   scripts/ovirt			\
   scripts/ovirt-awake		\

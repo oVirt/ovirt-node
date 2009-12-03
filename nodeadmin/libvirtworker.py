@@ -35,6 +35,10 @@ class LibvirtWorker:
         self.__net.setup(self.__conn)
         (self.__new_guest, self.__new_domain) = virtinst.CapabilitiesParser.guest_lookup(conn = self.__conn)
 
+    def get_connection(self):
+        '''Returns the underlying connection.'''
+        return self.__conn
+
     def list_domains(self, defined = True, started = True):
         '''Lists all domains.'''
         result = []
@@ -134,9 +138,12 @@ class LibvirtWorker:
         network = self.get_network(name)
         network.undefine()
 
-    def list_storage_pools(self):
+    def list_storage_pools(self, defined=True, created=True):
         '''Returns the list of all defined storage pools.'''
-        return self.__conn.listStoragePools()
+        pools = []
+        if defined: pools.extend(self.__conn.listDefinedStoragePools())
+        if created: pools.extend(self.__conn.listStoragePools())
+        return pools
 
     def storage_pool_exists(self, name):
         '''Returns whether a storage pool exists.'''
@@ -144,16 +151,62 @@ class LibvirtWorker:
         if name in pools: return True
         return False
 
-    def define_storage_pool(self, name):
+    def create_storage_pool(self, name):
+        '''Starts the named storage pool if it is not currently started.'''
+        if name not in self.list_storage_pools(defined = False):
+            pool = self.get_storage_pool(name)
+            pool.create(0)
+
+    def destroy_storage_pool(self, name):
+        '''Stops the specified storage pool.'''
+        if name in self.list_storage_pools(defined = False):
+            pool = self.get_storage_pool(name)
+            pool.destroy()
+
+    def define_storage_pool(self, name, config = None, meter = None):
         '''Defines a storage pool with the given name.'''
-        try:
+        if config is None:
             pool = virtinst.Storage.DirectoryPool(conn=self.__conn,
                                                   name=name,
                                                   target_path=DEFAULT_POOL_TARGET_PATH)
-            newpool = pool.install(build=True, create=True)
+            newpool = pool.install(build=True, create=True, meter=meter)
             newpool.setAutostart(True)
-        except Exception, error:
-            raise RuntimeError("Could not create pool: %s - %s", str(error))
+        else:
+            pool = config.get_pool()
+            pool.target_path = config.get_target_path()
+            if config.needs_hostname():
+                pool.host = config.get_hostname()
+            if config.needs_source_path():
+                pool.source_path = config.get_source_path()
+            if config.needs_format():
+                pool.format = config.get_format()
+            pool.conn = self.__conn
+            pool.get_xml_config()
+            newpool = pool.install(meter=meter,
+                                   build=True, # config.get_build_pool(),
+                                   create=True)
+            newpool.setAutostart(True)
+
+    def undefine_storage_pool(self, name):
+        '''Undefines the specified storage pool.'''
+        pool = self.get_storage_pool(name)
+        pool.undefine()
+
+    def get_storage_pool(self, name):
+        '''Returns the storage pool with the specified name.'''
+        return self.__conn.storagePoolLookupByName(name)
+
+    def define_storage_volume(self, config, meter):
+        '''Defines a new storage volume.'''
+        self.create_storage_pool(config.get_pool().name())
+        volume = config.create_volume()
+        volume.install(meter = meter)
+
+    def remove_storage_volume(self, poolname, volumename):
+        '''Removes the specified storage volume.'''
+        pool = self.get_storage_pool(poolname)
+        volume = pool.storageVolLookupByName(volumename)
+        volume.delete(0)
 
     def list_bridges(self):
         '''Lists all defined and active bridges.'''

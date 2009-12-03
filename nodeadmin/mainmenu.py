@@ -19,28 +19,32 @@
 from snack import *
 import traceback
 
-from menuscreen     import MenuScreen
-from nodemenu       import NodeMenu
-from netmenu        import NetworkMenu
+from menuscreen  import MenuScreen
+from nodemenu    import NodeMenu
+from netmenu     import NetworkMenu
+from storagemenu import StoragePoolMenu
 
 import utils
 import logging
 
 NODE_MENU    = 1
 NETWORK_MENU = 2
-EXIT_CONSOLE = 99
+STORAGE_MENU = 3
+EXIT_CONSOLE = 4
 
 class MainMenuScreen(MenuScreen):
     def __init__(self):
         MenuScreen.__init__(self, "Main Menu")
 
     def get_menu_items(self):
-        return (("Node Administration", NODE_MENU),
-                ("Network Administration", NETWORK_MENU))
+        return (("Node Administration",         NODE_MENU),
+                ("Network Administration",      NETWORK_MENU),
+                ("Storage Pool Administration", STORAGE_MENU))
 
-    def handle_selection(self, page):
-        if   page is NODE_MENU:    NodeMenu()
-        elif page is NETWORK_MENU: NetworkMenu()
+    def handle_selection(self, item):
+        if   item is NODE_MENU:    NodeMenu()
+        elif item is NETWORK_MENU: NetworkMenu()
+        elif item is STORAGE_MENU: StoragePoolMenu()
 
 def MainMenu():
     screen = MainMenuScreen()
