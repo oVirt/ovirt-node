@@ -260,14 +260,14 @@ mount_live() {
     mount -r $live_dev /live || mount $live_dev /live
 }
 
-# mount boot partition
-# boot loader + kernel + initrd
-mount_boot() {
-    if grep -q " /boot " /etc/mtab; then
+# mount root partition
+# boot loader + kernel + initrd + LiveOS
+mount_liveos() {
+    if grep -q " /liveos " /etc/mtab; then
         return 0
     fi
-    mkdir -p /boot
-    mount /dev/disk/by-label/BOOT /boot
+    mkdir -p /liveos
+    mount /dev/disk/by-label/Root /liveos
 }
 
 # mount config partition

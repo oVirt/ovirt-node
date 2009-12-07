@@ -34,16 +34,13 @@ if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"
 	unmount_logging
 	log "Removing volume group"
 	wipe_volume_group "HostVG"
-	partition=$(findfs LABEL=BOOT)
+	partition=$(findfs LABEL=Root)
 	if [ -n "$partition" ]; then
-	    log "Unmounting boot partition"
-	    umount $partition
 	    log "Removing partitions"
 	    drive=$(echo $partition | awk '{ print substr($0, 1, length($0) - 1) }')
 	    parted -s $drive "rm 1"
 	    parted -s $drive "rm 2"
             parted -s $drive "rm 3"
-            parted -s $drive "rm 4"
 	fi
 	printf "Finished uninstalling node."
     else

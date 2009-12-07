@@ -22,14 +22,12 @@ fi
 
 default_overcommit=0.5
 
-default_boot_size=50
 default_root_size=256
 default_config_size=5
 default_logging_size=2048
 # -1 indicates data partition should use remaining disk
 default_data_size=-1
 
-boot_min_size=50
 root_min_size=256
 config_min_size=5
 logging_min_size=5
@@ -90,7 +88,7 @@ check_partition_sizes()
     get_drive_size $DRIVE SPACE
     disk_size=$SPACE
     need_size=$(echo "scale=0;" \
-                     "$BOOT_SIZE + $SWAP_SIZE + $ROOT_SIZE * 2" \
+                     "$SWAP_SIZE + $ROOT_SIZE * 2" \
                      "+ $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
 
     if [ $need_size -gt $disk_size ]; then
@@ -213,7 +211,7 @@ do_configure()
     fi
 
     local space_left=$SPACE
-    for part in boot swap root config logging data ; do
+    for part in swap root config logging data ; do
         part_regexp="^0$"
         if [ "$part" = "data" ]; then
             part_regexp="^\-1|0$"
@@ -259,7 +257,6 @@ do_configure()
     # save input variables
     augtool <<EOF
 set /files$OVIRT_DEFAULTS/OVIRT_INIT $DRIVE
-set /files$OVIRT_DEFAULTS/OVIRT_VOL_BOOT_SIZE $BOOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_SWAP_SIZE $SWAP_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_ROOT_SIZE $ROOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_CONFIG_SIZE $CONFIG_SIZE
@@ -277,7 +274,7 @@ do_review()
 
     local data_size_display="$DATA_SIZE MB"
     if [ "$DATA_SIZE" = -1 ]; then
-        local remaining_mb=$(( $SPACE - $BOOT_SIZE - $SWAP_SIZE \
+        local remaining_mb=$(( $SPACE - $SWAP_SIZE \
                 - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
         data_size_display="$remaining_mb MB"
     fi
@@ -287,7 +284,6 @@ do_review()
 The local disk will be repartitioned as follows:
 ================================================
            Physical Hard Disk: $(get_drive_size $DRIVE)
-          Boot partition size: $BOOT_SIZE MB
           Swap partition size: $SWAP_SIZE MB
   Installation partition size: $ROOT_SIZE * 2 MB
  Configuration partition size: $CONFIG_SIZE MB
@@ -335,28 +331,22 @@ perform_partitioning()
     partprobe -s $DRIVE
 
     MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
-    local boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
     log "Labeling Drive"
     parted $DRIVE -s "mklabel ${LABEL_TYPE}"
-    log "Creating boot partition"
-    parted $DRIVE -s "mkpartfs primary ext2 0M ${boot_size_si}M"
     log "Creating Root and RootBackup Partitions"
-    let root1_end=${boot_size_si}+${ROOT_SIZE}
-    let root2_end=${root1_end}+${ROOT_SIZE}
-    parted $DRIVE -s "mkpartfs primary ext2 ${boot_size_si}M ${root1_end}M"
-    parted $DRIVE -s "mkpartfs primary ext2 ${root1_end}M ${root2_end}M"
+    let RootBackup_end=${ROOT_SIZE}*2
+    parted $DRIVE -s "mkpartfs primary ext2 0M ${ROOT_SIZE}M"
+    parted $DRIVE -s "mkpartfs primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
     # sleep to ensure filesystems are created before continuing
     sleep 10
-    e2label ${DRIVE}2 Root
-    e2label ${DRIVE}3 RootBackup
+    e2label ${DRIVE}1 Root
+    e2label ${DRIVE}2 RootBackup
+    tune2fs -c 0 -i 0 ${DRIVE}1
     tune2fs -c 0 -i 0 ${DRIVE}2
-    tune2fs -c 0 -i 0 ${DRIVE}3
     log "Creating LVM partition"
-    parted $DRIVE -s "mkpart primary ext2 ${root2_end}M -1"
-    log "Toggling boot on"
-    parted $DRIVE -s "set 1 boot on"
+    parted $DRIVE -s "mkpart primary ext2 ${RootBackup_end}M -1"
     log "Toggling LVM on"
-    parted $DRIVE -s "set 4 lvm on"
+    parted $DRIVE -s "set 3 lvm on"
     parted $DRIVE -s "print"
     udevadm settle 2> /dev/null || udevsettle
 
@@ -366,12 +356,10 @@ perform_partitioning()
         gptsync $DRIVE
     fi
 
-    partboot=${DRIVE}1
-    partpv=${DRIVE}4
+    partpv=${DRIVE}3
     if [ ! -e "$partpv" ]; then
         # e.g. /dev/cciss/c0d0p2
-        partboot=${DRIVE}p1
-        partpv=${DRIVE}p4
+        partpv=${DRIVE}p3
     fi
     log "Creating physical volume"
     if [ ! -e "$partpv" ]; then
@@ -383,15 +371,7 @@ perform_partitioning()
     log "Creating volume group"
     vgcreate /dev/HostVG "${partpv}"
 
-    log "Creating boot filesystem"
-    if [ ! -e "$partboot" ]; then
-        log "$partboot is not available!"
-        exit 1
-    fi
-    mke2fs -j "${partboot}" -L "BOOT"
-    tune2fs -c 0 -i 0 "${partboot}"
     mkdir -p /dev/disk/by-label
-    ln -snf "${partboot}" /dev/disk/by-label/BOOT
 
     if [ "$SWAP_SIZE" -gt 0 ]; then
         log "Creating swap partition"
@@ -512,7 +492,6 @@ fi
 CALC_SWAP_SIZE=$(echo "scale=0; ${BASE_SWAP_SIZE} + ${OVERCOMMIT_SWAP_SIZE};" | bc -l)
 
 SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$CALC_SWAP_SIZE}
-BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
 ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-$default_root_size}
 CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
 LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-$default_logging_size}

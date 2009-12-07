@@ -29,9 +29,9 @@ ovirt_boot_setup() {
     local disk2
     local partN=-1
     log "installing the image."
-    mount_boot
+    mount_liveos
     # check that /boot mounted ok and find partition number for GRUB
-    eval $(readlink -f /dev/disk/by-label/BOOT|awk {'
+    eval $(readlink -f /dev/disk/by-label/RootBackup|awk {'
         print "disk=" substr($1,1,length($1)-1);
         print "disk2=" substr($1,1,length($1)-2);
         partN=substr($1,length($1),1); partN--;
@@ -39,13 +39,13 @@ ovirt_boot_setup() {
     }')
     rc=$?
     if [ $rc -ne 0 -o $partN -lt 0 ]; then
-      log "unable to determine boot partition"
+      log "unable to determine Root partition"
       return 1
     fi
 
-    mountpoint /boot
+    mountpoint /liveos
     if [ $? -ne 0 ] ; then
-      log "boot partition not available"
+      log "Root partition not available"
       return 1
     fi
 
@@ -87,12 +87,12 @@ ovirt_boot_setup() {
     else
       syslinux=
     fi
-    rm -rf /boot/grub
+    rm -rf /liveos/boot/grub
     rm -rf /liveos/LiveOS
-    mkdir -p /boot/grub
+    mkdir -p /liveos/boot/grub
     mkdir -p /liveos/LiveOS
     cp -p $live/LiveOS/squashfs.img /liveos/LiveOS \
-    && cp -p $live/$syslinux/vmlinuz0 /boot
+    && cp -p $live/$syslinux/vmlinuz0 /liveos
     rc=$?
     if [ $rc -ne 0 ]; then
       log "image copy failed."
@@ -142,14 +142,14 @@ set -e\
     find $init_script bin/lvm lib$bit -type f |
         cpio -H newc --quiet -o |
         gzip -9 |
-        cat $live/$syslinux/initrd0.img - > /boot/initrd0.img
+        cat $live/$syslinux/initrd0.img - > /liveos/initrd0.img
 
     version=$(rpm -q --qf '%{version}' ovirt-node)
     release=$(rpm -q --qf '%{release}' ovirt-node)
     # reorder tty0 to allow both serial and phys console after installation
     bootparams="ro root=LABEL=Root roottypefs=ext3 console=tty0 \
                 $(echo $bootparams | sed s/console=tty0//g)"
-    cat > /boot/grub/grub.conf << EOF
+    cat > /liveos/boot/grub/grub.conf << EOF
 default=0
 timeout=5
 hiddenmenu
@@ -158,11 +158,11 @@ title oVirt Node (${version}-${release})
     kernel /vmlinuz0 $bootparams
     initrd /initrd0.img
 EOF
-    echo "(hd0) $disk" > /boot/grub/device.map
-    ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 /boot/grub )
-    grub --device-map=/boot/grub/device.map <<EOF
+    echo "(hd0) $disk" > /liveos/boot/grub/device.map
+    ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 /liveos/boot/grub )
+    grub --device-map=/liveos/boot/grub/device.map <<EOF
 root (hd0,$partN)
-setup --prefix=/grub (hd0)
+setup --prefix=/boot/grub (hd0)
 EOF
     rc=$?
     if [ $rc -ne 0 ]; then
@@ -171,7 +171,6 @@ EOF
     fi
 
     umount /liveos
-    umount /boot
     # mark new Root ready to go, reboot() in ovirt-function switches it to active
     e2label $candidate_dev RootUpdate
 
