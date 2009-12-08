@@ -198,6 +198,11 @@ cd -
 %{__install} -p -m0755 nodeadmin/destroynetwork.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0755 nodeadmin/undefinenetwork.py %{buildroot}%{python_sitelib}/nodeadmin
 
+%{__install} -p -m0755 nodeadmin/addhost.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/changehost.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/hostmenu.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/removehost.py %{buildroot}%{python_sitelib}/nodeadmin
+
 %{__install} -p -m0755 nodeadmin/createuser.py %{buildroot}%{python_sitelib}/nodeadmin
 
 %{__install} -p -m0644 nodeadmin/halworker.py %{buildroot}%{python_sitelib}/nodeadmin

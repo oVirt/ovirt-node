@@ -23,14 +23,16 @@ from menuscreen  import MenuScreen
 from nodemenu    import NodeMenu
 from netmenu     import NetworkMenu
 from storagemenu import StoragePoolMenu
+from hostmenu    import HostMenu
 
 import utils
 import logging
 
-NODE_MENU    = 1
-NETWORK_MENU = 2
-STORAGE_MENU = 3
-EXIT_CONSOLE = 4
+NODE_MENU    =  1
+NETWORK_MENU =  2
+STORAGE_MENU =  3
+HOST_MENU    =  4
+EXIT_CONSOLE = 99
 
 class MainMenuScreen(MenuScreen):
     def __init__(self):
@@ -39,12 +41,14 @@ class MainMenuScreen(MenuScreen):
     def get_menu_items(self):
         return (("Node Administration",         NODE_MENU),
                 ("Network Administration",      NETWORK_MENU),
-                ("Storage Pool Administration", STORAGE_MENU))
+                ("Storage Pool Administration", STORAGE_MENU),
+                ("Host Administration",         HOST_MENU))
 
-    def handle_selection(self, item):
-        if   item is NODE_MENU:    NodeMenu()
-        elif item is NETWORK_MENU: NetworkMenu()
-        elif item is STORAGE_MENU: StoragePoolMenu()
+    def handle_selection(self, page):
+        if   page is NODE_MENU:    NodeMenu()
+        elif page is NETWORK_MENU: NetworkMenu()
+        elif page is STORAGE_MENU: StoragePoolMenu()
+        elif page is HOST_MENU:    HostMenu()
 
 def MainMenu():
     screen = MainMenuScreen()

@@ -21,15 +21,60 @@ import libvirt
 import os
 import virtinst
 import utils
+import logging
 
 from domainconfig import DomainConfig
 
 DEFAULT_POOL_TARGET_PATH="/var/lib/libvirt/images"
+DEFAULT_URL="qemu:///system"
+
+default_url = DEFAULT_URL
+
+def set_default_url(url):
+    logging.info("Changing DEFAULT_URL to %s" % url)
+    global default_url
+
+    default_url = url
+
+def get_default_url():
+    logging.info("Returning default URL of %s" % default_url)
+    return default_url
+
+class VirtManagerConfig:
+    def __init__(self, filename = "/etc/remote-libvirt.conf"):
+        self.__filename = filename
+
+    def get_connection_list(self):
+        result = []
+        if os.path.exists(self.__filename):
+            input = file(self.__filename, "r")
+            for entry in input: result.append(entry[0:-1])
+        return result
+
+    def add_connection(self, connection):
+        connections = self.get_connection_list()
+        if connections.count(connection) is 0:
+            connections.append(connection)
+            self._save_connections(connections)
+
+    def remove_connection(self, connection):
+        connections = self.get_connection_list()
+        if connections.count(connection) > 0:
+            connections.remove(connection)
+            self._save_connections(connections)
+
+    def _save_connections(self, connections):
+        output = file(self.__filename, "w")
+        for entry in connections:
+            print >> output, entry
+        output.close
 
 class LibvirtWorker:
     '''Provides utilities for interfacing with libvirt.'''
-    def __init__(self, url = "qemu:///system"):
-        self.__conn = libvirt.open(url)
+    def __init__(self, url = None):
+        if url is None: url = get_default_url()
+        logging.info("Connecting to libvirt: %s" % url)
+        self.open_connection(url)
         self.__capabilities = virtinst.CapabilitiesParser.parse(self.__conn.getCapabilities())
         self.__net = virtinst.VirtualNetworkInterface(conn = self.__conn)
         self.__net.setup(self.__conn)
@@ -38,6 +83,10 @@ class LibvirtWorker:
     def get_connection(self):
         '''Returns the underlying connection.'''
         return self.__conn
+
+    def open_connection(self, url):
+        '''Lets the user change the url for the connection.'''
+        self.__conn = libvirt.open(url)
 
     def list_domains(self, defined = True, started = True):
         '''Lists all domains.'''

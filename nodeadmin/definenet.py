@@ -20,6 +20,7 @@ from snack import *
 from IPy import IP
 import traceback
 import logging
+import re
 
 from configscreen  import ConfigScreen
 from networkconfig import NetworkConfig

@@ -28,8 +28,10 @@ EXTRA_DIST =			\
   images/syslinux-vesa-splash.jpg	\
   nodeadmin/__init__.py         \
   nodeadmin/adddomain.py        \
+  nodeadmin/addhost.py          \
   nodeadmin/addpool.py          \
   nodeadmin/addvolume.py        \
+  nodeadmin/changehost.py       \
   nodeadmin/configscreen.py     \
   nodeadmin/createmeter.py      \
   nodeadmin/createnetwork.py    \
@@ -38,6 +40,8 @@ EXTRA_DIST =			\
   nodeadmin/destroynetwork.py   \
   nodeadmin/domainconfig.py     \
   nodeadmin/halworker.py        \
+  nodeadmin/hostconnect.py      \
+  nodeadmin/hostmenu.py         \
   nodeadmin/libvirtworker.py    \
   nodeadmin/listdomains.py      \
   nodeadmin/listnetworks.py     \
@@ -50,6 +54,7 @@ EXTRA_DIST =			\
   nodeadmin/nodemenu.py         \
   nodeadmin/poolconfig.py       \
   nodeadmin/removedomain.py     \
+  nodeadmin/removehost.py       \
   nodeadmin/removepool.py       \
   nodeadmin/removevolume.py     \
   nodeadmin/startdomain.py      \

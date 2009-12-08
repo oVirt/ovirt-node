@@ -18,7 +18,7 @@
 
 from snack import *
 from halworker import HALWorker
-from libvirtworker import LibvirtWorker
+from libvirtworker import *
 import traceback
 
 BACK_BUTTON   = "back"
@@ -35,12 +35,16 @@ class ConfigScreen:
         self.__finished = False
         self.__hal = HALWorker()
         self.__libvirt = LibvirtWorker()
+        self.__vm_config = VirtManagerConfig()
 
     def get_hal(self):
         return self.__hal
 
     def get_libvirt(self):
         return self.__libvirt
+
+    def get_virt_manager_config(self):
+        return self.__vm_config
 
     def set_finished(self):
         self.__finished = True
@@ -231,3 +235,33 @@ class StorageListConfigScreen(ConfigScreen):
 
     def has_selectable_volumes(self):
         return self.__has_volumes
+
+class HostListConfigScreen(ConfigScreen):
+    '''Provides a base class for working with lists of libvirt hosts.'''
+
+    def __init__(self, title):
+        ConfigScreen.__init__(self, title)
+
+    def get_connection_list_page(self, screen):
+        connections = self.get_virt_manager_config().get_connection_list()
+        result = None
+
+        if len(connections) > 0:
+            self.__has_connections = True
+            self.__connection_list = Listbox(0)
+            for connection in connections:
+                self.__connection_list.append(connection, connection)
+            result = self.__connection_list
+        else:
+            self.__has_connections = False
+            result = Label("There are no defined connections.")
+        grid = Grid(1, 1)
+        grid.setField(result, 0, 0)
+        return [Label("Host List"),
+                grid]
+
+    def get_selected_connection(self):
+        return self.__connection_list.current()
+
+    def has_selectable_connections(self):
+        return self.__has_connections
