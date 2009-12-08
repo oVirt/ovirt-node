@@ -48,6 +48,7 @@ EXTRA_DIST =			\
   nodeadmin/listpools.py        \
   nodeadmin/mainmenu.py         \
   nodeadmin/menuscreen.py       \
+  nodeadmin/migratedomain.py    \
   nodeadmin/networkconfig.py    \
   nodeadmin/netmenu.py          \
   nodeadmin/nodeadmin.py        \

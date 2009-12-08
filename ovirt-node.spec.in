@@ -187,6 +187,7 @@ cd -
 %{__install} -p -m0755 nodeadmin/adddomain.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0644 nodeadmin/domainconfig.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0755 nodeadmin/listdomains.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/migratedomain.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0755 nodeadmin/removedomain.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0755 nodeadmin/startdomain.py %{buildroot}%{python_sitelib}/nodeadmin
 %{__install} -p -m0755 nodeadmin/stopdomain.py %{buildroot}%{python_sitelib}/nodeadmin
@@ -386,6 +387,7 @@ fi
 %{_bindir}/stopvm
 %{_bindir}/rmvm
 %{_bindir}/listpools
+%{_bindir}/migratevm
 %{_bindir}/listvms
 %{_bindir}/rmpool
 %{_bindir}/rmvolume

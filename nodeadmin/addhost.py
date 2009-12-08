@@ -59,7 +59,9 @@ class AddHostConfigScreen(ConfigScreen):
 
     def validate_input(self, page, errors):
         if page is DETAILS_PAGE:
-            if len(self.__hostname.value()) > 0:
+            if self.__connection.getSelection() is CONNECTION_LOCAL:
+                return True
+            elif len(self.__hostname.value()) > 0:
                 return True
             else:
                 errors.append("You must enter a remote hostname.")
@@ -115,8 +117,12 @@ class AddHostConfigScreen(ConfigScreen):
         grid.setField(Label(HYPERVISORS[self.__hypervisor.getSelection()]), 1, 0, anchorLeft = 1)
         grid.setField(Label("Connection:"), 0, 1, anchorRight = 1)
         grid.setField(Label(CONNECTIONS[self.__connection.getSelection()]), 1, 1, anchorLeft = 1)
+        if self.__connection.getSelection() is not CONNECTION_LOCAL:
+            hostname = self.__hostname.value()
+        else:
+            hostname = "local"
         grid.setField(Label("Hostname:"), 0, 2, anchorRight = 1)
-        grid.setField(Label(self.__hostname.value()), 1, 2, anchorLeft = 1)
+        grid.setField(Label(hostname), 1, 2, anchorLeft = 1)
         grid.setField(Label("Autoconnect on Startup:"), 0, 3, anchorRight = 1)
         label = "Yes"
         if not self.__autoconnect.value(): label = "No"

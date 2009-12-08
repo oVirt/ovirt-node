@@ -126,6 +126,12 @@ class LibvirtWorker:
         domain = self.get_domain(name)
         domain.undefine()
 
+    def migrate_domain(self, name, target):
+        '''Migrates the specified domain to the target machine.'''
+        target_conn = libvirt.open(target)
+        virtmachine = self.get_domain(name)
+        virtmachine.migrate(target_conn, libvirt.VIR_MIGRATE_LIVE, None, None, 0)
+
     def list_networks(self, defined = True, started = True):
         '''Lists all networks.'''
         result = []
