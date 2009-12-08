@@ -21,13 +21,13 @@ if is_booted_from_local_disk; then
 fi
 
 default_overcommit=0.5
-
+default_boot_size=50
 default_root_size=256
 default_config_size=5
 default_logging_size=2048
 # -1 indicates data partition should use remaining disk
 default_data_size=-1
-
+boot_min_size=50
 root_min_size=256
 config_min_size=5
 logging_min_size=5
@@ -206,6 +206,11 @@ get_dev_name()
 do_configure()
 {
     local name_and_size
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        printf "\n\nPlease select the disk to use for the Boot partition.\n\n"
+        BOOTDRIVE=$(get_dev_name) || return 0
+        get_drive_size $BOOTDRIVE BOOTDRIVESPACE
+    fi
     printf "\n\nPlease select the disk to use for the Root.\n\n"
     ROOTDRIVE=$(get_dev_name) || return 0
     get_drive_size $ROOTDRIVE ROOTDRIVESPACE
@@ -230,7 +235,12 @@ do_configure()
     fi
 
     local space_left=$HOSTVGDRIVESPACE
-    for part in swap root config logging data ; do
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        partlist="boot swap root config logging data"
+    else
+        partlist="swap root config logging data"
+    fi
+    for part in $partlist ; do
         part_regexp="^0$"
         if [ "$part" = "data" ]; then
             part_regexp="^\-1|0$"
@@ -276,12 +286,19 @@ do_configure()
     # save input variables
     augtool <<EOF
 set /files$OVIRT_DEFAULTS/OVIRT_INIT $ROOTDRIVE
+set /files$OVIRT_DEFAULTS/OVIRT_VOL_BOOT_SIZE $BOOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_SWAP_SIZE $SWAP_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_ROOT_SIZE $ROOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_CONFIG_SIZE $CONFIG_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_LOGGING_SIZE $LOGGING_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_DATA_SIZE $DATA_SIZE
 EOF
+
+   if [ -n $BOOTDRIVE ]; then
+       augtool <<EOF
+set /files$OVIRT_DEFAULTS/OVIRT_BOOT_INIT $BOOTDRIVE
+EOF
+   fi
 }
 
 do_review()
@@ -356,20 +373,33 @@ perform_partitioning()
     partprobe -s $ROOTDRIVE
 
     MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
+    local boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
     log "Labeling Drive: $ROOTDRIVE"
     parted $ROOTDRIVE -s "mklabel ${LABEL_TYPE}"
+    if [ -n "$BOOTDRIVE" ]; then
+        dd if=/dev/zero of=$BOOTDRIVE bs=1024K count=1
+        blockdev --rereadpt $BOOTDRIVE
+        partprobe -s $BOOTDRIVE
+        log "Creating boot partition"
+        parted $BOOTDRIVE -s "mklabel ${LABEL_TYPE}"
+        parted $BOOTDRIVE -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+    fi
     if [ $ROOTDRIVE != $HOSTVGDRIVE ]; then
         log "Labeling Drive: $HOSTVGDRIVE"
         parted $HOSTVGDRIVE -s "mklabel ${LABEL_TYPE}"
     fi
     log "Creating Root and RootBackup Partitions"
     let RootBackup_end=${ROOT_SIZE}*2
-    parted $ROOTDRIVE -s "mkpartfs primary ext2 0M ${ROOT_SIZE}M"
-    parted $ROOTDRIVE -s "mkpartfs primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+    parted $ROOTDRIVE -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
+    parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
     # sleep to ensure filesystems are created before continuing
     sleep 10
-    e2label ${ROOTDRIVE}1 Root
-    e2label ${ROOTDRIVE}2 RootBackup
+    if [ -n "$BOOTDRIVE" ]; then
+        mke2fs ${BOOTDRIVE}1 -L Boot
+        tune2fs -c 0 -i 0 ${BOOTDRIVE}1
+    fi
+    mke2fs ${ROOTDRIVE}1 -L Root
+    mke2fs ${ROOTDRIVE}2 -L RootBackup
     tune2fs -c 0 -i 0 ${ROOTDRIVE}1
     tune2fs -c 0 -i 0 ${ROOTDRIVE}2
     log "Creating LVM partition"
@@ -468,6 +498,7 @@ perform_partitioning()
 
 do_confirm()
 {
+
     if [ -z "$ROOTDRIVE" ]; then
         printf "\nNo storage device selected.\n"
         return
@@ -502,6 +533,101 @@ do_confirm()
     done
 }
 
+do_iscsi_target()
+{
+while true; do
+    OPTIONS="\"Target IP\" \"Target Port\"" #\"CHAP Username\" \"CHAP Password\""
+    printf "\nPress Enter to leave option blank or Q to quit (default Target Port is 3260)\n"
+    eval set $OPTIONS
+    PS3="Choose an option: "
+    for OPTION in "$@"; do
+        while true; do
+            read -ep "Enter $OPTION: "
+            if [[ $REPLY == "q" || $REPLY == "Q" ]]; then
+                return
+            fi
+
+            if [ "$OPTION" == "Target IP" ]; then
+                OVIRT_ISCSI_TARGET_IP=$REPLY
+                if [ -n "$REPLY" ]; then
+                    break;
+                fi
+
+            elif [ "$OPTION" == "Target Port" ]; then
+                OVIRT_ISCSI_TARGET_PORT=$REPLY
+                if [ -z "$REPLY" ]; then
+                    OVIRT_ISCSI_TARGET_PORT="3260"
+                    break;
+                else
+                    break;
+                fi
+
+            elif [ "$OPTION" == "CHAP Username" ]; then
+                OVIRT_ISCSI_CHAP_USERNAME=$REPLY
+                break
+
+            elif [ "$OPTION" == "CHAP Password" ]; then
+                OVIRT_ISCSI_CHAP_PASSWORD=$REPLY
+                break;
+            fi
+        done
+    done
+
+    cat <<EOF
+
+The iSCSI target be configured as follows:
+================================================
+    Target IP:   $OVIRT_ISCSI_TARGET_IP
+  Target Port:   $OVIRT_ISCSI_TARGET_PORT
+
+EOF
+#     Username:   $OVIRT_ISCSI_CHAP_USERNAME
+#     Password:   $OVIRT_ISCSI_CHAP_PASSWORD
+#EOF
+
+if ask_yes_or_no "Is this correct ([Y]es/[N]o)?" true true; then
+
+    OVIRT_ISCSI_ENABLED="y"
+    augtool <<EOF
+set /files/etc/default/ovirt/OVIRT_ISCSI_ENABLED y
+set /files/etc/default/ovirt/OVIRT_ISCSI_TARGET_IP $OVIRT_ISCSI_TARGET_IP
+set /files/etc/default/ovirt/OVIRT_ISCSI_TARGET_PORT $OVIRT_ISCSI_TARGET_PORT
+EOF
+
+    if [[ -n "$OVIRT_ISCSI_CHAP_USERNAME" && -n "$OVIRT_ISCSI_CHAP_PASSWORD" ]]; then
+        log "setting iscsid.conf username/password"
+        augtool <<EOF
+set /files/etc/iscsi/iscsid.conf/node.session.auth.authmethod CHAP
+set /files/etc/iscsi/iscsid.conf/node.session.auth.username $OVIRT_ISCSI_CHAP_USERNAME
+set /files/etc/iscsi/iscsid.conf/node.session.auth.password $OVIRT_ISCSI_CHAP_PASSWORD
+set /files/etc/default/ovirt/OVIRT_ISCSI_CHAP_USERNAME $OVIRT_ISCSI_CHAP_USERNAME
+set /files/etc/default/ovirt/OVIRT_ISCSI_CHAP_PASSWORD $OVIRT_ISCSI_CHAP_PASSWORD
+EOF
+    fi
+
+    iscsiadm -p $OVIRT_ISCSI_TARGET_IP:$OVIRT_ISCSI_TARGET_PORT -m discovery -t sendtargets
+    log "Restarting iscsi service"
+    service iscsi restart
+
+ISCSI_NODE_NAMES="$(iscsiadm -m discovery -p $OVIRT_ISCSI_TARGET_IP:$OVIRT_ISCSI_TARGET_PORT -t sendtargets|awk {'print $2'})"
+
+printf "\n\n Select iSCSI target node\n\n" >&2
+select OVIRT_ISCSI_NODE_NAME in $ISCSI_NODE_NAMES ; do
+log " Selected Node Name: $OVIRT_ISCSI_NODE_NAME"
+break;
+done
+
+augtool <<EOF
+set /files/etc/default/ovirt/OVIRT_ISCSI_ENABLED y
+set /files/etc/default/ovirt/OVIRT_ISCSI_TARGET_IP $OVIRT_ISCSI_TARGET_IP
+set /files/etc/default/ovirt/OVIRT_ISCSI_TARGET_PORT $OVIRT_ISCSI_TARGET_PORT
+set /files/etc/default/ovirt/OVIRT_ISCSI_NODE_NAME $OVIRT_ISCSI_NODE_NAME
+EOF
+break;
+fi
+done
+}
+
 MEM_SIZE_MB=$(awk '/MemTotal:/ { print $2 }' /proc/meminfo)
 case $MEM_SIZE_MB in
     ''|*[^0-9]*) die failed to get system memory size;;
@@ -527,6 +653,7 @@ fi
 
 CALC_SWAP_SIZE=$(echo "scale=0; ${BASE_SWAP_SIZE} + ${OVERCOMMIT_SWAP_SIZE};" | bc -l)
 
+BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
 SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$CALC_SWAP_SIZE}
 ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-$default_root_size}
 CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
@@ -577,6 +704,7 @@ else
         select OPTION in "$@"
         do
             case "$OPTION" in
+                "Enable iSCSI Target") do_iscsi_target; break ;;
                 "Configure Storage") do_configure ; break ;;
                 "Review")    do_review    ; break ;;
                 "Commit Changes And Quit") do_confirm   ; break ;;

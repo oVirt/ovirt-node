@@ -304,6 +304,14 @@ mount_config() {
     fi
 }
 
+mount_boot() {
+
+    if grep -q " /boot " /etc/mtab; then
+       return 0
+    fi
+    mkdir -p /boot
+    mount /dev/disk/by-label/Boot /boot
+}
 # stop any service which keeps /var/log busy
 # keep the list of services
 unmount_logging_services() {

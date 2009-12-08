@@ -29,9 +29,28 @@ ovirt_boot_setup() {
     local disk2
     local partN=-1
     log "installing the image."
+    if [ -h /dev/disk/by-label/Boot ]; then
+        mount_boot
+        mountpoint /boot
+        if [ $? -ne 0 ] ; then
+            log "Boot partition not available"
+            return 1
+        fi
+        grub_dev_label="Boot"
+        # Grab OVIRT_ISCSI VARIABLES from boot partition for upgrading
+        # file created only if OVIRT_ISCSI_ENABLED=y
+        if [ -f /boot/ovirt ]; then
+            . /boot/ovirt
+        iscsiadm -p $OVIRT_ISCSI_TARGET_IP:$OVIRT_ISCSI_TARGET_PORT -m discovery -t sendtargets
+        log "Restarting iscsi service"
+        service iscsi restart
+        fi
+    else
+        grub_dev_label="RootBackup"
+    fi
     mount_liveos
     # check that /boot mounted ok and find partition number for GRUB
-    eval $(readlink -f /dev/disk/by-label/RootBackup|awk {'
+    eval $(readlink -f /dev/disk/by-label/$grub_dev_label|awk {'
         print "disk=" substr($1,1,length($1)-1);
         print "disk2=" substr($1,1,length($1)-2);
         partN=substr($1,length($1),1); partN--;
@@ -75,9 +94,10 @@ ovirt_boot_setup() {
     fi
     if [ $rc -ne 0 ]; then
       log "root partition not available."
-      log "$(lvdisplay -c)"
+      log "$(ls -al /dev/disk/by-label)"
       return $rc
     fi
+
     mount $candidate_dev /liveos
     # install oVirt Node image for local boot
     if [ -e "$live/syslinux" ]; then
@@ -87,12 +107,25 @@ ovirt_boot_setup() {
     else
       syslinux=
     fi
-    rm -rf /liveos/boot/grub
+
     rm -rf /liveos/LiveOS
-    mkdir -p /liveos/boot/grub
     mkdir -p /liveos/LiveOS
+
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        initrd_dest="/boot"
+        grub_dir="/boot/grub"
+        grub_prefix="/grub"
+    else
+        initrd_dest="/liveos"
+        grub_dir="/liveos/boot/grub"
+        grub_prefix="/boot/grub"
+    fi
+
+    rm -rf  $grub_dir
+    mkdir -p $grub_dir
+
     cp -p $live/LiveOS/squashfs.img /liveos/LiveOS \
-    && cp -p $live/$syslinux/vmlinuz0 /liveos
+    && cp -p $live/$syslinux/vmlinuz0 $initrd_dest
     rc=$?
     if [ $rc -ne 0 ]; then
       log "image copy failed."
@@ -139,17 +172,23 @@ set -e\
         # lvm is not static in Fedora
         cp /lib$bit/libreadline.so.5 /lib$bit/libncurses.so.5 lib$bit
     fi
+
     find $init_script bin/lvm lib$bit -type f |
         cpio -H newc --quiet -o |
         gzip -9 |
-        cat $live/$syslinux/initrd0.img - > /liveos/initrd0.img
+        cat $live/$syslinux/initrd0.img - > $initrd_dest/initrd0.img
 
     version=$(rpm -q --qf '%{version}' ovirt-node)
     release=$(rpm -q --qf '%{release}' ovirt-node)
     # reorder tty0 to allow both serial and phys console after installation
-    bootparams="ro root=LABEL=Root roottypefs=ext3 console=tty0 \
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        bootparams="ro root=LABEL=live:Root roottypefs=ext3 console=tty0 \
+                    netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
+    else
+        bootparams="ro root=LABEL=live:Root roottypefs=ext3 console=tty0 \
                 $(echo $bootparams | sed s/console=tty0//g)"
-    cat > /liveos/boot/grub/grub.conf << EOF
+    fi
+    cat > $grub_dir/grub.conf << EOF
 default=0
 timeout=5
 hiddenmenu
@@ -158,11 +197,11 @@ title oVirt Node (${version}-${release})
     kernel /vmlinuz0 $bootparams
     initrd /initrd0.img
 EOF
-    echo "(hd0) $disk" > /liveos/boot/grub/device.map
-    ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 /liveos/boot/grub )
-    grub --device-map=/liveos/boot/grub/device.map <<EOF
+    echo "(hd0) $disk" > $grub_dir/device.map
+    ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 $grub_dir )
+    grub --device-map=$grub_dir/device.map <<EOF
 root (hd0,$partN)
-setup --prefix=/boot/grub (hd0)
+setup --prefix=$grub_prefix (hd0)
 EOF
     rc=$?
     if [ $rc -ne 0 ]; then
@@ -175,6 +214,10 @@ EOF
     e2label $candidate_dev RootUpdate
 
     rm -rf $tmpdir
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        # copy default for when Root/HostVG is inaccessible(iscsi upgrade
+        cp $OVIRT_DEFAULTS /boot
+    fi
     log "done."
 }
 
