@@ -85,17 +85,23 @@ check_partition_sizes()
     fi
 
     printf "\n"
-    get_drive_size $ROOTDRIVE ROOTDRIVESPACE
-    get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
-    ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2"| bc -l)
-    HOSTVG_NEED_SIZE=$(echo "scale=0;" \
-                     "$SWAP_SIZE + $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
-
-    if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
-        drive_list="ROOT"
-        ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2 + $HOSTVG_NEED_SIZE"| bc -l)
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        get_drive_size $BOOTDRIVE BOOTDRIVESPACE
+        drive_list="BOOT"
+        BOOT_NEED_SIZE=$BOOT_SIZE
     else
-        drive_list="ROOT HOSTVG"
+        get_drive_size $ROOTDRIVE ROOTDRIVESPACE
+        get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
+        ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2"| bc -l)
+        HOSTVG_NEED_SIZE=$(echo "scale=0;" \
+                         "$SWAP_SIZE + $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
+
+        if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
+            drive_list="ROOT"
+            ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2 + $HOSTVG_NEED_SIZE"| bc -l)
+        else
+            drive_list="ROOT HOSTVG"
+        fi
     fi
 
     for drive in $drive_list; do
@@ -120,22 +126,26 @@ check_partition_sizes()
     done
 
     # check if an existing HostVG exists on a device other than the target
-    devices="$(pvs -o pv_name,vg_name --noheadings | \
-        grep "HostVG"|grep -v $HOSTVGDRIVE|awk '{ print $1 }')"
-    rc=0
-    if [ -n "$devices" ]; then
-        printf "\n"
-        printf "There appears to already be an installation on another device:\n"
-        for device in $devices; do
-            udi=$(hal-find-by-property --key block.device --string $device)
-            printf "\t$device ($(basename "$udi"))\n"
-        done
-        printf "We cannot proceed until either device is removed from the system\n"
-        printf "or until the HostVG volume group is removed.\n"
-        printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
-        printf "menu and then try to partition.\n"
-        printf "\n"
-        rc=1
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+        devices="$(pvs -o pv_name,vg_name --noheadings | \
+            grep "HostVG"|grep -v $HOSTVGDRIVE|awk '{ print $1 }')"
+        rc=0
+        if [ -n "$devices" ]; then
+            printf "\n"
+            printf "There appears to already be an installation on another device:\n"
+            for device in $devices; do
+                udi=$(hal-find-by-property --key block.device --string $device)
+                printf "\t$device ($(basename "$udi"))\n"
+            done
+            printf "We cannot proceed until either device is removed from the system\n"
+            printf "or until the HostVG volume group is removed.\n"
+            printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
+            printf "menu and then try to partition.\n"
+            printf "\n"
+            rc=1
+        fi
+    else
+        rc=0
     fi
 
     return $rc
@@ -210,16 +220,17 @@ do_configure()
         printf "\n\nPlease select the disk to use for the Boot partition.\n\n"
         BOOTDRIVE=$(get_dev_name) || return 0
         get_drive_size $BOOTDRIVE BOOTDRIVESPACE
+        echo $BOOTDRIVE
+    else
+        printf "\n\nPlease select the disk to use for the Root.\n\n"
+        ROOTDRIVE=$(get_dev_name) || return 0
+        get_drive_size $ROOTDRIVE ROOTDRIVESPACE
+
+        printf "\n\nPlease select the disk to use for the HostVG.\n\n"
+        HOSTVGDRIVE=$(get_dev_name) || return 0
+        get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
+        echo $HOSTVGDRIVESPACE
     fi
-    printf "\n\nPlease select the disk to use for the Root.\n\n"
-    ROOTDRIVE=$(get_dev_name) || return 0
-    get_drive_size $ROOTDRIVE ROOTDRIVESPACE
-
-    printf "\n\nPlease select the disk to use for the HostVG.\n\n"
-    HOSTVGDRIVE=$(get_dev_name) || return 0
-    get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
-    echo $HOSTVGDRIVESPACE
-
     printf "\n\nPlease configure storage partitions.\n\n"
     printf "* Enter partition sizes in MB.\n"
     printf "* A value of 0 indicates the partition should be disabled.\n"
@@ -236,7 +247,8 @@ do_configure()
 
     local space_left=$HOSTVGDRIVESPACE
     if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
-        partlist="boot swap root config logging data"
+        partlist="boot" # swap root config logging data"
+        local space_left=$BOOTDRIVESPACE
     else
         partlist="swap root config logging data"
     fi
@@ -303,24 +315,25 @@ EOF
 
 do_review()
 {
-    if [ -z "$ROOTDRIVE" ]; then
+    if [[ -z "$ROOTDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
         printf "\nNo Root storage device selected.\n"
         return
     fi
 
-    local data_size_display="$DATA_SIZE MB"
-    if [ "$DATA_SIZE" = -1 ]; then
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+        local data_size_display="$DATA_SIZE MB"
+        if [ "$DATA_SIZE" = -1 ]; then
 
-        if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
-            local remaining_mb=$(( $ROOTDRIVESPACE - $SWAP_SIZE \
-                    - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
-        else
-            local remaining_mb=$(( $HOSTVGDRIVESPACE - $SWAP_SIZE - $CONFIG_SIZE - $LOGGING_SIZE ))
+            if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
+                local remaining_mb=$(( $ROOTDRIVESPACE - $SWAP_SIZE \
+                        - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
+            else
+                local remaining_mb=$(( $HOSTVGDRIVESPACE - $SWAP_SIZE - $CONFIG_SIZE - $LOGGING_SIZE ))
+            fi
+            data_size_display="$remaining_mb MB"
         fi
-        data_size_display="$remaining_mb MB"
-    fi
 
-    cat <<EOF
+        cat <<EOF
 
 The local disk will be repartitioned as follows:
 ================================================
@@ -333,6 +346,17 @@ The local disk will be repartitioned as follows:
           Data partition size: $data_size_display
 
 EOF
+    else
+        cat <<EOF
+
+The local disk will be repartitioned as follows:
+================================================
+                   Boot Drive: $(get_drive_size $BOOTDRIVE)
+          Boot partition size: $BOOT_SIZE
+
+EOF
+
+    fi
 }
 
 # cleanup lvms on selected disk
@@ -348,14 +372,16 @@ wipe_lvm_on_disk()
 
 perform_partitioning()
 {
-    log "Partitioning drive: $ROOTDRIVE"
-    if [ -z "$HOSTVGDRIVE" ]; then
+    if [[ -z "$HOSTVGDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
         printf "\nNo storage device selected.\n"
         return
     fi
 
+    if [[ -z "$BOOTDRIVE" && "$OVIRT_ISCSI_ENABLED" == "y" ]]; then
+        printf "\nNo storage device selected.\n"
+        return
+    fi
     start_log
-    log "Starting partitioning of $ROOTDRIVE"
 
     log "Saving parameters"
     unmount_config /etc/default/ovirt
@@ -366,24 +392,36 @@ perform_partitioning()
     # begin critical section
     set -e
 
-    # FIXME: save a backup copy, just in case?
-    log "Wiping old boot sector"
-    dd if=/dev/zero of=$ROOTDRIVE bs=1024K count=1
-    blockdev --rereadpt $ROOTDRIVE
-    partprobe -s $ROOTDRIVE
-
     MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
     local boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
-    log "Labeling Drive: $ROOTDRIVE"
-    parted $ROOTDRIVE -s "mklabel ${LABEL_TYPE}"
-    if [ -n "$BOOTDRIVE" ]; then
+
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        log "Partitioning drive: $BOOTDRIVE"
+        log "Wiping old boot sector"
         dd if=/dev/zero of=$BOOTDRIVE bs=1024K count=1
         blockdev --rereadpt $BOOTDRIVE
         partprobe -s $BOOTDRIVE
         log "Creating boot partition"
         parted $BOOTDRIVE -s "mklabel ${LABEL_TYPE}"
         parted $BOOTDRIVE -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+        # sleep to ensure filesystems are created before continuing
+        sleep 10
+        mke2fs ${BOOTDRIVE}1 -L Boot
+        tune2fs -c 0 -i 0 ${BOOTDRIVE}1
+        log "Completed!"
+        return
     fi
+
+    log "Starting partitioning of $ROOTDRIVE"
+    log "Partitioning drive: $ROOTDRIVE"
+ # FIXME: save a backup copy, just in case?
+    log "Wiping old boot sector"
+    dd if=/dev/zero of=$ROOTDRIVE bs=1024K count=1
+    blockdev --rereadpt $ROOTDRIVE
+    partprobe -s $ROOTDRIVE
+    log "Labeling Drive: $ROOTDRIVE"
+    parted $ROOTDRIVE -s "mklabel ${LABEL_TYPE}"
+
     if [ $ROOTDRIVE != $HOSTVGDRIVE ]; then
         log "Labeling Drive: $HOSTVGDRIVE"
         parted $HOSTVGDRIVE -s "mklabel ${LABEL_TYPE}"
@@ -394,10 +432,6 @@ perform_partitioning()
     parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
     # sleep to ensure filesystems are created before continuing
     sleep 10
-    if [ -n "$BOOTDRIVE" ]; then
-        mke2fs ${BOOTDRIVE}1 -L Boot
-        tune2fs -c 0 -i 0 ${BOOTDRIVE}1
-    fi
     mke2fs ${ROOTDRIVE}1 -L Root
     mke2fs ${ROOTDRIVE}2 -L RootBackup
     tune2fs -c 0 -i 0 ${ROOTDRIVE}1
@@ -499,7 +533,7 @@ perform_partitioning()
 do_confirm()
 {
 
-    if [ -z "$ROOTDRIVE" ]; then
+    if [[ -z "$ROOTDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
         printf "\nNo storage device selected.\n"
         return
     fi
@@ -694,7 +728,7 @@ if [ "$1" == "AUTO" ]; then
 	log "Missing device parameter: unable to partition any disk"
     fi
 else
-    OPTIONS="\"Configure Storage\" \"Review\" \"Commit Changes And Quit\" \"Return To Menu\""
+    OPTIONS="\"Enable iSCSI Target\" \"Configure Storage\" \"Review\" \"Commit Changes And Quit\" \"Return To Menu\""
     eval set $OPTIONS
     PS3="Choose an option: "
 

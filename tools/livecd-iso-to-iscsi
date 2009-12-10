@@ -119,6 +119,9 @@ squashfs="%s/LiveOS/squashfs.img" % isomount
 ext3fs="tftpboot/squashfs-root/LiveOS/ext3fs.img"
 shutil.copy(kernel,"tftpboot")
 shutil.copy(initrd,"tftpboot")
+e2label_ret = subprocess.call(["e2label", options.disk_label])
+if e2label_ret != 0:
+    fail("Error relabeling %s to %s" % (options.disk,options.disk_label))
 
 unsquash = subprocess.call(["unsquashfs", squashfs])
 
