@@ -27,7 +27,10 @@ CONNECTED_PAGE       = 2
 
 class ChangeHostConfigScreen(HostListConfigScreen):
     def __init__(self):
-        HostListConfigScreen.__init__(self, "Change Host")
+        HostListConfigScreen.__init__(self, "")
+
+    def get_title(self):
+        return "Currently: %s" % self.get_libvirt().get_url()
 
     def get_elements_for_page(self, screen, page):
         if   page is CONNECTION_LIST_PAGE: return self.get_connection_list_page(screen)
@@ -36,7 +39,6 @@ class ChangeHostConfigScreen(HostListConfigScreen):
     def process_input(self, page):
         if   page is CONNECTION_LIST_PAGE:
             logging.info("Changing libvirt connection to %s" % self.get_selected_connection())
-            libvirtworker.set_default_url(self.get_selected_connection())
             self.get_libvirt().open_connection(self.get_selected_connection())
         elif page is CONNECTED_PAGE: self.set_finished()
 

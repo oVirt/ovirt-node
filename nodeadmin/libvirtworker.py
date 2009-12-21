@@ -74,6 +74,8 @@ class LibvirtWorker:
     def __init__(self, url = None):
         if url is None: url = get_default_url()
         logging.info("Connecting to libvirt: %s" % url)
+        self.__url  = None
+        self.__conn = None
         self.open_connection(url)
         self.__capabilities = virtinst.CapabilitiesParser.parse(self.__conn.getCapabilities())
         self.__net = virtinst.VirtualNetworkInterface(conn = self.__conn)
@@ -84,9 +86,21 @@ class LibvirtWorker:
         '''Returns the underlying connection.'''
         return self.__conn
 
+    def get_url(self):
+        return self.__url
+
     def open_connection(self, url):
         '''Lets the user change the url for the connection.'''
-        self.__conn = libvirt.open(url)
+        old_conn = self.__conn
+        old_url  = self.__url
+        try:
+            self.__conn = libvirt.open(url)
+            self.__url  = url
+            set_default_url(url)
+        except Exception, error:
+            self.__conn = old_conn
+            self.__url  = old_url
+            raise error
 
     def list_domains(self, defined = True, started = True):
         '''Lists all domains.'''

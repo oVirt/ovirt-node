@@ -37,6 +37,9 @@ class ConfigScreen:
         self.__libvirt = LibvirtWorker()
         self.__vm_config = VirtManagerConfig()
 
+    def get_title(self):
+        return self.__title
+
     def get_hal(self):
         return self.__hal
 
@@ -83,7 +86,7 @@ class ConfigScreen:
             screen = SnackScreen()
             elements = self.get_elements_for_page(screen, self.__current_page)
             # TODO: need to set the form height to the number of elements on the page
-            gridform = GridForm(screen, self.__title, 1, 10)
+            gridform = GridForm(screen, self.get_title(), 1, 10)
             current_element = 0
             for element in elements:
                 gridform.add(element, 0, current_element)
