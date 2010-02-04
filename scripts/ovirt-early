@@ -36,9 +36,12 @@ configure_from_network() {
     DEVICE=$1
 
     if [ -n "$DEVICE" ]; then
-        log "Configuring network Using interface $DEVICE"
-        # setup temporary interface to retrieve configuration
-        echo "network --device $DEVICE --bootproto dhcp" | nash
+        log "Configuring network"
+        if ! network_up ; then
+            log "Using interface $DEVICE"
+            # setup temporary interface to retrieve configuration
+            echo "network --device $DEVICE --bootproto dhcp" | nash
+        fi
         if [ $? -eq 0 ]; then
             # from network-scripts/ifup-post
             IPADDR=$(LC_ALL=C ip -o -4 addr ls dev ${DEVICE} | awk '{ print $4 ; exit }')

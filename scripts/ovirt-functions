@@ -729,6 +729,11 @@ is_valid_ipv4 () {
     return $result
 }
 
+# Check if networking is already up
+network_up () {
+    test -n "$(/sbin/ip -o link show up | cut -d: -f2 | grep -v 'lo$')"
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
