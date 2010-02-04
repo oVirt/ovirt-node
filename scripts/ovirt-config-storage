@@ -161,7 +161,8 @@ check_partition_sizes()
 get_dev_name()
 {
     local udi_list=$(hal-find-by-capability --capability storage)
-    if test -z "$udi_list"; then
+    local byid_list=$(find /dev/disk/by-id -mindepth 1 -not -name '*-part*')
+    if test -z "$udi_list" -a -z "$byid_list"; then
         warn "ERROR: no usable storage devices detected"
         return 1
     fi
@@ -184,6 +185,10 @@ get_dev_name()
         test -z "$devices" \
             && devices="$block_dev" \
             || devices="$devices $block_dev"
+    done
+    d=""
+    for d in $byid_list; do
+        devices="$devices `readlink -f $d`";
     done
 
     # FIXME: workaround for detecting virtio block devices
