@@ -705,7 +705,7 @@ perform_partitioning()
         lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
         mke2fs -j /dev/HostVG/Logging -L "LOGGING"
         tune2fs -c 0 -i 0 /dev/HostVG/Logging
-        echo "/dev/HostVG/Logging /var/log ext3 defaults 0 0" >> /etc/fstab
+        echo "/dev/HostVG/Logging /var/log ext3 defaults,noatime 0 0" >> /etc/fstab
     fi
 
     local use_data=1
@@ -722,7 +722,7 @@ perform_partitioning()
     if [ "$use_data" = 0 ]; then
         mke2fs -j /dev/HostVG/Data -L "DATA"
         tune2fs -c 0 -i 0 /dev/HostVG/Data
-        echo "/dev/HostVG/Data /data ext3 defaults 0 0" >> /etc/fstab
+        echo "/dev/HostVG/Data /data ext3 defaults,noatime 0 0" >> /etc/fstab
         echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
         echo "/data/core /var/log/core bind bind 0 0" >> /etc/fstab
     fi
