@@ -16,6 +16,8 @@ OVIRT_STANDALONE=${OVIRT_STANDALONE:-0}
 
 OVIRT_BACKUP_DIR=/var/lib/ovirt-backup
 
+MANAGEMENT_SCRIPTS_DIR=/etc/node.d
+
 OVIRT_CONFIG_FILES="\
  /etc/sysconfig/network-scripts/ifcfg-*         \
  /etc/rsyslog.conf                              \

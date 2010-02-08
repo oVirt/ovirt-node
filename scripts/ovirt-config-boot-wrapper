@@ -20,9 +20,9 @@ continuing."
     printf "\n"
     read -p "Please enter kernel boot arguments (hit return to use the above): "
     if [[ -n "$REPLY" ]]; then
-	bootparams="${REPLY}"
+        bootparams="${REPLY}"
     else
-	bootparams="${OVIRT_BOOTPARAMS}"
+        bootparams="${OVIRT_BOOTPARAMS}"
     fi
     if ask_yes_or_no "Do you wish to continue ([Y]es/[N]o)?"; then
         mount_live \

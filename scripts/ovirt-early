@@ -2,16 +2,22 @@
 #
 # ovirt-early Start early ovirt services
 #
-# chkconfig: - 01 99
-# description: ovirt-early services
-#
+### BEGIN INIT INFO
+# Provides: ovirt-early
+# Required-Start: ovirt-awake
+# Default-Start: 2 3 4 5
+# Dewscription: Managed node early configuration service
+### END INIT INFO
 
 # Source functions library
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
 prog=ovirt-early
-lockfile=/var/lock/subsys/$prog
+VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/$prog
+
+# load the configuration file
+[ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
 
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
@@ -23,16 +29,16 @@ get_mac_addresses() {
     macs=""
     devices=$(ls -b /sys/class/net/)
     for device in $devices; do
-	if [ "$device" != "$DEVICE" ]; then
-	    mac=$(cat /sys/class/net/$device/address 2>/dev/null)
-	    if [ -n "$mac" -a "$mac" != "00:00:00:00:00:00" ]; then
-		macs="${macs}${mac}=${device},"
-	    fi
-	fi
+        if [ "$device" != "$DEVICE" ]; then
+            mac=$(cat /sys/class/net/$device/address 2>/dev/null)
+            if [ -n "$mac" -a "$mac" != "00:00:00:00:00:00" ]; then
+                macs="${macs}${mac}=${device},"
+            fi
+        fi
     done
 }
 
-configure_from_network() {
+configure_ovirt_management_nic() {
     DEVICE=$1
 
     if [ -n "$DEVICE" ]; then
@@ -62,12 +68,12 @@ configure_from_network() {
                     if [ $? -eq 0 ]; then
                         log "Remote configuration bundle retrieved to $cfgdb"
                         ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
-			if [ $? -eq 0 ]; then
-			    log "Remote configuration retrieved and applied"
+                        if [ $? -eq 0 ]; then
+                            log "Remote configuration retrieved and applied"
                             rm $cfgdb
-			else
-			    log "Failure to retrieve or apply remote configuration"
-			fi
+                        else
+                            log "Failure to retrieve or apply remote configuration"
+                        fi
                     else
                         log "Failed to retrieve configuration bundle"
                     fi
@@ -88,11 +94,11 @@ configure_from_network() {
     if [ ! -f $ifcfg ]; then
         log "Applying default configuration to $DEVICE and $BRIDGE"
         printf '%s\n' "DEVICE=$DEVICE" ONBOOT=yes "BRIDGE=$BRIDGE" \
-	    > /etc/sysconfig/network-scripts/ifcfg-$DEVICE
+            > /etc/sysconfig/network-scripts/ifcfg-$DEVICE
         printf '%s\n' "DEVICE=$BRIDGE" "BOOTPROTO=dhcp" \
-	    ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
-	    > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
-	log "Default config applied"
+            ONBOOT=yes TYPE=Bridge PEERNTP=yes DELAY=0 \
+            > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
+        log "Default config applied"
     fi
 }
 
@@ -135,9 +141,39 @@ find_disk() {
     return 1
 }
 
+configure_management_interface() {
+    log "Configuring the manangement interface."
+    case $OVIRT_RUNTIME_MODE in
+        "ovirt")
+            configure_ovirt_management_nic $bootif
+            if [ -n "$init" ]; then
+                ovirt-config-storage AUTO
+                # initial configuration storage, after /config creation
+                ovirt_store_config \
+                    /etc/sysconfig/network-scripts/ifcfg-* \
+                    $BONDING_MODCONF_FILE
+                if [ $upgrade = 1 ]; then
+                    # local disk installation for managed mode
+                    mount_live
+                    ovirt-config-boot /live "$bootparams"
+                fi
+            fi
+            ;;
+        "managed")
+            if [ -x $MANAGEMENT_SCRIPTS_DIR/configure-management-interface ]; then
+                log "Executing $MANAGEMENT_SCRIPTS_DIR/configure-management-interface"
+                $MANAGEMENT_SCRIPTS_DIR/configure-management-interface
+            else
+                echo "No script to configure management interface found."
+            fi
+            ;;
+        "none")
+            log "Unmanaged node: no management interface to configure."
+    esac
+}
 
 start() {
-    touch $lockfile
+    touch $VAR_SUBSYS_OVIRT_EARLY
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
@@ -351,21 +387,21 @@ start() {
             dns=*)
             dns=${i#dns=}
             ;;
-	    ntp=*)
-	    ntp=${i#ntp=}
-	    ;;
+            ntp=*)
+            ntp=${i#ntp=}
+            ;;
             hostname=*)
             hostname=${i#hostname=}
             ;;
             vlan=*)
             vlan=${i#vlan=}
             ;;
-	    ssh_pwauth=1 | ssh_pwauth=true)
-	    ssh_pwauth=true
-	    ;;
-	    ssh_pwauth=0 | ssh_pwauth=false)
-	    ssh_pwauth=false
-	    ;;
+            ssh_pwauth=1 | ssh_pwauth=true)
+            ssh_pwauth=true
+            ;;
+            ssh_pwauth=0 | ssh_pwauth=false)
+            ssh_pwauth=false
+            ;;
             syslog=*)
             i=${i#syslog=}
             eval $(printf $i|awk -F: '{print "syslog_server="$1; print "syslog_port="$2;}')
@@ -438,22 +474,10 @@ start() {
             -e "s/^mech_list: .*gssapi.*/mech_list: digest-md5/" \
             /etc/sasl2/libvirt.conf
     else
-        configure_from_network $bootif
-        if [ -n "$init" ]; then
-            ovirt-config-storage AUTO
-            # initial configuration storage, after /config creation
-            ovirt_store_config \
-                /etc/sysconfig/network-scripts/ifcfg-* \
-                $BONDING_MODCONF_FILE
-            if [ $upgrade = 1 ]; then
-                # local disk installation for managed mode
-                mount_live
-                ovirt-config-boot /live "$bootparams"
-            fi
-        fi
+        configure_manament_interface
     fi
 
-    rm -f $lockfile
+    rm -f $VAR_SUBSYS_OVIRT_EARLY
 
     for hook in $ovirt_early; do
         post="$EARLY_DIR/post-$hook"
@@ -465,49 +489,22 @@ start() {
     return 0
 }
 
-scan_for_swap() {
-    # swap partition activation
-    # find all of the partitions on the system
-
-    # get the system pagesize
-    PAGESIZE=`getconf PAGESIZE`
-
-    # look first at raw partitions XXX disk/by-id or HAL? (for cciss)
-    BLOCKDEVS=`ls /dev/sd? /dev/hd? 2>/dev/null`
-
-    # now LVM partitions
-    LVMDEVS="$DEVICES `lvscan | awk '{print $2}' | tr -d \"'\"`"
-
-    SWAPDEVS="$LVMDEVS"
-    for dev in $BLOCKDEVS; do
-        SWAPDEVS="$SWAPDEVS `fdisk -l $dev 2>/dev/null | tr '*' ' ' \
-                                     | awk '$5 ~ /82/ {print $1}'`"
-    done
-
-    # now check if any of these partitions are swap, and activate if so
-    for device in $SWAPDEVS; do
-        sig=`dd if=$device bs=1 count=10 skip=$(( $PAGESIZE - 10 )) \
-            2>/dev/null`
-        if [ "$sig" = "SWAPSPACE2" ]; then
-            swapon $device
-        fi
-    done
+stop() {
+    echo -n "Stopping ovirt-early: "
+    success
 }
 
 case "$1" in
     start)
-        printf "Starting ovirt-early: "
-
+        [ -f "$VAR_SUBSYS_NODE_CONFIG" ] && exit 0
+        echo -n "Starting ovirt-early: "
         {
-            start_log
             log "Starting ovirt-early"
             start
             log "Completed ovirt-early"
-            stop_log
-        }
-
-        test $? == 0 && success || failure
-        echo
+            RETVAL=$?
+        } >> $OVIRT_LOGFILE 2>&1
+        test $RETVAL == 0 && success || failure
         ;;
     status)
         status $prog
@@ -521,5 +518,7 @@ case "$1" in
         ;;
     *)
         echo "Usage: ovirt-early {start}"
-        exit 2
+        RETVAL=2
 esac
+
+exit $RETVAL

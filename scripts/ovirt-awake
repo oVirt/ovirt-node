@@ -1,9 +1,8 @@
 #!/bin/bash
 #
-# ovirt-awake   Notifies the oVirt server that an oVirt Node is
-#               starting up.
+# ovirt-awake - Notifies any management server that the node is starting.
 #
-# Copyright (C) 2008 Red Hat, Inc.
+# Copyright (C) 2008-2010 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -20,86 +19,135 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+#
+### BEGIN INIT INFO
+# Provides: ovirt-awake
+# Default-Start: 2 3 4 5
+# Description: Managed node service to alert management servers.
+### END INIT INFO
 
-# Source function library
+# Source functions library
+# config: /etc/sysconfig/node-config
+
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
-function connect-to-server () {
-    echo "Connecting to $SRV_HOST:$SRV_PORT"
-    exec 3<> /dev/tcp/$SRV_HOST/$SRV_PORT
+prog=ovirt-early
+NODE_CONFIG=/etc/sysconfig/node-config
+VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
+
+# load the configuration file
+[ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
+
+send_text () {
+    local text=${1}
+
+    echo "$text" 1>&3
 }
 
-function disconnect-from-server () {
-    <&3-
-}
-
-function send-text () {
-    echo "$1" 1>&3
-}
-
-function receive-text () {
+receive_text () {
     read 0<&3
 }
 
-function error () {
-  errmsg="ERR: (ovirt-awake) $1"
-  send-text "$errmsg"
-  log "$errmsg"
+error () {
+    local text=${1-}
+
+    send_text "ERR: (ovirt-awake) ${text}"
+    # log "${text}"
 }
 
-start () {
-    connect-to-server
+ovirt_startup () {
+    local mgmthost=${OVIRT_MANAGEMENT_SERVER}
+    local mgmtport=${OVIRT_MANAGEMENT_PORT}
 
-    receive-text
-
-    if [ $REPLY == "HELLO?" ]; then
-        echo "Starting wakeup conversation."
-
-        send-text "HELLO!"
-
-        read 0<&3
-
-        if [ $REPLY == "MODE?" ]; then
-            send-text "AWAKEN"
-
-            receive-text
-
-            KEYTAB=`echo $REPLY | awk '{ print $2 }'`
-
-            if [ -n "$KEYTAB" -a -n "$KEYTAB_FILE" ]; then
-                echo "Retrieving keytab: '$KEYTAB'"
-
-                wget -q "$KEYTAB" --no-check-certificate --output-document="$KEYTAB_FILE"
-            else
-                echo "No keytab to retrieve"
-            fi
-            send-text ACK
-        else
-            error "Did not get a mode request."
-        fi
-    else
-        error "Did not get a proper startup marker."
+    if [[ -z "${mgmthost}" ]] || [[ -z "${mgmtport}" ]]; then
+        find_srv identify tcp
+        mgmthost=$SRV_HOST
+        mgmtport=$SRV_PORT
     fi
 
-    echo "Disconnecting."
+    if [[ -n "${mgmthost}" ]] && [[ -n "${mgmtport}" ]]; then
+        # log "Notifying oVirt management server: ${mgmthost}:${mgmtport}"
+        exec 3<> /dev/tcp/$mgmthost:$mgmtport
 
-    disconnect-from-server
+        connect-to-server
+        receive_text
+        if [ $REPLY == "HELLO?" ]; then
+            logo "Starting wakeup conversation."
+            send_text "HELLO!"
+            receive_text
+            if [ $REPLY == "MODE?" ]; then
+                send_text "AWAKEN"
+                receive_text
+                KEYTAB=$(echo $REPLY | awk '{ print $2 }')
+                if [ -n "$KEYTAB" -a -n "$KEYTAB_FILE" ]; then
+                    # log "Retrieving keytab: '$KEYTAB'"
+                    wget -q "$KEYTAB" --no-check-certificate --output-document="$KEYTAB_FILE"
+                else
+                    log "No keytab to retrieve"
+                fi
+                send_text ACK
+            else
+                error "Did not get a mode request."
+            fi
+        else
+            error "Did not get a proper startup marker."
+        fi
+        # log "Disconnecting."
+        <&3-
+    else
+        # log "Missing server information. Failing..."
+        return 1
+    fi
+}
+
+# Override this method to provide support for notifying a management
+# system that the node has started and will be available after
+# system initialization
+start () {
+    local RC=0
+
+    touch $VAR_SUBSYS_NODECONFIG
+    # log "Starting ovirt-awake."
+    case "$OVIRT_RUNTIME_MODE" in
+        "none")
+            log "Node is operating in unmanaged mode."
+            ;;
+        "ovirt")
+            ovirt_startup
+            RC=$?
+            ;;
+        "managed")
+            if [ -x /config/$MANAGEMENT_SCRIPTS_DIR/awake ]; then
+                log "Executing /config/$MANAGEMENT_SCRIPTS_DIR/awake"
+                /config/$MANAGEMENT_SCRIPTS_DIR/awake
+            else
+                echo "No script found to notify management server during awake state."
+            fi
+            ;;
+    esac
+
+    # log "Completed ovirt-awake: RC=${RC}"
+    rm -f $VAR_SUBSYS_NODECONFIG
+    return $RC
 }
 
 case "$1" in
     start)
-        SRV_HOST=$2
-        SRV_PORT=$3
-        KEYTAB_FILE=$4
-        start
-        RETVAL=$?
-    ;;
+        echo -n "Starting ovirt-awake: "
+        [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
+        {
+            start
+            RETVAL=$?
+            log "Completed ovirt-awake: RETVAL=$?"
+        } >> $OVIRT_LOGFILE 2>&1
+        test $RETVAL == 0 && success || failure
+        ;;
 
     *)
         echo "Usage: $0 start"
         RETVAL=2
-    ;;
+        ;;
 esac
 
 exit $RETVAL

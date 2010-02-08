@@ -2,34 +2,40 @@
 #
 # ovirt Start ovirt services
 #
-# chkconfig: - 98 02
-# description: ovirt-post services
-#
+### BEGIN INIT INFO
+# Provides: ovirt-post
+# Required-Start: ovirt
+# Default-Start: 2 3 4 5
+# Description: Performs managed node post configuration setup.
+### END INIT INFO
 
 # Source functions library
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
 prog=ovirt-post
-lockfile=/var/lock/subsys/$prog
+VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/$prog
+
+# load the configuration file
+[ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
 
 start() {
     # wait for libvirt to finish initializing
     local count=0
     while true; do
-	if [ -r /var/run/libvirt/libvirt-sock ]; then
-	    break
-	elif [ "$count" == "100" ]; then
-	    log "Libvirt did not initialize in time..."
-	    return 1
-	else
-	    log "Waiting for libvirt to finish initializing..."
-	    count=$(expr $count + 1)
-	    sleep 1
-	fi
-	
-	touch $lockfile
-	
+        if [ -r /var/run/libvirt/libvirt-sock ]; then
+            break
+        elif [ "$count" == "100" ]; then
+            log "Libvirt did not initialize in time..."
+            return 1
+        else
+            log "Waiting for libvirt to finish initializing..."
+            count=$(expr $count + 1)
+            sleep 1
+        fi
+
+        touch $VAR_SUBSYS_OVIRT_POST
+
     done
     BACKUP=$(mktemp)
     ISSUE=/etc/issue
@@ -38,20 +44,20 @@ start() {
     cp -f $BACKUP $ISSUE
     hwvirt=$(virsh capabilities)
     if [[ $hwvirt =~ kvm ]]; then
-	log "Hardware virtualization detected"
+        log "Hardware virtualization detected"
     else
-	log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	log "!!! Hardware Virtualization Is Unavailable !!!"
-	log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        log "!!! Hardware Virtualization Is Unavailable !!!"
+        log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
-	echo "Virtualization hardware is unavailable." >> $ISSUE
+        echo "Virtualization hardware is unavailable." >> $ISSUE
 
-	flags=$(cat /proc/cpuinfo | grep "^flags")
-	if [[ $flags =~ vmx ]] || [[ $flags =~ svm ]]; then
-	    echo "(Virtualization hardware was detected but is disabled)" >> $ISSUE
-	else
-	    echo "(No virtualization hardware was detected on this system)" >> $ISSUE
-	fi
+        flags=$(cat /proc/cpuinfo | grep "^flags")
+        if [[ $flags =~ vmx ]] || [[ $flags =~ svm ]]; then
+            echo "(Virtualization hardware was detected but is disabled)" >> $ISSUE
+        else
+            echo "(No virtualization hardware was detected on this system)" >> $ISSUE
+        fi
     fi
     cp -f $ISSUE $ISSUE_NET
 
@@ -62,18 +68,27 @@ start() {
     # persist selected configuration files
     ovirt_store_config \
         /etc/krb5.conf \
+        /etc/node.d \
+        /etc/sysconfig/node-config
         /etc/libvirt/krb5.tab \
         /etc/ssh/ssh_host*_key*
 
-    # Removed ovirt-identify-node since it has now
-    # been replaced with the matahari qmf agent.
+    # perform any post startup operations
+    case $OVIRT_RUNTIME_MODE in
+    esac
 
-    rm -f $lockfile
+    rm -f $VAR_SUBSYS_OVIRT_POST
+}
+
+stop() {
+    echo -n "Stopping ovirt-post: "
+    success
 }
 
 case "$1" in
     start)
-        printf "Starting ovirt-post: "
+        [ -f "$VAR_SUBSYS_OVIRT_POST" ] && exit 0
+        echo -n "Starting ovirt-post: "
 
         {
             log "Starting ovirt-post"

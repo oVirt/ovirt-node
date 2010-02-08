@@ -1,5 +1,6 @@
 %define product_family oVirt Node
 %define beta Beta
+%define mgmt_scripts_dir %{_sysconfdir}/node.d
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 
@@ -87,6 +88,8 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sbindir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/chkconfig.d
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig
+%{__install} -d -m0755 %{buildroot}%{mgmt_scripts_dir}
 %{__install} -d -m0755 %{buildroot}%{_initrddir}
 %{__install} -d -m0755 %{buildroot}%{app_root}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
@@ -94,7 +97,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 %{__install} -d -m0755 %{buildroot}%{python_sitelib}/nodeadmin
 
-%{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
+%{__install} -p -m0644 scripts/node-config %{buildroot}%{_sysconfdir}/sysconfig
 %{__install} -p -m0755 scripts/ovirt-config-boot %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-boot-wrapper %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-collectd %{buildroot}%{_sbindir}
@@ -153,6 +156,7 @@ make install DESTDIR=%{buildroot}
 # in Makefile now
 
 %{__install} -p -m0755 scripts/ovirt-functions %{buildroot}%{_initrddir}
+%{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt %{buildroot}%{_initrddir}
@@ -227,6 +231,7 @@ ln -s ovirt-release %{buildroot}/etc/system-release
 %post
 # Setup basic collectd configuration
 sed '/<Plugin network>/,/<\/Plugin>/d' /etc/collectd.conf.in > /etc/collectd.conf
+/sbin/chkconfig --add ovirt-awake
 /sbin/chkconfig --add ovirt-early
 /sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
@@ -238,6 +243,7 @@ if [ $1 = 0 ] ; then
     /sbin/service ovirt-firstboor stop >/dev/null 2>&1
     /sbin/service ovirt stop >/dev/null 2>&1
     /sbin/service ovirt-post stop >/dev/null 2>&1
+    /sbin/chkconfig --del ovirt-awake
     /sbin/chkconfig --del ovirt-early
     /sbin/chkconfig --del ovirt-firstboot
 	/sbin/chkconfig --del ovirt
@@ -270,9 +276,11 @@ fi
 %config(noreplace) %{_sysconfdir}/logrotate.d/ovirt-node
 %config(noreplace) %{_sysconfdir}/cron.d/ovirt-logrotate
 
+%{mgmt_scripts_dir}
 %{_sysconfdir}/ovirt-config-boot.d
 %{_sysconfdir}/ovirt-config-setup.d
 %config(noreplace) %{_sysconfdir}/collectd.conf.in
+%config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
 %doc COPYING
 # should be ifarch i386
@@ -280,7 +288,6 @@ fi
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
 
-%{_sbindir}/ovirt-awake
 %{_sbindir}/ovirt-config-boot
 %{_sbindir}/ovirt-config-boot-wrapper
 %{_sbindir}/ovirt-config-collectd
@@ -300,6 +307,7 @@ fi
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 
+%{_initrddir}/ovirt-awake
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt

@@ -69,6 +69,7 @@ EXTRA_DIST =			\
   nodeadmin/utils.py            \
   nodeadmin/volumeconfig.py     \
   scripts/collectd.conf.in	\
+  scripts/node-config           \
   scripts/ovirt			\
   scripts/ovirt-awake		\
   scripts/ovirt-config-boot  \
