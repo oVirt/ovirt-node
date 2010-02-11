@@ -1,2 +1,5 @@
 CHANGELOG
 =========
+
+Version 1.9.0:
+ * Created a reference implementation for a 2.0 management server.
