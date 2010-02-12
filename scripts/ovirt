@@ -10,7 +10,13 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+prog=ovirt
+lockfile=/var/lock/subsys/$prog
+
 start() {
+
+    touch $lockfile
+
     if is_standalone; then
         return 0
     fi
@@ -74,6 +80,8 @@ start() {
     else
         log "skipping libvirt-qpid and matahari configuration, could not find $libvirt_qpid_conf"
     fi
+
+    rm -f $lockfile
 }
 
 case "$1" in
@@ -88,6 +96,16 @@ case "$1" in
 
         test $? == 0 && success || failure
         echo
+        ;;
+    status)
+        status $prog
+        ;;
+    reload)
+        stop
+        start
+        ;;
+    stop)
+        stop
         ;;
     *)
         echo "Usage: ovirt {start}"

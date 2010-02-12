@@ -102,6 +102,16 @@ is_auto_install() {
     fi
 }
 
+# return 0 if this is an upgrade
+# return 1 otherwise
+is_upgrade() {
+    if [ "$OVIRT_UPGRADE" = "1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # return 0 if booted from local disk
 # return 1 if booted from other media
 is_booted_from_local_disk() {
@@ -123,7 +133,7 @@ disable_firstboot() {
         augtool <<EOF
 set /files$OVIRT_DEFAULTS/OVIRT_FIRSTBOOT 0
 set /files$OVIRT_DEFAULTS/OVIRT_INIT '""'
-set /files$OVIRT_DEFAULTS/OVIRT_LOCAL_BOOT 0
+set /files$OVIRT_DEFAULTS/OVIRT_UPGRADE 0
 EOF
     fi
 }
@@ -244,7 +254,7 @@ ptr() {
 # PXE /dev/loop0 (loopback ISO)
 # not available when booted from local disk installation
 mount_live() {
-    if grep -q " /live " /proc/mounts; then
+    if grep -q " /live " /etc/mtab; then
         return 0
     fi
     local live_dev=/dev/live
@@ -260,14 +270,14 @@ mount_live() {
     mount -r $live_dev /live || mount $live_dev /live
 }
 
-# mount boot partition
-# boot loader + kernel + initrd
-mount_boot() {
-    if grep -q " /boot " /proc/mounts; then
+# mount root partition
+# boot loader + kernel + initrd + LiveOS
+mount_liveos() {
+    if grep -q " /liveos " /etc/mtab; then
         return 0
     fi
-    mkdir -p /boot
-    mount /dev/disk/by-label/BOOT /boot
+    mkdir -p /liveos
+    mount /dev/disk/by-label/Root /liveos
 }
 
 # mount config partition
@@ -304,6 +314,14 @@ mount_config() {
     fi
 }
 
+mount_boot() {
+
+    if grep -q " /boot " /etc/mtab; then
+       return 0
+    fi
+    mkdir -p /boot
+    mount /dev/disk/by-label/Boot /boot
+}
 # stop any service which keeps /var/log busy
 # keep the list of services
 unmount_logging_services() {
@@ -388,7 +406,7 @@ mount_data() {
         mkdir -p /data
         mount /data
         mkdir -p /data/images
-        mount -p /var/lib/libvirt/images
+        mkdir -p /var/lib/libvirt/images
         mount /var/lib/libvirt/images
         restorecon -rv /var/lib/libvirt/images
 
@@ -625,9 +643,11 @@ lvremove() {
 reboot() {
     cd /
     # setup new Root if update is prepared
-    if [ -e /dev/HostVG/RootUpdate ]; then
-        lvrename HostVG Root RootBackup
-        lvrename HostVG RootUpdate Root
+    if [ -e "/dev/disk/by-label/RootUpdate" ]; then
+        root_update_dev=$(readlink -f /dev/disk/by-label/RootUpdate)
+        root_dev=$(readlink -f /dev/disk/by-label/Root)
+        e2label $root_dev RootBackup
+        e2label $root_update_dev Root
     fi
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
@@ -707,6 +727,11 @@ is_valid_ipv4 () {
     fi
 
     return $result
+}
+
+# Check if networking is already up
+network_up () {
+    test -n "$(/sbin/ip -o link show up | cut -d: -f2 | grep -v 'lo$')"
 }
 
 # execute a function if called as a script, e.g.

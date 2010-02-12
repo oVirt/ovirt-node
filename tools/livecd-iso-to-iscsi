@@ -1,0 +1,204 @@
+#!/usr/bin/python
+# Convert a live CD iso into iscsi root bootable format
+# iSCSI lun must be accessible via this script
+# Copyright 2009 Red Hat, Inc.
+# Written by Joey boggs <jboggs@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+from optparse import OptionParser
+from tempfile import mkdtemp
+import dbus
+import dbus.glib
+import sys
+import os
+import subprocess
+import shutil
+
+parser = OptionParser()
+parser.add_option("--iso", dest="iso", help="LiveCD iso filename")
+parser.add_option("--target", dest="target", help="iSCSI target ip address")
+parser.add_option("--targetname", dest="targetname", help="iSCSI target lun")
+parser.add_option("--targetport", dest="targetport", default="3260", help="iSCSI port number, defaults to 3260")
+parser.add_option("--user", dest="user", help="Target username(optional)")
+parser.add_option("--password", dest="password", help="Target password")
+parser.add_option("--reverse_user", dest="reverse_user", help="Reverse CHAP username(optional)")
+parser.add_option("--reverse_password", dest="reverse_password", help="Reverse CHAP password(optional)")
+parser.add_option("--disk", dest="disk", help="iSCSI disk device name")
+parser.add_option("--disk-label", dest="disk_label", default="ovirt-node-root", help="file system label")
+
+(options, args) = parser.parse_args()
+
+def fail(msg):
+    print(msg)
+    sys.exit(1)
+
+if os.geteuid () != 0:
+    fail("You must run as root")
+
+if options.iso is None:
+    fail("ERROR: iso file must be defined")
+else:
+    options.iso = os.path.abspath(options.iso)
+
+if options.target is None:
+    fail("ERROR: iscsi target must be defined")
+
+if options.targetname is None:
+    fail("ERROR: iscsi targetname must be defined")
+
+if len(options.disk_label.strip()) > 15:
+    fail("ERROR: disk label must be 14 characters or less")
+
+try:
+    file = os.mkdir("tftpboot")
+except OSError, e:
+    tftp_remove = raw_input("tftpboot directory exists, overwrite? (y/N)? ")
+    if tftp_remove.lower() == "y":
+        shutil.rmtree("tftpboot")
+        os.mkdir("tftpboot")
+    else:
+        print "Aborting"
+        sys.exit(1)
+
+if options.disk is None:
+    print "Below are the detected disks, if the iscsi disk is not shown, please ensure you are logged into the correct target\n"
+    bus = dbus.SystemBus ()
+    hal_obj = bus.get_object ('org.freedesktop.Hal', '/org/freedesktop/Hal/Manager')
+    hal = dbus.Interface (hal_obj, 'org.freedesktop.Hal.Manager')
+    udis = hal.FindDeviceByCapability ('storage')
+    dev_dict = {}
+    dev_count = 1
+    for udi in udis:
+        dev_obj = bus.get_object ('org.freedesktop.Hal', udi)
+        dev = dbus.Interface (dev_obj, 'org.freedesktop.Hal.Device')
+        dev_bus=dev.GetProperty ('storage.bus')
+        dev_name=dev.GetProperty ('block.device')
+        dev_size=dev.GetProperty ('storage.size')
+        dev_size=(dev_size/1024/1024)
+        basename=os.path.basename(udi)
+        if dev_bus == "scsi":
+            print "%s. %s %sM %s \n" % (dev_count,dev_name,dev_size,basename)
+            dev_dict[str(dev_count)] = dev_name
+            dev_count = dev_count + 1
+    print "Enter Q to Quit"
+    dev_choice = raw_input("Which device? ")
+    while not dev_dict.has_key(dev_choice):
+        if dev_choice.lower() == "q":
+           print "Aborting"
+           sys.exit(1)
+        else:
+            print "%s is an invalid choice" % dev_choice
+            dev_choice = raw_input("Which device? ")
+    options.disk = dev_dict[dev_choice]
+
+cont = raw_input("Creating file system on %s, do you wish to continue (y/N) " % options.disk)
+if cont.lower() != "y":
+    print "Aborting"
+    sys.exit(1)
+
+isomount = mkdtemp()
+isomount_ret = subprocess.call(["mount", "-o", "loop", options.iso, isomount])
+if isomount_ret != 0:
+    fail("Error mounting %s" % options.iso)
+
+kernel="%s/isolinux/vmlinuz0" % isomount
+initrd="%s/isolinux/initrd0.img" % isomount
+squashfs="%s/LiveOS/squashfs.img" % isomount
+ext3fs="tftpboot/squashfs-root/LiveOS/ext3fs.img"
+shutil.copy(kernel,"tftpboot")
+shutil.copy(initrd,"tftpboot")
+e2label_ret = subprocess.call(["e2label", options.disk_label])
+if e2label_ret != 0:
+    fail("Error relabeling %s to %s" % (options.disk,options.disk_label))
+
+unsquash = subprocess.call(["unsquashfs", squashfs])
+
+# workaround until bug is fixed with squashfs -d option
+shutil.move("squashfs-root","tftpboot/squashfs-root")
+
+print "Placing embedded file system on %s" % options.disk
+dd_cmd="dd if=%s of=%s" % (ext3fs,options.disk)
+copy_iscsi_ret = subprocess.call(dd_cmd, shell=True)
+if copy_iscsi_ret != 0:
+    fail("Error copying to %s" % options.disk)
+
+umount_ret = subprocess.call(["umount", isomount])
+if umount_ret != 0:
+    fail("Error unmounting %s, continuing" % isomount)
+else:
+    os.rmdir(isomount)
+shutil.rmtree("tftpboot/squashfs-root")
+
+pxe_template = """
+
+# pxelinux configuration.
+DEFAULT pxeboot
+TIMEOUT 20
+PROMPT 0
+LABEL ovirt-node-iscsi
+        KERNEL /vmlinuz0
+        APPEND initrd=/initrd0.img ro root=LABEL=%(disk_label)s netroot=iscsi:%(user)s%(password)s@%(target)s::%(target_port)s::%(target_name)s ip=eth0:dhcp
+	ipappend 2
+ONERROR LOCALBOOT 0
+"""
+
+# insert empty values for unneeded variables in the pxe template
+if not options.user is None:
+    options.user = options.user + ":"
+else:
+    options.user = ""
+
+if not options.password is None:
+    options.password = options.password + ":"
+else:
+    options.password = ""
+
+if not options.reverse_user is None:
+    options.reverse_user = options.reverse_user + ":"
+else:
+    options.reverse_user = ""
+
+if not options.reverse_password is None:
+    options.reverse_password = options.reverse_password + ":"
+else:
+    options.reverse_password = ""
+
+os.mkdir("tftpboot/pxelinux.cfg")
+pxe_cfg = pxe_template % {
+            "disk_label": options.disk_label,
+            "target": options.target,
+            "target_port": options.targetport,
+            "target_name": options.targetname,
+            "user": options.user,
+            "password": options.password,
+            "reverse_user": options.reverse_user,
+            "reverse_password": options.reverse_password
+        }
+
+pxe_conf = open("tftpboot/pxelinux.cfg/default", 'w')
+pxe_conf.write(pxe_cfg)
+pxe_conf.close()
+
+if os.path.exists("/usr/share/syslinux/pxelinux.0"):
+    shutil.copy("/usr/share/syslinux/pxelinux.0","tftpboot")
+elif os.path.exists("/usr/lib/syslinux/pxelinux.0"):
+   shutil.copy("/usr/lib/syslinux/pxelinux.0","tftpboot")
+else:
+    print "Warning: You need to add pxelinux.0 to tftpboot/ subdirectory"
+
+print "Your iscsiroot has been setup on %s" % options.disk
+print ""
+print "Copy the tftpboot/ subdirectory to your tftpserver root directory"
+print "Set up your DHCP, TFTP and PXE server to serve /tftpboot/.../pxeboot.0"

@@ -16,16 +16,58 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
-SUBDIRS = gptsync
+
+SUBDIRS = \
+  gptsync	\
+  recipe
 
 EXTRA_DIST =			\
   .gitignore			\
   ovirt-node.spec		\
   ovirt-node.spec.in		\
-  ovirt-node-selinux.te		\
-  ovirt-node-selinux.fc		\
   images/grub-splash.xpm.gz	\
   images/syslinux-vesa-splash.jpg	\
+  nodeadmin/__init__.py         \
+  nodeadmin/adddomain.py        \
+  nodeadmin/addhost.py          \
+  nodeadmin/addpool.py          \
+  nodeadmin/addvolume.py        \
+  nodeadmin/changehost.py       \
+  nodeadmin/configscreen.py     \
+  nodeadmin/createmeter.py      \
+  nodeadmin/createnetwork.py    \
+  nodeadmin/createuser.py       \
+  nodeadmin/definenet.py        \
+  nodeadmin/destroynetwork.py   \
+  nodeadmin/domainconfig.py     \
+  nodeadmin/halworker.py        \
+  nodeadmin/hostconnect.py      \
+  nodeadmin/hostmenu.py         \
+  nodeadmin/libvirtworker.py    \
+  nodeadmin/listdomains.py      \
+  nodeadmin/listnetworks.py     \
+  nodeadmin/listpools.py        \
+  nodeadmin/mainmenu.py         \
+  nodeadmin/menuscreen.py       \
+  nodeadmin/migratedomain.py    \
+  nodeadmin/networkconfig.py    \
+  nodeadmin/netmenu.py          \
+  nodeadmin/nodeadmin.py        \
+  nodeadmin/nodemenu.py         \
+  nodeadmin/poolconfig.py       \
+  nodeadmin/removedomain.py     \
+  nodeadmin/removehost.py       \
+  nodeadmin/removepool.py       \
+  nodeadmin/removevolume.py     \
+  nodeadmin/startdomain.py      \
+  nodeadmin/startpool.py        \
+  nodeadmin/stopdomain.py       \
+  nodeadmin/stoppool.py         \
+  nodeadmin/storagemenu.py      \
+  nodeadmin/undefinenetwork.py  \
+  nodeadmin/userworker.py       \
+  nodeadmin/utils.py            \
+  nodeadmin/volumeconfig.py     \
   scripts/collectd.conf.in	\
   scripts/ovirt			\
   scripts/ovirt-awake		\
@@ -33,6 +75,7 @@ EXTRA_DIST =			\
   scripts/ovirt-config-boot-wrapper  \
   scripts/ovirt-config-collectd  \
   scripts/ovirt-config-hostname  \
+  scripts/ovirt-config-iscsi	\
   scripts/ovirt-config-logging  \
   scripts/ovirt-config-networking \
   scripts/ovirt-config-password \
@@ -50,6 +93,11 @@ EXTRA_DIST =			\
   scripts/ovirt-post		\
   scripts/ovirt-process-config  \
   scripts/ovirt-uninstall-node-stateful	\
+  tools/create-ovirt-iso-nodes	\
+  tools/edit-livecd	\
+  tools/livecd-iso-to-iscsi	\
+  tools/livecd-rpms	\
+  tools/livecd-setauth	\
   kinit/ovirt-kinit		\
   logrotate/ovirt-logrotate	\
   logrotate/ovirt-logrotate.conf

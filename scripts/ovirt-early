@@ -10,8 +10,12 @@
 . /etc/init.d/functions
 . /etc/init.d/ovirt-functions
 
+prog=ovirt-early
+lockfile=/var/lock/subsys/$prog
+
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
+EARLY_DIR=/etc/ovirt-early.d
 
 get_mac_addresses() {
     local DEVICE=$1
@@ -32,9 +36,12 @@ configure_from_network() {
     DEVICE=$1
 
     if [ -n "$DEVICE" ]; then
-        log "Configuring network Using interface $DEVICE"
-        # setup temporary interface to retrieve configuration
-        echo "network --device $DEVICE --bootproto dhcp" | nash
+        log "Configuring network"
+        if ! network_up ; then
+            log "Using interface $DEVICE"
+            # setup temporary interface to retrieve configuration
+            /sbin/dhclient $1
+        fi
         if [ $? -eq 0 ]; then
             # from network-scripts/ifup-post
             IPADDR=$(LC_ALL=C ip -o -4 addr ls dev ${DEVICE} | awk '{ print $4 ; exit }')
@@ -130,12 +137,13 @@ find_disk() {
 
 
 start() {
+    touch $lockfile
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
     #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
     #   ovirt_overcommit=<overcommit_ratio>
-    #   ovirt_local_boot
+    #   ovirt_upgrade
     #   ovirt_standalone
     #   ovirt_firstboot
     #   rescue
@@ -182,9 +190,9 @@ start() {
     # or a specific positive number in MB
     vol_data_size=
 
-    #   ovirt_local_boot
+    #   ovirt_upgrade
     # install/update oVirt Node image on the local installation target disk
-    local_boot=
+    upgrade=
 
     #   ovirt_overcommit=<overcommit_ratio>
     # set the swap size coefficient
@@ -305,8 +313,8 @@ start() {
             i=${i#ovirt_vol=}
             eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5; print "vol_data_size="$6;}')
             ;;
-            ovirt_local_boot*)
-            local_boot=1
+            ovirt_upgrade* |ovirt_local_boot*)
+            upgrade=1
             ;;
             ovirt_standalone*)
             standalone=1
@@ -369,7 +377,18 @@ start() {
             console=*)
             bootparams="$bootparams $i"
             ;;
+            ovirt_early=*)
+            i=${i#ovirt_early=}
+            ovirt_early=$(echo $i|tr ",:;" " ")
+            ;;
         esac
+    done
+
+    for hook in $ovirt_early; do
+        pre="$EARLY_DIR/pre-$hook"
+        if [ -e "$pre" ]; then
+            . "$pre"
+        fi
     done
 
     if [ -z "$ip_netmask" ]; then
@@ -379,7 +398,7 @@ start() {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size local_boot standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
@@ -426,13 +445,22 @@ start() {
             ovirt_store_config \
                 /etc/sysconfig/network-scripts/ifcfg-* \
                 $BONDING_MODCONF_FILE
-            if [ $local_boot = 1 ]; then
+            if [ $upgrade = 1 ]; then
                 # local disk installation for managed mode
                 mount_live
                 ovirt-config-boot /live "$bootparams"
             fi
         fi
     fi
+
+    rm -f $lockfile
+
+    for hook in $ovirt_early; do
+        post="$EARLY_DIR/post-$hook"
+        if [ -e "$post" ]; then
+            . "$post"
+        fi
+    done
 
     return 0
 }
@@ -480,6 +508,16 @@ case "$1" in
 
         test $? == 0 && success || failure
         echo
+        ;;
+    status)
+        status $prog
+        ;;
+    reload)
+        stop
+        start
+        ;;
+    stop)
+        stop
         ;;
     *)
         echo "Usage: ovirt-early {start}"

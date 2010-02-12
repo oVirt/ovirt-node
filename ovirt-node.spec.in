@@ -1,19 +1,15 @@
 %define product_family oVirt Node
 %define beta Beta
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+
 
 Summary:        The oVirt Node daemons/scripts
 Name:           ovirt-node
 Version:        @VERSION@
-Release:        1%{?dist}%{?extra_release}
+Release:        0%{?dist}%{?extra_release}
 Source0:        %{name}-%{version}.tar.gz
 License:        GPLv2+
 Group:          Applications/System
-
-%define selinux_variants mls strict targeted minimum
-%define selinux_policyver %(sed -n 's,.*selinux-policy-\([^/]*\)/.*,\1,p' /usr/share/selinux/devel/policyhelp)
-%define modulename %{name}-selinux
-Source1:        %{modulename}.te
-Source2:        %{modulename}.fc
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
@@ -21,13 +17,15 @@ Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 BuildRequires:  libvirt-devel >= 0.5.1
 BuildRequires:  dbus-devel hal-devel
+BuildRequires:  python-devel
+BuildRequires:  python-setuptools
 Requires:       libvirt >= 0.6.3
 Requires:       augeas >= 0.3.5
 Requires:       libvirt-qpid >= 0.2.14-3
 Requires:       hal
 Requires:       collectd-virt
 Requires:       wget
-Requires:       cyrus-sasl-gssapi cyrus-sasl cyrus-sasl-lib
+Requires:       cyrus-sasl-gssapi cyrus-sasl >= 2.1.22
 Requires:       iscsi-initiator-utils
 Requires:       ntp
 Requires:       nfs-utils
@@ -44,98 +42,48 @@ Requires:       nc
 Requires:       grub
 Requires:       /usr/sbin/crond
 Requires:       anyterm
+Requires:       newt-python
+Requires:       libuser-python >= 0.56.9
+Requires:       dbus-python
+Requires:       python-IPy
+
 ExclusiveArch:  %{ix86} x86_64
 
 %define app_root %{_datadir}/%{name}
 
 %description
 Provides a series of daemons and support utilities to allow an
-oVirt Node to interact with the oVirt Server.
+oVirt Node to interact with the oVirt Server.  This package
+should only be installed on the oVirt Node machine.
 
-%package stateless
-Summary:        oVirt Node for running as embedded hypervisor
+%package tools
+Summary:        oVirt Node tools for building and running an oVirt Node image
 Group:          Applications/System
-Requires:       %{name} = %{version}-%{release}
-Conflicts:      %{name}-stateful
-ExclusiveArch:  %{ix86} x86_64
-
-%description stateless
-Provides the oVirt Node functionality needed as part of the
-ovirt-node-image creation.  This provides a stateless oVirt Node
-that runs as a livecd.
-
-%package stateful
-Summary:        oVirt Node for running on Fedora Hosts
-Group:          Applications/System
-Requires:       %{name} = %{version}-%{release}
-Conflicts:      %{name}-stateless
-ExclusiveArch:  %{ix86} x86_64
-
-%description stateful
-Provides the oVirt Node functionality needed to convert an existing
-host into a Node in a stateful manner.  Presently intended for use on
-the host running the oVirt Appliance.
-
-%package logos
-Summary:        oVirt Node Logos
-Group:          System Environment/Base
 BuildArch:      noarch
-Obsoletes:      redhat-logos
-Provides:       redhat-logos = 10.0.1-1
-Provides:       system-logos = 10.0.1-1
-Conflicts:      fedora-logos
-Conflicts:      generic-logos
-Conflicts:      fedora-logos
-Conflicts:      anaconda-images <= 10
-Conflicts:      redhat-artwork <= 5.0.5
+BuildRequires:  pykickstart  >= 1.54
+Requires:       livecd-tools >= 020-2
 
-%description logos
-The ovirt-logos package contains various image files which can be
-used by the bootloader, anaconda, and other related tools.
+%define tools_root %{_datadir}/ovirt-node-tools
 
-%package release
-Summary:	%{product_family} release file
-Group:		System Environment/Base
-Obsoletes:	redhat-release
-Provides:	redhat-release
-%description release
-%{product_family} release files.
-
-%package selinux
-Summary:        SELinux policy module supporting ovirt-node
-Group:          System Environment/Base
-BuildRequires:  checkpolicy, selinux-policy-devel, hardlink
-%if "%{selinux_policyver}" != ""
-Requires:       selinux-policy >= %{selinux_policyver}
-%endif
-Requires:       %{name} = %{version}-%{release}
-Requires(post):   /usr/sbin/semodule, /sbin/restorecon
-Requires(postun): /usr/sbin/semodule, /sbin/restorecon
-
-%description selinux
-SELinux policy module supporting ovirt-node
+%description tools
+The oVirt-node-tools package provides recipe (ks files), client tools,
+documentation for building and running an oVirt Node image. This package
+is not to be installed on the oVirt-Node, however on a development machine
+to help in deployment on the node.
 
 %prep
 %setup -q
 
-mkdir SELinux
-cp -p %{SOURCE1} %{SOURCE2} SELinux
-
 %build
 %configure
-make
-
-cd SELinux
-for selinuxvariant in %{selinux_variants}; do
-  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile
-  mv %{modulename}.pp %{modulename}.pp.${selinuxvariant}
-  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile clean
-done
-cd -
+make %{?ovirt_cache_dir: OVIRT_CACHE_DIR=%{ovirt_cache_dir}} \
+     %{?ovirt_local_repo: OVIRT_LOCAL_REPO=%{ovirt_local_repo}} \
+     %{?ovirt_url: OVIRT_URL=%{ovirt_url}}
 
 %install
 %{__rm} -rf %{buildroot}
-# FIXME move installs into makefile
+make install DESTDIR=%{buildroot}
+# FIXME move all installs into makefile
 %{__install} -d -m0755 %{buildroot}%{_sbindir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/chkconfig.d
@@ -144,12 +92,14 @@ cd -
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.hourly
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
+%{__install} -d -m0755 %{buildroot}%{python_sitelib}/nodeadmin
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-boot %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-boot-wrapper %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-collectd %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-hostname %{buildroot}%{_sbindir}
+%{__install} -p -m0755 scripts/ovirt-config-iscsi %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-logging %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-networking %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-password %{buildroot}%{_sbindir}
@@ -157,17 +107,50 @@ cd -
 %{__install} -p -m0755 scripts/ovirt-config-storage %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-config-uninstall %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/ovirt-process-config %{buildroot}%{_sbindir}
-%{__install} -D -m0755 scripts/ovirt-install-node-stateful %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-install-node-stateless %{buildroot}%{_sbindir}
-%{__install} -D -m0755 scripts/ovirt-uninstall-node-stateful %{buildroot}%{_sbindir}
 %{__install} -D -m0755 scripts/ovirt-config-view-logs %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/persist %{buildroot}%{_sbindir}
 %{__install} -p -m0755 scripts/unpersist %{buildroot}%{_sbindir}
 
+%{__install} -p -m0644 nodeadmin/__init__.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/configscreen.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/menuscreen.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/utils.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0755 nodeadmin/nodeadmin.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/mainmenu.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0644 nodeadmin/nodemenu.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/adddomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/domainconfig.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/listdomains.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/migratedomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/removedomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/startdomain.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/stopdomain.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0644 nodeadmin/netmenu.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/networkconfig.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/definenet.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/createnetwork.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/destroynetwork.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/undefinenetwork.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0755 nodeadmin/addhost.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/changehost.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/hostmenu.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0755 nodeadmin/removehost.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0755 nodeadmin/createuser.py %{buildroot}%{python_sitelib}/nodeadmin
+
+%{__install} -p -m0644 nodeadmin/halworker.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/libvirtworker.py %{buildroot}%{python_sitelib}/nodeadmin
+%{__install} -p -m0644 nodeadmin/userworker.py %{buildroot}%{python_sitelib}/nodeadmin
+
 # gptsync
-%{__install} -p -m0755 gptsync/gptsync %{buildroot}%{_sbindir}
-%{__install} -p -m0755 gptsync/showpart %{buildroot}%{_sbindir}
-#
+#%{__install} -p -m0755 gptsync/gptsync %{buildroot}%{_sbindir}
+#%{__install} -p -m0755 gptsync/showpart %{buildroot}%{_sbindir}
+# in Makefile now
 
 %{__install} -p -m0755 scripts/ovirt-functions %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
@@ -180,29 +163,23 @@ cd -
 %{__install} -p -m0755 kinit/ovirt-kinit %{buildroot}%{_sysconfdir}/cron.hourly
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
-%{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d
+%{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
+
+# install the admin tools
+python nodeadmin/setup.py install --root %{buildroot}
+# rm -rf %{buildroot}%{python_sitelib}/nodeadmin-@VERSION@*
 
 echo "oVirt Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
 mkdir -p %{buildroot}/%{_sysconfdir}/default
-touch %{buildroot}/%{_sysconfdir}/default/ovirt
-
-cd SELinux
-for selinuxvariant in %{selinux_variants}; do
-  install -d %{buildroot}%{_datadir}/selinux/${selinuxvariant}
-  install -p -m 644 %{modulename}.pp.${selinuxvariant} \
-  %{buildroot}%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
-done
-cd -
-
-/usr/sbin/hardlink -cv %{buildroot}%{_datadir}/selinux
+echo "# File where default partitioning info is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
 
 # ovirt-logos
 # should be ifarch i386
 mkdir -p %{buildroot}/boot/grub
-install -p -m 644 images/grub-splash.xpm.gz %{buildroot}/boot/grub/splash.xpm.gz
+install -p -m 644 images/grub-splash.xpm.gz %{buildroot}%{app_root}
 # end i386 bits
 mkdir -p %{buildroot}/usr/lib/anaconda-runtime
-install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}/usr/lib/anaconda-runtime
+install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}%{app_root}
 # ovirt-logos
 
 # release files
@@ -222,12 +199,26 @@ ln -s ovirt-release %{buildroot}/etc/system-release
 %{__ln_s} ../..%{_sbindir}/ovirt-config-storage %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"00_Disk Partitioning"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-password %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"05_Administrator Password"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-hostname %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"10_Set Hostname"
+%{__ln_s} ../..%{_sbindir}/ovirt-config-iscsi %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"12_iSCSI Initiator Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-collectd %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"35_Collectd Setup"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-view-logs %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"90_View logs"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
 %{__ln_s} ../..%{_sbindir}/ovirt-config-uninstall %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Uninstall node"
+
+# ovirt-early vendor hook dir
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-early.d
+
+# ovirt-node-tools
+%{__install} -d -m0755 %{buildroot}%{tools_root}
+#%{__install} -p -m0644 recipe/*.ks %{buildroot}%{tools_root}
+%{__install} -p -m0755 tools/create-ovirt-iso-nodes %{buildroot}%{_sbindir}
+%{__install} -p -m0755 tools/edit-livecd %{buildroot}%{_sbindir}
+%{__install} -p -m0755 tools/livecd-setauth %{buildroot}%{_sbindir}
+%{__install} -p -m0755 tools/livecd-rpms %{buildroot}%{_sbindir}
+#%{__install} -p -m0755 tools/get-ovirt-node-image %{buildroot}%{_sbindir}
+#%{__install} -p -m0755 tools/generate-ovirt-node-pxe-tree %{buildroot}%{_sbindir}
 
 
 %clean
@@ -236,61 +227,64 @@ ln -s ovirt-release %{buildroot}/etc/system-release
 %post
 # Setup basic collectd configuration
 sed '/<Plugin network>/,/<\/Plugin>/d' /etc/collectd.conf.in > /etc/collectd.conf
-
-%post stateless
 /sbin/chkconfig --add ovirt-early
 /sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
 /sbin/chkconfig --add ovirt-post
 
-%preun stateless
-if [ "$1" = 0 ] ; then
-  /sbin/chkconfig --del ovirt-early
-  /sbin/chkconfig --del ovirt-firstboot
-  /sbin/chkconfig --del ovirt
-  /sbin/chkconfig --del ovirt-post
+%preun
+if [ $1 = 0 ] ; then
+    /sbin/service ovirt-early stop >/dev/null 2>&1
+    /sbin/service ovirt-firstboor stop >/dev/null 2>&1
+    /sbin/service ovirt stop >/dev/null 2>&1
+    /sbin/service ovirt-post stop >/dev/null 2>&1
+    /sbin/chkconfig --del ovirt-early
+    /sbin/chkconfig --del ovirt-firstboot
+	/sbin/chkconfig --del ovirt
+	/sbin/chkconfig --del ovirt-post
 fi
 
-%post selinux
-for selinuxvariant in %{selinux_variants}; do
-  /usr/sbin/semodule -s ${selinuxvariant} -i \
-    %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
-done
 
-%postun selinux
-if [ $1 -eq 0 ] ; then
-  for selinuxvariant in %{selinux_variants}; do
-    /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
-  done
-fi
+%files tools
+%defattr(0644,root,root,0755)
+%doc README COPYING
+%{tools_root}/*.ks
+%defattr(0755,root,root,0755)
+%{_sbindir}/create-ovirt-iso-nodes
+%{_sbindir}/edit-livecd
+%{_sbindir}/livecd-setauth
+%{_sbindir}/livecd-rpms
+#%{_sbindir}/get-ovirt-node-image
+#%{_sbindir}/generate-ovirt-node-pxe-tree
 
-%files release
+
+%files
 %defattr(-,root,root)
-%attr(0644,root,root) /etc/ovirt-release
-/etc/redhat-release
-/etc/system-release
+%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/ovirt-release
+%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/default/ovirt
+%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/redhat-release
+%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/system-release
 %config(noreplace) %attr(0644,root,root) /etc/issue
 %config(noreplace) %attr(0644,root,root) /etc/issue.net
 
-%files selinux
-%defattr(-,root,root,0755)
-%doc SELinux/*
-%{_datadir}/selinux/*/%{modulename}.pp
+%config(noreplace) %{_sysconfdir}/logrotate.d/ovirt-node
+%config(noreplace) %{_sysconfdir}/cron.d/ovirt-logrotate
 
-%files logos
-%defattr(-, root, root)
+%{_sysconfdir}/ovirt-config-boot.d
+%{_sysconfdir}/ovirt-config-setup.d
+%config(noreplace) %{_sysconfdir}/collectd.conf.in
+
 %doc COPYING
 # should be ifarch i386
-/boot/grub/splash.xpm.gz
+%{app_root}/grub-splash.xpm.gz
 # end i386 bits
-/usr/lib/anaconda-runtime/*.jpg
+%{app_root}/syslinux-vesa-splash.jpg
 
-%files stateless
-%defattr(-,root,root,0755)
 %{_sbindir}/ovirt-awake
 %{_sbindir}/ovirt-config-boot
 %{_sbindir}/ovirt-config-boot-wrapper
 %{_sbindir}/ovirt-config-collectd
+%{_sbindir}/ovirt-config-iscsi
 %{_sbindir}/ovirt-config-hostname
 %{_sbindir}/ovirt-config-logging
 %{_sbindir}/ovirt-config-networking
@@ -305,31 +299,47 @@ fi
 %{_sbindir}/showpart
 %{_sbindir}/persist
 %{_sbindir}/unpersist
+
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
+%attr(0644,root,root) %{_initrddir}/ovirt-functions
 %config %{_sysconfdir}/cron.hourly/ovirt-kinit
-%config %{_sysconfdir}/logrotate.d/ovirt-logrotate.conf
-%config %{_sysconfdir}/cron.d/ovirt-logrotate
-%{_sysconfdir}/ovirt-config-boot.d
-%{_sysconfdir}/ovirt-config-setup.d
+%{_sysconfdir}/ovirt-early.d
 
-%files stateful
-%defattr(-,root,root,0755)
-%{_sbindir}/ovirt-install-node-stateful
-%{_sbindir}/ovirt-uninstall-node-stateful
+%{_bindir}/nodeadmin
+%{_bindir}/addpool
+%{_bindir}/addvm
+%{_bindir}/addvolume
+%{_bindir}/startvm
+%{_bindir}/stopvm
+%{_bindir}/rmvm
+%{_bindir}/listpools
+%{_bindir}/migratevm
+%{_bindir}/listvms
+%{_bindir}/rmpool
+%{_bindir}/rmvolume
+%{_bindir}/startpool
+%{_bindir}/stoppool
+%{_bindir}/definenet
+%{_bindir}/createnet
+%{_bindir}/destroynet
+%{_bindir}/undefinenet
+%{_bindir}/listnets
+%{_bindir}/createuser
 
-%files
-%defattr(-,root,root,0755)
-%{_sbindir}/ovirt-awake
-%{_initrddir}/ovirt-functions
-%defattr(-,root,root,0644)
-%{_sysconfdir}/collectd.conf.in
-%config %attr(0644,root,root) %{_sysconfdir}/ovirt-release
-%config %attr(0644,root,root) %{_sysconfdir}/default/ovirt
+%{python_sitelib}/nodeadmin
+%{python_sitelib}/nodeadmin-@VERSION@*
 
 %changelog
+* Wed Oct 07 2009 David Huff <dhuff@redhat.com> - 1.0.3-4
+- Added ovirt-node-tools subpackage
+
+* Thu Jun 23 2009 David Huff <dhuff@redhat.com> - 1.0.3
+- Clean up spec for inclusion in Fedora
+- Removed subpackages, stateful, stateless, logos, and selinux
+
 * Thu Dec 11 2008 Perry Myers <pmyers@redhat.com> - 0.96
 - Subpackage stateful/stateless to separate out functionality for
   embedded Node and Node running as part of already installed OS

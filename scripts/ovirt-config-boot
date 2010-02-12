@@ -29,9 +29,28 @@ ovirt_boot_setup() {
     local disk2
     local partN=-1
     log "installing the image."
-    mount_boot
+    if [ -h /dev/disk/by-label/Boot ]; then
+        mount_boot
+        mountpoint /boot
+        if [ $? -ne 0 ] ; then
+            log "Boot partition not available"
+            return 1
+        fi
+        grub_dev_label="Boot"
+        # Grab OVIRT_ISCSI VARIABLES from boot partition for upgrading
+        # file created only if OVIRT_ISCSI_ENABLED=y
+        if [ -f /boot/ovirt ]; then
+            . /boot/ovirt
+        iscsiadm -p $OVIRT_ISCSI_TARGET_IP:$OVIRT_ISCSI_TARGET_PORT -m discovery -t sendtargets
+        log "Restarting iscsi service"
+        service iscsi restart
+        fi
+    else
+        grub_dev_label="RootBackup"
+    fi
+
     # check that /boot mounted ok and find partition number for GRUB
-    eval $(readlink -f /dev/disk/by-label/BOOT|awk {'
+    eval $(readlink -f /dev/disk/by-label/$grub_dev_label|awk {'
         print "disk=" substr($1,1,length($1)-1);
         print "disk2=" substr($1,1,length($1)-2);
         partN=substr($1,length($1),1); partN--;
@@ -39,64 +58,91 @@ ovirt_boot_setup() {
     }')
     rc=$?
     if [ $rc -ne 0 -o $partN -lt 0 ]; then
-      log "unable to determine boot partition"
+      log "unable to determine Root partition"
       return 1
     fi
 
-    mountpoint /boot
-    if [ $? -ne 0 ] ; then
-      log "boot partition not available"
-      return 1
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+        mount_liveos
+        mountpoint /liveos
+        if [ $? -ne 0 ] ; then
+          log "Root partition not available"
+          return 1
+        fi
+
+        if [ ! -e "$disk" ]; then
+            # e.g. c0d0p1
+            disk="$disk2"
+        fi
+        # prepare Root partition update
+        candidate=
+        if [ -e /dev/disk/by-label/RootBackup ]; then
+            candidate=RootBackup
+        elif [ -e /dev/disk/by-label/RootUpdate ]; then
+            candidate=RootUpdate
+        elif [ -e /dev/disk/by-label/RootNew ]; then
+            candidate=RootNew
+        fi
+        if [ -z "$candidate" ]; then
+            rc=1
+        elif [ "$candidate" = "RootNew" ]; then
+            umount /liveos
+            rc=0
+        else
+            candidate_dev=$(readlink -f /dev/disk/by-label/$candidate)
+            e2label $candidate_dev RootNew
+            rc=$?
+        fi
+        if [ $rc -ne 0 ]; then
+          log "root partition not available."
+          log "$(ls -al /dev/disk/by-label)"
+          return $rc
+        fi
+
+        mount $candidate_dev /liveos
+
+        rm -rf /liveos/LiveOS
+        mkdir -p /liveos/LiveOS
+
+    fi
+        # install oVirt Node image for local boot
+        if [ -e "$live/syslinux" ]; then
+          syslinux=syslinux
+        elif [ -e "$live/isolinux" ]; then
+          syslinux=isolinux
+        else
+          syslinux=
+        fi
+
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        initrd_dest="/boot"
+        grub_dir="/boot/grub"
+        grub_prefix="/grub"
+    else
+        initrd_dest="/liveos"
+        grub_dir="/liveos/boot/grub"
+        grub_prefix="/boot/grub"
     fi
 
-    if [ ! -e "$disk" ]; then
-        # e.g. c0d0p1
-        disk="$disk2"
-    fi
-    mkdir -p /liveos
-    # prepare Root partition update
-    candidate=
-    if [ -e /dev/HostVG/RootBackup ]; then
-        candidate=RootBackup
-    elif [ -e /dev/HostVG/RootUpdate ]; then
-        candidate=RootUpdate
-    elif [ -e /dev/HostVG/RootNew ]; then
-        candidate=RootNew
-    fi
-    if [ -z "$candidate" ]; then
-        rc=1
-    elif [ "$candidate" = "RootNew" ]; then
-        umount /liveos
-        rc=0
-    else
-        lvrename HostVG $candidate RootNew
-        rc=$?
-    fi
-    if [ $rc -ne 0 ]; then
-      log "root partition not available."
-      log "$(lvdisplay -c)"
-      return $rc
-    fi
-    mount /dev/HostVG/RootNew /liveos
-    # install oVirt Node image for local boot
-    if [ -e "$live/syslinux" ]; then
-      syslinux=syslinux
-    elif [ -e "$live/isolinux" ]; then
-      syslinux=isolinux
-    else
-      syslinux=
-    fi
-    rm -rf /boot/grub
-    rm -rf /liveos/LiveOS
-    mkdir -p /boot/grub
-    mkdir -p /liveos/LiveOS
-    cp -p $live/LiveOS/squashfs.img /liveos/LiveOS \
-    && cp -p $live/$syslinux/vmlinuz0 /boot
+    rm -rf  $grub_dir
+    mkdir -p $grub_dir
+
+    cp -p $live/$syslinux/vmlinuz0 $initrd_dest
     rc=$?
     if [ $rc -ne 0 ]; then
-      log "image copy failed."
-      return $rc
+        log "kernel image copy failed."
+        return $rc
     fi
+
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+        cp -p $live/LiveOS/squashfs.img /liveos/LiveOS
+        rc=$?
+        if [ $rc -ne 0 ]; then
+          log "squashfs image copy failed."
+          return $rc
+        fi
+    fi
+
     # append LVM support to the livecd initramfs
     tmpdir=$(mktemp -d)
     cd $tmpdir
@@ -107,7 +153,7 @@ ovirt_boot_setup() {
         # Fedora 10 mkliveinitrd
         init_script=sbin/real-init
     fi
-    sed -i '/^\/sbin\/udev.*settle/ a \
+    sed -i '/^\/sbin\/udev.*trigger/ a \
 echo SCSI wait for scans\
 /sbin/modprobe scsi_wait_scan\
 /sbin/modprobe -r scsi_wait_scan\
@@ -125,8 +171,6 @@ set -e\
 ' $init_script
     # fix emergency shell
     sed -i 's/^    bash$/    bash < \/dev\/console/' $init_script
-    # do not fail if device node already exists
-    sed -i 's/mknod.*$/& || :/' $init_script
     mkdir -p bin
     bit=
     if [ -e /lib64 ]; then
@@ -140,17 +184,23 @@ set -e\
         # lvm is not static in Fedora
         cp /lib$bit/libreadline.so.5 /lib$bit/libncurses.so.5 lib$bit
     fi
+
     find $init_script bin/lvm lib$bit -type f |
         cpio -H newc --quiet -o |
         gzip -9 |
-        cat $live/$syslinux/initrd0.img - > /boot/initrd0.img
+        cat $live/$syslinux/initrd0.img - > $initrd_dest/initrd0.img
 
     version=$(rpm -q --qf '%{version}' ovirt-node)
     release=$(rpm -q --qf '%{release}' ovirt-node)
     # reorder tty0 to allow both serial and phys console after installation
-    bootparams="ro root=/dev/HostVG/Root roottypefs=ext3 console=tty0 \
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
+                    netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
+    else
+        bootparams="ro root=live:LABEL=Root roottypefs=ext3 console=tty0 \
                 $(echo $bootparams | sed s/console=tty0//g)"
-    cat > /boot/grub/grub.conf << EOF
+    fi
+    cat > $grub_dir/grub.conf << EOF
 default=0
 timeout=5
 hiddenmenu
@@ -159,11 +209,11 @@ title oVirt Node (${version}-${release})
     kernel /vmlinuz0 $bootparams
     initrd /initrd0.img
 EOF
-    echo "(hd0) $disk" > /boot/grub/device.map
-    ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 /boot/grub )
-    grub --device-map=/boot/grub/device.map <<EOF
+    echo "(hd0) $disk" > $grub_dir/device.map
+    ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 $grub_dir )
+    grub --device-map=$grub_dir/device.map <<EOF
 root (hd0,$partN)
-setup --prefix=/grub (hd0)
+setup --prefix=$grub_prefix (hd0)
 EOF
     rc=$?
     if [ $rc -ne 0 ]; then
@@ -171,16 +221,17 @@ EOF
         return $rc
     fi
 
-    # install iscsi initiator name for this machine
-    echo "InitiatorName=$(iscsi-iname)" > /etc/iscsi/initiatorname.iscsi
-    ovirt_store_config /etc/iscsi/initiatorname.iscsi
-
-    umount /liveos
-    umount /boot
-    # mark new Root ready to go, reboot() in ovirt-function switches it to active
-    lvrename HostVG RootNew RootUpdate
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+        umount /liveos
+        # mark new Root ready to go, reboot() in ovirt-function switches it to active
+        e2label $candidate_dev RootUpdate
+    fi
 
     rm -rf $tmpdir
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        # copy default for when Root/HostVG is inaccessible(iscsi upgrade
+        cp $OVIRT_DEFAULTS /boot
+    fi
     log "done."
 }
 
@@ -216,7 +267,12 @@ if [ $rc -eq 0 -a "$doreboot" = "yes" ]; then
     disable_firstboot
     ovirt_store_firstboot_config
     stop_log
-    reboot
+
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+        reboot
+    else
+        /sbin/reboot
+    fi
 fi
 stop_log
 exit $rc
