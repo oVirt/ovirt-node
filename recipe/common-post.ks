@@ -152,6 +152,7 @@ rm -f /etc/cron.daily/logrotate
 touch /var/lib/random-seed
 mkdir /live
 mkdir /boot
+mkdir -p /var/cache/multipathd
 sed -i '/^files	\/etc*/ s/^/#/' /etc/rwtab
 cat > /etc/rwtab.d/ovirt <<EOF
 dirs	/var/lib/multipath
@@ -162,7 +163,17 @@ files	/var/cache/hald
 files	/var/empty/sshd/etc/localtime
 files	/var/lib/dbus
 files	/var/lib/libvirt
+files   /var/lib/multipath
+files   /var/cache/multipathd
 empty	/mnt
 empty	/live
 empty	/boot
 EOF
+
+
+#use all hard-coded defaults for multipath
+cat /dev/mull > /etc/multipath.conf
+
+#lvm.conf should use /dev/mapper and /dev/sdX devices
+# and not /dev/dm-X devices
+sed -i 's/preferred_names = \[ \]/preferred_names = [ "^\/dev\/mapper", "^\/dev\/[hsv]d" ]/g' /etc/lvm/lvm.conf

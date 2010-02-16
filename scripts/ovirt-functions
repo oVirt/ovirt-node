@@ -332,7 +332,7 @@ unmount_logging_services() {
     cd /etc/init.d
     for prg in $(lsof -Fc +D /var/log|grep ^c|sort -u); do
         srv=$(grep -l ${prg#c}$ *)
-        service $srv stop
+        service $srv stop 6>&- 7>&-
         services="$services $srv"
     done
     # debugging help
@@ -364,7 +364,7 @@ mount_logging() {
         rmdir $log2
         restorecon -rv /var/log
         for srv in $services; do
-            service $srv start
+            service $srv start 6>&- 7>&-
         done
 
         return 0
@@ -392,7 +392,7 @@ unmount_logging() {
         return $rc
     fi
     for srv in $services; do
-        service $srv start
+        service $srv start 6>&- 7>&-
     done
 
     return 0

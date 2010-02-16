@@ -34,6 +34,68 @@ logging_min_size=5
 data_min_size=5
 swap_min_size=5
 
+# return sd name for given #:# identifier
+get_sd_name() {
+    local id=$1
+    local device_var=$2
+    for device in $(ls /sys/block)
+    do
+        if [[ $id = $(cat /sys/block/$device/dev) ]]; then
+            eval $device_var=$device
+            return
+        fi
+    done
+    eval $device_var=1
+}
+
+# gets the dependent block devices for multipath devices
+get_multipath_devices() {
+    local mpath_device=mpath-$(basename $1)
+    local deplist_var=$2
+    local deplist=""
+
+    #get dependencies for multipath device
+    local deps=$(dmsetup deps -u $mpath_device \
+    | sed -r 's/\(([0-9]+), ([0-9]+)\)/\1:\2/g' \
+    | sed 's/ /\n/g' | grep [0-9]:[0-9] )
+
+    local device=""
+    for dep in $deps
+    do
+        local device=""
+        get_sd_name $dep device
+        if [[ ! $device = 1 ]]; then
+            if [[ $deplist = "" ]]; then
+                deplist=$device
+            else
+                deplist="$deplist $device"
+            fi
+        fi
+    done
+
+    eval $deplist_var='$deplist'
+}
+
+#get Multipath device for given /dev/sdX device
+#return sdX device if no multipath device
+translate_multipath_device() {
+    #trim so that only sdX is stored, but support passing /dev/sdX
+    local dev=$1
+    local mpath_var=$2
+
+    local basedev=$(basename $dev)
+
+    local mpath_device=$(multipath -ll $dev |grep -n . | \
+        grep "^1:" |awk '{print $1}' | sed 's/^1:/\/dev\/mapper\//g')
+
+    if [ -z "$mpath_device" ]; then
+        mpath_device=$dev
+    fi
+
+    eval $mpath_var=$mpath_device
+}
+
+
 get_drive_size()
 {
     local drive=$1
@@ -53,8 +115,12 @@ get_drive_size()
     fi
     if [ -z "$udi" ]; then
         # If hal didn't find the device, it could be a virtio block device
+        # or a multipath device
         # In this case, use sfdisk -s to get the size
-        size=$(sfdisk -s $drive)
+        size=$(sfdisk -s $drive 2>/dev/null)
+        if [ -z "$size" ]; then
+            size=0
+        fi
         size=$(echo "scale=0; $size * 1024" | bc -l)
     else
         size=$(hal-get-property --udi "$udi" --key storage.size)
@@ -69,7 +135,7 @@ get_drive_size()
 
     size=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
     echo "$drive ($size MB)"
-    echo "Disk Identifier: $(basename "$udi")"
+    test -z "$udi" || echo "Disk Identifier: $(basename "$udi")"
     if [ -n "$space_var" ]; then
         eval $space_var=$size
     fi
@@ -151,6 +217,29 @@ check_partition_sizes()
     return $rc
 }
 
+manual_input()
+{
+    local manual_device
+    local return_var=$1
+    while true; do
+        read -rp "Enter disk device path: " manual_device
+        if [ -z "$device" ]; then
+            return 1
+        fi
+        translate_multipath_device $manual_device manual_device
+        eval $return_var="$manual_device"
+        if [ -n "$manual_device" ]; then
+            if [ -b "$(readlink -f $device)" ]; then
+                return 0
+            fi
+        else
+            echo "Aborting."
+            return 1
+        fi
+
+    done
+}
+
 # Find a usable/selected storage device.
 # If there are none, give a diagnostic and return nonzero.
 # If there is just one, e.g., /dev/sda, treat it as selected (see below).
@@ -161,7 +250,7 @@ check_partition_sizes()
 get_dev_name()
 {
     local udi_list=$(hal-find-by-capability --capability storage)
-    local byid_list=$(find /dev/disk/by-id -mindepth 1 -not -name '*-part*')
+    local byid_list=$(find /dev/disk/by-id -mindepth 1 -not -name '*-part*' 2>/dev/null)
     if test -z "$udi_list" -a -z "$byid_list"; then
         warn "ERROR: no usable storage devices detected"
         return 1
@@ -193,7 +282,33 @@ get_dev_name()
 
     # FIXME: workaround for detecting virtio block devices
     devices="$devices $(ls /dev/vd? 2> /dev/null | xargs)"
-    devices=$(echo $devices | tr ' ' '\n' | sort -u | xargs)
+
+    # FIXME: workaround for detecting cciss devices
+    for dev in $(ls /dev/cciss 2>/dev/null); do
+        if [[ ! $dev =~ p[0-9]+\$ ]]; then
+            devices="$devices /dev/cciss/dev"
+        fi
+    done
+
+    # Include mulitpath devices
+    local devs_to_remove
+    for dev in $(dmsetup ls --target=multipath | awk '{print $1}'); do
+        devices="$devices /dev/mapper/$dev"
+        local sd_devs=""
+        get_multipath_devices $dev sd_devs
+        devs_to_remove="${devs_to_remove} ${sd_devs}"
+    done
+
+    # Remove /dev/sd* devices that are part of a multipath device
+    local dev_list
+    for dev in $devices
+    do
+        if [[ ! "$devs_to_remove" =~ "$(basename $dev)" ]]; then
+            dev_list="$dev_list $dev"
+        fi
+    done
+
+    devices=$(echo $dev_list | tr ' ' '\n' | sort -u | xargs)
 
     local num_devices=$(echo "$devices" | wc -w)
     # If there's only one device, use it.
@@ -209,9 +324,10 @@ get_dev_name()
         get_drive_size $d >&2
     done
     local choices="$devices Abort"
-    select device in $choices
+    select device in $choices "Manual Selection"
     do
         test "$device" = Abort && return 1
+        test "$device" = "Manual selection" && manual_input device
         test -z "$device" && continue
         echo "$device"
         return 0
@@ -375,6 +491,17 @@ wipe_lvm_on_disk()
     done
 }
 
+
+reread_partitions()
+{
+    local drive=$1
+    if [[ $drive =~ "^/dev/mapper" ]]; then
+        kpartx -a -p p $drive
+    else
+        blockdev --rereadpt $drive
+    fi
+}
+
 perform_partitioning()
 {
     if [[ -z "$HOSTVGDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
@@ -404,15 +531,20 @@ perform_partitioning()
         log "Partitioning drive: $BOOTDRIVE"
         log "Wiping old boot sector"
         dd if=/dev/zero of=$BOOTDRIVE bs=1024K count=1
-        blockdev --rereadpt $BOOTDRIVE
+        reread_partitions $BOOTDRIVE
         partprobe -s $BOOTDRIVE
         log "Creating boot partition"
         parted $BOOTDRIVE -s "mklabel ${LABEL_TYPE}"
         parted $BOOTDRIVE -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+        reread_partitions $BOOTDRIVE
+        partboot=$BOOTDRIVE1
+        if [ ! -e $partboot ]; then
+            partboot=${BOOTDRIVE}p1
+        fi
         # sleep to ensure filesystems are created before continuing
         sleep 10
-        mke2fs ${BOOTDRIVE}1 -L Boot
-        tune2fs -c 0 -i 0 ${BOOTDRIVE}1
+        mke2fs ${partboot} -L Boot
+        tune2fs -c 0 -i 0 ${partboot}
         log "Completed!"
         return
     fi
@@ -422,7 +554,7 @@ perform_partitioning()
  # FIXME: save a backup copy, just in case?
     log "Wiping old boot sector"
     dd if=/dev/zero of=$ROOTDRIVE bs=1024K count=1
-    blockdev --rereadpt $ROOTDRIVE
+    reread_partitions $ROOTDRIVE
     partprobe -s $ROOTDRIVE
     log "Labeling Drive: $ROOTDRIVE"
     parted $ROOTDRIVE -s "mklabel ${LABEL_TYPE}"
@@ -435,12 +567,19 @@ perform_partitioning()
     let RootBackup_end=${ROOT_SIZE}*2
     parted $ROOTDRIVE -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
     parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+    reread_partitions $ROOTDRIVE
+    partroot=${ROOTDRIVE}1
+    partrootbackup=${ROOTDRIVE}2
+    if [ ! -e $partroot ]; then
+        partroot=${ROOTDRIVE}p1
+        partrootbackup=${ROOTDRIVE}p2
+    fi
     # sleep to ensure filesystems are created before continuing
     sleep 10
-    mke2fs ${ROOTDRIVE}1 -L Root
-    mke2fs ${ROOTDRIVE}2 -L RootBackup
-    tune2fs -c 0 -i 0 ${ROOTDRIVE}1
-    tune2fs -c 0 -i 0 ${ROOTDRIVE}2
+    mke2fs ${partroot} -L Root
+    mke2fs ${partrootbackup} -L RootBackup
+    tune2fs -c 0 -i 0 ${partroot}
+    tune2fs -c 0 -i 0 ${partrootbackup}
     log "Creating LVM partition"
 
     if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
@@ -454,6 +593,7 @@ perform_partitioning()
     parted $HOSTVGDRIVE -s "set $hostvgpart lvm on"
     parted $ROOTDRIVE -s "print"
     udevadm settle 2> /dev/null || udevsettle
+    reread_partitions $HOSTVGDRIVE
 
     # sync GPT to the legacy MBR partitions
     if [ "gpt" == "$LABEL_TYPE" ]; then
@@ -702,8 +842,9 @@ DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use the drive selected with 'ovirt_init' boot parameter
     # setting these the same until kernel cmdline argument implemented
-    ROOTDRIVE=$OVIRT_INIT
-    HOSTVGDRIVE=$OVIRT_INIT
+    translate_multipath_device $OVIRT_INIT DRIVE
+    ROOTDRIVE=$DRIVE
+    HOSTVGDRIVE=$DRIVE
     get_drive_size $ROOTDRIVE ROOTDRIVESPACE
 fi
 

@@ -18,3 +18,7 @@ device scsi_wait_scan
 # multipath kmods
 device dm-multipath
 device dm-round-robin
+device dm-emc
+device dm-rdac
+device dm-hp-sw
+device scsi_dh_rdac
