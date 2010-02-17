@@ -17,7 +17,7 @@ trap 'exit $?' 1 2 13 15
 
 # check that we're not booted from local storage; if so then exit with an error
 if is_booted_from_local_disk; then
-    die "You cannot configure storage on a running system. Please boot from CD/USB to configure local storage."
+    die "You cannot configure storage on a running system. Please boot from CD/USB to configure storage."
 fi
 
 default_overcommit=0.5
@@ -361,9 +361,12 @@ do_configure()
     printf "* For the Data partition, a size of -1 indicates that the\n"
     printf "  partition should use up the remaining space on the disk.\n\n"
 
-    do_review
-    if ask_yes_or_no "Use these default values ([Y]es/[N]o)?"; then
-        return
+    if do_review; then
+        if ask_yes_or_no "Use these default values ([Y]es/[N]o)?"; then
+            return
+        fi
+    else
+        printf "Selected disk is too small for default storage configuration"
     fi
 
     local space_left=$HOSTVGDRIVESPACE
@@ -438,8 +441,9 @@ do_review()
 {
     if [[ -z "$ROOTDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
         printf "\nNo Root storage device selected.\n"
-        return
+        return 1
     fi
+    local is_negative=0
 
     if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         local data_size_display="$DATA_SIZE MB"
@@ -448,15 +452,17 @@ do_review()
             if [ $ROOTDRIVE == $HOSTVGDRIVE ]; then
                 local remaining_mb=$(( $ROOTDRIVESPACE - $SWAP_SIZE \
                         - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
+                test $remaining_mb -lt 0 && is_negative=1
             else
                 local remaining_mb=$(( $HOSTVGDRIVESPACE - $SWAP_SIZE - $CONFIG_SIZE - $LOGGING_SIZE ))
+                test $remaining_mb -lt 0 && is_negative=1
             fi
             data_size_display="$remaining_mb MB"
         fi
 
         cat <<EOF
 
-The local disk will be repartitioned as follows:
+The selected disk will be repartitioned as follows:
 ================================================
                    Root Drive: $(get_drive_size $ROOTDRIVE)
                  HostVG Drive: $(get_drive_size $HOSTVGDRIVE)
@@ -470,7 +476,7 @@ EOF
     else
         cat <<EOF
 
-The local disk will be repartitioned as follows:
+The selected disk will be repartitioned as follows:
 ================================================
                    Boot Drive: $(get_drive_size $BOOTDRIVE)
           Boot partition size: $BOOT_SIZE
@@ -478,6 +484,8 @@ The local disk will be repartitioned as follows:
 EOF
 
     fi
+
+    return ${is_negative-0}
 }
 
 # cleanup lvms on selected disk
@@ -693,9 +701,9 @@ do_confirm()
           "$w8" \
           "$wb$sp$w" \
           "$wb$sp$w" \
-          "$wb    If you proceed, this will destroy all data on   $w" \
-          "$wb    your local system, and your hard disk will be   $w" \
-          "$wb    irreversably reconfigured                       $w" \
+          "$wb    If you proceed, all data on your selected storage  $w" \
+          "$wb    device will be destroyed and your hard disk        $w" \
+          "$wb    will be irreversably reconfigured                  $w" \
           "$wb$sp$w" \
           "$wb$sp$w" \
         "$w8" \
