@@ -29,24 +29,43 @@ EOF
 
 if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"; then
     if [ -d /dev/HostVG ]; then
-	log "Uninstalling node"
-	log "Detaching logging"
-	unmount_logging
-	log "Removing volume group"
-	wipe_volume_group "HostVG"
-	partition=$(findfs LABEL=Root)
-	if [ -n "$partition" ]; then
-	    log "Removing partitions"
-	    drive=$(echo $partition | awk '{ print substr($0, 1, length($0) - 1) }')
-	    parted -s $drive "rm 1"
-	    parted -s $drive "rm 2"
+        log "Uninstalling node"
+        log "Detaching logging"
+        start_log
+        # multipathd holds all mounts under /var in a private namespace
+        service multipathd stop 6>&- 7>&-
+        rm -f /var/lib/multipath/bindings
+        unmount_logging
+        log "Removing volume group"
+        wipe_volume_group "HostVG"
+        partition=$(readlink -f $(findfs LABEL=Root))
+        if [ -n "$partition" ]; then
+            log "Removing partitions"
+            eval $(echo $partition | awk ' {
+                print "drive=" substr($0,1,length($1)-1);
+                print "drive2=" substr($0,1,length($1)-2);
+            }')
+            if [ ! -e "$drive" ]; then
+                drive="$drive2"
+                partpv="$drive}p2"
+            else
+                partpv="${drive}2"
+            fi
+	        parted -s $drive "rm 1"
+            pvremove ${partpv}
+	        parted -s $drive "rm 2"
             parted -s $drive "rm 3"
-	fi
-	printf "Finished uninstalling node."
+	    fi
+        #restart multipath
+        multipath -F
+        multipath -v3
+        service multipathd start 6>&- 7>&-
+	    log "Finished uninstalling node."
+        stop_log
     else
-	log "There is no installed node instance to remove."
-	log "Aborting"
-	exit 1
+	    log "There is no installed node instance to remove."
+	    log "Aborting"
+	    exit 1
     fi
 else
     log "Aborted"
