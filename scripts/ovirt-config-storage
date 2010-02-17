@@ -349,6 +349,24 @@ do_configure()
 
         printf "\n\nPlease select the disk to use for the HostVG.\n\n"
         HOSTVGDRIVE=$(get_dev_name) || return 0
+        local skipped=false
+        if check_existing_hostvg $HOSTVGDRIVE devs; then
+            for dev in $devs
+            do
+                printf "Removing HostVG on $dev will erase the drive and cannot be undone\n"
+                if ask_yes_or_no "Do you want to remove HostVG from $dev (y/n)?"; then
+                    start_log
+                    if ! wipe_lvm_on_disk $dev; then
+                        stop_log
+                        return 1
+                    fi
+                    stop_log
+                else
+                    skipped=true
+                fi
+            done
+        fi
+        $skipped  && printf "Installation cannot proceed with existing HostVG.\n" && return 0
         get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
         echo $HOSTVGDRIVESPACE
     fi
@@ -488,15 +506,59 @@ EOF
     return ${is_negative-0}
 }
 
+#Check for an existing HostVG on any device on the system.
+# Return 0 if then is a HostVG found, unless only one found is on $1
+# Return 1 if no HostVG found or only found on $1
+check_existing_hostvg()
+{
+    local install_dev=$1
+    local devices_var=$2
+    if [ -z "$install_dev" ]; then
+        devices="$(pvs -o pv_name,vg_name --noheadings | \
+            grep "HostVG" | awk '{print $1}' )"
+    else
+        devices="$(pvs -o pv_name,vg_name --noheadings | \
+            grep -v ${install_dev} | grep "HostVG" | awk '{print $1}' )"
+    fi
+    rc=1
+    if [ -n "$devices" ]; then
+        printf "\n"
+        printf "There appears to already be an installation on another device:\n"
+        for device in $devices; do
+            get_multipath_devices ${device%p[0-9]} sd_dev
+            sd_dev=$(echo $sd_dev | awk '{print $1}')
+            udi=$(hal-find-by-property --key block.device --string /dev/${sd_dev})
+            printf "\t$device ($(basename "$udi"))\n"
+        done
+        printf "The installation cannot proceed until the device is removed\n"
+        printf "from the system of the HostVG volume group is removed.\n"
+        rc=0
+    fi
+
+    test -z $devices_var || eval $devices_var=$devices
+
+    return $rc
+
+}
+
 # cleanup lvms on selected disk
 # - remove mounted filesystems
 # - remove LVM volumes and groups
 wipe_lvm_on_disk()
 {
+    local dev=${1-$HOSTVGDRIVE}
     unmount_logging
     for vg in $(pvs -o vg_name --noheadings $HOSTVGDRIVE* 2>/dev/null|sort -u); do
+        if pvs -o pv_name,vg_name --noheadings | \
+            grep $vg | grep -v -q $dev* 2>/dev/null; then
+            log "The volume group \"$vg\" spans multiple disks."
+            log "This operation cannot complete.  Please manullay"
+            log "cleanup the storage using standard linux tools."
+            return 1
+        fi
         wipe_volume_group $vg
     done
+    return 0
 }
 
 
@@ -867,19 +929,22 @@ if [ "$1" == "AUTO" ]; then
     log "Beginning automatic disk partitioning.\n"
     if [ -n "$OVIRT_INIT" ]; then
         # do not format if HostVG exists on selected disk...
-	pvs -o vg_name --noheadings $HOSTVGDRIVE* 2>/dev/null|grep -q -m1 "HostVG"
-	existingHostVG=$?
+        check_existing_hostvg $HOSTVGDRIVE
+        existingHostVG=$?
         # ... unless overridden by ovirt_firstboot parameter
-	if is_firstboot || [ $existingHostVG -ne 0 ]; then
+        if is_firstboot || [ $existingHostVG -ne 0 ]; then
             if check_partition_sizes; then
-		log "Partitioning hard disk..."
-		perform_partitioning
+		        log "Partitioning hard disk..."
+                perform_partitioning
+                exit $?
             fi
-	else
+        else
             log "Skip disk partitioning, HostVG exists"
-	fi
+            exit 1
+        fi
     else
-	log "Missing device parameter: unable to partition any disk"
+        log "Missing device parameter: unable to partition any disk"
+        exit 2
     fi
 else
     OPTIONS="\"Enable iSCSI Target\" \"Configure Storage\" \"Review\" \"Commit Changes And Quit\" \"Return To Menu\""
