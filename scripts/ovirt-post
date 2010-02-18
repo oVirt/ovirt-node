@@ -4,7 +4,7 @@
 #
 ### BEGIN INIT INFO
 # Provides: ovirt-post
-# Required-Start: ovirt
+# Required-Start: ovirt libvirtd
 # Default-Start: 2 3 4 5
 # Description: Performs managed node post configuration setup.
 ### END INIT INFO
