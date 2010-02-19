@@ -431,7 +431,7 @@ function save_ntp_configuration
     local ntproot="/files/etc/ntp.conf"
 
     printf "\
-rm ${ntproot}\n\n
+rm ${ntproot}\n\
 set ${ntproot}/driftfile /var/lib/ntp/drift\n\
 set ${ntproot}/includefile /etc/ntp/crypto/pw\n\
 set ${ntproot}/keys /etc/ntp/keys\n\
