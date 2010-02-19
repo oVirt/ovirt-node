@@ -382,8 +382,9 @@ unmount_logging() {
 
     log "Unmounting log partition"
     # plymouthd keeps /var/log/boot.log
-    plymouth --quit
-    plymouth --wait
+    if plymouth --ping ; then
+        plymouth --quit
+    fi
     unmount_logging_services
 
     umount /var/log
