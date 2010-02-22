@@ -3,7 +3,7 @@
 # Configures the collectd daemon.
 # Source functions library
 . /etc/init.d/functions
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15

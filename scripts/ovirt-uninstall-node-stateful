@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 PATH=$PATH:/sbin:/usr/sbin
 ME=$(basename "$0")

@@ -19,9 +19,9 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 #
 # Convenience wrapper to give access to the ovirt_store_config
-# function in /etc/init.d/ovirt-functions
+# function in /usr/libexec/ovirt-functions
 
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }

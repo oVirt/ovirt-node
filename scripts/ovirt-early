@@ -11,7 +11,7 @@
 
 # Source functions library
 . /etc/init.d/functions
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 prog=ovirt-early
 VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/$prog
@@ -147,7 +147,7 @@ configure_management_interface() {
         "ovirt")
             configure_ovirt_management_nic $bootif
             if [ -n "$init" ]; then
-                ovirt-config-storage AUTO
+                /usr/libexec/ovirt-config-storage AUTO
                 # initial configuration storage, after /config creation
                 ovirt_store_config \
                     /etc/sysconfig/network-scripts/ifcfg-* \
@@ -155,7 +155,7 @@ configure_management_interface() {
                 if [ $upgrade = 1 ]; then
                     # local disk installation for managed mode
                     mount_live
-                    ovirt-config-boot /live "$bootparams"
+                    /usr/libexec/ovirt-config-boot /live "$bootparams"
                 fi
             fi
             ;;

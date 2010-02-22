@@ -1,7 +1,4 @@
-#!/bin/bash
-#
-# Copyright (C) 2009, Red Hat, Inc.
-# Written by Darryl L. Pierce <dpierce@redhat.com>
+# Copyright (C) 2010 Red Hat, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,21 +14,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-#
-# Convenience wrapper to give access to the ovirt_store_config
-# function in /usr/libexec/ovirt-functions
 
-. /usr/libexec/ovirt-functions
-
-ME=$(basename "$0")
-warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
-help() { printf "Usage: $ME FILE ...\n
-Unpersists a previous persisted file, removing it from /config.
-The file is restored to its original location.\n\n" >&2; exit 1;
-}
-die() { warn "$*"; help; exit 1; }
-
-if [ $# -eq 0 ]; then die "You need to specify at least one file."; fi
-
-remove_config $*
-
+EXTRA_DIST = \
+  grub-splash.xpm.gz \
+  syslinux-vesa-splash.jpg

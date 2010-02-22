@@ -11,7 +11,7 @@
 
 # Source functions library
 . /etc/init.d/functions
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 prog=ovirt-post
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/$prog

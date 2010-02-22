@@ -3,7 +3,7 @@
 # Iterates over the list of network devices on the node and prompts the user
 # to configure each.
 
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }

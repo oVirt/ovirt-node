@@ -8,6 +8,12 @@ test x"$ac_ct_CC:$CFLAGS" = 'xgcc:-g -O2' \
   && CFLAGS="$CFLAGS -Wshadow -Wall -Werror"
 
 AC_CONFIG_FILES([Makefile
+  images/Makefile
+  kinit/Makefile
+  nodeadmin/Makefile
+  scripts/Makefile
+  tools/Makefile
+  scripts/collectd.conf
   nodeadmin/setup.py
   gptsync/Makefile
   recipe/Makefile

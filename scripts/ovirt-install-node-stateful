@@ -3,7 +3,7 @@
 PHYS_HOST=physical.priv.ovirt.org
 MGMT_HOST=management.priv.ovirt.org
 
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 PATH=$PATH:/sbin:/usr/sbin
 ME=$(basename "$0")

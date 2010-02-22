@@ -3,7 +3,7 @@
 # Wrapper function to make sure the user wishes to continue before
 # rebooting the system
 
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 rc=0
 while true; do
@@ -26,7 +26,7 @@ continuing."
     fi
     if ask_yes_or_no "Do you wish to continue ([Y]es/[N]o)?"; then
         mount_live \
-            && /usr/sbin/ovirt-config-boot /live "${bootparams}"
+            && /usr/libexec/ovirt-config-boot /live "${bootparams}"
         rc=$?
         break
     else

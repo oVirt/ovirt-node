@@ -5,7 +5,7 @@
 # configuration file. It then restarts the networking service
 # and saves the configuration files.
 
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }

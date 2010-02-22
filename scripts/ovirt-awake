@@ -30,7 +30,7 @@
 # config: /etc/sysconfig/node-config
 
 . /etc/init.d/functions
-. /etc/init.d/ovirt-functions
+. /usr/libexec/ovirt-functions
 
 prog=ovirt-early
 NODE_CONFIG=/etc/sysconfig/node-config
