@@ -474,8 +474,8 @@ start() {
             -e "s/^mech_list: .*gssapi.*/mech_list: digest-md5/" \
             /etc/sasl2/libvirt.conf
     else
-        configure_manament_interface
-    fi
+       configure_management_interface
+       fi
 
     rm -f $VAR_SUBSYS_OVIRT_EARLY
 
