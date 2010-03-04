@@ -734,7 +734,7 @@ is_valid_ipv4 () {
 
 # Check if networking is already up
 network_up () {
-    test -n "$(/sbin/ip -o link show up | cut -d: -f2 | grep -v 'lo$')"
+    ip addr show | grep -q "inet.*scope global"
 }
 
 # Cleans partition tables
