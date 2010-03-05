@@ -414,12 +414,7 @@ function configure_ntp
 	        read -ep "Enter an NTP server (hit return when finished): "
 
 	        if [ -z "$REPLY" ]; then break; fi
-
-                if is_valid_ipv4 $REPLY; then
-                    NTPSERVERS="${NTPSERVERS}:${REPLY}"
-                else
-                    printf "${REPLY} is an invalid address.\n"
-                fi
+                NTPSERVERS="${NTPSERVERS}:${REPLY}"
 	    done
         fi
     fi
@@ -571,5 +566,9 @@ if [ "$net_configured" = 1 ]; then
       ifconfig $i down
       brctl delbr $i
     done
-    service network start
+    service network start 2> /dev/null
+    if [ $NTPSERVERS ]; then
+        log "Testing NTP Configuration"
+        test_ntp_configuration
+    fi
 fi

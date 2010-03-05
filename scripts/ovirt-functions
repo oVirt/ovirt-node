@@ -737,6 +737,32 @@ network_up () {
     test -n "$(/sbin/ip -o link show up | cut -d: -f2 | grep -v 'lo$')"
 }
 
+# Cleans partition tables
+wipe_partitions() {
+    local drive=$1
+    log "Wiping old boot sector"
+    dd if=/dev/zero of=$drive bs=1024K count=1
+    # zero out the GPT secondary header
+    log "Wiping secondary gpt header"
+    local disk_kb_count=$(sfdisk -s $drive 2>/dev/null)
+    dd if=/dev/zero of=$drive bs=1024 seek=$(($disk_kb_count - 1)) count=1
+}
+
+test_ntp_configuration () {
+    # stop ntpd service for testing
+    service ntpd stop > /dev/null 2>&1
+    SERVERS=$(echo $NTPSERVERS | awk 'BEGIN{FS=":"}{for (i=1; i<=NF; i++) print $i}')
+        for server in $SERVERS; do
+            ntpdate $server > /dev/null 2>&1
+            result=$?
+            if [ $result -ne 0 ]; then
+                printf "\n Unable to verify NTP server: $server \n"
+            else
+                printf "\n Verified NTP server: $server \n"
+            fi
+        done
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 

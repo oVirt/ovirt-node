@@ -56,6 +56,7 @@ if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"
             pvremove ${partpv}
 	        parted -s $drive "rm 2"
             parted -s $drive "rm 3"
+            wipe_partitions $drive
 	    fi
         #restart multipath
         multipath -F
