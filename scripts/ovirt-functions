@@ -761,6 +761,8 @@ test_ntp_configuration () {
                 printf "\n Verified NTP server: $server \n"
             fi
         done
+    service ntpd start
+
 }
 
 # execute a function if called as a script, e.g.
