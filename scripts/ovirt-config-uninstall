@@ -36,6 +36,7 @@ if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"
         service multipathd stop 6>&- 7>&-
         rm -f /var/lib/multipath/bindings
         unmount_logging
+        unmount_config /etc/default/ovirt
         log "Removing volume group"
         wipe_volume_group "HostVG"
         partition=$(readlink -f $(findfs LABEL=Root))
