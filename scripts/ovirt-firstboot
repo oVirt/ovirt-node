@@ -58,6 +58,7 @@ start ()
         mount_live
         /usr/libexec/ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
         disable_firstboot
+        ovirt_store_firstboot_config
         reboot
         return
     fi
