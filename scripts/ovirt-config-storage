@@ -38,13 +38,12 @@ swap_min_size=5
 get_sd_name() {
     local id=$1
     local device_var=$2
-    for device in $(ls /sys/block)
-    do
-        if [[ $id = $(cat /sys/block/$device/dev) ]]; then
-            eval $device_var=$device
-            return
-        fi
-    done
+    local device_sys=$(grep -H "^$id$" /sys/block/*/dev | cut -d: -f1)
+
+    if [ -n "$device_sys" ]; then
+        eval $device_var=$(basename $(dirname $device_sys))
+        return
+    fi
     eval $device_var=1
 }
 
@@ -83,10 +82,21 @@ translate_multipath_device() {
     local dev=$1
     local mpath_var=$2
 
-    local basedev=$(basename $dev)
+    if [ -z "$dev" ]; then
+        if [ -n "$mpath_var" ]; then
+            eval $mpath_var=
+        fi
+        return
+    fi
+    if [[ "$dev" =~ "/dev/mapper" ]]; then
+        eval $mpath_var=$dev
+        return
+    fi
 
-    local mpath_device=$(multipath -ll $dev |grep -n . | \
-        grep "^1:" |awk '{print $1}' | sed 's/^1:/\/dev\/mapper\//g')
+    local dm_dev=/dev/$(multipath -ll $dev | egrep dm-[0-9]+ | sed -r 's/^.& (dm-[0-9]+) .*$/\1/')
+
+    local mpath_device=
+    get_dm_device $dm_dev $mpath_device
 
     if [ -z "$mpath_device" ]; then
         mpath_device=$dev
@@ -152,12 +162,12 @@ check_partition_sizes()
 
     printf "\n"
     if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
-        get_drive_size $BOOTDRIVE BOOTDRIVESPACE
+        get_drive_size "$BOOTDRIVE" BOOTDRIVESPACE
         drive_list="BOOT"
         BOOT_NEED_SIZE=$BOOT_SIZE
     else
-        get_drive_size $ROOTDRIVE ROOTDRIVESPACE
-        get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
+        get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
+        get_drive_size "$HOSTVGDRIVE" HOSTVGDRIVESPACE
         ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2"| bc -l)
         HOSTVG_NEED_SIZE=$(echo "scale=0;" \
                          "$SWAP_SIZE + $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
@@ -224,12 +234,13 @@ manual_input()
     while true; do
         read -rp "Enter disk device path: " manual_device
         if [ -z "$device" ]; then
+            echo "Aborting."
             return 1
         fi
-        translate_multipath_device $manual_device manual_device
-        eval $return_var="$manual_device"
+        translate_multipath_device "$manual_device" manual_device
         if [ -n "$manual_device" ]; then
             if [ -b "$(readlink -f $device)" ]; then
+                eval $return_var="$manual_device"
                 return 0
             fi
         else
@@ -321,7 +332,7 @@ get_dev_name()
     # There are two or more; make the user choose.
     # display description for each disk
     for d in $devices; do
-        get_drive_size $d >&2
+        get_drive_size "$d" >&2
     done
     local choices="$devices Abort"
     select device in $choices "Manual Selection"
@@ -340,12 +351,12 @@ do_configure()
     if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
         printf "\n\nPlease select the disk to use for the Boot partition.\n\n"
         BOOTDRIVE=$(get_dev_name) || return 0
-        get_drive_size $BOOTDRIVE BOOTDRIVESPACE
+        get_drive_size "$BOOTDRIVE" BOOTDRIVESPACE
         echo $BOOTDRIVE
     else
         printf "\n\nPlease select the disk to use for the Root.\n\n"
         ROOTDRIVE=$(get_dev_name) || return 0
-        get_drive_size $ROOTDRIVE ROOTDRIVESPACE
+        get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
 
         printf "\n\nPlease select the disk to use for the HostVG.\n\n"
         HOSTVGDRIVE=$(get_dev_name) || return 0
@@ -367,7 +378,7 @@ do_configure()
             done
         fi
         $skipped  && printf "Installation cannot proceed with existing HostVG.\n" && return 0
-        get_drive_size $HOSTVGDRIVE HOSTVGDRIVESPACE
+        get_drive_size "$HOSTVGDRIVE" HOSTVGDRIVESPACE
         echo $HOSTVGDRIVESPACE
     fi
     printf "\n\nPlease configure storage partitions.\n\n"
@@ -482,8 +493,8 @@ do_review()
 
 The selected disk will be repartitioned as follows:
 ================================================
-                   Root Drive: $(get_drive_size $ROOTDRIVE)
-                 HostVG Drive: $(get_drive_size $HOSTVGDRIVE)
+                   Root Drive: $(get_drive_size "$ROOTDRIVE")
+                 HostVG Drive: $(get_drive_size "$HOSTVGDRIVE")
           Swap partition size: $SWAP_SIZE MB
   Installation partition size: $ROOT_SIZE * 2 MB
  Configuration partition size: $CONFIG_SIZE MB
@@ -496,7 +507,7 @@ EOF
 
 The selected disk will be repartitioned as follows:
 ================================================
-                   Boot Drive: $(get_drive_size $BOOTDRIVE)
+                   Boot Drive: $(get_drive_size "$BOOTDRIVE")
           Boot partition size: $BOOT_SIZE
 
 EOF
@@ -917,10 +928,10 @@ DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use the drive selected with 'ovirt_init' boot parameter
     # setting these the same until kernel cmdline argument implemented
-    translate_multipath_device $OVIRT_INIT DRIVE
+    translate_multipath_device "$OVIRT_INIT" DRIVE
     ROOTDRIVE=$DRIVE
     HOSTVGDRIVE=$DRIVE
-    get_drive_size $ROOTDRIVE ROOTDRIVESPACE
+    get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
 fi
 
 # if the node is Fedora then use GPT, otherwise use MBR

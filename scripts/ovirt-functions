@@ -765,6 +765,28 @@ test_ntp_configuration () {
 
 }
 
+get_dm_device ()
+{
+    local device=$1
+    local return_var=$2
+    major=$(stat -c '%t' $(readlink -f $device))
+    minor=$(stat -c '%T' $(readlink -f $device))
+    local dm_device=
+    local rc=1
+    for dm in /dev/mapper/*; do
+        if [ $major = $(stat -c '%t' $dm) -a \
+            $minor = $(stat -c '%T' $dm) ]; then
+            local dm_device=$dm
+            rc=0
+            break
+        fi
+    done
+
+    eval $return_var=$dm_device
+
+    return $rc
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
