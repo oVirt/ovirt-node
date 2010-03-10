@@ -32,7 +32,7 @@
 . /etc/init.d/functions
 . /usr/libexec/ovirt-functions
 
-prog=ovirt-early
+prog=ovirt-awake
 NODE_CONFIG=/etc/sysconfig/node-config
 VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 
