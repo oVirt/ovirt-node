@@ -68,12 +68,11 @@ ovirt_startup () {
 
     if [[ -n "${mgmthost}" ]] && [[ -n "${mgmtport}" ]]; then
         # log "Notifying oVirt management server: ${mgmthost}:${mgmtport}"
-        exec 3<> /dev/tcp/$mgmthost:$mgmtport
+        exec 3<>/dev/tcp/$mgmthost/$mgmtport
 
-        connect-to-server
         receive_text
         if [ $REPLY == "HELLO?" ]; then
-            logo "Starting wakeup conversation."
+            log "Starting wakeup conversation."
             send_text "HELLO!"
             receive_text
             if [ $REPLY == "MODE?" ]; then
