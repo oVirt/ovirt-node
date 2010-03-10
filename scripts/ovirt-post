@@ -107,7 +107,7 @@ case "$1" in
         start
         ;;
     stop)
-        stop
+        rm -f /var/lock/subsys/ovirt-post
         ;;
     *)
         echo "Usage: ovirt-post {start}"

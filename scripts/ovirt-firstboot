@@ -98,7 +98,7 @@ case "$1" in
         start
         ;;
     stop)
-        stop
+         rm -f /var/lock/subsys/ovirt-firstboot
         ;;
     *)
         echo "Usage: ovirt-firstboot {start}"
