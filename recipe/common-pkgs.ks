@@ -32,6 +32,7 @@ sysstat
 tcpdump
 pstack
 pciutils
+psmisc
 numactl
 file
 lsof

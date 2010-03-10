@@ -15,7 +15,7 @@ RPMS="$RPMS mkinitrd isomd5sum dmraid checkpolicy"
 # Remove additional RPMs forcefully
 RPMS="$RPMS gamin pm-utils kbd usermode vbetool ConsoleKit hdparm \
     efibootmgr linux-atm-libs fedora-release-notes \
-    psmisc cryptsetup-luks pciutils mtools syslinux \
+    cryptsetup-luks pciutils mtools syslinux \
     wireless-tools radeontool libicu gnupg2 \
     fedora-logos"
 
