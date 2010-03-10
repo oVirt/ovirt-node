@@ -13,3 +13,6 @@ OVIRT_MANAGEMENT_SERVER=""
 
 # the maangement server port
 OVIRT_MANAGEMENT_PORT=""
+
+# the keytab directory
+KEYTAB_FILE=/etc/libvirt/krb5.tab
