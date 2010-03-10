@@ -37,20 +37,6 @@ ovirt_start() {
         log "skipping Kerberos configuration"
     fi
 
-    find_srv identify tcp
-    if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-        krb5_tab=/etc/libvirt/krb5.tab
-        # skip ktab download if we got it from /config
-        if [ -s $krb5_tab ]; then
-          krb5_tab=
-        fi
-        ovirt-awake start $SRV_HOST $SRV_PORT $krb5_tab
-        if [ $? -ne 0 ]; then
-            log "ovirt-awake failed"; return 1
-        fi
-    else
-        log "skipping ovirt-awake, oVirt identify service not available"
-    fi
 
     find_srv collectd udp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
