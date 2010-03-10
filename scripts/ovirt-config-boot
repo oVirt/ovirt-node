@@ -29,14 +29,21 @@ ovirt_boot_setup() {
     local disk2
     local partN=-1
     log "installing the image."
-    if [ -h /dev/disk/by-label/Boot ]; then
+    local found_boot=false
+    if findfs LABEL=Boot 2>&1 >/dev/null ; then
+        found_boot=true
+        grub_dev_label=Boot
+    elif findfs LABEL=Root 2>&1 >/dev/null ; then
+        found_boot=true
+        grub_dev_label=Root
+    fi
+    if $found_boot; then
         mount_boot
         mountpoint /boot
         if [ $? -ne 0 ] ; then
             log "Boot partition not available"
             return 1
         fi
-        grub_dev_label="Boot"
         # Grab OVIRT_ISCSI VARIABLES from boot partition for upgrading
         # file created only if OVIRT_ISCSI_ENABLED=y
         if [ -f /boot/ovirt ]; then
@@ -50,7 +57,7 @@ ovirt_boot_setup() {
     fi
 
     # check that /boot mounted ok and find partition number for GRUB
-    get_part_info $(readlink -f /dev/disk/by-label/$grub_dev_label disk partN
+    get_part_info $(readlink -f $(findfs LABEL=$grub_dev_label 2>/dev/null)) disk partN
     rc=$?
     if [ $rc -ne 0 -o $partN -lt 0 ]; then
       log "unable to determine Root partition"
@@ -67,11 +74,11 @@ ovirt_boot_setup() {
 
         # prepare Root partition update
         candidate=
-        if [ -e /dev/disk/by-label/RootBackup ]; then
+        if findfs LABEL=RootBackup 2>&1 >/dev/null; then
             candidate=RootBackup
-        elif [ -e /dev/disk/by-label/RootUpdate ]; then
+        elif findfs LABEL=RootUpdate 2>&1 >/dev/null; then
             candidate=RootUpdate
-        elif [ -e /dev/disk/by-label/RootNew ]; then
+        elif findfs LABEL=RootNew 2>&1 >/dev/null; then
             candidate=RootNew
         fi
         if [ -z "$candidate" ]; then
@@ -80,7 +87,7 @@ ovirt_boot_setup() {
             umount /liveos
             rc=0
         else
-            candidate_dev=$(readlink -f /dev/disk/by-label/$candidate)
+            candidate_dev=$(findfs LABEL=$candidate 2>/dev/null)
             e2label $candidate_dev RootNew
             rc=$?
         fi
@@ -90,7 +97,7 @@ ovirt_boot_setup() {
           return $rc
         fi
 
-        mount $candidate_dev /liveos
+        mount $candidate_dev /liveos/
 
         rm -rf /liveos/LiveOS
         mkdir -p /liveos/LiveOS
@@ -212,11 +219,7 @@ if [ $rc -eq 0 -a "$doreboot" = "yes" ]; then
     ovirt_store_firstboot_config
     stop_log
 
-    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
-        reboot
-    else
-        /sbin/reboot
-    fi
+    reboot
 fi
 stop_log
 exit $rc

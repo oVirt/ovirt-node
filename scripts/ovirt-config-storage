@@ -702,8 +702,6 @@ perform_partitioning()
     log "Creating volume group"
     vgcreate /dev/HostVG "${partpv}"
 
-    mkdir -p /dev/disk/by-label
-
     if [ "$SWAP_SIZE" -gt 0 ]; then
         log "Creating swap partition"
         lvcreate --name Swap --size ${SWAP_SIZE}M /dev/HostVG

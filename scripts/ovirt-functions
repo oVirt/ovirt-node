@@ -283,7 +283,7 @@ mount_liveos() {
         return 0
     fi
     mkdir -p /liveos
-    mount /dev/disk/by-label/Root /liveos
+    mount LABEL=Root /liveos
 }
 
 # mount config partition
@@ -326,7 +326,7 @@ mount_boot() {
        return 0
     fi
     mkdir -p /boot
-    mount /dev/disk/by-label/Boot /boot
+    mount LABEL=Root /boot
 }
 # stop any service which keeps /var/log busy
 # keep the list of services
@@ -709,12 +709,14 @@ lvremove() {
 #   cleanup before reboot
 reboot() {
     cd /
-    # setup new Root if update is prepared
-    if [ -e "/dev/disk/by-label/RootUpdate" ]; then
-        root_update_dev=$(readlink -f /dev/disk/by-label/RootUpdate)
-        root_dev=$(readlink -f /dev/disk/by-label/Root)
-        e2label $root_dev RootBackup
-        e2label $root_update_dev Root
+    if [ "$OVIRT_ISCSI_ENABLED" = "yes" ]; then
+        # setup new Root if update is prepared
+        if findfs LABEL=RootUpdate 2>&1 >/dev/null; then
+            root_update_dev=$(findfs LABEL=RootUpdate 2>/dev/null)
+            root_dev=$(findfs LABEL=Root 2>/dev/null)
+            e2label $root_dev RootBackup
+            e2label $root_update_dev Root
+        fi
     fi
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
