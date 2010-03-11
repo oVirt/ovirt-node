@@ -548,9 +548,13 @@ wipe_lvm_on_disk()
 {
     local dev=${1-$HOSTVGDRIVE}
     unmount_logging
-    for vg in $(pvs -o vg_name --noheadings $HOSTVGDRIVE* 2>/dev/null|sort -u); do
+    local part_delim="p"
+    if [[ "$dev" =~ "/dev/sd" ]]; then
+        part_delim=""
+    fi
+    for vg in $(pvs -o vg_name --noheadings $HOSTVGDRIVE $HOSTVGDRIVE${dev_delim}[0-9]* 2>/dev/null|sort -u); do
         if pvs -o pv_name,vg_name --noheadings | \
-            grep $vg | grep -v -q $dev* 2>/dev/null; then
+            grep $vg | egrep -v -q "${dev}${part_delim}[0-9]+|${dev}" 2>/dev/null; then
             log "The volume group \"$vg\" spans multiple disks."
             log "This operation cannot complete.  Please manullay"
             log "cleanup the storage using standard linux tools."
