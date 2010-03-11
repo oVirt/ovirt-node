@@ -4,7 +4,6 @@
 #
 ### BEGIN INIT INFO
 # Provides: ovirt-early
-# Required-Start: ovirt-awake
 # Default-Start: 2 3 4 5
 # Dewscription: Managed node early configuration service
 ### END INIT INFO

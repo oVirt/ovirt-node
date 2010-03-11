@@ -22,6 +22,7 @@
 #
 ### BEGIN INIT INFO
 # Provides: ovirt-awake
+# Required-Start: ovirt-early
 # Default-Start: 2 3 4 5
 # Description: Managed node service to alert management servers.
 ### END INIT INFO

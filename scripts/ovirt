@@ -4,7 +4,7 @@
 #
 ### BEGIN INIT INFO
 # Provides: ovirt
-# Required-Start: ovirt-early
+# Required-Start: ovirt-awake
 # Default-Start: 2 3 4 5
 # Description: Performs managed node configuration functions.
 ### END INIT INFO
