@@ -19,7 +19,7 @@ VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/$prog
 # load the configuration file
 [ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
 
-start() {
+start_ovirt_post() {
     # wait for libvirt to finish initializing
     local count=0
     while true; do
@@ -80,9 +80,14 @@ start() {
     rm -f $VAR_SUBSYS_OVIRT_POST
 }
 
-stop() {
+stop_ovirt_post () {
     echo -n "Stopping ovirt-post: "
     success
+}
+
+reload_ovirt_post () {
+    stop_ovirt_post
+    start_ovirt_post
 }
 
 case "$1" in
@@ -92,7 +97,7 @@ case "$1" in
 
         {
             log "Starting ovirt-post"
-            start
+            start_ovirt_post
             log "Completed ovirt-post"
         } >> $OVIRT_LOGFILE 2>&1
 
@@ -103,11 +108,10 @@ case "$1" in
         status $prog
         ;;
     reload)
-        stop
-        start
+        reload_ovirt_post
         ;;
     stop)
-        rm -f /var/lock/subsys/ovirt-post
+        stop_ovirt_post
         ;;
     *)
         echo "Usage: ovirt-post {start}"

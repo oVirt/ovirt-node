@@ -172,7 +172,7 @@ configure_management_interface() {
     esac
 }
 
-start() {
+start_ovirt_early () {
     touch $VAR_SUBSYS_OVIRT_EARLY
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
@@ -511,9 +511,14 @@ EOF
     return 0
 }
 
-stop() {
+stop_ovirt_early () {
     echo -n "Stopping ovirt-early: "
     success
+}
+
+reload_ovirt_early () {
+    stop_ovirt_early
+    start_ovirt_early
 }
 
 case "$1" in
@@ -522,7 +527,7 @@ case "$1" in
         echo -n "Starting ovirt-early: "
         {
             log "Starting ovirt-early"
-            start
+            start_ovirt_early
             log "Completed ovirt-early"
             RETVAL=$?
         } >> $OVIRT_LOGFILE 2>&1
@@ -532,11 +537,10 @@ case "$1" in
         status $prog
         ;;
     reload)
-        stop
-        start
+        reload_ovirt_early
         ;;
     stop)
-        stop
+        stop_ovirt_early
         ;;
     *)
         echo "Usage: ovirt-early {start}"

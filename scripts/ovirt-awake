@@ -103,7 +103,7 @@ ovirt_startup () {
 # Override this method to provide support for notifying a management
 # system that the node has started and will be available after
 # system initialization
-start () {
+start_ovirt_awake () {
     local RC=0
 
     touch $VAR_SUBSYS_NODECONFIG
@@ -131,6 +131,16 @@ start () {
     return $RC
 }
 
+stop_ovirt_awake () {
+    echo -n "Stopping ovirt-awake: "
+    success
+}
+
+reload_ovirt_awake () {
+    stop_ovirt_awake
+    start_ovirt_awake
+}
+
 case "$1" in
     start)
         echo -n "Starting ovirt-awake: "
@@ -141,6 +151,14 @@ case "$1" in
             log "Completed ovirt-awake: RETVAL=$?"
         } >> $OVIRT_LOGFILE 2>&1
         test $RETVAL == 0 && success || failure
+        ;;
+
+    stop)
+        stop_ovirt_awake
+        ;;
+
+    reload)
+        reload_ovirt_awake
         ;;
 
     *)

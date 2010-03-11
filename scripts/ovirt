@@ -71,7 +71,7 @@ ovirt_start() {
     fi
 }
 
-start() {
+start_ovirt () {
     touch $VAR_SUBSYS_OVIRT
     case $OVIRT_RUNTIME_MODE in
         "ovirt")
@@ -90,9 +90,15 @@ start() {
     return $RC
 }
 
-stop() {
+stop_ovirt () {
     echo -n "Stopping ovirt: "
+    rm -f $VAR_SUBSYS_OVIRT
     success
+}
+
+reload_ovirt () {
+        stop_ovirt
+        start_ovirt
 }
 
 case "$1" in
@@ -101,7 +107,7 @@ case "$1" in
         echo -n "Starting ovirt: "
         {
             log "Starting ovirt"
-            start
+            start_ovirt
             log "Completed ovirt"
         } >> $OVIRT_LOGFILE 2>&1
         test $? == 0 && success || failure
@@ -110,11 +116,10 @@ case "$1" in
         status $prog
         ;;
     reload)
-        stop
-        start
+        reload_ovirt
         ;;
     stop)
-        rm -f /var/lock/subsys/ovirt
+        stop_ovirt
         ;;
     *)
         echo "Usage: ovirt {start}"
