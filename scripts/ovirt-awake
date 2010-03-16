@@ -31,7 +31,6 @@
 # config: /etc/sysconfig/node-config
 
 . /etc/init.d/functions
-. /usr/libexec/ovirt-functions
 
 prog=ovirt-awake
 NODE_CONFIG=/etc/sysconfig/node-config
@@ -39,6 +38,8 @@ VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 
 # load the configuration file
 [ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
+
+. /usr/libexec/ovirt-functions
 
 send_text () {
     local text=${1}
@@ -114,6 +115,7 @@ start_ovirt_awake () {
             log "Node is operating in unmanaged mode."
             ;;
         "ovirt")
+            log "Node is operating in ovirt mode."
             ovirt_startup
             RC=$?
             ;;
@@ -147,7 +149,7 @@ case "$1" in
         echo -n "Starting ovirt-awake: "
         [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
         {
-            start
+            start_ovirt_awake
             RETVAL=$?
             log "Completed ovirt-awake: RETVAL=$?"
         } >> $OVIRT_LOGFILE 2>&1
