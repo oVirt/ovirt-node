@@ -177,3 +177,18 @@ cat /dev/mull > /etc/multipath.conf
 #lvm.conf should use /dev/mapper and /dev/sdX devices
 # and not /dev/dm-X devices
 sed -i 's/preferred_names = \[ \]/preferred_names = [ "^\/dev\/mapper", "^\/dev\/[hsv]d" ]/g' /etc/lvm/lvm.conf
+
+# prevent node from hanging on reboot due to /etc mounts
+patch -d /etc/init.d/ -p0 <<\EOF
+--- halt.orig  2010-03-15 16:01:13.677585448 -0400
++++ halt       2010-03-15 16:01:39.798581069 -0400
+@@ -138,7 +138,7 @@ __umount_loop '$3 ~ /^rpc_pipefs$/ || $3
+     $"Unmounting pipe file systems (retry): " \
+     -f
+
+-LANG=C __umount_loop '$2 ~ /^\/$|^\/proc|^\/dev/{next}
++LANG=C __umount_loop '$2 ~ /^\/$|^\/proc|^\/etc|^\/dev/{next}
+    $3 == "tmpfs" || $3 == "proc" {print $2 ; next}
+    /(loopfs|autofs|nfs|cifs|smbfs|ncpfs|sysfs|^none|^\/dev\/ram|^\/dev\/root$)/ {next}
+   {print $2}' /proc/mounts \
+EOF
