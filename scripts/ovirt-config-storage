@@ -552,11 +552,11 @@ wipe_lvm_on_disk()
     if [[ "$dev" =~ "/dev/sd" ]]; then
         part_delim=""
     fi
-    for vg in $(pvs -o vg_name --noheadings $HOSTVGDRIVE $HOSTVGDRIVE${dev_delim}[0-9]* 2>/dev/null|sort -u); do
+    for vg in $(pvs -o vg_name --noheadings $dev $dev${dev_delim}[0-9]* 2>/dev/null|sort -u); do
         if pvs -o pv_name,vg_name --noheadings | \
             grep $vg | egrep -v -q "${dev}${part_delim}[0-9]+|${dev}" 2>/dev/null; then
             log "The volume group \"$vg\" spans multiple disks."
-            log "This operation cannot complete.  Please manullay"
+            log "This operation cannot complete.  Please manually"
             log "cleanup the storage using standard linux tools."
             return 1
         fi
@@ -593,7 +593,8 @@ perform_partitioning()
     unmount_config /etc/default/ovirt
 
     log "Removing old LVM partitions"
-    wipe_lvm_on_disk
+    wipe_lvm_on_disk $HOSTVGDRIVE
+    wipe_lvm_on_disk $ROOTDRIVE
 
     # begin critical section
     set -e
