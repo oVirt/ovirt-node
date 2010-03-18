@@ -96,7 +96,7 @@ translate_multipath_device() {
     local dm_dev=/dev/$(multipath -ll $dev | egrep dm-[0-9]+ | sed -r 's/^.& (dm-[0-9]+) .*$/\1/')
 
     local mpath_device=
-    get_dm_device $dm_dev $mpath_device
+    get_dm_device $dm_dev mpath_device
 
     if [ -z "$mpath_device" ]; then
         mpath_device=$dev
@@ -580,7 +580,7 @@ wipe_lvm_on_disk()
 reread_partitions()
 {
     local drive=$1
-    if [[ $drive =~ "^/dev/mapper" ]]; then
+    if [[ $drive =~ "/dev/mapper" ]]; then
         kpartx -a -p p $drive
     else
         blockdev --rereadpt $drive
