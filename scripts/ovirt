@@ -16,9 +16,6 @@
 prog=ovirt
 VAR_SUBSYS_OVIRT=/var/lock/subsys/$prog
 
-# load the configuration file
-[ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
-
 ovirt_start() {
     if is_standalone; then
         return 0

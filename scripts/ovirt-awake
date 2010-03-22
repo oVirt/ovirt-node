@@ -31,15 +31,13 @@
 # config: /etc/sysconfig/node-config
 
 . /etc/init.d/functions
+. /usr/libexec/ovirt-functions
 
 prog=ovirt-awake
 NODE_CONFIG=/etc/sysconfig/node-config
 VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 
-# load the configuration file
-[ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
 
-. /usr/libexec/ovirt-functions
 
 send_text () {
     local text=${1}

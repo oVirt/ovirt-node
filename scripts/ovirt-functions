@@ -6,11 +6,15 @@ _log_status=1
 
 # label of the oVirt partition
 OVIRT_LABEL=OVIRT
-# configuration defaults
+# configuration values are loaded in the following order:
+# 1. /etc/sysconfig/node-config sets the default values
+# 2. /etc/default/ovirt is loaded to override defaults with karg values
+NODE_SYSCONFIG=/etc/sysconfig/node-config
 OVIRT_DEFAULTS=/etc/default/ovirt
-if [ -f $OVIRT_DEFAULTS ]; then
-    . $OVIRT_DEFAULTS
-fi
+
+if [ -f "$NODE_SYSCONFIG" ]; then . "$NODE_SYSCONFIG"; fi
+if [ -f $OVIRT_DEFAULTS ];   then . $OVIRT_DEFAULTS; fi
+
 # fallback when default is empty
 OVIRT_STANDALONE=${OVIRT_STANDALONE:-0}
 

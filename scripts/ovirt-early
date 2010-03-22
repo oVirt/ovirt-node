@@ -15,9 +15,6 @@
 prog=ovirt-early
 VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/$prog
 
-# load the configuration file
-[ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
-
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 EARLY_DIR=/etc/ovirt-early.d
@@ -181,6 +178,7 @@ start_ovirt_early () {
     #   ovirt_upgrade
     #   ovirt_standalone
     #   ovirt_firstboot
+    #   ovirt_runtime_mode
     #   rescue
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
@@ -241,6 +239,10 @@ start_ovirt_early () {
     # force firstboot configuration even if it has already been run
     # in auto-install mode, overwrite the disk chosen by ovirt_init parameter
     firstboot=
+
+    #   ovirt_runtime_mode
+    # overrides the runtime mode defined in /etc/sysconfig/node-config
+    runtime_mode=
 
     #   rescue
     # enter emergency shell for fixing configuration issues
@@ -367,7 +369,10 @@ start_ovirt_early () {
             ovirt_firstboot*)
             firstboot=1
             ;;
-            rescue)
+            runtime_mode*)
+            runtime_mode=${i#runtime_mode=}
+            ;;
+	    rescue)
             rescue=1
             ;;
             rootpw=*)
@@ -442,7 +447,7 @@ start_ovirt_early () {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
@@ -459,7 +464,7 @@ start_ovirt_early () {
         fi
     done
     augtool $tmpaug
-
+    . $OVIRT_DEFAULTS
     if [ -f /etc/sysconfig/network ]; then
         . /etc/sysconfig/network
         if [ -n "$HOSTNAME" ]; then

@@ -16,9 +16,6 @@
 prog=ovirt-post
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/$prog
 
-# load the configuration file
-[ -f "$NODE_CONFIG" ] && . "$NODE_CONFIG"
-
 start_ovirt_post() {
     # wait for libvirt to finish initializing
     local count=0
