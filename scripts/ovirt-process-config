@@ -9,6 +9,8 @@
 
 ME=$(basename "$0")
 warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
+die() { warn "$*"; exit 1; }
+
 try_h() { printf "Try \`$ME -h' for more information.\n" >&2; exit 1;}
 try_help() { printf "Usage: \`$ME [config] [module output] [config output]\n" >&2; exit 1;}
 
@@ -55,20 +57,41 @@ networking=$(awk '/^[ \t]*ifcfg=/ {
             field=values[1]
             value=values[2]
 
+            if(length(field) == 0) {
+                print "Missing field name."
+                exit 1
+            }
+
+            if(length(value) == 0) {
+                print "Missing field value."
+                exit 2
+           }
+
             printf("set %s/ifcfg-%s/%s %s\n", ifcfg_dir, iface, field, value)
         }
     }
 
 }' $CONFIG)
 
+SUCCESS=$?
+
+if [ SUCCESS != 0 ]; then
+    case $SUCCESS in
+        1) error="missing field name";;
+        2) error="missing field value";;
+    esac
+
+    die "Bad data received: ${error}"
+fi
+
 echo "$networking" > $OVIRT_CONFIG_OUTPUT_FILE
 
 if [ -f $OVIRT_CONFIG_OUTPUT_FILE ]; then
     augtool $OVIRT_CONFIG_OUTPUT_FILE \
-	&& RESULT=0 || RESULT=1
+        && RESULT=0 || RESULT=1
     # FIXME do not store ifcfg-lo
     if ls /etc/sysconfig/network-scripts/ifcfg* >/dev/null 2>/dev/null; then
-	ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
+        ovirt_store_config /etc/sysconfig/network-scripts/ifcfg*
     fi
 fi
 

@@ -2,6 +2,8 @@ CHANGELOG
 =========
 
 Version 1.9.1:
+ * Update ovirt-process-config to fail configs that are missing the field name
+   or value.
  * Updated build system will use Fedora 13 as the rawhide repo.
  * Fixed ovirt-config-networking to not report success when network start fails.
  * Reboot hangs on /etc [FIXED].
