@@ -1,5 +1,18 @@
 CHANGELOG
 =========
 
+Version 1.9.1:
+ * Updated build system will use Fedora 13 as the rawhide repo.
+ * Fixed ovirt-config-networking to not report success when network start fails.
+ * Reboot hangs on /etc [FIXED].
+ * Multipath translation performance improvements.
+ * Cleanup ROOTDRIVE when partitioning.
+ * Fix hang when cleaning dirty storage.
+ * The order of the oVirt SysVInit scripts has been changed.
+   - ovirt-early -> ovirt-awake -> ovirt -> ovirt-post
+ * Fixes to the SysVINit scripts to name lifecycle methods propery.
+ * Added psmisc package.
+ * Added default KEYTAB_FILE name to /etc/sysconfig/node-config.
+
 Version 1.9.0:
  * Created a reference implementation for a 2.0 management server.
