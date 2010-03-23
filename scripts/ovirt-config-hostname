@@ -42,16 +42,31 @@ EOF
     return $rc
 }
 
+is_valid_hostname () {
+    local host=${1}
+    local result=1
+    if [[ $host =~ "^([a-zA-Z0-9._-]+)$" ]]; then
+        result=$?
+    fi
+    return $result
+}
+
 function prompt_user {
+  rc=0
+  while true; do
     printf "\n"
     read -p "What is the hostname for this node? "
 
     if [ -n "$REPLY" ]; then
+        if ! is_valid_hostname "$REPLY"; then
+            printf "\nInvalid Hostname\n"
+            continue
+        fi
         if set_hostname $REPLY; then
             printf "\nHostname has been set\n"
         else
             printf "\nSetting hostname failed\n"
-            return 1
+            rc=1
         fi
     else
         printf "\n"
@@ -60,18 +75,19 @@ function prompt_user {
             0)
                 if remove_hostname; then
                     printf "\nHostname was removed.\n"
-                    return 0
                 else
                     printf "\nRemoving hostname failed\n"
-                    return 1
+                    rc=1
                 fi
                 ;;
             1)
                 printf "\nNo changes made.\n"
-                return 0
                 ;;
         esac
     fi
+    break
+  done
+  return $rc
 }
 
 # AUTO for auto-install
