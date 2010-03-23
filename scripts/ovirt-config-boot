@@ -143,53 +143,6 @@ ovirt_boot_setup() {
         fi
     fi
 
-    # append LVM support to the livecd initramfs
-    tmpdir=$(mktemp -d)
-    cd $tmpdir
-    gzip -dc $live/$syslinux/initrd0.img |
-        cpio -id init sbin/real-init
-    init_script=init
-    if [ -e sbin/real-init ]; then
-        # Fedora 10 mkliveinitrd
-        init_script=sbin/real-init
-    fi
-    sed -i '/^\/sbin\/udev.*trigger/ a \
-echo SCSI wait for scans\
-/sbin/modprobe scsi_wait_scan\
-/sbin/modprobe -r scsi_wait_scan\
-set +e\
-while true; do\
-  echo Scanning logical volumes\
-  lvm vgscan --ignorelockingfailure\
-  echo Activating logical volumes\
-  if lvm vgchange -ay --ignorelockingfailure HostVG; then\
-    break\
-  fi\
-  sleep 1\
-done\
-set -e\
-' $init_script
-    # fix emergency shell
-    sed -i 's/^    bash$/    bash < \/dev\/console/' $init_script
-    mkdir -p bin
-    bit=
-    if [ -e /lib64 ]; then
-        bit=64
-    fi
-    mkdir -p lib$bit
-    if [ -e /sbin/lvm.static ]; then
-        cp /sbin/lvm.static bin/lvm
-    else
-        cp /sbin/lvm bin
-        # lvm is not static in Fedora
-        cp /lib$bit/libreadline.so.5 /lib$bit/libncurses.so.5 lib$bit
-    fi
-
-    find $init_script bin/lvm lib$bit -type f |
-        cpio -H newc --quiet -o |
-        gzip -9 |
-        cat $live/$syslinux/initrd0.img - > $initrd_dest/initrd0.img
-
     version=$(rpm -q --qf '%{version}' ovirt-node)
     release=$(rpm -q --qf '%{release}' ovirt-node)
     # reorder tty0 to allow both serial and phys console after installation
