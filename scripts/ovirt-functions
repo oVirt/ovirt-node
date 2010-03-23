@@ -480,13 +480,21 @@ ovirt_store_config() {
             # persisted
             if [ -f $p ]; then
                 if [ -f /config$p ]; then
-                    printf "File already persisted: $p\n"
-                    persist_it=false
+                    local md5root=$(md5 $p)
+                    local md5stored=$(md5 /config$p)
+                    if [ "$md5root" = "$md5stored" ]; then
+                        printf "File already persisted: $p\n"
+                        persist_it=false
+                    else
+                        # persistent copy needs refresh
+                        umount -n $p 2> /dev/null || :
+                        rm -f /config$p
+                    fi
                 fi
             fi
 
             if $persist_it; then
-                f=$(readlink -f $p)
+                local f=$(readlink -f $p)
                 printf "$f"
                 # skip if file does not exist or is empty
                 if [ ! -s "$f" ]; then
