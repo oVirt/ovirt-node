@@ -1,4 +1,4 @@
-# -*-Shell-script-*-
+\# -*-Shell-script-*-
 
 OVIRT_LOGFILE=/var/log/ovirt.log
 OVIRT_TMP_LOGFILE=/tmp/ovirt.log
@@ -465,28 +465,41 @@ ovirt_store_config() {
     if grep -q " /config ext3" /proc/mounts; then
         printf "storing to /config :\n"
         for p in "$@"; do
-            f=$(readlink -f $p)
-            printf "$f"
-            # skip if file does not exist or is empty
-            if [ ! -s "$f" ]; then
-                printf " Skipping, file '%s' does not exist or is empty\n" $p
-                continue
-            fi
-            # skip if already bind-mounted
-            if ! grep -q " $f ext3" /proc/mounts ; then
-                mkdir -p /config$(dirname $f)
-                cp -a $f /config$f \
-                && mount -n --bind /config$f $f
-                if [ $? -ne 0 ]; then
-                    printf " Failed to persist\n"
-                    rc=1
-                else
-                    printf " File persisted\n"
+            local persist_it=true
+
+            # ensure that, if this is a directory
+            if [ -d $p ]; then
+                if [ -d /config$p ]; then
+                    persist_it=false
                 fi
             fi
-            # register in /config/files used by rc.sysinit
-            if ! grep -q "^$f$" /config/files 2> /dev/null ; then
-                printf "$f\n" >> /config/files
+
+            if $persist_it; then
+                f=$(readlink -f $p)
+                printf "$f"
+                # skip if file does not exist or is empty
+                if [ ! -s "$f" ]; then
+                    printf " Skipping, file '%s' does not exist or is empty\n" $p
+                    continue
+                fi
+                # skip if already bind-mounted
+                if ! grep -q " $f ext3" /proc/mounts ; then
+                    mkdir -p /config$(dirname $f)
+                    cp -a $f /config$f \
+                        && mount -n --bind /config$f $f
+                    if [ $? -ne 0 ]; then
+                        printf " Failed to persist\n"
+                        rc=1
+                    else
+                        printf " File persisted\n"
+                    fi
+                fi
+                # register in /config/files used by rc.sysinit
+                if ! grep -q "^$f$" /config/files 2> /dev/null ; then
+                    printf "$f\n" >> /config/files
+                fi
+            else
+                printf "Could not persist $p: it contains an already persisted file.\n"
             fi
         done
         echo
@@ -529,13 +542,24 @@ remove_config() {
             f=$(readlink -f $p)
             if grep -q " $f ext3" /proc/mounts ; then
                 if umount -n $f; then
-                    if [ -f /config$f ]; then
-                        # refresh the file in rootfs if it was mounted over
-                        cp -a /config$f $f
+                    if [ -d $f ]; then
+                        cp -ar /config/$f/* $f
                         if [ $? -ne 0 ]; then
-                            printf " Failed to unpersist %s\n" $f
+                            printf " Failed to unpersist ${f}\n"
+                            exit 1
                         else
-                            printf " %s successully unpersisted\n" $f
+                            printf " $f successfully unpersisted\n"
+                        fi
+                    else
+                        if [ -f /config$f ]; then
+                            # refresh the file in rootfs if it was mounted over
+                            cp -a /config$f $f
+                            if [ $? -ne 0 ]; then
+                                printf " Failed to unpersist %s\n" $f
+                                exit 1
+                            else
+                                printf " %s successully unpersisted\n" $f
+                            fi
                         fi
                     fi
                 fi
@@ -557,17 +581,26 @@ remove_config() {
 # WARNING: file is shredded and removed
 #
 ovirt_safe_delete_config() {
-    if grep -q " /config ext3" /proc/mounts; then
-        for f in "$@"; do
-            if grep -q " $f ext3" /proc/mounts ; then
-                umount -n $f
-            fi
-            # unregister in /config/files used by rc.sysinit
-            sed --copy -i "\|^$f$|d" /config/files
-            shred -u /config$f
-        done
-    fi
-    shred -u $f
+    local target
+
+    for target in "$@"; do
+        if grep -q " $target ext3" /proc/mounts; then
+            umount -n $target
+        fi
+
+        sed --copy -i "\|$target$|d" /config/files
+
+        if [ -d $target ]; then
+            for child in $(ls -d $target/*); do
+                ovirt_safe_delete_config $child
+            done
+            rm -rf /config$target
+            rm -rf $target
+        else
+            shred -u /config$target
+            shred -u $target
+        fi
+    done
 }
 
 
