@@ -37,27 +37,37 @@ if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"
         rm -f /var/lib/multipath/bindings
         unmount_logging
         unmount_config /etc/default/ovirt
+        #get partition info
+        root2=""
+        if findfs LABEL=RootBackup 2>&1 >/dev/null; then
+            root2=RootBackup
+        elif findfs LABEL=RootUpdate 2>&1 >/dev/null; then
+            root2=RootUpdate
+        elif findfs LABEL=RootNew 2>&1 >/dev/null; then
+            root2=RootNew
+        fi
+        if ! get_part_info $(findfs LABEL=Root 2>/dev/null) root_dev root_part; then
+            log "Can't find Root device"
+            exit 2
+        fi
+        if ! get_part_info $(findfs LABEL=${root2} 2>/dev/null) root2_dev root2_part; then
+            log "Can't find RootBackup/RootNew/RootUpdate device"
+            exit 3
+        fi
+        if ! get_part_info $(pvs --noheadings -o pv_name,vg_name | grep HostVG | awk '{print $1}') pv_dev pv_part; then
+            log "Can't find HostVG device"
+            exit 4
+        fi
         log "Removing volume group"
         wipe_volume_group "HostVG"
-        partition=$(readlink -f $(findfs LABEL=Root))
-        if [ -n "$partition" ]; then
-            log "Removing partitions"
-            eval $(echo $partition | awk ' {
-                print "drive=" substr($0,1,length($1)-1);
-                print "drive2=" substr($0,1,length($1)-2);
-            }')
-            if [ ! -e "$drive" ]; then
-                drive="$drive2"
-                partpv="$drive}p2"
-            else
-                partpv="${drive}2"
-            fi
-	        parted -s $drive "rm 1"
-            pvremove ${partpv}
-	        parted -s $drive "rm 2"
-            parted -s $drive "rm 3"
-            wipe_partitions $drive
-	    fi
+        log "Removing partitions"
+        parted -s $root_dev "rm $root_part"
+        pvremove ${vg_dev}
+        parted -s $root2_dev "rm $root2_part"
+        parted -s $vg_dev "rm $vg_part"
+        wipe_partitions $pv_dev
+        wipe_partitions $root_dev
+        wipe_partitions $root2_dev
         #restart multipath
         multipath -F
         multipath -v3

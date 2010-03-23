@@ -50,12 +50,7 @@ ovirt_boot_setup() {
     fi
 
     # check that /boot mounted ok and find partition number for GRUB
-    eval $(readlink -f /dev/disk/by-label/$grub_dev_label|awk {'
-        print "disk=" substr($1,1,length($1)-1);
-        print "disk2=" substr($1,1,length($1)-2);
-        partN=substr($1,length($1),1); partN--;
-        print "partN=" partN;
-    }')
+    get_part_info $(readlink -f /dev/disk/by-label/$grub_dev_label disk partN
     rc=$?
     if [ $rc -ne 0 -o $partN -lt 0 ]; then
       log "unable to determine Root partition"
@@ -70,10 +65,6 @@ ovirt_boot_setup() {
           return 1
         fi
 
-        if [ ! -e "$disk" ]; then
-            # e.g. c0d0p1
-            disk="$disk2"
-        fi
         # prepare Root partition update
         candidate=
         if [ -e /dev/disk/by-label/RootBackup ]; then

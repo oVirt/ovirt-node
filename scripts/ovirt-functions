@@ -851,6 +851,39 @@ get_dm_device ()
     return $rc
 }
 
+#Function to determine partition and device names
+get_part_info() {
+    local drive_in=$1
+    local dev_var=$2
+    local part_var=$3
+    local devname_1 devname2 part_number
+    local rc=0
+
+    eval $(readlink -f $drive_in|awk {'
+        print "devname_1=" substr($1,1,length($1)-1);
+        print "devname_2=" substr($1,1,length($1)-2);
+        part_number=substr($1,length($1),1);
+        print "part_number=" part_number;
+    }')
+    rc=$?
+
+    if [[ "part_number" -lt 1 ]]; then
+        log "Partition number was invalid"
+        return 2
+    fi
+
+
+    if [ -e ${devname_1} ]; then
+        eval "${dev_var}"="${devname_1}"
+    elif [ -e ${devname_2} ]; then
+        eval "${dev_var}"="${devname_2}"
+    else
+        return 1
+    fi
+    eval "${part_var}"="${part_number}"
+    return $rc
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
