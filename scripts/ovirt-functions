@@ -1,4 +1,4 @@
-\# -*-Shell-script-*-
+# -*-Shell-script-*-
 
 OVIRT_LOGFILE=/var/log/ovirt.log
 OVIRT_TMP_LOGFILE=/tmp/ovirt.log
@@ -463,13 +463,24 @@ EOF
 ovirt_store_config() {
     rc=0
     if grep -q " /config ext3" /proc/mounts; then
-        printf "storing to /config :\n"
         for p in "$@"; do
             local persist_it=true
 
             # ensure that, if this is a directory
+            # that it's not already persisted
             if [ -d $p ]; then
                 if [ -d /config$p ]; then
+                    printf "Directory already persisted: $p\n"
+                    printf "You need to unpersist its child directories and/or files and try again.\n"
+                    persist_it=false
+                fi
+            fi
+
+            # if it's a file then make sure it's not already
+            # persisted
+            if [ -f $p ]; then
+                if [ -f /config$p ]; then
+                    printf "File already persisted: $p\n"
                     persist_it=false
                 fi
             fi
@@ -498,13 +509,12 @@ ovirt_store_config() {
                 if ! grep -q "^$f$" /config/files 2> /dev/null ; then
                     printf "$f\n" >> /config/files
                 fi
-            else
-                printf "Could not persist $p: it contains an already persisted file.\n"
+                printf "\nSuccessfully persisted $f\n"
             fi
         done
         echo
     else
-        printf "warning: persistent config storage not available\n"
+        printf "WARNING: persistent config storage not available\n"
         rc=2
     fi
     return $rc
@@ -537,39 +547,50 @@ unmount_config() {
 #       remove_config /etc/config /etc/config2 ...
 #
 remove_config() {
+    # if there are no persisted files then just exit
+    if [ ! -s /config/files ]; then
+        printf "There are currently no persisted files.\n"
+        exit 1
+    fi
+
     if grep -q " /config ext3" /proc/mounts; then
         for p in "$@"; do
-            f=$(readlink -f $p)
-            if grep -q " $f ext3" /proc/mounts ; then
-                if umount -n $f; then
-                    if [ -d $f ]; then
-                        cp -ar /config/$f/* $f
-                        if [ $? -ne 0 ]; then
-                            printf " Failed to unpersist ${f}\n"
-                            exit 1
-                        else
-                            printf " $f successfully unpersisted\n"
-                        fi
-                    else
-                        if [ -f /config$f ]; then
-                            # refresh the file in rootfs if it was mounted over
-                            cp -a /config$f $f
+            grep "^${p}\$" /config/files > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                f=$(readlink -f $p)
+                if grep -q " $f ext3" /proc/mounts ; then
+                    if umount -n $f; then
+                        if [ -d $f ]; then
+                            cp -ar /config/$f/* $f
                             if [ $? -ne 0 ]; then
-                                printf " Failed to unpersist %s\n" $f
+                                printf " Failed to unpersist ${f}\n" $f
                                 exit 1
                             else
-                                printf " %s successully unpersisted\n" $f
+                                printf " $f successully unpersisted\n" $f
+                            fi
+                        else
+                            if [ -f /config$f ]; then
+                            # refresh the file in rootfs if it was mounted over
+                                cp -a /config$f $f
+                                if [ $? -ne 0 ]; then
+                                    printf " Failed to unpersist %s\n" $f
+                                    exit 1
+                                else
+                                    printf " %s successully unpersisted\n" $f
+                                fi
                             fi
                         fi
                     fi
+                else
+                    printf "$f is not a persisted file.\n"
                 fi
+                # clean up the persistent store
+                rm -Rf /config$f
+                # unregister in /config/files used by rc.sysinit
+                sed --copy -i "\|^$f$|d" /config/files
             else
-                printf " %s is not in persistent storage" $f
+                printf "File not explicitly persisted: $p\n"
             fi
-            # clean up the persistent store
-            rm -f /config$f
-            # unregister in /config/files used by rc.sysinit
-            sed --copy -i "\|^$f$|d" /config/files
         done
     fi
 }
