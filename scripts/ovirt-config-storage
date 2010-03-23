@@ -307,14 +307,15 @@ get_dev_name()
         devices="$devices /dev/mapper/$dev"
         local sd_devs=""
         get_multipath_devices "$dev" sd_devs
-        devs_to_remove="${devs_to_remove} ${sd_devs}"
+        local dm_dev=$(multipath -ll "$dev" | grep "$dev" | sed -r 's/^.*(dm-[0-9]+ ).*$/\1/')
+        devs_to_remove="${devs_to_remove} ${sd_devs} $dm_dev"
     done
 
     # Remove /dev/sd* devices that are part of a multipath device
     local dev_list
     for dev in $devices
     do
-        if [[ ! "$devs_to_remove" =~ "$(basename $dev)" ]]; then
+        if [[ ! "$devs_to_remove" =~ "$(basename $dev) " ]]; then
             dev_list="$dev_list $dev"
         fi
     done
