@@ -15,6 +15,8 @@ Version 1.9.1:
  * Fixes to the SysVINit scripts to name lifecycle methods propery.
  * Added psmisc package.
  * Added default KEYTAB_FILE name to /etc/sysconfig/node-config.
+ * Fixes to the persist and unpersist commands to handle already persisted
+   files and directories.
 
 Version 1.9.0:
  * Created a reference implementation for a 2.0 management server.
