@@ -3,6 +3,7 @@ CUR_RAWHIDE       = 14
 CUR_DEVEL         = 13
 CUR_PREVIEW       = 12
 PREVIEW_URL      ?= http://jforbes.fedorapeople.org/virt-preview/f$(CUR_PREVIEW)/$(ARCH)
+OVIRT_REPO_URL    = http://ovirt.org/repos/ovirt/$(FEDORA)/$(ARCH)
 
 FEDORA            = $(shell rpm --eval '%{fedora}')
 ARCH              = $(shell rpm --eval '%{_arch}')
@@ -36,10 +37,11 @@ repos.ks:
 	        FEDORA_REPO=f$(FEDORA) ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/releases/$(FEDORA)/Everything/${ARCH}/os,--mirrorlist=$(FEDORA_MIRROR)?repo=fedora-$(FEDORA)&arch=$(ARCH))" ;\
 	        UPDATE_REPO_LINE="repo --name=$${FEDORA_REPO}-updates $(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/updates/$(FEDORA)/${ARCH},--mirrorlist=$(FEDORA_MIRROR)?repo=updates-released-f$(FEDORA)&arch=$(ARCH))\n" ;\
-	        if [ 0$(FEDORA) == 0$(CUR_PREVIEW) ]; then \
+	        if [ 0$(FEDORA)remove == 0$(CUR_PREVIEW)me ]; then \
 	            UPDATE_REPO_LINE="$${UPDATE_REPO_LINE}repo --name=preview --baseurl=$(PREVIEW_URL)\n" ;\
 	        fi ;\
 	    fi ;\
+	    UPDATE_REPO_LINE="$${UPDATE_REPO_LINE}repo --name=ovirt --baseurl=$(OVIRT_REPO_URL)\n" ;\
 	    echo "repo --name=$${FEDORA_REPO} $${FEDORA_REPO_LOC}" > repos.ks ;\
 	    printf "$${UPDATE_REPO_LINE}" >> repos.ks ;\
 	)
