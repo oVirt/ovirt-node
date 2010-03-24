@@ -96,6 +96,9 @@ configure_ovirt_management_nic() {
             > /etc/sysconfig/network-scripts/ifcfg-$BRIDGE
         log "Default config applied"
     fi
+
+    service network restart
+
 }
 
 # $(get_live_disk)
