@@ -75,7 +75,7 @@ networking=$(awk '/^[ \t]*ifcfg=/ {
 
 SUCCESS=$?
 
-if [ SUCCESS != 0 ]; then
+if [ $SUCCESS != 0 ]; then
     case $SUCCESS in
         1) error="missing field name";;
         2) error="missing field value";;
