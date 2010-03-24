@@ -320,6 +320,22 @@ fi
 %{python_sitelib}/nodeadmin-@VERSION@*
 
 %changelog
+* Wed Mar 24 2010 Darryl L. Pierce <dpierce@redhat.com> - 1.9.1-1
+- Update ovirt-process-config to fail configs that are missing the field name or value.
+- Updated build system will use Fedora 13 as the rawhide repo.
+- Fixed ovirt-config-networking to not report success when network start fails.
+- Reboot hangs on /etc [FIXED].
+- Multipath translation performance improvements.
+- Cleanup ROOTDRIVE when partitioning.
+- Fix hang when cleaning dirty storage.
+- The order of the oVirt SysVInit scripts has been changed.
+-   ovirt-early -> ovirt-awake -> ovirt -> ovirt-post
+- Fixes to the SysVINit scripts to name lifecycle methods propery.
+- Added psmisc package.
+- Added default KEYTAB_FILE name to /etc/sysconfig/node-config.
+- Fixes to the persist and unpersist commands to handle already persisted files and directories.
+- Duplicate NTP/DNS entries are rejected during network setup.
+
 * Wed Oct 07 2009 David Huff <dhuff@redhat.com> - 1.0.3-4
 - Added ovirt-node-tools subpackage
 
