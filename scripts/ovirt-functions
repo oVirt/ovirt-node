@@ -665,6 +665,13 @@ add_if_not_exist() {
         || echo "$string" >> "$file"
 }
 
+# $1 - the string to be trimmed
+trim_whitespace () {
+    local text=${1}
+
+    printf "$text" | awk '{gsub(/^[ ]*/,"",$0); gsub(/[ ]*$/,"",$0) ; print }'
+}
+
 is_numeric() {
     printf "$1" | grep -q -E '^[0-9]+$'
 }

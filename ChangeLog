@@ -17,6 +17,7 @@ Version 1.9.1:
  * Added default KEYTAB_FILE name to /etc/sysconfig/node-config.
  * Fixes to the persist and unpersist commands to handle already persisted
    files and directories.
+ * Duplicate NTP/DNS entries are rejected during network setup.
 
 Version 1.9.0:
  * Created a reference implementation for a 2.0 management server.

@@ -357,8 +357,9 @@ function configure_dns
                 for dns in first second; do
                     while true; do
                         printf "\n"
-                        read -ep "Please enter the ${dns} DNS server (or ENTER to exit): "
-                        if [[ -z "${REPLY}" ]]; then
+                        read -erp "Please enter the ${dns} DNS server (or ENTER to exit): "
+                        local ADDRESS=$(trim_whitespace $REPLY)
+                        if [[ -z "${ADDRESS}" ]]; then
                             if [[ -z "${DNS}" ]]; then
                                 printf "\nAborted...\n"
                                 return
@@ -366,15 +367,20 @@ function configure_dns
                                 break
                             fi
                         fi
-                        if is_valid_ipv4 $REPLY; then
+                        if is_valid_ipv4 $ADDRESS; then
                             if [[ -z "${DNS}" ]]; then
-                                DNS="${REPLY}"
-                            elif [[ -n "${REPLY}" ]]; then
-                                DNS="${DNS}:${REPLY}"
+                                DNS="${ADDRESS}"
+                                break
+                            elif [[ -n "${ADDRESS}" ]]; then
+                                if [[ ! $DNS =~ "${ADDRESS}" ]]; then
+                                    DNS="${DNS}:${ADDRESS}"
+                                    break
+                                else
+                                    printf "${ADDRESS} is already defined as a DNS server.\n"
+                                fi
                             fi
-                            break
                         else
-                            printf "${REPLY} is an invalid address.\n"
+                            printf "${ADDRESS} is an invalid address.\n"
                         fi
                     done
                 done
@@ -403,19 +409,28 @@ function configure_ntp
 {
     local AUTO=$2
     if [[ "$AUTO" == "AUTO" && -n "$OVIRT_NTP" ]]; then
-	NTPSERVERS=$OVIRT_NTP
+        NTPSERVERS=$OVIRT_NTP
     else
-	NTPSERVERS=""
+        NTPSERVERS=""
     fi
 
     if [ -z "$AUTO" ]; then
         if has_configured_interface true; then
-	    while true; do
-	        read -ep "Enter an NTP server (hit return when finished): "
+            while true; do
+                read -rp "Enter an NTP server (hit return when finished): "
+                local ADDRESS=$(trim_whitespace $REPLY)
 
-	        if [ -z "$REPLY" ]; then break; fi
-                NTPSERVERS="${NTPSERVERS}:${REPLY}"
-	    done
+                if [ -z "${ADDRESS}" ]; then break; fi
+                if is_valid_ipv4 $ADDRESS; then
+                    if [[ ! $NTPSERVERS =~ $ADDRESS ]]; then
+                        NTPSERVERS="${NTPSERVERS}:${ADDRESS}"
+                    else
+                        printf "${ADDRESS} is already defined as an NTP server.\n"
+                    fi
+                else
+                    printf "${ADDRESS} is an invalid address.\n"
+                fi
+            done
         fi
     fi
 }
