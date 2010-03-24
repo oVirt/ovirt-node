@@ -192,3 +192,7 @@ patch -d /etc/init.d/ -p0 <<\EOF
     /(loopfs|autofs|nfs|cifs|smbfs|ncpfs|sysfs|^none|^\/dev\/ram|^\/dev\/root$)/ {next}
    {print $2}' /proc/mounts \
 EOF
+
+# Need this for F12 findfs calls
+# Otherwise, findfs returns /dev/sdX instead of /dev/mapper/<wwid>
+echo "EVALUATE=scan" > /etc/blkid.conf
