@@ -495,9 +495,9 @@ ovirt_store_config() {
             fi
 
             if $persist_it; then
-                # skip if file does not exist or is empty
-                if [ ! -s "${filename}" ]; then
-                    printf " Skipping, file '${filename}' does not exist or is empty\n"
+                # skip if file does not exist
+                if [ ! -e "${filename}" ]; then
+                    printf " Skipping, file '${filename}' does not exist\n"
                     continue
                 fi
                 # skip if already bind-mounted
