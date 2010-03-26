@@ -84,6 +84,15 @@ linux0==1 && $1=="label" && $2!="linux0" {
 mv $LIVE_ROOT/isolinux/isolinux.cfg.standalone $LIVE_ROOT/isolinux/isolinux.cfg
 
 cp $INSTALL_ROOT/usr/share/ovirt-node/syslinux-vesa-splash.jpg $LIVE_ROOT/isolinux/splash.jpg
+
+# overwrite user visible banners with the image versioning info
+PACKAGE=ovirt
+ln -snf $PACKAGE-release $INSTALL_ROOT/etc/redhat-release
+ln -snf $PACKAGE-release $INSTALL_ROOT/etc/system-release
+cp $INSTALL_ROOT/etc/$PACKAGE-release $INSTALL_ROOT/etc/issue
+echo "Kernel \r on an \m (\l)" >> $INSTALL_ROOT/etc/issue
+cp $INSTALL_ROOT/etc/issue $INSTALL_ROOT/etc/issue.net
+
 %end
 
 %post

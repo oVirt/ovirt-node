@@ -154,25 +154,17 @@ python nodeadmin/setup.py install --root %{buildroot}
 
 echo "oVirt Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
 mkdir -p %{buildroot}/%{_sysconfdir}/default
-echo "# File where default partitioning info is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
+echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
 
 # ovirt-logos
 # should be ifarch i386
-mkdir -p %{buildroot}/boot/grub
 install -p -m 644 images/grub-splash.xpm.gz %{buildroot}%{app_root}
 # end i386 bits
-mkdir -p %{buildroot}/usr/lib/anaconda-runtime
 install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}%{app_root}
 # ovirt-logos
 
 # release files
 echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{buildroot}/etc/ovirt-release
-cp %{buildroot}/etc/ovirt-release %{buildroot}/etc/issue
-echo "Kernel \r on an \m (\l)" >> %{buildroot}/etc/issue
-cp %{buildroot}/etc/issue %{buildroot}/etc/issue.net
-echo >> %{buildroot}/etc/issue
-ln -s ovirt-release %{buildroot}/etc/redhat-release
-ln -s ovirt-release %{buildroot}/etc/system-release
 
 # ovirt-config-boot post-install hooks
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
@@ -247,10 +239,6 @@ fi
 %defattr(-,root,root)
 %config(noreplace) %attr(0644,root,root) %{_sysconfdir}/ovirt-release
 %config(noreplace) %attr(0644,root,root) %{_sysconfdir}/default/ovirt
-%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/redhat-release
-%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/system-release
-%config(noreplace) %attr(0644,root,root) /etc/issue
-%config(noreplace) %attr(0644,root,root) /etc/issue.net
 
 %config(noreplace) %{_sysconfdir}/logrotate.d/ovirt-node
 %config(noreplace) %{_sysconfdir}/cron.d/ovirt-logrotate
