@@ -41,3 +41,10 @@ if [ -f /usr/bin/rpmbuild ]; then
   fi
   rpmbuild --nodeps --define "extra_release $EXTRA_RELEASE" -ta --clean *.tar.gz
 fi
+
+#make iso
+cd recipe
+make ovirt-node-image
+
+#copy iso back to main directory for autotest.sh
+cp *iso ..
