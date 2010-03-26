@@ -172,7 +172,7 @@ EOF
 
 
 #use all hard-coded defaults for multipath
-cat /dev/mull > /etc/multipath.conf
+cat /dev/null > /etc/multipath.conf
 
 #lvm.conf should use /dev/mapper and /dev/sdX devices
 # and not /dev/dm-X devices
