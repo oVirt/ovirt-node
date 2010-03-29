@@ -88,7 +88,7 @@ ovirt_boot_setup() {
             rc=0
         else
             candidate_dev=$(findfs LABEL=$candidate 2>/dev/null)
-            e2label $candidate_dev RootNew
+            e2label "$candidate_dev" RootNew
             rc=$?
         fi
         if [ $rc -ne 0 ]; then
@@ -97,7 +97,7 @@ ovirt_boot_setup() {
           return $rc
         fi
 
-        mount $candidate_dev /liveos/
+        mount "$candidate_dev" /liveos/
 
         rm -rf /liveos/LiveOS
         mkdir -p /liveos/LiveOS
@@ -175,7 +175,7 @@ EOF
     if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         umount /liveos
         # mark new Root ready to go, reboot() in ovirt-function switches it to active
-        e2label $candidate_dev RootUpdate
+        e2label "$candidate_dev" RootUpdate
     fi
 
     rm -rf $tmpdir

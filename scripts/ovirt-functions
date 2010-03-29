@@ -148,7 +148,7 @@ EOF
 #
 wipe_volume_group()
 {
-    vg=$1
+    vg="$1"
 
     for d in $(grep $vg /proc/mounts|awk '{print $2}'); do
         log "Unmounting $d"
@@ -156,10 +156,10 @@ wipe_volume_group()
     done
     for d in $(grep $vg /proc/swaps|awk '{print $1}'); do
         log "Turning off $d"
-        swapoff $d
+        swapoff "$d"
     done
     log "Removing $vg"
-    vgremove -f $vg
+    vgremove -f "$vg"
 }
 
 # find_srv SERVICE PROTO
@@ -719,10 +719,10 @@ reboot() {
     if [ "$OVIRT_ISCSI_ENABLED" = "yes" ]; then
         # setup new Root if update is prepared
         if findfs LABEL=RootUpdate 2>&1 >/dev/null; then
-            root_update_dev=$(findfs LABEL=RootUpdate 2>/dev/null)
-            root_dev=$(findfs LABEL=Root 2>/dev/null)
-            e2label $root_dev RootBackup
-            e2label $root_update_dev Root
+            root_update_dev="$(findfs LABEL=RootUpdate 2>/dev/null)"
+            root_dev="$(findfs LABEL=Root 2>/dev/null)"
+            e2label "$root_dev" RootBackup
+            e2label "$root_update_dev" Root
         fi
     fi
     # run post-install hooks
@@ -812,12 +812,12 @@ network_up () {
 
 # Cleans partition tables
 wipe_partitions() {
-    local drive=$1
+    local drive="$1"
     log "Wiping old boot sector"
-    dd if=/dev/zero of=$drive bs=1024K count=1
+    dd if=/dev/zero of="$drive" bs=1024K count=1
     # zero out the GPT secondary header
     log "Wiping secondary gpt header"
-    local disk_kb_count=$(sfdisk -s $drive 2>/dev/null)
+    local disk_kb_count=$(sfdisk -s "$drive" 2>/dev/null)
     dd if=/dev/zero of=$drive bs=1024 seek=$(($disk_kb_count - 1)) count=1
 }
 
@@ -840,35 +840,35 @@ test_ntp_configuration () {
 
 get_dm_device ()
 {
-    local device=$1
+    local device="$1"
     local return_var=$2
-    major=$(stat -c '%t' $(readlink -f $device))
-    minor=$(stat -c '%T' $(readlink -f $device))
+    major=$(stat -c '%t' $(readlink -f "$device"))
+    minor=$(stat -c '%T' $(readlink -f "$device"))
     local dm_device=
     local rc=1
     for dm in /dev/mapper/*; do
-        if [ $major = $(stat -c '%t' $dm) -a \
-            $minor = $(stat -c '%T' $dm) ]; then
-            local dm_device=$dm
+        if [ $major = $(stat -c '%t' "$dm") -a \
+            $minor = $(stat -c '%T' "$dm") ]; then
+            local dm_device="$dm"
             rc=0
             break
         fi
     done
 
-    eval $return_var=$dm_device
+    eval $return_var="$dm_device"
 
     return $rc
 }
 
 #Function to determine partition and device names
 get_part_info() {
-    local drive_in=$1
+    local drive_in="$1"
     local dev_var=$2
     local part_var=$3
     local devname_1 devname2 part_number
     local rc=0
 
-    eval $(readlink -f $drive_in|awk {'
+    eval $(readlink -f "$drive_in" |awk {'
         print "devname_1=" substr($1,1,length($1)-1);
         print "devname_2=" substr($1,1,length($1)-2);
         part_number=substr($1,length($1),1);
