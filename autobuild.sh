@@ -44,7 +44,7 @@ fi
 
 #make iso
 cd recipe
-make ovirt-node-image
+make ovirt-node-image.iso
 
 #copy iso back to main directory for autotest.sh
 cp *iso ..
