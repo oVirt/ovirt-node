@@ -25,6 +25,9 @@ set -v
 
 test -f Makefile && make -k distclean || :
 
+OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT}/../ovirt-cache
+OVIRT_LOCAL_REPO=file://${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
+
 ./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT
 make
 make install
@@ -44,7 +47,10 @@ fi
 
 #make iso
 cd recipe
-make ovirt-node-image.iso
+make \
+  OVIRT_LOCAL_REPO=$OVIRT_LOCAL_REPO \
+  OVIRT_CACHE_DIR=$OVIRT_CACHE_DIR \
+ovirt-node-image.iso
 
 #copy iso back to main directory for autotest.sh
 cp *iso ..
