@@ -126,6 +126,7 @@ ovirt_boot_setup() {
     mkdir -p $grub_dir
 
     cp -p $live/$syslinux/vmlinuz0 $initrd_dest
+    cp -p $live/$syslinux/initrd0.img $initrd_dest
     rc=$?
     if [ $rc -ne 0 ]; then
         log "kernel image copy failed."
