@@ -716,7 +716,7 @@ lvremove() {
 #   cleanup before reboot
 reboot() {
     cd /
-    if [ "$OVIRT_ISCSI_ENABLED" = "yes" ]; then
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         # setup new Root if update is prepared
         if findfs LABEL=RootUpdate 2>&1 >/dev/null; then
             root_update_dev="$(findfs LABEL=RootUpdate 2>/dev/null)"
