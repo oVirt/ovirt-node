@@ -34,7 +34,7 @@ ovirt_boot_setup() {
         found_boot=true
         grub_dev_label=Boot
     elif findfs LABEL=Root 2>&1 >/dev/null ; then
-        found_boot=true
+        found_boot=false
         grub_dev_label=Root
     fi
     if $found_boot; then
@@ -56,8 +56,8 @@ ovirt_boot_setup() {
         grub_dev_label="RootBackup"
     fi
 
-    # check that /boot mounted ok and find partition number for GRUB
-    get_part_info $(readlink -f $(findfs LABEL=$grub_dev_label 2>/dev/null)) disk partN
+    # check that /boot mounted ok and find partition number for GRUB, $4 is to allow 0 as a partition number for grub
+    get_part_info $(readlink -f $(findfs LABEL=$grub_dev_label 2>/dev/null)) disk partN y
     rc=$?
     if [ $rc -ne 0 -o $partN -lt 0 ]; then
       log "unable to determine Root partition"
@@ -217,7 +217,9 @@ ovirt_boot_setup "$live" "$bootparams"
 rc=$?
 if [ $rc -eq 0 -a "$doreboot" = "yes" ]; then
     disable_firstboot
-    ovirt_store_firstboot_config
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+        ovirt_store_firstboot_config
+    fi
     stop_log
 
     reboot

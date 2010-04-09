@@ -624,7 +624,7 @@ perform_partitioning()
         parted "$BOOTDRIVE" -s "mklabel ${LABEL_TYPE}"
         parted "$BOOTDRIVE" -s "mkpartfs primary ext2 0M ${boot_size_si}M"
         reread_partitions "$BOOTDRIVE"
-        partboot="$BOOTDRIVE1"
+        partboot="${BOOTDRIVE}1"
         if [ ! -e "$partboot" ]; then
             partboot="${BOOTDRIVE}p1"
         fi
@@ -794,11 +794,26 @@ do_confirm()
         else
             return
         fi
+        # store networking config since it was created before storage was established for iscsi targets
+        if [ "$OVIRT_ISCSI_NETWORKING" == "y" ]; then
+            ovirt_store_config \
+        /etc/sysconfig/network-scripts/ifcfg* \
+        /etc/ntp.conf
+        fi
     done
 }
 
 do_iscsi_target()
 {
+if ! network_up ; then
+    printf "Networking must be configured prior to configuring an iscsi target.\n\n"
+    # allow network config without setting up storage first
+    augtool <<EOF
+set /files/etc/default/ovirt/OVIRT_ISCSI_NETWORK_CONFIG y
+EOF
+    exit 99
+fi
+
 while true; do
     OPTIONS="\"Target IP\" \"Target Port\"" #\"CHAP Username\" \"CHAP Password\""
     printf "\nPress Enter to leave option blank or Q to quit (default Target Port is 3260)\n"

@@ -326,7 +326,7 @@ mount_boot() {
        return 0
     fi
     mkdir -p /boot
-    mount LABEL=Root /boot
+    mount LABEL=Boot /boot
 }
 # stop any service which keeps /var/log busy
 # keep the list of services
@@ -865,22 +865,31 @@ get_part_info() {
     local drive_in="$1"
     local dev_var=$2
     local part_var=$3
+    local grub_dev=$4
     local devname_1 devname2 part_number
     local rc=0
 
-    eval $(readlink -f "$drive_in" |awk {'
-        print "devname_1=" substr($1,1,length($1)-1);
-        print "devname_2=" substr($1,1,length($1)-2);
-        part_number=substr($1,length($1),1);
-        print "part_number=" part_number;
-    }')
+    if [ -z "$grub_dev" ]; then
+        eval $(readlink -f "$drive_in" |awk {'
+            print "devname_1=" substr($1,1,length($1)-1);
+            print "devname_2=" substr($1,1,length($1)-2);
+            part_number=substr($1,length($1),1);
+            print "part_number=" part_number;
+        }')
+    else
+        eval $(readlink -f "$drive_in" |awk {'
+            print "devname_1=" substr($1,1,length($1)-1);
+            print "devname_2=" substr($1,1,length($1)-2);
+            part_number=substr($1,length($1),1); part_number--;
+            print "part_number=" part_number;
+        }')
+    fi
     rc=$?
 
-    if [[ "part_number" -lt 1 ]]; then
+    if [[ "$part_number" -lt 1 && "$grub_dev" != "y" ]]; then
         log "Partition number was invalid"
         return 2
     fi
-
 
     if [ -e ${devname_1} ]; then
         eval "${dev_var}"="${devname_1}"

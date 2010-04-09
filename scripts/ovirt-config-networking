@@ -24,10 +24,12 @@ CONFIGURED_NIC=""
 VLAN_ID=""
 VL_ROOT=""
 
+if [[ -z "$ROOTDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
 # if local storage is not configured, then exit the script
-if ! is_local_storage_configured; then
-    printf "Local storage must be configured prior to configuring the management interface.\n\n"
-    exit 99
+    if [[ ! is_local_storage_configured && "$OVIRT_ISCSI_NETWORKING" != "y" ]] ; then
+        printf "Local storage must be configured prior to configuring the management interface.\n\n"
+        exit 99
+    fi
 fi
 
 # $1 - the variable name to set
