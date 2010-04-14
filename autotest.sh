@@ -690,7 +690,7 @@ cleanup_after_testing () {
     test -n "$vm_list" && for vm in $vm_list; do
         destroy_node $vm
     done
-    stop_networking
+    stop_networking "${IFACE_NAME}" true
 
     # do not delete the work directory if preserve was specified
     if $preserve_vm; then return; fi
@@ -750,6 +750,8 @@ log "Logging results to file: ${RESULTS}"
     for test in ${tests}; do
         execute_test $test
         result=$?
+
+        cleanup_after_testing
 
         if [ $result != 0 ]; then
             echo "${result}" > $result_file
