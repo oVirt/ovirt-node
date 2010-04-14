@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Copyright (C) 2010, Red Hat, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
+# NAME
+#       node-creator - prepare the kickstart recipe and build the LiveCD image
+# SYNOPSIS
+#       node-creator [<RECIPE> [<BREW_TARGET>]]
+# ENVIRONMENT
+#       RECIPE - path to the kickstart recipe, can have relative %include
+#       BREW_TARGET - Brew build target e.g. rhev-h-5E-build
+#       REPO - if not set, use the latest Brew repo for BREW_TARGET
+#       OVIRT_CACHE_DIR - work folder for livecd-creator
+
+# Requires: sudo livecd-creator, sudo setenforce, ksflatten
+
+ME=$(basename "$0")
+warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
+die() { warn "$*"; exit 1; }
+
+RECIPE=${RECIPE:-$1}
+if [ -z "$RECIPE" -o "$RECIPE" != "${RECIPE#-}" ]; then
+    die "Usage: $ME [<recipe.ks> [<Brew-target>]]"
+fi
+LABEL=$(basename "$RECIPE")
+LABEL=${LABEL%%.ks}
+
+BREW_TARGET=${BREW_TARGET:-$2}
+if [ -z "$REPO" -a -n "$BREW_TARGET" ]; then
+    REPO=http://download.devel.redhat.com/brewroot/repos/$BREW_TARGET/latest/x86_64
+fi
+
+OVIRT_CACHE_DIR="${OVIRT_CACHE_DIR:-$HOME/ovirt-cache}"
+ARCH=$(rpm --eval '%{_arch}')
+NODE_TMP="$OVIRT_CACHE_DIR/node-creator-$ARCH-tmp"
+mkdir -p "$NODE_TMP"
+NODE_KS="$NODE_TMP/$LABEL.ks"
+
+if pgrep -xl nscd; then
+    die "Please stop nscd first"
+fi
+
+rm -f "$NODE_KS" "$NODE_KS.tmp"
+# combine recipe includes
+ksflatten --config "$RECIPE" --output "$NODE_KS.tmp"
+# XXX broken ksflatten leaves %include
+sed -i 's/^%include /#&/' "$NODE_KS.tmp"
+# add build repositories
+if [ -n "$REPO" ]; then
+    echo "repo --name=build --baseurl=$REPO" >> "$NODE_KS"
+fi
+if [ -n "$OVIRT_LOCAL_REPO" ]; then
+    echo "repo --name=local --baseurl=$OVIRT_LOCAL_REPO" >> "$NODE_KS"
+fi
+cat "$NODE_KS.tmp" >> "$NODE_KS"
+rm -f "$NODE_KS.tmp"
+
+mkdir -p "$OVIRT_CACHE_DIR/yum-$ARCH"
+SELINUX_ENFORCING=$(/usr/sbin/getenforce)
+case "$SELINUX_ENFORCING" in
+    Enforcing) sudo /usr/sbin/setenforce Permissive ;;
+    Permissive) ;;
+    *) if grep -q '^selinux --disabled' "$NODE_KS";
+           then
+               warn "WARNING: SELinux disabled in kickstart"
+           else
+               die "ERROR: SELinux enabled in kickstart, \
+               but disabled on the build machine"
+       fi ;;
+esac
+sudo livecd-creator -c "$NODE_KS" -f "$LABEL" \
+    --tmpdir="$NODE_TMP" \
+    --cache="$OVIRT_CACHE_DIR/yum-$ARCH"
+if [ "$SELINUX_ENFORCING" = Enforcing ]; then
+    sudo /usr/sbin/setenforce Enforcing
+fi

@@ -226,6 +226,7 @@ fi
 %doc README COPYING
 %{tools_root}/*.ks
 %defattr(0755,root,root,0755)
+%{_sbindir}/node-creator
 %{_sbindir}/create-ovirt-iso-nodes
 %{_sbindir}/edit-livecd
 %{_sbindir}/livecd-setauth

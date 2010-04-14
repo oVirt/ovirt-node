@@ -3,6 +3,9 @@ echo "Starting Kickstart Post"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 export PATH
 
+# cleanup rpmdb to allow non-matching host and chroot RPM versions
+rm -f /var/lib/rpm/__db*
+
 # Import SELinux Modules
 echo "Enabling selinux modules"
 SEMODULES="base automount avahi consolekit cyrus dhcp dnsmasq guest hal ipsec \
@@ -196,3 +199,24 @@ EOF
 # Need this for F12 findfs calls
 # Otherwise, findfs returns /dev/sdX instead of /dev/mapper/<wwid>
 echo "EVALUATE=scan" > /etc/blkid.conf
+
+touch /.autorelabel
+
+# prepare for STATE_MOUNT in rc.sysinit
+augtool <<\EOF
+set /files/etc/sysconfig/readonly-root/TEMPORARY_STATE NOT_OVIRT_FIRSTBOOT
+set /files/etc/sysconfig/readonly-root/STATE_LABEL CONFIG
+set /files/etc/sysconfig/readonly-root/STATE_MOUNT /config
+set /files/etc/sysconfig/readonly-root/READONLY yes
+save
+EOF
+# use persistent state unless firstboot is forced
+# XXX auges shellvars lens does not accept this value
+sed -i 's@NOT_OVIRT_FIRSTBOOT@$(if cat /proc/cmdline|grep -qv ovirt_firstboot; then printf "yes"; else printf "no"; fi)@' /etc/sysconfig/readonly-root
+# prepare mount points for local storage
+mkdir -p /boot
+mkdir -p /config
+mkdir -p /data
+mkdir -p /liveos
+echo "/dev/HostVG/Config /config ext3 defaults,noauto,noatime 0 0" >> /etc/fstab
+
