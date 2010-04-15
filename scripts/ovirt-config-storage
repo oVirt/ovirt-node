@@ -315,7 +315,19 @@ do_configure()
         get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
 
         printf "\n\nPlease select the disk to use for the HostVG.\n\n"
-        HOSTVGDRIVE=$(get_dev_name) || return 0
+        while true; do
+            HOSTVGDRIVE=$(get_dev_name) || return 0
+            if [ "$OVIRT_SHARED_ROOT" == "y" ]; then
+                if [ "$ROOTDRIVE" == "$HOSTVGDRIVE" ]; then
+                    printf "\n\nRoot Drive and HostVG drive must be different when shared\n\n"
+                    return 1
+                else
+                    break;
+                fi
+            fi
+            break;
+        done
+
         local skipped=false
         if check_existing_hostvg "$HOSTVGDRIVE" devs; then
             for dev in $devs
