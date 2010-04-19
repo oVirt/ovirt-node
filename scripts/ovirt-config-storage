@@ -309,6 +309,12 @@ do_configure()
         BOOTDRIVE=$(get_dev_name) || return 0
         get_drive_size "$BOOTDRIVE" BOOTDRIVESPACE
         echo "$BOOTDRIVE"
+        if ask_yes_or_no "Enable HostVG Storage (y/n)?"; then
+            OVIRT_ISCSI_HOSTVG="y"
+            HOSTVGDRIVE=$(get_dev_name) || return 0
+            get_drive_size "$HOSTVGDRIVE"
+            echo "$HOSTVGDRIVE"
+        fi
     else
         printf "\n\nPlease select the disk to use for the Root.\n\n"
         ROOTDRIVE=$(get_dev_name) || return 0
@@ -367,8 +373,11 @@ do_configure()
     fi
 
     local space_left=$HOSTVGDRIVESPACE
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
-        partlist="boot" # swap root config logging data"
+    if [[ "$OVIRT_ISCSI_ENABLED" == "y" && "$OVIRT_ISCSI_HOSTVG" != "y" ]]; then
+        partlist="boot"
+        local space_left=$BOOTDRIVESPACE
+    elif [[ "$OVIRT_ISCSI_ENABLED" == "y" && "$OVIRT_ISCSI_HOSTVG" == "y" ]]; then
+        partlist="boot swap config logging data"
         local space_left=$BOOTDRIVESPACE
     else
         partlist="swap root config logging data"
@@ -418,7 +427,6 @@ do_configure()
 
     # save input variables
     augtool <<EOF
-set /files$OVIRT_DEFAULTS/OVIRT_INIT $ROOTDRIVE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_BOOT_SIZE $BOOT_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_SWAP_SIZE $SWAP_SIZE
 set /files$OVIRT_DEFAULTS/OVIRT_VOL_ROOT_SIZE $ROOT_SIZE
@@ -430,6 +438,10 @@ EOF
    if [ -n "$BOOTDRIVE" ]; then
        augtool <<EOF
 set /files$OVIRT_DEFAULTS/OVIRT_BOOT_INIT $BOOTDRIVE
+EOF
+   else
+   augtool <<EOF
+set /files$OVIRT_DEFAULTS/OVIRT_INIT $ROOTDRIVE
 EOF
    fi
 }
@@ -577,90 +589,18 @@ reread_partitions()
     fi
 }
 
-perform_partitioning()
+create_hostvg()
 {
-    if [[ -z "$HOSTVGDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
-        printf "\nNo storage device selected.\n"
-        return
-    fi
-
-    if [[ -z "$BOOTDRIVE" && "$OVIRT_ISCSI_ENABLED" == "y" ]]; then
-        printf "\nNo storage device selected.\n"
-        return
-    fi
-    start_log
-
-    log "Saving parameters"
-    unmount_config /etc/default/ovirt
-
-    log "Removing old LVM partitions"
-    wipe_lvm_on_disk $HOSTVGDRIVE
-    wipe_lvm_on_disk $ROOTDRIVE
-
-    # begin critical section
-    set -e
-
-    MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
-    local boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
-
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
-        log "Partitioning drive: $BOOTDRIVE"
-        log "Wiping old boot sector"
-        dd if=/dev/zero of=$BOOTDRIVE bs=1024K count=1
-        reread_partitions "$BOOTDRIVE"
-        partprobe -s "$BOOTDRIVE"
-        log "Creating boot partition"
-        parted "$BOOTDRIVE" -s "mklabel ${LABEL_TYPE}"
-        parted "$BOOTDRIVE" -s "mkpartfs primary ext2 0M ${boot_size_si}M"
-        reread_partitions "$BOOTDRIVE"
-        partboot="${BOOTDRIVE}1"
-        if [ ! -e "$partboot" ]; then
-            partboot="${BOOTDRIVE}p1"
-        fi
-        # sleep to ensure filesystems are created before continuing
-        sleep 10
-        mke2fs "${partboot}" -L Boot
-        tune2fs -c 0 -i 0 ${partboot}
-        log "Completed!"
-        return
-    fi
-
-    log "Starting partitioning of $ROOTDRIVE"
-    log "Partitioning drive: $ROOTDRIVE"
- # FIXME: save a backup copy, just in case?
-    log "Wiping old boot sector"
-    dd if=/dev/zero of="$ROOTDRIVE" bs=1024K count=1
-    reread_partitions "$ROOTDRIVE"
-    partprobe -s "$ROOTDRIVE"
-    log "Labeling Drive: $ROOTDRIVE"
-    parted "$ROOTDRIVE" -s "mklabel ${LABEL_TYPE}"
-
-    if [ "$ROOTDRIVE" != "$HOSTVGDRIVE" ]; then
-        log "Labeling Drive: $HOSTVGDRIVE"
-        parted "$HOSTVGDRIVE" -s "mklabel ${LABEL_TYPE}"
-    fi
-    log "Creating Root and RootBackup Partitions"
-    let RootBackup_end=${ROOT_SIZE}*2
-    parted $ROOTDRIVE -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
-    parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
-    reread_partitions $ROOTDRIVE
-    partroot="${ROOTDRIVE}1"
-    partrootbackup="${ROOTDRIVE}2"
-    if [ ! -e "$partroot" ]; then
-        partroot="${ROOTDRIVE}p1"
-        partrootbackup="${ROOTDRIVE}p2"
-    fi
-    # sleep to ensure filesystems are created before continuing
-    sleep 10
-    mke2fs "${partroot}" -L Root
-    mke2fs "${partrootbackup}" -L RootBackup
-    tune2fs -c 0 -i 0 "${partroot}"
-    tune2fs -c 0 -i 0 "${partrootbackup}"
     log "Creating LVM partition"
 
     if [ "$ROOTDRIVE" == "$HOSTVGDRIVE" ]; then
         parted $HOSTVGDRIVE -s "mkpart primary ext2 ${RootBackup_end}M -1"
         hostvgpart="3"
+    elif [ "$BOOTDRIVE" == "$HOSTVGDRIVE" ]; then
+        parted "$HOSTVGDRIVE" -s "mkpart primary ext2 ${boot_size_si} -1"
+        hostvgpart="2"
+        # FIXME : set for gtpsync/parted compat for now
+        ROOTDRIVE=$BOOTDRIVE
     else
         parted "$HOSTVGDRIVE" -s "mkpart primary ext2 0M -1"
         hostvgpart="1"
@@ -747,6 +687,92 @@ perform_partitioning()
     log "Completed!"
 
     stop_log
+}
+
+perform_partitioning()
+{
+    if [[ -z "$HOSTVGDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
+        printf "\nNo storage device selected.\n"
+        return
+    fi
+
+    if [[ -z "$BOOTDRIVE" && "$OVIRT_ISCSI_ENABLED" == "y" ]]; then
+        printf "\nNo storage device selected.\n"
+        return
+    fi
+    start_log
+
+    log "Saving parameters"
+    unmount_config /etc/default/ovirt
+
+    log "Removing old LVM partitions"
+    wipe_lvm_on_disk $HOSTVGDRIVE
+    wipe_lvm_on_disk $ROOTDRIVE
+
+    # begin critical section
+    set -e
+
+    MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
+    boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
+
+    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+        log "Partitioning drive: $BOOTDRIVE"
+        log "Wiping old boot sector"
+        dd if=/dev/zero of=$BOOTDRIVE bs=1024K count=1
+        reread_partitions "$BOOTDRIVE"
+        partprobe -s "$BOOTDRIVE"
+        log "Creating boot partition"
+        parted "$BOOTDRIVE" -s "mklabel ${LABEL_TYPE}"
+        parted "$BOOTDRIVE" -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+        reread_partitions "$BOOTDRIVE"
+        partboot="${BOOTDRIVE}1"
+        if [ ! -e "$partboot" ]; then
+            partboot="${BOOTDRIVE}p1"
+        fi
+        # sleep to ensure filesystems are created before continuing
+        sleep 10
+        mke2fs "${partboot}" -L Boot
+        tune2fs -c 0 -i 0 ${partboot}
+        if [ "$OVIRT_ISCSI_HOSTVG" == "y" ]; then
+            create_hostvg
+        fi
+        log "Completed!"
+        return
+    fi
+
+    log "Starting partitioning of $ROOTDRIVE"
+    log "Partitioning drive: $ROOTDRIVE"
+ # FIXME: save a backup copy, just in case?
+    log "Wiping old boot sector"
+    dd if=/dev/zero of="$ROOTDRIVE" bs=1024K count=1
+    reread_partitions "$ROOTDRIVE"
+    partprobe -s "$ROOTDRIVE"
+    log "Labeling Drive: $ROOTDRIVE"
+    parted "$ROOTDRIVE" -s "mklabel ${LABEL_TYPE}"
+
+    if [ "$ROOTDRIVE" != "$HOSTVGDRIVE" ]; then
+        log "Labeling Drive: $HOSTVGDRIVE"
+        parted "$HOSTVGDRIVE" -s "mklabel ${LABEL_TYPE}"
+    fi
+    log "Creating Root and RootBackup Partitions"
+    let RootBackup_end=${ROOT_SIZE}*2
+    parted $ROOTDRIVE -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
+    parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+    reread_partitions $ROOTDRIVE
+    partroot="${ROOTDRIVE}1"
+    partrootbackup="${ROOTDRIVE}2"
+    if [ ! -e "$partroot" ]; then
+        partroot="${ROOTDRIVE}p1"
+        partrootbackup="${ROOTDRIVE}p2"
+    fi
+    # sleep to ensure filesystems are created before continuing
+    sleep 10
+    mke2fs "${partroot}" -L Root
+    mke2fs "${partrootbackup}" -L RootBackup
+    tune2fs -c 0 -i 0 "${partroot}"
+    tune2fs -c 0 -i 0 "${partrootbackup}"
+    create_hostvg
+
 }
 
 do_confirm()
