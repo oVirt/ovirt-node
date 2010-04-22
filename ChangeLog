@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+Version 1.9.2:
+ * Fixed the autoconf setup to cover more prerequisites.
+
 Version 1.9.1:
  * Update ovirt-process-config to fail configs that are missing the field name
    or value.

@@ -1,6 +1,20 @@
 AC_INIT([ovirt-node], [1.9.2], [ovirt-devel@redhat.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability tar-pax])
 AC_PROG_CC
+
+AC_CHECK_PROGS(PYKICKSTART, ksflatten)
+
+if test x"$PYKICKSTART" = x ; then
+   AC_MSG_ERROR([Missing python kickstart support.])
+fi
+
+# TODO need a way to check for python-setuptools
+
+AC_CHECK_LIB(dbus-1, main, , AC_MSG_ERROR([Cannot find DBus development libraries.]))
+AC_CHECK_LIB(virt, main, , AC_MSG_ERROR([Cannot find libvirt development libraries.]))
+AC_CHECK_LIB(hal, main, , AC_MSG_ERROR([Cannot find HAL development libraries.]))
+AC_CHECK_LIB(python2.6, main, , AC_MSG_ERROR([Cannot find python development libraries.]))
+
 AC_CONFIG_HEADERS([config.h])
 
 # If using gcc and default CFLAGS, enable some warnings.
