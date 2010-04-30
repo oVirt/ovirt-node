@@ -79,3 +79,6 @@ patch
 e2fsprogs
 sysfsutils
 less
+# VDSM
+vdsm-cli
+vdsm-reg
