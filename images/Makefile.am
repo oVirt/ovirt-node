@@ -15,6 +15,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-EXTRA_DIST = \
+splashdir=$(datadir)/ovirt-node
+dist_splash_DATA = \
   grub-splash.xpm.gz \
   syslinux-vesa-splash.jpg

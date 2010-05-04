@@ -150,13 +150,6 @@ echo "oVirt Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovi
 mkdir -p %{buildroot}/%{_sysconfdir}/default
 echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
 
-# ovirt-logos
-# should be ifarch i386
-#install -p -m 644 images/grub-splash.xpm.gz %{buildroot}%{app_root}
-# end i386 bits
-#install -p -m 644 images/syslinux-vesa-splash.jpg %{buildroot}%{app_root}
-# ovirt-logos
-
 # release files
 echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{buildroot}/etc/ovirt-release
 
@@ -200,6 +193,10 @@ sed '/<Plugin network>/,/<\/Plugin>/d' /etc/collectd.conf.in > /etc/collectd.con
 /sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
 /sbin/chkconfig --add ovirt-post
+# workaround for imgcreate/live.py __copy_efi_files
+if [ ! -e /boot/grub/splash.xpm.gz ]; then
+  cp /usr/share/ovirt-node/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
+fi
 
 %preun
 if [ $1 = 0 ] ; then
@@ -243,9 +240,9 @@ fi
 
 %doc COPYING
 # should be ifarch i386
-#%{app_root}/grub-splash.xpm.gz
+%{app_root}/grub-splash.xpm.gz
 # end i386 bits
-#%{app_root}/syslinux-vesa-splash.jpg
+%{app_root}/syslinux-vesa-splash.jpg
 
 %{_libexecdir}/ovirt-config-boot
 %{_libexecdir}/ovirt-config-boot-wrapper
