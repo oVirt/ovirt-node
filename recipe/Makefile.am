@@ -26,7 +26,7 @@ CUR_DEVEL         = 14
 CUR_PREVIEW       = 12
 PREVIEW_URL       ?= http://jforbes.fedorapeople.org/virt-preview/f$(CUR_PREVIEW)/$(ARCH)
 
-FEDORA            = $(shell rpm --eval '%{fedora}')
+FEDORA            = $(shell rpm --eval '%{fedora}' |grep [0-9])
 ARCH              = $(shell rpm --eval '%{_arch}')
 
 AUTH_KEYS         ?= $(HOME)/.ssh/authorized_keys
@@ -55,6 +55,7 @@ dist_sbin_SCRIPTS = node-creator
 
 repos.ks:
 	( \
+	  if [ -n "$(FEDORA)" ]; then \
 	    if [ 0$(FEDORA) == 0$(CUR_RAWHIDE) ]; then \
 	        FEDORA_REPO=rawhide ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/development/rawhide/$(ARCH)/os,--mirrorlist=$(FEDORA_MIRROR)?repo=rawhide&arch=$(ARCH))" ;\
@@ -71,6 +72,9 @@ repos.ks:
 	    fi ;\
 	    echo "repo --name=$${FEDORA_REPO} $${FEDORA_REPO_LOC}" > repos.ks ;\
 	    printf "$${UPDATE_REPO_LINE}" >> repos.ks ;\
+	  else \
+	    echo "repo --name=dist-ovirt --baseurl=$(OVIRT_REPO_URL)" > $@ ;\
+	  fi ;\
 	)
 
 keys:
