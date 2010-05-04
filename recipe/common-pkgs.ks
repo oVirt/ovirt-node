@@ -21,7 +21,6 @@ python-setuptools
 db4
 vconfig
 python-virtinst
-matahari
 #debugging
 hdparm
 sos
@@ -30,7 +29,6 @@ ltrace
 strace
 sysstat
 tcpdump
-pstack
 pciutils
 psmisc
 numactl
@@ -47,16 +45,11 @@ newt-python
 -prelink
 -newt-python
 -newt
--kudzu
 -libselinux-python
 -kbd
 -usermode
--fedora-logos
-generic-logos
--fedora-release
--fedora-release-notes
-#generic-release
-#generic-release-notes
+-redhat-release
+-redhat-release-notes
 -dmraid
 -gzip
 -less
@@ -66,7 +59,6 @@ generic-logos
 -libuser
 -mtools
 -cpio
--sysklogd
 /usr/sbin/lokkit
 isomd5sum
 irqbalance
