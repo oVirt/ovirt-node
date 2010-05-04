@@ -27,6 +27,8 @@ test -f Makefile && make -k distclean || :
 
 OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT}/../ovirt-cache
 OVIRT_LOCAL_REPO=file://${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
+OVIRT_REPO_URL=http://download.lab.bos.redhat.com/brewroot/repos/RHEL-6-test-build/latest/x86_64
+export OVIRT_REPO_URL OVIRT_LOCAL_REPO OVIRT_CACHE_DIR
 
 ./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT
 make
@@ -50,10 +52,7 @@ createrepo -d ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 
 #make iso
 cd recipe
-make \
-  OVIRT_LOCAL_REPO=$OVIRT_LOCAL_REPO \
-  OVIRT_CACHE_DIR=$OVIRT_CACHE_DIR \
-ovirt-node-image.iso
+make ovirt-node-image.iso
 
 #copy iso back to main directory for autotest.sh
 ln -nf *iso ..
