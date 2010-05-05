@@ -46,7 +46,7 @@ if [ -f /usr/bin/rpmbuild ]; then
 fi
 
 # regenerate repo so iso uses new ovirt-node rpms
-createrepo ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
+createrepo -d ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 
 #make iso
 cd recipe
@@ -56,4 +56,4 @@ make \
 ovirt-node-image.iso
 
 #copy iso back to main directory for autotest.sh
-cp *iso ..
+ln -nf *iso ..
