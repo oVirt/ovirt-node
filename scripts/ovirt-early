@@ -426,12 +426,15 @@ start_ovirt_early () {
             i=${i#collectd=}
             eval $(printf $i|awk -F: '{print "collectd_server="$1; print "collectd_port="$2;}')
             ;;
-            console=*)
-            bootparams="$bootparams $i"
-            ;;
             ovirt_early=*)
             i=${i#ovirt_early=}
             ovirt_early=$(echo $i|tr ",:;" " ")
+            ;;
+            BOOT_IMAGE=* | initrd=* | check | linux | liveimg | \
+            root=* | rootfstype=* | rootflags=* | ro)
+            ;;
+            *)
+            bootparams="$bootparams $i"
             ;;
         esac
     done
