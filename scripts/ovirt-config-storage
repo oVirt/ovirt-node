@@ -319,6 +319,22 @@ do_configure()
         printf "\n\nPlease select the disk to use for the Root.\n\n"
         ROOTDRIVE=$(get_dev_name) || return 0
         get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
+        if ask_yes_or_no "Will Root be shared with other nodes ([Y]es/[N]o)?"; then
+            OVIRT_SHARED_ROOT="y"
+            if ask_yes_or_no "Partition and install Root?"; then
+                OVIRT_ROOT_INSTALL="y"
+            else
+                OVIRT_ROOT_INSTALL="n"
+            fi
+        else
+            OVIRT_SHARED_ROOT="n"
+            OVIRT_ROOT_INSTALL="y"
+        fi
+
+    augtool <<EOF
+        set /files$OVIRT_DEFAULTS/OVIRT_SHARED_ROOT $OVIRT_SHARED_ROOT
+        set /files$OVIRT_DEFAULTS/OVIRT_ROOT_INSTALL $OVIRT_ROOT_INSTALL
+EOF
 
         printf "\n\nPlease select the disk to use for the HostVG.\n\n"
         while true; do
@@ -379,6 +395,8 @@ do_configure()
     elif [[ "$OVIRT_ISCSI_ENABLED" == "y" && "$OVIRT_ISCSI_HOSTVG" == "y" ]]; then
         partlist="boot swap config logging data"
         local space_left=$BOOTDRIVESPACE
+    elif [ "$OVIRT_ROOT_INSTALL" == "n" ]; then
+        partlist="swap config logging data"
     else
         partlist="swap root config logging data"
     fi
@@ -559,7 +577,7 @@ check_existing_hostvg()
 # - remove LVM volumes and groups
 wipe_lvm_on_disk()
 {
-    local dev=${1-$HOSTVGDRIVE}
+    local dev=${1-"$HOSTVGDRIVE"}
     unmount_logging
     local part_delim="p"
     if [[ "$dev" =~ "/dev/sd" ]]; then
@@ -612,9 +630,11 @@ create_hostvg()
     reread_partitions "$HOSTVGDRIVE"
 
     # sync GPT to the legacy MBR partitions
-    if [ "gpt" == "$LABEL_TYPE" ]; then
-        log "Running gptsync to create legacy mbr"
-        gptsync "$ROOTDRIVE"
+    if [ "${OVIRT_INSTALL_ROOT}" == "y" ]; then
+        if [ "gpt" == "$LABEL_TYPE" ]; then
+            log "Running gptsync to create legacy mbr"
+            gptsync "$ROOTDRIVE"
+        fi
     fi
 
     partpv="${HOSTVGDRIVE}${hostvgpart}"
@@ -706,8 +726,8 @@ perform_partitioning()
     unmount_config /etc/default/ovirt
 
     log "Removing old LVM partitions"
-    wipe_lvm_on_disk $HOSTVGDRIVE
-    wipe_lvm_on_disk $ROOTDRIVE
+    wipe_lvm_on_disk "$HOSTVGDRIVE"
+    wipe_lvm_on_disk "$ROOTDRIVE"
 
     # begin critical section
     set -e
@@ -740,39 +760,41 @@ perform_partitioning()
         return
     fi
 
-    log "Starting partitioning of $ROOTDRIVE"
-    log "Partitioning drive: $ROOTDRIVE"
- # FIXME: save a backup copy, just in case?
-    log "Wiping old boot sector"
-    dd if=/dev/zero of="$ROOTDRIVE" bs=1024K count=1
-    reread_partitions "$ROOTDRIVE"
-    partprobe -s "$ROOTDRIVE"
-    log "Labeling Drive: $ROOTDRIVE"
-    parted "$ROOTDRIVE" -s "mklabel ${LABEL_TYPE}"
+    if [ "OVIRT_ROOT_INSTALL" == "y" ]; then
+        log "Starting partitioning of $ROOTDRIVE"
+        log "Partitioning drive: $ROOTDRIVE"
+        # FIXME: save a backup copy, just in case?
+        log "Wiping old boot sector"
+        dd if=/dev/zero of="$ROOTDRIVE" bs=1024K count=1
+        reread_partitions "$ROOTDRIVE"
+        partprobe -s "$ROOTDRIVE"
+        log "Labeling Drive: $ROOTDRIVE"
+        parted "$ROOTDRIVE" -s "mklabel ${LABEL_TYPE}"
+
+        log "Creating Root and RootBackup Partitions"
+        let RootBackup_end=${ROOT_SIZE}*2
+        parted $ROOTDRIVE -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
+        parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+        # sleep to ensure filesystems are created before continuing
+        sleep 10
+        reread_partitions "$ROOTDRIVE"
+        partroot="${ROOTDRIVE}1"
+        partrootbackup="${ROOTDRIVE}2"
+        if [ ! -e "$partroot" ]; then
+            partroot="${ROOTDRIVE}p1"
+            partrootbackup="${ROOTDRIVE}p2"
+        fi
+        mke2fs "${partroot}" -L Root
+        mke2fs "${partrootbackup}" -L RootBackup
+        tune2fs -c 0 -i 0 "${partroot}"
+        tune2fs -c 0 -i 0 "${partrootbackup}"
+    fi
 
     if [ "$ROOTDRIVE" != "$HOSTVGDRIVE" ]; then
         log "Labeling Drive: $HOSTVGDRIVE"
         parted "$HOSTVGDRIVE" -s "mklabel ${LABEL_TYPE}"
     fi
-    log "Creating Root and RootBackup Partitions"
-    let RootBackup_end=${ROOT_SIZE}*2
-    parted $ROOTDRIVE -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
-    parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
-    reread_partitions $ROOTDRIVE
-    partroot="${ROOTDRIVE}1"
-    partrootbackup="${ROOTDRIVE}2"
-    if [ ! -e "$partroot" ]; then
-        partroot="${ROOTDRIVE}p1"
-        partrootbackup="${ROOTDRIVE}p2"
-    fi
-    # sleep to ensure filesystems are created before continuing
-    sleep 10
-    mke2fs "${partroot}" -L Root
-    mke2fs "${partrootbackup}" -L RootBackup
-    tune2fs -c 0 -i 0 "${partroot}"
-    tune2fs -c 0 -i 0 "${partrootbackup}"
     create_hostvg
-
 }
 
 do_confirm()

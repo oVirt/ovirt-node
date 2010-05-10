@@ -29,6 +29,12 @@ ovirt_boot_setup() {
     local disk2
     local partN=-1
     log "installing the image."
+
+    if [ "$OVIRT_ROOT_INSTALL" == "n" ]; then
+        log "done."
+        return
+    fi
+
     local found_boot=false
     if findfs LABEL=Boot 2>&1 >/dev/null ; then
         found_boot=true
@@ -213,7 +219,12 @@ if [ -z "$doreboot" ]; then
 fi
 
 start_log
-ovirt_boot_setup "$live" "$bootparams"
+if [ "$OVIRT_ROOT_INSTALL" =="n" ]; then
+    log "done."
+    return
+else
+    ovirt_boot_setup "$live" "$bootparams"
+fi
 rc=$?
 if [ $rc -eq 0 -a "$doreboot" = "yes" ]; then
     disable_firstboot
