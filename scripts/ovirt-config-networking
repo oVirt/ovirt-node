@@ -462,16 +462,16 @@ set ${ntproot}/keys /etc/ntp/keys\n\
 function setup_menu
 {
     NICS=""
-    udi_list=$(hal-find-by-capability --capability net.80203)
-    if [ -n "$udi_list" ]; then
-        for d in $udi_list; do
-	    if [[ ! "$(hal-get-property --udi $d --key net.physical_device)" =~ computer ]]; then
-		NICS="$NICS $(hal-get-property --udi "$d" --key net.interface)"
-	    fi
-        done
-    fi
+    nics=$(ls -bd /sys/class/net/*)
+    for nic in $nics; do
+        nic=$(basename $nic)
+        address=$(systool -c net -d $nic -A address | awk '/address\ += "(.*)"/ { print $3; }')
+        if [[ ! "$address" =~ '00:00:00:00' ]]; then
+            NICS="$NICS $nic"
+        fi
+    done
 
-    # Add virtio NICs that were possibly not detected by hal
+    # Add virtio NICs that were possibly not detected by other means
     NICS="$(ifconfig -a | awk '/Ethernet/ {print $1}'|xargs)"
     NICS=$(echo $NICS | tr ' ' '\n' | sort -u | xargs)
 

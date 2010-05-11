@@ -59,7 +59,7 @@ get_multipath_devices() {
     | sed 's/ /\n/g' | grep [0-9]:[0-9] )
 
     local device=""
-    for dep in "$deps"
+    for dep in $deps
     do
         local device=""
         get_sd_name "$dep" device
@@ -111,41 +111,11 @@ get_drive_size()
     local drive="$1"
     local space_var="$2"
 
-    local size=
-    local udi=$(hal-find-by-property --key block.device --string "$drive")
-    # if more than one UDI was found then iterate over them to find the base device
-    if [[ "${udi}" =~ \$  ]]; then
-        udi=$(echo "$udi" | sed 's/\$/ /g')
-        for found in ${udi}; do
-            if [[ "false" == $(hal-get-property --udi "$found" --key block.is_volume) ]]; then
-                udi="$found"
-                break
-            fi
-        done
-    fi
-    if [ -z "$udi" ]; then
-        # If hal didn't find the device, it could be a virtio block device
-        # or a multipath device
-        # In this case, use sfdisk -s to get the size
-        size=$(sfdisk -s "$drive" 2>/dev/null)
-        if [ -z "$size" ]; then
-            size=0
-        fi
-        size=$(echo "scale=0; $size * 1024" | bc -l)
-    else
-        size=$(hal-get-property --udi "$udi" --key storage.size)
-        if [[ "${size}" == "0" ]]; then
-            # disk is probably hot-swappable, use different HAL key
-            # but first check that it is removeable media and that  media is present
-            if [[ "true" == "$(hal-get-property --udi "$udi" --key storage.removable.media_available)" ]]; then
-                size=$(hal-get-property --udi "$udi" --key storage.removable.media_size)
-            fi
-        fi
-    fi
+    local size=$(sfdisk -s $drive)
+    size=$(echo "scale=0; $size / 1024" | bc -l)
 
-    size=$(echo "scale=0; $size / (1024 * 1024)" | bc -l)
     echo "$drive ($size MB)"
-    test -z "$udi" || echo "Disk Identifier: $(basename "$udi")"
+    echo "Disk Identifier: $drive"
     if [ -n "$space_var" ]; then
         eval $space_var="$size"
     fi
@@ -210,8 +180,10 @@ check_partition_sizes()
             printf "\n"
             printf "There appears to already be an installation on another device:\n"
             for device in $devices; do
-                udi=$(hal-find-by-property --key block.device --string $device)
-                printf "\t$device ($(basename "$udi"))\n"
+                local uuid
+
+                get_uuid $device uuid
+                printf "\t$device ${uuid}\n"
             done
             printf "We cannot proceed until either device is removed from the system\n"
             printf "or until the HostVG volume group is removed.\n"
@@ -260,39 +232,22 @@ manual_input()
 # Sample output: /dev/sda
 get_dev_name()
 {
-    local udi_list=$(hal-find-by-capability --capability storage)
     local byid_list=$(find /dev/disk/by-id -mindepth 1 -not -name '*-part*' 2>/dev/null)
-    if test -z "$udi_list" -a -z "$byid_list"; then
-        warn "ERROR: no usable storage devices detected"
-        return 1
-    fi
+    local devices=""
 
-    local d devices sizes
-    for d in $udi_list; do
-        local drive_type=$(hal-get-property --udi "$d" --key storage.drive_type)
-        test "X$drive_type" = Xdisk || continue
-        local block_dev=$(hal-get-property --udi "$d" --key block.device)
-        # Must start with a '/'.
-        case "$block_dev" in
-            *' '*)
-                # we use space as separator
-                warn "block device name '$block_dev' contains space; skipping";
-                continue;;
-            /*) ;;
-            *) warn "block device name $block_dev doesn't start with '/';" \
-                " skipping"; continue;;
-        esac
-        test -z "$devices" \
-            && devices="$block_dev" \
-            || devices="$devices $block_dev"
+    for drive in $(ls -db /sys/block/[hsv]d*); do
+        drive="/dev/$(basename $drive)"
+        test -z "$devices" && devices="$drive" || devices="$devices $drive"
     done
+
     d=""
     for d in $byid_list; do
-        devices="$devices $(readlink -f "$d")";
+        local devicename=$(readlink -f $d)
+        local bus=$(udevadm info --path=/sys/block/$(basename $devicename) --query=property | awk '/^ID_BUS=/ { print $1 }')
+        if [ -n "$bus" ]; then
+            devices="$devices $devicename"
+        fi
     done
-
-    # FIXME: workaround for detecting virtio block devices
-    devices="$devices $(ls /dev/vd? 2> /dev/null | xargs)"
 
     # FIXME: workaround for detecting cciss devices
     for dev in $(ls /dev/cciss 2>/dev/null); do
@@ -518,6 +473,26 @@ EOF
     return ${is_negative-0}
 }
 
+# Retrieves the UUID for the specified device.
+# $1 - the device
+# $2 - the variable to be set
+get_uuid()
+{
+    local device=${1-}
+    local envvar=${2-}
+    local rootname
+
+    if [[ "$device" =~ "^.*[0-9]?$" ]]; then
+        rootname="${device:0:${#device}-1}"
+    fi
+    local uuid=$(
+        udevadm info --path=/sys/block/$rootname/$device --query=property |
+        awk '/ID_FS_UUID=/ { match($0, "ID_FS_UUID=(.*)", data); print  data[1]; }'
+    )
+
+    eval $envvar="$uuid"
+}
+
 #Check for an existing HostVG on any device on the system.
 # Return 0 if then is a HostVG found, unless only one found is on $1
 # Return 1 if no HostVG found or only found on $1
@@ -537,10 +512,12 @@ check_existing_hostvg()
         printf "\n"
         printf "There appears to already be an installation on another device:\n"
         for device in $devices; do
+            local uuid
+
             get_multipath_devices ${device%p[0-9]} sd_dev
             sd_dev=$(echo "$sd_dev" | awk '{print $1}')
-            udi=$(hal-find-by-property --key block.device --string /dev/${sd_dev})
-            printf "\t$device ($(basename "$udi"))\n"
+            get_uuid $sd_dev uuid
+            printf "\t$device ($uuid)\n"
         done
         printf "The installation cannot proceed until the device is removed\n"
         printf "from the system of the HostVG volume group is removed.\n"

@@ -17,7 +17,6 @@ URL:            http://www.ovirt.org/
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 BuildRequires:  libvirt-devel >= 0.5.1
-BuildRequires:  dbus-devel hal-devel
 BuildRequires:  python-devel
 BuildRequires:  python-setuptools
 Requires:       libvirt >= 0.6.3
