@@ -20,6 +20,9 @@ if is_booted_from_local_disk; then
     die "You cannot configure storage on a running system. Please boot from CD/USB to configure storage."
 fi
 
+LF=$'\n'
+TAB=$'\t'
+
 default_overcommit=0.5
 default_boot_size=50
 default_root_size=256
@@ -37,34 +40,31 @@ swap_min_size=5
 # return sd name for given #:# identifier
 get_sd_name() {
     local id="$1"
-    local device_var="$2"
     local device_sys=$(grep -H "^$id$" /sys/block/*/dev | cut -d: -f1)
 
     if [ -n "$device_sys" ]; then
-        eval $device_var=$(basename $(dirname "$device_sys"))
-        return
+        echo $(basename $(dirname "$device_sys"))
+        return 0
     fi
-    eval $device_var=1
+    return 1
 }
 
 # gets the dependent block devices for multipath devices
-get_multipath_devices() {
-    local mpath_device=mpath-$(basename "$1")
+get_multipath_deps() {
+    local mpath_device="$(basename "$1")"
     local deplist_var="$2"
     local deplist=""
 
     #get dependencies for multipath device
-    local deps=$(dmsetup deps -u "$mpath_device" \
+    local deps=$(dmsetup deps -u "mpath-$mpath_device" \
     | sed -r 's/\(([0-9]+), ([0-9]+)\)/\1:\2/g' \
     | sed 's/ /\n/g' | grep [0-9]:[0-9] )
 
-    local device=""
     for dep in $deps
     do
-        local device=""
-        get_sd_name "$dep" device
-        if [[ ! "$device" = 1 ]]; then
-            if [[ "$deplist" = "" ]]; then
+        local device="$(get_sd_name "$dep")"
+        if [ -n "$device" ]; then
+            if [ -z "$deplist" ]; then
                 deplist="$device"
             else
                 deplist="$deplist $device"
@@ -80,29 +80,24 @@ get_multipath_devices() {
 translate_multipath_device() {
     #trim so that only sdX is stored, but support passing /dev/sdX
     local dev="$1"
-    local mpath_var="$2"
 
     if [ -z "$dev" ]; then
-        if [ -n "$mpath_var" ]; then
-            eval $mpath_var=
-        fi
-        return
+        return 1
     fi
     if [[ "$dev" =~ "/dev/mapper" ]]; then
-        eval $math_var="$dev"
-        return
+        echo "$dev"
+        return 0
     fi
 
     local dm_dev=/dev/$(multipath -ll "$dev" | egrep dm-[0-9]+ | sed -r 's/^.& (dm-[0-9]+) .*$/\1/')
 
-    local mpath_device=
-    get_dm_device "$dm_dev" mpath_device
+    local mpath_device=$(get_dm_device "$dm_dev")
 
     if [ -z "$mpath_device" ]; then
-        mpath_device="$dev"
+        echo "$dev"
+    else
+        echo "$mpath_device"
     fi
-
-    eval $mpath_var="$mpath_device"
 }
 
 
@@ -111,11 +106,10 @@ get_drive_size()
     local drive="$1"
     local space_var="$2"
 
-    local size=$(sfdisk -s $drive)
+    local size=$(sfdisk -s "$drive" 2>null)
     size=$(echo "scale=0; $size / 1024" | bc -l)
 
     echo "$drive ($size MB)"
-    echo "Disk Identifier: $drive"
     if [ -n "$space_var" ]; then
         eval $space_var="$size"
     fi
@@ -131,7 +125,7 @@ check_partition_sizes()
     fi
 
     printf "\n"
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+    if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         get_drive_size "$BOOTDRIVE" BOOTDRIVESPACE
         drive_list="BOOT"
         BOOT_NEED_SIZE="$BOOT_SIZE"
@@ -142,7 +136,7 @@ check_partition_sizes()
         HOSTVG_NEED_SIZE=$(echo "scale=0;" \
                          "$SWAP_SIZE + $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
 
-        if [ "$ROOTDRIVE" == "$HOSTVGDRIVE" ]; then
+        if [ "$ROOTDRIVE" = "$HOSTVGDRIVE" ]; then
             drive_list="ROOT"
             ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2 + $HOSTVG_NEED_SIZE"| bc -l)
         else
@@ -170,33 +164,6 @@ check_partition_sizes()
             printf "Required Space : $drive_need_size MB\n\n"
         fi
     done
-
-    # check if an existing HostVG exists on a device other than the target
-    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
-        devices="$(pvs -o pv_name,vg_name --noheadings | \
-            grep "HostVG"|grep -v "$HOSTVGDRIVE"|awk '{ print $1 }')"
-        rc=0
-        if [ -n "$devices" ]; then
-            printf "\n"
-            printf "There appears to already be an installation on another device:\n"
-            for device in $devices; do
-                local uuid
-
-                get_uuid $device uuid
-                printf "\t$device ${uuid}\n"
-            done
-            printf "We cannot proceed until either device is removed from the system\n"
-            printf "or until the HostVG volume group is removed.\n"
-            printf "\nTo re-install the node, please select \"Uninstall Node\" from the main\n"
-            printf "menu and then try to partition.\n"
-            printf "\n"
-            rc=1
-        fi
-    else
-        rc=0
-    fi
-
-    return $rc
 }
 
 manual_input()
@@ -205,13 +172,13 @@ manual_input()
     local return_var="$1"
     while true; do
         read -rp "Enter disk device path: " manual_device
-        if [ -z "$device" ]; then
+        if [ -z "$manual_device" ]; then
             echo "Aborting."
             return 1
         fi
-        translate_multipath_device "$manual_device" manual_device
+        manual_device="$(translate_multipath_device "$manual_device")"
         if [ -n "$manual_device" ]; then
-            if [ -b "$(readlink -f "$device")" ]; then
+            if [ -b "$(readlink -f "$manual_device")" ]; then
                 eval $return_var="$manual_device"
                 return 0
             fi
@@ -219,7 +186,6 @@ manual_input()
             echo "Aborting."
             return 1
         fi
-
     done
 }
 
@@ -232,56 +198,57 @@ manual_input()
 # Sample output: /dev/sda
 get_dev_name()
 {
-    local byid_list=$(find /dev/disk/by-id -mindepth 1 -not -name '*-part*' 2>/dev/null)
     local devices=""
-
-    for drive in $(ls -db /sys/block/[hsv]d*); do
-        drive="/dev/$(basename $drive)"
-        test -z "$devices" && devices="$drive" || devices="$devices $drive"
+    # list separator
+    for d in $(ls -db /sys/block/[hsv]d*); do
+        devices="/dev/$(basename "$d")${LF}${devices}"
     done
 
-    d=""
+    local byid_list=$(find /dev/disk/by-id -mindepth 1 -not -name '*-part*' 2>/dev/null)
     for d in $byid_list; do
-        local devicename=$(readlink -f $d)
-        local bus=$(udevadm info --path=/sys/block/$(basename $devicename) --query=property | awk '/^ID_BUS=/ { print $1 }')
-        if [ -n "$bus" ]; then
-            devices="$devices $devicename"
+        local devicename="$(readlink -f "$d")"
+        if udevadm info --name="$(basename "$devicename")" --query=property | grep -q ^ID_BUS; then
+            devices="${devicename}${LF}${devices}"
         fi
     done
 
     # FIXME: workaround for detecting cciss devices
-    for dev in $(ls /dev/cciss 2>/dev/null); do
-        if [[ ! "$dev" =~ p[0-9]+\$ ]]; then
-            devices="$devices /dev/cciss/dev"
+    for d in $(ls /dev/cciss/ 2>/dev/null); do
+        if [[ ! "$d" =~ p[0-9]+\$ ]]; then
+            devices="/dev/cciss/$d${LF}${devices}"
         fi
     done
 
-    # Include mulitpath devices
-    local devs_to_remove
-    for dev in $(dmsetup ls --target=multipath | awk '{print $1}'); do
-        devices="$devices /dev/mapper/$dev"
-        local sd_devs=""
-        get_multipath_devices "$dev" sd_devs
-        local dm_dev=$(multipath -ll "$dev" | grep "$dev" | sed -r 's/^.*(dm-[0-9]+ ).*$/\1/')
-        devs_to_remove="${devs_to_remove} ${sd_devs} $dm_dev"
-    done
-
-    # Remove /dev/sd* devices that are part of a multipath device
-    local dev_list
-    for dev in $devices
+    # include multipath devices
+    local devs_to_remove=""
+    oldIFS="$IFS"
+    IFS="$LF"
+    for d in $(dmsetup ls --target=multipath | cut -f1)
     do
-        if [[ ! "$devs_to_remove" =~ "$(basename $dev) " ]]; then
-            dev_list="$dev_list $dev"
+        devices="/dev/mapper/$d${LF}${devices}"
+        local sd_devs=""
+        IFS="$oldIFS" get_multipath_deps "$d" sd_devs
+        local dm_dev=$(multipath -ll "$d" | grep "$d" | sed -r 's/^.*(dm-[0-9]+ ).*$/\1/' )
+        devs_to_remove="${devs_to_remove} ${sd_devs} ${dm_dev}"
+    done
+    # Remove /dev/sd* devices that are part of a multipath device
+    local dev_list=""
+    for d in $devices
+    do
+        if [[ ! "$devs_to_remove" =~ "$(basename "$d") " ]]; then
+            dev_list="$d${LF}$dev_list"
         fi
     done
+    oldOFS="$OFS"
+    OFS="$LF"
+    devices=$(echo "$dev_list" | sort -u | grep -v "^$")
+    local num_devices=$(echo "$devices" | wc -l)
+    OFS="$oldOFS"
 
-    devices=$(echo $dev_list | tr ' ' '\n' | sort -u | xargs)
-
-    local num_devices=$(echo "$devices" | wc -w)
     # If there's only one device, use it.
     case $num_devices in
-        0) warn "ERROR: found no usable block device"; return 1;;
-        1) echo "$devices"; return 0;;
+        0) warn "ERROR: found no usable block device"; IFS="$oldIFS"; return 1;;
+        1) echo "$devices"; IFS="$oldIFS"; return 0;;
         *) ;; # found more than one
     esac
 
@@ -290,23 +257,26 @@ get_dev_name()
     for d in $devices; do
         get_drive_size "$d" >&2
     done
-    local choices="$devices Abort"
-    select device in $choices "Manual Selection"
+    local rc=0
+    local choices="$devices${LF}Abort${LF}Manual Selection"
+    select device in $choices
     do
-        test "$device" = Abort && return 1
+        test "$device" = Abort && rc=1
         test "$device" = "Manual selection" && manual_input device
         test -z "$device" && continue
         echo "$device"
-        return 0
+        break
     done
+    IFS="$oldIFS"
+    return $rc
 }
 
 do_configure()
 {
     local name_and_size
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+    if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         printf "\n\nPlease select the disk to use for the Boot partition.\n\n"
-        BOOTDRIVE=$(get_dev_name) || return 0
+        BOOTDRIVE="$(get_dev_name)" || return 0
         get_drive_size "$BOOTDRIVE" BOOTDRIVESPACE
         echo "$BOOTDRIVE"
         if ask_yes_or_no "Enable HostVG Storage (y/n)?"; then
@@ -339,8 +309,8 @@ EOF
         printf "\n\nPlease select the disk to use for the HostVG.\n\n"
         while true; do
             HOSTVGDRIVE=$(get_dev_name) || return 0
-            if [ "$OVIRT_SHARED_ROOT" == "y" ]; then
-                if [ "$ROOTDRIVE" == "$HOSTVGDRIVE" ]; then
+            if [ "$OVIRT_SHARED_ROOT" = "y" ]; then
+                if [ "$ROOTDRIVE" = "$HOSTVGDRIVE" ]; then
                     printf "\n\nRoot Drive and HostVG drive must be different when shared\n\n"
                     return 1
                 else
@@ -352,6 +322,8 @@ EOF
 
         local skipped=false
         if check_existing_hostvg "$HOSTVGDRIVE" devs; then
+            oldIFS="$IFS"
+            IFS="$LF"
             for dev in $devs
             do
                 printf "Removing HostVG on $dev will erase the drive and cannot be undone\n"
@@ -359,6 +331,7 @@ EOF
                     start_log
                     if ! wipe_lvm_on_disk "$dev"; then
                         stop_log
+                        IFS="$oldIFS"
                         return 1
                     fi
                     stop_log
@@ -366,6 +339,7 @@ EOF
                     skipped=true
                 fi
             done
+            IFS="$oldIFS"
         fi
         $skipped  && printf "Installation cannot proceed with existing HostVG.\n" && return 0
         get_drive_size "$HOSTVGDRIVE" HOSTVGDRIVESPACE
@@ -389,13 +363,13 @@ EOF
     fi
 
     local space_left=$HOSTVGDRIVESPACE
-    if [[ "$OVIRT_ISCSI_ENABLED" == "y" && "$OVIRT_ISCSI_HOSTVG" != "y" ]]; then
+    if [ "$OVIRT_ISCSI_ENABLED" = "y" -a "$OVIRT_ISCSI_HOSTVG" != "y" ]; then
         partlist="boot"
         local space_left=$BOOTDRIVESPACE
-    elif [[ "$OVIRT_ISCSI_ENABLED" == "y" && "$OVIRT_ISCSI_HOSTVG" == "y" ]]; then
+    elif [ "$OVIRT_ISCSI_ENABLED" = "y" -a "$OVIRT_ISCSI_HOSTVG" = "y" ]; then
         partlist="boot swap config logging data"
         local space_left=$BOOTDRIVESPACE
-    elif [ "$OVIRT_ROOT_INSTALL" == "n" ]; then
+    elif [ "$OVIRT_ROOT_INSTALL" = "n" ]; then
         partlist="swap config logging data"
     else
         partlist="swap root config logging data"
@@ -417,7 +391,7 @@ EOF
             mb_input=$REPLY
             test -z "$mb_input" && mb_input=$size
             local size_used=0
-            if [[ $mb_input == "q" || $mb_input == "Q" ]]; then
+            if [ $mb_input = "q" -o $mb_input = "Q" ]; then
                 printf "Aborting"
                 return
             elif [[ $mb_input =~ ^-*[0-9]+$ ]]; then
@@ -455,11 +429,11 @@ EOF
 
    if [ -n "$BOOTDRIVE" ]; then
        augtool <<EOF
-set /files$OVIRT_DEFAULTS/OVIRT_BOOT_INIT $BOOTDRIVE
+set /files$OVIRT_DEFAULTS/OVIRT_BOOT_INIT "$BOOTDRIVE"
 EOF
    else
    augtool <<EOF
-set /files$OVIRT_DEFAULTS/OVIRT_INIT $ROOTDRIVE
+set /files$OVIRT_DEFAULTS/OVIRT_INIT "$ROOTDRIVE"
 EOF
    fi
 }
@@ -476,7 +450,7 @@ do_review()
         local data_size_display="$DATA_SIZE MB"
         if [ "$DATA_SIZE" = -1 ]; then
 
-            if [ "$ROOTDRIVE" == "$HOSTVGDRIVE" ]; then
+            if [ "$ROOTDRIVE" = "$HOSTVGDRIVE" ]; then
                 local remaining_mb=$(( $ROOTDRIVESPACE - $SWAP_SIZE \
                         - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
                 test $remaining_mb -lt 0 && is_negative=1
@@ -515,61 +489,41 @@ EOF
     return ${is_negative-0}
 }
 
-# Retrieves the UUID for the specified device.
-# $1 - the device
-# $2 - the variable to be set
-get_uuid()
-{
-    local device=${1-}
-    local envvar=${2-}
-    local rootname
-
-    if [[ "$device" =~ "^.*[0-9]?$" ]]; then
-        rootname="${device:0:${#device}-1}"
-    fi
-    local uuid=$(
-        udevadm info --path=/sys/block/$rootname/$device --query=property |
-        awk '/ID_FS_UUID=/ { match($0, "ID_FS_UUID=(.*)", data); print  data[1]; }'
-    )
-
-    eval $envvar="$uuid"
-}
-
 #Check for an existing HostVG on any device on the system.
-# Return 0 if then is a HostVG found, unless only one found is on $1
+# Return 0 if there is a HostVG found, unless only one found is on $1
 # Return 1 if no HostVG found or only found on $1
+# XXX
+#    from check_partition_sizes():
+#    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
 check_existing_hostvg()
 {
-    local install_dev=$1
+    local install_dev="$1"
     local devices_var=$2
     if [ -z "$install_dev" ]; then
-        devices="$(pvs -o pv_name,vg_name --noheadings | \
-            grep "HostVG" | awk '{print $1}' )"
+        devices="$(pvs --separator="${TAB}" -o pv_name,vg_name --noheadings | \
+            grep "HostVG" | cut -f1)"
     else
-        devices="$(pvs -o pv_name,vg_name --noheadings | \
-            grep -v "${install_dev}" | grep "HostVG" | awk '{print $1}' )"
+        devices="$(pvs --separator="${TAB}" -o pv_name,vg_name --noheadings | \
+            grep -v "${install_dev}" | grep "HostVG" | cut -f1)"
     fi
     rc=1
     if [ -n "$devices" ]; then
         printf "\n"
         printf "There appears to already be an installation on another device:\n"
+        oldIFS="$IFS"
+        IFS="$LF"
         for device in $devices; do
-            local uuid
-
-            get_multipath_devices ${device%p[0-9]} sd_dev
-            sd_dev=$(echo "$sd_dev" | awk '{print $1}')
-            get_uuid $sd_dev uuid
-            printf "\t$device ($uuid)\n"
+            printf "\t$device\n"
         done
+        IFS="$oldIFS"
         printf "The installation cannot proceed until the device is removed\n"
         printf "from the system of the HostVG volume group is removed.\n"
         rc=0
     fi
 
-    test -z "$devices_var" || eval "$devices_var"="$devices"
+    test -n "$devices_var" && eval "$devices_var"="$devices"
 
     return $rc
-
 }
 
 # cleanup lvms on selected disk
@@ -588,7 +542,7 @@ wipe_lvm_on_disk()
             grep "$vg" | egrep -v -q "${dev}${part_delim}[0-9]+|${dev} " 2>/dev/null; then
             log "The volume group \"$vg\" spans multiple disks."
             log "This operation cannot complete.  Please manually"
-            log "cleanup the storage using standard linux tools."
+            log "cleanup the storage using standard disk tools."
             return 1
         fi
         wipe_volume_group $vg
@@ -599,9 +553,15 @@ wipe_lvm_on_disk()
 
 reread_partitions()
 {
-    local drive=$1
+    local drive="$1"
     if [[ $drive =~ "/dev/mapper" ]]; then
-        kpartx -a -p p $drive
+        # kpartx -a -p p "$drive"
+        # XXX fails with spaces in device names (TBI)
+        # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
+        # create/reload failed on 0QEMU    QEMU HARDDISK   drive-scsi0-0-0p1
+        partprobe ||:
+        # partprobe fails on cdrom:
+        # Error: Invalid partition table - recursive partition on /dev/sr0.
     else
         blockdev --rereadpt "$drive"
     fi
@@ -611,10 +571,10 @@ create_hostvg()
 {
     log "Creating LVM partition"
 
-    if [ "$ROOTDRIVE" == "$HOSTVGDRIVE" ]; then
-        parted $HOSTVGDRIVE -s "mkpart primary ext2 ${RootBackup_end}M -1"
+    if [ "$ROOTDRIVE" = "$HOSTVGDRIVE" ]; then
+        parted "$HOSTVGDRIVE" -s "mkpart primary ext2 ${RootBackup_end}M -1"
         hostvgpart="3"
-    elif [ "$BOOTDRIVE" == "$HOSTVGDRIVE" ]; then
+    elif [ "$BOOTDRIVE" = "$HOSTVGDRIVE" ]; then
         parted "$HOSTVGDRIVE" -s "mkpart primary ext2 ${boot_size_si} -1"
         hostvgpart="2"
         # FIXME : set for gtpsync/parted compat for now
@@ -630,8 +590,8 @@ create_hostvg()
     reread_partitions "$HOSTVGDRIVE"
 
     # sync GPT to the legacy MBR partitions
-    if [ "${OVIRT_INSTALL_ROOT}" == "y" ]; then
-        if [ "gpt" == "$LABEL_TYPE" ]; then
+    if [ "${OVIRT_INSTALL_ROOT}" = "y" ]; then
+        if [ "gpt" = "$LABEL_TYPE" ]; then
             log "Running gptsync to create legacy mbr"
             gptsync "$ROOTDRIVE"
         fi
@@ -647,7 +607,7 @@ create_hostvg()
         log "$partpv is not available!"
         exit 1
     fi
-    dd if=/dev/zero of=${partpv} bs=1024k count=1
+    dd if=/dev/zero of="${partpv}" bs=1024k count=1
     pvcreate -ff -y "${partpv}"
     log "Creating volume group"
     vgcreate /dev/HostVG "${partpv}"
@@ -692,6 +652,7 @@ create_hostvg()
     fi
 
     # end critical section
+    set +x
     set +e
 
     log "Mounting config partition"
@@ -711,12 +672,12 @@ create_hostvg()
 
 perform_partitioning()
 {
-    if [[ -z "$HOSTVGDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
+    if [ -z "$HOSTVGDRIVE" -a "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         printf "\nNo storage device selected.\n"
         return
     fi
 
-    if [[ -z "$BOOTDRIVE" && "$OVIRT_ISCSI_ENABLED" == "y" ]]; then
+    if [ -z "$BOOTDRIVE" -a "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         printf "\nNo storage device selected.\n"
         return
     fi
@@ -731,16 +692,15 @@ perform_partitioning()
 
     # begin critical section
     set -e
+    set -x
 
     MEM_SIZE_MB=$(echo "scale=0; $MEM_SIZE_MB / 1024;" | bc -l)
     boot_size_si=$(echo "scale=0; $BOOT_SIZE * (1024 * 1024) / (1000 * 1000)" | bc -l)
 
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
-        log "Partitioning drive: $BOOTDRIVE"
-        log "Wiping old boot sector"
-        dd if=/dev/zero of=$BOOTDRIVE bs=1024K count=1
+    if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
+        log "iSCSI enabled, partitioning boot drive: $BOOTDRIVE"
+        wipe_partitions "$BOOTDRIVE"
         reread_partitions "$BOOTDRIVE"
-        partprobe -s "$BOOTDRIVE"
         log "Creating boot partition"
         parted "$BOOTDRIVE" -s "mklabel ${LABEL_TYPE}"
         parted "$BOOTDRIVE" -s "mkpartfs primary ext2 0M ${boot_size_si}M"
@@ -752,29 +712,25 @@ perform_partitioning()
         # sleep to ensure filesystems are created before continuing
         sleep 10
         mke2fs "${partboot}" -L Boot
-        tune2fs -c 0 -i 0 ${partboot}
-        if [ "$OVIRT_ISCSI_HOSTVG" == "y" ]; then
+        tune2fs -c 0 -i 0 "${partboot}"
+        if [ "$OVIRT_ISCSI_HOSTVG" = "y" ]; then
             create_hostvg
         fi
         log "Completed!"
         return
     fi
 
-    if [ "OVIRT_ROOT_INSTALL" == "y" ]; then
-        log "Starting partitioning of $ROOTDRIVE"
-        log "Partitioning drive: $ROOTDRIVE"
-        # FIXME: save a backup copy, just in case?
-        log "Wiping old boot sector"
-        dd if=/dev/zero of="$ROOTDRIVE" bs=1024K count=1
+    if [ "$OVIRT_ROOT_INSTALL" = "y" ]; then
+        log "Partitioning root drive: $ROOTDRIVE"
+        wipe_partitions "$ROOTDRIVE"
         reread_partitions "$ROOTDRIVE"
-        partprobe -s "$ROOTDRIVE"
         log "Labeling Drive: $ROOTDRIVE"
         parted "$ROOTDRIVE" -s "mklabel ${LABEL_TYPE}"
 
         log "Creating Root and RootBackup Partitions"
         let RootBackup_end=${ROOT_SIZE}*2
-        parted $ROOTDRIVE -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
-        parted $ROOTDRIVE -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+        parted "$ROOTDRIVE" -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
+        parted "$ROOTDRIVE" -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
         # sleep to ensure filesystems are created before continuing
         sleep 10
         reread_partitions "$ROOTDRIVE"
@@ -832,7 +788,7 @@ do_confirm()
             return
         fi
         # store networking config since it was created before storage was established for iscsi targets
-        if [ "$OVIRT_ISCSI_NETWORKING" == "y" ]; then
+        if [ "$OVIRT_ISCSI_NETWORKING" = "y" ]; then
             ovirt_store_config \
         /etc/sysconfig/network-scripts/ifcfg* \
         /etc/ntp.conf
@@ -859,17 +815,17 @@ while true; do
     for OPTION in "$@"; do
         while true; do
             read -ep "Enter $OPTION: "
-            if [[ "$REPLY" == "q" || "$REPLY" == "Q" ]]; then
+            if [ "$REPLY" = "q" -o "$REPLY" = "Q" ]; then
                 return
             fi
 
-            if [ "$OPTION" == "Target IP" ]; then
+            if [ "$OPTION" = "Target IP" ]; then
                 OVIRT_ISCSI_TARGET_IP="$REPLY"
                 if [ -n "$REPLY" ]; then
                     break;
                 fi
 
-            elif [ "$OPTION" == "Target Port" ]; then
+            elif [ "$OPTION" = "Target Port" ]; then
                 OVIRT_ISCSI_TARGET_PORT="$REPLY"
                 if [ -z "$REPLY" ]; then
                     OVIRT_ISCSI_TARGET_PORT="3260"
@@ -878,11 +834,11 @@ while true; do
                     break;
                 fi
 
-            elif [ "$OPTION" == "CHAP Username" ]; then
+            elif [ "$OPTION" = "CHAP Username" ]; then
                 OVIRT_ISCSI_CHAP_USERNAME="$REPLY"
                 break
 
-            elif [ "$OPTION" == "CHAP Password" ]; then
+            elif [ "$OPTION" = "CHAP Password" ]; then
                 OVIRT_ISCSI_CHAP_PASSWORD="$REPLY"
                 break;
             fi
@@ -979,7 +935,7 @@ DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use the drive selected with 'ovirt_init' boot parameter
     # setting these the same until kernel cmdline argument implemented
-    translate_multipath_device "$OVIRT_INIT" DRIVE
+    DRIVE="$(translate_multipath_device "$OVIRT_INIT")"
     ROOTDRIVE="$DRIVE"
     HOSTVGDRIVE="$DRIVE"
     get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
@@ -992,8 +948,8 @@ else
     LABEL_TYPE="msdos"
 fi
 
-if [ "$1" == "AUTO" ]; then
-    log "Beginning automatic disk partitioning.\n"
+if [ "$1" = "AUTO" ]; then
+    log "Beginning automatic disk partitioning."
     if [ -n "$OVIRT_INIT" ]; then
         # do not format if HostVG exists on selected disk...
         check_existing_hostvg "$HOSTVGDRIVE"
@@ -1001,7 +957,7 @@ if [ "$1" == "AUTO" ]; then
         # ... unless overridden by ovirt_firstboot parameter
         if is_firstboot || [ $existingHostVG -ne 0 ]; then
             if check_partition_sizes; then
-		        log "Partitioning hard disk..."
+                log "Partitioning hard disk..."
                 perform_partitioning
                 exit $?
             fi

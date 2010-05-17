@@ -793,10 +793,10 @@ is_valid_ipv4 () {
     local result=1
 
     if [[ "$address" =~ "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" ]]; then
-        OIFS=$IFS
+        oldIFS="$IFS"
         IFS='.'
         ip=($address)
-        IFS=$OIFS
+        IFS="$oldIFS"
         [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
             && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
         result=$?
@@ -818,7 +818,7 @@ wipe_partitions() {
     # zero out the GPT secondary header
     log "Wiping secondary gpt header"
     local disk_kb_count=$(sfdisk -s "$drive" 2>/dev/null)
-    dd if=/dev/zero of=$drive bs=1024 seek=$(($disk_kb_count - 1)) count=1
+    dd if=/dev/zero of="$drive" bs=1024 seek=$(($disk_kb_count - 1)) count=1
 }
 
 test_ntp_configuration () {
@@ -841,21 +841,22 @@ test_ntp_configuration () {
 get_dm_device ()
 {
     local device="$1"
-    local return_var=$2
-    major=$(stat -c '%t' $(readlink -f "$device"))
-    minor=$(stat -c '%T' $(readlink -f "$device"))
+    major=$(stat -c '%t' "$(readlink -f "$device")")
+    minor=$(stat -c '%T' "$(readlink -f "$device")")
     local dm_device=
     local rc=1
+    oldIFS="$IFS"
+    IFS=$'\n'
     for dm in /dev/mapper/*; do
-        if [ $major = $(stat -c '%t' "$dm") -a \
-            $minor = $(stat -c '%T' "$dm") ]; then
-            local dm_device="$dm"
+        if [ $major = $(stat -c '%t' "$(readlink -f "$dm")") -a \
+            $minor = $(stat -c '%T' "$(readlink -f "$dm")") ]; then
+            dm_device="$dm"
             rc=0
             break
         fi
     done
-
-    eval $return_var="$dm_device"
+    IFS="$oldIFS"
+    echo "$dm_device"
 
     return $rc
 }
