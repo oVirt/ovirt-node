@@ -76,3 +76,4 @@ device-mapper-multipath
 kpartx
 dracut-network
 patch
+e2fsprogs
