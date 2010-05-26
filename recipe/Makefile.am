@@ -89,7 +89,7 @@ version.ks:
 	    echo "PRODUCT='"$(PRODUCT)"'" ;\
 	    echo "PACKAGE=$(PACKAGE)" ;\
 	    echo "VERSION=$(VERSION)" ;\
-	    echo "RELEASE=0" ;\
+	    echo "RELEASE=$(RELEASE)" ;\
 	) > $@
 
 $(PACKAGE).$(PKG_FMT) node: version.ks
