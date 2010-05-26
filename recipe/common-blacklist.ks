@@ -104,9 +104,11 @@ blacklist_ssh="/usr/bin/sftp /usr/bin/slogin /usr/bin/ssh /usr/bin/ssh-add \
 blacklist_docs="/usr/share/omf /usr/share/gnome /usr/share/doc \
     /usr/share/locale /usr/share/libthai /usr/share/man \
     /usr/share/X11 /usr/share/i18n"
+blacklist_boot="/boot/*"
+blacklist_yumdb="/var/lib/builder/* /var/lib/yumdb/*"
 
 eval $RM $blacklist $blacklist_lib $blacklist_pango $blacklist_hal \
-    $blacklist_ssh $blacklist_docs
+    $blacklist_ssh $blacklist_docs $blacklist_boot $blacklist_yumdb
 
 echo "Cleanup empty directory structures in /usr/share"
 find /usr/share -type d -exec rmdir {} \; > /dev/null 2>&1
