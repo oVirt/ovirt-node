@@ -30,7 +30,7 @@ ovirt_boot_setup() {
     local partN=-1
     log "installing the image."
 
-    if [ "$OVIRT_ROOT_INSTALL" == "n" ]; then
+    if [ "$OVIRT_ROOT_INSTALL" = "n" ]; then
         log "done."
         return
     fi
@@ -118,7 +118,7 @@ ovirt_boot_setup() {
           syslinux=
         fi
 
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+    if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         initrd_dest="/boot"
         grub_dir="/boot/grub"
         grub_prefix="/grub"
@@ -151,7 +151,7 @@ ovirt_boot_setup() {
     version=$(rpm -q --qf '%{version}' ovirt-node)
     release=$(rpm -q --qf '%{release}' ovirt-node)
     # reorder tty0 to allow both serial and phys console after installation
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+    if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
                     netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
     else
@@ -186,7 +186,7 @@ EOF
     fi
 
     rm -rf $tmpdir
-    if [ "$OVIRT_ISCSI_ENABLED" == "y" ]; then
+    if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         # copy default for when Root/HostVG is inaccessible(iscsi upgrade
         cp $OVIRT_DEFAULTS /boot
     fi
@@ -219,7 +219,7 @@ if [ -z "$doreboot" ]; then
 fi
 
 start_log
-if [ "$OVIRT_ROOT_INSTALL" =="n" ]; then
+if [ "$OVIRT_ROOT_INSTALL" = "n" ]; then
     log "done."
     return
 else
