@@ -21,7 +21,7 @@ RPMS="$RPMS gamin pm-utils kbd usermode vbetool ConsoleKit hdparm \
 
 # cronie pulls in exim (sendmail) which pulls in all kinds of perl deps
 RPMS="$RPMS exim perl-version perl-Pod-Simple perl-libs perl-Module-Pluggable \
-    perl-Pod-Escapes perl"
+    perl-Pod-Escapes perl postfix"
 
 RPMS="$RPMS sysklogd"
 
