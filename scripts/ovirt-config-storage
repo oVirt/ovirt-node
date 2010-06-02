@@ -106,7 +106,7 @@ get_drive_size()
     local drive="$1"
     local space_var="$2"
 
-    local size=$(sfdisk -s "$drive" 2>null)
+    local size=$(sfdisk -s "$drive" 2>/dev/null)
     size=$(echo "scale=0; $size / 1024" | bc -l)
 
     echo "$drive ($size MB)"
