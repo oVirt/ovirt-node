@@ -19,7 +19,7 @@ menu=$(mktemp)
 awk '
 BEGIN {
   # append additional default boot parameters
-  add_boot_params="check"
+  add_boot_params="check rootflags=ro"
 }
 /^label linux0/ { linux0=1 }
 linux0==1 && $1=="append" {

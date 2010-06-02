@@ -433,7 +433,7 @@ start_ovirt_early () {
             ovirt_early=$(echo $i|tr ",:;" " ")
             ;;
             BOOT_IMAGE=* | initrd=* | check | linux | liveimg | \
-            root=* | rootfstype=* | rootflags=* | ro)
+            root=* | rootfstype=* | ro)
             ;;
             *)
             bootparams="$bootparams $i"
