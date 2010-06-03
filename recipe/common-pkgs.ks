@@ -77,3 +77,4 @@ kpartx
 dracut-network
 patch
 e2fsprogs
+sysfsutils
