@@ -603,10 +603,15 @@ create_hostvg()
         partpv="${HOSTVGDRIVE}p${hostvgpart}"
     fi
     log "Creating physical volume"
-    if [ ! -e "$partpv" ]; then
-        log "$partpv is not available!"
-        exit 1
-    fi
+    for count in $(seq 1 10); do
+        if [ ! -e "$partpv" ]; then
+            sleep 1
+            if [[ "$count" == "10" && ! -e "$partpv" ]]; then
+                log "$partpv is not available!"
+                exit 1
+            fi
+        fi
+    done
     dd if=/dev/zero of="${partpv}" bs=1024k count=1
     pvcreate -ff -y "${partpv}"
     log "Creating volume group"
@@ -731,8 +736,6 @@ perform_partitioning()
         let RootBackup_end=${ROOT_SIZE}*2
         parted "$ROOTDRIVE" -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
         parted "$ROOTDRIVE" -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
-        # sleep to ensure filesystems are created before continuing
-        sleep 10
         reread_partitions "$ROOTDRIVE"
         partroot="${ROOTDRIVE}1"
         partrootbackup="${ROOTDRIVE}2"
@@ -740,10 +743,17 @@ perform_partitioning()
             partroot="${ROOTDRIVE}p1"
             partrootbackup="${ROOTDRIVE}p2"
         fi
-        mke2fs "${partroot}" -L Root
-        mke2fs "${partrootbackup}" -L RootBackup
-        tune2fs -c 0 -i 0 "${partroot}"
-        tune2fs -c 0 -i 0 "${partrootbackup}"
+        while [ ! -h /dev/disk/by-label/Root ]; do
+            mke2fs "${partroot}" -L Root
+            sleep 2
+            tune2fs -c 0 -i 0 "${partroot}"
+        done
+
+        while [ ! -h /dev/disk/by-label/RootBackup ]; do
+            mke2fs "${partrootbackup}" -L RootBackup
+            sleep 2
+            tune2fs -c 0 -i 0 "${partrootbackup}"
+        done
     fi
 
     if [ "$ROOTDRIVE" != "$HOSTVGDRIVE" ]; then
