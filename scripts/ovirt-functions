@@ -792,7 +792,7 @@ is_valid_ipv4 () {
     local address=${1}
     local result=1
 
-    if [[ "$address" =~ "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" ]]; then
+    if [[ "$address" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
         oldIFS="$IFS"
         IFS='.'
         ip=($address)
