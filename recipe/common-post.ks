@@ -157,6 +157,7 @@ rm -f /etc/cron.daily/logrotate
 touch /var/lib/random-seed
 mkdir /live
 mkdir /boot
+mkdir /rhev
 mkdir -p /var/cache/multipathd
 sed -i '/^files	\/etc*/ s/^/#/' /etc/rwtab
 cat > /etc/rwtab.d/ovirt <<EOF
@@ -173,6 +174,7 @@ files   /var/cache/multipathd
 empty	/mnt
 empty	/live
 empty	/boot
+empty	/rhev
 EOF
 
 

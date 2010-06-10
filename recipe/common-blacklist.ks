@@ -80,7 +80,7 @@ find /usr/share/zoneinfo -regextype egrep -type f \
   ! -regex ".*/UTC|.*/GMT" -exec $RM {} \;
 
 echo "Removing blacklisted files and directories"
-blacklist="/etc/alsa /etc/pki /usr/share/hwdata/MonitorsDB \
+blacklist="/etc/alsa /usr/share/hwdata/MonitorsDB \
     /usr/share/hwdata/oui.txt /usr/share/hwdata/videoaliases \
     /usr/share/firstboot /usr/share/lua /usr/share/kde4 /usr/share/pixmaps \
     /usr/share/hwdata/videodrivers /usr/share/icons /usr/share/fedora-release \
@@ -150,5 +150,9 @@ keep /lib/firmware/qlogic
 keep /lib/firmware/sun
 keep /lib/firmware/tehuti
 keep /lib/firmware/tigon
+drop /etc/pki/tls
+drop /etc/pki/java
+drop /etc/pki/nssdb
+drop /etc/pki/rpm-gpg 
 %end
 
