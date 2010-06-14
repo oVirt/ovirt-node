@@ -30,7 +30,6 @@ dist_sbin_SCRIPTS = \
 dist_libexec_SCRIPTS = \
   ovirt-config-boot \
   ovirt-config-boot-wrapper \
-  ovirt-config-collectd \
   ovirt-config-hostname \
   ovirt-config-iscsi \
   ovirt-config-logging \

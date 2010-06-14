@@ -41,16 +41,11 @@ start_ovirt_firstboot ()
 
     touch $VAR_SUBSYS_OVIRT_FIRSTBOOT
 
-    # by default in standalone, disable collectd until server is configured
-    service collectd stop > /dev/null 2>&1
-    chkconfig collectd off
-
     if is_auto_install; then
         /usr/libexec/ovirt-config-storage AUTO
         /usr/libexec/ovirt-config-hostname AUTO
         /usr/libexec/ovirt-config-networking AUTO
         /usr/libexec/ovirt-config-logging AUTO
-        /usr/libexec/ovirt-config-collectd AUTO
         /usr/libexec/ovirt-config-password AUTO
     fi
 
