@@ -58,6 +58,8 @@ cat >> /etc/profile << \EOF
 # oVirt: force our locale to C since we don't have locale stuff'
 export LC_ALL=C LANG=C
 EOF
+# unset AUDITD_LANG to prevent boot errors
+sed -i '/^AUDITD_LANG*/ s/^/#/' /etc/sysconfig/auditd
 
 echo "Configuring IPTables"
 # here, we need to punch the appropriate holes in the firewall
