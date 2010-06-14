@@ -134,8 +134,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 scripts/ovirt-post %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
 
-%{__install} -p -m0755 kinit/ovirt-kinit %{buildroot}%{_sysconfdir}/cron.hourly
-
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
 
@@ -174,8 +172,6 @@ echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{bu
 %{__install} -p -m0755 tools/edit-livecd %{buildroot}%{_sbindir}
 %{__install} -p -m0755 tools/livecd-setauth %{buildroot}%{_sbindir}
 %{__install} -p -m0755 tools/livecd-rpms %{buildroot}%{_sbindir}
-#%{__install} -p -m0755 tools/get-ovirt-node-image %{buildroot}%{_sbindir}
-#%{__install} -p -m0755 tools/generate-ovirt-node-pxe-tree %{buildroot}%{_sbindir}
 
 
 %clean
@@ -261,7 +257,6 @@ fi
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
-%config %{_sysconfdir}/cron.hourly/ovirt-kinit
 %{_sysconfdir}/ovirt-early.d
 
 %{_bindir}/nodeadmin

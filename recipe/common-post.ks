@@ -272,3 +272,7 @@ patch -d /etc/rc.d -p0 <<\EOF
  
  # Update quotas if necessary
 EOF
+
+# chkconfig off unnecessary services
+chkconfig ovirt off
+chkconfig ovirt-awake off
