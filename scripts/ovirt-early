@@ -2,6 +2,8 @@
 #
 # ovirt-early Start early ovirt services
 #
+# chkconfig: 23 01 99
+#
 ### BEGIN INIT INFO
 # Provides: ovirt-early
 # Default-Start: 2 3 4 5
