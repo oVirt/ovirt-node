@@ -5,7 +5,7 @@ auth --useshadow --enablemd5
 selinux --enforcing
 firewall --disabled
 # TODO: the sizing of the image needs to be more dynamic
-part / --size 750 --fstype ext2
+part / --size 1024 --fstype ext2
 services --enabled=auditd,ntpd,ntpdate,collectd,iptables,network,rsyslog,libvirt-qpid,multipathd
 # This requires a new fixed version of livecd-creator to honor the --append settings.
 bootloader --timeout=30 --append="console=tty0 console=ttyS0,115200n8"

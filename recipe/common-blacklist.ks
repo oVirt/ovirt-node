@@ -43,8 +43,8 @@ done
 # starting at $MODULES; so if you want to remove the NLS stuff from the
 # fs subdir, your mods entry would be "fs/nls"
 fs_mods="fs/nls fs/9p fs/affs fs/autofs fs/autofs4 fs/befs fs/bfs fs/cifs \
-       fs/coda fs/cramfs fs/dlm fs/ecryptfs fs/efs fs/exportfs fs/ext4 \
-       fs/freevxfs fs/gfs2 fs/hfs fs/hfsplus fs/jbd2 fs/jffs \
+       fs/coda fs/cramfs fs/dlm fs/ecryptfs fs/efs fs/exportfs \
+       fs/freevxfs fs/gfs2 fs/hfs fs/hfsplus fs/jffs \
        fs/jffs2 fs/jfs fs/minix fs/ncpfs fs/ocfs2 fs/qnx4 fs/reiserfs \
        fs/romfs fs/sysv fs/udf fs/ufs fs/xfs"
 

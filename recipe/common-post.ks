@@ -220,5 +220,5 @@ mkdir -p /boot
 mkdir -p /config
 mkdir -p /data
 mkdir -p /liveos
-echo "/dev/HostVG/Config /config ext3 defaults,noauto,noatime 0 0" >> /etc/fstab
+echo "/dev/HostVG/Config /config ext4 defaults,noauto,noatime 0 0" >> /etc/fstab
 

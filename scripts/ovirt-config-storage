@@ -626,15 +626,15 @@ create_hostvg()
     if [ "$CONFIG_SIZE" -gt 0 ]; then
         log "Creating config partition"
         lvcreate --name Config --size ${CONFIG_SIZE}M /dev/HostVG
-        mke2fs -j /dev/HostVG/Config -L "CONFIG"
+        mke2fs -j -t ext4 /dev/HostVG/Config -L "CONFIG"
         tune2fs -c 0 -i 0 /dev/HostVG/Config
     fi
     if [ "$LOGGING_SIZE" -gt 0 ]; then
         log "Creating log partition"
         lvcreate --name Logging --size ${LOGGING_SIZE}M /dev/HostVG
-        mke2fs -j /dev/HostVG/Logging -L "LOGGING"
+        mke2fs -j -t ext4 /dev/HostVG/Logging -L "LOGGING"
         tune2fs -c 0 -i 0 /dev/HostVG/Logging
-        echo "/dev/HostVG/Logging /var/log ext3 defaults,noatime 0 0" >> /etc/fstab
+        echo "/dev/HostVG/Logging /var/log ext4 defaults,noatime 0 0" >> /etc/fstab
     fi
 
     local use_data=1
@@ -649,9 +649,9 @@ create_hostvg()
     fi
 
     if [ "$use_data" = 0 ]; then
-        mke2fs -j /dev/HostVG/Data -L "DATA"
+        mke2fs -j -t ext4 /dev/HostVG/Data -L "DATA"
         tune2fs -c 0 -i 0 /dev/HostVG/Data
-        echo "/dev/HostVG/Data /data ext3 defaults,noatime 0 0" >> /etc/fstab
+        echo "/dev/HostVG/Data /data ext4 defaults,noatime 0 0" >> /etc/fstab
         echo "/data/images /var/lib/libvirt/images bind bind 0 0" >> /etc/fstab
         echo "/data/core /var/log/core bind bind 0 0" >> /etc/fstab
     fi
@@ -743,17 +743,12 @@ perform_partitioning()
             partroot="${ROOTDRIVE}p1"
             partrootbackup="${ROOTDRIVE}p2"
         fi
-        while [ ! -h /dev/disk/by-label/Root ]; do
-            mke2fs "${partroot}" -L Root
-            sleep 2
-            tune2fs -c 0 -i 0 "${partroot}"
-        done
-
-        while [ ! -h /dev/disk/by-label/RootBackup ]; do
-            mke2fs "${partrootbackup}" -L RootBackup
-            sleep 2
-            tune2fs -c 0 -i 0 "${partrootbackup}"
-        done
+        mke2fs -t ext2 "${partroot}" -L Root
+        tune2fs -c 0 -i 0 "${partroot}"
+        ln -snf "${partroot}" /dev/disk/by-label/Root
+        mke2fs -t ext2 "${partrootbackup}" -L RootBackup
+        tune2fs -c 0 -i 0 "${partrootbackup}"
+        ln -snf "${partrootbackup}" /dev/disk/by-label/RootBackup
     fi
 
     if [ "$ROOTDRIVE" != "$HOSTVGDRIVE" ]; then
