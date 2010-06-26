@@ -35,7 +35,9 @@ numactl
 file
 lsof
 newt-python
-/usr/bin/kvmtrace
+# test jboggs
+#/usr/bin/kvmtrace
+qemu-kvm-tools
 #remove
 -audit-libs-python
 -ustr
@@ -76,3 +78,4 @@ vdsm-cli
 vdsm-reg
 # host statistics rhbz#588852
 vhostmd
+kexec-tools

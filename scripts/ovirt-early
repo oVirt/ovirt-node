@@ -437,6 +437,9 @@ start_ovirt_early () {
             BOOT_IMAGE=* | initrd=* | check | linux | liveimg | \
             root=* | rootfstype=* | ro)
             ;;
+            crashkernel=*)
+            bootparams="$bootparams $i"
+            ;;
             *)
             bootparams="$bootparams $i"
             ;;
@@ -507,6 +510,23 @@ EOF
         bash < /dev/console > /dev/console 2> /dev/console
         plymouth --show-splash
         start_log
+    fi
+
+    # link to the kernel image for kdump
+    if is_booted_from_local_disk; then
+        mount_boot
+        if grep -q RootBackup; then
+            # try backup image
+            ln -s /boot/backup-vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+        else
+            ln -s /boot/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+        fi
+    else
+        # try source image
+        mount_live
+        if [ -e /live/*linux/vmlinuz0 ]; then
+            ln -s /live/*linux/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+        fi
     fi
 
     if [ "$standalone" = 1 ]; then

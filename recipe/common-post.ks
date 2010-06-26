@@ -276,3 +276,42 @@ EOF
 # chkconfig off unnecessary services
 chkconfig ovirt off
 chkconfig ovirt-awake off
+
+# mkdumprd wants to write to /initrd.XXXX with TMPDIR empty
+# this sets it to a writable directory for kdump to start correctly
+patch -d /sbin/ -p0 <<\EOF
+--- mkdumprd.orig	2010-06-25 14:39:54.718863880 +0000
++++ mkdumprd	2010-06-25 14:40:25.110785538 +0000
+@@ -75,7 +75,7 @@
+ DUMP_FSTYPE=""
+ 
+ TMPDISKLIST=`mktemp /tmp/disklist.XXXXXX`
+-
++TMPDIR="/tmp"
+ MNTIMAGE=`mktemp -d ${TMPDIR}/initrd.XXXXXX`
+ IMAGE=`mktemp ${TMPDIR}/initrd.img.XXXXXX`
+ RCFILE=$MNTIMAGE/init
+EOF
+
+patch -d /etc/rc.d/init.d/ -p0 <<\EOF
+--- kdump.orig	2010-06-25 16:06:17.019233645 -0400
++++ kdump	2010-06-25 16:06:48.342171474 -0400
+@@ -67,7 +67,7 @@
+ 		# to figure out if anything has changed
+ 		touch /etc/kdump.conf
+ 	else
+-		MKDUMPRD="/sbin/mkdumprd -d -f"
++		MKDUMPRD="/sbin/mkdumprd -d -f --allow-missing"
+ 	fi
+ 
+ 	if [ -z "$KDUMP_KERNELVER" ]; then
+@@ -137,7 +137,7 @@
+                         echo -n "  "; echo "$modified_files" | sed 's/\s/\n  /g'
+                 fi
+                 echo "Rebuilding $kdump_initrd"
+-                /sbin/mkdumprd -d -f $kdump_initrd $kdump_kver
++                /sbin/mkdumprd -d -f $kdump_initrd $kdump_kver --allow-missing
+                 if [ $? != 0 ]; then
+                         echo "Failed to run mkdumprd"
+                         $LOGGER "mkdumprd: failed to make kdump initrd"
+EOF
