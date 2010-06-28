@@ -300,6 +300,15 @@ start_ovirt_early () {
 
     for i in $(cat /proc/cmdline); do
         case $i in
+            root=live:CDLABEL=*)
+            set -x
+            # workaround for bz#605356
+            blkid /dev/sr*
+            label=${i#root=live:CDLABEL=}
+            mount -r -L $label /live
+            ln -s $(blkid -L $label) /dev/live
+            set +x
+            ;;
             BOOTIF=*)
             i=${i#BOOTIF=}
             case "$i" in
