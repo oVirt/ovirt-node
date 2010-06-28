@@ -504,7 +504,7 @@ EOF
         log "Rescue mode requested, starting emergency shell"
         stop_log
         plymouth --hide-splash
-        bash < /dev/console
+        bash < /dev/console > /dev/console 2> /dev/console
         plymouth --show-splash
         start_log
     fi
