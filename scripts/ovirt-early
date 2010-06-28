@@ -576,6 +576,8 @@ case "$1" in
         {
             log "Starting ovirt-early"
             start_ovirt_early
+            # TEMP fix broken libvirtd.conf
+            sed -c -i '/^log_filters=/d' /etc/libvirt/libvirtd.conf
             log "Completed ovirt-early"
             RETVAL=$?
         } >> $OVIRT_LOGFILE 2>&1
