@@ -34,6 +34,7 @@ dist_libexec_SCRIPTS = \
   ovirt-config-iscsi \
   ovirt-config-logging \
   ovirt-config-networking \
+  ovirt-config-rhn \
   ovirt-config-password \
   ovirt-config-setup \
   ovirt-config-storage \

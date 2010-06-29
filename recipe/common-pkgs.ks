@@ -78,4 +78,8 @@ vdsm-cli
 vdsm-reg
 # host statistics rhbz#588852
 vhostmd
+# kdump
 kexec-tools
+# RHN agent
+#rhn-virtualization-host
+rhn-setup

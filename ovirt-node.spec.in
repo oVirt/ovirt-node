@@ -158,6 +158,7 @@ echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{bu
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-hostname %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"10_Set Hostname"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-iscsi %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"12_iSCSI Initiator Setup"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
+%{__ln_s} ../..%{_libexecdir}/ovirt-config-rhn %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"25_Register Host to RHN"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-view-logs %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"90_View logs"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
@@ -240,6 +241,7 @@ fi
 %{_libexecdir}/ovirt-config-logging
 %{_libexecdir}/ovirt-config-networking
 %{_libexecdir}/ovirt-config-password
+%{_libexecdir}/ovirt-config-rhn
 %{_libexecdir}/ovirt-config-setup
 %{_libexecdir}/ovirt-config-storage
 %{_libexecdir}/ovirt-config-uninstall

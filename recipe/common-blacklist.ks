@@ -25,6 +25,9 @@ RPMS="$RPMS exim perl-version perl-Pod-Simple perl-libs perl-Module-Pluggable \
 
 RPMS="$RPMS sysklogd"
 
+# unneeded rhn deps
+RPMS="$RPMS yum-rhn-plugin yum"
+
 # Things we could probably remove if libvirt didn't link against them
 #RPMS="$RPMS avahi PolicyKit xen-libs"
 
@@ -106,9 +109,11 @@ blacklist_docs="/usr/share/omf /usr/share/gnome /usr/share/doc \
     /usr/share/X11 /usr/share/i18n"
 blacklist_boot="/boot/*"
 blacklist_yumdb="/var/lib/builder/* /var/lib/yumdb/*"
+blacklist_rhn="/usr/sbin/rhn_register /usr/sbin/*-channel"
 
 eval $RM $blacklist $blacklist_lib $blacklist_pango $blacklist_hal \
-    $blacklist_ssh $blacklist_docs $blacklist_boot $blacklist_yumdb
+    $blacklist_ssh $blacklist_docs $blacklist_boot $blacklist_yumdb \
+    $blacklist_rhn
 
 echo "Cleanup empty directory structures in /usr/share"
 find /usr/share -type d -exec rmdir {} \; > /dev/null 2>&1
