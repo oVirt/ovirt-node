@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# To automate the partitioning, pass in the specific fields in this order
-# ovirt-config-storage [swap size] [boot size] [root size] [logging size] [data size]
+# To automate the partitioning, set OVIRT_VOL_* in /etc/default/ovirt and call
+# ovirt-config-storage AUTO
 #
 # All sizes are in megabytes
 #
@@ -364,15 +364,15 @@ EOF
 
     local space_left=$HOSTVGDRIVESPACE
     if [ "$OVIRT_ISCSI_ENABLED" = "y" -a "$OVIRT_ISCSI_HOSTVG" != "y" ]; then
-        partlist="boot"
+        partlist=""
         local space_left=$BOOTDRIVESPACE
     elif [ "$OVIRT_ISCSI_ENABLED" = "y" -a "$OVIRT_ISCSI_HOSTVG" = "y" ]; then
-        partlist="boot swap config logging data"
+        partlist="swap config logging data"
         local space_left=$BOOTDRIVESPACE
     elif [ "$OVIRT_ROOT_INSTALL" = "n" ]; then
         partlist="swap config logging data"
     else
-        partlist="swap root config logging data"
+        partlist="swap config logging data"
     fi
     for part in $partlist ; do
         part_regexp="^0$"
@@ -930,9 +930,9 @@ fi
 
 CALC_SWAP_SIZE=$(echo "scale=0; ${BASE_SWAP_SIZE} + ${OVERCOMMIT_SWAP_SIZE};" | bc -l)
 
-BOOT_SIZE=${OVIRT_VOL_BOOT_SIZE:-$default_boot_size}
+BOOT_SIZE=$default_boot_size
 SWAP_SIZE=${OVIRT_VOL_SWAP_SIZE:-$CALC_SWAP_SIZE}
-ROOT_SIZE=${OVIRT_VOL_ROOT_SIZE:-$default_root_size}
+ROOT_SIZE=$default_root_size
 CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
 LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-$default_logging_size}
 DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
