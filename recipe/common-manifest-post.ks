@@ -3,6 +3,8 @@
 rpm -qa --qf '%{name}-%{version}-%{release}.%{arch} (%{SIGGPG:pgpsig})\n' | \
     sort > /manifest-rpm.txt
 rpm -qa --qf '%{sourcerpm}\n' | sort -u > /manifest-srpm.txt
+# collect all included licenses rhbz#601927
+rpm -qa --qf '%{license}\n' | sort -u > /manifest-license.txt
 # remove rpmdb rhbz#596718
 rm -rf /var/lib/rpm
 du -akx --exclude=/var/cache/yum / > /manifest-file.txt
