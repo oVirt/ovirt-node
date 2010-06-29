@@ -179,7 +179,6 @@ echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{bu
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-collectd %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"35_Collectd Setup"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-view-logs %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"90_View logs"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-uninstall %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"99_Uninstall node"
 
 # ovirt-early vendor hook dir
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-early.d
