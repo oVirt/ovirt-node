@@ -35,6 +35,32 @@ ovirt_boot_setup() {
         return
     fi
 
+    # install oVirt Node image for local boot
+    if [ -e "$live/syslinux" ]; then
+      syslinux=syslinux
+    elif [ -e "$live/isolinux" ]; then
+      syslinux=isolinux
+    else
+      syslinux=
+    fi
+
+    if [ ! -e "$live/LiveOS/squashfs.img" \
+      -o ! -e "$live/$syslinux/version" ]; then
+      log "source image not valid."
+      return 1
+    fi
+    . /etc/default/version
+    local current_version=$VERSION
+    local current_major=$(echo $VERSION|cut -d. -f1)
+    # image version
+    . $live/$syslinux/version
+    local new_major=$(echo $VERSION|cut -d. -f1)
+    # only N.x -> N.y upgrades are allowed
+    if [ "$current_major" != "$new_major" ]; then
+      log "cannot upgrade from $current_version to $VERSION."
+      return 1
+    fi
+
     local found_boot=false
     if findfs LABEL=Boot 2>&1 >/dev/null ; then
         found_boot=true
@@ -109,14 +135,6 @@ ovirt_boot_setup() {
         mkdir -p /liveos/LiveOS
 
     fi
-        # install oVirt Node image for local boot
-        if [ -e "$live/syslinux" ]; then
-          syslinux=syslinux
-        elif [ -e "$live/isolinux" ]; then
-          syslinux=isolinux
-        else
-          syslinux=
-        fi
 
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         initrd_dest="/boot"
