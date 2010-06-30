@@ -35,7 +35,6 @@ ovirt_boot_setup() {
         return
     fi
 
-    # install oVirt Node image for local boot
     if [ -e "$live/syslinux" ]; then
       syslinux=syslinux
     elif [ -e "$live/isolinux" ]; then
@@ -117,7 +116,8 @@ ovirt_boot_setup() {
             rc=1
         elif [ "$candidate" = "RootNew" ]; then
             umount /liveos
-            rc=0
+            candidate_dev=$(findfs LABEL=$candidate 2>/dev/null)
+            rc=$?
         else
             candidate_dev=$(findfs LABEL=$candidate 2>/dev/null)
             e2label "$candidate_dev" RootNew
@@ -146,11 +146,15 @@ ovirt_boot_setup() {
         grub_prefix="/boot/grub"
     fi
 
-    rm -rf  $grub_dir
-    mkdir -p $grub_dir
+    # backup current kernel/initrd
+    if [ "$candidate" != "Root" \
+         -a -e "$initrd_dest/vmlinuz0" -a -e "$initrd_dest/initrd0.img" ]; then
+        cp -p $initrd_dest/vmlinuz0 $initrd_dest/backup-vmlinuz0 \
+        && cp -p $initrd_dest/initrd0.img $initrd_dest/backup-initrd0.img
+    fi
 
-    cp -p $live/$syslinux/vmlinuz0 $initrd_dest
-    cp -p $live/$syslinux/initrd0.img $initrd_dest
+    cp -p $live/$syslinux/vmlinuz0 $initrd_dest \
+    && cp -p $live/$syslinux/initrd0.img $initrd_dest
     rc=$?
     if [ $rc -ne 0 ]; then
         log "kernel image copy failed."
@@ -166,8 +170,12 @@ ovirt_boot_setup() {
         fi
     fi
 
-    version=$(rpm -q --qf '%{version}' ovirt-node)
-    release=$(rpm -q --qf '%{release}' ovirt-node)
+    local oldtitle
+    if [ "$candidate" = "Root" ]; then
+        oldtitle=$(grep ^title /boot/grub/grub.conf|tail -n1|cut -c7-)
+    else
+        oldtitle="BACKUP $(grep ^title /boot/grub/grub.conf|head -n1|cut -c7-)"
+    fi
     # reorder tty0 to allow both serial and phys console after installation
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
@@ -176,17 +184,33 @@ ovirt_boot_setup() {
         bootparams="ro root=live:LABEL=Root roottypefs=ext3 console=tty0 \
                 $(echo $bootparams | sed s/console=tty0//g)"
     fi
+    mkdir -p $grub_dir
     cat > $grub_dir/grub.conf << EOF
-default=0
-timeout=5
+default saved
+timeout 5
 hiddenmenu
-title oVirt Node (${version}-${release})
+title $PRODUCT (${VERSION}-${RELEASE})
     root (hd0,$partN)
     kernel /vmlinuz0 $bootparams
     initrd /initrd0.img
 EOF
+    local backup_entry=0
+    if [ -n "$oldtitle" \
+      -a -e "$initrd_dest/backup-vmlinuz0" \
+      -a -e "$initrd_dest/backup-initrd0.img" ]; then
+        cat >> $grub_dir/grub.conf << EOF
+title ${oldtitle}
+    root (hd0,$partN)
+    kernel /backup-vmlinuz0 $bootparams root=live:LABEL=RootBackup
+    initrd /backup-initrd0.img
+    savedefault
+EOF
+        backup_entry=1
+    fi
     echo "(hd0) $disk" > $grub_dir/device.map
     ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 $grub_dir )
+    # grub setup will do direct changes
+    sync
     grub --device-map=$grub_dir/device.map <<EOF
 root (hd0,$partN)
 setup --prefix=$grub_prefix (hd0)
@@ -199,15 +223,25 @@ EOF
 
     if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         umount /liveos
+        rc=$?
+        if [ $rc -ne 0 ]; then
+            log "umount /liveos failed."
+            return $rc
+        fi
         # mark new Root ready to go, reboot() in ovirt-function switches it to active
         e2label "$candidate_dev" RootUpdate
+        mount "$candidate_dev" /liveos
+        grub <<EOF_SAVEDEFAULT
+savedefault --default=$backup_entry
+savedefault --default=0 --once
+EOF_SAVEDEFAULT
     fi
 
-    rm -rf $tmpdir
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
-        # copy default for when Root/HostVG is inaccessible(iscsi upgrade
+        # copy defaults for when Root/HostVG is inaccessible(iscsi upgrade)
         cp $OVIRT_DEFAULTS /boot
     fi
+
     log "done."
 }
 
