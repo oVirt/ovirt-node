@@ -67,7 +67,7 @@ configure_ovirt_management_nic() {
                       "http://$SRV_HOST:$SRV_PORT/ovirt/managed_node/config?host=$(hostname)&macs=$macs"
                     if [ $? -eq 0 ]; then
                         log "Remote configuration bundle retrieved to $cfgdb"
-                        ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
+                        /usr/libexec/ovirt-process-config $cfgdb $BONDING_MODCONF_FILE $AUGTOOL_CONFIG
                         if [ $? -eq 0 ]; then
                             log "Remote configuration retrieved and applied"
                             rm $cfgdb

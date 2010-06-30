@@ -254,12 +254,11 @@ fi
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
 
-%{_libexecdir}/ovirt-functions
 %{_libexecdir}/ovirt-config-boot
 %{_libexecdir}/ovirt-config-boot-wrapper
 %{_libexecdir}/ovirt-config-collectd
-%{_libexecdir}/ovirt-config-iscsi
 %{_libexecdir}/ovirt-config-hostname
+%{_libexecdir}/ovirt-config-iscsi
 %{_libexecdir}/ovirt-config-logging
 %{_libexecdir}/ovirt-config-networking
 %{_libexecdir}/ovirt-config-password
@@ -267,8 +266,9 @@ fi
 %{_libexecdir}/ovirt-config-storage
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-config-view-logs
-%{_sbindir}/ovirt-process-config
-%{_sbindir}/ovirt-install-node-stateless
+%{_libexecdir}/ovirt-functions
+%{_libexecdir}/ovirt-install-node-stateless
+%{_libexecdir}/ovirt-process-config
 %{_sbindir}/gptsync
 %{_sbindir}/showpart
 %{_sbindir}/persist

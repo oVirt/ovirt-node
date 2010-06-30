@@ -24,13 +24,10 @@ EXTRA_DIST = \
   ovirt-firstboot
 
 dist_sbin_SCRIPTS = \
-  ovirt-install-node-stateless \
-  ovirt-process-config \
   persist \
   unpersist
 
 dist_libexec_SCRIPTS = \
-  ovirt-functions \
   ovirt-config-boot \
   ovirt-config-boot-wrapper \
   ovirt-config-collectd \
@@ -42,4 +39,7 @@ dist_libexec_SCRIPTS = \
   ovirt-config-setup \
   ovirt-config-storage \
   ovirt-config-uninstall \
-  ovirt-config-view-logs
+  ovirt-config-view-logs \
+  ovirt-functions \
+  ovirt-install-node-stateless \
+  ovirt-process-config

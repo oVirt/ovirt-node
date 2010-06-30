@@ -44,7 +44,7 @@ fi
 rm -rf "$tmpdir"
 
 echo "Running ovirt-install-node-stateless"
-ovirt-install-node-stateless
+/usr/libexec/ovirt-install-node-stateless
 
 echo "Creating shadow files"
 # because we aren't installing authconfig, we aren't setting up shadow
