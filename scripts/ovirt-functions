@@ -121,7 +121,7 @@ is_upgrade() {
 # return 0 if booted from local disk
 # return 1 if booted from other media
 is_booted_from_local_disk() {
-    grep -q /dev/HostVG/ /proc/cmdline
+    grep -q LABEL=Root /proc/cmdline
 }
 
 # was firstboot menu already shown?
