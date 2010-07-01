@@ -470,7 +470,7 @@ EOF
 #   copy to /config and bind-mount back
 ovirt_store_config() {
     rc=0
-    if grep -q " /config ext3" /proc/mounts; then
+    if grep -q " /config ext4" /proc/mounts; then
         for p in "$@"; do
             local filename=$(readlink -f $p)
             local persist_it=true
