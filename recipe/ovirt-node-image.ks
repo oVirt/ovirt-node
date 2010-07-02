@@ -11,7 +11,7 @@
 
 %post
 %include common-post.ks
-
+%include common-el6.ks
 %end
 
 %include common-blacklist.ks

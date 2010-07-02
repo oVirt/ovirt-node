@@ -425,7 +425,7 @@ mount_data() {
         # configure kdump
         cat > /etc/kdump.conf <<\EOF
 default reboot
-ext3 /dev/HostVG/Data
+ext4 /dev/HostVG/Data
 path /core
 EOF
         ovirt_store_config /etc/kdump.conf

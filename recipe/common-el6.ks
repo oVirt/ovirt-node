@@ -1,11 +1,13 @@
 # add RHEV-H rwtab locations
 mkdir -p /rhev
 mkdir -p /var/cache/rhn
+mkdir -p /boot-kdump
 cat > /etc/rwtab.d/rhev <<EOF_RWTAB
 empty	/rhev
 files	/root/.ssh
 files	/var/cache/rhn
 files	/var/vdsm
+files	/boot-kdump
 EOF_RWTAB
 
 # convenience symlinks
@@ -76,3 +78,8 @@ cat > /etc/system-release-cpe <<\EOF_CPE
 cpe:/o:redhat:enterprise_virtualization_hypervisor:6
 EOF_CPE
 
+# kdump configuration
+augtool <<\EOF
+set /files/etc/sysconfig/kdump/KDUMP_BOOTDIR /boot-kdump
+save
+EOF
