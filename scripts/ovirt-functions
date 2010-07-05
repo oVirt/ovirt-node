@@ -474,20 +474,17 @@ ovirt_store_config() {
         for p in "$@"; do
             local filename=$(readlink -f $p)
             local persist_it=true
-
-            # ensure that, if this is a directory
-            # that it's not already persisted
-            if [ -d $filename ]; then
+            if [[ "$filename" =~ ^/[^/]*$ ]]; then
+                # persisting top-level folder makes trouble rhbz#611617
+                printf "Cannot persist system folder: ${filename}\n"
+                persist_it=false
+            elif [ -d $filename ]; then
                 if [ -d /config$filename ]; then
                     printf "Directory already persisted: ${filename}\n"
                     printf "You need to unpersist its child directories and/or files and try again.\n"
                     persist_it=false
                 fi
-            fi
-
-            # if it's a file then make sure it's not already
-            # persisted
-            if [ -f $filename ]; then
+            elif [ -f $filename ]; then
                 if [ -f /config$filename ]; then
                     local md5root=$(md5 $filename)
                     local md5stored=$(md5 /config$filename)
@@ -500,6 +497,9 @@ ovirt_store_config() {
                         rm -f /config$filename
                     fi
                 fi
+            else
+                printf "Cannot persist: ${filename}\n"
+                persist_it=false
             fi
 
             if $persist_it; then
