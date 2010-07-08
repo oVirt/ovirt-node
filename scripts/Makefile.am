@@ -32,6 +32,7 @@ dist_libexec_SCRIPTS = \
   ovirt-config-boot-wrapper \
   ovirt-config-hostname \
   ovirt-config-iscsi \
+  ovirt-config-kdump \
   ovirt-config-logging \
   ovirt-config-networking \
   ovirt-config-rhn \

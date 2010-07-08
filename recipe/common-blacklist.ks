@@ -102,8 +102,8 @@ blacklist_pango="/usr/lib{,64}/pango /usr/lib{,64}/libpango* \
 blacklist_hal="/usr/bin/hal-disable-polling \
     /usr/bin/hal-is-caller-locked-out /usr/bin/hal-is-caller-privileged \
     /usr/bin/hal-lock /usr/bin/hal-set-property /usr/bin/hal-setup-keymap"
-blacklist_ssh="/usr/bin/sftp /usr/bin/slogin /usr/bin/ssh /usr/bin/ssh-add \
-    /usr/bin/ssh-agent /usr/bin/ssh-copy-id /usr/bin/ssh-keyscan"
+blacklist_ssh="/usr/bin/sftp /usr/bin/slogin /usr/bin/ssh-add \
+    /usr/bin/ssh-agent /usr/bin/ssh-keyscan"
 blacklist_docs="/usr/share/omf /usr/share/gnome /usr/share/doc \
     /usr/share/locale /usr/share/libthai /usr/share/man \
     /usr/share/X11 /usr/share/i18n"

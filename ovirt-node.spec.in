@@ -158,6 +158,7 @@ echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{bu
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-hostname %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"10_Set Hostname"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-iscsi %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"12_iSCSI Initiator Setup"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
+%{__ln_s} ../..%{_libexecdir}/ovirt-config-kdump %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"20_Kdump Configuration"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-rhn %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"25_Register Host to RHN"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-view-logs %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"90_View logs"
@@ -238,6 +239,7 @@ fi
 %{_libexecdir}/ovirt-config-boot-wrapper
 %{_libexecdir}/ovirt-config-hostname
 %{_libexecdir}/ovirt-config-iscsi
+%{_libexecdir}/ovirt-config-kdump
 %{_libexecdir}/ovirt-config-logging
 %{_libexecdir}/ovirt-config-networking
 %{_libexecdir}/ovirt-config-password
