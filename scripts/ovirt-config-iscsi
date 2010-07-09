@@ -49,7 +49,7 @@ function set_initiator {
 
 # AUTO for auto-install
 if [ "$1" = "AUTO" ]; then
-    set_initiator
+    set_initiator $OVIRT_ISCSI_NAME
 else
     printf "\n\n iSCSI Initiator Configuration\n\n"
     prompt_user

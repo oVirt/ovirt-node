@@ -455,6 +455,9 @@ start_ovirt_early () {
             kdump_ssh=*)
             kdump_ssh=${i#kdump_ssh=}
             ;;
+            iscsi_name=*)
+            iscsi_name=${i#iscsi_name=}
+            ;;
             *)
             bootparams="$bootparams $i"
             ;;
@@ -475,7 +478,7 @@ start_ovirt_early () {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs kdump_ssh"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs kdump_ssh iscsi_name"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
