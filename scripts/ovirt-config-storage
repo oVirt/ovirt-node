@@ -584,6 +584,7 @@ create_hostvg()
         hostvgpart="1"
     fi
     log "Toggling LVM on"
+    udevadm settle 2> /dev/null || udevsettle
     parted "$HOSTVGDRIVE" -s "set $hostvgpart lvm on"
     parted "$ROOTDRIVE" -s "print"
     udevadm settle 2> /dev/null || udevsettle
