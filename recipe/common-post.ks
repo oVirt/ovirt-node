@@ -165,16 +165,13 @@ dirs	/var/lib/multipath
 files	/etc
 dirs    /var/lib/dnsmasq
 files	/var/cache/libvirt
-files	/var/cache/hald
 files	/var/empty/sshd/etc/localtime
-files	/var/lib/dbus
 files	/var/lib/libvirt
 files   /var/lib/multipath
 files   /var/cache/multipathd
 empty	/mnt
 empty	/live
 empty	/boot
-empty	/rhev
 EOF
 
 
