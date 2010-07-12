@@ -45,7 +45,7 @@ EOF
 is_valid_hostname () {
     local host=${1}
     local result=1
-    if [[ $host =~ "^([a-zA-Z0-9._-]+)$" ]]; then
+    if [[ $host =~ ^([a-zA-Z0-9._-]+)$ ]]; then
         result=$?
     fi
     return $result
