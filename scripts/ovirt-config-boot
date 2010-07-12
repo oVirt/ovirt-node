@@ -263,6 +263,12 @@ Usage: $0 [livecd_path] [bootparams] [reboot(yes/no)]
 EOF
     exit 1
 fi
+
+if ! is_local_storage_configured; then
+    printf "\nLocal storage must be configured prior to installing \n"
+    exit 99
+fi
+
 if [ -z "$bootparams" ]; then
     bootparams="$OVIRT_BOOTPARAMS"
 fi
