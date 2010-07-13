@@ -42,7 +42,9 @@ configure_ovirt_management_nic() {
         if ! network_up ; then
             log "Using interface $DEVICE"
             # setup temporary interface to retrieve configuration
-            /sbin/dhclient $1
+            /sbin/dhclient -1 $1 \
+             && [ -f /var/run/dhclient.pid ] \
+             && kill $(cat /var/run/dhclient.pid)
         fi
         if [ $? -eq 0 ]; then
             # from network-scripts/ifup-post
