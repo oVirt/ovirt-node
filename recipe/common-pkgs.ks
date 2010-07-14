@@ -81,5 +81,5 @@ vhostmd
 # kdump
 kexec-tools
 # RHN agent
-#rhn-virtualization-host
+rhn-virtualization-host
 rhn-setup
