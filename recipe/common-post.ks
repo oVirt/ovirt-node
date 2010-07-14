@@ -11,7 +11,7 @@ echo "Enabling selinux modules"
 SEMODULES="base automount avahi consolekit cyrus dhcp dnsmasq guest hal ipsec \
 iscsi kerberos kerneloops ldap lockdev logadm mozilla ntp \
 portmap qemu rpcbind sasl snmp stunnel sysstat tcpd unprivuser \
-unconfined usbmodules userhelper virt"
+unconfined usbmodules userhelper virt plymouthd"
 
 lokkit -v --selinuxtype=minimum
 
