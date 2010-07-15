@@ -82,6 +82,9 @@ cat > /etc/sysconfig/iptables << \EOF
 -A INPUT -p tcp -m multiport --dports 5800:6000 -j ACCEPT
 # migration
 -A INPUT -p tcp -m multiport --dports 49152:49216 -j ACCEPT
+# snmp
+-A INPUT -p udp --dport 161 -j ACCEPT
+#
 -A INPUT -j REJECT --reject-with icmp-host-prohibited
 -A FORWARD -m physdev ! --physdev-is-bridged -j REJECT --reject-with icmp-host-prohibited
 COMMIT
@@ -106,6 +109,8 @@ cat > /etc/sysconfig/ip6tables << \EOF
 -A INPUT -p tcp -m multiport --dports 5800:6000 -j ACCEPT
 # migration
 -A INPUT -p tcp -m multiport --dports 49152:49216 -j ACCEPT
+# snmp
+-A INPUT -p udp --dport 161 -j ACCEPT
 -A INPUT -j REJECT --reject-with icmp6-adm-prohibited
 -A FORWARD -m physdev ! --physdev-is-bridged -j REJECT --reject-with icmp6-adm-prohibited
 COMMIT
@@ -162,6 +167,7 @@ mkdir -p /var/cache/multipathd
 sed -i '/^files	\/etc*/ s/^/#/' /etc/rwtab
 cat > /etc/rwtab.d/ovirt <<EOF
 dirs	/var/lib/multipath
+dirs	/var/lib/net-snmp
 files	/etc
 dirs    /var/lib/dnsmasq
 files	/var/cache/libvirt
@@ -312,3 +318,11 @@ patch -d /etc/rc.d/init.d/ -p0 <<\EOF
                          echo "Failed to run mkdumprd"
                          $LOGGER "mkdumprd: failed to make kdump initrd"
 EOF
+
+echo 'OPTIONS="-v -Lf /dev/null"' >> /etc/sysconfig/snmpd
+cat > /etc/snmp/snmpd.conf <<SNMPCONF_EOF
+master agentx
+dontLogTCPWrappersConnects yes
+rwuser root auth .1
+SNMPCONF_EOF
+

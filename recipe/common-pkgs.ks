@@ -83,3 +83,5 @@ kexec-tools
 # RHN agent
 rhn-virtualization-host
 rhn-setup
+# SNMP support rhbz#614870
+net-snmp

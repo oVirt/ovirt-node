@@ -47,6 +47,7 @@ start_ovirt_firstboot ()
         /usr/libexec/ovirt-config-networking AUTO
         /usr/libexec/ovirt-config-logging AUTO
         /usr/libexec/ovirt-config-password AUTO
+        /usr/libexec/ovirt-config-snmp AUTO
     fi
 
     if is_upgrade; then

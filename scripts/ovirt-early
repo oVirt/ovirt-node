@@ -196,6 +196,7 @@ start_ovirt_early () {
     #   collectd=server[:port]
     #   hostname=fqdn
     #   TBD logrotate maxsize
+    #   snmp_password=<authpassphrase>
 
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     # network boot interface is assumed to be on management network where
@@ -260,6 +261,10 @@ start_ovirt_early () {
     # password is crypted, same as Kickstart option rootpw --iscrypted
     # WARNING: use for debugging only, this is not secure!
     rootpw=
+
+    #   snmp_password=<authpassphrase>
+    # enable snmpd and set password for "root" SNMPv3 USM user
+    snmp_password=
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
@@ -385,6 +390,9 @@ start_ovirt_early () {
             rootpw=*)
             rootpw=${i#rootpw=}
             ;;
+            snmp_password=*)
+            snmp_password=${i#snmp_password=}
+            ;;
 
             ovirt_overcommit*)
             i=${i#ovirt_overcommit=}
@@ -469,7 +477,7 @@ start_ovirt_early () {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs kdump_ssh iscsi_name"
+    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs kdump_ssh iscsi_name snmp_password"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config

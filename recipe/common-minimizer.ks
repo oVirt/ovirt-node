@@ -227,3 +227,12 @@ drop /etc/pki/tls
 drop /etc/pki/java
 drop /etc/pki/nssdb
 drop /etc/pki/rpm-gpg
+
+# minimize net-snmp
+drop /etc/rc.d/init.d/snmptrapd
+drop /etc/snmp/snmptrapd.conf
+drop /etc/sysconfig/snmptrapd
+drop /usr/sbin/snmptrapd
+drop /usr/bin/net-snmp-create-v3-user
+drop /usr/bin/snmpconf
+drop /usr/share/snmp/snmpconf-data

@@ -160,6 +160,7 @@ echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{bu
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-kdump %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"20_Kdump Configuration"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-rhn %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"25_Register Host to RHN"
+%{__ln_s} ../..%{_libexecdir}/ovirt-config-snmp %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"26_Enable SNMP Agent"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-view-logs %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"90_View logs"
 %{__ln_s} ../..%{_libexecdir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
@@ -245,6 +246,7 @@ fi
 %{_libexecdir}/ovirt-config-password
 %{_libexecdir}/ovirt-config-rhn
 %{_libexecdir}/ovirt-config-setup
+%{_libexecdir}/ovirt-config-snmp
 %{_libexecdir}/ovirt-config-storage
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-config-view-logs

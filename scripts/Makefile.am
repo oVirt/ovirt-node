@@ -36,6 +36,7 @@ dist_libexec_SCRIPTS = \
   ovirt-config-logging \
   ovirt-config-networking \
   ovirt-config-rhn \
+  ovirt-config-snmp \
   ovirt-config-password \
   ovirt-config-setup \
   ovirt-config-storage \
