@@ -560,8 +560,31 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
     done
 
     config="$WORKDIR"/config-augtool
-    cat "$WORKDIR"/augtool-* > $config \
-        && augtool $config
+    cat "$WORKDIR"/augtool-* > $config
+    # must preserve current eth/MAC mapping for *all* network interfaces,
+    # to avoid dev$RANDOM rhbz#489927
+    # TODO use udev rules to persist network interfaces
+    for eth in $(ls -d /sys/class/net/eth*|grep -v '\.') ; do
+        nic=$(basename $eth)
+        mac=$(cat $eth/address)
+        if [ -n "$nic" -a -n "$mac" ]; then
+            if_root="$IFCONFIG_FILE_ROOT-$nic"
+            printf "\nset $if_root/DEVICE $nic" >> $config
+            # store the hwaddr field in both, physical and vlan ifcfg if vlan is used
+            if [ -n "${VLAN_ID}" -a "$nic" = "${CONFIGURED_NIC}" ]; then
+                printf "\nset $if_root/HWADDR $mac" >> $config
+                printf "\n" >> $config
+                if_root="${VL_ROOT}"
+            fi
+            if [ ${CONFIGURED_NIC} != $nic ]; then
+                printf "\nset $if_root/ONBOOT no" >> $config
+            fi
+            printf "\nset $if_root/HWADDR $mac" >> $config
+            printf "\n" >> $config
+        fi
+    done
+    cp $config /tmp/augconfig
+    augtool $config
     if [ $? = 0 ]; then
         log "Network configured successfully"
         net_configured=1
