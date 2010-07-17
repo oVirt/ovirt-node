@@ -911,6 +911,10 @@ get_part_info() {
     return $rc
 }
 
+log_only() {
+    echo "$@" >> $OVIRT_TMP_LOGFILE
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
