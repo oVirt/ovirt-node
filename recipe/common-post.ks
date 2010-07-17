@@ -180,7 +180,7 @@ cat /dev/null > /etc/multipath.conf
 
 #lvm.conf should use /dev/mapper and /dev/sdX devices
 # and not /dev/dm-X devices
-sed -i 's/preferred_names = \[ \]/preferred_names = [ "^\/dev\/mapper", "^\/dev\/[hsv]d" ]/g' /etc/lvm/lvm.conf
+sed -i 's/preferred_names = \[ "^\/dev\/mpath\/", "^\/dev\/mapper\/mpath", "^\/dev\/\[hs\]d" \]/preferred_names = \[ "^\/dev\/mapper", "^\/dev\/\[hsv\]d" \]/g' /etc/lvm/lvm.conf
 
 # prevent node from hanging on reboot due to /etc mounts
 patch -d /etc/init.d/ -p0 <<\EOF
