@@ -49,7 +49,6 @@ newt-python
 -newt
 -kudzu
 -libselinux-python
--rhpl
 -kbd
 -usermode
 -fedora-logos
@@ -63,7 +62,6 @@ generic-logos
 -less
 -which
 -parted
--nash
 -tar
 -libuser
 -mtools
