@@ -20,9 +20,6 @@ if is_booted_from_local_disk; then
     die "You cannot configure storage on a running system. Please boot from CD/USB to configure storage."
 fi
 
-LF=$'\n'
-TAB=$'\t'
-
 default_overcommit=0.5
 default_boot_size=50
 default_root_size=256
@@ -30,6 +27,8 @@ default_config_size=5
 default_logging_size=2048
 # -1 indicates data partition should use remaining disk
 default_data_size=-1
+default_swap2_size=0
+default_data2_size=0
 boot_min_size=50
 root_min_size=256
 config_min_size=5
@@ -132,6 +131,10 @@ check_partition_sizes()
     if [ "$DATA_SIZE" = -1 ]; then
         min_data_size=5
     fi
+    local min_data2_size="$DATA2_SIZE"
+    if [ "$DATA2_SIZE" = -1 ]; then
+        min_data2_size=5
+    fi
 
     printf "\n"
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
@@ -140,7 +143,30 @@ check_partition_sizes()
         BOOT_NEED_SIZE="$BOOT_SIZE"
     else
         get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
-        get_drive_size "$HOSTVGDRIVE" HOSTVGDRIVESPACE
+        oldIFS="$IFS"
+        IFS="$SEP"
+        for drv in $HOSTVGDRIVE; do
+            get_drive_size "$drv" DRIVESPACE
+            if [ -n "${HOSTVGDRIVESPACE}" ]; then
+                HOSTVGDRIVESPACE=$(echo "scale=0;" \
+                                 "$HOSTVGDRIVESPACE + $DRIVESPACE" | bc -l)
+            else
+                HOSTVGDRIVESPACE=$DRIVESPACE
+            fi
+        done
+        if [ -n "${APPVGDRIVE}" ]; then
+            for drv in $APPVGDRIVE; do
+                get_drive_size "$drv" DRIVESPACE
+                if [ -n "${APPVGDRIVESPACE}" ]; then
+                    APPVGDRIVESPACE=$(echo "scale=0;" \
+                                     "$APPVGDRIVESPACE + $DRIVESPACE" | bc -l)
+                else
+                    APPVGDRIVESPACE=$DRIVESPACE
+                fi
+            done
+            APPVG_NEED_SIZE=$(echo "scale=0; $SWAP2_SIZE + $min_data2_size" | bc -l)
+        fi
+        IFS="$oldIFS"
         ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2"| bc -l)
         HOSTVG_NEED_SIZE=$(echo "scale=0;" \
                          "$SWAP_SIZE + $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
@@ -150,6 +176,19 @@ check_partition_sizes()
             ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2 + $HOSTVG_NEED_SIZE"| bc -l)
         else
             drive_list="ROOT HOSTVG"
+            oldIFS="$IFS"
+            IFS="$SEP"
+            for drv in $HOSTVGDRIVE; do
+                # XXX first in hostvgdrive list is assumed to be rootdrive
+                if [ "$ROOTDRIVE" = "$drv" ]; then
+                    HOSTVGDRIVESPACE=$(echo "scale=0; $HOSTVGDRIVESPACE - $ROOT_NEED_SIZE"| bc -l)
+                fi
+                break
+            done
+            IFS="$oldIFS"
+        fi
+        if [ -n "${APPVGDRIVE}" ]; then
+            drive_list="${drive_list} APPVG"
         fi
     fi
 
@@ -236,7 +275,8 @@ get_dev_name()
         local sd_devs=""
         IFS="$oldIFS" get_multipath_deps "/dev/mapper/$d" sd_devs
         local dm_dev=$(multipath -ll "$d" | grep "$d" | sed -r 's/^.*(dm-[0-9]+ ).*$/\1/' )
-        devs_to_remove="${devs_to_remove} ${sd_devs} ${dm_dev}"
+        devs_to_remove="${devs_to_remove} ${sd_devs} ${dm_dev} "
+        #  example: ++ devs_to_remove=' sda dm-2 '
     done
     # Remove /dev/sd* devices that are part of a multipath device
     local dev_list=""
@@ -246,11 +286,8 @@ get_dev_name()
             dev_list="$d${LF}$dev_list"
         fi
     done
-    oldOFS="$OFS"
-    OFS="$LF"
     devices=$(echo "$dev_list" | sort -u | grep -v "^$")
     local num_devices=$(echo "$devices" | wc -l)
-    OFS="$oldOFS"
 
     # If there's only one device, use it.
     case $num_devices in
@@ -330,7 +367,7 @@ EOF
         local skipped=false
         if check_existing_hostvg "$HOSTVGDRIVE" devs; then
             oldIFS="$IFS"
-            IFS="$LF"
+            IFS="$SEP"
             for dev in $devs
             do
                 printf "Removing HostVG on $dev will erase the drive and cannot be undone\n"
@@ -436,7 +473,7 @@ EOF
 
    if [ -n "$BOOTDRIVE" ]; then
        augtool <<EOF
-set /files$OVIRT_DEFAULTS/OVIRT_BOOT_INIT "$BOOTDRIVE"
+set /files$OVIRT_DEFAULTS/OVIRT_INIT_BOOT "$BOOTDRIVE"
 EOF
    else
    augtool <<EOF
@@ -511,22 +548,34 @@ EOF
 
 }
 
-#Check for an existing HostVG on any device on the system.
-# Return 0 if there is a HostVG found, unless only one found is on $1
-# Return 1 if no HostVG found or only found on $1
-# XXX
-#    from check_partition_sizes():
-#    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
+#Check for an existing VG on any device on the system.
+# Return 0 if there is a VG found, unless only one found is on $1
+# Return 1 if no VG found or only found on $1
 check_existing_hostvg()
 {
-    local install_dev="$1"
+    local install_dev=
+    local dev=
+    oldIFS="$IFS"
+    IFS="$SEP"
+    for dev in $1; do
+        if [ -n "${install_dev}" ]; then
+            install_dev="${install_dev}+|${dev}"
+            # XXX +| => wrong match e.g. sdaa vs sda ?
+        else
+            install_dev="${dev}"
+        fi
+    done
+    IFS="$oldIFS"
     local devices_var=$2
+    local vgname=
+    { [ -n $3 ] && vgname="$3"; } || vgname="HostVG"
+
     if [ -z "$install_dev" ]; then
         devices="$(pvs --separator="${TAB}" -o pv_name,vg_name --noheadings | \
-            grep "HostVG" | cut -f1)"
+            grep "${vgname}" | cut -f1)"
     else
         devices="$(pvs --separator="${TAB}" -o pv_name,vg_name --noheadings | \
-            grep -v "${install_dev}" | grep "HostVG" | cut -f1)"
+            egrep -v "${install_dev}" | grep "${vgname}" | cut -f1)"
     fi
     rc=1
     if [ -n "$devices" ]; then
@@ -553,19 +602,44 @@ check_existing_hostvg()
 # - remove LVM volumes and groups
 wipe_lvm_on_disk()
 {
-    local dev=${1-"$HOSTVGDRIVE"}
+    local devs=${1-"$HOSTVGDRIVE"}
+    local query1=
+    local query2=
     unmount_logging
     unmount_config /etc/default/ovirt
-    local part_delim="p"
-    if [[ "$dev" =~ /dev/[hsv]d ]]; then
-        part_delim=""
-    fi
-    for vg in $(pvs -o vg_uuid --noheadings $dev $dev${part_delim}[0-9]* \
-        --config " devices { filter = [ \"a/.*/\" ] } "  \
-        2>/dev/null|sort -u); do
+#    local part_delim="p"
+#    if [[ "$dev" =~ /dev/[hsv]d ]]; then
+#        part_delim=""
+#    fi
+    oldIFS="$IFS"
+    IFS="$SEP"
+    for d in $devs; do
+        local part_delim="p"
+        if [[ "$d" =~ "/dev/sd" ]]; then
+            part_delim=""
+        fi
+        if [ -n "${query1}" ]; then
+           query1="${query1} ${d} ${d}${part_delim}[0-9]*"
+        else
+           query1="${d} ${d}${part_delim}[0-9]*"
+        fi
+        if [ -n "${query2}" ]; then
+           query2="${query2}+|${d}${part_delim}[0-9]+|${d}"
+        else
+           query2="${d}${part_delim}[0-9]+|${d}"
+        fi
+    done
+    IFS="$oldIFS"
+    for vg in $(pvs -o vg_uuid --noheadings "$query1" 2>/dev/null|sort -u); do
+
+#    for vg in $(pvs -o vg_uuid --noheadings $dev $dev${part_delim}[0-9]* \
+#        --config " devices { filter = [ \"a/.*/\" ] } "  \
+#        2>/dev/null|sort -u); do
         if pvs -o pv_name,vg_uuid --noheadings \
             --config " devices { filter = [ \"a/.*/\" ] } " | \
-            grep $vg | egrep -v -q "${dev}${part_delim}[0-9]+|${dev} " 2>/dev/null; then
+            grep "$vg" | egrep -v -q "${query2} " 2>/dev/null; then
+
+#            grep "$vg" | egrep -v -q "${dev}${part_delim}[0-9]+|${dev} " 2>/dev/null; then
             log "The volume group \"$vg\" spans multiple disks."
             log "This operation cannot complete.  Please manually"
             log "cleanup the storage using standard linux tools."
@@ -597,26 +671,29 @@ reread_partitions()
 
 create_hostvg()
 {
-    log "Creating LVM partition"
-
-    if [ "$ROOTDRIVE" = "$HOSTVGDRIVE" ]; then
-        parted "$HOSTVGDRIVE" -s "mkpart primary ext2 ${RootBackup_end}M -1"
+    log "Creating LVM partition(s) for HostVG"
+    local drv
+    oldIFS="$IFS"
+    IFS="$SEP"
+    for drv in $HOSTVGDRIVE; do
+    if [ "$ROOTDRIVE" = "$drv" ]; then
+        parted "$drv" -s "mkpart primary ext2 ${RootBackup_end}M -1"
         hostvgpart="3"
-    elif [ "$BOOTDRIVE" = "$HOSTVGDRIVE" ]; then
-        parted "$HOSTVGDRIVE" -s "mkpart primary ext2 ${boot_size_si} -1"
+    elif [ "$BOOTDRIVE" = "$drv" ]; then
+        parted "$drv" -s "mkpart primary ext2 ${boot_size_si} -1"
         hostvgpart="2"
         # FIXME : set for gtpsync/parted compat for now
         ROOTDRIVE=$BOOTDRIVE
     else
-        parted "$HOSTVGDRIVE" -s "mkpart primary ext2 0M -1"
+        parted "$drv" -s "mkpart primary ext2 0M -1"
         hostvgpart="1"
     fi
     log "Toggling LVM on"
     udevadm settle 2> /dev/null || udevsettle
-    parted "$HOSTVGDRIVE" -s "set $hostvgpart lvm on"
-    parted "$HOSTVGDRIVE" -s "print"
+    parted "$drv" -s "set $hostvgpart lvm on"
+    parted "$drv" -s "print"
     udevadm settle 2> /dev/null || udevsettle
-    reread_partitions "$HOSTVGDRIVE"
+    reread_partitions "$drv"
 
     # sync GPT to the legacy MBR partitions
     if [ "${OVIRT_INSTALL_ROOT}" = "y" ]; then
@@ -626,10 +703,10 @@ create_hostvg()
         fi
     fi
 
-    partpv="${HOSTVGDRIVE}${hostvgpart}"
+    partpv="${drv}${hostvgpart}"
     if [ ! -e "$partpv" ]; then
         # e.g. /dev/cciss/c0d0p2
-        partpv="${HOSTVGDRIVE}p${hostvgpart}"
+        partpv="${drv}p${hostvgpart}"
     fi
     log "Creating physical volume"
     for count in $(seq 1 10); do
@@ -643,8 +720,23 @@ create_hostvg()
     done
     dd if=/dev/zero of="${partpv}" bs=1024k count=1
     pvcreate -ff -y "${partpv}"
-    log "Creating volume group"
-    vgcreate /dev/HostVG "${partpv}"
+        physical_vols="${physical_vols}${SEP}${partpv}"
+    done
+
+    log "Creating volume group HostVG"
+    local is_first=1
+    for drv in $physical_vols; do
+        if [ -z "$drv" ]; then
+            continue
+        fi
+        if [ "$is_first" ]; then
+            vgcreate HostVG "$drv"
+            is_first=
+        else
+            vgextend HostVG "$drv"
+        fi
+    done
+    IFS="$oldIFS"
 
     if [ "$SWAP_SIZE" -gt 0 ]; then
         log "Creating swap partition"
@@ -699,9 +791,89 @@ create_hostvg()
         log "Mounting data partition"
         mount_data
     fi
-    log "Completed!"
+    log "Completed HostVG!"
 
-    stop_log
+}
+
+create_appvg()
+{
+    log "Creating LVM partition(s) for AppVG"
+    local drv
+    oldIFS="$IFS"
+    IFS="$SEP"
+    for drv in $APPVGDRIVE; do
+        wipe_partitions "$drv"
+        reread_partitions "$drv"
+        log "Labeling Drive: $drv"
+        parted "$drv" -s "mklabel ${LABEL_TYPE}"
+        parted "$drv" -s "mkpart primary ext2 0M -1"
+        appvgpart="1"
+        log "Toggling LVM on"
+        parted "$drv" -s "set $appvgpart lvm on"
+        parted "$drv" -s "print"
+        udevadm settle 2> /dev/null || udevsettle
+        reread_partitions "$drv"
+
+        partpv="${drv}${appvgpart}"
+        if [ ! -e "$partpv" ]; then
+            # e.g. /dev/cciss/c0d0p2
+            partpv="${drv}p${appvgpart}"
+        fi
+        log "Creating physical volume"
+        if [ ! -e "$partpv" ]; then
+            log "$partpv is not available!"
+            exit 1
+        fi
+        dd if=/dev/zero of="${partpv}" bs=1024k count=1
+        pvcreate -ff -y "${partpv}"
+        physical_vols="${physical_vols}${SEP}${partpv}"
+    done
+
+    log "Creating volume group AppVG"
+    local is_first=1
+    for drv in $physical_vols; do
+        if [ -z "$drv" ]; then
+            continue
+        fi
+        if [ "$is_first" ]; then
+            vgcreate AppVG "$drv"
+            is_first=
+        else
+            vgextend AppVG "$drv"
+        fi
+    done
+    IFS="$oldIFS"
+
+    if [ "$SWAP2_SIZE" -gt 0 ]; then
+        log "Creating swap2 partition"
+        lvcreate --name Swap2 --size ${SWAP2_SIZE}M /dev/AppVG
+        mkswap -L "SWAP2" /dev/AppVG/Swap2
+        echo "/dev/AppVG/Swap2 swap swap defaults 0 0" >> /etc/fstab
+    fi
+
+    local use_data=1
+    if [ "$DATA2_SIZE" -eq -1 ]; then
+        log "Creating data2 partition with remaining free space"
+        lvcreate --name Data2 -l 100%FREE /dev/AppVG
+        use_data=0
+    elif [ "$DATA2_SIZE" -gt 0 ]; then
+        log "Creating data2 partition"
+        lvcreate --name Data2 --size ${DATA2_SIZE}M /dev/AppVG
+        use_data=0
+    fi
+
+    if [ "$use_data" = 0 ]; then
+        mke2fs -j /dev/AppVG/Data2 -L "DATA"
+        tune2fs -c 0 -i 0 /dev/AppVG/Data2
+        echo "/dev/AppVG/Data2 /data2 ext3 defaults,noatime 0 0" >> /etc/fstab
+    fi
+
+    if [ "$use_data" = 0 ]; then
+        log "Mounting data2 partition"
+        mount_data2
+    fi
+    log "Completed AppVG!"
+
 }
 
 perform_partitioning()
@@ -722,7 +894,9 @@ perform_partitioning()
 
     log "Removing old LVM partitions"
     wipe_volume_group HostVG
+    wipe_volume_group AppVG
     wipe_lvm_on_disk "$HOSTVGDRIVE"
+    [ -n ${APPVGDRIVE} ] && wipe_lvm_on_disk "$APPVGDRIVE"
     wipe_lvm_on_disk "$ROOTDRIVE"
 
     # begin critical section
@@ -788,11 +962,21 @@ perform_partitioning()
         ln -snf "${partrootbackup}" /dev/disk/by-label/RootBackup
     fi
 
-    if [ "$ROOTDRIVE" != "$HOSTVGDRIVE" ]; then
-        log "Labeling Drive: $HOSTVGDRIVE"
-        parted "$HOSTVGDRIVE" -s "mklabel ${LABEL_TYPE}"
-    fi
+    oldIFS="$IFS"
+    IFS="$SEP"
+    for drv in $HOSTVGDRIVE; do
+        if [ "$ROOTDRIVE" != "$drv" ]; then
+            wipe_partitions "$drv"
+            reread_partitions "$drv"
+            log "Labeling Drive: $drv"
+            parted "$drv" -s "mklabel ${LABEL_TYPE}"
+        fi
+    done
+    IFS="$oldIFS"
+
     create_hostvg
+    [ -n ${APPVGDRIVE} ] && create_appvg
+    stop_log
 }
 
 do_confirm()
@@ -956,6 +1140,23 @@ if mount_iscsi_liveos; then
 fi
 }
 
+cross_check_host_app()
+{
+oldIFS="$IFS"
+IFS="$SEP"
+for hdrv in $HOSTVGDRIVE; do
+    for adrv in $APPVGDRIVE; do
+        if [ "${hdrv}" = "${adrv}" ]; then
+            # Skip disk partitioning, AppVG overlaps with HostVG
+            IFS="$oldIFS"
+            return 1
+        fi
+    done
+done
+IFS="$oldIFS"
+return 0
+}
+
 MEM_SIZE_MB=$(awk '/MemTotal:/ { print $2 }' /proc/meminfo)
 case $MEM_SIZE_MB in
     ''|*[^0-9]*) die failed to get system memory size;;
@@ -987,15 +1188,57 @@ ROOT_SIZE=$default_root_size
 CONFIG_SIZE=${OVIRT_VOL_CONFIG_SIZE:-$default_config_size}
 LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-$default_logging_size}
 DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
+SWAP2_SIZE=${OVIRT_VOL_SWAP2_SIZE:-$default_swap2_size}
+DATA2_SIZE=${OVIRT_VOL_DATA2_SIZE:-$default_data2_size}
 
 if [ -n "$OVIRT_INIT" ]; then
-    # if present, use the drive selected with 'ovirt_init' boot parameter
-    # setting these the same until kernel cmdline argument implemented
-    DRIVE="$(translate_multipath_device "$OVIRT_INIT")"
-    ROOTDRIVE="$DRIVE"
-    HOSTVGDRIVE="$DRIVE"
+    # if present, use drive(s) selected with 'ovirt_init' boot parameter
+    ROOTDRIVE=
+    HOSTVGDRIVE=
+    oldIFS="$IFS"
+    IFS="$SEP"
+    for drv in $OVIRT_INIT; do
+        DRIVE="$(translate_multipath_device "$drv")"
+        if [ -z "$ROOTDRIVE" ]; then
+            # XXX assumes first is ROOTDRIVE
+            ROOTDRIVE="$DRIVE"
+        fi
+        if [ -n "$HOSTVGDRIVE" ]; then
+            HOSTVGDRIVE="$HOSTVGDRIVE${SEP}$DRIVE"
+        else
+            HOSTVGDRIVE="$DRIVE"
+        fi
+    done
+    IFS="$oldIFS"
+
     OVIRT_ROOT_INSTALL="y"
     get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
+fi
+
+if [ -n "$OVIRT_INIT_APP" ]; then
+    if [ ${SWAP2_SIZE} -ne 0 -o ${DATA2_SIZE} -ne 0 ]; then
+        APPVGDRIVE=
+        oldIFS="$IFS"
+        IFS="$SEP"
+        for drv in $OVIRT_INIT_APP; do
+            DRIVE="$(translate_multipath_device "$drv")"
+            if [ -n "$APPVGDRIVE" ]; then
+                APPVGDRIVE="$APPVGDRIVE${SEP}$DRIVE"
+            else
+                APPVGDRIVE="$DRIVE"
+            fi
+        done
+        IFS="$oldIFS"
+        cross_check_host_app || {
+            log "Skip disk partitioning, AppVG overlaps with HostVG"
+            exit 1
+        }
+    fi
+else
+    { [ ${SWAP2_SIZE} -ne 0 ] || [ $DATA2_SIZE -ne 0 ]; } && {
+        log "Missing device parameter for AppVG: unable to partition any disk"
+        exit 2
+    }
 fi
 
 # if the node is Fedora then use GPT, otherwise use MBR
@@ -1009,13 +1252,19 @@ if [ "$1" = "AUTO" ]; then
     log "Beginning automatic disk partitioning."
     if [ -n "$OVIRT_INIT" ]; then
         # Logic for automatic partitioning
-        # If HostVG exists on a disk other than $DRIVE, fail
-        # If HostVG exists on $DRIVE, then partition only if
+        # If HostVG/AppVG exists on a disk other than $DRIVE, fail
+        # If HostVG/AppVG exists on $DRIVE, then partition only if
         # firstboot is specified
         # Else, partition
-        if check_existing_hostvg 2>&1 >/dev/null; then
-            if check_existing_hostvg $HOSTVGDRIVE; then
+        if check_existing_hostvg >/dev/null 2>&1 \
+            || check_existing_hostvg "" "" AppVG ; then
+            if check_existing_hostvg "$HOSTVGDRIVE"; then
                 log "HostVG exists on a separate disk"
+                log "Manual Intervention required"
+                exit 1
+            elif [ -n "$APPVGDRIVE" ] \
+              && check_existing_hostvg "$APPVGDRIVE"; then
+                log "AppVG exists on a separate disk"
                 log "Manual Intervention required"
                 exit 1
             else

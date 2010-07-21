@@ -253,6 +253,7 @@ sed -i 's@NOT_OVIRT_FIRSTBOOT@$(if cat /proc/cmdline|grep -qv ovirt_firstboot; t
 mkdir -p /boot
 mkdir -p /config
 mkdir -p /data
+mkdir -p /data2
 mkdir -p /liveos
 mkdir -p /root/.uml
 echo "/dev/HostVG/Config /config ext4 defaults,noauto,noatime 0 0" >> /etc/fstab

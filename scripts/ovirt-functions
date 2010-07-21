@@ -37,6 +37,10 @@ OVIRT_CONFIG_FILES="\
  /etc/logrotate.d/ovirt-node
 "
 
+LF=$'\n'
+SEP=','
+TAB=$'\t'
+
 # Save stdout to fd 6 and stderr to fd 7.  Redirect normal stdout/stderr
 # to log file
 start_log() {
@@ -469,6 +473,23 @@ EOF
     else
         # /data is not available
         printf "\nThe data partition has not been created. Create a Data partition with the \"Configure storage partitions\" menu.\n"
+        return 1
+    fi
+}
+
+mount_data2() {
+    if grep -q " /data2 ext3" /proc/mounts; then
+        return 0
+    fi
+
+    if [ -e /dev/AppVG/Data2 ] ; then
+        mkdir -p /data2
+        mount /data2
+
+        return 0
+    else
+        # /data2 is not available
+        printf "\nThe data2 partion has not been created. Please create it at the main menu.\n"
         return 1
     fi
 }

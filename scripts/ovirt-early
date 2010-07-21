@@ -128,24 +128,86 @@ find_disk() {
     local bus=$1
     local serial=$2
     local live=$(get_live_disk)
-    for d in /dev/disk/by-id/{scsi,usb,cciss}*; do
+    local found=
+    for d in /dev/disk/by-id/{ata,cciss,scsi,usb}*; do
       ID_FS_USAGE=
       eval $(udev_info $(readlink -f $d) env)
       # ID_FS_USAGE is set for partitions
       if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
-        if [ -z "$serial" -o "$ID_SERIAL" = "$serial" ]; then
+        if [ -z "$serial" -o "$serial" = "ALL" \
+             -o "$ID_SERIAL" = "$serial" ]; then
           local dev="$(readlink -e $d)"
           if [ -n "$live" -a  "$dev" = "/dev/$live" ]; then
             # cannot install LiveOS over itself
             continue
+          elif [ "$serial" = "ALL" ]; then
+            if [ "$found" ]; then
+                echo -n "${SEP}"
+            fi
+            echo -n "$dev"
+            found="yes"
+            continue
           else
-            echo "$dev"
-            return 0
+            echo -n "$dev"
+            found="yes"
+            break
           fi
         fi
       fi
     done
-    return 1
+    if [ "$found" ]; then
+      echo
+      return 0
+    else
+       return 1
+    fi
+}
+
+# parse_disk_id DISK_ID
+#   DISK_ID=[ata|cciss|scsi|usb[:serial#]|/dev/...]
+# ata|cciss|scsi|usb - select disk bus, as reported by udev ID_BUS
+# serial# - select exact disk using serial number, as reported by
+#           udev ID_SERIAL
+# e.g. storage_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
+#           ALL selects all the disks on the specified bus
+# e.g. storage_init=ata:ALL
+#
+# /dev/... - use specified disk device
+#            (for cases when HAL doesn't handle it)
+parse_disk_id() {
+    local i="$1"
+    local disk=
+    local bus=
+    local serial=
+    case "$i" in
+        ata*)
+            bus=ata
+            i=${i#ata}
+            serial=${i#:}
+        ;;
+        scsi*)
+            bus=scsi
+            i=${i#scsi}
+            serial=${i#:}
+        ;;
+        usb*)
+            bus=usb
+            i=${i#usb}
+            serial=${i#:}
+        ;;
+        cciss*)
+            bus=cciss
+            i=${i#cciss}
+            serial=${i#:}
+        ;;
+        /dev/*)
+            disk="$(ls -1 "$i" 2>/dev/null | head -n1)"
+        ;;
+    esac
+    if [ -n "$bus" ]; then
+        disk=$(find_disk $bus $serial)
+    fi
+    echo "$disk"
 }
 
 configure_management_interface() {
@@ -224,8 +286,10 @@ start_ovirt_early () {
     # BOOTIF=eth* e.g. BOOTIF=eth0 - use given interface
     bootif=
 
-    #   storage_init=[usb|scsi|cciss[:serial#]|/dev/...]
-    # local installation target disk
+    #   ovirt_init=HOSTVGDISK1[,HOSTVGDISK2...][;APPVGDISK1[,APPVGDISK2...]]
+    #   where DISK=[ata|cciss|scsi|usb[:serial#]|/dev/...]
+    # local installation target disks
+    # Allow specification of multiple disks per VG
     # usb|scsi - select disk type, as reported by udev ID_BUS
     # serial# - select exact disk using serial number, as reported by
     #           udev ID_SERIAL
@@ -234,9 +298,13 @@ start_ovirt_early () {
     #            (for cases when HAL doesn't handle it)
     # w/o value - grab the first disk (/dev/?da)
     init=
+    init_app=
 
-    #   storage_vol=:SWAP_MB::CONFIG_MB:LOGGING_MB:DATA_MB
+    #   storage_vol=:SWAP_MB::CONFIG_MB:LOGGING_MB:DATA_MB:SWAP2_MB:DATA2_MB
+    #   or
+    #   storage_vol=size[,{Swap|Data|Config|Logging|Data2|Swap2}][:size...]
     # local partition sizes in MB
+    # LVs ending in 2 go to AppVG, all the others fall into HostVG
     vol_boot_size=
     vol_swap_size=
     vol_root_size=
@@ -246,6 +314,11 @@ start_ovirt_early () {
     # remaining free space after the other above partitions are defined
     # or a specific positive number in MB
     vol_data_size=
+
+    # swap2 and data2 will be placed into AppVG, 0 disables, data2
+    # can be -1 or a positive number in MB for each
+    vol_swap2_size=
+    vol_data2_size=
 
     #   upgrade
     # install/update oVirt Node image on the local installation target disk
@@ -365,41 +438,40 @@ start_ovirt_early () {
             storage_init* | ovirt_init*)
             i=${i#ovirt_init}
             i=${i#storage_init}
-            if [ -n "$i" ]; then
-                # resolve to disk device
-                case "$i" in
-                    =scsi*)
-                    bus=scsi
-                    i=${i#=scsi}
-                    serial=${i#:}
-                    ;;
-                    =usb*)
-                    bus=usb
-                    i=${i#=usb}
-                    serial=${i#:}
-                    ;;
-                    =cciss*)
-                    bus=cciss
-                    i=${i#=cciss}
-                    serial=${i#:}
-                    ;;
-                    =/dev/*)
-                    bus=
-                    serial=
-                    init=${i#=}
-                    ;;
-                    *)
-                    bus=
-                    serial=
-                    init=
-                    ;;
-                esac
-                if [ -n "$bus" ]; then
-                    init=$(find_disk $bus $serial)
-                fi
-            else
+            if [ -z "$i" ]; then
                 # 'storage_init' without value: grab first disk
                 init=$(ls -1 /dev/?da /dev/cciss/c?d? 2>/dev/null |head -n1)
+            else
+                i=${i#=}
+                eval $(printf $i|awk -F\; '{ print "hostvgdisks="$1; print "appvgdisks="$2; }')
+                # Look into HostVG disks
+                if [ -n "$hostvgdisks" ]; then
+                    oldIFS="$IFS"
+                    IFS=,
+                    init=
+                    for d in $hostvgdisks; do
+                        if [ -n "$init" ]; then
+                            init="$init${SEP}$(IFS="$oldIFS" parse_disk_id "$d")"
+                        else
+                            init="$(IFS="$oldIFS" parse_disk_id "$d")"
+                        fi
+                    done
+                    IFS="$oldIFS"
+                fi
+                # Look into AppVG disks
+                if [ -n "$appvgdisks" ]; then
+                    oldIFS="$IFS"
+                    IFS=,
+                    init_app=
+                    for d in $appvgdisks; do
+                        if [ -n "$init_app" ]; then
+                            init_app="$init_app${SEP}$(IFS="$oldIFS" parse_disk_id "$d")"
+                        else
+                            init_app="$(IFS="$oldIFS" parse_disk_id "$d")"
+                        fi
+                    done
+                    IFS="$oldIFS"
+                fi
             fi
             if [ -z "$init" ]; then
                 log "Selected disk $i is not valid."
@@ -408,7 +480,75 @@ start_ovirt_early () {
             storage_vol* | ovirt_vol=*)
             i=${i#ovirt_vol=}
             i=${i#storage_vol=}
-            eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5; print "vol_data_size="$6;}')
+            eval $(printf $i|awk -F: '{ print "lv1="$1; print "lv2="$2; print "lv3="$3; print "lv4="$4; print "lv5="$5; print "lv6="$6; print "lv7="$7; print "lv8="$8; }')
+            # Reads each provided LV size and assign them
+            # NOTE: Boot and Root size are ignored by o-c-storage
+            for p in $(seq 1 8); do
+                var=lv$p
+                size=
+                lv=
+                if [ -n "${!var}" ]; then
+                    eval $(printf ${!var}|awk -F, '{ print "size="$1; print "lv="$2; }')
+                    if [ -n "${size}" ]; then
+                        case "${lv}" in
+                            Boot)
+                            vol_boot_size=$size
+                            ;;
+                            Swap)
+                            vol_swap_size=$size
+                            ;;
+                            Root)
+                            vol_root_size=$size
+                            ;;
+                            Config)
+                            vol_config_size=$size
+                            ;;
+                            Logging)
+                            vol_logging_size=$size
+                            ;;
+                            Data)
+                            vol_data_size=$size
+                            ;;
+                            Swap2)
+                            vol_swap2_size=$size
+                            ;;
+                            Data2)
+                            vol_data2_size=$size
+                            ;;
+                            *)
+                            ## This is here to preserve old styled syntax (in order)
+                            ## BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB:SWAP2_MB:DATA2_MB
+                            case "$p" in
+                                1)
+                                vol_boot_size=$size
+                                ;;
+                                2)
+                                vol_swap_size=$size
+                                ;;
+                                3)
+                                vol_root_size=$size
+                                ;;
+                                4)
+                                vol_config_size=$size
+                                ;;
+                                5)
+                                vol_logging_size=$size
+                                ;;
+                                6)
+                                vol_data_size=$size
+                                ;;
+                                7)
+                                vol_swap2_size=$size
+                                ;;
+                                8)
+                                vol_data2_size=$size
+                                ;;
+                            esac
+                            ;;
+                        esac
+                    fi
+                fi
+            done
             ;;
             upgrade* | ovirt_upgrade* | local_boot* | ovirt_local_boot*)
             upgrade=1
@@ -546,7 +686,8 @@ start_ovirt_early () {
         ip_gateway=$gateway
     fi
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password"
+
+    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
