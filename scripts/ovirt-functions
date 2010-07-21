@@ -494,6 +494,50 @@ mount_data2() {
     fi
 }
 
+mount_crypt_swap() {
+    crypttab="/etc/ovirt-crypttab"
+    if [ ! -s "${crypttab}" ]; then
+        return 1
+    fi
+    rc=0
+
+    while read label dev mapp cyph; do
+        if [ -n ${label} -a -n ${dev} -a -n ${mapp} -a -n ${cyph} ]; then
+            if grep -q "${dev}" /proc/swaps; then
+                swapoff ${dev} >/dev/null 2>&1
+                rc=$?
+                [ ${rc} -ne 0 ] && {
+                    log "swapoff failed for Un-encrypted ${dev}";
+                    continue;
+                }
+            fi
+            if [ ! -b ${mapp} ]; then
+                /sbin/cryptsetup -d /dev/urandom -c ${cyph} create ${mapp} ${dev} > /dev/null 2>&1
+                rc=$?
+                [ ${rc} -ne 0 ] && {
+                    log "Creation of encrypted swap for ${dev} failed";
+                    continue;
+                }
+            fi
+            mkswap -L ${label} ${mapp} >/dev/null 2>&1
+            rc=$?
+            [ ${rc} -ne 0 ] && {
+                log "Creation of swap for ${mapp} failed";
+                continue;
+            }
+            swapon ${mapp} > /dev/null 2>&1
+            [ ${rc} -ne 0 ] && {
+                log "Activation of swap for ${mapp} failed";
+                continue;
+            }
+        else
+            continue
+        fi
+    done < ${cypttab}
+
+    return ${rc}
+}
+
 # augtool wrapper
 #   workaround for bind-mounted files
 #   see https://fedorahosted.org/augeas/ticket/32

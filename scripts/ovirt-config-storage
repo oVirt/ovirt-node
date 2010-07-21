@@ -741,8 +741,12 @@ create_hostvg()
     if [ "$SWAP_SIZE" -gt 0 ]; then
         log "Creating swap partition"
         lvcreate --name Swap --size ${SWAP_SIZE}M /dev/HostVG
-        mkswap -L "SWAP" /dev/HostVG/Swap
-        echo "/dev/HostVG/Swap swap swap defaults 0 0" >> /etc/fstab
+        if [ -n "${OVIRT_CRYPT_SWAP}" ]; then
+            echo "SWAP /dev/HostVG/Swap /dev/mapper/ovirt-crypt-swap ${OVIRT_CRYPT_SWAP}" >> /etc/ovirt-crypttab
+        else
+            mkswap -L "SWAP" /dev/HostVG/Swap
+            echo "/dev/HostVG/Swap swap swap defaults 0 0" >> /etc/fstab
+        fi
     fi
     if [ "$CONFIG_SIZE" -gt 0 ]; then
         log "Creating config partition"
@@ -847,8 +851,12 @@ create_appvg()
     if [ "$SWAP2_SIZE" -gt 0 ]; then
         log "Creating swap2 partition"
         lvcreate --name Swap2 --size ${SWAP2_SIZE}M /dev/AppVG
-        mkswap -L "SWAP2" /dev/AppVG/Swap2
-        echo "/dev/AppVG/Swap2 swap swap defaults 0 0" >> /etc/fstab
+        if [ -n "${OVIRT_CRYPT_SWAP2}" ]; then
+            echo "SWAP2 /dev/AppVG/Swap2 /dev/mapper/ovirt-crypt-swap2 ${OVIRT_CRYPT_SWAP2}" >> /etc/ovirt-crypttab
+        else
+            mkswap -L "SWAP2" /dev/AppVG/Swap2
+            echo "/dev/AppVG/Swap2 swap swap defaults 0 0" >> /etc/fstab
+        fi
     fi
 
     local use_data=1
@@ -975,7 +983,10 @@ perform_partitioning()
     IFS="$oldIFS"
 
     create_hostvg
-    [ -n ${APPVGDRIVE} ] && create_appvg
+    [ -n "${APPVGDRIVE}" ] && create_appvg
+    if [ -n "${OVIRT_CRYPT_SWAP2}" -o -n "${OVIRT_CRYPT_SWAP}" ]; then
+        ovirt_store_config /etc/ovirt-crypttab
+    fi
     stop_log
 }
 

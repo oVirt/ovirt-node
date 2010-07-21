@@ -367,3 +367,17 @@ echo -n "Rebuilding initramfs for multipath..."
 kernel="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}\n' kernel)"
 dracut -f -a "multipath" /initrd0.img "$kernel"
 echo "done."
+
+# load modules required by crypto swap
+cat > /etc/sysconfig/modules/swap-crypt.modules <<EOF
+#!/bin/sh
+
+modprobe aes >/dev/null 2>&1
+modprobe dm_mod >/dev/null 2>&1
+modprobe dm_crypt >/dev/null 2>&1
+modprobe cryptoloop >/dev/null 2>&1
+modprobe cbc >/dev/null 2>&1
+modprobe sha256 >/dev/null 2>&1
+
+EOF
+chmod +x /etc/sysconfig/modules/swap-crypt.modules

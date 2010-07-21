@@ -320,6 +320,12 @@ start_ovirt_early () {
     vol_swap2_size=
     vol_data2_size=
 
+    #   swap_encrypt={Swap|Swap2},cypher1[:cypher2...][;{Swap|Swap2}...]
+    # request swap encryption
+    # the default cypher is set to aes-cbc-essiv:sha256
+    crypt_swap=
+    crypt_swap2=
+
     #   upgrade
     # install/update oVirt Node image on the local installation target disk
     upgrade=
@@ -666,6 +672,33 @@ start_ovirt_early () {
             iscsi_name=*)
             iscsi_name=${i#iscsi_name=}
             ;;
+            swap_encrypt=* | ovirt_swap_encrypt=* )
+            i=${i#ovirt_swap_encrypt=}
+            i=${i#swap_encrypt=}
+            eval $(printf $i|awk -F\; '{ print "swap1="$1; print "swap2="$2; }')
+            for p in 1 2; do
+                var=swap$p
+                swapdev=
+                swapcyph=
+                local default_cypher="aes-cbc-essiv:sha256"
+		if [ -n ${!var} ]; then
+                    eval $(printf ${!var} |awk -F, '{ print "swapdev="$1; print "swapcyph="$2; }')
+                    if [ "${swapdev}" = "Swap" ]; then
+                        if [ -n ${swapcyph} ]; then
+                            crypt_swap=${swapcyph}
+                        else
+                            crypt_swap=${default_cypher}
+                        fi
+                    elif [ "${swapdev}" = "Swap2" ]; then
+                        if [ -n ${swapcyph} ]; then
+                            crypt_swap2=${swapcyph}
+                        else
+                            crypt_swap2=${default_cypher}
+                        fi
+                    fi
+                fi
+            done
+            ;;
             *)
             bootparams="$bootparams $i"
             ;;
@@ -687,7 +720,7 @@ start_ovirt_early () {
     fi
     # save boot parameters as defaults for ovirt-config-*
 
-    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password"
+    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
@@ -705,6 +738,9 @@ start_ovirt_early () {
     done
     augtool $tmpaug
     . $OVIRT_DEFAULTS
+    if [ "$firstboot" != "1" -a -f /etc/ovirt-crypttab ]; then
+        mount_crypt_swap
+    fi
     if [ -f /etc/sysconfig/network ]; then
         . /etc/sysconfig/network
         if [ -n "$HOSTNAME" ]; then

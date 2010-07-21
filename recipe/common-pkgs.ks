@@ -98,6 +98,8 @@ make
 checkpolicy
 #
 policycoreutils-python
+# crypto swap support
+cryptsetup-luks
 # newt UI deps
 #python-augeas not in RHEL-6, import augeas.py in ovirt-node
 ethtool
