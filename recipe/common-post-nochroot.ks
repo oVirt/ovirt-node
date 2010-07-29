@@ -39,7 +39,7 @@ linux0==1 && $1=="label" && $2!="linux0" {
 # change the title
 sed -i -e '/^menu title/d' $menu
 echo "say This is the $PRODUCT $VERSION ($RELEASE)" > $LIVE_ROOT/isolinux/isolinux.cfg
-echo "menu title Welcome to $PRODUCT $VERSION ($RELEASE)" >> $LIVE_ROOT/isolinux/isolinux.cfg
+echo "menu title $PRODUCT $VERSION ($RELEASE)" >> $LIVE_ROOT/isolinux/isolinux.cfg
 cat $menu >> $LIVE_ROOT/isolinux/isolinux.cfg
 rm $menu
 cp $INSTALL_ROOT/usr/share/ovirt-node/syslinux-vesa-splash.jpg $LIVE_ROOT/isolinux/splash.jpg
