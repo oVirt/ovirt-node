@@ -6,7 +6,7 @@ cat > /etc/rwtab.d/rhev <<EOF_RWTAB
 empty	/rhev
 files	/root/.ssh
 files	/var/cache/rhn
-files	/var/vdsm
+files	/var/lib/vdsm
 files	/boot-kdump
 EOF_RWTAB
 
