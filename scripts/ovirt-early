@@ -125,17 +125,18 @@ find_disk() {
     local bus=$1
     local serial=$2
     local live=$(get_live_disk)
-    for d in /dev/disk/by-id/{scsi,usb}*; do
+    for d in /dev/disk/by-id/{scsi,usb,cciss}*; do
       ID_FS_USAGE=
       eval $(udev_info $d env)
       # ID_FS_USAGE is set for partitions
       if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
         if [ -z "$serial" -o "$ID_SERIAL" = "$serial" ]; then
-          if [ -n "$live" -a "$d" = "$live" ]; then
+          local dev="$(readlink -e $d)"
+          if [ -n "$live" -a  "$dev" = "/dev/$live" ]; then
             # cannot install LiveOS over itself
             continue
           else
-            echo $(readlink -e $d)
+            echo "$dev"
             return 0
           fi
         fi
@@ -179,12 +180,12 @@ start_ovirt_early () {
     touch $VAR_SUBSYS_OVIRT_EARLY
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
-    #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
-    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
-    #   ovirt_overcommit=<overcommit_ratio>
-    #   ovirt_upgrade
-    #   ovirt_standalone
-    #   ovirt_firstboot
+    #   storage_init=[usb|scsi[:serial#]|/dev/...]
+    #   storage_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
+    #   mem_overcommit=<overcommit_ratio>
+    #   upgrade
+    #   standalone
+    #   firstboot
     #   ovirt_runtime_mode
     #   rescue
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
@@ -192,6 +193,8 @@ start_ovirt_early () {
     #   ipv6=dhcp|auto
     #   dns=server[,server]
     #   ntp=server[,server]
+    #   vlan=id
+    #   ssh_pwauth=[0|1]
     #   syslog=server[:port]
     #   collectd=server[:port]
     #   hostname=fqdn
@@ -200,7 +203,7 @@ start_ovirt_early () {
 
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     # network boot interface is assumed to be on management network where
-    # oVirt Server is reachable
+    # management server is reachable
     # BOOTIF=<MAC> e.g. BOOTIF=01-00-16-3e-12-34-57
     # PXELINUX option IPAPPEND 2 in pxelinux.cfg appends MAC address
     # of the booting node
@@ -208,7 +211,7 @@ start_ovirt_early () {
     # BOOTIF=eth* e.g. BOOTIF=eth0 - use given interface
     bootif=
 
-    #   ovirt_init=[usb|scsi[:serial#]|/dev/...]
+    #   storage_init=[usb|scsi|cciss[:serial#]|/dev/...]
     # local installation target disk
     # usb|scsi - select disk type, as reported by udev ID_BUS
     # serial# - select exact disk using serial number, as reported by
@@ -219,7 +222,7 @@ start_ovirt_early () {
     # w/o value - grab the first disk (/dev/?da)
     init=
 
-    #   ovirt_vol=BOOT_MB:SWAP_MB:ROOT_MB:CONFIG_MB:LOGGING_MB:DATA_MB
+    #   storage_vol=:SWAP_MB::CONFIG_MB:LOGGING_MB:DATA_MB
     # local partition sizes in MB
     vol_boot_size=
     vol_swap_size=
@@ -231,21 +234,21 @@ start_ovirt_early () {
     # or a specific positive number in MB
     vol_data_size=
 
-    #   ovirt_upgrade
+    #   upgrade
     # install/update oVirt Node image on the local installation target disk
     upgrade=
 
-    #   ovirt_overcommit=<overcommit_ratio>
+    #   mem_overcommit=<overcommit_ratio>
     # set the swap size coefficient
     overcommit=
 
-    #   ovirt_standalone
+    #   standalone
     # force oVirt Node standalone mode
     standalone=
 
-    #   ovirt_firstboot
+    #   firstboot
     # force firstboot configuration even if it has already been run
-    # in auto-install mode, overwrite the disk chosen by ovirt_init parameter
+    # in auto-install mode, overwrite the disk chosen by storage_init parameter
     firstboot=
 
     #   ovirt_runtime_mode
@@ -326,8 +329,9 @@ start_ovirt_early () {
                 ;;
             esac
             ;;
-            ovirt_init*)
+            storage_init* | ovirt_init*)
             i=${i#ovirt_init}
+            i=${i#storage_init}
             if [ -n "$i" ]; then
                 # resolve to disk device
                 case "$i" in
@@ -341,11 +345,15 @@ start_ovirt_early () {
                     i=${i#=usb}
                     serial=${i#:}
                     ;;
+                    =cciss*)
+                    bus=cciss
+                    i=${i#=cciss}
+                    serial=${i#:}
+                    ;;
                     =/dev/*)
                     bus=
                     serial=
-                    i=${i#=}
-                    init=$(ls -1 "$i" 2>/dev/null | head -n1)
+                    init=${i#=}
                     ;;
                     *)
                     bus=
@@ -357,34 +365,35 @@ start_ovirt_early () {
                     init=$(find_disk $bus $serial)
                 fi
             else
-                # 'ovirt_init' without value: grab first disk
-                init=$(ls -1 /dev/?da 2>/dev/null |head -n1)
+                # 'storage_init' without value: grab first disk
+                init=$(ls -1 /dev/?da /dev/cciss/c?d? 2>/dev/null |head -n1)
             fi
             if [ -z "$init" ]; then
                 log "Selected disk $i is not valid."
             fi
             ;;
-            ovirt_vol=*)
+            storage_vol* | ovirt_vol=*)
             i=${i#ovirt_vol=}
+            i=${i#storage_vol=}
             eval $(printf $i|awk -F: '{print "vol_boot_size="$1; print "vol_swap_size="$2; print "vol_root_size="$3; print "vol_config_size="$4; print "vol_logging_size="$5; print "vol_data_size="$6;}')
             ;;
-            ovirt_upgrade* |ovirt_local_boot*)
+            upgrade* | ovirt_upgrade* | local_boot* | ovirt_local_boot*)
             upgrade=1
             ;;
-            ovirt_standalone*)
+            standalone* | ovirt_standalone*)
             standalone=1
             bootparams="$bootparams $i"
             ;;
-            ovirt_firstboot=no | ovirt_firstboot=0)
+            firstboot=no | firsboot=0 | ovirt_firstboot=no | ovirt_firstboot=0)
             firstboot=0
             ;;
-            ovirt_firstboot*)
+            firstboot* | ovirt_firstboot*)
             firstboot=1
             ;;
             runtime_mode*)
             runtime_mode=${i#runtime_mode=}
             ;;
-	    rescue)
+            rescue)
             rescue=1
             ;;
             rootpw=*)
@@ -394,7 +403,8 @@ start_ovirt_early () {
             snmp_password=${i#snmp_password=}
             ;;
 
-            ovirt_overcommit*)
+            mem_overcommit* | ovirt_overcommit*)
+            i=${i#mem_overcommit=}
             i=${i#ovirt_overcommit=}
             eval $(printf $i|awk -F: '{print "overcommit="$1;}')
             ;;
@@ -553,7 +563,7 @@ EOF
             /etc/sasl2/libvirt.conf
     else
        configure_management_interface
-       fi
+    fi
 
     rm -f $VAR_SUBSYS_OVIRT_EARLY
 
