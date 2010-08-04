@@ -244,7 +244,7 @@ start_ovirt_early () {
 
     #   standalone
     # force oVirt Node standalone mode
-    standalone=
+    standalone=1
 
     #   firstboot
     # force firstboot configuration even if it has already been run
@@ -557,12 +557,9 @@ EOF
     fi
 
     if [ "$standalone" = 1 ]; then
-        # In standalone mode, fix libvirt to not use gssapi
-        sed -c -i -e s/^keytab/#keytab/ \
-            -e "s/^mech_list: .*gssapi.*/mech_list: digest-md5/" \
-            /etc/sasl2/libvirt.conf
+        log "Skip runtime mode configuration."
     else
-       configure_management_interface
+        configure_management_interface
     fi
 
     rm -f $VAR_SUBSYS_OVIRT_EARLY
