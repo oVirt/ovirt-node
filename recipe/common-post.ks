@@ -160,9 +160,9 @@ rm -f /etc/cron.daily/logrotate
 
 # comment out /etc/* entries in rwtab to prevent overlapping mounts
 touch /var/lib/random-seed
-mkdir /live
-mkdir /boot
-mkdir /rhev
+mkdir -p /live
+mkdir -p /boot
+mkdir -p /rhev
 mkdir -p /var/cache/multipathd
 sed -i '/^files	\/etc*/ s/^/#/' /etc/rwtab
 cat > /etc/rwtab.d/ovirt <<EOF
