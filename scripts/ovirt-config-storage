@@ -710,6 +710,7 @@ perform_partitioning()
         log "Creating boot partition"
         parted "$BOOTDRIVE" -s "mklabel ${LABEL_TYPE}"
         parted "$BOOTDRIVE" -s "mkpartfs primary ext2 0M ${boot_size_si}M"
+        udevadm settle 2> /dev/null || udevsettle
         reread_partitions "$BOOTDRIVE"
         partboot="${BOOTDRIVE}1"
         if [ ! -e "$partboot" ]; then
@@ -736,7 +737,9 @@ perform_partitioning()
         log "Creating Root and RootBackup Partitions"
         let RootBackup_end=${ROOT_SIZE}*2
         parted "$ROOTDRIVE" -s "mkpart primary ext2 0M ${ROOT_SIZE}M"
+        udevadm settle 2> /dev/null || udevsettle
         parted "$ROOTDRIVE" -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+        udevadm settle 2> /dev/null || udevsettle
         reread_partitions "$ROOTDRIVE"
         partroot="${ROOTDRIVE}1"
         partrootbackup="${ROOTDRIVE}2"
