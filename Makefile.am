@@ -21,7 +21,6 @@ SUBDIRS =   \
   gptsync \
   images \
   kinit \
-  nodeadmin \
   recipe \
   scripts \
   tools

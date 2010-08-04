@@ -89,42 +89,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{mgmt_scripts_dir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
-%{__install} -d -m0755 %{buildroot}%{python_sitelib}/nodeadmin
-
-%{__install} -p -m0644 nodeadmin/__init__.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/configscreen.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/menuscreen.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/utils.py %{buildroot}%{python_sitelib}/nodeadmin
-
-%{__install} -p -m0755 nodeadmin/nodeadmin.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/mainmenu.py %{buildroot}%{python_sitelib}/nodeadmin
-
-%{__install} -p -m0644 nodeadmin/nodemenu.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/adddomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/domainconfig.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/listdomains.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/migratedomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/removedomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/startdomain.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/stopdomain.py %{buildroot}%{python_sitelib}/nodeadmin
-
-%{__install} -p -m0644 nodeadmin/netmenu.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/networkconfig.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/definenet.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/createnetwork.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/destroynetwork.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/undefinenetwork.py %{buildroot}%{python_sitelib}/nodeadmin
-
-%{__install} -p -m0755 nodeadmin/addhost.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/changehost.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/hostmenu.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0755 nodeadmin/removehost.py %{buildroot}%{python_sitelib}/nodeadmin
-
-%{__install} -p -m0755 nodeadmin/createuser.py %{buildroot}%{python_sitelib}/nodeadmin
-
-%{__install} -p -m0644 nodeadmin/halworker.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/libvirtworker.py %{buildroot}%{python_sitelib}/nodeadmin
-%{__install} -p -m0644 nodeadmin/userworker.py %{buildroot}%{python_sitelib}/nodeadmin
 
 %{__install} -p -m0755 scripts/node-config %{buildroot}%{_sysconfdir}/sysconfig
 
@@ -136,10 +100,6 @@ make install DESTDIR=%{buildroot}
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
-
-# install the admin tools
-python nodeadmin/setup.py install --root %{buildroot}
-# rm -rf %{buildroot}%{python_sitelib}/nodeadmin-@VERSION@*
 
 echo "oVirt Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
 mkdir -p %{buildroot}/%{_sysconfdir}/default
@@ -264,30 +224,6 @@ fi
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
 %{_sysconfdir}/ovirt-early.d
-
-%{_bindir}/nodeadmin
-%{_bindir}/addpool
-%{_bindir}/addvm
-%{_bindir}/addvolume
-%{_bindir}/startvm
-%{_bindir}/stopvm
-%{_bindir}/rmvm
-%{_bindir}/listpools
-%{_bindir}/migratevm
-%{_bindir}/listvms
-%{_bindir}/rmpool
-%{_bindir}/rmvolume
-%{_bindir}/startpool
-%{_bindir}/stoppool
-%{_bindir}/definenet
-%{_bindir}/createnet
-%{_bindir}/destroynet
-%{_bindir}/undefinenet
-%{_bindir}/listnets
-%{_bindir}/createuser
-
-%{python_sitelib}/nodeadmin
-%{python_sitelib}/nodeadmin-@VERSION@*
 
 %changelog
 * Tue Apr 04 2010 Darryl L. Pierce <dpierce@redhat.com> - 1.9.2-1
