@@ -599,11 +599,11 @@ EOF
     # link to the kernel image for kdump
     if is_booted_from_local_disk; then
         mount_boot
-        if grep -q RootBackup; then
+        if [ -f /dev/.initramfs/live/backup-vmlinuz ]; then
             # try backup image
-            ln -s /boot/backup-vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+            ln -s /dev/.initramfs/live/backup-vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
         else
-            ln -s /boot/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+            ln -s /dev/.initramfs/live/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
         fi
     else
         # try source image
