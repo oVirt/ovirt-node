@@ -292,7 +292,7 @@ mount_config() {
     # Only try to mount /config if the persistent storage exists
     if [ -e /dev/HostVG/Config ] ; then
         mkdir -p /config
-        if ! grep -q " /config ext3 " /proc/mounts; then
+        if ! grep -q " /config ext4 " /proc/mounts; then
             mount /dev/HostVG/Config /config || return 1
         fi
 
