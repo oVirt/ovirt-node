@@ -38,6 +38,7 @@ OVIRT_NODE_TOOLS_DATA =         \
         common-manifest-post.ks \
         common-install.ks       \
         common-minimizer.ks     \
+        common-el6.ks           \
         common-pkgs.ks          \
         common-post.ks          \
         common-post-nochroot.ks \
@@ -48,6 +49,7 @@ EXTRA_DIST =                    \
         common-manifest-post.ks \
         common-install.ks       \
         common-minimizer.ks     \
+        common-el6.ks           \
         common-pkgs.ks          \
         common-post.ks          \
         common-post-nochroot.ks \
