@@ -172,9 +172,9 @@ ovirt_boot_setup() {
 
     local oldtitle
     if [ "$candidate" = "Root" ]; then
-        oldtitle=$(grep ^title /boot/grub/grub.conf|tail -n1|cut -c7-)
+        oldtitle=$(grep ^title ${grub_dir}/grub.conf|tail -n1|cut -c7-)
     else
-        oldtitle="BACKUP $(grep ^title /boot/grub/grub.conf|head -n1|cut -c7-)"
+        oldtitle="BACKUP $(grep ^title ${grub_dir}/grub.conf|head -n1|cut -c7-)"
     fi
     # reorder tty0 to allow both serial and phys console after installation
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
