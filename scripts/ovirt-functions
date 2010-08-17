@@ -149,6 +149,7 @@ EOF
 wipe_volume_group()
 {
     vg="$1"
+    local pv_dev=$2
 
     for d in $(grep $vg /proc/mounts|awk '{print $2}'); do
         log "Unmounting $d"
@@ -158,8 +159,12 @@ wipe_volume_group()
         log "Turning off $d"
         swapoff "$d"
     done
+    if [ -z "$pv_dev" ]; then
+        pv_dev=$(pvs|grep $vg|awk {'print $1'})
+    fi
     log "Removing $vg"
-    vgremove -f "$vg"
+    yes | vgremove -f $vg --config " devices { filter = [ \"a|$pv_dev|\" ] } "
+    yes | pvremove -ff $pv_dev --config " devices { filter = [ \"a|$pv_dev|\" ] } "
 }
 
 # find_srv SERVICE PROTO
@@ -303,7 +308,7 @@ mount_config() {
         # bind mount all persisted configs to rootfs
         for f in $(find /config -type f); do
             target=${f#/config}
-            if grep -q " $target ext3" /proc/mounts ; then
+            if grep -q " $target ext4" /proc/mounts ; then
                 # skip if already bind-mounted
                 true
             else
@@ -336,8 +341,10 @@ unmount_logging_services() {
     cd /etc/init.d
     for prg in $(lsof -Fc +D /var/log|grep ^c|sort -u); do
         srv=$(grep -l ${prg#c}$ *)
-        service $srv stop 6>&- 7>&-
-        services="$services $srv"
+        for svc in $srv; do
+            service $svc stop 6>&- 7>&-
+            services="$services $svc"
+        done
     done
     # debugging help
     lsof +D /var/log
@@ -346,7 +353,7 @@ unmount_logging_services() {
 # mount logging partition
 # this only gets executed when disk is re-partitioned, HostVG/Logging is empty
 mount_logging() {
-    if grep -q " /var/log ext3" /proc/mounts; then
+    if grep -q " /var/log ext4" /proc/mounts; then
         return 0
     fi
 
@@ -380,7 +387,7 @@ mount_logging() {
 }
 
 unmount_logging() {
-    if ! grep -q " /var/log ext3" /proc/mounts; then
+    if ! grep -q " /var/log ext4" /proc/mounts; then
         return 0
     fi
 
@@ -405,7 +412,7 @@ unmount_logging() {
 
 # mount data partition
 mount_data() {
-    if grep -q " /data ext3" /proc/mounts; then
+    if grep -q " /data ext4" /proc/mounts; then
         return 0
     fi
 
@@ -509,7 +516,7 @@ ovirt_store_config() {
                     continue
                 fi
                 # skip if already bind-mounted
-                if ! grep -q " $filename ext3" /proc/mounts ; then
+                if ! grep -q " $filename ext4" /proc/mounts ; then
                     mkdir -p /config$(dirname $filename)
                     cp -a $filename /config$filename \
                         && mount -n --bind /config$filename $filename
@@ -543,10 +550,10 @@ ovirt_store_config() {
 # to bindmount the config file again.
 #
 unmount_config() {
-    if grep -q " /config ext3" /proc/mounts; then
+    if grep -q " /config ext4" /proc/mounts; then
         for p in "$@"; do
             f=$(readlink -f $p)
-            if grep -q " $f ext3" /proc/mounts ; then
+            if grep -q " $f ext4" /proc/mounts ; then
                 if umount -n $f; then
                     if [ -f /config$f ]; then
                         # refresh the file in rootfs if it was mounted over
@@ -568,11 +575,11 @@ remove_config() {
         exit 1
     fi
 
-    if grep -q " /config ext3" /proc/mounts; then
+    if grep -q " /config ext4" /proc/mounts; then
         for p in "$@"; do
             local filename=$(readlink -f $p)
             if grep "^${filename}\$" /config/files > /dev/null 2>&1; then
-                if grep -q " $filename ext3" /proc/mounts ; then
+                if grep -q " $filename ext4" /proc/mounts ; then
                     if umount -n $filename; then
                         if [ -d $filename ]; then
                             cp -ar /config/$filename/* $filename
@@ -619,7 +626,7 @@ ovirt_safe_delete_config() {
     local target
 
     for target in "$@"; do
-        if grep -q " $target ext3" /proc/mounts; then
+        if grep -q " $target ext4" /proc/mounts; then
             umount -n $target
         fi
 
@@ -827,6 +834,15 @@ wipe_partitions() {
     log "Wiping secondary gpt header"
     local disk_kb_count=$(sfdisk -s "$drive" 2>/dev/null)
     dd if=/dev/zero of="$drive" bs=1024 seek=$(($disk_kb_count - 1)) count=1
+    kpartx -d "$drive"
+    # disable HostVG/Swap before removing from dmtable
+    if [ -L /dev/mapper/HostVG-Swap ]; then
+        swapoff -a
+    fi
+    # remove remaining HostVG entries from dmtable
+    for lv in $(find /dev/mapper/HostVG*); do
+        dmsetup remove $lv
+    done
 }
 
 test_ntp_configuration () {

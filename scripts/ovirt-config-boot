@@ -178,10 +178,10 @@ ovirt_boot_setup() {
     fi
     # reorder tty0 to allow both serial and phys console after installation
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
-        bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
+        bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext4 console=tty0 \
                     netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
     else
-        bootparams="ro root=live:LABEL=Root roottypefs=ext3 console=tty0 \
+        bootparams="ro root=live:LABEL=Root roottypefs=ext4 console=tty0 \
                 $(echo $bootparams | sed s/console=tty0//g)"
     fi
     mkdir -p $grub_dir
