@@ -14,7 +14,10 @@ echo "Fixing boot menu"
 # remove quiet from Node bootparams, added by livecd-creator
 sed -i -e 's/ quiet//' $LIVE_ROOT/isolinux/isolinux.cfg
 
-# add stand-alone boot entry
+#make console=tty0 the default
+sed -i -e 's/crashkernel=128M/crashkernel=128M console=tty0/' $LIVE_ROOT/isolinux/isolinux.cfg
+
+# add serial console boot entry
 menu=$(mktemp)
 awk '
 BEGIN {
@@ -29,10 +32,10 @@ linux0==1 && $1=="append" {
 linux0==1 && $1=="label" && $2!="linux0" {
   linux0=2
   print "label stand-alone"
-  print "  menu label Boot in stand-alone mode"
+  print "  menu label Boot with serial console"
   print "  kernel vmlinuz0"
-  gsub("console=tty0", "", append0)
-  print append0" ovirt_standalone console=tty0"
+  gsub("console=ttyS0,115200", "", append0)
+  print append0" console=ttyS0,115200n8"
 }
 { print }
 ' $LIVE_ROOT/isolinux/isolinux.cfg > $menu
