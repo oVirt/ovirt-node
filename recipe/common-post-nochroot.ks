@@ -14,8 +14,8 @@ echo "Fixing boot menu"
 # remove quiet from Node bootparams, added by livecd-creator
 sed -i -e 's/ quiet//' $LIVE_ROOT/isolinux/isolinux.cfg
 
-#make console=tty0 the default
-sed -i -e 's/crashkernel=128M/crashkernel=128M console=tty0/' $LIVE_ROOT/isolinux/isolinux.cfg
+# Remove Verify and Boot option
+sed -i -e '/label check0/{N;N;N;d;}' $LIVE_ROOT/isolinux/isolinux.cfg
 
 # add serial console boot entry
 menu=$(mktemp)
@@ -31,10 +31,9 @@ linux0==1 && $1=="append" {
 }
 linux0==1 && $1=="label" && $2!="linux0" {
   linux0=2
-  print "label stand-alone"
+  print "label serial-console"
   print "  menu label Boot with serial console"
   print "  kernel vmlinuz0"
-  gsub("console=ttyS0,115200", "", append0)
   print append0" console=ttyS0,115200n8"
 }
 { print }
@@ -42,7 +41,7 @@ linux0==1 && $1=="label" && $2!="linux0" {
 # change the title
 sed -i -e '/^menu title/d' $menu
 echo "say This is the $PRODUCT $VERSION ($RELEASE)" > $LIVE_ROOT/isolinux/isolinux.cfg
-echo "menu title $PRODUCT $VERSION ($RELEASE)" >> $LIVE_ROOT/isolinux/isolinux.cfg
+echo "menu title ${PRODUCT_SHORT} $VERSION ($RELEASE)" >> $LIVE_ROOT/isolinux/isolinux.cfg
 cat $menu >> $LIVE_ROOT/isolinux/isolinux.cfg
 rm $menu
 cp $INSTALL_ROOT/usr/share/ovirt-node/syslinux-vesa-splash.jpg $LIVE_ROOT/isolinux/splash.jpg
@@ -50,6 +49,7 @@ cp $INSTALL_ROOT/usr/share/ovirt-node/syslinux-vesa-splash.jpg $LIVE_ROOT/isolin
 # store image version info in the ISO and rootfs
 cat > $LIVE_ROOT/isolinux/version <<EOF
 PRODUCT='$PRODUCT'
+PRODUCT_SHORT='${PRODUCT_SHORT}'
 PACKAGE=$PACKAGE
 VERSION=$VERSION
 RELEASE=$RELEASE

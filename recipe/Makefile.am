@@ -18,6 +18,7 @@
 PACKAGE           = ovirt-node-image
 RECIPE            = $(PACKAGE).ks
 PRODUCT           = oVirt Node Hypervisor
+PRODUCT_SHORT     ?= $(PRODUCT)
 PKG_FMT           = iso
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
@@ -95,6 +96,7 @@ _ovirt_dev = \
 version.ks:
 	( \
 	    echo "PRODUCT='"$(PRODUCT)"'" ;\
+	    echo "PRODUCT_SHORT='"$(PRODUCT_SHORT)"'" ;\
 	    echo "PACKAGE=$(PACKAGE)" ;\
 	    echo "VERSION=$(VERSION)" ;\
 	    echo "RELEASE=$(RELEASE)" ;\
