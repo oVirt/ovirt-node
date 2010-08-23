@@ -61,10 +61,10 @@ ovirt_boot_setup() {
     fi
 
     local found_boot=false
-    if findfs LABEL=Boot 2>&1 >/dev/null ; then
+    if findfs LABEL=Boot >/dev/null 2>&1 ; then
         found_boot=true
         grub_dev_label=Boot
-    elif findfs LABEL=Root 2>&1 >/dev/null ; then
+    elif findfs LABEL=Root >/dev/null 2>&1 ; then
         found_boot=false
         grub_dev_label=Root
     fi
@@ -88,9 +88,9 @@ ovirt_boot_setup() {
     fi
 
     # check that /boot mounted ok and find partition number for GRUB, $4 is to allow 0 as a partition number for grub
-    get_part_info $(readlink -f $(findfs LABEL=$grub_dev_label 2>/dev/null)) disk partN y
+    get_part_info "$(readlink -f "$(findfs LABEL=$grub_dev_label 2>/dev/null)")" disk partN y
     rc=$?
-    if [ $rc -ne 0 -o $partN -lt 0 ]; then
+    if [ $rc -ne 0 -o "$partN" -lt 0 ]; then
       log "unable to determine Root partition"
       return 1
     fi
@@ -105,21 +105,21 @@ ovirt_boot_setup() {
 
         # prepare Root partition update
         candidate=
-        if findfs LABEL=RootBackup 2>&1 >/dev/null; then
+        if findfs LABEL=RootBackup >/dev/null 2>&1 ; then
             candidate=RootBackup
-        elif findfs LABEL=RootUpdate 2>&1 >/dev/null; then
+        elif findfs LABEL=RootUpdate >/dev/null 2>&1 ; then
             candidate=RootUpdate
-        elif findfs LABEL=RootNew 2>&1 >/dev/null; then
+        elif findfs LABEL=RootNew >/dev/null 2>&1 ; then
             candidate=RootNew
         fi
         if [ -z "$candidate" ]; then
             rc=1
         elif [ "$candidate" = "RootNew" ]; then
             umount /liveos
-            candidate_dev=$(findfs LABEL=$candidate 2>/dev/null)
+            candidate_dev="$(findfs LABEL=$candidate 2>/dev/null)"
             rc=$?
         else
-            candidate_dev=$(findfs LABEL=$candidate 2>/dev/null)
+            candidate_dev="$(findfs LABEL=$candidate 2>/dev/null)"
             e2label "$candidate_dev" RootNew
             rc=$?
         fi

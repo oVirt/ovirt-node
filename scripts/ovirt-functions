@@ -895,35 +895,35 @@ get_part_info() {
     local rc=0
 
     if [ -z "$grub_dev" ]; then
-        eval $(readlink -f "$drive_in" |awk {'
-            print "devname_1=" substr($1,1,length($1)-1);
-            print "devname_2=" substr($1,1,length($1)-2);
-            part_number=substr($1,length($1),1);
+        eval "$(readlink -f "$drive_in" | awk '{
+            print "devname_1=\"" substr($0,1,length($0)-1) "\"";
+            print "devname_2=\"" substr($0,1,length($0)-2) "\"";
+            part_number=substr($0,length($0),1);
             print "part_number=" part_number;
-        }')
+        }')"
     else
-        eval $(readlink -f "$drive_in" |awk {'
-            print "devname_1=" substr($1,1,length($1)-1);
-            print "devname_2=" substr($1,1,length($1)-2);
-            part_number=substr($1,length($1),1); part_number--;
+        eval "$(readlink -f "$drive_in" | awk '{
+            print "devname_1=\"" substr($0,1,length($0)-1) "\"";
+            print "devname_2=\"" substr($0,1,length($0)-2) "\"";
+            part_number=substr($0,length($0),1); part_number--;
             print "part_number=" part_number;
-        }')
+        }')"
     fi
     rc=$?
 
-    if [[ "$part_number" -lt 1 && "$grub_dev" != "y" ]]; then
+    if [ "$part_number" -lt 1 -a "$grub_dev" != "y" ]; then
         log "Partition number was invalid"
         return 2
     fi
 
-    if [ -e ${devname_1} ]; then
-        eval "${dev_var}"="${devname_1}"
-    elif [ -e ${devname_2} ]; then
-        eval "${dev_var}"="${devname_2}"
+    if [ -e "$devname_1" ]; then
+        eval "$dev_var=\"$devname_1\""
+    elif [ -e "$devname_2" ]; then
+        eval "$dev_var=\"$devname_2\""
     else
         return 1
     fi
-    eval "${part_var}"="${part_number}"
+    eval "$part_var=$part_number"
     return $rc
 }
 
