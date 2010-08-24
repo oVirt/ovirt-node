@@ -872,6 +872,7 @@ get_dm_device ()
     oldIFS="$IFS"
     IFS=$'\n'
     for dm in /dev/mapper/*; do
+        test -h "$dm" && continue
         if [ $major = $(stat -c '%t' "$(readlink -f "$dm")") -a \
             $minor = $(stat -c '%T' "$(readlink -f "$dm")") ]; then
             dm_device="$dm"

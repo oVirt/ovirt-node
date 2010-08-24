@@ -89,7 +89,7 @@ translate_multipath_device() {
         return 0
     fi
 
-    local dm_dev=/dev/$(multipath -ll "$dev" | egrep dm-[0-9]+ | sed -r 's/^.& (dm-[0-9]+) .*$/\1/')
+    local dm_dev=/dev/$(multipath -ll "$dev" | egrep dm-[0-9]+ | sed -r 's/^.* (dm-[0-9]+) .*$/\1/')
 
     local mpath_device=$(get_dm_device "$dm_dev")
 
@@ -953,6 +953,7 @@ if [ -n "$OVIRT_INIT" ]; then
     DRIVE="$(translate_multipath_device "$OVIRT_INIT")"
     ROOTDRIVE="$DRIVE"
     HOSTVGDRIVE="$DRIVE"
+    OVIRT_ROOT_INSTALL="y"
     get_drive_size "$ROOTDRIVE" ROOTDRIVESPACE
 fi
 
