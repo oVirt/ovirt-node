@@ -190,9 +190,14 @@ title $PRODUCT (${VERSION}-${RELEASE})
 EOF
     local backup_entry=0
     if [ -n "$oldtitle" ]; then
+        local partB
+        partB=0
+        if [ $partN = '0' ]; then
+            partB='1'
+        fi
         cat >> $grub_dir/grub.conf << EOF
 title ${oldtitle}
-    root (hd0,$partN)
+    root (hd0,$partB)
     kernel /vmlinuz0 root=live:LABEL=RootBackup $bootparams
     initrd /initrd0.img
     savedefault
