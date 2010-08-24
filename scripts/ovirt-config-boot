@@ -95,12 +95,21 @@ ovirt_boot_setup() {
       return 1
     fi
 
+    local oldtitle
     if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         mount_liveos
         mountpoint /liveos
         if [ $? -ne 0 ] ; then
           log "Root partition not available"
           return 1
+        fi
+
+        initrd_dest="/liveos"
+        grub_dir="/liveos/boot/grub"
+        grub_prefix="/boot/grub"
+
+        if [ -e "$initrd_dest/vmlinuz0" -a -e "$initrd_dest/initrd0.img" ]; then
+            oldtitle="BACKUP $(grep ^title ${grub_dir}/grub.conf|head -n1|cut -c7-)"
         fi
 
         # prepare Root partition update
@@ -134,24 +143,13 @@ ovirt_boot_setup() {
         rm -rf /liveos/LiveOS
         mkdir -p /liveos/LiveOS
 
-    fi
-
-    if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
+    else
         initrd_dest="/boot"
         grub_dir="/boot/grub"
         grub_prefix="/grub"
-    else
-        initrd_dest="/liveos"
-        grub_dir="/liveos/boot/grub"
-        grub_prefix="/boot/grub"
+        oldtitle=
     fi
 
-    # backup current kernel/initrd
-    if [ "$candidate" != "Root" \
-         -a -e "$initrd_dest/vmlinuz0" -a -e "$initrd_dest/initrd0.img" ]; then
-        cp -p $initrd_dest/vmlinuz0 $initrd_dest/backup-vmlinuz0 \
-        && cp -p $initrd_dest/initrd0.img $initrd_dest/backup-initrd0.img
-    fi
 
     cp -p $live/$syslinux/vmlinuz0 $initrd_dest \
     && cp -p $live/$syslinux/initrd0.img $initrd_dest
@@ -170,18 +168,14 @@ ovirt_boot_setup() {
         fi
     fi
 
-    local oldtitle
-    if [ "$candidate" = "Root" ]; then
-        oldtitle=$(grep ^title ${grub_dir}/grub.conf|tail -n1|cut -c7-)
-    else
-        oldtitle="BACKUP $(grep ^title ${grub_dir}/grub.conf|head -n1|cut -c7-)"
-    fi
     # reorder tty0 to allow both serial and phys console after installation
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
-        bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext4 console=tty0 \
+        root_part="root=LABEL=ovirt-node-root"
+        bootparams="ro roottypefs=ext4 console=tty0 \
                     netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
     else
-        bootparams="ro root=live:LABEL=Root roottypefs=ext4 console=tty0 \
+        root_part="root=live:LABEL=Root"
+        bootparams="ro roottypefs=ext4 console=tty0 \
                 $(echo $bootparams | sed s/console=tty0//g)"
     fi
     mkdir -p $grub_dir
@@ -191,18 +185,16 @@ timeout 5
 hiddenmenu
 title $PRODUCT (${VERSION}-${RELEASE})
     root (hd0,$partN)
-    kernel /vmlinuz0 $bootparams
+    kernel /vmlinuz0 $root_part $bootparams
     initrd /initrd0.img
 EOF
     local backup_entry=0
-    if [ -n "$oldtitle" \
-      -a -e "$initrd_dest/backup-vmlinuz0" \
-      -a -e "$initrd_dest/backup-initrd0.img" ]; then
+    if [ -n "$oldtitle" ]; then
         cat >> $grub_dir/grub.conf << EOF
 title ${oldtitle}
     root (hd0,$partN)
-    kernel /backup-vmlinuz0 $bootparams root=live:LABEL=RootBackup
-    initrd /backup-initrd0.img
+    kernel /vmlinuz0 root=live:LABEL=RootBackup $bootparams
+    initrd /initrd0.img
     savedefault
 EOF
         backup_entry=1
