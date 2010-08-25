@@ -204,6 +204,13 @@ title ${oldtitle}
 EOF
         backup_entry=1
     fi
+    if echo "$disk" | grep -q " " ; then
+        # workaround for grub setup failing with spaces in dev.name
+        disk2=$(multipath -l "$disk" | awk '/ active / {print $3}')
+        if [ -n "$disk2" ]; then
+            disk="/dev/$disk2"
+        fi
+    fi
     echo "(hd0) $disk" > $grub_dir/device.map
     ( cd /usr/share/grub/*; cp -p stage? e2fs_stage1_5 $grub_dir )
     # grub setup will do direct changes
