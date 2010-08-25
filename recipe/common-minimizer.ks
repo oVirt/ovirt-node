@@ -137,7 +137,6 @@ drop /usr/share/pixmaps
 drop /usr/share/icons
 drop /usr/share/fedora-release
 drop /usr/share/tabset
-drop /usr/share/libvirt
 drop /usr/share/augeas/lenses/tests
 drop /usr/share/tc
 drop /usr/share/emacs
