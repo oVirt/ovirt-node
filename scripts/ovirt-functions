@@ -34,7 +34,7 @@ OVIRT_CONFIG_FILES="\
  /etc/default/ovirt                             \
  /etc/sysconfig/network                         \
  /etc/collectd.conf                             \
- /etc/logrotate.d/ovirt-logrotate.conf
+ /etc/logrotate.d/ovirt-node
 "
 
 # Save stdout to fd 6 and stderr to fd 7.  Redirect normal stdout/stderr
