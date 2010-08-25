@@ -19,11 +19,11 @@ fi
 chkconfig --level 3 ovirt-early on
 chkconfig --level 3 ovirt on
 chkconfig --level 3 ovirt-post on
-chkconfig --level 3 collectd on
-chkconfig --level 3 anyterm on
+#chkconfig --level 3 collectd on
+#chkconfig --level 3 anyterm on
 
-ovirt_setup_libvirtd
-ovirt_setup_anyterm
+#ovirt_setup_libvirtd
+#ovirt_setup_anyterm
 
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
