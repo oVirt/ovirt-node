@@ -727,6 +727,11 @@ lvremove() {
     /sbin/lvremove "$@" 6>&- 7>&-
 }
 
+findfs() {
+    partprobe /dev/mapper/* 2>/dev/null
+    /sbin/findfs "$@"
+}
+
 # reboot wrapper
 #   cleanup before reboot
 reboot() {
@@ -930,13 +935,6 @@ get_part_info() {
 
 log_only() {
     echo "$@" >> $OVIRT_TMP_LOGFILE
-}
-
-# check if stored config exists
-#       is_persisted /etc/config
-is_persisted() {
-    local abspath=$(readlink -e "$1")
-    test -f "/config$abspath"
 }
 
 # execute a function if called as a script, e.g.
