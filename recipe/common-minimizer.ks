@@ -3,7 +3,6 @@
 # it afterwards, which we do here
 droprpm system-config-*
 droprpm rhpl
-droprpm rpm-python
 droprpm kudzu
 droprpm libsemanage-python
 

@@ -83,3 +83,34 @@ augtool <<\EOF
 set /files/etc/sysconfig/kdump/KDUMP_BOOTDIR /boot-kdump
 save
 EOF
+
+patch -d /usr/share/rhn/up2date_client -p0 <<\EOF
+--- up2dateUtils.py	2010-08-23 13:57:00.761671000 -0400
++++ up2dateUtils.py.new	2010-08-23 14:23:08.836686828 -0400
+@@ -19,21 +19,8 @@
+ 
+ 
+ def _getOSVersionAndRelease():
+-    cfg = config.initUp2dateConfig()
+-    ts = transaction.initReadOnlyTransaction()
+-    for h in ts.dbMatch('Providename', "redhat-release"):
+-        if cfg["versionOverride"]:
+-            version = cfg["versionOverride"]
+-        else:
+-            version = h['version']
+-
+-        osVersionRelease = (h['name'], version, h['release'])
++        osVersionRelease = ("redhat-release", "6Server", "RELEASE" )
+         return osVersionRelease
+-    else:
+-       raise up2dateErrors.RpmError(
+-           "Could not determine what version of Red Hat Linux you "\
+-           "are running.\nIf you get this error, try running \n\n"\
+-           "\t\trpm --rebuilddb\n\n")
+ 
+ 
+ def getVersion():
+EOF
+
+sed -i "s/RELEASE/$RELEASE/g" /usr/share/rhn/up2date_client/up2dateUtils.py
+python -m compileall /usr/share/rhn/up2date_client
