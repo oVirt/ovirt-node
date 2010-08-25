@@ -932,6 +932,13 @@ log_only() {
     echo "$@" >> $OVIRT_TMP_LOGFILE
 }
 
+# check if stored config exists
+#       is_persisted /etc/config
+is_persisted() {
+    local abspath=$(readlink -e "$1")
+    test -f "/config$abspath"
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
