@@ -76,6 +76,8 @@ less
 # VDSM
 vdsm-cli
 vdsm-reg
+# workaround: vdsm-reg dep
+traceroute
 # host statistics rhbz#588852
 vhostmd
 # kdump
