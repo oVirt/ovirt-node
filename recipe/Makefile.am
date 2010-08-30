@@ -78,7 +78,11 @@ repos.ks:
 	    echo "repo --name=$${FEDORA_REPO} $${FEDORA_REPO_LOC}" > repos.ks ;\
 	    printf "$${UPDATE_REPO_LINE}" >> repos.ks ;\
 	  else \
-	    echo "repo --name=dist-ovirt --baseurl=$(OVIRT_REPO_URL)" > $@ ;\
+	    echo "# OVIRT_REPO_URL=$(OVIRT_REPO_URL)" > $@ ;\
+	    for repo in $(OVIRT_REPO_URL); do \
+	       echo "repo --name=repo$${i} --baseurl=$${repo}" >> $@ ;\
+	       i=$${i}_ ;\
+	    done ;\
 	  fi ;\
 	)
 
