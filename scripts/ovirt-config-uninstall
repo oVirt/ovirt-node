@@ -46,38 +46,35 @@ if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"
         elif findfs LABEL=RootNew 2>&1 >/dev/null; then
             root2=RootNew
         fi
-        if ! get_part_info $(findfs LABEL=Root 2>/dev/null) root_dev root_part; then
-            log "Can't find Root device"
-            exit 2
-        fi
-        if ! get_part_info $(findfs LABEL=${root2} 2>/dev/null) root2_dev root2_part; then
-            log "Can't find RootBackup/RootNew/RootUpdate device"
-            exit 3
-        fi
-        if ! get_part_info $(pvs --noheadings -o pv_name,vg_name | grep HostVG | awk '{print $1}') pv_dev pv_part; then
-            log "Can't find HostVG device"
-            exit 4
-        fi
+        get_part_info "$(pvs --noheadings -o pv_name,vg_name | grep HostVG | sed -e 's/ HostVG$//' -e 's/^ *//')" pv_dev pv_part
         log "Removing volume group"
-        wipe_volume_group "HostVG"
+        wipe_volume_group HostVG
+        if [ -n "$pv_dev" -a -n "$pv_part" ]; then
+            pvremove "$pv_dev$pv_part"
+            parted -s "$pv_dev" "rm $pv_part"
+        fi
         log "Removing partitions"
-        parted -s $root_dev "rm $root_part"
-        pvremove ${vg_dev}
-        parted -s $root2_dev "rm $root2_part"
-        parted -s $vg_dev "rm $vg_part"
-        wipe_partitions $pv_dev
-        wipe_partitions $root_dev
-        wipe_partitions $root2_dev
+        get_part_info "$(findfs LABEL=Root 2>/dev/null)" root_dev root_part
+        if [ -n "$root_dev" -a -n "$root_part" ]; then
+            parted -s "$root_dev" "rm $root_part"
+        fi
+        get_part_info "$(findfs LABEL=${root2}" 2>/dev/null) root2_dev root2_part
+        if [ -n "$root2_dev" -a -n "$root2_part" ]; then
+            parted -s "$root2_dev" "rm $root2_part"
+        fi
+        wipe_partitions "$pv_dev"
+        wipe_partitions "$root_dev"
+        wipe_partitions "$root2_dev"
         #restart multipath
         multipath -F
         multipath -v3
         service multipathd start 6>&- 7>&-
-	    log "Finished uninstalling node."
+        log "Finished uninstalling node."
         stop_log
     else
-	    log "There is no installed node instance to remove."
-	    log "Aborting"
-	    exit 1
+        log "There is no installed node instance to remove."
+        log "Aborting"
+        exit 1
     fi
 else
     log "Aborted"

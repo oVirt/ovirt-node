@@ -288,7 +288,7 @@ mount_liveos() {
         return 0
     fi
     mkdir -p /liveos
-    mount LABEL=Root /liveos
+    mount LABEL=Root /liveos || mount -r LABEL=Root /liveos
 }
 
 # mount config partition
@@ -729,7 +729,7 @@ lvremove() {
 
 findfs() {
     partprobe /dev/mapper/* 2>/dev/null
-    /sbin/findfs "$@"
+    /sbin/blkid -c /dev/null -l -o device -t "$@"
 }
 
 # reboot wrapper
@@ -738,11 +738,13 @@ reboot() {
     cd /
     if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         # setup new Root if update is prepared
-        if findfs LABEL=RootUpdate 2>&1 >/dev/null; then
-            root_update_dev="$(findfs LABEL=RootUpdate 2>/dev/null)"
+        root_update_dev="$(findfs LABEL=RootUpdate 2>/dev/null)"
+        if [ -n "$root_update_dev" ]; then
+            set -x
             root_dev="$(findfs LABEL=Root 2>/dev/null)"
             e2label "$root_dev" RootBackup
             e2label "$root_update_dev" Root
+            set +x
         fi
     fi
     # run post-install hooks
