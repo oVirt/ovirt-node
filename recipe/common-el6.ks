@@ -40,7 +40,7 @@ setsebool allow_execstack off
 # successfull boot from /dev/HostVG/Root
 if grep -q -w root=live:LABEL=Root /proc/cmdline; then
     # set first boot entry as permanent default
-    mount_boot
+    ln -snf /dev/.initramfs/live/grub /boot/grub
     echo "savedefault --default=0" | grub > /dev/null 2>&1
 fi
 
