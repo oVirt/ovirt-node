@@ -15,10 +15,10 @@ ln -s /usr/libexec/ovirt-config-rhn /sbin/rhn_register
 ln -s /usr/sbin/ovirt-config-setup /usr/sbin/setup
 
 # disable SSH password auth by default
-augtool <<EOF
+augtool <<EOF_SSHD_CONFIG
 set /files/etc/ssh/sshd_config/PasswordAuthentication no
 save
-EOF
+EOF_SSHD_CONFIG
 
 # use static RPC ports, to avoid collision with VDSM port
 augtool <<EOF_NFS
@@ -79,10 +79,10 @@ cpe:/o:redhat:enterprise_virtualization_hypervisor:6
 EOF_CPE
 
 # kdump configuration
-augtool <<\EOF
+augtool <<\EOF_KDUMP
 set /files/etc/sysconfig/kdump/KDUMP_BOOTDIR /boot-kdump
 save
-EOF
+EOF_KDUMP
 
 patch -d /usr/share/rhn/up2date_client -p0 <<\EOF
 --- up2dateUtils.py	2010-08-23 13:57:00.761671000 -0400
