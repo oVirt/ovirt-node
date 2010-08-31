@@ -7,41 +7,42 @@ export PATH
 rm -f /var/lib/rpm/__db*
 
 # Import SELinux Modules
-echo "Enabling selinux modules"
-SEMODULES="base abrt cgroup consolekit cups dnsmasq guest hal ipsec iscsi \
-kdump kerberos ksmtuned logadm lpd ntp pegasus plymouthd policykit \
-portreserve portmap ppp qpidd qemu rpcbind shutdown snmp sosreport stunnel \
-sysstat unprivuser unconfined unconfineduser usbmodules userhelper \
-vhostmd virt"
-lokkit -v --selinuxtype=minimum
-
-tmpdir=$(mktemp -d)
-
-for semodule in $SEMODULES; do
-    found=0
-    pp_file=/usr/share/selinux/minimum/$semodule.pp
-    if [ -f $pp_file.bz2 ]; then
-        bzip2 -dc $pp_file.bz2 > "$tmpdir/$semodule.pp"
-        rm $pp_file.bz2
-        found=1
-    elif [ -f $pp_file ]; then
-        mv $pp_file "$tmpdir"
-        found=1
-    fi
-    # Don't put "base.pp" on the list.
-    test $semodule = base \
-        && continue
-    test $found=1 \
-        && modules="$modules $semodule.pp"
-done
-
-if test -n "$modules"; then
-    (cd "$tmpdir" \
-        && test -f base.pp \
-        && semodule -v -b base.pp -i $modules \
-        && semodule -v -B )
-fi
-rm -rf "$tmpdir"
+# XXX use targeted, pykickstart selinux directive cannot specify type
+#echo "Enabling selinux modules"
+#SEMODULES="base abrt cgroup consolekit cups dnsmasq guest hal ipsec iscsi \
+#kdump kerberos ksmtuned logadm lpd ntp pegasus plymouthd policykit \
+#portreserve portmap ppp qpidd rpcbind sasl shutdown snmp sosreport stunnel \
+#sysstat unprivuser unconfined unconfineduser usbmodules userhelper \
+#vhostmd virt xen qemu"
+#lokkit -v --selinuxtype=minimum
+#
+#tmpdir=$(mktemp -d)
+#
+#for semodule in $SEMODULES; do
+#    found=0
+#    pp_file=/usr/share/selinux/minimum/$semodule.pp
+#    if [ -f $pp_file.bz2 ]; then
+#        bzip2 -dc $pp_file.bz2 > "$tmpdir/$semodule.pp"
+#        rm $pp_file.bz2
+#        found=1
+#    elif [ -f $pp_file ]; then
+#        mv $pp_file "$tmpdir"
+#        found=1
+#    fi
+#    # Don't put "base.pp" on the list.
+#    test $semodule = base \
+#        && continue
+#    test $found=1 \
+#        && modules="$modules $semodule.pp"
+#done
+#
+#if test -n "$modules"; then
+#    (cd "$tmpdir" \
+#        && test -f base.pp \
+#        && semodule -v -b base.pp -i $modules \
+#        && semodule -v -B )
+#fi
+#rm -rf "$tmpdir"
 
 echo "Running ovirt-install-node-stateless"
 /usr/libexec/ovirt-install-node-stateless

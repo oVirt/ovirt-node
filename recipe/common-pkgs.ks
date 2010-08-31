@@ -11,8 +11,7 @@ openssh-server
 kvm
 libmlx4
 ovirt-node
--selinux-policy-targeted
-selinux-policy-minimum
+selinux-policy-targeted
 vim-minimal
 sudo
 python
