@@ -8,11 +8,11 @@ rm -f /var/lib/rpm/__db*
 
 # Import SELinux Modules
 echo "Enabling selinux modules"
-SEMODULES="base automount avahi consolekit cyrus dhcp dnsmasq guest hal ipsec \
-iscsi kerberos kerneloops ldap lockdev logadm mozilla ntp \
-portmap qemu rpcbind sasl snmp stunnel sysstat tcpd unprivuser \
-unconfined usbmodules userhelper virt plymouthd"
-
+SEMODULES="base abrt cgroup consolekit cups dnsmasq guest hal ipsec iscsi \
+kdump kerberos ksmtuned logadm lpd ntp pegasus plymouthd policykit \
+portreserve portmap ppp qpidd qemu rpcbind shutdown snmp sosreport stunnel \
+sysstat unprivuser unconfined unconfineduser usbmodules userhelper \
+vhostmd virt"
 lokkit -v --selinuxtype=minimum
 
 tmpdir=$(mktemp -d)
