@@ -278,24 +278,23 @@ chkconfig ovirt-awake off
 
 # mkdumprd wants to write to /initrd.XXXX with TMPDIR empty
 # this sets it to a writable directory for kdump to start correctly
-patch -d /sbin/ -p0 <<\EOF
+patch -d /sbin/ -p0 <<\EOF_mkdumprd
 --- mkdumprd.orig	2010-06-25 14:39:54.718863880 +0000
 +++ mkdumprd	2010-06-25 14:40:25.110785538 +0000
-@@ -75,7 +75,7 @@
- DUMP_FSTYPE=""
+@@ -92,6 +92,7 @@
+     exit $1
+ }
  
- TMPDISKLIST=`mktemp /tmp/disklist.XXXXXX`
--
-+TMPDIR="/tmp"
- MNTIMAGE=`mktemp -d ${TMPDIR}/initrd.XXXXXX`
- IMAGE=`mktemp ${TMPDIR}/initrd.img.XXXXXX`
- RCFILE=$MNTIMAGE/init
-EOF
++TMPDIR=/tmp
+ # find a temporary directory which doesn't use tmpfs
+ if [ -z "$TMPDIR" ]
+ then
+EOF_mkdumprd
 
-patch -d /etc/rc.d/init.d/ -p0 <<\EOF
+patch -d /etc/rc.d/init.d/ -p0 <<\EOF_kdump
 --- kdump.orig	2010-06-25 16:06:17.019233645 -0400
 +++ kdump	2010-06-25 16:06:48.342171474 -0400
-@@ -67,7 +67,7 @@
+@@ -68,7 +68,7 @@
  		# to figure out if anything has changed
  		touch /etc/kdump.conf
  	else
@@ -304,7 +303,7 @@ patch -d /etc/rc.d/init.d/ -p0 <<\EOF
  	fi
  
  	if [ -z "$KDUMP_KERNELVER" ]; then
-@@ -137,7 +137,7 @@
+@@ -138,7 +138,7 @@
                          echo -n "  "; echo "$modified_files" | sed 's/\s/\n  /g'
                  fi
                  echo "Rebuilding $kdump_initrd"
@@ -313,7 +312,7 @@ patch -d /etc/rc.d/init.d/ -p0 <<\EOF
                  if [ $? != 0 ]; then
                          echo "Failed to run mkdumprd"
                          $LOGGER "mkdumprd: failed to make kdump initrd"
-EOF
+EOF_kdump
 
 echo 'OPTIONS="-v -Lf /dev/null"' >> /etc/sysconfig/snmpd
 cat > /etc/snmp/snmpd.conf <<SNMPCONF_EOF
