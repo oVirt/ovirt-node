@@ -37,6 +37,7 @@ droprpm perl*
 # keep libperl for snmpd
 keeprpm perl-libs
 droprpm postfix
+droprpm mysql*
 
 droprpm sysklogd
 
@@ -126,6 +127,7 @@ drop /usr/share/zoneinfo
 keep /usr/share/zoneinfo/UTC
 
 drop /etc/alsa
+drop /usr/share/backgrounds
 drop /usr/share/hwdata/MonitorsDB
 drop /usr/share/hwdata/oui.txt
 drop /usr/share/hwdata/videoaliases
@@ -137,7 +139,44 @@ drop /usr/share/pixmaps
 drop /usr/share/icons
 drop /usr/share/fedora-release
 drop /usr/share/tabset
-drop /usr/share/augeas/lenses/tests
+drop /usr/share/augeas/lenses/dist/*
+keep /usr/share/augeas/lenses/dist/build.aug
+keep /usr/share/augeas/lenses/dist/cgconfig.aug
+keep /usr/share/augeas/lenses/dist/cgrules.aug
+keep /usr/share/augeas/lenses/dist/cron.aug
+keep /usr/share/augeas/lenses/dist/dhclient.aug
+keep /usr/share/augeas/lenses/dist/dnsmasq.aug
+keep /usr/share/augeas/lenses/dist/ethers.aug
+keep /usr/share/augeas/lenses/dist/exports.aug
+keep /usr/share/augeas/lenses/dist/fstab.aug
+keep /usr/share/augeas/lenses/dist/group.aug
+keep /usr/share/augeas/lenses/dist/grub.aug
+keep /usr/share/augeas/lenses/dist/hosts.aug
+keep /usr/share/augeas/lenses/dist/inifile.aug
+keep /usr/share/augeas/lenses/dist/inittab.aug
+keep /usr/share/augeas/lenses/dist/iptables.aug
+keep /usr/share/augeas/lenses/dist/json.aug
+keep /usr/share/augeas/lenses/dist/krb5.aug
+keep /usr/share/augeas/lenses/dist/limits.aug
+keep /usr/share/augeas/lenses/dist/logrotate.aug
+keep /usr/share/augeas/lenses/dist/lokkit.aug
+keep /usr/share/augeas/lenses/dist/modprobe.aug
+keep /usr/share/augeas/lenses/dist/modules_conf.aug
+keep /usr/share/augeas/lenses/dist/multipath.aug
+keep /usr/share/augeas/lenses/dist/ntp.aug
+keep /usr/share/augeas/lenses/dist/pam.aug
+keep /usr/share/augeas/lenses/dist/passwd.aug
+keep /usr/share/augeas/lenses/dist/securetty.aug
+keep /usr/share/augeas/lenses/dist/sep.aug
+keep /usr/share/augeas/lenses/dist/services.aug
+keep /usr/share/augeas/lenses/dist/shellvars.aug
+keep /usr/share/augeas/lenses/dist/shellvars_list.aug
+keep /usr/share/augeas/lenses/dist/spacevars.aug
+keep /usr/share/augeas/lenses/dist/sshd.aug
+keep /usr/share/augeas/lenses/dist/sudoers.aug
+keep /usr/share/augeas/lenses/dist/sysctl.aug
+keep /usr/share/augeas/lenses/dist/util.aug
+
 drop /usr/share/tc
 drop /usr/share/emacs
 drop /usr/share/info
