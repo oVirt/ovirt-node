@@ -114,3 +114,8 @@ EOF
 
 sed -i "s/RELEASE/$RELEASE/g" /usr/share/rhn/up2date_client/up2dateUtils.py
 python -m compileall /usr/share/rhn/up2date_client
+
+# rhbz#627661 workaround, remove vdsm customization:
+# fixes libvirtd startup on firstboot but migration won't work
+sed -i -e '/by vdsm$/d' /etc/sysconfig/libvirtd
+
