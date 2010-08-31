@@ -119,3 +119,6 @@ python -m compileall /usr/share/rhn/up2date_client
 # fixes libvirtd startup on firstboot but migration won't work
 sed -i -e '/by vdsm$/d' /etc/sysconfig/libvirtd
 
+# udev: replace spaces in device names
+sed -i -e 's/DM_NAME}"$/DM_NAME}", OPTIONS+="string_escape=replace"/' /lib/udev/rules.d/10-dm.rules
+
