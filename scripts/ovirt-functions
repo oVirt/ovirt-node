@@ -542,6 +542,13 @@ ovirt_store_config() {
     return $rc
 }
 
+# check if stored config exists
+#       is_persisted /etc/config
+is_persisted() {
+    local abspath=$(readlink -e "$1")
+    test -f "/config$abspath"
+}
+
 # unmount bindmounted config files
 #       unmount_config /etc/config /etc/config2 ...
 #
@@ -942,6 +949,6 @@ log_only() {
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
-if [ "$(basename "$0")" = "ovirt-functions" ]; then
+if [ "$(basename -- "$0")" = "ovirt-functions" ]; then
     "$@"
 fi
