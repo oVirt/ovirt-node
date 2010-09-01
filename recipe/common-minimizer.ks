@@ -138,7 +138,6 @@ drop /usr/share/gnome-background-properties
 drop /usr/share/dracut
 drop /usr/share/plymouth
 drop /usr/share/setuptool
-drop /usr/share/ovirt-node
 drop /usr/share/hwdata/MonitorsDB
 drop /usr/share/hwdata/oui.txt
 drop /usr/share/hwdata/videoaliases
@@ -277,9 +276,6 @@ keep /lib/firmware/sun
 keep /lib/firmware/tehuti
 keep /lib/firmware/tigon
 drop /lib/kbd/consolefonts
-drop /lib/kbd/keymaps/mac
-drop /lib/kbd/keymaps/sun
-drop /lib/kbd/keymaps/ppc
 drop /etc/pki/tls
 drop /etc/pki/java
 drop /etc/pki/nssdb
