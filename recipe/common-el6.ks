@@ -12,7 +12,7 @@ EOF_RWTAB
 
 # convenience symlinks
 ln -s /usr/libexec/ovirt-config-rhn /sbin/rhn_register
-ln -s /usr/sbin/ovirt-config-setup /usr/sbin/setup
+ln -s /usr/libexec/ovirt-config-setup /usr/sbin/setup
 
 # disable SSH password auth by default
 augtool <<EOF_SSHD_CONFIG
