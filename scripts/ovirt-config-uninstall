@@ -58,7 +58,7 @@ if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"
         if [ -n "$root_dev" -a -n "$root_part" ]; then
             parted -s "$root_dev" "rm $root_part"
         fi
-        get_part_info "$(findfs LABEL=${root2}" 2>/dev/null) root2_dev root2_part
+        get_part_info "$(findfs LABEL=${root2} 2>/dev/null)" root2_dev root2_part
         if [ -n "$root2_dev" -a -n "$root2_part" ]; then
             parted -s "$root2_dev" "rm $root2_part"
         fi
