@@ -242,6 +242,7 @@ drop /usr/bin/ssh-keyscan
 drop /usr/share/omf
 drop /usr/share/gnome
 drop /usr/share/doc
+keep /usr/share/doc/*-firmware-*
 drop /usr/share/locale
 drop /usr/share/man
 drop /usr/share/X11
@@ -271,7 +272,7 @@ keep /lib/firmware/bnx2
 keep /lib/firmware/cxgb3
 keep /lib/firmware/e100
 keep /lib/firmware/myricom
-keep /lib/firmware/qlogic
+keep /lib/firmware/ql*
 keep /lib/firmware/sun
 keep /lib/firmware/tehuti
 keep /lib/firmware/tigon

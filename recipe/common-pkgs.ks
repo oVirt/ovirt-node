@@ -87,3 +87,9 @@ rhn-virtualization-host
 rhn-setup
 # SNMP support rhbz#614870
 net-snmp
+# qlogic firmware
+ql2100-firmware
+ql2200-firmware
+ql23xx-firmware
+ql2400-firmware
+ql2500-firmware
