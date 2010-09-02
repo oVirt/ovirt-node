@@ -282,7 +282,7 @@ do_configure()
         if ask_yes_or_no "Enable HostVG Storage (y/n)?"; then
             OVIRT_ISCSI_HOSTVG="y"
             HOSTVGDRIVE=$(get_dev_name) || return 0
-            get_drive_size "$HOSTVGDRIVE"
+            get_drive_size "$HOSTVGDRIVE" HOSTVGDRIVESPACE
             echo "$HOSTVGDRIVE"
         fi
     else
@@ -446,21 +446,21 @@ do_review()
     fi
     local is_negative=0
 
-    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
-        local data_size_display="$DATA_SIZE MB"
-        if [ "$DATA_SIZE" = -1 ]; then
+    local data_size_display="$DATA_SIZE MB"
+    if [ "$DATA_SIZE" = -1 ]; then
 
-            if [ "$ROOTDRIVE" = "$HOSTVGDRIVE" ]; then
-                local remaining_mb=$(( $ROOTDRIVESPACE - $SWAP_SIZE \
-                        - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
-                test $remaining_mb -lt 0 && is_negative=1
-            else
-                local remaining_mb=$(( $HOSTVGDRIVESPACE - $SWAP_SIZE - $CONFIG_SIZE - $LOGGING_SIZE ))
-                test $remaining_mb -lt 0 && is_negative=1
-            fi
-            data_size_display="$remaining_mb MB"
+        if [ "$ROOTDRIVE" = "$HOSTVGDRIVE" ]; then
+            local remaining_mb=$(( $ROOTDRIVESPACE - $SWAP_SIZE \
+                    - $ROOT_SIZE * 2 - $CONFIG_SIZE - $LOGGING_SIZE ))
+            test $remaining_mb -lt 0 && is_negative=1
+        else
+            local remaining_mb=$(( $HOSTVGDRIVESPACE - $SWAP_SIZE - $CONFIG_SIZE - $LOGGING_SIZE ))
+            test $remaining_mb -lt 0 && is_negative=1
         fi
+        data_size_display="$remaining_mb MB"
+    fi
 
+    if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         cat <<EOF
 
 The selected disk will be repartitioned as follows:
@@ -485,8 +485,18 @@ The selected disk will be repartitioned as follows:
 EOF
 
     fi
-
+        if [ "$OVIRT_ISCSI_HOSTVG" = "y" ]; then
+            cat <<EOF
+                HostVG Drive: $(get_drive_size "$HOSTVGDRIVE")
+          Swap partition size: $SWAP_SIZE MB
+  Installation partition size: $ROOT_SIZE * 2 MB
+ Configuration partition size: $CONFIG_SIZE MB
+       Logging partition size: $LOGGING_SIZE MB
+          Data partition size: $data_size_display
+EOF
+        fi
     return ${is_negative-0}
+
 }
 
 #Check for an existing HostVG on any device on the system.
@@ -592,7 +602,7 @@ create_hostvg()
     log "Toggling LVM on"
     udevadm settle 2> /dev/null || udevsettle
     parted "$HOSTVGDRIVE" -s "set $hostvgpart lvm on"
-    parted "$ROOTDRIVE" -s "print"
+    parted "$HOSTVGDRIVE" -s "print"
     udevadm settle 2> /dev/null || udevsettle
     reread_partitions "$HOSTVGDRIVE"
 
@@ -727,6 +737,10 @@ perform_partitioning()
         mke2fs "${partboot}" -L Boot
         tune2fs -c 0 -i 0 "${partboot}"
         if [ "$OVIRT_ISCSI_HOSTVG" = "y" ]; then
+            log "Partitioning root drive: $HOSTVGDRIVE"
+            wipe_partitions "$HOSTVGDRIVE"
+            log "Labeling Drive: $HOSTVGDRIVE"
+            parted "$HOSTVGDRIVE" -s "mklabel ${LABEL_TYPE}"
             create_hostvg
         fi
         log "Completed!"
