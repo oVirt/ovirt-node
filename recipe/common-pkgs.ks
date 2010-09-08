@@ -72,6 +72,8 @@ patch
 e2fsprogs
 sysfsutils
 less
+#Autotest support rhbz#631795
+dosfstools
 # VDSM
 vdsm-cli
 vdsm-reg
