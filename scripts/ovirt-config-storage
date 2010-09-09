@@ -263,7 +263,7 @@ get_dev_name()
     do
         test "$device" = Abort && rc=1
         test "$device" = "Manual Selection" && manual_input device
-        test -z "$device" && continue
+        test "$device" = "Manual Selection" && rc=1
         echo "$device"
         break
     done
