@@ -279,12 +279,11 @@ do_configure()
         BOOTDRIVE="$(get_dev_name)" || return 0
         get_drive_size "$BOOTDRIVE" BOOTDRIVESPACE
         echo "$BOOTDRIVE"
-        if ask_yes_or_no "Enable HostVG Storage (y/n)?"; then
-            OVIRT_ISCSI_HOSTVG="y"
-            HOSTVGDRIVE=$(get_dev_name) || return 0
-            get_drive_size "$HOSTVGDRIVE" HOSTVGDRIVESPACE
-            echo "$HOSTVGDRIVE"
-        fi
+        OVIRT_ISCSI_HOSTVG="y"
+        printf "\n\nPlease select the disk to use for the HostVG.\n\n"
+        HOSTVGDRIVE=$(get_dev_name) || return 0
+        get_drive_size "$HOSTVGDRIVE" HOSTVGDRIVESPACE
+        echo "$HOSTVGDRIVE"
     else
         printf "\n\nPlease select the disk to use for the Root.\n\n"
         ROOTDRIVE=$(get_dev_name) || return 0
