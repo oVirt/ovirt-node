@@ -119,9 +119,6 @@ squashfs="%s/LiveOS/squashfs.img" % isomount
 ext3fs="tftpboot/squashfs-root/LiveOS/ext3fs.img"
 shutil.copy(kernel,"tftpboot")
 shutil.copy(initrd,"tftpboot")
-e2label_ret = subprocess.call(["e2label", options.disk_label])
-if e2label_ret != 0:
-    fail("Error relabeling %s to %s" % (options.disk,options.disk_label))
 
 unsquash = subprocess.call(["unsquashfs", squashfs])
 
@@ -133,6 +130,11 @@ dd_cmd="dd if=%s of=%s" % (ext3fs,options.disk)
 copy_iscsi_ret = subprocess.call(dd_cmd, shell=True)
 if copy_iscsi_ret != 0:
     fail("Error copying to %s" % options.disk)
+
+e2label_cmd="e2label %s %s" % (options.disk,options.disk_label)
+e2label_ret = subprocess.call(e2label_cmd, shell=True)
+if e2label_ret != 0:
+    fail("Error relabeling %s to %s" % (options.disk,options.disk_label))
 
 umount_ret = subprocess.call(["umount", isomount])
 if umount_ret != 0:
