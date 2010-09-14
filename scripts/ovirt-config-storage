@@ -926,6 +926,13 @@ EOF
 break;
 fi
 done
+
+if mount_iscsi_liveos; then
+    if ! [ -d /liveos/lib/modules/$(uname -r) ]; then
+        printf "Running kernel version does not match version installed to iscsi root file system, aborting\n\n"
+        exit 99
+    fi
+fi
 }
 
 MEM_SIZE_MB=$(awk '/MemTotal:/ { print $2 }' /proc/meminfo)

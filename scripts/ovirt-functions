@@ -291,6 +291,12 @@ mount_liveos() {
     mount LABEL=Root /liveos || mount -r LABEL=Root /liveos
 }
 
+mount_iscsi_liveos() {
+    if grep -q " /liveos " /etc/mtab; then
+        return 0
+    fi
+    mount LABEL=ovirt-node-root /liveos || mount -r LABEL=ovirt-node-root /liveos
+}
 # mount config partition
 # /config for persistance
 mount_config() {
