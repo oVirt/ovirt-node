@@ -847,11 +847,13 @@ while true; do
                 return
             fi
 
-            if [ "$OPTION" = "Target IP" ]; then
+        if [ "$OPTION" = "Target IP" ]; then
+            if is_valid_ipv4 $REPLY; then
                 OVIRT_ISCSI_TARGET_IP="$REPLY"
-                if [ -n "$REPLY" ]; then
-                    break;
-                fi
+                break;
+            else
+                printf "\nThe address $REPLY is not a valid IPv4 address.\n"
+        fi
 
             elif [ "$OPTION" = "Target Port" ]; then
                 OVIRT_ISCSI_TARGET_PORT="$REPLY"
