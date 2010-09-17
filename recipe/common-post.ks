@@ -204,7 +204,6 @@ patch -d /etc/init.d/ -p0 <<\EOF
  	{print $2}' /proc/mounts \
 EOF
 
-touch /.autorelabel
 
 # prepare for STATE_MOUNT in rc.sysinit
 augtool <<\EOF
