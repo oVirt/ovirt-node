@@ -10,12 +10,20 @@ rpm -qa --qf '%{license}\n' | sort -u > /manifest-license.txt
 rpm -qa | xargs -n1 rpm -e --test 2> /manifest-deps.txt
 echo -n "."
 find / -xdev -print -exec rpm -qf {} \; > /manifest-owns.txt
-# this one is kept in root for fake-rpm-query
+# this one is kept in root for ovirt-rpmquery
 rpm -qa --qf '%{NAME}\t%{VERSION}\t%{RELEASE}\t%{BUILDTIME}\n' | \
     sort > /rpm-qa.txt
 echo -n "."
 # remove rpmdb rhbz#596718
 rm -rf /var/lib/rpm
+# rpm query replacement
+rm -f /bin/rpm
+rm -f /usr/bin/rpmdb
+rm -f /usr/bin/rpmquery
+rm -f /usr/bin/rpmsign
+rm -f /usr/bin/rpmverify
+ln -snf /usr/libexec/ovirt-rpmquery /bin/rpm
+
 du -akx --exclude=/var/cache/yum / > /manifest-file.txt
 du -x --exclude=/var/cache/yum / > /manifest-dir.txt
 echo -n "."

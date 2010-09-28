@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# rpm query replacement for the Node image without rpmdb
+#   list of RPMs is stored during the image creatation in /rpm-qa.txt
+#   only rpm -q is available, any other option returns error
+
+PROG=$(basename $0)
+# rpmdb snapshot created during image creation:
+# rpm -qa --qf '%{NAME}\t%{VERSION}\t%{RELEASE}\t%{BUILDTIME}\n'
+RPMDB="/rpm-qa.txt"
+if [ ! -e $RPMDB ]; then
+    echo "$PROG: $RPMDB not found"
+    exit 2
+fi
+
+OPTS=$(getopt -n $PROG -o qav --long query,all,quiet,verbose,qf:,queryformat: -- "$@")
+eval set -- $OPTS
+
+query=
+all=
+qf=
+quiet=
+verbose=
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -q|--query)            query=1;;
+    -a|--all)              all=1;;
+    --qf|--queryformat)    qf="$2"; shift;;
+    --quiet)               quiet=1;;
+    -v|--verbose)          verbose=1;;
+    --)                    shift; break;;
+    *)                     echo "$PROG: invalid option, only --query is available"
+                           exit 2;;
+  esac
+  shift
+done
+
+function print_pkg() {
+    local pkg="$1"
+    local regex
+    if [ "$pkg" ]; then
+        regex="^$pkg"$'\t'
+    else
+        regex=""
+    fi
+
+    rc=0
+    if [ "$quiet" ]; then
+        grep -E -q "$regex" $RPMDB || rc=1
+    elif [ "$qf" ]; then
+        # actual queryformat is ignored
+        if ! grep -E "$regex" $RPMDB; then
+            echo "package $pkg is not installed"
+            rc=1
+        fi
+    else
+        awk -v p="$regex" '
+            BEGIN { rc=1 }
+            match($0,p) { print $1"-"$2"-"$3; rc=0 } END { exit rc }
+        ' $RPMDB || rc=1
+    fi
+    return $rc
+}
+
+
+if [ "$query" ]; then
+    if [ "$#" -eq 0 ]; then
+        if [ "$all" ]; then
+            print_pkg ""
+            exit
+        else
+            echo "$PROG: no arguments given for query"
+            exit 1
+        fi
+    fi
+    rc=0
+    for pkg in "$@"; do
+        print_pkg "$pkg" || rc=1
+    done
+else
+    echo "$PROG: invalid option, only --query is available"
+    rc=1
+fi
+
+exit $rc

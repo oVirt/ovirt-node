@@ -44,4 +44,5 @@ dist_libexec_SCRIPTS = \
   ovirt-config-view-logs \
   ovirt-functions \
   ovirt-install-node-stateless \
-  ovirt-process-config
+  ovirt-process-config \
+  ovirt-rpmquery

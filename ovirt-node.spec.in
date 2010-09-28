@@ -213,6 +213,7 @@ fi
 %{_libexecdir}/ovirt-functions
 %{_libexecdir}/ovirt-install-node-stateless
 %{_libexecdir}/ovirt-process-config
+%{_libexecdir}/ovirt-rpmquery
 %{_sbindir}/gptsync
 %{_sbindir}/showpart
 %{_sbindir}/persist
