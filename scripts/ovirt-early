@@ -465,10 +465,10 @@ start_ovirt_early () {
             vlan=${i#vlan=}
             ;;
             ssh_pwauth=1 | ssh_pwauth=true)
-            ssh_pwauth=true
+            ssh_pwauth=yes
             ;;
             ssh_pwauth=0 | ssh_pwauth=false)
-            ssh_pwauth=false
+            ssh_pwauth=no
             ;;
             syslog=*)
             i=${i#syslog=}
