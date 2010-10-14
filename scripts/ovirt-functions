@@ -151,7 +151,7 @@ wipe_volume_group()
     vg="$1"
     local pv_dev=$2
 
-    for d in $(grep $vg /proc/mounts|awk '{print $2}'); do
+    for d in $(grep $vg /proc/mounts|awk '{print $2}'|sort -r); do
         log "Unmounting $d"
         umount $d
     done

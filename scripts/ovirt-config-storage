@@ -708,6 +708,7 @@ perform_partitioning()
     unmount_config /etc/default/ovirt
 
     log "Removing old LVM partitions"
+    wipe_volume_group HostVG
     wipe_lvm_on_disk "$HOSTVGDRIVE"
     wipe_lvm_on_disk "$ROOTDRIVE"
 
