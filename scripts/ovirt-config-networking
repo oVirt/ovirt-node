@@ -168,7 +168,7 @@ function configure_interface
                         case $REPLY in
                             A|a) CONFIGURED_NIC=""; return;;
                             *)
-                                if [[ -n "$REPLY" ]] && [[ "$REPLY" =~ "^[0-9]{1,}$" ]]; then
+                                if [[ -n "$REPLY" ]] && [[ "$REPLY" =~ ^[0-9]{1,}$ ]]; then
 				    VLAN_ID=$REPLY
 				    setup_vlan $NIC $BRIDGE $VLAN_ID VL_ROOT VL_CONFIG $IF_ROOT VL_FILENAME $IF_FILENAME
                                     break
