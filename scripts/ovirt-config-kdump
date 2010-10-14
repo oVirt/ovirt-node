@@ -85,13 +85,9 @@ RESTORE="Restore Default Configuration"
 QUIT="Return to the Hypervisor Configuration Menu"
 
 if [ "$1" = "AUTO" ]; then
-    if [ -n $OVIRT_KDUMP_NFS ]; then
+    if [ -n "$OVIRT_KDUMP_NFS" ]; then
         write_kdump_config $OVIRT_KDUMP_NFS
-    elif [ -n $OVIRT_KDUMP_SSH ]; then
-        write_kdump_config $OVIRT_KDUMP_SSH
-        #ssh key#
     fi
-    exit $?
 else
     check
     printf "\n\n kdump Configuration\n\n"
