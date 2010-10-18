@@ -55,6 +55,10 @@ get_multipath_deps() {
     local deplist_var="$2"
     local deplist=""
 
+    if [[ ! "$1" =~ '/dev/mapper' ]]; then
+        evel $deplist_var=$(basename $1)
+        return
+    fi
     #get dependencies for multipath device
     local deps=$(dmsetup deps -u "mpath-$mpath_device" \
     | sed -r 's/\(([0-9]+), ([0-9]+)\)/\1:\2/g' \
@@ -87,6 +91,11 @@ translate_multipath_device() {
     if [[ "$dev" =~ "/dev/mapper" ]]; then
         echo "$dev"
         return 0
+    fi
+
+    if ! multipath -ll "$dev" 2>&1 >/dev/null; then
+        echo "$dev"
+        return
     fi
 
     local dm_dev=/dev/$(multipath -ll "$dev" | egrep dm-[0-9]+ | sed -r 's/^.* (dm-[0-9]+) .*$/\1/')
@@ -227,7 +236,7 @@ get_dev_name()
     do
         devices="/dev/mapper/$d${LF}${devices}"
         local sd_devs=""
-        IFS="$oldIFS" get_multipath_deps "$d" sd_devs
+        IFS="$oldIFS" get_multipath_deps "/dev/mapper/$d" sd_devs
         local dm_dev=$(multipath -ll "$d" | grep "$d" | sed -r 's/^.*(dm-[0-9]+ ).*$/\1/' )
         devs_to_remove="${devs_to_remove} ${sd_devs} ${dm_dev}"
     done
@@ -990,19 +999,45 @@ fi
 if [ "$1" = "AUTO" ]; then
     log "Beginning automatic disk partitioning."
     if [ -n "$OVIRT_INIT" ]; then
-        # do not format if HostVG exists on selected disk...
-        check_existing_hostvg "$HOSTVGDRIVE"
-        existingHostVG=$?
-        # ... unless overridden by ovirt_firstboot parameter
-        if is_firstboot || [ $existingHostVG -ne 0 ]; then
+        # Logic for automatic partitioning
+        # If HostVG exists on a disk other than $DRIVE, fail
+        # If HostVG exists on $DRIVE, then partition only if
+        # firstboot is specified
+        # Else, partition
+        if check_existing_hostvg 2>&1 >/dev/null; then
+            if check_existing_hostvg $HOSTVGDRIVE; then
+                log "HostVG exists on a separate disk"
+                log "Manual Intervention required"
+                exit 1
+            else
+                if is_firstboot; then
+                    if check_partition_sizes; then
+                        log "Partitioning hard disk..."
+                        perform_partitioning
+                        exit $?
+                    else
+                        log "storage_vol parameter can be used to reduce the size of partitions"
+                        log "e.g. storage_vol=:SWAP_SIZE_IN_MB"
+                        log "WARNING: you might have issues because you don't have enough swap"
+                        log "to meet suggested minimum swap size."
+                        exit 1
+                    fi
+                else
+                    echo "Disk is already partitioned and firstboot not specified, Skipping partitioning"
+                    exit 0
+                fi
+            fi
+        else
             if check_partition_sizes; then
                 log "Partitioning hard disk..."
                 perform_partitioning
                 exit $?
+            else
+                log "storage_vol parameter can be used to reduce the size of partitions"
+                log "e.g. storage_vol=:SWAP_SIZE_IN_MB"
+                log "WARNING: you might have issues because you don't have enough swap"
+                log "to meet suggested minimum swap size."
             fi
-        else
-            log "Skip disk partitioning, HostVG exists"
-            exit 1
         fi
     else
         log "Missing device parameter: unable to partition any disk"
