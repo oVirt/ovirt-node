@@ -551,7 +551,7 @@ start_ovirt_early () {
     for p in $params; do
         PARAM=$(uc $p)
         value=$(ptr $p)
-        if [ -n "$value" ]; then
+        if [ -n "$value" -o $p = 'init' -o $p = 'bootif' -o $p = 'upgrade' ]; then
             log "Updating OVIRT_$PARAM to '$value'"
             echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" \
                 >> $tmpaug
