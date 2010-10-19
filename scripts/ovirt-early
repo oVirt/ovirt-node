@@ -116,6 +116,9 @@ get_live_disk() {
     else
       live_part=$(readlink -e $live_dev)
       live_disk=$(basename $(dirname $(udev_info $live_part path)))
+      if [ "$live_disk" = "block" ]; then
+          live_disk=$(basename $(udev_info $live_part path))
+      fi
     fi
     echo $live_disk
 }
@@ -127,7 +130,7 @@ find_disk() {
     local live=$(get_live_disk)
     for d in /dev/disk/by-id/{scsi,usb,cciss}*; do
       ID_FS_USAGE=
-      eval $(udev_info $d env)
+      eval $(udev_info $(readlink -f $d) env)
       # ID_FS_USAGE is set for partitions
       if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
         if [ -z "$serial" -o "$ID_SERIAL" = "$serial" ]; then

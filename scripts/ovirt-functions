@@ -665,13 +665,9 @@ udev_info() {
     local query=$2
     local out
 
-    # old udev command with shortopts
-    out=$(udevinfo -n $name -q $query)
+    # Workaround for rhbz#644330
+    out=$(udevadm info --name=$name --query=$query | sed -r 's/=(.*)$/="\1"/')
     rc=$?
-    if [ $rc -ne 0 ]; then
-        out=$(udevadm info --name=$name --query=$query)
-        rc=$?
-    fi
     if [ $rc -eq 0 ]; then
         echo $out
     fi
