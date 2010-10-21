@@ -509,6 +509,7 @@ start_ovirt_early () {
             rhn_proxypassword=${i#rhn_proxypassword=}
             ;;
             ovirt_early=*)
+            bootparams="$bootparams $i"
             i=${i#ovirt_early=}
             ovirt_early=$(echo $i|tr ",:;" " ")
             ;;
