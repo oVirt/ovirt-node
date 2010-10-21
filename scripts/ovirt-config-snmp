@@ -13,7 +13,7 @@ if ! is_local_storage_configured; then
     exit 99
 fi
 
-set_password() {
+enable_snmpd() {
     local password=$1
     local CONF=/var/lib/net-snmp/snmpd.conf
     ovirt_store_config /etc/sysconfig/snmpd /var/lib/net-snmp/ >/dev/null
@@ -28,23 +28,33 @@ set_password() {
     service snmpd start
 }
 
+disable_snmpd() {
+    service snmpd stop > /dev/null
+    while umount /etc/sysconfig/snmpd; do : ; done 2> /dev/null
+    remove_config /etc/sysconfig/snmpd > /dev/null
+}
+
 if [[ "$1" == "AUTO" ]]; then
     if [ -n "${OVIRT_SNMP_PASSWORD}" ]; then
-        set_password $OVIRT_SNMP_PASSWORD
+        enable_snmpd $OVIRT_SNMP_PASSWORD
     fi
 else
-    while true; do
-        printf "\n"
-        read -p "Enter password for SNMPv3 USM 'root' user: " -esr
-        password1="$REPLY"
-        printf "\n"
-        read -p "Confirm password: " -esr
-        password="$REPLY"
-        if [ "$password1" = "$password" ]; then break; fi
-    done
-    printf "\n"
-    if ask_yes_or_no "Enable SNMP agent ([Y]es/[N]o)?"; then
-        set_password $password
-    fi
+    ask_yes_or_no "Enable SNMP agent ([Y]es/[N]o/[A]bort)?" true true
+    case $? in
+        0)
+            while true; do
+                printf "\n"
+                read -p "Enter password for SNMPv3 USM 'root' user: " -esr
+                password1="$REPLY"
+                printf "\n"
+                read -p "Confirm password: " -esr
+                password="$REPLY"
+                if [ "$password1" = "$password" ]; then break; fi
+            done
+            printf "\n"
+            enable_snmpd $password ;;
+        1) disable_snmpd ;;
+        2) ;;
+    esac
     printf "\n"
 fi
