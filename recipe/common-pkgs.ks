@@ -97,3 +97,5 @@ ql2500-firmware
 # for building custom selinux module
 make
 checkpolicy
+#
+policycoreutils-python

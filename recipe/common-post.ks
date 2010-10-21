@@ -28,6 +28,15 @@ semodule -v -i ovirt.pp
 cd /
 rm -rf /tmp/SELinux
 
+# set SELinux booleans
+# rhbz#502779 restrict certain memory protection operations
+#     keep allow_execmem on for grub
+# rhbz#642209 allow virt images on NFS
+semanage  boolean -m -S targeted -F /dev/stdin  << EOF_SEMANAGE
+allow_execstack=0
+virt_use_nfs=1
+EOF_SEMANAGE
+
 #echo "Enabling selinux modules"
 #SEMODULES="base abrt cgroup consolekit cups dnsmasq guest hal ipsec iscsi \
 #kdump kerberos ksmtuned logadm lpd ntp pegasus plymouthd policykit \

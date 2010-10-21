@@ -11,6 +11,9 @@ droprpm isomd5sum
 droprpm dmraid
 droprpm checkpolicy
 droprpm make
+droprpm policycoreutils-python
+droprpm setools-libs-python
+droprpm setools-libs
 
 droprpm gamin
 droprpm pm-utils

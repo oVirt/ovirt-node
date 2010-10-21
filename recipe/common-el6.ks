@@ -31,10 +31,7 @@ set /files/etc/sysconfig/nfs/STATD_OUTGOING_PORT 2020
 save
 EOF_NFS
 
-# rhbz#502779 restrict certain memory protection operations
-# keep allow_execmem on for grub
 cat >> /etc/rc.d/rc.local <<\EOF_RC_LOCAL
-setsebool allow_execstack off
 . /usr/libexec/ovirt-functions
 
 # successfull boot from /dev/HostVG/Root
