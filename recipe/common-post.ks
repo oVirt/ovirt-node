@@ -8,6 +8,26 @@ rm -f /var/lib/rpm/__db*
 
 # Import SELinux Modules
 # XXX use targeted, pykickstart selinux directive cannot specify type
+# XXX custom module for node specific rules
+mkdir /tmp/SELinux
+cd /tmp/SELinux
+cat > ovirt.te << \EOF_OVIRT_TE
+module ovirt 1.0;
+require {
+    type initrc_tmp_t;
+    type mount_t;
+    type setfiles_t;
+    type shadow_t;
+    class file { append mounton };
+}
+allow mount_t shadow_t:file mounton;
+allow setfiles_t initrc_tmp_t:file append;
+EOF_OVIRT_TE
+make NAME=targeted -f /usr/share/selinux/devel/Makefile
+semodule -v -i ovirt.pp
+cd /
+rm -rf /tmp/SELinux
+
 #echo "Enabling selinux modules"
 #SEMODULES="base abrt cgroup consolekit cups dnsmasq guest hal ipsec iscsi \
 #kdump kerberos ksmtuned logadm lpd ntp pegasus plymouthd policykit \

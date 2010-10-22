@@ -10,6 +10,7 @@ droprpm mkinitrd
 droprpm isomd5sum
 droprpm dmraid
 droprpm checkpolicy
+droprpm make
 
 droprpm gamin
 droprpm pm-utils
