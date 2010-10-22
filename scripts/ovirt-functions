@@ -615,16 +615,16 @@ remove_config() {
                             fi
                         fi
                     fi
-                    # clean up the persistent store
-                    rm -Rf /config$filename
-                    # unregister in /config/files used by rc.sysinit
-                    sed --copy -i "\|^${filename}$|d" /config/files
                 else
                     printf "$filename is not a persisted file.\n"
                 fi
+                # unregister in /config/files used by rc.sysinit
+                sed --copy -i "\|^${filename}$|d" /config/files
             else
                 printf "File not explicitly persisted: ${filename}\n"
             fi
+            # clean up the persistent store
+            rm -Rf /config$filename
         done
     fi
 }
