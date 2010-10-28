@@ -20,13 +20,8 @@ sed -i -e '/label check0/{N;N;N;d;}' $LIVE_ROOT/isolinux/isolinux.cfg
 # add serial console boot entry
 menu=$(mktemp)
 awk '
-BEGIN {
-  # append additional default boot parameters
-  add_boot_params="nomodeset check rootflags=ro crashkernel=128M"
-}
 /^label linux0/ { linux0=1 }
 linux0==1 && $1=="append" {
-  $0=$0 " " add_boot_params
   append0=$0
 }
 linux0==1 && $1=="label" && $2!="linux0" {
