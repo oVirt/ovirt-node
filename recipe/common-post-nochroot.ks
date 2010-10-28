@@ -60,3 +60,9 @@ ln -snf $PACKAGE-release $INSTALL_ROOT/etc/system-release
 cp $INSTALL_ROOT/etc/$PACKAGE-release $INSTALL_ROOT/etc/issue
 echo "Kernel \r on an \m (\l)" >> $INSTALL_ROOT/etc/issue
 cp $INSTALL_ROOT/etc/issue $INSTALL_ROOT/etc/issue.net
+
+# replace initramfs if regenerated
+if [ -f "$INSTALL_ROOT/initrd0.img" ]; then
+  mv -v "$INSTALL_ROOT/initrd0.img" "$LIVE_ROOT/isolinux/initrd0.img"
+fi
+
