@@ -27,7 +27,7 @@ test -f Makefile && make -k distclean || :
 
 OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT}/../ovirt-cache
 OVIRT_LOCAL_REPO=file://${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
-OVIRT_REPO_URL="http://download.lab.bos.redhat.com/brewroot/repos/rhel-6.0-rhev-h/latest/x86_64 http://download.lab.bos.redhat.com/brewroot/repos/RHEL-6.0-build/latest/x86_64"
+OVIRT_REPO_URL="http://download.lab.bos.redhat.com/brewroot/repos/rhel-6.0-rhev-h-test-build/latest/x86_64"
 export OVIRT_REPO_URL OVIRT_LOCAL_REPO OVIRT_CACHE_DIR
 
 ./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT
