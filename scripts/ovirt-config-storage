@@ -182,7 +182,6 @@ manual_input()
     while true; do
         read -rp "Enter disk device path: " manual_device
         if [ -z "$manual_device" ]; then
-            echo "Aborting."
             return 1
         fi
         manual_device="$(translate_multipath_device "$manual_device")"
@@ -192,7 +191,6 @@ manual_input()
                 return 0
             fi
         else
-            echo "Aborting."
             return 1
         fi
     done
@@ -274,7 +272,7 @@ get_dev_name()
         test "$device" = "Manual Selection" && manual_input device
         test "$device" = "Manual Selection" && rc=1
         test -z "$device" && continue
-        echo "$device"
+        test $rc = 0 && echo "$device"
         break
     done
     IFS="$oldIFS"
@@ -451,6 +449,11 @@ do_review()
 {
     if [[ -z "$ROOTDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
         printf "\nNo Root storage device selected.\n"
+        return 1
+    fi
+
+    if [[ -z "$HOSTVGDRIVE" ]]; then
+        printf "\nNo HostVG storage device selected.\n"
         return 1
     fi
     local is_negative=0
@@ -796,7 +799,12 @@ do_confirm()
 {
 
     if [[ -z "$ROOTDRIVE" && "$OVIRT_ISCSI_ENABLED" != "y" ]]; then
-        printf "\nNo storage device selected.\n"
+        printf "\nNo Root storage device selected.\n"
+        return
+    fi
+
+    if [[ -z "$HOSTVGDRIVE" ]]; then
+        printf "\nNo HostVG storage device selected.\n"
         return
     fi
 
