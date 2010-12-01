@@ -51,9 +51,9 @@ fi
 createrepo -d ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 
 #make iso
-cd recipe
-make ovirt-node-image.iso PRODUCT='Red Hat Enterprise Virtualization Hypervisor' VERSION=6.0 RELEASE=0$EXTRA_RELEASE PRODUCT_SHORT='RHEV Hypervisor'
-
+#cd recipe
+#make ovirt-node-image.iso PRODUCT='Red Hat Enterprise Virtualization Hypervisor' VERSION=6.0 RELEASE=0$EXTRA_RELEASE PRODUCT_SHORT='RHEV Hypervisor'
+#
 #copy iso back to main directory for autotest.sh
 ln -nf *iso ..
 
