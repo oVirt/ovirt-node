@@ -23,6 +23,10 @@ echo "Running oVirt Node Autobuild"
 set -e
 set -v
 
+if grep -q "DISTCVS Specfile" ovirt-node.spec; then
+    cp ovirt-node.spec distcvs.ovirt-node.spec
+fi
+
 test -f Makefile && make -k distclean || :
 
 OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT}/../ovirt-cache
@@ -33,6 +37,10 @@ export OVIRT_REPO_URL OVIRT_LOCAL_REPO OVIRT_CACHE_DIR
 ./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT
 make
 make install
+
+if [ -e distcvs.ovirt-node.spec ]; then
+    mv distcvs.ovirt-node.spec ovirt-node.spec
+fi
 
 rm -f *.tar.gz
 make dist
