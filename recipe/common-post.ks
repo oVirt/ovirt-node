@@ -102,6 +102,8 @@ cat > /etc/sysconfig/iptables << \EOF
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT -p icmp -j ACCEPT
 -A INPUT -i lo -j ACCEPT
+# vdsm
+-A INPUT -p tcp --dport 54321 -j ACCEPT
 # libvirt
 -A INPUT -p tcp --dport 16509 -j ACCEPT
 # SSH
@@ -109,7 +111,7 @@ cat > /etc/sysconfig/iptables << \EOF
 # anyterm
 -A INPUT -p tcp --dport 81 -j ACCEPT
 # guest consoles
--A INPUT -p tcp -m multiport --dports 5800:6000 -j ACCEPT
+-A INPUT -p tcp -m multiport --dports 5634:6166 -j ACCEPT
 # migration
 -A INPUT -p tcp -m multiport --dports 49152:49216 -j ACCEPT
 # snmp
@@ -136,7 +138,7 @@ cat > /etc/sysconfig/ip6tables << \EOF
 # anyterm
 -A INPUT -p tcp --dport 81 -j ACCEPT
 # guest consoles
--A INPUT -p tcp -m multiport --dports 5800:6000 -j ACCEPT
+-A INPUT -p tcp -m multiport --dports 5634:6166 -j ACCEPT
 # migration
 -A INPUT -p tcp -m multiport --dports 49152:49216 -j ACCEPT
 # snmp
