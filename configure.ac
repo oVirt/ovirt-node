@@ -11,7 +11,7 @@ fi
 # TODO need a way to check for python-setuptools
 
 AC_CHECK_LIB(virt, main, , AC_MSG_ERROR([Cannot find libvirt development libraries.]))
-AC_CHECK_LIB(python2.6, main, , AC_MSG_ERROR([Cannot find python development libraries.]))
+AC_CHECK_LIB(python2.7, main, , AC_MSG_ERROR([Cannot find python development libraries.]))
 
 AC_CONFIG_HEADERS([config.h])
 
