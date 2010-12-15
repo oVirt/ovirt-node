@@ -57,3 +57,11 @@ ovirt-node-image.iso
 
 #copy iso back to main directory for autotest.sh
 ln -nf *iso ..
+
+#Don't error out if this doesn't work.
+set +e
+TMPDIR=$(mktemp -d)
+sudo mount -o loop *iso $TMPDIR
+cp $TMPDIR/isolinux/manifest-srpm.txt ..
+sudo umount $TMPDIR
+rmdir $TMPDIR
