@@ -101,12 +101,8 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
 
-echo "oVirt Node release %{version}-%{release}" > %{buildroot}%{_sysconfdir}/ovirt-release
 mkdir -p %{buildroot}/%{_sysconfdir}/default
 echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
-
-# release files
-echo "%{product_family} release %{version}%{?beta: %{beta}} (%{release})" > %{buildroot}/etc/ovirt-release
 
 # ovirt-config-boot post-install hooks
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
@@ -179,7 +175,6 @@ fi
 
 %files
 %defattr(-,root,root)
-%config(noreplace) %attr(0644,root,root) %{_sysconfdir}/ovirt-release
 %config(noreplace) %attr(0644,root,root) %{_sysconfdir}/default/ovirt
 
 %config(noreplace) %{_sysconfdir}/logrotate.d/ovirt-node
