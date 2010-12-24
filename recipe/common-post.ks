@@ -184,6 +184,7 @@ function mod_vi() {
 }
 alias vi="mod_vi"
 alias ping='ping -c 3'
+export MALLOC_CHECK_=1
 EOF
 
 # Remove the default logrotate daily cron job
@@ -202,6 +203,7 @@ dirs	/var/lib/multipath
 dirs	/var/lib/net-snmp
 files	/etc
 dirs    /var/lib/dnsmasq
+dirs	/root/.uml
 files	/var/cache/libvirt
 files	/var/empty/sshd/etc/localtime
 files	/var/lib/libvirt
@@ -252,6 +254,7 @@ mkdir -p /boot
 mkdir -p /config
 mkdir -p /data
 mkdir -p /liveos
+mkdir -p /root/.uml
 echo "/dev/HostVG/Config /config ext4 defaults,noauto,noatime 0 0" >> /etc/fstab
 
 # prevent node from hanging on reboot due to /etc mounts
@@ -302,6 +305,12 @@ patch -d /etc/rc.d -p0 <<\EOF
  
  # Update quotas if necessary
 EOF
+
+# add admin user for configuration ui
+useradd admin
+usermod -G wheel admin
+usermod -s /usr/libexec/ovirt-admin-shell admin
+echo "%wheel	ALL=(ALL)	NOPASSWD: ALL" >> /etc/sudoers
 
 # chkconfig off unnecessary services
 chkconfig ovirt off
@@ -357,4 +366,3 @@ echo -n "Rebuilding initramfs for multipath..."
 kernel="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}\n' kernel)"
 dracut -f -a "multipath" /initrd0.img "$kernel"
 echo "done."
-

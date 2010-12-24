@@ -80,7 +80,7 @@ start_ovirt_firstboot ()
     if is_firstboot; then
         plymouth --hide-splash
 
-        /usr/libexec/ovirt-config-setup -x < /dev/console
+        /usr/libexec/ovirt-config-installer -x < /dev/console
 
         plymouth --show-splash
     fi

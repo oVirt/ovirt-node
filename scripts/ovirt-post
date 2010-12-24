@@ -56,6 +56,10 @@ start_ovirt_post() {
             echo "(No virtualization hardware was detected on this system)" >> $ISSUE
         fi
     fi
+    if is_local_storage_configured; then
+        echo "" >> $ISSUE
+        echo "Please login as 'admin' to configure the node" >> $ISSUE
+    fi
     cp -f $ISSUE $ISSUE_NET
 
     if is_standalone; then

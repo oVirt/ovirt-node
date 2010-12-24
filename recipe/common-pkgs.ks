@@ -34,7 +34,6 @@ numactl
 file
 lsof
 newt-python
-# test jboggs
 #/usr/bin/kvmtrace
 qemu-kvm-tools
 #remove
@@ -99,3 +98,12 @@ make
 checkpolicy
 #
 policycoreutils-python
+# newt UI deps
+#python-augeas not in RHEL-6, import augeas.py in ovirt-node
+ethtool
+python-devel
+PyPAM
+cracklib-python
+python-gudev
+# F15 dracut missing dep, bz# ???
+less

@@ -22,7 +22,21 @@ EXTRA_DIST = \
   ovirt \
   ovirt-post \
   ovirt-firstboot \
-  local_boot_trigger.sh
+  local_boot_trigger.sh \
+  augeas.py \
+  __init__.py \
+  ovirtfunctions.py \
+  install.py \
+  storage.py \
+  iscsi.py \
+  network.py \
+  password.py \
+  collectd.py \
+  logging.py \
+  kdump.py \
+  ovirt-config-installer.py \
+  ovirt-config-setup.py \
+  ovirt-admin-shell
 
 dist_sbin_SCRIPTS = \
   persist \
@@ -39,7 +53,7 @@ dist_libexec_SCRIPTS = \
   ovirt-config-rhn \
   ovirt-config-snmp \
   ovirt-config-password \
-  ovirt-config-setup \
+  ovirt-config-setup-old \
   ovirt-config-storage \
   ovirt-config-uninstall \
   ovirt-config-view-logs \
