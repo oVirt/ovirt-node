@@ -106,6 +106,8 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 
 # ovirt-config-boot post-install hooks
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
+# default hook for local_boot_trigger
+%{__install} -p -m0755 scripts/local_boot_trigger.sh %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
 
 # default ovirt-config-setup menu options
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-setup.d

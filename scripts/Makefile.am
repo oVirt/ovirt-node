@@ -21,7 +21,8 @@ EXTRA_DIST = \
   ovirt-early \
   ovirt \
   ovirt-post \
-  ovirt-firstboot
+  ovirt-firstboot \
+  local_boot_trigger.sh
 
 dist_sbin_SCRIPTS = \
   persist \
