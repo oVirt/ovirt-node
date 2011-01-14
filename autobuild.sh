@@ -78,7 +78,7 @@ sed 's/\.src\.rpm//' >> ovirt-node-image.mini-manifest
 echo "======================================================" >> ovirt-node-image.mini-manifest
 size=$(ls -l ovirt-node-image.iso | awk '{print $5}')
 human_size=$(ls -lh ovirt-node-image.iso | awk '{print $5}')
-echo "Iso Size:  $size  ($human_size)" >> ovirt-node-image.mini-manifest
+echo "    Iso Size:  $size  ($human_size)" >> ovirt-node-image.mini-manifest
 
 html_location=/var/www/html/builder/$(basename $(dirname ${AUTOBUILD_SOURCE_ROOT}))
 old_size=""
@@ -86,7 +86,8 @@ old_human_size=""
 if [ -e ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso ]; then
     old_size=$(ls -l ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso | awk '{print $5}')
     old_human_size=$(ls -lh ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso | awk '{print $5}')
-    echo "Old Iso Size:  $old_size  ($old_human_size)" >> ovirt-node-image.mini-manifest
+    let size_diff=(size-old_size)/1024
+    echo "    Old Iso Size:  $old_size  ($old_human_size) delta[kB] $size_diff" >> ovirt-node-image.mini-manifest
 else
     echo "No old iso found for compairson">> ovirt-node-image.mini-manifest
 fi
