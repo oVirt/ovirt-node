@@ -87,7 +87,7 @@ if [ -e ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso ]; t
     old_size=$(ls -l ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso | awk '{print $5}')
     old_human_size=$(ls -lh ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso | awk '{print $5}')
     let size_diff=(size-old_size)/1024
-    echo "    Old Iso Size:  $old_size  ($old_human_size) delta[kB] $size_diff" >> ovirt-node-image.mini-manifest
+    echo "Old Iso Size:  $old_size  ($old_human_size) delta[kB] $size_diff" >> ovirt-node-image.mini-manifest
 else
     echo "No old iso found for compairson">> ovirt-node-image.mini-manifest
 fi
