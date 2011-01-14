@@ -107,3 +107,8 @@ cracklib-python
 python-gudev
 # F15 dracut missing dep, bz# ???
 less
+# rhbz#641494 RFE - add libguestfs into RHEV-H
+libguestfs
+python-libguestfs
+libguestfs-tools-c
+python-hivex
