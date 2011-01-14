@@ -65,3 +65,31 @@ sudo mount -o loop *iso $TMPDIR
 cp $TMPDIR/isolinux/manifest-srpm.txt ..
 sudo umount $TMPDIR
 rmdir $TMPDIR
+
+cd ..
+egrep '^kernel|^kvm||^ovirt-node|^fence-agents' manifest-srpm.txt | \
+sed 's/\.src\.rpm//' >> ovirt-node-image.mini-manifest
+
+# Add additional information to mini-manifest
+# Check size of iso and report in mini-manifest
+echo "======================================================" >> ovirt-node-image.mini-manifest
+size=$(ls -l ovirt-node-image.iso | awk '{print $5}')
+human_size=$(ls -lh ovirt-node-image.iso | awk '{print $5}')
+echo "Iso Size:  $size  ($human_size)" >> ovirt-node-image.mini-manifest
+
+html_location=/var/www/html/builder/$(basename $(dirname ${AUTOBUILD_SOURCE_ROOT}))
+old_size=""
+old_human_size=""
+if [ -e ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso ]; then
+    old_size=$(ls -l ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso | awk '{print $5}')
+    old_human_size=$(ls -lh ${html_location}/artifacts/${AUTOBUILD_MODULE}/ovirt-node-image.iso | awk '{print $5}')
+    echo "Old Iso Size:  $old_size  ($old_human_size)" >> ovirt-node-image.mini-manifest
+else
+    echo "No old iso found for compairson">> ovirt-node-image.mini-manifest
+fi
+# md5 and sha256sums
+echo "MD5SUM:  $(md5sum ovirt-node-image.iso |awk '{print $1}')" >> ovirt-node-image.mini-manifest
+echo "SHA256SUM:  $(sha256sum ovirt-node-image.iso |awk '{print $1}')" >> ovirt-node-image.mini-manifest
+
+echo "======================================================" >> ovirt-node-image.mini-manifest
+echo "livecd-tools version:  $(rpm -qa livecd-tools)"
