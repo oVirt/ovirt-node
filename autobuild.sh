@@ -67,7 +67,10 @@ sudo umount $TMPDIR
 rmdir $TMPDIR
 
 cd ..
-egrep '^kernel|^kvm||^ovirt-node|^fence-agents' manifest-srpm.txt | \
+echo "======================================================" > ovirt-node-image.mini-manifest
+echo "Package info in ovirt-node-image.iso" >> ovirt-node-image.mini-manifest
+echo "======================================================" >> ovirt-node-image.mini-manifest
+egrep '^kernel|kvm|^ovirt-node|libvirt' manifest-srpm.txt | \
 sed 's/\.src\.rpm//' >> ovirt-node-image.mini-manifest
 
 # Add additional information to mini-manifest
@@ -92,4 +95,4 @@ echo "MD5SUM:  $(md5sum ovirt-node-image.iso |awk '{print $1}')" >> ovirt-node-i
 echo "SHA256SUM:  $(sha256sum ovirt-node-image.iso |awk '{print $1}')" >> ovirt-node-image.mini-manifest
 
 echo "======================================================" >> ovirt-node-image.mini-manifest
-echo "livecd-tools version:  $(rpm -qa livecd-tools)"
+echo "livecd-tools version:  $(rpm -qa livecd-tools)" >> ovirt-node-image.mini-manifest
