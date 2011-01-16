@@ -916,9 +916,37 @@ def get_media_version_number():
         return new_install["VERSION"]
     return False
 
-# execute a function if called as a script, e.g.
-#   ovirt-functions ovirt_store_config /etc/hosts
+class PluginBase(object):
+    """Base class for pluggable Hypervisor configuration options.
 
-#if [ "$(basename "$0")" = "ovirt-functions" ]; then
-#    "$@"
-#fi
+    Configuration plugins are modules in ovirt_config_setup package.
+    They provide implementation of this base class, adding specific
+    form elements and processing.
+    """
+
+    def __init__(self, name, screen):
+        """Initialize a PluginBase instance
+
+        name -- configuration option label
+        screen -- parent NodeConfigScreen
+        """
+        self.name = name
+        """A name of the configuration option."""
+        self.ncs = screen
+        """A NodeConfigScreen instance."""
+
+    def label(self):
+        """Returns label for the configuration option."""
+        return self.name
+
+    def form(self):
+        """Returns form elements for the configuration option.
+        Must be implemented by the child class.
+        """
+        pass
+
+    def action(self):
+        """Form processing action for the Hypervisor configuration option.
+        Must be implemented by the child class.
+        """
+        pass

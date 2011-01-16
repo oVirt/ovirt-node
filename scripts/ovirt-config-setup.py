@@ -28,8 +28,9 @@ import PAM
 import gudev
 import cracklib
 import getpass
+import pkgutil
+import ovirt_config_setup
 from ovirtnode.ovirtfunctions import *
-from ovirtnode.collectd import *
 from ovirtnode.password import *
 from ovirtnode.logging import *
 from ovirtnode.network import *
@@ -52,10 +53,13 @@ login_password = ""
 STATUS_PAGE = 1
 NETWORK_PAGE = 3
 AUTHENTICATION_PAGE = 5
-MONITORING_PAGE = 7
-LOGGING_PAGE = 9
-KDUMP_PAGE = 11
-REMOTE_STORAGE_PAGE = 13
+LOGGING_PAGE = 7
+KDUMP_PAGE = 9
+LAST_OPTION = REMOTE_STORAGE_PAGE = 11
+# max. 3 plugin menu options/pages: 13,15,17
+FIRST_PLUGIN_PAGE = 13
+LAST_PLUGIN_PAGE = 17
+#
 NETWORK_DETAILS_PAGE = 19
 LOCKED_PAGE = 99
 
@@ -70,8 +74,7 @@ def pam_conv(auth, query_list):
 
 class NodeConfigScreen():
       """
-      This example presents an application that looks like
-      an appliance more than an application.
+      User interface for Hypervisor Node Configuration.
       """
 
       def __init__(self):
@@ -84,7 +87,7 @@ class NodeConfigScreen():
                          "COMPACTBUTTON" : ("black", "magenta"),
                          "LISTBOX"       : ("green",  "red"),
                          "ACTLISTBOX"    : ("cyan", "red"),
-                         "ACTSELLISTBOX" : ("blue",  "white"), 
+                         "ACTSELLISTBOX" : ("blue",  "white"),
                          "TEXTBOX"       : ("cyan",  "magenta"),
                          "ENTRY"         : ("cyan", "magenta"),
                          "SHADOW"        : ("magenta",  "magenta"),
@@ -171,24 +174,31 @@ class NodeConfigScreen():
               self.screen.setColor(item, colors[0], colors[1])
 
       def get_elements_for_page(self, screen, page):
-            if page is 1:
+            if page == STATUS_PAGE :
                 return self.status_page(screen)
-            if page is 3:
+            if page == NETWORK_PAGE :
                 return self.network_configuration_page(screen)
-            if page is 5:
+            if page == AUTHENTICATION_PAGE :
                 return self.authentication_configuration_page(screen)
-            if page is 7:
-                return self.monitoring_configuration_page(screen)
-            if page is 9:
+            if page == LOGGING_PAGE :
                 return self.logging_configuration_page(screen)
-            if page is 11:
+            if page == KDUMP_PAGE :
                 return self.kdump_configuration_page(screen)
-            if page is 13:
+            if page == REMOTE_STORAGE_PAGE :
                 return self.remote_storage_configuration_page(screen)
-            if page is 19:
+            if page == NETWORK_DETAILS_PAGE :
                 return self.network_details_page(screen)
-            if page is 99:
+            if page == LOCKED_PAGE :
                 return self.screen_locked_page(screen)
+            # plugin pages
+            plugin_page=FIRST_PLUGIN_PAGE
+            for p in self.plugins :
+                if page == plugin_page:
+                    return p.form()
+                plugin_page+=2
+                if plugin_page > LAST_PLUGIN_PAGE :
+                    # should not happen
+                    return None
 
       def network_proto_Callback(self):
           return
@@ -407,20 +417,6 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
               self.reset_screen_colors()
 
-      def valid_collectd_server_callback(self):
-          if not is_valid_host_or_ip(self.collectd_server.value()):
-              self.screen.setColor("BUTTON", "black", "red")
-              self.screen.setColor("ACTBUTTON", "blue", "white")
-              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
-              self.reset_screen_colors()
-
-      def valid_collectd_port_callback(self):
-          if not is_valid_port(self.collectd_port.value()):
-              self.screen.setColor("BUTTON", "black", "red")
-              self.screen.setColor("ACTBUTTON", "blue", "white")
-              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Port Number", buttons = ['Ok'])
-              self.reset_screen_colors()
-
       def kdump_nfs_callback(self):
           self.kdump_ssh_type.setValue(" 0")
           self.kdump_restore_type.setValue(" 0")
@@ -551,32 +547,6 @@ class NodeConfigScreen():
             main_grid.setField(elements, 0, 1, anchorLeft = 1)
             main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1)
             return [Label(""), main_grid]
-
-      def monitoring_configuration_page(self, screen):
-            elements = Grid(2, 10)
-            elements.setField(Label("Monitoring Configuration"), 0, 0, anchorLeft = 1)
-            elements.setField(Label(""), 0, 1, anchorLeft = 1)
-            elements.setField(Label("Collectd"), 0, 2, anchorLeft = 1)
-            elements.setField(Textbox(45,3,"Collectd gathers statistics about the system that\ncan be used to find performance bottlenecks\nand predict future system load."), 0, 3, anchorLeft = 1)
-            collectd_grid = Grid(2,2)
-            collectd_grid.setField(Label("Server Address:"), 0, 0, anchorLeft = 1)
-            self.collectd_server = Entry(20, "")
-            self.collectd_server.setCallback(self.valid_collectd_server_callback)
-            collectd_grid.setField(self.collectd_server, 1, 0, anchorLeft = 1, padding=(2, 0, 0, 1))
-            self.collectd_port = Entry(5, "")
-            self.collectd_port.setCallback(self.valid_collectd_port_callback)
-            collectd_grid.setField(Label("Server Port:"), 0, 1, anchorLeft = 1)
-            collectd_grid.setField(self.collectd_port, 1, 1, anchorLeft = 1, padding=(2, 0, 0, 1))
-            elements.setField(collectd_grid, 0, 4, anchorLeft = 1, padding = (0,1,0,0))
-            collectd_config = get_collectd_config()
-            if not collectd_config is None:
-                collectd_server, collectd_port = get_collectd_config()
-                self.collectd_server.set(collectd_server)
-                self.collectd_port.set(collectd_port)
-            else:
-                self.collectd_port.set("7634")
-            return [Label(""), elements]
-
 
       def logging_configuration_page(self, screen):
           elements = Grid(2, 8)
@@ -981,50 +951,14 @@ class NodeConfigScreen():
 
       def menuSpacing(self):
           menu_option = self.menu_list.current()
-          if self.menuo < menu_option:
-              if menu_option == 2:
-                  self.menu_list.setCurrent(3)
-                  self.menuo = 3
-              if menu_option == 4:
-                  self.menu_list.setCurrent(5)
-                  self.menuo = 5
-              if menu_option == 6:
-                  self.menu_list.setCurrent(7)
-                  self.menuo = 7
-              if menu_option == 8:
-                  self.menu_list.setCurrent(9)
-                  self.menuo = 9
-              if menu_option == 10:
-                  self.menu_list.setCurrent(11)
-                  self.menuo = 11
-              if menu_option == 12:
-                  self.menu_list.setCurrent(13)
-                  self.menuo = 13
-              if menu_option == 14:
-                  self.menu_list.setCurrent(13)
-                  self.menuo = 13
-          elif self.menuo > self.menu_list.current():
-              if menu_option == 14:
-                  self.menu_list.setCurrent(13)
-                  self.menuo = 13
-              if menu_option == 12:
-                  self.menu_list.setCurrent(11)
-                  self.menuo = 11
-              if menu_option == 10:
-                  self.menu_list.setCurrent(9)
-                  self.menuo = 9
-              if menu_option == 8:
-                  self.menu_list.setCurrent(7)
-                  self.menuo = 7
-              if menu_option == 6:
-                  self.menu_list.setCurrent(5)
-                  self.menuo = 5
-              if menu_option == 4:
-                  self.menu_list.setCurrent(3)
-                  self.menuo = 3
-              if menu_option == 2:
-                  self.menu_list.setCurrent(1)
-                  self.menuo = 1
+          if menu_option > self.last_option:
+              self.menu_list.setCurrent(self.last_option)
+          elif menu_option % 2 == 0:
+              if self.menuo < menu_option:
+                  self.menu_list.setCurrent(menu_option+1)
+              else:
+                  self.menu_list.setCurrent(menu_option-1)
+          self.menuo = self.menu_list.current()
 
       def process_network_config(self):
           if self.net_hostname.value() != self.current_hostname:
@@ -1115,19 +1049,6 @@ class NodeConfigScreen():
               self.screen.popWindow()
               return
 
-      def process_collectd_config(self):
-          self.screen.setColor("BUTTON", "black", "red")
-          self.screen.setColor("ACTBUTTON", "blue", "white")
-          if not self.collectd_server.value() is "" and not self.collectd_port.value() is "":
-              if ovirt_collectd(self.collectd_server.value(), self.collectd_port.value()):
-                  ButtonChoiceWindow(self.screen, "Collectd Configuration", "Collectd Configuration Successfully Changed", buttons = ['Ok'])
-                  self.reset_screen_colors()
-                  return True
-              else:
-                  ButtonChoiceWindow(self.screen, "Collectd Configuration", "Collectd Configuration Failed", buttons = ['Ok'])
-                  self.reset_screen_colors()
-                  return False
-
       def process_authentication_config(self):
           self.screen.setColor("BUTTON", "black", "red")
           self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -1141,11 +1062,6 @@ class NodeConfigScreen():
       def process_logging_config(self):
           if not self.syslog_server.value() is "" and not self.syslog_port.value() is "":
               ovirt_rsyslog(self.syslog_server.value(), self.syslog_port.value(), "udp")
-          return True
-
-      def process_monitoring_config(self):
-          if not self.collectd_server.value() is "" and not self.collectd_port.value() is "":
-              write_collectd_config(self.collectd_server.value(), self.collectd_port.value())
           return True
 
       def process_locked_screen(self):
@@ -1173,8 +1089,6 @@ class NodeConfigScreen():
               ret = self.process_network_config()
           if self.__current_page == AUTHENTICATION_PAGE:
               ret = self.process_authentication_config()
-          if self.__current_page == MONITORING_PAGE:
-              ret = self.process_monitoring_config()
           if self.__current_page == LOGGING_PAGE:
               ret = self.process_logging_config()
           if self.__current_page == NETWORK_DETAILS_PAGE:
@@ -1185,6 +1099,16 @@ class NodeConfigScreen():
               ret = self.process_remote_storage_config()
           if self.__current_page == LOCKED_PAGE:
               ret = self.process_locked_screen()
+          # plugin pages
+          plugin_page=FIRST_PLUGIN_PAGE
+          for p in self.plugins :
+              if self.__current_page == plugin_page:
+                  ret = p.action()
+                  break
+              plugin_page+=2
+              if plugin_page > LAST_PLUGIN_PAGE :
+                  # should not happen
+                  break
           return
 
       def process_kdump_config(self):
@@ -1203,9 +1127,16 @@ class NodeConfigScreen():
           set_iscsi_initiator(self.iscsi_initiator_config.value())
 
       def start(self):
+            self.plugins = []
+            self.last_option = LAST_OPTION
+            for imp,mod,ispkg in pkgutil.iter_modules(ovirt_config_setup.__path__, "ovirt_config_setup."):
+                module = __import__(mod, fromlist="dummy")
+                self.plugins.append(module.get_plugin(self))
+                self.last_option+=2
+
             active = True
             # check for screenlock status
-            self.screen_locked = False 
+            self.screen_locked = False
             while active and (self.__finished == False):
                 log("current page: " + str(self.__current_page))
                 self.screen = SnackScreen()
@@ -1230,17 +1161,23 @@ class NodeConfigScreen():
                 self.menu_list.append("", 4)
                 self.menu_list.append("Security", 5)
                 self.menu_list.append("", 6)
-                self.menu_list.append("Monitoring", 7)
+                self.menu_list.append("Logging", 7)
                 self.menu_list.append("", 8)
-                self.menu_list.append("Logging", 9)
+                self.menu_list.append("KDump", 9)
                 self.menu_list.append("", 10)
-                self.menu_list.append("KDump", 11)
+                self.menu_list.append("Remote Storage", 11)
                 self.menu_list.append("", 12)
-                self.menu_list.append("Remote Storage", 13)
-                self.menu_list.append("", 14)
-                self.menu_list.append("", 15)
-                self.menu_list.append("", 16)
-
+                # plugin menu options
+                plugin_page=FIRST_PLUGIN_PAGE
+                for p in self.plugins :
+                    self.menu_list.append(p.label(), plugin_page)
+                    self.menu_list.append("", plugin_page+1)
+                    plugin_page+=2
+                    if plugin_page > LAST_PLUGIN_PAGE :
+                        # should not happen
+                        raise "Too many plugins installed: max. %d are allowed." % ((LAST_PLUGIN_PAGE-FIRST_PLUGIN_PAGE)/2+1)
+                for filler in range(plugin_page, LAST_PLUGIN_PAGE):
+                    self.menu_list.append("", filler)
                 self.menu_list.setCallback(self.menuSpacing)
                 if self.__current_page != LOCKED_PAGE and self.__current_page != NETWORK_DETAILS_PAGE:
                     self.menu_list.setCurrent(self.__current_page)

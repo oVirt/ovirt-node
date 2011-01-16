@@ -112,10 +112,12 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__install} -p -m0755 scripts/local_boot_trigger.sh %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
 
 # newt UI
+%{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirt_config_setup
+%{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirt_config_setup
+%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/storage.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/password.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/install.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/iscsi.py %{buildroot}%{python_sitelib}/ovirtnode
@@ -238,6 +240,7 @@ fi
 %{_sbindir}/showpart
 %{_sbindir}/persist
 %{_sbindir}/unpersist
+%{python_sitelib}/ovirt_config_setup
 %{python_sitelib}/ovirtnode
 %{python_sitelib}/augeas*
 
