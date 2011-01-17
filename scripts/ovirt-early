@@ -513,8 +513,9 @@ start_ovirt_early () {
             i=${i#ovirt_early=}
             ovirt_early=$(echo $i|tr ",:;" " ")
             ;;
+            # Don't store these parameters in /etc/default/ovirt
             BOOT_IMAGE=* | initrd=* | check | linux | liveimg | \
-            root=* | rootfstype=* | ro)
+            root=* | rootfstype=* | rootflags=* | ro | single)
             ;;
             crashkernel=*)
             bootparams="$bootparams $i"
