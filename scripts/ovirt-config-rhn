@@ -56,7 +56,8 @@ function run_rhnreg {
         location="/etc/sysconfig/rhn/$cert"
         log "Downloading Satellite CA cert....."
         log "From: $CaCert To: $location"
-        if wget -q -r -nd --no-check-certificate --timeout=90 -O $location $CaCert; then
+        wget -q -r -nd --no-check-certificate --timeout=30 --tries=3 -O "$location" "$CaCert"
+        if [ -s "${location}" ]; then
             args="${args} --sslCACert $location"
             ovirt_store_config $location
         else
