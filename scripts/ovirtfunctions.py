@@ -47,6 +47,13 @@ aug = augeas.Augeas()
 #   see https://fedorahosted.org/augeas/ticket/32
 aug.set("/augeas/save/copy_if_rename_fails", "")
 
+# read product / version info
+PRODUCT_SHORT = aug.get("/files/etc/default/version/PRODUCT_SHORT")
+if PRODUCT_SHORT == None:
+    PRODUCT_SHORT = "oVirt"
+else:
+    PRODUCT_SHORT = PRODUCT_SHORT.strip("'\"")
+
 OVIRT_VARS = {}
 # Parse all OVIRT_* variables
 

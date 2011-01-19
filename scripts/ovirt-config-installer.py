@@ -270,13 +270,15 @@ class NodeInstallScreen:
 
     def finish_install_page(self):
         elements = Grid(2, 5)
-        elements.setField(Label("oVirt Hypervisor Installation Finished Successfully"), 0, 0,padding=(13,5,0,1))
+        elements.setField(Label("%s Installation Finished Successfully" %
+            PRODUCT_SHORT), 0, 0,padding=(13,5,0,1))
         elements.setField(Label(" "), 0, 1)
         return [Label(""), elements]
 
     def failed_install_page(self):
         elements = Grid(2, 5)
-        elements.setField(Label("oVirt Hypervisor Installation Failed "), 0, 0)
+        elements.setField(Label("%s Installation Failed " %
+            PRODUCT_SHORT), 0, 0)
         elements.setField(Label("Check /var/log/ovirt.log for more details"), 0, 1)
         return [Label(""), elements]
 
@@ -350,7 +352,8 @@ class NodeInstallScreen:
                     self.root_disk_menu_list.append(dev_entry, dev)
                     self.valid_disks.append(dev_name)
                     self.displayed_disks[dev] = ""
-        elements.setField(Label("Please select the disk to use for booting oVirt"), 0,1, anchorLeft = 1)
+        elements.setField(Label("Please select the disk to use for booting %s"
+            % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(Label(" "), 0,2, anchorLeft = 1)
         elements.setField(Label("      Location          Device Name   Size (GB)      Description"),0,3,anchorLeft =1)
         elements.setField(self.root_disk_menu_list, 0,4)
@@ -426,7 +429,7 @@ class NodeInstallScreen:
                     dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
-        elements.setField(Label("Please select the disk(s) to use for installation of oVirt"), 0,1, anchorLeft = 1)
+        elements.setField(Label("Please select the disk(s) to use for installation of %s" % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(self.hostvg_checkbox, 0,3)
         elements.setField(Label("Disk Details"), 0,4, anchorLeft = 1)
         elements.setField(Label(" "), 0,5)
@@ -581,9 +584,9 @@ class NodeInstallScreen:
                 colors = self.__colorset.get(item)
                 screen.setColor(item, colors[0], colors[1])
             screen.pushHelpLine(" ")
-            screen.drawRootText(1,0, "                                                                              ") 
-            screen.drawRootText(1,1, "   oVirt Hypervisor                                                           ")
-            screen.drawRootText(1,2, "                                                                              ")
+            screen.drawRootText(1,0, "".ljust(80))
+            screen.drawRootText(1,1, "   %s" % PRODUCT_SHORT.ljust(77))
+            screen.drawRootText(1,2, "".ljust(80))
             elements = self.get_elements_for_page(screen, self.__current_page)
             self.gridform = GridForm(screen, "", 8, 8)
             gridform = self.gridform
