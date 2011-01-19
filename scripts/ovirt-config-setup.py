@@ -98,9 +98,21 @@ class NodeConfigScreen():
             self.__finished = False
             self.__nic_config_failed = 0
       def set_console_colors(self):
+          self.existing_color_array = None
+          if os.path.exists("/dev/tty"):
+            tty_file = open("/dev/tty", "rw")
+          else:
+            tty_file = open("/dev/console", "rw")
+          try:
+            self._set_colors(tty_file)
+          except:
+              pass
+          finally:
+              tty_file.close()
+
+      def _set_colors(self, tty_file):
           GIO_CMAP = 0x4B70
           PIO_CMAP = 0x4B71
-          tty_file = open("/dev/console", "rw")
           self.existing_color_array = bytearray(fcntl.ioctl(tty_file.fileno(), GIO_CMAP, b"\x00" * 48))
           color_array = self.existing_color_array
           color_array[3] = 0xde
@@ -127,9 +139,22 @@ class NodeConfigScreen():
           fcntl.ioctl(tty_file.fileno(), PIO_CMAP, bytes(color_array))
 
       def restore_console_colors(self):
+          if self.existing_color_array == None:
+            return
+          if os.path.exists("/dev/tty"):
+            tty_file = open("/dev/tty", "rw")
+          else:
+            tty_file = open("/dev/console", "rw")
+          try:
+              self._restore_colors(tty_file)
+          except:
+              pass
+          finally:
+              tty_file.close()
+
+      def _restore_colors(self, tty_file):
           GIO_CMAP = 0x4B70
           PIO_CMAP = 0x4B71
-          tty_file = open("/dev/console", "rw")
           fcntl.ioctl(tty_file.fileno(), PIO_CMAP, bytes(self.existing_color_array))
 
       def get_elements_for_page(self, screen, page):
