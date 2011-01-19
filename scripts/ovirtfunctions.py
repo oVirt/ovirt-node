@@ -43,6 +43,9 @@ OVIRT_LABEL="OVIRT"
 NODE_SYSCONFIG="/etc/sysconfig/node-config"
 OVIRT_DEFAULTS="/etc/default/ovirt"
 aug = augeas.Augeas()
+#   workaround for bind-mounted files
+#   see https://fedorahosted.org/augeas/ticket/32
+aug.set("/augeas/save/copy_if_rename_fails", "")
 
 OVIRT_VARS = {}
 # Parse all OVIRT_* variables
