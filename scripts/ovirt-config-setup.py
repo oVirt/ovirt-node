@@ -463,6 +463,7 @@ class NodeConfigScreen():
             try:
                 conn = libvirt.openReadOnly(None)
                 self.dom_count = conn.numOfDomains()
+                conn.close()
             except:
                 self.dom_count = "Failed to connect"
             self.jobs_status = Textbox(18, 1, str(self.dom_count))
@@ -1203,6 +1204,7 @@ class NodeConfigScreen():
                     try:
                         conn = libvirt.openReadOnly(None)
                         self.dom_count = conn.numOfDomains()
+                        conn.close()
                     except:
                         self.dom_count = "Failed to connect"
                     if str(self.dom_count).isdigit():
