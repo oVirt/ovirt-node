@@ -528,7 +528,7 @@ class NodeInstallScreen:
         for d in self.valid_disks:
             while i < 1:
                 dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[d].split(",",5)
-                self.hostvg_checkbox.setCurrent(dev)
+                self.hostvg_checkbox.setCurrent(self.root_disk_menu_list.current())
                 i = i + 1
         self.dev_name_label = Label(dev_name)
         self.dev_model_label = Label(dev_model)
