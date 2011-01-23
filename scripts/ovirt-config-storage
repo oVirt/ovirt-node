@@ -676,50 +676,50 @@ create_hostvg()
     oldIFS="$IFS"
     IFS="$SEP"
     for drv in $HOSTVGDRIVE; do
-    if [ "$ROOTDRIVE" = "$drv" ]; then
-        parted "$drv" -s "mkpart primary ext2 ${RootBackup_end}M -1"
-        hostvgpart="3"
-    elif [ "$BOOTDRIVE" = "$drv" ]; then
-        parted "$drv" -s "mkpart primary ext2 ${boot_size_si} -1"
-        hostvgpart="2"
-        # FIXME : set for gtpsync/parted compat for now
-        ROOTDRIVE=$BOOTDRIVE
-    else
-        parted "$drv" -s "mkpart primary ext2 0M -1"
-        hostvgpart="1"
-    fi
-    log "Toggling LVM on"
-    udevadm settle 2> /dev/null || udevsettle
-    parted "$drv" -s "set $hostvgpart lvm on"
-    parted "$drv" -s "print"
-    udevadm settle 2> /dev/null || udevsettle
-    reread_partitions "$drv"
-
-    # sync GPT to the legacy MBR partitions
-    if [ "${OVIRT_INSTALL_ROOT}" = "y" ]; then
-        if [ "gpt" = "$LABEL_TYPE" ]; then
-            log "Running gptsync to create legacy mbr"
-            gptsync "$ROOTDRIVE"
+        if [ "$ROOTDRIVE" = "$drv" ]; then
+            parted "$drv" -s "mkpart primary ext2 ${RootBackup_end}M -1"
+            hostvgpart="3"
+        elif [ "$BOOTDRIVE" = "$drv" ]; then
+            parted "$drv" -s "mkpart primary ext2 ${boot_size_si} -1"
+            hostvgpart="2"
+            # FIXME : set for gtpsync/parted compat for now
+            ROOTDRIVE=$BOOTDRIVE
+        else
+            parted "$drv" -s "mkpart primary ext2 0M -1"
+            hostvgpart="1"
         fi
-    fi
+        log "Toggling LVM on"
+        udevadm settle 2> /dev/null || udevsettle
+        parted "$drv" -s "set $hostvgpart lvm on"
+        parted "$drv" -s "print"
+        udevadm settle 2> /dev/null || udevsettle
+        reread_partitions "$drv"
 
-    partpv="${drv}${hostvgpart}"
-    if [ ! -e "$partpv" ]; then
-        # e.g. /dev/cciss/c0d0p2
-        partpv="${drv}p${hostvgpart}"
-    fi
-    log "Creating physical volume"
-    for count in $(seq 1 10); do
-        if [ ! -e "$partpv" ]; then
-            sleep 1
-            if [[ "$count" == "10" && ! -e "$partpv" ]]; then
-                log "$partpv is not available!"
-                exit 1
+        # sync GPT to the legacy MBR partitions
+        if [ "${OVIRT_INSTALL_ROOT}" = "y" ]; then
+            if [ "gpt" = "$LABEL_TYPE" ]; then
+                log "Running gptsync to create legacy mbr"
+                gptsync "$ROOTDRIVE"
             fi
         fi
-    done
-    dd if=/dev/zero of="${partpv}" bs=1024k count=1
-    pvcreate -ff -y "${partpv}"
+
+        partpv="${drv}${hostvgpart}"
+        if [ ! -e "$partpv" ]; then
+            # e.g. /dev/cciss/c0d0p2
+            partpv="${drv}p${hostvgpart}"
+        fi
+        log "Creating physical volume"
+        for count in $(seq 1 10); do
+            if [ ! -e "$partpv" ]; then
+                sleep 1
+                if [[ "$count" == "10" && ! -e "$partpv" ]]; then
+                    log "$partpv is not available!"
+                    exit 1
+                fi
+            fi
+        done
+        dd if=/dev/zero of="${partpv}" bs=1024k count=1
+        pvcreate -ff -y "${partpv}"
         physical_vols="${physical_vols}${SEP}${partpv}"
     done
 
