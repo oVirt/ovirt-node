@@ -364,9 +364,16 @@ unmount_logging_services() {
             # fallback for scripts without correct prog=
             srv=$(grep -l '^DAEMON=["]*'$prog'["]*$' *)
         fi
+        if [ -z "$srv" ]; then
+            # fallback for scripts with more than 1 daemon
+            srv=$(grep -l "daemon $prog$" *)
+        fi
         if [ -n "$srv" ]; then
             service $srv stop 6>&- 7>&-
             services="$services $srv"
+        else
+            # failed to map process to initscript
+            killall "$prog"
         fi
     done
     # debugging help
