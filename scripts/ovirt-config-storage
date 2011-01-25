@@ -661,7 +661,10 @@ reread_partitions()
         # XXX fails with spaces in device names (TBI)
         # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
         # create/reload failed on 0QEMU    QEMU HARDDISK   drive-scsi0-0-0p1
-        partprobe ||:
+
+        # flush to sync DM and blockdev, workaround from rhbz#623846#c14
+        echo 3 > /proc/sys/vm/drop_caches
+        partprobe "$drive" ||:
         # partprobe fails on cdrom:
         # Error: Invalid partition table - recursive partition on /dev/sr0.
     else
@@ -904,7 +907,7 @@ perform_partitioning()
     wipe_volume_group HostVG
     wipe_volume_group AppVG
     wipe_lvm_on_disk "$HOSTVGDRIVE"
-    [ -n ${APPVGDRIVE} ] && wipe_lvm_on_disk "$APPVGDRIVE"
+    [ -n "${APPVGDRIVE}" ] && wipe_lvm_on_disk "$APPVGDRIVE"
     wipe_lvm_on_disk "$ROOTDRIVE"
 
     # begin critical section
@@ -945,7 +948,7 @@ perform_partitioning()
     if [ "$OVIRT_ROOT_INSTALL" = "y" ]; then
         log "Partitioning root drive: $ROOTDRIVE"
         wipe_partitions "$ROOTDRIVE"
-        #reread_partitions "$ROOTDRIVE"
+        reread_partitions "$ROOTDRIVE"
         log "Labeling Drive: $ROOTDRIVE"
         parted "$ROOTDRIVE" -s "mklabel ${LABEL_TYPE}"
 
@@ -955,7 +958,7 @@ perform_partitioning()
         udevadm settle 2> /dev/null || udevsettle
         parted "$ROOTDRIVE" -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
         udevadm settle 2> /dev/null || udevsettle
-        #reread_partitions "$ROOTDRIVE"
+        reread_partitions "$ROOTDRIVE"
         partroot="${ROOTDRIVE}1"
         partrootbackup="${ROOTDRIVE}2"
         if [ ! -e "$partroot" ]; then
