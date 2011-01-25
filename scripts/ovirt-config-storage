@@ -676,26 +676,24 @@ create_hostvg()
 {
     log "Creating LVM partition(s) for HostVG"
     local drv
+    local parted_cmd
     oldIFS="$IFS"
     IFS="$SEP"
     for drv in $HOSTVGDRIVE; do
         if [ "$ROOTDRIVE" = "$drv" ]; then
-            parted "$drv" -s "mkpart primary ext2 ${RootBackup_end}M -1"
+            parted_cmd="mkpart primary ext2 ${RootBackup_end}M -1"
             hostvgpart="3"
         elif [ "$BOOTDRIVE" = "$drv" ]; then
-            parted "$drv" -s "mkpart primary ext2 ${boot_size_si} -1"
+            parted_cmd="mkpart primary ext2 ${boot_size_si} -1"
             hostvgpart="2"
             # FIXME : set for gtpsync/parted compat for now
             ROOTDRIVE=$BOOTDRIVE
         else
-            parted "$drv" -s "mkpart primary ext2 2048s -1"
+            parted_cmd="mkpart primary ext2 2048s -1"
             hostvgpart="1"
         fi
-        log "Toggling LVM on"
-        udevadm settle 2> /dev/null || udevsettle
-        parted "$drv" -s "set $hostvgpart lvm on"
-        parted "$drv" -s "print"
-        udevadm settle 2> /dev/null || udevsettle
+        parted -s "$drv" "$parted_cmd set $hostvgpart lvm on print"
+        udevadm settle 2> /dev/null
         reread_partitions "$drv"
 
         # sync GPT to the legacy MBR partitions
@@ -812,13 +810,9 @@ create_appvg()
         wipe_partitions "$drv"
         reread_partitions "$drv"
         log "Labeling Drive: $drv"
-        parted "$drv" -s "mklabel ${LABEL_TYPE}"
-        parted "$drv" -s "mkpart primary ext2 2048s -1"
         appvgpart="1"
-        log "Toggling LVM on"
-        parted "$drv" -s "set $appvgpart lvm on"
-        parted "$drv" -s "print"
-        udevadm settle 2> /dev/null || udevsettle
+        parted -s "$drv" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s -1 set $appvgpart lvm on print"
+        udevadm settle 2> /dev/null
         reread_partitions "$drv"
 
         partpv="${drv}${appvgpart}"
@@ -922,9 +916,8 @@ perform_partitioning()
         wipe_partitions "$BOOTDRIVE"
         reread_partitions "$BOOTDRIVE"
         log "Creating boot partition"
-        parted "$BOOTDRIVE" -s "mklabel ${LABEL_TYPE}"
-        parted "$BOOTDRIVE" -s "mkpartfs primary ext2 2048s ${boot_size_si}M"
-        udevadm settle 2> /dev/null || udevsettle
+        parted -s "$BOOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s ${boot_size_si}M"
+        udevadm settle 2> /dev/null
         reread_partitions "$BOOTDRIVE"
         partboot="${BOOTDRIVE}1"
         if [ ! -e "$partboot" ]; then
@@ -935,10 +928,13 @@ perform_partitioning()
         mke2fs "${partboot}" -L Boot
         tune2fs -c 0 -i 0 "${partboot}"
         if [ "$OVIRT_ISCSI_HOSTVG" = "y" ]; then
+            # XXX Can iscsi hostvg span multiple drives?
+            # for drv in $HOSTVGDRIVE
             log "Partitioning root drive: $HOSTVGDRIVE"
             wipe_partitions "$HOSTVGDRIVE"
+            reread_partitions "$HOSTVGDRIVE"
             log "Labeling Drive: $HOSTVGDRIVE"
-            parted "$HOSTVGDRIVE" -s "mklabel ${LABEL_TYPE}"
+            parted -s "$HOSTVGDRIVE" "mklabel ${LABEL_TYPE}"
             create_hostvg
         fi
         log "Completed!"
@@ -949,15 +945,10 @@ perform_partitioning()
         log "Partitioning root drive: $ROOTDRIVE"
         wipe_partitions "$ROOTDRIVE"
         reread_partitions "$ROOTDRIVE"
-        log "Labeling Drive: $ROOTDRIVE"
-        parted "$ROOTDRIVE" -s "mklabel ${LABEL_TYPE}"
-
         log "Creating Root and RootBackup Partitions"
         let RootBackup_end=${ROOT_SIZE}*2
-        parted "$ROOTDRIVE" -s "mkpart primary ext2 2048s ${ROOT_SIZE}M"
-        udevadm settle 2> /dev/null || udevsettle
-        parted "$ROOTDRIVE" -s "mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
-        udevadm settle 2> /dev/null || udevsettle
+        parted -s "$ROOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s ${ROOT_SIZE}M mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+        udevadm settle 2> /dev/null
         reread_partitions "$ROOTDRIVE"
         partroot="${ROOTDRIVE}1"
         partrootbackup="${ROOTDRIVE}2"
@@ -980,7 +971,7 @@ perform_partitioning()
             wipe_partitions "$drv"
             reread_partitions "$drv"
             log "Labeling Drive: $drv"
-            parted "$drv" -s "mklabel ${LABEL_TYPE}"
+            parted -s "$drv" "mklabel ${LABEL_TYPE}"
         fi
     done
     IFS="$oldIFS"
