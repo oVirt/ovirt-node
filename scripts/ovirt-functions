@@ -163,12 +163,37 @@ wipe_volume_group()
         log "Turning off $d"
         swapoff "$d"
     done
-    if [ -z "$pv_dev" ]; then
-        pv_dev=$(pvs|grep $vg|awk {'print $1'})
-    fi
     log "Removing $vg"
-    yes | vgremove -f $vg --config " devices { filter = [ \"a|$pv_dev|\" ] } "
-    yes | pvremove -ff $pv_dev --config " devices { filter = [ \"a|$pv_dev|\" ] } "
+    if [ -z "$pv_dev" ]; then
+        LVM2_VG_NAME=""
+        LVM2_PV_NAME=""
+        pv_filter=""
+        pv_list=""
+        oldIFS="$IFS"
+        LF=$'\n'
+        IFS="$LF"
+        for vars in $(pvs --nameprefixes --noheadings -o pv_name,vg_name); do
+            eval  $vars
+            if [ "$LVM2_VG_NAME" = "HostVG" ]; then
+                if [ -n "${pv_list}" ]; then
+                    pv_list="${pv_list}${LF}${LVM2_PV_NAME}"
+                    #pv_filter="${pv_filter}, \"a|^${LVM2_PV_NAME}\$|\""
+                else
+                    pv_list="${LVM2_PV_NAME}"
+                    #pv_filter="${LVM2_PV_NAME}"
+                fi
+            fi
+        done
+        yes | vgremove -f $vg
+        for pv in $pv_list; do
+            yes | pvremove -ff "$pv"
+        done
+        IFS="$oldIFS"
+    else
+        # XXX isn't filter is useless w/o "r|.*|" ?
+        yes | vgremove -f $vg --config " devices { filter = [ \"a|$pv_dev|\" ] } "
+        yes | pvremove -ff "$pv_dev" --config " devices { filter = [ \"a|$pv_dev|\" ] } "
+    fi
 }
 
 # find_srv SERVICE PROTO
