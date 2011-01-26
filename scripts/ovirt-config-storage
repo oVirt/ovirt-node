@@ -656,7 +656,9 @@ wipe_lvm_on_disk()
 reread_partitions()
 {
     local drive="$1"
-    if [[ $drive =~ "/dev/mapper" ]]; then
+    udevadm settle 2> /dev/null
+
+    if [[ "$drive" =~ "/dev/mapper" ]]; then
         # kpartx -a -p p "$drive"
         # XXX fails with spaces in device names (TBI)
         # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
@@ -664,11 +666,20 @@ reread_partitions()
 
         # flush to sync DM and blockdev, workaround from rhbz#623846#c14
         echo 3 > /proc/sys/vm/drop_caches
-        partprobe "$drive" ||:
-        # partprobe fails on cdrom:
-        # Error: Invalid partition table - recursive partition on /dev/sr0.
+        set +e
+        until partprobe "$drive"; do
+            log "retrying partprobe"
+            sleep 1
+        done
+        set -e
     else
-        blockdev --rereadpt "$drive"
+        # ioctl 0x0000125F   BLKRRPART    void
+        set +e
+        until blockdev --rereadpt "$drive"; do
+            log "retrying blockdev"
+            sleep 1
+        done
+        set -e
     fi
 }
 
@@ -692,9 +703,15 @@ create_hostvg()
             parted_cmd="mkpart primary ext2 2048s -1"
             hostvgpart="1"
         fi
-        parted -s "$drv" "$parted_cmd set $hostvgpart lvm on print"
-        udevadm settle 2> /dev/null
-        reread_partitions "$drv"
+        while true; do
+            set +e
+            parted -s "$drv" "$parted_cmd set $hostvgpart lvm on print"
+            set -e
+            reread_partitions "$drv"
+            if [ -e "${drv}${hostvgpart}" -o "${drv}p${hostvgpart}" ]; then
+                break
+            fi
+        done
 
         # sync GPT to the legacy MBR partitions
         if [ "${OVIRT_INSTALL_ROOT}" = "y" ]; then
@@ -706,7 +723,7 @@ create_hostvg()
 
         partpv="${drv}${hostvgpart}"
         if [ ! -e "$partpv" ]; then
-            # e.g. /dev/cciss/c0d0p2
+            # e.g. /dev/cciss/c0d0p2 or /dev/mapper/<wwid>p3
             partpv="${drv}p${hostvgpart}"
         fi
         log "Creating physical volume"
@@ -811,9 +828,15 @@ create_appvg()
         reread_partitions "$drv"
         log "Labeling Drive: $drv"
         appvgpart="1"
-        parted -s "$drv" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s -1 set $appvgpart lvm on print"
-        udevadm settle 2> /dev/null
-        reread_partitions "$drv"
+        while true; do
+            set +e
+            parted -s "$drv" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s -1 set $appvgpart lvm on print"
+            set -e
+            reread_partitions "$drv"
+            if [ -e "${drv}${appvgpart}" -o "${drv}p${appvgpart}" ]; then
+                break
+            fi
+        done
 
         partpv="${drv}${appvgpart}"
         if [ ! -e "$partpv" ]; then
@@ -916,9 +939,15 @@ perform_partitioning()
         wipe_partitions "$BOOTDRIVE"
         reread_partitions "$BOOTDRIVE"
         log "Creating boot partition"
-        parted -s "$BOOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s ${boot_size_si}M"
-        udevadm settle 2> /dev/null
-        reread_partitions "$BOOTDRIVE"
+        while true; do
+            set +e
+            parted -s "$BOOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s ${boot_size_si}M"
+            set -e
+            reread_partitions "$BOOTDRIVE"
+            if [ -e "${BOOTDRIVE}1" -o "${BOOTDRIVE}p1" ]; then
+                break
+            fi
+        done
         partboot="${BOOTDRIVE}1"
         if [ ! -e "$partboot" ]; then
             partboot="${BOOTDRIVE}p1"
@@ -934,7 +963,12 @@ perform_partitioning()
             wipe_partitions "$HOSTVGDRIVE"
             reread_partitions "$HOSTVGDRIVE"
             log "Labeling Drive: $HOSTVGDRIVE"
-            parted -s "$HOSTVGDRIVE" "mklabel ${LABEL_TYPE}"
+            set +e
+            until parted -s "$HOSTVGDRIVE" "mklabel ${LABEL_TYPE}"; do
+                log "retrying iscsi-hostvg:mklabel"
+                sleep 1
+            done
+            set -e
             create_hostvg
         fi
         log "Completed!"
@@ -947,9 +981,15 @@ perform_partitioning()
         reread_partitions "$ROOTDRIVE"
         log "Creating Root and RootBackup Partitions"
         let RootBackup_end=${ROOT_SIZE}*2
-        parted -s "$ROOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s ${ROOT_SIZE}M mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
-        udevadm settle 2> /dev/null
-        reread_partitions "$ROOTDRIVE"
+        while true; do
+            set +e
+            parted -s "$ROOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s ${ROOT_SIZE}M mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+            set -e
+            reread_partitions "$ROOTDRIVE"
+            if [ -e "${ROOTDRIVE}2" -o "${ROOTDRIVE}p2" ]; then
+                break
+            fi
+        done
         partroot="${ROOTDRIVE}1"
         partrootbackup="${ROOTDRIVE}2"
         if [ ! -e "$partroot" ]; then
@@ -971,7 +1011,12 @@ perform_partitioning()
             wipe_partitions "$drv"
             reread_partitions "$drv"
             log "Labeling Drive: $drv"
-            parted -s "$drv" "mklabel ${LABEL_TYPE}"
+            set +e
+            until parted -s "$drv" "mklabel ${LABEL_TYPE}"; do
+                log "retrying hostvg:mklabel"
+                sleep 1
+            done
+            set -e
         fi
     done
     IFS="$oldIFS"
