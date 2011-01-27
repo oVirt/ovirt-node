@@ -28,7 +28,7 @@ cat <<EOF
 EOF
 
 if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"; then
-    if [ -d /dev/HostVG ]; then
+    if vgs --noheadings HostVG -o vg_name >/dev/null 2>&1; then
         log "Uninstalling node"
         log "Detaching logging"
         start_log
@@ -37,34 +37,22 @@ if ask_yes_or_no "Do you wish to continue and uninstall this node ([Y]es/[N]o)?"
         rm -f /var/lib/multipath/bindings
         unmount_logging
         unmount_config /etc/default/ovirt
-        #get partition info
-        root2=""
-        if findfs LABEL=RootBackup 2>&1 >/dev/null; then
-            root2=RootBackup
-        elif findfs LABEL=RootUpdate 2>&1 >/dev/null; then
-            root2=RootUpdate
-        elif findfs LABEL=RootNew 2>&1 >/dev/null; then
-            root2=RootNew
-        fi
-        get_part_info "$(pvs --noheadings -o pv_name,vg_name | grep HostVG | sed -e 's/ HostVG$//' -e 's/^ *//')" pv_dev pv_part
-        log "Removing volume group"
+        # remove rootfs labels
+        for label in Root RootBackup RootUpdate RootNew; do
+            root="$(findfs LABEL=$label 2>/dev/null)"
+            if [ "$root" ]; then
+                e2label "$root" ""
+            fi
+            rm -f /dev/disk/by-label/$label
+        done
+        log "Removing volume groups"
         wipe_volume_group HostVG
-        if [ -n "$pv_dev" -a -n "$pv_part" ]; then
-            pvremove "$pv_dev$pv_part"
-            parted -s "$pv_dev" "rm $pv_part"
-        fi
-        log "Removing partitions"
-        get_part_info "$(findfs LABEL=Root 2>/dev/null)" root_dev root_part
-        if [ -n "$root_dev" -a -n "$root_part" ]; then
-            parted -s "$root_dev" "rm $root_part"
-        fi
-        get_part_info "$(findfs LABEL=${root2} 2>/dev/null)" root2_dev root2_part
-        if [ -n "$root2_dev" -a -n "$root2_part" ]; then
-            parted -s "$root2_dev" "rm $root2_part"
-        fi
-        wipe_partitions "$pv_dev"
-        wipe_partitions "$root_dev"
-        wipe_partitions "$root2_dev"
+        wipe_volume_group AppVG
+        #log "Removing partitions"
+        #wipe_partitions "$pv_dev"
+        #wipe_partitions "$root_dev"
+        #wipe_partitions "$root2_dev"
+
         #restart multipath
         multipath -F
         multipath -v3
