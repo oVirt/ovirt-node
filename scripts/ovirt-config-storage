@@ -996,12 +996,12 @@ perform_partitioning()
             partroot="${ROOTDRIVE}p1"
             partrootbackup="${ROOTDRIVE}p2"
         fi
+        ln -snf "${partroot}" /dev/disk/by-label/Root
         mke2fs -t ext2 "${partroot}" -L Root
         tune2fs -c 0 -i 0 "${partroot}"
-        ln -snf "${partroot}" /dev/disk/by-label/Root
+        ln -snf "${partrootbackup}" /dev/disk/by-label/RootBackup
         mke2fs -t ext2 "${partrootbackup}" -L RootBackup
         tune2fs -c 0 -i 0 "${partrootbackup}"
-        ln -snf "${partrootbackup}" /dev/disk/by-label/RootBackup
     fi
 
     oldIFS="$IFS"
