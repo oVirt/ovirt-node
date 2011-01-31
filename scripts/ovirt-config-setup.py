@@ -99,9 +99,12 @@ class NodeConfigScreen():
             self.__nic_config_failed = 0
       def set_console_colors(self):
           self.existing_color_array = None
-          if os.path.exists("/dev/tty"):
+          tty_file = None
+          try:
             tty_file = open("/dev/tty", "rw")
-          else:
+          except:
+            pass
+          if tty_file == None:
             tty_file = open("/dev/console", "rw")
           try:
             self._set_colors(tty_file)
@@ -141,9 +144,12 @@ class NodeConfigScreen():
       def restore_console_colors(self):
           if self.existing_color_array == None:
             return
-          if os.path.exists("/dev/tty"):
+          tty_file = None
+          try:
             tty_file = open("/dev/tty", "rw")
-          else:
+          except:
+            pass
+          if tty_file == None:
             tty_file = open("/dev/console", "rw")
           try:
               self._restore_colors(tty_file)
