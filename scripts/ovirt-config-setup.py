@@ -450,6 +450,16 @@ class NodeConfigScreen():
                       dev_bootproto = augtool_get(cmd)
                       if dev_bootproto is None:
                           dev_bootproto = "Disabled"
+                    link_status_cmd = "ethtool %s|grep \"Link detected\"" % key
+                    link_status = subprocess.Popen(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                    link_status = link_status.stdout.read()
+                    if not "yes" in link_status:
+                        ipv4_addr = "(Link Inactive)"
+                    if ipv4_addr.strip() == "" and dev_bootproto.strip() == "dhcp":
+                        if "Inactive" in ipv4_addr:
+                            ipv4_addr = "(Link Inactive)"
+                        else:
+                            ipv4_addr = "(DHCP Failed)"
                     if ipv6_addr != "":
                         status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip(),ipv6_addr.strip())
                     else:
