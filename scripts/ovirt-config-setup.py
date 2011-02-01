@@ -415,9 +415,13 @@ class NodeConfigScreen():
 
       def status_page(self, screen):
             elements = Grid(2, 10)
-            elements.setField(Label("Hostname:"), 0, 2, anchorLeft = 1)
+            main_grid = Grid(2, 10)
+            hostname_grid = Grid(2,2)
+            hostname_grid.setField(Label("Hostname: "), 0, 0, anchorLeft = 1)
+            hostname_grid.setField(Label(" "), 0, 1, anchorLeft = 1)
             hostname = Textbox(30, 1, os.uname()[1])
-            elements.setField(hostname, 1, 2, anchorLeft = 1, padding=(4, 0, 0, 1))
+            hostname_grid.setField(hostname, 1, 0, anchorLeft = 1)
+
             if network_up():
                 self.network_status = {}
                 status_text = ""
@@ -483,9 +487,13 @@ class NodeConfigScreen():
             except:
                 self.dom_count = "Failed to connect"
             self.jobs_status = Textbox(18, 1, str(self.dom_count))
-            elements.setField(Label("Running VMs:"), 0, 6, anchorLeft = 1)
-            elements.setField(self.jobs_status, 1, 6, anchorLeft = 1, padding=(4, 0, 0, 1))
-            return [Label(""), elements]
+            running_vms_grid = Grid(2,1)
+            running_vms_grid.setField(Label("Running Virtual Machines:   "), 0, 0, anchorLeft = 1)
+            running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)#, padding=(4, 0, 0, 1))
+            main_grid.setField(hostname_grid, 0, 0, anchorLeft = 1)
+            main_grid.setField(elements, 0, 1, anchorLeft = 1)
+            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1)
+            return [Label(""), main_grid]
 
       def monitoring_configuration_page(self, screen):
             elements = Grid(2, 10)
