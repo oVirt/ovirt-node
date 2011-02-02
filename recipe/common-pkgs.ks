@@ -78,6 +78,8 @@ vdsm-cli
 vdsm-reg
 # workaround: vdsm-reg dep
 traceroute
+# supported hooks
+vdsm-hook-vhostmd
 # host statistics rhbz#588852
 vhostmd
 # kdump
