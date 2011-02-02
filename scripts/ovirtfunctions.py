@@ -373,14 +373,15 @@ def mount_boot(self):
 # keep the list of services
 def unmount_logging_services():
     # mapping command->service is lame, but works for most initscripts
-    logging_services=""
+    logging_services= []
     prgs_cmd = "cd /etc/init.d|lsof -Fc +D /var/log|grep ^c|sort -u"
     prgs = subprocess.Popen(prgs_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     prgs_output = prgs.stdout.read()
     for prg in prgs_output.split():
         svc = prg = prg[1:]
         os.system("service " + svc +" stop &>/dev/null")
-        logging_services+= svc
+        logging_services.append(svc)
+    return logging_services
     # debugging help
     #os.system("lsof +D /var/log")
 
@@ -394,7 +395,7 @@ def mount_logging():
         # temporary mount-point
         log2 = tempfile.mkdtemp()
         os.system("mount /dev/HostVG/Logging %s") % log2
-        unmount_logging_services()
+        logging_services = unmount_logging_services()
         # save logs from tmpfs
         os.system("cp -av /var/log/* %s &>/dev/null") % log2
         # save temporary log
@@ -403,7 +404,7 @@ def mount_logging():
         os.system("mount --move %s /var/log") % log2
         shutil.rmtree(log2)
         os.system("restorecon -rv /var/log &>/dev/null")
-        for srv in self.logging_services:
+        for srv in logging_services:
             os.system("service %s start &>/dev/null") % srv
         return
     else:
@@ -897,7 +898,10 @@ def get_installed_version_number():
 def get_media_version_number():
     new_install = {}
     if mount_live():
-        upgrade_version = open("/live/isolinux/version")
+        try:
+            upgrade_version = open("/live/isolinux/version")
+        except:
+            upgrade_version = open("/live/syslinux/version")
         for line in upgrade_version.readlines():
             try:
                 key, value = line.strip().split("=")
