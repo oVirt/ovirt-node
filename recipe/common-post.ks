@@ -222,3 +222,51 @@ mkdir -p /data
 mkdir -p /liveos
 echo "/dev/HostVG/Config /config ext4 defaults,noauto,noatime 0 0" >> /etc/fstab
 
+# prevent node from hanging on reboot due to /etc mounts
+patch -d /etc/init.d/ -p0 <<\EOF
+--- halt.orig	2011-01-06 13:31:37.808149001 -0500
++++ halt	2011-01-06 13:32:02.604149001 -0500
+@@ -138,7 +138,7 @@
+     $"Unmounting pipe file systems (retry): " \
+     -f
+ 
+-LANG=C __umount_loop '$2 ~ /^\/$|^\/proc|^\/cgroup|^\/sys\/fs\/cgroup|^\/dev/{next}
++LANG=C __umount_loop '$2 ~ /^\/$|^\/proc|^\/cgroup|^\/sys\/fs\/cgroup|^((?!\/etc).)*|^\/dev/{next}
+ 	$3 == "tmpfs" || $3 == "proc" {print $2 ; next}
+ 	/(loopfs|autofs|nfs|cifs|smbfs|ncpfs|sysfs|^none|^\/dev\/ram|^\/dev\/root$)/ {next}
+ 	{print $2}' /proc/mounts \
+EOF
+
+patch -d /etc/init.d/ -p0 <<\EOF
+--- netfs.orig	2011-02-01 16:41:03.448897000 -0500
++++ netfs	2011-02-01 16:41:51.616897001 -0500
+@@ -98,7 +98,8 @@
+ 	   fi
+ 	  }
+ 	touch /var/lock/subsys/netfs
+-	action $"Mounting other filesystems: " mount -a -t nonfs,nfs4,cifs,ncpfs,gfs
++	echo "Mounting other filesystems: "
++	mount -a -t nonfs,nfs4,cifs,ncpfs,gfs &> /dev/null
+ 	;;
+   stop)
+         # Unmount loopback stuff first
+EOF
+
+patch -d /etc/rc.d -p0 <<\EOF
+--- rc.sysinit.orig	2011-02-01 12:29:07.208897000 -0500
++++ rc.sysinit	2011-02-02 09:33:06.991739018 -0500
+@@ -495,9 +495,11 @@
+ # mounted). Contrary to standard usage,
+ # filesystems are NOT unmounted in single user mode.
+ if [ "$READONLY" != "yes" ] ; then
+-	action $"Mounting local filesystems: " mount -a -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2 -O no_netdev
++	echo "Mounting local filesystems: "
++	mount -a -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2 -O no_netdev &> /dev/null
+ else
+-	action $"Mounting local filesystems: " mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2 -O no_netdev
++	echo "Mounting local filesystems: "
++	mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2 -O no_netdev &>/dev/null
+ fi
+ 
+ # Update quotas if necessary
+EOF
