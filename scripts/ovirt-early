@@ -131,7 +131,7 @@ find_disk() {
     local found=
     for d in /dev/disk/by-id/{ata,cciss,scsi,usb}*; do
       ID_FS_USAGE=
-      eval $(udev_info $(readlink -f $d) env)
+      eval $(udev_info $(readlink -f $d) shenv)
       # ID_FS_USAGE is set for partitions
       if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
         if [ -z "$serial" -o "$serial" = "ALL" \
