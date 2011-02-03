@@ -72,7 +72,7 @@ chmod +x /usr/bin/lsb_release
 
 # CPE name rhbz#593463
 cat > /etc/system-release-cpe <<\EOF_CPE
-cpe:/o:redhat:enterprise_virtualization_hypervisor:6
+cpe:/o:redhat:enterprise_linux:6:update1:hypervisor
 EOF_CPE
 
 # kdump configuration
