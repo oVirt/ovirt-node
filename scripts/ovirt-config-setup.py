@@ -908,20 +908,20 @@ class NodeConfigScreen():
           try:
               kdump_config_file = open("/etc/kdump.conf")
               for line in kdump_config_file:
-                  if "net" in line:
-                      line = line.replace("net ", "")
-                      if "@" in line:
-                          self.kdump_ssh_type.setValue("*")
-                          self.kdump_ssh_config.set(line)
-                          self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-
-                      elif ":" in line:
-                          self.kdump_nfs_type.setValue("*")
-                          self.kdump_nfs_config.set(line)
-                          self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-
-                  elif "/dev/HostVG/Data" in line:
-                      self.kdump_restore_type.setValue("*")
+                  if not line.startswith("#"):
+                      if line.startswith("net"):
+                          line = line.replace("net ", "")
+                          if "@" in line:
+                              self.kdump_ssh_type.setValue("*")
+                              self.kdump_ssh_config.set(line)
+                              self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+                          elif ":" in line:
+                              self.kdump_nfs_type.setValue("*")
+                              self.kdump_nfs_config.set(line)
+                              self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+                      elif "/dev/HostVG/Data" in line:
+                          self.kdump_restore_type.setValue("*")
+              kdump_config_file.close()
           except:
               pass
           return [Label(""), elements]
