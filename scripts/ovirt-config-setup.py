@@ -90,7 +90,8 @@ class NodeConfigScreen():
                          "LABEL"         : ("brown",  "magenta"),
                          "TITLE"         : ("white",  "blue"),
                          "HELPLINE"      : ("cyan",  "magenta"),
-                         "EMPTYSCALE"    : ("cyan",  "magenta"),
+                         "EMPTYSCALE"    : ("white",  "cyan"),
+                         "FULLSCALE"     : ("cyan",  "white"),
                          "CHECKBOX"      : ("black",  "red"),
                          "ACTCHECKBOX"   : ("blue", "white")
                          }
@@ -163,6 +164,11 @@ class NodeConfigScreen():
           PIO_CMAP = 0x4B71
           fcntl.ioctl(tty_file.fileno(), PIO_CMAP, bytes(self.existing_color_array))
 
+      def reset_screen_colors(self):
+          for item in self.__colorset.keys():
+              colors = self.__colorset.get(item)
+              self.screen.setColor(item, colors[0], colors[1])
+
       def get_elements_for_page(self, screen, page):
             if page is 1:
                 return self.status_page(screen)
@@ -213,6 +219,7 @@ class NodeConfigScreen():
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.dns_host1.set("")
+              self.reset_screen_colors()
           return
 
       def dns_host2_callback(self):
@@ -225,6 +232,7 @@ class NodeConfigScreen():
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.dns_host2.set("")
+              self.reset_screen_colors()
           return
 
       def ipv4_ip_callback(self):
@@ -237,6 +245,7 @@ class NodeConfigScreen():
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv4_netdevip.set("")
+              self.reset_screen_colors()
           return
 
       def ipv4_netmask_callback(self):
@@ -249,6 +258,7 @@ class NodeConfigScreen():
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv4_netdevmask.set("")
+              self.reset_screen_colors()
           return
 
       def ipv4_gateway_callback(self):
@@ -261,6 +271,7 @@ class NodeConfigScreen():
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv4_netdevgateway.set("")
+              self.reset_screen_colors()
           return
 
       def ipv4_disabled_callback(self):
@@ -328,6 +339,7 @@ class NodeConfigScreen():
                   self.screen.setColor("BUTTON", "black", "red")
                   self.screen.setColor("ACTBUTTON", "blue", "white")
                   ButtonChoiceWindow(self.screen, "Password Check", "Passwords Do Not Match", buttons = ['Ok'])
+                  self.reset_screen_colors()
                   return
               try:
                   cracklib.FascistCheck(self.root_password_1.value())
@@ -339,6 +351,7 @@ class NodeConfigScreen():
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Password Check", "Please Confirm Password", buttons = ['Ok'])
+              self.reset_screen_colors()
           return
 
       def valid_syslog_port_callback(self):
@@ -346,24 +359,28 @@ class NodeConfigScreen():
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Port Number", buttons = ['Ok'])
+              self.reset_screen_colors()
 
       def valid_syslog_server_callback(self):
           if not is_valid_host_or_ip(self.syslog_server.value()):
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
+              self.reset_screen_colors()
 
       def valid_collectd_server_callback(self):
           if not is_valid_host_or_ip(self.collectd_server.value()):
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
+              self.reset_screen_colors()
 
       def valid_collectd_port_callback(self):
           if not is_valid_port(self.collectd_port.value()):
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Port Number", buttons = ['Ok'])
+              self.reset_screen_colors()
 
       def kdump_nfs_callback(self):
           self.kdump_ssh_type.setValue(" 0")
@@ -397,6 +414,7 @@ class NodeConfigScreen():
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP/Hostname", buttons = ['Ok'])
+              self.reset_screen_colors()
           return
 
       def screen_locked_page(self, screen):
@@ -1009,6 +1027,7 @@ class NodeConfigScreen():
                   self.ipv4_current_netdevip = self.ipv4_netdevip.value()
                   self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
                   self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
+                  self.reset_screen_colors()
                   return
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevmask.value() + '"')
@@ -1030,6 +1049,7 @@ class NodeConfigScreen():
           self.screen.setColor("BUTTON", "black", "red")
           self.screen.setColor("ACTBUTTON", "blue", "white")
           warn = ButtonChoiceWindow(self.screen, "Confirm Network Settings", "Network Configuration may take a few moments, proceed?")
+          self.reset_screen_colors()
           if warn == "ok":
               self.set_console_colors()
               self.screen.refresh()
@@ -1059,9 +1079,11 @@ class NodeConfigScreen():
           if not self.collectd_server.value() is "" and not self.collectd_port.value() is "":
               if ovirt_collectd(self.collectd_server.value(), self.collectd_port.value()):
                   ButtonChoiceWindow(self.screen, "Collectd Configuration", "Collectd Configuration Successfully Changed", buttons = ['Ok'])
+                  self.reset_screen_colors()
                   return True
               else:
                   ButtonChoiceWindow(self.screen, "Collectd Configuration", "Collectd Configuration Failed", buttons = ['Ok'])
+                  self.reset_screen_colors()
                   return False
 
       def process_authentication_config(self):
@@ -1071,6 +1093,7 @@ class NodeConfigScreen():
           set_password(self.root_password_1.value(), "admin")
           ButtonChoiceWindow(self.screen, "Remote Access", "Password Successfully Changed", buttons = ['Ok'])
           log("\nroot & admin password changed")
+          self.reset_screen_colors()
           return True
 
       def process_logging_config(self):
