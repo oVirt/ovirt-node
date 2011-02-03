@@ -27,6 +27,7 @@ import libvirt
 import PAM
 import gudev
 import cracklib
+import getpass
 from ovirtnode.ovirtfunctions import *
 from ovirtnode.collectd import *
 from ovirtnode.password import *
@@ -422,10 +423,10 @@ class NodeConfigScreen():
             elements = Grid(1, 3)
             pw_elements = Grid(2, 2)
             elements.setField(Label("Unlock " + os.uname()[1]), 0, 0, padding=(13,1,0,1))
-            self.login_username = Entry(15, "")
+            self.login_username = getpass.getuser()
             self.login_password = Entry(15, "", password = 1)
             pw_elements.setField(Label("Login: "), 0, 0, padding=(13,1,0,1))
-            pw_elements.setField(self.login_username, 1, 0)
+            pw_elements.setField(Label(self.login_username), 1, 0)
             pw_elements.setField(Label("Password: "), 0, 1, padding=(13,0,0,1))
             pw_elements.setField(self.login_password, 1, 1)
             elements.setField(pw_elements, 0, 1)
@@ -1109,7 +1110,7 @@ class NodeConfigScreen():
       def process_locked_screen(self):
           auth = PAM.pam()
           auth.start("passwd")
-          auth.set_item(PAM.PAM_USER, self.login_username.value())
+          auth.set_item(PAM.PAM_USER, self.login_username)
           global login_password
           login_password = self.login_password.value()
           auth.set_item(PAM.PAM_CONV, pam_conv)
