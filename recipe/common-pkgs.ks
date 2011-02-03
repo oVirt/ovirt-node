@@ -34,6 +34,7 @@ numactl
 file
 lsof
 newt-python
+systemtap-runtime
 #/usr/bin/kvmtrace
 qemu-kvm-tools
 #remove
