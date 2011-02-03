@@ -24,7 +24,6 @@ droprpm ConsoleKit
 droprpm hdparm
 droprpm efibootmgr
 droprpm linux-atm-libs
-droprpm pciutils
 droprpm mtools
 droprpm syslinux
 droprpm wireless-tools
