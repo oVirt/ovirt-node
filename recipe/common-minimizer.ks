@@ -202,7 +202,6 @@ drop /usr/games
 drop /usr/include
 drop /usr/local
 drop /usr/sbin/dell*
-drop /usr/sbin/sasldblistusers2
 drop /usr/sbin/build-locale-archive
 drop /usr/sbin/glibc_post_upgrade.*
 drop /usr/lib*/tc
