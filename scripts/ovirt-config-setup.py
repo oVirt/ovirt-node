@@ -334,6 +334,44 @@ class NodeConfigScreen():
                   self.disabled_ipv6_nic_proto.setValue(" 0")
                   self.dhcp_ipv6_nic_proto.setValue(" 0")
                   self.static_ipv6_nic_proto.setValue(" 0")
+      def ipv6_ip_callback(self):
+          warn = 0
+          if not self.ipv6_netdevip.value() is None and not self.ipv6_netdevip.value() == "":
+               if not is_valid_ipv6(self.ipv6_netdevip.value()):
+                   warn = 1
+          if warn == 1:
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
+              self.ipv6_netdevip.set("")
+              self.reset_screen_colors()
+          return
+
+      def ipv6_netmask_callback(self):
+          warn = 0
+          if not self.ipv6_netdevmask.value() is None and not self.ipv6_netdevmask.value() == "":
+               if not is_valid_ipv6(self.ipv6_netdevmask.value()):
+                   warn = 1
+          if warn == 1:
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
+              self.ipv6_netdevmask.set("")
+              self.reset_screen_colors()
+          return
+
+      def ipv6_gateway_callback(self):
+          warn = 0
+          if not self.ipv6_netdevgateway.value() is None and not self.ipv6_netdevgateway.value() == "":
+               if not is_valid_ipv6(self.ipv6_netdevgateway.value()):
+                   warn = 1
+          if warn == 1:
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
+              self.ipv6_netdevgateway.set("")
+              self.reset_screen_colors()
+          return
       def password_check_callback(self):
           if self.root_password_1.value() != "" and self.root_password_2.value() != "":
               if self.root_password_1.value() != self.root_password_2.value():
@@ -852,8 +890,11 @@ class NodeConfigScreen():
           ipv6_main_grid.setField(Label("IPv6 Settings"), 0, 0, anchorLeft = 1)
           ipv6_main_grid.setField(ipv6_proto_grid, 0, 2, anchorLeft = 1)
           self.ipv6_netdevip = Entry(15, "", scroll = 0)
+          self.ipv6_netdevip.setCallback(self.ipv6_ip_callback)
           self.ipv6_netdevmask = Entry(15, "", scroll = 0)
+          self.ipv6_netdevmask.setCallback(self.ipv6_netmask_callback)
           self.ipv6_netdevgateway = Entry(15, "", scroll = 0)
+          self.ipv6_netdevgateway.setCallback(self.ipv6_gateway_callback)
           ipv6_grid = Grid (5,3)
           ipv6_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)
           ipv6_grid.setField(Label(" Netmask: "), 3, 1, anchorLeft = 1)
