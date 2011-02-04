@@ -289,7 +289,10 @@ class NodeInstallScreen:
         return [Label(""), elements]
 
     def disk_details_callback(self):
-        dev = self.root_disk_menu_list.current()
+        if self.__current_page == ROOT_STORAGE_PAGE:
+            dev = self.root_disk_menu_list.current()
+        elif self.__current_page == HOSTVG_STORAGE_PAGE:
+            dev = self.hostvg_checkbox.getCurrent()
         dev = translate_multipath_device(dev)
         dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
         self.dev_bus_label.setText(dev_bus)
@@ -677,12 +680,16 @@ class NodeInstallScreen:
                         self.__current_page = HOSTVG_STORAGE_PAGE
                     elif self.__current_page == HOSTVG_STORAGE_PAGE:
                         self.hostvg_init = self.hostvg_checkbox.getSelection()
-                        hostvg_list = ""
-                        for dev in self.hostvg_init:
-                            if dev != self.storage_init:
-                                hostvg_list += dev + ","
-                        augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
-                        self.__current_page = PASSWORD_PAGE
+                        if not self.hostvg_checkbox.getSelection():
+                            ButtonChoiceWindow(self.screen, "HostVG Storage Selection", "You must select a HostVG device", buttons = ['Ok'])
+                            self.__current_page = HOSTVG_STORAGE_PAGE
+                        else:
+                            hostvg_list = ""
+                            for dev in self.hostvg_init:
+                                if dev != self.storage_init:
+                                    hostvg_list += dev + ","
+                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
+                            self.__current_page = PASSWORD_PAGE
                     elif self.__current_page == UPGRADE_PAGE:
                         if not self.current_password_fail == 1:
                             self.upgrade_node()
