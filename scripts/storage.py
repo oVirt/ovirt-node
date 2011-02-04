@@ -34,6 +34,7 @@ class Storage:
         self.LOGGING_SIZE=2048
         self.SWAP_SIZE=""
         self.BOOTDRIVE = ""
+        self.HOSTVGDRIVE = ""
         self.RootBackup_end = self.ROOT_SIZE * 2
         # -1 indicates data partition should use remaining disk
         self.DATA_SIZE = -1
@@ -43,8 +44,18 @@ class Storage:
         else:
             self.LABEL_TYPE="msdos"
         if OVIRT_VARS.has_key("OVIRT_INIT"):
-            self.ROOTDRIVE = OVIRT_VARS["OVIRT_INIT"]
-            self.HOSTVGDRIVE = OVIRT_VARS["OVIRT_INIT"]
+            OVIRT_VARS["OVIRT_INIT"] = OVIRT_VARS["OVIRT_INIT"].strip(",")
+            if "," in OVIRT_VARS["OVIRT_INIT"]:
+                disk_count = 0
+                for disk in OVIRT_VARS["OVIRT_INIT"].split(","):
+                    if disk_count < 1:
+                        self.ROOTDRIVE = disk
+                        disk_count = disk_count + 1
+                    else:
+                        self.HOSTVGDRIVE = self.HOSTVGDRIVE + disk + ","
+            else:
+                self.ROOTDRIVE = OVIRT_VARS["OVIRT_INIT"]
+                self.HOSTVGDRIVE = OVIRT_VARS["OVIRT_INIT"]
 
         mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
         mem_size_mb = subprocess.Popen(mem_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -243,50 +254,71 @@ class Storage:
     def create_hostvg(self):
         log("Creating LVM partition")
         log(self.HOSTVGDRIVE)
-        if self.ROOTDRIVE == self.HOSTVGDRIVE:
-            parted_cmd = "parted " + self.HOSTVGDRIVE + " -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\" &>/dev/null "
-            os.system(parted_cmd)
-            hostvgpart="3"
-        elif self.BOOTDRIVE == self.HOSTVGDRIVE:
-            parted_cmd = "parted " + self.HOSTVGDRIVE + " -s \"mkpart primary ext2 " + str(boot_size_si) + " -1\" &>/dev/null"
-            os.system(parted_cmd)
-            hostvgpart="2"
-            self.ROOTDRIVE = self.BOOTDRIVE
-        else:
-            os.system("parted \""+ self.HOSTVGDRIVE + "\" -s \"mkpart primary ext2 0M -1 \" &>/dev/null " )
-            hostvgpart = "1"
-        log("Toggling LVM on")
-        parted_cmd = "parted " + self.HOSTVGDRIVE +  " -s \"set " + str(hostvgpart) + " lvm on\"" + " &>/dev/null"
-        os.system(parted_cmd)
-        os.system("parted \"" + self.ROOTDRIVE + "\" -s \"print\" &>/dev/null")
-        os.system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
-        self.reread_partitions(self.HOSTVGDRIVE)
+        self.physical_vols = []
+        for drv in self.HOSTVGDRIVE.split(","):
+            if drv != "":
+                if self.ROOTDRIVE == drv:
+                    parted_cmd = "parted " + drv + " -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\" &>/dev/null "
+                    log(parted_cmd)
+                    os.system(parted_cmd)
+                    hostvgpart="3"
+                elif self.BOOTDRIVE == drv:
+                    parted_cmd = "parted " + drv + " -s \"mkpart primary ext2 " + str(self.boot_size_si) + " -1\" &>/dev/null"
+                    log(parted_cmd)
+                    os.system(parted_cmd)
+                    hostvgpart="2"
+                    self.ROOTDRIVE = self.BOOTDRIVE
+                else:
+                    os.system("parted \""+ drv +"\" -s \"mklabel "+self.LABEL_TYPE+"\" &>/dev/null")
+                    parted_cmd = "parted \""+ drv + "\" -s \"mkpart primary ext2 0M -1 \" &>/dev/null "
+                    log(parted_cmd)
+                    os.system(parted_cmd)
+                    hostvgpart = "1"
+                log("Toggling LVM on")
+                parted_cmd = "parted " + self.HOSTVGDRIVE +  " -s \"set " + str(hostvgpart) + " lvm on\"" + " &>/dev/null"
+                os.system(parted_cmd)
+                os.system("parted \"" + self.ROOTDRIVE + "\" -s \"print\" &>/dev/null")
+                os.system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
+                self.reread_partitions(drv)
 
-        # sync GPT to the legacy MBR partitions
-        if OVIRT_VARS.has_key("OVIRT_INSTALL_ROOT") and OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y" :
-            if self.LABEL_TYPE == "gpt":
-                log("Running gptsync to create legacy mbr")
-                os.system("gptsync \"" + self.ROOTDRIVE + "\" &>/dev/null")
+                # sync GPT to the legacy MBR partitions
+                if OVIRT_VARS.has_key("OVIRT_INSTALL_ROOT") and OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y" :
+                    if self.LABEL_TYPE == "gpt":
+                        log("Running gptsync to create legacy mbr")
+                        os.system("gptsync \"" + self.ROOTDRIVE + "\" &>/dev/null")
 
-        partpv = self.HOSTVGDRIVE + hostvgpart
-        if not os.path.exists(partpv):
-            # e.g. /dev/cciss/c0d0p2
-            partpv = self.HOSTVGDRIVE + "p" + hostvgpart
-        log("Creating physical volume")
-        log(hostvgpart)
-        if not os.path.exists(partpv):
-            log("%s is not available!") % partpv
-            return False
-        ret = os.system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1 &>/dev/null")
-        if ret != 0:
-            log("Failed to wipe lvm partition")
-        ret = os.system("pvcreate -ff -y \"" + partpv + "\" &>/dev/null ")
-        if ret != 0:
-            log("Failed to pvcreate on " + partpv)
-        log("Creating volume group")
-        ret = os.system("vgcreate /dev/HostVG \"" + partpv + "\" &>/dev/null ")
-        if ret != 0:
-            log("Failed to vgcreate /dev/HostVG on " + partpv)
+                partpv = drv + hostvgpart
+                if not os.path.exists(partpv):
+                    # e.g. /dev/cciss/c0d0p2
+                    partpv = drv + "p" + hostvgpart
+                self.physical_vols.append(partpv)
+        drv_count = 0
+        log(self.physical_vols)
+        for partpv in self.physical_vols:
+            log("Creating physical volume on " + partpv)
+            if not os.path.exists(partpv):
+                log("%s is not available!") % partpv
+                return False
+            ret = os.system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1 &>/dev/null")
+            if ret != 0:
+                log("Failed to wipe lvm partition")
+            ret = os.system("pvcreate -ff -y \"" + partpv + "\" &>/dev/null ")
+            if ret != 0:
+                log("Failed to pvcreate on " + partpv)
+                return False
+            if drv_count < 1:
+                log("Creating volume group on " + partpv)
+                ret = os.system("vgcreate /dev/HostVG \"" + partpv + "\" &>/dev/null ")
+                if ret != 0:
+                    log("Failed to vgcreate /dev/HostVG on " + partpv)
+                    return False
+            else:
+                log("Extending volume group on " + partpv)
+                ret = os.system("vgextend /dev/HostVG \"" + partpv + "\" &>/dev/null ")
+                if ret != 0:
+                    log("Failed to vgextend /dev/HostVG on " + partpv)
+                    return False
+            drv_count = drv_count + 1
         if self.SWAP_SIZE > 0:
             log("Creating swap partition")
             os.system("lvcreate --name Swap --size "+str(self.SWAP_SIZE) + "M /dev/HostVG &>/dev/null")
@@ -346,7 +378,7 @@ class Storage:
         wipe_volume_group("HostVG")
         self.wipe_lvm_on_disk(self.HOSTVGDRIVE)
         self.wipe_lvm_on_disk(self.ROOTDRIVE)
-        boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
+        self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
         # clear leftover multipath mappings
         os.system("multipath -F")
         if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
@@ -355,7 +387,7 @@ class Storage:
             reread_partitions(self.BOOTDRIVE)
             log("Creating boot partition")
             os.system("parted \""+ self.BOOTDRIVE+"\" -s \"mklabel "+self.LABEL_TYPE+"\" &>/dev/null")
-            os.system("parted \""+self.BOOTDRIVE+"\" -s \"mkpartfs primary ext2 0M "+ boot_size_si+"%sM\" &>/dev/null")
+            os.system("parted \""+self.BOOTDRIVE+"\" -s \"mkpartfs primary ext2 0M "+ self.boot_size_si+"%sM\" &>/dev/null")
             reread_partitions(self.BOOTDRIVE)
             partboot= self.BOOTDRIVE + "1"
             if not os.path.exists(partboot):
@@ -411,7 +443,9 @@ class Storage:
             drive_space_dict["BOOT_NEED_SIZE"] = self.BOOT_SIZE
         else:
             ROOTDRIVESPACE = self.get_drive_size(self.ROOTDRIVE)
-            HOSTVGDRIVESPACE = self.get_drive_size(self.HOSTVGDRIVE)
+            for drive in self.HOSTVGDRIVE.split(","):
+                space = self.get_drive_size(drive)
+                HOSTVGDRIVESPACE = HOSTVGDRIVESPACE + space
             ROOT_NEED_SIZE=self.ROOT_SIZE * 2
             HOSTVG_NEED_SIZE= int(self.SWAP_SIZE) + int(self.CONFIG_SIZE) + int(self.LOGGING_SIZE) + int(min_data_size)
             drive_space_dict["ROOTDRIVESPACE"] = ROOTDRIVESPACE

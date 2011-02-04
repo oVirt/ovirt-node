@@ -325,7 +325,11 @@ class NodeInstallScreen:
                 dev_name = translate_multipath_device(dev_name)
                 self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
         Storage = storage.Storage()
-        dev_names = Storage.get_dev_name()
+        devs = Storage.get_dev_name()
+        dev_names = []
+        for dev in devs:
+            dev_names.append(dev)
+        dev_names.sort()
         self.displayed_disks = {}
         self.valid_disks = []
         for dev in dev_names:
@@ -400,7 +404,11 @@ class NodeInstallScreen:
         self.hostvg_checkbox.append("      Location          Device Name   Size (GB)      Description", selected = 1)
         elements = Grid(2, 9)
         Storage = storage.Storage()
-        dev_names = Storage.get_dev_name()
+        devs = Storage.get_dev_name()
+        dev_names = []
+        for dev in devs:
+            dev_names.append(dev)
+        dev_names.sort()
         self.displayed_disks = {}
         for dev in dev_names:
             dev = translate_multipath_device(dev)
@@ -661,7 +669,6 @@ class NodeInstallScreen:
                         elif menu_choice == 3:
                             self.__current_page = UPGRADE_PAGE
                     elif self.__current_page == ROOT_STORAGE_PAGE:
-#             FIXME - need to include hostvg disk as well
                             self.storage_init = self.root_disk_menu_list.current()
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + '"')
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_ROOT_INSTALL", '"y"')
@@ -669,6 +676,12 @@ class NodeInstallScreen:
                     elif self.__current_page == ROOT_STORAGE_PAGE:
                         self.__current_page = HOSTVG_STORAGE_PAGE
                     elif self.__current_page == HOSTVG_STORAGE_PAGE:
+                        self.hostvg_init = self.hostvg_checkbox.getSelection()
+                        hostvg_list = ""
+                        for dev in self.hostvg_init:
+                            if dev != self.storage_init:
+                                hostvg_list += dev + ","
+                        augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                         self.__current_page = PASSWORD_PAGE
                     elif self.__current_page == UPGRADE_PAGE:
                         if not self.current_password_fail == 1:
