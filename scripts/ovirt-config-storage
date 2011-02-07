@@ -568,7 +568,11 @@ check_existing_hostvg()
     IFS="$oldIFS"
     local devices_var=$2
     local vgname=
-    { [ -n $3 ] && vgname="$3"; } || vgname="HostVG"
+    if [ -n "$3" ]; then
+        vgname="$3"
+    else
+        vgname="HostVG"
+    fi
 
     if [ -z "$install_dev" ]; then
         devices="$(pvs --separator="${TAB}" -o pv_name,vg_name --noheadings | \
@@ -592,7 +596,7 @@ check_existing_hostvg()
         rc=0
     fi
 
-    test -n "$devices_var" && eval "$devices_var"="$devices"
+    test -n "$devices_var" && eval "$devices_var"="\"$devices\""
 
     return $rc
 }
