@@ -42,7 +42,9 @@ SHELL_BUTTON = "Drop To Shell"
 
 WELCOME_PAGE = 1
 ROOT_STORAGE_PAGE = 3
+OTHER_DEVICE_ROOT_PAGE = 4
 HOSTVG_STORAGE_PAGE = 5
+OTHER_DEVICE_HOSTVG_PAGE = 6
 PASSWORD_PAGE = 7
 UPGRADE_PAGE = 9
 FAILED_PAGE = 11
@@ -91,6 +93,7 @@ class NodeInstallScreen:
         self.dev_size = ""
         self.dev_desc = ""
         self.current_password_fail = 0
+        self.failed_block_dev = 0
 
     def set_console_colors(self):
         self.existing_color_array = None
@@ -158,6 +161,11 @@ class NodeInstallScreen:
         PIO_CMAP = 0x4B71
         fcntl.ioctl(tty_file.fileno(), PIO_CMAP, bytes(self.existing_color_array))
 
+    def reset_screen_colors(self):
+        for item in self.__colorset.keys():
+            colors = self.__colorset.get(item)
+            self.screen.setColor(item, colors[0], colors[1])
+
     def password_check_callback(self):
         if self.root_password_1.value() != "" and self.root_password_2.value() != "":
             if self.root_password_1.value() != self.root_password_2.value():
@@ -196,6 +204,31 @@ class NodeInstallScreen:
         else:
             self.current_password_fail == 0
             return True
+
+    def other_device_root_callback(self):
+        ret = os.system("test -b " + self.root_device.value())
+        if ret != 0:
+            self.screen.setColor("BUTTON", "black", "red")
+            self.screen.setColor("ACTBUTTON", "blue", "white")
+            ButtonChoiceWindow(self.screen, "Storage Check", "Invalid Block Device", buttons = ['Ok'])
+            self.reset_screen_colors()
+            self.failed_block_dev = 1
+        else:
+            self.failed_block_dev = 0
+        return
+
+    def other_device_hostvg_callback(self):
+        for dev in self.hostvg_device.value().split(","):
+            ret = os.system("test -b " + dev)
+            if ret != 0:
+                self.screen.setColor("BUTTON", "black", "red")
+                self.screen.setColor("ACTBUTTON", "blue", "white")
+                ButtonChoiceWindow(self.screen, "Storage Check", "Invalid Block Device: " + dev, buttons = ['Ok'])
+            self.reset_screen_colors()
+            self.failed_block_dev = 1
+        else:
+            self.failed_block_dev = 0
+        return
 
     def menuSpacing(self):
         menu_option = self.menu_list.current()
@@ -242,6 +275,10 @@ class NodeInstallScreen:
     def get_back_page(self):
         if self.__current_page == ROOT_STORAGE_PAGE:
             self.__current_page = WELCOME_PAGE
+        elif self.__current_page == OTHER_DEVICE_ROOT_PAGE:
+            self.__current_page = ROOT_STORAGE_PAGE
+        elif self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
+            self.__current_page = HOSTVG_STORAGE_PAGE
         elif self.__current_page == HOSTVG_STORAGE_PAGE:
             self.__current_page = ROOT_STORAGE_PAGE
         elif self.__current_page == PASSWORD_PAGE:
@@ -365,6 +402,8 @@ class NodeInstallScreen:
                     self.root_disk_menu_list.append(dev_entry, dev)
                     self.valid_disks.append(dev_name)
                     self.displayed_disks[dev] = ""
+        self.root_disk_menu_list.append(" Other Device", "OtherDevice")
+        self.disk_dict["OtherDevice"] = ",,,,,"
         elements.setField(Label("Please select the disk to use for booting %s"
             % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(Label(" "), 0,2, anchorLeft = 1)
@@ -446,6 +485,9 @@ class NodeInstallScreen:
                     dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
+        if self.root_disk_menu_list.current() == "OtherDevice":
+            select_status = 1
+        self.hostvg_checkbox.addItem(" Other Device", (0, snackArgs['append']), item = "OtherDevice", selected = select_status)
         elements.setField(Label("Please select the disk(s) to use for installation of %s" % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(self.hostvg_checkbox, 0,3)
         elements.setField(Label("Disk Details"), 0,4, anchorLeft = 1)
@@ -478,6 +520,23 @@ class NodeInstallScreen:
         disk_grid.setField(self.dev_desc_label,1, 5, anchorLeft = 1)
         elements.setField(disk_grid, 0,6, anchorLeft = 1)
         elements.setField(Label(" "), 0, 7, anchorLeft = 1)
+        return [Label(""), elements]
+
+    def other_device_root_page(self):
+        elements = Grid(2, 8)
+        elements.setField(Label("Please enter the disk to use for booting %s" % PRODUCT_SHORT), 0, 0, anchorLeft = 1)
+        self.root_device = Entry(35)
+        self.root_device.setCallback(self.other_device_root_callback)
+        elements.setField(self.root_device, 0,1, anchorLeft = 1, padding = (0,1,0,1))
+        return [Label(""), elements]
+
+    def other_device_hostvg_page(self):
+        elements = Grid(2, 8)
+        elements.setField(Label("Please select the disk(s) to use for installation of %s" % PRODUCT_SHORT), 0, 0, anchorLeft = 1)
+        elements.setField(Label("Enter multiple entries separated by commas"), 0, 1, anchorLeft = 1)
+        self.hostvg_device = Entry(35)
+        self.hostvg_device.setCallback(self.other_device_hostvg_callback)
+        elements.setField(self.hostvg_device, 0, 2, anchorLeft = 1, padding = (0,1,0,1))
         return [Label(""), elements]
 
     def password_page(self):
@@ -528,6 +587,10 @@ class NodeInstallScreen:
             return self.install_page()
         if page == ROOT_STORAGE_PAGE:
             return self.root_disk_page()
+        if page == OTHER_DEVICE_ROOT_PAGE:
+            return self.other_device_root_page()
+        if page == OTHER_DEVICE_HOSTVG_PAGE:
+            return self.other_device_hostvg_page()
         if page == HOSTVG_STORAGE_PAGE:
             return self.hostvg_disk_page()
         if page == PASSWORD_PAGE:
@@ -624,6 +687,8 @@ class NodeInstallScreen:
                 buttons.append(["Back", BACK_BUTTON])
             if self.__current_page == HOSTVG_STORAGE_PAGE or self.__current_page == ROOT_STORAGE_PAGE or self.__current_page == UPGRADE_PAGE:
                 buttons.append(["Continue", CONTINUE_BUTTON])
+            if self.__current_page == OTHER_DEVICE_ROOT_PAGE or self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
+                buttons.append(["Continue", CONTINUE_BUTTON])
             if self.__current_page == PASSWORD_PAGE:
                 buttons.append(["Install", INSTALL_BUTTON])
             if self.__current_page == FAILED_PAGE:
@@ -673,23 +738,43 @@ class NodeInstallScreen:
                             self.__current_page = UPGRADE_PAGE
                     elif self.__current_page == ROOT_STORAGE_PAGE:
                             self.storage_init = self.root_disk_menu_list.current()
+                            if self.storage_init == "OtherDevice":
+                                self.__current_page = OTHER_DEVICE_ROOT_PAGE
+                            else:
+                                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + '"')
+                                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_ROOT_INSTALL", '"y"')
+                                self.__current_page =  HOSTVG_STORAGE_PAGE
+                    elif self.__current_page == OTHER_DEVICE_ROOT_PAGE:
+                        if self.failed_block_dev == 0:
+                            self.storage_init = self.root_device.value()
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + '"')
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_ROOT_INSTALL", '"y"')
-                            self.__current_page =  HOSTVG_STORAGE_PAGE
-                    elif self.__current_page == ROOT_STORAGE_PAGE:
-                        self.__current_page = HOSTVG_STORAGE_PAGE
+                            self.__current_page = HOSTVG_STORAGE_PAGE
+                        else:
+                            self.__current_page = OTHER_DEVICE_ROOT_PAGE
                     elif self.__current_page == HOSTVG_STORAGE_PAGE:
                         self.hostvg_init = self.hostvg_checkbox.getSelection()
                         if not self.hostvg_checkbox.getSelection():
                             ButtonChoiceWindow(self.screen, "HostVG Storage Selection", "You must select a HostVG device", buttons = ['Ok'])
                             self.__current_page = HOSTVG_STORAGE_PAGE
                         else:
-                            hostvg_list = ""
-                            for dev in self.hostvg_init:
-                                if dev != self.storage_init:
-                                    hostvg_list += dev + ","
-                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
-                            self.__current_page = PASSWORD_PAGE
+                            if "OtherDevice" in self.hostvg_init:
+                                self.__current_page = OTHER_DEVICE_HOSTVG_PAGE
+                            else:
+                                hostvg_list = ""
+                                for dev in self.hostvg_init:
+                                    if dev != self.storage_init:
+                                        hostvg_list += dev + ","
+                                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
+                                self.__current_page = PASSWORD_PAGE
+                    elif self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
+                        self.hostvg_init = self.hostvg_device.value()
+                        hostvg_list = ""
+                        for dev in self.hostvg_init.split(","):
+                            if dev != self.storage_init:
+                                hostvg_list += dev + ","
+                        augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
+                        self.__current_page = PASSWORD_PAGE
                     elif self.__current_page == UPGRADE_PAGE:
                         if not self.current_password_fail == 1:
                             self.upgrade_node()
