@@ -819,13 +819,22 @@ def get_dm_device(device):
         dm_lookup_cmd = "ls -l \"%s\"|awk {'print $9\":\"$11'}" % dm_dev_path
         dm_lookup = subprocess.Popen(dm_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dm_lookup = dm_lookup.stdout.read()
-        try:
-            mpath_device, dm_device = dm_lookup.split(":")
-            dm_device = dm_device.replace("../","/dev/")
-            if dm_device.strip() == device.strip():
-                return mpath_device
-        except:
-            pass
+        if dm_lookup.count(":") > 1:
+            dm_lookup_cmd = "ls -l \"%s\"|awk {'print $5$6\":\"$10'}" % dm_dev_path
+            dm_lookup = subprocess.Popen(dm_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            dm_lookup = dm_lookup.stdout.read()
+            device = device.replace("/dev/dm-","")
+            if dm_lookup.startswith("253," + device):
+                major_minor, mpath_device = dm_lookup.split(":")
+                return mpath_device.strip()
+        else:
+            try:
+                mpath_device, dm_device = dm_lookup.split(":")
+                dm_device = dm_device.replace("../","/dev/")
+                if dm_device.strip() == device.strip():
+                    return mpath_device.strip()
+            except:
+                pass
 
 def check_existing_hostvgg(self, install_dev):
     if install_dev is None:
@@ -860,7 +869,7 @@ def translate_multipath_device(dev):
     if mpath_device is None:
         return dev
     else:
-        return mpath_device
+        return mpath_device.strip()
 
 def pwd_lock_check(user):
     passwd_cmd = "passwd -S %s" % user

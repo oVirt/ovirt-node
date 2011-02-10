@@ -374,12 +374,13 @@ class NodeInstallScreen:
         self.valid_disks = []
         for dev in dev_names:
             dev = translate_multipath_device(dev)
+            dev = dev.strip()
             if not self.displayed_disks.has_key(dev):
                 if self.disk_dict.has_key(dev):
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":
                         dev_bus = dev_bus.upper()
-                    elif dev_bus == "ata":
+                    elif dev_bus == "ata" or dev_bus == "scsi":
                         dev_bus = "Local / FibreChannel"
                     else:
                         if "/dev/vd" in dev_name:
@@ -395,9 +396,20 @@ class NodeInstallScreen:
                     else:
                         dev_desc = dev_desc.rstrip(dev_desc[-to_rem:])
                     self.valid_disks.append(dev_name)
-                    dev_name = dev_name.replace("mapper/","")
-                    dev_name = dev_name.replace("/dev/","")
-                    dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
+                    if "dev/mapper" in dev_name:
+                        dev_bus = "FibreChannel"
+                        dev_name = dev_name.replace("/dev/mapper/","")
+                        to_rem = len(dev_name) - 25
+                        # if negative pad name space
+                        if to_rem < 1:
+                            while abs(to_rem) != 0:
+                                dev_name += " "
+                                to_rem = to_rem + 1
+                        dev_name = dev_name[:+25]
+                        dev_entry = " %1s %10s  %2sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
+                    else:
+                        dev_name = dev_name.replace("/dev/","")
+                        dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
                     dev_name = translate_multipath_device(dev_name)
                     self.root_disk_menu_list.append(dev_entry, dev)
                     self.valid_disks.append(dev_name)
@@ -480,9 +492,21 @@ class NodeInstallScreen:
                     else:
                         select_status = 0
                     # strip all "/dev/*/" references and leave just basename
-                    dev_name = dev_name.replace("mapper/","")
-                    dev_name = dev_name.replace("/dev/","")
-                    dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
+                    if "dev/mapper" in dev_name:
+                        dev_bus = "FibreChannel"
+                        dev_name = dev_name.replace("/dev/mapper/","")
+                        to_rem = len(dev_name) - 25
+                        # if negative pad name space
+                        if to_rem < 1:
+                            while abs(to_rem) != 0:
+                                dev_name += " "
+                                to_rem = to_rem + 1
+                        dev_name = dev_name[:+25]
+                        dev_entry = " %6s %10s  %1sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
+                    else:
+                        dev_name = dev_name.replace("/dev/","")
+                        dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
+
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
         if self.root_disk_menu_list.current() == "OtherDevice":
