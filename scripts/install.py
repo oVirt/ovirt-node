@@ -184,8 +184,8 @@ def ovirt_boot_setup():
         bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
                     netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
     else:
-        bootparams="ro root=live:LABEL=Root roottypefs=ext3 console=tty0 \
-                $(echo $bootparams | sed s/console=tty0//g)"
+        bootparams="ro root=live:LABEL=Root roottypefs=ext3 console=tty0 "
+        bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
     grub_config_file = "%s/grub.conf" % grub_dir
     GRUB_CONFIG_TEMPLATE = """
 default=0
