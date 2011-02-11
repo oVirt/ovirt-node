@@ -12,12 +12,12 @@ RSYSLOG_CONFIG_TEMPLATE = """
 #ovirt rsyslog config file
 
 #### MODULES ####
-\$ModLoad imuxsock.so    # provides support for local system logging (e.g. via logger command)
-\$ModLoad imklog.so      # provides kernel logging support (previously done by rklogd)
+$ModLoad imuxsock.so    # provides support for local system logging (e.g. via logger command)
+$ModLoad imklog.so      # provides kernel logging support (previously done by rklogd)
 
 #### GLOBAL DIRECTIVES ####
 # Use default timestamp format
-\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
 
 #### RULES ####
 # Log anything (except mail) of level info or higher.
@@ -42,12 +42,12 @@ uucp,news.crit                                          /var/log/spooler
 # Save boot messages also to boot.log
 local7.*                                                /var/log/boot.log
 
-\$WorkDirectory /var/spool/rsyslog
-\$ActionQueueFileName ovirtNode
-\$ActionQueueMaxDiskSpace 10m
-\$ActionQueueSaveOnShutdown on
-\$ActionQueueType LinkedList
-\$ActionResumeRetryCount -1
+$WorkDirectory /var/spool/rsyslog
+$ActionQueueFileName ovirtNode
+$ActionQueueMaxDiskSpace 10m
+$ActionQueueSaveOnShutdown on
+$ActionQueueType LinkedList
+$ActionResumeRetryCount -1
 *.* %(delim)s%(server)s:%(port)s
 """
 
