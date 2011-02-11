@@ -836,19 +836,23 @@ def get_dm_device(device):
             except:
                 pass
 
-def check_existing_hostvgg(self, install_dev):
-    if install_dev is None:
-        devices="$(pvs --separator=\" \" -o pv_name,vg_name --noheadings | grep \"HostVG\" | cut -f1)"
+def check_existing_hostvg(install_dev):
+    if install_dev is "":
+        devices_cmd = "pvs --separator=\":\" -o pv_name,vg_name --noheadings 2>/dev/null| grep HostVG |awk -F \":\" {'print $1'}"
     else:
-        devices="$(pvs --separator=\" \" -o pv_name,vg_name --noheadings | grep -v \"%s\" | grep \"HostVG\" | cut -f1)" % install_dev
-    if devices is not None:
+        devices_cmd="pvs --separator=\":\" -o pv_name,vg_name --noheadings 2>/dev/null| grep -v \"%s\" | grep HostVG | awk -F \":\" {'print $1'}" % install_dev
+    devices_cmd = subprocess.Popen(devices_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    devices = devices_cmd.stdout.read().strip()
+    if len(devices) > 0:
         log("\n")
         log("There appears to already be an installation on another device:\n")
-        for device in devices.split():
-            log("\t%s\n") % device
-            log("The installation cannot proceed until the device is removed\n")
+        for device in devices.split(":"):
+            log(device)
+            log("The installation cannot proceed until the device is removed")
             log("from the system of the HostVG volume group is removed.\n")
-    return devices
+        return devices
+    else:
+        return False
 
 def translate_multipath_device(dev):
     #trim so that only sdX is stored, but support passing /dev/sdX

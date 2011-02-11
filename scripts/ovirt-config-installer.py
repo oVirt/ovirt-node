@@ -791,6 +791,15 @@ class NodeInstallScreen:
                                         hostvg_list += dev + ","
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                                 self.__current_page = PASSWORD_PAGE
+                                if check_existing_hostvg(""):
+                                    self.screen.setColor("BUTTON", "black", "red")
+                                    self.screen.setColor("ACTBUTTON", "blue", "white")
+                                    msg = "Existing HostVG Detected on %s, Overwrite?" % check_existing_hostvg("")
+                                    warn = ButtonChoiceWindow(self.screen, "HostVG Check", msg)
+                                    self.reset_screen_colors()
+                                    if warn != "ok":
+                                        self.__current_page = HOSTVG_STORAGE_PAGE
+                                        augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                     elif self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
                         self.hostvg_init = self.hostvg_device.value()
                         hostvg_list = ""

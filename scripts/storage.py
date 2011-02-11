@@ -479,21 +479,6 @@ class Storage:
             else:
                 log("Required Space : " + str(drive_need_size) + "MB\n\n")
 
-    def check_existing_hostvg(self, install_dev):
-        if install_dev is None:
-            rc = "pvs --separator=\" \" -o pv_name,vg_name --noheadings | grep \"HostVG\" | cut -f1 /dev/null 2>/dev/null"
-        else:
-            ret = "pvs --separator=\" \" -o pv_name,vg_name --noheadings | grep -v \"%s\" | grep \"HostVG\" | cut -f1 /dev/null 2>/dev/null" % install_dev
-        if ret == 0:
-            log("\nThere appears to already be an installation on another device:\n")
-            for device in devices.split():
-                log("\t%s\n") % device
-                log("The installation cannot proceed until the device is removed\n")
-                log("from the system of the HostVG volume group is removed.\n")
-            return True
-        return False
-
-
 if __name__ == "__main__":
     storage = Storage()
     OVIRT_VARS = parse_defaults()
