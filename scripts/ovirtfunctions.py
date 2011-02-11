@@ -753,7 +753,7 @@ def get_netmask(ifname):
 def get_gateway(ifname):
     cmd = "ip route list dev "+ ifname + " | awk ' /^default/ {print $3}'"
     fin,fout = os.popen4(cmd)
-    result = fout.read()
+    result = fout.read().strip()
     return result
 
 def get_ipv6_address(interface):

@@ -797,7 +797,7 @@ class NodeConfigScreen():
           else:
               current_gateway = get_gateway(self.nic_lb.current())
               if current_gateway == "":
-                  current_gateway = get_netmask("br" + self.nic_lb.current())
+                  current_gateway = get_gateway("br" + self.nic_lb.current())
               if current_gateway != "":
                   self.ipv4_netdevgateway.set(current_gateway)
           ipv4_grid = Grid (5,3)
