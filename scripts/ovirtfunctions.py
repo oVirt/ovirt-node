@@ -554,7 +554,7 @@ def unmount_config(config_file):
             if ret == 0:
                 if os.path.exists("/config%s" % f):
             # refresh the file in rootfs if it was mounted over
-                    shutil.copy("/config%s %s" % (f,f))
+                    shutil.copy("/config" + f, f)
 
 # remove persistent config files
 #       remove_config /etc/config /etc/config2 ...
