@@ -29,6 +29,8 @@ strace
 sysstat
 tcpdump
 pciutils
+usbutils
+lsscsi
 psmisc
 numactl
 file
