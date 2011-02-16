@@ -706,7 +706,7 @@ class NodeInstallScreen:
             if self.__current_page == FINISHED_PAGE:
                 buttons.append(["Reboot", REBOOT_BUTTON])
             if self.__current_page != FINISHED_PAGE:
-                buttons.append(["Abort", ABORT_BUTTON, "ESC"])
+                buttons.append(["Abort", ABORT_BUTTON])
             if self.__current_page != WELCOME_PAGE and self.__current_page != FAILED_PAGE and self.__current_page != FINISHED_PAGE:
                 buttons.append(["Back", BACK_BUTTON])
             if self.__current_page == HOSTVG_STORAGE_PAGE or self.__current_page == ROOT_STORAGE_PAGE or self.__current_page == UPGRADE_PAGE:
@@ -747,8 +747,11 @@ class NodeInstallScreen:
                     os.system("/usr/bin/clear;/bin/bash")
                 elif pressed == ABORT_BUTTON:
                     log("Exiting")
-                    screen.finish()
-                    os.system("/usr/bin/clear;halt")
+                    abort = ButtonChoiceWindow(self.screen, "Abort Installation", "", buttons = ['Back','Reboot','Shutdown'])
+                    if abort == "reboot":
+                        os.system("/usr/bin/clear;reboot")
+                    elif abort == "shutdown":
+                        os.system("/usr/bin/clear;halt")
                 elif pressed == REBOOT_BUTTON:
                     screen.finish()
                     os.system("/usr/bin/clear;/sbin/reboot")
