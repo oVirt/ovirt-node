@@ -295,15 +295,14 @@ class NodeInstallScreen:
         try:
             media_ver = get_media_version_number()
         finally:
-            self.menu_list.append(" Install Hypervisor " + media_ver, 1)
-        if os.path.exists("/dev/HostVG"):
+            if os.path.exists("/dev/HostVG"):
+                self.menu_list.append(" Reinstall Existing " + existing_ver + " Install", 1)
+            else:
+                self.menu_list.append(" Install Hypervisor " + media_ver, 1)
             try:
                 if existing_ver < media_ver:
                     self.menu_list.append("", 2)
                     self.menu_list.append(" Upgrade Existing " + existing_ver + " Version to " + media_ver, 3)
-                elif existing_ver == media_ver:
-                    self.menu_list.append("", 2)
-                    self.menu_list.append(" Reinstall Existing " + existing_ver + " Install", 3)
             except:
                 log("unable to get_version_numbers for upgrade")
                 pass
