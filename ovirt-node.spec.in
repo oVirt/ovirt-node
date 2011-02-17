@@ -22,7 +22,7 @@ BuildRequires:  python-setuptools
 Requires:       libvirt >= 0.6.3
 Requires:       augeas >= 0.3.5
 #Requires:       libvirt-qpid >= 0.2.14-3
-Requires:       udev >= 147-2.30
+Requires:       udev >= 147-2.34
 Requires:       wget
 Requires:       cyrus-sasl-gssapi cyrus-sasl >= 2.1.22
 Requires:       iscsi-initiator-utils

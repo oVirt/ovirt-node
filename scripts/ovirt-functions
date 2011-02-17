@@ -782,9 +782,10 @@ ovirt_safe_delete_config() {
 udev_info() {
     local name=$1
     local query=$2
+    local options=$3
     local out
 
-    out=$(udevadm info --name=$name --query=$query)
+    out=$(udevadm info --name=$name --query=$query $options)
     rc=$?
     if [ $rc -eq 0 ]; then
         echo $out
