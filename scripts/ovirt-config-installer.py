@@ -94,7 +94,8 @@ class NodeInstallScreen:
         self.dev_desc = ""
         self.current_password_fail = 0
         self.failed_block_dev = 0
-
+        self.live_disk = "/dev/" + get_live_disk().rstrip('0123456789')
+        log("::::live::::\n" + self.live_disk)
     def set_console_colors(self):
         self.existing_color_array = None
         tty_file = None
@@ -375,7 +376,7 @@ class NodeInstallScreen:
             dev = translate_multipath_device(dev)
             dev = dev.strip()
             if not self.displayed_disks.has_key(dev):
-                if self.disk_dict.has_key(dev):
+                if self.disk_dict.has_key(dev) and dev != self.live_disk:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":
                         dev_bus = dev_bus.upper()
@@ -465,7 +466,7 @@ class NodeInstallScreen:
         self.displayed_disks = {}
         for dev in dev_names:
             dev = translate_multipath_device(dev)
-            if not self.displayed_disks.has_key(dev):
+            if not self.displayed_disks.has_key(dev) and dev != self.live_disk:
                 if self.disk_dict.has_key(dev):
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":

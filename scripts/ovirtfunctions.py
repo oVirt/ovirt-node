@@ -625,22 +625,47 @@ def ovirt_safe_delete_config(target):
 
 
 # compat function to handle different udev versions
-def udev_info(self, name, query):
+def udev_info(name, query):
     # old udev command with shortopts
-    udev_cmd = "udevinfo -n %s -q %s" % (name, query)
+    udev_cmd = "udevadm info -n %s -q %s" % (name, query)
     udev = subprocess.Popen(udev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     udev_output = udev.stdout.read()
     udev.poll()
-    udev_rc = udev.returncode()
+    udev_rc = udev.returncode
     if udev_rc > 0:
         udev_cmd = "udevadm info --name=%s --query=%s" % (name, query)
         udev = subprocess.Popen(udev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         udev_output = udev.stdout.read()
         udev.poll()
-        udev_rc = udev.returncode()
-    if udev_rc == 0:
-        os.system("echo %s") % udev_output
+        udev_rc = udev.returncode
     return udev_output
+
+def get_live_disk():
+    live_disk=""
+    if os.path.exists("/dev/live"):
+        live_disk = os.path.dirname(udev_info("/dev/live","path"))
+        if "block" in live_disk:
+            live_disk = os.path.basename(udev_info("/dev/live","path")).strip()
+    elif os.path.exists("/dev/disk/by-label/LIVE"):
+        live_disk = os.path.dirname(udev_info("/dev/disk/by-label/LIVE","path"))
+        if "block" in live_disk:
+            live_disk = os.path.basename(udev_info("/dev/disk/by-label/LIVE","path")).strip()
+    else:
+        ret = os.system("losetup /dev/loop0|grep -q '\.iso'")
+        if ret != 0:
+            client = gudev.Client(['block'])
+            version = open("/etc/default/version")
+            for line in version.readlines():
+                if "PACKAGE" in line:
+                    pkg, pkg_name = line.split("=")
+            for device in client.query_by_subsystem("block"):
+                if device.has_property("ID_CDROM"):
+                    dev = device.get_property("DEVNAME")
+                    blkid_cmd = "blkid %s|grep -q %s " % (dev, pkg_name)
+                    ret = os.system(blkid_cmd)
+                    if ret == 0:
+                        live_disk = os.path.basename(dev)
+    return live_disk
 
 def backup_file(self, file):
     dir = os.path.dirname(file)
