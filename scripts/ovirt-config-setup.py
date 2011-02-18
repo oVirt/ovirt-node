@@ -932,11 +932,11 @@ class NodeConfigScreen():
                           line = line.replace("net ", "")
                           if "@" in line:
                               self.kdump_ssh_type.setValue("*")
-                              self.kdump_ssh_config.set(line)
+                              self.kdump_ssh_config.set(line.strip())
                               self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
                           elif ":" in line:
                               self.kdump_nfs_type.setValue("*")
-                              self.kdump_nfs_config.set(line)
+                              self.kdump_nfs_config.set(line.strip())
                               self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
                       elif "/dev/HostVG/Data" in line:
                           self.kdump_restore_type.setValue("*")

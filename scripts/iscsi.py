@@ -39,5 +39,5 @@ def get_current_iscsi_initiator_name():
     for line in iscsi_config:
         if "InitiatorName" in line:
             initiator_name = line.replace("InitiatorName=","")
-            return initiator_name
+            return initiator_name.strip()
     
