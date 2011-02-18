@@ -120,3 +120,4 @@ python-libguestfs
 libguestfs-tools-c
 python-hivex
 libguestfs-winsupport
+febootstrap-supermin-helper

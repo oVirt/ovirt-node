@@ -33,6 +33,13 @@ droprpm gnupg2
 droprpm fedora-release-notes
 droprpm fedora-logos
 
+# rhbz#641494 - drop unnecessary rpms pulled in from libguestfs-winsupport
+droprpm fakechroot
+droprpm fakechroot-libs
+droprpm fakeroot
+droprpm fakeroot-libs
+droprpm febootstrap
+
 # cronie pulls in exim (sendmail) which pulls in all kinds of perl deps
 droprpm exim
 droprpm perl*
