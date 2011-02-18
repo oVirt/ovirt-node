@@ -72,7 +72,7 @@ class NodeInstallScreen:
                         "BUTTON"        : ("blue",  "white"),
                         "COMPACTBUTTON" : ("black", "magenta"),
                         "LISTBOX"       : ("green",  "red"),
-                        "ACTLISTBOX"    : ("cyan", "red"),
+                        "ACTLISTBOX"    : ("blue", "white"),
                         "ACTSELLISTBOX" : ("blue",  "white"),
                         "TEXTBOX"       : ("cyan",  "magenta"),
                         "ENTRY"         : ("cyan", "magenta"),
