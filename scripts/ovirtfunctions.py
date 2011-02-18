@@ -734,6 +734,13 @@ def is_valid_hostname(hostname):
     else:
         return False
 
+def is_valid_nfs(nfs_entry):
+    regex = "^([a-zA-Z0-9_\-]+)([\.][a-zA-Z0-9_\-]+)+([:][/][a-zA-Z0-9\~\(\)_\-]*)+([\.][a-zA-Z0-9\(\)_\-]+)*$"
+    if re.match(regex, nfs_entry):
+        return True
+    else:
+        return False
+
 def is_valid_host_or_ip(host_or_ip):
     if host_or_ip != "" :
         if is_valid_ipv4(host_or_ip):

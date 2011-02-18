@@ -423,6 +423,13 @@ class NodeConfigScreen():
           self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
           self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
 
+      def kdump_valid_nfs_callback(self):
+          if not is_valid_nfs(self.kdump_nfs_config.value()):
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NFS Entry", buttons = ['Ok'])
+              self.reset_screen_colors()
+
       def kdump_ssh_callback(self):
           self.kdump_nfs_type.setValue(" 0")
           self.kdump_restore_type.setValue(" 0")
@@ -911,6 +918,7 @@ class NodeConfigScreen():
           elements.setField(Label(" "), 0, 3, anchorLeft = 1)
           elements.setField(Label("NFS Location (example.redhat.com:/var/crash):"), 0, 4, anchorLeft = 1)
           self.kdump_nfs_config = Entry(30, "")
+          self.kdump_nfs_config.setCallback(self.kdump_valid_nfs_callback)
           elements.setField(self.kdump_nfs_config, 0, 5, anchorLeft = 1)
           elements.setField(Label(" "), 0, 6, anchorLeft = 1)
           elements.setField(Label("SSH Location (root@example.redhat.com)"), 0, 7, anchorLeft = 1)
