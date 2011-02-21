@@ -380,7 +380,7 @@ class Storage:
         self.wipe_lvm_on_disk(self.ROOTDRIVE)
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
         # clear leftover multipath mappings
-        os.system("multipath -F")
+        os.system("multipath -F &>/dev/null")
         if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
             log("iSCSI enabled, partitioning boot drive: $BOOTDRIVE")
             wipe_partitions(self.BOOTDRIVE)
