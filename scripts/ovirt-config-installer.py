@@ -342,7 +342,7 @@ class NodeInstallScreen:
     def root_disk_page(self):
         elements = Grid(2, 9)
         self.disk_dict = {}
-        self.root_disk_menu_list = Listbox(6, width = 70, returnExit = 0, border = 0, scroll = 1)
+        self.root_disk_menu_list = Listbox(5, width = 70, returnExit = 0, border = 0, scroll = 1)
         self.root_disk_menu_list.setCallback(self.disk_details_callback)
         client = gudev.Client(['block'])
         for device in client.query_by_subsystem("block"):
