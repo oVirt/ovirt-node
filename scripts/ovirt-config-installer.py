@@ -511,6 +511,8 @@ class NodeInstallScreen:
                     self.displayed_disks[dev] = ""
         if self.root_disk_menu_list.current() == "OtherDevice":
             select_status = 1
+        else:
+            select_status = 0
         self.hostvg_checkbox.addItem(" Other Device", (0, snackArgs['append']), item = "OtherDevice", selected = select_status)
         elements.setField(Label("Please select the disk(s) to use for installation of %s" % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(self.hostvg_checkbox, 0,3)
