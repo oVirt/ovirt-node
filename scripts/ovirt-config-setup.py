@@ -903,7 +903,10 @@ class NodeConfigScreen():
       def kdump_configuration_page(self, screen):
           elements = Grid(2, 12)
           elements.setField(Label("KDump Configuration"), 0, 0, anchorLeft = 1)
-          elements.setField(Label(" "), 0, 1, anchorLeft = 1)
+          if not network_up():
+              elements.setField(Label(" * Network Down Configuration Disabled * "), 0, 1, anchorLeft = 1)
+          else:
+              elements.setField(Label(" "), 0, 1, anchorLeft = 1)
           kdump_type_grid = Grid(5, 2)
           self.kdump_nfs_type = Checkbox("NFS ")
           self.kdump_nfs_type.setCallback(self.kdump_nfs_callback)
@@ -943,6 +946,11 @@ class NodeConfigScreen():
               kdump_config_file.close()
           except:
               pass
+          if not network_up():
+              self.kdump_nfs_type.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+              self.kdump_ssh_type.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+              self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+              self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
           return [Label(""), elements]
 
       def remote_storage_configuration_page(self, screen):
