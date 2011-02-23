@@ -195,12 +195,11 @@ def is_firstboot(self):
         return False
 
 def disable_firstboot():
-    return # fixme
-    if mount_config():
+    if os.path.ismount("/config"):
         firstboot = augeas.Augeas(root="/")
         firstboot.set("/files/etc/defaults/ovirt/OVIRT_FIRSTBOOT", "0")
         firstboot.set("/files/etc/defaults/ovirt/OVIRT_INIT", '""')
-        firstboot.set("/files/etc/defaults/OVIRT_UPGRADE", "0")
+        firstboot.set("/files/etc/defaults/ovirt/OVIRT_UPGRADE", "0")
         firstboot.save()
 
 # Destroys a particular volume group and its logical volumes.
