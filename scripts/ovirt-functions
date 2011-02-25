@@ -332,7 +332,7 @@ mount_config() {
     # Only try to mount /config if the persistent storage exists
     if [ -e /dev/HostVG/Config ] ; then
         mkdir -p /config
-        if ! grep -q " /config ext4 " /proc/mounts; then
+        if ! grep -q " /config ext[234] " /proc/mounts; then
             mount /dev/HostVG/Config /config || return 1
         fi
 
@@ -343,7 +343,7 @@ mount_config() {
         # bind mount all persisted configs to rootfs
         for f in $(find /config -type f); do
             target=${f#/config}
-            if grep -q " $target ext4" /proc/mounts ; then
+            if grep -q " $target ext[234]" /proc/mounts ; then
                 # skip if already bind-mounted
                 true
             else
@@ -413,7 +413,7 @@ unmount_logging_services() {
 # mount logging partition
 # this only gets executed when disk is re-partitioned, HostVG/Logging is empty
 mount_logging() {
-    if grep -q " /var/log ext4" /proc/mounts; then
+    if grep -q " /var/log ext[234]" /proc/mounts; then
         return 0
     fi
 
@@ -447,7 +447,7 @@ mount_logging() {
 }
 
 unmount_logging() {
-    if ! grep -q " /var/log ext4" /proc/mounts; then
+    if ! grep -q " /var/log ext[234]" /proc/mounts; then
         return 0
     fi
 
@@ -475,20 +475,20 @@ mount_data() {
     udevsettle
     if [ -e /dev/HostVG/Data ] ; then
         mkdir -p /data
-        if ! grep -q " /data ext4" /proc/mounts; then
+        if ! grep -q " /data ext[234]" /proc/mounts; then
             mount /data
         fi
 
         mkdir -p /data/images
         mkdir -p /var/lib/libvirt/images
-        if ! grep -q "/var/lib/libvirt/images ext4" /proc/mounts; then
+        if ! grep -q "/var/lib/libvirt/images ext[234]" /proc/mounts; then
             mount /var/lib/libvirt/images
         fi
         restorecon -rv /var/lib/libvirt/images
 
         mkdir -p /data/core
         mkdir -p /var/log/core
-        if ! grep -q "/var/log/core ext4" /proc/mounts; then
+        if ! grep -q "/var/log/core ext[234]" /proc/mounts; then
             mount /var/log/core
         fi
         restorecon -rv /var/log/core
@@ -602,7 +602,7 @@ EOF
 #   copy to /config and bind-mount back
 ovirt_store_config() {
     rc=0
-    if grep -q " /config ext4" /proc/mounts; then
+    if grep -q " /config ext[234]" /proc/mounts; then
         for p in "$@"; do
             local filename=$(readlink -f $p)
             local persist_it=true
@@ -641,7 +641,7 @@ ovirt_store_config() {
                     continue
                 fi
                 # skip if already bind-mounted
-                if ! grep -q " $filename ext4" /proc/mounts ; then
+                if ! grep -q " $filename ext[234]" /proc/mounts ; then
                     mkdir -p /config$(dirname $filename)
                     cp -a $filename /config$filename \
                         && mount -n --bind /config$filename $filename
@@ -682,10 +682,10 @@ is_persisted() {
 # to bindmount the config file again.
 #
 unmount_config() {
-    if grep -q " /config ext4" /proc/mounts; then
+    if grep -q " /config ext[234]" /proc/mounts; then
         for p in "$@"; do
             f=$(readlink -f $p)
-            if grep -q " $f ext4" /proc/mounts ; then
+            if grep -q " $f ext[234]" /proc/mounts ; then
                 if umount -n $f; then
                     if [ -f /config$f ]; then
                         # refresh the file in rootfs if it was mounted over
@@ -707,11 +707,11 @@ remove_config() {
         exit 1
     fi
 
-    if grep -q " /config ext4" /proc/mounts; then
+    if grep -q " /config ext[234]" /proc/mounts; then
         for p in "$@"; do
             local filename=$(readlink -f $p)
             if grep "^${filename}\$" /config/files > /dev/null 2>&1; then
-                if grep -q " $filename ext4" /proc/mounts ; then
+                if grep -q " $filename ext[234]" /proc/mounts ; then
                     if umount -n $filename; then
                         if [ -d $filename ]; then
                             cp -ar /config/$filename/* $filename
@@ -758,7 +758,7 @@ ovirt_safe_delete_config() {
     local target
 
     for target in "$@"; do
-        if grep -q " $target ext4" /proc/mounts; then
+        if grep -q " $target ext[234]" /proc/mounts; then
             umount -n $target
         fi
 
