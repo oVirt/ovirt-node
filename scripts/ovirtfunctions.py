@@ -111,7 +111,10 @@ OVIRT_CONFIG_FILES = ["/etc/sysconfig/network-scripts/ifcfg-*", \
                       "/etc/logrotate.d/ovirt-logrotate.conf" ]
 
 def log(log_entry):
-    log_file = open(OVIRT_LOGFILE, "a")
+    if is_firstboot:
+        log_file = open(OVIRT_TMP_LOGFILE, "a")
+    else:
+        log_file = open(OVIRT_LOGFILE, "a")
     try: 
         log_file.write(log_entry +"\n")
     except:
@@ -217,9 +220,9 @@ def wipe_volume_group(vg):
     swap_cmd = "grep %s /proc/swaps|awk '{print $1}'" % vg
     swap = subprocess.Popen(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     swap_output = swap.stdout.read()
-    for d in swap_output:
-        log ("Turning off %s") % d
-        os.system("swapoff %s &>/dev/null") % d
+    for d in swap_output.strip():
+        log ("Turning off " + d)
+        os.system("swapoff " + d +" &>/dev/null")
     log ("Removing "+ vg)
     vgremove_cmd = "vgremove -f " + vg + " &>/dev/null"
     os.system(vgremove_cmd)
@@ -378,7 +381,9 @@ def unmount_logging_services():
     prgs_output = prgs.stdout.read()
     for prg in prgs_output.split():
         svc = prg = prg[1:]
-        os.system("service " + svc +" stop &>/dev/null")
+        ret = os.system("service " + svc +" stop &>/dev/null")
+        if ret != 0:
+            os.system("pkill " + svc)
         logging_services.append(svc)
     return logging_services
     # debugging help
@@ -393,18 +398,18 @@ def mount_logging():
         log("Mounting log partition")
         # temporary mount-point
         log2 = tempfile.mkdtemp()
-        os.system("mount /dev/HostVG/Logging %s") % log2
+        os.system("mount /dev/HostVG/Logging " + log2)
         logging_services = unmount_logging_services()
         # save logs from tmpfs
-        os.system("cp -av /var/log/* %s &>/dev/null") % log2
+        os.system("cp -av /var/log/* " + log2 + " &>/dev/null")
         # save temporary log
         if os.path.exists("/tmp/ovirt.log"):
-            os.system("cp /tmp/ovirt.log %s/ovirt.log-tmp") % log2
-        os.system("mount --move %s /var/log") % log2
+            os.system("cp /tmp/ovirt.log " + log2 +"/ovirt.log-tmp &>> /tmp/ovirt.log")
+        os.system("mount --move " + log2 + " /var/log")
         shutil.rmtree(log2)
         os.system("restorecon -rv /var/log &>/dev/null")
         for srv in logging_services:
-            os.system("service %s start &>/dev/null") % srv
+            os.system("service " + srv + " start &>/dev/null")
         return
     else:
         # /var/log is not available
@@ -419,13 +424,13 @@ def unmount_logging():
     ret = os.system("plymouth --ping")
     if ret == 0:
         os.system("plymouth --quit")
-    unmount_logging_services()
+    logging_services = unmount_logging_services()
 
     ret = os.system("umount /var/log &>/dev/null")
     if ret > 0:
         return ret
-    for srv in self._logging_services:
-        os.system("service %s start") % srv
+    for srv in logging_services:
+        os.system("service " + srv + " start &> /dev/null")
     return
 
 # mount data partition
@@ -830,7 +835,7 @@ def wipe_partitions(drive):
     # remove remaining HostVG entries from dmtable
     for lv in os.listdir("/dev/mapper/"):
         if "HostVG" in lv:
-            os.system("dmsetup remove " +lv)
+            os.system("dmsetup remove " +lv + " &>" + OVIRT_TMP_LOGFILE)
 
 
 def test_ntp_configuration(self):

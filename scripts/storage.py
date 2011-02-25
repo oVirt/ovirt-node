@@ -112,6 +112,8 @@ class Storage:
             os.system("partprobe ||: &>/dev/null")
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
+            os.system("service multipathd reload &>>"+ OVIRT_TMP_LOGFILE)
+
         else:
             os.system("blockdev --rereadpt " + drive + " &>/dev/null")
 
@@ -297,7 +299,7 @@ class Storage:
         for partpv in self.physical_vols:
             log("Creating physical volume on " + partpv)
             if not os.path.exists(partpv):
-                log("%s is not available!") % partpv
+                log(partpv + "is not available!")
                 return False
             ret = os.system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1 &>/dev/null")
             if ret != 0:

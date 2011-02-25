@@ -103,7 +103,7 @@ def ovirt_boot_setup():
         if not os.path.ismount("/liveos"):
           log("Root partition not available")
           sys.exit(1)
-
+        os.system("umount /liveos")
         # prepare Root partition update
         candidate=""
         ret = os.system("findfs LABEL=RootBackup &>/dev/null")
