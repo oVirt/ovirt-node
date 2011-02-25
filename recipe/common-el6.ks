@@ -66,7 +66,11 @@ EOF_RHN_CRON
 # minimal lsb_release for vdsm-reg (bz#549147)
 cat > /usr/bin/lsb_release <<\EOF_LSB
 #!/bin/sh
-echo RedHatEnterpriseVirtualizationHypervisor
+if [ "$1" = "-r" ]; then
+    printf "Release:\t$(cat /etc/redhat-release | awk '{print $7}')\n"
+else
+    echo RedHatEnterpriseVirtualizationHypervisor
+fi
 EOF_LSB
 chmod +x /usr/bin/lsb_release
 
