@@ -68,6 +68,7 @@ keep /lib/modules/*/kernel/fs/nfs
 keep /lib/modules/*/kernel/fs/nfs_common
 keep /lib/modules/*/kernel/fs/fscache
 keep /lib/modules/*/kernel/fs/lockd
+keep /lib/modules/*/kernel/fs/nls/nls_utf8.ko
 # autofs4     configfs  exportfs *fat     *jbd    mbcache.ko  nls       xfs
 #*btrfs       cramfs   *ext2     *fscache *jbd2  *nfs         squashfs
 # cachefiles  dlm      *ext3      fuse     jffs2 *nfs_common  ubifs
@@ -209,7 +210,7 @@ drop /usr/games
 drop /usr/include
 drop /usr/local
 drop /usr/sbin/dell*
-drop /usr/sbin/build-locale-archive
+keep /usr/sbin/build-locale-archive
 drop /usr/sbin/glibc_post_upgrade.*
 drop /usr/lib*/tc
 drop /usr/lib*/tls
@@ -225,6 +226,7 @@ drop /usr/lib*/gio
 drop /usr/share/syslinux
 # glibc-common locales
 drop /usr/lib/locale
+keep /usr/lib/locale/usr/share/locale/en_US
 # pango
 drop /usr/lib*/pango
 drop /usr/lib*/libpango*
@@ -250,7 +252,8 @@ drop /usr/share/omf
 drop /usr/share/gnome
 drop /usr/share/doc
 keep /usr/share/doc/*-firmware-*
-drop /usr/share/locale
+drop /usr/share/locale/
+keep /usr/share/locale/en_US
 drop /usr/share/man
 drop /usr/share/X11
 drop /usr/share/i18n

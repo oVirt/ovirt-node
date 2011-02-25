@@ -381,3 +381,7 @@ modprobe sha256 >/dev/null 2>&1
 
 EOF
 chmod +x /etc/sysconfig/modules/swap-crypt.modules
+#strip out all unncesssary locales
+localedef --list-archive | grep -v -i -E 'en_US.utf8' |xargs localedef --delete-from-archive
+mv /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl
+/usr/sbin/build-locale-archive
