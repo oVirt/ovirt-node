@@ -29,7 +29,7 @@ linux0==1 && $1=="label" && $2!="linux0" {
   print "label serial-console"
   print "  menu label Boot with serial console"
   print "  kernel vmlinuz0"
-  print append0" console=ttyS0,115200n8"
+  print append0" console=tty0, console=ttyS0,115200n8"
 }
 { print }
 ' $LIVE_ROOT/isolinux/isolinux.cfg > $menu

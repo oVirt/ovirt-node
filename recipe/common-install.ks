@@ -10,7 +10,7 @@ services --enabled=auditd,ntpd,ntpdate,iptables,network,rsyslog,multipathd,snmpd
 # additional default boot parameters
 # Need to use deadline Scheduler for performance, rhbz#647301
 # VM timekeeping: Do not allow C2 state, rhbz#647300
-bootloader --timeout=30 --append="console=tty0 nomodeset check rootflags=ro crashkernel=auto elevator=deadline processor.max_cstate=1"
+bootloader --timeout=30 --append="nomodeset check rootflags=ro crashkernel=auto elevator=deadline processor.max_cstate=1"
 
 # not included by default in Fedora 10 livecd initramfs
 device virtio_blk
