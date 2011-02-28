@@ -732,7 +732,7 @@ class NodeInstallScreen:
             buttonbar = ButtonBar(screen, buttons, compact = 1)
             buttongrid = Grid(1,1)
             if self.__current_page == FINISHED_PAGE or self.__current_page == FINISHED_UNINSTALL_PAGE:
-                buttongrid.setField(buttonbar, 0, 0, padding = (7,0,0,0))#, growx = 0)
+                buttongrid.setField(buttonbar, 0, 0, padding = (14,0,0,0))
                 buttongrid_anchor = 0
             else:
                 buttongrid.setField(buttonbar, 0, 0, anchorLeft = 1)#, growx = 0)
