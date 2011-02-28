@@ -965,6 +965,43 @@ def get_media_version_number():
         return new_install["VERSION"]
     return False
 
+def uninstall_node():
+    ret = os.system("vgs --noheadings HostVG -o vg_name >/dev/null 2>&1")
+    try:
+        if ret == 0:
+            log("Uninstalling node")
+            log("Detaching logging")
+            # multipathd holds all mounts under /var in a private namespace
+            os.system("service multipathd stop &>/dev/null")
+            os.system("rm -f /var/lib/multipath/bindings &>/dev/null")
+            unmount_logging()
+            unmount_config("/etc/default/ovirt")
+            # remove rootfs labels
+            for label in "Root,RootBackup,RootUpdate,RootNew".split(","):
+                findfs_cmd = "findfs LABEL=" + label + " 2>/dev/null"
+                findfs = subprocess.Popen(findfs_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                findfs_output = findfs.stdout.read().strip()
+                if findfs_output is not None:
+                    os.system("e2label" + findfs_output + "\"\"&>/dev/null")
+                os.system("rm -f /dev/disk/by-label/"+label)
+            log("Removing volume groups")
+            wipe_volume_group("HostVG")
+            if os.path.exists("/dev/AppVG"):
+                wipe_volume_group("AppVG")
+            #log "Removing partitions"
+            #wipe_partitions "$pv_dev"
+            #wipe_partitions "$root_dev"
+            #wipe_partitions "$root2_dev"
+            #restart multipath
+            os.system("multipath -F &>/dev/null")
+            os.system("multipath -v3 &>/dev/null")
+            os.system("service multipathd start &>/dev/null")
+            log("Finished uninstalling node.")
+            return True
+    except:
+        log("Failed uninstalling node.")
+        return False
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 
