@@ -183,7 +183,7 @@ def is_upgrade(self):
 # return 0 if booted from local disk
 # return 1 if booted from other media
 def is_booted_from_local_disk():
-    ret = os.system("grep -q /dev/HostVG/ /proc/cmdline")
+    ret = os.system("grep -q LABEL=Root /proc/cmdline")
     if ret == 0:
         return True
     else:

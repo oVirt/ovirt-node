@@ -1328,5 +1328,9 @@ class NodeConfigScreen():
                 self.restore_console_colors()
 
 if __name__ == "__main__":
-   screen = NodeConfigScreen()
-   screen.start()
+    if is_booted_from_local_disk():
+        screen = NodeConfigScreen()
+        screen.start()
+    else:
+        print "Setup must be run after installation and reboot"
+        sys.exit(1)
