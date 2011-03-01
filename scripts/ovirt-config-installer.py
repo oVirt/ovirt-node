@@ -331,8 +331,12 @@ class NodeInstallScreen:
             dev = self.root_disk_menu_list.current()
         elif self.__current_page == HOSTVG_STORAGE_PAGE:
             dev = self.hostvg_checkbox.getCurrent()
-        dev = translate_multipath_device(dev)
-        dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
+        if dev == "      Location          Device Name   Size (GB)      Description":
+            blank_entry = ",,,,,"
+            dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = blank_entry.split(",",5)
+        else:
+            dev = translate_multipath_device(dev)
+            dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
         self.dev_bus_label.setText(dev_bus)
         self.dev_name_label.setText(dev_name)
         self.dev_size_label.setText(dev_size + "GB")
