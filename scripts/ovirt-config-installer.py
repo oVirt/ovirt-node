@@ -323,6 +323,7 @@ class NodeInstallScreen:
         return [Label(""), elements]
 
     def failed_install_page(self):
+        os.system("cat " + OVIRT_TMP_LOGFILE + ">> " + OVIRT_LOGFILE)
         elements = Grid(2, 5)
         elements.setField(Label("%s Installation Failed " %
             PRODUCT_SHORT), 0, 0)
