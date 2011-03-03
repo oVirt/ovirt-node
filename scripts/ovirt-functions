@@ -857,6 +857,7 @@ lvremove() {
 
 findfs() {
     partprobe /dev/mapper/* 2>/dev/null
+    udevadm settle
     /sbin/blkid -c /dev/null -l -o device -t "$@"
 }
 
