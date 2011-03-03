@@ -139,7 +139,7 @@ class Network:
 
     def configure_ntp(self):
         if OVIRT_VARS.has_key("OVIRT_NTP"):
-            NTPSERVERS=OVIRT_NTP
+            NTPSERVERS=OVIRT_VARS["OVIRT_NTP"]
         else:
             NTPSERVERS=""
 
