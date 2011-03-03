@@ -102,6 +102,8 @@ class NodeConfigScreen():
             self.__current_page = 1
             self.__finished = False
             self.__nic_config_failed = 0
+            self.net_apply_config = 0
+
       def set_console_colors(self):
           self.existing_color_array = None
           tty_file = None
@@ -978,8 +980,9 @@ class NodeConfigScreen():
 
       def process_network_config(self):
           if self.net_hostname.value() != self.current_hostname:
-              augtool(set, "/file/etc/sysconfig/network", self.net_hostname.value())
+              augtool("set", "/files/etc/sysconfig/network/HOSTNAME", self.net_hostname.value())
               os.system("hostname " + self.net_hostname.value())
+              ovirt_store_config("/etc/sysconfig/network")
           dns_servers = ""
           ntp_servers = ""
           if not self.dns_host1.value() == "":
@@ -1000,6 +1003,7 @@ class NodeConfigScreen():
           if len(ntp_servers) > 0:
               network.configure_ntp()
               network.save_ntp_configuration()
+          self.net_apply_config = 1
           return
 
       def process_nic_config(self):
@@ -1310,6 +1314,9 @@ class NodeConfigScreen():
                                 self.__current_page = NETWORK_DETAILS_PAGE
                             else:
                                 self.__current_page = menu_choice
+                            if self.net_apply_config == 1:
+                                self.net_apply_config = 0
+                                self.__current_page = NETWORK_PAGE
                         elif self.__current_page == NETWORK_DETAILS_PAGE:
                             if pressed == BACK_BUTTON:
                                 self.__current_page = NETWORK_PAGE
