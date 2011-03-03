@@ -1068,10 +1068,18 @@ class NodeConfigScreen():
       def process_authentication_config(self):
           self.screen.setColor("BUTTON", "black", "red")
           self.screen.setColor("ACTBUTTON", "blue", "white")
-          set_password(self.root_password_1.value(), "root")
-          set_password(self.root_password_1.value(), "admin")
-          ButtonChoiceWindow(self.screen, "Remote Access", "Password Successfully Changed", buttons = ['Ok'])
-          log("\nroot & admin password changed")
+          if self.root_password_1.value() != "":
+              set_password(self.root_password_1.value(), "root")
+              set_password(self.root_password_1.value(), "admin")
+              ButtonChoiceWindow(self.screen, "Remote Access", "Password Successfully Changed", buttons = ['Ok'])
+              log("\nroot & admin password changed")
+          if self.ssh_passwd_status.value() == 1:
+              self.current_ssh_pwd_status = augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
+          else:
+              self.current_ssh_pwd_status = augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
+          os.system("service sshd restart &>/dev/null")
+          ButtonChoiceWindow(self.screen, "Remote Access", "SSH Restarted", buttons = ['Ok'])
+          log("\nSSH service restarted")
           self.reset_screen_colors()
           return True
 
