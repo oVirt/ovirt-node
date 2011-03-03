@@ -33,6 +33,15 @@ VAR_SUBSYS_OVIRT_FIRSTBOOT=/var/lock/subsys/$prog
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
+autoinstall_failed(){
+    if is_auto_install; then
+        log "Automatic installation failed. Please review console messages."
+        log "Press Enter to drop to emergency shell."
+        read < /dev/console
+        bash < /dev/console
+    fi
+}
+
 start_ovirt_firstboot ()
 {
     if ! is_firstboot && ! is_auto_install && ! is_upgrade; then
@@ -61,20 +70,23 @@ start_ovirt_firstboot ()
             rm -f $OVIRT_TMP_LOGFILE
         fi
         if [ $rc -ne 0 ]; then
-            log "Automatic installation failed. Please review console messages."
-            log "Press Enter to drop to emergency shell."
-            read < /dev/console
-            bash < /dev/console
+            autoinstall_failed
         fi
     fi
 
     if is_upgrade; then
         mount_live
         /usr/libexec/ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
+        if [ $? -ne 0 ]; then
+            autoinstall_failed
+        fi
         disable_firstboot
         ovirt_store_firstboot_config
         reboot
-        return
+        if [ $? -ne 0 ]; then
+            autoinstall_failed
+        fi
+        return 1
     fi
 
     if is_firstboot; then

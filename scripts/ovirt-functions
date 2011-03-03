@@ -864,16 +864,21 @@ findfs() {
 #   cleanup before reboot
 reboot() {
     cd /
+    rc=0
     if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         # setup new Root if update is prepared
         root_update_dev="$(findfs LABEL=RootUpdate 2>/dev/null)"
         if [ -n "$root_update_dev" ]; then
             set -x
             root_dev="$(findfs LABEL=Root 2>/dev/null)"
-            e2label "$root_dev" RootBackup
-            e2label "$root_update_dev" Root
+            e2label "$root_dev" RootBackup || rc=1
+            e2label "$root_update_dev" Root || rc=1
             set +x
         fi
+    fi
+    if [ $rc -ne 0 ]; then
+        log "Relabeling failed, please check logs"
+        return 1
     fi
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
@@ -882,6 +887,10 @@ reboot() {
     #   -O /dev/null
     for hook in $(ls /etc/ovirt-config-boot.d/* 2>/dev/null); do
         $hook
+        rc=$?
+        if [ $? -ne 0 ]; then
+            log "Hook \"$hook\" failed."
+        fi
     done
     /sbin/reboot
 }
