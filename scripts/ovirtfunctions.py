@@ -155,7 +155,7 @@ def is_standalone(self):
 # return 0 if local storage is configured
 # return 1 if local storage is not configured
 def is_local_storage_configured():
-    ret = os.system("lvs HostVG/Config >/dev/null >&1")
+    ret = os.system("lvs HostVG/Config &>/dev/null")
     if ret > 0:
         return False
     return True
@@ -215,17 +215,19 @@ def wipe_volume_group(vg):
         log("Unmounting " + file)
         umount_cmd = "umount " + file + " &>/dev/null"
         os.system(umount_cmd)
-
-    
+    unmount_logging()
     swap_cmd = "grep %s /proc/swaps|awk '{print $1}'" % vg
     swap = subprocess.Popen(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    swap_output = swap.stdout.read()
-    for d in swap_output.strip():
+    swap_output = swap.stdout.read().strip()
+    for d in swap_output.split():
         log ("Turning off " + d)
         os.system("swapoff " + d +" &>/dev/null")
-    log ("Removing "+ vg)
-    vgremove_cmd = "vgremove -f " + vg + " &>/dev/null"
-    os.system(vgremove_cmd)
+    log("Removing "+ vg)
+    vgremove_cmd = "vgremove -ff " + vg + " &>> " + OVIRT_TMP_LOGFILE
+    ret = os.system(vgremove_cmd)
+    if ret != 0:
+        #retry one more time before failing
+        os.system(vgremove_cmd)
 
 # find_srv SERVICE PROTO
 #
@@ -835,7 +837,7 @@ def wipe_partitions(drive):
     # remove remaining HostVG entries from dmtable
     for lv in os.listdir("/dev/mapper/"):
         if "HostVG" in lv:
-            os.system("dmsetup remove " +lv + " &>" + OVIRT_TMP_LOGFILE)
+            os.system("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
 
 
 def test_ntp_configuration(self):

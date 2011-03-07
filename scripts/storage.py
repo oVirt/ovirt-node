@@ -109,13 +109,13 @@ class Storage:
             # XXX fails with spaces in device names (TBI)
             # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
             # create/reload failed on 0QEMU    QEMU HARDDISK   drive-scsi0-0-0p1
-            os.system("partprobe ||: &>/dev/null")
+            os.system("partprobe ||: &>>/dev/null")
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
             os.system("service multipathd reload &>>"+ OVIRT_TMP_LOGFILE)
 
         else:
-            os.system("blockdev --rereadpt " + drive + " &>/dev/null")
+            os.system("blockdev --rereadpt " + drive + " &>>/dev/null")
 
 
     def get_sd_name(self, id):
