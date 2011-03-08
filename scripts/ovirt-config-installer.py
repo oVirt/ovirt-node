@@ -169,6 +169,7 @@ class NodeInstallScreen:
             self.screen.setColor(item, colors[0], colors[1])
 
     def password_check_callback(self):
+        self.valid_password = 0
         if self.root_password_1.value() != "" and self.root_password_2.value() != "":
             if self.root_password_1.value() != self.root_password_2.value():
                 self.screen.setColor("BUTTON", "black", "red")
@@ -181,6 +182,8 @@ class NodeInstallScreen:
                 self.screen.setColor("BUTTON", "black", "red")
                 self.screen.setColor("ACTBUTTON", "blue", "white")
                 ButtonChoiceWindow(self.screen, "Password Check", "You have provided a weak password!\nStrong passwords mix uppercase,\nlowercase, numbers, and punctuation", buttons = ['Ok'])
+            finally:
+                self.valid_password = 1
         elif self.root_password_1.value() != "" and self.root_password_2.value() == "":
             self.screen.setColor("BUTTON", "black", "red")
             self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -838,7 +841,11 @@ class NodeInstallScreen:
                         if not self.current_password_fail == 1:
                             self.upgrade_node()
                     elif self.__current_page == PASSWORD_PAGE:
-                        self.install_node()
+                        if self.valid_password == 1:
+                            self.install_node()
+                        else:
+                            ButtonChoiceWindow(self.screen, "Password Check", "You must enter a valid password", buttons = ['Ok'])
+                            self.__current_page = PASSWORD_PAGE
             except Exception, error:
                 self.screen.setColor("BUTTON", "black", "red")
                 self.screen.setColor("ACTBUTTON", "blue", "white")
