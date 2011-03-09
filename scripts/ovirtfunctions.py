@@ -348,20 +348,24 @@ def mount_config():
             os.system("cp -rv --update /live/config/* /config")
 
         # bind mount all persisted configs to rootfs
-        for f in os.listdir("/config"):
-            if os.path.isfile("/config/" + f):
+        filelist_cmd = "find /config -type f"
+        filelist = subprocess.Popen(filelist_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        filelist = filelist.stdout.read()
+        for f in filelist.split():
+            log(f)
+            if os.path.isfile(f) and f != "/config/files":
                 target = string.replace(f, "/config", "")
-                mounted = os.system("grep -q  %s ext3 /proc/mounts") % target
+                mounted_cmd = "grep -q " + target + " /proc/mounts"
+                mounted = os.system(mounted_cmd)
                 if mounted == 0:
                     # skip if already bind-mounted
                     pass
                 else:
                     dirname = os.path.dirname(target)
-                    os.system("mkdir -p %s") % dirname
-                    if not os.path.exists(target): 
-                        os.open(target, 'w').close() 
-                        os.system("mount -n --bind %s %s" % (f,target))
-                return True
+                    os.system("mkdir -p " + dirname)
+                    os.system("touch " + target)
+                    os.system("mount -n --bind %s %s" % (f,target))
+        return True
     else:
         # /config is not available
         return False
@@ -521,8 +525,8 @@ def ovirt_store_config(files):
         # register in /config/files used by rc.sysinit
         ret = os.system("grep -q \"^$" + filename +"$\" /config/files 2> /dev/null")
         if ret > 0:
-            os.system("echo \""+filename+"\n\" >> /config/files")
-            log("\nSuccessfully persisted " + filename + "\n")
+            os.system("echo "+filename+" >> /config/files")
+            log("\nSuccessfully persisted: " + filename)
             rc = 0
     else:
         log("WARNING: persistent config storage not available\n")
@@ -722,7 +726,8 @@ def finish_install():
 def is_valid_ipv4(ip_address):
     ipv4_regex = r"\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
     if re.match(ipv4_regex, ip_address):
-        return True
+        if not ":" in ip_address:
+            return True
     else:
         return False
 
@@ -743,6 +748,13 @@ def is_valid_hostname(hostname):
 def is_valid_nfs(nfs_entry):
     regex = "^([a-zA-Z0-9_\-]+)([\.][a-zA-Z0-9_\-]+)+([:][/][a-zA-Z0-9\~\(\)_\-]*)+([\.][a-zA-Z0-9\(\)_\-]+)*$"
     if re.match(regex, nfs_entry):
+        return True
+    else:
+        return False
+
+def is_valid_host_port(host):
+    regex = "^([a-zA-Z0-9_\-]+)([\.][a-zA-Z0-9_\-]+)+([:][0-9\~\(\)_\-]*)+([\.][0-9]+)*$"
+    if re.match(regex, host):
         return True
     else:
         return False

@@ -354,7 +354,8 @@ class Storage:
             os.system("echo \"/data/core /var/log/core bind bind 0 0\" >> /etc/fstab")
 
         log("Mounting config partition")
-        if mount_config():
+        mount_config()
+        if os.path.ismount("/config"):
             ovirt_store_config("/etc/fstab")
 
         mount_logging()
