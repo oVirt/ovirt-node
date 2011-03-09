@@ -1145,7 +1145,14 @@ class NodeConfigScreen():
               write_kdump_config(self.kdump_nfs_config.value())
           if self.kdump_ssh_type.value() == 1:
               write_kdump_config(self.kdump_ssh_config.value())
-              #service kdump propagate
+              self.screen.popWindow()
+              self.screen.finish()
+              ret = os.system("service kdump propagate")
+              if ret == 0:
+                  ovirt_store_config("/root/.ssh/kdump_id_rsa.pub")
+                  ovirt_store_config("/root/.ssh/kdump_id_rsa")
+                  ovirt_store_config("/root/.ssh/known_hosts")
+                  ovirt_store_config("/root/.ssh/config")
           if self.kdump_restore_type.value() == 1:
               restore_kdump_config()
           ovirt_store_config("/etc/kdump.conf")

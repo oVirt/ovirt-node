@@ -41,7 +41,6 @@ def process_kdump_config():
         write_kdump_config(self.kdump_nfs_config)
     if self.kdump_ssh.value() == 1:
         write_kdump_config(self.kdump_ssh_config)
-        #service kdump propagate
     if self.kdump_restore_config.value() == 1:
         restore_kdump_config()
     ovirt_store_config("/etc/kdump.conf")
