@@ -746,7 +746,7 @@ def is_valid_hostname(hostname):
         return False
 
 def is_valid_nfs(nfs_entry):
-    regex = "^([a-zA-Z0-9_\-]+)([\.][a-zA-Z0-9_\-]+)+([:][/][a-zA-Z0-9\~\(\)_\-]*)+([\.][a-zA-Z0-9\(\)_\-]+)*$"
+    regex = "^([a-zA-Z0-9_\-]+)([\.][a-zA-Z0-9_\-]+)+([:][/][a-zA-Z0-9\~\(\)_\-]*)+([\.][a-zA-Z0-9\(\)_\-]+)*"
     if re.match(regex, nfs_entry):
         return True
     else:
