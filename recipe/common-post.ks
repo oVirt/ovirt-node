@@ -144,6 +144,8 @@ cat > /etc/sysconfig/ip6tables << \EOF
 # snmp
 -A INPUT -p udp --dport 161 -j ACCEPT
 -A INPUT -j REJECT --reject-with icmp6-adm-prohibited
+# unblock ipv6 dhcp response
+-A INPUT -p udp --dport 546 -j ACCEPT
 -A FORWARD -m physdev ! --physdev-is-bridged -j REJECT --reject-with icmp6-adm-prohibited
 COMMIT
 EOF
