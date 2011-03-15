@@ -21,7 +21,7 @@ PRODUCT           = oVirt Node Hypervisor
 PKG_FMT           = iso
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
-CUR_RAWHIDE       = 15
+CUR_RAWHIDE       = 16
 CUR_DEVEL         = 15
 CUR_PREVIEW       = 12
 PREVIEW_URL       ?= http://jforbes.fedorapeople.org/virt-preview/f$(CUR_PREVIEW)/$(ARCH)
