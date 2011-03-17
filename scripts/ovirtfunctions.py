@@ -759,6 +759,13 @@ def is_valid_host_port(host):
     else:
         return False
 
+def is_valid_url(host):
+    regex = "^(http|https|ftp)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*[^\.\,\)\(\s]$"
+    if re.match(regex, host):
+        return True
+    else:
+        return False
+
 def is_valid_host_or_ip(host_or_ip):
     if host_or_ip != "" :
         if is_valid_ipv4(host_or_ip):

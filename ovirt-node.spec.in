@@ -116,6 +116,7 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 #%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %{__install} -p -m0644 scripts/rhevm.py %{buildroot}%{python_sitelib}/ovirt_config_setup
+%{__install} -p -m0644 scripts/rhn.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/storage.py %{buildroot}%{python_sitelib}/ovirtnode
