@@ -1090,6 +1090,7 @@ class NodeConfigScreen():
               os.system("service sshd restart &>/dev/null")
               ButtonChoiceWindow(self.screen, "Remote Access", "SSH Restarted", buttons = ['Ok'])
               log("\nSSH service restarted")
+              ovirt_store_config("/etc/ssh/sshd_config")
           self.reset_screen_colors()
           return True
 
