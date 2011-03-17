@@ -27,7 +27,6 @@ import libvirt
 import PAM
 import gudev
 import cracklib
-import getpass
 import pkgutil
 import ovirt_config_setup
 from ovirtnode.ovirtfunctions import *
@@ -466,7 +465,7 @@ class NodeConfigScreen():
             elements = Grid(1, 3)
             pw_elements = Grid(2, 2)
             elements.setField(Label("Unlock " + os.uname()[1]), 0, 0, padding=(13,1,0,1))
-            self.login_username = getpass.getuser()
+            self.login_username = os.getlogin()
             self.login_password = Entry(15, "", password = 1)
             pw_elements.setField(Label("Login: "), 0, 0, padding=(13,1,0,1))
             pw_elements.setField(Label(self.login_username), 1, 0)
