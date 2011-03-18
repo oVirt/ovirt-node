@@ -1325,7 +1325,10 @@ class NodeConfigScreen():
                     else:
                         if self.__current_page == NETWORK_PAGE:
                             if menu_choice == NETWORK_PAGE:
-                                self.__current_page = NETWORK_DETAILS_PAGE
+                                if pressed == RESET_BUTTON:
+                                    self.__current_page = NETWORK_PAGE
+                                else:
+                                    self.__current_page = NETWORK_DETAILS_PAGE
                             else:
                                 self.__current_page = menu_choice
                             if self.net_apply_config == 1:
