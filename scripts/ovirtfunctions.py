@@ -953,8 +953,8 @@ def get_installed_version_number():
             existing_install[key] = value
         except:
             pass
-    if existing_install.has_key("VERSION"):
-        return existing_install["VERSION"]
+    if existing_install.has_key("VERSION") and existing_install.has_key("RELEASE"):
+        return [existing_install["VERSION"],existing_install["RELEASE"]]
     else:
         return False
 
@@ -975,8 +975,8 @@ def get_media_version_number():
     else:
         log("Failed to mount_live()")
         return False
-    if new_install.has_key("VERSION"):
-        return new_install["VERSION"]
+    if new_install.has_key("VERSION") and new_install.has_key("RELEASE"):
+        return [new_install["VERSION"],new_install["RELEASE"]]
     return False
 
 def uninstall_node():

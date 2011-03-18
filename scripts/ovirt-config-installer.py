@@ -239,8 +239,12 @@ class NodeInstallScreen:
         menu_option = self.menu_list.current()
         if self.menuo < self.menu_list.current():
             if menu_option == 2:
-                self.menu_list.setCurrent(3)
-                self.menuo = 3
+                try:
+                    self.menu_list.setCurrent(3)
+                    self.menuo = 3
+                except:
+                    self.menu_list.setCurrent(5)
+                    self.menuo = 5
             if menu_option == 4:
                 self.menu_list.setCurrent(5)
                 self.menuo = 5
@@ -296,21 +300,27 @@ class NodeInstallScreen:
         elements = Grid(2, 5)
         self.menuo = 1
         self.menu_list = Listbox(16, width = 60, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
-        existing_ver = get_installed_version_number()
         try:
-            media_ver = get_media_version_number()
+            m_version,m_release = get_media_version_number()
+            m_full_ver = m_version + "-" + m_release
         finally:
             if os.path.exists("/dev/HostVG"):
                 try:
-                    if existing_ver < media_ver:
-                        self.menu_list.append(" Upgrade Existing " + existing_ver + " Version to " + media_ver, 3)
-                        self.menu_list.append(" ", 4)
-                    self.menu_list.append(" Uninstall " + PRODUCT_SHORT, 5)
+                    e_version, e_release = get_installed_version_number()
+                    e_full_ver = e_version + "-" + e_release
+                    if e_version <= m_version:
+                        if e_release < m_release:
+                            self.menu_list.append(" Upgrade " + e_full_ver + " Version to " + m_full_ver, 3)
+                            self.menu_list.append(" ", 4)
+                        else:
+                            self.menu_list.append(" Install " + PRODUCT_SHORT + " " +  m_full_ver, 1)
+                            self.menu_list.append(" ", 2)
+                    self.menu_list.append(" Uninstall " + PRODUCT_SHORT + " " + e_full_ver, 5)
                 except:
                     log("unable to get_version_numbers for upgrade")
                     pass
             else:
-                self.menu_list.append(" Install Hypervisor " + media_ver, 1)
+                self.menu_list.append(" Install Hypervisor " + m_full_ver, 1)
             self.menu_list.setCallback(self.menuSpacing)
         elements.setField(self.menu_list, 1,1, anchorLeft = 1)
         return [Label(""), elements]
