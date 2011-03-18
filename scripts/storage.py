@@ -109,7 +109,7 @@ class Storage:
             # XXX fails with spaces in device names (TBI)
             # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
             # create/reload failed on 0QEMU    QEMU HARDDISK   drive-scsi0-0-0p1
-            os.system("partprobe ||: &>>/dev/null")
+            os.system("partprobe &>/dev/null")
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
             os.system("service multipathd reload &>>"+ OVIRT_TMP_LOGFILE)
@@ -260,12 +260,12 @@ class Storage:
         for drv in self.HOSTVGDRIVE.split(","):
             if drv != "":
                 if self.ROOTDRIVE == drv:
-                    parted_cmd = "parted " + drv + " -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\" &>/dev/null "
+                    parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\" &>/dev/null "
                     log(parted_cmd)
                     os.system(parted_cmd)
                     hostvgpart="3"
                 elif self.BOOTDRIVE == drv:
-                    parted_cmd = "parted " + drv + " -s \"mkpart primary ext2 " + str(self.boot_size_si) + " -1\" &>/dev/null"
+                    parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 " + str(self.boot_size_si) + " -1\" &>/dev/null"
                     log(parted_cmd)
                     os.system(parted_cmd)
                     hostvgpart="2"
@@ -382,8 +382,6 @@ class Storage:
         self.wipe_lvm_on_disk(self.HOSTVGDRIVE)
         self.wipe_lvm_on_disk(self.ROOTDRIVE)
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
-        # clear leftover multipath mappings
-        os.system("multipath -F &>/dev/null")
         if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
             log("iSCSI enabled, partitioning boot drive: $BOOTDRIVE")
             wipe_partitions(self.BOOTDRIVE)

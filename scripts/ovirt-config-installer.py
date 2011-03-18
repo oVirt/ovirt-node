@@ -393,7 +393,6 @@ class NodeInstallScreen:
         self.valid_disks = []
         for dev in dev_names:
             dev = translate_multipath_device(dev)
-            dev = dev.strip()
             if not self.displayed_disks.has_key(dev):
                 if self.disk_dict.has_key(dev) and dev != self.live_disk:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
@@ -415,20 +414,16 @@ class NodeInstallScreen:
                     else:
                         dev_desc = dev_desc.rstrip(dev_desc[-to_rem:])
                     self.valid_disks.append(dev_name)
-                    if "dev/mapper" in dev_name:
-                        dev_bus = "FibreChannel"
-                        dev_name = dev_name.replace("/dev/mapper/","")
-                        to_rem = len(dev_name) - 25
-                        # if negative pad name space
-                        if to_rem < 1:
-                            while abs(to_rem) != 0:
-                                dev_name += " "
-                                to_rem = to_rem + 1
-                        dev_name = dev_name[:+25]
-                        dev_entry = " %1s %10s  %2sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
-                    else:
-                        dev_name = dev_name.replace("/dev/","")
-                        dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
+                    dev_name = dev_name.replace("/dev/mapper/","")
+                    dev_name = dev_name.replace("  ","_").replace("__","_").replace(" ","")
+                    to_rem = len(dev_name) - 25
+                    # if negative pad name space
+                    if to_rem < 1:
+                        while abs(to_rem) != 0:
+                            dev_name += " "
+                            to_rem = to_rem + 1
+                    dev_name = dev_name[:+25]
+                    dev_entry = " %6s  %11s  %8sGB" % (dev_bus,dev_name, dev_size)
                     dev_name = translate_multipath_device(dev_name)
                     self.root_disk_menu_list.append(dev_entry, dev)
                     self.valid_disks.append(dev_name)
@@ -438,7 +433,7 @@ class NodeInstallScreen:
         elements.setField(Label("Please select the disk to use for booting %s"
             % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(Label(" "), 0,2, anchorLeft = 1)
-        elements.setField(Label("      Location          Device Name   Size (GB)      Description"),0,3,anchorLeft =1)
+        elements.setField(Label("      Location              Device Name                  Size (GB)"),0,3,anchorLeft =1)
         elements.setField(self.root_disk_menu_list, 0,4)
         disk_grid = Grid(5,8)
         elements.setField(Label("Disk Details"), 0,5, anchorLeft = 1)
@@ -474,7 +469,7 @@ class NodeInstallScreen:
     def hostvg_disk_page(self):
         self.hostvg_checkbox = CheckboxTree(6, width = 70, scroll = 1)
         self.hostvg_checkbox.setCallback(self.disk_details_callback)
-        self.hostvg_checkbox.append("      Location          Device Name   Size (GB)      Description", selected = 1)
+        self.hostvg_checkbox.append("      Location            Device Name                Size (GB)", selected = 1)
         elements = Grid(2, 9)
         Storage = storage.Storage()
         devs = Storage.get_dev_name()
@@ -490,7 +485,7 @@ class NodeInstallScreen:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":
                         dev_bus = dev_bus.upper()
-                    elif dev_bus == "ata":
+                    elif dev_bus == "ata" or dev_bus == "scsi":
                         dev_bus = "Local / FibreChannel"
                     else:
                         if "/dev/vd" in dev_name:
@@ -511,21 +506,17 @@ class NodeInstallScreen:
                     else:
                         select_status = 0
                     # strip all "/dev/*/" references and leave just basename
-                    if "dev/mapper" in dev_name:
-                        dev_bus = "FibreChannel"
-                        dev_name = dev_name.replace("/dev/mapper/","")
-                        to_rem = len(dev_name) - 25
-                        # if negative pad name space
-                        if to_rem < 1:
-                            while abs(to_rem) != 0:
-                                dev_name += " "
-                                to_rem = to_rem + 1
-                        dev_name = dev_name[:+25]
-                        dev_entry = " %6s %10s  %1sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
-                    else:
-                        dev_name = dev_name.replace("/dev/","")
-                        dev_entry = " %6s %10s  %8sGB  %29s" % (dev_bus,dev_name, dev_size, dev_desc)
-
+                    dev_name = dev_name.replace("/dev/mapper/","")
+                    dev_name = dev_name.replace("/dev/","")
+                    dev_name = dev_name.replace("  ","_").replace("__","_").replace(" ","")
+                    to_rem = len(dev_name) - 25
+                    # if negative pad name space
+                    if to_rem < 1:
+                        while abs(to_rem) != 0:
+                            dev_name += " "
+                            to_rem = to_rem + 1
+                    dev_name = dev_name[:+25]
+                    dev_entry = " %6s %10s  %7sGB" % (dev_bus,dev_name, dev_size)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
         if self.root_disk_menu_list.current() == "OtherDevice":
@@ -660,7 +651,8 @@ class NodeInstallScreen:
     def install_node(self):
         self.__current_page = FAILED_PAGE
         gridform = GridForm(self.screen, "", 2, 2)
-        gridform.add(Label("Partitioning and Creating File Systems on: " + self.storage_init ), 0, 0, anchorLeft = 1)
+        dev_name = self.storage_init.replace("/dev/mapper/","").replace("  ","_").replace("__","_").replace(" ","")
+        gridform.add(Label("Partitioning and Creating File Systems on: " + dev_name ), 0, 0, anchorLeft = 1)
         progress_bar = Scale(50,100)
         progress_bar.set(25)
         gridform.add(progress_bar, 0, 1)

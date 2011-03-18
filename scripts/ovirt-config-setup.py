@@ -806,7 +806,7 @@ class NodeConfigScreen():
               current_gateway = get_gateway(self.nic_lb.current())
               if current_gateway == "":
                   current_gateway = get_gateway("br" + self.nic_lb.current())
-              if current_gateway != "":
+              if is_valid_ipv4(current_gateway) or is_valid_ipv6(current_gateway):
                   self.ipv4_netdevgateway.set(current_gateway)
           ipv4_grid = Grid (5,3)
           ipv4_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)

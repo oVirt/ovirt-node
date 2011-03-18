@@ -87,13 +87,14 @@ def ovirt_boot_setup():
     grub_part_info_cmd = "findfs LABEL=%s 2>/dev/null" % grub_dev_label
     grub_part_info = subprocess.Popen(grub_part_info_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     disk = grub_part_info.stdout.read()
-    disk = disk.rstrip(disk[-1:])
+    disk = disk.strip()
     length = len(disk) - 1
     partN = disk[length:]
-    log("partN=")
-    log(partN)
+    log("partN: " + str(partN))
     partN = int(partN) - 1
-    disk = disk.rstrip(disk[-1:])
+    disk_basename = disk.rstrip(disk[-2:])
+    if os.path.exists(disk_basename):
+        disk = disk_basename
 
     if disk is None and partN < 0:
       log("unable to determine Root partition")
@@ -128,7 +129,7 @@ def ovirt_boot_setup():
             candidate_dev_cmd = "findfs LABEL=%s 2>/dev/null" % candidate
             candidate_dev = subprocess.Popen(grub_part_info_cmd, shell=True, stdout=PIPE, stderr=STDOUT, stdin=PIPE)
             candidate_dev = candidate_dev.stdout.read().strip()
-            e2label_cmd = "e2label %s RootNew" % candidate_dev
+            e2label_cmd = "e2label \"%s\" RootNew" % candidate_dev
             log(e2label_cmd)
             rc = os.system(e2label_cmd)
             log(rc)
@@ -137,7 +138,7 @@ def ovirt_boot_setup():
           label_debug = os.listdir("/dev/disk/by-label")
           log(label_debug)
           return rc
-        mount_cmd = "mount %s /liveos" % candidate_dev
+        mount_cmd = "mount \"%s\" /liveos" % candidate_dev
         os.system(mount_cmd)
         os.system("rm -rf /liveos/LiveOS")
         os.system("mkdir -p /liveos/LiveOS")
@@ -186,6 +187,17 @@ def ovirt_boot_setup():
     else:
         bootparams="ro root=live:LABEL=Root roottypefs=auto  "
         bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
+    if " " in disk:
+        # workaround for grub setup failing with spaces in dev.name
+        grub_disk_cmd= "multipath -l \"" + disk + "\" | awk '/ active / {print $3}'"
+        log(grub_disk_cmd)
+        grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        disk = grub_disk.stdout.read()
+        log("disk:" + disk)
+        # flush to sync DM and blockdev, workaround from rhbz#623846#c14
+        os.system("echo 3 > /proc/sys/vm/drop_caches")
+        os.system("partprobe " + "/dev/"+disk)
+
     grub_config_file = "%s/grub.conf" % grub_dir
     GRUB_CONFIG_TEMPLATE = """
 default=0
@@ -197,7 +209,7 @@ title oVirt Node (%(version)s-%(release)s)
     initrd /initrd0.img
     """
     device_map_conf = open(grub_dir + "/device.map", "w")
-    device_map_conf.write("(hd0) " + disk)
+    device_map_conf.write("(hd0) " + "/dev/"+disk)
     device_map_conf.close()
     grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
     for file in grub_files:
@@ -232,7 +244,7 @@ EOF
         os.system("sleep 2")
         os.system("umount /liveos")
         # mark new Root ready to go, reboot() in ovirt-function switches it to active
-        e2label_cmd = "e2label %s RootUpdate" % candidate_dev
+        e2label_cmd = "e2label \"%s\" RootUpdate" % candidate_dev
         ret = os.system(e2label_cmd)
         if ret != 0:
             log("Unable to relabel " + candidate_dev + " to RootUpdate ")

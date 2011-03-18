@@ -416,6 +416,8 @@ def mount_logging():
         os.system("restorecon -rv /var/log &>/dev/null")
         for srv in logging_services:
             os.system("service " + srv + " start &>/dev/null")
+        # make sure rsyslog restarts
+        os.system("service rsyslog start &>/dev/null")
         return
     else:
         # /var/log is not available
@@ -708,8 +710,8 @@ def finish_install():
             root_update_dev = root_update_dev_lookup.stdout.read().strip()
             root_dev_lookup = subprocess.Popen("findfs LABEL=Root", shell=True, stdout=PIPE, stderr=STDOUT)
             root_dev = root_dev_lookup.stdout.read().strip()
-            e2label_rootbackup_cmd = "e2label " + root_dev + " RootBackup"
-            e2label_root_cmd = "e2label " + root_update_dev + " Root" 
+            e2label_rootbackup_cmd = "e2label \"" + root_dev + "\" RootBackup"
+            e2label_root_cmd = "e2label \"" + root_update_dev + "\" Root"
             log(e2label_rootbackup_cmd)
             log(e2label_root_cmd)
             subprocess.Popen(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -845,12 +847,12 @@ def is_valid_port(port_number):
 # Cleans partition tables
 def wipe_partitions(drive):
     log("Wiping old boot sector")
-    os.system("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>/dev/null")
+    os.system("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     # zero out the GPT secondary header
     log("Wiping secondary gpt header")
     disk_kb = subprocess.Popen("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
     disk_kb_count = disk_kb.stdout.read()
-    os.system("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>/dev/null")
+    os.system("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
     if os.path.exists("/dev/mapper/HostVG-Swap"):
         os.system("swapoff -a")
     # remove remaining HostVG entries from dmtable
@@ -871,27 +873,25 @@ def test_ntp_configuration(self):
     os.system("service ntpd start")
 
 def get_dm_device(device):
-    for dm in os.listdir("/dev/mapper/"):
-        dm_dev_path = "/dev/mapper/" + dm
-        dm_lookup_cmd = "ls -l \"%s\"|awk {'print $9\":\"$11'}" % dm_dev_path
-        dm_lookup = subprocess.Popen(dm_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        dm_lookup = dm_lookup.stdout.read()
-        if dm_lookup.count(":") > 1:
-            dm_lookup_cmd = "ls -l \"%s\"|awk {'print $5$6\":\"$10'}" % dm_dev_path
-            dm_lookup = subprocess.Popen(dm_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-            dm_lookup = dm_lookup.stdout.read()
-            device = device.replace("/dev/dm-","")
-            if dm_lookup.startswith("253," + device):
-                major_minor, mpath_device = dm_lookup.split(":")
-                return mpath_device.strip()
-        else:
-            try:
-                mpath_device, dm_device = dm_lookup.split(":")
-                dm_device = dm_device.replace("../","/dev/")
-                if dm_device.strip() == device.strip():
-                    return mpath_device.strip()
-            except:
-                pass
+    dev_major_cmd="stat -c '%t' " + "\"/dev/" + device + "\""
+    dev_minor_cmd="stat -c '%T' " + "\"/dev/" + device + "\""
+    major_lookup = subprocess.Popen(dev_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    minor_lookup = subprocess.Popen(dev_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    major_lookup = major_lookup.stdout.read().strip()
+    minor_lookup = minor_lookup.stdout.read().strip()
+    dm_cmd = "ls /dev/mapper"
+    dm_cmd = subprocess.Popen(dm_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    devices = dm_cmd.stdout.read().strip()
+    for dm in devices.split("\n"):
+        dm_major_cmd="stat -c '%t' " + "\"/dev/mapper/" + dm + "\""
+        dm_minor_cmd="stat -c '%T' " + "\"/dev/mapper/" + dm + "\""
+        dm_major_lookup = subprocess.Popen(dm_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dm_minor_lookup = subprocess.Popen(dm_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dm_major_lookup = dm_major_lookup.stdout.read().strip()
+        dm_minor_lookup = dm_minor_lookup.stdout.read().strip()
+        if dm_major_lookup == major_lookup and minor_lookup == dm_minor_lookup:
+            dm = "/dev/mapper/" + dm
+            return dm
 
 def check_existing_hostvg(install_dev):
     if install_dev is "":
@@ -921,16 +921,19 @@ def translate_multipath_device(dev):
     ret = os.system(mpath_cmd)
     if ret > 0:
         return dev
-    dm_dev_cmd = "multipath -ll \"%s\" | egrep dm-[0-9]+ | awk {'print $2'}" % dev
+    dm_dev_cmd = "multipath -ll \"%s\" | egrep dm-[0-9]+" % dev
     dm_dev = subprocess.Popen(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     dm_dev_output = "/dev/" + dm_dev.stdout.read()
-    dm_dev_output = dm_dev_output.strip()
-    mpath_device = get_dm_device(dm_dev_output)
-
-    if mpath_device is None:
+    dm_dev = re.search('dm-[0-9]+', dm_dev_output)
+    try:
+        dm_dev = dm_dev.group(0)
+        mpath_device = get_dm_device(dm_dev)
+        if mpath_device is None:
+            return dev
+        else:
+            return mpath_device.strip("\n")
+    except:
         return dev
-    else:
-        return mpath_device.strip()
 
 def pwd_lock_check(user):
     passwd_cmd = "passwd -S %s" % user
