@@ -18,6 +18,7 @@
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
 
 SUBDIRS =   \
+  dracut \
   gptsync \
   images \
   kinit \

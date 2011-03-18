@@ -60,6 +60,7 @@ dist_libexec_SCRIPTS = \
   ovirt-config-uninstall \
   ovirt-config-view-logs \
   ovirt-functions \
+  ovirt-boot-functions \
   ovirt-install-node-stateless \
   ovirt-process-config \
   ovirt-rpmquery

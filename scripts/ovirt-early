@@ -13,6 +13,7 @@
 # Source functions library
 . /etc/init.d/functions
 . /usr/libexec/ovirt-functions
+. /usr/libexec/ovirt-boot-functions
 
 prog=ovirt-early
 VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/$prog
@@ -121,93 +122,6 @@ get_live_disk() {
       fi
     fi
     echo $live_disk
-}
-
-# find_disk $bus $serial
-find_disk() {
-    local bus=$1
-    local serial=$2
-    local live=$(get_live_disk)
-    local found=
-    for d in /dev/disk/by-id/{ata,cciss,scsi,usb}*; do
-      ID_FS_USAGE=
-      eval $(udev_info $(readlink -f $d) property --export)
-      # ID_FS_USAGE is set for partitions
-      if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
-        if [ -z "$serial" -o "$serial" = "ALL" \
-             -o "$ID_SERIAL" = "$serial" ]; then
-          local dev="$(readlink -e $d)"
-          if [ -n "$live" -a  "$dev" = "/dev/$live" ]; then
-            # cannot install LiveOS over itself
-            continue
-          elif [ "$serial" = "ALL" ]; then
-            if [ "$found" ]; then
-                echo -n "${SEP}"
-            fi
-            echo -n "$dev"
-            found="yes"
-            continue
-          else
-            echo -n "$dev"
-            found="yes"
-            break
-          fi
-        fi
-      fi
-    done
-    if [ "$found" ]; then
-      echo
-      return 0
-    else
-       return 1
-    fi
-}
-
-# parse_disk_id DISK_ID
-#   DISK_ID=[ata|cciss|scsi|usb[:serial#]|/dev/...]
-# ata|cciss|scsi|usb - select disk bus, as reported by udev ID_BUS
-# serial# - select exact disk using serial number, as reported by
-#           udev ID_SERIAL
-# e.g. storage_init=usb:Generic_STORAGE_DEVICE_0000145418-0:0
-#           ALL selects all the disks on the specified bus
-# e.g. storage_init=ata:ALL
-#
-# /dev/... - use specified disk device
-#            (for cases when HAL doesn't handle it)
-parse_disk_id() {
-    local i="$1"
-    local disk=
-    local bus=
-    local serial=
-    case "$i" in
-        ata*)
-            bus=ata
-            i=${i#ata}
-            serial=${i#:}
-        ;;
-        scsi*)
-            bus=scsi
-            i=${i#scsi}
-            serial=${i#:}
-        ;;
-        usb*)
-            bus=usb
-            i=${i#usb}
-            serial=${i#:}
-        ;;
-        cciss*)
-            bus=cciss
-            i=${i#cciss}
-            serial=${i#:}
-        ;;
-        /dev/*)
-            disk="$(ls -1 "$i" 2>/dev/null | head -n1)"
-        ;;
-    esac
-    if [ -n "$bus" ]; then
-        disk=$(find_disk $bus $serial)
-    fi
-    echo "$disk"
 }
 
 configure_management_interface() {

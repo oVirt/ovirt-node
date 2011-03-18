@@ -103,6 +103,13 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
 
+#dracut module for disk cleanup
+%{__install} -d -m0755 %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
+%{__install} -p -m0755 dracut/check %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
+%{__install} -p -m0755 dracut/install %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
+%{__install} -p -m0755 scripts/ovirt-boot-functions %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
+%{__install} -p -m0755 dracut/ovirt-cleanup.sh %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
+
 mkdir -p %{buildroot}/%{_sysconfdir}/default
 echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
 
@@ -217,6 +224,10 @@ fi
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
 
+%{_datadir}/dracut/modules.d/91ovirtnode/check
+%{_datadir}/dracut/modules.d/91ovirtnode/install
+%{_datadir}/dracut/modules.d/91ovirtnode/ovirt-boot-functions
+%{_datadir}/dracut/modules.d/91ovirtnode/ovirt-cleanup.sh
 %{_libexecdir}/ovirt-config-boot
 %{_libexecdir}/ovirt-config-boot-wrapper
 %{_libexecdir}/ovirt-config-hostname
@@ -233,6 +244,7 @@ fi
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-config-view-logs
 %{_libexecdir}/ovirt-functions
+%{_libexecdir}/ovirt-boot-functions
 %{_libexecdir}/ovirt-install-node-stateless
 %{_libexecdir}/ovirt-process-config
 %{_libexecdir}/ovirt-rpmquery

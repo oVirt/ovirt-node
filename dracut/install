@@ -1,0 +1,4 @@
+#!/bin/bash
+
+inst_hook pre-pivot 01 "$moddir/ovirt-cleanup.sh"
+inst_simple "$moddir/ovirt-boot-functions" /sbin/ovirt-boot-functions
