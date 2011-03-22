@@ -146,10 +146,10 @@ def ovirt_boot_setup():
     # install oVirt Node image for local boot
     if os.path.exists("/live/syslinux"):
         syslinux = "syslinux"
-    if os.path.exists("/live/isolinux"):
+    elif os.path.exists("/live/isolinux"):
         syslinux = "isolinux"
     else:
-        syslinux=""
+        return False
 
     if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
         initrd_dest = "/boot"
