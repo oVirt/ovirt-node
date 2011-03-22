@@ -611,7 +611,8 @@ class NodeConfigScreen():
 
       def network_configuration_page(self, screen):
           grid = Grid(2,15)
-          grid.setField(Label("System Identification"), 0, 1, anchorLeft = 1)
+          self.heading = Label("System Identification")
+          grid.setField(self.heading, 0, 1, anchorLeft = 1)
           hostname_grid = Grid(2,2)
           hostname_grid.setField(Label("Hostname: "), 0, 1, anchorLeft = 1, padding=(0,0,2,0))
           self.current_hostname = os.uname()[1]
@@ -727,6 +728,10 @@ class NodeConfigScreen():
           NIC_LABEL = Label("Device     Status      Model       MAC Address")
           grid.setField(NIC_LABEL, 0, 11, (0, 0, 0, 0), anchorLeft = 1)
           grid.setField(self.nic_lb, 0, 12)
+          if self.nic_dict.has_key("rhevm"):
+              for item in self.dns_host1, self.dns_host2, self.ntp_host1, self.ntp_host2:
+                  item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+              self.heading.setText("Managed by RHEV-M (Read Only)")
           return [Label(""),
                   grid]
 
@@ -899,6 +904,13 @@ class NodeConfigScreen():
           vlan_grid.setField(Label("VLAN ID: "), 0, 0, anchorLeft = 1)
           vlan_grid.setField(self.netvlanid, 1, 0)
           grid.setField(vlan_grid, 0, 9, anchorLeft = 1)
+          # disable all items if registered to rhevm server
+          if self.nic_dict.has_key("rhevm"):
+              for item in self.disabled_ipv4_nic_proto, self.dhcp_ipv4_nic_proto, self.static_ipv4_nic_proto, \
+                  self.ipv4_netdevip, self.ipv4_netdevmask, self.ipv4_netdevgateway, self.disabled_ipv6_nic_proto, \
+                  self.dhcp_ipv6_nic_proto, self.static_ipv6_nic_proto, self.auto_ipv6_nic_proto, \
+                  self.ipv6_netdevip, self.ipv6_netdevmask, self.ipv6_netdevgateway, self.netvlanid:
+                  item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
           return [Label(""),
                   grid]
       def kdump_configuration_page(self, screen):
