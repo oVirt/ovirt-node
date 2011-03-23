@@ -918,6 +918,11 @@ def translate_multipath_device(dev):
         return False
     if "/dev/mapper" in dev:
         return dev
+    if "/dev/cciss" in dev:
+        log("cciss device: " + dev)
+        cciss_dev_cmd = "cciss_id " + dev
+        cciss_dev = subprocess.Popen(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dev = "/dev/mapper/" + cciss_dev.stdout.read().strip()
     mpath_cmd = "multipath -ll %s &> /dev/null" % dev
     ret = os.system(mpath_cmd)
     if ret > 0:

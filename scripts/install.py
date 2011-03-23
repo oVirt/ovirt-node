@@ -187,13 +187,15 @@ def ovirt_boot_setup():
     else:
         bootparams="ro root=live:LABEL=Root roottypefs=auto  "
         bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
-    if " " in disk:
+    if " " in disk or os.path.exists("/dev/cciss"):
         # workaround for grub setup failing with spaces in dev.name
         grub_disk_cmd= "multipath -l \"" + disk + "\" | awk '/ active / {print $3}'"
         log(grub_disk_cmd)
         grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         disk = grub_disk.stdout.read()
         log("disk:" + disk)
+        if "cciss" in disk:
+            disk = disk.replace("!","/")
         # flush to sync DM and blockdev, workaround from rhbz#623846#c14
         os.system("echo 3 > /proc/sys/vm/drop_caches")
         os.system("partprobe " + "/dev/"+disk)
