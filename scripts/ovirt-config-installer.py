@@ -181,7 +181,8 @@ class NodeInstallScreen:
             except ValueError, e:
                 self.screen.setColor("BUTTON", "black", "red")
                 self.screen.setColor("ACTBUTTON", "blue", "white")
-                ButtonChoiceWindow(self.screen, "Password Check", "You have provided a weak password!\nStrong passwords mix uppercase,\nlowercase, numbers, and punctuation", buttons = ['Ok'])
+                ButtonChoiceWindow(self.screen, "Password Check", "You have provided a weak password!\n\nStrong passwords contain a mix of uppercase, lowercase, numeric and \
+                punctuation characters. They are six or more characters long and do not\ncontain dictionary words.\n", buttons = ['Ok'])
             finally:
                 self.valid_password = 1
         elif self.root_password_1.value() != "" and self.root_password_2.value() == "":
