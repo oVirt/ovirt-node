@@ -735,10 +735,10 @@ def is_valid_ipv4(ip_address):
         return False
 
 def is_valid_ipv6(ip_address):
-    ipv6_regex = "^(((([1]?\d)?\d|2[0-4]\d|25[0-5])\.){3}(([1]?\d)?\d|2[0-4]\d|25[0-5]))|([\da-fA-F]{1,4}(\:[\da-fA-F]{1,4}){7})|(([\da-fA-F]{1,4}:){0,5}::([\da-fA-F]{1,4}:){0,5}[\da-fA-F]{1,4})$"
-    if re.match(ipv6_regex, ip_address):
+    try:
+        socket.inet_pton(socket.AF_INET6, ip_address)
         return True
-    else:
+    except socket.error:
         return False
 
 def is_valid_hostname(hostname):
