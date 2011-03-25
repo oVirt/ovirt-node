@@ -523,7 +523,7 @@ def ovirt_store_config(files):
                     rc = 1
                 else:
                     log("File persisted\n")
-                    rc = 0
+                    rc = True
         # register in /config/files used by rc.sysinit
         ret = os.system("grep -q \"^$" + filename +"$\" /config/files 2> /dev/null")
         if ret > 0:
