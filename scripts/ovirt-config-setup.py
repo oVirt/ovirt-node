@@ -701,7 +701,7 @@ class NodeConfigScreen():
                       self.configured_nics = self.configured_nics + 1
               except:
                   pass
-              if not dev_interface == "lo" and not dev_interface.startswith("br") and not dev_interface.startswith("bond") and not dev_interface.startswith("sit"):
+              if not dev_interface == "lo" and not dev_interface.startswith("br") and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
                   self.nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status)
           for key in sorted(self.nic_dict.iterkeys()):
               dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status = self.nic_dict[key].split(",", 5)

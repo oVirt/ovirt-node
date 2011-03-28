@@ -63,16 +63,21 @@ class Network:
 
         for file in os.listdir(self.WORKDIR):
             os.system("rm -rf %s/%s") % (self.WORKDIR, file)
+        n_address = open("/sys/class/net/" + self.CONFIGURED_NIC + "/address")
+        nic_hwaddr = n_address.readline().strip("\n")
+        n_address.close()
         BRIDGE = "br" + self.CONFIGURED_NIC
         IF_FILENAME = self.WORKDIR + "/augtool-" + self.CONFIGURED_NIC
         BR_FILENAME = self.WORKDIR + "/augtool-" + BRIDGE
         log("\nConfigure $BRIDGE for use by $NIC..\n\n")
         IF_ROOT = "%s-%s" % (self.IFCONFIG_FILE_ROOT, self.CONFIGURED_NIC)
         self.IF_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (IF_ROOT, IF_ROOT, self.CONFIGURED_NIC)
+        self.IF_CONFIG += "set %s/HWADDR %s\n" % (IF_ROOT, nic_hwaddr)
         BR_ROOT = "%s-%s" % (self.IFCONFIG_FILE_ROOT, BRIDGE)
         self.BR_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (BR_ROOT, BR_ROOT, BRIDGE)
         self.BR_CONFIG += "set %s/TYPE Bridge\n" % BR_ROOT
         self.BR_CONFIG += "set %s/PEERNTP yes\n" % BR_ROOT
+        self.BR_CONFIG += "set %s/DELAY 0\n" % BR_ROOT
 
         if OVIRT_VARS.has_key("OVIRT_IPV6"):
             if OVIRT_VARS["OVIRT_IPV6"]  == "auto":
@@ -93,15 +98,19 @@ class Network:
         if OVIRT_VARS.has_key("OVIRT_VLAN"):
             VLAN_ID=OVIRT_VARS["OVIRT_VLAN"]
             VL_ROOT = "%s.%s" % (IF_ROOT, VLAN_ID)
-            self.VL_CONFIG += "rm %s\\nset \%s/DEVICE %s.%s\n" % (VL_ROOT, VL_ROOT, self.CONFIGURED_NIC, VLAN_ID)
+            self.VL_CONFIG += "rm %s\n" % VL_ROOT
+            self.VL_CONFIG += "set %s/DEVICE %s.%s\n" % (VL_ROOT, self.CONFIGURED_NIC, VLAN_ID)
+            self.VL_CONFIG += "set %s/HWADDR %s\n" % (VL_ROOT, nic_hwaddr)
             self.VL_CONFIG += "set %s/BRIDGE %s\n" % (VL_ROOT, BRIDGE)
             self.VL_CONFIG += "set %s/VLAN yes\n" % VL_ROOT
             self.VL_FILENAME = "%s.%s" % (IF_FILENAME, OVIRT_VARS["OVIRT_VLAN"])
+            self.VL_CONFIG +="set %s/ONBOOT yes" % VL_ROOT
+
 
         if not OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
 	    if not self.VL_CONFIG:
 	        self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
-                self.BR_CONFIG += "set %s/BOOTPROTO dhcp\n" % BR_ROOT
+            self.BR_CONFIG += "set %s/BOOTPROTO dhcp\n" % BR_ROOT
         else:
             if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS") and OVIRT_VARS["OVIRT_IP_ADDRESS"] != "off":
 		if self.VL_CONFIG is None:
@@ -113,15 +122,13 @@ class Network:
                     self.BR_CONFIG += "set %s/GATEWAY %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_GATEWAY"])
         self.IF_CONFIG += "set %s/ONBOOT yes" % IF_ROOT
         self.BR_CONFIG += "set %s/ONBOOT yes" % BR_ROOT
-        
-        if OVIRT_VARS.has_key("OVIRT_VLAN") and self.VL_CONFIG is not "" :
-	    self.VL_CONFIG="set %s/ONBOOT yes" % VL_ROOT
         self.IF_CONFIG = self.IF_CONFIG.split("\n")
         self.BR_CONFIG = self.BR_CONFIG.split("\n")
         try:
             self.VL_CONFIG = self_VL_CONFIG.split("\n")
         except:
             pass
+        log("VL_CONFIG: " + self.VL_CONFIG)
         return True
 
     def configure_dns(self):
@@ -204,8 +211,7 @@ class Network:
                 except:
                     pass
 
-        for line in self.VL_CONFIG:
-            log(line)
+        for line in self.VL_CONFIG.split("\n"):
             try:
                 oper, file, value = line.split()
                 augtool(oper, file, value)
