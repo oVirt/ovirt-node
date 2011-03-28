@@ -127,7 +127,6 @@ class Plugin(PluginBase):
         login_grid = Grid(4,2)
         self.rhn_user = Entry(15, "")
         self.rhn_pass = Entry(15, "", password = 1)
-        self.rhn_user.setCallback(self.rhn_user_callback)
         login_grid.setField(self.rhn_user, 1, 0)
         login_grid.setField(Label("Login: "), 0, 0, anchorLeft = 1)
         login_grid.setField(Label(" Password: "), 2, 0, anchorLeft = 1)
@@ -143,7 +142,6 @@ class Plugin(PluginBase):
         self.public_rhn.setCallback(self.public_rhn_callback)
         self.rhn_satellite = Checkbox("Satellite ")
         self.rhn_satellite.setCallback(self.rhn_satellite_callback)
-
         rhn_type_grid.setField(self.public_rhn, 0, 0)
         rhn_type_grid.setField(self.rhn_satellite, 1, 0)
         elements.setField(rhn_type_grid, 0, 6, anchorLeft= 1, padding = (0, 0, 0, 1))
@@ -261,12 +259,6 @@ class Plugin(PluginBase):
         self.public_rhn.setValue(" 0")
         self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
         self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
-
-    def rhn_user_callback(self):
-        if len(self.rhn_user.value()) > 0 and len(self.rhn_pass.value()) == 0:
-            self.ncs.screen.setColor("BUTTON", "black", "red")
-            self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
-            ButtonChoiceWindow(self.ncs.screen, "Password Check", "Please Confirm Password", buttons = ['Ok'])
 
     def proxyhost_callback(self):
         if len(self.proxyhost.value()) > 0:
