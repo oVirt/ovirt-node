@@ -336,6 +336,10 @@ start_ovirt_early () {
 
     for i in $(cat /proc/cmdline); do
         case $i in
+            uninstall*)
+                echo "Found uninstall karg, rebooting..."
+                /sbin/reboot
+                ;;
             BOOTIF=*)
             i=${i#BOOTIF=}
             case "$i" in
@@ -479,11 +483,14 @@ start_ovirt_early () {
             standalone=1
             bootparams="$bootparams $i"
             ;;
-            firstboot=no | firsboot=0 | ovirt_firstboot=no | ovirt_firstboot=0)
+            firstboot=no | firsboot=0 | ovirt_firstboot=no | ovirt_firstboot=0 | reinstall=0 | reinstall=no)
             firstboot=0
             ;;
-            firstboot* | ovirt_firstboot*)
+            firstboot* | ovirt_firstboot* | reinstall)
             firstboot=1
+            ;;
+            install*)
+            install=1
             ;;
             runtime_mode*)
             runtime_mode=${i#runtime_mode=}
@@ -640,7 +647,7 @@ start_ovirt_early () {
     fi
     # save boot parameters as defaults for ovirt-config-*
 
-    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password"
+    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
@@ -650,7 +657,7 @@ start_ovirt_early () {
     for p in $params; do
         PARAM=$(uc $p)
         value=$(ptr $p)
-        if [ -n "$value" -o $p = 'init' -o $p = 'bootif' -o $p = 'upgrade' ]; then
+        if [ -n "$value" -o $p = 'init' -o $p = 'bootif' -o $p = 'upgrade' -o $p = 'install' ]; then
             log "Updating OVIRT_$PARAM to '$value'"
             echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" \
                 >> $tmpaug

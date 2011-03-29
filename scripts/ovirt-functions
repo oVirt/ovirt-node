@@ -138,6 +138,15 @@ is_firstboot() {
     fi
 }
 
+# is install option passed?
+is_install() {
+    if [ -z "$OVIRT_INSTALL" -o "$OVIRT_INSTALL" = "0" ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
 disable_firstboot() {
     if mount_config; then
         augtool <<EOF

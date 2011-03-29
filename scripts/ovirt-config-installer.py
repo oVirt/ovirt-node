@@ -49,7 +49,6 @@ PASSWORD_PAGE = 7
 UPGRADE_PAGE = 9
 FAILED_PAGE = 11
 FINISHED_PAGE = 13
-FINISHED_UNINSTALL_PAGE = 15
 current_password = ""
 
 def pam_conv(auth, query_list):
@@ -316,7 +315,6 @@ class NodeInstallScreen:
                         else:
                             self.menu_list.append(" Install " + PRODUCT_SHORT + " " +  m_full_ver, 1)
                             self.menu_list.append(" ", 2)
-                    self.menu_list.append(" Uninstall " + PRODUCT_SHORT + " " + e_full_ver, 5)
                 except:
                     log("unable to get_version_numbers for upgrade")
                     pass
@@ -619,13 +617,6 @@ class NodeInstallScreen:
         elements.setField(Label(" "), 0, 6)
         return [Label(""), elements]
 
-    def finish_uninstall_page(self):
-        elements = Grid(2, 5)
-        elements.setField(Label("%s Uninstall Finished Successfully" %
-            PRODUCT_SHORT), 0, 0,padding=(18,5,0,1))
-        elements.setField(Label(" "), 0, 1)
-        return [Label(""), elements]
-
     def get_elements_for_page(self, screen, page):
         if page == WELCOME_PAGE:
             return self.install_page()
@@ -645,8 +636,6 @@ class NodeInstallScreen:
             return self.upgrade_page()
         if page == FINISHED_PAGE:
             return self.finish_install_page()
-        if page == FINISHED_UNINSTALL_PAGE:
-            return self.finish_uninstall_page()
         return []
 
     def install_node(self):
@@ -726,11 +715,11 @@ class NodeInstallScreen:
             (fullwidth, fullheight) = _snack.size()
             current_element += 1
             buttons = []
-            if self.__current_page == FINISHED_PAGE or self.__current_page == FINISHED_UNINSTALL_PAGE:
+            if self.__current_page == FINISHED_PAGE:
                 buttons.append(["Reboot", REBOOT_BUTTON])
-            if self.__current_page != FINISHED_PAGE or self.__current_page != FINISHED_UNINSTALL_PAGE:
+            if self.__current_page != FINISHED_PAGE:
                 buttons.append(["Abort", ABORT_BUTTON])
-            if self.__current_page != WELCOME_PAGE and self.__current_page != FAILED_PAGE and self.__current_page != FINISHED_PAGE and self.__current_page != FINISHED_UNINSTALL_PAGE:
+            if self.__current_page != WELCOME_PAGE and self.__current_page != FAILED_PAGE and self.__current_page != FINISHED_PAGE:
                 buttons.append(["Back", BACK_BUTTON])
             if self.__current_page == HOSTVG_STORAGE_PAGE or self.__current_page == ROOT_STORAGE_PAGE or self.__current_page == UPGRADE_PAGE:
                 buttons.append(["Continue", CONTINUE_BUTTON])
@@ -742,7 +731,7 @@ class NodeInstallScreen:
                 buttons.append(["Drop To Shell", SHELL_BUTTON])
             buttonbar = ButtonBar(screen, buttons, compact = 1)
             buttongrid = Grid(1,1)
-            if self.__current_page == FINISHED_PAGE or self.__current_page == FINISHED_UNINSTALL_PAGE:
+            if self.__current_page == FINISHED_PAGE:
                 buttongrid.setField(buttonbar, 0, 0, padding = (14,0,0,0))
                 buttongrid_anchor = 0
             else:
@@ -786,13 +775,6 @@ class NodeInstallScreen:
                             self.__current_page = ROOT_STORAGE_PAGE
                         elif menu_choice == 3:
                             self.__current_page = UPGRADE_PAGE
-                        elif menu_choice == 5:
-                            warn = ButtonChoiceWindow(self.screen, "!! WARNING !! WARNING !! WARNING !! WARNING !! WARNING !!", "Do you wish to continue and uninstall this node?", buttons = ['Ok', 'Cancel'])
-                            if warn == "ok":
-                                uninstall_node()
-                                self.__current_page = FINISHED_UNINSTALL_PAGE
-                            else:
-                                self.__current_page = WELCOME_PAGE
                     elif self.__current_page == ROOT_STORAGE_PAGE:
                             self.storage_init = self.root_disk_menu_list.current()
                             if self.storage_init == "OtherDevice":

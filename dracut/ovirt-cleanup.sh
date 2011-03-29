@@ -6,10 +6,16 @@
 # Check firstboot arg
 # accept either ovirt-firstboot or firstboot
 # return if =0 or =no
+# rhbz#640782 - reinstall is alias for firstboot
+# uninstall should trigger cleanup as well
 if getarg firstboot >/dev/null; then
     fb=$(getarg firstboot)
-elif getarg ovirt_firstboot; then
+elif getarg ovirt_firstboot >/dev/null; then
     fb=$(getarg ovirt_firstboot)
+elif getarg reinstall >/dev/null; then
+    fb=$(getarg reinstall)
+elif getarg uninstall >/dev/null; then
+    fb=$(getarg uninstall)
 else
     return 0
 fi
