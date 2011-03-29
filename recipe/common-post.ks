@@ -364,12 +364,6 @@ dontLogTCPWrappersConnects yes
 rwuser root auth .1
 SNMPCONF_EOF
 
-# rebuild initramfs to include multipath rhbz#627647
-echo -n "Rebuilding initramfs for multipath and disk cleanup..."
-kernel="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}\n' kernel)"
-dracut -f -a "ovirtnode" -a "multipath" /initrd0.img "$kernel"
-echo "done."
-
 # load modules required by crypto swap
 cat > /etc/sysconfig/modules/swap-crypt.modules <<EOF
 #!/bin/sh

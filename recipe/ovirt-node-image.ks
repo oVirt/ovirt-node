@@ -14,12 +14,12 @@
 %include common-el6.ks
 %end
 
-%include common-blacklist.ks
-
 %post --nochroot
 %include common-post-nochroot.ks
 
 %end
 
+%include common-initrd-post.ks
+%include common-blacklist.ks
 %include common-manifest-post.ks
 

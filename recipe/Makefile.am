@@ -37,6 +37,7 @@ OVIRT_NODE_TOOLS_DATA =         \
         repos.ks                \
         common-blacklist.ks     \
         common-manifest-post.ks \
+        common-initrd-post.ks   \
         common-install.ks       \
         common-minimizer.ks     \
         common-el6.ks           \
@@ -48,6 +49,7 @@ OVIRT_NODE_TOOLS_DATA =         \
 EXTRA_DIST =                    \
         common-blacklist.ks     \
         common-manifest-post.ks \
+        common-initrd-post.ks   \
         common-install.ks       \
         common-minimizer.ks     \
         common-el6.ks           \
