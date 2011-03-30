@@ -1,6 +1,9 @@
 #!/bin/sh
 
 . /sbin/ovirt-boot-functions
+if [ "$(basename $0)" = "01ovirt-cleanup.sh" ]; then
+    . /lib/dracut-lib.sh
+fi
 
 
 # Check firstboot arg
@@ -50,6 +53,7 @@ storage_init=$(echo $storage_init | sed 's/;/,/')
 
 oldIFS=$IFS
 
+lvm_scan
 IFS=","
 for dev in $storage_init; do
     device=$(IFS=$oldIFS parse_disk_id "$dev")
@@ -68,5 +72,5 @@ done
 
 IFS=$oldIFS
 
-
+lvm_scan
 return 0
