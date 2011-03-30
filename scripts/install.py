@@ -211,7 +211,10 @@ title oVirt Node (%(version)s-%(release)s)
     initrd /initrd0.img
     """
     device_map_conf = open(grub_dir + "/device.map", "w")
-    device_map_conf.write("(hd0) " + "/dev/"+disk)
+    if "/dev/mapper" in disk:
+        device_map_conf.write("(hd0) " + disk)
+    else:
+        device_map_conf.write("(hd0) " + "/dev/"+disk)
     device_map_conf.close()
     grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
     for file in grub_files:
