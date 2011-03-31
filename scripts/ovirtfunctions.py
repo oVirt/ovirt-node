@@ -995,6 +995,14 @@ def get_media_version_number():
         return [new_install["VERSION"],new_install["RELEASE"]]
     return False
 
+def findfs(label):
+    os.system("partprobe /dev/mapper/* 2>/dev/null")
+    os.system("udevadm settle")
+    blkid_cmd = "/sbin/blkid -c /dev/null -l -o device -t LABEL=\"" + label + "\""
+    blkid = subprocess.Popen(blkid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    blkid_output = blkid.stdout.read().strip()
+    return blkid_output
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

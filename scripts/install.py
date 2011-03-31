@@ -84,14 +84,19 @@ def ovirt_boot_setup():
 
     # check that /boot mounted ok and find partition number for GRUB, $4 is to allow 0 as a partition number for grub
     log("grub_dev_label: " + grub_dev_label)
-    grub_part_info_cmd = "findfs LABEL=%s 2>/dev/null" % grub_dev_label
-    grub_part_info = subprocess.Popen(grub_part_info_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    disk = grub_part_info.stdout.read()
-    disk = disk.strip()
-    length = len(disk) - 1
-    partN = disk[length:]
-    log("partN: " + str(partN))
-    partN = int(partN) - 1
+    try:
+        disk = findfs(grub_dev_label)
+        if disk:
+            disk = disk.strip()
+            length = len(disk) - 1
+            partN = disk[length:]
+            partN = int(partN) - 1
+            log("partN: " + str(partN))
+        else:
+            log("Unable to find %s partition") % grub_dev_label
+    except:
+        log("Failed to determine new Root partition")
+        return False
     disk_basename = disk.rstrip(disk[-2:])
     if os.path.exists(disk_basename):
         disk = disk_basename
@@ -107,14 +112,11 @@ def ovirt_boot_setup():
         os.system("umount /liveos")
         # prepare Root partition update
         candidate=""
-        ret = os.system("findfs LABEL=RootBackup &>/dev/null")
-        if ret == 0:
+        if findfs("RootBackup"):
             candidate = "RootBackup"
-        ret = os.system("findfs LABEL=RootUpdate &>/dev/null")
-        if ret == 0:
+        elif findfs("RootUpdate"):
             candidate = "RootUpdate"
-        ret = os.system("findfs LABEL=RootNew &>/dev/null")
-        if ret == 0:
+        elif findfs("RootNew"):
             candidate = "RootNew"
         if candidate == "":
             rc=1
@@ -126,9 +128,7 @@ def ovirt_boot_setup():
                 log("Failed to unmount /liveos")
                 return False
         else:
-            candidate_dev_cmd = "findfs LABEL=%s 2>/dev/null" % candidate
-            candidate_dev = subprocess.Popen(grub_part_info_cmd, shell=True, stdout=PIPE, stderr=STDOUT, stdin=PIPE)
-            candidate_dev = candidate_dev.stdout.read().strip()
+            candidate_dev = findfs(candidate)
             e2label_cmd = "e2label \"%s\" RootNew" % candidate_dev
             log(e2label_cmd)
             rc = os.system(e2label_cmd)
