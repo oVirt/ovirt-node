@@ -38,6 +38,7 @@ device atp870u
 device be2iscsi
 device bfa
 device BusLogic
+device cciss
 device cxgb3i
 device dc395x
 device fnic

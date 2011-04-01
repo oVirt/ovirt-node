@@ -412,6 +412,8 @@ class Storage:
             os.system("parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.ROOT_SIZE)+"M "+str(self.RootBackup_end)+"M\" &>/dev/null")
             # sleep to ensure filesystems are created before continuing
             time.sleep(5)
+            # force reload some cciss devices will fail to mkfs
+            os.system("multipath -r &>" + OVIRT_TMP_LOGFILE)
             self.reread_partitions(self.ROOTDRIVE)
             partroot = self.ROOTDRIVE + "1"
             partrootbackup = self.ROOTDRIVE + "2"

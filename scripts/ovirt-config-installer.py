@@ -397,7 +397,7 @@ class NodeInstallScreen:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":
                         dev_bus = dev_bus.upper()
-                    elif dev_bus == "ata" or dev_bus == "scsi":
+                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss":
                         dev_bus = "Local / FibreChannel"
                     else:
                         if "/dev/vd" in dev_name:
@@ -484,7 +484,7 @@ class NodeInstallScreen:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":
                         dev_bus = dev_bus.upper()
-                    elif dev_bus == "ata" or dev_bus == "scsi":
+                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss":
                         dev_bus = "Local / FibreChannel"
                     else:
                         if "/dev/vd" in dev_name:
