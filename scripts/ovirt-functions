@@ -37,6 +37,7 @@ OVIRT_CONFIG_FILES="\
  /etc/logrotate.d/ovirt-node
 "
 
+. /usr/libexec/ovirt-boot-functions
 LF=$'\n'
 SEP=','
 TAB=$'\t'
@@ -792,21 +793,6 @@ ovirt_safe_delete_config() {
     done
 }
 
-
-# compat function to handle different udev versions
-udev_info() {
-    local name=$1
-    local query=$2
-    local options=$3
-    local out
-
-    out=$(udevadm info --name=$name --query=$query $options)
-    rc=$?
-    if [ $rc -eq 0 ]; then
-        echo $out
-    fi
-    return $rc
-}
 
 backup_file() {
     dir=$(dirname "$1")

@@ -106,24 +106,6 @@ configure_ovirt_management_nic() {
 
 }
 
-# $(get_live_disk)
-# livecd boot disk
-get_live_disk() {
-    local live_dev=/dev/live
-    if [ ! -e $live_dev ]; then
-      # PXE boot
-      live_dev=/dev/loop0
-      live_disk=
-    else
-      live_part=$(readlink -e $live_dev)
-      live_disk=$(basename $(dirname $(udev_info $live_part path)))
-      if [ "$live_disk" = "block" ]; then
-          live_disk=$(basename $(udev_info $live_part path))
-      fi
-    fi
-    echo $live_disk
-}
-
 configure_management_interface() {
     log "Configuring the manangement interface."
     case $OVIRT_RUNTIME_MODE in
