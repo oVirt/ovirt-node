@@ -105,8 +105,14 @@ is_local_storage_configured () {
 # for storage - OVIRT_INIT, local disk to use
 #       if ovirt_vol is not specified, default volume sizes are set
 is_auto_install() {
-    if [ -n "$OVIRT_BOOTIF" -a -n "$OVIRT_INIT" ] ; then
-        return 0
+    if [ -n "$OVIRT_BOOTIF" ]; then
+        if [ -n "$OVIRT_INIT" ] ; then
+            return 0
+        elif egrep -q "storage_init|ovirt_init" /proc/cmdline ; then
+            return 2
+        else
+            return 1
+        fi
     else
         return 1
     fi

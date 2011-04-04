@@ -34,12 +34,10 @@ trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
 autoinstall_failed(){
-    if is_auto_install; then
-        log "Automatic installation failed. Please review console messages."
-        log "Press Enter to drop to emergency shell."
-        read < /dev/console
-        bash < /dev/console
-    fi
+    log "Automatic installation failed. Please review console messages."
+    log "Press Enter to drop to emergency shell."
+    read < /dev/console
+    bash < /dev/console
 }
 
 start_ovirt_firstboot ()
@@ -55,7 +53,9 @@ start_ovirt_firstboot ()
     # Hide kernel messages on the console
     dmesg -n 1
 
-    if is_auto_install; then
+    is_auto_install
+    auto_install=$?
+    if [ "$auto_install" = "0" ]; then
         /usr/libexec/ovirt-config-storage AUTO && \
         /usr/libexec/ovirt-config-hostname AUTO && \
         /usr/libexec/ovirt-config-networking AUTO && \
@@ -73,6 +73,9 @@ start_ovirt_firstboot ()
         if [ $rc -ne 0 ]; then
             autoinstall_failed
         fi
+    elif [ "$auto_install" = "2" ]; then
+        echo "Device specified in storage_init does not exist"
+        autoinstall_failed
     fi
 
     if is_upgrade; then
@@ -82,7 +85,7 @@ start_ovirt_firstboot ()
             autoinstall_failed
         fi
         disable_firstboot
-        ovirt_store_firstboot_config
+        ovirt_store_firstboot_config || autoinstall_failed
         reboot
         if [ $? -ne 0 ]; then
             autoinstall_failed
