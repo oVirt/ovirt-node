@@ -300,3 +300,6 @@ drop /usr/sbin/snmptrapd
 drop /usr/bin/net-snmp-create-v3-user
 drop /usr/bin/snmpconf
 drop /usr/share/snmp/snmpconf-data
+
+#desktop files
+drop /etc/xdg/autostart/restorecond.desktop
