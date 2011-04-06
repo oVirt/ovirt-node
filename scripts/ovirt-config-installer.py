@@ -802,8 +802,7 @@ class NodeInstallScreen:
                             else:
                                 hostvg_list = ""
                                 for dev in self.hostvg_init:
-                                    if dev != self.storage_init:
-                                        hostvg_list += dev + ","
+                                    hostvg_list += dev + ","
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                                 self.__current_page = PASSWORD_PAGE
                                 if check_existing_hostvg(""):
