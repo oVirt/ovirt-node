@@ -22,7 +22,7 @@ require {
     type unconfined_t;
     class file { append mounton open getattr read execute ioctl lock entrypoint };
     class fd { use };
-    class process { sigchld signull transition noatsecure siginh rlimitinh };
+    class process { sigchld signull transition noatsecure siginh rlimitinh getattr };
     class fifo_file { getattr open read write append lock ioctl };
     class filesystem getattr;
     class dir { getattr search open read lock ioctl };
