@@ -6,7 +6,7 @@ selinux --enforcing
 firewall --disabled
 # TODO: the sizing of the image needs to be more dynamic
 part / --size 1024 --fstype ext2
-services --enabled=auditd,ntpd,ntpdate,iptables,network,rsyslog,multipathd,snmpd --disabled=rhn-virtualization-host
+services --enabled=auditd,ntpd,ntpdate,iptables,network,rsyslog,multipathd,snmpd --disabled=rhn-virtualization-host,netfs
 # additional default boot parameters
 # Need to use deadline Scheduler for performance, rhbz#647301
 # VM timekeeping: Do not allow C2 state, rhbz#647300

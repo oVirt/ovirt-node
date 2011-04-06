@@ -381,3 +381,22 @@ chmod +x /etc/sysconfig/modules/swap-crypt.modules
 localedef --list-archive | grep -v -i -E 'en_US.utf8' |xargs localedef --delete-from-archive
 mv /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl
 /usr/sbin/build-locale-archive
+
+# rhbz#675868
+# Modify rc.sysinit
+patch -d /etc/rc.d -p0 <<\EOF
+--- rc.sysinit.orig	2011-04-06 09:11:18.126385229 -0400
++++ rc.sysinit	2011-04-06 09:11:04.195923990 -0400
+@@ -495,9 +495,9 @@
+ # mounted). Contrary to standard usage,
+ # filesystems are NOT unmounted in single user mode.
+ if [ "$READONLY" != "yes" ] ; then
+-	action $"Mounting local filesystems: " mount -a -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2 -O no_netdev
++	action $"Mounting local filesystems: " mount -a -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2,noproc,nosysfs,nodevpts -O no_netdev
+ else
+-	action $"Mounting local filesystems: " mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2 -O no_netdev
++	action $"Mounting local filesystems: " mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2,noproc,nosysfs,nodevpts -O no_netdev
+ fi
+
+ # Update quotas if necessary
+EOF
