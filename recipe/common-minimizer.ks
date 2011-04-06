@@ -226,6 +226,7 @@ drop /usr/lib*/gio
 drop /usr/share/syslinux
 # glibc-common locales
 drop /usr/lib/locale
+keep /usr/lib/locale/locale-archive
 keep /usr/lib/locale/usr/share/locale/en_US
 # pango
 drop /usr/lib*/pango
