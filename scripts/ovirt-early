@@ -658,20 +658,27 @@ start_ovirt_early () {
     fi
 
     if [ -n "$rootpw" ]; then
-        log "Setting temporary root password: $rootpw"
+        log "Setting temporary root and admin password: $rootpw"
         unmount_config /etc/passwd /etc/shadow
         /usr/sbin/usermod -p "$rootpw" root
+        /usr/sbin/usermod -p "$rootpw" admin
         chage -d 0 root
+        chage -d 0 admin
     fi
     # check if root password is expired, this might be upon reboot
     # in case of automated installed with rootpw parameter!
-    if LC_ALL=C chage -l root | grep  -q "password must be changed"; then
+    if LC_ALL=C chage -l root | grep  -q "password must be changed" \
+        || LC_ALL=c chage -l admin | grep -q "password must be changed"; then
         unmount_config /etc/passwd /etc/shadow
         # PAM will force password change at first login
         # so make sure we persist it after a successful login
         cat >> /etc/profile << EOF
 # added by ovirt-early
-persist /etc/passwd /etc/shadow
+sudo persist /etc/passwd /etc/shadow
+if LC_ALL=C sudo chage -l root | grep  -q "password must be changed" \
+    || LC_ALL=C sudo chage -l admin | grep -q "password must be changed"; then
+    sudo /usr/libexec/ovirt-functions unmount_config /etc/passwd /etc/shadow
+fi
 EOF
     fi
 

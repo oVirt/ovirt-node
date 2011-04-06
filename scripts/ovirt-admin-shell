@@ -1,2 +1,3 @@
 #!/bin/bash
+. /etc/profile
 sudo /usr/libexec/ovirt-config-setup
