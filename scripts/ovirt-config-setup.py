@@ -912,6 +912,20 @@ class NodeConfigScreen():
                   self.dhcp_ipv6_nic_proto, self.static_ipv6_nic_proto, self.auto_ipv6_nic_proto, \
                   self.ipv6_netdevip, self.ipv6_netdevmask, self.ipv6_netdevgateway, self.netvlanid:
                   item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+          try:
+              current_ip = get_ipv6_address("br" + self.nic_lb.current()).split("\n")
+              if current_ip == "":
+                  current_ip = get_ipv6_address(self.nic_lb.current()).split("\n")
+              if current_ip != "":
+                  if len(current_ip) > 1:
+                      current_ip = current_ip[0]
+                      current_ip, netmask = current_ip.split("/")
+                  else:
+                      current_ip, netmask = current_ip.split("/")
+                  self.ipv6_netdevip.set(current_ip)
+                  self.ipv6_netdevmask.set(netmask)
+          except:
+              pass
           return [Label(""),
                   grid]
       def kdump_configuration_page(self, screen):
@@ -1046,7 +1060,14 @@ class NodeConfigScreen():
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "dhcp" + '"')
           if self.auto_ipv6_nic_proto.value() == 1:
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "auto" + '"')
-
+          if self.static_ipv6_nic_proto.value() == 1:
+              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "static" + '"')
+              if self.ipv6_netdevip.value():
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", '"' + self.ipv6_netdevip.value() + '"')
+              if self.ipv6_netdevmask.value():
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", '"' + self.ipv6_netdevmask.value() + '"')
+              if self.ipv6_netdevgateway.value():
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", '"' + self.ipv6_netdevgateway.value() + '"')
           self.screen = SnackScreen()
           # apply any colorsets that were provided.
           for item in self.__colorset.keys():

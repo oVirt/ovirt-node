@@ -225,7 +225,7 @@ function configure_interface
                     S|s)
                         read -ep "IPv6 Address: "; IPADDR=$REPLY
                         BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6INIT yes"
-                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IP6ADDR $IPADDR"
+                        BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPV6ADDR $IPADDR"
                         break
                         ;;
                     D|d)
