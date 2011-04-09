@@ -1003,6 +1003,12 @@ def findfs(label):
     blkid_output = blkid.stdout.read().strip()
     return blkid_output
 
+def system(command):
+    if os.system(command + " &>> " + OVIRT_TMP_LOGFILE) == 0:
+        return True
+    else:
+        return False
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

@@ -44,12 +44,10 @@ def ovirt_boot_setup():
             return
 
     found_boot=False
-    rc = os.system("findfs LABEL=Boot &>/dev/null")
-    if rc == 0:
+    if findfs("Boot"):
         found_boot = True
         grub_dev_label = "Boot"
-    rc = os.system("findfs LABEL=Root &>/dev/null")
-    if rc == 0:
+    if findfs("Root"):
         found_boot = False
         grub_dev_label = "Root"
     if found_boot:
@@ -163,9 +161,11 @@ def ovirt_boot_setup():
         shutil.rmtree(grub_dir)
     if not os.path.exists(grub_dir):
         os.makedirs(grub_dir)
-    os.system("cp -p /live/" + syslinux + "/vmlinuz0 " + initrd_dest)
-    rc = os.system("cp -p /live/" + syslinux + "/initrd0.img " + initrd_dest)
-    if rc != 0:
+    if system("cp -p /live/" + syslinux + "/vmlinuz0 " + initrd_dest):
+        if not system("cp -p /live/" + syslinux + "/initrd0.img " + initrd_dest):
+            log("initrd image copy failed.")
+            return False
+    else:
         log("kernel image copy failed.")
         return False
 

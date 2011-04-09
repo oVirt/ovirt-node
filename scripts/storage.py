@@ -93,7 +93,7 @@ class Storage:
         vg = subprocess.Popen(vg_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         vg_output = vg.stdout.read()
         for vg in vg_output:
-            pvs = os.system("pvscan -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \" &>/dev/null") % (vg, dev, part_delim, dev)
+            pvs = system("pvscan -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \"") % (vg, dev, part_delim, dev)
             if pvs > 0:
                 log("The volume group \"%s\" spans multiple disks.") % vg
                 log("This operation cannot complete.  Please manually")
@@ -112,7 +112,7 @@ class Storage:
             os.system("partprobe &>/dev/null")
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
-            os.system("service multipathd reload &>>"+ OVIRT_TMP_LOGFILE)
+            system("service multipathd reload")
 
         else:
             os.system("blockdev --rereadpt " + drive + " &>>/dev/null")
@@ -167,7 +167,7 @@ class Storage:
         for d in byid_list_output.split():
             d = os.readlink(d)
             d_basename = os.path.basename(d)
-            udev_cmd = "udevadm info --name=/dev/" + d_basename + " --query=property | grep -q ^ID_BUS: &>/dev/null"
+            udev_cmd = "udevadm info --name=/dev/" + d_basename + " --query=property | grep -q ^ID_BUS: &>>/dev/null"
             if os.system(udev_cmd):
                 devices="%s /dev/%s " % (devices, d_basename)
         # FIXME: workaround for detecting cciss devices
@@ -260,26 +260,26 @@ class Storage:
         for drv in self.HOSTVGDRIVE.split(","):
             if drv != "":
                 if self.ROOTDRIVE == drv:
-                    parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\" &>/dev/null "
+                    parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\""
                     log(parted_cmd)
-                    os.system(parted_cmd)
+                    system(parted_cmd)
                     hostvgpart="3"
                 elif self.BOOTDRIVE == drv:
-                    parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 " + str(self.boot_size_si) + " -1\" &>/dev/null"
+                    parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 " + str(self.boot_size_si) + " -1\""
                     log(parted_cmd)
-                    os.system(parted_cmd)
+                    system(parted_cmd)
                     hostvgpart="2"
                     self.ROOTDRIVE = self.BOOTDRIVE
                 else:
-                    os.system("parted \""+ drv +"\" -s \"mklabel "+self.LABEL_TYPE+"\" &>/dev/null")
-                    parted_cmd = "parted \""+ drv + "\" -s \"mkpart primary ext2 0M -1 \" &>/dev/null "
+                    system("parted \""+ drv +"\" -s \"mklabel "+self.LABEL_TYPE+"\"")
+                    parted_cmd = "parted \""+ drv + "\" -s \"mkpart primary ext2 0M -1 \""
                     log(parted_cmd)
-                    os.system(parted_cmd)
+                    system(parted_cmd)
                     hostvgpart = "1"
                 log("Toggling LVM on")
-                parted_cmd = "parted " + self.HOSTVGDRIVE +  " -s \"set " + str(hostvgpart) + " lvm on\"" + " &>/dev/null"
-                os.system(parted_cmd)
-                os.system("parted \"" + self.ROOTDRIVE + "\" -s \"print\" &>/dev/null")
+                parted_cmd = "parted " + self.HOSTVGDRIVE +  " -s \"set " + str(hostvgpart) + " lvm on\""
+                system(parted_cmd)
+                system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
                 os.system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
                 self.reread_partitions(drv)
 
@@ -287,7 +287,7 @@ class Storage:
                 if OVIRT_VARS.has_key("OVIRT_INSTALL_ROOT") and OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y" :
                     if self.LABEL_TYPE == "gpt":
                         log("Running gptsync to create legacy mbr")
-                        os.system("gptsync \"" + self.ROOTDRIVE + "\" &>/dev/null")
+                        system("gptsync \"" + self.ROOTDRIVE + "\"")
 
                 partpv = drv + hostvgpart
                 if not os.path.exists(partpv):
@@ -301,54 +301,50 @@ class Storage:
             if not os.path.exists(partpv):
                 log(partpv + "is not available!")
                 return False
-            ret = os.system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1 &>/dev/null")
-            if ret != 0:
+            if not system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1"):
                 log("Failed to wipe lvm partition")
-            ret = os.system("pvcreate -ff -y \"" + partpv + "\" &>/dev/null ")
-            if ret != 0:
+            if not system("pvcreate -ff -y \"" + partpv + "\""):
                 log("Failed to pvcreate on " + partpv)
                 return False
             if drv_count < 1:
                 log("Creating volume group on " + partpv)
-                ret = os.system("vgcreate /dev/HostVG \"" + partpv + "\" &>/dev/null ")
-                if ret != 0:
+                if not system("vgcreate /dev/HostVG \"" + partpv + "\""):
                     log("Failed to vgcreate /dev/HostVG on " + partpv)
                     return False
             else:
                 log("Extending volume group on " + partpv)
-                ret = os.system("vgextend /dev/HostVG \"" + partpv + "\" &>/dev/null ")
-                if ret != 0:
+                if not system("vgextend /dev/HostVG \"" + partpv + "\""):
                     log("Failed to vgextend /dev/HostVG on " + partpv)
                     return False
             drv_count = drv_count + 1
         if self.SWAP_SIZE > 0:
             log("Creating swap partition")
-            os.system("lvcreate --name Swap --size "+str(self.SWAP_SIZE) + "M /dev/HostVG &>/dev/null")
-            os.system("mkswap -L \"SWAP\" /dev/HostVG/Swap &>/dev/null")
+            system("lvcreate --name Swap --size "+str(self.SWAP_SIZE) + "M /dev/HostVG")
+            system("mkswap -L \"SWAP\" /dev/HostVG/Swap")
             os.system("echo \"/dev/HostVG/Swap swap swap defaults 0 0\" >> /etc/fstab")
         if self.CONFIG_SIZE > 0:
             log("Creating config partition")
-            os.system("lvcreate --name Config --size "+str(self.CONFIG_SIZE)+"M /dev/HostVG &>/dev/null")
-            os.system("mke2fs -j /dev/HostVG/Config -L \"CONFIG\" &>/dev/null")
-            os.system("tune2fs -c 0 -i 0 /dev/HostVG/Config &>/dev/null")
+            system("lvcreate --name Config --size "+str(self.CONFIG_SIZE)+"M /dev/HostVG")
+            system("mke2fs -j /dev/HostVG/Config -L \"CONFIG\"")
+            system("tune2fs -c 0 -i 0 /dev/HostVG/Config")
         if self.LOGGING_SIZE > 0:
             log("Creating log partition")
-            os.system("lvcreate --name Logging --size "+str(self.LOGGING_SIZE)+"M /dev/HostVG &>/dev/null")
-            os.system("mke2fs -j /dev/HostVG/Logging -L \"LOGGING\" &>/dev/null")
-            os.system("tune2fs -c 0 -i 0 /dev/HostVG/Logging &>/dev/null")
+            system("lvcreate --name Logging --size "+str(self.LOGGING_SIZE)+"M /dev/HostVG")
+            system("mke2fs -j /dev/HostVG/Logging -L \"LOGGING\"")
+            system("tune2fs -c 0 -i 0 /dev/HostVG/Logging")
             os.system("echo \"/dev/HostVG/Logging /var/log ext3 defaults,noatime 0 0\" >> /etc/fstab")
         use_data=1
         if self.DATA_SIZE == -1:
             log("Creating data partition with remaining free space")
-            os.system("lvcreate --name Data -l 100%FREE /dev/HostVG &>/dev/null")
+            system("lvcreate --name Data -l 100%FREE /dev/HostVG")
             use_data=0
         elif self.DATA_SIZE > 0:
             log("Creating data partition")
-            os.system("lvcreate --name Data --size "+str(self.DATA_SIZE)+"M /dev/HostVG &>/dev/null")
+            system("lvcreate --name Data --size "+str(self.DATA_SIZE)+"M /dev/HostVG")
             use_data=0
         if use_data == 0:
-            os.system("mke2fs -j /dev/HostVG/Data -L \"DATA\" &>/dev/null")
-            os.system("tune2fs -c 0 -i 0 /dev/HostVG/Data &>/dev/null")
+            system("mke2fs -j /dev/HostVG/Data -L \"DATA\"")
+            system("tune2fs -c 0 -i 0 /dev/HostVG/Data")
             os.system("echo \"/dev/HostVG/Data /data ext3 defaults,noatime 0 0\" >> /etc/fstab")
             os.system("echo \"/data/images /var/lib/libvirt/images bind bind 0 0\" >> /etc/fstab")
             os.system("echo \"/data/core /var/log/core bind bind 0 0\" >> /etc/fstab")
@@ -387,16 +383,16 @@ class Storage:
             wipe_partitions(self.BOOTDRIVE)
             reread_partitions(self.BOOTDRIVE)
             log("Creating boot partition")
-            os.system("parted \""+ self.BOOTDRIVE+"\" -s \"mklabel "+self.LABEL_TYPE+"\" &>/dev/null")
-            os.system("parted \""+self.BOOTDRIVE+"\" -s \"mkpartfs primary ext2 0M "+ self.boot_size_si+"%sM\" &>/dev/null")
+            system("parted \""+ self.BOOTDRIVE+"\" -s \"mklabel "+self.LABEL_TYPE+"\"")
+            system("parted \""+self.BOOTDRIVE+"\" -s \"mkpartfs primary ext2 0M "+ self.boot_size_si+"%sM\"")
             reread_partitions(self.BOOTDRIVE)
             partboot= self.BOOTDRIVE + "1"
             if not os.path.exists(partboot):
                 partboot = self.BOOTDRIVE + "p1"
             # sleep to ensure filesystems are created before continuing
             time.sleep(10)
-            os.system("mke2fs \"" + str(partboot) +"\" -L Boot &>/dev/null")
-            os.system("tune2fs -c 0 -i 0 " + str(partboot) + " &>/dev/null")
+            system("mke2fs \"" + str(partboot) +"\" -L Boot")
+            system("tune2fs -c 0 -i 0 " + str(partboot))
             if OVIRT_VARS["OVIRT_ISCSI_HOSTVG"] == "y":
                 self.create_hostvg()
             log("Completed!")
@@ -406,27 +402,27 @@ class Storage:
             wipe_partitions(self.ROOTDRIVE)
             self.reread_partitions(self.ROOTDRIVE)
             log("Labeling Drive: " + self.ROOTDRIVE)
-            os.system("parted \""+ self.ROOTDRIVE +"\" -s \"mklabel "+ self.LABEL_TYPE+"\" &>/dev/null")
+            system("parted \""+ self.ROOTDRIVE +"\" -s \"mklabel "+ self.LABEL_TYPE+"\"")
             log("Creating Root and RootBackup Partitions")
-            os.system("parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 0M "+ str(self.ROOT_SIZE)+"sM\" &>/dev/null")
-            os.system("parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.ROOT_SIZE)+"M "+str(self.RootBackup_end)+"M\" &>/dev/null")
+            system("parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 0M "+ str(self.ROOT_SIZE)+"sM\"")
+            system("parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.ROOT_SIZE)+"M "+str(self.RootBackup_end)+"M\"")
             # sleep to ensure filesystems are created before continuing
             time.sleep(5)
             # force reload some cciss devices will fail to mkfs
-            os.system("multipath -r &>" + OVIRT_TMP_LOGFILE)
+            system("multipath -r")
             self.reread_partitions(self.ROOTDRIVE)
             partroot = self.ROOTDRIVE + "1"
             partrootbackup = self.ROOTDRIVE + "2"
             if not os.path.exists(partroot):
                 partroot = self.ROOTDRIVE + "p1"
                 partrootbackup= self.ROOTDRIVE + "p2"
-            os.system("mke2fs \""+partroot+"\" -L Root &>/dev/null")
-            os.system("mke2fs \""+partrootbackup+"\" -L RootBackup &>/dev/null")
-            os.system("tune2fs -c 0 -i 0 \""+partroot+"\" &>/dev/null")
-            os.system("tune2fs -c 0 -i 0 \""+partrootbackup+"\" &>/dev/null")
+            system("mke2fs \""+partroot+"\" -L Root")
+            system("mke2fs \""+partrootbackup+"\" -L RootBackup")
+            system("tune2fs -c 0 -i 0 \""+partroot+"\"")
+            system("tune2fs -c 0 -i 0 \""+partrootbackup+"\"")
 
         if self.ROOTDRIVE != self.HOSTVGDRIVE:
-            os.system("parted \"" + self.HOSTVGDRIVE +"\" -s \"mklabel " + self.LABEL_TYPE + "\" &>/dev/null")
+            system("parted \"" + self.HOSTVGDRIVE +"\" -s \"mklabel " + self.LABEL_TYPE + "\"")
         if self.create_hostvg():
             return True
         else:
