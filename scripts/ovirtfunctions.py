@@ -482,6 +482,7 @@ def ovirt_store_config(files):
         filename = os.path.abspath(files)
         persist_it=True
     else:
+        log("/config is not mounted")
         return False
     # ensure that, if this is a directory
     # that it's not already persisted
@@ -531,9 +532,10 @@ def ovirt_store_config(files):
             log("\nSuccessfully persisted: " + filename)
             rc = 0
     else:
-        log("WARNING: persistent config storage not available\n")
-        rc=2
-    return rc
+        log(filename + " Already persisted\n")
+        rc = 0
+    if rc == 0:
+        return True
 
 def is_persisted(filename):
     abspath = os.path.abspath(filename)
