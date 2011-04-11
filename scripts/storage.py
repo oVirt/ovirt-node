@@ -402,10 +402,16 @@ class Storage:
             wipe_partitions(self.ROOTDRIVE)
             self.reread_partitions(self.ROOTDRIVE)
             log("Labeling Drive: " + self.ROOTDRIVE)
-            system("parted \""+ self.ROOTDRIVE +"\" -s \"mklabel "+ self.LABEL_TYPE+"\"")
+            parted_cmd = "parted \""+ self.ROOTDRIVE +"\" -s \"mklabel "+ self.LABEL_TYPE+"\""
+            log(parted_cmd)
+            system(parted_cmd)
             log("Creating Root and RootBackup Partitions")
-            system("parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 0M "+ str(self.ROOT_SIZE)+"sM\"")
-            system("parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.ROOT_SIZE)+"M "+str(self.RootBackup_end)+"M\"")
+            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 0M "+ str(self.ROOT_SIZE)+"M\""
+            log(parted_cmd)
+            system(parted_cmd)
+            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.ROOT_SIZE)+"M "+str(self.RootBackup_end)+"M\""
+            log(parted_cmd)
+            system(parted_cmd)
             # sleep to ensure filesystems are created before continuing
             time.sleep(5)
             # force reload some cciss devices will fail to mkfs
