@@ -177,12 +177,6 @@ def ovirt_boot_setup():
         if rc > 0:
           log("squashfs image copy failed.")
           return False
-    version_cmd = "rpm -q --qf '%{version}' ovirt-node"
-    version = subprocess.Popen(version_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    version = version.stdout.read()
-    release_cmd = "rpm -q --qf '%{release}' ovirt-node"
-    release = subprocess.Popen(release_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    release = release.stdout.read()
     # reorder tty0 to allow both serial and phys console after installation
     if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
         bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
@@ -208,7 +202,7 @@ def ovirt_boot_setup():
 default=0
 timeout=5
 hiddenmenu
-title oVirt Node (%(version)s-%(release)s)
+title %(product)s %(version)s-%(release)s
     root (hd0,%(partN)s)
     kernel /vmlinuz0 %(bootparams)s
     initrd /initrd0.img
@@ -231,8 +225,9 @@ EOF
 """
 
     grub_dict = {
-        "version" : version,
-        "release" : release,
+        "product" : PRODUCT_SHORT,
+        "version" : PRODUCT_VERSION,
+        "release" : PRODUCT_RELEASE,
         "partN" : partN,
         "bootparams" : bootparams,
         "disk" : disk,

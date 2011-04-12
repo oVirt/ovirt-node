@@ -53,6 +53,8 @@ if PRODUCT_SHORT == None:
     PRODUCT_SHORT = "oVirt"
 else:
     PRODUCT_SHORT = PRODUCT_SHORT.strip("'\"")
+PRODUCT_VERSION = aug.get("/files/etc/default/version/VERSION")
+PRODUCT_RELEASE = aug.get("/files/etc/default/version/RELEASE")
 
 OVIRT_VARS = {}
 # Parse all OVIRT_* variables
