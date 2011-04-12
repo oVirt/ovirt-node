@@ -53,7 +53,7 @@ storage_init=$(echo $storage_init | sed 's/;/,/')
 
 oldIFS=$IFS
 
-lvm_scan
+lvm pvscan 2>/dev/null
 IFS=","
 for dev in $storage_init; do
     device=$(IFS=$oldIFS parse_disk_id "$dev")
@@ -72,5 +72,4 @@ done
 
 IFS=$oldIFS
 
-lvm_scan
 return 0
