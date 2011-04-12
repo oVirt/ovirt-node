@@ -165,6 +165,9 @@ def ovirt_boot_setup():
         if not system("cp -p /live/" + syslinux + "/initrd0.img " + initrd_dest):
             log("initrd image copy failed.")
             return False
+        if not system("cp -p /live/" + syslinux + "/version /liveos"):
+            log("version details copy failed.")
+            return False
     else:
         log("kernel image copy failed.")
         return False

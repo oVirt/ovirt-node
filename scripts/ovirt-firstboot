@@ -40,6 +40,17 @@ autoinstall_failed(){
     bash < /dev/console
 }
 
+check_version(){
+    if [ -e "/dev/HostVG/Root" ]; then
+    log "                                          "
+    log "   Major version upgrades are not allowed."
+    log "   Please uninstall existing version and reinstall."
+    log "   Press Enter to drop to emergency shell."
+    read < /dev/console
+    bash < /dev/console
+    fi
+}
+
 start_ovirt_firstboot ()
 {
 
@@ -80,6 +91,7 @@ start_ovirt_firstboot ()
 
     if is_upgrade; then
         mount_live
+        check_version
         /usr/libexec/ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
         if [ $? -ne 0 ]; then
             autoinstall_failed

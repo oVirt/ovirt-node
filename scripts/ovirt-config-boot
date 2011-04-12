@@ -142,6 +142,12 @@ ovirt_boot_setup() {
       return 1
     fi
 
+    cp -p $live/$syslinux/version /liveos
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        log "version details copy failed."
+        return $rc
+    fi
 
     cp -p $live/$syslinux/vmlinuz0 $initrd_dest \
     && cp -p $live/$syslinux/initrd0.img $initrd_dest
