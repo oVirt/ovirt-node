@@ -31,7 +31,7 @@ import cracklib
 import gudev
 import PAM
 
-ABORT_BUTTON = "Abort"
+QUIT_BUTTON = "Quit"
 BACK_BUTTON = "Back"
 NEXT_BUTTON = "Next"
 FINISH_BUTTON = "Finish"
@@ -718,7 +718,7 @@ class NodeInstallScreen:
             if self.__current_page == FINISHED_PAGE:
                 buttons.append(["Reboot", REBOOT_BUTTON])
             if self.__current_page != FINISHED_PAGE:
-                buttons.append(["Abort", ABORT_BUTTON])
+                buttons.append(["Quit", QUIT_BUTTON])
             if self.__current_page != WELCOME_PAGE and self.__current_page != FAILED_PAGE and self.__current_page != FINISHED_PAGE:
                 buttons.append(["Back", BACK_BUTTON])
             if self.__current_page == HOSTVG_STORAGE_PAGE or self.__current_page == ROOT_STORAGE_PAGE or self.__current_page == UPGRADE_PAGE:
@@ -757,7 +757,7 @@ class NodeInstallScreen:
                     screen.popWindow()
                     screen.finish()
                     os.system("/usr/bin/clear;/bin/bash")
-                elif pressed == ABORT_BUTTON:
+                elif pressed == QUIT_BUTTON:
                     log("Exiting")
                     abort = ButtonChoiceWindow(self.screen, "Abort Installation", "", buttons = ['Back','Reboot','Shutdown'])
                     if abort == "reboot":
