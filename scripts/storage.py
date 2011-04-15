@@ -422,7 +422,9 @@ class Storage:
             if not os.path.exists(partroot):
                 partroot = self.ROOTDRIVE + "p1"
                 partrootbackup= self.ROOTDRIVE + "p2"
+            system("ln -snf " + partroot + " /dev/disk/by-label/Root")
             system("mke2fs \""+partroot+"\" -L Root")
+            system("ln -snf " + partrootbackup + " /dev/disk/by-label/RootBackup")
             system("mke2fs \""+partrootbackup+"\" -L RootBackup")
             system("tune2fs -c 0 -i 0 \""+partroot+"\"")
             system("tune2fs -c 0 -i 0 \""+partrootbackup+"\"")
