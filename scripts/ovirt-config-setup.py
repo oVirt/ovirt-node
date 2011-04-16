@@ -1224,9 +1224,9 @@ class NodeConfigScreen():
                 screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
                 gridform = GridForm(screen, "", 4, 2) # 5,2
-                screen.drawRootText(1,0, "".ljust(80))
-                screen.drawRootText(1,1, "   %s" % PRODUCT_SHORT.ljust(77))
-                screen.drawRootText(1,2, "".ljust(80))
+                screen.drawRootText(1,0, "".ljust(78))
+                screen.drawRootText(1,1, "   %s" % PRODUCT_SHORT.ljust(75))
+                screen.drawRootText(1,2, "".ljust(78))
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
                 self.menu_list = Listbox(18, width = 20, returnExit = 1, border = 0, showCursor = 0)
