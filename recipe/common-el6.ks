@@ -38,7 +38,9 @@ cat >> /etc/rc.d/rc.local <<\EOF_RC_LOCAL
 if grep -q -w root=live:LABEL=Root /proc/cmdline; then
     # set first boot entry as permanent default
     ln -snf /dev/.initramfs/live/grub /boot/grub
-    echo "savedefault --default=0" | grub > /dev/null 2>&1
+    mount -o rw,remount LABEL=Root /dev/.initramfs/live > /tmp/grub-savedefault.log 2>&1
+    echo "savedefault --default=0" | grub >> /tmp/grub-savedefault.log 2>&1
+    mount -o ro,remount LABEL=Root /dev/.initramfs/live >> /tmp/grub-savedefault.log 2>&1
 fi
 
 # remove old persisted lvm.conf
