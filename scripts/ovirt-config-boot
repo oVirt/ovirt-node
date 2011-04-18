@@ -82,6 +82,11 @@ ovirt_boot_setup() {
     local oldtitle
     if [ "$OVIRT_ISCSI_ENABLED" != "y" ]; then
         # get title for the current Root
+        /sbin/dmsetup mknodes
+        if [ $? -ne 0 ] ; then
+          log "Could not create DM links"
+          return 1
+        fi
         mount -r LABEL=Root /liveos
         mountpoint /liveos > /dev/null
         if [ $? -ne 0 ] ; then
