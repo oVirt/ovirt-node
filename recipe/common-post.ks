@@ -354,43 +354,10 @@ echo "%wheel	ALL=(ALL)	NOPASSWD: ALL" >> /etc/sudoers
 chkconfig ovirt off
 chkconfig ovirt-awake off
 
-# mkdumprd wants to write to /initrd.XXXX with TMPDIR empty
-# this sets it to a writable directory for kdump to start correctly
-patch -d /sbin/ -p0 <<\EOF_mkdumprd
---- mkdumprd.orig	2010-06-25 14:39:54.718863880 +0000
-+++ mkdumprd	2010-06-25 14:40:25.110785538 +0000
-@@ -92,6 +92,7 @@
-     exit $1
- }
- 
-+TMPDIR=/tmp
- # find a temporary directory which doesn't use tmpfs
- if [ -z "$TMPDIR" ]
- then
-EOF_mkdumprd
-
-patch -d /etc/rc.d/init.d/ -p0 <<\EOF_kdump
---- kdump.orig	2010-06-25 16:06:17.019233645 -0400
-+++ kdump	2010-06-25 16:06:48.342171474 -0400
-@@ -68,7 +68,7 @@
- 		# to figure out if anything has changed
- 		touch /etc/kdump.conf
- 	else
--		MKDUMPRD="/sbin/mkdumprd -d -f"
-+		MKDUMPRD="/sbin/mkdumprd -d -f --allow-missing"
- 	fi
- 
- 	if [ -z "$KDUMP_KERNELVER" ]; then
-@@ -138,7 +138,7 @@
-                         echo -n "  "; echo "$modified_files" | sed 's/\s/\n  /g'
-                 fi
-                 echo "Rebuilding $kdump_initrd"
--                /sbin/mkdumprd -d -f $kdump_initrd $kdump_kver
-+                /sbin/mkdumprd -d -f $kdump_initrd $kdump_kver --allow-missing
-                 if [ $? != 0 ]; then
-                         echo "Failed to run mkdumprd"
-                         $LOGGER "mkdumprd: failed to make kdump initrd"
-EOF_kdump
+augtool <<\EOF_kdump
+set /files/etc/sysconfig/kdump/MKDUMPRD_ARGS --allow-missing
+save
+EOF
 
 echo 'OPTIONS="-v -Lf /dev/null"' >> /etc/sysconfig/snmpd
 cat > /etc/snmp/snmpd.conf <<SNMPCONF_EOF
