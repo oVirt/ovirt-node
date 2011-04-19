@@ -357,7 +357,7 @@ chkconfig ovirt-awake off
 augtool <<\EOF_kdump
 set /files/etc/sysconfig/kdump/MKDUMPRD_ARGS --allow-missing
 save
-EOF
+EOF_kdump
 
 echo 'OPTIONS="-v -Lf /dev/null"' >> /etc/sysconfig/snmpd
 cat > /etc/snmp/snmpd.conf <<SNMPCONF_EOF
