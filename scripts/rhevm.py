@@ -31,7 +31,7 @@ fWriteConfig = 0
 def set_defaults():
     vdsm_config_file = open(VDSM_CONFIG, "w")
     vdsm_config = """[vars]
-trust_store_path = /var/vdsm/ts
+trust_store_path = /etc/pki/vdsm/
 ssl = true
 
 [netconsole]
