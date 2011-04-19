@@ -125,3 +125,30 @@ sed -i -e '/by vdsm$/d' /etc/sysconfig/libvirtd
 # udev: do not create symlinks under /dev/mapper/ rhbz#633222
 sed -i -e '/^ENV{DM_UDEV_DISABLE_DM_RULES_FLAG}/d' /lib/udev/rules.d/10-dm.rules
 
+patch -d /usr/share/rhn/up2date_client -p0 <<\EOF
+--- up2dateErrors.py.old	2011-04-18 22:20:55.180730000 -0400
++++ up2dateErrors.py	2011-04-18 22:21:17.339730000 -0400
+@@ -12,7 +12,20 @@
+ _ = gettext.gettext
+ import OpenSSL
+ import config
+-from yum.Errors import RepoError
++
++class RepoError(Exception):
++    """
++    Base Yum Error. All other Errors thrown by yum should inherit from
++    this.
++    """
++    def __init__(self, value=None):
++        Exception.__init__(self)
++        self.value = value
++    def __str__(self):
++        return "%s" %(self.value,)
++
++    def __unicode__(self):
++        return '%s' % to_unicode(self.value)
+ 
+ class Error:
+     """base class for errors"""
+EOF
+python -m compileall /usr/share/rhn/up2date_client
