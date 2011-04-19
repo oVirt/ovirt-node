@@ -113,8 +113,8 @@ class Network:
             self.BR_CONFIG += "set %s/BOOTPROTO dhcp\n" % BR_ROOT
         else:
             if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS") and OVIRT_VARS["OVIRT_IP_ADDRESS"] != "off":
-		if self.VL_CONFIG is None:
-                    self.IF_CONFIG =+ "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
+		if self.VL_CONFIG == "":
+                    self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
                 self.BR_CONFIG += "set %s/IPADDR %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_ADDRESS"])
                 if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
                     self.BR_CONFIG += "set %s/NETMASK %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_NETMASK"])
@@ -193,6 +193,7 @@ class Network:
         config = self.WORKDIR + "/config-augtool"
         
         for line in self.IF_CONFIG:
+            log(line)
             try:
                 oper, file, value = line.split()
                 augtool(oper, file, value)
@@ -212,6 +213,7 @@ class Network:
                     pass
 
         for line in self.VL_CONFIG.split("\n"):
+            log(line)
             try:
                 oper, file, value = line.split()
                 augtool(oper, file, value)
