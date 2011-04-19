@@ -692,19 +692,20 @@ EOF
     fi
 
     # link to the kernel image for kdump
+    chcon -t boot_t /boot-kdump
     if is_booted_from_local_disk; then
         mount_boot
         if [ -f /dev/.initramfs/live/backup-vmlinuz ]; then
             # try backup image
-            ln -s /dev/.initramfs/live/backup-vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+            cp -p /dev/.initramfs/live/backup-vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
         else
-            ln -s /dev/.initramfs/live/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+            cp -p /dev/.initramfs/live/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
         fi
     else
         # try source image
         mount_live
         if [ -e /live/*linux/vmlinuz0 ]; then
-            ln -s /live/*linux/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+            cp -p /live/*linux/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
         fi
     fi
 
