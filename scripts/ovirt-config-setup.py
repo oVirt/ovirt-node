@@ -46,7 +46,7 @@ IDENTIFY_BUTTON = "Identify NIC"
 LOCK_BUTTON = "Lock"
 RESTART_BUTTON = "Restart"
 POWER_OFF_BUTTON = "Power Off"
-LOGIN_BUTTON = "Login"
+UNLOCK_BUTTON = "Unlock"
 login_password = ""
 
 STATUS_PAGE = 1
@@ -465,12 +465,13 @@ class NodeConfigScreen():
             self.screen_locked = True
             elements = Grid(1, 3)
             pw_elements = Grid(2, 2)
-            elements.setField(Label("Unlock " + os.uname()[1]), 0, 0, padding=(13,1,0,1))
+            pad = 34 - len(os.uname()[1]) / 2
+            elements.setField(Label("Unlock " + os.uname()[1]), 0, 0, padding=(pad - 3,1,0,1))
             self.login_username = os.getlogin()
             self.login_password = Entry(15, "", password = 1)
-            pw_elements.setField(Label("Login: "), 0, 0, padding=(13,1,0,1))
+            pw_elements.setField(Label("Username: "), 0, 0, padding=(pad,1,0,1))
             pw_elements.setField(Label(self.login_username), 1, 0)
-            pw_elements.setField(Label("Password: "), 0, 1, padding=(13,0,0,1))
+            pw_elements.setField(Label("Password: "), 0, 1, padding=(pad,0,0,1))
             pw_elements.setField(self.login_password, 1, 1)
             elements.setField(pw_elements, 0, 1)
             return [Label(""), elements]
@@ -1285,11 +1286,15 @@ class NodeConfigScreen():
                     buttons.append(["Restart", RESTART_BUTTON])
                     buttons.append(["Power Off", POWER_OFF_BUTTON])
                 if self.__current_page == LOCKED_PAGE:
-                    buttons.append(["Login", LOGIN_BUTTON])
+                    buttons.append(["Unlock", UNLOCK_BUTTON])
                 if self.__current_page != STATUS_PAGE and self.__current_page < 20:
                     buttons.append(["Reset", RESET_BUTTON])
                 buttonbar = ButtonBar(screen, buttons, compact = 1)
-                content.setField(buttonbar, 0, current_element, anchorLeft = 1)
+                if self.__current_page == LOCKED_PAGE:
+                    pad = 28
+                else:
+                    pad = 0
+                content.setField(buttonbar, 0, current_element, anchorLeft = 1, padding = (pad,0,0,0))
                 current_element += 1
                 gridform.add(Label("  "), 2, 0, anchorTop = 1)
                 current_element += 1
@@ -1320,7 +1325,7 @@ class NodeConfigScreen():
                         os.system("/usr/bin/clear;/bin/bash")
                     if pressed == IDENTIFY_BUTTON:
                         os.system("ethtool -p " + self.nic_lb.current() + " 10")
-                    elif pressed == APPLY_BUTTON or pressed == LOGIN_BUTTON:
+                    elif pressed == APPLY_BUTTON or pressed == UNLOCK_BUTTON:
                         errors = []
                         self.process_config()
                     elif pressed == LOCK_BUTTON:
