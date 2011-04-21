@@ -117,12 +117,6 @@ echo "Creating shadow files"
 pwconv
 grpconv
 
-echo "Forcing C locale"
-# force logins (via ssh, etc) to use C locale, since we remove locales
-cat >> /etc/profile << \EOF
-# oVirt: force our locale to C since we don't have locale stuff'
-export LC_ALL=C LANG=C
-EOF
 # unset AUDITD_LANG to prevent boot errors
 sed -i '/^AUDITD_LANG*/ s/^/#/' /etc/sysconfig/auditd
 
