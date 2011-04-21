@@ -26,7 +26,6 @@ import fcntl
 import libvirt
 import PAM
 import gudev
-import cracklib
 import pkgutil
 import ovirt_config_setup
 from ovirtnode.ovirtfunctions import *
@@ -384,25 +383,8 @@ class NodeConfigScreen():
               self.reset_screen_colors()
           return
       def password_check_callback(self):
-          if self.root_password_1.value() != "" and self.root_password_2.value() != "":
-              if self.root_password_1.value() != self.root_password_2.value():
-                  self.screen.setColor("BUTTON", "black", "red")
-                  self.screen.setColor("ACTBUTTON", "blue", "white")
-                  ButtonChoiceWindow(self.screen, "Password Check", "Passwords Do Not Match", buttons = ['Ok'])
-                  self.reset_screen_colors()
-                  return
-              try:
-                  cracklib.FascistCheck(self.root_password_1.value())
-              except ValueError, e:
-                  self.screen.setColor("BUTTON", "black", "red")
-                  self.screen.setColor("ACTBUTTON", "blue", "white")
-                  ButtonChoiceWindow(self.screen, "Password Check", "You have provided a weak password!\n\nStrong passwords contain a mix of uppercase, lowercase, numeric and \
-                  punctuation characters. They are six or more characters long and do not\ncontain dictionary words.\n", buttons = ['Ok'])
-          elif self.root_password_1.value() != "" and self.root_password_2.value() == "":
-              self.screen.setColor("BUTTON", "black", "red")
-              self.screen.setColor("ACTBUTTON", "blue", "white")
-              ButtonChoiceWindow(self.screen, "Password Check", "Please Confirm Password", buttons = ['Ok'])
-              self.reset_screen_colors()
+          resp, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
+          self.pw_msg.setText(msg)
           return
 
       def valid_syslog_port_callback(self):
@@ -606,8 +588,9 @@ class NodeConfigScreen():
           self.root_password_2.setCallback(self.password_check_callback)
           pw_elements.setField(self.root_password_1, 1,1)
           pw_elements.setField(self.root_password_2, 1,2)
-          state = _snack.FLAGS_SET
-          elements.setField(pw_elements, 0, 7)
+          self.pw_msg = Textbox(60, 6, "", wrap=1)
+          elements.setField(pw_elements, 0, 7, anchorLeft=1)
+          elements.setField(self.pw_msg, 0, 8, padding = (0,1,0,0))
           return [Label(""), elements]
 
       def network_configuration_page(self, screen):

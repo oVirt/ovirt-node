@@ -27,7 +27,6 @@ import traceback
 import os
 import dbus
 import fcntl
-import cracklib
 import gudev
 import PAM
 
@@ -168,26 +167,8 @@ class NodeInstallScreen:
             self.screen.setColor(item, colors[0], colors[1])
 
     def password_check_callback(self):
-        self.valid_password = 0
-        if self.root_password_1.value() != "" and self.root_password_2.value() != "":
-            if self.root_password_1.value() != self.root_password_2.value():
-                self.screen.setColor("BUTTON", "black", "red")
-                self.screen.setColor("ACTBUTTON", "blue", "white")
-                ButtonChoiceWindow(self.screen, "Password Check", "Passwords Do Not Match", buttons = ['Ok'])
-                return
-            try:
-                cracklib.FascistCheck(self.root_password_1.value())
-            except ValueError, e:
-                self.screen.setColor("BUTTON", "black", "red")
-                self.screen.setColor("ACTBUTTON", "blue", "white")
-                ButtonChoiceWindow(self.screen, "Password Check", "You have provided a weak password!\n\nStrong passwords contain a mix of uppercase, lowercase, numeric and \
-                punctuation characters. They are six or more characters long and do not\ncontain dictionary words.\n", buttons = ['Ok'])
-            finally:
-                self.valid_password = 1
-        elif self.root_password_1.value() != "" and self.root_password_2.value() == "":
-            self.screen.setColor("BUTTON", "black", "red")
-            self.screen.setColor("ACTBUTTON", "blue", "white")
-            ButtonChoiceWindow(self.screen, "Password Check", "Please Confirm Password", buttons = ['Ok'])
+        self.valid_password, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
+        self.pw_msg.setText(msg)
         return
 
     def current_password_callback(self):
@@ -590,7 +571,8 @@ class NodeInstallScreen:
         pw_elements.setField(self.root_password_1, 1,1)
         pw_elements.setField(self.root_password_2, 1,2)
         elements.setField(pw_elements, 0, 5, anchorLeft = 1)
-        elements.setField(Label(" "), 0, 6)
+        self.pw_msg = Textbox(60, 6, "", wrap=1)
+        elements.setField(self.pw_msg, 0, 6, padding = (0,1,0,1))
         return [Label(""), elements]
 
     def upgrade_page(self):
@@ -827,7 +809,7 @@ class NodeInstallScreen:
                         if not self.current_password_fail == 1:
                             self.upgrade_node()
                     elif self.__current_page == PASSWORD_PAGE:
-                        if self.valid_password == 1:
+                        if self.valid_password == 0:
                             self.install_node()
                         else:
                             ButtonChoiceWindow(self.screen, "Password Check", "You must enter a valid password", buttons = ['Ok'])

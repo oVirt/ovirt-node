@@ -31,6 +31,7 @@ import hashlib
 import shutil
 import re
 import gudev
+import cracklib
 
 OVIRT_LOGFILE="/var/log/ovirt.log"
 OVIRT_TMP_LOGFILE="/tmp/ovirt.log"
@@ -1012,6 +1013,20 @@ def system(command):
         return True
     else:
         return False
+
+def password_check(password_1, password_2):
+          if password_1 != "" and password_2 != "":
+              if password_1 != password_2:
+                  return (1, "Passwords Do Not Match\n\n\n\n\n\n")
+              try:
+                  cracklib.FascistCheck(password_1)
+              except ValueError, e:
+                  return (0, "You have provided a weak password!\nStrong passwords contain a mix of uppercase,\
+                          lowercase, numeric and punctuation characters.\n\nThey are six or more characters long and \
+                          do not contain dictionary words")
+          elif password_1 != "" and password_2 == "":
+              return (1, "Please Confirm Password\n\n\n\n\n\n")
+          return (1, "\n\n\n\n\n\n")
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
