@@ -581,7 +581,7 @@ mount_crypt_swap() {
         else
             continue
         fi
-    done < ${cypttab}
+    done < ${crypttab}
 
     return ${rc}
 }
