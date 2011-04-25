@@ -28,6 +28,7 @@ import PAM
 import gudev
 import pkgutil
 import ovirt_config_setup
+import sys
 from ovirtnode.ovirtfunctions import *
 from ovirtnode.password import *
 from ovirtnode.logging import *
@@ -461,11 +462,9 @@ class NodeConfigScreen():
       def status_page(self, screen):
             elements = Grid(2, 10)
             main_grid = Grid(2, 10)
-            hostname_grid = Grid(2,2)
-            hostname_grid.setField(Label("Hostname: "), 0, 0, anchorLeft = 1)
-            hostname_grid.setField(Label(" "), 0, 1, anchorLeft = 1)
+            elements.setField(Label("Hostname: "), 0, 2, anchorLeft = 1)
             hostname = Textbox(30, 1, os.uname()[1])
-            hostname_grid.setField(hostname, 1, 0, anchorLeft = 1)
+            elements.setField(hostname, 1, 2, anchorLeft = 1, padding=(4, 0, 0, 1))
 
             if network_up():
                 self.network_status = {}
@@ -523,7 +522,7 @@ class NodeConfigScreen():
             elements.setField(Label("Networking:"), 0, 3, anchorLeft = 1, anchorTop = 1)
             elements.setField(networking, 1, 3, anchorLeft = 1, padding=(4, 0, 0, 1))
             logging_status = Textbox(18, 1, "local only")
-            elements.setField(Label("Logs and Reporting:"), 0, 5, anchorLeft = 1)
+            elements.setField(Label("Logs:"), 0, 5, anchorLeft = 1)
             elements.setField(logging_status, 1, 5, anchorLeft = 1, padding=(4, 0, 0, 1))
             try:
                 conn = libvirt.openReadOnly(None)
@@ -533,11 +532,10 @@ class NodeConfigScreen():
                 self.dom_count = "Failed to connect"
             self.jobs_status = Textbox(18, 1, str(self.dom_count))
             running_vms_grid = Grid(2,1)
-            running_vms_grid.setField(Label("Running Virtual Machines:   "), 0, 0, anchorLeft = 1)
-            running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)#, padding=(4, 0, 0, 1))
-            main_grid.setField(hostname_grid, 0, 0, anchorLeft = 1)
+            running_vms_grid.setField(Label("Running VMs:   "), 0, 0, anchorLeft = 1)
+            running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)
             main_grid.setField(elements, 0, 1, anchorLeft = 1)
-            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1)
+            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,1))
             return [Label(""), main_grid]
 
       def logging_configuration_page(self, screen):
@@ -1381,7 +1379,7 @@ class NodeConfigScreen():
                 self.restore_console_colors()
 
 if __name__ == "__main__":
-    if is_booted_from_local_disk():
+    if is_booted_from_local_disk() or "--force" in sys.argv:
         screen = NodeConfigScreen()
         screen.start()
     else:
