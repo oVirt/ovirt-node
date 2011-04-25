@@ -971,8 +971,8 @@ network_up () {
     ip addr show | grep -q "inet.*scope global"
 }
 
-# Cleans partition tables
-wipe_partitions() {
+# wipe mbr from disks
+wipe_mbr () {
     local drive="$1"
     log "Wiping old boot sector"
     dd if=/dev/zero of="$drive" bs=1024K count=1
@@ -981,6 +981,12 @@ wipe_partitions() {
     local disk_kb_count=$(sfdisk -s "$drive" 2>/dev/null)
     dd if=/dev/zero of="$drive" bs=1024 seek=$(($disk_kb_count - 1)) count=1
     kpartx -d "$drive"
+}
+
+# Cleans partition tables
+wipe_partitions() {
+    local drive="$1"
+    wipe_mbr $drive
     # disable HostVG/Swap before removing from dmtable
     if [ -L /dev/mapper/HostVG-Swap ]; then
         swapoff -a

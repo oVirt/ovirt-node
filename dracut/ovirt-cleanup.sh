@@ -68,8 +68,6 @@ for dev in $storage_init; do
         lvm pvremove -ff "$pv"
     done
     IFS=,
-    echo "Wiping disk data for $dev..."
-    dd if=/dev/zero of=$dev
 done
 
 IFS=$oldIFS

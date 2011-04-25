@@ -277,6 +277,7 @@ start_ovirt_early () {
     dns=
     ntp=
     ssh_pwauth=
+    uninstall=
 
     # hostname=fqdn
     # hostname
@@ -319,8 +320,7 @@ start_ovirt_early () {
     for i in $(cat /proc/cmdline); do
         case $i in
             uninstall*)
-                echo "Found uninstall karg, rebooting..."
-                /sbin/reboot
+                uninstall='yes'
                 ;;
             BOOTIF=*)
             i=${i#BOOTIF=}
@@ -627,6 +627,22 @@ start_ovirt_early () {
     if [ -z "$ip_gateway" ]; then
         ip_gateway=$gateway
     fi
+    # Handle uninstall arg
+    # need to wipe mbr if passed
+    if [ "$uninstall" = "yes" ]; then
+        oldIFS=$IFS
+        log "Found uninstall arg, wiping mbr from init disks"
+        IFS=$SEP
+        for init_disk in $init $init_app; do
+            echo "Wiping $init_disk"
+            wipe_mbr $init_disk
+        done
+        IFS=$oldIFS
+        log "Uninstall complete, rebooting"
+        /sbin/reboot
+    fi
+
+
     # save boot parameters as defaults for ovirt-config-*
 
     params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install"
