@@ -396,7 +396,7 @@ start_ovirt_early () {
                 size=
                 lv=
                 if [ -n "${!var}" ]; then
-                    eval $(printf ${!var}|awk -F, '{ print "size="$1; print "lv="$2; }')
+                    eval $(printf '${!var}'|awk -F, '{ print "size="$1; print "lv="$2; }')
                     if [ -n "${size}" ]; then
                         case "${lv}" in
                             Boot)

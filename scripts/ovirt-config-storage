@@ -694,6 +694,7 @@ create_hostvg()
     local parted_cmd
     oldIFS="$IFS"
     IFS="$SEP"
+    local physical_vols=
     for drv in $HOSTVGDRIVE; do
         if [ "$ROOTDRIVE" = "$drv" ]; then
             parted_cmd="mkpart primary ext2 ${RootBackup_end}M -1"
@@ -825,6 +826,7 @@ create_appvg()
 {
     log "Creating LVM partition(s) for AppVG"
     local drv
+    local physical_vols=
     oldIFS="$IFS"
     IFS="$SEP"
     for drv in $APPVGDRIVE; do

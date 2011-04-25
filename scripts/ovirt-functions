@@ -488,7 +488,7 @@ unmount_logging() {
 
 # mount data partition
 mount_data() {
-    udevsettle
+    udevadm settle
     if [ -e /dev/HostVG/Data ] ; then
         mkdir -p /data
         if ! grep -q " /data ext[234]" /proc/mounts; then
