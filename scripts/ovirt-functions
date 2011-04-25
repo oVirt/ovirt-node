@@ -560,7 +560,7 @@ mount_crypt_swap() {
                 }
             fi
             if [ ! -b ${mapp} ]; then
-                /sbin/cryptsetup -d /dev/urandom -c ${cyph} create ${mapp} ${dev} > /dev/null 2>&1
+                /sbin/cryptsetup -d /dev/urandom -c ${cyph} create $(basename ${mapp}) ${dev} > /dev/null 2>&1
                 rc=$?
                 [ ${rc} -ne 0 ] && {
                     log "Creation of encrypted swap for ${dev} failed";
