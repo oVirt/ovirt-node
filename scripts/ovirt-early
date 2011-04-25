@@ -460,6 +460,13 @@ start_ovirt_early () {
             ;;
             upgrade* | ovirt_upgrade* | local_boot* | ovirt_local_boot*)
             upgrade=1
+            if ! grep -q admin /etc/passwd; then
+                unmount_config /etc/passwd /etc/shadow
+                useradd -g admin -s /usr/libexec/ovirt-admin-shell admin
+                [ ! grep -q ^%wheel /etc/sudoers ] && echo "%wheel	ALL=(ALL)	NOPASSWD: ALL" >> /etc/sudoers
+                /usr/sbin/usermod -p $(grep ^root /etc/shadow | sed 's/:/ /g' | awk '{print $2}') admin
+                persist /etc/shadow /etc/passwd
+            fi
             ;;
             standalone* | ovirt_standalone*)
             standalone=1
