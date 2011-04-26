@@ -211,7 +211,7 @@ title %(product)s %(version)s-%(release)s
     if "/dev/mapper" in disk:
         device_map_conf.write("(hd0) " + disk)
     else:
-        device_map_conf.write("(hd0) " + "/dev/"+disk)
+        device_map_conf.write("(hd0) " + disk.rstrip('0123456789'))
     device_map_conf.close()
     grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
     for file in grub_files:
