@@ -986,7 +986,7 @@ wipe_mbr () {
 # Cleans partition tables
 wipe_partitions() {
     local drive="$1"
-    wipe_mbr $drive
+    wipe_mbr "$drive"
     # disable HostVG/Swap before removing from dmtable
     if [ -L /dev/mapper/HostVG-Swap ]; then
         swapoff -a
