@@ -32,21 +32,23 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     extra_args="--novirtinfo --norhnsd --nopackages --force"
     args=""
     # Get cacert location
-    args+=" --serverUrl %s" % serverurl
+    if len(serverurl) > 0:
+        args+=" --serverUrl %s" % serverurl
     location="/etc/sysconfig/rhn/%s" % os.path.basename(cacert)
-    if not os.path.exists(cacert):
-        log("cacert: " + cacert)
-        log("location: " + location)
-        log("Downloading Satellite CA cert.....")
-        log("From: " + cacert + " To: " + location) #% (cacert, location)
-        os.system("wget -q -r -nd --no-check-certificate --timeout=30 --tries=3 -O \"" + location +"\" \"" + cacert + "\"")
-    if os.path.isfile(location):
-        if os.stat(location).st_size > 0:
-            args+=" --sslCACert %s" % location
-            ovirt_store_config(location)
-        else:
-            log("Error Downloading Satellite CA cert!")
-            return 3
+    if len(cacert) > 0:
+        if not os.path.exists(cacert):
+            log("cacert: " + cacert)
+            log("location: " + location)
+            log("Downloading Satellite CA cert.....")
+            log("From: " + cacert + " To: " + location)
+            os.system("wget -q -r -nd --no-check-certificate --timeout=30 --tries=3 -O \"" + location +"\" \"" + cacert + "\"")
+        if os.path.isfile(location):
+            if os.stat(location).st_size > 0:
+                args+=" --sslCACert %s" % location
+                ovirt_store_config(location)
+            else:
+                log("Error Downloading Satellite CA cert!")
+                return 3
 
     if len(activationkey):
         args+=" --activationkey %s" % activationkey
@@ -119,11 +121,11 @@ class Plugin(PluginBase):
     """
 
     def __init__(self, ncs):
-        PluginBase.__init__(self, "Register with RHN", ncs)
+        PluginBase.__init__(self, "Red Hat Network", ncs)
         self.rhn_conf = {}
     def form(self):
         elements = Grid(2, 12)
-        elements.setField(Textbox(62,3,"This option registers RHEV-H node with RHN, to enable\nusage of Virtualization Entitlements for RHEL guests"), 0, 2, anchorLeft = 1)
+        elements.setField(Textbox(62,3,"Register with Red Hat Network"), 0, 2, anchorLeft = 1)
         login_grid = Grid(4,2)
         self.rhn_user = Entry(15, "")
         self.rhn_pass = Entry(15, "", password = 1)
@@ -134,7 +136,7 @@ class Plugin(PluginBase):
         elements.setField(login_grid, 0, 4, anchorLeft = 1)
         profile_grid = Grid(2, 2)
         self.profilename = Entry(30, "")
-        profile_grid.setField(Label("Profile Name(optional): "), 0, 0, anchorLeft = 1)
+        profile_grid.setField(Label("Profile Name (optional): "), 0, 0, anchorLeft = 1)
         profile_grid.setField(self.profilename, 1, 0, anchorLeft = 1)
         elements.setField(profile_grid, 0, 5, anchorLeft= 1, padding = (0, 0, 0, 1))
         rhn_type_grid = Grid(2, 2)
@@ -154,22 +156,33 @@ class Plugin(PluginBase):
         rhn_grid.setField(Label("RHN CA : "), 0, 1, anchorLeft = 1)
         rhn_grid.setField(self.rhn_ca, 1, 1, anchorLeft = 1, padding=(1, 0, 0, 0))
         elements.setField(rhn_grid, 0, 7, anchorLeft = 1, padding = (0, 0, 0, 1))
-        elements.setField(Label("HTTP Proxy Server: (proxy.example.com:3128)"), 0, 8, anchorLeft = 1)
-        self.proxyhost = Entry(35, "")
-        self.proxyhost.setCallback(self.proxyhost_callback)
-        elements.setField(self.proxyhost, 0, 9, anchorLeft = 1, padding = (0, 0, 0, 0))
-        proxy_grid = Grid(4,2)
-        self.proxyuser = Entry(12, "")
+        top_proxy_grid = Grid(4,2)
+        bot_proxy_grid = Grid(4,2)
+        elements.setField(Label("HTTP Proxy"), 0, 8, anchorLeft = 1)
+        self.proxyhost = Entry(20, "")
+        self.proxyport = Entry(5, "", scroll = 0)
+        self.proxyuser = Entry(14, "")
         self.proxypass = Entry(12, "", password = 1)
-        proxy_grid.setField(self.proxyuser, 1, 0)
-        proxy_grid.setField(Label("Proxy Login: "), 0, 0, anchorLeft = 1)
-        proxy_grid.setField(Label(" Proxy Password: "), 2, 0, anchorLeft = 1)
-        proxy_grid.setField(self.proxypass, 3, 0, padding = (0, 0, 0, 0))
-        elements.setField(proxy_grid, 0, 10, anchorLeft = 1, padding = (0, 1, 0, 0))
+        self.proxyhost.setCallback(self.proxyhost_callback)
+        self.proxyport.setCallback(self.proxyport_callback)
+        top_proxy_grid.setField(Label("Server: "), 0, 0, anchorLeft = 1)
+        top_proxy_grid.setField(self.proxyhost, 1, 0, anchorLeft = 1, padding = (0, 0, 1, 0))
+        top_proxy_grid.setField(Label("Port: "), 2, 0, anchorLeft = 1)
+        top_proxy_grid.setField(self.proxyport, 3, 0, anchorLeft = 1, padding = (0, 0, 0, 0))
+        bot_proxy_grid.setField(Label("Username: "), 0, 0, anchorLeft = 1)
+        bot_proxy_grid.setField(self.proxyuser, 1, 0, padding =(0,0,1,0))
+        bot_proxy_grid.setField(Label("Password: "), 2, 0, anchorLeft = 1)
+        bot_proxy_grid.setField(self.proxypass, 3, 0, padding = (0, 0, 0, 0))
+        elements.setField(top_proxy_grid, 0, 10, anchorLeft = 1, padding = (0, 0, 0, 0))
+        elements.setField(bot_proxy_grid, 0, 11, anchorLeft = 1, padding = (0, 0, 0, 0))
+        self.proxyhost.setCallback(self.proxyhost_callback)
+        self.proxyport.setCallback(self.proxyport_callback)
+
         # optional: profilename, proxyhost, proxyuser, proxypass
         self.get_rhn_config()
-        self.rhn_url.set(self.rv("serverURL"))
-        self.rhn_ca.set(self.rv("sslCACert"))
+        if not "https://xmlrpc.rhn.redhat.com/XMLRPC" in self.rv("serverURL"):
+            self.rhn_url.set(self.rv("serverURL"))
+            self.rhn_ca.set(self.rv("sslCACert"))
         self.proxyhost.set(self.rv("httpProxy"))
         self.proxyuser.set(self.rv("proxyUser"))
         self.proxypass.set(self.rv("proxyPassword"))
@@ -178,8 +191,6 @@ class Plugin(PluginBase):
             self.public_rhn.setValue("*")
             self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
             self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-            self.rhn_url.set("https://xmlrpc.rhn.redhat.com/XMLRPC")
-            self.rhn_ca.set("/usr/share/rhn/RHNS-CA-CERT")
         else:
             self.rhn_satellite.setValue(" 0")
             self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
@@ -224,8 +235,6 @@ class Plugin(PluginBase):
             ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
         if self.rhn_satellite.value() == 1:
             host = self.rhn_url.value().replace("/XMLRPC","")
-            satellite_ca = host + "/pub/RHN-ORG-TRUSTED-SSL-CERT"
-            self.rhn_ca.set(satellite_ca)
 
     def get_rhn_config(self):
         if os.path.exists(RHN_CONFIG_FILE):
@@ -252,8 +261,8 @@ class Plugin(PluginBase):
         self.rhn_satellite.setValue(" 0")
         self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-        self.rhn_url.set("https://xmlrpc.rhn.redhat.com/XMLRPC")
-        self.rhn_ca.set("/usr/share/rhn/RHNS-CA-CERT")
+        #self.rhn_url.set("https://xmlrpc.rhn.redhat.com/XMLRPC")
+        #self.rhn_ca.set("/usr/share/rhn/RHNS-CA-CERT")
 
     def rhn_satellite_callback(self):
         self.public_rhn.setValue(" 0")
@@ -262,10 +271,17 @@ class Plugin(PluginBase):
 
     def proxyhost_callback(self):
         if len(self.proxyhost.value()) > 0:
-            if not is_valid_host_port(self.proxyhost.value()):
+            if not is_valid_hostname(self.proxyhost.value()):
                 self.ncs.screen.setColor("BUTTON", "black", "red")
                 self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
-                ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Proxy Configuration", buttons = ['Ok'])
+                ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Proxy Host", buttons = ['Ok'])
+
+    def proxyport_callback(self):
+        if len(self.proxyport.value()) > 0:
+            if not is_valid_port(self.proxyport.value()):
+                self.ncs.screen.setColor("BUTTON", "black", "red")
+                self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+                ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Proxy Port", buttons = ['Ok'])
 
 def get_plugin(ncs):
     return Plugin(ncs)

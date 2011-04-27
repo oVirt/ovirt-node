@@ -89,6 +89,7 @@ class NodeConfigScreen():
                          "ACTSELLISTBOX" : ("blue",  "white"),
                          "TEXTBOX"       : ("cyan",  "magenta"),
                          "ENTRY"         : ("cyan", "magenta"),
+                         "DISENTRY"      : ("white", "cyan"),
                          "SHADOW"        : ("magenta",  "magenta"),
                          "LABEL"         : ("brown",  "magenta"),
                          "TITLE"         : ("white",  "blue"),
