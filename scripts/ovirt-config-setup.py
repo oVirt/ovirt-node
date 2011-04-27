@@ -596,12 +596,12 @@ class NodeConfigScreen():
           self.heading = Label("System Identification")
           grid.setField(self.heading, 0, 1, anchorLeft = 1)
           hostname_grid = Grid(2,2)
-          hostname_grid.setField(Label("Hostname: "), 0, 1, anchorLeft = 1, padding=(0,0,2,0))
+          hostname_grid.setField(Label("Hostname: "), 0, 1, anchorLeft = 1, padding=(0,0,4,0))
           self.current_hostname = os.uname()[1]
           hostname = os.uname()[1]
           self.net_hostname = Entry(35, hostname)
-          hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft = 1, padding=(0,0,2,0))
-          grid.setField(hostname_grid, 0, 3)
+          hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft = 1, padding=(0,0,0,0))
+          grid.setField(hostname_grid, 0, 3, anchorLeft=1)
           dns_grid = Grid(2,2)
           self.dns_host1 = Entry(25)
           self.dns_host1.setCallback(self.dns_host1_callback)
@@ -641,8 +641,6 @@ class NodeConfigScreen():
           ntp_grid.setField(self.ntp_host2, 1, 1, anchorLeft = 1)
           grid.setField(Label("  "), 0, 10)
           grid.setField(ntp_grid, 0, 9, anchorLeft =1)
-
-          self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 1)
           self.nic_dict = {}
           client = gudev.Client(['net'])
           self.configured_nics = 0
@@ -675,15 +673,19 @@ class NodeConfigScreen():
                           dev_bootproto = "Disabled"
                           dev_conf_status = "Unconfigured"
                       else:
-                          dev_conf_status = "Configured"
+                          dev_conf_status = "Configured  "
                   else:
-                      dev_conf_status = "Configured"
-                  if dev_conf_status == "Configured":
+                      dev_conf_status = "Configured  "
+                  if dev_conf_status == "Configured  ":
                       self.configured_nics = self.configured_nics + 1
               except:
                   pass
               if not dev_interface == "lo" and not dev_interface.startswith("br") and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
                   self.nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status)
+          if len(self.nic_dict) > 5:
+              self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 1)
+          else:
+              self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 0)
           for key in sorted(self.nic_dict.iterkeys()):
               dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status = self.nic_dict[key].split(",", 5)
               to_rem = len(dev_vendor) - 10
@@ -705,9 +707,9 @@ class NodeConfigScreen():
                           dev_interface = dev_interface + " "
                           to_rem = to_rem + 1
 
-              nic_option = '%2s %13s %12s %19s\n' % (dev_interface,dev_conf_status,dev_vendor,dev_address)
+              nic_option = '%2s %13s %10s %19s\n' % (dev_interface,dev_conf_status,dev_vendor,dev_address)
               self.nic_lb.append(nic_option, dev_interface.strip())
-          NIC_LABEL = Label("Device     Status      Model       MAC Address")
+          NIC_LABEL = Label("Device  Status          Model     MAC Address")
           grid.setField(NIC_LABEL, 0, 11, (0, 0, 0, 0), anchorLeft = 1)
           grid.setField(self.nic_lb, 0, 12)
           if self.nic_dict.has_key("rhevm"):
@@ -719,32 +721,24 @@ class NodeConfigScreen():
 
       def network_details_page(self,screen):
           grid = Grid(1,15)
-          link_status_cmd = "ethtool %s|grep \"Link detected\"" % self.nic_lb.current()
-          link_status = subprocess.Popen(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-          link_status = link_status.stdout.read()
-          if "yes" in link_status:
+          if system("ethtool %s|grep \"Link detected\"|grep yes" % self.nic_lb.current()):
               link_status = "Active"
           else:
               link_status = "Inactive"
           interface,bootproto,vendor,address,driver,conf_status = self.nic_dict[self.nic_lb.current()].split(",", 5)
-          nic_driver_grid = Grid(2,2)
-          nic_driver_grid.setField(Label("Driver: "), 0, 0, anchorLeft = 1)
-          nic_driver_grid.setField(Label(driver), 1, 0, anchorLeft = 1)
           nic_detail_grid = Grid(6, 10)
-          nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft = 1)
-          nic_detail_grid.setField(Label("Vendor:      "), 0, 2, anchorLeft = 1)
-          nic_detail_grid.setField(Label("MAC Address: "), 0, 3, anchorLeft = 1)
-          nic_detail_grid.setField(nic_driver_grid, 3, 1, anchorLeft = 1)
-          nic_detail_grid.setField(Label("Protocol:    "), 3, 2, anchorLeft = 1)
-          nic_detail_grid.setField(Label("Link Status: "), 3, 3, anchorLeft = 1)
-          nic_detail_grid.setField(Label(interface), 1, 1, anchorLeft = 1)
-          nic_detail_grid.setField(Label(vendor), 1, 2, anchorLeft = 1)
-          nic_detail_grid.setField(Label(address), 1, 3, anchorLeft = 1)
-          nic_detail_grid.setField(Label(" "), 2, 1, anchorLeft = 1)
-          nic_detail_grid.setField(Label(" "), 2, 2, anchorLeft = 1)
-          nic_detail_grid.setField(Label("  "), 2, 3, anchorLeft = 1)
-          nic_detail_grid.setField(Label(bootproto), 4, 2, anchorLeft = 1)
-          nic_detail_grid.setField(Label(link_status), 4, 3, anchorLeft = 1)
+          nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft = 1, padding=(0,0,1,0))
+          nic_detail_grid.setField(Label("Protocol:    "), 0, 2, anchorLeft = 1, padding=(0,0,1,0))
+          nic_detail_grid.setField(Label("Link Status: "), 0, 3, anchorLeft = 1, padding=(0,0,1,0))
+          nic_detail_grid.setField(Label("Driver:      "), 3, 1, anchorLeft = 1, padding=(0,0,1,0))
+          nic_detail_grid.setField(Label("Vendor:      "), 3, 2, anchorLeft = 1, padding=(0,0,1,0))
+          nic_detail_grid.setField(Label("MAC Address: "), 3, 3, anchorLeft = 1, padding=(0,0,1,0))
+          nic_detail_grid.setField(Label(interface), 1, 1, anchorLeft = 1, padding=(0,0,5,0))
+          nic_detail_grid.setField(Label(bootproto), 1, 2, anchorLeft = 1, padding=(0,0,5,0))
+          nic_detail_grid.setField(Label(link_status), 1, 3, anchorLeft = 1, padding=(0,0,5,0))
+          nic_detail_grid.setField(Label(driver), 4, 1, anchorLeft = 1, padding=(0,0,0,0))
+          nic_detail_grid.setField(Label(vendor), 4, 2, anchorLeft = 1, padding=(0,0,0,0))
+          nic_detail_grid.setField(Label(address), 4, 3, anchorLeft = 1, padding=(0,0,0,0))
           grid.setField(nic_detail_grid, 0, 1)
           ipv4_main_grid = Grid(6,8)
           self.disabled_ipv4_nic_proto = Checkbox("Disabled ")
@@ -1057,6 +1051,7 @@ class NodeConfigScreen():
           self.screen.pushHelpLine(" ")
           self.screen.refresh()
           self.screen.setColor("BUTTON", "black", "red")
+          self.screen.setColor("TEXTBOX", "black", "magenta")
           self.screen.setColor("ACTBUTTON", "blue", "white")
           warn = ButtonChoiceWindow(self.screen, "Confirm Network Settings", "Network Configuration may take a few moments, proceed?")
           self.reset_screen_colors()
@@ -1081,6 +1076,7 @@ class NodeConfigScreen():
               self.screen.refresh()
               network.save_network_configuration()
               self.screen.popWindow()
+              self.net_apply_config = 1
               return
 
       def process_authentication_config(self):
@@ -1355,6 +1351,8 @@ class NodeConfigScreen():
                                 self.__current_page = NETWORK_PAGE
                         elif self.__current_page == NETWORK_DETAILS_PAGE:
                             if pressed == BACK_BUTTON:
+                                self.__current_page = NETWORK_PAGE
+                            elif self.net_apply_config == 1:
                                 self.__current_page = NETWORK_PAGE
                             elif is_managed(OVIRT_VARS["OVIRT_BOOTPARAMS"]):
                                 dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status = self.nic_dict[self.nic_lb.current()].split(",", 5)
