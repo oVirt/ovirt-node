@@ -36,7 +36,7 @@ BACK_BUTTON = "Back"
 NEXT_BUTTON = "Next"
 FINISH_BUTTON = "Finish"
 INSTALL_BUTTON = "Install"
-REBOOT_BUTTON = "Reboot"
+RESTART_BUTTON = "Restart"
 CONTINUE_BUTTON = "Continue"
 SHELL_BUTTON = "Drop To Shell"
 
@@ -716,7 +716,7 @@ class NodeInstallScreen:
             current_element += 1
             buttons = []
             if self.__current_page == FINISHED_PAGE:
-                buttons.append(["Reboot", REBOOT_BUTTON])
+                buttons.append(["Restart", RESTART_BUTTON])
             if self.__current_page != FINISHED_PAGE:
                 buttons.append(["Quit", QUIT_BUTTON])
             if self.__current_page != WELCOME_PAGE and self.__current_page != FAILED_PAGE and self.__current_page != FINISHED_PAGE:
@@ -764,7 +764,7 @@ class NodeInstallScreen:
                         os.system("/usr/bin/clear;reboot")
                     elif abort == "shutdown":
                         os.system("/usr/bin/clear;halt")
-                elif pressed == REBOOT_BUTTON:
+                elif pressed == RESTART_BUTTON:
                     screen.finish()
                     os.system("/usr/bin/clear;/sbin/reboot")
                 elif pressed == BACK_BUTTON:
