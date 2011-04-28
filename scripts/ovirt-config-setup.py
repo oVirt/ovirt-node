@@ -1231,22 +1231,22 @@ class NodeConfigScreen():
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
                 self.menu_list = Listbox(18, width = 20, returnExit = 1, border = 0, showCursor = 0)
-                self.menu_list.append("Status", 1)
+                self.menu_list.append(" Status", 1)
                 self.menu_list.append("", 2)
-                self.menu_list.append("Network", 3)
+                self.menu_list.append(" Network", 3)
                 self.menu_list.append("", 4)
-                self.menu_list.append("Security", 5)
+                self.menu_list.append(" Security", 5)
                 self.menu_list.append("", 6)
-                self.menu_list.append("Logging", 7)
+                self.menu_list.append(" Logging", 7)
                 self.menu_list.append("", 8)
-                self.menu_list.append("KDump", 9)
+                self.menu_list.append(" Kernel Dump", 9)
                 self.menu_list.append("", 10)
-                self.menu_list.append("Remote Storage", 11)
+                self.menu_list.append(" Remote Storage", 11)
                 self.menu_list.append("", 12)
                 # plugin menu options
                 plugin_page=FIRST_PLUGIN_PAGE
                 for p in self.plugins :
-                    self.menu_list.append(p.label(), plugin_page)
+                    self.menu_list.append(" " + p.label(), plugin_page)
                     self.menu_list.append("", plugin_page+1)
                     plugin_page+=2
                     if plugin_page > LAST_PLUGIN_PAGE :
