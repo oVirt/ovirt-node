@@ -131,8 +131,6 @@ class Plugin(PluginBase):
 
     def form(self):
         elements = Grid(2, 10)
-        elements.setField(Label("RHEV-M Configuration"), 0, 0, anchorLeft = 1)
-        elements.setField(Label(""), 0, 1, anchorLeft = 1)
         rhevm_grid = Grid(2,2)
         rhevm_grid.setField(Label("Management Server:"), 0, 0, anchorLeft = 1)
         self.rhevm_server = Entry(25, "")
