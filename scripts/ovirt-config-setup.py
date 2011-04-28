@@ -576,8 +576,7 @@ class NodeConfigScreen():
               self.current_ssh_pwd_status = 0
           self.ssh_passwd_status = Checkbox("Enable ssh password authentication", isOn=self.current_ssh_pwd_status)
           elements.setField(self.ssh_passwd_status, 0, 1, anchorLeft = 1)
-          elements.setField(Label(""), 0, 2, anchorLeft = 1)
-          elements.setField(Label("Local Access"), 0, 3, anchorLeft = 1)
+          elements.setField(Label("Local Access"), 0, 3, anchorLeft = 1, padding = (0,2,0,0))
           elements.setField(Label(" "), 0, 6)
           pw_elements.setField(Label("Password: "), 0, 1, anchorLeft = 1)
           pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft = 1)
