@@ -983,9 +983,9 @@ class NodeConfigScreen():
 
       def remote_storage_configuration_page(self, screen):
           elements = Grid(2, 8)
-          elements.setField(Label("Remote Storage Configuration"), 0, 0, anchorLeft = 1)
+          elements.setField(Label("Remote Storage"), 0, 0, anchorLeft = 1)
           elements.setField(Label(" "), 0, 1, anchorLeft = 1)
-          elements.setField(Label("Iscsi Initiator Name:"), 0, 2, anchorLeft = 1)
+          elements.setField(Label("iSCSI Initiator Name:"), 0, 2, anchorLeft = 1)
           self.iscsi_initiator_config = Entry(50, "")
           elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft = 1)
           current_iscsi_initiator_name = get_current_iscsi_initiator_name()
