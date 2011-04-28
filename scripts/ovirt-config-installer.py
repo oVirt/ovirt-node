@@ -773,7 +773,7 @@ class NodeInstallScreen:
                                 self.__current_page =  HOSTVG_STORAGE_PAGE
                     elif self.__current_page == OTHER_DEVICE_ROOT_PAGE:
                         if self.failed_block_dev == 0:
-                            self.storage_init = self.root_device.value()
+                            self.storage_init = translate_multipath_device(self.root_device.value())
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + '"')
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_ROOT_INSTALL", '"y"')
                             self.__current_page = HOSTVG_STORAGE_PAGE
@@ -803,11 +803,10 @@ class NodeInstallScreen:
                                         self.__current_page = HOSTVG_STORAGE_PAGE
                                         augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                     elif self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
-                        self.hostvg_init = self.hostvg_device.value()
+                        self.hostvg_init = translate_multipath_device(self.hostvg_device.value())
                         hostvg_list = ""
                         for dev in self.hostvg_init.split(","):
-                            if dev != self.storage_init:
-                                hostvg_list += dev + ","
+                            hostvg_list += dev + ","
                         augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                         self.__current_page = PASSWORD_PAGE
                     elif self.__current_page == UPGRADE_PAGE:
