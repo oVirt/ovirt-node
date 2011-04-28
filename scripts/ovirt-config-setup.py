@@ -559,9 +559,8 @@ class NodeConfigScreen():
 
       def logging_configuration_page(self, screen):
           elements = Grid(2, 8)
-          elements.setField(Label("Logging Configuration"), 0, 0, anchorLeft = 1)
+          elements.setField(Label("Logging"), 0, 0, anchorLeft = 1)
           elements.setField(Label(" "), 0, 1, anchorLeft = 1)
-          elements.setField(Label("Rsyslog"), 0, 2, anchorLeft = 1)
           elements.setField(Textbox(45,3,"Rsyslog is an enhanced multi-threaded syslogd\nwith a focus on security and reliability."), 0, 3, anchorLeft = 1)
           rsyslog_grid = Grid(2,2)
           rsyslog_grid.setField(Label("Server Address:"), 0, 0, anchorLeft = 1)
