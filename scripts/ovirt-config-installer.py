@@ -224,8 +224,12 @@ class NodeInstallScreen:
                     self.menu_list.setCurrent(3)
                     self.menuo = 3
                 except:
-                    self.menu_list.setCurrent(5)
-                    self.menuo = 5
+                    try:
+                        self.menu_list.setCurrent(5)
+                        self.menuo = 5
+                    except:
+                        self.menu_list.setCurrent(1)
+                        self.menuo = 1
             if menu_option == 4:
                 self.menu_list.setCurrent(5)
                 self.menuo = 5
