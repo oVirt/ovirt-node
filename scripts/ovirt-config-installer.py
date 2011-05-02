@@ -742,8 +742,9 @@ class NodeInstallScreen:
                     os.system("/usr/bin/clear;/bin/bash")
                 elif pressed == QUIT_BUTTON:
                     log("Exiting")
-                    abort = ButtonChoiceWindow(self.screen, "Abort Installation", "", buttons = ['Back','Reboot','Shutdown'])
-                    if abort == "reboot":
+                    abort = ButtonChoiceWindow(self.screen, "Abort Installation","The installation of %s is not complete." %
+             PRODUCT_SHORT, buttons = ['Back','Restart','Shutdown'])
+                    if abort == "restart":
                         os.system("/usr/bin/clear;reboot")
                     elif abort == "shutdown":
                         os.system("/usr/bin/clear;halt")
