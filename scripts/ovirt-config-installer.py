@@ -295,7 +295,7 @@ class NodeInstallScreen:
                     e_full_ver = e_version + "-" + e_release
                     if e_version <= m_version:
                         if e_release < m_release:
-                            self.menu_list.append(" Upgrade " + e_full_ver + " Version to " + m_full_ver, 3)
+                            self.menu_list.append(" Upgrade " + e_full_ver + " to " + m_full_ver, 3)
                             self.menu_list.append(" ", 4)
                         else:
                             self.menu_list.append(" Install " + PRODUCT_SHORT + " " +  m_full_ver, 1)

@@ -330,10 +330,17 @@ def mount_live():
 # boot loader + kernel + initrd + LiveOS
 def mount_liveos():
     if os.path.ismount("/liveos"):
-        return
+        return True
     else:
         os.system("mkdir -p /liveos")
-        os.system("mount LABEL=Root /liveos")
+        if not system("mount LABEL=Root /liveos"):
+            # just in case /dev/disk/by-label is not using devmapper and fails
+            for dev in os.listdir("/dev/mapper"):
+                if system("e2label \"/dev/mapper/" + dev + "\" 2>/dev/null|grep Root|grep -v Backup"):
+                    system("rm -rf /dev/disk/by-label/Root")
+                    system("ln -s \"/dev/mapper/" + dev + "\" /dev/disk/by-label/Root")
+                    if system("mount LABEL=Root /liveos"):
+                        return True
 
 # mount config partition
 # /config for persistance
@@ -965,19 +972,20 @@ def pwd_set_check(user):
         return False
 
 def get_installed_version_number():
-    existing_version = open("/etc/default/version")
-    existing_install = {}
-    for line in existing_version.readlines():
-        try:
-            key, value = line.strip().split("=")
-            value = value.replace("'", "")
-            existing_install[key] = value
-        except:
-            pass
-    if existing_install.has_key("VERSION") and existing_install.has_key("RELEASE"):
-        return [existing_install["VERSION"],existing_install["RELEASE"]]
-    else:
-        return False
+    if mount_liveos():
+        existing_version = open("/liveos/version")
+        existing_install = {}
+        for line in existing_version.readlines():
+            try:
+                key, value = line.strip().split("=")
+                value = value.replace("'", "")
+                existing_install[key] = value
+            except:
+                pass
+        if existing_install.has_key("VERSION") and existing_install.has_key("RELEASE"):
+            return [existing_install["VERSION"],existing_install["RELEASE"]]
+        else:
+            return False
 
 def get_media_version_number():
     new_install = {}
