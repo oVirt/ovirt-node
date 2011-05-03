@@ -189,7 +189,7 @@ def ovirt_boot_setup():
         grub_disk_cmd= "multipath -l \"" + disk + "\" | awk '/ active / {print $3}'"
         log(grub_disk_cmd)
         grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        disk = grub_disk.stdout.read()
+        disk = grub_disk.stdout.read().strip()
         log("disk:" + disk)
         if "cciss" in disk:
             disk = disk.replace("!","/")
@@ -211,7 +211,16 @@ title %(product)s %(version)s-%(release)s
     if "/dev/mapper" in disk:
         device_map_conf.write("(hd0) " + disk)
     else:
-        device_map_conf.write("(hd0) " + disk.rstrip('0123456789'))
+        client = gudev.Client(['block'])
+        for device in client.query_by_subsystem("block"):
+            dev_name = device.get_property("DEVNAME")
+            dev_bus = device.get_property("ID_BUS")
+            if dev_name.endswith(disk) and dev_bus == "usb":
+                log("usb boot device")
+                device_map_conf.write("(hd0) " + disk.rstrip('0123456789'))
+            elif dev_name.endswith(disk):
+                log("nonusb boot device")
+                device_map_conf.write("(hd0) /dev/" + disk)
     device_map_conf.close()
     grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
     for file in grub_files:
