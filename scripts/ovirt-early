@@ -599,7 +599,7 @@ start_ovirt_early () {
                             crypt_swap=${default_cypher}
                         fi
                     elif [ "${swapdev}" = "Swap2" ]; then
-                        if [ -n $"{swapcyph}" ]; then
+                        if [ -n "${swapcyph}" ]; then
                             crypt_swap2=${swapcyph}
                         else
                             crypt_swap2=${default_cypher}
@@ -635,7 +635,7 @@ start_ovirt_early () {
         IFS=$SEP
         for init_disk in $init $init_app; do
             echo "Wiping $init_disk"
-            wipe_mbr $init_disk
+            wipe_mbr "$init_disk"
         done
         IFS=$oldIFS
         log "Uninstall complete, rebooting"
