@@ -329,7 +329,7 @@ class NodeInstallScreen:
             dev = self.root_disk_menu_list.current()
         elif self.__current_page == HOSTVG_STORAGE_PAGE:
             dev = self.hostvg_checkbox.getCurrent()
-        if dev == "      Location          Device Name   Size (GB)      Description":
+        if "Location" in dev:
             blank_entry = ",,,,,"
             dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = blank_entry.split(",",5)
         else:
@@ -382,15 +382,12 @@ class NodeInstallScreen:
                 if self.disk_dict.has_key(dev) and dev != self.live_disk:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":
-                        dev_bus = dev_bus.upper()
-                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss":
+                        dev_bus = "USB Device          "
+                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss" or "/dev/vd" in dev_name:
                         dev_bus = "Local / FibreChannel"
                     else:
-                        if "/dev/vd" in dev_name:
-                            dev_bus = "      Local        "
-                        else:
-                            dev_bus = "     "
-                    to_rem = len(dev_desc) - 26
+                        dev_bus = "                    "
+                    to_rem = len(dev_desc) - 33
                     # if negative pad name space
                     if to_rem < 1:
                         while abs(to_rem) != 0:
@@ -400,14 +397,14 @@ class NodeInstallScreen:
                         dev_desc = dev_desc.rstrip(dev_desc[-to_rem:])
                     self.valid_disks.append(dev_name)
                     dev_name = dev_name.replace("/dev/mapper/","").replace(" ", "")
-                    to_rem = len(dev_name) - 25
+                    to_rem = len(dev_name) - 32
                     # if negative pad name space
                     if to_rem < 1:
                         while abs(to_rem) != 0:
                             dev_name += " "
                             to_rem = to_rem + 1
-                    dev_name = dev_name[:+25]
-                    dev_entry = " %6s  %11s  %6s GB" % (dev_bus,dev_name, dev_size)
+                    dev_name = dev_name[:+32]
+                    dev_entry = " %6s  %11s  %5s GB" % (dev_bus,dev_name, dev_size)
                     dev_name = translate_multipath_device(dev_name)
                     self.root_disk_menu_list.append(dev_entry, dev)
                     self.valid_disks.append(dev_name)
@@ -417,7 +414,7 @@ class NodeInstallScreen:
         elements.setField(Label("Please select the disk to use for booting %s"
             % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(Label(" "), 0,2, anchorLeft = 1)
-        elements.setField(Label("      Location              Device Name               Size"),0,3,anchorLeft =1)
+        elements.setField(Label(" Location              Device Name                           Size"),0,3,anchorLeft =1)
         elements.setField(self.root_disk_menu_list, 0,4)
         disk_grid = Grid(5,8)
         elements.setField(Label("Disk Details"), 0,5, anchorLeft = 1)
@@ -452,9 +449,9 @@ class NodeInstallScreen:
         return [Label(""), elements]
 
     def hostvg_disk_page(self):
-        self.hostvg_checkbox = CheckboxTree(6, width = 70, scroll = 1)
+        self.hostvg_checkbox = CheckboxTree(6, width = 73, scroll = 1)
         self.hostvg_checkbox.setCallback(self.disk_details_callback)
-        self.hostvg_checkbox.append("      Location            Device Name                Size", selected = 1)
+        self.hostvg_checkbox.append("    Location             Device Name                       Size", selected = 1)
         elements = Grid(2, 9)
         Storage = storage.Storage()
         devs = Storage.get_dev_name()
@@ -469,16 +466,12 @@ class NodeInstallScreen:
                 if self.disk_dict.has_key(dev):
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     if dev_bus == "usb":
-                        dev_bus = dev_bus.upper()
-                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss":
+                        dev_bus = "USB Device          "
+                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss" or "/dev/vd" in dev_name:
                         dev_bus = "Local / FibreChannel"
                     else:
-                        if "/dev/vd" in dev_name:
-                            dev_bus = "      Local        "
-
-                        else:
-                            dev_bus = "     "
-                    to_rem = len(dev_desc) - 26
+                        dev_bus = "                    "
+                    to_rem = len(dev_desc) - 33
                     # if negative pad name space
                     if to_rem < 1:
                       while abs(to_rem) != 0:
@@ -493,14 +486,14 @@ class NodeInstallScreen:
                     # strip all "/dev/*/" references and leave just basename
                     dev_name = dev_name.replace("/dev/mapper/","")
                     dev_name = dev_name.replace("/dev/","").replace(" ", "")
-                    to_rem = len(dev_name) - 25
+                    to_rem = len(dev_name) - 32
                     # if negative pad name space
                     if to_rem < 1:
                         while abs(to_rem) != 0:
                             dev_name += " "
                             to_rem = to_rem + 1
-                    dev_name = dev_name[:+25]
-                    dev_entry = " %6s %10s  %3s GB" % (dev_bus,dev_name, dev_size)
+                    dev_name = dev_name[:+32]
+                    dev_entry = " %6s %10s %2s GB" % (dev_bus,dev_name, dev_size)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
         if self.root_disk_menu_list.current() == "OtherDevice":
