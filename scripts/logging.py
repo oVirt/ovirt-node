@@ -70,6 +70,13 @@ def ovirt_rsyslog(server, port, protocol):
     os.system("/sbin/service rsyslog restart &> /dev/null")
     return True
 
+def ovirt_netconsole(server, port):
+    augtool("set","/files/etc/sysconfig/netconsole/SYSLOGADDR", server)
+    augtool("set","/files/etc/sysconfig/netconsole/SYSLOGPORT", port)
+    os.system("/sbin/service netconsole restart &> /dev/null")
+    ovirt_store_config("/etc/sysconfig/netconsole")
+    return True
+
 def get_rsyslog_config():
     rsyslog_config = open(RSYSLOG_FILE)
     for line in rsyslog_config:

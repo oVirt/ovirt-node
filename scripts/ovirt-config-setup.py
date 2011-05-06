@@ -428,6 +428,20 @@ class NodeConfigScreen():
           self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
           self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
 
+      def valid_netconsole_server_callback(self):
+          if not is_valid_host_or_ip(self.netconsole_server.value()):
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Hostname or Address", buttons = ['Ok'])
+              self.reset_screen_colors()
+
+      def valid_netconsole_server_port_callback(self):
+          if not is_valid_port(self.netconsole_server_port.value()):
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Server Port", buttons = ['Ok'])
+              self.reset_screen_colors()
+
       def valid_fqdn_or_ipv4(self):
           warn = 0
           if not self.ntp_host1.value() == "":
@@ -562,6 +576,27 @@ class NodeConfigScreen():
           else:
               self.syslog_port.set("514")
           elements.setField(rsyslog_grid, 0, 4, anchorLeft = 1)
+          elements.setField(Textbox(48,3,"Netconsole service allows a remote syslog daemon\nto record kernel printk() messages"), 0, 5, anchorLeft = 1, padding = (0,1,0,0))
+          netconsole_grid = Grid(2,2)
+          netconsole_grid.setField(Label("Server Address:"), 0, 0, anchorLeft = 1)
+          self.netconsole_server = Entry(25, "")
+          self.netconsole_server.setCallback(self.valid_netconsole_server_callback)
+          netconsole_grid.setField(Label("Server Port:"), 0, 1, anchorLeft = 1)
+          self.netconsole_server_port = Entry(5, "", scroll = 0)
+          self.netconsole_server_port.setCallback(self.valid_netconsole_server_port_callback)
+          netconsole_grid.setField(self.netconsole_server, 1, 0, anchorLeft = 1, padding=(2, 0, 0, 1))
+          netconsole_grid.setField(self.netconsole_server_port, 1, 1, anchorLeft = 1, padding=(2, 0, 0, 0))
+          elements.setField(netconsole_grid, 0, 6, anchorLeft = 1, padding = (0,0,0,0))
+          netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGADDR")
+          netconsole_server_port = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGPORT")
+          if netconsole_server is None:
+              self.netconsole_server.set("")
+          else:
+              self.netconsole_server.set(netconsole_server)
+          if netconsole_server_port is None:
+              self.netconsole_server_port.set("6666")
+          else:
+              self.netconsole_server_port.set(netconsole_server_port)
           return [Label(""), elements]
 
 
@@ -1108,6 +1143,8 @@ class NodeConfigScreen():
       def process_logging_config(self):
           if not self.syslog_server.value() is "" and not self.syslog_port.value() is "":
               ovirt_rsyslog(self.syslog_server.value(), self.syslog_port.value(), "udp")
+          if not self.netconsole_server.value() is "" and not self.netconsole_server_port.value() is "":
+              ovirt_netconsole(self.netconsole_server.value(), self.netconsole_server_port.value())
           return True
 
       def process_locked_screen(self):
