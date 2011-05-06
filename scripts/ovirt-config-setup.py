@@ -447,11 +447,22 @@ class NodeConfigScreen():
           if not self.ntp_host1.value() == "":
                if not is_valid_ipv4(self.ntp_host1.value()):
                    if not is_valid_hostname(self.ntp_host1.value()):
-                       warn = 1
+                       if not is_valid_ipv6(self.ntp_host1.value()):
+                           warn = 1
           if not self.ntp_host2.value() == "":
                if not is_valid_ipv4(self.ntp_host2.value()):
                    if not is_valid_hostname(self.ntp_host2.value()):
-                       warn = 1
+                       if not is_valid_ipv6(self.ntp_host2.value()):
+                           warn = 1
+
+          if not self.dns_host1.value() == "":
+               if not is_valid_ipv4(self.dns_host1.value()):
+                   if not is_valid_ipv6(self.dns_host1.value()):
+                           warn = 1
+          if not self.dns_host2.value() == "":
+               if not is_valid_ipv4(self.dns_host2.value()):
+                   if not is_valid_ipv6(self.dns_host2.value()):
+                           warn = 1
           if warn == 1:
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -656,6 +667,8 @@ class NodeConfigScreen():
           dns_grid.setField(Label("DNS Server 2: "), 0, 1, anchorLeft = 1)
           dns_grid.setField(self.dns_host1, 1, 0, anchorLeft = 1)
           dns_grid.setField(self.dns_host2, 1, 1, anchorLeft = 1)
+          self.dns_host1.setCallback(self.valid_fqdn_or_ipv4)
+          self.dns_host2.setCallback(self.valid_fqdn_or_ipv4)
           grid.setField(Label("  "), 0, 4)
           grid.setField(dns_grid, 0, 6, anchorLeft =1)
           grid.setField(Label("  "), 0, 7)
