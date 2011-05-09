@@ -58,6 +58,9 @@ def ovirt_rsyslog(server, port, protocol):
     else:
         DELIM="@"
 
+    if is_valid_ipv6(server):
+        server = "[" + server + "]"
+
     rsyslog_dict = {
         "delim" : DELIM,
         "server" : server,
@@ -89,8 +92,16 @@ def get_rsyslog_config():
                 if not server.startswith("#"):
                     return (server,port.strip())
             except:
-                log("rsyslog config parsing failed: %s") % line
-                return
+                # try ipv6 parsing
+                try:
+                    ip, port = line.split("]")
+                    server = ip.replace("[","")
+                    port = port.replace(":","")
+                    if not server.startswith("#"):
+                        return (server,port.strip())
+                except:
+                    log("rsyslog config parsing failed " + line)
+                    return
 
 if len(sys.argv) > 1:
     try:
