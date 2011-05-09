@@ -18,6 +18,7 @@
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
 
 SUBDIRS =   \
+  augeas \
   dracut \
   gptsync \
   images \

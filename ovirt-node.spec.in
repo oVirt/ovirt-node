@@ -45,7 +45,6 @@ Requires:       newt-python
 Requires:       libuser-python >= 0.56.9
 Requires:       dbus-python
 #Requires:       python-IPy
-
 ExclusiveArch:  x86_64
 
 %define app_root %{_datadir}/%{name}
@@ -109,6 +108,12 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 dracut/install %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
 %{__install} -p -m0755 scripts/ovirt-boot-functions %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
 %{__install} -p -m0755 dracut/ovirt-cleanup.sh %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
+
+# resolv.conf augeas lens
+%{__install} -d -m0755 %{buildroot}/usr/share/augeas/lenses/dist
+%{__install} -p -m0644 augeas/buildd.aug %{buildroot}/usr/share/augeas/lenses/dist/buildd.aug
+%{__install} -p -m0644 augeas/resolv.aug %{buildroot}/usr/share/augeas/lenses/dist/resolv.aug
+%{__install} -p -m0644 augeas/utill.aug %{buildroot}/usr/share/augeas/lenses/dist/utill.aug
 
 mkdir -p %{buildroot}/%{_sysconfdir}/default
 echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
@@ -224,6 +229,9 @@ fi
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
 
+%{_datadir}/augeas/lenses/dist/buildd.aug
+%{_datadir}/augeas/lenses/dist/resolv.aug
+%{_datadir}/augeas/lenses/dist/utill.aug
 %{_datadir}/dracut/modules.d/91ovirtnode/check
 %{_datadir}/dracut/modules.d/91ovirtnode/install
 %{_datadir}/dracut/modules.d/91ovirtnode/ovirt-boot-functions

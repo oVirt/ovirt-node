@@ -173,6 +173,7 @@ keep /usr/share/augeas/lenses/dist/spacevars.aug
 keep /usr/share/augeas/lenses/dist/sysctl.aug
 keep /usr/share/augeas/lenses/dist/util.aug
 # whitelist only relevant lenses
+keep /usr/share/augeas/lenses/dist/buildd.aug
 keep /usr/share/augeas/lenses/dist/cgconfig.aug
 keep /usr/share/augeas/lenses/dist/cgrules.aug
 keep /usr/share/augeas/lenses/dist/cron.aug
@@ -195,12 +196,13 @@ keep /usr/share/augeas/lenses/dist/multipath.aug
 keep /usr/share/augeas/lenses/dist/ntp.aug
 keep /usr/share/augeas/lenses/dist/pam.aug
 keep /usr/share/augeas/lenses/dist/passwd.aug
+keep /usr/share/augeas/lenses/dist/resolv.aug
 keep /usr/share/augeas/lenses/dist/securetty.aug
 keep /usr/share/augeas/lenses/dist/services.aug
 keep /usr/share/augeas/lenses/dist/shellvars_list.aug
 keep /usr/share/augeas/lenses/dist/sshd.aug
 keep /usr/share/augeas/lenses/dist/sudoers.aug
-
+keep /usr/share/augeas/lenses/dist/utill.aug
 drop /usr/share/tc
 drop /usr/share/emacs
 drop /usr/share/info

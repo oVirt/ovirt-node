@@ -136,7 +136,7 @@ class Network:
             DNS=OVIRT_VARS["OVIRT_DNS"]
             if not DNS is None:
                 try:
-                    DNS1, DNS2 = DNS.split(" ", 1)
+                    DNS1, DNS2 = DNS.split(",", 1)
                     if not DNS1 is None:
                         augtool("set", "/files/etc/resolv.conf/nameserver[1]", DNS1)
                     if not DNS2 is None:
@@ -165,11 +165,14 @@ class Network:
             
             augtool(oper, line, "")
 
-        if OVIRT_VARS.has_key("NTPSERVERS"):
+        if OVIRT_VARS.has_key("OVIRT_NTP"):
             offset=1
-            SERVERS = OVIRT_VARS["NTPSERVERS"].split(":")
+            SERVERS = OVIRT_VARS["OVIRT_NTP"].split(",")
             for server in SERVERS:
-                augtool("set", "/files/etc/ntp.conf/server[%s]", server) % offset
+                if offset == 1:
+                    augtool("set", "/files/etc/ntp.conf/server[1]", server)
+                elif offset == 2:
+                    augtool("set", "/files/etc/ntp.conf/server[2]", server)
                 offset = offset + 1
 
     def save_network_configuration(self):
