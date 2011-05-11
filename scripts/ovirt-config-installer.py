@@ -512,13 +512,9 @@ class NodeInstallScreen:
         disk_grid.setField(Label("Serial       "),0, 3, anchorLeft = 1)
         disk_grid.setField(Label("Size         "),0, 4, anchorLeft = 1)
         disk_grid.setField(Label("Description  "),0, 5, anchorLeft = 1)
-        # get first disk's info to prepopulate
-        i = 0
-        for d in self.valid_disks:
-            while i < 1:
-                dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[d].split(",",5)
-                self.hostvg_checkbox.setCurrent(self.root_disk_menu_list.current())
-                i = i + 1
+        # get disk's info to prepopulate
+        dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[self.root_disk_menu_list.current()].split(",",5)
+        self.hostvg_checkbox.setCurrent(self.root_disk_menu_list.current())
         dev_name = dev_name.replace(" ", "")
         self.dev_name_label = Label(dev_name)
         self.dev_model_label = Label(dev_model)
