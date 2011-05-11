@@ -33,6 +33,8 @@
 from ovirtnode.ovirtfunctions import *
 import shutil
 import sys
+import os
+import stat
 OVIRT_VARS = parse_defaults()
 
 def ovirt_boot_setup():
@@ -208,11 +210,29 @@ title %(product)s %(version)s-%(release)s
     initrd /initrd0.img
     """
     device_map_conf = open(grub_dir + "/device.map", "w")
-    disk = disk.rstrip('012')
-    if "/dev/" in disk:
-        device_map_conf.write("(hd0) " + disk)
-    else:
-        device_map_conf.write("(hd0) /dev/" + disk)
+    disk = re.sub("p[1,2]$", "", disk)
+    # to capture/filter other devices like /dev/sda1
+    if not disk.startswith("/dev/"):
+        disk = "/dev/" + disk
+    try:
+        if stat.S_ISBLK(os.stat(disk).st_mode):
+            length = len(disk) - 1
+            try:
+                if stat.S_ISBLK(os.stat(disk[:length]).st_mode):
+                    disk = disk[:length]
+                    length = len(disk) - 2
+                    try:
+                        if stat.S_ISBLK(os.stat(disk[:length]).st_mode):
+                            disk = disk[:length]
+                    except OSError:
+                        pass
+            except OSError:
+                pass
+    except OSError:
+        log("Unable to determine disk for grub installation")
+        return False
+
+    device_map_conf.write("(hd0) " + disk)
     device_map_conf.close()
     grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
     for file in grub_files:
