@@ -570,7 +570,7 @@ start_ovirt_early () {
             ;;
             # Don't store these parameters in /etc/default/ovirt
             BOOT_IMAGE=* | initrd=* | check | linux | liveimg | \
-            root=* | rootfstype=* | rootflags=* | ro | single)
+            root=* | rootfstype=* | rootflags=* | ro | single | install)
             ;;
             crashkernel=*)
             bootparams="$bootparams $i"
