@@ -831,7 +831,7 @@ def get_gateway(ifname):
     return result
 
 def get_ipv6_address(interface):
-    inet6_lookup_cmd = 'ifconfig ' + interface + ' |grep inet6|awk {\'print $3\'}'
+    inet6_lookup_cmd = 'ifconfig ' + interface + ' |grep inet6|grep -v Global|awk {\'print $3\'}'
     inet6_lookup = subprocess.Popen(inet6_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     ipv6_addr = inet6_lookup.stdout.read()
 
