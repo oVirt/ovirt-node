@@ -341,6 +341,8 @@ def mount_liveos():
                     system("ln -s \"/dev/mapper/" + dev + "\" /dev/disk/by-label/Root")
                     if system("mount LABEL=Root /liveos"):
                         return True
+        else:
+            return True
 
 # mount config partition
 # /config for persistance
