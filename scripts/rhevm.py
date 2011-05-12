@@ -105,7 +105,7 @@ class Plugin(PluginBase):
         self.rhevm_server_port.setCallback(self.valid_rhevm_server_port_callback)
         rhevm_grid.setField(self.rhevm_server, 1, 0, anchorLeft = 1, padding=(2, 0, 0, 1))
         rhevm_grid.setField(self.rhevm_server_port, 1, 1, anchorLeft = 1, padding=(2, 0, 0, 1))
-        elements.setField(rhevm_grid, 0, 3, anchorLeft = 1, padding = (0,1,0,0))
+        elements.setField(rhevm_grid, 0, 3, anchorLeft = 1, padding = (0,1,0,10))
         try:
             rhevm_server = get_rhevm_config()
             rhevm_server,rhevm_port = rhevm_server.split(":")

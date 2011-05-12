@@ -306,7 +306,7 @@ class NodeInstallScreen:
             else:
                 self.menu_list.append(" Install Hypervisor " + m_full_ver, 1)
             self.menu_list.setCallback(self.menuSpacing)
-        elements.setField(self.menu_list, 1,1, anchorLeft = 1)
+        elements.setField(self.menu_list, 1,1, anchorLeft = 1, padding = (0,0,0,1))
         return [Label(""), elements]
 
     def finish_install_page(self):
@@ -503,7 +503,7 @@ class NodeInstallScreen:
         self.hostvg_checkbox.addItem(" Other Device", (0, snackArgs['append']), item = "OtherDevice", selected = select_status)
         elements.setField(Label("Please select the disk(s) to use for installation of %s" % PRODUCT_SHORT), 0,1, anchorLeft = 1)
         elements.setField(self.hostvg_checkbox, 0,3)
-        elements.setField(Label("Disk Details"), 0,4, anchorLeft = 1)
+        elements.setField(Label("Disk Details"), 0,4, anchorLeft = 1, padding = (0,1,0,0))
         elements.setField(Label(" "), 0,5)
         disk_grid = Grid(2,8)
         disk_grid.setField(Label("Device       "),0, 0, anchorLeft = 1)
@@ -528,8 +528,7 @@ class NodeInstallScreen:
         disk_grid.setField(self.dev_serial_label,1, 3, anchorLeft = 1)
         disk_grid.setField(self.dev_size_label,1, 4, anchorLeft = 1)
         disk_grid.setField(self.dev_desc_label,1, 5, anchorLeft = 1)
-        elements.setField(disk_grid, 0,6, anchorLeft = 1)
-        elements.setField(Label(" "), 0, 7, anchorLeft = 1)
+        elements.setField(disk_grid, 0,6, anchorLeft = 1, padding = (0,0,0,1))
         return [Label(""), elements]
 
     def other_device_root_page(self):
@@ -537,7 +536,7 @@ class NodeInstallScreen:
         elements.setField(Label("Please enter the disk to use for booting %s" % PRODUCT_SHORT), 0, 0, anchorLeft = 1)
         self.root_device = Entry(35)
         self.root_device.setCallback(self.other_device_root_callback)
-        elements.setField(self.root_device, 0,1, anchorLeft = 1, padding = (0,1,0,1))
+        elements.setField(self.root_device, 0,1, anchorLeft = 1, padding = (0,1,0,14))
         return [Label(""), elements]
 
     def other_device_hostvg_page(self):
@@ -546,7 +545,7 @@ class NodeInstallScreen:
         elements.setField(Label("Enter multiple entries separated by commas"), 0, 1, anchorLeft = 1)
         self.hostvg_device = Entry(35)
         self.hostvg_device.setCallback(self.other_device_hostvg_callback)
-        elements.setField(self.hostvg_device, 0, 2, anchorLeft = 1, padding = (0,1,0,1))
+        elements.setField(self.hostvg_device, 0, 2, anchorLeft = 1, padding = (0,1,0,13))
         return [Label(""), elements]
 
     def password_page(self):
@@ -565,7 +564,7 @@ class NodeInstallScreen:
         pw_elements.setField(self.root_password_2, 1,2)
         elements.setField(pw_elements, 0, 5, anchorLeft = 1)
         self.pw_msg = Textbox(60, 6, "", wrap=1)
-        elements.setField(self.pw_msg, 0, 6, padding = (0,1,0,1))
+        elements.setField(self.pw_msg, 0, 6, padding = (0,1,0,5))
         return [Label(""), elements]
 
     def upgrade_page(self):

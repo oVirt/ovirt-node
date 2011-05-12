@@ -561,7 +561,7 @@ class NodeConfigScreen():
             running_vms_grid.setField(Label("Running VMs:   "), 0, 0, anchorLeft = 1)
             running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)
             main_grid.setField(elements, 0, 1, anchorLeft = 1)
-            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,1))
+            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,7))
             return [Label(""), main_grid]
 
       def logging_configuration_page(self, screen):
@@ -977,7 +977,7 @@ class NodeConfigScreen():
           elements.setField(Label(" "), 0, 6, anchorLeft = 1)
           elements.setField(Label("SSH Location (root@example.redhat.com)"), 0, 7, anchorLeft = 1)
           self.kdump_ssh_config = Entry(30, "")
-          elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft = 1)
+          elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft = 1, padding =(0,0,0,6))
           try:
               kdump_config_file = open("/etc/kdump.conf")
               for line in kdump_config_file:
@@ -1010,7 +1010,7 @@ class NodeConfigScreen():
           elements.setField(Label(" "), 0, 1, anchorLeft = 1)
           elements.setField(Label("iSCSI Initiator Name:"), 0, 2, anchorLeft = 1)
           self.iscsi_initiator_config = Entry(50, "")
-          elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft = 1)
+          elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft = 1, padding =(0,0,0,11))
           current_iscsi_initiator_name = get_current_iscsi_initiator_name()
           if current_iscsi_initiator_name is not None:
               self.iscsi_initiator_config.set(current_iscsi_initiator_name)
