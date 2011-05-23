@@ -36,6 +36,7 @@ NEXT_BUTTON = "Next"
 FINISH_BUTTON = "Finish"
 INSTALL_BUTTON = "Install"
 RESTART_BUTTON = "Restart"
+POWEROFF_BUTTON = "Power Off"
 CONTINUE_BUTTON = "Continue"
 SHELL_BUTTON = "Drop To Shell"
 
@@ -321,7 +322,11 @@ class NodeInstallScreen:
         elements = Grid(2, 5)
         elements.setField(Label("%s Installation Failed " %
             PRODUCT_SHORT), 0, 0)
-        elements.setField(Label("Check /var/log/ovirt.log for more details"), 0, 1)
+        elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,0))
+        self.log_menu_list = Listbox(2, width = 30, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
+        self.log_menu_list.append(" /var/log/ovirt.log", "/var/log/ovirt.log")
+        self.log_menu_list.append(" /var/log/messages", "/var/log/messages")
+        elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,12))
         return [Label(""), elements]
 
     def disk_details_callback(self):
@@ -703,7 +708,8 @@ class NodeInstallScreen:
             if self.__current_page == PASSWORD_PAGE:
                 buttons.append(["Install", INSTALL_BUTTON])
             if self.__current_page == FAILED_PAGE:
-                buttons.append(["Drop To Shell", SHELL_BUTTON])
+                buttons.append(["Restart", RESTART_BUTTON])
+                buttons.append(["Power Off", POWEROFF_BUTTON])
             buttonbar = ButtonBar(screen, buttons, compact = 1)
             buttongrid = Grid(1,1)
             if self.__current_page == FINISHED_PAGE:
@@ -733,7 +739,6 @@ class NodeInstallScreen:
                     screen.finish()
                     os.system("/usr/bin/clear;/bin/bash")
                 elif pressed == QUIT_BUTTON:
-                    log("Exiting")
                     abort = ButtonChoiceWindow(self.screen, "Abort Installation","The installation of %s is not complete." %
              PRODUCT_SHORT, buttons = ['Back','Restart','Shutdown'])
                     if abort == "restart":
@@ -743,6 +748,8 @@ class NodeInstallScreen:
                 elif pressed == RESTART_BUTTON:
                     screen.finish()
                     os.system("/usr/bin/clear;/sbin/reboot")
+                elif pressed == POWEROFF_BUTTON:
+                    os.system("/usr/bin/clear;halt")
                 elif pressed == BACK_BUTTON:
                     self.get_back_page()
                 elif not result == "F2":
@@ -806,6 +813,12 @@ class NodeInstallScreen:
                         else:
                             ButtonChoiceWindow(self.screen, "Password Check", "You must enter a valid password", buttons = ['Ok'])
                             self.__current_page = PASSWORD_PAGE
+                    elif self.__current_page == FAILED_PAGE:
+                        f = self.log_menu_list.current()
+                        log = open(f)
+                        log = log.read()
+                        ButtonChoiceWindow(screen, "Log Viewer", log, buttons=['Ok'], width=68, x = 1, y = 6)
+
             except Exception, error:
                 self.screen.setColor("BUTTON", "black", "red")
                 self.screen.setColor("ACTBUTTON", "blue", "white")
