@@ -24,10 +24,10 @@ autoload xfm
  *************************************************************************)
 
 (* View: comment *)
-let comment = Utill.comment_generic /[ \t]*[;#][ \t]*/ "# "
+let comment = Util.comment_generic /[ \t]*[;#][ \t]*/ "# "
 
 (* View: empty *)
-let empty = Utill.empty
+let empty = Util.empty
 
 
 (************************************************************************
@@ -36,7 +36,7 @@ let empty = Utill.empty
 
 (* View: netmask
 A network mask for IP addresses *)
-let netmask = [ label "netmask" . Utill.del_str "/" . store Rx.ip ]
+let netmask = [ label "netmask" . Util.del_str "/" . store Rx.ip ]
 
 (* View: ipaddr 
 An IP address or range with an optional mask *) 
@@ -45,24 +45,24 @@ let ipaddr = [label "ipaddr" . store Rx.ip . netmask?]
 
 (* View: nameserver
      A nameserver entry *)
-let nameserver = Buildd.key_value_line 
+let nameserver = Build.key_value_line 
                     "nameserver" Sep.space (store Rx.ip)
 
 (* View: domain *)
-let domain = Buildd.key_value_line
+let domain = Build.key_value_line
                     "domain" Sep.space (store Rx.word)
 
 (* View: search *)
-let search = Buildd.key_value_line
+let search = Build.key_value_line
                     "search" Sep.space
-                    (Buildd.opt_list 
+                    (Build.opt_list 
                            [label "domain" . store Rx.word]
                             Sep.space)
 
 (* View: sortlist *)
-let sortlist = Buildd.key_value_line
+let sortlist = Build.key_value_line
                     "sortlist" Sep.space
-                    (Buildd.opt_list
+                    (Build.opt_list
                            ipaddr
                            Sep.space) 
 
@@ -79,15 +79,15 @@ let ip6_dotint =
 (* View: options 
      Options values *)
 let options =
-      let options_entry = Buildd.key_value ("ndots"|"timeout"|"attempts") 
-                                          (Utill.del_str ":") (store Rx.integer)
-                        | Buildd.flag ("debug"|"rotate"|"no-check-names"
+      let options_entry = Build.key_value ("ndots"|"timeout"|"attempts") 
+                                          (Util.del_str ":") (store Rx.integer)
+                        | Build.flag ("debug"|"rotate"|"no-check-names"
                                      |"inet6"|"ip6-bytestring"|"edns0")
                         | ip6_dotint
 
-            in Buildd.key_value_line
+            in Build.key_value_line
                     "options" Sep.space
-                    (Buildd.opt_list
+                    (Build.opt_list
                            options_entry
                            Sep.space)
 
@@ -103,7 +103,7 @@ let lns = ( empty | comment | entry )*
 
 (* Variable: filter *)
 let filter = (incl "/etc/resolv.conf")
-    . Utill.stdexcl
+    . Util.stdexcl
 
 let xfm = transform lns filter
 

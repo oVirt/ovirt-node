@@ -111,9 +111,9 @@ make install DESTDIR=%{buildroot}
 
 # resolv.conf augeas lens
 %{__install} -d -m0755 %{buildroot}/usr/share/augeas/lenses/dist
-%{__install} -p -m0644 augeas/buildd.aug %{buildroot}/usr/share/augeas/lenses/dist/buildd.aug
-%{__install} -p -m0644 augeas/resolv.aug %{buildroot}/usr/share/augeas/lenses/dist/resolv.aug
-%{__install} -p -m0644 augeas/utill.aug %{buildroot}/usr/share/augeas/lenses/dist/utill.aug
+%{__install} -p -m0644 augeas/build.aug %{buildroot}/usr/share/augeas/lenses/build.aug
+%{__install} -p -m0644 augeas/resolv.aug %{buildroot}/usr/share/augeas/lenses/resolv.aug
+%{__install} -p -m0644 augeas/util.aug %{buildroot}/usr/share/augeas/lenses/util.aug
 
 mkdir -p %{buildroot}/%{_sysconfdir}/default
 echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
@@ -229,9 +229,9 @@ fi
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
 
-%{_datadir}/augeas/lenses/dist/buildd.aug
-%{_datadir}/augeas/lenses/dist/resolv.aug
-%{_datadir}/augeas/lenses/dist/utill.aug
+%{_datadir}/augeas/lenses/build.aug
+%{_datadir}/augeas/lenses/resolv.aug
+%{_datadir}/augeas/lenses/util.aug
 %{_datadir}/dracut/modules.d/91ovirtnode/check
 %{_datadir}/dracut/modules.d/91ovirtnode/install
 %{_datadir}/dracut/modules.d/91ovirtnode/ovirt-boot-functions

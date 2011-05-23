@@ -16,6 +16,6 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 EXTRA_DIST = \
-  buildd.aug \
+  build.aug \
   resolv.aug \
-  utill.aug
+  util.aug

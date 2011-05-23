@@ -1,5 +1,5 @@
 (*
-Module: Utill
+Module: Util
   Generic module providing useful primitives
 
 Author: David Lutterkort
@@ -9,7 +9,7 @@ About: License
 *)
 
 
-module Utill =
+module Util =
 
 
 (*

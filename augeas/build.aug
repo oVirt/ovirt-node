@@ -12,9 +12,9 @@ About: Reference
 *)
 
 
-module Buildd =
+module Build =
 
-let eol = Utill.eol
+let eol = Util.eol
 
 (************************************************************************
  * Group:               GENERIC CONSTRUCTIONS
