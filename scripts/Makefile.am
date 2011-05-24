@@ -34,7 +34,6 @@ EXTRA_DIST = \
   collectd.py \
   logging.py \
   kdump.py \
-  rhevm.py \
   rhn.py \
   ovirt-config-installer.py \
   ovirt-config-setup.py \
