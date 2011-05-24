@@ -389,6 +389,13 @@ class NodeConfigScreen():
           self.pw_msg.setText(msg)
           return
 
+      def valid_logrotate_max_size_callback(self):
+          if not self.logrotate_max_size.value().isdigit():
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Log File Size", buttons = ['Ok'])
+              self.reset_screen_colors()
+
       def valid_syslog_port_callback(self):
           if not is_valid_port(self.syslog_port.value()):
               self.screen.setColor("BUTTON", "black", "red")
@@ -567,16 +574,24 @@ class NodeConfigScreen():
       def logging_configuration_page(self, screen):
           elements = Grid(2, 8)
           elements.setField(Label("Logging"), 0, 0, anchorLeft = 1)
-          elements.setField(Label(" "), 0, 1, anchorLeft = 1)
-          elements.setField(Textbox(45,3,"Rsyslog is an enhanced multi-threaded syslogd\nwith a focus on security and reliability."), 0, 3, anchorLeft = 1)
+          logrotate_grid = Grid(2,2)
+          logrotate_grid.setField(Label("  Logrotate Max Log Size (KB): "), 0, 0, anchorLeft = 1)
+          self.logrotate_max_size = Entry(5, "", scroll = 0)
+          self.logrotate_max_size.setCallback(self.valid_logrotate_max_size_callback)
+          logrotate_grid.setField(self.logrotate_max_size, 1, 0, anchorLeft = 1)
+          current_logrotate_size = get_logrotate_size()
+          self.logrotate_max_size.set(current_logrotate_size)
+          elements.setField(logrotate_grid, 0, 1, anchorLeft = 1, padding = (0,1,0,0))
+          elements.setField(Label(" "), 0, 2, anchorLeft = 1)
+          elements.setField(Textbox(45,2,"Rsyslog is an enhanced multi-threaded syslogd"), 0, 3, anchorLeft = 1)
           rsyslog_grid = Grid(2,2)
-          rsyslog_grid.setField(Label("Server Address:"), 0, 0, anchorLeft = 1)
+          rsyslog_grid.setField(Label("  Server Address:"), 0, 0, anchorLeft = 1)
           self.syslog_server = Entry(25, "")
           self.syslog_server.setCallback(self.valid_syslog_server_callback)
           rsyslog_grid.setField(self.syslog_server, 1, 0, anchorLeft = 1, padding=(2, 0, 0, 1))
           self.syslog_port = Entry(6, "", scroll = 0)
           self.syslog_port.setCallback(self.valid_syslog_port_callback)
-          rsyslog_grid.setField(Label("Server Port:"), 0, 1, anchorLeft = 1, padding=(0, 0, 0, 1))
+          rsyslog_grid.setField(Label("  Server Port:"), 0, 1, anchorLeft = 1, padding=(0, 0, 0, 1))
           rsyslog_grid.setField(self.syslog_port, 1, 1, anchorLeft = 1, padding=(2, 0, 0, 1))
           rsyslog_config = get_rsyslog_config()
           log(rsyslog_config)
@@ -587,12 +602,12 @@ class NodeConfigScreen():
           else:
               self.syslog_port.set("514")
           elements.setField(rsyslog_grid, 0, 4, anchorLeft = 1)
-          elements.setField(Textbox(48,3,"Netconsole service allows a remote syslog daemon\nto record kernel printk() messages"), 0, 5, anchorLeft = 1, padding = (0,1,0,0))
+          elements.setField(Textbox(48,3,"Netconsole service allows a remote syslog daemon\nto record kernel printk() messages"), 0, 5, anchorLeft = 1, padding = (0,0,0,0))
           netconsole_grid = Grid(2,2)
-          netconsole_grid.setField(Label("Server Address:"), 0, 0, anchorLeft = 1)
+          netconsole_grid.setField(Label("  Server Address:"), 0, 0, anchorLeft = 1)
           self.netconsole_server = Entry(25, "")
           self.netconsole_server.setCallback(self.valid_netconsole_server_callback)
-          netconsole_grid.setField(Label("Server Port:"), 0, 1, anchorLeft = 1)
+          netconsole_grid.setField(Label("  Server Port:"), 0, 1, anchorLeft = 1)
           self.netconsole_server_port = Entry(5, "", scroll = 0)
           self.netconsole_server_port.setCallback(self.valid_netconsole_server_port_callback)
           netconsole_grid.setField(self.netconsole_server, 1, 0, anchorLeft = 1, padding=(2, 0, 0, 1))
@@ -1158,6 +1173,7 @@ class NodeConfigScreen():
               ovirt_rsyslog(self.syslog_server.value(), self.syslog_port.value(), "udp")
           if not self.netconsole_server.value() is "" and not self.netconsole_server_port.value() is "":
               ovirt_netconsole(self.netconsole_server.value(), self.netconsole_server_port.value())
+          set_logrotate_size(self.logrotate_max_size.value())
           return True
 
       def process_locked_screen(self):

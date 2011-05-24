@@ -1038,6 +1038,16 @@ def password_check(password_1, password_2):
               return (1, "Please Confirm Password\n\n\n\n\n\n")
           return (1, "\n\n\n\n\n\n")
 
+def get_logrotate_size():
+    size = augtool_get("/files/etc/logrotate.d/ovirt-node/rule/size")
+    if "m" in size.lower():
+        multiplier = 1024
+    else:
+        multiplier = 1
+    size = size.lower().rstrip("kmb")
+    size = int(size) * multiplier
+    return str(size)
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

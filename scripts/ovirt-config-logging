@@ -157,7 +157,7 @@ function prompt_user {
                             $syslog_server_port \
                             $syslog_server_protocol
                     fi
-                    sed -c -i -e "s/^size=.*/size=${max_log_size}k/" \
+                    sed -c -i -e "s/size.*/size ${max_log_size}k/" \
                         /etc/logrotate.d/ovirt-node
                     return
                     ;;
