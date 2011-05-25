@@ -47,6 +47,8 @@ LOCK_BUTTON = "Lock"
 RESTART_BUTTON = "Restart"
 POWER_OFF_BUTTON = "Power Off"
 UNLOCK_BUTTON = "Unlock"
+SHELL_BUTTON = "Drop to Shell"
+MENU_BUTTON = "Back to Menu"
 login_password = ""
 
 STATUS_PAGE = 1
@@ -60,6 +62,7 @@ FIRST_PLUGIN_PAGE = 13
 LAST_PLUGIN_PAGE = 17
 #
 NETWORK_DETAILS_PAGE = 19
+SUPPORT_PAGE = 21
 LOCKED_PAGE = 99
 
 OVIRT_VARS = parse_defaults()
@@ -190,6 +193,8 @@ class NodeConfigScreen():
                 return self.remote_storage_configuration_page(screen)
             if page == NETWORK_DETAILS_PAGE :
                 return self.network_details_page(screen)
+            if page == SUPPORT_PAGE :
+                return self.support_page(screen)
             if page == LOCKED_PAGE :
                 return self.screen_locked_page(screen)
             # plugin pages
@@ -568,7 +573,7 @@ class NodeConfigScreen():
             running_vms_grid.setField(Label("Running VMs:   "), 0, 0, anchorLeft = 1)
             running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)
             main_grid.setField(elements, 0, 1, anchorLeft = 1)
-            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,7))
+            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,4))
             return [Label(""), main_grid]
 
       def logging_configuration_page(self, screen):
@@ -1019,6 +1024,17 @@ class NodeConfigScreen():
               self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
           return [Label(""), elements]
 
+      def support_page(self, screen):
+          log("loading support page")
+          elements = Grid(2, 8)
+          elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,0))
+          self.log_menu_list = Listbox(3, width = 30, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
+          self.log_menu_list.append(" /var/log/ovirt.log", "/var/log/ovirt.log")
+          self.log_menu_list.append(" /var/log/messages", "/var/log/messages")
+          self.log_menu_list.append(" /var/log/secure", "/var/log/secure")
+          elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,11))
+          return [Label(""), elements]
+
       def remote_storage_configuration_page(self, screen):
           elements = Grid(2, 8)
           elements.setField(Label("Remote Storage"), 0, 0, anchorLeft = 1)
@@ -1265,15 +1281,18 @@ class NodeConfigScreen():
                     colors = self.__colorset.get(item)
                     screen.setColor(item, colors[0], colors[1])
                 self.set_console_colors()
-                screen.pushHelpLine(" ")
+                if self.__current_page == STATUS_PAGE:
+                    screen.pushHelpLine(" Press F2 For Support Menu ")
+                else:
+                    screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
-                gridform = GridForm(screen, "", 4, 2) # 5,2
+                gridform = GridForm(screen, "", 2, 1) # 5,2
                 screen.drawRootText(1,0, "".ljust(78))
                 screen.drawRootText(1,1, "   %s" % PRODUCT_SHORT.ljust(75))
                 screen.drawRootText(1,2, "".ljust(78))
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
-                self.menu_list = Listbox(18, width = 20, returnExit = 1, border = 0, showCursor = 0)
+                self.menu_list = Listbox(16, width = 20, returnExit = 1, border = 0, showCursor = 0)
                 self.menu_list.append(" Status", 1)
                 self.menu_list.append("", 2)
                 self.menu_list.append(" Network", 3)
@@ -1298,11 +1317,11 @@ class NodeConfigScreen():
                 for filler in range(plugin_page, LAST_PLUGIN_PAGE):
                     self.menu_list.append("", filler)
                 self.menu_list.setCallback(self.menuSpacing)
-                if self.__current_page != LOCKED_PAGE and self.__current_page != NETWORK_DETAILS_PAGE:
+                if self.__current_page != LOCKED_PAGE and self.__current_page != NETWORK_DETAILS_PAGE and self.__current_page != SUPPORT_PAGE:
                     self.menu_list.setCurrent(self.__current_page)
                 if not self.screen_locked:
-                    if not self.__current_page == NETWORK_DETAILS_PAGE:
-                        gridform.add(self.menu_list, 1, 0,
+                    if not self.__current_page == NETWORK_DETAILS_PAGE and not self.__current_page == SUPPORT_PAGE:
+                        gridform.add(self.menu_list, 0, 0, # was 1,0
                                      anchorTop = 1, anchorLeft = 1,
                                      growx = 0)
                 current_element = 0
@@ -1332,16 +1351,16 @@ class NodeConfigScreen():
                     buttons.append(["Unlock", UNLOCK_BUTTON])
                 if self.__current_page != STATUS_PAGE and self.__current_page < 20:
                     buttons.append(["Reset", RESET_BUTTON])
+                if self.__current_page == SUPPORT_PAGE:
+                    buttons.append(["Back to Menu", MENU_BUTTON])
+                    buttons.append(["Drop to Shell", SHELL_BUTTON])
                 buttonbar = ButtonBar(screen, buttons, compact = 1)
                 if self.__current_page == LOCKED_PAGE:
                     pad = 28
                 else:
                     pad = 0
                 content.setField(buttonbar, 0, current_element, anchorLeft = 1, padding = (pad,0,0,0))
-                current_element += 1
-                gridform.add(Label("  "), 2, 0, anchorTop = 1)
-                current_element += 1
-                gridform.add(content, 3, 0, anchorTop = 1)
+                gridform.add(content, 1, 0, anchorTop = 1, padding = (2,0,0,0))
                 gridform.addHotKey("F2")
                 try:
                     (top, left) = (1, 4)
@@ -1362,10 +1381,6 @@ class NodeConfigScreen():
                         warn_message= "Unable to verify any running vms\n\n"
                     self.screen.setColor("BUTTON", "black", "red")
                     self.screen.setColor("ACTBUTTON", "blue", "white")
-                    if result == "F2" and self.__current_page != LOCKED_PAGE:
-                        screen.popWindow()
-                        screen.finish()
-                        os.system("/usr/bin/clear;/bin/bash")
                     if pressed == IDENTIFY_BUTTON:
                         os.system("ethtool -p " + self.nic_lb.current() + " 10")
                     elif pressed == APPLY_BUTTON or pressed == UNLOCK_BUTTON:
@@ -1403,6 +1418,8 @@ class NodeConfigScreen():
                             os.system("/usr/bin/clear;shutdown -h now")
                     if self.__current_page == LOCKED_PAGE:
                         self.screen_locked = True
+                    elif result == "F2" and self.__current_page != LOCKED_PAGE:
+                        self.__current_page = SUPPORT_PAGE
                     else:
                         if self.__current_page == NETWORK_PAGE:
                             if menu_choice == NETWORK_PAGE:
@@ -1429,6 +1446,21 @@ class NodeConfigScreen():
                                 self.__current_page = NETWORK_DETAILS_PAGE
                             else:
                                self.__current_page = NETWORK_PAGE
+                        elif self.__current_page == SUPPORT_PAGE:
+                           log("pressed: " + str(pressed))
+                           if pressed == SHELL_BUTTON:
+                               warn = ButtonChoiceWindow(self.screen, "Support Shell", "This is for troubleshooting with support representatives. Do not use this option without guidance from support.")
+                               if warn == "ok":
+                                   screen.popWindow()
+                                   screen.finish()
+                                   os.system("/usr/bin/clear;/bin/bash")
+                           elif pressed == MENU_BUTTON:
+                               self.__current_page = STATUS_PAGE
+                           else:
+                               f = self.log_menu_list.current()
+                               screen.popWindow()
+                               screen.finish()
+                               os.system("/usr/bin/clear;/usr/bin/less -R " + f)
                         else:
                             self.__current_page = menu_choice
                 except Exception, error:
