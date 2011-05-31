@@ -125,7 +125,6 @@ class Plugin(PluginBase):
         self.rhn_conf = {}
     def form(self):
         elements = Grid(2, 12)
-        elements.setField(Textbox(62,3,"Register with Red Hat Network"), 0, 2, anchorLeft = 1)
         login_grid = Grid(4,2)
         self.rhn_user = Entry(15, "")
         self.rhn_pass = Entry(15, "", password = 1)
@@ -195,6 +194,12 @@ class Plugin(PluginBase):
             self.rhn_satellite.setValue(" 0")
             self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
             self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+        if network_up():
+            elements.setField(Textbox(62,3,"Register with Red Hat Network"), 0, 2, anchorLeft = 1)
+        else:
+            elements.setField(Textbox(62,3,"Network Down, Red Hat Network Registration Disabled"), 0, 2, anchorLeft = 1)
+            for i in self.rhn_user, self.rhn_pass, self.profilename, self.public_rhn, self.rhn_satellite, self.rhn_url, self.rhn_ca, self.proxyhost, self.proxyport, self.proxyuser, self.proxypass:
+                i.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         return [Label(""), elements]
 
     def action(self):
