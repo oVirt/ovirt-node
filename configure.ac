@@ -1,17 +1,17 @@
-AC_INIT([ovirt-node], [1.9.3], [ovirt-devel@redhat.com])
+AC_INIT([ovirt-node], [2.0.0], [ovirt-devel@redhat.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability tar-pax])
 AC_PROG_CC
 
-AC_CHECK_PROGS(PYKICKSTART, ksflatten)
+AC_SUBST([FEDORA],[[`rpm --eval '%{fedora}'|sed 's/[^0-9]//g'`]])
+AC_SUBST([RHEL], [[`rpm --eval '%{rhel}'|sed 's/[^0-9]//g'`]])
+AC_SUBST([DISTRO])
 
-if test x"$PYKICKSTART" = x ; then
-   AC_MSG_ERROR([Missing python kickstart support.])
+if test "$FEDORA"; then
+    DISTRO=ovirt$FEDORA
 fi
-
-# TODO need a way to check for python-setuptools
-
-AC_CHECK_LIB(virt, main, , AC_MSG_ERROR([Cannot find libvirt development libraries.]))
-AC_CHECK_LIB(python2.7, main, , AC_MSG_ERROR([Cannot find python development libraries.]))
+if test "$RHEL"; then
+    DISTRO=rhevh$RHEL
+fi
 
 AC_CONFIG_HEADERS([config.h])
 
@@ -25,10 +25,9 @@ AC_CONFIG_FILES([Makefile
   images/Makefile
   kinit/Makefile
   scripts/Makefile
-  tools/Makefile
   scripts/collectd.conf
-  gptsync/Makefile
   recipe/Makefile
+  recipe/ovirt-node-image.ks
   ovirt-node.spec
   ])
 AC_OUTPUT

@@ -20,12 +20,10 @@ OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
 SUBDIRS =   \
   augeas \
   dracut \
-  gptsync \
   images \
   kinit \
   recipe \
-  scripts \
-  tools
+  scripts
 
 EXTRA_DIST = \
   ovirt-node.spec \

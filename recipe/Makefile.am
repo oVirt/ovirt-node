@@ -20,45 +20,41 @@ RECIPE            = $(PACKAGE).ks
 PRODUCT           = oVirt Node Hypervisor
 PRODUCT_SHORT     ?= $(PRODUCT)
 PKG_FMT           = iso
+FEDORA            = @FEDORA@
+RHEL              = @RHEL@
+DISTRO            = @DISTRO@
+ARCH              = $(shell rpm --eval '%{_arch}')
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
 CUR_RAWHIDE       = 16
 CUR_DEVEL         = 16
-CUR_PREVIEW       = 12
-PREVIEW_URL       ?= http://jforbes.fedorapeople.org/virt-preview/f$(CUR_PREVIEW)/$(ARCH)
-
-FEDORA            = $(shell rpm --eval '%{fedora}' |grep [0-9])
-ARCH              = $(shell rpm --eval '%{_arch}')
-
-AUTH_KEYS         ?= $(HOME)/.ssh/authorized_keys
 
 OVIRT_NODE_TOOLSdir = $(datadir)/ovirt-node-tools
 OVIRT_NODE_TOOLS_DATA =         \
         repos.ks                \
-        common-blacklist.ks     \
-        common-manifest-post.ks \
-        common-initrd-post.ks   \
-        common-install.ks       \
-        common-minimizer.ks     \
-        common-el6.ks           \
-        common-pkgs.ks          \
-        common-post.ks          \
-        common-post-nochroot.ks \
+        *-install.ks     \
+        *-pkgs.ks        \
+        *-post.ks        \
+        *-minimizer.ks   \
+        common-nochroot.ks \
+        common-initrd.ks   \
+        common-manifest.ks \
         $(PACKAGE).ks
 
 EXTRA_DIST =                    \
-        common-blacklist.ks     \
-        common-manifest-post.ks \
-        common-initrd-post.ks   \
-        common-install.ks       \
-        common-minimizer.ks     \
-        common-el6.ks           \
-        common-pkgs.ks          \
-        common-post.ks          \
-        common-post-nochroot.ks \
+        *-install.ks     \
+        *-pkgs.ks        \
+        *-post.ks        \
+        *-minimizer.ks   \
+        common-nochroot.ks \
+        common-initrd.ks   \
+        common-manifest.ks \
+        $(PACKAGE).ks.in        \
         $(PACKAGE).ks
 
 dist_sbin_SCRIPTS = node-creator
+
+$(PACKAGE).ks: repos.ks version.ks
 
 repos.ks:
 	( \
@@ -73,9 +69,6 @@ repos.ks:
 	        FEDORA_REPO=f$(FEDORA) ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/releases/$(FEDORA)/Everything/${ARCH}/os,--mirrorlist=$(FEDORA_MIRROR)?repo=fedora-$(FEDORA)&arch=$(ARCH))" ;\
 	        UPDATE_REPO_LINE="repo --name=$${FEDORA_REPO}-updates $(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/updates/$(FEDORA)/${ARCH},--mirrorlist=$(FEDORA_MIRROR)?repo=updates-released-f$(FEDORA)&arch=$(ARCH))\n" ;\
-	        if [ 0$(FEDORA)remove == 0$(CUR_PREVIEW)me ]; then \
-	            UPDATE_REPO_LINE="$${UPDATE_REPO_LINE}repo --name=preview --baseurl=$(PREVIEW_URL)\n" ;\
-	        fi ;\
 	    fi ;\
 	    echo "repo --name=$${FEDORA_REPO} $${FEDORA_REPO_LOC}" > repos.ks ;\
 	    printf "$${UPDATE_REPO_LINE}" >> repos.ks ;\
@@ -87,17 +80,6 @@ repos.ks:
 	    done ;\
 	  fi ;\
 	)
-
-keys:
-	if [ "$(_ovirt_dev)" = 1 -a -f $(AUTH_KEYS) ]; then \
-	    cp -va $(AUTH_KEYS) ovirt-authorized_keys ;\
-	fi
-
-# For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
-# annotated rpm version strings.
-_ovirt_dev = \
- $(shell grep -q '^[[:space:]]*Release:[[:space:]]*0' \
-   $(top_srcdir)/*.spec.in && echo 1 || :)
 
 version.ks:
 	( \
@@ -111,4 +93,4 @@ version.ks:
 $(PACKAGE).$(PKG_FMT) node: version.ks
 	node-creator $(RECIPE)
 
-.PHONY: repos.ks version.ks
+.PHONY: repos.ks version.ks $(PACKAGE).ks

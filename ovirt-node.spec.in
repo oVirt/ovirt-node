@@ -1,10 +1,9 @@
-%define product_family oVirt Node
-%define beta Beta
-%define mgmt_scripts_dir %{_sysconfdir}/node.d
+%global product_family oVirt Node
+%global mgmt_scripts_dir %{_sysconfdir}/node.d
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 
-Summary:        The oVirt Node daemons/scripts
+Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
 Version:        @VERSION@
 Release:        999%{?dist}%{?extra_release}
@@ -14,38 +13,43 @@ Group:          Applications/System
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
+BuildRequires:  python-setuptools
+BuildRequires:  automake autoconf
+
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
-BuildRequires:  libvirt-devel >= 0.5.1
-BuildRequires:  python-devel
-BuildRequires:  python-setuptools
+%if 0%{?fedora}
+Requires:       python-augeas
+Requires:       libvirt-qpid >= 0.2.14-3
+Requires:       glusterfs-client >= 2.0.1
+Requires:       anyterm
+Requires:       python-IPy
+%endif
 Requires:       libvirt >= 0.6.3
 Requires:       augeas >= 0.3.5
-#Requires:       libvirt-qpid >= 0.2.14-3
 Requires:       udev >= 147-2.34
 Requires:       wget
 Requires:       cyrus-sasl-gssapi cyrus-sasl >= 2.1.22
 Requires:       iscsi-initiator-utils
 Requires:       ntp
 Requires:       nfs-utils
-#Requires:       glusterfs-client >= 2.0.1
 Requires:       krb5-workstation
 Requires:       bash
 Requires:       chkconfig
 Requires:       bind-utils
-# Stupid yum dep solver pulls in older 'qemu' to resolve
-# /usr/bin/qemu-img dep. This forces it to pick the new
-# qemu-img RPM.
 Requires:       qemu-img
 Requires:       nc
 Requires:       grub
 Requires:       /usr/sbin/crond
-#Requires:       anyterm
 Requires:       newt-python
 Requires:       libuser-python >= 0.56.9
 Requires:       dbus-python
-#Requires:       python-IPy
-ExclusiveArch:  x86_64
+Requires:       python-gudev
+Requires:       PyPAM
+Requires:       ethtool
+Requires:       cracklib-python
+
+BuildArch:      noarch
 
 %define app_root %{_datadir}/%{name}
 
@@ -53,27 +57,25 @@ ExclusiveArch:  x86_64
 Provides a series of daemons and support utilities for hypervisor distribution.
 
 %package tools
-Summary:        oVirt Node tools for building and running an oVirt Node image
+Summary:        Tools for building and running %{product_family} image
 Group:          Applications/System
-BuildArch:      noarch
-BuildRequires:  pykickstart  >= 1.54
+Requires:       pykickstart  >= 1.54
 Requires:       livecd-tools >= 020-2
 
 %define tools_root %{_datadir}/ovirt-node-tools
 
 %description tools
-The oVirt-node-tools package provides recipe (ks files), client tools,
-documentation for building and running an oVirt Node image. This package
-is not to be installed on the oVirt-Node, however on a development machine
-to help in deployment on the node.
+This package provides recipe (Kickstart files), client tools,
+documentation for building and running an %{product_family} image.
+This package is not to be installed on the %{product_family},
+however on a development machine to help to build the image.
 
 %prep
 %setup -q
 
 %build
+aclocal && autoheader && automake --add-missing && autoconf
 %configure
-# workaround for repos.ks
-# for RHEL based image builds, brew spin-livecd uses Brew repos
 make
 
 %install
@@ -88,8 +90,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{mgmt_scripts_dir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
-# remove nodeadmin from el6 build
-#%{__install} -d -m0755 %{buildroot}%{python_sitelib}/nodeadmin
 
 %{__install} -p -m0755 scripts/node-config %{buildroot}%{_sysconfdir}/sysconfig
 
@@ -110,7 +110,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 dracut/ovirt-cleanup.sh %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
 
 # resolv.conf augeas lens
-%{__install} -d -m0755 %{buildroot}/usr/share/augeas/lenses/dist
+%{__install} -d -m0755 %{buildroot}/usr/share/augeas/lenses
 %{__install} -p -m0644 augeas/build.aug %{buildroot}/usr/share/augeas/lenses/build.aug
 %{__install} -p -m0644 augeas/resolv.aug %{buildroot}/usr/share/augeas/lenses/resolv.aug
 %{__install} -p -m0644 augeas/util.aug %{buildroot}/usr/share/augeas/lenses/util.aug
@@ -126,9 +126,13 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 # newt UI
 %{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirt_config_setup
 %{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirt_config_setup
-#%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
+%if 0%{?fedora}
+%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
+%endif
+%if 0%{?rhel}
 %{__install} -p -m0644 scripts/rhevm.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %{__install} -p -m0644 scripts/rhn.py %{buildroot}%{python_sitelib}/ovirt_config_setup
+%endif
 %{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/storage.py %{buildroot}%{python_sitelib}/ovirtnode
@@ -142,33 +146,13 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__install} -p -m0755 scripts/ovirt-config-installer.py %{buildroot}%{_libexecdir}/ovirt-config-installer
 %{__install} -p -m0755 scripts/ovirt-config-setup.py %{buildroot}%{_libexecdir}/ovirt-config-setup
 %{__install} -p -m0755 scripts/ovirt-admin-shell %{buildroot}%{_libexecdir}
+%if 0%{?rhel}
 # python-augeas is not in RHEL-6
 %{__install} -p -m0644 scripts/augeas.py %{buildroot}%{python_sitelib}
-
-# default ovirt-config-setup menu options
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-setup.d
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-storage %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"00_Disk Partitioning"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-password %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"05_Administrator Password"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-hostname %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"10_Set Hostname"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-iscsi %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"12_iSCSI Initiator Setup"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-networking %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"15_Networking Setup"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-kdump %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"20_Kdump Configuration"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-rhn %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"25_Register Host to RHN"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-snmp %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"26_Enable SNMP Agent"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-logging %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"30_Logging Setup"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-view-logs %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"90_View logs"
-%{__ln_s} ../..%{_libexecdir}/ovirt-config-boot-wrapper %{buildroot}%{_sysconfdir}/ovirt-config-setup.d/"98_Local install and reboot"
+%endif
 
 # ovirt-early vendor hook dir
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-early.d
-
-# ovirt-node-tools
-%{__install} -d -m0755 %{buildroot}%{tools_root}
-#%{__install} -p -m0644 recipe/*.ks %{buildroot}%{tools_root}
-%{__install} -p -m0755 tools/create-ovirt-iso-nodes %{buildroot}%{_sbindir}
-%{__install} -p -m0755 tools/edit-livecd %{buildroot}%{_sbindir}
-%{__install} -p -m0755 tools/livecd-setauth %{buildroot}%{_sbindir}
-%{__install} -p -m0755 tools/livecd-rpms %{buildroot}%{_sbindir}
 
 
 %clean
@@ -205,10 +189,6 @@ fi
 %{tools_root}/*.ks
 %defattr(0755,root,root,0755)
 %{_sbindir}/node-creator
-%{_sbindir}/create-ovirt-iso-nodes
-%{_sbindir}/edit-livecd
-%{_sbindir}/livecd-setauth
-%{_sbindir}/livecd-rpms
 
 
 %files
@@ -220,7 +200,6 @@ fi
 
 %{mgmt_scripts_dir}
 %{_sysconfdir}/ovirt-config-boot.d
-%{_sysconfdir}/ovirt-config-setup.d
 %config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
 %doc COPYING
@@ -245,26 +224,24 @@ fi
 %{_libexecdir}/ovirt-config-networking
 %{_libexecdir}/ovirt-config-password
 %{_libexecdir}/ovirt-config-rhn
-%{_libexecdir}/ovirt-config-setup
-%{_libexecdir}/ovirt-config-setup-old
 %{_libexecdir}/ovirt-config-snmp
 %{_libexecdir}/ovirt-config-storage
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-config-view-logs
 %{_libexecdir}/ovirt-functions
 %{_libexecdir}/ovirt-boot-functions
-%{_libexecdir}/ovirt-install-node-stateless
 %{_libexecdir}/ovirt-process-config
 %{_libexecdir}/ovirt-rpmquery
 %{_libexecdir}/ovirt-config-installer
+%{_libexecdir}/ovirt-config-setup
 %{_libexecdir}/ovirt-admin-shell
-%{_sbindir}/gptsync
-%{_sbindir}/showpart
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{python_sitelib}/ovirt_config_setup
 %{python_sitelib}/ovirtnode
+%if 0%{?rhel}
 %{python_sitelib}/augeas*
+%endif
 
 %{_initrddir}/ovirt-awake
 %{_initrddir}/ovirt-early
@@ -274,6 +251,11 @@ fi
 %{_sysconfdir}/ovirt-early.d
 
 %changelog
+* Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1
+- split kickstarts per distro, currently ovirt15 and rhevh6
+- new installation and configuration text UI for standalone mode
+- drop gptsync, make it noarch
+
 * Tue Apr 04 2010 Darryl L. Pierce <dpierce@redhat.com> - 1.9.2-1
 - Updated autoconf environment.
 - Allow persistence of empty configuration files.

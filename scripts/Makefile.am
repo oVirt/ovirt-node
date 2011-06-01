@@ -55,12 +55,10 @@ dist_libexec_SCRIPTS = \
   ovirt-config-rhn \
   ovirt-config-snmp \
   ovirt-config-password \
-  ovirt-config-setup-old \
   ovirt-config-storage \
   ovirt-config-uninstall \
   ovirt-config-view-logs \
   ovirt-functions \
   ovirt-boot-functions \
-  ovirt-install-node-stateless \
   ovirt-process-config \
   ovirt-rpmquery

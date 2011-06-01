@@ -1,9 +1,4 @@
-#%post --nochroot --interpreter image-minimizer
-# lokkit is just an install-time dependency; we can remove
-# it afterwards, which we do here
 droprpm system-config-*
-droprpm rhpl
-droprpm kudzu
 droprpm libsemanage-python
 
 droprpm mkinitrd
