@@ -741,11 +741,10 @@ def finish_install():
     return True
 
 def is_valid_ipv4(ip_address):
-    ipv4_regex = r"\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
-    if re.match(ipv4_regex, ip_address):
-        if not ":" in ip_address:
-            return True
-    else:
+    try:
+        socket.inet_pton(socket.AF_INET, ip_address)
+        return True
+    except socket.error:
         return False
 
 def is_valid_ipv6(ip_address):
