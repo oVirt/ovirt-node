@@ -98,6 +98,10 @@ ql2200-firmware
 ql23xx-firmware
 ql2400-firmware
 ql2500-firmware
+# more firmwares
+aic94xx-firmware
+bfa-firmware
+
 # for building custom selinux module
 make
 checkpolicy

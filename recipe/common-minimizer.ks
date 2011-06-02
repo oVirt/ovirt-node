@@ -282,13 +282,20 @@ keep /lib/firmware/acenic
 keep /lib/firmware/adaptec
 keep /lib/firmware/advansys
 keep /lib/firmware/bnx2
+keep /lib/firmware/bnx2x
 keep /lib/firmware/cxgb3
+keep /lib/firmware/cxgb4
 keep /lib/firmware/e100
 keep /lib/firmware/myricom
 keep /lib/firmware/ql*
 keep /lib/firmware/sun
 keep /lib/firmware/tehuti
 keep /lib/firmware/tigon
+keep /lib/firmware/cbfw_fc.bin
+keep /lib/firmware/ctfw_cna.bin
+keep /lib/firmware/ctfw_fc.bin
+keep /lib/firmware/aic94xx-seq.fw
+
 drop /lib/kbd/consolefonts
 drop /etc/pki/tls
 drop /etc/pki/java
