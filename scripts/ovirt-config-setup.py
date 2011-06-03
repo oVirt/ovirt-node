@@ -389,6 +389,21 @@ class NodeConfigScreen():
               self.ipv6_netdevgateway.set("")
               self.reset_screen_colors()
           return
+
+      def netvlanid_callback(self):
+          warn = 0
+          try:
+              if not int(self.netvlanid.value()) in range(0,4095):
+                  warn = 1
+          except:
+              warn = 1
+          finally:
+              if warn == 1:
+                  self.screen.setColor("BUTTON", "black", "red")
+                  self.screen.setColor("ACTBUTTON", "blue", "white")
+                  ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid VLAN ID", buttons = ['Ok'])
+                  self.reset_screen_colors()
+
       def password_check_callback(self):
           resp, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
           self.pw_msg.setText(msg)
@@ -943,6 +958,7 @@ class NodeConfigScreen():
           grid.setField(Label(" "), 0, 8, anchorLeft = 1)
           vlan_grid = Grid(2,2)
           self.netvlanid = Entry(4, "", scroll = 0)
+          self.netvlanid.setCallback(self.netvlanid_callback)
           if "OVIRT_VLAN" in OVIRT_VARS:
               self.netvlanid.set(OVIRT_VARS["OVIRT_VLAN"])
           vlan_grid.setField(Label("VLAN ID: "), 0, 0, anchorLeft = 1)
