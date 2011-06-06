@@ -58,12 +58,17 @@ fi
 # regenerate repo so iso uses new ovirt-node rpms
 createrepo -d ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 
-#make iso
-#cd recipe
-#make ovirt-node-image.iso PRODUCT='Red Hat Enterprise Virtualization Hypervisor' VERSION=6.0 RELEASE=0$EXTRA_RELEASE PRODUCT_SHORT='RHEV Hypervisor'
+cd recipe
+make ovirt-node-image.iso VERSION=2.0 RELEASE=0$EXTRA_RELEASE
+
+if [ ! ls *.iso 2>/dev/null >/dev/null ]; then
+    echo "ISO not created"
+    exit 1
+fi
+
 #
 #copy iso back to main directory for autotest.sh
-ln -nf *iso ..
+ln -nf *iso .. ||:
 
 #Don't error out if this doesn't work.
 set +e
