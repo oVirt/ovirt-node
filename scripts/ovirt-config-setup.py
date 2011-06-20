@@ -470,6 +470,13 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Server Port", buttons = ['Ok'])
               self.reset_screen_colors()
 
+      def valid_hostname_callback(self):
+          if not is_valid_hostname(self.net_hostname.value()):
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname", buttons = ['Ok'])
+              self.reset_screen_colors()
+
       def valid_fqdn_or_ipv4(self):
           warn = 0
           if not self.ntp_host1.value() == "":
@@ -682,6 +689,8 @@ class NodeConfigScreen():
           self.current_hostname = os.uname()[1]
           hostname = os.uname()[1]
           self.net_hostname = Entry(35, hostname)
+          self.net_hostname.setCallback(self.valid_hostname_callback)
+
           hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft = 1, padding=(0,0,0,0))
           grid.setField(hostname_grid, 0, 3, anchorLeft=1)
           dns_grid = Grid(2,2)
@@ -1076,7 +1085,7 @@ class NodeConfigScreen():
           self.menuo = self.menu_list.current()
 
       def process_network_config(self):
-          if self.net_hostname.value() != self.current_hostname:
+          if self.net_hostname.value() != self.current_hostname and is_valid_hostname(self.net_hostname.value()):
               augtool("set", "/files/etc/sysconfig/network/HOSTNAME", self.net_hostname.value())
               os.system("hostname " + self.net_hostname.value())
               ovirt_store_config("/etc/sysconfig/network")
