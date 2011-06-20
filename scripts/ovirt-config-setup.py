@@ -393,8 +393,9 @@ class NodeConfigScreen():
       def netvlanid_callback(self):
           warn = 0
           try:
-              if not int(self.netvlanid.value()) in range(0,4095):
-                  warn = 1
+              if not self.netvlanid.value() == "":
+                  if not int(self.netvlanid.value()) in range(0,4095):
+                      warn = 1
           except:
               warn = 1
           finally:
