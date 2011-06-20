@@ -1106,6 +1106,9 @@ class NodeConfigScreen():
       def process_nic_config(self):
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", "")
           augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '"')
+          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
+          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
+          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
           if self.static_ipv4_nic_proto.value() == 1:
               msg = ""
               if self.ipv4_netdevip.value() == "":
@@ -1125,6 +1128,14 @@ class NodeConfigScreen():
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
+          else:
+              # if exists remove static keys from dictionary
+              if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
+                  del OVIRT_VARS["OVIRT_IP_ADDRESS"]
+              if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
+                  del OVIRT_VARS["OVIRT_IP_NETMASK"]
+              if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
+                  del OVIRT_VARS["OVIRT_IP_GATEWAY"]
           if self.netvlanid.value() != "":
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", '"' + self.netvlanid.value() + '"')
           if self.dhcp_ipv6_nic_proto.value() == 1:

@@ -113,6 +113,7 @@ class Network:
             self.BR_CONFIG += "set %s/BOOTPROTO dhcp\n" % BR_ROOT
         else:
             if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS") and OVIRT_VARS["OVIRT_IP_ADDRESS"] != "off":
+                self.BR_CONFIG += "set %s/BOOTPROTO static\n" % (BR_ROOT)
 		if self.VL_CONFIG == "":
                     self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
                 self.BR_CONFIG += "set %s/IPADDR %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_ADDRESS"])
@@ -120,6 +121,7 @@ class Network:
                     self.BR_CONFIG += "set %s/NETMASK %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_NETMASK"])
                 if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
                     self.BR_CONFIG += "set %s/GATEWAY %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_GATEWAY"])
+
         self.IF_CONFIG += "set %s/ONBOOT yes" % IF_ROOT
         self.BR_CONFIG += "set %s/ONBOOT yes" % BR_ROOT
         self.IF_CONFIG = self.IF_CONFIG.split("\n")
