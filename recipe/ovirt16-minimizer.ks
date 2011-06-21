@@ -1,0 +1,1 @@
+ovirt15-minimizer.ks
