@@ -60,7 +60,7 @@ createrepo -d ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 cd recipe
 make ovirt-node-image.iso VERSION=2.0 RELEASE=0$EXTRA_RELEASE
 
-if [ ! ls *.iso 2>/dev/null >/dev/null ]; then
+if ! ls *.iso 2>/dev/null >/dev/null; then
     echo "ISO not created"
     exit 1
 fi
