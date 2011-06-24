@@ -1,5 +1,7 @@
 audit
 bc
+cracklib-python
+ethtool
 kernel
 hwdata
 passwd
@@ -15,8 +17,10 @@ selinux-policy-targeted
 vim-minimal
 sudo
 python
+python-gudev
 python-libs
 python-setuptools
+PyPAM
 db4
 vconfig
 python-virtinst
@@ -45,7 +49,6 @@ qemu-kvm-tools
 -wireless-tools
 -setserial
 -prelink
--newt-python
 -newt
 -libselinux-python
 -kbd

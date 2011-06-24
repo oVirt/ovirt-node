@@ -205,6 +205,7 @@ drop /usr/src
 drop /usr/etc
 drop /usr/games
 drop /usr/include
+keep /usr/include/python2.*
 drop /usr/local
 drop /usr/sbin/dell*
 keep /usr/sbin/build-locale-archive

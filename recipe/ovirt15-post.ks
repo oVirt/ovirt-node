@@ -32,3 +32,59 @@ EOF_anyterm
    # permit it to run the virsh console
    echo "anyterm ALL=NOPASSWD: /usr/bin/virsh console *" >> /etc/sudoers
 
+# rwtab changes from upstream
+patch -d /etc/ -p1 << \EOF_PATCH
+diff --git a/rwtab b/rwtab
+index cfcb814..7dcb846 100644
+--- a/rwtab
++++ b/rwtab
+@@ -1,9 +1,7 @@
+ dirs	/var/cache/man
+ dirs	/var/gdm
+ dirs	/var/lib/xkb
+-dirs	/var/lock
+ dirs	/var/log
+-dirs	/var/run
+ dirs	/var/puppet
+ dirs	/var/lib/dbus
+ dirs	/var/lib/nfs
+@@ -25,7 +23,6 @@ empty /var/lib/pulse
+ empty	/var/lib/ups
+ empty	/var/tmp
+ empty	/var/tux
+-empty	/media
+
+ files	/etc/adjtime
+ files	/etc/ntp.conf
+EOF_PATCH
+
+# systemd configuration
+# set default runlevel to multi-user(3)
+
+rm -rf /etc/systemd/system/default.target
+ln -sf /lib/systemd/system/multi-user.target /etc/systemd/system/default.target
+
+# setup ovirt-firstboot multi-user dependency
+cat >> /lib/systemd/system/ovirt-firstboot.service << \EOF_firstboot
+[Unit]
+Description=firstboot configuration program (text mode)
+After=livesys.service plymouth-quit.service
+Before=systemd-user-sessions.service
+
+[Service]
+Environment=RUNLEVEL=3
+ExecStart=/etc/init.d/ovirt-firstboot start
+TimeoutSec=0
+RemainAfterExit=yes
+Type=oneshot
+SysVStartPriority=99
+StandardInput=tty
+
+[Install]
+WantedBy=multi-user.target
+EOF_firstboot
+
+systemctl enable ovirt-firstboot.service >/dev/null 2>&1
+
+# force /dev/root to mount read only or systemd will remount as default options
+sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
