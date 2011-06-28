@@ -137,9 +137,9 @@ class NodeConfigScreen():
           color_array[9] = 0x52
           color_array[10] = 0x52
           color_array[11] = 0x52
-          color_array[12] = 0xcc
-          color_array[13] = 0x00
-          color_array[14] = 0x00
+          color_array[12] = 0x00
+          color_array[13] = 0xbb
+          color_array[14] = 0xff
           color_array[15] = 0xea
           color_array[16] = 0xea
           color_array[17] = 0xea
