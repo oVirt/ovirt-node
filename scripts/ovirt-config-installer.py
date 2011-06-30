@@ -683,9 +683,10 @@ class NodeInstallScreen:
                 colors = self.__colorset.get(item)
                 screen.setColor(item, colors[0], colors[1])
             screen.pushHelpLine(" ")
-            screen.drawRootText(1,0, "".ljust(80))
-            screen.drawRootText(1,1, "   %s" % PRODUCT_SHORT.ljust(77))
-            screen.drawRootText(1,2, "".ljust(80))
+            PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION, PRODUCT_RELEASE)
+            screen.drawRootText(1,0, "".ljust(78))
+            screen.drawRootText(1,1, "   %s" % PRODUCT_TITLE.ljust(75))
+            screen.drawRootText(1,2, "".ljust(78))
             elements = self.get_elements_for_page(screen, self.__current_page)
             self.gridform = GridForm(screen, "", 8, 8)
             gridform = self.gridform
