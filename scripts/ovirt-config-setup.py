@@ -1114,12 +1114,19 @@ class NodeConfigScreen():
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
+          msg = ""
           if self.static_ipv4_nic_proto.value() == 1:
-              msg = ""
               if self.ipv4_netdevip.value() == "":
-                  msg = "  - IP Address\n"
+                  msg = "  - IPv4 Address\n"
               if self.ipv4_netdevmask.value() == "":
-                  msg += "  - Netmask Address\n"
+                  msg += "  - IPv4 Netmask Address\n"
+              if self.ipv6_netdevip.value() == "":
+                  msg = "  - IPv6 Address\n"
+          if self.static_ipv6_nic_proto.value() == 1:
+              if self.ipv6_netdevmask.value() == "":
+                  msg += "  - IPv6 Netmask Address\n"
+              if self.ipv6_netdevgateway.value() == "":
+                  msg += "  - IPv6 Gateway Address\n"
               # left out gateway check to prevent multiple ones
               if msg != "":
                   msg = "Please Input:\n" + msg
