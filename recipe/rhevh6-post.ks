@@ -42,10 +42,10 @@ cpe:/o:redhat:enterprise_linux:6:update1:hypervisor
 EOF_CPE
 
 patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch1
---- up2dateUtils.py	2010-08-23 13:57:00.761671000 -0400
-+++ up2dateUtils.py.new	2010-08-23 14:23:08.836686828 -0400
-@@ -19,21 +19,8 @@
- 
+--- up2dateUtils.py.orig        2011-07-02 11:06:38.000000000 +0000
++++ up2dateUtils.py     2011-07-02 11:09:15.000000000 +0000
+@@ -17,21 +17,8 @@
+ _ = t.ugettext
  
  def _getOSVersionAndRelease():
 -    cfg = config.initUp2dateConfig()
@@ -70,10 +70,10 @@ patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch1
 EOF_up2date_patch1
 sed -i "s/RELEASE/$RELEASE/g" /usr/share/rhn/up2date_client/up2dateUtils.py
 patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch2
---- up2dateErrors.py.old	2011-04-18 22:20:55.180730000 -0400
-+++ up2dateErrors.py	2011-04-18 22:21:17.339730000 -0400
-@@ -12,7 +12,20 @@
- _ = gettext.gettext
+--- up2dateErrors.py.orig       2011-07-02 11:06:46.000000000 +0000
++++ up2dateErrors.py    2011-07-02 11:09:19.000000000 +0000
+@@ -13,7 +13,20 @@
+ _ = t.ugettext
  import OpenSSL
  import config
 -from yum.Errors import RepoError
@@ -233,7 +233,7 @@ EOF_halt
 
 # rhbz#675868
 # Modify rc.sysinit
-patch -d /etc/rc.d -p0 << \EOF_rc.sysinit
+patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
 --- rc.sysinit.orig	2011-04-06 09:11:18.126385229 -0400
 +++ rc.sysinit	2011-04-06 09:11:04.195923990 -0400
 @@ -495,9 +495,9 @@
@@ -248,5 +248,4 @@ patch -d /etc/rc.d -p0 << \EOF_rc.sysinit
  fi
 
  # Update quotas if necessary
-EOF_rc.sysinit
-
+EOF_rc_sysinit
