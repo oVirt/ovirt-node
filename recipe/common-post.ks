@@ -61,17 +61,11 @@ echo "/dev/HostVG/Config /config ext4 defaults,noauto,noatime 0 0" >> /etc/fstab
 
 # prepare for STATE_MOUNT in rc.sysinit
 augtool << \EOF_readonly-root
-set /files/etc/sysconfig/readonly-root/TEMPORARY_STATE NOT_OVIRT_FIRSTBOOT
 set /files/etc/sysconfig/readonly-root/STATE_LABEL CONFIG
 set /files/etc/sysconfig/readonly-root/STATE_MOUNT /config
 set /files/etc/sysconfig/readonly-root/READONLY yes
 save
 EOF_readonly-root
-
-# use persistent state unless firstboot is forced
-# XXX auges shellvars lens does not accept this value
-sed -i 's@NOT_OVIRT_FIRSTBOOT@$(if cat /proc/cmdline|grep -qv ovirt_firstboot; then printf "yes"; else printf "no"; fi)@' /etc/sysconfig/readonly-root
-
 
 # comment out /etc/* entries in rwtab to prevent overlapping mounts
 sed -i '/^files	\/etc*/ s/^/#/' /etc/rwtab
@@ -180,3 +174,7 @@ if is_persisted /etc/lvm/lvm.conf; then
 fi
 EOF_rc.local
 
+
+# XXX someting is wrong with readonly-root and dracut
+# see modules.d/95rootfs-block/mount-root.sh
+sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab

@@ -85,6 +85,3 @@ WantedBy=multi-user.target
 EOF_firstboot
 
 systemctl enable ovirt-firstboot.service >/dev/null 2>&1
-
-# force /dev/root to mount read only or systemd will remount as default options
-sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
