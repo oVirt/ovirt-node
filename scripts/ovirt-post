@@ -20,7 +20,7 @@ start_ovirt_post() {
     # wait for libvirt to finish initializing
     local count=0
     while true; do
-        if [ -r /var/run/libvirt/libvirt-sock ]; then
+        if [ -r /var/run/libvirt/libvirt-sock-ro ]; then
             break
         elif [ "$count" == "100" ]; then
             log "Libvirt did not initialize in time..."
@@ -39,7 +39,7 @@ start_ovirt_post() {
     ISSUE_NET=/etc/issue.net
     egrep -v "[Vv]irtualization hardware" $ISSUE > $BACKUP
     cp -f $BACKUP $ISSUE
-    hwvirt=$(virsh capabilities)
+    hwvirt=$(virsh --readonly capabilities)
     if [[ $hwvirt =~ kvm ]]; then
         log "Hardware virtualization detected"
     else
