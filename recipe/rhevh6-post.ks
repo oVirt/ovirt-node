@@ -249,3 +249,7 @@ patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
 
  # Update quotas if necessary
 EOF_rc_sysinit
+
+# semanage is not present in the image and virt_use_nfs is on (see rhbz#642209)
+# remove it from vdsmd startup script to avoid error
+sed -i 's#/usr/sbin/semanage#/bin/true#' /etc/rc.d/init.d/vdsmd
