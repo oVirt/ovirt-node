@@ -277,7 +277,7 @@ class Storage:
                     system(parted_cmd)
                     hostvgpart = "1"
                 log("Toggling LVM on")
-                parted_cmd = "parted " + self.HOSTVGDRIVE +  " -s \"set " + str(hostvgpart) + " lvm on\""
+                parted_cmd = "parted \"" + self.HOSTVGDRIVE +  "\" -s \"set " + str(hostvgpart) + " lvm on\""
                 system(parted_cmd)
                 system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
                 os.system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
@@ -391,8 +391,8 @@ class Storage:
                 partboot = self.BOOTDRIVE + "p1"
             # sleep to ensure filesystems are created before continuing
             time.sleep(10)
-            system("mke2fs \"" + str(partboot) +"\" -L Boot")
-            system("tune2fs -c 0 -i 0 " + str(partboot))
+            system("mke2fs \""+str(partboot)+"\" -L Boot")
+            system("tune2fs -c 0 -i 0 \""+str(partboot)+"\"")
             if OVIRT_VARS["OVIRT_ISCSI_HOSTVG"] == "y":
                 self.create_hostvg()
             log("Completed!")
@@ -422,11 +422,11 @@ class Storage:
             if not os.path.exists(partroot):
                 partroot = self.ROOTDRIVE + "p1"
                 partrootbackup= self.ROOTDRIVE + "p2"
-            system("ln -snf " + partroot + " /dev/disk/by-label/Root")
+            system("ln -snf \""+partroot+"\" /dev/disk/by-label/Root")
             system("mke2fs \""+partroot+"\" -L Root")
-            system("ln -snf " + partrootbackup + " /dev/disk/by-label/RootBackup")
-            system("mke2fs \""+partrootbackup+"\" -L RootBackup")
             system("tune2fs -c 0 -i 0 \""+partroot+"\"")
+            system("ln -snf \""+partrootbackup+"\" /dev/disk/by-label/RootBackup")
+            system("mke2fs \""+partrootbackup+"\" -L RootBackup")
             system("tune2fs -c 0 -i 0 \""+partrootbackup+"\"")
 
         if self.ROOTDRIVE != self.HOSTVGDRIVE:
