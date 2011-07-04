@@ -272,7 +272,7 @@ class Storage:
                     self.ROOTDRIVE = self.BOOTDRIVE
                 else:
                     system("parted \""+ drv +"\" -s \"mklabel "+self.LABEL_TYPE+"\"")
-                    parted_cmd = "parted \""+ drv + "\" -s \"mkpart primary ext2 0M -1 \""
+                    parted_cmd = "parted \""+ drv + "\" -s \"mkpart primary ext2 1M -1 \""
                     log(parted_cmd)
                     system(parted_cmd)
                     hostvgpart = "1"
@@ -384,7 +384,7 @@ class Storage:
             reread_partitions(self.BOOTDRIVE)
             log("Creating boot partition")
             system("parted \""+ self.BOOTDRIVE+"\" -s \"mklabel "+self.LABEL_TYPE+"\"")
-            system("parted \""+self.BOOTDRIVE+"\" -s \"mkpartfs primary ext2 0M "+ self.boot_size_si+"%sM\"")
+            system("parted \""+self.BOOTDRIVE+"\" -s \"mkpartfs primary ext2 1M "+self.boot_size_si+"M\"")
             reread_partitions(self.BOOTDRIVE)
             partboot= self.BOOTDRIVE + "1"
             if not os.path.exists(partboot):
@@ -406,7 +406,7 @@ class Storage:
             log(parted_cmd)
             system(parted_cmd)
             log("Creating Root and RootBackup Partitions")
-            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 0M "+ str(self.ROOT_SIZE)+"M\""
+            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 1M "+ str(self.ROOT_SIZE)+"M\""
             log(parted_cmd)
             system(parted_cmd)
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.ROOT_SIZE)+"M "+str(self.RootBackup_end)+"M\""
