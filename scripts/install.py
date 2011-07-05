@@ -33,8 +33,10 @@
 from ovirtnode.ovirtfunctions import *
 import shutil
 import sys
+import traceback
 import os
 import stat
+import subprocess
 OVIRT_VARS = parse_defaults()
 
 def ovirt_boot_setup():
@@ -43,20 +45,17 @@ def ovirt_boot_setup():
     if OVIRT_VARS.has_key("OVIRT_ROOT_INSTALL"):
         if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
             log("done.")
-            return
+            return True
 
-    found_boot=False
+    if os.path.ismount("/liveos"):
+        system("umount /liveos")
+    candidate=""
     if findfs("Boot"):
-        found_boot = True
-        grub_dev_label = "Boot"
-    if findfs("Root"):
-        found_boot = False
-        grub_dev_label = "Root"
-    if found_boot:
+        candidate = "Boot"
         mount_boot()
         if not os.path.ismount("/boot"):
             log("Boot partition not available")
-            sys.exit(1)
+            return False
         # Grab OVIRT_ISCSI VARIABLES from boot partition for upgrading
         # file created only if OVIRT_ISCSI_ENABLED=y
         if os.path.exists("/boot/ovirt"):
@@ -74,74 +73,55 @@ def ovirt_boot_setup():
                         pass
                 f.close()
                 iscsiadm_cmd = "iscsiadm -p %s:%s -m discovery -t sendtargets" % (OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"], OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"])
-                os.system("iscsiadm_cmd")
+                system(iscsiadm_cmd)
                 log("Restarting iscsi service")
-                os.system("service iscsi restart &>/dev/null")
+                system("service iscsi restart")
             except:
                 pass
+    elif findfs("RootBackup"):
+        candidate = "RootBackup"
+    elif findfs("RootUpdate"):
+        candidate = "RootUpdate"
+    elif findfs("RootNew"):
+        candidate = "RootNew"
     else:
-        grub_dev_label="RootBackup"
+        log("Unable to find Root partition")
+        label_debug = ''
+        for label in os.listdir("/dev/disk/by-label"):
+            label_debug += "%s\n" % label
+        label_debug += subprocess.Popen("blkid", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.read()
+        log(label_debug)
+        return False
 
-    # check that /boot mounted ok and find partition number for GRUB, $4 is to allow 0 as a partition number for grub
-    log("grub_dev_label: " + grub_dev_label)
+    log("candidate: " + candidate)
+    disk = None
+    partN = -1
     try:
-        disk = findfs(grub_dev_label)
-        if disk:
-            disk = disk.strip()
-            length = len(disk) - 1
-            partN = disk[length:]
-            partN = int(partN) - 1
-            log("partN: " + str(partN))
-        else:
-            log("Unable to find %s partition") % grub_dev_label
+        candidate_dev = disk = findfs(candidate)
+        partN = int(disk[-1:]) - 1
+        log("partN: %d" % partN)
     except:
-        log("Failed to determine new Root partition")
+        log(traceback.format_exc())
         return False
     disk_basename = disk.rstrip(disk[-2:])
     if os.path.exists(disk_basename):
         disk = disk_basename
 
-    if disk is None and partN < 0:
-      log("unable to determine Root partition")
-      sys.exit(1)
+    if disk is None or partN < 0:
+        log("Failed to determine Root partition number")
+        return False
     if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
-        mount_liveos()
-        if not os.path.ismount("/liveos"):
-          log("Root partition not available")
-          sys.exit(1)
-        os.system("umount /liveos")
         # prepare Root partition update
-        candidate=""
-        if findfs("RootBackup"):
-            candidate = "RootBackup"
-        elif findfs("RootUpdate"):
-            candidate = "RootUpdate"
-        elif findfs("RootNew"):
-            candidate = "RootNew"
-        if candidate == "":
-            rc=1
-        elif candidate == "RootNew":
-            ret = os.system("umount /liveos")
-            if ret == 0:
-                rc=0
-            else:
-                log("Failed to unmount /liveos")
-                return False
-        else:
-            candidate_dev = findfs(candidate)
+        if candidate != "RootNew":
             e2label_cmd = "e2label \"%s\" RootNew" % candidate_dev
             log(e2label_cmd)
-            rc = os.system(e2label_cmd)
-            log(rc)
-        if rc != 0:
-          log("root partition not available.")
-          label_debug = os.listdir("/dev/disk/by-label")
-          log(label_debug)
-          return rc
+            if not system(e2label_cmd):
+                log("Failed to label new Root partition")
+                return False
         mount_cmd = "mount \"%s\" /liveos" % candidate_dev
-        os.system(mount_cmd)
-        os.system("rm -rf /liveos/LiveOS")
-        os.system("mkdir -p /liveos/LiveOS")
+        system(mount_cmd)
+        system("rm -rf /liveos/LiveOS")
+        system("mkdir -p /liveos/LiveOS")
         mount_live()
     # install oVirt Node image for local boot
     if os.path.exists("/live/syslinux"):
@@ -163,22 +143,20 @@ def ovirt_boot_setup():
         shutil.rmtree(grub_dir)
     if not os.path.exists(grub_dir):
         os.makedirs(grub_dir)
-    if system("cp -p /live/" + syslinux + "/vmlinuz0 " + initrd_dest):
-        if not system("cp -p /live/" + syslinux + "/initrd0.img " + initrd_dest):
-            log("initrd image copy failed.")
-            return False
-        if not system("cp -p /live/" + syslinux + "/version /liveos"):
-            log("version details copy failed.")
-            return False
-    else:
+    if not system("cp -p /live/" + syslinux + "/vmlinuz0 " + initrd_dest):
         log("kernel image copy failed.")
+        return False
+    if not system("cp -p /live/" + syslinux + "/initrd0.img " + initrd_dest):
+        log("initrd image copy failed.")
+        return False
+    if not system("cp -p /live/" + syslinux + "/version /liveos"):
+        log("version details copy failed.")
         return False
 
     if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
-        rc = os.system("cp -p /live/LiveOS/squashfs.img /liveos/LiveOS")
-        if rc > 0:
-          log("squashfs image copy failed.")
-          return False
+        if not system("cp -p /live/LiveOS/squashfs.img /liveos/LiveOS"):
+            log("squashfs image copy failed.")
+            return False
     # reorder tty0 to allow both serial and phys console after installation
     if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
         bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
@@ -190,14 +168,17 @@ def ovirt_boot_setup():
         # workaround for grub setup failing with spaces in dev.name
         grub_disk_cmd= "multipath -l \"" + disk + "\" | awk '/ active / {print $3}'"
         log(grub_disk_cmd)
-        grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         disk = grub_disk.stdout.read().strip()
-        log("disk:" + disk)
         if "cciss" in disk:
             disk = disk.replace("!","/")
         # flush to sync DM and blockdev, workaround from rhbz#623846#c14
-        os.system("echo 3 > /proc/sys/vm/drop_caches")
-        os.system("partprobe " + "/dev/"+disk)
+        sysfs=open("/proc/sys/vm/drop_caches","w")
+        sysfs.write("3")
+        sysfs.close()
+        partprobe_cmd="partprobe \"/dev/%s\"" % disk
+        log(partprobe_cmd)
+        system(partprobe_cmd)
 
     grub_config_file = "%s/grub.conf" % grub_dir
     GRUB_CONFIG_TEMPLATE = """
@@ -229,14 +210,14 @@ title %(product)s %(version)s-%(release)s
             except OSError:
                 pass
     except OSError:
-        log("Unable to determine disk for grub installation")
+        log("Unable to determine disk for grub installation " + traceback.format_exc())
         return False
 
     device_map_conf.write("(hd0) " + disk)
     device_map_conf.close()
     grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
     for file in grub_files:
-        os.system("cp /usr/share/grub/x86_64-redhat/" + file + " " + grub_dir)
+        system("cp /usr/share/grub/x86_64-redhat/" + file + " " + grub_dir)
 
     GRUB_SETUP_TEMPLATE = """
     grub --device-map=%(grub_dir)s/device.map <<EOF
@@ -261,23 +242,25 @@ EOF
     grub_conf = open(grub_config_file, "w")
     grub_conf.write(grub_config_out)
     grub_conf.close()
-    grub_setup = subprocess.Popen(grub_setup_out, shell=True, stdout=PIPE, stderr=STDOUT)
+    grub_setup = subprocess.Popen(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     grub_results = grub_setup.stdout.read()
     log(grub_results)
+    if grub_setup.wait() != 0 or "Error" in grub_results:
+        log("GRUB setup failed")
+        return False
     if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
-        os.system("sync")
-        os.system("sleep 2")
-        os.system("umount /liveos")
+        system("sync")
+        system("sleep 2")
+        system("umount /liveos")
         # mark new Root ready to go, reboot() in ovirt-function switches it to active
         e2label_cmd = "e2label \"%s\" RootUpdate" % candidate_dev
-        ret = os.system(e2label_cmd)
-        if ret != 0:
+        if not system(e2label_cmd):
             log("Unable to relabel " + candidate_dev + " to RootUpdate ")
             return False
     if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
         # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
         shutil.copy(OVIRT_DEFAULTS, "/boot")
-    os.system("e2label /dev/disk/by-label/RootNew RootUpdate")
+    system("e2label /dev/disk/by-label/RootNew RootUpdate")
     disable_firstboot()
     if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
         if OVIRT_VARS["OVIRT_ISCSI_ENABLED"] != "y":
@@ -291,8 +274,8 @@ def Usage():
     print "Usage: %s [livecd_path] [bootparams] [reboot(yes/no)]" % sys.argv[0]
     print "       livecd_path - where livecd media is mounted parent of LiveOS"
     print "                     and isolinux folders default is /live"
-    print ""                                      
-    print "       bootparams - extra boot parameters like console=..." 
+    print ""
+    print "       bootparams - extra boot parameters like console=..."
     print "                    default is \"$OVIRT_BOOTPARAMS\""
     print ""
     print "       reboot     - reboot after install, default is yes"
@@ -304,22 +287,17 @@ if __name__ == "__main__":
 
     live = sys.argv[1]
     bootparams = sys.argv[2]
-    try:
+    if len(sys.argv) == 3:
+        doreboot="yes"
+    else:
         doreboot=sys.argv[3]
-        doreboot="no"
-    except:
-        doreboot = "yes"
 
     if bootparams is None:
         bootparams=OVIRT_VARS["OVIRT_BOOTPARAMS"]
-    if doreboot == "":
-        doreboot="yes"
 
     if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
         log("done.")
-    else:
-        rc = ovirt_boot_setup()   #(live, bootparams)
-    if rc == 0 and doreboot == "yes":
+    elif ovirt_boot_setup() and doreboot == "yes":
         disable_firstboot()
         if OVIRT_VARS["OVIRT_ISCSI_ENABLED"] != "y":
             ovirt_store_firstboot_config()

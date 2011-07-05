@@ -719,25 +719,22 @@ def finish_install():
     log("finishing install")
     if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
         # setup new Root if update is prepared
-        ret = os.system("findfs LABEL=RootUpdate")
-        if ret == 0:
-            root_update_dev_lookup = subprocess.Popen("findfs LABEL=RootUpdate", shell=True, stdout=PIPE, stderr=STDOUT)
-            root_update_dev = root_update_dev_lookup.stdout.read().strip()
-            root_dev_lookup = subprocess.Popen("findfs LABEL=Root", shell=True, stdout=PIPE, stderr=STDOUT)
-            root_dev = root_dev_lookup.stdout.read().strip()
-            e2label_rootbackup_cmd = "e2label \"" + root_dev + "\" RootBackup"
-            e2label_root_cmd = "e2label \"" + root_update_dev + "\" Root"
-            log(e2label_rootbackup_cmd)
-            log(e2label_root_cmd)
-            subprocess.Popen(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-            subprocess.Popen(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        root_update_dev = findfs("RootUpdate")
+        root_dev = findfs("Root")
+        e2label_rootbackup_cmd = "e2label \"%s\" RootBackup" % root_dev
+        e2label_root_cmd = "e2label \"%s\" Root" % root_update_dev
+        log(e2label_rootbackup_cmd)
+        log(e2label_root_cmd)
+        subprocess.Popen(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        subprocess.Popen(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
     # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
     #   -O /dev/null
-    for hook in os.listdir("/etc/ovirt-config-boot.d"):
-        os.system(hook)
+    hookdir="/etc/ovirt-config-boot.d"
+    for hook in os.listdir(hookdir):
+        os.system(os.path.join(hookdir,hook))
     return True
 
 def is_valid_ipv4(ip_address):
