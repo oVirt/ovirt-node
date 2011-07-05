@@ -277,7 +277,7 @@ class Storage:
                     system(parted_cmd)
                     hostvgpart = "1"
                 log("Toggling LVM on")
-                parted_cmd = "parted \"" + self.HOSTVGDRIVE +  "\" -s \"set " + str(hostvgpart) + " lvm on\""
+                parted_cmd = "parted \"" + drv +  "\" -s \"set " + str(hostvgpart) + " lvm on\""
                 system(parted_cmd)
                 system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
                 os.system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
@@ -429,8 +429,9 @@ class Storage:
             system("mke2fs \""+partrootbackup+"\" -L RootBackup")
             system("tune2fs -c 0 -i 0 \""+partrootbackup+"\"")
 
-        if self.ROOTDRIVE != self.HOSTVGDRIVE:
-            system("parted \"" + self.HOSTVGDRIVE +"\" -s \"mklabel " + self.LABEL_TYPE + "\"")
+        hostvg1=self.HOSTVGDRIVE.split(",")[0]
+        if self.ROOTDRIVE != hostvg1 :
+            system("parted \"" + hostvg1 +"\" -s \"mklabel " + self.LABEL_TYPE + "\"")
         if self.create_hostvg():
             return True
         else:
@@ -459,7 +460,8 @@ class Storage:
             drive_space_dict["ROOT_NEED_SIZE"] = ROOT_NEED_SIZE
             drive_space_dict["HOSTVGDRIVESPACE"] = HOSTVGDRIVESPACE
             drive_space_dict["HOSTVG_NEED_SIZE"] = HOSTVG_NEED_SIZE
-            if self.ROOTDRIVE == self.HOSTVGDRIVE:
+            hostvg1=self.HOSTVGDRIVE.split(",")[0]
+            if self.ROOTDRIVE == hostvg1:
                 drive_list.append("ROOT")
                 ROOT_NEED_SIZE=self.ROOT_SIZE * 2 + HOSTVG_NEED_SIZE
                 drive_space_dict["ROOT_NEED_SIZE"] = ROOT_NEED_SIZE
