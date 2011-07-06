@@ -174,6 +174,37 @@ if is_persisted /etc/lvm/lvm.conf; then
 fi
 EOF_rc.local
 
+# sosreport fixups for node image:
+# use .pyc for plugins enumeration, .py is blacklisted
+# include *-release
+patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
+--- sosreport.py.orig	2011-04-07 11:51:40.000000000 +0000
++++ sosreport.py	2011-07-06 13:26:44.000000000 +0000
+@@ -428,8 +428,8 @@
+ 
+     # validate and load plugins
+     for plug in plugins:
+-        plugbase =  plug[:-3]
+-        if not plug[-3:] == '.py' or plugbase == "__init__":
++        plugbase =  plug[:-4]
++        if not plug[-4:] == '.pyc' or plugbase == "__init__":
+             continue
+         try:
+             if GlobalVars.policy.validatePlugin(pluginpath + plug):
+--- plugins/general.py.orig     2011-02-09 15:25:48.000000000 +0000
++++ plugins/general.py  2011-07-06 23:13:32.000000000 +0000
+@@ -25,8 +25,7 @@
+                   ("all_logs", "collect all log files defined in syslog.conf", "", False)]
+ 
+     def setup(self):
+-        self.addCopySpec("/etc/redhat-release")
+-        self.addCopySpec("/etc/fedora-release")
++        self.addCopySpec("/etc/*-release")
+         self.addCopySpec("/etc/inittab")
+         self.addCopySpec("/etc/sos.conf")
+         self.addCopySpec("/etc/sysconfig")
+EOF_sos_patch
+python -m compileall /usr/lib/python2.*/site-packages/sos
 
 # XXX someting is wrong with readonly-root and dracut
 # see modules.d/95rootfs-block/mount-root.sh
