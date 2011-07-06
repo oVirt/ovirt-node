@@ -103,9 +103,6 @@ def ovirt_boot_setup():
     except:
         log(traceback.format_exc())
         return False
-    disk_basename = disk.rstrip(disk[-2:])
-    if os.path.exists(disk_basename):
-        disk = disk_basename
 
     if disk is None or partN < 0:
         log("Failed to determine Root partition number")
@@ -165,8 +162,10 @@ def ovirt_boot_setup():
         bootparams="ro root=live:LABEL=Root roottypefs=auto  "
         bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
     if " " in disk or os.path.exists("/dev/cciss"):
-        # workaround for grub setup failing with spaces in dev.name
-        grub_disk_cmd= "multipath -l \"" + disk + "\" | awk '/ active / {print $3}'"
+        # workaround for grub setup failing with spaces in dev.name:
+        # use first active sd* device
+        disk = re.sub("p[1,2]$", "", disk)
+        grub_disk_cmd= "multipath -l \"" + os.path.basename(disk) + "\" | awk '/ active / {print $3}' | head -n1"
         log(grub_disk_cmd)
         grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         disk = grub_disk.stdout.read().strip()
