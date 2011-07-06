@@ -190,34 +190,28 @@ title %(product)s %(version)s-%(release)s
     kernel /vmlinuz0 %(bootparams)s
     initrd /initrd0.img
     """
-    device_map_conf = open(grub_dir + "/device.map", "w")
-    disk = re.sub("p[1,2]$", "", disk)
-    # to capture/filter other devices like /dev/sda1
     if not disk.startswith("/dev/"):
         disk = "/dev/" + disk
     try:
         if stat.S_ISBLK(os.stat(disk).st_mode):
-            length = len(disk) - 1
             try:
-                if stat.S_ISBLK(os.stat(disk[:length]).st_mode):
-                    disk = disk[:length]
-                    length = len(disk) - 2
-                    try:
-                        if stat.S_ISBLK(os.stat(disk[:length]).st_mode):
-                            disk = disk[:length]
-                    except OSError:
-                        pass
+                if stat.S_ISBLK(os.stat(disk[:-1]).st_mode):
+                    # e.g. /dev/sda2
+                    disk = disk[:-1]
+                elif stat.S_ISBLK(os.stat(disk[:-2]).st_mode):
+                    # e.g. /dev/mapper/WWIDp2
+                    disk = disk[:-2]
             except OSError:
                 pass
     except OSError:
         log("Unable to determine disk for grub installation " + traceback.format_exc())
         return False
 
-    device_map_conf.write("(hd0) " + disk)
+    device_map = "(hd0) %s" % disk
+    log(device_map)
+    device_map_conf = open(grub_dir + "/device.map", "w")
+    device_map_conf.write(device_map)
     device_map_conf.close()
-    grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
-    for file in grub_files:
-        system("cp /usr/share/grub/x86_64-redhat/" + file + " " + grub_dir)
 
     GRUB_SETUP_TEMPLATE = """
     grub --device-map=%(grub_dir)s/device.map <<EOF
@@ -242,6 +236,9 @@ EOF
     grub_conf = open(grub_config_file, "w")
     grub_conf.write(grub_config_out)
     grub_conf.close()
+    grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
+    for file in grub_files:
+        system("cp /usr/share/grub/x86_64-redhat/" + file + " " + grub_dir)
     grub_setup = subprocess.Popen(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     grub_results = grub_setup.stdout.read()
     log(grub_results)
