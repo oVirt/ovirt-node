@@ -211,7 +211,7 @@ def disable_firstboot():
 # Destroys a particular volume group and its logical volumes.
 
 def wipe_volume_group(vg):
-    files_cmd = "grep %s /proc/mounts|awk '{print $2}'|sort -r" % vg
+    files_cmd = "grep '%s' /proc/mounts|awk '{print $2}'|sort -r" % vg
     files = subprocess.Popen(files_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     files_output = files.stdout.read()
     for file in files_output.split():
@@ -219,7 +219,7 @@ def wipe_volume_group(vg):
         umount_cmd = "umount " + file + " &>/dev/null"
         os.system(umount_cmd)
     unmount_logging()
-    swap_cmd = "grep %s /proc/swaps|awk '{print $1}'" % vg
+    swap_cmd = "grep '%s' /proc/swaps|awk '{print $1}'" % vg
     swap = subprocess.Popen(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     swap_output = swap.stdout.read().strip()
     for d in swap_output.split():
@@ -277,19 +277,19 @@ def ovirt_setup_libvirtd(self):
 
     # with libvirt (0.4.0), make sure we we setup gssapi in the mech_list
     sasl_conf="/etc/sasl2/libvirt.conf"
-    ret = os.system('grep -qE "^mech_list: gssapi %s') % sasl_conf
+    ret = os.system('grep -qE "^mech_list: gssapi %s' % sasl_conf)
     if ret > 0:
-        os.system("sed -i -e \"s/^\([[:space:]]*mech_list.*\)/#\1/\" %s") % sasl_conf
-        os.system("echo \"mech_list: gssapi\" >> %s") % sasl_conf
+        os.system("sed -i -e 's/^\([[:space:]]*mech_list.*\)/#\1/' %s" % sasl_conf)
+        os.system('echo "mech_list: gssapi" >> %s' % sasl_conf)
 
 def ovirt_setup_anyterm():
    # configure anyterm
    anyterm_conf = open("/etc/sysconfig/anyterm", "w")
-   anyterm_conf.write("ANYTERM_CMD=\"sudo /usr/bin/virsh console %p\"")
+   anyterm_conf.write("ANYTERM_CMD='sudo /usr/bin/virsh console %p'")
    anyterm_conf.write("ANYTERM_LOCAL_ONLY=false")
    anyterm_conf.close()
    # permit it to run the virsh console
-   os.system("echo \"anyterm ALL=NOPASSWD: /usr/bin/virsh console *\" >> /etc/sudoers")
+   os.system("echo 'anyterm ALL=NOPASSWD: /usr/bin/virsh console *' >> /etc/sudoers")
 
 # mount livecd media
 # e.g. CD /dev/sr0, USB /dev/sda1,
@@ -315,7 +315,7 @@ def mount_live():
             for device in client.query_by_subsystem("block"):
                 if device.has_property("ID_CDROM"):
                     dev = device.get_property("DEVNAME")
-                    blkid_cmd = "blkid %s|grep -q %s " % (dev, pkg_name)
+                    blkid_cmd = "blkid '%s'|grep -q '%s'" % (dev, pkg_name)
                     ret = os.system(blkid_cmd)
                     if ret == 0:
                         live_dev = dev
@@ -374,9 +374,9 @@ def mount_config():
                     pass
                 else:
                     dirname = os.path.dirname(target)
-                    os.system("mkdir -p " + dirname)
-                    os.system("touch " + target)
-                    os.system("mount -n --bind %s %s" % (f,target))
+                    os.system("mkdir -p '%s'" % dirname)
+                    os.system("touch '%s'" % target)
+                    os.system("mount -n --bind '%s' '%s'" % (f,target))
         return True
     else:
         # /config is not available
@@ -485,17 +485,23 @@ def md5sum(filename):
         return m.hexdigest()
 
 
+STRING_TYPE=(str,unicode)
 # persist configuration to /config
 #   ovirt_store_config /etc/config /etc/config2 ...
 #   copy to /config and bind-mount back
 
 def ovirt_store_config(files):
-    if os.path.ismount("/config"):
-        filename = os.path.abspath(files)
-        persist_it=True
-    else:
-        log("/config is not mounted")
-        return False
+  if not os.path.ismount("/config"):
+    log("/config is not mounted")
+    return False
+  if isinstance(files,STRING_TYPE):
+    files_list = []
+    files_list.append(files)
+  else:
+    files_list=files
+  for f in files_list:
+    filename = os.path.abspath(f)
+    persist_it=True
     # ensure that, if this is a directory
     # that it's not already persisted
     if os.path.isdir(filename):
@@ -565,66 +571,76 @@ def is_persisted(filename):
 #
 
 def check_bind_mount(config_file):
-    bind_mount_cmd = "grep -q \"%s ext4\" /proc/mounts" % config_file
-    bind_mount_ret = os.system(bind_mount_cmd)
-    if bind_mount_ret == 0:
+    bind_mount_cmd = 'grep -q "%s ext4" /proc/mounts' % config_file
+    if os.system(bind_mount_cmd) == 0:
         return True
     else:
         return False
 
-def unmount_config(config_file):
+def unmount_config(files):
     if os.path.ismount("/config"):
-        f = os.path.abspath(config_file)
-        if check_bind_mount(f):
-            ret = os.system("umount -n %s &>/dev/null" % f)
+      if isinstance(files,STRING_TYPE):
+        files_list = []
+        files_list.append(files)
+      else:
+        files_list=files
+      for f in files_list:
+        filename = os.path.abspath(f)
+        if check_bind_mount(filename):
+            ret = os.system('umount -n "%s" &>/dev/null' % filename)
             if ret == 0:
-                if os.path.exists("/config%s" % f):
-            # refresh the file in rootfs if it was mounted over
-                    if os.system("cp -a /config" + f + " " + f + "&> /dev/null"):
+                if os.path.exists('/config"%s"' % filename):
+                    # refresh the file in rootfs if it was mounted over
+                    if os.system('cp -a /config"%s" "%s" &> /dev/null' % (filename,filename)):
                         return True
 
 # remove persistent config files
 #       remove_config /etc/config /etc/config2 ...
 #
-def remove_config(config_file):
+def remove_config(files):
     # if there are no persisted files then just exit
     if os.path.exists("/config/files"):
         if os.path.getsize('/config/files') == 0:
             print "There are currently no persisted files."
-        return
+        return True
     if os.path.ismount("/config"):
-        for p in config_file:
-            filename = os.path.abspath(filename)
-            ret = os.system("grep \"^%s\$\" /config/files > /dev/null 2>&1") % filename
+      if isinstance(files,STRING_TYPE):
+        files_list = []
+        files_list.append(files)
+      else:
+        files_list=files
+      for f in files_list:
+            filename = os.path.abspath(f)
+            ret = os.system('grep "^%s$" /config/files > /dev/null 2>&1' % filename)
             if ret == 0:
                 if check_bind_mount(filename):
-                    ret = os.system("umount -n %s &>/dev/null") % filename
+                    ret = os.system('umount -n "%s" &>/dev/null' % filename)
                     if ret == 0:
                         if os.path.isdir(filename):
-                            ret = os.system("cp -ar /config/%s/* %s") % (filename,filename)
+                            ret = os.system('cp -ar /config/"%s"/* "%s"' % (filename,filename))
                             if ret > 0:
-                                log(" Failed to unpersist %s\n") % filename
+                                log(" Failed to unpersist %s\n" % filename)
                                 return False
                             else:
-                                log("%s successully unpersisted\n") % filename
+                                log("%s successully unpersisted\n" % filename)
                                 return True
                         else:
                             if os.path.isfile(filename):
                                 # refresh the file in rootfs if it was mounted over
-                               ret = os.system("cp -a /config%s") % (filename, filename)
+                               ret = os.system('cp -a /config"%s" "%s"' % (filename,filename))
                                if ret > 0:
-                                    log("Failed to unpersist %s\n") % filename
+                                    log("Failed to unpersist %s\n" % filename)
                                     return False
                                else:
-                                   log("%s successully unpersisted\n") % filename
+                                   log("%s successully unpersisted\n" % filename)
                     # clean up the persistent store
-                    os.system("rm -Rf /config%s") % filename
+                    os.system('rm -Rf /config"%s"' % filename)
                     # unregister in /config/files used by rc.sysinit
-                    os.system("sed --copy -i \"\|^%s$|d\" /config/files") % filename
+                    os.system('sed --copy -i "\|^%s$|d" /config/files' % filename)
                 else:
-                    log("%s is not a persisted file.\n") % filename
+                    log("%s is not a persisted file.\n" % filename)
             else:
-                log("File not explicitly persisted: %s\n") % filename
+                log("File not explicitly persisted: %s\n" % filename)
 
 # ovirt_safe_delete_config
 #       ovirt_safe_delete_config /etc/config /etc/config2 ...
@@ -632,23 +648,27 @@ def remove_config(config_file):
 # Use to *permanently* remove persisted configuration file.
 # WARNING: file is shredded and removed
 #
-def ovirt_safe_delete_config(target):
-    for t in target:
-        if check_bind_mount(target):
-            os.system("umount -n %s &>/dev/null") % t
+def ovirt_safe_delete_config(files):
+    if isinstance(files,STRING_TYPE):
+        files_list = []
+        files_list.append(files)
+    else:
+        files_list=files
+    for f in files_list:
+        filename = os.path.abspath(f)
+        if check_bind_mount(filename):
+            os.system('umount -n "%s" &>/dev/null' % filename)
 
-        os.system("sed --copy -i \"\|%s$|d\" /config/files") % target
+        os.system('sed --copy -i "\|%s$|d" /config/files' % filename)
 
-        if os.path.isdir(target):
-            child = subprocess.Popen("ls -d %s')", shell=True, stdout=PIPE, stderr=STDOUT) % target
-            child_output = swap.stdout.read()
-            for child in child_output:
+        if os.path.isdir(filename):
+            for child in subprocess.Popen("ls -d '%s'" % filename, shell=True, stdout=PIPE, stderr=STDOUT).stdout.read():
                 ovirt_safe_delete_config(child)
-            os.system("rm -rf /config%s") % target
-            os.system("rm -rf %s") % target
+            os.system("rm -rf /config'%s'" % filename)
+            os.system("rm -rf '%s'" % filename)
         else:
-            os.system("shred -u /config%s") % target
-            os.system("shred -u %s") % target
+            os.system("shred -u /config'%s'" % filename)
+            os.system("shred -u '%s'" % filename)
 
 
 # compat function to handle different udev versions
@@ -688,7 +708,7 @@ def get_live_disk():
             for device in client.query_by_subsystem("block"):
                 if device.has_property("ID_CDROM"):
                     dev = device.get_property("DEVNAME")
-                    blkid_cmd = "blkid %s|grep -q %s " % (dev, pkg_name)
+                    blkid_cmd = "blkid '%s'|grep -q '%s' " % (dev, pkg_name)
                     ret = os.system(blkid_cmd)
                     if ret == 0:
                         live_disk = os.path.basename(dev)
@@ -699,7 +719,7 @@ def backup_file(self, file):
     if dir in os.listdir("/"):
         print "unexpected non-absolute dir: %s" % dir
         sys.exit(1)
-    os.system("mkdir -p %s%s") % (OVIRT_BACKUP_DIR, dir)
+    os.system("mkdir -p '%s%s'") % (OVIRT_BACKUP_DIR, dir)
     if os.path.exists(file):
         shutil.copy(file, OVIRT_BACKUP_DIR + file)
     #test -f "$1" && cp -pf "$1" "$OVIRT_BACKUP_DIR/${dir:1}"
@@ -721,8 +741,8 @@ def finish_install():
         # setup new Root if update is prepared
         root_update_dev = findfs("RootUpdate")
         root_dev = findfs("Root")
-        e2label_rootbackup_cmd = "e2label \"%s\" RootBackup" % root_dev
-        e2label_root_cmd = "e2label \"%s\" Root" % root_update_dev
+        e2label_rootbackup_cmd = "e2label '%s' RootBackup" % root_dev
+        e2label_root_cmd = "e2label '%s' Root" % root_update_dev
         log(e2label_rootbackup_cmd)
         log(e2label_root_cmd)
         subprocess.Popen(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -876,11 +896,11 @@ def test_ntp_configuration(self):
     # stop ntpd service for testing
     os.system("service ntpd stop > /dev/null 2>&1")
     for server in OVIRT_VARS["NTP"].split():
-        ret = os.system("ntpdate %s > /dev/null 2>&1") % server
+        ret = os.system("ntpdate %s > /dev/null 2>&1" % server)
         if ret > 0:
             print "\n Unable to verify NTP server: %s \n" % server
         else:
-            log("\n Verified NTP server: %s \n") % server
+            log("\n Verified NTP server: %s \n" % server)
     os.system("service ntpd start")
 
 def get_dm_device(device):
@@ -908,7 +928,7 @@ def check_existing_hostvg(install_dev):
     if install_dev is "":
         devices_cmd = "pvs --separator=\":\" -o pv_name,vg_name --noheadings 2>/dev/null| grep HostVG |awk -F \":\" {'print $1'}"
     else:
-        devices_cmd="pvs --separator=\":\" -o pv_name,vg_name --noheadings 2>/dev/null| grep -v \"%s\" | grep HostVG | awk -F \":\" {'print $1'}" % install_dev
+        devices_cmd="pvs --separator=: -o pv_name,vg_name --noheadings 2>/dev/null| grep -v '%s' | grep HostVG | awk -F: {'print $1'}" % install_dev
     devices_cmd = subprocess.Popen(devices_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     devices = devices_cmd.stdout.read().strip()
     if len(devices) > 0:
@@ -933,11 +953,11 @@ def translate_multipath_device(dev):
         cciss_dev_cmd = "cciss_id " + dev
         cciss_dev = subprocess.Popen(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dev = "/dev/mapper/" + cciss_dev.stdout.read().strip()
-    mpath_cmd = "multipath -ll %s &> /dev/null" % dev
+    mpath_cmd = "multipath -ll '%s' &> /dev/null" % dev
     ret = os.system(mpath_cmd)
     if ret > 0:
         return dev
-    dm_dev_cmd = "multipath -ll \"%s\" | egrep dm-[0-9]+" % dev
+    dm_dev_cmd = "multipath -ll '%s' | egrep dm-[0-9]+" % dev
     dm_dev = subprocess.Popen(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     dm_dev_output = "/dev/" + dm_dev.stdout.read()
     dm_dev = re.search('dm-[0-9]+', dm_dev_output)
