@@ -38,11 +38,8 @@ class Storage:
         self.RootBackup_end = self.ROOT_SIZE * 2
         # -1 indicates data partition should use remaining disk
         self.DATA_SIZE = -1
-        # if the node is Fedora then use GPT, otherwise use MBR
-        if os.path.isfile("/etc/fedora-release"):
-            self.LABEL_TYPE="gpt"
-        else:
-            self.LABEL_TYPE="msdos"
+        # gpt or msdos partition table type
+        self.LABEL_TYPE="gpt"
         if OVIRT_VARS.has_key("OVIRT_INIT"):
             OVIRT_VARS["OVIRT_INIT"] = OVIRT_VARS["OVIRT_INIT"].strip(",")
             if "," in OVIRT_VARS["OVIRT_INIT"]:
