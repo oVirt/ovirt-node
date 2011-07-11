@@ -197,7 +197,10 @@ title %(product)s %(version)s-%(release)s
                 if stat.S_ISBLK(os.stat(disk[:-1]).st_mode):
                     # e.g. /dev/sda2
                     disk = disk[:-1]
-                elif stat.S_ISBLK(os.stat(disk[:-2]).st_mode):
+            except OSError:
+                pass
+            try:
+                if stat.S_ISBLK(os.stat(disk[:-2]).st_mode):
                     # e.g. /dev/mapper/WWIDp2
                     disk = disk[:-2]
             except OSError:
