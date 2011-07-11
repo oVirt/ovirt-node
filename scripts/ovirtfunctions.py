@@ -462,6 +462,8 @@ def mount_data():
         os.system("mkdir -p /data")
         os.system("mount /data")
         os.system("mkdir -p /data/images")
+        os.system("mkdir -p /data/images/rhev")
+        os.system("chown 36:36 /data/images/rhev")
         os.system("mkdir -p /var/lib/libvirt/images")
         os.system("mount /var/lib/libvirt/images")
         os.system("restorecon -rv /var/lib/libvirt/images &>/dev/null")

@@ -496,6 +496,8 @@ mount_data() {
         fi
 
         mkdir -p /data/images
+        mkdir -p /data/images/rhev
+        chown 36:36 /data/images/rhev
         mkdir -p /var/lib/libvirt/images
         if ! grep -q "/var/lib/libvirt/images ext[234]" /proc/mounts; then
             mount /var/lib/libvirt/images
