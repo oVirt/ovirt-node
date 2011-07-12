@@ -285,25 +285,29 @@ class NodeInstallScreen:
     def install_page(self):
         elements = Grid(2, 5)
         self.menuo = 1
-        self.menu_list = Listbox(16, width = 60, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
+        self.menu_list = Listbox(16, width = 73, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
         try:
             m_version,m_release = get_media_version_number()
             m_full_ver = m_version + "-" + m_release
         finally:
             if os.path.exists("/dev/HostVG"):
-                try:
-                    e_version, e_release = get_installed_version_number()
-                    e_full_ver = e_version + "-" + e_release
-                    if e_version <= m_version:
-                        if e_release < m_release:
-                            self.menu_list.append(" Upgrade " + e_full_ver + " to " + m_full_ver, 3)
-                            self.menu_list.append(" ", 4)
-                        else:
-                            self.menu_list.append(" Install " + PRODUCT_SHORT + " " +  m_full_ver, 1)
-                            self.menu_list.append(" ", 2)
-                except:
-                    log("unable to get_version_numbers for upgrade")
-                    pass
+                if not os.path.exists("/dev/disk/by-label/ROOT"):
+                    try:
+                        e_version, e_release = get_installed_version_number()
+                        e_full_ver = e_version + "-" + e_release
+                        if e_version <= m_version:
+                            if e_release < m_release:
+                                self.menu_list.append(" Upgrade " + e_full_ver + " to " + m_full_ver, 3)
+                                self.menu_list.append(" ", 4)
+                            else:
+                                self.menu_list.append(" Install " + PRODUCT_SHORT + " " +  m_full_ver, 1)
+                                self.menu_list.append(" ", 2)
+                    except:
+                        log("unable to get_version_numbers for upgrade")
+                        pass
+
+                else:
+                    self.menu_list.append("Major version upgrades are unsupported, uninstall existing version first", 0)
             else:
                 self.menu_list.append(" Install Hypervisor " + m_full_ver, 1)
             self.menu_list.setCallback(self.menuSpacing)
