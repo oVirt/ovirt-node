@@ -12,3 +12,5 @@ anyterm
 glusterfs-client
 # F15 dracut missing dep, bz# ???
 less
+# alternate management framework
+libvirt-cim
