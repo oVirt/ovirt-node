@@ -254,6 +254,12 @@ start_ovirt_early () {
     # WARNING: use for debugging only, this is not secure!
     rootpw=
 
+    #   adminpw=<encrypted_password>
+    # sets a temporary password for admin, change is forced on first login
+    # password is crypted, same as Kickstart option rootpw --iscrypted
+    # WARNING: use for debugging only, this is not secure!
+    adminpw=
+
     #   snmp_password=<authpassphrase>
     # enable snmpd and set password for "root" SNMPv3 USM user
     snmp_password=
@@ -487,6 +493,9 @@ start_ovirt_early () {
             rescue)
             rescue=1
             ;;
+            adminpw=*)
+            adminpw=${i#adminpw=}
+            ;;
             rootpw=*)
             rootpw=${i#rootpw=}
             ;;
@@ -680,16 +689,20 @@ start_ovirt_early () {
         fi
     fi
 
-    if [ -n "$rootpw" ]; then
-        log "Setting temporary root and admin password: $rootpw"
+    if [ -n "$adminpw" ]; then
+        log "Setting temporary admin password: $adminpw"
         unmount_config /etc/passwd /etc/shadow
-        /usr/sbin/usermod -p "$rootpw" root
         /usr/sbin/usermod -p "$rootpw" admin
-        chage -d 0 root
         chage -d 0 admin
     fi
-    # check if root password is expired, this might be upon reboot
-    # in case of automated installed with rootpw parameter!
+    if [ -n "$rootpw" ]; then
+        log "Setting temporary root password: $rootpw"
+        unmount_config /etc/passwd /etc/shadow
+        /usr/sbin/usermod -p "$rootpw" root
+        chage -d 0 root
+    fi
+    # check if root or admin password is expired, this might be upon reboot
+    # in case of automated installed with rootpw or adminpw parameter!
     if LC_ALL=C chage -l root | grep  -q "password must be changed" \
         || LC_ALL=c chage -l admin | grep -q "password must be changed"; then
         unmount_config /etc/passwd /etc/shadow
