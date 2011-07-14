@@ -36,8 +36,8 @@ def set_password(password, user):
     admin = libuser.admin()
     root = admin.lookupUserByName(user)
     passwd = cryptPassword(password)
-    admin.setpassUser(root, passwd, "is_crypted")
     unmount_config("/etc/shadow")
+    admin.setpassUser(root, passwd, "is_crypted")
     ovirt_store_config("/etc/shadow")
     return True
 
