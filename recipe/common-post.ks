@@ -209,3 +209,5 @@ python -m compileall /usr/lib/python2.*/site-packages/sos
 # XXX someting is wrong with readonly-root and dracut
 # see modules.d/95rootfs-block/mount-root.sh
 sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
+
+echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
