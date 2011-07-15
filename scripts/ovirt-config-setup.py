@@ -995,7 +995,7 @@ class NodeConfigScreen():
                   grid]
       def kdump_configuration_page(self, screen):
           elements = Grid(2, 12)
-          elements.setField(Label("Kernel Configuration"), 0, 0, anchorLeft = 1)
+          elements.setField(Label("Kernel Dump"), 0, 0, anchorLeft = 1)
           if not network_up():
               elements.setField(Label(" * Network Down, Configuration Disabled * "), 0, 1, anchorLeft = 1)
           else:
