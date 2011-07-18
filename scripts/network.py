@@ -78,7 +78,6 @@ class Network:
         self.BR_CONFIG += "set %s/TYPE Bridge\n" % BR_ROOT
         self.BR_CONFIG += "set %s/PEERNTP yes\n" % BR_ROOT
         self.BR_CONFIG += "set %s/DELAY 0\n" % BR_ROOT
-
         if OVIRT_VARS.has_key("OVIRT_IPV6"):
             if OVIRT_VARS["OVIRT_IPV6"]  == "auto":
                 self.BR_CONFIG += "set %s/IPV6INIT yes\n" % BR_ROOT
@@ -89,11 +88,16 @@ class Network:
                 self.BR_CONFIG += "set %s/IPV6_AUTOCONF no\n" % BR_ROOT
                 self.BR_CONFIG += "set %s/IPV6FORWARDING no\n" % BR_ROOT
                 self.BR_CONFIG += "set %s/DHCPV6C yes\n" % BR_ROOT
-            else:
+            elif OVIRT_VARS["OVIRT_IPV6"] == "static":
                 self.BR_CONFIG += "set %s/IPV6INIT yes\n" % BR_ROOT
                 self.BR_CONFIG += "set %s/IPV6ADDR %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IPV6_ADDRESS"])
                 self.BR_CONFIG += "set %s/IPV6_AUTOCONF no\n" % BR_ROOT
                 self.BR_CONFIG += "set %s/IPV6FORWARDING no\n" % BR_ROOT
+        else:
+            self.BR_CONFIG += "set %s/IPV6INIT no\n" % BR_ROOT
+            self.BR_CONFIG += "set %s/IPV6_AUTOCONF no\n" % BR_ROOT
+            self.BR_CONFIG += "set %s/IPV6FORWARDING no\n" % BR_ROOT
+
 
         if OVIRT_VARS.has_key("OVIRT_VLAN"):
             VLAN_ID=OVIRT_VARS["OVIRT_VLAN"]

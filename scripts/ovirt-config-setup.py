@@ -1144,6 +1144,11 @@ class NodeConfigScreen():
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
+          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6" ,"")
+          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", "")
+          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", "")
+          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", "")
+
           msg = ""
           if self.static_ipv4_nic_proto.value() == 1:
               if self.ipv4_netdevip.value() == "":
@@ -1178,6 +1183,15 @@ class NodeConfigScreen():
                   del OVIRT_VARS["OVIRT_IP_NETMASK"]
               if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
                   del OVIRT_VARS["OVIRT_IP_GATEWAY"]
+              if OVIRT_VARS.has_key("OVIRT_IPV6"):
+                  del OVIRT_VARS["OVIRT_IPV6"]
+              if OVIRT_VARS.has_key("OVIRT_ADDRESS"):
+                  del OVIRT_VARS["OVIRT_IPV6_ADDRESS"]
+              if OVIRT_VARS.has_key("OVIRT_IPV6_NETMASK"):
+                  del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
+              if OVIRT_VARS.has_key("OVIRT_IPV6_GATEWAY"):
+                  del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
+
           if self.netvlanid.value() != "":
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", '"' + self.netvlanid.value() + '"')
           if self.dhcp_ipv6_nic_proto.value() == 1:
@@ -1192,6 +1206,7 @@ class NodeConfigScreen():
                   augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", '"' + self.ipv6_netdevmask.value() + '"')
               if self.ipv6_netdevgateway.value():
                   augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", '"' + self.ipv6_netdevgateway.value() + '"')
+
           self.screen = SnackScreen()
           # apply any colorsets that were provided.
           for item in self.__colorset.keys():
