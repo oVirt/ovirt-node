@@ -65,7 +65,6 @@ qemu-kvm-tools
 /usr/sbin/lokkit
 isomd5sum
 irqbalance
-cpuspeed
 acpid
 device-mapper-multipath
 kpartx
