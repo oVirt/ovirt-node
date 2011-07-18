@@ -231,7 +231,8 @@ class NodeConfigScreen():
           warn = 0
           if not self.dns_host1.value() is None and not self.dns_host1.value() == "":
                if not is_valid_ipv4(self.dns_host1.value()):
-                   warn = 1
+                   if not is_valid_ipv6(self.dns_host1.value()):
+                       warn = 1
           if warn == 1:
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -244,12 +245,41 @@ class NodeConfigScreen():
           warn = 0
           if not self.dns_host2.value() is None and not self.dns_host2.value() == "":
               if not is_valid_ipv4(self.dns_host2.value()):
-                   warn = 1
+                   if not is_valid_ipv6(self.dns_host1.value()):
+                       warn = 1
           if warn == 1:
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.dns_host2.set("")
+              self.reset_screen_colors()
+          return
+
+      def ntp_host1_callback(self):
+          warn = 0
+          if not self.ntp_host1.value() is None and not self.ntp_host1.value() == "":
+               if not is_valid_ipv4(self.ntp_host1.value()):
+                   if not is_valid_ipv6(self.ntp_host1.value()):
+                       warn = 1
+          if warn == 1:
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
+              self.ntp_host1.set("")
+              self.reset_screen_colors()
+          return
+
+      def ntp_host2_callback(self):
+          warn = 0
+          if not self.ntp_host2.value() is None and not self.ntp_host2.value() == "":
+              if not is_valid_ipv4(self.ntp_host2.value()):
+                   if not is_valid_ipv6(self.ntp_host1.value()):
+                       warn = 1
+          if warn == 1:
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
+              self.ntp_host2.set("")
               self.reset_screen_colors()
           return
 
@@ -708,16 +738,16 @@ class NodeConfigScreen():
           dns_grid.setField(Label("DNS Server 2: "), 0, 1, anchorLeft = 1)
           dns_grid.setField(self.dns_host1, 1, 0, anchorLeft = 1)
           dns_grid.setField(self.dns_host2, 1, 1, anchorLeft = 1)
-          self.dns_host1.setCallback(self.valid_fqdn_or_ipv4)
-          self.dns_host2.setCallback(self.valid_fqdn_or_ipv4)
           grid.setField(Label("  "), 0, 4)
           grid.setField(dns_grid, 0, 6, anchorLeft =1)
           grid.setField(Label("  "), 0, 7)
           ntp_grid = Grid(2,2)
           self.ntp_host1 = Entry(25)
-          self.ntp_host1.setCallback(self.valid_fqdn_or_ipv4)
+          self.ntp_host1.setCallback(self.ntp_host1_callback)
+
           self.ntp_host2 = Entry(25)
-          self.ntp_host2.setCallback(self.valid_fqdn_or_ipv4)
+          self.ntp_host2.setCallback(self.ntp_host2_callback)
+
           self.current_ntp_host1 = augtool_get("/files/etc/ntp.conf/server[1]")
           if self.current_ntp_host1:
               self.ntp_host1.set(self.current_ntp_host1)
