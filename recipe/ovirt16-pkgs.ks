@@ -1,1 +1,2 @@
-ovirt15-pkgs.ks
+%include fedora-pkgs.ks
+matahari-network
