@@ -91,6 +91,9 @@ ql2500-firmware
 aic94xx-firmware
 bfa-firmware
 
+# dracut dmsquash-live module requires eject
+eject
+
 # for building custom selinux module
 make
 checkpolicy
