@@ -42,27 +42,21 @@ class Network:
 
     def configure_interface(self):
         log("Configuring Interface")
+        self.disabled_nic = 0
         if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
             IPADDR = OVIRT_VARS["OVIRT_IP_ADDRESS"]
             NETMASK = OVIRT_VARS["OVIRT_IP_NETMASK"]
             GATEWAY = OVIRT_VARS["OVIRT_IP_GATEWAY"]
 
-        if OVIRT_VARS.has_key("OVIRT_BOOTIF"):
-            self.CONFIGURED_NIC = OVIRT_VARS["OVIRT_BOOTIF"]
-        if not self.CONFIGURED_NIC is None:
-            log("\nDeleting existing network configuration...\n")
-            os.system("cp -a  /etc/sysconfig/network-scripts/ifcfg-lo /etc/sysconfig/network-scripts/backup.lo")
-            for file in os.listdir("/etc/sysconfig/network-scripts/"):
-                if "ifcfg-" in file:
-                    remove_config("/etc/sysconfig/network-scripts/" + file)
-            os.system("rm -rf /etc/sysconfig/network-scripts/ifcfg-* &>/dev/null")
-            os.system("cp -a  /etc/sysconfig/network-scripts/backup.lo /etc/sysconfig/network-scripts/ifcfg-lo")
-        else:
+        if self.CONFIGURED_NIC is None:
             log("\nAborting...\n")
             return False
 
-        for file in os.listdir(self.WORKDIR):
-            os.system("rm -rf %s/%s") % (self.WORKDIR, file)
+        if OVIRT_VARS.has_key("OVIRT_BOOTIF"):
+            if OVIRT_VARS["OVIRT_BOOTIF"].endswith("-DISABLED"):
+                self.disabled_nic = 1
+            self.CONFIGURED_NIC = OVIRT_VARS["OVIRT_BOOTIF"].strip("-DISABLED")
+
         n_address = open("/sys/class/net/" + self.CONFIGURED_NIC + "/address")
         nic_hwaddr = n_address.readline().strip("\n")
         n_address.close()
@@ -112,10 +106,14 @@ class Network:
 
 
         if not OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
-	    if not self.VL_CONFIG:
-	        self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
-            self.BR_CONFIG += "set %s/BOOTPROTO dhcp\n" % BR_ROOT
-        else:
+            if OVIRT_VARS.has_key("OVIRT_BOOTIF") and self.disabled_nic == 0:
+                if not self.VL_CONFIG:
+	            self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
+                self.BR_CONFIG += "set %s/BOOTPROTO dhcp\n" % BR_ROOT
+            elif self.disabled_nic == 1:
+                self.BR_CONFIG += "set %s/BOOTPROTO none\n" % BR_ROOT
+
+        elif OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
             if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS") and OVIRT_VARS["OVIRT_IP_ADDRESS"] != "off":
                 self.BR_CONFIG += "set %s/BOOTPROTO static\n" % (BR_ROOT)
 		if self.VL_CONFIG == "":
@@ -134,7 +132,6 @@ class Network:
             self.VL_CONFIG = self_VL_CONFIG.split("\n")
         except:
             pass
-        log("VL_CONFIG: " + self.VL_CONFIG)
         return True
 
     def configure_dns(self):
@@ -194,13 +191,12 @@ class Network:
 #        except:
 #            pass
 #
-#        for script in os.listdir("/etc/sysconfig/network-scripts/"):
-#            if "ifcfg" in script:
-#                if not "ifcfg-lo" in script:
-#                    ovirt_safe_delete_config(script)
+        for script in os.listdir("/etc/sysconfig/network-scripts/"):
+            if self.CONFIGURED_NIC in script:
+                log("Removing Script: " + script)
+                ovirt_safe_delete_config("/etc/sysconfig/network-scripts/" + script)
+        augtool("rm", "/files/etc/sysconfig/network-scripts/ifcfg-br"+self.CONFIGURED_NIC, "")
 
-        config = self.WORKDIR + "/config-augtool"
-        
         for line in self.IF_CONFIG:
             log(line)
             try:
@@ -209,6 +205,7 @@ class Network:
             except:
                 oper, file = line.split()
                 augtool(oper, line, "")
+
         for line in self.BR_CONFIG:
             log(line)
             try:

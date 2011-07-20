@@ -1140,7 +1140,10 @@ class NodeConfigScreen():
 
       def process_nic_config(self):
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", "")
-          augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '"')
+          if self.disabled_ipv4_nic_proto.value() == 1:
+              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '-DISABLED"')
+          else:
+              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '"')
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
@@ -1155,26 +1158,27 @@ class NodeConfigScreen():
                   msg = "  - IPv4 Address\n"
               if self.ipv4_netdevmask.value() == "":
                   msg += "  - IPv4 Netmask Address\n"
-              if self.ipv6_netdevip.value() == "":
-                  msg = "  - IPv6 Address\n"
+              if self.ipv4_netdevgateway.value() == "":
+                  msg = "  - IPv4 Gateway Address\n"
+              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
+              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
+              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
+
           if self.static_ipv6_nic_proto.value() == 1:
               if self.ipv6_netdevmask.value() == "":
                   msg += "  - IPv6 Netmask Address\n"
               if self.ipv6_netdevgateway.value() == "":
                   msg += "  - IPv6 Gateway Address\n"
               # left out gateway check to prevent multiple ones
-              if msg != "":
-                  msg = "Please Input:\n" + msg
-                  warn = ButtonChoiceWindow(self.screen, "Network Settings", msg, buttons = ['Ok'])
-                  self.__nic_config_failed = 1
-                  self.ipv4_current_netdevip = self.ipv4_netdevip.value()
-                  self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
-                  self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
-                  self.reset_screen_colors()
-                  return
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
+          if msg != "":
+              msg = "Please Input:\n" + msg
+              warn = ButtonChoiceWindow(self.screen, "Network Settings", msg, buttons = ['Ok'])
+              self.__nic_config_failed = 1
+              self.ipv4_current_netdevip = self.ipv4_netdevip.value()
+              self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
+              self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
+              self.reset_screen_colors()
+              return
           else:
               # if exists remove static keys from dictionary
               if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):

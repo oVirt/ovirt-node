@@ -604,7 +604,7 @@ def remove_config(files):
     if os.path.exists("/config/files"):
         if os.path.getsize('/config/files') == 0:
             print "There are currently no persisted files."
-        return True
+            return True
     if os.path.ismount("/config"):
       if isinstance(files,STRING_TYPE):
         files_list = []
