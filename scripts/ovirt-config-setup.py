@@ -1378,8 +1378,8 @@ class NodeConfigScreen():
                 gridform = GridForm(screen, "", 2, 1) # 5,2
                 PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION, PRODUCT_RELEASE)
                 screen.drawRootText(1,0, "".ljust(78))
-                screen.drawRootText(1,1, "   %s" % PRODUCT_TITLE.ljust(75))
-                screen.drawRootText(1,2, "   %s" % os.uname()[1].ljust(75))
+                screen.drawRootText(1,1, "  %s" % PRODUCT_TITLE.ljust(75))
+                screen.drawRootText(1,2, "  %s" % os.uname()[1].ljust(75))
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
                 self.menu_list = Listbox(16, width = 20, returnExit = 1, border = 0, showCursor = 0)
