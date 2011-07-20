@@ -35,7 +35,7 @@ BACK_BUTTON = "Back"
 NEXT_BUTTON = "Next"
 FINISH_BUTTON = "Finish"
 INSTALL_BUTTON = "Install"
-RESTART_BUTTON = "Restart"
+REBOOT_BUTTON = "Reboot"
 POWEROFF_BUTTON = "Power Off"
 CONTINUE_BUTTON = "Continue"
 SHELL_BUTTON = "Drop To Shell"
@@ -704,7 +704,7 @@ class NodeInstallScreen:
             current_element += 1
             buttons = []
             if self.__current_page == FINISHED_PAGE:
-                buttons.append(["Restart", RESTART_BUTTON])
+                buttons.append(["Reboot", REBOOT_BUTTON])
             if self.__current_page != FINISHED_PAGE:
                 buttons.append(["Quit", QUIT_BUTTON])
             if self.__current_page != WELCOME_PAGE and self.__current_page != FAILED_PAGE and self.__current_page != FINISHED_PAGE:
@@ -716,7 +716,7 @@ class NodeInstallScreen:
             if self.__current_page == PASSWORD_PAGE:
                 buttons.append(["Install", INSTALL_BUTTON])
             if self.__current_page == FAILED_PAGE:
-                buttons.append(["Restart", RESTART_BUTTON])
+                buttons.append(["Reboot", REBOOT_BUTTON])
                 buttons.append(["Power Off", POWEROFF_BUTTON])
             buttonbar = ButtonBar(screen, buttons, compact = 1)
             buttongrid = Grid(1,1)
@@ -748,12 +748,12 @@ class NodeInstallScreen:
                     os.system("/usr/bin/clear;/bin/bash")
                 elif pressed == QUIT_BUTTON:
                     abort = ButtonChoiceWindow(self.screen, "Abort Installation","The installation of %s is not complete." %
-             PRODUCT_SHORT, buttons = ['Back','Restart','Shutdown'])
-                    if abort == "restart":
+             PRODUCT_SHORT, buttons = ['Back','Reboot','Shutdown'])
+                    if abort == "reboot":
                         os.system("/usr/bin/clear;reboot")
                     elif abort == "shutdown":
                         os.system("/usr/bin/clear;halt")
-                elif pressed == RESTART_BUTTON:
+                elif pressed == REBOOT_BUTTON:
                     screen.finish()
                     os.system("/usr/bin/clear;/sbin/reboot")
                 elif pressed == POWEROFF_BUTTON:
