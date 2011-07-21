@@ -211,3 +211,6 @@ python -m compileall /usr/lib/python2.*/site-packages/sos
 sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
 
 echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
+
+#mount kernel debugfs
+echo "debugfs /sys/kernel/debug debugfs 0 0" >> /etc/fstab
