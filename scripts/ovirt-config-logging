@@ -174,6 +174,13 @@ function prompt_user {
     done
 }
 
+function ovirt_netconsole {
+    augtool <<EOF
+set /files/etc/sysconfig/netconsole/SYSLOGADDR $OVIRT_NETCONSOLE_SERVER
+set /files/etc/sysconfig/netconsole/SYSLOGPORT $OVIRT_NETCONSOLE_PORT
+EOF
+    ovirt_store_config /etc/sysconfig/netconsole
+}
 # AUTO for auto-install
 if [ "$1" = "AUTO" ]; then
     if [ -z "$OVIRT_SYSLOG_SERVER" -o -z "$OVIRT_SYSLOG_PORT" ]; then
@@ -188,6 +195,10 @@ if [ "$1" = "AUTO" ]; then
     else
         printf "\nUsing default syslog server '$OVIRT_SYSLOG_SERVER:$OVIRT_SYSLOG_PORT'.\n"
         ovirt_rsyslog $OVIRT_SYSLOG_SERVER $OVIRT_SYSLOG_PORT udp
+    fi
+    if [ -n "$OVIRT_NETCONSOLE_SERVER" -a -n "$OVIRT_NETCONSOLE_PORT" ]; then
+        printf "\nConfiguring netconsole server..."
+        ovirt_netconsole
     fi
 else
     printf "\n\n Logging Configuration\n\n"
