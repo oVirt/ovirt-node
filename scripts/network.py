@@ -144,6 +144,7 @@ class Network:
                         augtool("set", "/files/etc/resolv.conf/nameserver[1]", DNS1)
                     if not DNS2 is None:
                         augtool("set", "/files/etc/resolv.conf/nameserver[2]", DNS2)
+                    ovirt_store_config("/etc/resolv.conf")
                 except:
                     log("Failed to set DNS servers")
 
