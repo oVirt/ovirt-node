@@ -63,9 +63,9 @@ for dev in $storage_init; do
         pv="${i%%,*}"
         vg="${i##*,}"
         if [ -n "$vg" ]; then
-            lvm vgremove -ff "$vg"
+            yes | lvm vgremove -ff "$vg"
         fi
-        lvm pvremove -ff "$pv"
+        yes | lvm pvremove -ff "$pv"
     done
     IFS=,
 done
