@@ -69,6 +69,7 @@ acpid
 device-mapper-multipath
 kpartx
 dracut-network
+dracut-fips
 patch
 e2fsprogs
 sysfsutils
