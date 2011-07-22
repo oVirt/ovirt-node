@@ -37,7 +37,6 @@ OVIRT_NODE_TOOLS_DATA =         \
         *-post.ks        \
         *-minimizer.ks   \
         common-nochroot.ks \
-        common-initrd.ks   \
         common-manifest.ks \
         $(PACKAGE).ks
 
@@ -47,7 +46,6 @@ EXTRA_DIST =                    \
         *-post.ks        \
         *-minimizer.ks   \
         common-nochroot.ks \
-        common-initrd.ks   \
         common-manifest.ks \
         $(PACKAGE).ks.in        \
         $(PACKAGE).ks

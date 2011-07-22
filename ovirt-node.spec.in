@@ -48,6 +48,11 @@ Requires:       python-gudev
 Requires:       PyPAM
 Requires:       ethtool
 Requires:       cracklib-python
+Requires:       dracut
+%if 0%{?rhel}
+# for applying patches in %post
+Requires:       patch
+%endif
 
 BuildArch:      noarch
 
@@ -90,6 +95,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{mgmt_scripts_dir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/dracut.conf.d
 
 %{__install} -p -m0755 scripts/node-config %{buildroot}%{_sysconfdir}/sysconfig
 
@@ -108,6 +114,12 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 dracut/install %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
 %{__install} -p -m0755 scripts/ovirt-boot-functions %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
 %{__install} -p -m0755 dracut/ovirt-cleanup.sh %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
+%{__install} -p -m0644 dracut/ovirt-dracut.conf %{buildroot}%{_sysconfdir}/dracut.conf.d
+%if 0%{?rhel}
+# dracut patches for rhel6
+%{__install} -p -m0644 dracut/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch %{buildroot}%{app_root}
+%{__install} -p -m0644 dracut/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch %{buildroot}%{app_root}
+%endif
 
 # resolv.conf augeas lens
 %{__install} -d -m0755 %{buildroot}/usr/share/augeas/lenses
@@ -165,8 +177,15 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 /sbin/chkconfig --add ovirt-post
 # workaround for imgcreate/live.py __copy_efi_files
 if [ ! -e /boot/grub/splash.xpm.gz ]; then
-  cp /usr/share/ovirt-node/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
+  cp %{app_root}/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
 fi
+%if 0%{?rhel}
+# apply dracut fixes not in rhel6
+# rhbz#683330
+# dracut.git commits rediffed for dracut-004-53.el6
+patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch
+patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
+%endif
 
 %preun
 if [ $1 = 0 ] ; then
@@ -206,6 +225,10 @@ fi
 %{app_root}/grub-splash.xpm.gz
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
+%if 0%{?rhel}
+%{app_root}/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch
+%{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
+%endif
 
 %{_datadir}/augeas/lenses/build.aug
 %{_datadir}/augeas/lenses/resolv.aug
@@ -214,6 +237,7 @@ fi
 %{_datadir}/dracut/modules.d/91ovirtnode/install
 %{_datadir}/dracut/modules.d/91ovirtnode/ovirt-boot-functions
 %{_datadir}/dracut/modules.d/91ovirtnode/ovirt-cleanup.sh
+%{_sysconfdir}/dracut.conf.d/ovirt-dracut.conf
 %{_libexecdir}/ovirt-config-boot
 %{_libexecdir}/ovirt-config-boot-wrapper
 %{_libexecdir}/ovirt-config-hostname

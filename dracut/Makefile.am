@@ -16,6 +16,9 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 EXTRA_DIST = \
+  dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch \
+  dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch \
+  ovirt-dracut.conf \
   check \
   install \
   ovirt-cleanup.sh

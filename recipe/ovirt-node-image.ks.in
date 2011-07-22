@@ -21,8 +21,6 @@
 
 %end
 
-%include common-initrd.ks
-
 %post --nochroot --interpreter image-minimizer
 %include common-minimizer.ks
 %include @DISTRO@-minimizer.ks
