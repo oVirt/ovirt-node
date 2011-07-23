@@ -80,7 +80,7 @@ however on a development machine to help to build the image.
 
 %build
 aclocal && autoheader && automake --add-missing && autoconf
-%configure
+%configure --with-image-minimizer
 make
 
 %install

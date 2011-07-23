@@ -33,7 +33,7 @@ OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT}/../ovirt-cache
 OVIRT_LOCAL_REPO=file://${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 export OVIRT_LOCAL_REPO OVIRT_CACHE_DIR
 
-./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT
+./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT --with-image-minimizer
 make
 make install
 

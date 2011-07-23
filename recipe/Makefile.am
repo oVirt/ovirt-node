@@ -47,6 +47,7 @@ EXTRA_DIST =                    \
         *-minimizer.ks   \
         common-nochroot.ks \
         common-manifest.ks \
+        image-minimizer.ks.in   \
         $(PACKAGE).ks.in        \
         $(PACKAGE).ks
 
