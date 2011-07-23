@@ -169,7 +169,8 @@ class NodeInstallScreen:
 
     def password_check_callback(self):
         self.valid_password, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
-        self.pw_msg.setText(msg)
+        if self.current_password_fail == 0:
+            self.pw_msg.setText(msg)
         return
 
     def current_password_callback(self):
@@ -179,18 +180,21 @@ class NodeInstallScreen:
         global current_password
         current_password = self.current_password.value()
         auth.set_item(PAM.PAM_CONV, pam_conv)
-        try:
-            auth.authenticate()
-        except PAM.error, (resp, code):
-            log(resp)
-            self.current_password_fail == 1
-            return False
-        except:
-            log("Internal error")
-            return False
-        else:
-            self.current_password_fail == 0
-            return True
+        if self.current_password.value() != "":
+            try:
+                auth.authenticate()
+            except PAM.error, (resp, code):
+                log(resp)
+                self.current_password_fail = 1
+                self.pw_msg.setText("Current Password Invalid")
+                return False
+            except:
+                log("Internal error")
+                return False
+            else:
+                self.current_password_fail = 0
+                self.pw_msg.setText(" ")
+                return True
 
     def other_device_root_callback(self):
         ret = os.system("test -b " + self.root_device.value())
@@ -569,9 +573,9 @@ class NodeInstallScreen:
         pw_elements.setField(Label("Password: "), 0, 1, anchorLeft = 1)
         pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft = 1)
         self.root_password_1 = Entry(15,password = 1)
-        self.root_password_1.setCallback(self.password_check_callback)
+        self.root_password_1.setCallback(self.password1_check_callback)
         self.root_password_2 = Entry(15,password = 1)
-        self.root_password_2.setCallback(self.password_check_callback)
+        self.root_password_2.setCallback(self.password2_check_callback)
         pw_elements.setField(self.root_password_1, 1,1)
         pw_elements.setField(self.root_password_2, 1,2)
         elements.setField(pw_elements, 0, 5, anchorLeft = 1)
@@ -601,7 +605,8 @@ class NodeInstallScreen:
         pw_elements.setField(self.root_password_1, 1,2)
         pw_elements.setField(self.root_password_2, 1,3)
         elements.setField(pw_elements, 0, 5, anchorLeft = 1)
-        elements.setField(Label(" "), 0, 6)
+        self.pw_msg = Textbox(60, 6, "", wrap=1)
+        elements.setField(self.pw_msg, 0, 6, padding = (0,1,0,3))
         return [Label(""), elements]
 
     def get_elements_for_page(self, screen, page):
