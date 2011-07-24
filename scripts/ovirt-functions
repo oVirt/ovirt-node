@@ -73,6 +73,15 @@ log() {
     fi
 }
 
+log_error() {
+    if [ "$_log_status" = 1 ]; then
+        echo "$@" >&2
+    else
+        printf "%s " "$(date +'%b %d %H:%M:%S')" "$@"
+        echo "$@" >&7
+    fi
+}
+
 ovirt_store_firstboot_config() {
     # persist config for standalone
     ovirt_store_config $OVIRT_CONFIG_FILES

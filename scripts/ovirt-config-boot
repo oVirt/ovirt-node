@@ -56,7 +56,7 @@ ovirt_boot_setup() {
     local new_major=$(echo $VERSION|cut -d. -f1)
     # only N.x -> N.y upgrades are allowed
     if [ "$current_major" != "$new_major" ]; then
-      log "cannot upgrade from $current_version to $VERSION."
+      log_error "cannot upgrade from $current_version to $VERSION."
       return 1
     fi
 
@@ -66,7 +66,7 @@ ovirt_boot_setup() {
         mount "$grub_dev" /boot
         mountpoint /boot > /dev/null
         if [ $? -ne 0 ] ; then
-            log "Boot partition not available"
+            log_error "Boot partition not available"
             return 1
         fi
         # Grab OVIRT_ISCSI VARIABLES from boot partition for upgrading
@@ -84,13 +84,13 @@ ovirt_boot_setup() {
         # get title for the current Root
         /sbin/dmsetup mknodes
         if [ $? -ne 0 ] ; then
-          log "Could not create DM links"
+          log_error "Could not create DM links"
           return 1
         fi
         mount -r LABEL=Root /liveos
         mountpoint /liveos > /dev/null
         if [ $? -ne 0 ] ; then
-          log "Root partition not available"
+          log_error "Root partition not available"
           return 1
         fi
 
@@ -121,8 +121,8 @@ ovirt_boot_setup() {
             fi
         fi
         if [ $rc -ne 0 ]; then
-            log "root partition not available."
-            log "$(ls -al /dev/disk/by-label)"
+            log_error "root partition not available."
+            log_error "$(ls -al /dev/disk/by-label)"
             return $rc
         fi
 
@@ -143,14 +143,14 @@ ovirt_boot_setup() {
     get_part_info "$(readlink -f "$grub_dev")" disk partN y
     rc=$?
     if [ $rc -ne 0 -o "$partN" -lt 0 ]; then
-      log "unable to determine Root partition"
+      log_error "unable to determine Root partition"
       return 1
     fi
 
     cp -p $live/$syslinux/version /liveos
     rc=$?
     if [ $rc -ne 0 ]; then
-        log "version details copy failed."
+        log_error "version details copy failed."
         return $rc
     fi
 
@@ -158,7 +158,7 @@ ovirt_boot_setup() {
     && cp -p $live/$syslinux/initrd0.img $initrd_dest
     rc=$?
     if [ $rc -ne 0 ]; then
-        log "kernel image copy failed."
+        log_error "kernel image copy failed."
         return $rc
     fi
 
@@ -166,7 +166,7 @@ ovirt_boot_setup() {
         cp -p $live/LiveOS/squashfs.img /liveos/LiveOS
         rc=$?
         if [ $rc -ne 0 ]; then
-            log "squashfs image copy failed."
+            log_error "squashfs image copy failed."
             return $rc
         fi
     fi
@@ -225,7 +225,7 @@ setup --prefix=$grub_prefix (hd0)
 EOF
     rc=$?
     if [ $rc -ne 0 ]; then
-        log "boot loader install failed."
+        log_error "boot loader install failed."
         return $rc
     fi
 
@@ -233,7 +233,7 @@ EOF
         umount /liveos
         rc=$?
         if [ $rc -ne 0 ]; then
-            log "umount /liveos failed."
+            log_error "umount /liveos failed."
             return $rc
         fi
         # mark new Root ready to go, reboot() in ovirt-function switches it to active
