@@ -12,6 +12,9 @@ echo "Creating shadow files"
 pwconv
 grpconv
 
+echo "Lock root account"
+passwd -l root
+
 # set SELinux booleans
 # rhbz#502779 restrict certain memory protection operations
 #     keep allow_execmem on for grub
