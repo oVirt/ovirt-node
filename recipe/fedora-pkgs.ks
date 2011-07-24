@@ -4,8 +4,7 @@
 -fedora-logos
 generic-logos
 # Fedora only packages
-collectd
-collectd-rrdtool
+collectd-virt
 libvirt-qpid
 # install selected Matahari agents and the broker
 matahari-broker
