@@ -253,3 +253,10 @@ EOF_rc_sysinit
 # semanage is not present in the image and virt_use_nfs is on (see rhbz#642209)
 # remove it from vdsmd startup script to avoid error
 sed -i 's#/usr/sbin/semanage#/bin/true#' /etc/rc.d/init.d/vdsmd
+
+# reserve vdsm port 54321
+augtool << \EOF_sysctl
+set /files/etc/sysctl.conf/net.ipv4.ip_local_reserved_ports 54321
+save
+EOF_sysctl
+
