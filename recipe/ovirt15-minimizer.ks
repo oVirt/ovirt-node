@@ -1,1 +1,0 @@
-# Fedora specific image minimization

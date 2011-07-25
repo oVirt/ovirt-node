@@ -1,1 +1,1 @@
-ovirt15-minimizer.ks
+# Fedora specific image minimization
