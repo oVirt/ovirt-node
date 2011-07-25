@@ -173,11 +173,11 @@ ovirt_boot_setup() {
 
     if [ "$OVIRT_ISCSI_ENABLED" = "y" ]; then
         root_part="root=LABEL=ovirt-node-root"
-        bootparams="ro roottypefs=ext2 $bootparams \
+        bootparams="ro rootfstype=ext2 rootflags=ro $bootparams \
                     netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
     else
         root_part="root=live:LABEL=Root"
-        bootparams="ro roottypefs=ext2 $bootparams"
+        bootparams="ro rootfstype=ext2 rootflags=ro $bootparams"
     fi
     mkdir -p $grub_dir
     cat > $grub_dir/grub.conf << EOF

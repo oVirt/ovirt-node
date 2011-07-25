@@ -156,10 +156,10 @@ def ovirt_boot_setup():
             return False
     # reorder tty0 to allow both serial and phys console after installation
     if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
-        bootparams="ro root=LABEL=ovirt-node-root roottypefs=ext3 console=tty0 \
+        bootparams="ro root=LABEL=ovirt-node-root rootfstype=ext3 rootflags=ro console=tty0 \
                     netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
     else:
-        bootparams="ro root=live:LABEL=Root roottypefs=auto  "
+        bootparams="ro root=live:LABEL=Root rootfstype=auto rootflags=ro  "
         bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
     if " " in disk or os.path.exists("/dev/cciss"):
         # workaround for grub setup failing with spaces in dev.name:
