@@ -185,6 +185,8 @@ fi
 patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch
 patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
 %endif
+#use all hard-coded defaults for multipath
+> /etc/multipath.conf
 
 %preun
 if [ $1 = 0 ] ; then

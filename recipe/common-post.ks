@@ -92,9 +92,6 @@ empty	/boot
 empty	/boot-kdump
 EOF_rwtab_ovirt
 
-#use all hard-coded defaults for multipath
-cat /dev/null > /etc/multipath.conf
-
 # fix iSCSI/LVM startup issue
 sed -i 's/node\.session\.initial_login_retry_max.*/node.session.initial_login_retry_max = 60/' /etc/iscsi/iscsid.conf
 
