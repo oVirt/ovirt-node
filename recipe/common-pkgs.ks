@@ -110,3 +110,5 @@ python-hivex
 febootstrap-supermin-helper
 # sosreport soft-dep
 rpm-python
+# alternate management framework
+libvirt-cim
