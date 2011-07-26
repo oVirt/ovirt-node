@@ -5,7 +5,7 @@
 generic-logos
 # Fedora only packages
 collectd-virt
-libvirt-qpid
+libvirt-qmf
 # install selected Matahari agents and the broker
 matahari-broker
 matahari-host
