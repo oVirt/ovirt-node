@@ -79,6 +79,8 @@ dirs	/var/lib/net-snmp
 dirs    /var/lib/dnsmasq
 files	/root/.ssh
 dirs	/root/.uml
+dirs	/root/.virt-manager
+dirs	/home/admin/.virt-manager
 files	/var/cache/libvirt
 files	/var/empty/sshd/etc/localtime
 files	/var/lib/libvirt
@@ -217,3 +219,9 @@ echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 
 #mount kernel debugfs
 echo "debugfs /sys/kernel/debug debugfs 0 0" >> /etc/fstab
+
+# create .virt-manager directories for readonly root
+mkdir -p /root/.virt-manager /home/admin/.virt-manager
+
+#symlink virt-manager-tui pointer file to .pyc version
+sed -i "s/tui.py/tui.pyc/g" /usr/bin/virt-manager-tui

@@ -143,3 +143,5 @@ cat > /etc/sysconfig/ip6tables << \EOF
 -A FORWARD -m physdev ! --physdev-is-bridged -j REJECT --reject-with icmp6-adm-prohibited
 COMMIT
 EOF
+
+python -m compileall /usr/share/virt-manager
