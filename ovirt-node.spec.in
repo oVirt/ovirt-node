@@ -1,4 +1,5 @@
 %global product_family oVirt Node
+%global product_release %{version} (0)
 %global mgmt_scripts_dir %{_sysconfdir}/node.d
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
@@ -52,6 +53,7 @@ Requires:       dracut
 # for applying patches in %post
 Requires:       patch
 %endif
+Requires:       system-release
 
 BuildArch:      noarch
 
@@ -187,6 +189,8 @@ patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-93724aa28fc20c8b7f0167201d1
 %endif
 #use all hard-coded defaults for multipath
 > /etc/multipath.conf
+#release info for dracut to pick it up into initramfs
+echo "%{product_family} release %{product_release}" > /etc/system-release
 
 %preun
 if [ $1 = 0 ] ; then
