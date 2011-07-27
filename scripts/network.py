@@ -25,6 +25,7 @@ class Network:
     def __init__(self):
         OVIRT_VARS = parse_defaults()
         self.WORKDIR=tempfile.mkdtemp()
+        self.IFSCRIPTS_PATH ="/etc/sysconfig/network-scripts/"
         self.IFCONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
         self.NTPCONF_FILE_ROOT="/files/etc/ntp"
         self.NTP_CONFIG_FILE="/etc/ntp.conf"
@@ -183,16 +184,14 @@ class Network:
         net_configured=0
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
         log("Configuring network")
+        os.system("ifdown br" + self.CONFIGURED_NIC)
+        for vlan in os.listdir("/proc/net/vlan/"):
+            if self.CONFIGURED_NIC in vlan:
+                os.system("vconfig rem " + vlan + "&> /dev/null")
+                ovirt_safe_delete_config(self.IFSCRIPTS_PATH + vlan)
+                os.system("rm -rf " + self.IFSCRIPTS_PATH + vlan)
 
-#        # delete existing scripts
-#        try:
-#            for vlan in os.listdir("/proc/net/vlan/"):
-#                if "config" in vlan:
-#                    os.system("vconfig rem %s &> /dev/null") % vlan
-#        except:
-#            pass
-#
-        for script in os.listdir("/etc/sysconfig/network-scripts/"):
+        for script in os.listdir(self.IFSCRIPTS_PATH):
             if self.CONFIGURED_NIC in script:
                 log("Removing Script: " + script)
                 ovirt_safe_delete_config("/etc/sysconfig/network-scripts/" + script)

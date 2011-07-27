@@ -260,7 +260,8 @@ class NodeConfigScreen():
           if not self.ntp_host1.value() is None and not self.ntp_host1.value() == "":
                if not is_valid_ipv4(self.ntp_host1.value()):
                    if not is_valid_ipv6(self.ntp_host1.value()):
-                       warn = 1
+                       if not is_valid_hostname(self.ntp_host1.value()):
+                           warn = 1
           if warn == 1:
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -274,7 +275,8 @@ class NodeConfigScreen():
           if not self.ntp_host2.value() is None and not self.ntp_host2.value() == "":
               if not is_valid_ipv4(self.ntp_host2.value()):
                    if not is_valid_ipv6(self.ntp_host1.value()):
-                       warn = 1
+                       if not is_valid_hostname(self.ntp_host1.value()):
+                           warn = 1
           if warn == 1:
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -1140,6 +1142,8 @@ class NodeConfigScreen():
 
       def process_nic_config(self):
           augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", "")
+          if self.netvlanid.value() == "":
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", "")
           if self.disabled_ipv4_nic_proto.value() == 1:
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '-DISABLED"')
           else:
