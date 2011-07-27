@@ -426,7 +426,7 @@ class NodeConfigScreen():
           warn = 0
           try:
               if not self.netvlanid.value() == "":
-                  if not int(self.netvlanid.value()) in range(0,4095):
+                  if not int(self.netvlanid.value()) in range(1,4095):
                       warn = 1
           except:
               warn = 1
@@ -436,7 +436,7 @@ class NodeConfigScreen():
                   self.screen.setColor("ACTBUTTON", "blue", "white")
                   ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid VLAN ID", buttons = ['Ok'])
                   self.reset_screen_colors()
-
+                  self.netvlanid.set("")
       def password_check_callback(self):
           resp, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
           self.pw_msg.setText(msg)
