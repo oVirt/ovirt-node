@@ -166,8 +166,8 @@ cat > /etc/sysconfig/iptables << \EOF
 -A INPUT -i lo -j ACCEPT
 # vdsm
 -A INPUT -p tcp --dport 54321 -j ACCEPT
-# libvirt
--A INPUT -p tcp --dport 16509 -j ACCEPT
+# libvirt tls
+-A INPUT -p tcp --dport 16514 -j ACCEPT
 # libvirt-cim
 -A INPUT -p tcp --dport 5989 -j ACCEPT
 # SSH
@@ -193,8 +193,8 @@ cat > /etc/sysconfig/ip6tables << \EOF
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT -p ipv6-icmp -j ACCEPT
 -A INPUT -i lo -j ACCEPT
-# libvirt
--A INPUT -p tcp --dport 16509 -j ACCEPT
+# libvirt tls
+-A INPUT -p tcp --dport 16514 -j ACCEPT
 # libvirt-cim
 -A INPUT -p tcp --dport 5989 -j ACCEPT
 # SSH
