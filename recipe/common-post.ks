@@ -27,6 +27,9 @@ EOF_semanage
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 
+# rhevh uses libvirtd upstart job, sysv initscript must not interfere
+rm -f /etc/rc.d/init.d/libvirtd
+
 # remove the /etc/krb5.conf file; it will be fetched on bootup
 rm -f /etc/krb5.conf
 

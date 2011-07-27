@@ -258,6 +258,9 @@ EOF_rc_sysinit
 # remove it from vdsmd startup script to avoid error
 sed -i 's#/usr/sbin/semanage#/bin/true#' /etc/rc.d/init.d/vdsmd
 
+# libvirtd upstart job is already configured on rhevh
+sed -i 's/ && start_libvirtd$//' /etc/rc.d/init.d/vdsmd
+
 # reserve vdsm port 54321
 augtool << \EOF_sysctl
 set /files/etc/sysctl.conf/net.ipv4.ip_local_reserved_ports 54321

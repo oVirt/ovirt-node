@@ -26,6 +26,7 @@ SUBDIRS =   \
   scripts
 
 EXTRA_DIST = \
+  libvirtd.upstart \
   ovirt-node.spec \
   ovirt-node.spec.in \
   logrotate/ovirt-logrotate \
