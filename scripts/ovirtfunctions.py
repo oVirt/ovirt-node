@@ -808,7 +808,12 @@ def is_valid_host_or_ip(host_or_ip):
         if is_valid_ipv6(host_or_ip):
             return True
         if is_valid_hostname(host_or_ip):
-            return True
+            try:
+                socket.gethostbyname(host_or_ip)
+                return True
+            except:
+                log("Invalid hostname, unable to resolve: " + host_or_ip)
+                return False
         else:
             return False
     else:
