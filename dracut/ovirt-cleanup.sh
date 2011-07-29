@@ -34,9 +34,9 @@ fi
 # Blank entry will result in getting first disk
 
 if getarg storage_init; then
-    storage_init=$(getarg storage_init)
+    storage_init="$(getargs storage_init)"
 elif getarg ovirt_init; then
-    storage_init=$(getarg ovirt_init)
+    storage_init="$(getargs ovirt_init)"
 else
     return 0
 fi
@@ -49,7 +49,7 @@ fi
 # would partition sda and sdb as part of HostVG and
 # sdc and sdd as part of AppVG
 # Since we only care which disks are being used, change to a single list
-storage_init=$(echo $storage_init | sed 's/;/,/')
+storage_init="$(echo "$storage_init" | sed 's/;/,/')"
 
 oldIFS=$IFS
 

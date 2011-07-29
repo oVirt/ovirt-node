@@ -128,7 +128,7 @@ parse_disk_id() {
             serial=${i#:}
         ;;
         /dev/*)
-            disk="$(ls -1 "$i" 2>/dev/null | grep -m 1 "$dev")"
+            disk="$(ls -1 $i 2>/dev/null | head -n1)"
         ;;
     esac
     if [ -n "$bus" ]; then
