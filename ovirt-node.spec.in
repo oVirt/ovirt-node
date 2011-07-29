@@ -111,6 +111,9 @@ make install DESTDIR=%{buildroot}
 # configure libvirtd upstart job
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/init
 %{__install} -p -m0644 libvirtd.upstart %{buildroot}%{_sysconfdir}/init/libvirtd.conf
+# load vlan module
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig/modules
+%{__install} -p -m0755 vlan.modules %{buildroot}%{_sysconfdir}/sysconfig/modules
 
 #dracut module for disk cleanup
 %{__install} -d -m0755 %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
@@ -229,6 +232,8 @@ fi
 %config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
 %{_sysconfdir}/init/libvirtd.conf
+
+%{_sysconfdir}/sysconfig/modules/vlan.modules
 
 %doc COPYING
 # should be ifarch i386
