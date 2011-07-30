@@ -1,0 +1,1 @@
+ovirt16-minimizer.ks
