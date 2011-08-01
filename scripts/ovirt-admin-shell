@@ -1,3 +1,5 @@
 #!/bin/bash
 . /etc/profile
+# Hide kernel messages on the console
+sudo dmesg -n 1
 sudo /usr/libexec/ovirt-config-setup
