@@ -83,7 +83,7 @@ def parse_defaults():
     for line in f:
         try:
             line = line.strip()
-            key, value = line.split("\"", 1)
+            key, value = line.split("=", 1)
             key = key.strip("=")
             value = value.strip("\"")
             OVIRT_VARS[key] = value
@@ -114,7 +114,7 @@ OVIRT_CONFIG_FILES = ["/etc/sysconfig/network-scripts/ifcfg-*", \
                       "/etc/logrotate.d/ovirt-logrotate.conf" ]
 
 def log(log_entry):
-    if is_firstboot:
+    if is_firstboot():
         log_file = open(OVIRT_TMP_LOGFILE, "a")
     else:
         log_file = open(OVIRT_LOGFILE, "a")
@@ -194,11 +194,11 @@ def is_booted_from_local_disk():
 
 # was firstboot menu already shown?
 # state is stored in persistent config partition
-def is_firstboot(self):
-    if not self.OVIRT_VARS.has_key("OVIRT_FIRSTBOOT") or self.OVIRT_VARS["OVIRT_FIRSTBOOT"] == 1:
-        return True
-    else:
-        return False
+def is_firstboot():
+    if OVIRT_VARS.has_key("OVIRT_FIRSTBOOT"):
+        if OVIRT_VARS["OVIRT_FIRSTBOOT"] == "1":
+            return True
+    return False
 
 def disable_firstboot():
     if os.path.ismount("/config"):
@@ -1105,3 +1105,5 @@ class PluginBase(object):
         Must be implemented by the child class.
         """
         pass
+
+OVIRT_VARS = parse_defaults()
