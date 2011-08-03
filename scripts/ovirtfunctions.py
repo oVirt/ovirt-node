@@ -195,10 +195,17 @@ def is_booted_from_local_disk():
 # was firstboot menu already shown?
 # state is stored in persistent config partition
 def is_firstboot():
+    # check if theres a key first
     if OVIRT_VARS.has_key("OVIRT_FIRSTBOOT"):
         if OVIRT_VARS["OVIRT_FIRSTBOOT"] == "1":
             return True
-    return False
+        elif OVIRT_VARS["OVIRT_FIRSTBOOT"] == "0":
+            return False
+    # in case there's no key, default to True unless booted from disk
+    if is_booted_from_local_disk():
+        return False
+    else:
+        return True
 
 def disable_firstboot():
     if os.path.ismount("/config"):
