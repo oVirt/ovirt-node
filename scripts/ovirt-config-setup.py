@@ -399,12 +399,15 @@ class NodeConfigScreen():
       def ipv6_netmask_callback(self):
           warn = 0
           if not self.ipv6_netdevmask.value() is None and not self.ipv6_netdevmask.value() == "":
-               if not is_valid_ipv6(self.ipv6_netdevmask.value()):
-                   warn = 1
+              try:
+                  if not int(self.ipv6_netdevmask.value()) in range(1,128):
+                      warn = 1
+              except:
+                  warn = 1
           if warn == 1:
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
-              ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
+              ButtonChoiceWindow(self.screen, "Network", "Invalid IPv6 Netmask", buttons = ['Ok'])
               self.ipv6_netdevmask.set("")
               self.reset_screen_colors()
           return
@@ -566,9 +569,9 @@ class NodeConfigScreen():
                         if not interface == "lo":
                             if has_ip_address(interface) or get_ipv6_address(interface):
                                 ipv4_address = get_ip_address(interface)
-                                if get_ipv6_address(interface):
-                                    ipv6_address = get_ipv6_address(interface)
-                                else:
+                                try:
+                                    ipv6_address, netmask = get_ipv6_address(interface)
+                                except:
                                     ipv6_address = ""
                                 self.network_status[interface] = (ipv4_address,ipv6_address)
                     except:
@@ -577,7 +580,8 @@ class NodeConfigScreen():
                 for key in sorted(self.network_status.iterkeys()):
                     if key.startswith("br"):
                         parent_dev = key[+2:]
-                        del self.network_status[parent_dev]
+                        if self.network_status.has_key(parent_dev):
+                            del self.network_status[parent_dev]
                 for key in sorted(self.network_status.iterkeys()):
                     ipv4_addr, ipv6_addr = self.network_status[key]
                     cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(key)
@@ -600,7 +604,7 @@ class NodeConfigScreen():
                     if ipv6_addr != "":
                         status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip(),ipv6_addr.strip())
                     else:
-                        status_text += "%1s: %5s %14s \n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip(),ipv6_addr.strip())
+                        status_text += "%1s: %5s %14s \n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip())
                     status_text.strip()
                     networking = TextboxReflowed(32, status_text, maxHeight=10)
                     networking.setText(status_text)
@@ -975,6 +979,32 @@ class NodeConfigScreen():
           self.ipv6_netdevmask.setCallback(self.ipv6_netmask_callback)
           self.ipv6_netdevgateway = Entry(39, "", scroll = 0)
           self.ipv6_netdevgateway.setCallback(self.ipv6_gateway_callback)
+          if "OVIRT_IPV6_ADDRESS" in OVIRT_VARS:
+              self.ipv6_netdevip.set(OVIRT_VARS["OVIRT_IPV6_ADDRESS"])
+          else:
+              try:
+                  current_ip, current_netmask = get_ipv6_address(self.nic_lb.current())
+              except:
+                  current_ip = ""
+                  current_netmask = ""
+              if current_ip == "":
+                  try:
+                      current_ip, current_netmask = get_ipv6_address("br" + self.nic_lb.current())
+                  except:
+                      pass
+              if current_ip != "":
+                  self.ipv6_netdevip.set(current_ip)
+          if "OVIRT_IPV6_NETMASK" in OVIRT_VARS:
+              self.ipv6_netdevmask.set(OVIRT_VARS["OVIRT_IPV6_NETMASK"])
+          else:
+              if current_ip != "":
+                  self.ipv6_netdevmask.set(current_netmask)
+          if "OVIRT_IPV6_GATEWAY" in OVIRT_VARS:
+              self.ipv6_netdevgateway.set(OVIRT_VARS["OVIRT_IPV6_GATEWAY"])
+          else:
+              current_gateway = get_ipv6_gateway(self.nic_lb.current())
+              if current_gateway == "":
+                  current_gateway = get_gateway("br" + self.nic_lb.current())
           ipv6_grid = Grid (5,4)
           ipv6_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)
           ipv6_grid.setField(Label("Netmask: "), 0, 2, anchorLeft = 1)

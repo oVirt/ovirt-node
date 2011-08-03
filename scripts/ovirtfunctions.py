@@ -854,17 +854,21 @@ def get_gateway(ifname):
     return result
 
 def get_ipv6_address(interface):
-    inet6_lookup_cmd = 'ifconfig ' + interface + ' |grep inet6|grep -v Global|awk {\'print $3\'}'
+    inet6_lookup_cmd = "ip addr show dev %s | awk '$1==\"inet6\" && $4==\"global\" { print $2 }'" % interface
     inet6_lookup = subprocess.Popen(inet6_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    ipv6_addr = inet6_lookup.stdout.read()
-
-    if "/" in ipv6_addr:
-        while not ipv6_addr.endswith("/"):
-            ipv6_addr = ipv6_addr[:-1]
-        ipv6_addr = ipv6_addr.strip("/")
-        return ipv6_addr
-
+    ipv6_addr = inet6_lookup.stdout.read().strip()
+    try:
+        ip, netmask = ipv6_addr.split("/")
+        return (ip,netmask)
+    except:
+        log("unable to determine ip/netmask from: " + ipv6_addr)
     return False
+
+def get_ipv6_gateway(ifname):
+    cmd = "ip route list dev "+ ifname + " | awk ' /^default/ {print $3}'"
+    result = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    result = result.stdout.read().strip()
+    return result
 
 def has_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
