@@ -57,10 +57,10 @@ find_disk() {
     # /dev/disk/by-id/{ata,cciss,scsi,usb}* correctly,
     # so manually enumerate them
     for d in $(ls /dev/disk/by-id/ata* /dev/disk/by-id/cciss* /dev/disk/by-id/scsi* /dev/disk/by-id/usb* 2>/dev/null); do
-        ID_FS_USAGE=
+        DEVTYPE=
         eval $(udev_info $(readlink -f $d) property "--export")
         # ID_FS_USAGE is set for partitions
-        if [ -z "$ID_FS_USAGE" -a "$ID_BUS" = "$bus" ]; then
+        if [ "$DEVTYPE" = "disk" -a "$ID_BUS" = "$bus" ]; then
             if [ -z "$serial" -o "$serial" = "ALL" \
                 -o "$ID_SERIAL" = "$serial" ]; then
                 local dev="$(readlink -e $d)"
