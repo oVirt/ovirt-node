@@ -274,8 +274,8 @@ class NodeConfigScreen():
           warn = 0
           if not self.ntp_host2.value() is None and not self.ntp_host2.value() == "":
               if not is_valid_ipv4(self.ntp_host2.value()):
-                   if not is_valid_ipv6(self.ntp_host1.value()):
-                       if not is_valid_hostname(self.ntp_host1.value()):
+                   if not is_valid_ipv6(self.ntp_host2.value()):
+                       if not is_valid_hostname(self.ntp_host2.value()):
                            warn = 1
           if warn == 1:
               self.screen.setColor("BUTTON", "black", "red")
@@ -506,11 +506,12 @@ class NodeConfigScreen():
               self.reset_screen_colors()
 
       def valid_hostname_callback(self):
-          if not is_valid_hostname(self.net_hostname.value()):
-              self.screen.setColor("BUTTON", "black", "red")
-              self.screen.setColor("ACTBUTTON", "blue", "white")
-              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname", buttons = ['Ok'])
-              self.reset_screen_colors()
+          if not self.net_hostname.value() == "":
+              if not is_valid_hostname(self.net_hostname.value()):
+                  self.screen.setColor("BUTTON", "black", "red")
+                  self.screen.setColor("ACTBUTTON", "blue", "white")
+                  ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname", buttons = ['Ok'])
+                  self.reset_screen_colors()
 
       def valid_fqdn_or_ipv4(self):
           warn = 0
@@ -1143,10 +1144,13 @@ class NodeConfigScreen():
           self.menuo = self.menu_list.current()
 
       def process_network_config(self):
-          if self.net_hostname.value() != self.current_hostname and is_valid_hostname(self.net_hostname.value()):
+          if self.net_hostname.value() == "":
+              augtool("set", "/files/etc/sysconfig/network/HOSTNAME", "")
+              os.system("hostname \"" + self.net_hostname.value()+"\"")
+          elif self.net_hostname.value() != self.current_hostname and is_valid_hostname(self.net_hostname.value()):
               augtool("set", "/files/etc/sysconfig/network/HOSTNAME", self.net_hostname.value())
               os.system("hostname " + self.net_hostname.value())
-              ovirt_store_config("/etc/sysconfig/network")
+          ovirt_store_config("/etc/sysconfig/network")
           dns_servers = ""
           ntp_servers = ""
           if not self.dns_host1.value() == "":

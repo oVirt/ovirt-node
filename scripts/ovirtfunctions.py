@@ -781,11 +781,15 @@ def is_valid_ipv6(ip_address):
         return False
 
 def is_valid_hostname(hostname):
-    regex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
-    if re.match(regex, hostname):
+    regex_1 = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])\.)+([a-zA-Z0-9]{2,5})"
+    regex_2 = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
+    if re.match(regex_1, hostname):
         return True
     else:
-        return False
+        if re.match(regex_2, hostname):
+            return True
+        else:
+            return False
 
 def is_valid_nfs(nfs_entry):
     regex = "^([a-zA-Z0-9_\-]+)([\.][a-zA-Z0-9_\-]+)+([:][/][a-zA-Z0-9\~\(\)_\-]*)+([\.][a-zA-Z0-9\(\)_\-]+)*"
