@@ -205,6 +205,8 @@ class Plugin(PluginBase):
     def action(self):
         self.ncs.screen.setColor("BUTTON", "black", "red")
         self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+        if not network_up():
+            return False
         if len(self.rhn_user.value()) < 1 or len(self.rhn_pass.value()) < 1:
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "Login/Password must not be empty\n", buttons = ['Ok'])
             return False
