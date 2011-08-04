@@ -192,6 +192,17 @@ def is_booted_from_local_disk():
     else:
         return False
 
+def is_rescue_mode():
+    ret = os.system("grep -q rescue /proc/cmdline")
+    if ret == 0:
+        return True
+    # check for runlevel 1
+    else:
+        ret = os.system("runlevel|grep 1")
+        if ret == 0:
+            return True
+        return False
+
 # was firstboot menu already shown?
 # state is stored in persistent config partition
 def is_firstboot():

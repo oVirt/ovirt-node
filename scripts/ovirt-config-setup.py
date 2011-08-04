@@ -1603,7 +1603,10 @@ class NodeConfigScreen():
                 self.restore_console_colors()
 
 if __name__ == "__main__":
-    if is_booted_from_local_disk() or "--force" in sys.argv:
+    if is_rescue_mode():
+        print "Unable to run setup in rescue mode"
+        sys.exit(1)
+    elif is_booted_from_local_disk() or "--force" in sys.argv:
         screen = NodeConfigScreen()
         screen.start()
     else:
