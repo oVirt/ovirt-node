@@ -1083,6 +1083,7 @@ def password_check(password_1, password_2):
                   return (0, "You have provided a weak password!\nStrong passwords contain a mix of uppercase,\
                           lowercase, numeric and punctuation characters.\n\nThey are six or more characters long and \
                           do not contain dictionary words")
+              return (0, "\n\n\n\n\n\n")
           elif password_1 != "" and password_2 == "":
               return (1, "Please Confirm Password\n\n\n\n\n\n")
           return (1, "\n\n\n\n\n\n")
