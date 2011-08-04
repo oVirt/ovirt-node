@@ -700,7 +700,7 @@ start_ovirt_early () {
     if [ -n "$adminpw" ]; then
         log "Setting temporary admin password: $adminpw"
         unmount_config /etc/passwd /etc/shadow
-        /usr/sbin/usermod -p "$rootpw" admin
+        /usr/sbin/usermod -p "$adminpw" admin
         chage -d 0 admin
     fi
     if [ -n "$rootpw" ]; then
