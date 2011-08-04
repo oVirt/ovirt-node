@@ -474,6 +474,10 @@ start_ovirt_early () {
                 persist /etc/shadow /etc/passwd
             fi
             ;;
+            standalone=no | standalone=0 | ovirt_standalone=no | ovirt_standalone=0)
+            standalone=0
+            bootparams="$bootparams $i"
+            ;;
             standalone* | ovirt_standalone*)
             standalone=1
             bootparams="$bootparams $i"
