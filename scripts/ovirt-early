@@ -478,7 +478,7 @@ start_ovirt_early () {
             standalone=1
             bootparams="$bootparams $i"
             ;;
-            firstboot=no | firsboot=0 | ovirt_firstboot=no | ovirt_firstboot=0 | reinstall=0 | reinstall=no)
+            firstboot=no | firstboot=0 | ovirt_firstboot=no | ovirt_firstboot=0 | reinstall=0 | reinstall=no)
             firstboot=0
             ;;
             firstboot* | ovirt_firstboot* | reinstall)
