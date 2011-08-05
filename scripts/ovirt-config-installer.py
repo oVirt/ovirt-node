@@ -669,16 +669,21 @@ class NodeInstallScreen:
 
     def upgrade_node(self):
         gridform = GridForm(self.screen, "", 2, 2)
-        gridform.add(Label("Upgrading Hypervisor"), 0, 0, anchorLeft = 1)
+        # can also cover downgrading/reinstalling so changed to "updating"
+        gridform.add(Label("Updating Hypervisor"), 0, 0, anchorLeft = 1)
         progress_bar = Scale(50,100)
         progress_bar.set(75)
         gridform.add(progress_bar, 0, 1)
         gridform.draw()
         self.screen.refresh()
-        boot_setup = install.ovirt_boot_setup()
-        progress_bar.set(100)
-        self.__current_page = FINISHED_PAGE
-        return
+        root_pw_set = password.set_password(self.root_password_1.value(), "root")
+        if root_pw_set:
+            admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
+            if admin_pw_set:
+                boot_setup = install.ovirt_boot_setup()
+                progress_bar.set(100)
+                self.__current_page = FINISHED_PAGE
+                return
 
     def start(self):
         self.set_console_colors()
