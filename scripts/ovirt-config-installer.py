@@ -29,6 +29,7 @@ import dbus
 import fcntl
 import gudev
 import PAM
+import rpm
 
 QUIT_BUTTON = "Quit"
 BACK_BUTTON = "Back"
@@ -299,17 +300,16 @@ class NodeInstallScreen:
                     try:
                         e_version, e_release = get_installed_version_number()
                         e_full_ver = e_version + "-" + e_release
-                        if e_version <= m_version:
-                            if e_release < m_release:
-                                self.menu_list.append(" Upgrade " + e_full_ver + " to " + m_full_ver, 3)
-                                self.menu_list.append(" ", 4)
-                            else:
-                                self.menu_list.append(" Install " + PRODUCT_SHORT + " " +  m_full_ver, 1)
-                                self.menu_list.append(" ", 2)
+                        compare = rpm.labelCompare(('1', e_version, e_release), ('1', m_version, m_release))
+                        if compare == -1:
+                            self.menu_list.append(" Upgrade " + e_full_ver + " to " + m_full_ver, 3)
+                        elif compare == 1:
+                            self.menu_list.append(" Downgrade " + e_full_ver + " to " + m_full_ver, 3)
+                        else:
+                            self.menu_list.append(" Reinstall " + m_full_ver, 3)
                     except:
                         log("unable to get_version_numbers for upgrade")
                         pass
-
                 else:
                     self.menu_list.append("Major version upgrades are unsupported, uninstall existing version first", 0)
             else:
