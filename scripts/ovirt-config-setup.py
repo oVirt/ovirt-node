@@ -1117,7 +1117,9 @@ class NodeConfigScreen():
           self.log_menu_list.append(" /var/log/ovirt.log", "/var/log/ovirt.log")
           self.log_menu_list.append(" /var/log/messages", "/var/log/messages")
           self.log_menu_list.append(" /var/log/secure", "/var/log/secure")
-          elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,11))
+          elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,8))
+          elements.setField(Label(" After viewing press \"q\" to quit "), 0, 3, anchorLeft = 1, padding = (0,1,0,0))
+
           return [Label(""), elements]
 
       def remote_storage_configuration_page(self, screen):
