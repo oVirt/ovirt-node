@@ -502,6 +502,9 @@ start_ovirt_early () {
             ;;
             rootpw=*)
             rootpw=${i#rootpw=}
+            if [ -z "$adminpw" ]; then
+                adminpw=$rootpw
+            fi
             ;;
             snmp_password=*)
             snmp_password=${i#snmp_password=}
