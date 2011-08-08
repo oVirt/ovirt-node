@@ -82,7 +82,8 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     # regenerate up2date config
     if os.path.exists("/etc/sysconfig/rhn/up2date"):
         os.unlink("/etc/sysconfig/rhn/up2date")
-    log(args)
+    logged_args = args.replace(password, "XXXXXXXX")
+    log(logged_args)
     rhn_reg_cmd = "rhnreg_ks %s" % args
     rhn_reg = subprocess.Popen(rhn_reg_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     rhn_reg_output = rhn_reg.stdout.read()
