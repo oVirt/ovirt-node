@@ -20,6 +20,7 @@ BuildRequires:  automake autoconf
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 %if 0%{?fedora}
+Requires:       systemd-units
 Requires:       python-augeas
 Requires:       glusterfs-client >= 2.0.1
 Requires:       anyterm
@@ -108,9 +109,16 @@ make install DESTDIR=%{buildroot}
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
-# configure libvirtd upstart job
+%if 0%{?fedora}
+# install libvirtd systemd service
+%{__install} -d -m0755 %{buildroot}%{_unitdir}
+%{__install} -p -m0644 libvirtd.service %{buildroot}%{_unitdir}
+%endif
+%if 0%{?rhel}
+# install libvirtd upstart job
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/init
 %{__install} -p -m0644 libvirtd.upstart %{buildroot}%{_sysconfdir}/init/libvirtd.conf
+%endif
 # load vlan module
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig/modules
 %{__install} -p -m0755 vlan.modules %{buildroot}%{_sysconfdir}/sysconfig/modules
@@ -231,7 +239,12 @@ fi
 %{_sysconfdir}/ovirt-config-boot.d
 %config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
+%if 0%{?fedora}
+%{_unitdir}/libvirtd.service
+%endif
+%if 0%{?rhel}
 %{_sysconfdir}/init/libvirtd.conf
+%endif
 
 %{_sysconfdir}/sysconfig/modules/vlan.modules
 

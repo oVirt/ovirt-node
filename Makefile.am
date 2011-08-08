@@ -27,6 +27,7 @@ SUBDIRS =   \
 
 EXTRA_DIST = \
   vlan.modules \
+  libvirtd.service \
   libvirtd.upstart \
   ovirt-node.spec \
   ovirt-node.spec.in \
