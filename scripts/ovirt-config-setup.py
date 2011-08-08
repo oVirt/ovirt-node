@@ -1305,7 +1305,6 @@ class NodeConfigScreen():
               if self.root_password_1.value() != self.root_password_2.value():
                   ButtonChoiceWindow(self.screen, "Remote Access", "Passwords Do Not Match", buttons = ['Ok'])
               else:
-                  set_password(self.root_password_1.value(), "root")
                   set_password(self.root_password_1.value(), "admin")
                   ButtonChoiceWindow(self.screen, "Remote Access", "Password Successfully Changed", buttons = ['Ok'])
                   log("\nroot & admin password changed")

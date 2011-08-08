@@ -177,7 +177,7 @@ class NodeInstallScreen:
     def current_password_callback(self):
         auth = PAM.pam()
         auth.start("passwd")
-        auth.set_item(PAM.PAM_USER, "root")
+        auth.set_item(PAM.PAM_USER, "admin")
         global current_password
         current_password = self.current_password.value()
         auth.set_item(PAM.PAM_CONV, pam_conv)
@@ -590,7 +590,7 @@ class NodeInstallScreen:
         self.root_password_1 = Entry(15,password = 1)
         self.root_password_2 = Entry(15,password = 1)
 
-        if pwd_set_check("root"):
+        if pwd_set_check("admin"):
             elements.setField(Label(" "), 0, 1, anchorLeft = 1)
             elements.setField(Label("To reset password, please enter the current password "), 0, 2, anchorLeft = 1)
             pw_elements.setField(Label("Current Password: "), 0, 1, anchorLeft = 1)
@@ -649,23 +649,21 @@ class NodeInstallScreen:
             gridform.add(progress_bar, 0, 1)
             gridform.draw()
             self.screen.refresh()
-            root_pw_set = password.set_password(self.root_password_1.value(), "root")
-            if root_pw_set:
-                admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
-                if admin_pw_set:
-                    gridform.add(progress_bar, 0, 1)
-                    gridform.draw()
-                    self.screen.refresh()
-                    progress_bar.set(75)
-                    gridform = GridForm(self.screen, "", 2, 2)
-                    gridform.add(Label("Installing Bootloader Configuration on: " + self.storage_init ), 0, 0, anchorLeft = 1)
-                    gridform.add(progress_bar, 0, 1)
-                    gridform.draw()
-                    self.screen.refresh()
-                    boot_setup = install.ovirt_boot_setup()
-                    if boot_setup:
-                        progress_bar.set(100)
-                        self.__current_page = FINISHED_PAGE
+            admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
+            if admin_pw_set:
+                gridform.add(progress_bar, 0, 1)
+                gridform.draw()
+                self.screen.refresh()
+                progress_bar.set(75)
+                gridform = GridForm(self.screen, "", 2, 2)
+                gridform.add(Label("Installing Bootloader Configuration on: " + self.storage_init ), 0, 0, anchorLeft = 1)
+                gridform.add(progress_bar, 0, 1)
+                gridform.draw()
+                self.screen.refresh()
+                boot_setup = install.ovirt_boot_setup()
+                if boot_setup:
+                    progress_bar.set(100)
+                    self.__current_page = FINISHED_PAGE
 
     def upgrade_node(self):
         gridform = GridForm(self.screen, "", 2, 2)
@@ -676,14 +674,12 @@ class NodeInstallScreen:
         gridform.add(progress_bar, 0, 1)
         gridform.draw()
         self.screen.refresh()
-        root_pw_set = password.set_password(self.root_password_1.value(), "root")
-        if root_pw_set:
-            admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
-            if admin_pw_set:
-                boot_setup = install.ovirt_boot_setup()
-                progress_bar.set(100)
-                self.__current_page = FINISHED_PAGE
-                return
+        admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
+        if admin_pw_set:
+            boot_setup = install.ovirt_boot_setup()
+            progress_bar.set(100)
+            self.__current_page = FINISHED_PAGE
+            return
 
     def start(self):
         self.set_console_colors()
