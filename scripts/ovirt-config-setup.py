@@ -786,12 +786,18 @@ class NodeConfigScreen():
                           to_rem = to_rem + 1
                   else:
                       dev_vendor = dev_vendor.rstrip(dev_vendor[-to_rem:])
-                  dev_driver = os.readlink("/sys/class/net/" + dev_interface + "/device/driver")
-                  dev_driver = os.path.basename(dev_driver)
+                  # bridges will fail due to no driver
+                  try:
+                      dev_driver = os.readlink("/sys/class/net/" + dev_interface + "/device/driver")
+                      dev_driver = os.path.basename(dev_driver)
+                  except:
+                      pass
                   nic_addr_file = open("/sys/class/net/" + dev_interface + "/address")
                   dev_address = nic_addr_file.read().strip()
                   cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(dev_interface)
                   dev_bootproto = augtool_get(cmd)
+                  type_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/TYPE" % str(dev_interface)
+                  dev_type = augtool_get(type_cmd)
                   if dev_bootproto is None:
                       cmd = "/files/etc/sysconfig/network-scripts/ifcfg-br%s/BOOTPROTO" % str(dev_interface)
                       dev_bootproto = augtool_get(cmd)
@@ -804,10 +810,14 @@ class NodeConfigScreen():
                       dev_conf_status = "Configured  "
                   if dev_conf_status == "Configured  ":
                       self.configured_nics = self.configured_nics + 1
+                  if dev_type is None:
+                      type_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-br%s/TYPE" % str(dev_interface)
+                      dev_type = augtool_get(type_cmd)
               except:
                   pass
               if not dev_interface == "lo" and not dev_interface.startswith("br") and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
-                  self.nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status)
+                  if not dev_type == "Bridge":
+                      self.nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status)
           if len(self.nic_dict) > 5:
               self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 1)
           else:
