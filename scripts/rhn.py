@@ -217,7 +217,7 @@ class Plugin(PluginBase):
             username=self.rhn_user.value(),
             password=self.rhn_pass.value(),
             profilename=self.profilename.value(),
-            proxyhost=self.proxyhost.value(),
+            proxyhost=self.proxyhost.value()+ ":" + self.proxyport.value(),
             proxyuser=self.proxyuser.value(),
             proxypass=self.proxypass.value())
         if reg_rc == 0 and not False:
