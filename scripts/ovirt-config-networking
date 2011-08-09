@@ -21,6 +21,7 @@ NTPCONF_FILE_ROOT="/files/etc/ntp"
 NTP_CONFIG_FILE="/etc/ntp.conf"
 NTPSERVERS=""
 CONFIGURED_NIC=""
+CONFIGURED_NICS=""
 VLAN_ID=""
 VL_ROOT=""
 
@@ -561,12 +562,14 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
 
     config="$WORKDIR"/config-augtool
     cat "$WORKDIR"/augtool-* > $config
-    # must preserve current eth/MAC mapping for *all* network interfaces,
+    CONFIGURED_NICS="$CONFIGURED_NIC br$CONFIGURED_NIC"
+    if [ -n "${VLAN_ID}" ]; then
+        CONFIGURED_NICS="$CONFIGURED_NICS $CONFIGURED_NIC.$VLAN_ID"
+    fi
+    # preserve current MAC mappings for *all physical* network interfaces
     # to avoid dev$RANDOM rhbz#489927
-    # TODO use udev rules to persist network interfaces
-    for eth in $(ls -d /sys/class/net/eth*|grep -v '\.') ; do
-        nic=$(basename $eth)
-        mac=$(cat $eth/address)
+    for nic in $(ls -d /sys/class/net/*/device|cut -d/ -f5) ; do
+        mac=$(cat /sys/class/net/$nic/address)
         if [ -n "$nic" -a -n "$mac" ]; then
             if_root="$IFCONFIG_FILE_ROOT-$nic"
             printf "\nset $if_root/DEVICE $nic" >> $config
@@ -578,6 +581,7 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
             fi
             if [ ${CONFIGURED_NIC} != $nic ]; then
                 printf "\nset $if_root/ONBOOT no" >> $config
+                CONFIGURED_NICS="$CONFIGURED_NICS $nic"
             fi
             printf "\nset $if_root/HWADDR $mac" >> $config
             printf "\n" >> $config
@@ -588,9 +592,10 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
     if [ $? = 0 ]; then
         log "Network configured successfully"
         net_configured=1
-        ovirt_store_config \
-            /etc/sysconfig/network-scripts/ifcfg* \
-            $NTP_CONFIG_FILE
+        for nic in $CONFIGURED_NICS; do
+            ovirt_store_config /etc/sysconfig/network-scripts/ifcfg-$nic
+        done
+        ovirt_store_config $NTP_CONFIG_FILE
     else
         log "Error configuring network, see $OVIRT_LOGFILE"
         stop_log
@@ -601,6 +606,7 @@ stop_log
 
 if [ "$net_configured" = 1 ]; then
     service network stop > /dev/null 2>&1
+    # XXX eth assumed in breth
     for i in `brctl show | grep breth | awk '{print $1}'`
     do
       ifconfig $i down

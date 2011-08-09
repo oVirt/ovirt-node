@@ -17,6 +17,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirtnode.ovirtfunctions import *
+from glob import glob
 import tempfile
 import sys
 
@@ -25,12 +26,12 @@ class Network:
     def __init__(self):
         OVIRT_VARS = parse_defaults()
         self.WORKDIR=tempfile.mkdtemp()
-        self.IFSCRIPTS_PATH ="/etc/sysconfig/network-scripts/"
-        self.IFCONFIG_FILE_ROOT="/files/etc/sysconfig/network-scripts/ifcfg"
-        self.NTPCONF_FILE_ROOT="/files/etc/ntp"
+        self.IFSCRIPTS_PATH ="/etc/sysconfig/network-scripts/ifcfg-"
+        self.IFCONFIG_FILE_ROOT="/files%s" % self.IFSCRIPTS_PATH
         self.NTP_CONFIG_FILE="/etc/ntp.conf"
         self.NTPSERVERS=""
-        self.CONFIGURED_NIC= ""
+        self.CONFIGURED_NIC = ""
+        self.CONFIGURED_NICS = []
         self.IF_CONFIG = ""
         self.BR_CONFIG = ""
         self.VL_CONFIG = ""
@@ -62,13 +63,15 @@ class Network:
         nic_hwaddr = n_address.readline().strip("\n")
         n_address.close()
         BRIDGE = "br" + self.CONFIGURED_NIC
+        self.CONFIGURED_NICS.append(self.CONFIGURED_NIC)
+        self.CONFIGURED_NICS.append(BRIDGE)
         IF_FILENAME = self.WORKDIR + "/augtool-" + self.CONFIGURED_NIC
         BR_FILENAME = self.WORKDIR + "/augtool-" + BRIDGE
         log("\nConfigure $BRIDGE for use by $NIC..\n\n")
-        IF_ROOT = "%s-%s" % (self.IFCONFIG_FILE_ROOT, self.CONFIGURED_NIC)
+        IF_ROOT = "%s%s" % (self.IFCONFIG_FILE_ROOT, self.CONFIGURED_NIC)
         self.IF_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (IF_ROOT, IF_ROOT, self.CONFIGURED_NIC)
         self.IF_CONFIG += "set %s/HWADDR %s\n" % (IF_ROOT, nic_hwaddr)
-        BR_ROOT = "%s-%s" % (self.IFCONFIG_FILE_ROOT, BRIDGE)
+        BR_ROOT = "%s%s" % (self.IFCONFIG_FILE_ROOT, BRIDGE)
         self.BR_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (BR_ROOT, BR_ROOT, BRIDGE)
         self.BR_CONFIG += "set %s/TYPE Bridge\n" % BR_ROOT
         self.BR_CONFIG += "set %s/PEERNTP yes\n" % BR_ROOT
@@ -96,6 +99,7 @@ class Network:
 
 
         if OVIRT_VARS.has_key("OVIRT_VLAN"):
+            self.CONFIGURED_NICS.append("%s.%s" % (self.CONFIGURED_NIC, VLAN_ID))
             VLAN_ID=OVIRT_VARS["OVIRT_VLAN"]
             VL_ROOT = "%s.%s" % (IF_ROOT, VLAN_ID)
             self.VL_CONFIG += "rm %s\n" % VL_ROOT
@@ -187,16 +191,17 @@ class Network:
         log("Configuring network")
         os.system("ifdown br" + self.CONFIGURED_NIC)
         for vlan in os.listdir("/proc/net/vlan/"):
+            # XXX wrong match e.g. eth10.1 with eth1
             if self.CONFIGURED_NIC in vlan:
                 os.system("vconfig rem " + vlan + "&> /dev/null")
                 ovirt_safe_delete_config(self.IFSCRIPTS_PATH + vlan)
                 os.system("rm -rf " + self.IFSCRIPTS_PATH + vlan)
 
-        for script in os.listdir(self.IFSCRIPTS_PATH):
-            if self.CONFIGURED_NIC in script:
-                log("Removing Script: " + script)
-                ovirt_safe_delete_config("/etc/sysconfig/network-scripts/" + script)
-        augtool("rm", "/files/etc/sysconfig/network-scripts/ifcfg-br"+self.CONFIGURED_NIC, "")
+        for script in glob("%s%s*" % (self.IFSCRIPTS_PATH, self.CONFIGURED_NIC)):
+            # XXX wrong match e.g. eth10 with eth1* (need * to cover VLANs)
+            log("Removing Script: " + script)
+            ovirt_safe_delete_config(script)
+        augtool("rm", self.IFCONFIG_FILE_ROOT+"br"+self.CONFIGURED_NIC, "")
 
         for line in self.IF_CONFIG:
             log(line)
@@ -231,15 +236,30 @@ class Network:
                 except:
                     pass
 
+        # preserve current MAC mappings for *all physical* network interfaces
+        for nicdev in glob('/sys/class/net/*/device'):
+            nic=nicdev.split('/')[4]
+            if nic != self.CONFIGURED_NIC:
+                f=open('/sys/class/net/%s/address' % nic)
+                mac=f.read().strip()
+                f.close()
+                if len(mac) > 0:
+                    self.CONFIGURED_NICS.append(nic)
+                    nicroot = "%s%s" % (self.IFCONFIG_FILE_ROOT, nic)
+                    # XXX augtool does save every time!
+                    augtool("set", "%s/DEVICE" % nicroot, nic)
+                    augtool("set", "%s/HWADDR" % nicroot, mac)
+                    augtool("set", "%s/ONBOOT" % nicroot, "no")
+
         net_configured=1
-        for i in os.listdir("/etc/sysconfig/network-scripts/"):
-            if "ifcfg" in i:
-                ovirt_store_config("/etc/sysconfig/network-scripts/" + i)
+        for nic in self.CONFIGURED_NICS:
+            ovirt_store_config("%s%s" % (self.IFSCRIPTS_PATH, nic) )
         ovirt_store_config(self.NTP_CONFIG_FILE)
         log("Network configured successfully")
         if net_configured == 1:
             log("\nStopping Network service")
             os.system("service network stop &> /dev/null")
+            # XXX eth assumed in breth
             brctl_cmd = "brctl show|grep breth|awk '{print $1}'"
             brctl = subprocess.Popen(brctl_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             brctl_output = brctl.stdout.read()

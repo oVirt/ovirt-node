@@ -100,19 +100,6 @@ OVIRT_BACKUP_DIR="/var/lib/ovirt-backup"
 
 MANAGEMENT_SCRIPTS_DIR="/etc/node.d"
 
-OVIRT_CONFIG_FILES = ["/etc/sysconfig/network-scripts/ifcfg-*", \
-                      "/etc/rsyslog.conf", \
-                      "/etc/libvirt/libvirtd.conf", \
-                      "/etc/sasl2/libvirt.conf", \
-                      "/etc/libvirt/passwd.db", \
-                      "/etc/passwd", \
-                      "/etc/shadow", \
-                      "/etc/ssh/ssh_host*_key*", \
-                      "/etc/default/ovirt", \
-                      "/etc/sysconfig/network", \
-                      "/etc/collectd.conf", \
-                      "/etc/logrotate.d/ovirt-logrotate.conf" ]
-
 def log(log_entry):
     if is_firstboot():
         log_file = open(OVIRT_TMP_LOGFILE, "a")
