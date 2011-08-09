@@ -165,11 +165,11 @@ class Network:
         ntpconf = ntpconf.split("\n")
         for line in ntpconf:
             try:
-                oper, file, value = line.split()
+                oper, key, value = line.split()
+                augtool(oper, key, value)
             except:
-                oper, file = line.split()
-            
-            augtool(oper, line, "")
+                oper, key = line.split()
+                augtool(oper, key, "")
 
         if OVIRT_VARS.has_key("OVIRT_NTP"):
             offset=1
@@ -201,33 +201,33 @@ class Network:
         for line in self.IF_CONFIG:
             log(line)
             try:
-                oper, file, value = line.split()
-                augtool(oper, file, value)
+                oper, key, value = line.split()
+                augtool(oper, key, value)
             except:
-                oper, file = line.split()
-                augtool(oper, line, "")
+                oper, key = line.split()
+                augtool(oper, key, "")
 
         for line in self.BR_CONFIG:
             log(line)
             try:
-                oper, file, value = line.split()
-                augtool(oper, file, value)
+                oper, key, value = line.split()
+                augtool(oper, key, value)
             except:
                 try:
-                    oper, file = line.split()
-                    augtool(oper, line, "")
+                    oper, key = line.split()
+                    augtool(oper, key, "")
                 except:
                     pass
 
         for line in self.VL_CONFIG.split("\n"):
             log(line)
             try:
-                oper, file, value = line.split()
-                augtool(oper, file, value)
+                oper, key, value = line.split()
+                augtool(oper, key, value)
             except:
                 try:
-                    oper, file = line.split()
-                    augtool(oper, line, "")
+                    oper, key = line.split()
+                    augtool(oper, key, "")
                 except:
                     pass
 
