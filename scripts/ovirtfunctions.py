@@ -129,8 +129,8 @@ def augtool_get(key):
     return value
 # return 1 if oVirt Node is running in standalone mode
 # return 0 if oVirt Node is managed by the oVirt Server
-def is_managed(bootparams):
-    if "ovirt_standalone" in bootparams:
+def is_managed():
+    if "ovirt_standalone" in OVIRT_VARS["OVIRT_BOOTPARAMS"]:
         return False
     else:
         return True

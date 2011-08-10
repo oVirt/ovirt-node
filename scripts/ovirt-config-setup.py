@@ -1570,13 +1570,12 @@ class NodeConfigScreen():
                                 self.__current_page = menu_choice
                             if self.net_apply_config == 1:
                                 self.net_apply_config = 0
-                                self.__current_page = NETWORK_PAGE
                         elif self.__current_page == NETWORK_DETAILS_PAGE:
                             if pressed == BACK_BUTTON:
                                 self.__current_page = NETWORK_PAGE
                             elif self.net_apply_config == 1:
                                 self.__current_page = NETWORK_PAGE
-                            elif is_managed(OVIRT_VARS["OVIRT_BOOTPARAMS"]):
+                            elif is_managed():
                                 dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status = self.nic_dict[self.nic_lb.current()].split(",", 5)
                                 if self.configured_nics >= 1 and dev_conf_status != "Configured" :
                                     ButtonChoiceWindow(self.screen, "Network", "Hypervisor is already managed, unable to configure additional nics", buttons = ['Ok'])
@@ -1584,7 +1583,7 @@ class NodeConfigScreen():
                             elif self.__nic_config_failed == 1:
                                 self.__current_page = NETWORK_DETAILS_PAGE
                             else:
-                               self.__current_page = NETWORK_PAGE
+                               self.__current_page = menu_choice
                         elif self.__current_page == SUPPORT_PAGE:
                            log("pressed: " + str(pressed))
                            if pressed == SHELL_BUTTON:
