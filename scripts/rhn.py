@@ -153,6 +153,7 @@ class Plugin(PluginBase):
         self.rhn_url.setCallback(self.rhn_url_callback)
         rhn_grid.setField(self.rhn_url, 1, 0, anchorLeft = 1, padding=(1, 0, 0, 0))
         self.rhn_ca = Entry(40, "")
+        self.rhn_ca.setCallback(self.rhn_ca_callback)
         rhn_grid.setField(Label("CA : "), 0, 1, anchorLeft = 1)
         rhn_grid.setField(self.rhn_ca, 1, 1, anchorLeft = 1, padding=(1, 0, 0, 0))
         elements.setField(rhn_grid, 0, 7, anchorLeft = 1, padding = (0, 0, 0, 1))
@@ -208,6 +209,9 @@ class Plugin(PluginBase):
         self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
         if not network_up():
             return False
+        if self.rhn_satellite.value() == 1 and self.rhn_ca.value() == "":
+            ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "Please input a CA certificate URL", buttons = ['Ok'])
+            return False
         if len(self.rhn_user.value()) < 1 or len(self.rhn_pass.value()) < 1:
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "Login/Password must not be empty\n", buttons = ['Ok'])
             return False
@@ -232,7 +236,6 @@ class Plugin(PluginBase):
             else:
                 msg = "Check ovirt.log for details"
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "RHN Configuration Failed\n\n" + msg, buttons = ['Ok'])
-#            self.ncs.reset_screen_colors()
             return False
 
     def rhn_url_callback(self):
@@ -243,6 +246,19 @@ class Plugin(PluginBase):
             ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
         if self.rhn_satellite.value() == 1:
             host = self.rhn_url.value().replace("/XMLRPC","")
+
+    def rhn_ca_callback(self):
+        # TODO URL validation
+        msg = ""
+        if not self.rhn_ca.value() == "":
+            if not is_valid_url(self.rhn_ca.value()):
+                msg = "Invalid URL"
+        elif self.rhn_ca.value() == "":
+            msg = "Please input a CA certificate URL"
+        if not msg == "":
+            self.ncs.screen.setColor("BUTTON", "black", "red")
+            self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+            ButtonChoiceWindow(self.ncs.screen, "Configuration Check", msg, buttons = ['Ok'])
 
     def get_rhn_config(self):
         if os.path.exists(RHN_CONFIG_FILE):
@@ -269,8 +285,6 @@ class Plugin(PluginBase):
         self.rhn_satellite.setValue(" 0")
         self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-        #self.rhn_url.set("https://xmlrpc.rhn.redhat.com/XMLRPC")
-        #self.rhn_ca.set("/usr/share/rhn/RHNS-CA-CERT")
 
     def rhn_satellite_callback(self):
         self.public_rhn.setValue(" 0")
