@@ -774,6 +774,7 @@ class NodeConfigScreen():
               try:
                   dev_interface = device.get_property("INTERFACE")
                   dev_vendor = device.get_property("ID_VENDOR_FROM_DATABASE")
+                  dev_type = device.get_property("DEVTYPE")
                   try:
                       dev_vendor = dev_vendor.replace(",", "")
                   except AttributeError:
@@ -797,9 +798,10 @@ class NodeConfigScreen():
                   cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(dev_interface)
                   dev_bootproto = augtool_get(cmd)
                   type_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/TYPE" % str(dev_interface)
-                  dev_type = augtool_get(type_cmd)
+                  bridge_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BRIDGE" % str(dev_interface)
+                  dev_bridge =  augtool_get(bridge_cmd)
                   if dev_bootproto is None:
-                      cmd = "/files/etc/sysconfig/network-scripts/ifcfg-br%s/BOOTPROTO" % str(dev_interface)
+                      cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(dev_bridge)
                       dev_bootproto = augtool_get(cmd)
                       if dev_bootproto is None:
                           dev_bootproto = "Disabled"
@@ -810,20 +812,17 @@ class NodeConfigScreen():
                       dev_conf_status = "Configured  "
                   if dev_conf_status == "Configured  ":
                       self.configured_nics = self.configured_nics + 1
-                  if dev_type is None:
-                      type_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-br%s/TYPE" % str(dev_interface)
-                      dev_type = augtool_get(type_cmd)
               except:
                   pass
-              if not dev_interface == "lo" and not dev_interface.startswith("br") and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
-                  if not dev_type == "Bridge":
-                      self.nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status)
+              if not dev_interface == "lo" and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
+                  if not dev_type == "bridge":
+                      self.nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status,dev_bridge)
           if len(self.nic_dict) > 5:
               self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 1)
           else:
               self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 0)
           for key in sorted(self.nic_dict.iterkeys()):
-              dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status = self.nic_dict[key].split(",", 5)
+              dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status,dev_bridge = self.nic_dict[key].split(",", 6)
               to_rem = len(dev_vendor) - 10
               # if negative pad name space
               if to_rem < 1:
@@ -861,7 +860,8 @@ class NodeConfigScreen():
               link_status = "Active"
           else:
               link_status = "Inactive"
-          interface,bootproto,vendor,address,driver,conf_status = self.nic_dict[self.nic_lb.current()].split(",", 5)
+          dev = self.nic_lb.current()
+          interface,bootproto,vendor,address,driver,conf_status,dev_bridge = self.nic_dict[dev].split(",", 6)
           nic_detail_grid = Grid(6, 10)
           nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft = 1, padding=(0,0,1,0))
           nic_detail_grid.setField(Label("Protocol:    "), 0, 2, anchorLeft = 1, padding=(0,0,1,0))
@@ -901,28 +901,24 @@ class NodeConfigScreen():
           self.ipv4_netdevmask.setCallback(self.ipv4_netmask_callback)
           self.ipv4_netdevgateway = Entry(16, "", scroll = 0)
           self.ipv4_netdevgateway.setCallback(self.ipv4_gateway_callback)
+          if not dev_bridge is None:
+              dev = dev_bridge
           if "OVIRT_IP_ADDRESS" in OVIRT_VARS:
               self.ipv4_netdevip.set(OVIRT_VARS["OVIRT_IP_ADDRESS"])
           else:
-              current_ip = get_ip_address(self.nic_lb.current())
-              if current_ip == "":
-                  current_ip = get_ip_address("br" + self.nic_lb.current())
+              current_ip = get_ip_address(dev)
               if current_ip != "":
                   self.ipv4_netdevip.set(current_ip)
           if "OVIRT_IP_NETMASK" in OVIRT_VARS:
               self.ipv4_netdevmask.set(OVIRT_VARS["OVIRT_IP_NETMASK"])
           else:
-              current_netmask = get_netmask(self.nic_lb.current())
-              if current_netmask == "":
-                  current_netmask = get_netmask("br" + self.nic_lb.current())
-              if current_ip != "":
+              current_netmask = get_netmask(dev)
+              if current_netmask != "":
                   self.ipv4_netdevmask.set(current_netmask)
           if "OVIRT_IP_GATEWAY" in OVIRT_VARS:
               self.ipv4_netdevgateway.set(OVIRT_VARS["OVIRT_IP_GATEWAY"])
           else:
-              current_gateway = get_gateway(self.nic_lb.current())
-              if current_gateway == "":
-                  current_gateway = get_gateway("br" + self.nic_lb.current())
+              current_gateway = get_gateway(dev)
               if is_valid_ipv4(current_gateway) or is_valid_ipv6(current_gateway):
                   self.ipv4_netdevgateway.set(current_gateway)
           ipv4_grid = Grid (5,3)
@@ -1576,10 +1572,7 @@ class NodeConfigScreen():
                             elif self.net_apply_config == 1:
                                 self.__current_page = NETWORK_PAGE
                             elif is_managed():
-                                dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status = self.nic_dict[self.nic_lb.current()].split(",", 5)
-                                if self.configured_nics >= 1 and dev_conf_status != "Configured" :
-                                    ButtonChoiceWindow(self.screen, "Network", "Hypervisor is already managed, unable to configure additional nics", buttons = ['Ok'])
-                                    self.__current_page = NETWORK_PAGE
+                                self.__current_page = NETWORK_PAGE
                             elif self.__nic_config_failed == 1:
                                 self.__current_page = NETWORK_DETAILS_PAGE
                             else:
