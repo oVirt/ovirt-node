@@ -723,7 +723,7 @@ class NodeConfigScreen():
           hostname = os.uname()[1]
           self.net_hostname = Entry(35, hostname)
           self.net_hostname.setCallback(self.valid_hostname_callback)
-
+          self.ntp_dhcp = 0
           hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft = 1, padding=(0,0,0,0))
           grid.setField(hostname_grid, 0, 3, anchorLeft=1)
           dns_grid = Grid(2,2)
@@ -817,6 +817,8 @@ class NodeConfigScreen():
               if not dev_interface == "lo" and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
                   if not dev_type == "bridge":
                       self.nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status,dev_bridge)
+                      if dev_bootproto == "dhcp":
+                          self.ntp_dhcp = 1
           if len(self.nic_dict) > 5:
               self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 1)
           else:
@@ -851,6 +853,9 @@ class NodeConfigScreen():
               for item in self.dns_host1, self.dns_host2, self.ntp_host1, self.ntp_host2:
                   item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
               self.heading.setText("Managed by RHEV-M (Read Only)")
+          if self.ntp_dhcp == 1:
+              for item in self.ntp_host1, self.ntp_host2:
+                  item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
           return [Label(""),
                   grid]
 
