@@ -317,6 +317,7 @@ function configure_interface
 		if [ -z "$VL_CONFIG" ]; then
                     IF_CONFIG="${IF_CONFIG}\nset ${IF_ROOT}/BRIDGE ${BRIDGE}"
 		fi
+                BR_CONFIG="${BR_CONFIG}\nset ${BR_ROOT}/BOOTPROTO static"
                 BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/IPADDR $OVIRT_IP_ADDRESS"
                 if [ -n "$OVIRT_IP_NETMASK" ]; then
                     BR_CONFIG="$BR_CONFIG\nset $BR_ROOT/NETMASK $OVIRT_IP_NETMASK"
