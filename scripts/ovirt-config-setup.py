@@ -775,6 +775,19 @@ class NodeConfigScreen():
                   dev_interface = device.get_property("INTERFACE")
                   dev_vendor = device.get_property("ID_VENDOR_FROM_DATABASE")
                   dev_type = device.get_property("DEVTYPE")
+                  dev_path = device.get_property("DEVPATH")
+                  try:
+                      dev_vendor = dev_vendor.replace(",", "")
+                  except AttributeError:
+                      try:
+                          # rhevh workaround since udev version doesn't have vendor info
+                          dev_path = dev_path.split('/')
+                          pci_dev = dev_path[5].lstrip("0000:")
+                          pci_lookup_cmd = " lspci|grep %s|awk -F \":\" {'print $3'}" % pci_dev
+                          pci_lookup = subprocess.Popen(pci_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                          dev_vendor = pci_lookup.stdout.read().strip()
+                      except:
+                          dev_vendor = "unknown"
                   try:
                       dev_vendor = dev_vendor.replace(",", "")
                   except AttributeError:
