@@ -1029,7 +1029,11 @@ class NodeConfigScreen():
           grid.setField(Label(" "), 0, 4, anchorLeft = 1)
           grid.setField(ipv4_main_grid, 0, 5, anchorLeft = 1)
           grid.setField(Label(" "), 0, 6, anchorLeft = 1)
-          grid.setField(ipv6_main_grid, 0, 7, anchorLeft = 1)
+          # only display ipv6 settings if OVIRT_IPV6 key is in defaults file
+          if OVIRT_VARS.has_key("OVIRT_IPV6"):
+              grid.setField(ipv6_main_grid, 0, 7, anchorLeft = 1)
+          else:
+              grid.setField(Label(" "), 0, 7, anchorLeft = 1, padding=(0,4,0,0))
           grid.setField(Label(" "), 0, 8, anchorLeft = 1)
           vlan_grid = Grid(2,2)
           self.netvlanid = Entry(4, "", scroll = 0)
