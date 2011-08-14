@@ -2,7 +2,7 @@
 # install.py - Copyright (C) 2010 Red Hat, Inc.
 # Written by Joey Boggs <jboggs@redhat.com>
 #
-# This program is free software; you can redistribute it and/or modify
+# This program is free softwaee; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; version 2 of the License.
 #
@@ -37,6 +37,7 @@ import traceback
 import os
 import stat
 import subprocess
+import re
 OVIRT_VARS = parse_defaults()
 
 def ovirt_boot_setup():
@@ -47,7 +48,25 @@ def ovirt_boot_setup():
             log("done.")
             return True
 
+    if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
+        initrd_dest = "/boot"
+        grub_dir = "/boot/grub"
+        grub_prefix = "/grub"
+    else:
+        initrd_dest = "/liveos"
+        grub_dir = "/liveos/grub"
+        grub_prefix = "/grub"
+
+    oldtitle=None
     if os.path.ismount("/liveos"):
+        if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
+            f=open("/liveos/grub/grub.conf")
+            oldgrub=f.read()
+            f.close()
+            m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
+            if m is not None:
+                oldtitle=m.group(1)
+
         system("umount /liveos")
     candidate=""
     if findfs("Boot"):
@@ -128,14 +147,6 @@ def ovirt_boot_setup():
     else:
         return False
 
-    if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
-        initrd_dest = "/boot"
-        grub_dir = "/boot/grub"
-        grub_prefix = "/grub"
-    else:
-        initrd_dest = "/liveos"
-        grub_dir = "/liveos/boot/grub"
-        grub_prefix = "/boot/grub"
     if os.path.isdir(grub_dir):
         shutil.rmtree(grub_dir)
     if not os.path.exists(grub_dir):
@@ -156,11 +167,13 @@ def ovirt_boot_setup():
             return False
     # reorder tty0 to allow both serial and phys console after installation
     if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
-        bootparams="ro root=LABEL=ovirt-node-root rootfstype=ext3 rootflags=ro console=tty0 \
+        root_param="root=LABEL=ovirt-node-root"
+        bootparams="ro rootfstype=ext2 rootflags=ro console=tty0 \
                     netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
     else:
-        bootparams="ro root=live:LABEL=Root rootfstype=auto rootflags=ro  "
-        bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
+        root_param="root=live:LABEL=Root"
+        bootparams="ro rootfstype=auto rootflags=ro "
+    bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
     if " " in disk or os.path.exists("/dev/cciss"):
         # workaround for grub setup failing with spaces in dev.name:
         # use first active sd* device
@@ -179,16 +192,6 @@ def ovirt_boot_setup():
         log(partprobe_cmd)
         system(partprobe_cmd)
 
-    grub_config_file = "%s/grub.conf" % grub_dir
-    GRUB_CONFIG_TEMPLATE = """
-default=0
-timeout=5
-hiddenmenu
-title %(product)s %(version)s-%(release)s
-    root (hd0,%(partN)s)
-    kernel /vmlinuz0 %(bootparams)s
-    initrd /initrd0.img
-    """
     if not disk.startswith("/dev/"):
         disk = "/dev/" + disk
     try:
@@ -215,9 +218,24 @@ title %(product)s %(version)s-%(release)s
     device_map_conf.write(device_map)
     device_map_conf.close()
 
+    GRUB_CONFIG_TEMPLATE = """
+default saved
+timeout 5
+hiddenmenu
+title %(product)s %(version)s-%(release)s
+    root (hd0,%(partN)d)
+    kernel /vmlinuz0 %(root_param)s %(bootparams)s
+    initrd /initrd0.img
+    """
+    GRUB_BACKUP_TEMPLATE = """
+title BACKUP %(oldtitle)s
+    root (hd0,%(partB)d)
+    kernel /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
+    initrd /initrd0.img
+    """
     GRUB_SETUP_TEMPLATE = """
     grub --device-map=%(grub_dir)s/device.map <<EOF
-root (hd0,%(partN)s)
+root (hd0,%(partN)d)
 setup --prefix=%(grub_prefix)s (hd0)
 EOF
 """
@@ -227,27 +245,38 @@ EOF
         "version" : PRODUCT_VERSION,
         "release" : PRODUCT_RELEASE,
         "partN" : partN,
+        "root_param" : root_param,
         "bootparams" : bootparams,
         "disk" : disk,
         "grub_dir" : grub_dir,
         "grub_prefix" : grub_prefix
     }
-    grub_config_out = GRUB_CONFIG_TEMPLATE % grub_dict
+    grub_config_file = "%s/grub.conf" % grub_dir
+    grub_conf = open(grub_config_file, "w")
+    grub_conf.write(GRUB_CONFIG_TEMPLATE % grub_dict)
+    if oldtitle is not None:
+        partB=0
+        if partN == 0:
+            partB=1
+        grub_dict['oldtitle']=oldtitle
+        grub_dict['partB']=partB
+        grub_conf.write(GRUB_BACKUP_TEMPLATE % grub_dict)
+    grub_conf.close()
+    for f in ["stage1", "stage2", "e2fs_stage1_5"]:
+        system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f, grub_dir))
     grub_setup_out = GRUB_SETUP_TEMPLATE % grub_dict
     log(grub_setup_out)
-    grub_conf = open(grub_config_file, "w")
-    grub_conf.write(grub_config_out)
-    grub_conf.close()
-    grub_files = ["stage1", "stage2", "e2fs_stage1_5"]
-    for file in grub_files:
-        system("cp /usr/share/grub/x86_64-redhat/" + file + " " + grub_dir)
     grub_setup = subprocess.Popen(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     grub_results = grub_setup.stdout.read()
     log(grub_results)
     if grub_setup.wait() != 0 or "Error" in grub_results:
         log("GRUB setup failed")
         return False
-    if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
+    if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") \
+       and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
+        # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
+        shutil.copy(OVIRT_DEFAULTS, "/boot")
+    else:
         system("sync")
         system("sleep 2")
         system("umount /liveos")
@@ -256,17 +285,12 @@ EOF
         if not system(e2label_cmd):
             log("Unable to relabel " + candidate_dev + " to RootUpdate ")
             return False
-    if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
-        # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
-        shutil.copy(OVIRT_DEFAULTS, "/boot")
-    system("e2label /dev/disk/by-label/RootNew RootUpdate")
     disable_firstboot()
-    if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
-        if OVIRT_VARS["OVIRT_ISCSI_ENABLED"] != "y":
-            ovirt_store_firstboot_config()
     if finish_install():
         log("done.")
         return True
+    else:
+        return False
 
 def Usage():
 
@@ -297,8 +321,5 @@ if __name__ == "__main__":
     if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
         log("done.")
     elif ovirt_boot_setup() and doreboot == "yes":
-        disable_firstboot()
-        if OVIRT_VARS["OVIRT_ISCSI_ENABLED"] != "y":
-            ovirt_store_firstboot_config()
         reboot()
 
