@@ -90,6 +90,7 @@ start_ovirt_firstboot ()
     fi
 
     if is_upgrade; then
+        plymouth --hide-splash
         mount_live
         check_version
         /usr/libexec/ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
