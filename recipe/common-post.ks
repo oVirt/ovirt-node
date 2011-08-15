@@ -225,3 +225,9 @@ mkdir -p /root/.virt-manager /home/admin/.virt-manager
 
 #symlink virt-manager-tui pointer file to .pyc version
 sed -i "s/tui.py/tui.pyc/g" /usr/bin/virt-manager-tui
+
+#set NETWORKING off by default
+augtool << \EOF_NETWORKING
+set /files/etc/sysconfig/network/NETWORKING no
+save
+EOF_NETWORKING

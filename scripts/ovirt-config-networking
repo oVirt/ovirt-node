@@ -563,6 +563,7 @@ if ls "$WORKDIR"/augtool-* > /dev/null 2>&1 ; then
 
     config="$WORKDIR"/config-augtool
     cat "$WORKDIR"/augtool-* > $config
+    echo "set /files/etc/sysconfig/network/NETWORKING yes" >> $config
     CONFIGURED_NICS="$CONFIGURED_NIC br$CONFIGURED_NIC"
     if [ -n "${VLAN_ID}" ]; then
         CONFIGURED_NICS="$CONFIGURED_NICS $CONFIGURED_NIC.$VLAN_ID"

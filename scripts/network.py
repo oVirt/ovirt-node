@@ -184,6 +184,9 @@ class Network:
                 elif offset == 2:
                     augtool("set", "/files/etc/ntp.conf/server[2]", server)
                 offset = offset + 1
+            os.system("service ntpd stop &> /dev/null")
+            os.system("service ntpdate start &> /dev/null")
+            os.system("service ntpd start &> /dev/null")
 
     def save_network_configuration(self):
         net_configured=0
@@ -255,10 +258,13 @@ class Network:
         for nic in self.CONFIGURED_NICS:
             ovirt_store_config("%s%s" % (self.IFSCRIPTS_PATH, nic) )
         ovirt_store_config(self.NTP_CONFIG_FILE)
+        augtool("set", "/files/etc/sysconfig/network/NETWORKING", "yes")
+        ovirt_store_config("/etc/sysconfig/network")
         log("Network configured successfully")
         if net_configured == 1:
-            log("\nStopping Network service")
+            log("\nStopping Network services")
             os.system("service network stop &> /dev/null")
+            os.system("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
             brctl_cmd = "brctl show|grep breth|awk '{print $1}'"
             brctl = subprocess.Popen(brctl_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -270,6 +276,8 @@ class Network:
                 os.system(del_br_cmd)
             log("\nStarting Network service")
             os.system("service network start &> /dev/null")
+            os.system("service ntpdate start &> /dev/null")
+            os.system("service ntpd start &> /dev/null")
             if OVIRT_VARS.has_key("NTP"):
                 log("Testing NTP Configuration")
                 test_ntp_configuration()
