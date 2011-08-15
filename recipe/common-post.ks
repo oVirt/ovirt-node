@@ -47,6 +47,7 @@ function mod_vi() {
 alias vi="mod_vi"
 alias ping='ping -c 3'
 export MALLOC_CHECK_=1
+export LVM_SUPPRESS_FD_WARNINGS=0
 EOF_bashrc
 
 # directories required in the image with the correct perms
