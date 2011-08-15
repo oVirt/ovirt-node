@@ -322,14 +322,14 @@ class Storage:
         if self.CONFIG_SIZE > 0:
             log("Creating config partition")
             system("lvcreate --name Config --size "+str(self.CONFIG_SIZE)+"M /dev/HostVG")
-            system("mke2fs -j /dev/HostVG/Config -L \"CONFIG\"")
+            system("mke2fs -j -t ext4 /dev/HostVG/Config -L \"CONFIG\"")
             system("tune2fs -c 0 -i 0 /dev/HostVG/Config")
         if self.LOGGING_SIZE > 0:
             log("Creating log partition")
             system("lvcreate --name Logging --size "+str(self.LOGGING_SIZE)+"M /dev/HostVG")
-            system("mke2fs -j /dev/HostVG/Logging -L \"LOGGING\"")
+            system("mke2fs -j -t ext4 /dev/HostVG/Logging -L \"LOGGING\"")
             system("tune2fs -c 0 -i 0 /dev/HostVG/Logging")
-            os.system("echo \"/dev/HostVG/Logging /var/log ext3 defaults,noatime 0 0\" >> /etc/fstab")
+            os.system("echo \"/dev/HostVG/Logging /var/log ext4 defaults,noatime 0 0\" >> /etc/fstab")
         use_data=1
         if self.DATA_SIZE == -1:
             log("Creating data partition with remaining free space")
@@ -340,9 +340,9 @@ class Storage:
             system("lvcreate --name Data --size "+str(self.DATA_SIZE)+"M /dev/HostVG")
             use_data=0
         if use_data == 0:
-            system("mke2fs -j /dev/HostVG/Data -L \"DATA\"")
+            system("mke2fs -j -t ext4 /dev/HostVG/Data -L \"DATA\"")
             system("tune2fs -c 0 -i 0 /dev/HostVG/Data")
-            os.system("echo \"/dev/HostVG/Data /data ext3 defaults,noatime 0 0\" >> /etc/fstab")
+            os.system("echo \"/dev/HostVG/Data /data ext4 defaults,noatime 0 0\" >> /etc/fstab")
             os.system("echo \"/data/images /var/lib/libvirt/images bind bind 0 0\" >> /etc/fstab")
             os.system("echo \"/data/core /var/log/core bind bind 0 0\" >> /etc/fstab")
 

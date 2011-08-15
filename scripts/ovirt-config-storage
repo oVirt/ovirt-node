@@ -897,9 +897,9 @@ create_appvg()
     fi
 
     if [ "$use_data" = 0 ]; then
-        mke2fs -j /dev/AppVG/Data2 -L "DATA"
+        mke2fs -j -t ext4 /dev/AppVG/Data2 -L "DATA"
         tune2fs -c 0 -i 0 /dev/AppVG/Data2
-        echo "/dev/AppVG/Data2 /data2 ext3 defaults,noatime 0 0" >> /etc/fstab
+        echo "/dev/AppVG/Data2 /data2 ext4 defaults,noatime 0 0" >> /etc/fstab
     fi
 
     if [ "$use_data" = 0 ]; then
