@@ -83,6 +83,7 @@ get_multipath_deps() {
 translate_multipath_device() {
     #trim so that only sdX is stored, but support passing /dev/sdX
     local dev="$1"
+    local dm_dev
 
     if [ -z "$dev" ]; then
         return 1
@@ -90,14 +91,22 @@ translate_multipath_device() {
     if [[ "$dev" =~ "/dev/mapper" ]]; then
         echo "$dev"
         return 0
-    fi
+    elif [[ "$dev" =~ "/dev/cciss" ]]; then
+        #rename to cciss!device
+        dev2="cciss\!$(basename "$dev")"
+        dm_dev="/dev/$(basename $(ls -d /sys/block/$dev2/holders/dm* | head -n1))"
+        if [ -z "$dm_dev" ]; then
+            echo "$dev"
+            return
+        fi
+    else
 
-    if ! multipath -ll "$dev" 2>&1 >/dev/null; then
-        echo "$dev"
-        return
+        if ! multipath -ll "$dev" 2>&1 >/dev/null; then
+            echo "$dev"
+            return
+        fi
+        dm_dev=/dev/$(multipath -ll "$dev" | egrep dm-[0-9]+ | sed -r 's/^.* (dm-[0-9]+) .*$/\1/')
     fi
-
-    local dm_dev=/dev/$(multipath -ll "$dev" | egrep dm-[0-9]+ | sed -r 's/^.* (dm-[0-9]+) .*$/\1/')
 
     local mpath_device=$(get_dm_device "$dm_dev")
 
