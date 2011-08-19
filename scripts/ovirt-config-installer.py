@@ -290,7 +290,7 @@ class NodeInstallScreen:
     def install_page(self):
         elements = Grid(2, 5)
         self.menuo = 1
-        self.menu_list = Listbox(16, width = 73, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
+        self.menu_list = Listbox(14, width = 73, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
         try:
             m_version,m_release = get_media_version_number()
             m_full_ver = m_version + "-" + m_release
@@ -316,6 +316,9 @@ class NodeInstallScreen:
                 self.menu_list.append(" Install Hypervisor " + m_full_ver, 1)
             self.menu_list.setCallback(self.menuSpacing)
         elements.setField(self.menu_list, 1,1, anchorLeft = 1, padding = (0,0,0,1))
+        hwvirt_msg =  get_virt_hw_status()
+        self.hwvirt = Textbox(50, 2, hwvirt_msg, wrap = 1)
+        elements.setField(self.hwvirt, 1, 2, anchorLeft = 1, padding=(0,0,0,0))
         return [Label(""), elements]
 
     def finish_install_page(self):

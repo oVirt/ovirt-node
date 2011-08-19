@@ -630,6 +630,10 @@ class NodeConfigScreen():
             running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)
             main_grid.setField(elements, 0, 1, anchorLeft = 1)
             main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,4))
+            hwvirt_msg =  get_virt_hw_status()
+            if not hwvirt_msg is "":
+                self.hwvirt = Textbox(50, 3, hwvirt_msg, wrap = 1)
+                main_grid.setField(self.hwvirt, 0, 4, anchorLeft = 1, padding=(0,0,0,0))
             return [Label(""), main_grid]
 
       def logging_configuration_page(self, screen):

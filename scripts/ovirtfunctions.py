@@ -32,6 +32,7 @@ import shutil
 import re
 import gudev
 import cracklib
+import libvirt
 
 OVIRT_LOGFILE="/var/log/ovirt.log"
 OVIRT_TMP_LOGFILE="/tmp/ovirt.log"
@@ -1079,6 +1080,23 @@ def get_logrotate_size():
     size = size.lower().rstrip("kmb")
     size = int(size) * multiplier
     return str(size)
+
+def get_virt_hw_status():
+    hwvirt_msg = ""
+    conn = libvirt.openReadOnly(None)
+    libvirt_capabilities = conn.getCapabilities()
+    if "kvm" in libvirt_capabilities:
+        log("Hardware virtualization detected")
+    else:
+        hwvirt_msg = "Virtualization hardware is unavailable."
+        cpuflags_cmd = "cat /proc/cpuinfo |grep ^flags|tail -n 1"
+        cpuflags_lookup = subprocess.Popen(cpuflags_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        cpuflags = cpuflags_lookup.stdout.read().strip()
+        if "vmx" in cpuflags or "svm" in cpuflags:
+            hwvirt_msg = "\n(Virtualization hardware detected but disabled)"
+        else:
+            hwvirt_msg = "\n(Virtualization hardware was not detected)"
+    return hwvirt_msg
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
