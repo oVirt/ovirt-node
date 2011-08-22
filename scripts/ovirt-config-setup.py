@@ -1586,6 +1586,8 @@ class NodeConfigScreen():
                             if menu_choice == NETWORK_PAGE:
                                 if pressed == RESET_BUTTON:
                                     self.__current_page = NETWORK_PAGE
+                                elif pressed == APPLY_BUTTON:
+                                    self.__current_page == NETWORK_PAGE
                                 else:
                                     self.__current_page = NETWORK_DETAILS_PAGE
                             else:
