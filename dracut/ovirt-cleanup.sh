@@ -55,12 +55,15 @@ info "Found storage_init:  $storage_init"
 # Since we only care which disks are being used, change to a single list
 storage_init="$(echo "$storage_init" | sed 's/;/,/')"
 info "Replaced all ';' with ',' : $storage_init"
+storage_init="$(echo "$storage_init" | sed 's/\*/\\\*/')"
+info "Escaped all asterisks:  $storage_init"
 
 oldIFS=$IFS
 
 lvm pvscan 2>/dev/null
 IFS=","
 for dev in $storage_init; do
+    dev="$(echo "$dev" | sed 's/\\\*/\*/g')"
     device=$(IFS=$oldIFS parse_disk_id "$dev")
     info "After parsing \"$dev\", we got \"$device\""
     echo "Wiping LVM from device: ${device}"
