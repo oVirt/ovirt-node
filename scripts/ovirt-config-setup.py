@@ -605,19 +605,30 @@ class NodeConfigScreen():
                     if ipv6_addr != "":
                         status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip(),ipv6_addr.strip())
                     else:
-                        status_text += "%1s: %5s %14s \n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip())
+                        status_text += "%1s: %5s %14s \n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip())
                     status_text.strip()
-                    networking = TextboxReflowed(32, status_text, maxHeight=10)
+                    networking = TextboxReflowed(32, status_text, maxHeight=7)
                     networking.setText(status_text)
                 log(status_text)
                 log(self.network_status)
             else:
                 networking = Textbox(25, 1, "Not Connected")
-            elements.setField(Label("Networking:"), 0, 3, anchorLeft = 1, anchorTop = 1)
-            elements.setField(networking, 1, 3, anchorLeft = 1, padding=(4, 0, 0, 1))
+            elements.setField(Label("Networking:"), 0, 0, anchorLeft = 1, anchorTop = 1)
+            elements.setField(networking, 1, 0, anchorLeft = 1, padding=(4, 0, 0, 1))
+            elements.setField(Label("Logical Network   Device    MAC Address"),1,4,anchorLeft =1)
+            self.network_list = Textbox(50, 3, "", scroll = 1)
+            networks = logical_to_physical_networks()
+            net_entry = ""
+            for key in networks.iterkeys():
+                device, mac = networks[key]
+                key = pad_or_trim(12, key)
+                device = pad_or_trim(8,device)
+                net_entry += " %1s %6s  %9s\n" % (key, device, mac)
+            elements.setField(self.network_list, 1, 5, anchorLeft = 1, padding=(4, 0, 0, 1))
+            self.network_list.setText(net_entry)
             logging_status = Textbox(18, 1, "local only")
-            elements.setField(Label("Logs:"), 0, 5, anchorLeft = 1)
-            elements.setField(logging_status, 1, 5, anchorLeft = 1, padding=(4, 0, 0, 1))
+            elements.setField(Label("Logs:"), 0, 6, anchorLeft = 1)
+            elements.setField(logging_status, 1, 6, anchorLeft = 1, padding=(4, 0, 0, 1))
             try:
                 conn = libvirt.openReadOnly(None)
                 self.dom_count = conn.numOfDomains()
@@ -629,11 +640,13 @@ class NodeConfigScreen():
             running_vms_grid.setField(Label("Running VMs:   "), 0, 0, anchorLeft = 1)
             running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)
             main_grid.setField(elements, 0, 1, anchorLeft = 1)
-            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,4))
             hwvirt_msg =  get_virt_hw_status()
             if not hwvirt_msg is "":
-                self.hwvirt = Textbox(50, 3, hwvirt_msg, wrap = 1)
-                main_grid.setField(self.hwvirt, 0, 4, anchorLeft = 1, padding=(0,0,0,0))
+                self.hwvirt = Textbox(50, 1, hwvirt_msg)
+                main_grid.setField(self.hwvirt, 0, 3, anchorLeft = 1, padding=(0,1,0,0))
+            else:
+                main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,0))
+
             return [Label(""), main_grid]
 
       def logging_configuration_page(self, screen):
@@ -1449,8 +1462,8 @@ class NodeConfigScreen():
                 gridform = GridForm(screen, "", 2, 1) # 5,2
                 PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION, PRODUCT_RELEASE)
                 screen.drawRootText(1,0, "".ljust(78))
-                screen.drawRootText(1,1, "  %s" % PRODUCT_TITLE.ljust(75))
-                screen.drawRootText(1,2, "  %s" % os.uname()[1].ljust(75))
+                screen.drawRootText(1,1, "  %s" % PRODUCT_TITLE.ljust(76))
+                screen.drawRootText(1,2, "  %s" % os.uname()[1].ljust(76))
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
                 self.menu_list = Listbox(16, width = 20, returnExit = 1, border = 0, showCursor = 0)
@@ -1495,6 +1508,8 @@ class NodeConfigScreen():
                                  padding = ((fullwidth / 2) - 15, 0,
                                             (fullwidth / 2) - 16, 0),
                                  growx = 1)
+
+
                 current_element += 1
                 buttons = []
                 if self.__current_page == NETWORK_PAGE:

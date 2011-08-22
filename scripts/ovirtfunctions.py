@@ -1093,10 +1093,41 @@ def get_virt_hw_status():
         cpuflags_lookup = subprocess.Popen(cpuflags_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         cpuflags = cpuflags_lookup.stdout.read().strip()
         if "vmx" in cpuflags or "svm" in cpuflags:
-            hwvirt_msg = "\n(Virtualization hardware detected but disabled)"
+            hwvirt_msg = "(Virtualization hardware detected but disabled)"
         else:
-            hwvirt_msg = "\n(Virtualization hardware was not detected)"
+            hwvirt_msg = "(Virtualization hardware was not detected)"
     return hwvirt_msg
+
+def get_mac_address(dev):
+    nic_addr_file = open("/sys/class/net/" + dev + "/address")
+    dev_address = nic_addr_file.read().strip()
+    return dev_address
+
+def logical_to_physical_networks():
+    networks = {}
+    client = gudev.Client(['net'])
+    for device in client.query_by_subsystem("net"):
+        try:
+            dev_interface = device.get_property("INTERFACE")
+            dev_address = get_mac_address(dev_interface)
+            bridge_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BRIDGE" % str(dev_interface)
+            dev_bridge =  augtool_get(bridge_cmd)
+        except:
+            pass
+        if not dev_bridge is None:
+            networks[dev_bridge] = (dev_interface,dev_address)
+    return networks
+
+def pad_or_trim(length, string):
+    to_rem = len(string) - length
+    # if negative pad name space
+    if to_rem < 0:
+        while abs(to_rem) != 0:
+            string = string + " "
+            to_rem = to_rem + 1
+    else:
+        string = string.rstrip(string[-to_rem:])
+    return string
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
