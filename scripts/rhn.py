@@ -51,11 +51,11 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
                 return 3
 
     if len(activationkey):
-        args+=" --activationkey %s" % activationkey
+        args+=" --activationkey '%s'" % activationkey
     elif len(username):
-        args+=" --username %s" % username
+        args+=" --username '%s'" % username
         if len(password):
-            args+=" --password %s " % password
+            args+=" --password '%s' " % password
     else:
         # skip RHN registration when neither activationkey
         # nor username/password is supplied
@@ -63,14 +63,14 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
         return 1
 
     if len(profilename):
-        args+=" --profilename %s" % profilename
+        args+=" --profilename '%s'" % profilename
 
     if len(proxyhost):
         args+=" --proxy=%s" % proxyhost
         if len(proxyuser):
-            args+=" --proxyUser=%s" % proxyuser
+            args+=" --proxyUser='%s'" % proxyuser
             if len(proxypass):
-                args+=" --proxyPassword=%s" % proxypass
+                args+=" --proxyPassword='%s'" % proxypass
 
     if len(extra_args):
         args+=" %s" % extra_args
