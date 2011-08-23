@@ -79,6 +79,7 @@ sed -i '/^files	\/etc*/ s/^/#/' /etc/rwtab
 cat > /etc/rwtab.d/ovirt << \EOF_rwtab_ovirt
 files	/etc
 dirs	/var/lib/multipath
+dirs    /dev/.initramfs/live
 dirs	/var/lib/net-snmp
 dirs    /var/lib/dnsmasq
 files	/root/.ssh
