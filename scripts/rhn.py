@@ -197,7 +197,7 @@ class Plugin(PluginBase):
             self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
             self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
         if network_up():
-            elements.setField(Textbox(62,3,"Register with Red Hat Network"), 0, 2, anchorLeft = 1)
+            elements.setField(Textbox(62,4,"RHN Registration is only required if you wish to use\nRed Hat Enterprise Linux Virtualization or Virtuali-\nzation Platform entitlements for your guests."), 0, 2, anchorLeft = 1)
         else:
             elements.setField(Textbox(62,3,"Network Down, Red Hat Network Registration Disabled"), 0, 2, anchorLeft = 1)
             for i in self.rhn_user, self.rhn_pass, self.profilename, self.public_rhn, self.rhn_satellite, self.rhn_url, self.rhn_ca, self.proxyhost, self.proxyport, self.proxyuser, self.proxypass:
