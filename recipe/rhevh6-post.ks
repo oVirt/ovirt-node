@@ -168,8 +168,6 @@ cat > /etc/sysconfig/iptables << \EOF
 -A INPUT -p tcp --dport 54321 -j ACCEPT
 # libvirt tls
 -A INPUT -p tcp --dport 16514 -j ACCEPT
-# libvirt-cim
--A INPUT -p tcp --dport 5989 -j ACCEPT
 # SSH
 -A INPUT -p tcp --dport 22 -j ACCEPT
 # guest consoles
@@ -195,8 +193,6 @@ cat > /etc/sysconfig/ip6tables << \EOF
 -A INPUT -i lo -j ACCEPT
 # libvirt tls
 -A INPUT -p tcp --dport 16514 -j ACCEPT
-# libvirt-cim
--A INPUT -p tcp --dport 5989 -j ACCEPT
 # SSH
 -A INPUT -p tcp --dport 22 -j ACCEPT
 # guest consoles
