@@ -65,7 +65,7 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     if len(profilename):
         args+=" --profilename '%s'" % profilename
 
-    if len(proxyhost):
+    if len(proxyhost) > 1:
         args+=" --proxy=%s" % proxyhost
         if len(proxyuser):
             args+=" --proxyUser='%s'" % proxyuser
