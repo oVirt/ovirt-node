@@ -17,6 +17,9 @@ sed -i -e 's/ quiet//' $LIVE_ROOT/isolinux/isolinux.cfg
 # Remove Verify and Boot option
 sed -i -e '/label check0/{N;N;N;d;}' $LIVE_ROOT/isolinux/isolinux.cfg
 
+# Rename Boot option to Install or Upgrade
+sed -i 's/^  menu label Boot$/  menu label Install or Upgrade/' $LIVE_ROOT/isolinux/isolinux.cfg
+
 # add serial console boot entry
 menu=$(mktemp)
 awk '
@@ -27,9 +30,21 @@ linux0==1 && $1=="append" {
 linux0==1 && $1=="label" && $2!="linux0" {
   linux0=2
   print "label serial-console"
-  print "  menu label Boot with serial console"
+  print "  menu label Install or Upgrade with serial console"
   print "  kernel vmlinuz0"
-  print append0" console=ttyS0,115200n8"
+  print append0" console=ttyS0,115200n8 "
+  print "label reinstall"
+  print "  menu label Reinstall"
+  print "  kernel vmlinuz0"
+  print append0" reinstall "
+  print "label reinstall-serial"
+  print "  menu label Reinstall with serial console"
+  print "  kernel vmlinuz0"
+  print append0" reinstall console=ttyS0,115200n8 "
+  print "label uninstall"
+  print "  menu label Uninstall"
+  print "  kernel vmlinuz0"
+  print append0" uninstall "
 }
 { print }
 ' $LIVE_ROOT/isolinux/isolinux.cfg > $menu
