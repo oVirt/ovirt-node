@@ -40,10 +40,19 @@ if [ $? -eq 1 ]; then
     storage_init="$(getargs ovirt_init)"
     if [ $? -eq 1 ]; then
         info "storage_init or ovirt_init arguments not found"
-        return 0
+    else
+        info "Found storage_init:  $storage_init"
     fi
 fi
-info "Found storage_init:  $storage_init"
+
+# Check for HostVG
+lvm pvscan >/dev/null 2>&1
+
+for hostvg in $(lvm pvs --noheadings -o vg_name,pv_name 2>/dev/null | awk '/^  HostVG/{print $2}'); do
+    storage_init="$hostvg,$storage_init"
+    info "Found HostVG on $hostvg"
+done
+
 
 # storage_init is passed in a specific format
 # A comma separated list of HostVG devices
@@ -60,7 +69,6 @@ info "Escaped all asterisks:  $storage_init"
 
 oldIFS=$IFS
 
-lvm pvscan 2>/dev/null
 IFS=","
 for dev in $storage_init; do
     dev="$(echo "$dev" | sed 's/\\\*/\*/g')"
