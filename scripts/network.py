@@ -99,8 +99,8 @@ class Network:
 
 
         if OVIRT_VARS.has_key("OVIRT_VLAN"):
-            self.CONFIGURED_NICS.append("%s.%s" % (self.CONFIGURED_NIC, VLAN_ID))
             VLAN_ID=OVIRT_VARS["OVIRT_VLAN"]
+            self.CONFIGURED_NICS.append("%s.%s" % (self.CONFIGURED_NIC, VLAN_ID))
             VL_ROOT = "%s.%s" % (IF_ROOT, VLAN_ID)
             self.VL_CONFIG += "rm %s\n" % VL_ROOT
             self.VL_CONFIG += "set %s/DEVICE %s.%s\n" % (VL_ROOT, self.CONFIGURED_NIC, VLAN_ID)
