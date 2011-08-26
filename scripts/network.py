@@ -143,16 +143,20 @@ class Network:
     def configure_dns(self):
         if OVIRT_VARS.has_key("OVIRT_DNS"):
             DNS=OVIRT_VARS["OVIRT_DNS"]
-            if not DNS is None:
-                try:
-                    DNS1, DNS2 = DNS.split(",", 1)
-                    if not DNS1 is None:
-                        augtool("set", "/files/etc/resolv.conf/nameserver[1]", DNS1)
-                    if not DNS2 is None:
-                        augtool("set", "/files/etc/resolv.conf/nameserver[2]", DNS2)
+            try:
+                if not DNS is None:
+                    DNS = DNS.split(",")
+                    i = 1
+                    for server in DNS:
+                        setting = "/files/etc/resolv.conf/nameserver[%s]" % i
+                        augtool("set", setting, server)
+                        i = i + i
                     ovirt_store_config("/etc/resolv.conf")
-                except:
-                    log("Failed to set DNS servers")
+            except:
+                log("Failed to set DNS servers")
+            finally:
+                if len(DNS) < 2:
+                    augtool("rm", "/files/etc/resolv.conf/nameserver[2]", "")
 
     def configure_ntp(self):
         if OVIRT_VARS.has_key("OVIRT_NTP"):
