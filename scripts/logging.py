@@ -48,11 +48,15 @@ $ActionQueueMaxDiskSpace 10m
 $ActionQueueSaveOnShutdown on
 $ActionQueueType LinkedList
 $ActionResumeRetryCount -1
-*.* %(delim)s%(server)s:%(port)s
+%(disable)s*.* %(delim)s%(server)s:%(port)s
 """
 
 
 def ovirt_rsyslog(server, port, protocol):
+    if server == "":
+        disable = "#"
+    else:
+        disable = ""
     if protocol == "tcp":
         DELIM="@@"
     else:
@@ -62,6 +66,7 @@ def ovirt_rsyslog(server, port, protocol):
         server = "[" + server + "]"
 
     rsyslog_dict = {
+        "disable" : disable,
         "delim" : DELIM,
         "server" : server,
         "port" : port

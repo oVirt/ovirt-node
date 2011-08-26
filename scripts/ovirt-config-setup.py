@@ -1362,10 +1362,8 @@ class NodeConfigScreen():
           return True
 
       def process_logging_config(self):
-          if not self.syslog_server.value() is "" and not self.syslog_port.value() is "":
-              ovirt_rsyslog(self.syslog_server.value(), self.syslog_port.value(), "udp")
-          if not self.netconsole_server.value() is "" and not self.netconsole_server_port.value() is "":
-              ovirt_netconsole(self.netconsole_server.value(), self.netconsole_server_port.value())
+          ovirt_rsyslog(self.syslog_server.value(), self.syslog_port.value(), "udp")
+          ovirt_netconsole(self.netconsole_server.value(), self.netconsole_server_port.value())
           set_logrotate_size(self.logrotate_max_size.value())
           return True
 
