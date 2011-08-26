@@ -616,8 +616,12 @@ class NodeConfigScreen():
             elements.setField(Label("Networking:"), 0, 0, anchorLeft = 1, anchorTop = 1)
             elements.setField(networking, 1, 0, anchorLeft = 1, padding=(4, 0, 0, 1))
             elements.setField(Label("Logical Network   Device    MAC Address"),1,4,anchorLeft =1)
-            self.network_list = Textbox(50, 3, "", scroll = 1)
             networks = logical_to_physical_networks()
+            if len(networks) >= 4:
+               net_scroll = 1
+            else:
+                net_scroll = 0
+            self.network_list = Textbox(50, 3, "", scroll = net_scroll)
             net_entry = ""
             for key in networks.iterkeys():
                 device, mac = networks[key]
