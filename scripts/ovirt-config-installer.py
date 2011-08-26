@@ -377,14 +377,18 @@ class NodeInstallScreen:
             dev_size_cmd = "sfdisk -s %s 2>/dev/null" % dev_name
             dev_size = subprocess.Popen(dev_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             dev_size = dev_size.stdout.read()
+            size_failed = 0
             if not device.get_property("ID_CDROM"):
-                dev_size = int(dev_size) / 1024 /1024
+                try:
+                    dev_size = int(dev_size) / 1024 /1024
+                except:
+                   size_failed = 1
             if not dev_desc:
                 if "/dev/vd" in dev_name:
                     dev_desc = "virtio disk"
                 else:
                     dev_desc = "unknown"
-            if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name:
+            if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name and size_failed == 0:
                 dev_name = translate_multipath_device(dev_name)
                 self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
         Storage = storage.Storage()
