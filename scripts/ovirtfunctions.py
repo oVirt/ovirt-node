@@ -191,6 +191,15 @@ def is_rescue_mode():
             return True
         return False
 
+def manual_setup():
+    manual_cmd = "ps -ed|grep ovirt-admin"
+    manual = subprocess.Popen(manual_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    manual_output = manual.stdout.read().strip()
+    if len(manual_output):
+        return True
+    else:
+        return False
+
 # was firstboot menu already shown?
 # state is stored in persistent config partition
 def is_firstboot():

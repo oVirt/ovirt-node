@@ -1661,8 +1661,11 @@ if __name__ == "__main__":
         print "Unable to run setup in rescue mode"
         sys.exit(1)
     elif is_booted_from_local_disk() or "--force" in sys.argv:
-        screen = NodeConfigScreen()
-        screen.start()
+        if manual_setup and "--force" not in sys.argv:
+            print "Unable to run setup manually, Run \"exit\" to return to setup"
+        else:
+            screen = NodeConfigScreen()
+            screen.start()
     else:
         print "Setup must be run after installation and reboot"
         sys.exit(1)
