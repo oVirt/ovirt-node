@@ -464,7 +464,7 @@ start_ovirt_early () {
                 fi
             done
             ;;
-            upgrade* | ovirt_upgrade* | local_boot* | ovirt_local_boot*)
+            upgrade* | ovirt_upgrade* | local_boot | local_boot=* | ovirt_local_boot*)
             upgrade=1
             if ! grep -q admin /etc/passwd; then
                 unmount_config /etc/passwd /etc/shadow
