@@ -976,11 +976,14 @@ class NodeConfigScreen():
               self.ipv4_disabled_callback()
           # prepopulate current values only in case of missing values
           if self.__nic_config_failed == 1:
-              self.ipv4_netdevip.set(self.ipv4_current_netdevip)
-              self.ipv4_netdevmask.set(self.ipv4_current_netdevmask)
-              self.ipv4_netdevgateway.set(self.ipv4_current_netdevgateway)
-              self.static_ipv4_nic_proto.setValue("*")
-              self.ipv4_static_callback()
+              try:
+                  self.ipv4_netdevip.set(self.ipv4_current_netdevip)
+                  self.ipv4_netdevmask.set(self.ipv4_current_netdevmask)
+                  self.ipv4_netdevgateway.set(self.ipv4_current_netdevgateway)
+                  self.static_ipv4_nic_proto.setValue("*")
+                  self.ipv4_static_callback()
+              except:
+                  pass
           # ipv6 grids
           ipv6_main_grid = Grid(6,8)
           self.disabled_ipv6_nic_proto = Checkbox("Disabled ")
@@ -1335,6 +1338,9 @@ class NodeConfigScreen():
               self.screen.popWindow()
               self.net_apply_config = 1
               return
+          else:
+              self.__nic_config_failed = 1
+              return
 
       def process_authentication_config(self):
           self.screen.setColor("BUTTON", "black", "red")
@@ -1616,10 +1622,10 @@ class NodeConfigScreen():
                                 self.__current_page = NETWORK_PAGE
                             elif self.net_apply_config == 1:
                                 self.__current_page = NETWORK_PAGE
-                            elif is_managed():
-                                self.__current_page = NETWORK_PAGE
                             elif self.__nic_config_failed == 1:
                                 self.__current_page = NETWORK_DETAILS_PAGE
+                            elif is_managed():
+                                self.__current_page = NETWORK_PAGE
                             else:
                                self.__current_page = menu_choice
                         elif self.__current_page == SUPPORT_PAGE:
