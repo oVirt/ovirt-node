@@ -655,7 +655,9 @@ class NodeConfigScreen():
 
       def logging_configuration_page(self, screen):
           elements = Grid(2, 8)
-          elements.setField(Label("Logging"), 0, 0, anchorLeft = 1)
+          heading = Label("Logging")
+          heading.setColors(customColorset(1))
+          elements.setField(heading, 0, 0, anchorLeft = 1)
           logrotate_grid = Grid(2,2)
           logrotate_grid.setField(Label("  Logrotate Max Log Size (KB): "), 0, 0, anchorLeft = 1)
           self.logrotate_max_size = Entry(5, "", scroll = 0)
@@ -710,7 +712,9 @@ class NodeConfigScreen():
 
       def authentication_configuration_page(self, screen):
           elements = Grid(2, 9)
-          elements.setField(Label("Remote Access"), 0, 0, anchorLeft = 1)
+          heading = Label("Remote Access")
+          heading.setColors(customColorset(1))
+          elements.setField(heading, 0, 0, anchorLeft = 1)
           pw_elements = Grid (3,3)
           self.current_ssh_pwd_status = augtool_get("/files/etc/ssh/sshd_config/PasswordAuthentication")
           if self.current_ssh_pwd_status == "yes":
@@ -719,7 +723,9 @@ class NodeConfigScreen():
               self.current_ssh_pwd_status = 0
           self.ssh_passwd_status = Checkbox("Enable ssh password authentication", isOn=self.current_ssh_pwd_status)
           elements.setField(self.ssh_passwd_status, 0, 1, anchorLeft = 1)
-          elements.setField(Label("Local Access"), 0, 3, anchorLeft = 1, padding = (0,2,0,0))
+          local_heading = Label("Local Access")
+          local_heading.setColors(customColorset(1))
+          elements.setField(local_heading, 0, 3, anchorLeft = 1, padding = (0,2,0,0))
           elements.setField(Label(" "), 0, 6)
           pw_elements.setField(Label("Password: "), 0, 1, anchorLeft = 1)
           pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft = 1)
@@ -1110,7 +1116,9 @@ class NodeConfigScreen():
                   grid]
       def kdump_configuration_page(self, screen):
           elements = Grid(2, 12)
-          elements.setField(Label("Kernel Dump"), 0, 0, anchorLeft = 1)
+          heading = Label("Kernel Dump")
+          heading.setColors(customColorset(1))
+          elements.setField(heading, 0, 0, anchorLeft = 1)
           if not network_up():
               elements.setField(Label(" * Network Down, Configuration Disabled * "), 0, 1, anchorLeft = 1)
           else:
@@ -1176,7 +1184,9 @@ class NodeConfigScreen():
 
       def remote_storage_configuration_page(self, screen):
           elements = Grid(2, 8)
-          elements.setField(Label("Remote Storage"), 0, 0, anchorLeft = 1)
+          heading = Label("Remote Storage")
+          heading.setColors(customColorset(1))
+          elements.setField(heading, 0, 0, anchorLeft = 1)
           elements.setField(Label(" "), 0, 1, anchorLeft = 1)
           elements.setField(Label("iSCSI Initiator Name:"), 0, 2, anchorLeft = 1)
           self.iscsi_initiator_config = Entry(50, "")
@@ -1462,6 +1472,7 @@ class NodeConfigScreen():
                     colors = self.__colorset.get(item)
                     screen.setColor(item, colors[0], colors[1])
                 self.set_console_colors()
+                screen.setColor(customColorset(1), "black", "magenta")
                 if self.__current_page == STATUS_PAGE:
                     screen.pushHelpLine(" Press F2 For Support Menu ")
                 else:
