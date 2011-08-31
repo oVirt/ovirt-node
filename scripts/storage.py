@@ -82,17 +82,15 @@ class Storage:
 
 
     def wipe_lvm_on_disk(self, dev):
-        unmount_logging()
         part_delim="p"
         if "/dev/sd" in dev:
             part_delim=""
-        vg_cmd = "pvs -o vg_uuid --noheadings %s \"%s%s[0-9]\"* 2>/dev/null|sort -u" % (dev, dev, part_delim) 
-        vg = subprocess.Popen(vg_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        vg_output = vg.stdout.read()
-        for vg in vg_output:
-            pvs = system("pvscan -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \"") % (vg, dev, part_delim, dev)
-            if pvs > 0:
-                log("The volume group \"%s\" spans multiple disks.") % vg
+        vg_cmd = "pvs -o vg_uuid --noheadings \"%s\" \"%s%s\"[0-9]* 2>/dev/null|sort -u" % (dev, dev, part_delim)
+        vg_proc = subprocess.Popen(vg_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        for vg in vg_proc.stdout.read().split():
+            pvs_cmd="pvs -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \"" % (vg, dev, part_delim, dev)
+            if system(pvs_cmd):
+                log("The volume group \"%s\" spans multiple disks." % vg)
                 log("This operation cannot complete.  Please manually")
                 log("cleanup the storage using standard disk tools.")
                 sys.exit(1)
@@ -350,7 +348,8 @@ class Storage:
         mount_config()
         if os.path.ismount("/config"):
             ovirt_store_config("/etc/fstab")
-
+        # remount /var/log from tmpfs to HostVG/Logging
+        unmount_logging()
         mount_logging()
         if use_data == 0:
             log("Mounting data partition")
@@ -371,8 +370,11 @@ class Storage:
         unmount_config("/etc/default/ovirt")
 
         log("Removing old LVM partitions")
-        wipe_volume_group("HostVG")
+        # HostVG must not exist at this point
+        # we wipe only foreign LVM here
+        log("Wiping LVM on HOSTVGDRIVE %s" % self.HOSTVGDRIVE)
         self.wipe_lvm_on_disk(self.HOSTVGDRIVE)
+        log("Wiping LVM on ROOTDRIVE %s" % self.ROOTDRIVE)
         self.wipe_lvm_on_disk(self.ROOTDRIVE)
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
         if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":

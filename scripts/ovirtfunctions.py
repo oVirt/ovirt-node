@@ -224,24 +224,23 @@ def disable_firstboot():
         firstboot.save()
 
 # Destroys a particular volume group and its logical volumes.
-
+# The input (vg) is accepted as either the vg_name or vg_uuid
 def wipe_volume_group(vg):
+    vg_name_cmd = "vgs -o vg_name,vg_uuid --noheadings 2>/dev/null | grep -w \"" + vg + "\" | awk '{print $1}'"
+    vg_name = subprocess.Popen(vg_name_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    vg = vg_name.stdout.read().strip()
     files_cmd = "grep '%s' /proc/mounts|awk '{print $2}'|sort -r" % vg
     files = subprocess.Popen(files_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     files_output = files.stdout.read()
     for file in files_output.split():
-        log("Unmounting " + file)
-        umount_cmd = "umount " + file + " &>/dev/null"
-        os.system(umount_cmd)
-    unmount_logging()
+        os.system("umount %s &>/dev/null" % file)
     swap_cmd = "grep '%s' /proc/swaps|awk '{print $1}'" % vg
     swap = subprocess.Popen(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     swap_output = swap.stdout.read().strip()
     for d in swap_output.split():
-        log ("Turning off " + d)
-        os.system("swapoff " + d +" &>/dev/null")
-    log("Removing "+ vg)
-    vgremove_cmd = "vgremove -ff " + vg + " &>> " + OVIRT_TMP_LOGFILE
+        os.system("swapoff %s &>/dev/null" % d)
+    system("vgchange -an %s" % vg)
+    vgremove_cmd = "vgremove -ff %s &>> %s" % (vg, OVIRT_TMP_LOGFILE)
     ret = os.system(vgremove_cmd)
     if ret != 0:
         #retry one more time before failing
