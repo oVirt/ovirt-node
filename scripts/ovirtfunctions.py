@@ -184,9 +184,9 @@ def is_rescue_mode():
     ret = os.system("grep -q rescue /proc/cmdline")
     if ret == 0:
         return True
-    # check for runlevel 1
+    # check for runlevel 1/single
     else:
-        ret = os.system("runlevel|grep 1")
+        ret = os.system("runlevel|grep -q '1\|S'")
         if ret == 0:
             return True
         return False
