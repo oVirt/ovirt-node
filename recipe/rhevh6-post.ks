@@ -236,6 +236,15 @@ EOF_halt
 patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
 --- rc.sysinit.orig	2011-04-06 09:11:18.126385229 -0400
 +++ rc.sysinit	2011-04-06 09:11:04.195923990 -0400
+@@ -43,7 +43,7 @@
+ fi
+ 
+ if [ -n "$SELINUX_STATE" -a -x /sbin/restorecon ] && __fgrep " /dev " /proc/mounts >/dev/null 2>&1 ; then
+-	/sbin/restorecon  -R /dev 2>/dev/null
++	/sbin/restorecon -e /dev/.initramfs -R /dev 2>/dev/null
+ fi
+ 
+ disable_selinux() {
 @@ -495,9 +495,9 @@
  # mounted). Contrary to standard usage,
  # filesystems are NOT unmounted in single user mode.
@@ -249,6 +258,22 @@ patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
 
  # Update quotas if necessary
 EOF_rc_sysinit
+
+# rhbz#675868
+# Modify start_udev
+patch -d /sbin -p0 << \EOF_start_udev
+--- start_udev.orig	2011-03-30 12:32:03.000000000 +0000
++++ start_udev	2011-09-02 17:16:57.954610422 +0000
+@@ -121,7 +121,7 @@
+ 	#/bin/chown root:root /dev/fuse
+ 
+ 	if [ -x /sbin/restorecon ]; then
+-		/sbin/restorecon -R /dev
++		/sbin/restorecon -e /dev/.initramfs -R /dev
+ 	fi
+ 
+ 	if [ -x "$MAKEDEV" ]; then
+EOF_start_udev
 
 # semanage is not present in the image and virt_use_nfs is on (see rhbz#642209)
 # remove it from vdsmd startup script to avoid error
