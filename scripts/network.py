@@ -196,7 +196,7 @@ class Network:
         net_configured=0
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
         log("Configuring network")
-        os.system("ifdown br" + self.CONFIGURED_NIC)
+        system("ifdown br" + self.CONFIGURED_NIC)
         for vlan in os.listdir("/proc/net/vlan/"):
             # XXX wrong match e.g. eth10.1 with eth1
             if self.CONFIGURED_NIC in vlan:
