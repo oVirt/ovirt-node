@@ -191,15 +191,22 @@ def is_rescue_mode():
             return True
         return False
 
+def get_ttyname():
+    for f in sys.stdin, sys.stdout, sys.stderr:
+        if f.isatty():
+            tty = os.ttyname(f.fileno()).replace("/dev/","")
+            if "pts" in tty:
+                tty = tty.replace("/","")
+            return tty
+    return None
+
 def manual_setup():
-    manual_cmd = "ps -ed|grep ovirt-admin"
-    manual = subprocess.Popen(manual_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    manual_output = manual.stdout.read().strip()
-    if len(manual_output):
+    log("checking for lockfile")
+    tty = get_ttyname()
+    if os.path.exists("/tmp/ovirt-setup.%s" % tty):
         return True
     else:
         return False
-
 # was firstboot menu already shown?
 # state is stored in persistent config partition
 def is_firstboot():
