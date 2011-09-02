@@ -29,11 +29,12 @@ RHN_CONFIG_FILE = "/etc/sysconfig/rhn/up2date"
 
 def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password="", profilename="", proxyhost="", proxyuser="", proxypass=""):
     # novirtinfo: rhn-virtualization daemon refreshes virtinfo
-    extra_args="--novirtinfo --norhnsd --nopackages --force"
-    args=""
+    extra_args = ['--novirtinfo','--norhnsd','--nopackages','--force']
+    args = ['/usr/sbin/rhnreg_ks']
     # Get cacert location
     if len(serverurl) > 0:
-        args+=" --serverUrl %s" % serverurl
+        args.append('--serverUrl')
+        args.append(serverurl)
     location="/etc/sysconfig/rhn/%s" % os.path.basename(cacert)
     if len(cacert) > 0:
         if not os.path.exists(cacert):
@@ -44,18 +45,22 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
             os.system("wget -q -r -nd --no-check-certificate --timeout=30 --tries=3 -O \"" + location +"\" \"" + cacert + "\"")
         if os.path.isfile(location):
             if os.stat(location).st_size > 0:
-                args+=" --sslCACert %s" % location
+                args.append('--sslCACert')
+                args.append(location)
                 ovirt_store_config(location)
             else:
                 log("Error Downloading Satellite CA cert!")
                 return 3
 
     if len(activationkey):
-        args+=" --activationkey '%s'" % activationkey
+        args.append('--activationkey')
+        args.append(activationkey)
     elif len(username):
-        args+=" --username '%s'" % username
+        args.append('--username')
+        args.append(username)
         if len(password):
-            args+=" --password '%s' " % password
+            args.append('--password')
+            args.append(password)
     else:
         # skip RHN registration when neither activationkey
         # nor username/password is supplied
@@ -63,17 +68,20 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
         return 1
 
     if len(profilename):
-        args+=" --profilename '%s'" % profilename
+        args.append('--profilename')
+        args.append(profilename)
 
     if len(proxyhost) > 1:
-        args+=" --proxy=%s" % proxyhost
+        args.append('--proxy')
+        args.append(proxyhost)
         if len(proxyuser):
-            args+=" --proxyUser='%s'" % proxyuser
+            args.append('--proxyUser')
+            args.append(proxyuser)
             if len(proxypass):
-                args+=" --proxyPassword='%s'" % proxypass
+                args.append('--proxyPassword')
+                args.append(proxypass)
 
-    if len(extra_args):
-        args+=" %s" % extra_args
+    args.extend(extra_args)
 
     log("Registering to RHN account.....")
 
@@ -82,15 +90,12 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     # regenerate up2date config
     if os.path.exists("/etc/sysconfig/rhn/up2date"):
         os.unlink("/etc/sysconfig/rhn/up2date")
-    logged_args = args.replace(password, "XXXXXXXX")
+    logged_args = str(args).replace(password, "XXXXXXXX")
     log(logged_args)
-    rhn_reg_cmd = "rhnreg_ks %s" % args
-    rhn_reg = subprocess.Popen(rhn_reg_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    rhn_reg = subprocess.Popen(args, shell=False, stdout=PIPE, stderr=STDOUT)
     rhn_reg_output = rhn_reg.stdout.read()
     log(rhn_reg_output)
-    rhn_reg.wait()
-    rhn_reg_rc = rhn_reg.returncode
-    if rhn_reg_rc == 0:
+    if rhn_reg.wait() == 0:
         ovirt_store_config("/etc/sysconfig/rhn/up2date")
         ovirt_store_config("/etc/sysconfig/rhn/systemid")
         log("System %s sucessfully registered to %s" % (profilename, serverurl))
