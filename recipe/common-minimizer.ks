@@ -56,6 +56,7 @@ keeprpm ConsoleKit-libs
 # filesystems
 drop /lib/modules/*/kernel/fs
 keep /lib/modules/*/kernel/fs/ext*
+keep /lib/modules/*/kernel/fs/mbcache*
 keep /lib/modules/*/kernel/fs/jbd*
 keep /lib/modules/*/kernel/fs/btrfs
 keep /lib/modules/*/kernel/fs/fat
