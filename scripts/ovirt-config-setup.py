@@ -846,6 +846,11 @@ class NodeConfigScreen():
                       if dev_bootproto is None:
                           dev_bootproto = "Disabled"
                           dev_conf_status = "Unconfigured"
+                          # check for vlans
+                          log("checking for vlan")
+                          if len(glob("/etc/sysconfig/network-scripts/ifcfg-" + dev_interface + ".*")) > 0:
+                              log("found vlan")
+                              dev_conf_status = "Configured  "
                       else:
                           dev_conf_status = "Configured  "
                   else:
