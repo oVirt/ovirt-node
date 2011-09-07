@@ -147,6 +147,7 @@ init_daemon_domain(unconfined_t,ovirt_exec_t)
 EOF_OVIRT_TE
 cat > ovirt.fc << \EOF_OVIRT_FC
 /etc/rc\.d/init\.d/ovirt-firstboot             -- gen_context(system_u:object_r:ovirt_exec_t)
+/etc/rc\.d/init\.d/ovirt-post             -- gen_context(system_u:object_r:ovirt_exec_t)
 EOF_OVIRT_FC
 make NAME=targeted -f /usr/share/selinux/devel/Makefile
 semodule -v -i ovirt.pp
