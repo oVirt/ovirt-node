@@ -627,7 +627,7 @@ class NodeConfigScreen():
                net_scroll = 1
             else:
                 net_scroll = 0
-            self.network_list = Textbox(50, 3, "", scroll = net_scroll)
+            self.network_list = Textbox(50, 4, "", scroll = net_scroll)
             net_entry = ""
             for key in networks.iterkeys():
                 device, mac = networks[key]
