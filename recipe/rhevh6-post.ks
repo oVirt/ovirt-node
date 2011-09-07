@@ -324,3 +324,18 @@ set /files/etc/sysctl.conf/net.ipv4.ip_local_reserved_ports 54321
 save
 EOF_sysctl
 
+# patch lvm.conf to enable verify_udev_operations rule
+# rhbz#736357
+patch -d /etc/lvm -p0 << \EOF_lvm_conf
+--- lvm.conf.orig	2011-09-07 19:27:11.308017651 +0000
++++ lvm.conf	2011-09-07 19:27:15.781006848 +0000
+@@ -463,7 +463,7 @@
+     # additional checks (and if necessary, repairs) on entries in the device
+     # directory after udev has completed processing its events. 
+     # Useful for diagnosing problems with LVM2/udev interactions.
+-    verify_udev_operations = 0
++    verify_udev_operations = 1
+ 
+     # How to fill in missing stripes if activating an incomplete volume.
+     # Using "error" will make inaccessible parts of the device return
+EOF_lvm_conf
