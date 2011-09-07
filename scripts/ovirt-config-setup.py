@@ -485,6 +485,12 @@ class NodeConfigScreen():
           self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
           self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
 
+      def kdump_valid_ssh_callback(self):
+          if not is_valid_user_host(self.kdump_ssh_config.value()):
+              self.screen.setColor("BUTTON", "black", "red")
+              self.screen.setColor("ACTBUTTON", "blue", "white")
+              ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid SSH Entry", buttons = ['Ok'])
+
       def kdump_restore_callback(self):
           self.kdump_ssh_type.setValue(" 0")
           self.kdump_nfs_type.setValue(" 0")
@@ -1147,6 +1153,7 @@ class NodeConfigScreen():
           elements.setField(Label(" "), 0, 6, anchorLeft = 1)
           elements.setField(Label("SSH Location (root@example.redhat.com)"), 0, 7, anchorLeft = 1)
           self.kdump_ssh_config = Entry(30, "")
+          self.kdump_ssh_config.setCallback(self.kdump_valid_ssh_callback)
           elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft = 1, padding =(0,0,0,6))
           try:
               kdump_config_file = open("/etc/kdump.conf")

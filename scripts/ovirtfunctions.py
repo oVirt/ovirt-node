@@ -848,6 +848,13 @@ def is_valid_host_or_ip(host_or_ip):
     else:
         return True
 
+def is_valid_user_host(user):
+    regex = "^[\w-]+(\.[\w-]+)*@([a-z0-9-]+(\.[a-z0-9-]+)*?\.[a-z]{2,6}|(\d{1,3}\.){3}\d{1,3})(:\d{4})?$"
+    if re.match(regex, user):
+        return True
+    else:
+        return False
+
 # Check if networking is already up
 def network_up():
     ret = os.system("ip addr show | grep -q 'inet.*scope global'")
