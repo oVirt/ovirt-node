@@ -1651,7 +1651,7 @@ class NodeConfigScreen():
                                if warn == "ok":
                                    screen.popWindow()
                                    screen.finish()
-                                   os.system("/usr/bin/clear;/bin/bash")
+                                   os.system("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
                            elif pressed == MENU_BUTTON:
                                self.__current_page = STATUS_PAGE
                            else:
