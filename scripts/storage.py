@@ -104,13 +104,13 @@ class Storage:
             # XXX fails with spaces in device names (TBI)
             # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
             # create/reload failed on 0QEMU    QEMU HARDDISK   drive-scsi0-0-0p1
-            os.system("partprobe &>/dev/null")
+            system("partprobe")
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
             system("service multipathd reload")
 
         else:
-            os.system("blockdev --rereadpt " + drive + " &>>/dev/null")
+            system("blockdev --rereadpt " + drive + " &>>/dev/null")
 
 
     def get_sd_name(self, id):
@@ -275,7 +275,7 @@ class Storage:
                 parted_cmd = "parted \"" + drv +  "\" -s \"set " + str(hostvgpart) + " lvm on\""
                 system(parted_cmd)
                 system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
-                os.system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
+                system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
                 self.reread_partitions(drv)
 
                 # sync GPT to the legacy MBR partitions
