@@ -308,6 +308,7 @@ class NodeInstallScreen:
                         else:
                             self.menu_list.append(" Reinstall " + m_full_ver, 3)
                     except:
+                        self.menu_list.append(" Invalid installation, please reboot from media and choose Reinstall", 0)
                         log("unable to get_version_numbers for upgrade")
                         pass
                 else:
