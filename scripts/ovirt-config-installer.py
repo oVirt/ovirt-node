@@ -640,9 +640,9 @@ class NodeInstallScreen:
     def install_node(self):
         self.__current_page = FAILED_PAGE
         gridform = GridForm(self.screen, "", 2, 3)
-        dev_name = self.storage_init.replace("/dev/mapper/","").replace("  ","_").replace("__","_").replace(" ","")
+        dev_name = self.storage_init.replace(" ","")
         gridform.add(Label("Partitioning and Creating File Systems On"), 0, 0)
-        gridform.add(Label(self.storage_init), 0, 1)
+        gridform.add(Label(dev_name), 0, 1)
         progress_bar = Scale(50,100)
         progress_bar.set(25)
         gridform.add(progress_bar, 0, 2)
@@ -665,7 +665,7 @@ class NodeInstallScreen:
                 progress_bar.set(75)
                 gridform = GridForm(self.screen, "", 2, 3)
                 gridform.add(Label("Installing Bootloader Configuration On "), 0, 0)
-                gridform.add(Label(self.storage_init), 0, 1)
+                gridform.add(Label(dev_name), 0, 1)
                 gridform.add(progress_bar, 0, 2)
                 gridform.draw()
                 self.screen.refresh()
