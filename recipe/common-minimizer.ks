@@ -296,6 +296,7 @@ keep /lib/firmware/aic94xx-seq.fw
 
 drop /lib/kbd/consolefonts
 drop /etc/pki/tls
+keep /etc/pki/tls/openssl.cnf
 drop /etc/pki/java
 drop /etc/pki/nssdb
 drop /etc/pki/rpm-gpg
