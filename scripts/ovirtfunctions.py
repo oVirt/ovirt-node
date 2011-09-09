@@ -612,7 +612,7 @@ def unmount_config(files):
         if check_bind_mount(filename):
             ret = os.system('umount -n "%s" &>/dev/null' % filename)
             if ret == 0:
-                if os.path.exists('/config"%s"' % filename):
+                if os.path.exists('/config%s' % filename):
                     # refresh the file in rootfs if it was mounted over
                     if os.system('cp -a /config"%s" "%s" &> /dev/null' % (filename,filename)):
                         return True
