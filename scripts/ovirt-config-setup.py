@@ -814,7 +814,10 @@ class NodeConfigScreen():
                       try:
                           # rhevh workaround since udev version doesn't have vendor info
                           dev_path = dev_path.split('/')
-                          pci_dev = dev_path[3].replace("0000:","")
+                          if "virtio" in dev_path[4]:
+                              pci_dev = dev_path[3].replace("0000:","")
+                          else:
+                              pci_dev = dev_path[4].replace("0000:","")
                           pci_lookup_cmd = " lspci|grep %s|awk -F \":\" {'print $3'}" % pci_dev
                           pci_lookup = subprocess.Popen(pci_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                           dev_vendor = pci_lookup.stdout.read().strip()
