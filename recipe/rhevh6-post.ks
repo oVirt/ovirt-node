@@ -108,8 +108,7 @@ patch -d /usr/share/rhn/virtualization -p0 << \EOF_rhn_virt
 +        conn = libvirt.openReadOnly(None)
      except libvirt.libvirtError, lve:
          # virConnectOpen() failed
--        sys.stderr.write("Warning: Could not retrieve virtualization
-information!\n\tlibvirtd service needs to be running.\n")
+-        sys.stderr.write("Warning: Could not retrieve virtualization information!\n\tlibvirtd service needs to be running.\n")
          conn = None
 
      if not conn:
