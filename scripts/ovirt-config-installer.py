@@ -759,9 +759,11 @@ class NodeInstallScreen:
                 self.screen.setColor("BUTTON", "black", "red")
                 self.screen.setColor("ACTBUTTON", "blue", "white")
                 if result == "F2" or pressed == SHELL_BUTTON:
-                    screen.popWindow()
-                    screen.finish()
-                    os.system("/usr/bin/clear;/bin/bash")
+                    warn = ButtonChoiceWindow(self.screen, "Support Shell", "This is for troubleshooting with support representatives. Do not use this option without guidance from support.")
+                    if warn == "ok":
+                        screen.popWindow()
+                        screen.finish()
+                        os.system("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
                 elif pressed == QUIT_BUTTON:
                     abort = ButtonChoiceWindow(self.screen, "Abort Installation","The installation of %s is not complete." %
              PRODUCT_SHORT, buttons = ['Back','Reboot','Shutdown'])

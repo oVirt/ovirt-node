@@ -47,7 +47,6 @@ LOCK_BUTTON = "Lock"
 RESTART_BUTTON = "Restart"
 POWER_OFF_BUTTON = "Power Off"
 UNLOCK_BUTTON = "Unlock"
-SHELL_BUTTON = "Drop to Shell"
 MENU_BUTTON = "Back to Menu"
 login_password = ""
 
@@ -1486,7 +1485,7 @@ class NodeConfigScreen():
                 self.set_console_colors()
                 screen.setColor(customColorset(1), "black", "magenta")
                 if self.__current_page == STATUS_PAGE:
-                    screen.pushHelpLine(" Press F2 For Support Menu ")
+                    screen.pushHelpLine(" Press F10 For Support Menu ")
                 else:
                     screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
@@ -1560,7 +1559,6 @@ class NodeConfigScreen():
                     buttons.append(["Reset", RESET_BUTTON])
                 if self.__current_page == SUPPORT_PAGE:
                     buttons.append(["Back to Menu", MENU_BUTTON])
-                    buttons.append(["Drop to Shell", SHELL_BUTTON])
                 buttonbar = ButtonBar(screen, buttons, compact = 1)
                 if self.__current_page == LOCKED_PAGE:
                     pad = 28
@@ -1569,6 +1567,7 @@ class NodeConfigScreen():
                 content.setField(buttonbar, 0, current_element, anchorLeft = 1, padding = (pad,0,0,0))
                 gridform.add(content, 1, 0, anchorTop = 1, padding = (2,0,0,0))
                 gridform.addHotKey("F2")
+                gridform.addHotKey("F10")
                 try:
                     (top, left) = (1, 4)
                     result = gridform.runOnce(top, left)
@@ -1625,8 +1624,14 @@ class NodeConfigScreen():
                             os.system("/usr/bin/clear;shutdown -h now")
                     if self.__current_page == LOCKED_PAGE:
                         self.screen_locked = True
-                    elif result == "F2" and self.__current_page != LOCKED_PAGE:
+                    elif result == "F10" and self.__current_page != LOCKED_PAGE:
                         self.__current_page = SUPPORT_PAGE
+                    elif result == "F2" and self.__current_page != LOCKED_PAGE:
+                        warn = ButtonChoiceWindow(self.screen, "Support Shell", "This is for troubleshooting with support representatives. Do not use this option without guidance from support.")
+                        if warn == "ok":
+                            screen.popWindow()
+                            screen.finish()
+                            os.system("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
                     else:
                         if self.__current_page == NETWORK_PAGE:
                             if menu_choice == NETWORK_PAGE:
@@ -1653,13 +1658,7 @@ class NodeConfigScreen():
                                self.__current_page = menu_choice
                         elif self.__current_page == SUPPORT_PAGE:
                            log("pressed: " + str(pressed))
-                           if pressed == SHELL_BUTTON:
-                               warn = ButtonChoiceWindow(self.screen, "Support Shell", "This is for troubleshooting with support representatives. Do not use this option without guidance from support.")
-                               if warn == "ok":
-                                   screen.popWindow()
-                                   screen.finish()
-                                   os.system("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
-                           elif pressed == MENU_BUTTON:
+                           if pressed == MENU_BUTTON:
                                self.__current_page = STATUS_PAGE
                            else:
                                f = self.log_menu_list.current()
