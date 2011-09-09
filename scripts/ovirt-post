@@ -39,6 +39,7 @@ start_ovirt_post() {
     ISSUE_NET=/etc/issue.net
     egrep -v "[Vv]irtualization hardware" $ISSUE > $BACKUP
     cp -f $BACKUP $ISSUE
+    rm $BACKUP
     hwvirt=$(virsh --readonly capabilities)
     if [[ $hwvirt =~ kvm ]]; then
         log "Hardware virtualization detected"
