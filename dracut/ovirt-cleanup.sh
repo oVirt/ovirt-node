@@ -48,11 +48,16 @@ fi
 # Check for HostVG
 lvm pvscan >/dev/null 2>&1
 
-for hostvg in $(lvm pvs --noheadings -o vg_name,pv_name 2>/dev/null | awk '/^  HostVG/{print $2}'); do
-    storage_init="$hostvg,$storage_init"
-    info "Found HostVG on $hostvg"
-done
-
+if [ -z "$storage_init" ]; then
+    for hostvg in $(lvm pvs --noheadings -o vg_name,pv_name 2>/dev/null | awk '/^  HostVG/{print $2}'); do
+        if [ -z "$storage_init" ]; then
+            storage_init="$hostvg"
+        else
+            storage_init="$hostvg,$storage_init"
+        fi
+        info "Found HostVG on $hostvg"
+    done
+fi
 
 # storage_init is passed in a specific format
 # A comma separated list of HostVG devices
