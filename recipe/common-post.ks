@@ -94,6 +94,7 @@ empty	/mnt
 empty	/live
 empty	/boot
 empty	/boot-kdump
+empty	/cgroup
 EOF_rwtab_ovirt
 
 # fix iSCSI/LVM startup issue
