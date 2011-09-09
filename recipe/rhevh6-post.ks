@@ -97,6 +97,39 @@ patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch2
 EOF_up2date_patch2
 python -m compileall /usr/share/rhn/up2date_client
 
+patch -d /usr/share/rhn/virtualization -p0 << \EOF_rhn_virt
+--- poller.py.orig 2011-04-19 15:53:43.000000000 +0000
++++ poller.py 2011-09-08 20:45:49.000000000 +0000
+@@ -73,10 +73,9 @@
+         return {}
+
+     try:
+-        conn = libvirt.open(None)
++        conn = libvirt.openReadOnly(None)
+     except libvirt.libvirtError, lve:
+         # virConnectOpen() failed
+-        sys.stderr.write("Warning: Could not retrieve virtualization
+information!\n\tlibvirtd service needs to be running.\n")
+         conn = None
+
+     if not conn:
+@@ -286,10 +285,10 @@
+         vdsm_enabled = True
+
+     # Crawl each of the domains on this host and obtain the new state.
+-    if vdsm_enabled:
+-        domain_list = poll_through_vdsm()
+-    elif libvirt:
++    if libvirt:
+         domain_list = poll_hypervisor()
++    elif vdsm_enabled:
++        domain_list = poll_through_vdsm()
+     else:
+         # If no libvirt nor vdsm is present, this program is pretty much
+         # useless.  Just exit.
+EOF_rhn_virt
+python -m compileall /usr/share/rhn/virtualization
+
 echo "Configuring SELinux"
 # custom module for node specific rules
 mkdir /tmp/SELinux
