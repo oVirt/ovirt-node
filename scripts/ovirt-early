@@ -364,10 +364,14 @@ start_ovirt_early () {
                     IFS=,
                     init=
                     for d in $hostvgdisks; do
+                        did="$(IFS="$oldIFS" parse_disk_id "$d")"
+                        if [ -z "$did" ]; then
+                            autoinstall_failed
+                        fi
                         if [ -n "$init" ]; then
-                            init="$init${SEP}$(IFS="$oldIFS" parse_disk_id "$d")"
+                            init="$init${SEP}$did"
                         else
-                            init="$(IFS="$oldIFS" parse_disk_id "$d")"
+                            init="$did"
                         fi
                     done
                     IFS="$oldIFS"
@@ -378,10 +382,14 @@ start_ovirt_early () {
                     IFS=,
                     init_app=
                     for d in $appvgdisks; do
+                        did="$(IFS="$oldIFS" parse_disk_id "$d")"
+                        if [ -z "$did" ]; then
+                            autoinstall_failed
+                        fi
                         if [ -n "$init_app" ]; then
-                            init_app="$init_app${SEP}$(IFS="$oldIFS" parse_disk_id "$d")"
+                            init_app="$init_app${SEP}$did"
                         else
-                            init_app="$(IFS="$oldIFS" parse_disk_id "$d")"
+                            init_app="$did"
                         fi
                     done
                     IFS="$oldIFS"

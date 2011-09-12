@@ -1093,6 +1093,15 @@ log_only() {
     echo "$@" >> $OVIRT_TMP_LOGFILE
 }
 
+autoinstall_failed(){
+    plymouth --hide-splash
+    log "Automatic installation failed. Please review console messages."
+    log "Press Enter to drop to emergency shell."
+    read < /dev/console
+    bash < /dev/console > /dev/console 2> /dev/console
+    plymouth --show-splash
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
