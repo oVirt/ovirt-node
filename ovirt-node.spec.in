@@ -180,6 +180,9 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 # ovirt-early vendor hook dir
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-early.d
 
+# ovirt-early vendor commandline variables
+%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-commandline.d
+
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -299,6 +302,7 @@ fi
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
 %{_sysconfdir}/ovirt-early.d
+%{_sysconfdir}/ovirt-commandline.d
 
 %changelog
 * Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1

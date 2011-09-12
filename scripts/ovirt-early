@@ -644,7 +644,11 @@ start_ovirt_early () {
             done
             ;;
             *)
-            bootparams="$bootparams $i"
+            # check the params to be ignored before adding to bootparams
+            varname=${i%=*}
+            if ! grep -qw $varname /etc/ovirt-commandline.d/*; then
+                bootparams="$bootparams $i"
+            fi
             ;;
         esac
     done
