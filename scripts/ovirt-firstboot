@@ -34,10 +34,12 @@ trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
 
 autoinstall_failed(){
+    plymouth --hide-splash
     log "Automatic installation failed. Please review console messages."
     log "Press Enter to drop to emergency shell."
     read < /dev/console
-    bash < /dev/console
+    bash < /dev/console > /dev/console 2> /dev/console
+    plymouth --show-splash
 }
 
 check_version(){
