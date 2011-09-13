@@ -106,6 +106,24 @@ class NodeConfigScreen():
             self.__nic_config_failed = 0
             self.net_apply_config = 0
 
+      def _set_title(self):
+          PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION, PRODUCT_RELEASE)
+          self.screen.drawRootText(1,0, "".ljust(78))
+          self.screen.drawRootText(1,1, "  %s" % PRODUCT_TITLE.ljust(76))
+          self.screen.drawRootText(1,2, "  %s" % os.uname()[1].ljust(76))
+
+      def _create_blank_screen(self):
+          self.screen = SnackScreen()
+          self.reset_screen_colors()
+          self.gridform = GridForm(self.screen, "", 2, 2)
+          self.screen.pushHelpLine(" ")
+          self._set_title()
+
+      def _create_warn_screen(self):
+          self._create_blank_screen()
+          self.screen.setColor("BUTTON", "black", "red")
+          self.screen.setColor("ACTBUTTON", "blue", "white")
+
       def set_console_colors(self):
           self.existing_color_array = None
           tty_file = None
@@ -1329,9 +1347,7 @@ class NodeConfigScreen():
 
           self.screen = SnackScreen()
           # apply any colorsets that were provided.
-          for item in self.__colorset.keys():
-              colors = self.__colorset.get(item)
-              self.screen.setColor(item, colors[0], colors[1])
+          self.reset_screen_colors()
           self.screen.pushHelpLine(" ")
           self.screen.refresh()
           self.screen.setColor("BUTTON", "black", "red")
@@ -1418,6 +1434,14 @@ class NodeConfigScreen():
               return True
 
       def process_config(self):
+          self._create_blank_screen()
+          self._set_title()
+          if self.__current_page == NETWORK_DETAILS_PAGE:
+              self.gridform.add(Label("Generating Network Configuration"), 0, 0)
+          else:
+              self.gridform.add(Label("Applying Configuration"), 0, 0)
+          self.gridform.draw()
+          self.screen.refresh()
           if self.__current_page == NETWORK_PAGE:
               ret = self.process_network_config()
           if self.__current_page == AUTHENTICATION_PAGE:
@@ -1479,12 +1503,9 @@ class NodeConfigScreen():
             self.screen_locked = False
             while active and (self.__finished == False):
                 log("current page: " + str(self.__current_page))
-                self.screen = SnackScreen()
+                self._create_blank_screen()
                 screen = self.screen
                 # apply any colorsets that were provided.
-                for item in self.__colorset.keys():
-                    colors = self.__colorset.get(item)
-                    screen.setColor(item, colors[0], colors[1])
                 self.set_console_colors()
                 screen.setColor(customColorset(1), "black", "magenta")
                 if self.__current_page == STATUS_PAGE:
@@ -1493,10 +1514,7 @@ class NodeConfigScreen():
                     screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
                 gridform = GridForm(screen, "", 2, 1) # 5,2
-                PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION, PRODUCT_RELEASE)
-                screen.drawRootText(1,0, "".ljust(78))
-                screen.drawRootText(1,1, "  %s" % PRODUCT_TITLE.ljust(76))
-                screen.drawRootText(1,2, "  %s" % os.uname()[1].ljust(76))
+                self._set_title()
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
                 self.menu_list = Listbox(16, width = 20, returnExit = 1, border = 0, showCursor = 0)
@@ -1598,28 +1616,14 @@ class NodeConfigScreen():
                     elif pressed == LOCK_BUTTON:
                         self.__current_page = LOCKED_PAGE
                     elif pressed == RESTART_BUTTON:
-                        self.screen = SnackScreen()
-                        for item in self.__colorset.keys():
-                            colors = self.__colorset.get(item)
-                            self.screen.setColor(item, colors[0], colors[1])
-                        self.screen.pushHelpLine(" ")
-                        self.screen.refresh()
-                        self.screen.setColor("BUTTON", "black", "red")
-                        self.screen.setColor("ACTBUTTON", "blue", "white")
+                        self._create_warn_screen()
                         warn = ButtonChoiceWindow(self.screen, "Confirm System Restart", warn_message + "This will restart the system, proceed?")
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
                             os.system("reboot")
                     elif pressed == POWER_OFF_BUTTON:
-                        self.screen = SnackScreen()
-                        for item in self.__colorset.keys():
-                            colors = self.__colorset.get(item)
-                            self.screen.setColor(item, colors[0], colors[1])
-                        self.screen.pushHelpLine(" ")
-                        self.screen.refresh()
-                        self.screen.setColor("BUTTON", "black", "red")
-                        self.screen.setColor("ACTBUTTON", "blue", "white")
+                        self._create_warn_screen()
                         warn = ButtonChoiceWindow(self.screen, "Confirm System Shutdown", warn_message + "This will shutdown the system, proceed?")
                         if warn == "ok":
                             screen.popWindow()
@@ -1630,6 +1634,7 @@ class NodeConfigScreen():
                     elif result == "F10" and self.__current_page != LOCKED_PAGE:
                         self.__current_page = SUPPORT_PAGE
                     elif result == "F2" and self.__current_page != LOCKED_PAGE:
+                        self._create_warn_screen()
                         warn = ButtonChoiceWindow(self.screen, "Support Shell", "This is for troubleshooting with support representatives. Do not use this option without guidance from support.")
                         if warn == "ok":
                             screen.popWindow()
