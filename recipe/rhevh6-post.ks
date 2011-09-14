@@ -38,7 +38,7 @@ chmod +x /usr/bin/lsb_release
 
 # CPE name rhbz#593463
 cat > /etc/system-release-cpe <<\EOF_CPE
-cpe:/o:redhat:enterprise_linux:6:update1:hypervisor
+cpe:/o:redhat:enterprise_linux:6:update2:hypervisor
 EOF_CPE
 
 patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch1
