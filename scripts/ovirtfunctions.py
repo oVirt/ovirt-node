@@ -798,9 +798,7 @@ def is_valid_hostname(hostname):
     regex_1 = "([a-zA-Z]|[0-9])(([a-zA-Z]|[0-9]|-)*([a-zA-Z]|[0-9]))?$"
     regex_2 = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
     if re.match(regex_1, hostname):
-        # check for only digits before approving
-        if not hostname.isdigit():
-            return True
+        return True
     else:
         if re.match(regex_2, hostname):
             return True
