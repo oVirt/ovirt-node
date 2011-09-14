@@ -507,6 +507,7 @@ class NodeConfigScreen():
               self.screen.setColor("BUTTON", "black", "red")
               self.screen.setColor("ACTBUTTON", "blue", "white")
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid SSH Entry", buttons = ['Ok'])
+              self.reset_screen_colors()
 
       def kdump_restore_callback(self):
           self.kdump_ssh_type.setValue(" 0")
