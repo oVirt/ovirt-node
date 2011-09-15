@@ -672,7 +672,7 @@ start_ovirt_early () {
         oldIFS=$IFS
         log "Found uninstall arg, wiping mbr from init disks"
         IFS=$SEP
-        for init_disk in $init $init_app; do
+        for init_disk in $init $init_app $(get_boot_disk); do
             echo "Wiping $init_disk"
             wipe_mbr "$init_disk"
         done

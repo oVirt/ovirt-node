@@ -1102,6 +1102,30 @@ autoinstall_failed(){
     plymouth --show-splash
 }
 
+get_base_device() {
+    dev=$1
+    if [ -e "${dev%?}" ]; then
+        echo "${dev%?}"
+        return 0
+    elif [ -e "${dev%p?}" ]; then
+        echo "${dev%p?}"
+        return 0
+    else
+        return 1
+    fi
+}
+
+get_boot_device() {
+    ROOT=$(get_base_device $(findfs LABEL=Root))
+    ROOTBACKUP=$(get_base_device $(findfs LABEL=RootBackup))
+    if [ "$ROOT" = "$ROOTBACKUP" ]; then
+        echo "$ROOT"
+        return 0
+    else
+        return 1
+    fi
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
