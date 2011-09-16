@@ -656,7 +656,7 @@ class NodeConfigScreen():
             self.network_list.setText(net_entry)
             logging_status = Textbox(18, 1, "local only")
             elements.setField(Label("Logs:"), 0, 6, anchorLeft = 1)
-            elements.setField(logging_status, 1, 6, anchorLeft = 1, padding=(4, 0, 0, 1))
+            elements.setField(logging_status, 1, 6, anchorLeft = 1, padding=(4, 0, 0, 0))
             try:
                 conn = libvirt.openReadOnly(None)
                 self.dom_count = conn.numOfDomains()
@@ -674,6 +674,9 @@ class NodeConfigScreen():
                 main_grid.setField(self.hwvirt, 0, 3, anchorLeft = 1, padding=(0,1,0,0))
             else:
                 main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,0))
+            help_text = Textbox(62, 1, "Press F10 For Support Menu")
+            main_grid.setField(help_text, 0, 4, anchorLeft = 1, padding=(0,1,0,0))
+
 
             return [Label(""), main_grid]
 
@@ -1552,7 +1555,7 @@ class NodeConfigScreen():
                 self.set_console_colors()
                 screen.setColor(customColorset(1), "black", "magenta")
                 if self.__current_page == STATUS_PAGE:
-                    screen.pushHelpLine(" Press F10 For Support Menu ")
+                    screen.pushHelpLine(" Use arrow keys to choose option, then press Enter to select it ")
                 else:
                     screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
