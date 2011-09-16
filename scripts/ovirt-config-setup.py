@@ -1272,102 +1272,147 @@ class NodeConfigScreen():
           return
 
       def process_nic_config(self):
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", "")
-          if self.netvlanid.value() == "":
-              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", "")
-          if self.disabled_ipv4_nic_proto.value() == 1:
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '-DISABLED"')
-          else:
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '"')
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6" ,"")
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", "")
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", "")
-          augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", "")
-
-          msg = ""
-          if self.static_ipv4_nic_proto.value() == 1:
-              if self.ipv4_netdevip.value() == "":
-                  msg = "  - IPv4 Address\n"
-              if self.ipv4_netdevmask.value() == "":
-                  msg += "  - IPv4 Netmask Address\n"
-              if self.ipv4_netdevgateway.value() == "":
-                  msg = "  - IPv4 Gateway Address\n"
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
-
-          if self.static_ipv6_nic_proto.value() == 1:
-              if self.ipv6_netdevmask.value() == "":
-                  msg += "  - IPv6 Netmask Address\n"
-              if self.ipv6_netdevgateway.value() == "":
-                  msg += "  - IPv6 Gateway Address\n"
-              # left out gateway check to prevent multiple ones
-          if msg != "":
-              msg = "Please Input:\n" + msg
-              warn = ButtonChoiceWindow(self.screen, "Network Settings", msg, buttons = ['Ok'])
-              self.__nic_config_failed = 1
-              self.ipv4_current_netdevip = self.ipv4_netdevip.value()
-              self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
-              self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
-              self.reset_screen_colors()
-              return
-          else:
-              # if exists remove static keys from dictionary
-              if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
-                  del OVIRT_VARS["OVIRT_IP_ADDRESS"]
-              if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
-                  del OVIRT_VARS["OVIRT_IP_NETMASK"]
-              if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
-                  del OVIRT_VARS["OVIRT_IP_GATEWAY"]
-              if OVIRT_VARS.has_key("OVIRT_IPV6"):
-                  del OVIRT_VARS["OVIRT_IPV6"]
-              if OVIRT_VARS.has_key("OVIRT_ADDRESS"):
-                  del OVIRT_VARS["OVIRT_IPV6_ADDRESS"]
-              if OVIRT_VARS.has_key("OVIRT_IPV6_NETMASK"):
-                  del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
-              if OVIRT_VARS.has_key("OVIRT_IPV6_GATEWAY"):
-                  del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
-
-          if self.netvlanid.value() != "":
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", '"' + self.netvlanid.value() + '"')
-          if self.dhcp_ipv6_nic_proto.value() == 1:
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "dhcp" + '"')
-          if self.auto_ipv6_nic_proto.value() == 1:
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "auto" + '"')
-          if self.static_ipv6_nic_proto.value() == 1:
-              augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "static" + '"')
-              if self.ipv6_netdevip.value():
-                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", '"' + self.ipv6_netdevip.value() + '"')
-              if self.ipv6_netdevmask.value():
-                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", '"' + self.ipv6_netdevmask.value() + '"')
-              if self.ipv6_netdevgateway.value():
-                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", '"' + self.ipv6_netdevgateway.value() + '"')
-
-          self.screen = SnackScreen()
-          # apply any colorsets that were provided.
-          self.reset_screen_colors()
-          self.screen.pushHelpLine(" ")
-          self.screen.refresh()
-          self.screen.setColor("BUTTON", "black", "red")
-          self.screen.setColor("TEXTBOX", "black", "magenta")
-          self.screen.setColor("ACTBUTTON", "blue", "white")
+          self._create_warn_screen()
           warn = ButtonChoiceWindow(self.screen, "Confirm Network Settings", "Network Configuration may take a few moments, proceed?")
           self.reset_screen_colors()
           if warn == "ok":
-              self.set_console_colors()
+              self._create_blank_screen()
+              gridform = GridForm(self.screen, "", 2, 2)
+              gridform.add(Label("Verifying Networking Configuration"), 0, 0)
+              progress_bar = Scale(50,100)
+              gridform.add(progress_bar, 0, 1)
+              progress_bar.set(25)
+              gridform.draw()
               self.screen.refresh()
-              network = Network()
+              msg = ""
+              if self.static_ipv4_nic_proto.value() == 1:
+                  if self.ipv4_netdevip.value() == "":
+                      msg = "  - IPv4 Address\n"
+                  if self.ipv4_netdevmask.value() == "":
+                      msg += "  - IPv4 Netmask Address\n"
+                  if self.ipv4_netdevgateway.value() == "":
+                      msg = "  - IPv4 Gateway Address\n"
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
+
+              if self.static_ipv6_nic_proto.value() == 1:
+                  if self.ipv6_netdevmask.value() == "":
+                      msg += "  - IPv6 Netmask Address\n"
+                  if self.ipv6_netdevgateway.value() == "":
+                      msg += "  - IPv6 Gateway Address\n"
+                  # left out gateway check to prevent multiple ones
+              if msg != "":
+                  msg = "Please Input:\n" + msg
+                  self._create_warn_screen()
+                  warn = ButtonChoiceWindow(self.screen, "Network Settings", msg, buttons = ['Ok'])
+                  self.__nic_config_failed = 1
+                  self.ipv4_current_netdevip = self.ipv4_netdevip.value()
+                  self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
+                  self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
+                  self.reset_screen_colors()
+                  return
+              else:
+                  # if exists remove static keys from dictionary
+                  if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
+                      del OVIRT_VARS["OVIRT_IP_ADDRESS"]
+                  if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
+                      del OVIRT_VARS["OVIRT_IP_NETMASK"]
+                  if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
+                      del OVIRT_VARS["OVIRT_IP_GATEWAY"]
+                  if OVIRT_VARS.has_key("OVIRT_IPV6"):
+                      del OVIRT_VARS["OVIRT_IPV6"]
+                  if OVIRT_VARS.has_key("OVIRT_ADDRESS"):
+                      del OVIRT_VARS["OVIRT_IPV6_ADDRESS"]
+                  if OVIRT_VARS.has_key("OVIRT_IPV6_NETMASK"):
+                      del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
+                  if OVIRT_VARS.has_key("OVIRT_IPV6_GATEWAY"):
+                      del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
               gridform = GridForm(self.screen, "", 2, 2)
               gridform.add(Label("Configuring Networking"), 0, 0)
               progress_bar = Scale(50,100)
               gridform.add(progress_bar, 0, 1)
+              progress_bar.set(50)
               gridform.draw()
               self.screen.refresh()
+
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", "")
+              if self.netvlanid.value() == "":
+                  augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", "")
+              if self.disabled_ipv4_nic_proto.value() == 1:
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '-DISABLED"')
+              else:
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '"')
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6" ,"")
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", "")
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", "")
+              augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", "")
+
+              msg = ""
+              if self.static_ipv4_nic_proto.value() == 1:
+                  if self.ipv4_netdevip.value() == "":
+                      msg = "  - IPv4 Address\n"
+                  if self.ipv4_netdevmask.value() == "":
+                      msg += "  - IPv4 Netmask Address\n"
+                  if self.ipv4_netdevgateway.value() == "":
+                      msg = "  - IPv4 Gateway Address\n"
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
+
+              if self.static_ipv6_nic_proto.value() == 1:
+                  if self.ipv6_netdevmask.value() == "":
+                      msg += "  - IPv6 Netmask Address\n"
+                  if self.ipv6_netdevgateway.value() == "":
+                      msg += "  - IPv6 Gateway Address\n"
+                  # left out gateway check to prevent multiple ones
+              if msg != "":
+                  msg = "Please Input:\n" + msg
+                  self._create_warn_screen()
+                  warn = ButtonChoiceWindow(self.screen, "Network Settings", msg, buttons = ['Ok'])
+                  self.__nic_config_failed = 1
+                  self.ipv4_current_netdevip = self.ipv4_netdevip.value()
+                  self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
+                  self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
+                  self.reset_screen_colors()
+                  return
+              else:
+                  # if exists remove static keys from dictionary
+                  if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
+                      del OVIRT_VARS["OVIRT_IP_ADDRESS"]
+                  if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
+                      del OVIRT_VARS["OVIRT_IP_NETMASK"]
+                  if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
+                      del OVIRT_VARS["OVIRT_IP_GATEWAY"]
+                  if OVIRT_VARS.has_key("OVIRT_IPV6"):
+                      del OVIRT_VARS["OVIRT_IPV6"]
+                  if OVIRT_VARS.has_key("OVIRT_ADDRESS"):
+                      del OVIRT_VARS["OVIRT_IPV6_ADDRESS"]
+                  if OVIRT_VARS.has_key("OVIRT_IPV6_NETMASK"):
+                      del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
+                  if OVIRT_VARS.has_key("OVIRT_IPV6_GATEWAY"):
+                      del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
+
+              if self.netvlanid.value() != "":
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", '"' + self.netvlanid.value() + '"')
+              if self.dhcp_ipv6_nic_proto.value() == 1:
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "dhcp" + '"')
+              if self.auto_ipv6_nic_proto.value() == 1:
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "auto" + '"')
+              if self.static_ipv6_nic_proto.value() == 1:
+                  augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "static" + '"')
+                  if self.ipv6_netdevip.value():
+                      augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", '"' + self.ipv6_netdevip.value() + '"')
+                  if self.ipv6_netdevmask.value():
+                      augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", '"' + self.ipv6_netdevmask.value() + '"')
+                  if self.ipv6_netdevgateway.value():
+                      augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", '"' + self.ipv6_netdevgateway.value() + '"')
+
+              network = Network()
               network.configure_interface()
-              self.screen.popWindow()
               gridform = GridForm(self.screen, "", 2, 2)
               gridform.add(Label("Enabling Network Configuration"), 0, 0)
               progress_bar = Scale(50,100)
@@ -1437,10 +1482,7 @@ class NodeConfigScreen():
       def process_config(self):
           self._create_blank_screen()
           self._set_title()
-          if self.__current_page == NETWORK_DETAILS_PAGE:
-              self.gridform.add(Label("Generating Network Configuration"), 0, 0)
-          else:
-              self.gridform.add(Label("Applying Configuration"), 0, 0)
+          self.gridform.add(Label("Applying Configuration"), 0, 0)
           self.gridform.draw()
           self.screen.refresh()
           if self.__current_page == NETWORK_PAGE:
