@@ -31,6 +31,7 @@
 #                     default is yes
 
 from ovirtnode.ovirtfunctions import *
+from ovirtnode.iscsi import *
 import shutil
 import sys
 import traceback
@@ -287,6 +288,10 @@ EOF
             return False
     disable_firstboot()
     if finish_install():
+        log("generating iscsi iqn and persisting")
+        iscsi_iqn_cmd = subprocess.Popen("/sbin/iscsi-iname", stdout=PIPE)
+        iscsi_iqn, err = iscsi_iqn_cmd.communicate()
+        set_iscsi_initiator(iscsi_iqn.strip())
         log("done.")
         return True
     else:

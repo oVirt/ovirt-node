@@ -67,6 +67,7 @@ start_ovirt_firstboot ()
         /usr/libexec/ovirt-config-password AUTO && \
         /usr/libexec/ovirt-config-snmp AUTO && \
         /usr/libexec/ovirt-config-rhn AUTO && \
+        /usr/libexec/ovirt-config-iscsi AUTO && \
         /usr/libexec/ovirt-config-kdump AUTO
         rc=$?
         # Handle Log file
