@@ -2,6 +2,8 @@
 
 OVIRT_LOGFILE=/var/log/ovirt.log
 OVIRT_TMP_LOGFILE=/tmp/ovirt.log
+touch $OVIRT_TMP_LOGFILE
+chcon -t var_log_t $OVIRT_TMP_LOGFILE
 _log_status=1
 
 # label of the oVirt partition
