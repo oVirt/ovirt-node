@@ -339,3 +339,8 @@ patch -d /etc/lvm -p0 << \EOF_lvm_conf
      # How to fill in missing stripes if activating an incomplete volume.
      # Using "error" will make inaccessible parts of the device return
 EOF_lvm_conf
+# rhbz#734478 add virt-who (*.py are removed in rhevh image)
+cat > /usr/bin/virt-who <<EOF_virt_who
+#!/bin/sh
+exec /usr/bin/python /usr/share/virt-who/virt-who.pyc "$@"
+EOF_virt_who
