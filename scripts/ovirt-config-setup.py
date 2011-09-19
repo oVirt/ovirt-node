@@ -587,6 +587,8 @@ class NodeConfigScreen():
                 self.network_status = {}
                 status_text = ""
                 client = gudev.Client(['net'])
+                # reload augeas tree
+                aug.load()
                 for nic in client.query_by_subsystem("net"):
                     try:
                         interface = nic.get_property("INTERFACE")
