@@ -288,6 +288,8 @@ class Plugin(PluginBase):
 
     def public_rhn_callback(self):
         self.rhn_satellite.setValue(" 0")
+        self.rhn_url.set("")
+        self.rhn_ca.set("")
         self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
 
