@@ -20,7 +20,7 @@ start_ovirt_post() {
     # wait for libvirt to finish initializing
     local count=0
     while true; do
-        if [ -r /var/run/libvirt/libvirt-sock-ro ]; then
+        if virsh connect qemu:///system --readonly >/dev/null 2>&1; then
             break
         elif [ "$count" == "100" ]; then
             log "Libvirt did not initialize in time..."
