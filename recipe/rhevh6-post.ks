@@ -5,6 +5,7 @@ cat > /etc/rwtab.d/rhev << EOF_RWTAB_RHEVH
 empty	/rhev
 files	/var/cache/rhn
 files	/var/lib/vdsm
+dirs    /var/db
 EOF_RWTAB_RHEVH
 
 # convenience symlinks
