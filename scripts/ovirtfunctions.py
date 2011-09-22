@@ -1114,8 +1114,11 @@ def get_logrotate_size():
 
 def get_virt_hw_status():
     hwvirt_msg = ""
-    conn = libvirt.openReadOnly(None)
-    libvirt_capabilities = conn.getCapabilities()
+    try:
+        conn = libvirt.openReadOnly(None)
+        libvirt_capabilities = conn.getCapabilities()
+    except:
+        return "(Failed to Establish Libvirt Connection)"
     if "kvm" in libvirt_capabilities:
         log("Hardware virtualization detected")
     else:
