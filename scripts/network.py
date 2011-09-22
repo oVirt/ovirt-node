@@ -292,6 +292,83 @@ class Network:
                 log("Testing NTP Configuration")
                 test_ntp_configuration()
 
+def get_system_nics():
+    client = gudev.Client(['net'])
+    configured_nics = 0
+    ntp_dhcp = 0
+    nic_dict = {}
+    for device in client.query_by_subsystem("net"):
+        try:
+            dev_interface = device.get_property("INTERFACE")
+            dev_vendor = device.get_property("ID_VENDOR_FROM_DATABASE")
+            dev_type = device.get_property("DEVTYPE")
+            dev_path = device.get_property("DEVPATH")
+            try:
+                dev_vendor = dev_vendor.replace(",", "")
+            except AttributeError:
+                try:
+                    # rhevh workaround since udev version doesn't have vendor info
+                    dev_path = dev_path.split('/')
+                    if "virtio" in dev_path[4]:
+                        pci_dev = dev_path[3].replace("0000:","")
+                    else:
+                        pci_dev = dev_path[4].replace("0000:","")
+                    pci_lookup_cmd = " lspci|grep %s|awk -F \":\" {'print $3'}" % pci_dev
+                    pci_lookup = subprocess.Popen(pci_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                    dev_vendor = pci_lookup.stdout.read().strip()
+                except:
+                    dev_vendor = "unknown"
+            try:
+                dev_vendor = dev_vendor.replace(",", "")
+            except AttributeError:
+                dev_vendor = "unknown"
+            to_rem = len(dev_vendor) - 25
+            # if negative pad name space
+            if to_rem < 0:
+                while abs(to_rem) != 0:
+                    dev_vendor = dev_vendor + " "
+                    to_rem = to_rem + 1
+            else:
+                dev_vendor = dev_vendor.rstrip(dev_vendor[-to_rem:])
+            # bridges will fail due to no driver
+            try:
+                dev_driver = os.readlink("/sys/class/net/" + dev_interface + "/device/driver")
+                dev_driver = os.path.basename(dev_driver)
+            except:
+                pass
+            nic_addr_file = open("/sys/class/net/" + dev_interface + "/address")
+            dev_address = nic_addr_file.read().strip()
+            cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(dev_interface)
+            dev_bootproto = augtool_get(cmd)
+            type_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/TYPE" % str(dev_interface)
+            bridge_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BRIDGE" % str(dev_interface)
+            dev_bridge =  augtool_get(bridge_cmd)
+            if dev_bootproto is None:
+                cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(dev_bridge)
+                dev_bootproto = augtool_get(cmd)
+                if dev_bootproto is None:
+                    dev_bootproto = "Disabled"
+                    dev_conf_status = "Unconfigured"
+                    # check for vlans
+                    log("checking for vlan")
+                    if len(glob("/etc/sysconfig/network-scripts/ifcfg-" + dev_interface + ".*")) > 0:
+                        log("found vlan")
+                        dev_conf_status = "Configured  "
+                else:
+                    dev_conf_status = "Configured  "
+            else:
+                dev_conf_status = "Configured  "
+            if dev_conf_status == "Configured  ":
+                configured_nics = configured_nics + 1
+        except:
+            pass
+        if not dev_interface == "lo" and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
+            if not dev_type == "bridge":
+                nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status,dev_bridge)
+                if dev_bootproto == "dhcp":
+                    ntp_dhcp = 1
+    return nic_dict, configured_nics, ntp_dhcp
+
 
 if __name__ == "__main__":
     try:
