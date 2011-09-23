@@ -28,9 +28,9 @@ def set_iscsi_initiator(initiator_name):
     iscsi_config.write("InitiatorName=" + initiator_name + "\n")
     iscsi_config.close()
     if ovirt_store_config(INITIATOR_FILE):
-        log("Initiator name set as: " + initiator_name)
+        logging.info("Initiator name set as: " + initiator_name)
     else:
-        log("Setting initiator name failed\n")
+        loggin.warning("Setting initiator name failed\n")
     os.system("service iscsi restart &> /dev/null")
 
 def get_current_iscsi_initiator_name():
