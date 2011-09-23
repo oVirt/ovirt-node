@@ -31,11 +31,10 @@ import ovirt_config_setup
 import sys
 from ovirtnode.ovirtfunctions import *
 from ovirtnode.password import *
-from ovirtnode.logging import *
+from ovirtnode.log import *
 from ovirtnode.network import *
 from ovirtnode.kdump import *
 from ovirtnode.iscsi import *
-from ovirtnode.logging import *
 
 OK_BUTTON = "OK"
 BACK_BUTTON = "Back"
@@ -593,7 +592,7 @@ class NodeConfigScreen():
                 for nic in client.query_by_subsystem("net"):
                     try:
                         interface = nic.get_property("INTERFACE")
-                        log(interface)
+                        logger.debug(interface)
                         if not interface == "lo":
                             if has_ip_address(interface) or get_ipv6_address(interface):
                                 ipv4_address = get_ip_address(interface)
@@ -636,8 +635,8 @@ class NodeConfigScreen():
                     status_text.strip()
                     networking = TextboxReflowed(32, status_text, maxHeight=7)
                     networking.setText(status_text)
-                log(status_text)
-                log(self.network_status)
+                logger.debug(status_text)
+                logger.debug(self.network_status)
             else:
                 networking = Textbox(25, 1, "Not Connected")
             elements.setField(Label("Networking:"), 0, 0, anchorLeft = 1, anchorTop = 1)
@@ -708,7 +707,7 @@ class NodeConfigScreen():
           rsyslog_grid.setField(Label("  Server Port:"), 0, 1, anchorLeft = 1, padding=(0, 0, 0, 1))
           rsyslog_grid.setField(self.syslog_port, 1, 1, anchorLeft = 1, padding=(2, 0, 0, 1))
           rsyslog_config = get_rsyslog_config()
-          log(rsyslog_config)
+          logger.debug(rsyslog_config)
           if not rsyslog_config is None:
               rsyslog_server, rsyslog_port = rsyslog_config
               self.syslog_server.set(rsyslog_server)
@@ -1120,7 +1119,7 @@ class NodeConfigScreen():
           return [Label(""), elements]
 
       def support_page(self, screen):
-          log("loading support page")
+          logger.info("Loading Support Page")
           elements = Grid(2, 8)
           elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,0))
           self.log_menu_list = Listbox(5, width = 40, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
@@ -1362,7 +1361,7 @@ class NodeConfigScreen():
               else:
                   set_password(self.root_password_1.value(), "admin")
                   ButtonChoiceWindow(self.screen, "Remote Access", "Password Successfully Changed", buttons = ['Ok'])
-                  log("\nroot & admin password changed")
+                  logger.info("Admin Password Changed")
           if self.ssh_passwd_status.value() == 1 and self.current_ssh_pwd_status == 0:
               self.current_ssh_pwd_status = augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
               ssh_restart = True
@@ -1372,7 +1371,7 @@ class NodeConfigScreen():
           if ssh_restart:
               os.system("service sshd restart &>/dev/null")
               ButtonChoiceWindow(self.screen, "Remote Access", "SSH Restarted", buttons = ['Ok'])
-              log("\nSSH service restarted")
+              logger.info("SSH service restarted")
               ovirt_store_config("/etc/ssh/sshd_config")
           self.reset_screen_colors()
           return True
@@ -1393,10 +1392,10 @@ class NodeConfigScreen():
           try:
               auth.authenticate()
           except PAM.error, (resp, code):
-              log(resp)
+              logger.debug(resp)
               return False
           except:
-              log("Internal error")
+              logger.debug("Internal error")
               return False
           else:
               self.screen_locked = False
@@ -1437,7 +1436,6 @@ class NodeConfigScreen():
 
       def process_kdump_config(self):
           if self.kdump_nfs_type.value() == 1:
-              log(self.kdump_nfs_config.value())
               write_kdump_config(self.kdump_nfs_config.value())
           if self.kdump_ssh_type.value() == 1:
               write_kdump_config(self.kdump_ssh_config.value())
@@ -1469,7 +1467,7 @@ class NodeConfigScreen():
             # check for screenlock status
             self.screen_locked = False
             while active and (self.__finished == False):
-                log("current page: " + str(self.__current_page))
+                logger.debug("Current Page: " + str(self.__current_page))
                 self._create_blank_screen()
                 screen = self.screen
                 # apply any colorsets that were provided.
@@ -1636,7 +1634,7 @@ class NodeConfigScreen():
                             else:
                                self.__current_page = menu_choice
                         elif self.__current_page == SUPPORT_PAGE:
-                           log("pressed: " + str(pressed))
+                           logger.debug("Pressed: " + str(pressed))
                            if pressed == MENU_BUTTON:
                                self.__current_page = STATUS_PAGE
                            else:

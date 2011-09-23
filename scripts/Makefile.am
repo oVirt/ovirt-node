@@ -32,7 +32,7 @@ EXTRA_DIST = \
   network.py \
   password.py \
   collectd.py \
-  logging.py \
+  log.py \
   kdump.py \
   rhn.py \
   ovirt-config-installer.py \
