@@ -6,6 +6,7 @@ empty	/rhev
 files	/var/cache/rhn
 files	/var/lib/vdsm
 dirs    /var/db
+dirs    /var/lib/rhsm
 EOF_RWTAB_RHEVH
 
 # convenience symlinks
@@ -30,7 +31,7 @@ sed -i -e '/^ENV{DM_UDEV_DISABLE_DM_RULES_FLAG}/d' /lib/udev/rules.d/10-dm.rules
 cat > /usr/bin/lsb_release <<\EOF_LSB
 #!/bin/sh
 if [ "$1" = "-r" ]; then
-    printf "Release:\t$(cat /etc/redhat-release | awk '{print $7}')\n"
+    printf "Release:\t$(cat /etc/rhev-hypervisor-release | awk '{print $7}')\n"
 else
     echo RedHatEnterpriseVirtualizationHypervisor
 fi
@@ -42,34 +43,6 @@ cat > /etc/system-release-cpe <<\EOF_CPE
 cpe:/o:redhat:enterprise_linux:6:update2:hypervisor
 EOF_CPE
 
-patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch1
---- up2dateUtils.py.orig        2011-07-02 11:06:38.000000000 +0000
-+++ up2dateUtils.py     2011-07-02 11:09:15.000000000 +0000
-@@ -17,21 +17,8 @@
- _ = t.ugettext
- 
- def _getOSVersionAndRelease():
--    cfg = config.initUp2dateConfig()
--    ts = transaction.initReadOnlyTransaction()
--    for h in ts.dbMatch('Providename', "redhat-release"):
--        if cfg["versionOverride"]:
--            version = cfg["versionOverride"]
--        else:
--            version = h['version']
--
--        osVersionRelease = (h['name'], version, h['release'])
-+        osVersionRelease = ("redhat-release", "6Server", "RELEASE" )
-         return osVersionRelease
--    else:
--       raise up2dateErrors.RpmError(
--           "Could not determine what version of Red Hat Linux you "\
--           "are running.\nIf you get this error, try running \n\n"\
--           "\t\trpm --rebuilddb\n\n")
- 
- 
- def getVersion():
-EOF_up2date_patch1
-sed -i "s/RELEASE/$RELEASE/g" /usr/share/rhn/up2date_client/up2dateUtils.py
 patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch2
 --- up2dateErrors.py.orig       2011-07-02 11:06:46.000000000 +0000
 +++ up2dateErrors.py    2011-07-02 11:09:19.000000000 +0000

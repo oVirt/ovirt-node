@@ -207,6 +207,8 @@ patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-93724aa28fc20c8b7f0167201d1
 #use all hard-coded defaults for multipath
 > /etc/multipath.conf
 #release info for dracut to pick it up into initramfs
+# remove symlink to keep original redhat-release
+rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
 
 %preun

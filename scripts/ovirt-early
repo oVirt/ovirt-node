@@ -161,6 +161,7 @@ start_ovirt_early () {
     #   collectd=server[:port]
     #   hostname=fqdn
     #   TBD logrotate maxsize
+    #   rhn_type=[classic|sam]
     #   rhn_url=SATELLITE_URL
     #   rhn_CA_CERT=CA_CERT_URL
     #   rhn_username=RHN-USERNAME
@@ -299,6 +300,8 @@ start_ovirt_early () {
     collectd_server=
     collectd_port=
 
+    #   rhn_type=[classic|sam]
+    #           default is classic
     #   rhn_url=SATELLITE_URL
     #   rhn_CA_CERT=CA_CERT_URL
     #   rhn_username=RHN-USERNAME
@@ -309,6 +312,7 @@ start_ovirt_early () {
     #   rhn_proxy=PROXY-HOST:PORT
     #   rhn_proxyuser=PROXY-USERNAME
     #   rhn_proxypassword=PROXY-PASSWORD
+    rhn_type=classic
     rhn_url=
     rhn_ca_cert=
     rhn_username=
@@ -571,6 +575,9 @@ start_ovirt_early () {
             i=${i#collectd=}
             eval $(printf $i|awk -F: '{print "collectd_server="$1; print "collectd_port="$2;}')
             ;;
+            rhn_type=*)
+            rhn_type=${i#rhn_type=}
+            ;;
             rhn_url=*)
             rhn_url=${i#rhn_url=}
             ;;
@@ -684,7 +691,7 @@ start_ovirt_early () {
 
     # save boot parameters as defaults for ovirt-config-*
 
-    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port"
+    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config

@@ -1,5 +1,4 @@
 # remove
--redhat-release
 -redhat-release-notes
 # VDSM
 vdsm-cli

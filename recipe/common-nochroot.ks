@@ -73,7 +73,6 @@ cp $LIVE_ROOT/isolinux/version $INSTALL_ROOT/etc/default/
 cat > $INSTALL_ROOT/etc/$PACKAGE-release <<EOF
 $PRODUCT release $VERSION ($RELEASE)
 EOF
-ln -snf $PACKAGE-release $INSTALL_ROOT/etc/redhat-release
 ln -snf $PACKAGE-release $INSTALL_ROOT/etc/system-release
 cp $INSTALL_ROOT/etc/$PACKAGE-release $INSTALL_ROOT/etc/issue
 echo "Kernel \r on an \m (\l)" >> $INSTALL_ROOT/etc/issue
