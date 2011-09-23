@@ -831,25 +831,8 @@ class NodeConfigScreen():
               self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 0)
           for key in sorted(self.nic_dict.iterkeys()):
               dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status,dev_bridge = self.nic_dict[key].split(",", 6)
-              to_rem = len(dev_vendor) - 10
-              # if negative pad name space
-              if to_rem < 1:
-                  while abs(to_rem) != 0:
-                      dev_vendor += " "
-                      to_rem = to_rem + 1
-              else:
-                  dev_vendor = dev_vendor.rstrip(dev_vendor[-to_rem:])
-              if len(dev_interface) > 6:
-                  to_rem = len(dev_interface) - 6
-                  dev_interface = dev_interface.lstrip(dev_interface[:to_rem])
-              else:
-                  to_rem = len(dev_interface) - 6
-                  # if negative pad name space
-                  if to_rem < 0:
-                      while abs(to_rem) != 0:
-                          dev_interface = dev_interface + " "
-                          to_rem = to_rem + 1
-
+              dev_vendor = pad_or_trim(10, dev_vendor)
+              dev_interface = pad_or_trim(6, dev_interface)
               nic_option = '%2s %13s %10s %19s\n' % (dev_interface,dev_conf_status,dev_vendor,dev_address)
               self.nic_lb.append(nic_option, dev_interface.strip())
           NIC_LABEL = Label("Device  Status          Model     MAC Address")

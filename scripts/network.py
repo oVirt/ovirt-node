@@ -322,15 +322,7 @@ def get_system_nics():
                 dev_vendor = dev_vendor.replace(",", "")
             except AttributeError:
                 dev_vendor = "unknown"
-            to_rem = len(dev_vendor) - 25
-            # if negative pad name space
-            if to_rem < 0:
-                while abs(to_rem) != 0:
-                    dev_vendor = dev_vendor + " "
-                    to_rem = to_rem + 1
-            else:
-                dev_vendor = dev_vendor.rstrip(dev_vendor[-to_rem:])
-            # bridges will fail due to no driver
+            dev_vendor = pad_or_trim(25, dev_vendor)
             try:
                 dev_driver = os.readlink("/sys/class/net/" + dev_interface + "/device/driver")
                 dev_driver = os.path.basename(dev_driver)

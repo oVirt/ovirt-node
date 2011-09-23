@@ -411,23 +411,10 @@ class NodeInstallScreen:
                         dev_bus = "Local / FibreChannel"
                     else:
                         dev_bus = "                    "
-                    to_rem = len(dev_desc) - 33
-                    # if negative pad name space
-                    if to_rem < 1:
-                        while abs(to_rem) != 0:
-                            dev_desc += " "
-                            to_rem = to_rem + 1
-                    else:
-                        dev_desc = dev_desc.rstrip(dev_desc[-to_rem:])
+                    dev_desc = pad_or_trim(33, dev_desc)
                     self.valid_disks.append(dev_name)
                     dev_name = dev_name.replace("/dev/mapper/","").replace(" ", "")
-                    to_rem = len(dev_name) - 32
-                    # if negative pad name space
-                    if to_rem < 1:
-                        while abs(to_rem) != 0:
-                            dev_name += " "
-                            to_rem = to_rem + 1
-                    dev_name = dev_name[:+32]
+                    dev_name = pad_or_trim(33, dev_name)
                     dev_entry = " %6s  %11s  %5s GB" % (dev_bus,dev_name, dev_size)
                     dev_name = translate_multipath_device(dev_name)
                     self.root_disk_menu_list.append(dev_entry, dev)
@@ -495,14 +482,7 @@ class NodeInstallScreen:
                         dev_bus = "Local / FibreChannel"
                     else:
                         dev_bus = "                    "
-                    to_rem = len(dev_desc) - 33
-                    # if negative pad name space
-                    if to_rem < 1:
-                      while abs(to_rem) != 0:
-                          dev_desc += " "
-                          to_rem = to_rem + 1
-                    else:
-                        dev_desc = dev_desc.rstrip(dev_desc[-to_rem:])
+                    dev_desc = pad_or_trim(33, dev_desc)
                     if dev_name == self.root_disk_menu_list.current():
                         select_status = 1
                     else:
@@ -510,13 +490,7 @@ class NodeInstallScreen:
                     # strip all "/dev/*/" references and leave just basename
                     dev_name = dev_name.replace("/dev/mapper/","")
                     dev_name = dev_name.replace("/dev/","").replace(" ", "")
-                    to_rem = len(dev_name) - 32
-                    # if negative pad name space
-                    if to_rem < 1:
-                        while abs(to_rem) != 0:
-                            dev_name += " "
-                            to_rem = to_rem + 1
-                    dev_name = dev_name[:+32]
+                    dev_name = pad_or_trim(33, dev_name)
                     dev_entry = " %6s %10s %2s GB" % (dev_bus,dev_name, dev_size)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
