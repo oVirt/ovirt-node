@@ -33,6 +33,7 @@ import re
 import gudev
 import cracklib
 import libvirt
+import logging
 
 OVIRT_LOGFILE="/var/log/ovirt.log"
 OVIRT_TMP_LOGFILE="/tmp/ovirt.log"
@@ -1189,3 +1190,16 @@ class PluginBase(object):
         pass
 
 OVIRT_VARS = parse_defaults()
+
+# setup logging facility
+if is_firstboot():
+    log_file = OVIRT_TMP_LOGFILE
+else:
+    log_file = OVIRT_LOGFILE
+
+logger = logging.getLogger(PRODUCT_SHORT)
+handler = logging.FileHandler(log_file)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
