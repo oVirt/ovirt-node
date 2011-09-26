@@ -1021,7 +1021,7 @@ def translate_multipath_device(dev):
 def pwd_lock_check(user):
     passwd_cmd = "passwd -S %s" % user
     passwd = subprocess.Popen(passwd_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    passwd = passwd.stdout.read()
+    passwd, err = passwd.communicate()
     if "locked" in passwd:
         return True
     else:
@@ -1030,7 +1030,7 @@ def pwd_lock_check(user):
 def pwd_set_check(user):
     passwd_cmd = "passwd -S %s" % user
     passwd = subprocess.Popen(passwd_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    passwd = passwd.stdout.read()
+    passwd, err = passwd.communicate()
     if "set" in passwd:
         return True
     else:
