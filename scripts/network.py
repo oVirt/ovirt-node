@@ -20,6 +20,7 @@ from ovirtnode.ovirtfunctions import *
 from glob import glob
 import tempfile
 import sys
+import logging
 
 class Network:
 
@@ -43,7 +44,7 @@ class Network:
         self.vlan_id=""
 
     def configure_interface(self):
-        log("Configuring Interface")
+        logging.info("Configuring Interface")
         self.disabled_nic = 0
         if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
             IPADDR = OVIRT_VARS["OVIRT_IP_ADDRESS"]
@@ -51,7 +52,7 @@ class Network:
             GATEWAY = OVIRT_VARS["OVIRT_IP_GATEWAY"]
 
         if self.CONFIGURED_NIC is None:
-            log("\nAborting...\n")
+            logging.warn("Aborting Network Configuration")
             return False
 
         if OVIRT_VARS.has_key("OVIRT_BOOTIF"):
@@ -67,7 +68,7 @@ class Network:
         self.CONFIGURED_NICS.append(BRIDGE)
         IF_FILENAME = self.WORKDIR + "/augtool-" + self.CONFIGURED_NIC
         BR_FILENAME = self.WORKDIR + "/augtool-" + BRIDGE
-        log("\nConfigure $BRIDGE for use by $NIC..\n\n")
+        logging.info("Configure %s for use by %s" % (BRIDGE, self.CONFIGURED_NIC))
         IF_ROOT = "%s%s" % (self.IFCONFIG_FILE_ROOT, self.CONFIGURED_NIC)
         self.IF_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (IF_ROOT, IF_ROOT, self.CONFIGURED_NIC)
         self.IF_CONFIG += "set %s/HWADDR %s\n" % (IF_ROOT, nic_hwaddr)
@@ -153,7 +154,7 @@ class Network:
                         i = i + i
                     ovirt_store_config("/etc/resolv.conf")
             except:
-                log("Failed to set DNS servers")
+                logging.warn("Failed to set DNS servers")
             finally:
                 if len(DNS) < 2:
                     augtool("rm", "/files/etc/resolv.conf/nameserver[2]", "")
@@ -196,7 +197,7 @@ class Network:
         aug.load()
         net_configured=0
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
-        log("Configuring network")
+        logging.info("Configuring network")
         system("ifdown br" + self.CONFIGURED_NIC)
         for vlan in os.listdir("/proc/net/vlan/"):
             # XXX wrong match e.g. eth10.1 with eth1
@@ -207,12 +208,12 @@ class Network:
 
         for script in glob("%s%s*" % (self.IFSCRIPTS_PATH, self.CONFIGURED_NIC)):
             # XXX wrong match e.g. eth10 with eth1* (need * to cover VLANs)
-            log("Removing Script: " + script)
+            logging.debug("Removing Script: " + script)
             ovirt_safe_delete_config(script)
         augtool("rm", self.IFCONFIG_FILE_ROOT+"br"+self.CONFIGURED_NIC, "")
 
         for line in self.IF_CONFIG:
-            log(line)
+            logging.debug(line)
             try:
                 oper, key, value = line.split()
                 augtool(oper, key, value)
@@ -221,7 +222,7 @@ class Network:
                 augtool(oper, key, "")
 
         for line in self.BR_CONFIG:
-            log(line)
+            logging.debug(line)
             try:
                 oper, key, value = line.split()
                 augtool(oper, key, value)
@@ -233,7 +234,7 @@ class Network:
                     pass
 
         for line in self.VL_CONFIG.split("\n"):
-            log(line)
+            logging.debug(line)
             try:
                 oper, key, value = line.split()
                 augtool(oper, key, value)
@@ -265,9 +266,9 @@ class Network:
         ovirt_store_config(self.NTP_CONFIG_FILE)
         augtool("set", "/files/etc/sysconfig/network/NETWORKING", "yes")
         ovirt_store_config("/etc/sysconfig/network")
-        log("Network configured successfully")
+        logging.info("Network configured successfully")
         if net_configured == 1:
-            log("\nStopping Network services")
+            logging.info("Stopping Network services")
             os.system("service network stop &> /dev/null")
             os.system("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
@@ -279,7 +280,7 @@ class Network:
                 os.system(if_down_cmd)
                 del_br_cmd = "brctl delbr %s &> /dev/null" % i
                 os.system(del_br_cmd)
-            log("\nStarting Network service")
+            logging.info("Starting Network service")
             os.system("service network start &> /dev/null")
             os.system("service ntpdate start &> /dev/null")
             os.system("service ntpd start &> /dev/null")
@@ -289,7 +290,7 @@ class Network:
             os.system("service rpcidmapd start &> /dev/null")
             os.system("service rpcgssd start &> /dev/null")
             if OVIRT_VARS.has_key("NTP"):
-                log("Testing NTP Configuration")
+                logging.info("Testing NTP Configuration")
                 test_ntp_configuration()
 
 def get_system_nics():
@@ -342,9 +343,9 @@ def get_system_nics():
                     dev_bootproto = "Disabled"
                     dev_conf_status = "Unconfigured"
                     # check for vlans
-                    log("checking for vlan")
+                    logging.debug("checking for vlan")
                     if len(glob("/etc/sysconfig/network-scripts/ifcfg-" + dev_interface + ".*")) > 0:
-                        log("found vlan")
+                        logging.debug("found vlan")
                         dev_conf_status = "Configured  "
                 else:
                     dev_conf_status = "Configured  "
@@ -373,7 +374,7 @@ if __name__ == "__main__":
                 network.save_ntp_configuration()
                 network.save_network_configuration()
             else:
-                log("No network interface specified. Unable to configure networking.")
+                logging.debug("No network interface specified. Unable to configure networking.")
     except:
-        log("Exiting..")
+        logging.warn("Exiting..")
         sys.exit(0)

@@ -20,6 +20,7 @@
 
 import os
 from ovirtnode.ovirtfunctions import *
+import logging
 
 INITIATOR_FILE="/etc/iscsi/initiatorname.iscsi"
 
@@ -30,7 +31,7 @@ def set_iscsi_initiator(initiator_name):
     if ovirt_store_config(INITIATOR_FILE):
         logging.info("Initiator name set as: " + initiator_name)
     else:
-        loggin.warning("Setting initiator name failed\n")
+        logging.warning("Setting initiator name failed")
     os.system("service iscsi restart &> /dev/null")
 
 def get_current_iscsi_initiator_name():
