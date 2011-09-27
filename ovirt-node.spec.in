@@ -173,7 +173,7 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__install} -p -m0644 scripts/install.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/iscsi.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/kdump.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/logging.py %{buildroot}%{python_sitelib}/ovirtnode
+%{__install} -p -m0644 scripts/log.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/ovirtfunctions.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/network.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0755 scripts/ovirt-config-installer.py %{buildroot}%{_libexecdir}/ovirt-config-installer
