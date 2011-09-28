@@ -48,6 +48,7 @@ RESTART_BUTTON = "Restart"
 POWER_OFF_BUTTON = "Power Off"
 UNLOCK_BUTTON = "Unlock"
 MENU_BUTTON = "Back to Menu"
+LOG_OFF_BUTTON = "Log Off"
 login_password = ""
 
 STATUS_PAGE = 1
@@ -1624,6 +1625,7 @@ class NodeConfigScreen():
                 if self.__current_page == STATUS_PAGE:
                     if not pwd_lock_check("admin"):
                         buttons.append(["Lock", LOCK_BUTTON])
+                    buttons.append(["Log Off", LOG_OFF_BUTTON])
                     buttons.append(["Restart", RESTART_BUTTON])
                     buttons.append(["Power Off", POWER_OFF_BUTTON])
                 if self.__current_page == LOCKED_PAGE:
@@ -1681,6 +1683,9 @@ class NodeConfigScreen():
                             screen.popWindow()
                             screen.finish()
                             os.system("/usr/bin/clear;shutdown -h now")
+                    elif pressed == LOG_OFF_BUTTON:
+                        # will exit and ovirt-admin-shell cleans up tty lockfile and drops to login
+                        sys.exit(2)
                     if self.__current_page == LOCKED_PAGE:
                         self.screen_locked = True
                     elif result == "F8" and self.__current_page != LOCKED_PAGE:
