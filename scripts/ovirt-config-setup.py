@@ -676,7 +676,7 @@ class NodeConfigScreen():
                 main_grid.setField(self.hwvirt, 0, 3, anchorLeft = 1, padding=(0,1,0,0))
             else:
                 main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,0))
-            help_text = Textbox(62, 1, "Press F10 For Support Menu")
+            help_text = Textbox(62, 1, "Press F8 For Support Menu")
             main_grid.setField(help_text, 0, 4, anchorLeft = 1, padding=(0,1,0,0))
 
 
@@ -1211,10 +1211,14 @@ class NodeConfigScreen():
           log("loading support page")
           elements = Grid(2, 8)
           elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,0))
-          self.log_menu_list = Listbox(3, width = 30, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
-          self.log_menu_list.append(" /var/log/ovirt.log", "/var/log/ovirt.log")
-          self.log_menu_list.append(" /var/log/messages", "/var/log/messages")
-          self.log_menu_list.append(" /var/log/secure", "/var/log/secure")
+          self.log_menu_list = Listbox(5, width = 40, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
+          self.log_menu_list.append(" oVirt Log (ovirt.log)", "/var/log/ovirt.log")
+          self.log_menu_list.append(" System Messages (messages)", "/var/log/messages")
+          self.log_menu_list.append(" Security Log (secure)", "/var/log/secure")
+          if os.path.exists("/var/log/vdsm/vdsm.log"):
+              self.log_menu_list.append(" VDSM Log (vdsm.log)", "/var/log/vdsm/vdsm.log")
+          if os.path.exists("/var/log/vdsm-reg/vdsm-reg.log"):
+              self.log_menu_list.append(" VDSM Registration Log (vdsm-reg.log)", "/var/log/vdsm-reg/vdsm-reg.log")
           elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,8))
           elements.setField(Label(" After viewing press \"q\" to quit "), 0, 3, anchorLeft = 1, padding = (0,1,0,0))
 
@@ -1636,7 +1640,7 @@ class NodeConfigScreen():
                 content.setField(buttonbar, 0, current_element, anchorLeft = 1, padding = (pad,0,0,0))
                 gridform.add(content, 1, 0, anchorTop = 1, padding = (2,0,0,0))
                 gridform.addHotKey("F2")
-                gridform.addHotKey("F10")
+                gridform.addHotKey("F8")
                 try:
                     (top, left) = (1, 4)
                     result = gridform.runOnce(top, left)
@@ -1679,7 +1683,7 @@ class NodeConfigScreen():
                             os.system("/usr/bin/clear;shutdown -h now")
                     if self.__current_page == LOCKED_PAGE:
                         self.screen_locked = True
-                    elif result == "F10" and self.__current_page != LOCKED_PAGE:
+                    elif result == "F8" and self.__current_page != LOCKED_PAGE:
                         self.__current_page = SUPPORT_PAGE
                     elif result == "F2" and self.__current_page != LOCKED_PAGE:
                         self._create_warn_screen()
