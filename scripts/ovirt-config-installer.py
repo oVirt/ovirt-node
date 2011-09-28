@@ -373,7 +373,7 @@ class NodeInstallScreen:
             dev_name = device.get_property("DEVNAME")
             dev_bus = device.get_property("ID_BUS")
             dev_model = device.get_property("ID_MODEL")
-            dev_serial = device.get_property("ID_SERIAL_SHORT")
+            dev_serial = device.get_property("ID_SERIAL")
             dev_desc = device.get_property("ID_SCSI_COMPAT")
             dev_size_cmd = "sfdisk -s %s 2>/dev/null" % dev_name
             dev_size = subprocess.Popen(dev_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
