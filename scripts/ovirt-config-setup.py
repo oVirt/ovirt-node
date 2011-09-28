@@ -1729,7 +1729,7 @@ class NodeConfigScreen():
                                f = self.log_menu_list.current()
                                screen.popWindow()
                                screen.finish()
-                               os.system("/usr/bin/clear;/usr/bin/less -R " + f)
+                               os.system("/usr/bin/clear;SHELL=/bin/false /usr/bin/less -R " + f)
                         else:
                             self.__current_page = menu_choice
                 except Exception, error:
