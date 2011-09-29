@@ -629,8 +629,8 @@ class NodeConfigScreen():
                             ipv4_addr = "(Link Inactive)"
                         else:
                             ipv4_addr = "(DHCP Failed)"
-                    if ipv6_addr != "":
-                        status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip(),ipv6_addr.strip())
+                    if OVIRT_VARS.has_key("OVIRT_IPV6") and ipv6_addr != "" :
+                            status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip(),ipv6_addr.strip())
                     else:
                         status_text += "%1s: %5s %14s \n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip())
                     status_text.strip()
