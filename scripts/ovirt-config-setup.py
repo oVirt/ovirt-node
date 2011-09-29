@@ -927,7 +927,7 @@ class NodeConfigScreen():
           NIC_LABEL = Label("Device  Status          Model     MAC Address")
           grid.setField(NIC_LABEL, 0, 11, (0, 0, 0, 0), anchorLeft = 1)
           grid.setField(self.nic_lb, 0, 12)
-          if self.nic_dict.has_key("rhevm"):
+          if os.path.exists("/etc/sysconfig/network-scripts/ifcfg-rhevm"):
               for item in self.dns_host1, self.dns_host2, self.ntp_host1, self.ntp_host2:
                   item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
               self.heading.setText("Managed by RHEV-M (Read Only)")
@@ -1130,7 +1130,7 @@ class NodeConfigScreen():
           vlan_grid.setField(self.netvlanid, 1, 0)
           grid.setField(vlan_grid, 0, 9, anchorLeft = 1)
           # disable all items if registered to rhevm server
-          if self.nic_dict.has_key("rhevm"):
+          if os.path.exists("/etc/sysconfig/network-scripts/ifcfg-rhevm"):
               for item in self.disabled_ipv4_nic_proto, self.dhcp_ipv4_nic_proto, self.static_ipv4_nic_proto, \
                   self.ipv4_netdevip, self.ipv4_netdevmask, self.ipv4_netdevgateway, self.disabled_ipv6_nic_proto, \
                   self.dhcp_ipv6_nic_proto, self.static_ipv6_nic_proto, self.auto_ipv6_nic_proto, \
