@@ -1338,6 +1338,9 @@ class NodeConfigScreen():
                       del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
                   if OVIRT_VARS.has_key("OVIRT_IPV6_GATEWAY"):
                       del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
+                  if OVIRT_VARS.has_key("OVIRT_VLAN"):
+                      del OVIRT_VARS["OVIRT_VLAN"]
+
               gridform = GridForm(self.screen, "", 2, 2)
               gridform.add(Label("Configuring Networking"), 0, 0)
               progress_bar = Scale(50,100)

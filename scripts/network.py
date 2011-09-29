@@ -193,6 +193,7 @@ class Network:
             os.system("service ntpd start &> /dev/null")
 
     def save_network_configuration(self):
+        aug.load()
         net_configured=0
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
         log("Configuring network")
