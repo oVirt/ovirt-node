@@ -118,29 +118,22 @@ class Storage:
         device_sys = subprocess.Popen(device_sys_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         device_sys_output = device_sys.stdout.read().strip()
         if not device_sys_output is "":
-            device = os.path.basename(device_sys_output)
+            device = os.path.basename(os.path.dirname(device_sys_output))
             return device
-        return False
 
 
     # gets the dependent block devices for multipath devices
-    def get_multipath_deps(self, mpath_device, deplist_var):
-        return
+    def get_multipath_deps(self, mpath_device):
         deplist=""
         #get dependencies for multipath device
-        deps_cmd ="dmsetup deps -u \"mpath-%s\" \
-        | sed -r 's/\(([0-9]+), ([0-9]+)\)/\1:\2/g' \
-        | sed 's/ /\n/g' | grep [0-9]:[0-9] 2>/dev/null" % mpath_device
+        deps_cmd = "dmsetup deps -u mpath-%s | sed 's/^.*: //' \
+        | sed 's/, /:/g' | sed 's/[\(\)]//g'" % mpath_device
         deps = subprocess.Popen(deps_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         deps_output = deps.stdout.read()
         for dep in deps_output.split():
-            device=get_sd_name(dep)
-            dep_list=[]
-            if device is None:
-                if deplist is None:
-                    deplist = device
-                else:
-                    deplist.append(device)
+            device=self.get_sd_name(dep)
+            if device is not None:
+                deplist = "%s %s" % (device, deplist)
         return deplist
 
     # Find a usable/selected storage device.
@@ -177,15 +170,15 @@ class Storage:
         multipath_list = subprocess.Popen(multipath_list_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         multipath_list_output = multipath_list.stdout.read()
 
-        for d in multipath_list_output:
+        for d in multipath_list_output.split():
             devices="/dev/mapper/%s %s" % (d, devices)
             sd_devs=""
-            self.get_multipath_deps(d, sd_devs)
+            sd_devs = self.get_multipath_deps(d)
 
-            dm_dev_cmd = "multipath -ll \"%s\" | grep \"%s\" | sed -r 's/^.*(dm-[0-9]+ ).*$/\1/' )" % (d, d)
+            dm_dev_cmd = "multipath -ll \"%s\" | grep \"%s\" | sed -r 's/^.*(dm-[0-9]+ ).*$/\\1/'" % (d, d)
             dm_dev = subprocess.Popen(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             dm_dev_output = dm_dev.stdout.read()
-            devs_to_remove="%s %s %s" % (devs_to_remove, sd_devs, dm_dev)
+            devs_to_remove="%s %s %s" % (devs_to_remove, sd_devs, dm_dev_output)
         # Remove /dev/sd* devices that are part of a multipath device
         dev_list=[]
         for d in devices.split():
