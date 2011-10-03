@@ -653,7 +653,7 @@ start_ovirt_early () {
             *)
             # check the params to be ignored before adding to bootparams
             varname=${i%=*}
-            if ! grep -qw $varname /etc/ovirt-commandline.d/*; then
+            if ! grep -qw $varname /etc/ovirt-commandline.d/* 2>/dev/null; then
                 bootparams="$bootparams $i"
             fi
             ;;
