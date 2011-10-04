@@ -68,24 +68,25 @@ ln -sf /lib/systemd/system/multi-user.target /etc/systemd/system/default.target
 cat >> /lib/systemd/system/ovirt-firstboot.service << \EOF_firstboot
 [Unit]
 Description=firstboot configuration program (text mode)
-After=livesys.service plymouth-quit.service
-Before=systemd-user-sessions.service
+After=plymouth-quit.service
+Before=getty@tty1.service
 
 [Service]
 Environment=RUNLEVEL=3
+ExecStartPre=-/bin/plymouth quit
 ExecStart=/etc/init.d/ovirt-firstboot start
 TimeoutSec=0
 RemainAfterExit=yes
 Type=oneshot
 SysVStartPriority=99
-StandardInput=tty
+StandardInput=tty-force
 
 [Install]
 WantedBy=multi-user.target
 EOF_firstboot
 
 systemctl enable ovirt-firstboot.service >/dev/null 2>&1
-
+chkconfig --del ovirt-firstboot
 
 echo "Configuring IPTables"
 # here, we need to punch the appropriate holes in the firewall
