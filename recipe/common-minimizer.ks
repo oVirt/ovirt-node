@@ -313,3 +313,7 @@ drop /usr/share/snmp/snmpconf-data
 
 #desktop files
 drop /etc/xdg/autostart/restorecond.desktop
+
+#ebtables depends on perl
+drop /sbin/ebtables-save
+drop /sbin/ebtables-restore
