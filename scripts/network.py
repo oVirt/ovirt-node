@@ -362,19 +362,14 @@ def get_system_nics():
                     ntp_dhcp = 1
     return nic_dict, configured_nics, ntp_dhcp
 
-
-if __name__ == "__main__":
+def network_auto():
     try:
-        if "AUTO" in sys.argv[1]:
-            if OVIRT_VARS.has_key("OVIRT_INIT"):
-                network = Network()
-                network.configure_interface()
-                network.configure_dns()
-                network.configure_ntp()
-                network.save_ntp_configuration()
-                network.save_network_configuration()
-            else:
-                logging.debug("No network interface specified. Unable to configure networking.")
+        network = Network()
+        network.configure_interface()
+        network.configure_dns()
+        network.configure_ntp()
+        network.save_ntp_configuration()
+        network.save_network_configuration()
     except:
-        logging.warn("Exiting..")
-        sys.exit(0)
+        logging.warn("Network Configuration Failed....")
+        sys.exit(1)
