@@ -1,7 +1,7 @@
 %post
 echo -n "Creating manifest"
 # Create post-image processing manifests
-rpm -qa --qf '%{name}-%{version}-%{release}.%{arch} (%{SIGGPG:pgpsig})\n' | \
+rpm -qa --qf '%{name}-%{version}-%{release}.%{arch} (%{SIGPGP:pgpsig})\n' | \
     sort > /manifest-rpm.txt
 rpm -qa --qf '%{sourcerpm}\n' | sort -u > /manifest-srpm.txt
 # collect all included licenses rhbz#601927
