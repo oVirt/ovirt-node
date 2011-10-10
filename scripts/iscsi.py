@@ -41,4 +41,12 @@ def get_current_iscsi_initiator_name():
         if "InitiatorName" in line:
             initiator_name = line.replace("InitiatorName=","")
             return initiator_name.strip()
-    
+
+def iscsi_auto():
+    if not OVIRT_VARS.has_key("OVIRT_ISCSI_NAME"):
+        logging.info("Generating iSCSI IQN")
+        iscsi_iqn_cmd = subprocess.Popen("/sbin/iscsi-iname", stdout=PIPE)
+        iscsi_iqn, err = iscsi_iqn_cmd.communicate()
+        set_iscsi_initiator(iscsi_iqn.strip())
+    else:
+        set_iscsi_initiator(OVIRT_VARS["OVIRT_ISCSI_NAME"])
