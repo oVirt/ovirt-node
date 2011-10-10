@@ -92,9 +92,8 @@ class Storage:
         for vg in vg_proc.stdout.read().split():
             pvs_cmd="pvs -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \"" % (vg, dev, part_delim, dev)
             if system(pvs_cmd):
-                log("The volume group \"%s\" spans multiple disks." % vg)
-                log("This operation cannot complete.  Please manually")
-                log("cleanup the storage using standard disk tools.")
+                logger.error("The volume group \"%s\" spans multiple disks." % vg)
+                logger.error("This operation cannot complete.  Please manually cleanup the storage using standard disk tools.")
                 sys.exit(1)
             wipe_volume_group(vg)
         return
@@ -229,45 +228,42 @@ class Storage:
     
             if drive_need_size > drive_disk_size:
                 gap_size = drive_need_size - drive_disk_size
-                log("\n")
-                log("=============================================================\n")
-                log("The target storage device is too small for the desired sizes:\n")
-                log(" Disk Target: " + drive + " \n")
-                log(" Size of target storage device: " + drive_disk_size + "MB\n")
-                log(" Total storage size to be used: " + drive_need_size + "MB\n")
-                log("\n")
-                log("You need an additional " + gap_size + "MB of storage.\n")
-                log("\n")
+                logger.error("The target storage device is too small for the desired sizes:")
+                logger.error(" Disk Target: " + drive)
+                logger.error(" Size of target storage device: " + drive_disk_size + "MB")
+                logger.error(" Total storage size to be used: " + drive_need_size + "MB")
+                logger.error("You need an additional " + gap_size + "MB of storage.")
                 sys.exit(1)
             else:
-                log("Required Space : " + drive_need_size + "MB\n\n")
+                logger.info("Required Space : " + drive_need_size + "MB")
                 return True
 
     def create_hostvg(self):
-        log("Creating LVM partition")
-        log(self.HOSTVGDRIVE)
+        logger.info("Creating LVM partition")
+        logger.info(self.HOSTVGDRIVE)
         self.physical_vols = []
         for drv in self.HOSTVGDRIVE.split(","):
             if drv != "":
                 if self.ROOTDRIVE == drv:
                     parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\""
-                    log(parted_cmd)
+                    logger.debug(parted_cmd)
                     system(parted_cmd)
                     hostvgpart="4"
                 elif self.BOOTDRIVE == drv:
                     parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 " + str(self.boot_size_si) + " -1\""
-                    log(parted_cmd)
+                    logger.debug(parted_cmd)
                     system(parted_cmd)
                     hostvgpart="2"
                     self.ROOTDRIVE = self.BOOTDRIVE
                 else:
                     system("parted \""+ drv +"\" -s \"mklabel "+self.LABEL_TYPE+"\"")
                     parted_cmd = "parted \""+ drv + "\" -s \"mkpart primary ext2 1M -1 \""
-                    log(parted_cmd)
+                    logger.debug(parted_cmd)
                     system(parted_cmd)
                     hostvgpart = "1"
-                log("Toggling LVM on")
+                logger.info("Toggling LVM on")
                 parted_cmd = "parted \"" + drv +  "\" -s \"set " + str(hostvgpart) + " lvm on\""
+                logger.debug(parted_cmd)
                 system(parted_cmd)
                 system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
                 system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
@@ -276,7 +272,7 @@ class Storage:
                 # sync GPT to the legacy MBR partitions
                 if OVIRT_VARS.has_key("OVIRT_INSTALL_ROOT") and OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y" :
                     if self.LABEL_TYPE == "gpt":
-                        log("Running gptsync to create legacy mbr")
+                        logger.info("Running gptsync to create legacy mbr")
                         system("gptsync \"" + self.ROOTDRIVE + "\"")
 
                 partpv = drv + hostvgpart
@@ -285,51 +281,52 @@ class Storage:
                     partpv = drv + "p" + hostvgpart
                 self.physical_vols.append(partpv)
         drv_count = 0
-        log(self.physical_vols)
+        logger.debug(self.physical_vols)
         for partpv in self.physical_vols:
-            log("Creating physical volume on " + partpv)
+            logger.info("Creating physical volume on " + partpv)
             if not os.path.exists(partpv):
-                log(partpv + "is not available!")
+                logger.error(partpv + "is not available!")
                 return False
             if not system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1"):
-                log("Failed to wipe lvm partition")
+                logger.error("Failed to wipe lvm partition")
+                return False
             if not system("pvcreate -ff -y \"" + partpv + "\""):
-                log("Failed to pvcreate on " + partpv)
+                logger.error("Failed to pvcreate on " + partpv)
                 return False
             if drv_count < 1:
-                log("Creating volume group on " + partpv)
+                logger.info("Creating volume group on " + partpv)
                 if not system("vgcreate /dev/HostVG \"" + partpv + "\""):
-                    log("Failed to vgcreate /dev/HostVG on " + partpv)
+                    logger.error("Failed to vgcreate /dev/HostVG on " + partpv)
                     return False
             else:
-                log("Extending volume group on " + partpv)
+                logger.info("Extending volume group on " + partpv)
                 if not system("vgextend /dev/HostVG \"" + partpv + "\""):
-                    log("Failed to vgextend /dev/HostVG on " + partpv)
+                    logger.error("Failed to vgextend /dev/HostVG on " + partpv)
                     return False
             drv_count = drv_count + 1
         if self.SWAP_SIZE > 0:
-            log("Creating swap partition")
+            logger.info("Creating swap partition")
             system("lvcreate --name Swap --size "+str(self.SWAP_SIZE) + "M /dev/HostVG")
             system("mkswap -L \"SWAP\" /dev/HostVG/Swap")
             os.system("echo \"/dev/HostVG/Swap swap swap defaults 0 0\" >> /etc/fstab")
         if self.CONFIG_SIZE > 0:
-            log("Creating config partition")
+            logger.info("Creating config partition")
             system("lvcreate --name Config --size "+str(self.CONFIG_SIZE)+"M /dev/HostVG")
             system("mke2fs -j -t ext4 /dev/HostVG/Config -L \"CONFIG\"")
             system("tune2fs -c 0 -i 0 /dev/HostVG/Config")
         if self.LOGGING_SIZE > 0:
-            log("Creating log partition")
+            logger.info("Creating log partition")
             system("lvcreate --name Logging --size "+str(self.LOGGING_SIZE)+"M /dev/HostVG")
             system("mke2fs -j -t ext4 /dev/HostVG/Logging -L \"LOGGING\"")
             system("tune2fs -c 0 -i 0 /dev/HostVG/Logging")
             os.system("echo \"/dev/HostVG/Logging /var/log ext4 defaults,noatime 0 0\" >> /etc/fstab")
         use_data=1
         if self.DATA_SIZE == -1:
-            log("Creating data partition with remaining free space")
+            logger.info("Creating data partition with remaining free space")
             system("lvcreate --name Data -l 100%FREE /dev/HostVG")
             use_data=0
         elif self.DATA_SIZE > 0:
-            log("Creating data partition")
+            logger.info("Creating data partition")
             system("lvcreate --name Data --size "+str(self.DATA_SIZE)+"M /dev/HostVG")
             use_data=0
         if use_data == 0:
@@ -339,7 +336,7 @@ class Storage:
             os.system("echo \"/data/images /var/lib/libvirt/images bind bind 0 0\" >> /etc/fstab")
             os.system("echo \"/data/core /var/log/core bind bind 0 0\" >> /etc/fstab")
 
-        log("Mounting config partition")
+        logger.info("Mounting config partition")
         mount_config()
         if os.path.ismount("/config"):
             ovirt_store_config("/etc/fstab")
@@ -347,36 +344,36 @@ class Storage:
         unmount_logging()
         mount_logging()
         if use_data == 0:
-            log("Mounting data partition")
+            logger.info("Mounting data partition")
             mount_data()
-        log("Completed!")
+        logger.info("Completed HostVG Setup!")
         return True
 
     def perform_partitioning(self):
         if self.HOSTVGDRIVE is None and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] != "y":
-            log("\nNo storage device selected.\n")
+            logger.error("\nNo storage device selected.")
             return False
 
         if self.BOOTDRIVE is None and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
-            log("\nNo storage device selected.\n")
+            logger.error("No storage device selected.")
             return False
 
-        log("Saving parameters")
+        logger.info("Saving parameters")
         unmount_config("/etc/default/ovirt")
 
-        log("Removing old LVM partitions")
+        logger.info("Removing old LVM partitions")
         # HostVG must not exist at this point
         # we wipe only foreign LVM here
-        log("Wiping LVM on HOSTVGDRIVE %s" % self.HOSTVGDRIVE)
+        logger.info("Wiping LVM on HOSTVGDRIVE %s" % self.HOSTVGDRIVE)
         self.wipe_lvm_on_disk(self.HOSTVGDRIVE)
-        log("Wiping LVM on ROOTDRIVE %s" % self.ROOTDRIVE)
+        logger.info("Wiping LVM on ROOTDRIVE %s" % self.ROOTDRIVE)
         self.wipe_lvm_on_disk(self.ROOTDRIVE)
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
         if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
-            log("iSCSI enabled, partitioning boot drive: $BOOTDRIVE")
+            logger.info("iSCSI enabled, partitioning boot drive: $BOOTDRIVE")
             wipe_partitions(self.BOOTDRIVE)
             reread_partitions(self.BOOTDRIVE)
-            log("Creating boot partition")
+            logger.info("Creating boot partition")
             system("parted \""+ self.BOOTDRIVE+"\" -s \"mklabel "+self.LABEL_TYPE+"\"")
             system("parted \""+self.BOOTDRIVE+"\" -s \"mkpartfs primary ext2 1M "+self.boot_size_si+"M\"")
             reread_partitions(self.BOOTDRIVE)
@@ -389,17 +386,17 @@ class Storage:
             system("tune2fs -c 0 -i 0 \""+str(partboot)+"\"")
             if OVIRT_VARS["OVIRT_ISCSI_HOSTVG"] == "y":
                 self.create_hostvg()
-            log("Completed!")
+            logger.info("Completed!")
             return
         if OVIRT_VARS.has_key("OVIRT_ROOT_INSTALL") and OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "y":
-            log("Partitioning root drive: " + self.ROOTDRIVE)
+            logger.info("Partitioning root drive: " + self.ROOTDRIVE)
             wipe_partitions(self.ROOTDRIVE)
             self.reread_partitions(self.ROOTDRIVE)
-            log("Labeling Drive: " + self.ROOTDRIVE)
+            logger.info("Labeling Drive: " + self.ROOTDRIVE)
             parted_cmd = "parted \""+ self.ROOTDRIVE +"\" -s \"mklabel "+ self.LABEL_TYPE+"\""
-            log(parted_cmd)
+            logger.debug(parted_cmd)
             system(parted_cmd)
-            log("Creating Root and RootBackup Partitions")
+            logger.debug("Creating Root and RootBackup Partitions")
             parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary fat32 1M "+ str(self.EFI_SIZE)+"M\""
             log(parted_cmd)
             system(parted_cmd)
@@ -408,6 +405,9 @@ class Storage:
             system(parted_cmd)
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.Root_end)+"M "+str(self.RootBackup_end)+"M\""
             log(parted_cmd)
+            system(parted_cmd)
+            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"set 1 boot on\""
+            logger.debug(parted_cmd)
             system(parted_cmd)
             # sleep to ensure filesystems are created before continuing
             time.sleep(5)
@@ -476,18 +476,14 @@ class Storage:
 
             if drive_need_size > drive_disk_size:
                 gap_size = drive_need_size - drive_disk_size
-                log("\n")
-                log("=============================================================\n")
-                log("The target storage device is too small for the desired sizes:\n")
-                log(" Disk Target: " + drive + " \n")
-                log(" Size of target storage device: " + str(drive_disk_size) + "MB\n")
-                log(" Total storage size to be used: " + str(drive_need_size) + "MB\n")
-                log("\n")
-                log("You need an additional " + str(gap_size) + "MB of storage.\n")
-                log("\n")
+                logger.error("The target storage device is too small for the desired sizes:")
+                logger.error(" Disk Target: " + drive)
+                logger.error(" Size of target storage device: " + str(drive_disk_size) + "MB")
+                logger.error(" Total storage size to be used: " + str(drive_need_size) + "MB")
+                logger.error("You need an additional " + str(gap_size) + "MB of storage.")
                 sys.exit(1)
             else:
-                log("Required Space : " + str(drive_need_size) + "MB\n\n")
+                logger.info("Required Space : " + str(drive_need_size) + "MB")
 
 def storage_auto():
     storage = Storage()
@@ -497,4 +493,4 @@ def storage_auto():
         else:
             return False
     else:
-        log("\n Storage Device Is Required for Auto Installation\n")
+        logger.error("Storage Device Is Required for Auto Installation")
