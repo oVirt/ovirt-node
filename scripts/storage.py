@@ -53,8 +53,8 @@ class Storage:
                     else:
                         self.HOSTVGDRIVE = self.HOSTVGDRIVE + disk + ","
             else:
-                self.ROOTDRIVE = OVIRT_VARS["OVIRT_INIT"]
-                self.HOSTVGDRIVE = OVIRT_VARS["OVIRT_INIT"]
+                self.ROOTDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
+                self.HOSTVGDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
 
         mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
         mem_size_mb = subprocess.Popen(mem_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -489,39 +489,12 @@ class Storage:
             else:
                 log("Required Space : " + str(drive_need_size) + "MB\n\n")
 
-if __name__ == "__main__":
+def storage_auto():
     storage = Storage()
-    OVIRT_VARS = parse_defaults()
-    # do not format if HostVG exists on selected disk...
-    print OVIRT_VARS
-    existingHostVG = storage.check_existing_hostvg(OVIRT_VARS["OVIRT_INIT"])
-    print existingHostVG
-    a = storage.perform_partitioning()
-    print a
-
-"""
-    try:
-        OVIRT_VARS = parse_defaults()
-        if sys.argv[1] == "AUTO":
-            log("Beginning automatic disk partitioning.")
-            
-            if not OVIRT_VARS["OVIRT_INIT"] is None:
-                storage = Storage()
-                # do not format if HostVG exists on selected disk...
-                existingHostVG = storage.check_existing_hostvg(OVIRT_VARS["OVIRT_INIT"])
-                # ... unless overridden by ovirt_firstboot parameter
-                if is_firstboot or existingHostVG == False:
-                    if storage.check_partition_sizes():
-                        log("Partitioning hard disk...")
-                        storage.perform_partitioning()
-                    else:
-                        log("Skip disk partitioning, HostVG exists")
-                        sys.exit(1)
+    if not OVIRT_VARS["OVIRT_INIT"] == "":
+        if storage.perform_partitioning():
+            return True
         else:
-            log("Missing device parameter: unable to partition any disk")
-            sys.exit(2)
-
-    except:
-        print "Storage Configuration Failed check ovirt.log for details"
-        sys.exit(1)
-"""
+            return False
+    else:
+        log("\n Storage Device Is Required for Auto Installation\n")
