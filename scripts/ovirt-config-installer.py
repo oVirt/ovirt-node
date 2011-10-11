@@ -392,10 +392,6 @@ class NodeInstallScreen:
             if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name and size_failed == 0:
                 dev_name = translate_multipath_device(dev_name)
                 self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
-                # add entry for mpath device and map disk info correctly
-                if os.path.exists("/dev/mapper/"+str(dev_serial)):
-                    dev_name = "/dev/mapper/" + dev_serial
-                    self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
         Storage = storage.Storage()
         devs = Storage.get_dev_name()
         dev_names = []
@@ -870,4 +866,3 @@ class NodeInstallScreen:
 if __name__ == "__main__":
    screen = NodeInstallScreen()
    screen.start()
-

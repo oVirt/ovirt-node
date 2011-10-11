@@ -1000,23 +1000,13 @@ def translate_multipath_device(dev):
         cciss_dev_cmd = "cciss_id " + dev
         cciss_dev = subprocess.Popen(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dev = "/dev/mapper/" + cciss_dev.stdout.read().strip()
-    mpath_cmd = "multipath -ll '%s' &> /dev/null" % dev
-    ret = os.system(mpath_cmd)
-    if ret > 0:
-        return dev
     dm_dev_cmd = "multipath -ll '%s' | egrep dm-[0-9]+" % dev
     dm_dev = subprocess.Popen(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    dm_dev_output = "/dev/" + dm_dev.stdout.read()
-    dm_dev = re.search('dm-[0-9]+', dm_dev_output)
-    try:
-        dm_dev = dm_dev.group(0)
-        mpath_device = get_dm_device(dm_dev)
-        if mpath_device is None:
-            return dev
-        else:
-            return mpath_device.strip("\n")
-    except:
+    (dm_dev_output, dummy) = dm_dev.communicate()
+    if dm_dev.returncode > 0:
         return dev
+    else:
+        return "/dev/mapper/"+dm_dev_output.split()[0]
 
 def pwd_lock_check(user):
     passwd_cmd = "passwd -S %s" % user
