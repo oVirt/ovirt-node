@@ -76,13 +76,15 @@ def ovirt_rsyslog(server, port, protocol):
     rsyslog_config.write(rsyslog_config_out)
     rsyslog_config.close()
     os.system("/sbin/service rsyslog restart &> /dev/null")
+    logger.info("Syslog Configuration Updated")
     return True
 
 def ovirt_netconsole(server, port):
     augtool("set","/files/etc/sysconfig/netconsole/SYSLOGADDR", server)
     augtool("set","/files/etc/sysconfig/netconsole/SYSLOGPORT", port)
     os.system("/sbin/service netconsole restart &> /dev/null")
-    ovirt_store_config("/etc/sysconfig/netconsole")
+    if ovirt_store_config("/etc/sysconfig/netconsole"):
+        logger.info("Netconsole Configuration Updated")
     return True
 
 
@@ -114,24 +116,23 @@ def get_rsyslog_config():
                     if not server.startswith("#"):
                         return (server,port.strip())
                 except:
-                    log("rsyslog config parsing failed " + line)
+                    logger.error("rsyslog config parsing failed " + line)
                     return
 
 if len(sys.argv) > 1:
     try:
         if sys.argv[1] == "AUTO":
             if not OVIRT_VARS.has_key("OVIRT_SYSLOG_SERVER") or not OVIRT_VARS.has_key("OVIRT_SYSLOG_PORT"):
-                
-                log("\nAttempting to locate remote syslog server...")
+                logger.info("Attempting to locate remote syslog server...")
                 host, port = find_srv("syslog", "udp")
                 if not host is None and not port is None:
-                    log("found! Using syslog server " + host + ":" + port) 
+                    logger.info("Found! Using syslog server " + host + ":" + port)
                     ovirt_rsyslog(host, port, udp)
                 else:
-                    log("not found!\n")
+                    logger.warn("Syslog server not found!")
             else:
-                log("\nUsing default syslog server " + OVIRT_SYSLOG_SERVER + ":" + OVIRT_SYSLOG_PORT + ".\n")
+                logger.info("Using default syslog server " + OVIRT_SYSLOG_SERVER + ":" + OVIRT_SYSLOG_PORT + ".")
                 ovirt_rsyslog(OVIRT_VARS["OVIRT_SYSLOG_SERVER"], OVIRT_VAR["OVIRT_SYSLOG_PORT"], udp)
     except:
-        log("Error configuring rsyslog server")
+        logger.error("Error configuring rsyslog server")
         sys.exit(1)
