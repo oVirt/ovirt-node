@@ -283,6 +283,11 @@ class Network:
             os.system("service network start &> /dev/null")
             os.system("service ntpdate start &> /dev/null")
             os.system("service ntpd start &> /dev/null")
+            # rhbz#745541
+            os.system("service rpcbind start &> /dev/null")
+            os.system("service nfslock start &> /dev/null")
+            os.system("service rpcidmapd start &> /dev/null")
+            os.system("service rpcgssd start &> /dev/null")
             if OVIRT_VARS.has_key("NTP"):
                 log("Testing NTP Configuration")
                 test_ntp_configuration()
