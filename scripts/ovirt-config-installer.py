@@ -96,7 +96,7 @@ class NodeInstallScreen:
         self.current_password_fail = 0
         self.failed_block_dev = 0
         self.live_disk = "/dev/" + get_live_disk().rstrip('0123456789')
-        log("::::live::::\n" + self.live_disk)
+        logger.info("::::live device::::\n" + self.live_disk)
     def set_console_colors(self):
         self.existing_color_array = None
         tty_file = None
@@ -185,12 +185,12 @@ class NodeInstallScreen:
             try:
                 auth.authenticate()
             except PAM.error, (resp, code):
-                log(resp)
+                logger.error(resp)
                 self.current_password_fail = 1
                 self.pw_msg.setText("Current Password Invalid")
                 return False
             except:
-                log("Internal error")
+                logger.error("Internal error")
                 return False
             else:
                 self.current_password_fail = 0
@@ -309,7 +309,7 @@ class NodeInstallScreen:
                             self.menu_list.append(" Reinstall " + m_full_ver, 3)
                     except:
                         self.menu_list.append(" Invalid installation, please reboot from media and choose Reinstall", 0)
-                        log("unable to get_version_numbers for upgrade")
+                        logger.error("Unable to get version numbers for upgrade, invalid installation or media")
                         pass
                 else:
                     self.menu_list.append("Major version upgrades are unsupported, uninstall existing version first", 0)
