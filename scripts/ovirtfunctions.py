@@ -547,9 +547,8 @@ def ovirt_store_config(files):
                 rc = 0
             else:
                 # persistent copy needs refresh
-                ret = os.system("umount -n " + filename + " 2> /dev/null")
-                if ret != 0:
-                    os.system("rm -f /config"+ filename)
+                if system("umount -n " + filename + " 2> /dev/null"):
+                    system("rm -f /config"+ filename)
     if persist_it:
         # skip if file does not exist
         if not os.path.exists(filename):
@@ -557,11 +556,9 @@ def ovirt_store_config(files):
         # skip if already bind-mounted
         if not check_bind_mount(filename):
             dirname = os.path.dirname(filename)
-            os.system("mkdir -p /config/" + dirname)
-            ret = os.system("cp -a " + filename + " /config"+filename)
-            if ret == 0:
-                ret = os.system("mount -n --bind /config"+filename+ " "+filename)
-                if ret != 0:
+            system("mkdir -p /config/" + dirname)
+            if system("cp -a " + filename + " /config"+filename):
+                if not system("mount -n --bind /config"+filename+ " "+filename):
                     log("Failed to persist\n")
                     rc = 1
                 else:
