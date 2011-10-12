@@ -38,10 +38,10 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     location="/etc/sysconfig/rhn/%s" % os.path.basename(cacert)
     if len(cacert) > 0:
         if not os.path.exists(cacert):
-            log("cacert: " + cacert)
-            log("location: " + location)
-            log("Downloading Satellite CA cert.....")
-            log("From: " + cacert + " To: " + location)
+            logger.debug("CACert: " + cacert)
+            logger.debug("Location: " + location)
+            logger.info("Downloading Satellite CA cert.....")
+            logger.debug("From: " + cacert + " To: " + location)
             os.system("wget -q -r -nd --no-check-certificate --timeout=30 --tries=3 -O \"" + location +"\" \"" + cacert + "\"")
         if os.path.isfile(location):
             if os.stat(location).st_size > 0:
@@ -49,7 +49,7 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
                 args.append(location)
                 ovirt_store_config(location)
             else:
-                log("Error Downloading Satellite CA cert!")
+                logger.error("Error Downloading Satellite CA cert!")
                 return 3
 
     if len(activationkey):
@@ -83,7 +83,7 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
 
     args.extend(extra_args)
 
-    log("Registering to RHN account.....")
+    logger.info("Registering to RHN account.....")
 
     unmount_config("/etc/sysconfig/rhn/systemid")
     unmount_config("/etc/sysconfig/rhn/up2date")
@@ -91,21 +91,21 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     if os.path.exists("/etc/sysconfig/rhn/up2date"):
         os.unlink("/etc/sysconfig/rhn/up2date")
     logged_args = str(args).replace(password, "XXXXXXXX")
-    log(logged_args)
+    logger.debug(logged_args)
     rhn_reg = subprocess.Popen(args, shell=False, stdout=PIPE, stderr=STDOUT)
     rhn_reg_output = rhn_reg.stdout.read()
-    log(rhn_reg_output)
+    logger.debug(rhn_reg_output)
     if rhn_reg.wait() == 0:
         ovirt_store_config("/etc/sysconfig/rhn/up2date")
         ovirt_store_config("/etc/sysconfig/rhn/systemid")
-        log("System %s sucessfully registered to %s" % (profilename, serverurl))
+        logger.info("System %s sucessfully registered to %s" % (profilename, serverurl))
         return 0
     else:
         if "username/password" in rhn_reg_output:
             rc = 2
         else:
             rc = 1
-        log("Error registering to RHN account!")
+        logger.error("Error registering to RHN account!")
         return rc
 
 def parse_host_port(u):
@@ -398,9 +398,9 @@ class Plugin(PluginBase):
                         self.rhn_conf[item] = value.strip()
             except:
                 pass
-            log(self.rhn_conf)
+            logger.debug(self.rhn_conf)
         else:
-            log("RHN Config does not exist")
+            logger.debug("RHN Config does not exist")
             return
 
     def rv(self, var):
