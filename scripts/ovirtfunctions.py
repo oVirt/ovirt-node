@@ -202,7 +202,7 @@ def get_ttyname():
     return None
 
 def manual_setup():
-    log("checking for lockfile")
+    logger.info("Checking For Setup Lockfile")
     tty = get_ttyname()
     if os.path.exists("/tmp/ovirt-setup.%s" % tty):
         return True
@@ -386,7 +386,7 @@ def mount_config():
         filelist = subprocess.Popen(filelist_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         filelist = filelist.stdout.read()
         for f in filelist.split():
-            log(f)
+            logger.debug("Bind Mounting: " + f)
             if os.path.isfile(f) and f != "/config/files":
                 target = string.replace(f, "/config", "")
                 mounted_cmd = "grep -q " + target + " /proc/mounts"
@@ -435,7 +435,7 @@ def mount_logging():
     if os.path.ismount("/var/log"):
         return True
     if os.path.exists("/dev/HostVG/Logging"):
-        log("Mounting log partition")
+        logger.info("Mounting log partition")
         # temporary mount-point
         log2 = tempfile.mkdtemp()
         os.system("mount /dev/HostVG/Logging " + log2)
@@ -455,13 +455,13 @@ def mount_logging():
         return
     else:
         # /var/log is not available
-        log("\nThe logging partion has not been created. Please create it at the main menu.\n")
+        logger.error("The logging partion has not been created. Please create it at the main menu.")
         return False
 
 def unmount_logging():
     if not os.path.ismount("/var/log"):
         return True
-    log("Unmounting log partition")
+    logger.info("Unmounting log partition")
     # plymouthd keeps /var/log/boot.log
     ret = os.system("plymouth --ping")
     if ret == 0:
@@ -496,7 +496,7 @@ def mount_data():
         return
     else:
         # /data is not available
-        log("\nThe data partion has not been created. Please create it at the main menu.\n")
+        logger.error("The data partion has not been created. Please create it at the main menu.")
         return False
 
 def md5sum(filename):
@@ -516,7 +516,7 @@ STRING_TYPE=(str,unicode)
 
 def ovirt_store_config(files):
   if not os.path.ismount("/config"):
-    log("/config is not mounted")
+    logger.error("/config is not mounted")
     return False
   if isinstance(files,STRING_TYPE):
     files_list = []
@@ -530,8 +530,8 @@ def ovirt_store_config(files):
     # that it's not already persisted
     if os.path.isdir(filename):
         if os.path.isdir("/config/" + filename):
-            log("Directory already persisted: ${filename}\n")
-            log("You need to unpersist its child directories and/or files and try again.\n")
+            logger.warn("Directory already persisted: " + filename)
+            logger.warn("You need to unpersist its child directories and/or files and try again.")
             persist_it=False
             rc = 0
 
@@ -541,8 +541,7 @@ def ovirt_store_config(files):
             md5root=md5sum(filename)
             md5stored=md5sum("/config" + filename)
             if md5root == md5stored:
-                log(filename)
-                log("File already persisted: " + filename + "\n")
+                logger.warn("File already persisted: " + filename)
                 persist_it=False
                 rc = 0
             else:
@@ -552,26 +551,26 @@ def ovirt_store_config(files):
     if persist_it:
         # skip if file does not exist
         if not os.path.exists(filename):
-            log("Skipping, file " + filename + " does not exist\n")
+            logger.warn("Skipping, file: " + filename + " does not exist")
         # skip if already bind-mounted
         if not check_bind_mount(filename):
             dirname = os.path.dirname(filename)
             system("mkdir -p /config/" + dirname)
             if system("cp -a " + filename + " /config"+filename):
                 if not system("mount -n --bind /config"+filename+ " "+filename):
-                    log("Failed to persist\n")
+                    logger.error("Failed to persist: " + filename)
                     rc = 1
                 else:
-                    log("File persisted\n")
+                    logger.info("File: " + filename + " persisted")
                     rc = True
         # register in /config/files used by rc.sysinit
         ret = os.system("grep -q \"^$" + filename +"$\" /config/files 2> /dev/null")
         if ret > 0:
             os.system("echo "+filename+" >> /config/files")
-            log("\nSuccessfully persisted: " + filename)
+            logger.info("Successfully persisted: " + filename)
             rc = 0
     else:
-        log(filename + " Already persisted\n")
+        logger.warn(filename + " Already persisted")
         rc = 0
     if rc == 0:
         return True
@@ -640,28 +639,28 @@ def remove_config(files):
                         if os.path.isdir(filename):
                             ret = os.system('cp -ar /config/"%s"/* "%s"' % (filename,filename))
                             if ret > 0:
-                                log(" Failed to unpersist %s\n" % filename)
+                                logger.error(" Failed to unpersist %s" % filename)
                                 return False
                             else:
-                                log("%s successully unpersisted\n" % filename)
+                                logger.info("%s successully unpersisted" % filename)
                                 return True
                         else:
                             if os.path.isfile(filename):
                                 # refresh the file in rootfs if it was mounted over
                                ret = os.system('cp -a /config"%s" "%s"' % (filename,filename))
                                if ret > 0:
-                                    log("Failed to unpersist %s\n" % filename)
+                                    logger.error("Failed to unpersist %s" % filename)
                                     return False
                                else:
-                                   log("%s successully unpersisted\n" % filename)
+                                   logger.info("%s successully unpersisted" % filename)
                     # clean up the persistent store
                     os.system('rm -Rf /config"%s"' % filename)
                     # unregister in /config/files used by rc.sysinit
                     os.system('sed --copy -i "\|^%s$|d" /config/files' % filename)
                 else:
-                    log("%s is not a persisted file.\n" % filename)
+                    logger.warn("%s is not a persisted file." % filename)
             else:
-                log("File not explicitly persisted: %s\n" % filename)
+                logger.warn("File not explicitly persisted: %s" % filename)
 
 # ovirt_safe_delete_config
 #       ovirt_safe_delete_config /etc/config /etc/config2 ...
@@ -757,15 +756,15 @@ def backup_file(self, file):
 #   cleanup before reboot
 
 def finish_install():
-    log("finishing install")
+    logger.info("Completing Installation")
     if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
         # setup new Root if update is prepared
         root_update_dev = findfs("RootUpdate")
         root_dev = findfs("Root")
         e2label_rootbackup_cmd = "e2label '%s' RootBackup" % root_dev
         e2label_root_cmd = "e2label '%s' Root" % root_update_dev
-        log(e2label_rootbackup_cmd)
-        log(e2label_root_cmd)
+        logger.debug(e2label_rootbackup_cmd)
+        logger.debug(e2label_root_cmd)
         subprocess.Popen(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         subprocess.Popen(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     # run post-install hooks
@@ -895,7 +894,7 @@ def get_ipv6_address(interface):
         ip, netmask = ipv6_addr.split("/")
         return (ip,netmask)
     except:
-        log("unable to determine ip/netmask from: " + ipv6_addr)
+        logger.debug("unable to determine ip/netmask from: " + ipv6_addr)
     return False
 
 def get_ipv6_gateway(ifname):
@@ -922,10 +921,10 @@ def is_valid_port(port_number):
 
 # Cleans partition tables
 def wipe_partitions(drive):
-    log("Wiping old boot sector")
+    logger.info("Wiping old boot sector")
     os.system("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     # zero out the GPT secondary header
-    log("Wiping secondary gpt header")
+    logger.info("Wiping secondary gpt header")
     disk_kb = subprocess.Popen("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
     disk_kb_count = disk_kb.stdout.read()
     os.system("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
@@ -943,9 +942,9 @@ def test_ntp_configuration(self):
     for server in OVIRT_VARS["NTP"].split():
         ret = os.system("ntpdate %s > /dev/null 2>&1" % server)
         if ret > 0:
-            print "\n Unable to verify NTP server: %s \n" % server
+            logger.error("Unable to verify NTP server: %s" % server)
         else:
-            log("\n Verified NTP server: %s \n" % server)
+            logger.info("Verified NTP server: %s" % server)
     os.system("service ntpd start")
 
 def get_dm_device(device):
@@ -977,24 +976,23 @@ def check_existing_hostvg(install_dev):
     devices_cmd = subprocess.Popen(devices_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     devices = devices_cmd.stdout.read().strip()
     if len(devices) > 0:
-        log("\n")
-        log("There appears to already be an installation on another device:\n")
+        logger.error("There appears to already be an installation on another device:")
         for device in devices.split(":"):
-            log(device)
-            log("The installation cannot proceed until the device is removed")
-            log("from the system of the HostVG volume group is removed.\n")
+            logger.error(device)
+        logger.error("The installation cannot proceed until the device is removed")
+        logger.error("from the system of the HostVG volume group is removed")
         return devices
     else:
         return False
 
 def translate_multipath_device(dev):
     #trim so that only sdX is stored, but support passing /dev/sdX
+    logger.debug("Translating: %s" % dev)
     if dev is None:
         return False
     if "/dev/mapper" in dev:
         return dev
     if "/dev/cciss" in dev:
-        log("cciss device: " + dev)
         cciss_dev_cmd = "cciss_id " + dev
         cciss_dev = subprocess.Popen(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dev = "/dev/mapper/" + cciss_dev.stdout.read().strip()
@@ -1004,6 +1002,7 @@ def translate_multipath_device(dev):
     if dm_dev.returncode > 0:
         return dev
     else:
+        logger.debug("Translated to: /dev/mapper/" + dm_dev_output.split()[0])
         return "/dev/mapper/"+dm_dev_output.split()[0]
 
 def pwd_lock_check(user):
@@ -1055,7 +1054,7 @@ def get_media_version_number():
             except:
                 pass
     else:
-        log("Failed to mount_live()")
+        logger.error("Failed to mount_live()")
         return False
     if new_install.has_key("VERSION") and new_install.has_key("RELEASE"):
         return [new_install["VERSION"],new_install["RELEASE"]]
@@ -1109,7 +1108,7 @@ def get_virt_hw_status():
     except:
         return "(Failed to Establish Libvirt Connection)"
     if "kvm" in libvirt_capabilities:
-        log("Hardware virtualization detected")
+        logger.info("Hardware virtualization detected")
     else:
         hwvirt_msg = "Virtualization hardware is unavailable."
         cpuflags_cmd = "cat /proc/cpuinfo |grep ^flags|tail -n 1"
