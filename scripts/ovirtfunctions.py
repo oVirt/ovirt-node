@@ -1074,6 +1074,7 @@ def findfs(label):
 
 def system(command):
     if os.system(command + " &>> " + OVIRT_TMP_LOGFILE) == 0:
+        os.system("echo '\n' >> " + OVIRT_TMP_LOGFILE)
         return True
     else:
         return False
