@@ -365,39 +365,10 @@ class NodeInstallScreen:
         return
     def root_disk_page(self):
         elements = Grid(2, 9)
-        self.disk_dict = {}
         self.root_disk_menu_list = Listbox(5, width = 70, returnExit = 0, border = 0, scroll = 1)
         self.root_disk_menu_list.setCallback(self.disk_details_callback)
-        client = gudev.Client(['block'])
-        for device in client.query_by_subsystem("block"):
-            dev_name = device.get_property("DEVNAME")
-            dev_bus = device.get_property("ID_BUS")
-            dev_model = device.get_property("ID_MODEL")
-            dev_serial = device.get_property("ID_SERIAL")
-            dev_desc = device.get_property("ID_SCSI_COMPAT")
-            dev_size_cmd = "sfdisk -s %s 2>/dev/null" % dev_name
-            dev_size = subprocess.Popen(dev_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-            dev_size = dev_size.stdout.read()
-            size_failed = 0
-            if not device.get_property("ID_CDROM"):
-                try:
-                    dev_size = int(dev_size) / 1024 /1024
-                except:
-                   size_failed = 1
-            if not dev_desc:
-                if "/dev/vd" in dev_name:
-                    dev_desc = "virtio disk"
-                else:
-                    dev_desc = "unknown"
-            if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name and size_failed == 0:
-                dev_name = translate_multipath_device(dev_name)
-                self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
         Storage = storage.Storage()
-        devs = Storage.get_dev_name()
-        dev_names = []
-        for dev in devs:
-            dev_names.append(dev)
-        dev_names.sort()
+        dev_names, self.disk_dict = Storage.get_udev_devices()
         self.displayed_disks = {}
         self.valid_disks = []
         for dev in dev_names:

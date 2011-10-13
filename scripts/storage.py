@@ -23,6 +23,7 @@ import time
 import re
 import subprocess
 from subprocess import PIPE, STDOUT
+import gudev
 
 class Storage:
     def __init__(self):
@@ -137,6 +138,8 @@ class Storage:
                 deplist = "%s %s" % (device, deplist)
         return deplist
 
+        return (dev_names.sort(), self.disk_dict)
+
     # Find a usable/selected storage device.
     # If there are none, give a diagnostic and return nonzero.
     # If there is just one, e.g., /dev/sda, treat it as selected (see below).
@@ -149,7 +152,7 @@ class Storage:
         # list separator
         for d in os.listdir("/sys/block/"):
             if re.match("^[hsv]+d", d):
-                devices ="%s /dev/%s " % (devices,d)
+                devices.append("/dev/%s" % d)
             byid_list_cmd = "find /dev/disk/by-id -mindepth 1 -not -name '*-part*' 2>/dev/null"
             byid_list = subprocess.Popen(byid_list_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             byid_list_output = byid_list.stdout.read()
@@ -158,12 +161,12 @@ class Storage:
             d_basename = os.path.basename(d)
             udev_cmd = "udevadm info --name=/dev/" + d_basename + " --query=property | grep -q ^ID_BUS: &>>/dev/null"
             if os.system(udev_cmd):
-                devices="%s /dev/%s " % (devices, d_basename)
+                devices.append("/dev/%s" % d_basename)
         # FIXME: workaround for detecting cciss devices
         if os.path.exists("/dev/cciss"):
             for d in os.listdir("/dev/cciss"):
                 if not re.match("p[0-9]+\$", d):
-                     devices="%s /dev/cciss/%s" % (devices, d)
+                     devices.append("/dev/cciss/%s" % d)
 
         # include multipath devices
         devs_to_remove=""
@@ -172,7 +175,7 @@ class Storage:
         multipath_list_output = multipath_list.stdout.read()
 
         for d in multipath_list_output.split():
-            devices="/dev/mapper/%s %s" % (d, devices)
+            devices.append("/dev/mapper/%s" % d)
             sd_devs=""
             sd_devs = self.get_multipath_deps(d)
 
@@ -182,8 +185,8 @@ class Storage:
             devs_to_remove="%s %s %s" % (devs_to_remove, sd_devs, dm_dev_output)
         # Remove /dev/sd* devices that are part of a multipath device
         dev_list=[]
-        for d in devices.split():
-            if os.path.basename(d) not in devs_to_remove:
+        for d in devices:
+            if os.path.basename(d) not in devs_to_remove and not "/dev/dm-" in d:
                  dev_list.append(d)
 
         for dev in dev_list:
@@ -193,6 +196,35 @@ class Storage:
                     dev_list.remove(dev)
                     count = count - 1
         return dev_list
+
+    def get_udev_devices(self):
+        self.disk_dict = {}
+        client = gudev.Client(['block'])
+        for device in client.query_by_subsystem("block"):
+            dev_name = device.get_property("DEVNAME")
+            dev_bus = device.get_property("ID_BUS")
+            dev_model = device.get_property("ID_MODEL")
+            dev_serial = device.get_property("ID_SERIAL")
+            dev_desc = device.get_property("ID_SCSI_COMPAT")
+            dev_size_cmd = "sfdisk -s %s 2>/dev/null" % dev_name
+            dev_size = subprocess.Popen(dev_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            dev_size = dev_size.stdout.read()
+            size_failed = 0
+            if not device.get_property("ID_CDROM"):
+                try:
+                    dev_size = int(dev_size) / 1024 /1024
+                except:
+                   size_failed = 1
+            if not dev_desc:
+                if "/dev/vd" in dev_name:
+                    dev_desc = "virtio disk"
+                else:
+                    dev_desc = "unknown"
+            if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name and not "/dev/loop" in dev_name and size_failed == 0:
+                dev_name = translate_multipath_device(dev_name)
+                self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
+        devs = self.get_dev_name()
+        return (sorted(devs), self.disk_dict)
 
     def check_partition_sizes(self):
         drive_list = []
