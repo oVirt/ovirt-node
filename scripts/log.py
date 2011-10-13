@@ -119,20 +119,56 @@ def get_rsyslog_config():
                     logger.error("rsyslog config parsing failed " + line)
                     return
 
-if len(sys.argv) > 1:
+def syslog_auto():
+    host = ""
+    port = ""
+    if not OVIRT_VARS.has_key("OVIRT_SYSLOG_SERVER") or not OVIRT_VARS.has_key("OVIRT_SYSLOG_PORT"):
+        logger.info("Attempting to locate remote syslog server...")
+        try:
+            host, port = find_srv("syslog", "udp")
+        except:
+            pass
+        if not host is "" and not port is "":
+            logger.info("Found! Using syslog server " + host + ":" + port)
+            ovirt_rsyslog(host, port, "udp")
+            return True
+        else:
+            logger.warn("Syslog server not found!")
+            return False
+    else:
+        logger.info("Using default syslog server " + OVIRT_VARS["OVIRT_SYSLOG_SERVER"] + ":" + OVIRT_VARS["OVIRT_SYSLOG_PORT"] + ".")
+        ovirt_rsyslog(OVIRT_VARS["OVIRT_SYSLOG_SERVER"], OVIRT_VARS["OVIRT_SYSLOG_PORT"], "udp")
+        return True
+
+def netconsole_auto():
+    host = ""
+    port = ""
+    if not OVIRT_VARS.has_key("OVIRT_NETCONSOLE_SERVER") or not OVIRT_VARS.has_key("OVIRT_NETCONSOLE_PORT"):
+        logger.info("Attempting to locate remote netconsole server...")
+        try:
+            host, port = find_srv("netconsole", "udp")
+        except:
+            pass
+        if not host is "" and not port is "":
+            logger.info("Found! Using netconsole server " + host + ":" + port)
+            ovirt_netconsole(host, port)
+            return True
+        else:
+            logger.warn("Netconsole server not found!")
+            return False
+    else:
+        logger.info("Using default netconsole server " + OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"] + ":" + OVIRT_VARS["OVIRT_NETCONSOLE_PORT"] + ".")
+        ovirt_netconsole(OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"], OVIRT_VARS["OVIRT_NETCONSOLE_PORT"])
+        return True
+
+def logging_auto():
     try:
-        if sys.argv[1] == "AUTO":
-            if not OVIRT_VARS.has_key("OVIRT_SYSLOG_SERVER") or not OVIRT_VARS.has_key("OVIRT_SYSLOG_PORT"):
-                logger.info("Attempting to locate remote syslog server...")
-                host, port = find_srv("syslog", "udp")
-                if not host is None and not port is None:
-                    logger.info("Found! Using syslog server " + host + ":" + port)
-                    ovirt_rsyslog(host, port, udp)
-                else:
-                    logger.warn("Syslog server not found!")
-            else:
-                logger.info("Using default syslog server " + OVIRT_SYSLOG_SERVER + ":" + OVIRT_SYSLOG_PORT + ".")
-                ovirt_rsyslog(OVIRT_VARS["OVIRT_SYSLOG_SERVER"], OVIRT_VAR["OVIRT_SYSLOG_PORT"], udp)
+        syslog_auto()
+        logger.info("Syslog Configuration Completed")
     except:
-        logger.error("Error configuring rsyslog server")
-        sys.exit(1)
+        logger.warn("Syslog Configuration Failed")
+    try:
+        netconsole_auto()
+        logger.info("Syslog Configuration Completed")
+    except:
+        logger.warn("Netconsole Configuration Failed")
