@@ -378,7 +378,7 @@ class NodeInstallScreen:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
                     dev_desc = pad_or_trim(33, dev_desc)
                     self.valid_disks.append(dev_name)
-                    dev_name = dev_name.replace("/dev/mapper/","").replace(" ", "")
+                    dev_name = os.path.basename(dev_name).replace(" ", "")
                     dev_name = pad_or_trim(33, dev_name)
                     dev_entry = " %6s  %11s  %5s GB" % (dev_bus,dev_name, dev_size)
                     dev_name = translate_multipath_device(dev_name)
@@ -402,11 +402,7 @@ class NodeInstallScreen:
         disk_grid.setField(Label("Size         "),0, 4, anchorLeft = 1)
         disk_grid.setField(Label("Description  "),0, 5, anchorLeft = 1)
         # get first disk's info to prepopulate
-        i = 0
-        for d in self.valid_disks:
-            while i < 1:
-                dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[d].split(",",5)
-                i = i + 1
+        dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[self.valid_disks[0]].split(",",5)
         dev_name = dev_name.replace(" ", "")
         self.dev_name_label = Label(dev_name)
         self.dev_model_label = Label(dev_model)
@@ -447,8 +443,7 @@ class NodeInstallScreen:
                     else:
                         select_status = 0
                     # strip all "/dev/*/" references and leave just basename
-                    dev_name = dev_name.replace("/dev/mapper/","")
-                    dev_name = dev_name.replace("/dev/","").replace(" ", "")
+                    dev_name = os.path.basename(dev_name).replace(" ", "")
                     dev_name = pad_or_trim(33, dev_name)
                     dev_entry = " %6s %10s %2s GB" % (dev_bus,dev_name, dev_size)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
