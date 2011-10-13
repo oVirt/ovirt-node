@@ -36,19 +36,26 @@ def get_collectd_config():
         collectd_config.close()
 
 # AUTO for auto-install
-if len(sys.argv) > 1:
-    if sys.argv[1] == "AUTO":
-        if not OVIRT_VARS.has_key("OVIRT_COLLECTD_SERVER") or not OVIRT_VARS.has_key["OVIRT_COLLECTD_PORT"]:
-            logger.info("Attempting to locate remote collectd server...")
+def collectd_auto():
+    host = ""
+    port = ""
+    if not OVIRT_VARS.has_key("OVIRT_COLLECTD_SERVER") or not OVIRT_VARS.has_key("OVIRT_COLLECTD_PORT"):
+        logger.info("Attempting to locate remote collectd server...")
+        try:
             host, port = find_srv("collectd", "udp")
-            if not host is None and not port is None:
-                logger.info("collectd server found! Using collectd server " + host + ":" + port)
-                write_collectd_config(host, port)
-            else:
-                logger.error("collectd server not found!")
+        except:
+            pass
+        if not host is "" and not port is "":
+            logger.info("collectd server found! Using collectd server " + host + ":" + port)
+            write_collectd_config(host, port)
+            return True
         else:
-            logger.info("Using default collectd server '$OVIRT_COLLECTD_SERVER:$OVIRT_COLLECTD_PORT'.")
-            write_collectd_config(OVIRT_VARS["OVIRT_COLLECTD_SERVER"], OVIRT_VARS["OVIRT_COLLECTD_PORT"])
+            logger.error("collectd server not found!")
+            return False
+    else:
+        logger.info("Using default collectd server: " + OVIRT_VARS["OVIRT_COLLECTD_SERVER"]+ " : " + OVIRT_VARS["OVIRT_COLLECTD_PORT"])
+        write_collectd_config(OVIRT_VARS["OVIRT_COLLECTD_SERVER"], OVIRT_VARS["OVIRT_COLLECTD_PORT"])
+        return True
 
 #
 # configuration UI plugin interface

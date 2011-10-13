@@ -270,17 +270,20 @@ def find_srv(srv, proto):
     # This is workaround:
     search = subprocess.Popen("grep search /etc/resolv.conf", shell=True, stdout=PIPE, stderr=STDOUT)
     search_output = search.stdout.read()
-    search = search.replace("search ","")
+    search = search_output.replace("search ","")
     domain_search = domain_output + search_output
     for d in domain_search.split():
         dig_cmd = "dig +short -t srv _%s._%s.%s" % (srv, proto,search)
         dig = subprocess.Popen(dig_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dig_output = dig.stdout.read()
         dig.poll()
-        dig_rc = dnsreply.returncode()
+        dig_rc = dig.returncode
         if dig_rc == 0:
-            a,b,port,host = dig_output.split("=", 4)
-            return (port, host)
+            try:
+                a,b,port,host = dig_output.split("=", 4)
+                return (port, host)
+            except:
+                logger.error("Unable to find srv records")
         return False
 
 def ovirt_setup_libvirtd(self):
