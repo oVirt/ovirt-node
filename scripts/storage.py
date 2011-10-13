@@ -222,6 +222,13 @@ class Storage:
                     dev_desc = "unknown"
             if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name and not "/dev/loop" in dev_name and size_failed == 0:
                 dev_name = translate_multipath_device(dev_name)
+                if dev_bus == "usb":
+                    dev_bus = "USB Device          "
+                elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss" or "/dev/vd" in dev_name:
+                    dev_bus = "Local / FibreChannel"
+                else:
+                    dev_bus = "                    "
+
                 self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
         devs = self.get_dev_name()
         return (sorted(devs), self.disk_dict)

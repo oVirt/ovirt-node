@@ -376,12 +376,6 @@ class NodeInstallScreen:
             if not self.displayed_disks.has_key(dev):
                 if self.disk_dict.has_key(dev) and dev != self.live_disk:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
-                    if dev_bus == "usb":
-                        dev_bus = "USB Device          "
-                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss" or "/dev/vd" in dev_name:
-                        dev_bus = "Local / FibreChannel"
-                    else:
-                        dev_bus = "                    "
                     dev_desc = pad_or_trim(33, dev_desc)
                     self.valid_disks.append(dev_name)
                     dev_name = dev_name.replace("/dev/mapper/","").replace(" ", "")
@@ -447,12 +441,6 @@ class NodeInstallScreen:
             if not self.displayed_disks.has_key(dev) and dev != self.live_disk:
                 if self.disk_dict.has_key(dev):
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
-                    if dev_bus == "usb":
-                        dev_bus = "USB Device          "
-                    elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss" or "/dev/vd" in dev_name:
-                        dev_bus = "Local / FibreChannel"
-                    else:
-                        dev_bus = "                    "
                     dev_desc = pad_or_trim(33, dev_desc)
                     if dev_name == self.root_disk_menu_list.current():
                         select_status = 1
