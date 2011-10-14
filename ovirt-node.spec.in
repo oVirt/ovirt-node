@@ -40,7 +40,6 @@ Requires:       chkconfig
 Requires:       bind-utils
 Requires:       qemu-img
 Requires:       nc
-Requires:       grub
 Requires:       /usr/sbin/crond
 Requires:       newt-python
 Requires:       libuser-python >= 0.56.9
@@ -51,8 +50,12 @@ Requires:       ethtool
 Requires:       cracklib-python
 Requires:       dracut
 %if 0%{?rhel}
+Requires:       grub
 # for applying patches in %post
 Requires:       patch
+%endif
+%if 0%{?fedora}
+Requires: grub2
 %endif
 Requires:       system-release
 
