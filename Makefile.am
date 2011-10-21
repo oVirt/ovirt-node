@@ -26,6 +26,7 @@ SUBDIRS =   \
   scripts
 
 EXTRA_DIST = \
+  ovirt-qla4xxx.conf \
   vlan.modules \
   libvirtd.service \
   libvirtd.upstart \
