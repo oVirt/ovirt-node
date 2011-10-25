@@ -108,6 +108,115 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
         log("Error registering to RHN account!")
         return rc
 
+def parse_host_port(u):
+    if u.count('://') == 1:
+        (proto, u) = u.split('://')
+    else:
+        proto = ''
+    if u.count(':') == 1:
+        (u, port) = u.split(':')
+        try:
+            port=int(port)
+        except:
+            port=0
+    elif proto == 'http':
+        port = 80
+    elif proto == 'https':
+        port = 443
+    else:
+        port = 0
+    host = u.split('/')[0]
+    return (host, port)
+
+def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="", profilename="", proxyhost="", proxyuser="", proxypass=""):
+    extra_args = ['--force','--autosubscribe']
+    sm = ['/usr/sbin/subscription-manager']
+
+    args = list(sm)
+    args.append('register')
+    if len(activationkey):
+        args.append('--activationkey')
+        args.append(activationkey)
+    elif len(username):
+        args.append('--username')
+        args.append(username)
+        if len(password):
+            args.append('--password')
+            args.append(password)
+    else:
+        # skip RHN registration when neither activationkey
+        # nor username/password is supplied
+        # return success for AUTO w/o rhn_* parameters
+        return 1
+
+    if len(serverurl) > 0:
+        (host, port) = parse_host_port(serverurl)
+        if port == 0:
+            port = "443"
+        else:
+            port = str(port)
+    else:
+        host = "subscription.rhn.redhat.com"
+        port = "443"
+    smconf=list(sm)
+    smconf.append('config')
+    smconf.append('--server.hostname')
+    smconf.append(host)
+    smconf.append('--server.port')
+    smconf.append(port)
+    log(str(smconf))
+    smconf_proc = subprocess.Popen(smconf, shell=False, stdout=PIPE, stderr=STDOUT)
+    smconf_output = smconf_proc.stdout.read()
+    log(smconf_proc)
+    if smconf_proc.wait() == 0:
+        ovirt_store_config("/etc/rhsm/rhsm.conf")
+
+    if len(profilename):
+        args.append('--name')
+        args.append(profilename)
+
+    if len(proxyhost) > 1:
+        args.append('--proxy')
+        args.append(proxyhost)
+        if len(proxyuser):
+            args.append('--proxyuser')
+            args.append(proxyuser)
+            if len(proxypass):
+                args.append('--proxypassword')
+                args.append(proxypass)
+
+    args.extend(extra_args)
+
+    log("Registering to RHN account.....")
+
+    import glob
+    all_rhsm_configs="/var/lib/rhsm/productid.js /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json".split()
+    unmount_config(all_rhsm_configs)
+    unmount_config(glob.glob("/etc/pki/consumer/*pem"))
+    def unlink_if_exists(f):
+        if os.path.exists(f):
+            os.unlink(f)
+    for f in all_rhsm_configs:
+        unlink_if_exists(f)
+
+    logged_args = str(args).replace(password, "XXXXXXXX")
+    log(logged_args)
+    smreg_proc = subprocess.Popen(args, shell=False, stdout=PIPE, stderr=STDOUT)
+    smreg_output = smreg_proc.stdout.read()
+    log(smreg_output)
+    if smreg_proc.wait() == 0:
+        ovirt_store_config(all_rhsm_configs)
+        ovirt_store_config(glob.glob("/etc/pki/consumer/*pem"))
+        log("System %s sucessfully registered to %s" % (profilename, serverurl))
+        return 0
+    else:
+        if "username/password" in smreg_output:
+            rc = 2
+        else:
+            rc = 1
+        log("Error registering to RHN account!")
+        return rc
+
 def ov(var):
     if OVIRT_VARS.has_key(var):
         return OVIRT_VARS[var]
@@ -144,13 +253,16 @@ class Plugin(PluginBase):
         profile_grid.setField(Label("Profile Name (optional): "), 0, 0, anchorLeft = 1)
         profile_grid.setField(self.profilename, 1, 0, anchorLeft = 1)
         elements.setField(profile_grid, 0, 5, anchorLeft= 1, padding = (0, 0, 0, 1))
-        rhn_type_grid = Grid(2, 2)
+        rhn_type_grid = Grid(3, 2)
         self.public_rhn = Checkbox("RHN ")
         self.public_rhn.setCallback(self.public_rhn_callback)
         self.rhn_satellite = Checkbox("Satellite ")
         self.rhn_satellite.setCallback(self.rhn_satellite_callback)
+        self.sam = Checkbox("Subscription Asset Manager")
+        self.sam.setCallback(self.sam_callback)
         rhn_type_grid.setField(self.public_rhn, 0, 0)
         rhn_type_grid.setField(self.rhn_satellite, 1, 0)
+        rhn_type_grid.setField(self.sam, 2, 0)
         elements.setField(rhn_type_grid, 0, 6, anchorLeft= 1, padding = (0, 0, 0, 1))
         rhn_grid = Grid(2,2)
         rhn_grid.setField(Label("URL: "), 0, 0, anchorLeft = 1)
@@ -220,15 +332,26 @@ class Plugin(PluginBase):
         if len(self.rhn_user.value()) < 1 or len(self.rhn_pass.value()) < 1:
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "Login/Password must not be empty\n", buttons = ['Ok'])
             return False
-        reg_rc = run_rhnreg(  serverurl=self.rhn_url.value(),
-            cacert=self.rhn_ca.value(),
-            activationkey=self.rhn_actkey.value(),
-            username=self.rhn_user.value(),
-            password=self.rhn_pass.value(),
-            profilename=self.profilename.value(),
-            proxyhost=self.proxyhost.value()+ ":" + self.proxyport.value(),
-            proxyuser=self.proxyuser.value(),
-            proxypass=self.proxypass.value())
+        if self.sam.value() == 1:
+            reg_rc = run_rhsm(  serverurl=self.rhn_url.value(),
+                cacert=self.rhn_ca.value(),
+                activationkey=self.rhn_actkey.value(),
+                username=self.rhn_user.value(),
+                password=self.rhn_pass.value(),
+                profilename=self.profilename.value(),
+                proxyhost=self.proxyhost.value()+ ":" + self.proxyport.value(),
+                proxyuser=self.proxyuser.value(),
+                proxypass=self.proxypass.value())
+        else:
+            reg_rc = run_rhnreg(  serverurl=self.rhn_url.value(),
+                cacert=self.rhn_ca.value(),
+                activationkey=self.rhn_actkey.value(),
+                username=self.rhn_user.value(),
+                password=self.rhn_pass.value(),
+                profilename=self.profilename.value(),
+                proxyhost=self.proxyhost.value()+ ":" + self.proxyport.value(),
+                proxyuser=self.proxyuser.value(),
+                proxypass=self.proxypass.value())
         if reg_rc == 0 and not False:
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "RHN Registration Successful", buttons = ['Ok'])
             self.ncs.reset_screen_colors()
@@ -288,6 +411,7 @@ class Plugin(PluginBase):
 
     def public_rhn_callback(self):
         self.rhn_satellite.setValue(" 0")
+        self.sam.setValue(" 0")
         self.rhn_url.set("")
         self.rhn_ca.set("")
         self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
@@ -295,8 +419,16 @@ class Plugin(PluginBase):
 
     def rhn_satellite_callback(self):
         self.public_rhn.setValue(" 0")
+        self.sam.setValue(" 0")
         self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
         self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+
+    def sam_callback(self):
+        self.public_rhn.setValue(" 0")
+        self.rhn_satellite.setValue(" 0")
+        self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+        self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+        ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "Subscription Asset Manager server is not available presently, please consult\n https://access.redhat.com/kb/docs/DOC-45987", buttons = ['Ok'])
 
     def proxyhost_callback(self):
         if len(self.proxyhost.value()) > 0:

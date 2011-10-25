@@ -120,8 +120,106 @@ function run_rhnreg {
     fi
 }
 
+function run_rhsm {
+
+    local serverUrl=$1
+    local CaCert=$2
+    local activationkey=$3
+    local userName=$4
+    local passWord=$5
+    local profileName=$6
+    local proxyuser=$7
+    local proxypass=$8
+    local proxyhost=$9
+
+    extra_args="--force --autosubscribe"
+    args=""
+
+    if [ -n "$activationkey" ]; then
+        args="${args} --activationkey=$activationkey"
+    elif [ -n "$userName" ]; then
+        args="${args} --username=$userName"
+        if [ -n "$passWord" ]; then
+            args="${args} --password=$passWord"
+        fi
+    else
+        # skip RHSM registration when neither activationkey
+        # nor username/password is supplied
+        # return success for AUTO w/o rhn_* parameters
+        return 0
+    fi
+
+    if [ -n "$serverUrl" ]; then
+        eval $(serverUrl=$serverUrl python -c "
+import os
+u=os.getenv('serverUrl')
+if u.count('://') == 1:
+    (proto, u) = u.split('://')
+else:
+    proto = ''
+if u.count(':') == 1:
+    (u, port) = u.split(':')
+elif proto == 'http':
+    port = 80
+elif proto == 'https':
+    port = 443
+else:
+    port = 0
+host = u.split('/')[0]
+print 'host=%s' % host
+print 'port=%s' % port
+")
+        if [ -z "$port" -o "$port" == "0" ]; then
+            port=443
+        fi
+    else
+        host="subscription.rhn.redhat.com"
+        port="443"
+    fi
+    if subscription-manager config --server.hostname=$host --server.port=$port; then
+        ovirt_store_config /etc/rhsm/rhsm.conf
+    fi
+
+    if [ -n "$profileName" ]; then
+        args="${args} --name=$profileName"
+    fi
+
+    if [ -n "$proxyhost" ]; then
+        args="${args} --proxy=$proxyhost"
+        if [ -n "$proxyuser" ]; then
+            args="${args} --proxyuser=$proxyuser"
+            if [ -n "$proxypass" ]; then
+                args="${args} --proxypassword=$proxypass"
+            fi
+        fi
+    fi
+
+    if [ -n "$extra_args" ]; then
+        args="${args} $extra_args"
+    fi
+
+    log "Registering to RHN account....."
+
+    unmount_config /etc/pki/consumer/*pem
+    unmount_config /var/lib/rhsm/productid.js /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
+    rm -rf /var/lib/rhsm/productid.js /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
+    if subscription-manager register $args; then
+        ovirt_store_config \
+            /etc/pki/consumer/*pem \
+            /var/lib/rhsm/productid.js \
+            /var/lib/rhsm/cache/installed_products.json \
+            /var/lib/rhsm/facts/facts.json
+        log "System "$profileName" sucessfuly registered "$serverUrl""
+        return 0
+    else
+        log "Error registering to RHN account!"
+        return 1
+    fi
+}
+
 # Prompts the user for a single username, password combo
 function prompt_user {
+        servertype="$1"
         serverurl=""
         cacert=""
         username=""
@@ -131,7 +229,7 @@ function prompt_user {
         proxyuser=""
         proxypass=""
 
-        if [ "$1" = "SAT" ]; then
+        if [ "$servertype" = "SAT" ]; then
             printf "\n"
             read -p "Enter URL of RHN Satellite (ie. https://satellite.example.com): " -er
             test -z "$REPLY" && return 1
@@ -142,6 +240,12 @@ function prompt_user {
             read -p "Enter location of satellite cert ($default): " -er
             #test -z "$REPLY" && REPLY=$default
             cacert=$REPLY
+        elif [ "$servertype" = "SAM" ]; then
+            printf "\n"
+            read -p "Enter URL of Subscription Asset Manager (ie. https://subscription.rhn.redhat.com): " -er
+            test -z "$REPLY" && return 1
+            serverurl=$REPLY
+            #XXX where is cacert for SAM?
         fi
 
         printf "\n"
@@ -174,26 +278,36 @@ function prompt_user {
             proxypass=$REPLY
         fi
 
-        run_rhnreg "$serverurl" "$cacert" "" "$username" "$password" "$profilename" "$proxyuser" "$proxypass" "$proxyhost"
+        if [ "$servertype" = "SAT" ]; then
+            run_rhnreg "$serverurl" "$cacert" "" "$username" "$password" "$profilename" "$proxyuser" "$proxypass" "$proxyhost"
+        else
+            run_rhsm "$serverurl" "$cacert" "" "$username" "$password" "$profilename" "$proxyuser" "$proxypass" "$proxyhost"
+        fi
 }
 
 HOSTED="Register to public RHN"
 SATELLITE="Register to RHN Satellite"
+SAM="Register to Subscription Asset Manager"
 QUIT="Return to the Hypervisor Configuration Menu"
 
 if [ "$1" = "AUTO" ]; then
-    run_rhnreg "${OVIRT_RHN_URL}" "${OVIRT_RHN_CA_CERT}" "${OVIRT_RHN_ACTIVATIONKEY}" "${OVIRT_RHN_USERNAME}" "${OVIRT_RHN_PASSWORD}" "${OVIRT_RHN_PROFILE}" "${OVIRT_RHN_PROXY}" "${OVIRT_RHN_PROXYUSER}" "${OVIRT_RHN_PROXYPASSWORD}"
+    if [ "$OVIRT_RHN_TYPE" = "sam" ]; then
+        run_rhsm "${OVIRT_RHN_URL}" "${OVIRT_RHN_CA_CERT}" "${OVIRT_RHN_ACTIVATIONKEY}" "${OVIRT_RHN_USERNAME}" "${OVIRT_RHN_PASSWORD}" "${OVIRT_RHN_PROFILE}" "${OVIRT_RHN_PROXY}" "${OVIRT_RHN_PROXYUSER}" "${OVIRT_RHN_PROXYPASSWORD}"
+    else
+        run_rhnreg "${OVIRT_RHN_URL}" "${OVIRT_RHN_CA_CERT}" "${OVIRT_RHN_ACTIVATIONKEY}" "${OVIRT_RHN_USERNAME}" "${OVIRT_RHN_PASSWORD}" "${OVIRT_RHN_PROFILE}" "${OVIRT_RHN_PROXY}" "${OVIRT_RHN_PROXYUSER}" "${OVIRT_RHN_PROXYPASSWORD}"
+    fi
     exit $?
 else
     check
     while true; do
         PS3="Choose an option: "
-        select option in "$HOSTED" "$SATELLITE" "$QUIT"
+        select option in "$HOSTED" "$SATELLITE" "$SAM" "$QUIT"
           do
 
           case $option in
               $HOSTED) prompt_user; break;;
               $SATELLITE) prompt_user "SAT"; break;;
+              $SAM) prompt_user "SAM"; break;;
               $QUIT) exit;;
           esac
         done
