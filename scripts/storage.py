@@ -32,10 +32,12 @@ class Storage:
         self.ROOT_SIZE=256
         self.CONFIG_SIZE=5
         self.LOGGING_SIZE=2048
+        self.EFI_SIZE=256
         self.SWAP_SIZE=""
         self.BOOTDRIVE = ""
         self.HOSTVGDRIVE = ""
-        self.RootBackup_end = self.ROOT_SIZE * 2
+        self.RootBackup_end = self.ROOT_SIZE * 2 + self.EFI_SIZE
+        self.Root_end = self.EFI_SIZE + self.ROOT_SIZE
         # -1 indicates data partition should use remaining disk
         self.DATA_SIZE = -1
         # gpt or msdos partition table type
@@ -251,7 +253,7 @@ class Storage:
                     parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\""
                     log(parted_cmd)
                     system(parted_cmd)
-                    hostvgpart="3"
+                    hostvgpart="4"
                 elif self.BOOTDRIVE == drv:
                     parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 " + str(self.boot_size_si) + " -1\""
                     log(parted_cmd)
@@ -398,10 +400,16 @@ class Storage:
             log(parted_cmd)
             system(parted_cmd)
             log("Creating Root and RootBackup Partitions")
-            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 1M "+ str(self.ROOT_SIZE)+"M\""
+            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary fat32 1M "+ str(self.EFI_SIZE)+"M\""
             log(parted_cmd)
             system(parted_cmd)
-            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.ROOT_SIZE)+"M "+str(self.RootBackup_end)+"M\""
+            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 "+str(self.EFI_SIZE)+" "+ str(self.Root_end)+"M\""
+            log(parted_cmd)
+            system(parted_cmd)
+            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.Root_end)+"M "+str(self.RootBackup_end)+"M\""
+            log(parted_cmd)
+            system(parted_cmd)
+            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"set 1 boot on\""
             log(parted_cmd)
             system(parted_cmd)
             # sleep to ensure filesystems are created before continuing
@@ -409,11 +417,16 @@ class Storage:
             # force reload some cciss devices will fail to mkfs
             system("multipath -r")
             self.reread_partitions(self.ROOTDRIVE)
-            partroot = self.ROOTDRIVE + "1"
-            partrootbackup = self.ROOTDRIVE + "2"
+            partefi = self.ROOTDRIVE + "1"
+            partroot = self.ROOTDRIVE + "2"
+            partrootbackup = self.ROOTDRIVE + "3"
             if not os.path.exists(partroot):
-                partroot = self.ROOTDRIVE + "p1"
-                partrootbackup= self.ROOTDRIVE + "p2"
+                partefi = self.ROOTDRIVE + "p1"
+                partroot = self.ROOTDRIVE + "p2"
+                partrootbackup= self.ROOTDRIVE + "p3"
+            system("ln -snf \""+partefi+"\" /dev/disk/by-label/EFI")
+            system("mkfs.vfat \""+partefi+"\" -n EFI")
+            system("echo \""+partefi+" /boot/efi vfat defaults 0 0\" >> /etc/fstab")
             system("ln -snf \""+partroot+"\" /dev/disk/by-label/Root")
             system("mke2fs \""+partroot+"\" -L Root")
             system("tune2fs -c 0 -i 0 \""+partroot+"\"")

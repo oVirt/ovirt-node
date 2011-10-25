@@ -180,6 +180,9 @@ ovirt_boot_setup() {
         bootparams="ro rootfstype=ext2 rootflags=ro $bootparams"
     fi
     mkdir -p $grub_dir
+    mkdir -p $grub_dir/efi
+    mount LABEL=EFI $grubdir/efi
+    cp -rv /boot/efi/* $grubdir/efi
     cat > $grub_dir/grub.conf << EOF
 default saved
 timeout 5

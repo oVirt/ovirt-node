@@ -35,6 +35,7 @@ config_min_size=5
 logging_min_size=5
 data_min_size=5
 swap_min_size=5
+default_efi_size=256
 
 # return sd name for given #:# identifier
 get_sd_name() {
@@ -176,7 +177,7 @@ check_partition_sizes()
             APPVG_NEED_SIZE=$(echo "scale=0; $SWAP2_SIZE + $min_data2_size" | bc -l)
         fi
         IFS="$oldIFS"
-        ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2"| bc -l)
+        ROOT_NEED_SIZE=$(echo "scale=0; $ROOT_SIZE * 2 + $EFI_SIZE"| bc -l)
         HOSTVG_NEED_SIZE=$(echo "scale=0;" \
                          "$SWAP_SIZE + $CONFIG_SIZE + $LOGGING_SIZE + $min_data_size" | bc -l)
 
@@ -707,7 +708,7 @@ create_hostvg()
     for drv in $HOSTVGDRIVE; do
         if [ "$ROOTDRIVE" = "$drv" ]; then
             parted_cmd="mkpart primary ext2 ${RootBackup_end}M -1"
-            hostvgpart="3"
+            hostvgpart="4"
         elif [ "$BOOTDRIVE" = "$drv" ]; then
             parted_cmd="mkpart primary ext2 ${boot_size_si} -1"
             hostvgpart="2"
@@ -719,13 +720,15 @@ create_hostvg()
         fi
         while true; do
             set +e
-            parted -s "$drv" "$parted_cmd set $hostvgpart lvm on print"
+            parted -s "$drv" "$parted_cmd"
             set -e
             reread_partitions "$drv"
             if [ -e "${drv}${hostvgpart}" -o "${drv}p${hostvgpart}" ]; then
                 break
             fi
         done
+        log "Toggling LVM on"
+        parted -s "$drv" "set $hostvgpart lvm on"
 
         # sync GPT to the legacy MBR partitions
         if [ "${OVIRT_INSTALL_ROOT}" = "y" ]; then
@@ -995,28 +998,35 @@ perform_partitioning()
         wipe_partitions "$ROOTDRIVE"
         reread_partitions "$ROOTDRIVE"
         log "Creating Root and RootBackup Partitions"
-        let RootBackup_end=${ROOT_SIZE}*2
+        let RootBackup_end=${ROOT_SIZE}*2+${EFI_SIZE}
+        let Root_end=${ROOT_SIZE}+${EFI_SIZE}
         while true; do
             set +e
-            parted -s "$ROOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary ext2 2048s ${ROOT_SIZE}M mkpart primary ext2 ${ROOT_SIZE}M ${RootBackup_end}M"
+            parted -s "$ROOTDRIVE" "mklabel ${LABEL_TYPE} mkpart primary fat32 2048s ${EFI_SIZE}M mkpart primary ext2 ${EFI_SIZE} ${Root_end}M mkpart primary ext2 ${Root_end}M ${RootBackup_end}M"
             set -e
             reread_partitions "$ROOTDRIVE"
-            if [ -e "${ROOTDRIVE}2" -o "${ROOTDRIVE}p2" ]; then
+            if [ -e "${ROOTDRIVE}3" -o -e "${ROOTDRIVE}p3" ]; then
                 break
             fi
         done
-        partroot="${ROOTDRIVE}1"
-        partrootbackup="${ROOTDRIVE}2"
+        partefi="${ROOTDRIVE}1"
+        partroot="${ROOTDRIVE}2"
+        partrootbackup="${ROOTDRIVE}3"
         if [ ! -e "$partroot" ]; then
-            partroot="${ROOTDRIVE}p1"
-            partrootbackup="${ROOTDRIVE}p2"
+            partefi="${ROOTDRIVE}p1"
+            partroot="${ROOTDRIVE}p2"
+            partrootbackup="${ROOTDRIVE}p3"
         fi
+        ln -snf "${partefi}" /dev/disk/by-label/EFI
+        echo "$partefi" /boot/efi vfat defaults 0 0 >> /etc/fstab
+        mkfs.vfat "${partefi}" -n EFI
         ln -snf "${partroot}" /dev/disk/by-label/Root
         mke2fs -t ext2 "${partroot}" -L Root
         tune2fs -c 0 -i 0 "${partroot}"
         ln -snf "${partrootbackup}" /dev/disk/by-label/RootBackup
         mke2fs -t ext2 "${partrootbackup}" -L RootBackup
         tune2fs -c 0 -i 0 "${partrootbackup}"
+        parted -s "$ROOTDRIVE" "set 1 boot on"
     fi
 
     oldIFS="$IFS"
@@ -1255,6 +1265,7 @@ LOGGING_SIZE=${OVIRT_VOL_LOGGING_SIZE:-$default_logging_size}
 DATA_SIZE=${OVIRT_VOL_DATA_SIZE:-$default_data_size}
 SWAP2_SIZE=${OVIRT_VOL_SWAP2_SIZE:-$default_swap2_size}
 DATA2_SIZE=${OVIRT_VOL_DATA2_SIZE:-$default_data2_size}
+EFI_SIZE=${default_efi_size}
 
 if [ -n "$OVIRT_INIT" ]; then
     # if present, use drive(s) selected with 'ovirt_init' boot parameter

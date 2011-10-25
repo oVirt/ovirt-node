@@ -259,6 +259,7 @@ drop /usr/share/man
 drop /usr/share/X11
 drop /usr/share/i18n
 drop /boot/*
+keep /boot/efi
 drop /var/lib/builder
 drop /var/lib/yum
 drop /usr/sbin/rhn_register
