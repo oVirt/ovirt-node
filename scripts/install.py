@@ -154,7 +154,7 @@ def ovirt_boot_setup():
         os.makedirs(grub_dir)
         os.makedirs(grub_dir + "/efi")
         system("mount LABEL=EFI "+grub_dir+"/efi")
-        system("cp -rv /boot/efi/* " + grub_dir + "/efi")
+        system("cp -ra /boot/efi/* " + grub_dir + "/efi")
     if not system("cp -p /live/" + syslinux + "/vmlinuz0 " + initrd_dest):
         log("kernel image copy failed.")
         return False
