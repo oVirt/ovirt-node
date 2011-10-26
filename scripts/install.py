@@ -181,7 +181,7 @@ def ovirt_boot_setup():
     if " " in disk or os.path.exists("/dev/cciss"):
         # workaround for grub setup failing with spaces in dev.name:
         # use first active sd* device
-        disk = re.sub("p[1,2]$", "", disk)
+        disk = re.sub("p[1,2,3]$", "", disk)
         grub_disk_cmd= "multipath -l \"" + os.path.basename(disk) + "\" | awk '/ active / {print $3}' | head -n1"
         log(grub_disk_cmd)
         grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

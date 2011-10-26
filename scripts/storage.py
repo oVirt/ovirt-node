@@ -409,9 +409,6 @@ class Storage:
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.Root_end)+"M "+str(self.RootBackup_end)+"M\""
             log(parted_cmd)
             system(parted_cmd)
-            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"set 1 boot on\""
-            log(parted_cmd)
-            system(parted_cmd)
             # sleep to ensure filesystems are created before continuing
             time.sleep(5)
             # force reload some cciss devices will fail to mkfs
@@ -426,7 +423,6 @@ class Storage:
                 partrootbackup= self.ROOTDRIVE + "p3"
             system("ln -snf \""+partefi+"\" /dev/disk/by-label/EFI")
             system("mkfs.vfat \""+partefi+"\" -n EFI")
-            system("echo \""+partefi+" /boot/efi vfat defaults 0 0\" >> /etc/fstab")
             system("ln -snf \""+partroot+"\" /dev/disk/by-label/Root")
             system("mke2fs \""+partroot+"\" -L Root")
             system("tune2fs -c 0 -i 0 \""+partroot+"\"")

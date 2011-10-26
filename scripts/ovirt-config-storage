@@ -721,14 +721,13 @@ create_hostvg()
         while true; do
             set +e
             parted -s "$drv" "$parted_cmd"
+            parted -s "$drv" "set $hostvgpart lvm on"
             set -e
             reread_partitions "$drv"
             if [ -e "${drv}${hostvgpart}" -o "${drv}p${hostvgpart}" ]; then
                 break
             fi
         done
-        log "Toggling LVM on"
-        parted -s "$drv" "set $hostvgpart lvm on"
 
         # sync GPT to the legacy MBR partitions
         if [ "${OVIRT_INSTALL_ROOT}" = "y" ]; then
@@ -1018,7 +1017,6 @@ perform_partitioning()
             partrootbackup="${ROOTDRIVE}p3"
         fi
         ln -snf "${partefi}" /dev/disk/by-label/EFI
-        echo "$partefi" /boot/efi vfat defaults 0 0 >> /etc/fstab
         mkfs.vfat "${partefi}" -n EFI
         ln -snf "${partroot}" /dev/disk/by-label/Root
         mke2fs -t ext2 "${partroot}" -L Root
@@ -1026,7 +1024,6 @@ perform_partitioning()
         ln -snf "${partrootbackup}" /dev/disk/by-label/RootBackup
         mke2fs -t ext2 "${partrootbackup}" -L RootBackup
         tune2fs -c 0 -i 0 "${partrootbackup}"
-        parted -s "$ROOTDRIVE" "set 1 boot on"
     fi
 
     oldIFS="$IFS"

@@ -183,6 +183,7 @@ ovirt_boot_setup() {
     mkdir -p $grub_dir/efi
     mount LABEL=EFI $grub_dir/efi
     cp -ra /boot/efi/* $grub_dir/efi
+    umount $grub_dir/efi
     cat > $grub_dir/grub.conf << EOF
 default saved
 timeout 5
