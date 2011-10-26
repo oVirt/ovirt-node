@@ -110,3 +110,6 @@ python-hivex
 febootstrap-supermin-helper
 # sosreport soft-dep
 rpm-python
+#VDSM
+vdsm-cli
+vdsm-reg

@@ -1,8 +1,5 @@
 # remove
 -redhat-release-notes
-# VDSM
-vdsm-cli
-vdsm-reg
 # workaround: vdsm-reg dep
 traceroute
 # supported hooks
