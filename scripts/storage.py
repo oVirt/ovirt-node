@@ -437,13 +437,13 @@ class Storage:
             system(parted_cmd)
             logger.debug("Creating Root and RootBackup Partitions")
             parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary fat32 1M "+ str(self.EFI_SIZE)+"M\""
-            log(parted_cmd)
+            logger.debug(parted_cmd)
             system(parted_cmd)
             parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 "+str(self.EFI_SIZE)+" "+ str(self.Root_end)+"M\""
-            log(parted_cmd)
+            logger.debug(parted_cmd)
             system(parted_cmd)
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.Root_end)+"M "+str(self.RootBackup_end)+"M\""
-            log(parted_cmd)
+            logger.debug(parted_cmd)
             system(parted_cmd)
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"set 1 boot on\""
             logger.debug(parted_cmd)
