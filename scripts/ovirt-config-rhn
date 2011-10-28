@@ -278,10 +278,10 @@ function prompt_user {
             proxypass=$REPLY
         fi
 
-        if [ "$servertype" = "SAT" ]; then
-            run_rhnreg "$serverurl" "$cacert" "" "$username" "$password" "$profilename" "$proxyuser" "$proxypass" "$proxyhost"
-        else
+        if [ "$servertype" = "SAM" ]; then
             run_rhsm "$serverurl" "$cacert" "" "$username" "$password" "$profilename" "$proxyuser" "$proxypass" "$proxyhost"
+        else
+            run_rhnreg "$serverurl" "$cacert" "" "$username" "$password" "$profilename" "$proxyuser" "$proxypass" "$proxyhost"
         fi
 }
 
