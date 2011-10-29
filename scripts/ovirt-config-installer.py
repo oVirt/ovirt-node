@@ -19,7 +19,7 @@
 
 from snack import *
 import ovirtnode.password as password
-import ovirtnode.install as install
+from ovirtnode.install import *
 import ovirtnode.storage as storage
 from ovirtnode.ovirtfunctions import *
 import _snack
@@ -598,6 +598,7 @@ class NodeInstallScreen:
                 gridform.add(progress_bar, 0, 2)
                 gridform.draw()
                 self.screen.refresh()
+                install = Install()
                 boot_setup = install.ovirt_boot_setup()
                 if boot_setup:
                     progress_bar.set(100)
