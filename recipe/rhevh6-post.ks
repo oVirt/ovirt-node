@@ -305,3 +305,28 @@ EOF_virt_who
 
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
+
+# rhbz#738170
+patch -d /sbin -p0 << \EOF_mkdumprd
+--- /sbin/mkdumprd.orig	2011-10-06 06:37:49.000000000 +0000
++++ /sbin/mkdumprd	2011-11-01 04:21:19.000000000 +0000
+@@ -583,7 +583,7 @@
+         eth*.*)
+             modalias=8021q
+             ;;
+-        br*)
++        rhevm|br*)
+             modalias=bridge
+             ;;
+         *)
+@@ -756,7 +756,7 @@
+             echo >> $MNTIMAGE/etc/ifcfg-$dev
+             echo "BUS_ID=\"Bonding\"" >> $MNTIMAGE/etc/ifcfg-$dev
+             ;;
+-	br*)
++	rhevm|br*)
+             for j in `ls /sys/class/net/$dev/brif`
+             do
+                 handlenetdev $j
+
+EOF_mkdumprd
