@@ -71,7 +71,8 @@ class Install:
         if os.path.exists("/sbin/grub2-install"):
             self.grub_prefix = self.grub_prefix + "2"
             self.grub_dir = self.grub_dir + "2"
-
+            self.grub_config_file = "%s/grub.cfg" % self.grub_dir
+        else:
             self.grub_config_file = "%s/grub.conf" % self.grub_dir
 
     def grub_install(self):
@@ -105,11 +106,11 @@ EOF
 
         grub_conf = open(self.grub_config_file, "w")
         grub_conf.write(GRUB_CONFIG_TEMPLATE % self.grub_dict)
-        if oldtitle is not None:
-            partB=0
-            if partN == 0:
-                partB=1
-            self.grub_dict['oldtitle']=oldtitle
+        if self.oldtitle is not None:
+            partB=1
+            if partN == 1:
+                partB=2
+            self.grub_dict['oldtitle']=self.oldtitle
             self.grub_dict['partB']=partB
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
         grub_conf.close()
@@ -144,6 +145,7 @@ initrd /initrd0.img
     """
 
         grub_setup_cmd = "/sbin/grub2-install " + self.disk + " --boot-directory=" + self.initrd_dest + " --force"
+        logger.debug(grub_setup_cmd)
         grub_setup = subprocess.Popen(grub_setup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         grub_results = grub_setup.stdout.read()
         logger.debug(grub_results)
@@ -154,11 +156,11 @@ initrd /initrd0.img
             logger.debug("Generating Grub2 Templates")
             grub_conf = open(self.grub_config_file, "w")
             grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
-            if oldtitle is not None:
+            if self.oldtitle is not None:
                 partB=0
                 if partN == 0:
                     partB=1
-                self.grub_dict['oldtitle']=oldtitle
+                self.grub_dict['oldtitle']=self.oldtitle
                 self.grub_dict['partB']=partB
                 grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
             grub_conf.close()
@@ -175,7 +177,7 @@ initrd /initrd0.img
                 logger.info("Root Installation Not Required, Finished.")
                 return True
 
-        oldtitle=None
+        self.oldtitle=None
         if os.path.ismount("/liveos"):
             if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
                 f=open(self.grub_config_file)
@@ -183,7 +185,7 @@ initrd /initrd0.img
                 f.close()
                 m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
                 if m is not None:
-                    oldtitle=m.group(1)
+                    self.oldtitle=m.group(1)
 
             system("umount /liveos")
 
@@ -229,15 +231,16 @@ initrd /initrd0.img
             label_debug += subprocess.Popen("blkid", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.read()
             logger(label_debug)
             return False
-        logger.info("FIXME 1")
         logger.debug("candidate: " + candidate)
 
         try:
             candidate_dev = self.disk = findfs(candidate)
             logger.info(candidate_dev)
             logger.info(self.disk)
-### jboggs ### grub2 isn't - 1
-            self.partN = int(self.disk[-1:]) - 1
+            # grub2 starts at part 1
+            self.partN = int(self.disk[-1:])
+            if not os.path.exists("/sbin/grub2-install"):
+                self.partN = self.partN - 1
             logger.debug("partN: %d" % self.partN)
         except:
             logger.debug(traceback.format_exc())
@@ -246,7 +249,6 @@ initrd /initrd0.img
         if self.disk is None or self.partN < 0:
             logger.error("Failed to determine Root partition number")
             return False
-        logger.info("FIXME 2")
         if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
             # prepare Root partition update
             if candidate != "RootNew":
@@ -255,13 +257,11 @@ initrd /initrd0.img
                 if not system(e2label_cmd):
                     logger.error("Failed to label new Root partition")
                     return False
-            logger.info("FIXME 3")
             mount_cmd = "mount \"%s\" /liveos" % candidate_dev
             system(mount_cmd)
             system("rm -rf /liveos/LiveOS")
             system("mkdir -p /liveos/LiveOS")
             mount_live()
-            logger.info("FIXME 4")
 
         if os.path.isdir(self.grub_dir):
             shutil.rmtree(self.grub_dir)
