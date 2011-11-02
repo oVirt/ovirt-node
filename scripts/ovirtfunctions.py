@@ -224,9 +224,9 @@ def is_firstboot():
 
 def disable_firstboot():
     if os.path.ismount("/config"):
-        aug.set("/files/etc/defaults/ovirt/OVIRT_FIRSTBOOT", "0")
-        aug.set("/files/etc/defaults/ovirt/OVIRT_INIT", '""')
-        aug.set("/files/etc/defaults/ovirt/OVIRT_UPGRADE", "0")
+        aug.set("/files/etc/default/ovirt/OVIRT_FIRSTBOOT", "0")
+        aug.set("/files/etc/default/ovirt/OVIRT_INIT", '""')
+        aug.set("/files/etc/default/ovirt/OVIRT_UPGRADE", "0")
         aug.save()
         ovirt_store_config("/etc/default/ovirt")
 
