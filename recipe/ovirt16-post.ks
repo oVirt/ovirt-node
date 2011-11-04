@@ -138,3 +138,61 @@ COMMIT
 EOF
 
 python -m compileall /usr/share/virt-manager
+
+echo "Configuring SELinux"
+# custom module for node specific rules
+mkdir /tmp/SELinux
+cd /tmp/SELinux
+cat > ovirt.te << \EOF_OVIRT_TE
+module ovirt 1.0;
+require {
+    type initrc_t;
+    type initrc_tmp_t;
+    type mount_t;
+    type setfiles_t;
+    type shadow_t;
+    type unconfined_t;
+    class file { append mounton open getattr read execute ioctl lock entrypoint };
+    class fd { use };
+    class process { sigchld signull transition noatsecure siginh rlimitinh getattr };
+    class fifo_file { getattr open read write append lock ioctl };
+    class filesystem getattr;
+    class dir { getattr search open read lock ioctl };
+    class socket { read write };
+    class tcp_socket { read write };
+    class udp_socket { read write };
+    class rawip_socket { read write };
+    class netlink_socket { read write };
+    class packet_socket { read write };
+    class unix_stream_socket { read write create ioctl getattr lock setattr append bind connect getopt setopt shutdown connectto };
+    class unix_dgram_socket { read write };
+    class appletalk_socket { read write };
+    class netlink_route_socket { read write };
+    class netlink_firewall_socket { read write };
+    class netlink_tcpdiag_socket { read write };
+    class netlink_nflog_socket { read write };
+    class netlink_xfrm_socket { read write };
+    class netlink_selinux_socket { read write };
+    class netlink_audit_socket { read write };
+    class netlink_ip6fw_socket { read write };
+    class netlink_dnrt_socket { read write };
+    class netlink_kobject_uevent_socket { read write };
+    class tun_socket { read write };
+    class chr_file { getattr read write append ioctl lock open };
+    class lnk_file { getattr read };
+    class sock_file { getattr write open append };
+}
+allow mount_t shadow_t:file mounton;
+allow setfiles_t initrc_tmp_t:file append;
+type ovirt_exec_t;
+init_daemon_domain(unconfined_t,ovirt_exec_t)
+EOF_OVIRT_TE
+cat > ovirt.fc << \EOF_OVIRT_FC
+/etc/rc\.d/init\.d/ovirt-firstboot             -- gen_context(system_u:object_r:ovirt_exec_t)
+/etc/rc\.d/init\.d/ovirt-post             -- gen_context(system_u:object_r:ovirt_exec_t)
+EOF_OVIRT_FC
+make NAME=targeted -f /usr/share/selinux/devel/Makefile
+semodule -v -i ovirt.pp
+cd /
+rm -rf /tmp/SELinux
+
