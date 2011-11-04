@@ -615,6 +615,7 @@ class NodeInstallScreen:
         self.screen.refresh()
         admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
         if admin_pw_set:
+            install = Install()
             boot_setup = install.ovirt_boot_setup()
             progress_bar.set(100)
             self.__current_page = FINISHED_PAGE
