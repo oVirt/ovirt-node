@@ -48,4 +48,11 @@ def process_kdump_config():
     return True
 
 
-
+def kdump_auto():
+    try:
+        write_kdump_config(OVIRT_VARS["OVIRT_KDUMP_NFS"])
+        ovirt_store_config("/etc/kdump.conf")
+        logger.info("Syslog Configuration Completed")
+        return True
+    except:
+        logger.error("KDump Configuration Failed")
