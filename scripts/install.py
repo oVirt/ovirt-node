@@ -229,7 +229,7 @@ initrd /initrd0.img
             for label in os.listdir("/dev/disk/by-label"):
                 label_debug += "%s\n" % label
             label_debug += subprocess.Popen("blkid", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.read()
-            logger(label_debug)
+            logger.debug(label_debug)
             return False
         logger.debug("candidate: " + candidate)
 
