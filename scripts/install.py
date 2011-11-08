@@ -293,7 +293,7 @@ initrd /initrd0.img
             grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.disk = grub_disk.stdout.read().strip()
             if "cciss" in self.disk:
-                self.disk = disk.replace("!","/")
+                self.disk = self.disk.replace("!","/")
             # flush to sync DM and blockdev, workaround from rhbz#623846#c14
             sysfs=open("/proc/sys/vm/drop_caches","w")
             sysfs.write("3")
@@ -303,7 +303,7 @@ initrd /initrd0.img
             system(partprobe_cmd)
 
         if not self.disk.startswith("/dev/"):
-            disk = "/dev/" + disk
+            self.disk = "/dev/" + disk
         try:
             if stat.S_ISBLK(os.stat(self.disk).st_mode):
                 try:
