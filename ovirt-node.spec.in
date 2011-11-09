@@ -55,14 +55,7 @@ Requires:       grub
 # for applying patches in %post
 Requires:       patch
 %endif
-%if 0%{?fedora}
-Requires: grub2
-%endif
 Requires:       system-release
-
-%if 0%{?rhel}
-Requires:       grub
-%endif
 
 BuildArch:      noarch
 
