@@ -362,10 +362,7 @@ initrd /initrd0.img
                 return False
         disable_firstboot()
         if finish_install():
-            logger.info("Generating iSCSI IQN and Persisting")
-            iscsi_iqn_cmd = subprocess.Popen("/sbin/iscsi-iname", stdout=PIPE)
-            iscsi_iqn, err = iscsi_iqn_cmd.communicate()
-            set_iscsi_initiator(iscsi_iqn.strip())
+            iscsi_auto()
             logger.info("Installation of %s Completed" % PRODUCT_SHORT)
             return True
         else:
