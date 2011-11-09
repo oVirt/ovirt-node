@@ -27,7 +27,7 @@ ARCH              = $(shell rpm --eval '%{_arch}')
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
 CUR_RAWHIDE       = 17
-CUR_DEVEL         = 16
+CUR_DEVEL         = 17
 
 OVIRT_NODE_TOOLSdir = $(datadir)/ovirt-node-tools
 OVIRT_NODE_TOOLS_DATA =         \
