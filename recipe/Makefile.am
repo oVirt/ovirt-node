@@ -81,6 +81,7 @@ repos.ks:
 	  fi ;\
 	)
 
+RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" --specfile ../ovirt-node.spec | head -n1)
 version.ks:
 	( \
 	    echo "PRODUCT='"$(PRODUCT)"'" ;\
