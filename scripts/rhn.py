@@ -317,7 +317,7 @@ class Plugin(PluginBase):
             elements.setField(Textbox(62,4,"RHN Registration is only required if you wish to use\nRed Hat Enterprise Linux Virtualization or Virtuali-\nzation Platform entitlements for your guests."), 0, 2, anchorLeft = 1)
         else:
             elements.setField(Textbox(62,3,"Network Down, Red Hat Network Registration Disabled"), 0, 2, anchorLeft = 1)
-            for i in self.rhn_user, self.rhn_pass, self.profilename, self.public_rhn, self.rhn_satellite, self.rhn_url, self.rhn_ca, self.proxyhost, self.proxyport, self.proxyuser, self.proxypass:
+            for i in self.rhn_user, self.rhn_pass, self.profilename, self.public_rhn, self.rhn_satellite, self.sam, self.rhn_url, self.rhn_ca, self.proxyhost, self.proxyport, self.proxyuser, self.proxypass:
                 i.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         return [Label(""), elements]
 
