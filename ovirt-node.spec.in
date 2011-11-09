@@ -7,7 +7,7 @@
 Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
 Version:        @VERSION@
-Release:        999%{?dist}%{?extra_release}
+Release:        0%{?dist}%{?extra_release}
 Source0:        %{name}-%{version}.tar.gz
 License:        GPLv2+
 Group:          Applications/System
