@@ -32,32 +32,6 @@ EOF_anyterm
    # permit it to run the virsh console
    echo "anyterm ALL=NOPASSWD: /usr/bin/virsh console *" >> /etc/sudoers
 
-# rwtab changes from upstream
-patch -d /etc/ -p1 << \EOF_PATCH
-diff --git a/rwtab b/rwtab
-index cfcb814..7dcb846 100644
---- a/rwtab
-+++ b/rwtab
-@@ -1,9 +1,7 @@
- dirs	/var/cache/man
- dirs	/var/gdm
- dirs	/var/lib/xkb
--dirs	/var/lock
- dirs	/var/log
--dirs	/var/run
- dirs	/var/puppet
- dirs	/var/lib/dbus
- dirs	/var/lib/nfs
-@@ -25,7 +23,6 @@ empty /var/lib/pulse
- empty	/var/lib/ups
- empty	/var/tmp
- empty	/var/tux
--empty	/media
-
- files	/etc/adjtime
- files	/etc/ntp.conf
-EOF_PATCH
-
 # systemd configuration
 # set default runlevel to multi-user(3)
 
