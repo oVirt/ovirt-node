@@ -35,8 +35,11 @@ class Storage:
         self.LOGGING_SIZE=2048
         self.EFI_SIZE=256
         self.SWAP_SIZE=""
+        self.SWAP2_SIZE=0
+        self.DATA2_SIZE=0
         self.BOOTDRIVE = ""
         self.HOSTVGDRIVE = ""
+        self.APPVGDRIVE = []
         self.RootBackup_end = self.ROOT_SIZE * 2 + self.EFI_SIZE
         self.Root_end = self.EFI_SIZE + self.ROOT_SIZE
         # -1 indicates data partition should use remaining disk
@@ -56,6 +59,22 @@ class Storage:
             else:
                 self.ROOTDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
                 self.HOSTVGDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
+        if OVIRT_VARS.has_key("OVIRT_VOL_SWAP2_SIZE"):
+            self.SWAP2_SIZE = OVIRT_VARS["OVIRT_VOL_SWAP2_SIZE"]
+        if OVIRT_VARS.has_key("OVIRT_VOL_DATA2_SIZE"):
+            self.DATA2_SIZE = int(OVIRT_VARS["OVIRT_VOL_DATA2_SIZE"])
+        if OVIRT_VARS.has_key("OVIRT_INIT_APP"):
+            if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
+                for drv in OVIRT_VARS["OVIRT_INIT_APP"].split(","):
+                    DRIVE = translate_multipath_device(drv)
+                    self.APPVGDRIVE.append(DRIVE)
+            if not self.cross_check_host_app:
+                logger.error("Skip disk partitioning, AppVG overlaps with HostVG")
+                sys.exit(1)
+        else:
+            if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
+                logger.error("Missing device parameter for AppVG: unable to partition any disk")
+                sys.exit(2)
 
         mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
         mem_size_mb = subprocess.Popen(mem_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -75,6 +94,15 @@ class Storage:
         else:
             BASE_SWAP_SIZE=16384
         self.SWAP_SIZE = int(BASE_SWAP_SIZE) + int(OVERCOMMIT_SWAP_SIZE)
+
+
+    def cross_check_host_app(self):
+        for hdrv in self.HOSTVGDRIVE:
+            if hdrv in self.APPDRIVE:
+                # Skip disk partitioning, AppVG overlaps with HostVG
+                return False
+            else:
+                return True
 
     def get_drive_size(self, drive):
         size_cmd = "sfdisk -s " + drive + " 2>null"
@@ -388,6 +416,77 @@ class Storage:
         logger.info("Completed HostVG Setup!")
         return True
 
+    def create_appvg(self):
+        logger.info("Creating LVM partition(s) for AppVG")
+        physical_vols = []
+        logger.debug("APPVGDRIVE: " + ' '.join(self.APPVGDRIVE))
+        logger.debug("SWAP2_SIZE: " + str(self.SWAP2_SIZE))
+        logger.debug("DATA2_SIZE: " + str(self.DATA2_SIZE))
+        for drv in self.APPVGDRIVE:
+            wipe_partitions(drv)
+            self.reread_partitions(drv)
+            logger.info("Labeling Drive: " + drv)
+            appvgpart = "1"
+            while True:
+                parted_cmd = "parted -s \"" + drv + "\" \"mklabel " + self.LABEL_TYPE + " mkpart primary ext2 2048s -1 set " + appvgpart + " lvm on print\""
+                system(parted_cmd)
+                self.reread_partitions(drv)
+                if os.path.exists(drv + appvgpart) or os.path.exists(drv + "p" + appvgpart):
+                    break
+
+            partpv = drv + appvgpart
+            if not os.path.exists(partpv):
+                # e.g. /dev/cciss/c0d0p2
+                partpv=drv + "p" + appvgpart
+            logger.info("Creating physical volume")
+            if not os.path.exists(partpv):
+                logger.error(partpv + " is not available!")
+                sys.exit(1)
+            dd_cmd = "dd if=/dev/zero of=\""+ partpv + "\" bs=1024k count=1"
+            logger.info(dd_cmd)
+            system(dd_cmd)
+            system("pvcreate -ff -y \"" + partpv + "\"")
+            physical_vols.append(partpv)
+
+        logger.info("Creating volume group AppVG")
+        is_first = True
+        for drv in physical_vols:
+            if is_first:
+                system("vgcreate AppVG \"" + drv + "\"")
+                is_first = False
+            else:
+                system("vgextend AppVG \"" + drv +"\"")
+
+        if self.SWAP2_SIZE > 0:
+            logger.info("Creating swap2 partition")
+            lv_cmd = "lvcreate --name Swap2 --size \"" + str(self.SWAP2_SIZE) + "M\" /dev/AppVG"
+            logger.debug(lv_cmd)
+            system(lv_cmd)
+            if OVIRT_VARS.has_key("OVIRT_CRYPT_SWAP2"):
+                system("echo \"SWAP2 /dev/AppVG/Swap2 /dev/mapper/ovirt-crypt-swap2 " + OVIRT_VARS["OVIRT_CRYPT_SWAP2"] + "\" >> /etc/ovirt-crypttab")
+            else:
+                system("mkswap -L \"SWAP2\" /dev/AppVG/Swap2")
+                system("echo \"/dev/AppVG/Swap2 swap swap defaults 0 0\" >> /etc/fstab")
+
+        use_data = "1"
+        if self.DATA2_SIZE == -1:
+            logger.info("Creating data2 partition with remaining free space")
+            system("lvcreate --name Data2 -l 100%FREE /dev/AppVG")
+            use_data = 0
+        elif self.DATA2_SIZE > 0:
+            logger.info("Creating data2 partition")
+            system("lvcreate --name Data2 --size " + str(self.DATA2_SIZE) + "M /dev/AppVG")
+            use_data = 0
+
+        if use_data == 0:
+            system("mke2fs -j -t ext4 /dev/AppVG/Data2 -L \"DATA2\"")
+            system("tune2fs -c 0 -i 0 /dev/AppVG/Data2")
+            system("echo \"/dev/AppVG/Data2 /data2 ext4 defaults,noatime 0 0\" >> /etc/fstab")
+            logger.info("Mounting data2 partition")
+            mount_data2()
+            logger.info("Completed AppVG!")
+            return True
+
     def perform_partitioning(self):
         if self.HOSTVGDRIVE is None and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] != "y":
             logger.error("\nNo storage device selected.")
@@ -473,6 +572,8 @@ class Storage:
         if self.ROOTDRIVE != hostvg1 :
             system("parted \"" + hostvg1 +"\" -s \"mklabel " + self.LABEL_TYPE + "\"")
         if self.create_hostvg():
+            if len(self.APPVGDRIVE) > 0:
+                self.create_appvg()
             return True
         else:
             return False

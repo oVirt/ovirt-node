@@ -502,6 +502,21 @@ def mount_data():
         logger.error("The data partion has not been created. Please create it at the main menu.")
         return False
 
+def mount_data2():
+    if os.path.ismount("/data2"):
+        return True
+
+    if os.path.exists("/dev/AppVG/Data2"):
+        system("mkdir -p /data2")
+        system("mount /data2")
+
+    if os.path.ismount("/data2"):
+        return True
+    else:
+        # /data2 is not available
+        logger.error("The data2 volume can not be mounted")
+        return False
+
 def md5sum(filename):
     m = hashlib.md5()
     with open(filename) as f:
