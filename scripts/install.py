@@ -129,7 +129,7 @@ EOF
     def grub2_install(self):
         GRUB2_CONFIG_TEMPLATE = """
 #default saved
-set timeout 5
+set timeout=5
 #hiddenmenu
 menuentry "%(product)s %(version)s-%(release)s" {
 set root=(hd0,%(partN)d)
