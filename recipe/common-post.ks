@@ -169,16 +169,6 @@ if grep -q -w root=live:LABEL=Root /proc/cmdline; then
     mount -o ro,remount LABEL=Root /dev/.initramfs/live >> /tmp/grub-savedefault.log 2>&1
 fi
 
-# remove old persisted lvm.conf
-if is_persisted /etc/lvm/lvm.conf; then
-  remove_config /etc/lvm/lvm.conf
-  # should be only one, loop just in case
-  for rpmnew in /etc/lvm/lvm.conf.rpmnew-*
-  do
-    cp -pv "$rpmnew" /etc/lvm/lvm.conf
-  done
-  pvscan
-fi
 EOF_rc.local
 
 # sosreport fixups for node image:
