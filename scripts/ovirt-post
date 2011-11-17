@@ -75,6 +75,17 @@ start_ovirt_post() {
         /etc/libvirt/krb5.tab \
         /etc/ssh/ssh_host*_key*
 
+    . /usr/libexec/ovirt-functions
+
+    # successfull boot from /dev/HostVG/Root
+    if grep -q -w root=live:LABEL=Root /proc/cmdline; then
+        # set first boot entry as permanent default
+        ln -snf /dev/.initramfs/live/grub /boot/grub
+        mount -o rw,remount LABEL=Root /dev/.initramfs/live > /tmp/grub-savedefault.log 2>&1
+        echo "savedefault --default=0" | grub >> /tmp/grub-savedefault.log 2>&1
+        mount -o ro,remount LABEL=Root /dev/.initramfs/live >> /tmp/grub-savedefault.log 2>&1
+    fi
+
     # perform any post startup operations
     case $OVIRT_RUNTIME_MODE in
     esac

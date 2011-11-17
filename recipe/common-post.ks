@@ -157,20 +157,6 @@ set /files/etc/sysconfig/nfs/STATD_OUTGOING_PORT 2020
 save
 EOF_nfs
 
-cat >> /etc/rc.d/rc.local << \EOF_rc.local
-. /usr/libexec/ovirt-functions
-
-# successfull boot from /dev/HostVG/Root
-if grep -q -w root=live:LABEL=Root /proc/cmdline; then
-    # set first boot entry as permanent default
-    ln -snf /dev/.initramfs/live/grub /boot/grub
-    mount -o rw,remount LABEL=Root /dev/.initramfs/live > /tmp/grub-savedefault.log 2>&1
-    echo "savedefault --default=0" | grub >> /tmp/grub-savedefault.log 2>&1
-    mount -o ro,remount LABEL=Root /dev/.initramfs/live >> /tmp/grub-savedefault.log 2>&1
-fi
-
-EOF_rc.local
-
 # sosreport fixups for node image:
 # use .pyc for plugins enumeration, .py is blacklisted
 # include *-release
