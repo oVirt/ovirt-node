@@ -175,9 +175,12 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__install} -p -m0644 scripts/log.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/ovirtfunctions.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/network.py %{buildroot}%{python_sitelib}/ovirtnode
+%{__install} -p -m0644 scripts/snmp.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0755 scripts/ovirt-config-installer.py %{buildroot}%{_libexecdir}/ovirt-config-installer
 %{__install} -p -m0755 scripts/ovirt-config-setup.py %{buildroot}%{_libexecdir}/ovirt-config-setup
 %{__install} -p -m0755 scripts/ovirt-admin-shell %{buildroot}%{_libexecdir}
+# python auto install
+%{__install} -p -m0755 scripts/ovirt-auto-install.py %{buildroot}%{_libexecdir}/ovirt-auto-install
 #%if 0%{?rhel}
 # python-augeas is not in RHEL-6
 # specific version of python-augeas is not available in Fedora yet
@@ -284,6 +287,7 @@ fi
 %{_datadir}/dracut/modules.d/91ovirtnode/ovirt-boot-functions
 %{_datadir}/dracut/modules.d/91ovirtnode/ovirt-cleanup.sh
 %{_sysconfdir}/dracut.conf.d/ovirt-dracut.conf
+%{_libexecdir}/ovirt-auto-install
 %{_libexecdir}/ovirt-config-boot
 %{_libexecdir}/ovirt-config-hostname
 %{_libexecdir}/ovirt-config-iscsi

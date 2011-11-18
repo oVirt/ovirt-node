@@ -35,8 +35,10 @@ EXTRA_DIST = \
   log.py \
   kdump.py \
   rhn.py \
+  snmp.py \
   ovirt-config-installer.py \
   ovirt-config-setup.py \
+  ovirt-auto-install.py \
   ovirt-admin-shell
 
 dist_sbin_SCRIPTS = \

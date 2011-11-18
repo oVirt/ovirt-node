@@ -51,12 +51,14 @@ class Install:
         return True
 
     def generate_paths(self):
+        mount_live()
         # install oVirt Node image for local boot
         if os.path.exists("/live/syslinux"):
             self.syslinux = "syslinux"
         elif os.path.exists("/live/isolinux"):
             self.syslinux = "isolinux"
         else:
+            logger.info("Failed to determine grub pathnames")
             return False
 
         if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
