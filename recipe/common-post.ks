@@ -209,3 +209,13 @@ augtool << \EOF_NETWORKING
 set /files/etc/sysconfig/network/NETWORKING no
 save
 EOF_NETWORKING
+
+# disable SSH password auth by default
+# set ssh timeouts for increased security
+augtool << \EOF_sshd_config
+set /files/etc/ssh/sshd_config/PasswordAuthentication no
+set /files/etc/ssh/sshd_config/ClientAliveInterval 300
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 3
+save
+EOF_sshd_config
+

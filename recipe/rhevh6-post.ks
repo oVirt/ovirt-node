@@ -18,14 +18,6 @@ cat > /etc/cron.d/rhn-virtualization.cron << \EOF_cron-rhn
 0-59/2 * * * * root python /usr/share/rhn/virtualization/poller.pyc
 EOF_cron-rhn
 
-# disable SSH password auth by default
-augtool << \EOF_sshd_config
-set /files/etc/ssh/sshd_config/PasswordAuthentication no
-set /files/etc/ssh/sshd_config/ClientAliveInterval 300
-set /files/etc/ssh/sshd_config/ClientAliveCountMax 3
-save
-EOF_sshd_config
-
 # minimal lsb_release for vdsm-reg (bz#549147)
 cat > /usr/bin/lsb_release <<\EOF_LSB
 #!/bin/sh
