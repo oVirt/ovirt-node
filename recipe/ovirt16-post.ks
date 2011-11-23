@@ -15,13 +15,6 @@
        -e "s/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/" \
        /etc/libvirt/libvirtd.conf
 
-    # with libvirt (0.4.0), make sure we we setup gssapi in the mech_list
-    sasl_conf=/etc/sasl2/libvirt.conf
-    if ! grep -qE "^mech_list: gssapi" $sasl_conf ; then
-       sed -i -e "s/^\([[:space:]]*mech_list.*\)/#\1/" $sasl_conf
-       echo "mech_list: gssapi" >> $sasl_conf
-    fi
-
 #ovirt_setup_anyterm()
    # configure anyterm
    cat >> /etc/sysconfig/anyterm << \EOF_anyterm

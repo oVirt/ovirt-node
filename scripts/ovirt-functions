@@ -27,7 +27,6 @@ MANAGEMENT_SCRIPTS_DIR=/etc/node.d
 OVIRT_CONFIG_FILES="\
  /etc/rsyslog.conf                              \
  /etc/libvirt/libvirtd.conf                     \
- /etc/sasl2/libvirt.conf                        \
  /etc/libvirt/passwd.db                         \
  /etc/passwd                                    \
  /etc/shadow                                    \
@@ -278,13 +277,6 @@ ovirt_setup_libvirtd() {
     sed -i -e "s/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/" \
        -e "s/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/" \
        /etc/libvirt/libvirtd.conf
-
-    # with libvirt (0.4.0), make sure we we setup gssapi in the mech_list
-    sasl_conf=/etc/sasl2/libvirt.conf
-    if ! grep -qE "^mech_list: gssapi" $sasl_conf ; then
-       sed -i -e "s/^\([[:space:]]*mech_list.*\)/#\1/" $sasl_conf
-       echo "mech_list: gssapi" >> $sasl_conf
-    fi
 }
 
 ovirt_setup_anyterm() {

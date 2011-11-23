@@ -300,13 +300,6 @@ def ovirt_setup_libvirtd(self):
        -e "s/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/" \
        /etc/libvirt/libvirtd.conf')
 
-    # with libvirt (0.4.0), make sure we we setup gssapi in the mech_list
-    sasl_conf="/etc/sasl2/libvirt.conf"
-    ret = os.system('grep -qE "^mech_list: gssapi %s' % sasl_conf)
-    if ret > 0:
-        os.system("sed -i -e 's/^\([[:space:]]*mech_list.*\)/#\1/' %s" % sasl_conf)
-        os.system('echo "mech_list: gssapi" >> %s' % sasl_conf)
-
 def ovirt_setup_anyterm():
    # configure anyterm
    anyterm_conf = open("/etc/sysconfig/anyterm", "w")
