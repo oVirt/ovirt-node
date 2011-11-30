@@ -170,3 +170,5 @@ semodule -v -i ovirt.pp
 cd /
 rm -rf /tmp/SELinux
 
+# Workaround for rhbz#755464
+/sbin/service zfs-fuse stop 2>/dev/null
