@@ -376,6 +376,8 @@ class Storage:
             system("lvcreate --name Swap --size "+str(self.SWAP_SIZE) + "M /dev/HostVG")
             system("mkswap -L \"SWAP\" /dev/HostVG/Swap")
             os.system("echo \"/dev/HostVG/Swap swap swap defaults 0 0\" >> /etc/fstab")
+            if OVIRT_VARS.has_key("OVIRT_CRYPT_SWAP"):
+                os.system("echo \"SWAP /dev/HostVG/Swap /dev/mapper/ovirt-crypt-swap " + OVIRT_VARS["OVIRT_CRYPT_SWAP"] + "\" >> /etc/ovirt-crypttab")
         if self.CONFIG_SIZE > 0:
             logger.info("Creating config partition")
             system("lvcreate --name Config --size "+str(self.CONFIG_SIZE)+"M /dev/HostVG")
@@ -463,10 +465,10 @@ class Storage:
             logger.debug(lv_cmd)
             system(lv_cmd)
             if OVIRT_VARS.has_key("OVIRT_CRYPT_SWAP2"):
-                system("echo \"SWAP2 /dev/AppVG/Swap2 /dev/mapper/ovirt-crypt-swap2 " + OVIRT_VARS["OVIRT_CRYPT_SWAP2"] + "\" >> /etc/ovirt-crypttab")
+                os.system("echo \"SWAP2 /dev/AppVG/Swap2 /dev/mapper/ovirt-crypt-swap2 " + OVIRT_VARS["OVIRT_CRYPT_SWAP2"] + "\" >> /etc/ovirt-crypttab")
             else:
                 system("mkswap -L \"SWAP2\" /dev/AppVG/Swap2")
-                system("echo \"/dev/AppVG/Swap2 swap swap defaults 0 0\" >> /etc/fstab")
+                os.system("echo \"/dev/AppVG/Swap2 swap swap defaults 0 0\" >> /etc/fstab")
 
         use_data = "1"
         if self.DATA2_SIZE == -1:
@@ -481,7 +483,7 @@ class Storage:
         if use_data == 0:
             system("mke2fs -j -t ext4 /dev/AppVG/Data2 -L \"DATA2\"")
             system("tune2fs -c 0 -i 0 /dev/AppVG/Data2")
-            system("echo \"/dev/AppVG/Data2 /data2 ext4 defaults,noatime 0 0\" >> /etc/fstab")
+            os.system("echo \"/dev/AppVG/Data2 /data2 ext4 defaults,noatime 0 0\" >> /etc/fstab")
             logger.info("Mounting data2 partition")
             mount_data2()
             logger.info("Completed AppVG!")
@@ -574,9 +576,11 @@ class Storage:
         if self.create_hostvg():
             if len(self.APPVGDRIVE) > 0:
                 self.create_appvg()
-            return True
         else:
             return False
+        if OVIRT_VARS.has_key("OVIRT_CRYPT_SWAP2") or OVIRT_VARS.has_key("OVIRT_CRYPT_SWAP"):
+            ovirt_store_config("/etc/ovirt-crypttab")
+        return True
 
     def check_partition_sizes(self):
         drive_list = []
