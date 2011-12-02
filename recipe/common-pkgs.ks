@@ -42,6 +42,7 @@ lsof
 newt-python
 systemtap-runtime
 qemu-kvm-tools
+setools-console
 # remove
 -audit-libs-python
 -ustr
