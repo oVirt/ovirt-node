@@ -349,7 +349,7 @@ class NodeInstallScreen:
             dev = self.root_disk_menu_list.current()
         elif self.__current_page == HOSTVG_STORAGE_PAGE:
             dev = self.hostvg_checkbox.getCurrent()
-        if "Location" in dev:
+        if "Location" in dev or "NoDevices" in dev:
             blank_entry = ",,,,,"
             dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = blank_entry.split(",",5)
         else:
@@ -385,6 +385,12 @@ class NodeInstallScreen:
                     self.root_disk_menu_list.append(dev_entry, dev)
                     self.valid_disks.append(dev_name)
                     self.displayed_disks[dev] = ""
+        if len(self.valid_disks) == 0:
+            self.root_disk_menu_list.append(" No Valid Install Devices Detected", "NoDevices")
+            self.disk_dict["NoDevices"] = ",,,,,"
+            dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict["NoDevices"].split(",",5)
+        else:
+            dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[self.valid_disks[0]].split(",",5)
         self.root_disk_menu_list.append(" Other Device", "OtherDevice")
         self.disk_dict["OtherDevice"] = ",,,,,"
         elements.setField(Label("Please select the disk to use for booting %s"
@@ -401,8 +407,6 @@ class NodeInstallScreen:
         disk_grid.setField(Label("Serial       "),0, 3, anchorLeft = 1)
         disk_grid.setField(Label("Size         "),0, 4, anchorLeft = 1)
         disk_grid.setField(Label("Description  "),0, 5, anchorLeft = 1)
-        # get first disk's info to prepopulate
-        dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[self.valid_disks[0]].split(",",5)
         dev_name = dev_name.replace(" ", "")
         self.dev_name_label = Label(dev_name)
         self.dev_model_label = Label(dev_model)
@@ -718,6 +722,9 @@ class NodeInstallScreen:
                             self.storage_init = self.root_disk_menu_list.current()
                             if self.storage_init == "OtherDevice":
                                 self.__current_page = OTHER_DEVICE_ROOT_PAGE
+                            elif self.storage_init == "NoDevices":
+                                ButtonChoiceWindow(self.screen, "Root Storage Selection", "You must enter a valid device", buttons = ['Ok'])
+                                self.__current_page = ROOT_STORAGE_PAGE
                             else:
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + '"')
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_ROOT_INSTALL", '"y"')
