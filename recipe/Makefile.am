@@ -26,6 +26,7 @@ DISTRO            = @DISTRO@
 ARCH              = $(shell rpm --eval '%{_arch}')
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
+OVIRT_URL		  = http://ovirt.org/releases/stable/fedora
 CUR_RAWHIDE       = 17
 CUR_DEVEL         = 17
 
@@ -61,17 +62,21 @@ repos.ks:
 	    if [ 0$(FEDORA) == 0$(CUR_RAWHIDE) ]; then \
 	        FEDORA_REPO=rawhide ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/development/rawhide/$(ARCH)/os,--mirrorlist=$(FEDORA_MIRROR)?repo=rawhide&arch=$(ARCH))" ;\
+			OVIRT_REPO_LINE="repo --name=ovirt-repo --baseurl=$(OVIRT_URL)/$(FEDORA)\n" ;\
 	    elif [ 0$(FEDORA) == 0$(CUR_DEVEL) ]; then \
 	        FEDORA_REPO=f$(FEDORA) ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/development/$(FEDORA)/$(ARCH)/os,--mirrorlist=$(FEDORA_MIRROR)?repo=fedora-$(FEDORA)&arch=$(ARCH))" ;\
 	        UPDATE_REPO_LINE="repo --name=$${FEDORA_REPO}-updates-testing $(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/updates/testing/$(FEDORA)/${ARCH},--mirrorlist=$(FEDORA_MIRROR)?repo=updates-testing-f$(FEDORA)&arch=$(ARCH))\n" ;\
+			OVIRT_REPO_LINE="repo --name=ovirt-repo --baseurl=$(OVIRT_URL)/$(FEDORA)\n" ;\
 	    else \
 	        FEDORA_REPO=f$(FEDORA) ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/releases/$(FEDORA)/Everything/${ARCH}/os,--mirrorlist=$(FEDORA_MIRROR)?repo=fedora-$(FEDORA)&arch=$(ARCH))" ;\
 	        UPDATE_REPO_LINE="repo --name=$${FEDORA_REPO}-updates $(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/updates/$(FEDORA)/${ARCH},--mirrorlist=$(FEDORA_MIRROR)?repo=updates-released-f$(FEDORA)&arch=$(ARCH))\n" ;\
+			OVIRT_REPO_LINE="repo --name=ovirt-repo --baseurl=$(OVIRT_URL)/$(FEDORA)\n" ;\
 	    fi ;\
 	    echo "repo --name=$${FEDORA_REPO} $${FEDORA_REPO_LOC}" > repos.ks ;\
 	    printf "$${UPDATE_REPO_LINE}" >> repos.ks ;\
+	    printf "$${OVIRT_REPO_LINE}" >> repos.ks ;\
 	  else \
 	    echo "# OVIRT_REPO_URL=$(OVIRT_REPO_URL)" > $@ ;\
 	    for repo in $(OVIRT_REPO_URL); do \
