@@ -53,6 +53,17 @@ EXTRA_DIST =                    \
         $(PACKAGE).ks.in        \
         $(PACKAGE).ks
 
+# For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
+# annotated rpm version strings.
+_ovirt_dev = \
+ $(shell grep -q '^[[:space:]]*Release:[[:space:]]*0' \
+   $(top_srcdir)/*.spec && echo 1 || :)
+
+git_head	= $$(git log -1 --pretty=format:%h)
+GIT_RELEASE	= git$(git_head)
+EXTRA_RELEASE = $(if $(_ovirt_dev),.$(GIT_RELEASE),${nil})
+RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" --define "extra_release $(EXTRA_RELEASE)" --specfile ../ovirt-node.spec | head -n1)
+
 dist_sbin_SCRIPTS = node-creator
 
 $(PACKAGE).ks: repos.ks version.ks
@@ -87,7 +98,6 @@ repos.ks:
 	  fi ;\
 	)
 
-RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" --specfile ../ovirt-node.spec | head -n1)
 version.ks:
 	( \
 	    echo "PRODUCT='"$(PRODUCT)"'" ;\
