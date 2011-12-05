@@ -24,6 +24,7 @@ FEDORA            = @FEDORA@
 RHEL              = @RHEL@
 DISTRO            = @DISTRO@
 ARCH              = $(shell rpm --eval '%{_arch}')
+NODE_CREATOR      = $(shell test -e node-creator && echo "./node-creator" || echo "/usr/sbin/node-creator")
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
 OVIRT_URL		  = http://ovirt.org/releases/stable/fedora
@@ -97,6 +98,6 @@ version.ks:
 	) > $@
 
 $(PACKAGE).$(PKG_FMT) node: version.ks
-	node-creator $(RECIPE)
+	$(NODE_CREATOR) $(RECIPE)
 
 .PHONY: repos.ks version.ks $(PACKAGE).ks
