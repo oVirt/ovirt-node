@@ -446,7 +446,7 @@ class NodeConfigScreen():
           warn = 0
           try:
               if not self.netvlanid.value() == "":
-                  if not int(self.netvlanid.value()) in range(1,4095):
+                  if not int(self.netvlanid.value()) in range(1,4095) or " " in self.netvlanid.value():
                       warn = 1
           except:
               warn = 1
