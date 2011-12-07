@@ -34,14 +34,12 @@ class Storage:
         self.CONFIG_SIZE=5
         self.LOGGING_SIZE=2048
         self.EFI_SIZE=256
-        self.SWAP_SIZE=""
+        self.SWAP_SIZE=0
         self.SWAP2_SIZE=0
         self.DATA2_SIZE=0
         self.BOOTDRIVE = ""
         self.HOSTVGDRIVE = ""
         self.APPVGDRIVE = []
-        self.RootBackup_end = self.ROOT_SIZE * 2 + self.EFI_SIZE
-        self.Root_end = self.EFI_SIZE + self.ROOT_SIZE
         # -1 indicates data partition should use remaining disk
         self.DATA_SIZE = -1
         # gpt or msdos partition table type
@@ -59,22 +57,6 @@ class Storage:
             else:
                 self.ROOTDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
                 self.HOSTVGDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
-        if OVIRT_VARS.has_key("OVIRT_VOL_SWAP2_SIZE"):
-            self.SWAP2_SIZE = OVIRT_VARS["OVIRT_VOL_SWAP2_SIZE"]
-        if OVIRT_VARS.has_key("OVIRT_VOL_DATA2_SIZE"):
-            self.DATA2_SIZE = int(OVIRT_VARS["OVIRT_VOL_DATA2_SIZE"])
-        if OVIRT_VARS.has_key("OVIRT_INIT_APP"):
-            if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
-                for drv in OVIRT_VARS["OVIRT_INIT_APP"].split(","):
-                    DRIVE = translate_multipath_device(drv)
-                    self.APPVGDRIVE.append(DRIVE)
-            if not self.cross_check_host_app:
-                logger.error("Skip disk partitioning, AppVG overlaps with HostVG")
-                sys.exit(1)
-        else:
-            if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
-                logger.error("Missing device parameter for AppVG: unable to partition any disk")
-                sys.exit(2)
 
         mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
         mem_size_mb = subprocess.Popen(mem_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -94,6 +76,31 @@ class Storage:
         else:
             BASE_SWAP_SIZE=16384
         self.SWAP_SIZE = int(BASE_SWAP_SIZE) + int(OVERCOMMIT_SWAP_SIZE)
+
+        for i in ['OVIRT_VOL_BOOT_SIZE','OVIRT_VOL_SWAP_SIZE','OVIRT_VOL_ROOT_SIZE','OVIRT_VOL_CONFIG_SIZE','OVIRT_VOL_LOGGING_SIZE', \
+                  'OVIRT_VOL_DATA_SIZE','OVIRT_VOL_SWAP2_SIZE','OVIRT_VOL_DATA2_SIZE']:
+            i_short = i.replace("OVIRT_VOL_","")
+            if OVIRT_VARS.has_key(i):
+                logging.info("Setting value for %s to %s " % (self.__dict__[i_short], OVIRT_VARS[i]))
+                self.__dict__[i_short] = int(OVIRT_VARS[i])
+            else:
+                logging.info("Using default value for: %s" % i_short)
+
+        self.RootBackup_end = self.ROOT_SIZE * 2 + self.EFI_SIZE
+        self.Root_end = self.EFI_SIZE + self.ROOT_SIZE
+
+        if OVIRT_VARS.has_key("OVIRT_INIT_APP"):
+            if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
+                for drv in OVIRT_VARS["OVIRT_INIT_APP"].split(","):
+                    DRIVE = translate_multipath_device(drv)
+                    self.APPVGDRIVE.append(DRIVE)
+            if not self.cross_check_host_app:
+                logger.error("Skip disk partitioning, AppVG overlaps with HostVG")
+                sys.exit(1)
+        else:
+            if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
+                logger.error("Missing device parameter for AppVG: unable to partition any disk")
+                sys.exit(2)
 
 
     def cross_check_host_app(self):
