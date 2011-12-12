@@ -1441,7 +1441,12 @@ class NodeConfigScreen():
               write_kdump_config(self.kdump_ssh_config.value())
               self.screen.popWindow()
               self.screen.finish()
-              ret = os.system("clear;service kdump propagate")
+              # systemctl change
+              if os.path.exists("/usr/bin/kdumpctl"):
+                  kdump_prop_cmd = "kdumpctl propagate"
+              else:
+                  kdump_prop_cmd = "service kdump propagate"
+              ret = os.system("clear; %s" % kdump_prop_cmd)
               if ret == 0:
                   ovirt_store_config("/root/.ssh/kdump_id_rsa.pub")
                   ovirt_store_config("/root/.ssh/kdump_id_rsa")
