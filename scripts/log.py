@@ -76,7 +76,8 @@ def ovirt_rsyslog(server, port, protocol):
     rsyslog_config.write(rsyslog_config_out)
     rsyslog_config.close()
     os.system("/sbin/service rsyslog restart &> /dev/null")
-    logger.info("Syslog Configuration Updated")
+    if ovirt_store_config("/etc/rsyslog.conf"):
+        logger.info("Syslog Configuration Updated")
     return True
 
 def ovirt_netconsole(server, port):
