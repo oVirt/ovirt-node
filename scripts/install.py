@@ -129,6 +129,12 @@ EOF
         return True
 
     def grub2_install(self):
+
+        GRUB2_EFI_CONFIG_TEMPLATE = """
+insmod efi_gop
+insmod efi_uga
+"""
+
         GRUB2_CONFIG_TEMPLATE = """
 #default saved
 set timeout=5
@@ -166,6 +172,20 @@ initrd /initrd0.img
                 self.grub_dict['partB']=partB
                 grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
             grub_conf.close()
+            if os.path.exists("/liveos/efi"):
+                efi_grub_conf = open("/liveos/grub2-efi/grub.cfg","w")
+                # inject efi console output modules
+                efi_grub_conf.write(GRUB2_EFI_CONFIG_TEMPLATE)
+                efi_grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
+                if self.oldtitle is not None:
+                    partB=0
+                    if partN == 0:
+                        partB=1
+                    self.grub_dict['oldtitle']=self.oldtitle
+                    self.grub_dict['partB']=partB
+                    efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
+                efi_grub_conf.close()
+                system("umount /liveos/efi")
             logger.info("Grub2 Install Completed")
             return True
 
@@ -269,10 +289,17 @@ initrd /initrd0.img
             shutil.rmtree(self.grub_dir)
         if not os.path.exists(self.grub_dir):
             os.makedirs(self.grub_dir)
-            os.makedirs(self.grub_dir + "/efi")
-            system("mount LABEL=EFI "+self.grub_dir+"/efi")
-            system("cp -ra /boot/efi/* " + self.grub_dir + "/efi")
-            system("umount /liveos/grub/efi")
+            # log if efi system, however install both efi/bios grub until better efi detection works
+            if os.path.exists("/sys/firmware/efi"):
+                logger.info("efi detected, installing efi grub2 configuraton")
+            if os.path.exists("/sbin/grub2-efi-install"):
+                system("mkdir /liveos/efi")
+                system("mount LABEL=EFI /liveos/efi")
+                system("mkdir -p /liveos/efi/EFI/BOOT")
+                grub_setup_cmd = "/sbin/grub2-efi-install " + self.disk + " --boot-directory=/liveos --force"
+                system(grub_setup_cmd)
+                system("mv /liveos/efi/EFI/grub/grubx64.efi /liveos/efi/EFI/BOOT/BOOTX64.EFI")
+                system("rm -rf /liveos/efi/EFI/grub")
 
         self.kernel_image_copy()
 

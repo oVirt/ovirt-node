@@ -544,7 +544,7 @@ class Storage:
             logger.debug(parted_cmd)
             system(parted_cmd)
             logger.debug("Creating Root and RootBackup Partitions")
-            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary fat32 1M "+ str(self.EFI_SIZE)+"M\""
+            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI fat32 1M "+ str(self.EFI_SIZE)+"M\""
             logger.debug(parted_cmd)
             system(parted_cmd)
             parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 "+str(self.EFI_SIZE)+" "+ str(self.Root_end)+"M\""
@@ -569,7 +569,7 @@ class Storage:
                 partroot = self.ROOTDRIVE + "p2"
                 partrootbackup= self.ROOTDRIVE + "p3"
             system("ln -snf \""+partefi+"\" /dev/disk/by-label/EFI")
-            system("mkfs.vfat \""+partefi+"\" -n EFI")
+            system("mkfs.vfat \""+partefi+"\" -n EFI -F32")
             system("ln -snf \""+partroot+"\" /dev/disk/by-label/Root")
             system("mke2fs \""+partroot+"\" -L Root")
             system("tune2fs -c 0 -i 0 \""+partroot+"\"")
