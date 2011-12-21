@@ -19,7 +19,6 @@ AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
 AC_SUBST([IMAGE_MINIMIZER])
 
 AC_CONFIG_FILES([Makefile
-  augeas/Makefile
   dracut/Makefile
   images/Makefile
   kinit/Makefile
