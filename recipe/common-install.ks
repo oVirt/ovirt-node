@@ -10,7 +10,7 @@ part / --size 1024 --fstype ext2
 # additional default boot parameters
 # Need to use deadline Scheduler for performance, rhbz#647301
 # VM timekeeping: Do not allow C2 state, rhbz#647300
-bootloader --timeout=30 --append="nomodeset check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline processor.max_cstate=1 install quiet rd_NO_LVM"
+bootloader --timeout=30 --append="nomodeset check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM"
 
 # not included by default in Fedora 10 livecd initramfs
 device virtio_blk
