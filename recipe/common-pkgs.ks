@@ -28,7 +28,6 @@ python-virtinst
 hdparm
 sos
 gdb
-ltrace
 strace
 sysstat
 tcpdump
@@ -77,8 +76,6 @@ sysfsutils
 less
 # Autotest support rhbz#631795
 dosfstools
-# host statistics rhbz#588852
-vhostmd
 # kdump
 kexec-tools
 # SNMP support rhbz#614870
@@ -111,8 +108,5 @@ python-hivex
 febootstrap-supermin-helper
 # sosreport soft-dep
 rpm-python
-#VDSM
-vdsm-cli
-vdsm-reg
 # for efi installs
 efibootmgr

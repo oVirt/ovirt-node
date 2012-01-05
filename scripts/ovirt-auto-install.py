@@ -29,46 +29,50 @@ from ovirtnode.kdump import *
 from ovirtnode.snmp import *
 from ovirt_config_setup.collectd import *
 
-print "Performing automatic disk partitioning"
-storage_auto_succ = 0
-if storage_auto():
-    storage_auto_succ = 1
+def config_networking():
+   # network configuration
+    print "Configuring Network"
+    if OVIRT_VARS["OVIRT_BOOTIF"] != "":
+        network_auto()
+    if OVIRT_VARS.has_key("OVIRT_HOSTNAME"):
+        system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
 
-# network configuration
-print "Configuring Network"
-if OVIRT_VARS["OVIRT_BOOTIF"] != "":
-    network_auto()
+if not is_stateless():
+    print "Performing automatic disk partitioning"
+    if storage_auto:
+        print "Completed automatic disk partitioning"
+        # store /etc/shadow if adminpw/rootpw are set, handled already in ovirt-early
+        file = open("/proc/cmdline")
+        args = file.read()
+        if "adminpw" in args or "rootpw" in args:
+            print "Storing /etc/shadow"
+            ovirt_store_config("/etc/passwd")
+            ovirt_store_config("/etc/shadow")
+        file.close()
+    else:
+        config_networking()
+        print "Automatic installation failed. Please review /tmp/ovirt.log"
+        sys.exit(1)
 
-if OVIRT_VARS.has_key("OVIRT_HOSTNAME"):
-    system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
+config_networking()
+#set ssh_passwd_auth
+if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
+    if self.ssh_passwd_status.value() == 1:
+        augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
+    elif self.ssh_passwd_status.value() == 0:
+        augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
 
-if storage_auto_succ == 1:
-    print "Completed automatic disk partitioning"
-    # store /etc/shadow if adminpw/rootpw are set, handled already in ovirt-early
-    file = open("/proc/cmdline")
-    args = file.read()
-    if "adminpw" in args or "rootpw" in args:
-        print "Storing /etc/shadow"
-        ovirt_store_config("/etc/passwd")
-        ovirt_store_config("/etc/shadow")
-    file.close()
-    #set ssh_passwd_auth
-    if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
-        if self.ssh_passwd_status.value() == 1:
-            augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
-        elif self.ssh_passwd_status.value() == 0:
-            augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
-
-    # iscsi handled in install.py
-    print "Configuring Logging"
-    logging_auto()
-    print "Configuring Collectd"
-    collectd_auto()
-    install = Install()
-    print "Configuring KDump"
-    kdump_auto()
-    print "Configuring SNMP"
-    snmp_auto()
+# iscsi handled in install.py
+print "Configuring Logging"
+logging_auto()
+print "Configuring Collectd"
+collectd_auto()
+install = Install()
+print "Configuring KDump"
+kdump_auto()
+print "Configuring SNMP"
+snmp_auto()
+if not is_stateless():
     print "Installing Bootloader"
     if install.ovirt_boot_setup():
         print "Bootloader Installation Completed"
@@ -76,6 +80,3 @@ if storage_auto_succ == 1:
         print "Bootloader Installation Failed"
         sys.exit(1)
     print "Installation and Configuration Completed"
-else:
-    print "Automatic installation failed. Please review /tmp/ovirt.log"
-    sys.exit(1)

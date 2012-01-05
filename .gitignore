@@ -15,3 +15,8 @@ ovirt-node*.gz
 ovirt-node.spec
 *.pyc
 *~
+recipe/*.iso
+recipe/archipel-node-image.ks
+recipe/image-minimizer.ks
+recipe/version.ks
+scripts/collectd.conf

@@ -27,6 +27,7 @@ Requires:       glusterfs-client >= 2.0.1
 Requires:       anyterm
 Requires:       python-IPy
 Requires:       grub2
+Requires:       system-release
 %endif
 Requires:       libvirt >= 0.9.2
 Requires:       augeas >= 0.3.5
@@ -56,7 +57,10 @@ Requires:       grub
 # for applying patches in %post
 Requires:       patch
 %endif
+%if 0%{?rhel} && ! 0%{?centos}
 Requires:       system-release
+%endif
+
 
 BuildArch:      noarch
 
@@ -84,7 +88,7 @@ however on a development machine to help to build the image.
 
 %build
 aclocal && autoheader && automake --add-missing && autoconf
-%configure --with-image-minimizer
+%configure --with-image-minimizer @ARCHIPEL_FLAGS@
 make
 
 %install
@@ -121,6 +125,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/init
 %{__install} -p -m0644 libvirtd.upstart %{buildroot}%{_sysconfdir}/init/libvirtd.conf
 %endif
+
 # load vlan module
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig/modules
 %{__install} -p -m0755 vlan.modules %{buildroot}%{_sysconfdir}/sysconfig/modules
@@ -156,7 +161,10 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %if 0%{?fedora}
 %{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %endif
-%if 0%{?rhel}
+%if 0%{?centos}
+%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
+%endif
+%if 0%{?rhel} && ! 0%{?centos}
 %{__install} -p -m0644 scripts/rhn.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %endif
 %{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirtnode
@@ -175,11 +183,9 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__install} -p -m0755 scripts/ovirt-admin-shell %{buildroot}%{_libexecdir}
 # python auto install
 %{__install} -p -m0755 scripts/ovirt-auto-install.py %{buildroot}%{_libexecdir}/ovirt-auto-install
-#%if 0%{?rhel}
 # python-augeas is not in RHEL-6
 # specific version of python-augeas is not available in Fedora yet
 %{__install} -p -m0644 scripts/augeas.py %{buildroot}%{python_sitelib}
-#%endif
 
 # ovirt-early vendor hook dir
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-early.d
@@ -201,7 +207,7 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 if [ ! -e /boot/grub/splash.xpm.gz ]; then
   cp %{app_root}/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
 fi
-%if 0%{?rhel}
+%if 0%{?rhel} && ! 0%{?centos}
 # apply dracut fixes not in rhel6
 # rhbz#683330
 # dracut.git commits rediffed for dracut-004-53.el6
@@ -302,9 +308,7 @@ fi
 %{_sbindir}/unpersist
 %{python_sitelib}/ovirt_config_setup
 %{python_sitelib}/ovirtnode
-#%if 0%{?rhel}
 %{python_sitelib}/augeas*
-#%endif
 
 %{_initrddir}/ovirt-awake
 %{_initrddir}/ovirt-early

@@ -47,7 +47,7 @@ check_version(){
 start_ovirt_firstboot ()
 {
 
-    if ! is_firstboot && ! is_auto_install && ! is_upgrade && ! is_install; then
+    if ! is_firstboot && ! is_auto_install && ! is_upgrade && ! is_install && ! is_stateless; then
         return
     fi
 
@@ -57,9 +57,12 @@ start_ovirt_firstboot ()
     # Hide kernel messages on the console
     dmesg -n 1
 
+    is_stateless
+    stateless=$?
+
     is_auto_install
     auto_install=$?
-    if [ "$auto_install" = "0" ]; then
+    if [ "$auto_install" = "0" -o "$stateless" = "0" ]; then
         /usr/libexec/ovirt-auto-install
         rc=$?
         # Handle Log file
@@ -73,6 +76,10 @@ start_ovirt_firstboot ()
     elif [ "$auto_install" = "2" ]; then
         echo "Device specified in storage_init does not exist"
         autoinstall_failed
+    fi
+
+    if is_stateless; then
+        return 0
     fi
 
     if is_auto_install || is_upgrade; then

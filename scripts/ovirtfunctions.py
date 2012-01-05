@@ -226,6 +226,15 @@ def is_firstboot():
     else:
         return True
 
+def is_stateless():
+    # check if theres a key first
+    if OVIRT_VARS.has_key("OVIRT_STATELESS"):
+        if OVIRT_VARS["OVIRT_STATELESS"] == "1":
+            return True
+        elif OVIRT_VARS["OVIRT_STATELESS"] == "0":
+            return False
+    return False
+
 def disable_firstboot():
     if os.path.ismount("/config"):
         aug.set("/files/etc/default/ovirt/OVIRT_FIRSTBOOT", "0")

@@ -98,6 +98,16 @@ is_standalone() {
     if is_managed; then return 1; else return 0; fi
 }
 
+# return 1 if oVirt Node is running in stateless mode
+# return 0 if oVirt Node is not running in stateless mode
+is_stateless() {
+    if [ -z "$OVIRT_STATELESS" -o "$OVIRT_STATELESS" = "1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # return 0 if local storage is configured
 # return 1 if local storage is not configured
 is_local_storage_configured () {

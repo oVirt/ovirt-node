@@ -5,7 +5,7 @@ auth --useshadow --enablemd5
 selinux --enforcing
 firewall --disabled
 # TODO: the sizing of the image needs to be more dynamic
-part / --size 1024 --fstype ext2
+part / --size 1280 --fstype ext2
 
 # additional default boot parameters
 # Need to use deadline Scheduler for performance, rhbz#647301
