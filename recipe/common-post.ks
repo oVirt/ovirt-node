@@ -219,3 +219,10 @@ set /files/etc/ssh/sshd_config/ClientAliveCountMax 3
 save
 EOF_sshd_config
 
+
+#Disable LRO for all nics that use it as a default
+#rhbz#772319
+echo "options bnx2x disable_tpa=1" > /etc/modprobe.d/bnx2x.conf
+echo "options mlx4_en num_lro=0" > /etc/modprobe.d/mlx4_en.conf
+echo "options enic lro_disable=1" > /etc/modprobe.d/enic.conf
+echo "options s2io lro=0" > /etc/modprobe.d/s2io.conf
