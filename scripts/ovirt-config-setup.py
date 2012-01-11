@@ -1161,13 +1161,18 @@ class NodeConfigScreen():
           self.menuo = self.menu_list.current()
 
       def process_network_config(self):
+          network = Network()
           if self.net_hostname.value() == "":
+              network.remove_non_localhost()
               augtool("set", "/files/etc/sysconfig/network/HOSTNAME", "")
               os.system("hostname \"" + self.net_hostname.value()+"\"")
           elif self.net_hostname.value() != self.current_hostname and is_valid_hostname(self.net_hostname.value()):
+              network.remove_non_localhost()
+              network.add_localhost_alias(self.net_hostname.value())
               augtool("set", "/files/etc/sysconfig/network/HOSTNAME", self.net_hostname.value())
               os.system("hostname " + self.net_hostname.value())
           ovirt_store_config("/etc/sysconfig/network")
+          ovirt_store_config("/etc/hosts")
           dns_servers = ""
           ntp_servers = ""
           if not self.dns_host1.value() == "":
@@ -1182,7 +1187,6 @@ class NodeConfigScreen():
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS", '"' + dns_servers + '"')
           if not ntp_servers == "":
               augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP", '"' + ntp_servers + '"')
-          network = Network()
           if len(dns_servers) > 0:
               network.configure_dns()
           if len(ntp_servers) > 0:

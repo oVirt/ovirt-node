@@ -42,6 +42,8 @@ class Network:
         self.nic=""
         self.bridge=""
         self.vlan_id=""
+        self.localhost_entry = self.get_localhost_entry()
+        self.alias_count = self.get_num_localhost_aliases()
 
     def configure_interface(self):
         logger.info("Configuring Interface")
@@ -140,6 +142,33 @@ class Network:
         except:
             pass
         return True
+
+    def get_localhost_entry(self):
+        entries = augtool("match","/files/etc/hosts/*","")
+        for entry in entries:
+            ipaddr = augtool("get",entry + "/ipaddr", "")
+            if ipaddr == "127.0.0.1":
+                return entry
+        return None
+
+    def get_num_localhost_aliases(self):
+        aliases = augtool("match", self.localhost_entry+"/alias", "")
+        return len(aliases)
+
+    def remove_non_localhost(self):
+        last_alias = augtool("get", self.localhost_entry+"/alias["+str(self.alias_count)+"]", "")
+        while self.alias_count != 0:
+            if last_alias == "localhost":
+                break
+            elif last_alias == "localhost.localdomain":
+                break
+            augtool("rm", self.localhost_entry+"/alias["+str(self.alias_count)+"]", "")
+            self.alias_count = self.alias_count - 1
+
+    def add_localhost_alias(self, alias):
+        self.alias_count = self.alias_count + 1
+        augtool("set", self.localhost_entry+"/alias["+str(self.alias_count)+"]",alias)
+
 
     def configure_dns(self):
         if OVIRT_VARS.has_key("OVIRT_DNS"):
@@ -266,6 +295,7 @@ class Network:
         ovirt_store_config(self.NTP_CONFIG_FILE)
         augtool("set", "/files/etc/sysconfig/network/NETWORKING", "yes")
         ovirt_store_config("/etc/sysconfig/network")
+        ovirt_store_config ("/etc/hosts")
         logger.info("Network configured successfully")
         if net_configured == 1:
             logger.info("Stopping Network services")

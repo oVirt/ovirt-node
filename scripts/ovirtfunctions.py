@@ -125,6 +125,9 @@ def augtool(oper, key, value):
     elif oper == "get":
         value = aug.get(key)
         return value
+    elif oper == "match":
+        value = aug.match(key)
+        return value
 
 def augtool_get(key):
     value = aug.get(key)
