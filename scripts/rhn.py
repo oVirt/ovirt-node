@@ -430,7 +430,6 @@ class Plugin(PluginBase):
         self.rhn_satellite.setValue(" 0")
         self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
         self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
-        ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "Subscription Asset Manager server is not available presently, please consult\n https://access.redhat.com/kb/docs/DOC-45987", buttons = ['Ok'])
 
     def proxyhost_callback(self):
         if len(self.proxyhost.value()) > 0:
