@@ -23,11 +23,13 @@ PKG_FMT           = iso
 FEDORA            = @FEDORA@
 RHEL              = @RHEL@
 DISTRO            = @DISTRO@
+BUILD_TYPE	  ?= STABLE
 ARCH              = $(shell rpm --eval '%{_arch}')
 NODE_CREATOR      = $(shell test -e node-creator && echo "./node-creator" || echo "/usr/sbin/node-creator")
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
-OVIRT_URL		  = http://ovirt.org/releases/stable/fedora
+OVIRT_URL	  = http://ovirt.org/releases/stable/fedora
+OVIRT_NIGHTLY_URL = http://ovirt.org/releases/nightly/fedora
 CUR_RAWHIDE       = 17
 CUR_DEVEL         = 17
 
@@ -62,7 +64,8 @@ _ovirt_dev = \
 git_head	= $$(git log -1 --pretty=format:%h)
 GIT_RELEASE	= git$(git_head)
 EXTRA_RELEASE = $(if $(_ovirt_dev),.$(GIT_RELEASE),${nil})
-RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" --define "extra_release $(EXTRA_RELEASE)" --specfile ../ovirt-node.spec | head -n1)
+BUILD_NUMBER := .1
+RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" --define "extra_release $(EXTRA_RELEASE)" --define "BUILD_NUMBER $(BUILD_NUMBER)" --specfile ../ovirt-node.spec | head -n1)
 
 dist_sbin_SCRIPTS = node-creator
 
@@ -71,24 +74,26 @@ $(PACKAGE).ks: repos.ks version.ks
 repos.ks:
 	( \
 	  if [ -n "$(FEDORA)" ]; then \
+            OVIRT_STABLE_REPO_LINE="repo --name=ovirt-stable-repo --baseurl=$(OVIRT_URL)/$(FEDORA)\n" ;\
+            OVIRT_NIGHTLY_REPO_LINE="repo --name=ovirt-nightly-repo --baseurl=$(OVIRT_NIGHTLY_URL)/$(FEDORA)\n" ;\
 	    if [ 0$(FEDORA) == 0$(CUR_RAWHIDE) ]; then \
 	        FEDORA_REPO=rawhide ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/development/rawhide/$(ARCH)/os,--mirrorlist=$(FEDORA_MIRROR)?repo=rawhide&arch=$(ARCH))" ;\
-			OVIRT_REPO_LINE="repo --name=ovirt-repo --baseurl=$(OVIRT_URL)/$(FEDORA)\n" ;\
 	    elif [ 0$(FEDORA) == 0$(CUR_DEVEL) ]; then \
 	        FEDORA_REPO=f$(FEDORA) ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/development/$(FEDORA)/$(ARCH)/os,--mirrorlist=$(FEDORA_MIRROR)?repo=fedora-$(FEDORA)&arch=$(ARCH))" ;\
 	        UPDATE_REPO_LINE="repo --name=$${FEDORA_REPO}-updates-testing $(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/updates/testing/$(FEDORA)/${ARCH},--mirrorlist=$(FEDORA_MIRROR)?repo=updates-testing-f$(FEDORA)&arch=$(ARCH))\n" ;\
-			OVIRT_REPO_LINE="repo --name=ovirt-repo --baseurl=$(OVIRT_URL)/$(FEDORA)\n" ;\
 	    else \
 	        FEDORA_REPO=f$(FEDORA) ;\
 	        FEDORA_REPO_LOC="$(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/releases/$(FEDORA)/Everything/${ARCH}/os,--mirrorlist=$(FEDORA_MIRROR)?repo=fedora-$(FEDORA)&arch=$(ARCH))" ;\
 	        UPDATE_REPO_LINE="repo --name=$${FEDORA_REPO}-updates $(if $(FEDORA_URL),--baseurl=$(FEDORA_URL)/updates/$(FEDORA)/${ARCH},--mirrorlist=$(FEDORA_MIRROR)?repo=updates-released-f$(FEDORA)&arch=$(ARCH))\n" ;\
-			OVIRT_REPO_LINE="repo --name=ovirt-repo --baseurl=$(OVIRT_URL)/$(FEDORA)\n" ;\
 	    fi ;\
 	    echo "repo --name=$${FEDORA_REPO} $${FEDORA_REPO_LOC}" > repos.ks ;\
 	    printf "$${UPDATE_REPO_LINE}" >> repos.ks ;\
-	    printf "$${OVIRT_REPO_LINE}" >> repos.ks ;\
+	    printf "$${OVIRT_STABLE_REPO_LINE}" >> repos.ks ;\
+            if [ "$${BUILD_TYPE}" == "NIGHTLY" ]; then \
+              printf "$${OVIRT_NIGHTLY_REPO_LINE}" >> repos.ks ;\
+            fi ;\
 	  else \
 	    echo "# OVIRT_REPO_URL=$(OVIRT_REPO_URL)" > $@ ;\
 	    for repo in $(OVIRT_REPO_URL); do \
@@ -109,5 +114,7 @@ version.ks:
 
 $(PACKAGE).$(PKG_FMT) node: version.ks
 	$(NODE_CREATOR) $(RECIPE)
+	mv ovirt-node-image.iso ovirt-node-image-$(VERSION)-$(RELEASE).iso
+	ln -snf ovirt-node-image-$(VERSION)-$(RELEASE).iso ovirt-node-image.iso
 
 .PHONY: repos.ks version.ks $(PACKAGE).ks
