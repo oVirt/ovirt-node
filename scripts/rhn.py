@@ -33,6 +33,8 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     args = ['/usr/sbin/rhnreg_ks']
     # Get cacert location
     if len(serverurl) > 0:
+        if not serverurl.endswith("/XMLRPC"):
+            serverurl = serverurl + "/XMLRPC"
         args.append('--serverUrl')
         args.append(serverurl)
     location="/etc/sysconfig/rhn/%s" % os.path.basename(cacert)
