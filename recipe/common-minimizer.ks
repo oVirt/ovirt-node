@@ -16,7 +16,6 @@ droprpm usermode
 droprpm vbetool
 droprpm ConsoleKit
 droprpm hdparm
-droprpm efibootmgr
 droprpm linux-atm-libs
 droprpm mtools
 droprpm syslinux

@@ -114,3 +114,5 @@ rpm-python
 #VDSM
 vdsm-cli
 vdsm-reg
+#efi
+grub-efi

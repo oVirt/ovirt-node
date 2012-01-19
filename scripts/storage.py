@@ -316,7 +316,7 @@ class Storage:
         logger.info("Creating LVM partition")
         logger.info(self.HOSTVGDRIVE)
         self.physical_vols = []
-        for drv in self.HOSTVGDRIVE.split(","):
+        for drv in self.HOSTVGDRIVE.strip(",").split(","):
             if drv != "":
                 if self.ROOTDRIVE == drv:
                     parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\""
@@ -342,7 +342,6 @@ class Storage:
                 system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
                 system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
                 self.reread_partitions(drv)
-
                 # sync GPT to the legacy MBR partitions
                 if OVIRT_VARS.has_key("OVIRT_INSTALL_ROOT") and OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y" :
                     if self.LABEL_TYPE == "gpt":
@@ -544,10 +543,15 @@ class Storage:
             logger.debug(parted_cmd)
             system(parted_cmd)
             logger.debug("Creating Root and RootBackup Partitions")
-            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI fat32 1M "+ str(self.EFI_SIZE)+"M\""
+            # efi partition should at 0M
+            if is_efi_boot():
+                efi_start = 0
+            else:
+                efi_start = 1
+            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
             logger.debug(parted_cmd)
             system(parted_cmd)
-            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 "+str(self.EFI_SIZE)+" "+ str(self.Root_end)+"M\""
+            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 "+str(self.EFI_SIZE)+"M "+ str(self.Root_end)+"M\""
             logger.debug(parted_cmd)
             system(parted_cmd)
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.Root_end)+"M "+str(self.RootBackup_end)+"M\""
@@ -576,7 +580,6 @@ class Storage:
             system("ln -snf \""+partrootbackup+"\" /dev/disk/by-label/RootBackup")
             system("mke2fs \""+partrootbackup+"\" -L RootBackup")
             system("tune2fs -c 0 -i 0 \""+partrootbackup+"\"")
-
         hostvg1=self.HOSTVGDRIVE.split(",")[0]
         if self.ROOTDRIVE != hostvg1 :
             system("parted \"" + hostvg1 +"\" -s \"mklabel " + self.LABEL_TYPE + "\"")

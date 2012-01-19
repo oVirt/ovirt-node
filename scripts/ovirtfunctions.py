@@ -1172,6 +1172,12 @@ def pad_or_trim(length, string):
         string = string.rstrip(string[-to_rem:])
     return string
 
+def is_efi_boot():
+    if os.path.exists("/sys/firmware/efi"):
+        return True
+    else:
+        return False
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

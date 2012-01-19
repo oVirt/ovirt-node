@@ -70,7 +70,7 @@ class Install:
             self.grub_dir = "/liveos/grub"
             self.grub_prefix = "/grub"
 
-        if os.path.exists("/sbin/grub2-install"):
+        if os.path.exists("/sbin/grub2-install") and not is_efi_boot():
             self.grub_prefix = self.grub_prefix + "2"
             self.grub_dir = self.grub_dir + "2"
             self.grub_config_file = "%s/grub.cfg" % self.grub_dir
@@ -105,7 +105,8 @@ root (hd0,%(partN)d)
 setup --prefix=%(grub_prefix)s (hd0)
 EOF
 """
-
+        if is_efi_boot():
+            self.grub_config_file = "/liveos/efi/EFI/ovirt/grub.conf"
         grub_conf = open(self.grub_config_file, "w")
         grub_conf.write(GRUB_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
@@ -116,16 +117,17 @@ EOF
             self.grub_dict['partB']=partB
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
         grub_conf.close()
-        for f in ["stage1", "stage2", "e2fs_stage1_5"]:
-            system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f, self.grub_dir))
-        grub_setup_out = GRUB_SETUP_TEMPLATE % self.grub_dict
-        logger.debug(grub_setup_out)
-        grub_setup = subprocess.Popen(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        grub_results = grub_setup.stdout.read()
-        logger.debug(grub_results)
-        if grub_setup.wait() != 0 or "Error" in grub_results:
-            logger.error("GRUB setup failed")
-            return False
+        if not is_efi_boot():
+            for f in ["stage1", "stage2", "e2fs_stage1_5"]:
+                system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f, self.grub_dir))
+            grub_setup_out = GRUB_SETUP_TEMPLATE % self.grub_dict
+            logger.debug(grub_setup_out)
+            grub_setup = subprocess.Popen(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_results = grub_setup.stdout.read()
+            logger.debug(grub_results)
+            if grub_setup.wait() != 0 or "Error" in grub_results:
+                logger.error("GRUB setup failed")
+                return False
         return True
 
     def grub2_install(self):
@@ -151,19 +153,21 @@ set root (hd0,%(partB)d)
 linux /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
 initrd /initrd0.img
     """
-
-        grub_setup_cmd = "/sbin/grub2-install " + self.disk + " --boot-directory=" + self.initrd_dest + " --force"
-        logger.debug(grub_setup_cmd)
-        grub_setup = subprocess.Popen(grub_setup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        grub_results = grub_setup.stdout.read()
-        logger.debug(grub_results)
-        if grub_setup.wait() != 0 or "Error" in grub_results:
-            logger.error("GRUB setup failed")
-            return False
-        else:
-            logger.debug("Generating Grub2 Templates")
-            grub_conf = open(self.grub_config_file, "w")
-            grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
+        # if efi is detected only install grub-efi
+        if not is_efi_boot():
+            logger.info("efi not detected, installing grub2 configuraton")
+            grub_setup_cmd = "/sbin/grub2-install " + self.disk + " --boot-directory=" + self.initrd_dest + " --force"
+            logger.info(grub_setup_cmd)
+            grub_setup = subprocess.Popen(grub_setup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_results = grub_setup.stdout.read()
+            logger.info(grub_results)
+            if grub_setup.wait() != 0 or "Error" in grub_results:
+                logger.error("GRUB efi setup failed")
+                return False
+            else:
+                logger.debug("Generating Grub2 Templates")
+                grub_conf = open(self.grub_config_file, "w")
+                grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
             if self.oldtitle is not None:
                 partB=0
                 if partN == 0:
@@ -261,9 +265,8 @@ initrd /initrd0.img
             logger.info(self.disk)
             # grub2 starts at part 1
             self.partN = int(self.disk[-1:])
-            if not os.path.exists("/sbin/grub2-install"):
+            if not os.path.exists("/sbin/grub2-install") or is_efi_boot():
                 self.partN = self.partN - 1
-            logger.debug("partN: %d" % self.partN)
         except:
             logger.debug(traceback.format_exc())
             return False
@@ -289,18 +292,18 @@ initrd /initrd0.img
             shutil.rmtree(self.grub_dir)
         if not os.path.exists(self.grub_dir):
             os.makedirs(self.grub_dir)
-            # log if efi system, however install both efi/bios grub until better efi detection works
-            if os.path.exists("/sys/firmware/efi"):
-                logger.info("efi detected, installing efi grub2 configuraton")
-            if os.path.exists("/sbin/grub2-efi-install"):
+
+            if is_efi_boot():
+                logger.info("efi detected, installing efi configuration")
                 system("mkdir /liveos/efi")
                 system("mount LABEL=EFI /liveos/efi")
-                system("mkdir -p /liveos/efi/EFI/BOOT")
-                grub_setup_cmd = "/sbin/grub2-efi-install " + self.disk + " --boot-directory=/liveos --force"
-                system(grub_setup_cmd)
-                system("mv /liveos/efi/EFI/grub/grubx64.efi /liveos/efi/EFI/BOOT/BOOTX64.EFI")
-                system("rm -rf /liveos/efi/EFI/grub")
-
+                system("mkdir -p /liveos/efi/EFI/ovirt")
+                system("cp /boot/efi/EFI/redhat/grub.efi /liveos/efi/EFI/ovirt/grub.efi")
+                efi_disk = re.sub("p[1,2,3]$", "", self.disk)
+                # generate grub legacy config for efi partition
+                efi_mgr_cmd = "efibootmgr -c -l '\\EFI\\ovirt\\grub.efi' -L '%s' -d %s -v" % (PRODUCT_SHORT,efi_disk)
+                logger.info(efi_mgr_cmd)
+                system(efi_mgr_cmd)
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation
@@ -312,7 +315,8 @@ initrd /initrd0.img
             self.root_param="root=live:LABEL=Root"
             self.bootparams="ro rootfstype=auto rootflags=ro "
         self.bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
-
+        if is_efi_boot():
+            self.bootparams = self.bootparams.replace("quiet","")
         if " " in self.disk or os.path.exists("/dev/cciss"):
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
@@ -364,11 +368,16 @@ initrd /initrd0.img
     }
 
         if os.path.exists("/sbin/grub2-install"):
-            if not self.grub2_install():
-                logger.error("Grub2 Installation Failed ")
-                return False
+            if not is_efi_boot():
+                if not self.grub2_install():
+                    logger.error("Grub2 Installation Failed ")
+                    return False
             else:
-                logger.info("Grub 2 Installation Completed")
+                if not self.grub_install():
+                    logger.error("Grub EFI Installation Failed ")
+                    return False
+                else:
+                    logger.info("Grub EFI Installation Completed ")
         else:
             if not self.grub_install():
                 logger.error("Grub Installation Failed ")
@@ -383,6 +392,7 @@ initrd /initrd0.img
         else:
             system("sync")
             system("sleep 2")
+            system("umount /liveos/efi")
             system("umount /liveos")
             # mark new Root ready to go, reboot() in ovirt-function switches it to active
             e2label_cmd = "e2label \"%s\" RootUpdate" % candidate_dev
