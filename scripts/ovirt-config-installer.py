@@ -324,8 +324,9 @@ class NodeInstallScreen:
 
     def finish_install_page(self):
         elements = Grid(2, 5)
-        elements.setField(Label("%s Installation Finished Successfully" %
-            PRODUCT_SHORT), 0, 0,padding=(20,5,0,1))
+        title = "%s Installation Finished Successfully" % PRODUCT_SHORT
+        title_start = 39 - len(title) / 2
+        elements.setField(Label(title), 0, 0,padding=(title_start,6,0,1))
         elements.setField(Label(" "), 0, 1)
         return [Label(""), elements]
 
@@ -671,7 +672,7 @@ class NodeInstallScreen:
             buttonbar = ButtonBar(screen, buttons, compact = 1)
             buttongrid = Grid(1,1)
             if self.__current_page == FINISHED_PAGE:
-                buttongrid.setField(buttonbar, 0, 0, padding = (14,0,0,0))
+                buttongrid.setField(buttonbar, 0, 0, padding = (9,0,0,0))
                 buttongrid_anchor = 0
             else:
                 buttongrid.setField(buttonbar, 0, 0, anchorLeft = 1)#, growx = 0)
