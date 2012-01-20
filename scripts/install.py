@@ -317,6 +317,8 @@ initrd /initrd0.img
         self.bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
         if is_efi_boot():
             self.bootparams = self.bootparams.replace("quiet","")
+        # remove nomodeset, efi/non-uefi fail to output to console
+        self.bootparams = self.bootparams.replace("nomodeset","")
         if " " in self.disk or os.path.exists("/dev/cciss"):
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
@@ -392,6 +394,12 @@ initrd /initrd0.img
         else:
             system("sync")
             system("sleep 2")
+            if is_efi_boot():
+                system("mv /liveos/efi/EFI /tmp")
+                efi_dev = os.readlink("/dev/disk/by-label/EFI")
+                system("mkfs.vfat %s" % efi_dev)
+                system("mount %s /liveos/efi" % efi_dev)
+                system("cp -a /tmp/EFI /liveos/efi")
             system("umount /liveos/efi")
             system("umount /liveos")
             # mark new Root ready to go, reboot() in ovirt-function switches it to active
