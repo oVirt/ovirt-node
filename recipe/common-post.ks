@@ -214,8 +214,8 @@ EOF_NETWORKING
 # set ssh timeouts for increased security
 augtool << \EOF_sshd_config
 set /files/etc/ssh/sshd_config/PasswordAuthentication no
-set /files/etc/ssh/sshd_config/ClientAliveInterval 300
-set /files/etc/ssh/sshd_config/ClientAliveCountMax 3
+set /files/etc/ssh/sshd_config/ClientAliveInterval 900
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
 save
 EOF_sshd_config
 
