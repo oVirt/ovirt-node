@@ -187,6 +187,10 @@ class Network:
             finally:
                 if len(DNS) < 2:
                     augtool("rm", "/files/etc/resolv.conf/nameserver[2]", "")
+                for nic in glob("/etc/sysconfig/network-scripts/ifcfg-*"):
+                    if not "ifcfg-lo" in nic:
+                        path="/files%s/PEERDNS" % nic
+                        augtool("set", path, "no")
 
     def configure_ntp(self):
         if OVIRT_VARS.has_key("OVIRT_NTP"):
