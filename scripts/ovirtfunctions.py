@@ -866,6 +866,13 @@ def is_valid_user_host(user):
     else:
         return False
 
+def is_valid_iqn(iqn):
+    regex="^iqn\.(\d{4}-\d{2})\.([^:]+):"
+    if re.match(regex, iqn):
+        return True
+    else:
+        return False
+
 # Check if networking is already up
 def network_up():
     ret = os.system("ip addr show | grep -q 'inet.*scope global'")

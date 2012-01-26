@@ -537,6 +537,16 @@ class NodeConfigScreen():
                   ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname", buttons = ['Ok'])
                   self.reset_screen_colors()
 
+      def valid_iqn_callback(self):
+          if not self.iscsi_initiator_config.value() =="":
+              if not is_valid_iqn(self.iscsi_initiator_config.value()):
+                  self.screen.setColor("BUTTON", "black", "red")
+                  self.screen.setColor("ACTBUTTON", "blue", "white")
+                  ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid IQN Format", buttons = ['Ok'])
+                  self.reset_screen_colors()
+
+
+
       def valid_fqdn_or_ipv4(self):
           warn = 0
           if not self.ntp_host1.value() == "":
@@ -1143,6 +1153,7 @@ class NodeConfigScreen():
           elements.setField(Label(" "), 0, 1, anchorLeft = 1)
           elements.setField(Label("iSCSI Initiator Name:"), 0, 2, anchorLeft = 1)
           self.iscsi_initiator_config = Entry(50, "")
+          self.iscsi_initiator_config.setCallback(self.valid_iqn_callback)
           elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft = 1, padding =(0,0,0,11))
           current_iscsi_initiator_name = get_current_iscsi_initiator_name()
           if current_iscsi_initiator_name is not None:
