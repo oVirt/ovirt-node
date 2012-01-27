@@ -666,7 +666,17 @@ class NodeConfigScreen():
                 net_entry += " %1s %6s  %9s\n" % (key, device, mac)
             elements.setField(self.network_list, 1, 5, anchorLeft = 1, padding=(4, 0, 0, 1))
             self.network_list.setText(net_entry)
-            logging_status = Textbox(18, 1, "local only")
+            logging_status_text = ""
+            if not get_rsyslog_config() is None:
+                host,port = get_rsyslog_config()
+                logging_status_text += "Rsyslog: %s:%s\n" % (host,port)
+            netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGADDR")
+            netconsole_server_port = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGPORT")
+            if netconsole_server and netconsole_server_port:
+                logging_status_text += "Netconsole: %s:%s" % (netconsole_server,netconsole_server_port)
+            if len(logging_status_text) == 0:
+                logging_status_text = "Local Only"
+            logging_status = Textbox(45, 2, logging_status_text)
             elements.setField(Label("Logs:"), 0, 6, anchorLeft = 1)
             elements.setField(logging_status, 1, 6, anchorLeft = 1, padding=(4, 0, 0, 0))
             try:
