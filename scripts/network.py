@@ -389,6 +389,8 @@ def get_system_nics():
                 configured_nics = configured_nics + 1
         except:
             pass
+        if "." in dev_interface:
+            dev_interface = dev_interface.split(".")[0]
         if not dev_interface == "lo" and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
             if not dev_type == "bridge":
                 nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status,dev_bridge)
