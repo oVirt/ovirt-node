@@ -46,6 +46,11 @@ else
                 printf "\n"
                 read -p "Enter password for SNMPv3 USM 'root' user: " -esr
                 password1="$REPLY"
+                result=$(echo $password1 | cracklib-check | sed -r 's/^.*: //')
+                if [ ! "$reply" = "OK" ]; then
+                    printf "Error:  $reply"
+                    continue
+                fi
                 printf "\n"
                 read -p "Confirm password: " -esr
                 password="$REPLY"
