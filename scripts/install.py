@@ -296,7 +296,10 @@ initrd /initrd0.img
             if is_efi_boot():
                 logger.info("efi detected, installing efi configuration")
                 system("mkdir /liveos/efi")
-                system("mount LABEL=EFI /liveos/efi")
+                # determine proper efi partition
+                efi_part = findfs("Root")
+                efi_part = efi_part[:-1]+"1"
+                system("mount " + efi_part +" /liveos/efi")
                 system("mkdir -p /liveos/efi/EFI/ovirt")
                 system("cp /boot/efi/EFI/redhat/grub.efi /liveos/efi/EFI/ovirt/grub.efi")
                 efi_disk = re.sub("p[1,2,3]$", "", self.disk)
