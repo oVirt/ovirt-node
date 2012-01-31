@@ -643,7 +643,7 @@ class NodeConfigScreen():
                     else:
                         status_text += "%1s: %5s %14s \n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip())
                     status_text.strip()
-                    networking = TextboxReflowed(32, status_text, maxHeight=7)
+                    networking = TextboxReflowed(32, status_text, maxHeight=3)
                     networking.setText(status_text)
                 logger.debug(status_text)
                 logger.debug(self.network_status)
@@ -653,11 +653,11 @@ class NodeConfigScreen():
             elements.setField(networking, 1, 0, anchorLeft = 1, padding=(4, 0, 0, 1))
             elements.setField(Label("Logical Network   Device    MAC Address"),1,4,anchorLeft =1)
             networks = logical_to_physical_networks()
-            if len(networks) >= 4:
+            if len(networks) >= 3:
                net_scroll = 1
             else:
                 net_scroll = 0
-            self.network_list = Textbox(50, 4, "", scroll = net_scroll)
+            self.network_list = Textbox(50, 3, "", scroll = net_scroll)
             net_entry = ""
             for key in networks.iterkeys():
                 device, mac = networks[key]
@@ -697,9 +697,7 @@ class NodeConfigScreen():
             else:
                 main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,0))
             help_text = Textbox(62, 1, "Press F8 For Support Menu")
-            main_grid.setField(help_text, 0, 4, anchorLeft = 1, padding=(0,1,0,0))
-
-
+            main_grid.setField(help_text, 0, 4, anchorLeft = 1, padding=(0,0,0,0))
             return [Label(""), main_grid]
 
       def logging_configuration_page(self, screen):
@@ -745,7 +743,7 @@ class NodeConfigScreen():
           self.netconsole_server_port.setCallback(self.valid_netconsole_server_port_callback)
           netconsole_grid.setField(self.netconsole_server, 1, 0, anchorLeft = 1, padding=(2, 0, 0, 1))
           netconsole_grid.setField(self.netconsole_server_port, 1, 1, anchorLeft = 1, padding=(2, 0, 0, 0))
-          elements.setField(netconsole_grid, 0, 6, anchorLeft = 1, padding = (0,0,0,0))
+          elements.setField(netconsole_grid, 0, 6, anchorLeft = 1, padding = (0,0,0,1))
           netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGADDR")
           netconsole_server_port = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGPORT")
           if netconsole_server is None:
@@ -1544,12 +1542,6 @@ class NodeConfigScreen():
                     current_element += 1
                 (fullwidth, fullheight) = _snack.size()
                 screen.height = fullheight
-                content.setField(Label(""), 0, current_element,
-                                 padding = ((fullwidth / 2) - 15, 0,
-                                            (fullwidth / 2) - 16, 0),
-                                 growx = 1)
-
-
                 current_element += 1
                 buttons = []
                 if self.__current_page == NETWORK_PAGE:
