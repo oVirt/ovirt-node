@@ -112,7 +112,7 @@ version.ks:
 	    echo "RELEASE=$(RELEASE)" ;\
 	) > $@
 
-$(PACKAGE).$(PKG_FMT) node: version.ks
+$(PACKAGE).$(PKG_FMT) node: version.ks repos.ks
 	$(NODE_CREATOR) $(RECIPE)
 	mv ovirt-node-image.iso ovirt-node-image-$(VERSION)-$(RELEASE).iso
 	ln -snf ovirt-node-image-$(VERSION)-$(RELEASE).iso ovirt-node-image.iso
