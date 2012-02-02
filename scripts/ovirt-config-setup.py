@@ -906,24 +906,15 @@ class NodeConfigScreen():
           self.ipv4_netdevgateway.setCallback(self.ipv4_gateway_callback)
           if not dev_bridge is None:
               dev = dev_bridge
-          if "OVIRT_IP_ADDRESS" in OVIRT_VARS:
-              self.ipv4_netdevip.set(OVIRT_VARS["OVIRT_IP_ADDRESS"])
-          else:
-              current_ip = get_ip_address(dev)
-              if current_ip != "":
-                  self.ipv4_netdevip.set(current_ip)
-          if "OVIRT_IP_NETMASK" in OVIRT_VARS:
-              self.ipv4_netdevmask.set(OVIRT_VARS["OVIRT_IP_NETMASK"])
-          else:
-              current_netmask = get_netmask(dev)
-              if current_netmask != "":
-                  self.ipv4_netdevmask.set(current_netmask)
-          if "OVIRT_IP_GATEWAY" in OVIRT_VARS:
-              self.ipv4_netdevgateway.set(OVIRT_VARS["OVIRT_IP_GATEWAY"])
-          else:
-              current_gateway = get_gateway(dev)
-              if is_valid_ipv4(current_gateway) or is_valid_ipv6(current_gateway):
-                  self.ipv4_netdevgateway.set(current_gateway)
+          current_ip = get_ip_address(dev)
+          if current_ip != "":
+              self.ipv4_netdevip.set(current_ip)
+          current_netmask = get_netmask(dev)
+          if current_netmask != "":
+              self.ipv4_netdevmask.set(current_netmask)
+          current_gateway = get_gateway(dev)
+          if is_valid_ipv4(current_gateway) or is_valid_ipv6(current_gateway):
+              self.ipv4_netdevgateway.set(current_gateway)
           ipv4_grid = Grid (5,3)
           ipv4_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)
           ipv4_grid.setField(Label(" Netmask: "), 3, 1, anchorLeft = 1)
