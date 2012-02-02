@@ -2,4 +2,3 @@
 matahari-network
 virt-manager-tui
 grub-efi
-efibootmgr
