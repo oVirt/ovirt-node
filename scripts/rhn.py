@@ -225,11 +225,49 @@ def ov(var):
     else:
         return ""
 
-# AUTO for auto-install
-#if len(sys.argv):
-#    if sys.argv[1] == "AUTO":
-#            run_rhnreg( ov("OVIRT_RHN_URL"), ov("OVIRT_RHN_CA_CERT"), ov("OVIRT_RHN_ACTIVATIONKEY"), ov("OVIRT_RHN_USERNAME"), ov("OVIRT_RHN_PASSWORD"), ov("OVIRT_RHN_PROFILE"), ov("OVIRT_RHN_PROXY"), ov("OVIRT_RHN_PROXYUSER"), ov("OVIRT_RHN_PROXYPASSWORD") )
-#
+def get_rhn_config():
+    if os.path.exists(RHN_CONFIG_FILE):
+        rhn_config = open(RHN_CONFIG_FILE)
+        rhn_conf = {}
+        for line in rhn_config:
+            if "=" in line and "[comment]" not in line:
+                item, value = line.split("=")
+                rhn_conf[item] = value.strip()
+        return rhn_conf
+
+def rhn_check():
+    rhncheck_cmd = subprocess.Popen("rhn_check", shell=False, stdout=PIPE, stderr=STDOUT)
+    rhncheck = rhncheck_cmd.communicate()[0]
+    if rhncheck_cmd.returncode == 0:
+        return True
+    else:
+        return False
+
+def sam_check():
+    samcheck_cmd = subprocess.Popen("subscription_manager identity", shell=True, stdout=PIPE, stderr=open('/dev/null', 'w'))
+    samcheck = samcheck_cmd.communicate()[0]
+    if samcheck_cmd.returncode == 0:
+        return True
+    else:
+        return False
+
+def get_rhn_status():
+    msg = ""
+    status = 0
+    rhn_conf = get_rhn_config()
+    if rhn_check(): # Is Satellite or Hosted
+        status = 1
+        logger.info(rhn_conf)
+        if rhn_conf.has_key("serverURL"):
+            if "https://xmlrpc.rhn.redhat.com/XMLRPC" in rhn_conf["serverURL"]:
+                msg = "RHN"
+            else:
+                msg = "Satellite"
+    elif sam_check():
+        status = 1
+        msg = "SAM"
+    return (status,msg)
+
 #
 # configuration UI plugin interface
 #
@@ -316,7 +354,12 @@ class Plugin(PluginBase):
             self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
             self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
         if network_up():
-            elements.setField(Textbox(62,4,"RHN Registration is only required if you wish to use\nRed Hat Enterprise Linux Virtualization or Virtuali-\nzation Platform entitlements for your guests."), 0, 2, anchorLeft = 1)
+            status, msg = get_rhn_status()
+            if status == 0:
+                rhn_msg = "RHN Registration is required only if you wish to use\nRed Hat Enterprise Linux with virtual guests\nsubscriptions for your guests."
+            else:
+                rhn_msg = "RHN Registration\n\nRegistration Status: %s" % msg
+            elements.setField(Textbox(62,4, rhn_msg), 0, 2, anchorLeft = 1)
         else:
             elements.setField(Textbox(62,3,"Network Down, Red Hat Network Registration Disabled"), 0, 2, anchorLeft = 1)
             for i in self.rhn_user, self.rhn_pass, self.profilename, self.public_rhn, self.rhn_satellite, self.sam, self.rhn_url, self.rhn_ca, self.proxyhost, self.proxyport, self.proxyuser, self.proxypass:
