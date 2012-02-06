@@ -61,15 +61,15 @@ def collectd_auto():
 # configuration UI plugin interface
 #
 class Plugin(PluginBase):
-    """Plugin for Monitoring(collectd) configuration option.
+    """Plugin for Monitoring configuration option.
     """
 
     def __init__(self, ncs):
-        PluginBase.__init__(self, "Monitoring(collectd)", ncs)
+        PluginBase.__init__(self, "Monitoring", ncs)
 
     def form(self):
         elements = Grid(2, 10)
-        elements.setField(Label("Monitoring(collectd) Configuration"), 0, 0, anchorLeft = 1)
+        elements.setField(Label("Monitoring Configuration"), 0, 0, anchorLeft = 1)
         elements.setField(Label(""), 0, 1, anchorLeft = 1)
         elements.setField(Label("Collectd"), 0, 2, anchorLeft = 1)
         elements.setField(Textbox(45,3,"Collectd gathers statistics about the system that\ncan be used to find performance bottlenecks\nand predict future system load."), 0, 3, anchorLeft = 1)
