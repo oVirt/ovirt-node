@@ -24,9 +24,12 @@ import re
 import subprocess
 from subprocess import PIPE, STDOUT
 import gudev
+import logging
 
 class Storage:
     def __init__(self):
+        logger = logging.getLogger(PRODUCT_SHORT)
+        logger.propagate = False
         OVIRT_VARS = parse_defaults()
         self.overcommit=0.5
         self.BOOT_SIZE=50

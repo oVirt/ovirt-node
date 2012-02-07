@@ -1221,9 +1221,14 @@ if is_firstboot():
 else:
     log_file = OVIRT_LOGFILE
 
+def setup_custom_logger():
+    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+    handler = logging.FileHandler(log_file)
+    handler.setFormatter(formatter)
+    logger = logging.getLogger(PRODUCT_SHORT)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    return logger
+
+setup_custom_logger()
 logger = logging.getLogger(PRODUCT_SHORT)
-handler = logging.FileHandler(log_file)
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)

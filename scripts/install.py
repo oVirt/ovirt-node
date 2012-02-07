@@ -31,6 +31,8 @@ class Install:
 
 
     def __init__(self):
+        logger = logging.getLogger(PRODUCT_SHORT)
+        logger.propagate = False
         self.disk = None
         self.partN = -1
 
