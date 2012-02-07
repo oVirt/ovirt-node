@@ -75,7 +75,7 @@ start_ovirt_firstboot ()
         autoinstall_failed
     fi
 
-    if is_upgrade; then
+    if is_auto_install || is_upgrade; then
         plymouth --hide-splash
         mount_live
         check_version
