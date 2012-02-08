@@ -1169,9 +1169,10 @@ class NodeConfigScreen():
               else:
                   self.menu_list.setCurrent(menu_option-1)
           self.menuo = self.menu_list.current()
-          if self.menu_list.current() != self.__current_page:
-              self.__current_page = self.menu_list.current()
-              screen.start()
+          if not self.__current_page == NETWORK_DETAILS_PAGE: # pages that dont use main listbox
+              if self.menu_list.current() != self.__current_page:
+                  self.__current_page = self.menu_list.current()
+                  screen.start()
 
       def process_network_config(self):
           network = Network()
