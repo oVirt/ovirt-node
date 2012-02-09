@@ -258,11 +258,16 @@ def get_rhn_status():
     if rhn_check(): # Is Satellite or Hosted
         status = 1
         logger.info(rhn_conf)
-        if rhn_conf.has_key("serverURL"):
-            if "https://xmlrpc.rhn.redhat.com/XMLRPC" in rhn_conf["serverURL"]:
-                msg = "RHN"
-            else:
-                msg = "Satellite"
+        try:
+            if rhn_conf.has_key("serverURL"):
+                if "https://xmlrpc.rhn.redhat.com/XMLRPC" in rhn_conf["serverURL"]:
+                    msg = "RHN"
+                else:
+                    msg = "Satellite"
+        except:
+            #corrupt up2date config in this case
+            status = 0
+            pass
     elif sam_check():
         status = 1
         msg = "SAM"
