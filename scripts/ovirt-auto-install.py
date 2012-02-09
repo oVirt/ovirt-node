@@ -30,7 +30,19 @@ from ovirtnode.snmp import *
 from ovirt_config_setup.collectd import *
 
 print "Performing automatic disk partitioning"
+storage_auto_succ = 0
 if storage_auto():
+    storage_auto_succ = 1
+
+# network configuration
+print "Configuring Network"
+if OVIRT_VARS["OVIRT_BOOTIF"] != "":
+    network_auto()
+
+if OVIRT_VARS.has_key("OVIRT_HOSTNAME"):
+    system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
+
+if storage_auto_succ == 1:
     print "Completed automatic disk partitioning"
     # store /etc/shadow if adminpw/rootpw are set, handled already in ovirt-early
     file = open("/proc/cmdline")
@@ -40,13 +52,6 @@ if storage_auto():
         ovirt_store_config("/etc/passwd")
         ovirt_store_config("/etc/shadow")
     file.close()
-    # network configuration
-    print "Configuring Network"
-    if OVIRT_VARS["OVIRT_BOOTIF"] != "":
-        network_auto()
-
-    if OVIRT_VARS.has_key("OVIRT_HOSTNAME"):
-        system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
     #set ssh_passwd_auth
     if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
         if self.ssh_passwd_status.value() == 1:
