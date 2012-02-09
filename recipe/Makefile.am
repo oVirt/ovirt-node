@@ -30,7 +30,7 @@ NODE_CREATOR      = $(shell test -e node-creator && echo "./node-creator" || ech
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
 OVIRT_URL	  = http://ovirt.org/releases/stable/fedora
 OVIRT_NIGHTLY_URL = http://ovirt.org/releases/nightly/fedora
-CUR_RAWHIDE       = 17
+CUR_RAWHIDE       = 18
 CUR_DEVEL         = 17
 
 OVIRT_NODE_TOOLSdir = $(datadir)/ovirt-node-tools
