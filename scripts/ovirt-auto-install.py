@@ -57,9 +57,9 @@ if not is_stateless():
 config_networking()
 #set ssh_passwd_auth
 if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
-    if self.ssh_passwd_status.value() == 1:
+    if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == 1:
         augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
-    elif self.ssh_passwd_status.value() == 0:
+    elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == 0:
         augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
 
 # iscsi handled in install.py
