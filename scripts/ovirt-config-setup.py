@@ -1660,7 +1660,9 @@ class NodeConfigScreen():
                         self.__current_page = SUPPORT_PAGE
                     elif result == "F2" and self.__current_page != LOCKED_PAGE:
                         self._create_warn_screen()
-                        warn = ButtonChoiceWindow(self.screen, "Support Shell", "This is for troubleshooting with support representatives. Do not use this option without guidance from support.")
+                        title = "Shell Access"
+                        message = "This is a non persistent filesystem.  Any changes will be lost on reboot.  RPM installations may succeed, but changes will be lost when rebooted."
+                        warn = ButtonChoiceWindow(self.screen, title, message)
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
