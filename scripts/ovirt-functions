@@ -101,10 +101,10 @@ is_standalone() {
 # return 1 if oVirt Node is running in stateless mode
 # return 0 if oVirt Node is not running in stateless mode
 is_stateless() {
-    if [ -z "$OVIRT_STATELESS" -o "$OVIRT_STATELESS" = "1" ]; then
-        return 0
-    else
+    if [ -z "$OVIRT_STATELESS" -o "$OVIRT_STATELESS" = "0" ]; then
         return 1
+    else
+        return 0
     fi
 }
 
