@@ -632,6 +632,10 @@ EOF
 #   copy to /config and bind-mount back
 ovirt_store_config() {
     rc=0
+    if is_stateless; then
+        # no need to do anything
+        return 0;
+    fi
     if grep -q " /config ext[234]" /proc/mounts; then
         for p in "$@"; do
             local filename=$(readlink -f $p)
@@ -731,6 +735,10 @@ unmount_config() {
 #       remove_config /etc/config /etc/config2 ...
 #
 remove_config() {
+    #if stateless, then no need to go any further
+    if is_stateless; then
+        return 0
+    fi
     # if there are no persisted files then just exit
     if [ ! -s /config/files ]; then
         printf "There are currently no persisted files.\n"

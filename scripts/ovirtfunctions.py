@@ -538,6 +538,8 @@ STRING_TYPE=(str,unicode)
 #   copy to /config and bind-mount back
 
 def ovirt_store_config(files):
+  if is_stateless():
+      return True
   if not os.path.ismount("/config"):
     logger.error("/config is not mounted")
     return False
@@ -641,6 +643,8 @@ def unmount_config(files):
 #       remove_config /etc/config /etc/config2 ...
 #
 def remove_config(files):
+    if is_stateless():
+        return True
     # if there are no persisted files then just exit
     if os.path.exists("/config/files"):
         if os.path.getsize('/config/files') == 0:
