@@ -1677,7 +1677,7 @@ if __name__ == "__main__":
     if is_rescue_mode():
         print "Unable to run setup in rescue mode"
         sys.exit(1)
-    elif is_booted_from_local_disk() or "--force" in sys.argv:
+    elif is_booted_from_local_disk() or is_stateless() or "--force" in sys.argv:
         if manual_setup() and "--force" not in sys.argv:
             print "Unable to run setup manually, Run \"exit\" to return to setup"
         else:
