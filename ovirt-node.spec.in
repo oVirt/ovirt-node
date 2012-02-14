@@ -2,6 +2,8 @@
 %global product_release %{version} (0)
 %global mgmt_scripts_dir %{_sysconfdir}/node.d
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%define is_f16 %(test "0%{?fedora}" == "016" && echo 1 || echo 0)
+
 
 
 Summary:        The %{product_family} daemons/scripts
@@ -115,7 +117,7 @@ make install DESTDIR=%{buildroot}
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
-%if 0%{?fedora}
+%if %is_f16
 # install libvirtd systemd service
 %{__install} -d -m0755 %{buildroot}%{_unitdir}
 %{__install} -p -m0644 libvirtd.service %{buildroot}%{_unitdir}
@@ -259,7 +261,7 @@ fi
 %{_sysconfdir}/ovirt-config-boot.d
 %config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
-%if 0%{?fedora}
+%if %is_f16
 %{_unitdir}/libvirtd.service
 %endif
 %if 0%{?rhel}
