@@ -343,7 +343,7 @@ initrd /initrd0.img
             system(partprobe_cmd)
 
         if not self.disk.startswith("/dev/"):
-            self.disk = "/dev/" + disk
+            self.disk = "/dev/" + self.disk
         try:
             if stat.S_ISBLK(os.stat(self.disk).st_mode):
                 try:
