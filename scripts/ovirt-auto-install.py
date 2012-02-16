@@ -27,7 +27,6 @@ from ovirtnode.network import *
 from ovirtnode.log import *
 from ovirtnode.kdump import *
 from ovirtnode.snmp import *
-from ovirt_config_setup.collectd import *
 
 def config_networking():
    # network configuration
@@ -65,8 +64,12 @@ if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
 # iscsi handled in install.py
 print "Configuring Logging"
 logging_auto()
-print "Configuring Collectd"
-collectd_auto()
+try:
+    from ovirt_config_setup.collectd import *
+    print "Configuring Collectd"
+    collectd_auto()
+except:
+    pass
 install = Install()
 print "Configuring KDump"
 kdump_auto()
