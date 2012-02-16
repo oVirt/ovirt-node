@@ -19,7 +19,7 @@ EXTRA_DIST = \
   node-config \
   ovirt-awake \
   ovirt-early \
-  ovirt \
+  ovirt.init \
   ovirt-post \
   ovirt-cim \
   cim.py \
@@ -62,4 +62,5 @@ dist_libexec_SCRIPTS = \
   ovirt-functions \
   ovirt-boot-functions \
   ovirt-process-config \
-  ovirt-rpmquery
+  ovirt-rpmquery \
+  ovirt.sh

@@ -13,8 +13,7 @@
 . /etc/init.d/functions
 . /usr/libexec/ovirt-functions
 
-prog=ovirt
-VAR_SUBSYS_OVIRT=/var/lock/subsys/$prog
+VAR_SUBSYS_OVIRT=/var/lock/subsys/ovirt
 
 ovirt_start() {
     if is_standalone; then
@@ -88,9 +87,7 @@ start_ovirt () {
 }
 
 stop_ovirt () {
-    echo -n "Stopping ovirt: "
     rm -f $VAR_SUBSYS_OVIRT
-    success
 }
 
 reload_ovirt () {
@@ -98,27 +95,6 @@ reload_ovirt () {
         start_ovirt
 }
 
-case "$1" in
-    start)
-        [ -f "$VAR_SUBSYS_OVIRT" ] && exit 0
-        echo -n "Starting ovirt: "
-        {
-            log "Starting ovirt"
-            start_ovirt
-            log "Completed ovirt"
-        } >> $OVIRT_LOGFILE 2>&1
-        test $? == 0 && success || failure
-        ;;
-    status)
-        status $prog
-        ;;
-    reload)
-        reload_ovirt
-        ;;
-    stop)
-        stop_ovirt
-        ;;
-    *)
-        echo "Usage: ovirt {start}"
-        exit 2
-esac
+# When called with a parameter:
+$@
+

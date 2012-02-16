@@ -111,7 +111,10 @@ make install DESTDIR=%{buildroot}
 
 %{__install} -p -m0755 scripts/ovirt-awake %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
-%{__install} -p -m0755 scripts/ovirt %{buildroot}%{_initrddir}
+
+%{__install} -p -m0755 scripts/ovirt.sh %{buildroot}%{_libexecdir}/ovirt.sh
+%{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
+
 %{__install} -p -m0755 scripts/ovirt-post %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-cim %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
@@ -310,6 +313,7 @@ fi
 %{_libexecdir}/ovirt-config-installer
 %{_libexecdir}/ovirt-config-setup
 %{_libexecdir}/ovirt-admin-shell
+%{_libexecdir}/ovirt.sh
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{python_sitelib}/ovirt_config_setup
