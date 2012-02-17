@@ -35,13 +35,13 @@ cpe:/o:redhat:enterprise_linux:6:update2:hypervisor
 EOF_CPE
 
 patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch2
---- up2dateErrors.py.orig       2011-07-02 11:06:46.000000000 +0000
-+++ up2dateErrors.py    2011-07-02 11:09:19.000000000 +0000
-@@ -13,7 +13,20 @@
+--- up2dateErrors.py.orig	2012-02-17 14:28:19.798545090 -0500
++++ up2dateErrors.py	2012-02-17 14:49:07.638959433 -0500
+@@ -13,7 +13,34 @@
  _ = t.ugettext
  import OpenSSL
  import config
--from yum.Errors import RepoError
+-from yum.Errors import RepoError, YumBaseError
 +
 +class RepoError(Exception):
 +    """
@@ -56,8 +56,22 @@ patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch2
 +
 +    def __unicode__(self):
 +        return '%s' % to_unicode(self.value)
++
++class YumBaseError(Exception):
++    """
++    Base Yum Error. All other Errors thrown by yum should inherit from
++    this.
++    """
++    def __init__(self, value=None):
++        Exception.__init__(self)
++        self.value = value
++    def __str__(self):
++        return "%s" %(self.value,)
++
++    def __unicode__(self):
++        return '%s' % to_unicode(self.value)
  
- class Error:
+ class Error(YumBaseError):
      """base class for errors"""
 EOF_up2date_patch2
 python -m compileall /usr/share/rhn/up2date_client
