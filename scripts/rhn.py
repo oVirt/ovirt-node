@@ -23,9 +23,11 @@ import sys
 from ovirtnode.ovirtfunctions import *
 from subprocess import Popen, PIPE, STDOUT
 from snack import *
+from urlparse import urlparse
 import _snack
 
 RHN_CONFIG_FILE = "/etc/sysconfig/rhn/up2date"
+RHSM_CONFIG_FILE = "/etc/rhsm/rhsm.conf"
 
 def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password="", profilename="", proxyhost="", proxyuser="", proxypass=""):
     # novirtinfo: rhn-virtualization daemon refreshes virtinfo
@@ -93,6 +95,7 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
     if os.path.exists("/etc/sysconfig/rhn/up2date"):
         os.unlink("/etc/sysconfig/rhn/up2date")
     logged_args = str(args).replace(password, "XXXXXXXX")
+    logged_args = str(logged_args).replace(proxypass, "XXXXXXXX")
     logger.debug(logged_args)
     rhn_reg = subprocess_closefds(args, shell=False, stdout=PIPE, stderr=STDOUT)
     rhn_reg_output = rhn_reg.stdout.read()
@@ -153,11 +156,14 @@ def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="
 
     if len(serverurl) > 0:
         (host, port) = parse_host_port(serverurl)
+        parsed_url = urlparse(serverurl)
+        prefix = parsed_url.path
         if port == 0:
             port = "443"
         else:
             port = str(port)
     else:
+        prefix = "/subscription"
         host = "subscription.rhn.redhat.com"
         port = "443"
     location="/etc/rhsm/ca/candlepin-local.pem"
@@ -181,6 +187,9 @@ def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="
     smconf.append(host)
     smconf.append('--server.port')
     smconf.append(port)
+    smconf.append('--server.prefix')
+    smconf.append(prefix)
+
     if len(cacert) > 0:
         smconf.append('--rhsm.repo_ca_cert')
         smconf.append('/etc/rhsm/ca/candlepin-local.pem')
@@ -220,6 +229,7 @@ def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="
         unlink_if_exists(f)
 
     logged_args = str(args).replace(password, "XXXXXXXX")
+    logged_args = str(logged_args).replace(proxypass, "XXXXXXXX")
     log(logged_args)
     smreg_proc = subprocess_closefds(args, shell=False, stdout=PIPE, stderr=STDOUT)
     smreg_output = smreg_proc.stdout.read()
@@ -245,14 +255,20 @@ def ov(var):
         return ""
 
 def get_rhn_config():
+    conf_files = []
     if os.path.exists(RHN_CONFIG_FILE):
-        rhn_config = open(RHN_CONFIG_FILE)
-        rhn_conf = {}
+        conf_files.append(RHN_CONFIG_FILE)
+    if os.path.exists(RHSM_CONFIG_FILE):
+        conf_files.append(RHSM_CONFIG_FILE)
+    rhn_conf = {}
+    for f in conf_files:
+        rhn_config = open(f)
         for line in rhn_config:
             if "=" in line and "[comment]" not in line:
-                item, value = line.split("=")
+                item, value = line.replace(" ", "").split("=")
                 rhn_conf[item] = value.strip()
-        return rhn_conf
+        rhn_config.close()
+    return rhn_conf
 
 def rhn_check():
     rhncheck_cmd = subprocess_closefds("rhn_check", shell=False, stdout=PIPE, stderr=STDOUT)
@@ -291,6 +307,71 @@ def get_rhn_status():
         status = 1
         msg = "SAM"
     return (status,msg)
+
+def rhn_auto():
+    if not OVIRT_VARS.has_key("OVIRT_RHN_TYPE"):
+        OVIRT_VARS["OVIRT_RHN_TYPE"] = classic
+    if not OVIRT_VARS.has_key("OVIRT_RHN_URL"):
+        OVIRT_VARS["OVIRT_RHN_URL"] = "https://xmlrpc.rhn.redhat.com/XMLRPC"
+    if not OVIRT_VARS.has_key("OVIRT_RHN_CA_CERT"):
+        OVIRT_VARS["OVIRT_RHN_CA_CERT"] = ""
+    if not OVIRT_VARS.has_key("OVIRT_RHN_USERNAME") and not OVIRT_VARS.has_key("OVIRT_RHN_ACTIVATIONKEY"):
+            logger.debug("RHN registration requires a username")
+            return False
+    if not OVIRT_VARS.has_key("OVIRT_RHN_PASSWORD") and not OVIRT_VARS.has_key("OVIRT_RHN_ACTIVATIONKEY"):
+        logger.debug("RHN registration requires a password")
+        return False
+    if not OVIRT_VARS.has_key("OVIRT_RHN_PROFILE"):
+        OVIRT_VARS["OVIRT_RHN_PROFILE"] = ""
+    if not OVIRT_VARS.has_key("OVIRT_RHN_ACTIVATIONKEY"):
+        OVIRT_VARS["OVIRT_RHN_ACTIVATIONKEY"] = ""
+    if not OVIRT_VARS.has_key("OVIRT_RHN_PROXY"):
+        OVIRT_VARS["OVIRT_RHN_PROXY"] = ""
+    if not OVIRT_VARS.has_key("OVIRT_RHN_PROXYUSER"):
+        OVIRT_VARS["OVIRT_RHN_PROXYUSER"] = ""
+    if not OVIRT_VARS.has_key("OVIRT_RHN_PROXYPASSWORD"):
+        OVIRT_VARS["OVIRT_RHN_PROXYPASSWORD"] = ""
+
+    if not "https://xmlrpc.rhn.redhat.com/XMLRPC" in OVIRT_VARS["OVIRT_RHN_URL"] and OVIRT_VARS["OVIRT_RHN_CA_CERT"] == "":
+        logger.debug("Missing Satellite CA certificate URL")
+        return False
+
+    if OVIRT_VARS["OVIRT_RHN_TYPE"] == "sam":
+        reg_rc = run_rhsm(  serverurl=OVIRT_VARS["OVIRT_RHN_URL"],
+            cacert=OVIRT_VARS["OVIRT_RHN_CA_CERT"],
+            activationkey=OVIRT_VARS["OVIRT_RHN_ACTIVATIONKEY"],
+            username=OVIRT_VARS["OVIRT_RHN_USERNAME"],
+            password=OVIRT_VARS["OVIRT_RHN_PASSWORD"],
+            profilename=OVIRT_VARS["OVIRT_RHN_PROFILE"],
+            proxyhost=OVIRT_VARS["OVIRT_RHN_PROXY"],
+            proxyuser=OVIRT_VARS["OVIRT_RHN_PROXYUSER"],
+            proxypass=OVIRT_VARS["OVIRT_RHN_PROXYPASSWORD"])
+    elif OVIRT_VARS["OVIRT_RHN_TYPE"] == "classic":
+        reg_rc = run_rhnreg(  serverurl=OVIRT_VARS["OVIRT_RHN_URL"],
+            cacert=OVIRT_VARS["OVIRT_RHN_CA_CERT"],
+            activationkey=OVIRT_VARS["OVIRT_RHN_ACTIVATIONKEY"],
+            username=OVIRT_VARS["OVIRT_RHN_USERNAME"],
+            password=OVIRT_VARS["OVIRT_RHN_PASSWORD"],
+            profilename=OVIRT_VARS["OVIRT_RHN_PROFILE"],
+            proxyhost=OVIRT_VARS["OVIRT_RHN_PROXY"],
+            proxyuser=OVIRT_VARS["OVIRT_RHN_PROXYUSER"],
+            proxypass=OVIRT_VARS["OVIRT_RHN_PROXYPASSWORD"])
+    else:
+        logger.debug("Unknown RHN Type")
+        return False
+    if reg_rc == 0 and not False:
+        logger.info("RHN Registration Successful")
+        return True
+    elif reg_rc > 0:
+        logger.debug(reg_rc)
+        if reg_rc == 2:
+            msg = "Invalid Username / Password "
+        elif reg_rc == 3:
+            msg = "Unable to retreive satellite certificate"
+        else:
+            msg = "Check ovirt.log for details"
+            logger.info("RHN Configuration Failed")
+            return False
 
 #
 # configuration UI plugin interface
@@ -361,22 +442,35 @@ class Plugin(PluginBase):
         self.proxyport.setCallback(self.proxyport_callback)
 
         # optional: profilename, proxyhost, proxyuser, proxypass
-        self.get_rhn_config()
+        self.rhn_conf = get_rhn_config()
         if not "https://xmlrpc.rhn.redhat.com/XMLRPC" in self.rv("serverURL"):
             self.rhn_url.set(self.rv("serverURL"))
             self.rhn_ca.set(self.rv("sslCACert"))
+        elif sam_check():
+            if not "subscription.rhn.redhat.com" in self.rv("hostname"):
+                self.rhn_url.set("https://"+self.rv("hostname"))
+                if os.path.exists("/etc/rhsm/ca/candlepin-local.pem"):
+                    self.rhn_ca.set("/etc/rhsm/ca/candlepin-local.pem")
         self.proxyhost.set(self.rv("httpProxy"))
         self.proxyuser.set(self.rv("proxyUser"))
         self.proxypass.set(self.rv("proxyPassword"))
         self.rhn_actkey = Entry(40, "")
-        if self.rhn_url.value() == "https://xmlrpc.rhn.redhat.com/XMLRPC" or len(self.rhn_url.value()) == 0:
+        if rhn_check():
+            if self.rhn_url.value() == "https://xmlrpc.rhn.redhat.com/XMLRPC" or len(self.rhn_url.value()) == 0:
+                self.public_rhn.setValue("*")
+                self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+                self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+            else:
+                self.rhn_satellite.setValue("*")
+                self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+                self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+        elif sam_check():
+            self.sam.setValue("*")
+        else:
             self.public_rhn.setValue("*")
             self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
             self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-        else:
-            self.rhn_satellite.setValue(" 0")
-            self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
-            self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+
         if network_up():
             status, msg = get_rhn_status()
             if status == 0:
@@ -402,6 +496,12 @@ class Plugin(PluginBase):
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "Login/Password must not be empty\n", buttons = ['Ok'])
             return False
         if self.sam.value() == 1:
+            if os.path.exists(RHN_CONFIG_FILE):
+                remove_config(RHN_CONFIG_FILE)
+                os.remove(RHN_CONFIG_FILE)
+            if os.path.exists("/etc/sysconfig/rhn/systemid"):
+                remove_config("/etc/sysconfig/rhn/systemid")
+                os.remove("/etc/sysconfig/rhn/systemid")
             reg_rc = run_rhsm(  serverurl=self.rhn_url.value(),
                 cacert=self.rhn_ca.value(),
                 activationkey=self.rhn_actkey.value(),
@@ -412,6 +512,8 @@ class Plugin(PluginBase):
                 proxyuser=self.proxyuser.value(),
                 proxypass=self.proxypass.value())
         else:
+            # clear sam registration
+            system("subscription-manager unregister")
             reg_rc = run_rhnreg(  serverurl=self.rhn_url.value(),
                 cacert=self.rhn_ca.value(),
                 activationkey=self.rhn_actkey.value(),
@@ -433,14 +535,19 @@ class Plugin(PluginBase):
             else:
                 msg = "Check ovirt.log for details"
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration", "RHN Configuration Failed\n\n" + msg, buttons = ['Ok'])
+            self.ncs.reset_screen_colors()
             return False
 
     def rhn_url_callback(self):
         # TODO URL validation
         if not is_valid_url(self.rhn_url.value()):
+            self.ncs._create_warn_screen()
             self.ncs.screen.setColor("BUTTON", "black", "red")
             self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
             ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
+            self.ncs.reset_screen_colors()
+            self.ncs.gridform.draw()
+
         if self.rhn_satellite.value() == 1:
             host = self.rhn_url.value().replace("/XMLRPC","")
 
@@ -449,28 +556,17 @@ class Plugin(PluginBase):
         msg = ""
         if not self.rhn_ca.value() == "":
             if not is_valid_url(self.rhn_ca.value()):
-                msg = "Invalid URL"
+                if not os.path.exists(self.rhn_ca.value()):
+                    msg = "Invalid URL or Path"
         elif self.rhn_ca.value() == "":
             msg = "Please input a CA certificate URL"
         if not msg == "":
             self.ncs.screen.setColor("BUTTON", "black", "red")
             self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+            self.ncs._create_warn_screen()
             ButtonChoiceWindow(self.ncs.screen, "Configuration Check", msg, buttons = ['Ok'])
-
-    def get_rhn_config(self):
-        if os.path.exists(RHN_CONFIG_FILE):
-            rhn_config = open(RHN_CONFIG_FILE)
-            try:
-                for line in rhn_config:
-                    if "=" in line and "[comment]" not in line:
-                        item, value = line.split("=")
-                        self.rhn_conf[item] = value.strip()
-            except:
-                pass
-            logger.debug(self.rhn_conf)
-        else:
-            logger.debug("RHN Config does not exist")
-            return
+            self.ncs.reset_screen_colors()
+            self.ncs.gridform.draw()
 
     def rv(self, var):
         if self.rhn_conf.has_key(var):
@@ -500,17 +596,23 @@ class Plugin(PluginBase):
 
     def proxyhost_callback(self):
         if len(self.proxyhost.value()) > 0:
-            if not is_valid_hostname(self.proxyhost.value()):
+            if not is_valid_host_or_ip(self.proxyhost.value()):
                 self.ncs.screen.setColor("BUTTON", "black", "red")
                 self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+                self.ncs._create_warn_screen()
                 ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Proxy Host", buttons = ['Ok'])
+                self.ncs.reset_screen_colors()
+                self.ncs.gridform.draw()
 
     def proxyport_callback(self):
         if len(self.proxyport.value()) > 0:
             if not is_valid_port(self.proxyport.value()):
                 self.ncs.screen.setColor("BUTTON", "black", "red")
                 self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+                self.ncs._create_warn_screen()
                 ButtonChoiceWindow(self.ncs.screen, "Configuration Check", "Invalid Proxy Port", buttons = ['Ok'])
+                self.ncs.reset_screen_colors()
+                self.ncs.gridform.draw()
 
 def get_plugin(ncs):
     return Plugin(ncs)

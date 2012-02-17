@@ -85,6 +85,13 @@ print "Configuring KDump"
 kdump_auto()
 print "Configuring SNMP"
 snmp_auto()
+try:
+    from ovirt_config_setup.rhn import *
+    print "Configuring RHN"
+    rhn_auto()
+except:
+    pass
+
 if not is_stateless():
     print "Installing Bootloader"
     if install.ovirt_boot_setup():
