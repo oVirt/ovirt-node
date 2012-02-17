@@ -65,7 +65,7 @@ class NodeInstallScreen:
         self.__finished = False
         self.ovirt_defaults_file = "/etc/default/ovirt"
         OVIRT_VARS = parse_defaults()
-        _colorset = {
+        _console_colorset = {
                         "ROOT"          : ("gray",  "magenta"),
                         "BORDER"        : ("magenta", "magenta"),
                         "WINDOW"        : ("magenta", "magenta"),
@@ -86,7 +86,26 @@ class NodeInstallScreen:
                         "CHECKBOX"      : ("black",  "red"),
                         "ROOTTEXT"      : ("white",  "blue"),
                          }
-        self.__colorset = _colorset
+        _alternate_colorset = {
+                        "ROOT"          : ("white",  "white"),
+                        "HELPLINE"      : ("white",  "white"),
+                        "SHADOW"        : ("white",  "white"),
+                        "BORDER"        : ("white", "white"),
+                        "ACTBUTTON"     : ("white",  "blue"),
+                        "BUTTON"        : ("blue",  "white"),
+                        "TITLE"         : ("white",  "blue"),
+                        "EMPTYSCALE"    : ("white",  "cyan"),
+                        "FULLSCALE"     : ("black",  "white"),
+                        "CHECKBOX"      : ("black",  "gray"),
+                        "ROOTTEXT"      : ("white",  "blue"),
+                        "ACTSELLISTBOX" : ("white",  "black"),
+                        "LABEL"         : ("black",  "white"),
+                         }
+
+        if is_console():
+            self.__colorset = _console_colorset
+        else:
+            self.__colorset = _alternate_colorset
         self.dev_name = ""
         self.dev_model = ""
         self.dev_bus = ""

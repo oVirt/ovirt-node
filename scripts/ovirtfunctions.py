@@ -204,6 +204,12 @@ def get_ttyname():
             return tty
     return None
 
+def is_console():
+    tty = get_ttyname()
+    if "console" in tty:
+        return True
+    else:
+        return False
 def manual_setup():
     logger.info("Checking For Setup Lockfile")
     tty = get_ttyname()
