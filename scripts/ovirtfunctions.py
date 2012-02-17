@@ -1132,8 +1132,11 @@ def findfs(label):
     return blkid_output
 
 def system(command):
-    if os.system(command + " &>> " + OVIRT_TMP_LOGFILE) == 0:
-        os.system("echo '\n' >> " + OVIRT_TMP_LOGFILE)
+    system_cmd = subprocess.Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+    output, err = system_cmd.communicate()
+    logger.debug(command)
+    logger.debug(output)
+    if system_cmd.returncode == 0:
         return True
     else:
         return False
@@ -1245,7 +1248,6 @@ def is_efi_boot():
     else:
         return False
 
-
 def manage_firewall_port(port, action="open", proto="tcp"):
     if action == "open":
         opt = "-A"
@@ -1256,6 +1258,12 @@ def manage_firewall_port(port, action="open", proto="tcp"):
     os.system("iptables %s INPUT -p %s --dport %s -j ACCEPT" % (opt, proto, port))
     os.system("iptables-save")
     ovirt_store_config("/etc/sysconfig/iptables")
+
+def is_iscsi_install():
+    if OVIRT_VARS.has_key("OVIRT_ISCSI_INSTALL") and OVIRT_VARS["OVIRT_ISCSI_INSTALL"].upper() == "Y":
+        return True
+    else:
+        return False
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.

@@ -372,6 +372,12 @@ _start_ovirt_early () {
     # save boot parameters like console= for local disk boot menu
     bootparams=
     cat /etc/system-release >> $OVIRT_LOGFILE
+    # determine iscsi_install status
+    if grep -q iscsi_install /proc/cmdline; then
+        iscsi_install=0
+    else
+        iscsi_install=1
+    fi
 
     for i in $(cat /proc/cmdline); do
         case $i in
@@ -415,7 +421,7 @@ _start_ovirt_early () {
                     init=
                     for d in $hostvgdisks; do
                         did="$(IFS="$oldIFS" parse_disk_id "$d")"
-                        if [ -z "$did" ]; then
+                        if [ -z "$did" -a $iscsi_install == 1 ]; then
                             autoinstall_failed
                         fi
                         if [ -n "$init" ]; then
@@ -445,7 +451,7 @@ _start_ovirt_early () {
                     IFS="$oldIFS"
                 fi
             fi
-            if [ -z "$init" ]; then
+            if [ -z "$init" -a $iscsi_install == 1 ]; then
                 log "Selected disk $i is not valid."
             fi
             ;;
@@ -695,6 +701,19 @@ _start_ovirt_early () {
             iscsi_name=*)
             iscsi_name=${i#iscsi_name=}
             ;;
+            iscsi_init=*)
+            iscsi_init=${i#iscsi_init=}
+            ;;
+            iscsi_server=*)
+            i=${i#iscsi_server=}
+            eval $(printf $i|awk -F: '{print "iscsi_target_host="$1; print "iscsi_target_port="$2;}')
+            ;;
+            iscsi_target_name=*)
+            iscsi_target_name=${i#iscsi_target_name=}
+            ;;
+            iscsi_install*)
+            iscsi_install="Y"
+            ;;
             swap_encrypt=* | ovirt_swap_encrypt=* )
             i=${i#ovirt_swap_encrypt=}
             i=${i#swap_encrypt=}
@@ -762,8 +781,7 @@ _start_ovirt_early () {
 
 
     # save boot parameters as defaults for ovirt-config-*
-
-    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid"
+    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config

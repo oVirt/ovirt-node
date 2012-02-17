@@ -36,6 +36,10 @@ def config_networking():
     if OVIRT_VARS.has_key("OVIRT_HOSTNAME"):
         system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
 
+# setup network before storage for iscsi installs
+if is_iscsi_install():
+    config_networking()
+
 if not is_stateless():
     print "Performing automatic disk partitioning"
 

@@ -46,10 +46,9 @@ class Install:
         if not system("cp -p /live/" + self.syslinux + "/version /liveos"):
             logger.error("version details copy failed.")
             return False
-        if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
-            if not system("cp -p /live/LiveOS/squashfs.img /liveos/LiveOS"):
-                logger.error("squashfs image copy failed.")
-                return False
+        if not system("cp -p /live/LiveOS/squashfs.img /liveos/LiveOS"):
+            logger.error("squashfs image copy failed.")
+            return False
         return True
 
     def generate_paths(self):
@@ -63,7 +62,7 @@ class Install:
             logger.info("Failed to determine grub pathnames")
             return False
 
-        if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
+        if is_iscsi_install():
             self.initrd_dest = "/boot"
             self.grub_dir = "/boot/grub"
             self.grub_prefix = "/grub"
@@ -158,7 +157,11 @@ initrd /initrd0.img
         # if efi is detected only install grub-efi
         if not is_efi_boot():
             logger.info("efi not detected, installing grub2 configuraton")
-            grub_setup_cmd = "/sbin/grub2-install " + self.disk + " --boot-directory=" + self.initrd_dest + " --force"
+            if is_iscsi_install():
+                disk = re.sub("p[1,2,3]$", "", findfs(self.boot_candidate))
+            else:
+                disk = self.disk
+            grub_setup_cmd = "/sbin/grub2-install " + disk + " --boot-directory=" + self.initrd_dest + " --force"
             logger.info(grub_setup_cmd)
             grub_setup = subprocess.Popen(grub_setup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             grub_results = grub_setup.stdout.read()
@@ -217,9 +220,10 @@ initrd /initrd0.img
 
             system("umount /liveos")
 
-        if findfs("Boot"):
-            candidate = "Boot"
-            mount_boot()
+        if findfs("BootBackup"):
+            self.boot_candidate = "BootBackup"
+        elif findfs("Boot"):
+            self.boot_candidate = "Boot"
             if not os.path.ismount("/boot"):
                 logger.error("Boot partition not available, Install Failed")
                 return False
@@ -245,7 +249,7 @@ initrd /initrd0.img
                     system("service iscsi restart")
                 except:
                     pass
-        elif findfs("RootBackup"):
+        if findfs("RootBackup"):
             candidate = "RootBackup"
         elif findfs("RootUpdate"):
             candidate = "RootUpdate"
@@ -261,6 +265,8 @@ initrd /initrd0.img
             return False
         logger.debug("candidate: " + candidate)
 
+        if is_iscsi_install():
+            system("mount LABEL=%s /boot" % self.boot_candidate)
         try:
             candidate_dev = self.disk = findfs(candidate)
             logger.info(candidate_dev)
@@ -276,19 +282,18 @@ initrd /initrd0.img
         if self.disk is None or self.partN < 0:
             logger.error("Failed to determine Root partition number")
             return False
-        if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
-            # prepare Root partition update
-            if candidate != "RootNew":
-                e2label_cmd = "e2label \"%s\" RootNew" % candidate_dev
-                logger.debug(e2label_cmd)
-                if not system(e2label_cmd):
-                    logger.error("Failed to label new Root partition")
-                    return False
-            mount_cmd = "mount \"%s\" /liveos" % candidate_dev
-            system(mount_cmd)
-            system("rm -rf /liveos/LiveOS")
-            system("mkdir -p /liveos/LiveOS")
-            mount_live()
+        # prepare Root partition update
+        if candidate != "RootNew":
+            e2label_cmd = "e2label \"%s\" RootNew" % candidate_dev
+            logger.debug(e2label_cmd)
+            if not system(e2label_cmd):
+                logger.error("Failed to label new Root partition")
+                return False
+        mount_cmd = "mount \"%s\" /liveos" % candidate_dev
+        system(mount_cmd)
+        system("rm -rf /liveos/LiveOS")
+        system("mkdir -p /liveos/LiveOS")
+        mount_live()
 
         if os.path.isdir(self.grub_dir):
             shutil.rmtree(self.grub_dir)
@@ -312,10 +317,10 @@ initrd /initrd0.img
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation
-        if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
-            self.root_param="root=LABEL=ovirt-node-root"
-            self.bootparams="ro rootfstype=ext2 rootflags=ro console=tty0 \
-                        netroot=iscsi:$OVIRT_ISCSI_TARGET_IP::$OVIRT_ISCSI_TARGET_PORT::$OVIRT_ISCSI_NODE_NAME ip=eth0:dhcp"
+        if is_iscsi_install():
+            self.root_param="root=LABEL=Root"
+            self.bootparams="root=iscsi:%s::%s::%s ip=%s:dhcp" % (OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"], \
+                OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"],OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],OVIRT_VARS["OVIRT_BOOTIF"])
         else:
             self.root_param="root=live:LABEL=Root"
             self.bootparams="ro rootfstype=auto rootflags=ro "
@@ -392,10 +397,10 @@ initrd /initrd0.img
             else:
                 logger.info("Grub 2 Installation Completed")
 
-        if OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED") \
-           and OVIRT_VARS["OVIRT_ISCSI_ENABLED"] == "y":
+        if is_iscsi_install():
             # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
             shutil.copy(OVIRT_DEFAULTS, "/boot")
+            system("umount /boot")
         else:
             system("sync")
             system("sleep 2")
@@ -406,12 +411,12 @@ initrd /initrd0.img
                 system("mount %s /liveos/efi" % efi_dev)
                 system("cp -a /tmp/EFI /liveos/efi")
             system("umount /liveos/efi")
-            system("umount /liveos")
-            # mark new Root ready to go, reboot() in ovirt-function switches it to active
-            e2label_cmd = "e2label \"%s\" RootUpdate" % candidate_dev
-            if not system(e2label_cmd):
-                logger.error("Unable to relabel " + candidate_dev + " to RootUpdate ")
-                return False
+        system("umount /liveos")
+        # mark new Root ready to go, reboot() in ovirt-function switches it to active
+        e2label_cmd = "e2label \"%s\" RootUpdate" % candidate_dev
+        if not system(e2label_cmd):
+            logger.error("Unable to relabel " + candidate_dev + " to RootUpdate ")
+            return False
         disable_firstboot()
         if finish_install():
             iscsi_auto()

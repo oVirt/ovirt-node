@@ -128,7 +128,14 @@ parse_disk_id() {
             serial=${i#:}
         ;;
         /dev/*)
-            disk="$(ls -1 $i 2>/dev/null | head -n1)"
+            # iscsi disk won't be present until later in the boot
+            iscsi_install=$(grep -q iscsi_install /proc/cmdline)
+            rc=$?
+            if [ $rc -eq 0 ]; then
+                disk=$i
+            else
+                disk="$(ls -1 $i 2>/dev/null | head -n1)"
+            fi
         ;;
     esac
     if [ -n "$bus" ]; then
