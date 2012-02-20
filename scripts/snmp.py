@@ -20,5 +20,5 @@ def disable_snmpd():
     remove_config("/etc/sysconfig/snmpd")
 
 def snmp_auto():
-    if OVIRT_VARS.has_key("OVIRT_SNMP_PASSWORD}"):
+    if OVIRT_VARS.has_key("OVIRT_SNMP_PASSWORD"):
         enable_snmpd(OVIRT_VARS["OVIRT_SNMP_PASSWORD"])
