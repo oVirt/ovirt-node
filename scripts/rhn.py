@@ -160,12 +160,30 @@ def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="
     else:
         host = "subscription.rhn.redhat.com"
         port = "443"
+    location="/etc/rhsm/ca/candlepin-local.pem"
+    if len(cacert) > 0:
+        if not os.path.exists(cacert):
+            logger.debug("CACert: " + cacert)
+            logger.debug("Location: " + location)
+            logger.info("Downloading Satellite CA cert.....")
+            logger.debug("From: " + cacert + " To: " + location)
+            system("wget -q -r -nd --no-check-certificate --timeout=30 --tries=3 -O \"" + location +"\" \"" + cacert + "\"")
+        if os.path.isfile(location):
+            if os.stat(location).st_size > 0:
+                ovirt_store_config(location)
+            else:
+                logger.error("Error Downloading CA cert!")
+                return 3
+
     smconf=list(sm)
     smconf.append('config')
     smconf.append('--server.hostname')
     smconf.append(host)
     smconf.append('--server.port')
     smconf.append(port)
+    if len(cacert) > 0:
+        smconf.append('--rhsm.repo_ca_cert')
+        smconf.append('/etc/rhsm/ca/candlepin-local.pem')
     log(str(smconf))
     smconf_proc = subprocess.Popen(smconf, shell=False, stdout=PIPE, stderr=STDOUT)
     smconf_output = smconf_proc.stdout.read()
@@ -206,7 +224,8 @@ def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="
     smreg_proc = subprocess.Popen(args, shell=False, stdout=PIPE, stderr=STDOUT)
     smreg_output = smreg_proc.stdout.read()
     log(smreg_output)
-    if smreg_proc.wait() == 0:
+    smreg_proc.wait()
+    if "been registered" in smreg_output:
         ovirt_store_config(all_rhsm_configs)
         ovirt_store_config(glob.glob("/etc/pki/consumer/*pem"))
         log("System %s sucessfully registered to %s" % (profilename, serverurl))
@@ -244,7 +263,7 @@ def rhn_check():
         return False
 
 def sam_check():
-    samcheck_cmd = subprocess.Popen("subscription_manager identity", shell=True, stdout=PIPE, stderr=open('/dev/null', 'w'))
+    samcheck_cmd = subprocess.Popen("subscription-manager identity", shell=True, stdout=PIPE, stderr=open('/dev/null', 'w'))
     samcheck = samcheck_cmd.communicate()[0]
     if samcheck_cmd.returncode == 0:
         return True

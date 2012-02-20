@@ -172,6 +172,18 @@ print 'port=%s' % port
         if [ -z "$port" -o "$port" == "0" ]; then
             port=443
         fi
+        cert=$(echo $CaCert | awk -F/ '{print $NF}')
+        location="/etc/rhsm/ca/$cert"
+        log "Downloading CA cert....."
+        log "From: $CaCert To: $location"
+        wget -r -nd --no-check-certificate --timeout=30 --tries=3 -O "$location" "$CaCert"
+        if [ -s "${location}" ]; then
+            subscription-manager config --rhsm.repo_ca_cert $location
+            ovirt_store_config $location
+        else
+            log "Error Downloading Satellite CA cert!"
+            return 1
+        fi
     else
         host="subscription.rhn.redhat.com"
         port="443"
@@ -203,13 +215,18 @@ print 'port=%s' % port
     unmount_config /etc/pki/consumer/*pem
     unmount_config /var/lib/rhsm/productid.js /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
     rm -rf /var/lib/rhsm/productid.js /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
-    if subscription-manager register $args; then
+    args="subscription-manager register ${args}"
+    # cant rely on return code in RHEVH's case
+    eval $args
+    subscription-manager identity $>/dev/null
+    rc=$?
+    if [ $rc -eq 0 ]; then
         ovirt_store_config \
             /etc/pki/consumer/*pem \
             /var/lib/rhsm/productid.js \
             /var/lib/rhsm/cache/installed_products.json \
             /var/lib/rhsm/facts/facts.json
-        log "System "$profileName" sucessfuly registered "$serverUrl""
+        log "System "$profileName" successfully registered "$serverUrl""
         return 0
     else
         log "Error registering to RHN account!"
@@ -243,9 +260,13 @@ function prompt_user {
         elif [ "$servertype" = "SAM" ]; then
             printf "\n"
             read -p "Enter URL of Subscription Asset Manager (ie. https://subscription.rhn.redhat.com): " -er
-            test -z "$REPLY" && return 1
             serverurl=$REPLY
-            #XXX where is cacert for SAM?
+            if [ -n "$serverurl" ]; then
+                default=$serverurl/pub/RHN-ORG-TRUSTED-SSL-CERT
+                printf "\n"
+                read -p "Enter location of Subscription Asset Manager Cert ($default): " -er
+                cacert=$REPLY
+            fi
         fi
 
         printf "\n"
