@@ -55,6 +55,7 @@ AC_CONFIG_FILES([Makefile
                 images/Makefile
                 kinit/Makefile
                 scripts/Makefile
+                tools/Makefile
                 scripts/collectd.conf
                 recipe/Makefile
                 $MAIN_KS

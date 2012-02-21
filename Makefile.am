@@ -22,7 +22,8 @@ SUBDIRS =   \
   images \
   kinit \
   recipe \
-  scripts
+  scripts \
+  tools
 
 EXTRA_DIST = \
   ovirt-qla4xxx.conf \

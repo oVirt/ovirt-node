@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+#
+# edit-node Copyright (C) 2012 Red Hat, Inc.
+# Written by Joey Boggs <jboggs@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
+import os
+import sys
+import optparse
+from tempfile import mktemp
+import subprocess
+
+class PluginTool():
+
+    def __init__(self):
+        self.script = []
+
+    def parse_options(self, args):
+        parser = optparse.OptionParser(usage = """
+           %prog   [-p=<encrypted_password>]
+                               <LIVEIMG.src>""")
+
+        parser.add_option("-p", "--passwd", type="string", dest="password",
+                          help="encrypted password")
+
+        (self.options, self.args) = parser.parse_args()
+        if len(self.args) != 1:
+            parser.print_usage()
+            sys.exit(1)
+        else:
+            self.args=self.args[0]
+            if not os.path.exists(self.args):
+                print "iso file does not exist"
+                sys,exit(1)
+
+    def create_script(self):
+        if not self.options.password is None:
+            print "Appending Password Change"
+            self.script.append("/usr/sbin/usermod -p \"%s\" admin" % self.options.password)
+        else:
+            print "Missing Password Option"
+        return
+
+    def main(self):
+        self.parse_options(sys.argv[1:])
+        self.create_script()
+        scriptfile = mktemp()
+        print("Script Temp File: %s" % scriptfile)
+        f = open(scriptfile, "w")
+        f.write("#!/bin/bash\n")
+        for item in self.script:
+            f.write(item+"\n")
+        f.close()
+        #list wont recognize iso file arg in edit-livecd
+        edit_args="edit-livecd -s %s %s" % (scriptfile, self.args)
+        edit_cmd = subprocess.Popen(edit_args, shell=True)
+        edit_cmd.wait()
+        if edit_cmd.returncode == 0:
+            print "\n\nEdited ISO is: " + self.args + "edited.iso\n"
+            return True
+        else:
+            print "Editing Failed"
+            sys.exit(1)
+
+if __name__ == "__main__":
+    tool = PluginTool()
+    if tool.main():
+        sys.exit(0)
+

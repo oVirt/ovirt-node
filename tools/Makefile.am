@@ -16,8 +16,4 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 EXTRA_DIST = \
-  create-ovirt-iso-nodes \
-  edit-livecd \
-  livecd-iso-to-iscsi \
-  livecd-rpms \
-  livecd-setauth
+  edit-node
