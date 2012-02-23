@@ -1142,7 +1142,7 @@ class NodeConfigScreen():
               self.log_menu_list.append(" VDSM Log (vdsm.log)", "/var/log/vdsm/vdsm.log")
           if os.path.exists("/var/log/vdsm-reg/vdsm-reg.log"):
               self.log_menu_list.append(" VDSM Registration Log (vdsm-reg.log)", "/var/log/vdsm-reg/vdsm-reg.log")
-          elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,8))
+          elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,6))
           elements.setField(Label(" After viewing press \"q\" to quit "), 0, 3, anchorLeft = 1, padding = (0,1,0,0))
 
           return [Label(""), elements]
