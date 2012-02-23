@@ -1529,11 +1529,11 @@ class NodeConfigScreen():
                         raise "Too many plugins installed: max. %d are allowed." % ((LAST_PLUGIN_PAGE-FIRST_PLUGIN_PAGE)/2+1)
                 for filler in range(plugin_page, LAST_PLUGIN_PAGE):
                     self.menu_list.append("", filler)
-                self.menu_list.setCallback(self.menuSpacing)
                 if self.__current_page != LOCKED_PAGE and self.__current_page != NETWORK_DETAILS_PAGE and self.__current_page != SUPPORT_PAGE:
                     self.menu_list.setCurrent(self.__current_page)
                 if not self.screen_locked:
                     if not self.__current_page == NETWORK_DETAILS_PAGE and not self.__current_page == SUPPORT_PAGE:
+                        self.menu_list.setCallback(self.menuSpacing)
                         gridform.add(self.menu_list, 0, 0, # was 1,0
                                      anchorTop = 1, anchorLeft = 1,
                                      growx = 0)
