@@ -1043,8 +1043,11 @@ class NodeConfigScreen():
           vlan_grid = Grid(2,2)
           self.netvlanid = Entry(4, "", scroll = 0)
           self.netvlanid.setCallback(self.netvlanid_callback)
-          if "OVIRT_VLAN" in OVIRT_VARS:
-              self.netvlanid.set(OVIRT_VARS["OVIRT_VLAN"])
+          for vlan in os.listdir("/proc/net/vlan/"):
+            # XXX wrong match e.g. eth10.1 with eth1
+            if self.nic_lb.current() in vlan:
+              vlan_id = vlan.replace(self.nic_lb.current()+".","")
+              self.netvlanid.set(vlan_id)
           vlan_grid.setField(Label("VLAN ID: "), 0, 0, anchorLeft = 1)
           vlan_grid.setField(self.netvlanid, 1, 0)
           grid.setField(vlan_grid, 0, 9, anchorLeft = 1)
