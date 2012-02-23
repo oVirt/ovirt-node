@@ -335,7 +335,7 @@ class NodeInstallScreen:
         elements = Grid(2, 5)
         elements.setField(Label("%s Installation Failed " %
             PRODUCT_SHORT), 0, 0)
-        elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,0))
+        elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,1))
         self.log_menu_list = Listbox(3, width = 30, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
         if os.path.exists("/var/log/ovirt.log"):
             self.log_menu_list.append(" /var/log/ovirt.log", "/var/log/ovirt.log")

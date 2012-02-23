@@ -1130,7 +1130,7 @@ class NodeConfigScreen():
       def support_page(self, screen):
           logger.info("Loading Support Page")
           elements = Grid(2, 8)
-          elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,0))
+          elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,1))
           self.log_menu_list = Listbox(5, width = 40, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
           self.log_menu_list.append(" oVirt Log (ovirt.log)", "/var/log/ovirt.log")
           self.log_menu_list.append(" System Messages (messages)", "/var/log/messages")
