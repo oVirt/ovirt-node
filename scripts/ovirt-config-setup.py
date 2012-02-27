@@ -1514,7 +1514,7 @@ class NodeConfigScreen():
                 self._set_title()
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
-                self.menu_list = Listbox(16, width = 20, returnExit = 1, border = 0, showCursor = 0)
+                self.menu_list = Listbox(16, width = 20, returnExit = 0, border = 0, showCursor = 0)
                 self.menu_list.append(" Status", 1)
                 self.menu_list.append("", 2)
                 self.menu_list.append(" Network", 3)
