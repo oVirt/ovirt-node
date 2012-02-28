@@ -20,6 +20,7 @@ EXTRA_DIST = \
   ovirt-awake \
   ovirt-early \
   ovirt.init \
+  ovirt.service \
   ovirt-post \
   ovirt-cim \
   cim.py \

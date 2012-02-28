@@ -22,8 +22,9 @@ BuildRequires:  automake autoconf
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
 %if 0%{?fedora}
-BuildRequires:  systemd-units
 Requires:       systemd-units
+Requires(post):     systemd-units
+Requires(preun):    systemd-units
 #Requires:       python-augeas
 Requires:       glusterfs-client >= 2.0.1
 Requires:       anyterm
@@ -106,6 +107,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/dracut.conf.d
+%{__install} -d -m0755 %{buildroot}%{_unitdir}
 
 %{__install} -p -m0755 scripts/node-config %{buildroot}%{_sysconfdir}/sysconfig
 
@@ -114,6 +116,7 @@ make install DESTDIR=%{buildroot}
 
 %{__install} -p -m0755 scripts/ovirt.sh %{buildroot}%{_libexecdir}/ovirt.sh
 %{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
+%{__install} -p -m0755 scripts/ovirt.service %{buildroot}%{_unitdir}/ovirt.service
 
 %{__install} -p -m0755 scripts/ovirt-post %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-cim %{buildroot}%{_initrddir}
@@ -123,7 +126,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
 %if %is_f16
 # install libvirtd systemd service
-%{__install} -d -m0755 %{buildroot}%{_unitdir}
 %{__install} -p -m0644 libvirtd.service %{buildroot}%{_unitdir}
 %endif
 %if 0%{?rhel}
@@ -205,12 +207,25 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__rm} -rf %{buildroot}
 
 %post
+%if 0%{?rhel}
 /sbin/chkconfig --add ovirt-awake
 /sbin/chkconfig --add ovirt-early
 /sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
 /sbin/chkconfig --add ovirt-post
 /sbin/chkconfig --add ovirt-cim
+%else
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+
+    /sbin/chkconfig --add ovirt-awake
+    /sbin/chkconfig --add ovirt-early
+    /sbin/chkconfig --add ovirt-firstboot
+    /sbin/chkconfig --add ovirt-post
+    /sbin/chkconfig --add ovirt-cim
+fi
+%endif
 # workaround for imgcreate/live.py __copy_efi_files
 if [ ! -e /boot/grub/splash.xpm.gz ]; then
   cp %{app_root}/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
@@ -235,6 +250,7 @@ rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
 
 %preun
+%if 0%{?rhel}
 if [ $1 = 0 ] ; then
     /sbin/service ovirt-early stop >/dev/null 2>&1
     /sbin/service ovirt-firstboor stop >/dev/null 2>&1
@@ -248,7 +264,23 @@ if [ $1 = 0 ] ; then
     /sbin/chkconfig --del ovirt-post
     /sbin/chkconfig --del ovirt-cim
 fi
+%else
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /sbin/service ovirt-early stop >/dev/null 2>&1
+    /sbin/service ovirt-firstboor stop >/dev/null 2>&1
 
+    /bin/systemctl --no-reload disable ovirt.service > /dev/null 2>&1 || :
+    /bin/systemctl stop ovirt.service > /dev/null 2>&1 || :
+
+    /sbin/service ovirt-post stop >/dev/null 2>&1
+
+    /sbin/chkconfig --del ovirt-awake
+    /sbin/chkconfig --del ovirt-early
+    /sbin/chkconfig --del ovirt-firstboot
+    /sbin/chkconfig --del ovirt-post
+fi
+%endif
 
 %files tools
 %defattr(0644,root,root,0755)
@@ -328,6 +360,7 @@ fi
 %{_initrddir}/ovirt-cim
 %{_sysconfdir}/ovirt-early.d
 %{_sysconfdir}/ovirt-commandline.d
+%{_unitdir}/ovirt.service
 
 %changelog
 * Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1
