@@ -68,21 +68,26 @@ ovirt_start() {
 }
 
 start_ovirt () {
-    touch $VAR_SUBSYS_OVIRT
-    case $OVIRT_RUNTIME_MODE in
-        "ovirt")
-            ovirt_start
-            ;;
-        "managed")
-            if [ -x $MANAGEMENT_SCRIPTS_DIR/ready ]; then
-                log "Executing $MANAGEMENT_SCRIPTS_DIR/ready."
-                $MANAGEMENT_SCRIPTS_DIR/ready
-                RC=$?
-            else
-                log "No script to perform node activation."
-            fi
-    esac
-    rm -f $VAR_SUBSYS_OVIRT
+    [ -f "$VAR_SUBSYS_OVIRT" ] && exit 0
+    {
+        log "Starting ovirt"
+        touch $VAR_SUBSYS_OVIRT
+        case $OVIRT_RUNTIME_MODE in
+            "ovirt")
+                ovirt_start
+                ;;
+            "managed")
+                if [ -x $MANAGEMENT_SCRIPTS_DIR/ready ]; then
+                    log "Executing $MANAGEMENT_SCRIPTS_DIR/ready."
+                    $MANAGEMENT_SCRIPTS_DIR/ready
+                    RC=$?
+                else
+                    log "No script to perform node activation."
+                fi
+        esac
+        rm -f $VAR_SUBSYS_OVIRT
+        log "Completed ovirt"
+    } >> $OVIRT_LOGFILE 2>&1
     return $RC
 }
 

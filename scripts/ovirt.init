@@ -17,13 +17,8 @@ VAR_SUBSYS_OVIRT=/var/lock/subsys/$prog
 
 case "$1" in
     start)
-        [ -f "$VAR_SUBSYS_OVIRT" ] && exit 0
         echo -n "Starting ovirt: "
-        {
-            log "Starting ovirt"
-            start_ovirt
-            log "Completed ovirt"
-        } >> $OVIRT_LOGFILE 2>&1
+        start_ovirt
         test $? == 0 && success || failure
         ;;
     status)
