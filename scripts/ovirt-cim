@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# ovirt Start cim services
+#
+### BEGIN INIT INFO
+# Provides: ovirt-cim
+# Required-Start: ovirt-post
+# Default-Start: 2 3 4 5
+# Description: Performs managed node cim configuration setup.
+### END INIT INFO
+
+# Source functions library
+. /etc/init.d/functions
+. /usr/libexec/ovirt-functions
+
+prog=ovirt-cim
+VAR_SUBSYS_OVIRT_CIM=/var/lock/subsys/$prog
+
+start_ovirt_cim() {
+
+    touch $VAR_SUBSYS_OVIRT_CIM
+
+    if is_cim_enabled; then
+        python -c 'import ovirtnode.ovirtfunctions; manage_firewall_port("5989","open","tcp")'
+        service sblim-sfcb start
+    fi
+    rm -f $VAR_SUBSYS_OVIRT_CIM
+}
+
+stop_ovirt_cim () {
+    echo -n "Stopping ovirt-cim: "
+    if service sblim-sfcb status >/dev/null; then
+        python -c 'import ovirtnode.ovirtfunctions; manage_firewall_port("5989","close","tcp")'
+        service sblim-sfcb stop
+    fi
+    success
+}
+
+reload_ovirt_cim () {
+    stop_ovirt_cim
+    start_ovirt_cim
+}
+
+case "$1" in
+    start)
+        [ -f "$VAR_SUBSYS_OVIRT_cim" ] && exit 0
+        echo -n "Starting ovirt-cim: "
+
+        {
+            log "Starting ovirt-cim"
+            start_ovirt_cim
+            log "Completed ovirt-cim"
+        } >> $OVIRT_LOGFILE 2>&1
+
+        test $? == 0 && success || failure
+        echo
+        ;;
+    status)
+        status $prog
+        ;;
+    reload)
+        reload_ovirt_cim
+        ;;
+    stop)
+        stop_ovirt_cim
+        ;;
+    *)
+        echo "Usage: ovirt-cim {start}"
+        exit 2
+esac

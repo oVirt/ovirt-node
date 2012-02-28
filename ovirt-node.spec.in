@@ -113,6 +113,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-post %{buildroot}%{_initrddir}
+%{__install} -p -m0755 scripts/ovirt-cim %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
@@ -169,6 +170,7 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %if 0%{?rhel} && ! 0%{?centos}
 %{__install} -p -m0644 scripts/rhn.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %endif
+%{__install} -p -m0644 scripts/cim.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0644 scripts/storage.py %{buildroot}%{python_sitelib}/ovirtnode
@@ -205,6 +207,7 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 /sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
 /sbin/chkconfig --add ovirt-post
+/sbin/chkconfig --add ovirt-cim
 # workaround for imgcreate/live.py __copy_efi_files
 if [ ! -e /boot/grub/splash.xpm.gz ]; then
   cp %{app_root}/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
@@ -234,11 +237,13 @@ if [ $1 = 0 ] ; then
     /sbin/service ovirt-firstboor stop >/dev/null 2>&1
     /sbin/service ovirt stop >/dev/null 2>&1
     /sbin/service ovirt-post stop >/dev/null 2>&1
+    /sbin/service ovirt-cim stop >/dev/null 2>&1
     /sbin/chkconfig --del ovirt-awake
     /sbin/chkconfig --del ovirt-early
     /sbin/chkconfig --del ovirt-firstboot
     /sbin/chkconfig --del ovirt
     /sbin/chkconfig --del ovirt-post
+    /sbin/chkconfig --del ovirt-cim
 fi
 
 
@@ -316,6 +321,7 @@ fi
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
+%{_initrddir}/ovirt-cim
 %{_sysconfdir}/ovirt-early.d
 %{_sysconfdir}/ovirt-commandline.d
 

@@ -225,3 +225,8 @@ EOF_sshd_config
 echo "options bnx2x disable_tpa=1" > /etc/modprobe.d/bnx2x.conf
 echo "options mlx4_en num_lro=0" > /etc/modprobe.d/mlx4_en.conf
 echo "options s2io lro=0" > /etc/modprobe.d/s2io.conf
+
+#CIM related changes
+# set read-only
+echo "readonly = true;" > /etc/libvirt-cim.conf
+useradd -G sfcb cim

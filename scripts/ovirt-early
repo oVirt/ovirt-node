@@ -268,6 +268,12 @@ start_ovirt_early () {
     # enable snmpd and set password for "root" SNMPv3 USM user
     snmp_password=
 
+    # CIM related options
+    # enable_cim=0|1
+    # cim_passwd=<encrypted password>
+    cim_passwd=
+    enable_cim=
+
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
     #   or               ip=dhcp|off
@@ -488,6 +494,11 @@ start_ovirt_early () {
                 /usr/sbin/usermod -p $(grep ^root /etc/shadow | sed 's/:/ /g' | awk '{print $2}') admin
                 persist /etc/shadow /etc/passwd
             fi
+            if ! grep -q ^cim /etc/passwd; then
+                unmount_config /etc/passwd /etc/shadow
+                useradd -g cim -s /usr/libexec/ovirt-admin-shell cim
+                persist /etc/shadow /etc/passwd
+            fi
             ;;
             standalone=no | standalone=0 | ovirt_standalone=no | ovirt_standalone=0)
             standalone=0
@@ -526,6 +537,15 @@ start_ovirt_early () {
             if [ -z "$adminpw" ]; then
                 adminpw=$rootpw
             fi
+            ;;
+            cim_passwd=*)
+            cim_passwd=${i#cim_passwd=}
+            ;;
+            cim_enabled* | cim_enabled)
+            cim_enabled=1
+            ;;
+            cim_enabled=0 | cim_enabled=no)
+            cim_enabled=0
             ;;
             snmp_password=*)
             snmp_password=${i#snmp_password=}
@@ -700,7 +720,7 @@ start_ovirt_early () {
 
     # save boot parameters as defaults for ovirt-config-*
 
-    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless"
+    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
@@ -728,6 +748,12 @@ start_ovirt_early () {
         fi
     fi
 
+    if [ -n "$cim_passwd" ]; then
+        log "Setting temporary admin password: $cim_passwd"
+        unmount_config /etc/passwd /etc/shadow
+        /usr/sbin/usermod -p "$cim_passwd" cim
+        chage -d 0 cim
+    fi
     if [ -n "$adminpw" ]; then
         log "Setting temporary admin password: $adminpw"
         unmount_config /etc/passwd /etc/shadow

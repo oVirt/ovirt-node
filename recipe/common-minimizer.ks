@@ -321,3 +321,10 @@ drop /sbin/ebtables-restore
 
 # remove bogus kdump script (rpmdiff complains)
 drop /etc/kdump-adv-conf
+
+#cim
+droprpm tog-pegasus
+droprpm tog-pegasus-libs
+droprpm libcmpiutil
+droprpm mailcap
+droprpm openslp

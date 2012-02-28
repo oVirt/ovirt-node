@@ -110,3 +110,6 @@ febootstrap-supermin-helper
 rpm-python
 # for efi installs
 efibootmgr
+# libvirt-cim
+sblim-sfcb
+libvirt-cim

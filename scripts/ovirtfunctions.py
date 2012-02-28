@@ -232,6 +232,17 @@ def is_firstboot():
     else:
         return True
 
+def is_cim_enabled():
+    # check if theres a key first
+    # reload OVIRT_VARS
+    OVIRT_VARS = parse_defaults()
+    if OVIRT_VARS.has_key("OVIRT_CIM_ENABLED"):
+        if OVIRT_VARS["OVIRT_CIM_ENABLED"] == "1":
+            return True
+        elif OVIRT_VARS["OVIRT_CIM_ENABLED"] == "0":
+            return False
+    return False
+
 def is_stateless():
     # check if theres a key first
     if OVIRT_VARS.has_key("OVIRT_STATELESS"):
@@ -1196,6 +1207,18 @@ def is_efi_boot():
         return True
     else:
         return False
+
+
+def manage_firewall_port(port, action="open", proto="tcp"):
+    if action == "open":
+        opt = "-A"
+        logger.info("Opening port " + port)
+    elif action == "close":
+        opt = "-D"
+        logger.info("Closing port " + port)
+    os.system("iptables %s INPUT -p %s --dport %s -j ACCEPT" % (opt, proto, port))
+    os.system("iptables-save")
+    ovirt_store_config("/etc/sysconfig/iptables")
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
