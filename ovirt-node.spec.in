@@ -295,7 +295,6 @@ fi
 %{_libexecdir}/ovirt-config-networking
 %{_libexecdir}/ovirt-config-password
 %{_libexecdir}/ovirt-config-rhn
-%{_libexecdir}/ovirt-config-snmp
 %{_libexecdir}/ovirt-config-storage
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-config-view-logs

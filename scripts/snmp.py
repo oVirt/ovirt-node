@@ -11,7 +11,9 @@ def enable_snmpd(password):
     system("sed -c -ie '/^OPTIONS/d' /etc/sysconfig/snmpd")
     if os.path.exists(CONF):
         system("sed -c -ie '/^createUser root/d' %s" % CONF)
-    os.system("echo \"createUser root SHA %s AES\" >> %s" % (password,CONF))
+    f = open("/etc/sysconfig/snmpd", "a")
+    f.write("createUser root SHA %s AES" % password)
+    f.close()
     system("service snmpd start")
 
 def disable_snmpd():

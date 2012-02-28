@@ -35,6 +35,7 @@ from ovirtnode.log import *
 from ovirtnode.network import *
 from ovirtnode.kdump import *
 from ovirtnode.iscsi import *
+from ovirtnode.snmp import *
 
 OK_BUTTON = "OK"
 BACK_BUTTON = "Back"
@@ -51,14 +52,15 @@ LOG_OFF_BUTTON = "Log Off"
 login_password = ""
 
 STATUS_PAGE = 1
-NETWORK_PAGE = 3
-AUTHENTICATION_PAGE = 5
-LOGGING_PAGE = 7
-KDUMP_PAGE = 9
-LAST_OPTION = REMOTE_STORAGE_PAGE = 11
+NETWORK_PAGE = 2
+AUTHENTICATION_PAGE = 3
+SNMP_PAGE = 4
+LOGGING_PAGE = 5
+KDUMP_PAGE = 6
+LAST_OPTION = REMOTE_STORAGE_PAGE = 7
 # max. 3 plugin menu options/pages: 13,15,17
-FIRST_PLUGIN_PAGE = 13
-LAST_PLUGIN_PAGE = 17
+FIRST_PLUGIN_PAGE = 8
+LAST_PLUGIN_PAGE = 13
 #
 NETWORK_DETAILS_PAGE = 19
 SUPPORT_PAGE = 21
@@ -224,6 +226,8 @@ class NodeConfigScreen():
                 return self.network_configuration_page(screen)
             if page == AUTHENTICATION_PAGE :
                 return self.authentication_configuration_page(screen)
+            if page == SNMP_PAGE:
+                return self.snmp_configuration_page(screen)
             if page == LOGGING_PAGE :
                 return self.logging_configuration_page(screen)
             if page == KDUMP_PAGE :
@@ -241,7 +245,7 @@ class NodeConfigScreen():
             for p in self.plugins :
                 if page == plugin_page:
                     return p.form()
-                plugin_page+=2
+                plugin_page+=1
                 if plugin_page > LAST_PLUGIN_PAGE :
                     # should not happen
                     return None
@@ -1078,6 +1082,40 @@ class NodeConfigScreen():
               pass
           return [Label(""),
                   grid]
+
+      def snmp_configuration_page(self, screen):
+          elements = Grid(2, 9)
+          heading = Label("SNMP")
+          if is_console():
+              heading.setColors(customColorset(1))
+          elements.setField(heading, 0, 0, anchorLeft = 1)
+          pw_elements = Grid (3,3)
+          self.current_snmp_status = 0
+          if os.path.exists("/etc/sysconfig/snmpd"):
+              f = open("/etc/sysconfig/snmpd")
+              for line in f:
+                  if "createUser" in line:
+                      self.current_snmp_status = 1
+          self.snmp_status = Checkbox("Enable SNMP", isOn=self.current_snmp_status)
+          elements.setField(self.snmp_status, 0, 1, anchorLeft = 1)
+          local_heading = Label("SNMP Password")
+          if is_console():
+              local_heading.setColors(customColorset(1))
+          elements.setField(local_heading, 0, 3, anchorLeft = 1, padding = (0,2,0,0))
+          elements.setField(Label(" "), 0, 6)
+          pw_elements.setField(Label("Password: "), 0, 1, anchorLeft = 1)
+          pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft = 1)
+          self.root_password_1 = Entry(15,password = 1)
+          self.root_password_1.setCallback(self.password_check_callback)
+          self.root_password_2 = Entry(15,password = 1)
+          self.root_password_2.setCallback(self.password_check_callback)
+          pw_elements.setField(self.root_password_1, 1,1)
+          pw_elements.setField(self.root_password_2, 1,2)
+          self.pw_msg = Textbox(60, 6, "", wrap=1)
+          elements.setField(pw_elements, 0, 7, anchorLeft=1)
+          elements.setField(self.pw_msg, 0, 8, padding = (0,1,0,0))
+          return [Label(""), elements]
+
       def kdump_configuration_page(self, screen):
           elements = Grid(2, 12)
           heading = Label("Kernel Dump")
@@ -1169,15 +1207,6 @@ class NodeConfigScreen():
           return [Label(""), elements]
 
       def menuSpacing(self):
-          menu_option = self.menu_list.current()
-          if menu_option > self.last_option:
-              self.menu_list.setCurrent(self.last_option)
-          elif menu_option % 2 == 0:
-              if self.menuo < menu_option:
-                  self.menu_list.setCurrent(menu_option+1)
-              else:
-                  self.menu_list.setCurrent(menu_option-1)
-          self.menuo = self.menu_list.current()
           if not self.__current_page == NETWORK_DETAILS_PAGE: # pages that dont use main listbox
               if self.menu_list.current() != self.__current_page:
                   self.__current_page = self.menu_list.current()
@@ -1442,6 +1471,8 @@ class NodeConfigScreen():
               ret = self.process_logging_config()
           if self.__current_page == NETWORK_DETAILS_PAGE:
               ret = self.process_nic_config()
+          if self.__current_page == SNMP_PAGE:
+              ret = self.process_snmp_config()
           if self.__current_page == KDUMP_PAGE:
               ret = self.process_kdump_config()
           if self.__current_page == REMOTE_STORAGE_PAGE:
@@ -1459,6 +1490,12 @@ class NodeConfigScreen():
                   # should not happen
                   break
           return
+
+      def process_snmp_config(self):
+          if self.snmp_status.value() == 1:
+              enable_snmpd(self.root_password_1.value())
+          elif self.snmp_status.value() == 0:
+              disable_snmpd()
 
       def process_kdump_config(self):
           if self.kdump_nfs_type.value() == 1:
@@ -1492,7 +1529,7 @@ class NodeConfigScreen():
             for imp,mod,ispkg in pkgutil.iter_modules(ovirt_config_setup.__path__, "ovirt_config_setup."):
                 module = __import__(mod, fromlist="dummy")
                 self.plugins.append(module.get_plugin(self))
-                self.last_option+=2
+                self.last_option+=1
 
             active = True
             # check for screenlock status
@@ -1510,29 +1547,23 @@ class NodeConfigScreen():
                 else:
                     screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
-                gridform = GridForm(screen, "", 2, 1) # 5,2
+                gridform = GridForm(screen, "", 2, 1)
                 self._set_title()
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
-                self.menu_list = Listbox(16, width = 20, returnExit = 0, border = 0, showCursor = 0)
+                self.menu_list = Listbox(18, width = 20, returnExit = 0, border = 0, showCursor = 0)
                 self.menu_list.append(" Status", 1)
-                self.menu_list.append("", 2)
-                self.menu_list.append(" Network", 3)
-                self.menu_list.append("", 4)
-                self.menu_list.append(" Security", 5)
-                self.menu_list.append("", 6)
-                self.menu_list.append(" Logging", 7)
-                self.menu_list.append("", 8)
-                self.menu_list.append(" Kernel Dump", 9)
-                self.menu_list.append("", 10)
-                self.menu_list.append(" Remote Storage", 11)
-                self.menu_list.append("", 12)
+                self.menu_list.append(" Network", 2)
+                self.menu_list.append(" Security", 3)
+                self.menu_list.append(" SNMP", 4)
+                self.menu_list.append(" Logging", 5)
+                self.menu_list.append(" Kernel Dump", 6)
+                self.menu_list.append(" Remote Storage", 7)
                 # plugin menu options
                 plugin_page=FIRST_PLUGIN_PAGE
                 for p in self.plugins :
                     self.menu_list.append(" " + p.label(), plugin_page)
-                    self.menu_list.append("", plugin_page+1)
-                    plugin_page+=2
+                    plugin_page+=1
                     if plugin_page > LAST_PLUGIN_PAGE :
                         # should not happen
                         raise "Too many plugins installed: max. %d are allowed." % ((LAST_PLUGIN_PAGE-FIRST_PLUGIN_PAGE)/2+1)
@@ -1543,7 +1574,7 @@ class NodeConfigScreen():
                 if not self.screen_locked:
                     if not self.__current_page == NETWORK_DETAILS_PAGE and not self.__current_page == SUPPORT_PAGE:
                         self.menu_list.setCallback(self.menuSpacing)
-                        gridform.add(self.menu_list, 0, 0, # was 1,0
+                        gridform.add(self.menu_list, 0, 0,
                                      anchorTop = 1, anchorLeft = 1,
                                      growx = 0)
                 current_element = 0
