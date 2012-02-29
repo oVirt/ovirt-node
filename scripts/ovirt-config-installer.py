@@ -42,6 +42,7 @@ CONTINUE_BUTTON = "Continue"
 SHELL_BUTTON = "Drop To Shell"
 
 WELCOME_PAGE = 1
+KEYBOARD_PAGE = 2
 ROOT_STORAGE_PAGE = 3
 OTHER_DEVICE_ROOT_PAGE = 4
 HOSTVG_STORAGE_PAGE = 5
@@ -307,8 +308,10 @@ class NodeInstallScreen:
                 self.menuo = 1
 
     def get_back_page(self):
-        if self.__current_page == ROOT_STORAGE_PAGE:
+        if self.__current_page == KEYBOARD_PAGE:
             self.__current_page = WELCOME_PAGE
+        elif self.__current_page == ROOT_STORAGE_PAGE:
+            self.__current_page = KEYBOARD_PAGE
         elif self.__current_page == OTHER_DEVICE_ROOT_PAGE:
             self.__current_page = ROOT_STORAGE_PAGE
         elif self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
@@ -381,6 +384,42 @@ class NodeInstallScreen:
         self.log_menu_list.append(" /var/log/messages", "/var/log/messages")
         elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,12))
         return [Label(""), elements]
+
+    def keyboard_page(self):
+        # placeholder for system-config-keyboard-base, will remove move later
+        try:
+            import system_config_keyboard.keyboard as keyboard
+        except:
+            return [Label(""), elements]
+
+        elements = Grid(2, 9)
+        heading = Label("Keyboard Layout Selection")
+        if is_console():
+            heading.setColors(customColorset(1))
+        self.kbd = keyboard.Keyboard()
+        self.kbd.read()
+        self.kbdDict = self.kbd.modelDict
+        self.kbdKeys = self.kbdDict.keys()
+        self.kbdKeys.sort()
+        self.kb_list = Listbox(10, scroll = 1, returnExit = 1)
+        default = ""
+        for kbd in self.kbdKeys:
+            if kbd == self.kbd.get():
+                default = kbd
+            plainName = self.kbdDict[kbd][0]
+            self.kb_list.append(plainName, kbd)
+        try:
+            self.kb_list.setCurrent(default)
+        except:
+            pass
+        elements.setField(heading, 0, 0, anchorLeft = 1)
+        elements.setField(self.kb_list, 0, 1, anchorLeft = 1, padding=(1,1,0,3))
+        return [Label(""), elements]
+
+    def process_keyboard_config(self):
+       self.kbd.set(self.kb_list.current())
+       self.kbd.write()
+       self.kbd.activate()
 
     def disk_details_callback(self):
         if self.__current_page == ROOT_STORAGE_PAGE:
@@ -590,6 +629,8 @@ class NodeInstallScreen:
     def get_elements_for_page(self, screen, page):
         if page == WELCOME_PAGE:
             return self.install_page()
+        if page == KEYBOARD_PAGE:
+            return self.keyboard_page()
         if page == ROOT_STORAGE_PAGE:
             return self.root_disk_page()
         if page == OTHER_DEVICE_ROOT_PAGE:
@@ -752,6 +793,9 @@ class NodeInstallScreen:
                     self.get_back_page()
                 elif not result == "F2":
                     if self.__current_page == WELCOME_PAGE:
+                        self.__current_page = KEYBOARD_PAGE
+                    elif self.__current_page == KEYBOARD_PAGE:
+                        self.process_keyboard_config()
                         if menu_choice == 1:
                             self.__current_page = ROOT_STORAGE_PAGE
                         elif menu_choice == 3:

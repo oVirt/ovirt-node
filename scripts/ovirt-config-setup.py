@@ -54,12 +54,13 @@ login_password = ""
 STATUS_PAGE = 1
 NETWORK_PAGE = 2
 AUTHENTICATION_PAGE = 3
-SNMP_PAGE = 4
-LOGGING_PAGE = 5
-KDUMP_PAGE = 6
-LAST_OPTION = REMOTE_STORAGE_PAGE = 7
+KEYBOARD_PAGE = 4
+SNMP_PAGE = 5
+LOGGING_PAGE = 6
+KDUMP_PAGE = 7
+LAST_OPTION = REMOTE_STORAGE_PAGE = 8
 # max. 3 plugin menu options/pages: 13,15,17
-FIRST_PLUGIN_PAGE = 8
+FIRST_PLUGIN_PAGE = 9
 LAST_PLUGIN_PAGE = 13
 #
 NETWORK_DETAILS_PAGE = 19
@@ -226,6 +227,8 @@ class NodeConfigScreen():
                 return self.network_configuration_page(screen)
             if page == AUTHENTICATION_PAGE :
                 return self.authentication_configuration_page(screen)
+            if page == KEYBOARD_PAGE:
+                return self.keyboard_configuration_page(screen)
             if page == SNMP_PAGE:
                 return self.snmp_configuration_page(screen)
             if page == LOGGING_PAGE :
@@ -1116,6 +1119,38 @@ class NodeConfigScreen():
           elements.setField(self.pw_msg, 0, 8, padding = (0,1,0,0))
           return [Label(""), elements]
 
+
+      def keyboard_configuration_page(self, screen):
+          # placeholder for system-config-keyboard-base, will remove move later
+          try:
+              import system_config_keyboard.keyboard as keyboard
+          except:
+              return [Label(""), elements]
+
+          elements = Grid(2, 9)
+          heading = Label("Keyboard Layout Selection")
+          if is_console():
+              heading.setColors(customColorset(1))
+          self.kbd = keyboard.Keyboard()
+          self.kbd.read()
+          self.kbdDict = self.kbd.modelDict
+          self.kbdKeys = self.kbdDict.keys()
+          self.kbdKeys.sort()
+          self.kb_list = Listbox(10, scroll = 1, returnExit = 0)
+          default = ""
+          for kbd in self.kbdKeys:
+              if kbd == self.kbd.get():
+                  default = kbd
+              plainName = self.kbdDict[kbd][0]
+              self.kb_list.append(plainName, kbd)
+          try:
+              self.kb_list.setCurrent(default)
+          except:
+              pass
+          elements.setField(heading, 0, 0, anchorLeft = 1)
+          elements.setField(self.kb_list, 0, 1, anchorLeft = 1, padding=(1,1,0,3))
+          return [Label(""), elements]
+
       def kdump_configuration_page(self, screen):
           elements = Grid(2, 12)
           heading = Label("Kernel Dump")
@@ -1437,6 +1472,11 @@ class NodeConfigScreen():
           set_logrotate_size(self.logrotate_max_size.value())
           return True
 
+      def process_keyboard_config(self):
+          self.kbd.set(self.kb_list.current())
+          self.kbd.write()
+          self.kbd.activate()
+
       def process_locked_screen(self):
           auth = PAM.pam()
           auth.start("passwd")
@@ -1471,6 +1511,8 @@ class NodeConfigScreen():
               ret = self.process_logging_config()
           if self.__current_page == NETWORK_DETAILS_PAGE:
               ret = self.process_nic_config()
+          if self.__current_page == KEYBOARD_PAGE:
+              ret = self.process_keyboard_config()
           if self.__current_page == SNMP_PAGE:
               ret = self.process_snmp_config()
           if self.__current_page == KDUMP_PAGE:
@@ -1555,10 +1597,11 @@ class NodeConfigScreen():
                 self.menu_list.append(" Status", 1)
                 self.menu_list.append(" Network", 2)
                 self.menu_list.append(" Security", 3)
-                self.menu_list.append(" SNMP", 4)
-                self.menu_list.append(" Logging", 5)
-                self.menu_list.append(" Kernel Dump", 6)
-                self.menu_list.append(" Remote Storage", 7)
+                self.menu_list.append(" Keyboard",4)
+                self.menu_list.append(" SNMP", 5)
+                self.menu_list.append(" Logging", 6)
+                self.menu_list.append(" Kernel Dump", 7)
+                self.menu_list.append(" Remote Storage", 8)
                 # plugin menu options
                 plugin_page=FIRST_PLUGIN_PAGE
                 for p in self.plugins :

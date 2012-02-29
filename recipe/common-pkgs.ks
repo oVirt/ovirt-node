@@ -113,3 +113,5 @@ efibootmgr
 # libvirt-cim
 sblim-sfcb
 libvirt-cim
+# keyboard layout
+system-config-keyboard-base
