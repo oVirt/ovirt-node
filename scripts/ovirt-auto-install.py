@@ -56,10 +56,11 @@ if not is_stateless():
 config_networking()
 #set ssh_passwd_auth
 if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
-    if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == 1:
+    if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "yes":
         augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
-    elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == 0:
+    elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "no":
         augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
+    os.system("service sshd start &> /dev/null")
 
 # iscsi handled in install.py
 print "Configuring Logging"
