@@ -1,4 +1,5 @@
 audit
+dmraid
 bc
 cracklib-python
 ethtool
@@ -53,7 +54,6 @@ setools-console
 -libselinux-python
 -kbd
 -usermode
--dmraid
 -gzip
 -less
 -which

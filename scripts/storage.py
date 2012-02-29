@@ -507,6 +507,13 @@ class Storage:
             logger.error("No storage device selected.")
             return False
 
+        if has_fakeraid(self.HOSTVGDRIVE):
+            if not handle_fakeraid(self.HOSTVGDRIVE):
+                return False
+        if has_fakeraid(self.ROOTDRIVE):
+            if not handle_fakeraid(self.ROOTDRIVE):
+                return False
+
         logger.info("Saving parameters")
         unmount_config("/etc/default/ovirt")
 
@@ -641,6 +648,25 @@ class Storage:
                 sys.exit(1)
             else:
                 logger.info("Required Space : " + str(drive_need_size) + "MB")
+
+def wipe_fakeraid(device):
+    dmraid_cmd = "echo y | dmraid -rE $(readlink -f \"%s\")" % device
+    dmraid=subprocess.Popen(dmraid_cmd, stdout=PIPE, stderr=STDOUT, shell=True)
+    dmraid.communicate()
+    dmraid.poll()
+    if dmraid.returncode == 0:
+        return True
+    else:
+        return False
+
+def handle_fakeraid(device):
+    if is_wipe_fakeraid():
+        return wipe_fakeraid(device)
+    #don't wipe fakeraid
+    logger.error("Fakeraid metadata detected on %s, Aborting install." % device)
+    logger.error("If you want auto-install to wipe the fakeraid metadata automatically,")
+    logger.error("then boot with the wipe-fakeraid option on the kernel commandline.")
+    return False
 
 def storage_auto():
     storage = Storage()

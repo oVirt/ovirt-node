@@ -59,6 +59,21 @@ def pam_conv(auth, query_list):
         resp.append((current_password, 0))
     return resp
 
+def tui_check_fakeraid(device, screen):
+    if not is_wipe_fakeraid():
+        if has_fakeraid(device):
+            msg = "The device(s) you have selected contains fakeraid metadata.  Installation cannot proceed with this metadata on the disk.  Is it OK to remove the metadata?"
+            warn = ButtonChoiceWindow(screen, "Fakeraid Metadata Detected", msg, buttons = ['Ok', 'Cancel'])
+            if warn == "ok":
+                set_wipe_fakeraid(1)
+                return True
+            else:
+                return False
+        else:
+            return True
+    else:
+        return True
+
 class NodeInstallScreen:
     def __init__(self, colorset = None):
         self.__current_page = 1
@@ -749,6 +764,8 @@ class NodeInstallScreen:
                                 ButtonChoiceWindow(self.screen, "Root Storage Selection", "You must enter a valid device", buttons = ['Ok'])
                                 self.__current_page = ROOT_STORAGE_PAGE
                             else:
+                                if not tui_check_fakeraid(self.storage_init, self.screen):
+                                    continue
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + '"')
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_ROOT_INSTALL", '"y"')
                                 self.__current_page =  HOSTVG_STORAGE_PAGE
@@ -759,6 +776,8 @@ class NodeInstallScreen:
                         else:
                             if self.failed_block_dev == 0:
                                 self.storage_init = translate_multipath_device(self.root_device.value())
+                                if not tui_check_fakeraid(self.storage_init, self.screen):
+                                    continue
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + '"')
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_ROOT_INSTALL", '"y"')
                                 self.__current_page = HOSTVG_STORAGE_PAGE
@@ -775,6 +794,8 @@ class NodeInstallScreen:
                             else:
                                 hostvg_list = ""
                                 for dev in self.hostvg_init:
+                                    if not tui_check_fakeraid(dev, self.screen):
+                                        continue
                                     hostvg_list += dev + ","
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                                 self.__current_page = PASSWORD_PAGE
@@ -794,6 +815,8 @@ class NodeInstallScreen:
                             self.hostvg_init = translate_multipath_device(self.hostvg_device.value())
                             hostvg_list = ""
                             for dev in self.hostvg_init.split(","):
+                                if not tui_check_fakeraid(dev, self.screen):
+                                    continue
                                 hostvg_list += dev + ","
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                             self.__current_page = PASSWORD_PAGE

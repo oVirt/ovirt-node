@@ -241,6 +241,11 @@ start_ovirt_early () {
     # in auto-install mode, overwrite the disk chosen by storage_init parameter
     firstboot=
 
+    # wipe_fakeraid
+    # force the wiping of fakeraid metadata when auto-installing
+    # otherwise, the auto-install will fail
+    wipe_fakeraid=
+
     #   ovirt_runtime_mode
     # overrides the runtime mode defined in /etc/sysconfig/node-config
     runtime_mode=
@@ -514,6 +519,12 @@ start_ovirt_early () {
             firstboot* | ovirt_firstboot* | reinstall)
             firstboot=1
             ;;
+            wipe_fakeraid=no | wipe_fakeraid=0 )
+            wipe_fakeraid=0
+            ;;
+            wipe_fakeraid*)
+            wipe_fakeraid=1
+            ;;
             stateless=no | stateless=0 | ovirt_stateless=no | ovirt_stateless=0)
             stateless=0
             ;;
@@ -720,7 +731,7 @@ start_ovirt_early () {
 
     # save boot parameters as defaults for ovirt-config-*
 
-    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled"
+    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config

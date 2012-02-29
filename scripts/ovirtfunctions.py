@@ -1191,6 +1191,31 @@ def logical_to_physical_networks():
             networks[dev_bridge] = (dev_interface,dev_address)
     return networks
 
+def has_fakeraid(device):
+    fakeraid_cmd = "dmraid -r $(readlink -f \"" + device + "\")"
+    fakeraid = subprocess.Popen(fakeraid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    fakeraid.communicate()
+    fakeraid.poll()
+    if fakeraid.returncode == 0:
+        return True
+    else:
+        return False
+
+def is_wipe_fakeraid():
+    OVIRT_VARS = parse_defaults()
+    # check if theres a key first
+    if "OVIRT_WIPE_FAKERAID" in OVIRT_VARS:
+        if OVIRT_VARS["OVIRT_WIPE_FAKERAID"] == "1":
+            return True
+        elif OVIRT_VARS["OVIRT_WIPE_FAKERAID"] == "0":
+            return False
+    return False
+
+def set_wipe_fakeraid(value):
+    augtool("set","/files/etc/default/ovirt/OVIRT_WIPE_FAKERAID",str(value))
+    OVIRT_VARS = parse_defaults()
+
+
 def pad_or_trim(length, string):
     to_rem = len(string) - length
     # if negative pad name space
