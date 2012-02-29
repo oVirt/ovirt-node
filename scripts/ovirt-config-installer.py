@@ -339,6 +339,9 @@ class NodeInstallScreen:
         hwvirt_msg =  get_virt_hw_status()
         self.hwvirt = Textbox(50, 2, hwvirt_msg, wrap = 1)
         elements.setField(self.hwvirt, 1, 2, anchorLeft = 1, padding=(0,0,0,0))
+        if is_efi_boot():
+            efi_text="INFO: Machine is booted in EFI mode"
+            elements.setField(Label(efi_text), 1, 3, anchorLeft = 1, padding=(0,1,0,0))
         return [Label(""), elements]
 
     def finish_install_page(self):
