@@ -255,7 +255,7 @@ echo "%{product_family} release %{product_release}" > /etc/system-release
 %if 0%{?rhel}
 if [ $1 = 0 ] ; then
     /sbin/service ovirt-early stop >/dev/null 2>&1
-    /sbin/service ovirt-firstboor stop >/dev/null 2>&1
+    /sbin/service ovirt-firstboot stop >/dev/null 2>&1
     /sbin/service ovirt stop >/dev/null 2>&1
     /sbin/service ovirt-post stop >/dev/null 2>&1
     /sbin/service ovirt-cim stop >/dev/null 2>&1
@@ -270,7 +270,7 @@ fi
 if [ $1 -eq 0 ] ; then
     # Package removal, not upgrade
     /sbin/service ovirt-early stop >/dev/null 2>&1
-    /sbin/service ovirt-firstboor stop >/dev/null 2>&1
+    /sbin/service ovirt-firstboot stop >/dev/null 2>&1
 
     /bin/systemctl --no-reload disable ovirt.service > /dev/null 2>&1 || :
     /bin/systemctl stop ovirt.service > /dev/null 2>&1 || :
