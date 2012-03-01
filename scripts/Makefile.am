@@ -18,6 +18,7 @@
 EXTRA_DIST = \
   node-config \
   ovirt-awake.init \
+  ovirt-awake.service \
   ovirt-early \
   ovirt.init \
   ovirt.service \

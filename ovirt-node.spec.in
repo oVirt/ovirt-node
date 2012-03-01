@@ -113,6 +113,7 @@ make install DESTDIR=%{buildroot}
 
 %{__install} -p -m0755 scripts/ovirt-awake.sh %{buildroot}%{_libexecdir}/ovirt-awake.sh
 %{__install} -p -m0755 scripts/ovirt-awake.init %{buildroot}%{_initrddir}/ovirt-awake
+%{__install} -p -m0755 scripts/ovirt-awake.service %{buildroot}%{_unitdir}/ovirt-awake.service
 
 %{__install} -p -m0755 scripts/ovirt-early %{buildroot}%{_initrddir}
 
@@ -221,7 +222,6 @@ if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 
-    /sbin/chkconfig --add ovirt-awake
     /sbin/chkconfig --add ovirt-early
     /sbin/chkconfig --add ovirt-firstboot
     /sbin/chkconfig --add ovirt-post
@@ -277,7 +277,6 @@ if [ $1 -eq 0 ] ; then
 
     /sbin/service ovirt-post stop >/dev/null 2>&1
 
-    /sbin/chkconfig --del ovirt-awake
     /sbin/chkconfig --del ovirt-early
     /sbin/chkconfig --del ovirt-firstboot
     /sbin/chkconfig --del ovirt-post
@@ -364,6 +363,7 @@ fi
 %{_sysconfdir}/ovirt-early.d
 %{_sysconfdir}/ovirt-commandline.d
 %{_unitdir}/ovirt.service
+%{_unitdir}/ovirt-awake.service
 
 %changelog
 * Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1
