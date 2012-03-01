@@ -30,10 +30,6 @@ prog=ovirt-firstboot
 
 case "$1" in
     start)
-        if is_managed; then
-            exit 0
-        fi
-
         printf "Starting ovirt-firstboot: "
 
         start_ovirt_firstboot
@@ -48,7 +44,9 @@ case "$1" in
         reload_ovirt_firstboot
         ;;
     stop)
+        echo -n "Stopping ovirt-firstboot: "
         stop_ovirt_firstboot
+        success
         ;;
     *)
         echo "Usage: ovirt-firstboot {start}"

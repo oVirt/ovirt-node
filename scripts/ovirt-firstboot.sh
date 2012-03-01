@@ -45,6 +45,9 @@ check_version(){
 
 start_ovirt_firstboot ()
 {
+    if is_managed; then
+        exit 0
+    fi
 
     if ! is_firstboot && ! is_auto_install && ! is_upgrade && ! is_install && ! is_stateless; then
         return
@@ -117,8 +120,7 @@ start_ovirt_firstboot ()
 }
 
 stop_ovirt_firstboot () {
-    echo -n "Stopping ovirt-firstboot: "
-    success
+    return 0
 }
 
 reload_ovirt_firstboot () {
