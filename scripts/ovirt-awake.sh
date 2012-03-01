@@ -20,20 +20,10 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 #
-### BEGIN INIT INFO
-# Provides: ovirt-awake
-# Required-Start: ovirt-early
-# Default-Start: 2 3 4 5
-# Description: Managed node service to alert management servers.
-### END INIT INFO
-
-# Source functions library
-# config: /etc/sysconfig/node-config
 
 . /etc/init.d/functions
 . /usr/libexec/ovirt-functions
 
-prog=ovirt-awake
 NODE_CONFIG=/etc/sysconfig/node-config
 VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 
@@ -106,29 +96,34 @@ ovirt_startup () {
 start_ovirt_awake () {
     local RC=0
 
-    touch $VAR_SUBSYS_NODECONFIG
-    # log "Starting ovirt-awake."
-    case "$OVIRT_RUNTIME_MODE" in
-        "none")
-            log "Node is operating in unmanaged mode."
-            ;;
-        "ovirt")
-            log "Node is operating in ovirt mode."
-            ovirt_startup
-            RC=$?
-            ;;
-        "managed")
-            if [ -x /config/$MANAGEMENT_SCRIPTS_DIR/awake ]; then
-                log "Executing /config/$MANAGEMENT_SCRIPTS_DIR/awake"
-                /config/$MANAGEMENT_SCRIPTS_DIR/awake
-            else
-                echo "No script found to notify management server during awake state."
-            fi
-            ;;
-    esac
+    [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
+    {
+        touch $VAR_SUBSYS_NODECONFIG
+        # log "Starting ovirt-awake."
+        case "$OVIRT_RUNTIME_MODE" in
+            "none")
+                log "Node is operating in unmanaged mode."
+                ;;
+            "ovirt")
+                log "Node is operating in ovirt mode."
+                ovirt_startup
+                RC=$?
+                ;;
+            "managed")
+                if [ -x /config/$MANAGEMENT_SCRIPTS_DIR/awake ]; then
+                    log "Executing /config/$MANAGEMENT_SCRIPTS_DIR/awake"
+                    /config/$MANAGEMENT_SCRIPTS_DIR/awake
+                else
+                    echo "No script found to notify management server during awake state."
+                fi
+                ;;
+        esac
 
-    # log "Completed ovirt-awake: RC=${RC}"
-    rm -f $VAR_SUBSYS_NODECONFIG
+        rm -f $VAR_SUBSYS_NODECONFIG
+    
+        log "Completed ovirt-awake: RETVAL=$RC"
+    } >> $OVIRT_LOGFILE 2>&1
+    
     return $RC
 }
 
@@ -142,30 +137,6 @@ reload_ovirt_awake () {
     start_ovirt_awake
 }
 
-case "$1" in
-    start)
-        echo -n "Starting ovirt-awake: "
-        [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
-        {
-            start_ovirt_awake
-            RETVAL=$?
-            log "Completed ovirt-awake: RETVAL=$?"
-        } >> $OVIRT_LOGFILE 2>&1
-        test $RETVAL == 0 && success || failure
-        ;;
+# When called with a parameter:
+$@
 
-    stop)
-        stop_ovirt_awake
-        ;;
-
-    reload)
-        reload_ovirt_awake
-        ;;
-
-    *)
-        echo "Usage: $0 start"
-        RETVAL=2
-        ;;
-esac
-
-exit $RETVAL

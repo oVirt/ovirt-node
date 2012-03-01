@@ -17,7 +17,7 @@
 
 EXTRA_DIST = \
   node-config \
-  ovirt-awake \
+  ovirt-awake.init \
   ovirt-early \
   ovirt.init \
   ovirt.service \
@@ -64,4 +64,5 @@ dist_libexec_SCRIPTS = \
   ovirt-boot-functions \
   ovirt-process-config \
   ovirt-rpmquery \
-  ovirt.sh
+  ovirt.sh \
+  ovirt-awake.sh
