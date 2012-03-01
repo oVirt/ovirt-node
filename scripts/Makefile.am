@@ -23,9 +23,9 @@ EXTRA_DIST = \
   ovirt.init \
   ovirt.service \
   ovirt-post \
+  ovirt-firstboot.init \
   ovirt-cim \
   cim.py \
-  ovirt-firstboot \
   local_boot_trigger.sh \
   augeas.py \
   __init__.py \
@@ -66,4 +66,5 @@ dist_libexec_SCRIPTS = \
   ovirt-process-config \
   ovirt-rpmquery \
   ovirt.sh \
-  ovirt-awake.sh
+  ovirt-awake.sh \
+  ovirt-firstboot.sh

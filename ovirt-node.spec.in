@@ -122,8 +122,12 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 scripts/ovirt.service %{buildroot}%{_unitdir}/ovirt.service
 
 %{__install} -p -m0755 scripts/ovirt-post %{buildroot}%{_initrddir}
+
+%{__install} -p -m0755 scripts/ovirt-firstboot.sh %{buildroot}%{_libexecdir}/ovirt-firstboot.sh
+%{__install} -p -m0755 scripts/ovirt-firstboot.init %{buildroot}%{_initrddir}/ovirt-firstboot
+
 %{__install} -p -m0755 scripts/ovirt-cim %{buildroot}%{_initrddir}
-%{__install} -p -m0755 scripts/ovirt-firstboot %{buildroot}%{_initrddir}
+
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
@@ -348,6 +352,7 @@ fi
 %{_libexecdir}/ovirt-admin-shell
 %{_libexecdir}/ovirt.sh
 %{_libexecdir}/ovirt-awake.sh
+%{_libexecdir}/ovirt-firstboot.sh
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{python_sitelib}/ovirt_config_setup

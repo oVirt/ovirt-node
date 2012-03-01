@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# ovirt-firstboot Puts the node into configuration mode.
+#
+# chkconfig: 2345 99 01
+# description: ovirt-firstboot node configuration script
+#
+# Copyright (C) 2008 Red Hat, Inc.
+# Written by Darryl L. Pierce <dpierce@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.  A copy of the GNU General Public License is
+# also available at http://www.gnu.org/copyleft/gpl.html.
+
+## Source functions library
+. /usr/libexec/ovirt-firstboot.sh
+
+prog=ovirt-firstboot
+
+case "$1" in
+    start)
+        if is_managed; then
+            exit 0
+        fi
+
+        printf "Starting ovirt-firstboot: "
+
+        start_ovirt_firstboot
+
+        test $? == 0 && success || failure
+        echo
+        ;;
+    status)
+        status $prog
+        ;;
+    reload)
+        reload_ovirt_firstboot
+        ;;
+    stop)
+        stop_ovirt_firstboot
+        ;;
+    *)
+        echo "Usage: ovirt-firstboot {start}"
+        exit 2
+esac

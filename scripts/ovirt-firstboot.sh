@@ -27,8 +27,7 @@
 . /etc/init.d/functions
 . /usr/libexec/ovirt-functions
 
-prog=ovirt-firstboot
-VAR_SUBSYS_OVIRT_FIRSTBOOT=/var/lock/subsys/$prog
+VAR_SUBSYS_OVIRT_FIRSTBOOT=/var/lock/subsys/ovirt-firstboot
 
 trap '__st=$?; stop_log; exit $__st' 0
 trap 'exit $?' 1 2 13 15
@@ -127,29 +126,5 @@ reload_ovirt_firstboot () {
     start_ovirt_firstboot
 }
 
-case "$1" in
-    start)
-        if is_managed; then
-            exit 0
-        fi
+$@
 
-        printf "Starting ovirt-firstboot: "
-
-        start_ovirt_firstboot
-
-        test $? == 0 && success || failure
-        echo
-        ;;
-    status)
-        status $prog
-        ;;
-    reload)
-        reload_ovirt_firstboot
-        ;;
-    stop)
-        stop_ovirt_firstboot
-        ;;
-    *)
-        echo "Usage: ovirt-firstboot {start}"
-        exit 2
-esac
