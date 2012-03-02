@@ -2,13 +2,6 @@
 #
 # ovirt-early Start early ovirt services
 #
-# chkconfig: 23 01 99
-#
-### BEGIN INIT INFO
-# Provides: ovirt-early
-# Default-Start: 2 3 4 5
-# Dewscription: Managed node early configuration service
-### END INIT INFO
 
 # Source functions library
 . /etc/init.d/functions
@@ -849,32 +842,4 @@ reload_ovirt_early () {
     start_ovirt_early
 }
 
-case "$1" in
-    start)
-        [ -f "$VAR_SUBSYS_NODE_CONFIG" ] && exit 0
-        echo -n "Starting ovirt-early: "
-        {
-            log "Starting ovirt-early"
-            start_ovirt_early
-            # TEMP fix broken libvirtd.conf
-            sed -c -i '/^log_filters=/d' /etc/libvirt/libvirtd.conf
-            log "Completed ovirt-early"
-            RETVAL=$?
-        } >> $OVIRT_LOGFILE 2>&1
-        test $RETVAL == 0 && success || failure
-        ;;
-    status)
-        status $prog
-        ;;
-    reload)
-        reload_ovirt_early
-        ;;
-    stop)
-        stop_ovirt_early
-        ;;
-    *)
-        echo "Usage: ovirt-early {start}"
-        RETVAL=2
-esac
-
-exit $RETVAL
+$@
