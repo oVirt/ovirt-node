@@ -1,0 +1,12 @@
+[Unit]
+Description=Performs managed node post configuration setup.
+After=ovirt.service
+After=libvirtd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/ovirt-post.sh start_ovirt_post
+ExecStop=/usr/libexec/ovirt-post.sh stop_ovirt_post
+
+[Install]
+WantedBy=multi-user.target

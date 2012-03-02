@@ -23,6 +23,7 @@ EXTRA_DIST = \
   ovirt.init \
   ovirt.service \
   ovirt-post.init \
+  ovirt-post.service \
   ovirt-firstboot.init \
   ovirt-firstboot.service \
   ovirt-cim \
