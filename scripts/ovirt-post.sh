@@ -11,80 +11,86 @@ prog=ovirt-post
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/$prog
 
 start_ovirt_post() {
-    # wait for libvirt to finish initializing
-    local count=0
-    while true; do
-        if virsh connect qemu:///system --readonly >/dev/null 2>&1; then
-            break
-        elif [ "$count" == "100" ]; then
-            log "Libvirt did not initialize in time..."
-            return 1
+    [ -f "$VAR_SUBSYS_OVIRT_POST" ] && exit 0
+    {
+        log "Starting ovirt-post"
+        # wait for libvirt to finish initializing
+        local count=0
+        while true; do
+            if virsh connect qemu:///system --readonly >/dev/null 2>&1; then
+                break
+            elif [ "$count" == "100" ]; then
+                log "Libvirt did not initialize in time..."
+                return 1
+            else
+                log "Waiting for libvirt to finish initializing..."
+                count=$(expr $count + 1)
+                sleep 1
+            fi
+
+            touch $VAR_SUBSYS_OVIRT_POST
+
+        done
+        BACKUP=$(mktemp)
+        ISSUE=/etc/issue
+        ISSUE_NET=/etc/issue.net
+        egrep -v "[Vv]irtualization hardware" $ISSUE > $BACKUP
+        cp -f $BACKUP $ISSUE
+        rm $BACKUP
+        hwvirt=$(virsh --readonly capabilities)
+        if [[ $hwvirt =~ kvm ]]; then
+            log "Hardware virtualization detected"
         else
-            log "Waiting for libvirt to finish initializing..."
-            count=$(expr $count + 1)
-            sleep 1
+            log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            log "!!! Hardware Virtualization Is Unavailable !!!"
+            log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+            echo "Virtualization hardware is unavailable." >> $ISSUE
+
+            flags=$(cat /proc/cpuinfo | grep "^flags")
+            if [[ $flags =~ vmx ]] || [[ $flags =~ svm ]]; then
+                echo "(Virtualization hardware was detected but is disabled)" >> $ISSUE
+            else
+                echo "(No virtualization hardware was detected on this system)" >> $ISSUE
+            fi
+        fi
+        if is_local_storage_configured; then
+            echo "" >> $ISSUE
+            echo "Please login as 'admin' to configure the node" >> $ISSUE
+        fi
+        cp -f $ISSUE $ISSUE_NET
+
+        if is_standalone; then
+            return 0
         fi
 
-        touch $VAR_SUBSYS_OVIRT_POST
+        # persist selected configuration files
+        ovirt_store_config \
+            /etc/krb5.conf \
+            /etc/node.d \
+            /etc/sysconfig/node-config
+            /etc/libvirt/krb5.tab \
+            /etc/ssh/ssh_host*_key*
 
-    done
-    BACKUP=$(mktemp)
-    ISSUE=/etc/issue
-    ISSUE_NET=/etc/issue.net
-    egrep -v "[Vv]irtualization hardware" $ISSUE > $BACKUP
-    cp -f $BACKUP $ISSUE
-    rm $BACKUP
-    hwvirt=$(virsh --readonly capabilities)
-    if [[ $hwvirt =~ kvm ]]; then
-        log "Hardware virtualization detected"
-    else
-        log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        log "!!! Hardware Virtualization Is Unavailable !!!"
-        log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        . /usr/libexec/ovirt-functions
 
-        echo "Virtualization hardware is unavailable." >> $ISSUE
-
-        flags=$(cat /proc/cpuinfo | grep "^flags")
-        if [[ $flags =~ vmx ]] || [[ $flags =~ svm ]]; then
-            echo "(Virtualization hardware was detected but is disabled)" >> $ISSUE
-        else
-            echo "(No virtualization hardware was detected on this system)" >> $ISSUE
+        # successfull boot from /dev/HostVG/Root
+        if grep -q -w root=live:LABEL=Root /proc/cmdline; then
+            # set first boot entry as permanent default
+            ln -snf /dev/.initramfs/live/grub /boot/grub
+            mount -o rw,remount LABEL=Root /dev/.initramfs/live > /tmp/grub-savedefault.log 2>&1
+            echo "savedefault --default=0" | grub >> /tmp/grub-savedefault.log 2>&1
+            mount -o ro,remount LABEL=Root /dev/.initramfs/live >> /tmp/grub-savedefault.log 2>&1
         fi
-    fi
-    if is_local_storage_configured; then
-        echo "" >> $ISSUE
-        echo "Please login as 'admin' to configure the node" >> $ISSUE
-    fi
-    cp -f $ISSUE $ISSUE_NET
 
-    if is_standalone; then
-        return 0
-    fi
+        # perform any post startup operations
+        case $OVIRT_RUNTIME_MODE in
+        esac
 
-    # persist selected configuration files
-    ovirt_store_config \
-        /etc/krb5.conf \
-        /etc/node.d \
-        /etc/sysconfig/node-config
-        /etc/libvirt/krb5.tab \
-        /etc/ssh/ssh_host*_key*
+        rm -f $VAR_SUBSYS_OVIRT_POST
 
-    . /usr/libexec/ovirt-functions
-
-    # successfull boot from /dev/HostVG/Root
-    if grep -q -w root=live:LABEL=Root /proc/cmdline; then
-        # set first boot entry as permanent default
-        ln -snf /dev/.initramfs/live/grub /boot/grub
-        mount -o rw,remount LABEL=Root /dev/.initramfs/live > /tmp/grub-savedefault.log 2>&1
-        echo "savedefault --default=0" | grub >> /tmp/grub-savedefault.log 2>&1
-        mount -o ro,remount LABEL=Root /dev/.initramfs/live >> /tmp/grub-savedefault.log 2>&1
-    fi
-
-    # perform any post startup operations
-    case $OVIRT_RUNTIME_MODE in
-    esac
-
-    rm -f $VAR_SUBSYS_OVIRT_POST
+        log "Completed ovirt-post"
+    } >> $OVIRT_LOGFILE 2>&1
 }
 
 stop_ovirt_post () {
