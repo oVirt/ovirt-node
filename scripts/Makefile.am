@@ -20,6 +20,7 @@ EXTRA_DIST = \
   ovirt-awake.init \
   ovirt-awake.service \
   ovirt-early.init \
+  ovirt-early.service \
   ovirt.init \
   ovirt.service \
   ovirt-post.init \

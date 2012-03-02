@@ -1,0 +1,10 @@
+[Unit]
+Description=Managed node early configuration service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/ovirt-early.sh start_ovirt_early
+ExecStop=/usr/libexec/ovirt-early.sh stop_ovirt_early
+
+[Install]
+WantedBy=multi-user.target

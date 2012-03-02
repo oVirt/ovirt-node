@@ -117,6 +117,7 @@ make install DESTDIR=%{buildroot}
 
 %{__install} -p -m0755 scripts/ovirt-early.sh %{buildroot}%{_libexecdir}/ovirt-early.sh
 %{__install} -p -m0755 scripts/ovirt-early.init %{buildroot}%{_initrddir}/ovirt-early
+%{__install} -p -m0755 scripts/ovirt-early.service %{buildroot}%{_unitdir}/ovirt-early.service
 
 %{__install} -p -m0755 scripts/ovirt.sh %{buildroot}%{_libexecdir}/ovirt.sh
 %{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
@@ -230,7 +231,6 @@ if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 
-    /sbin/chkconfig --add ovirt-early
     /sbin/chkconfig --add ovirt-cim
 fi
 %endif
@@ -275,16 +275,14 @@ fi
 %else
 if [ $1 -eq 0 ] ; then
     # Package removal, not upgrade
-    /sbin/service ovirt-early stop >/dev/null 2>&1
-
     /bin/systemctl --no-reload disable ovirt-firstboot.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable ovirt.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable ovirt-post.service > /dev/null 2>&1 || :
+    /bin/systemctl --no-reload disable ovirt-early.service > /dev/null 2>&1 || :
     
     /bin/systemctl stop ovirt.service > /dev/null 
     /bin/systemctl stop ovirt-post.service > /dev/null
-
-    /sbin/chkconfig --del ovirt-early
+    /bin/systemctl stop ovirt-early.service > /dev/null
 fi
 %endif
 
@@ -374,6 +372,7 @@ fi
 %{_unitdir}/ovirt-awake.service
 %{_unitdir}/ovirt-firstboot.service
 %{_unitdir}/ovirt-post.service
+%{_unitdir}/ovirt-early.service
 
 %changelog
 * Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1
