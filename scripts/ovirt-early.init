@@ -18,17 +18,9 @@ VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/$prog
 
 case "$1" in
     start)
-        [ -f "$VAR_SUBSYS_NODE_CONFIG" ] && exit 0
         echo -n "Starting ovirt-early: "
-        {
-            log "Starting ovirt-early"
-            start_ovirt_early
-            # TEMP fix broken libvirtd.conf
-            sed -c -i '/^log_filters=/d' /etc/libvirt/libvirtd.conf
-            log "Completed ovirt-early"
-            RETVAL=$?
-        } >> $OVIRT_LOGFILE 2>&1
-        test $RETVAL == 0 && success || failure
+        start_ovirt_early
+        test $? == 0 && success || failure
         ;;
     status)
         status $prog

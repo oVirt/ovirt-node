@@ -131,6 +131,19 @@ configure_management_interface() {
 }
 
 start_ovirt_early () {
+    [ -f "$VAR_SUBSYS_NODE_CONFIG" ] && exit 0
+    {
+        log "Starting ovirt-early"
+        _start_ovirt_early
+        RETVAL=$?
+        # TEMP fix broken libvirtd.conf
+        sed -c -i '/^log_filters=/d' /etc/libvirt/libvirtd.conf
+        log "Completed ovirt-early"
+    } >> $OVIRT_LOGFILE 2>&1
+    return $RETVAL
+}
+
+_start_ovirt_early () {
     touch $VAR_SUBSYS_OVIRT_EARLY
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
