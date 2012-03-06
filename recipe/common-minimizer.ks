@@ -1,4 +1,5 @@
 droprpm system-config-*
+keeprpm system-config-keyboard-base
 droprpm libsemanage-python
 
 droprpm mkinitrd
