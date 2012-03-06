@@ -563,18 +563,25 @@ class Storage:
             # efi partition should at 0M
             if is_efi_boot():
                 efi_start = 0
+                parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
+                logger.debug(parted_cmd)
+                system(parted_cmd)
             else:
                 efi_start = 1
-            parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
-            logger.debug(parted_cmd)
-            system(parted_cmd)
+                # create partition labeled bios_grub
+                parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
+                logger.debug(parted_cmd)
+                system(parted_cmd)
+                parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"set 1 bios_grub on\""
+                logger.debug(parted_cmd)
+                system(parted_cmd)
             parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 "+str(self.EFI_SIZE)+"M "+ str(self.Root_end)+"M\""
             logger.debug(parted_cmd)
             system(parted_cmd)
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.Root_end)+"M "+str(self.RootBackup_end)+"M\""
             logger.debug(parted_cmd)
             system(parted_cmd)
-            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"set 1 boot on\""
+            parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"set 2 boot on\""
             logger.debug(parted_cmd)
             system(parted_cmd)
             # sleep to ensure filesystems are created before continuing
@@ -589,8 +596,9 @@ class Storage:
                 partefi = self.ROOTDRIVE + "p1"
                 partroot = self.ROOTDRIVE + "p2"
                 partrootbackup= self.ROOTDRIVE + "p3"
-            system("ln -snf \""+partefi+"\" /dev/disk/by-label/EFI")
-            system("mkfs.vfat \""+partefi+"\" -n EFI -F32")
+            if is_efi_boot():
+                system("ln -snf \""+partefi+"\" /dev/disk/by-label/EFI")
+                system("mkfs.vfat \""+partefi+"\" -n EFI -F32")
             system("ln -snf \""+partroot+"\" /dev/disk/by-label/Root")
             system("mke2fs \""+partroot+"\" -L Root")
             system("tune2fs -c 0 -i 0 \""+partroot+"\"")
