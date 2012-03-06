@@ -671,6 +671,8 @@ def handle_fakeraid(device):
 def storage_auto():
     storage = Storage()
     if not OVIRT_VARS["OVIRT_INIT"] == "":
+        #force root install variable for autoinstalls
+        OVIRT_VARS["OVIRT_ROOT_INSTALL"] = "y"
         if storage.perform_partitioning():
             return True
         else:

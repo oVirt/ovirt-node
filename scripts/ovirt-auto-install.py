@@ -38,7 +38,8 @@ def config_networking():
 
 if not is_stateless():
     print "Performing automatic disk partitioning"
-    if storage_auto:
+
+    if storage_auto():
         print "Completed automatic disk partitioning"
         # store /etc/shadow if adminpw/rootpw are set, handled already in ovirt-early
         file = open("/proc/cmdline")
