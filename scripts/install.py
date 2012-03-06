@@ -113,7 +113,7 @@ EOF
         grub_conf.write(GRUB_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
             partB=1
-            if partN == 1:
+            if self.partN == 1:
                 partB=2
             self.grub_dict['oldtitle']=self.oldtitle
             self.grub_dict['partB']=partB
@@ -172,7 +172,7 @@ initrd /initrd0.img
                 grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
             if self.oldtitle is not None:
                 partB=0
-                if partN == 0:
+                if self.partN == 0:
                     partB=1
                 self.grub_dict['oldtitle']=self.oldtitle
                 self.grub_dict['partB']=partB
@@ -185,7 +185,7 @@ initrd /initrd0.img
                 efi_grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
                 if self.oldtitle is not None:
                     partB=0
-                    if partN == 0:
+                    if self.partN == 0:
                         partB=1
                     self.grub_dict['oldtitle']=self.oldtitle
                     self.grub_dict['partB']=partB
