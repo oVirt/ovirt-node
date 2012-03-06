@@ -99,7 +99,7 @@ start_ovirt_awake () {
     [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
     {
         touch $VAR_SUBSYS_NODECONFIG
-        # log "Starting ovirt-awake."
+        log "Starting ovirt-awake."
         case "$OVIRT_RUNTIME_MODE" in
             "none")
                 log "Node is operating in unmanaged mode."
