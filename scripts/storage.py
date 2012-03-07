@@ -322,6 +322,7 @@ class Storage:
         for drv in self.HOSTVGDRIVE.strip(",").split(","):
             if drv != "":
                 if self.ROOTDRIVE == drv:
+                    self.reread_partitions(self.ROOTDRIVE)
                     parted_cmd = "parted \"" + drv + "\" -s \"mkpart primary ext2 "+ str(self.RootBackup_end) +"M -1\""
                     logger.debug(parted_cmd)
                     system(parted_cmd)
@@ -360,9 +361,15 @@ class Storage:
         logger.debug(self.physical_vols)
         for partpv in self.physical_vols:
             logger.info("Creating physical volume on " + partpv)
-            if not os.path.exists(partpv):
+            for drv in self.HOSTVGDRIVE.strip(",").split(","):
+                self.reread_partitions(drv)
+            i = 0
+            while not os.path.exists(partpv):
                 logger.error(partpv + "is not available!")
-                return False
+                i = i + i
+                time.sleep(1)
+                if i == 15:
+                    return False
             if not system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1"):
                 logger.error("Failed to wipe lvm partition")
                 return False
@@ -591,6 +598,7 @@ class Storage:
             system("mke2fs \""+partrootbackup+"\" -L RootBackup")
             system("tune2fs -c 0 -i 0 \""+partrootbackup+"\"")
         hostvg1=self.HOSTVGDRIVE.split(",")[0]
+        self.reread_partitions(self.ROOTDRIVE)
         if self.ROOTDRIVE != hostvg1 :
             system("parted \"" + hostvg1 +"\" -s \"mklabel " + self.LABEL_TYPE + "\"")
         if self.create_hostvg():
