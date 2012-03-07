@@ -60,4 +60,8 @@ publish: rpms
 	rsync -aq $(shell rpm --eval '%{_srcrpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/src
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
+iso: publish
+	cd recipe
+	make node
+
 .PHONY: rpms publish srpms
