@@ -5,8 +5,8 @@ After=libvirtd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/libexec/ovirt-post.sh start_ovirt_post
-ExecStop=/usr/libexec/ovirt-post.sh stop_ovirt_post
+ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_post
+ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_post
 
 [Install]
 WantedBy=multi-user.target

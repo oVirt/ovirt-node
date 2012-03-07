@@ -24,7 +24,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 ## Source functions library
-. /usr/libexec/ovirt-firstboot.sh
+. /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt-firstboot
 

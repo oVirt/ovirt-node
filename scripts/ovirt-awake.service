@@ -5,8 +5,8 @@ After=ovirt-early.service
 [Service]
 Type=oneshot
 EnvironmentFile=-/etc/sysconfig/node-config
-ExecStart=/usr/libexec/ovirt-awake.sh start_ovirt_awake
-ExecStop=/usr/libexec/ovirt-awake.sh stop_ovirt_awake
+ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_awake
+ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_awake
 
 [Install]
 WantedBy=multi-user.target

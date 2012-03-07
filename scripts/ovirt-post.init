@@ -10,7 +10,7 @@
 ### END INIT INFO
 
 # Source functions library
-. /usr/libexec/ovirt-post.sh
+. /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt-post
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/$prog

@@ -30,7 +30,7 @@
 # Source functions library
 # config: /etc/sysconfig/node-config
 
-. /usr/libexec/ovirt-awake.sh
+. /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt-awake
 

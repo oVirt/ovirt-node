@@ -4,8 +4,8 @@ After=ovirt-early.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/libexec/ovirt-firstboot.sh start_ovirt_firstboot
-ExecStop=/usr/libexec/ovirt-firstboot.sh stop_ovirt_firstboot
+ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_firstboot
+ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_firstboot
 
 [Install]
 WantedBy=multi-user.target

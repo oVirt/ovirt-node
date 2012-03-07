@@ -68,8 +68,4 @@ dist_libexec_SCRIPTS = \
   ovirt-boot-functions \
   ovirt-process-config \
   ovirt-rpmquery \
-  ovirt.sh \
-  ovirt-awake.sh \
-  ovirt-firstboot.sh \
-  ovirt-post.sh \
-  ovirt-early.sh
+  ovirt-init-functions.sh

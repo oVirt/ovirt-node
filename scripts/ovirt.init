@@ -10,7 +10,7 @@
 ### END INIT INFO
 
 # Source functions library
-. /usr/libexec/ovirt.sh
+. /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt
 VAR_SUBSYS_OVIRT=/var/lock/subsys/$prog
