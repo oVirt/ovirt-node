@@ -205,8 +205,15 @@ def get_ttyname():
     return None
 
 def is_console():
+    # /dev/console only used during install
     tty = get_ttyname()
     if "console" in tty:
+        return True
+    # serial console
+    elif "ttyS" in tty:
+        return False
+    # local console
+    elif "tty" in tty:
         return True
     else:
         return False
