@@ -1485,7 +1485,7 @@ class NodeConfigScreen():
               if self.__current_page == plugin_page:
                   ret = p.action()
                   break
-              plugin_page+=2
+              plugin_page+=1
               if plugin_page > LAST_PLUGIN_PAGE :
                   # should not happen
                   break
