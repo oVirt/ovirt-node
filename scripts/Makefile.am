@@ -24,6 +24,7 @@ EXTRA_DIST = \
   ovirt.service \
   ovirt-post \
   ovirt-firstboot.init \
+  ovirt-firstboot.service \
   ovirt-cim \
   cim.py \
   local_boot_trigger.sh \
