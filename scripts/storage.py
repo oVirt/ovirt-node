@@ -363,7 +363,7 @@ class Storage:
                 system(parted_cmd)
                 system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
                 system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
-                self.reread_partitions(drv)
+#                self.reread_partitions(drv)
                 # sync GPT to the legacy MBR partitions
                 if OVIRT_VARS.has_key("OVIRT_INSTALL_ROOT") and OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y" :
                     if self.LABEL_TYPE == "gpt":
