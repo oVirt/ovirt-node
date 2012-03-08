@@ -22,7 +22,7 @@ EXTRA_DIST = \
   ovirt-early \
   ovirt.init \
   ovirt.service \
-  ovirt-post \
+  ovirt-post.init \
   ovirt-firstboot.init \
   ovirt-firstboot.service \
   ovirt-cim \
@@ -68,4 +68,5 @@ dist_libexec_SCRIPTS = \
   ovirt-rpmquery \
   ovirt.sh \
   ovirt-awake.sh \
-  ovirt-firstboot.sh
+  ovirt-firstboot.sh \
+  ovirt-post.sh

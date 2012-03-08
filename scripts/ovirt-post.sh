@@ -2,12 +2,6 @@
 #
 # ovirt Start ovirt services
 #
-### BEGIN INIT INFO
-# Provides: ovirt-post
-# Required-Start: ovirt libvirtd
-# Default-Start: 2 3 4 5
-# Description: Performs managed node post configuration setup.
-### END INIT INFO
 
 # Source functions library
 . /etc/init.d/functions
@@ -103,30 +97,4 @@ reload_ovirt_post () {
     start_ovirt_post
 }
 
-case "$1" in
-    start)
-        [ -f "$VAR_SUBSYS_OVIRT_POST" ] && exit 0
-        echo -n "Starting ovirt-post: "
-
-        {
-            log "Starting ovirt-post"
-            start_ovirt_post
-            log "Completed ovirt-post"
-        } >> $OVIRT_LOGFILE 2>&1
-
-        test $? == 0 && success || failure
-        echo
-        ;;
-    status)
-        status $prog
-        ;;
-    reload)
-        reload_ovirt_post
-        ;;
-    stop)
-        stop_ovirt_post
-        ;;
-    *)
-        echo "Usage: ovirt-post {start}"
-        exit 2
-esac
+$@
