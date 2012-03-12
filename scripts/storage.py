@@ -38,6 +38,7 @@ class Storage:
         self.LOGGING_SIZE=2048
         self.EFI_SIZE=256
         self.SWAP_SIZE=0
+        self.MIN_SWAP_SIZE=5
         self.SWAP2_SIZE=0
         self.DATA2_SIZE=0
         self.BOOTDRIVE = ""
@@ -94,6 +95,7 @@ class Storage:
                 logger.error("Swap size is smaller than minimum required size of: %s" % self.MIN_SWAP_SIZE)
                 print "\n\nSwap size is smaller than minimum required size of: %s" % self.MIN_SWAP_SIZE
                 return False
+                sys.exit(1)
             else:
                 self.SWAP_SIZE = OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]
         else:
@@ -110,7 +112,6 @@ class Storage:
                 self.__dict__[i_short] = int(OVIRT_VARS[i])
             else:
                 logging.info("Using default value for: %s" % i_short)
-
         self.RootBackup_end = self.ROOT_SIZE * 2 + self.EFI_SIZE
         self.Root_end = self.EFI_SIZE + self.ROOT_SIZE
 
