@@ -637,13 +637,11 @@ class Storage:
             logger.debug("Creating Root and RootBackup Partitions")
             # efi partition should at 0M
             if is_efi_boot():
-                efi_start = 0
-                parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
+                parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI 1M " + str(self.EFI_SIZE)+"M\""
                 passthrough(parted_cmd, logger.debug)
             else:
-                efi_start = 1
                 # create partition labeled bios_grub
-                parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
+                parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary 1M " + str(self.EFI_SIZE)+"M\""
                 passthrough(parted_cmd, logger.debug)
                 parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"set 1 bios_grub on\""
                 passthrough(parted_cmd, logger.debug)
@@ -658,7 +656,7 @@ class Storage:
             # sleep to ensure filesystems are created before continuing
             time.sleep(5)
             # force reload some cciss devices will fail to mkfs
-            system("multipath -r")
+            system("multipath -r &>/dev/null")
             self.reread_partitions(self.ROOTDRIVE)
             partefi = self.ROOTDRIVE + "1"
             partroot = self.ROOTDRIVE + "2"
@@ -669,7 +667,7 @@ class Storage:
                 partrootbackup= self.ROOTDRIVE + "p3"
             if is_efi_boot():
                 system("ln -snf \""+partefi+"\" /dev/disk/by-label/EFI")
-                system("mkfs.vfat \""+partefi+"\" -n EFI -F32")
+                system("mkfs.vfat \""+partefi+"\"")
             system("ln -snf \""+partroot+"\" /dev/disk/by-label/Root")
             system("mke2fs \""+partroot+"\" -L Root")
             system("tune2fs -c 0 -i 0 \""+partroot+"\"")

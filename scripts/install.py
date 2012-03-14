@@ -25,7 +25,9 @@ import os
 import stat
 import subprocess
 import re
+import time
 OVIRT_VARS = parse_defaults()
+from ovirtnode.storage import Storage
 
 class Install:
 
@@ -35,7 +37,7 @@ class Install:
         logger.propagate = False
         self.disk = None
         self.partN = -1
-
+        self.s = Storage()
     def kernel_image_copy(self):
         if not system("cp -p /live/" + self.syslinux + "/vmlinuz0 " + self.initrd_dest):
             logger.error("kernel image copy failed.")
@@ -200,7 +202,6 @@ initrd /initrd0.img
 
     def ovirt_boot_setup(self):
         self.generate_paths()
-
         logger.info("Installing the image.")
 
         if OVIRT_VARS.has_key("OVIRT_ROOT_INSTALL"):
@@ -256,7 +257,7 @@ initrd /initrd0.img
         elif findfs("RootNew"):
             candidate = "RootNew"
         else:
-            logger.error("Unable to find Root partition")
+            logger.error("Unable to find %s partition" % candidate)
             label_debug = ''
             for label in os.listdir("/dev/disk/by-label"):
                 label_debug += "%s\n" % label
@@ -304,9 +305,19 @@ initrd /initrd0.img
                 logger.info("efi detected, installing efi configuration")
                 system("mkdir /liveos/efi")
                 # determine proper efi partition
-                efi_part = findfs("Root")
-                efi_part = efi_part[:-1]+"1"
-                system("mount " + efi_part +" /liveos/efi")
+                self.efi_part = findfs("Root")
+                self.efi_part = self.efi_part[:-1]+"1"
+                system("mount -t vfat " + self.efi_part +" /liveos/efi")
+                i = 0
+                while not os.path.ismount("/liveos/efi"):
+                    self.s.reread_partitions(self.efi_part)
+                    time.sleep(3)
+                    system("mount -t vfat " + self.efi_part +" /liveos/efi")
+                    system("mount")
+                    i = i + 1
+                    if i == 5:
+                        logger.error("Timed out waiting for /liveos/efi mount")
+                        return False
                 system("mkdir -p /liveos/efi/EFI/ovirt")
                 system("cp /boot/efi/EFI/redhat/grub.efi /liveos/efi/EFI/ovirt/grub.efi")
                 efi_disk = re.sub("p[1,2,3]$", "", self.disk)
@@ -393,21 +404,13 @@ initrd /initrd0.img
                 logger.error("Grub Installation Failed ")
                 return False
             else:
-                logger.info("Grub 2 Installation Completed")
+                logger.info("Grub Installation Completed")
 
         if is_iscsi_install():
             # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
             shutil.copy(OVIRT_DEFAULTS, "/boot")
             system("umount /boot")
         else:
-            system("sync")
-            system("sleep 2")
-            if is_efi_boot():
-                system("mv /liveos/efi/EFI /tmp")
-                efi_dev = os.readlink("/dev/disk/by-label/EFI")
-                system("mkfs.vfat %s" % efi_dev)
-                system("mount %s /liveos/efi" % efi_dev)
-                system("cp -a /tmp/EFI /liveos/efi")
             system("umount /liveos/efi")
         system("umount /liveos")
         # mark new Root ready to go, reboot() in ovirt-function switches it to active
