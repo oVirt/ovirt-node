@@ -23,5 +23,5 @@
 
 @IMAGE_MINIMIZER@
 
-%include common-manifest.ks
+@MANIFESTS_INCLUDED@
 

@@ -25,6 +25,12 @@ AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
             [IMAGE_MINIMIZER=""])
 AC_SUBST([IMAGE_MINIMIZER])
 
+AC_ARG_WITH([manifests], [AC_HELP_STRING([--without-manifests],
+            [disable manifest generation at build time])],
+            [MANIFESTS_INCLUDED=""],
+            [MANIFESTS_INCLUDED="%include common-manifest.ks"])
+AC_SUBST([MANIFESTS_INCLUDED])
+
 AC_ARG_WITH([archipel], [AC_HELP_STRING([--with-archipel],
             [build ovirt node including Archipel])],
             [ARCHIPEL_FLAGS="--with-archipel"],
