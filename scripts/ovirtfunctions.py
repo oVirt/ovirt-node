@@ -350,13 +350,11 @@ def ovirt_setup_anyterm():
 # PXE /dev/loop0 (loopback ISO)
 # not available when booted from local disk installation
 def mount_live():
-    ret = os.system('cat /proc/mounts|grep -q "none /live"')
-    if ret == 0:
-        os.system("umount /live")
-    live_dev="/dev/live"
-    if not os.path.exists(live_dev):
-        ret = os.system("losetup /dev/loop0|grep -q '\.iso'")
-        if ret == 0:
+    live_dev = ""
+    if system('cat /proc/mounts|grep -q "none /live"'):
+        system("umount /live")
+    if not os.path.exists("/dev/live"):
+        if system("losetup /dev/loop0|grep -q '\.iso'"):
             # PXE boot
             live_dev="/dev/loop0"
         else:
@@ -369,10 +367,14 @@ def mount_live():
             for device in client.query_by_subsystem("block"):
                 if device.has_property("ID_CDROM"):
                     dev = device.get_property("DEVNAME")
-                    blkid_cmd = "blkid '%s'|grep -q '%s'" % (dev, pkg_name)
-                    ret = os.system(blkid_cmd)
-                    if ret == 0:
+                    if system("blkid '%s'|grep -q '%s'" % (dev, pkg_name)):
                         live_dev = dev
+            if not live_dev:
+                # usb devices with LIVE label
+                live_dev = findfs("LIVE")
+    else:
+        live_dev="/dev/live"
+
     os.system("mkdir -p /live")
     os.system("mount -r " + live_dev + " /live &>/dev/null")
     if os.path.ismount("/live"):
