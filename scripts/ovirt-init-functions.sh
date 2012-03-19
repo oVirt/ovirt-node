@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# ovirt-awake - Notifies any management server that the node is starting.
+# ovirt-init-functions.sh - Wrapps all functions needed by oVirt at boot time.
 #
 # Copyright (C) 2008-2010 Red Hat, Inc.
 # Written by Darryl L. Pierce <dpierce@redhat.com>
@@ -156,7 +156,7 @@ configure_management_interface() {
 }
 
 start_ovirt_early () {
-    [ -f "$VAR_SUBSYS_NODE_CONFIG" ] && exit 0
+    [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
     {
         log "Starting ovirt-early"
         _start_ovirt_early
