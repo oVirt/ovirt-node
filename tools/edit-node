@@ -31,11 +31,16 @@ class PluginTool():
 
     def parse_options(self, args):
         parser = optparse.OptionParser(usage = """
-           %prog   [-p=<encrypted_password>]
-                               <LIVEIMG.src>""")
+           %prog   [-p <encrypted_password>]
+                       [-k <comma delimited ssh key files>]
+                       <LIVEIMG.src>""")
 
         parser.add_option("-p", "--passwd", type="string", dest="password",
                           help="encrypted password")
+        parser.add_option("-k", "--sshkey", type="string", dest="ssh_keys",
+                          help="comma delimited list of ssh public key files")
+        parser.add_option("-u", "--key_users", type="string", dest="key_users",
+                          help="comma delimited list of user account for ssh public key files")
 
         (self.options, self.args) = parser.parse_args()
         if len(self.args) != 1:
@@ -51,26 +56,43 @@ class PluginTool():
         if not self.options.password is None:
             print "Appending Password Change"
             self.script.append("/usr/sbin/usermod -p \"%s\" admin" % self.options.password)
-        else:
-            print "Missing Password Option"
+        if not self.options.ssh_keys is None:
+            for key in self.options.ssh_keys.split(","):
+                if os.path.exists(key):
+                   # if no users defined, default is admin
+                   if self.options.key_users is None:
+                       self.options.key_users = "admin"
+                   for user in self.options.key_users.split(","):
+                       if user == "root":
+                           home = "/root/.ssh"
+                       else:
+                           home = "/home/%s/.ssh" % user
+                       self.script.append("mkdir -p %s" % home)
+                       self.script.append("cat > %s/authorized_keys <<EOF_%s" % (home,user))
+                       f = open(key)
+                       for line in f:
+                           self.script.append (line.strip())
+                       self.script.append("EOF_%s" % user)
+                else:
+                    print "Invalid Key File: %s" % key
         return
 
     def main(self):
         self.parse_options(sys.argv[1:])
+        self.scriptfile = mktemp()
         self.create_script()
-        scriptfile = mktemp()
-        print("Script Temp File: %s" % scriptfile)
-        f = open(scriptfile, "w")
+        print("Script Temp File: %s" % self.scriptfile)
+        f = open(self.scriptfile, "w")
         f.write("#!/bin/bash\n")
         for item in self.script:
             f.write(item+"\n")
         f.close()
         #list wont recognize iso file arg in edit-livecd
-        edit_args="edit-livecd -s %s %s" % (scriptfile, self.args)
+        edit_args="edit-livecd -s %s %s" % (self.scriptfile, self.args)
         edit_cmd = subprocess.Popen(edit_args, shell=True)
         edit_cmd.wait()
         if edit_cmd.returncode == 0:
-            print "\n\nEdited ISO is: " + self.args + "edited.iso\n"
+            print "\n\nEdited ISO is: " + self.args + ".edited.iso\n"
             return True
         else:
             print "Editing Failed"
