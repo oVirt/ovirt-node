@@ -828,6 +828,9 @@ def finish_install():
     hookdir="/etc/ovirt-config-boot.d"
     for hook in os.listdir(hookdir):
         os.system(os.path.join(hookdir,hook))
+    for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
+        ovirt_store_config(f)
+        ovirt_store_config("%s.pub" % f)
     return True
 
 def is_valid_ipv4(ip_address):

@@ -1247,7 +1247,7 @@ start_ovirt_post() {
         ovirt_store_config \
             /etc/krb5.conf \
             /etc/node.d \
-            /etc/sysconfig/node-config
+            /etc/sysconfig/node-config \
             /etc/libvirt/krb5.tab \
             /etc/ssh/ssh_host*_key*
 
