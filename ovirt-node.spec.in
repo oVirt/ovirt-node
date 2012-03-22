@@ -133,7 +133,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 scripts/ovirt-post.init %{buildroot}%{_initrddir}/ovirt-post
 %{__install} -p -m0755 scripts/ovirt-firstboot.init %{buildroot}%{_initrddir}/ovirt-firstboot
 %endif
-%{__install} -p -m0755 scripts/ovirt-cim %{buildroot}%{_initrddir}
+%{__install} -p -m0755 scripts/ovirt-cim.init %{buildroot}%{_initrddir}/ovirt-cim
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node

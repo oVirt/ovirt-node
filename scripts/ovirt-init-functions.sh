@@ -31,6 +31,7 @@ NODE_CONFIG=/etc/sysconfig/node-config
 VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/ovirt-early
 VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/ovirt-post
+VAR_SUBSYS_OVIRT_CIM=/var/lock/subsys/ovirt-cim
 
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
@@ -1281,6 +1282,43 @@ reload_ovirt_post () {
     stop_ovirt_post
     start_ovirt_post
 }
+
+
+#
+# ovirt-cim
+#
+start_ovirt_cim() {
+    [ -f "$VAR_SUBSYS_OVIRT_cim" ] && exit 0
+    {
+        log "Starting ovirt-cim"
+
+        touch $VAR_SUBSYS_OVIRT_CIM
+
+        if is_cim_enabled; then
+            python -c 'import ovirtnode.ovirtfunctions; manage_firewall_port("5989","open","tcp")'
+            service sblim-sfcb start
+        fi
+
+        rm -f $VAR_SUBSYS_OVIRT_CIM
+
+        log "Completed ovirt-cim"
+    } >> $OVIRT_LOGFILE 2>&1
+}
+
+stop_ovirt_cim () {
+    echo -n "Stopping ovirt-cim: "
+    if service sblim-sfcb status >/dev/null; then
+        python -c 'import ovirtnode.ovirtfunctions; manage_firewall_port("5989","close","tcp")'
+        service sblim-sfcb stop
+    fi
+    success
+}
+
+reload_ovirt_cim () {
+    stop_ovirt_cim
+    start_ovirt_cim
+}
+
 
 #
 # If called with a param from service file:

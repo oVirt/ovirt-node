@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# ovirt Start cim services
+#
+### BEGIN INIT INFO
+# Provides: ovirt-cim
+# Required-Start: ovirt-post
+# Default-Start: 2 3 4 5
+# Description: Performs managed node cim configuration setup.
+### END INIT INFO
+
+# Source functions library
+. /usr/libexec/ovirt-init-functions.sh
+
+prog=ovirt-cim
+
+case "$1" in
+    start)
+        echo -n "Starting ovirt-cim: "
+        start_ovirt_cim
+        test $? == 0 && success || failure
+        echo
+        ;;
+    status)
+        status $prog
+        ;;
+    reload)
+        reload_ovirt_cim
+        ;;
+    stop)
+        stop_ovirt_cim
+        ;;
+    *)
+        echo "Usage: ovirt-cim {start}"
+        exit 2
+esac
