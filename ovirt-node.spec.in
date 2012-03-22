@@ -18,6 +18,9 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
 BuildRequires:  python-setuptools
 BuildRequires:  automake autoconf
+%if 0%{?fedora}
+BuildRequires:  systemd-units
+%endif
 
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
@@ -107,7 +110,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/dracut.conf.d
-%{__install} -d -m0755 %{buildroot}%{_unitdir}
 
 %{__install} -p -m0755 scripts/node-config %{buildroot}%{_sysconfdir}/sysconfig
 
@@ -115,23 +117,23 @@ make install DESTDIR=%{buildroot}
 # Init stuff
 %{__install} -p -m0755 scripts/ovirt-init-functions.sh %{buildroot}%{_libexecdir}/ovirt-init-functions.sh
 
-%{__install} -p -m0755 scripts/ovirt-awake.init %{buildroot}%{_initrddir}/ovirt-awake
+%if 0%{?fedora}
+# Provide systemd service files
+%{__install} -d -m0755 %{buildroot}%{_unitdir}
 %{__install} -p -m0755 scripts/ovirt-awake.service %{buildroot}%{_unitdir}/ovirt-awake.service
-
-%{__install} -p -m0755 scripts/ovirt-early.init %{buildroot}%{_initrddir}/ovirt-early
 %{__install} -p -m0755 scripts/ovirt-early.service %{buildroot}%{_unitdir}/ovirt-early.service
-
-%{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
 %{__install} -p -m0755 scripts/ovirt.service %{buildroot}%{_unitdir}/ovirt.service
-
-%{__install} -p -m0755 scripts/ovirt-post.init %{buildroot}%{_initrddir}/ovirt-post
 %{__install} -p -m0755 scripts/ovirt-post.service %{buildroot}%{_unitdir}/ovirt-post.service
-
-%{__install} -p -m0755 scripts/ovirt-firstboot.init %{buildroot}%{_initrddir}/ovirt-firstboot
 %{__install} -p -m0755 scripts/ovirt-firstboot.service %{buildroot}%{_unitdir}/ovirt-firstboot.service
-
+%else
+# Provide sysV scripts
+%{__install} -p -m0755 scripts/ovirt-awake.init %{buildroot}%{_initrddir}/  ovirt-awake
+%{__install} -p -m0755 scripts/ovirt-early.init %{buildroot}%{_initrddir}/ovirt-early
+%{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
+%{__install} -p -m0755 scripts/ovirt-post.init %{buildroot}%{_initrddir}/ovirt-post
+%{__install} -p -m0755 scripts/ovirt-firstboot.init %{buildroot}%{_initrddir}/ovirt-firstboot
+%endif
 %{__install} -p -m0755 scripts/ovirt-cim %{buildroot}%{_initrddir}
-
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
@@ -354,20 +356,22 @@ fi
 %{python_sitelib}/ovirt_config_setup
 %{python_sitelib}/ovirtnode
 %{python_sitelib}/augeas*
-
-%{_initrddir}/ovirt-awake
-%{_initrddir}/ovirt-early
-%{_initrddir}/ovirt-firstboot
-%{_initrddir}/ovirt
-%{_initrddir}/ovirt-post
-%{_initrddir}/ovirt-cim
 %{_sysconfdir}/ovirt-early.d
 %{_sysconfdir}/ovirt-commandline.d
+%if 0%{?fedora}
 %{_unitdir}/ovirt.service
 %{_unitdir}/ovirt-awake.service
 %{_unitdir}/ovirt-firstboot.service
 %{_unitdir}/ovirt-post.service
 %{_unitdir}/ovirt-early.service
+%else
+%{_initrddir}/ovirt-awake
+%{_initrddir}/ovirt-early
+%{_initrddir}/ovirt-firstboot
+%{_initrddir}/ovirt
+%{_initrddir}/ovirt-post
+%endif
+%{_initrddir}/ovirt-cim
 
 %changelog
 * Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1
