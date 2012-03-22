@@ -28,6 +28,7 @@ EXTRA_DIST = \
   ovirt-firstboot.init \
   ovirt-firstboot.service \
   ovirt-cim.init \
+  ovirt-cim.service \
   cim.py \
   local_boot_trigger.sh \
   augeas.py \

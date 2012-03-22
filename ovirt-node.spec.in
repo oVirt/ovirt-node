@@ -125,6 +125,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 scripts/ovirt.service %{buildroot}%{_unitdir}/ovirt.service
 %{__install} -p -m0755 scripts/ovirt-post.service %{buildroot}%{_unitdir}/ovirt-post.service
 %{__install} -p -m0755 scripts/ovirt-firstboot.service %{buildroot}%{_unitdir}/ovirt-firstboot.service
+%{__install} -p -m0755 scripts/ovirt-cim.service %{buildroot}%{_unitdir}/ovirt-cim.service
 %else
 # Provide sysV scripts
 %{__install} -p -m0755 scripts/ovirt-awake.init %{buildroot}%{_initrddir}/  ovirt-awake
@@ -132,8 +133,8 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
 %{__install} -p -m0755 scripts/ovirt-post.init %{buildroot}%{_initrddir}/ovirt-post
 %{__install} -p -m0755 scripts/ovirt-firstboot.init %{buildroot}%{_initrddir}/ovirt-firstboot
-%endif
 %{__install} -p -m0755 scripts/ovirt-cim.init %{buildroot}%{_initrddir}/ovirt-cim
+%endif
 
 %{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
@@ -231,8 +232,6 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-
-    /sbin/chkconfig --add ovirt-cim
 fi
 %endif
 # workaround for imgcreate/live.py __copy_efi_files
@@ -280,10 +279,12 @@ if [ $1 -eq 0 ] ; then
     /bin/systemctl --no-reload disable ovirt.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable ovirt-post.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable ovirt-early.service > /dev/null 2>&1 || :
+    /bin/systemctl --no-reload disable ovirt-cim.service > /dev/null 2>&1 || :
 
     /bin/systemctl stop ovirt.service > /dev/null 
     /bin/systemctl stop ovirt-post.service > /dev/null
     /bin/systemctl stop ovirt-early.service > /dev/null
+    /bin/systemctl stop ovirt-cim.service > /dev/null
 fi
 %endif
 
@@ -364,14 +365,15 @@ fi
 %{_unitdir}/ovirt-firstboot.service
 %{_unitdir}/ovirt-post.service
 %{_unitdir}/ovirt-early.service
+%{_unitdir}/ovirt-cim.service
 %else
 %{_initrddir}/ovirt-awake
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
-%endif
 %{_initrddir}/ovirt-cim
+%endif
 
 %changelog
 * Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1
