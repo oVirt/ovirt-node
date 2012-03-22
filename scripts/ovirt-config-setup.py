@@ -704,8 +704,13 @@ class NodeConfigScreen():
                 main_grid.setField(self.hwvirt, 0, 3, anchorLeft = 1, padding=(0,1,0,0))
             else:
                 main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,0))
+
             help_text = Textbox(62, 1, "Press F8 For Support Menu")
             main_grid.setField(help_text, 0, 4, anchorLeft = 1, padding=(0,0,0,0))
+
+            self.ssh_hostkey_btn = CompactButton("View Host Key")
+            main_grid.setField(self.ssh_hostkey_btn, 0, 5, anchorLeft = 1, padding=(1,1,0,0))
+
             return [Label(""), main_grid]
 
       def logging_configuration_page(self, screen):
@@ -1566,6 +1571,12 @@ class NodeConfigScreen():
       def process_remote_storage_config(self):
           set_iscsi_initiator(self.iscsi_initiator_config.value())
 
+      def ssh_hostkey_btn_cb(self):
+            self._create_warn_screen()
+            ssh_hostkey_msg = "RSA Host Key Fingerprint:\n%s\n\nRSA Host Key:\n%s" % get_ssh_hostkey()
+            ButtonChoiceWindow(self.screen, "Host Key", ssh_hostkey_msg, buttons = ['Ok'])
+            self.reset_screen_colors()
+
       def start(self):
             self.plugins = []
             self.last_option = LAST_OPTION
@@ -1698,6 +1709,9 @@ class NodeConfigScreen():
                     elif pressed == LOG_OFF_BUTTON:
                         # will exit and ovirt-admin-shell cleans up tty lockfile and drops to login
                         sys.exit(2)
+                    elif (result is self.ssh_hostkey_btn):
+                        self.ssh_hostkey_btn_cb()
+
                     if self.__current_page == LOCKED_PAGE:
                         self.screen_locked = True
                     elif result == "F8" and self.__current_page != LOCKED_PAGE:

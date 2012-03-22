@@ -1188,6 +1188,14 @@ def get_virt_hw_status():
             hwvirt_msg = "(Virtualization hardware was not detected)"
     return hwvirt_msg
 
+def get_ssh_hostkey(variant="rsa"):
+    fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant
+    hostkey = open(fn_hostkey).read ()
+    hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
+    hostkey_fp_lookup = subprocess.Popen(hostkey_fp_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    fingerprint = hostkey_fp_lookup.stdout.read().strip().split(" ")[1]
+    return (fingerprint, hostkey)
+
 def get_mac_address(dev):
     nic_addr_file = open("/sys/class/net/" + dev + "/address")
     dev_address = nic_addr_file.read().strip()
