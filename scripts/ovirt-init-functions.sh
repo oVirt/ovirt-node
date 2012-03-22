@@ -767,6 +767,8 @@ _start_ovirt_early () {
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
+	# Small hack to fix https://bugzilla.redhat.com/show_bug.cgi?id=805313
+	service network restart 2>&1 | :
     fi
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
