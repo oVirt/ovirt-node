@@ -280,7 +280,7 @@ if [ $1 -eq 0 ] ; then
     /bin/systemctl --no-reload disable ovirt.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable ovirt-post.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable ovirt-early.service > /dev/null 2>&1 || :
-    
+
     /bin/systemctl stop ovirt.service > /dev/null 
     /bin/systemctl stop ovirt-post.service > /dev/null
     /bin/systemctl stop ovirt-early.service > /dev/null

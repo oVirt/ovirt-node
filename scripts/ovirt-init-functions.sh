@@ -975,10 +975,10 @@ start_ovirt_awake () {
         esac
 
         rm -f $VAR_SUBSYS_NODECONFIG
-    
+
         log "Completed ovirt-awake: RETVAL=$RC"
     } >> $OVIRT_LOGFILE 2>&1
-    
+
     return $RC
 }
 
