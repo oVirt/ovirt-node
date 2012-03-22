@@ -102,7 +102,6 @@ make
 make install DESTDIR=%{buildroot}
 
 # FIXME move all installs into makefile
-%{__install} -d -m0755 %{buildroot}%{_initrddir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.hourly
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig
@@ -128,6 +127,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0755 scripts/ovirt-cim.service %{buildroot}%{_unitdir}/ovirt-cim.service
 %else
 # Provide sysV scripts
+%{__install} -d -m0755 %{buildroot}%{_initrddir}
 %{__install} -p -m0755 scripts/ovirt-awake.init %{buildroot}%{_initrddir}/  ovirt-awake
 %{__install} -p -m0755 scripts/ovirt-early.init %{buildroot}%{_initrddir}/ovirt-early
 %{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
