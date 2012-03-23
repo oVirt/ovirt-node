@@ -24,6 +24,9 @@ case "$1" in
     status)
         status $prog
         ;;
+    restart)
+        reload_ovirt_cim
+        ;;
     reload)
         reload_ovirt_cim
         ;;

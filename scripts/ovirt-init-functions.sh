@@ -306,10 +306,10 @@ _start_ovirt_early () {
     snmp_password=
 
     # CIM related options
-    # enable_cim=0|1
+    # cim_enabled=0|1
     # cim_passwd=<encrypted password>
     cim_passwd=
-    enable_cim=
+    cim_enabled=
 
     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
@@ -590,11 +590,11 @@ _start_ovirt_early () {
             cim_passwd=*)
             cim_passwd=${i#cim_passwd=}
             ;;
-            cim_enabled* | cim_enabled)
-            cim_enabled=1
-            ;;
             cim_enabled=0 | cim_enabled=no)
             cim_enabled=0
+            ;;
+            enable_cim* | enable_cim | cim_enabled* | cim_enabled)
+            cim_enabled=1
             ;;
             snmp_password=*)
             snmp_password=${i#snmp_password=}
@@ -813,7 +813,6 @@ _start_ovirt_early () {
         log "Setting temporary admin password: $cim_passwd"
         unmount_config /etc/passwd /etc/shadow
         /usr/sbin/usermod -p "$cim_passwd" cim
-        chage -d 0 cim
     fi
     if [ -n "$adminpw" ]; then
         log "Setting temporary admin password: $adminpw"
@@ -836,10 +835,12 @@ _start_ovirt_early () {
         # so make sure we persist it after a successful login
         cat >> /etc/profile << EOF
 # added by ovirt-early
-sudo persist /etc/passwd /etc/shadow
-if LC_ALL=C sudo chage -l root | grep  -q "password must be changed" \
-    || LC_ALL=C sudo chage -l admin | grep -q "password must be changed"; then
-    sudo /usr/libexec/ovirt-functions unmount_config /etc/passwd /etc/shadow
+if [ "$USER" = "root" -o "$USER" = "admin" ]; then
+    sudo persist /etc/passwd /etc/shadow
+    if LC_ALL=C sudo chage -l root | grep  -q "password must be changed" \
+        || LC_ALL=C sudo chage -l admin | grep -q "password must be changed"; then
+        sudo /usr/libexec/ovirt-functions unmount_config /etc/passwd /etc/shadow
+    fi
 fi
 EOF
     fi
@@ -1317,7 +1318,7 @@ start_ovirt_cim() {
         touch $VAR_SUBSYS_OVIRT_CIM
 
         if is_cim_enabled; then
-            python -c 'import ovirtnode.ovirtfunctions; manage_firewall_port("5989","open","tcp")'
+            python -c 'from ovirtnode.ovirtfunctions import *; manage_firewall_port("5989","open","tcp")'
             service sblim-sfcb start
         fi
 
@@ -1330,7 +1331,7 @@ start_ovirt_cim() {
 stop_ovirt_cim () {
     echo -n "Stopping ovirt-cim: "
     if service sblim-sfcb status >/dev/null; then
-        python -c 'import ovirtnode.ovirtfunctions; manage_firewall_port("5989","close","tcp")'
+        python -c 'from ovirtnode.ovirtfunctions import *; manage_firewall_port("5989","close","tcp")'
         service sblim-sfcb stop
     fi
     success

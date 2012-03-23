@@ -5,6 +5,7 @@ Wants=ovirt-post.service
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 EnvironmentFile=-/etc/sysconfig/node-config
 ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_cim
 ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_cim

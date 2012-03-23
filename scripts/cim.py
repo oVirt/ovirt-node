@@ -24,12 +24,12 @@ import _snack
 
 def enable_cim():
     augtool("set","/files/etc/default/ovirt/OVIRT_CIM_ENABLED", "1")
-    if system("service ovirt-cim reload"):
+    if system("service ovirt-cim restart"):
         return True
 
 def disable_cim():
     augtool("set", "/files/etc/default/ovirt/OVIRT_CIM_ENABLED", "0")
-    if system("service ovirt-cim reload &> /dev/null"):
+    if system("service ovirt-cim restart &> /dev/null"):
         return True
 
 class Plugin(PluginBase):
