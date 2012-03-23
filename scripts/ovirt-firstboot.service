@@ -2,11 +2,18 @@
 Description=Puts the node into configuration mode.
 After=ovirt-early.service
 Wants=ovirt-early.service
+Before=getty@tty1.service
 
 [Service]
+Environment=RUNLEVEL=3
 Type=oneshot
+ExecStartPre=-/bin/plymouth quit
 ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_firstboot
 ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_firstboot
+TimeoutSec=0
+RemainAfterExit=yes
+SysVStartPriority=99
+StandardInput=tty-force
 
 [Install]
 WantedBy=multi-user.target
