@@ -1,6 +1,7 @@
 [Unit]
 Description=Performs managed node post configuration setup.
 After=ovirt.service
+Wants=ovirt.service
 After=libvirtd.service
 
 [Service]

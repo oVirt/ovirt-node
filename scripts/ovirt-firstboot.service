@@ -1,6 +1,7 @@
 [Unit]
 Description=Puts the node into configuration mode.
 After=ovirt-early.service
+Wants=ovirt-early.service
 
 [Service]
 Type=oneshot

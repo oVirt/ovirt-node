@@ -1,6 +1,7 @@
 [Unit]
 Description=Performs managed node cim configuration setup.
 After=ovirt-post.service
+Wants=ovirt-post.service
 
 [Service]
 Type=oneshot

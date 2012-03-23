@@ -1,6 +1,7 @@
 [Unit]
 Description=Performs managed node configuration functions.
 After=ovirt-awake.service
+Wants=ovirt-awake.service
 
 [Service]
 Type=oneshot

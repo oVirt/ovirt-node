@@ -1,5 +1,7 @@
 [Unit]
 Description=Managed node early configuration service
+After=fedora-readonly.target local-fs.target network.target
+Wants=fedora-readonly.target local-fs.target network.target
 
 [Service]
 Type=oneshot

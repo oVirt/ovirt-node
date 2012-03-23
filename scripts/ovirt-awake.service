@@ -1,6 +1,7 @@
 [Unit]
 Description=Managed node service to alert management servers.
 After=ovirt-early.service
+Wants=ovirt-early.service
 
 [Service]
 Type=oneshot
