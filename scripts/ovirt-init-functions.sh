@@ -785,8 +785,6 @@ _start_ovirt_early () {
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
-	# Small hack to fix https://bugzilla.redhat.com/show_bug.cgi?id=805313
-	service network restart 2>&1 | :
     fi
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
@@ -1259,6 +1257,10 @@ start_ovirt_post() {
             echo "Please login as 'admin' to configure the node" >> $ISSUE
         fi
         cp -f $ISSUE $ISSUE_NET
+
+        # Small hack to fix https://bugzilla.redhat.com/show_bug.cgi?id=805313
+
+        service network restart 2>/dev/null
 
         if is_standalone; then
             return 0
