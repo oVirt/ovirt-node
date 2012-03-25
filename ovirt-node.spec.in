@@ -128,7 +128,7 @@ make install DESTDIR=%{buildroot}
 %else
 # Provide sysV scripts
 %{__install} -d -m0755 %{buildroot}%{_initrddir}
-%{__install} -p -m0755 scripts/ovirt-awake.init %{buildroot}%{_initrddir}/  ovirt-awake
+%{__install} -p -m0755 scripts/ovirt-awake.init %{buildroot}%{_initrddir}/ovirt-awake
 %{__install} -p -m0755 scripts/ovirt-early.init %{buildroot}%{_initrddir}/ovirt-early
 %{__install} -p -m0755 scripts/ovirt.init %{buildroot}%{_initrddir}/ovirt
 %{__install} -p -m0755 scripts/ovirt-post.init %{buildroot}%{_initrddir}/ovirt-post
