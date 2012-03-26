@@ -3,9 +3,11 @@ Description=Performs managed node post configuration setup.
 After=ovirt.service
 Wants=ovirt.service
 After=libvirtd.service
+Before=getty@tty1.service
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_post
 ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_post
 

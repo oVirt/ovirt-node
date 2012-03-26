@@ -5,6 +5,7 @@ Wants=fedora-readonly.target local-fs.target network.target
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_early
 ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_early
 
