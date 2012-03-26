@@ -444,7 +444,7 @@ class NodeInstallScreen:
         return
     def root_disk_page(self):
         elements = Grid(2, 9)
-        self.root_disk_menu_list = Listbox(5, width = 70, returnExit = 0, border = 0, scroll = 1)
+        self.root_disk_menu_list = Listbox(5, width = 70, returnExit = 1, border = 0, scroll = 1)
         self.root_disk_menu_list.setCallback(self.disk_details_callback)
         Storage = storage.Storage()
         dev_names, self.disk_dict = Storage.get_udev_devices()
