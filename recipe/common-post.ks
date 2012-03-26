@@ -66,6 +66,11 @@ mkdir -p /var/cache/multipathd
 touch /var/lib/random-seed
 echo "/dev/HostVG/Config /config ext4 defaults,noauto,noatime 0 0" >> /etc/fstab
 
+# Create wwids file to prevent an error on boot, rhbz #805570
+mkdir -p /etc/multipath
+touch /etc/multipath/wwids
+chmod 0600 /etc/multipath/wwids
+
 # prepare for STATE_MOUNT in rc.sysinit
 augtool << \EOF_readonly-root
 set /files/etc/sysconfig/readonly-root/STATE_LABEL CONFIG
