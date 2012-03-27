@@ -1094,11 +1094,12 @@ class NodeConfigScreen():
           elements.setField(heading, 0, 0, anchorLeft = 1)
           pw_elements = Grid (3,3)
           self.current_snmp_status = 0
-          if os.path.exists("/etc/sysconfig/snmpd"):
-              f = open("/etc/sysconfig/snmpd")
+          if os.path.exists("/etc/snmp/snmpd.conf"):
+              f = open("/etc/snmp/snmpd.conf")
               for line in f:
                   if "createUser" in line:
                       self.current_snmp_status = 1
+              f.close()
           self.snmp_status = Checkbox("Enable SNMP", isOn=self.current_snmp_status)
           elements.setField(self.snmp_status, 0, 1, anchorLeft = 1)
           local_heading = Label("SNMP Password")

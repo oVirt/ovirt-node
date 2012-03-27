@@ -3,23 +3,19 @@ from ovirtnode.ovirtfunctions import *
 import os
 
 def enable_snmpd(password):
-    CONF="/var/lib/net-snmp/snmpd.conf"
-    ovirt_store_config("/etc/sysconfig/snmpd")
-    ovirt_store_config("/var/lib/net-snmp")
+    conf = "/etc/snmp/snmpd.conf"
     system("service snmpd stop")
-    # reset snmpd options to defaults, image has "-v" to prevent snmpd start
-    system("sed -c -ie '/^OPTIONS/d' /etc/sysconfig/snmpd")
-    if os.path.exists(CONF):
-        system("sed -c -ie '/^createUser root/d' %s" % CONF)
-    f = open("/etc/sysconfig/snmpd", "a")
-    f.write("createUser root SHA %s AES" % password)
+    system("sed -c -ie '/^createUser root/d' %s" % conf)
+    f = open(conf, "a")
+    # create user account
+    f.write("createUser root SHA %s AES\n" % password)
     f.close()
     system("service snmpd start")
+    ovirt_store_config(conf)
 
 def disable_snmpd():
     system("service snmpd stop")
-    system("umount /etc/sysconfig/snmpd")
-    remove_config("/etc/sysconfig/snmpd")
+    remove_config("/etc/snmp/snmpd.conf")
 
 def snmp_auto():
     if OVIRT_VARS.has_key("OVIRT_SNMP_PASSWORD"):
