@@ -159,6 +159,8 @@ configure_management_interface() {
 start_ovirt_early () {
     [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
     {
+        # FIXME Hack around rhbz#806349 and which might be because of rhbz#807203
+        mount -a
         log "Starting ovirt-early"
         _start_ovirt_early
         RETVAL=$?
