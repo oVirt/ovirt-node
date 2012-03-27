@@ -103,7 +103,9 @@ OVIRT_BACKUP_DIR="/var/lib/ovirt-backup"
 MANAGEMENT_SCRIPTS_DIR="/etc/node.d"
 
 def log(log_entry):
-    if is_firstboot():
+    if is_stateless():
+        log_file = open(OVIRT_LOGFILE, "a")
+    elif is_firstboot():
         log_file = open(OVIRT_TMP_LOGFILE, "a")
     else:
         log_file = open(OVIRT_LOGFILE, "a")
@@ -1303,7 +1305,9 @@ class PluginBase(object):
 OVIRT_VARS = parse_defaults()
 
 # setup logging facility
-if is_firstboot():
+if is_stateless():
+    log_file = OVIRT_LOGFILE
+elif is_firstboot():
     log_file = OVIRT_TMP_LOGFILE
 else:
     log_file = OVIRT_LOGFILE
