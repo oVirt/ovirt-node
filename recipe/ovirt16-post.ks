@@ -15,6 +15,10 @@
        -e "s/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/" \
        /etc/libvirt/libvirtd.conf
 
+    # disable mdns/avahi
+    sed -i -e 's/^[[:space:]]*#[[:space:]]*\(mdns_adv = 0\).*/\1/' \
+       /etc/libvirt/qemu.conf
+
 #ovirt_setup_anyterm()
    # configure anyterm
    cat >> /etc/sysconfig/anyterm << \EOF_anyterm
