@@ -201,7 +201,7 @@ sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
 echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 
 #mount kernel debugfs
-echo "debugfs /sys/kernel/debug debugfs 0 0" >> /etc/fstab
+echo "debugfs /sys/kernel/debug debugfs auto 0 0" >> /etc/fstab
 
 # create .virt-manager directories for readonly root
 mkdir -p /root/.virt-manager /home/admin/.virt-manager
