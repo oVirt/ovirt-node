@@ -20,6 +20,7 @@
 
 from ovirtnode.ovirtfunctions import *
 
+
 def write_kdump_config(config):
     kdump_config_file = open("/etc/kdump.conf", "w")
     kdump_config_file.write("default reboot\n")
@@ -28,6 +29,7 @@ def write_kdump_config(config):
     ovirt_store_config("/etc/kdump.conf")
     return True
 
+
 def restore_kdump_config():
     kdump_config_file = open("/etc/kdump.conf", "w")
     kdump_config_file.write("default reboot\n")
@@ -35,6 +37,7 @@ def restore_kdump_config():
     kdump_config_file.write("path /core\n")
     kdump_config_file.close()
     return True
+
 
 def process_kdump_config():
     if self.kdump_nfs.value() == 1:
@@ -50,7 +53,7 @@ def process_kdump_config():
 
 def kdump_auto():
     try:
-        if OVIRT_VARS.has_key("OVIRT_KDUMP_NFS"):
+        if "OVIRT_KDUMP_NFS" in OVIRT_VARS:
             write_kdump_config(OVIRT_VARS["OVIRT_KDUMP_NFS"])
             ovirt_store_config("/etc/kdump.conf")
             logger.info("Syslog Configuration Completed")
