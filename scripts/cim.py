@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# ovirtfunctions.py - Copyright (C) 2010 Red Hat, Inc.
+#
+# cim.py - Copyright (C) 2010 Red Hat, Inc.
 # Written by Mike Burns <mburns@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
