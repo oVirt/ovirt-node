@@ -29,20 +29,22 @@ import time
 OVIRT_VARS = parse_defaults()
 from ovirtnode.storage import Storage
 
+
 class Install:
-
-
     def __init__(self):
         logger = logging.getLogger(PRODUCT_SHORT)
         logger.propagate = False
         self.disk = None
         self.partN = -1
         self.s = Storage()
+
     def kernel_image_copy(self):
-        if not system("cp -p /live/" + self.syslinux + "/vmlinuz0 " + self.initrd_dest):
+        if not system("cp -p /live/" + self.syslinux + "/vmlinuz0 " +
+                      self.initrd_dest):
             logger.error("kernel image copy failed.")
             return False
-        if not system("cp -p /live/" + self.syslinux + "/initrd0.img " + self.initrd_dest):
+        if not system("cp -p /live/" + self.syslinux + "/initrd0.img " +
+                      self.initrd_dest):
             logger.error("initrd image copy failed.")
             return False
         if not system("cp -p /live/" + self.syslinux + "/version /liveos"):
@@ -113,19 +115,22 @@ EOF
         grub_conf = open(self.grub_config_file, "w")
         grub_conf.write(GRUB_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
-            partB=1
+            partB = 1
             if self.partN == 1:
-                partB=2
-            self.grub_dict['oldtitle']=self.oldtitle
-            self.grub_dict['partB']=partB
+                partB = 2
+            self.grub_dict['oldtitle'] = self.oldtitle
+            self.grub_dict['partB'] = partB
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
         grub_conf.close()
         if not is_efi_boot():
             for f in ["stage1", "stage2", "e2fs_stage1_5"]:
-                system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f, self.grub_dir))
+                system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f,
+                                                                self.grub_dir))
             grub_setup_out = GRUB_SETUP_TEMPLATE % self.grub_dict
             logger.debug(grub_setup_out)
-            grub_setup = subprocess_closefds(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_setup = subprocess_closefds(grub_setup_out, shell=True,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT)
             grub_results = grub_setup.stdout.read()
             logger.debug(grub_results)
             if grub_setup.wait() != 0 or "Error" in grub_results:
@@ -163,9 +168,13 @@ initrd /initrd0.img
                 disk = re.sub("p[1,2,3]$", "", findfs(self.boot_candidate))
             else:
                 disk = self.disk
-            grub_setup_cmd = "/sbin/grub2-install " + disk + " --boot-directory=" + self.initrd_dest + " --force"
+            grub_setup_cmd = ("/sbin/grub2-install " + disk +
+                              " --boot-directory=" + self.initrd_dest +
+                              " --force")
             logger.info(grub_setup_cmd)
-            grub_setup = subprocess_closefds(grub_setup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_setup = subprocess_closefds(grub_setup_cmd, shell=True,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT)
             grub_results = grub_setup.stdout.read()
             logger.info(grub_results)
             if grub_setup.wait() != 0 or "Error" in grub_results:
@@ -176,24 +185,24 @@ initrd /initrd0.img
                 grub_conf = open(self.grub_config_file, "w")
                 grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
             if self.oldtitle is not None:
-                partB=0
+                partB = 0
                 if self.partN == 0:
-                    partB=1
-                self.grub_dict['oldtitle']=self.oldtitle
-                self.grub_dict['partB']=partB
+                    partB = 1
+                self.grub_dict['oldtitle'] = self.oldtitle
+                self.grub_dict['partB'] = partB
                 grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
             grub_conf.close()
             if os.path.exists("/liveos/efi"):
-                efi_grub_conf = open("/liveos/grub2-efi/grub.cfg","w")
+                efi_grub_conf = open("/liveos/grub2-efi/grub.cfg", "w")
                 # inject efi console output modules
                 efi_grub_conf.write(GRUB2_EFI_CONFIG_TEMPLATE)
                 efi_grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
                 if self.oldtitle is not None:
-                    partB=0
+                    partB = 0
                     if self.partN == 0:
-                        partB=1
-                    self.grub_dict['oldtitle']=self.oldtitle
-                    self.grub_dict['partB']=partB
+                        partB = 1
+                    self.grub_dict['oldtitle'] = self.oldtitle
+                    self.grub_dict['partB'] = partB
                     efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
                 efi_grub_conf.close()
                 system("umount /liveos/efi")
@@ -204,20 +213,21 @@ initrd /initrd0.img
         self.generate_paths()
         logger.info("Installing the image.")
 
-        if OVIRT_VARS.has_key("OVIRT_ROOT_INSTALL"):
+        if "OVIRT_ROOT_INSTALL" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
                 logger.info("Root Installation Not Required, Finished.")
                 return True
 
-        self.oldtitle=None
+        self.oldtitle = None
         if os.path.ismount("/liveos"):
-            if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
-                f=open(self.grub_config_file)
-                oldgrub=f.read()
+            if (os.path.exists("/liveos/vmlinuz0") and
+                os.path.exists("/liveos/initrd0.img")):
+                f = open(self.grub_config_file)
+                oldgrub = f.read()
                 f.close()
-                m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
+                m = re.search("^title (.*)$", oldgrub, re.MULTILINE)
                 if m is not None:
-                    self.oldtitle=m.group(1)
+                    self.oldtitle = m.group(1)
 
             system("umount /liveos")
 
@@ -244,7 +254,10 @@ initrd /initrd0.img
                         except:
                             pass
                     f.close()
-                    iscsiadm_cmd = "iscsiadm -p %s:%s -m discovery -t sendtargets" % (OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"], OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"])
+                    iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
+                                     "sendtargets") % (
+                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"],
+                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
                     system(iscsiadm_cmd)
                     logger.info("Restarting iscsi service")
                     system("service iscsi restart")
@@ -261,7 +274,9 @@ initrd /initrd0.img
             label_debug = ''
             for label in os.listdir("/dev/disk/by-label"):
                 label_debug += "%s\n" % label
-            label_debug += subprocess_closefds("blkid", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.read()
+            label_debug += subprocess_closefds("blkid", shell=True,
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT).stdout.read()
             logger.debug(label_debug)
             return False
         logger.debug("candidate: " + candidate)
@@ -306,53 +321,62 @@ initrd /initrd0.img
                 system("mkdir /liveos/efi")
                 # determine proper efi partition
                 self.efi_part = findfs("Root")
-                self.efi_part = self.efi_part[:-1]+"1"
-                system("mount -t vfat " + self.efi_part +" /liveos/efi")
+                self.efi_part = self.efi_part[:-1] + "1"
+                system("mount -t vfat " + self.efi_part + " /liveos/efi")
                 i = 0
                 while not os.path.ismount("/liveos/efi"):
                     self.s.reread_partitions(self.efi_part)
                     time.sleep(3)
-                    system("mount -t vfat " + self.efi_part +" /liveos/efi")
+                    system("mount -t vfat " + self.efi_part + " /liveos/efi")
                     system("mount")
                     i = i + 1
                     if i == 5:
                         logger.error("Timed out waiting for /liveos/efi mount")
                         return False
                 system("mkdir -p /liveos/efi/EFI/ovirt")
-                system("cp /boot/efi/EFI/redhat/grub.efi /liveos/efi/EFI/ovirt/grub.efi")
+                system("cp /boot/efi/EFI/redhat/grub.efi " +
+                       "/liveos/efi/EFI/ovirt/grub.efi")
                 efi_disk = re.sub("p[1,2,3]$", "", self.disk)
                 # generate grub legacy config for efi partition
-                efi_mgr_cmd = "efibootmgr -c -l '\\EFI\\ovirt\\grub.efi' -L '%s' -d %s -v" % (PRODUCT_SHORT,efi_disk)
+                efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\ovirt\\grub.efi' " +
+                              "-L '%s' -d %s -v") % (PRODUCT_SHORT, efi_disk)
                 logger.info(efi_mgr_cmd)
                 system(efi_mgr_cmd)
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation
         if is_iscsi_install():
-            self.root_param="root=LABEL=Root"
-            self.bootparams="root=iscsi:%s::%s::%s ip=%s:dhcp" % (OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"], \
-                OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"],OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],OVIRT_VARS["OVIRT_BOOTIF"])
+            self.root_param = "root=LABEL=Root"
+            self.bootparams = "root=iscsi:%s::%s::%s ip=%s:dhcp" % (
+                OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
+                OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"],
+                OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
+                OVIRT_VARS["OVIRT_BOOTIF"])
         else:
-            self.root_param="root=live:LABEL=Root"
-            self.bootparams="ro rootfstype=auto rootflags=ro "
-        self.bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
+            self.root_param = "root=live:LABEL=Root"
+            self.bootparams = "ro rootfstype=auto rootflags=ro "
+        self.bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace(
+                                                            "console=tty0", "")
         if is_efi_boot():
-            self.bootparams = self.bootparams.replace("quiet","")
+            self.bootparams = self.bootparams.replace("quiet", "")
         if " " in self.disk or os.path.exists("/dev/cciss"):
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
             self.disk = re.sub("p[1,2,3]$", "", self.disk)
-            grub_disk_cmd= "multipath -l \"" + os.path.basename(self.disk) + "\" | awk '/ active / {print $3}' | head -n1"
+            grub_disk_cmd = "multipath -l \"" + os.path.basename(self.disk) + \
+                            "\" | awk '/ active / {print $3}' | head -n1"
             logger.debug(grub_disk_cmd)
-            grub_disk = subprocess_closefds(grub_disk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_disk = subprocess_closefds(grub_disk_cmd, shell=True,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.STDOUT)
             self.disk = grub_disk.stdout.read().strip()
             if "cciss" in self.disk:
-                self.disk = self.disk.replace("!","/")
+                self.disk = self.disk.replace("!", "/")
             # flush to sync DM and blockdev, workaround from rhbz#623846#c14
-            sysfs=open("/proc/sys/vm/drop_caches","w")
+            sysfs = open("/proc/sys/vm/drop_caches", "w")
             sysfs.write("3")
             sysfs.close()
-            partprobe_cmd="partprobe \"/dev/%s\"" % self.disk
+            partprobe_cmd = "partprobe \"/dev/%s\"" % self.disk
             logger.debug(partprobe_cmd)
             system(partprobe_cmd)
 
@@ -373,19 +397,20 @@ initrd /initrd0.img
                 except OSError:
                     pass
         except OSError:
-            logger.error("Unable to determine disk for grub installation " + traceback.format_exc())
+            logger.error("Unable to determine disk for grub installation " +
+                         traceback.format_exc())
             return False
 
         self.grub_dict = {
-        "product" : PRODUCT_SHORT,
-        "version" : PRODUCT_VERSION,
-        "release" : PRODUCT_RELEASE,
-        "partN" : self.partN,
-        "root_param" : self.root_param,
-        "bootparams" : self.bootparams,
-        "disk" : self.disk,
-        "grub_dir" : self.grub_dir,
-        "grub_prefix" : self.grub_prefix
+        "product": PRODUCT_SHORT,
+        "version": PRODUCT_VERSION,
+        "release": PRODUCT_RELEASE,
+        "partN": self.partN,
+        "root_param": self.root_param,
+        "bootparams": self.bootparams,
+        "disk": self.disk,
+        "grub_dir": self.grub_dir,
+        "grub_prefix": self.grub_prefix
     }
 
         if os.path.exists("/sbin/grub2-install"):
@@ -413,10 +438,12 @@ initrd /initrd0.img
         else:
             system("umount /liveos/efi")
         system("umount /liveos")
-        # mark new Root ready to go, reboot() in ovirt-function switches it to active
+        # mark new Root ready to go, reboot() in ovirt-function switches it
+        # to active
         e2label_cmd = "e2label \"%s\" RootUpdate" % candidate_dev
         if not system(e2label_cmd):
-            logger.error("Unable to relabel " + candidate_dev + " to RootUpdate ")
+            logger.error("Unable to relabel " + candidate_dev +
+                         " to RootUpdate ")
             return False
         disable_firstboot()
         if finish_install():
