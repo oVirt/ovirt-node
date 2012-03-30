@@ -101,4 +101,11 @@ pyovirtnode_PYTHON = \
 EXTRA_DIST = \
   augeas.py
 
-# vim: ts=2
+# Requires python-pep8 package (Fedora)
+check-local: check-local-pep8
+
+check-local-pep8:
+	find $(srcdir) -name \*.py | sort | uniq | xargs pep8 --repeat --statistics --count
+
+check-local-doctest:
+	find $(srcdir) -name \*.py | sort | uniq | xargs python -m doctest -v
