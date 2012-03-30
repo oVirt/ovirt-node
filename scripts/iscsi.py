@@ -22,7 +22,8 @@ import os
 from ovirtnode.ovirtfunctions import *
 import logging
 
-INITIATOR_FILE="/etc/iscsi/initiatorname.iscsi"
+INITIATOR_FILE = "/etc/iscsi/initiatorname.iscsi"
+
 
 def set_iscsi_initiator(initiator_name):
     iscsi_config = open(INITIATOR_FILE, "w")
@@ -34,16 +35,18 @@ def set_iscsi_initiator(initiator_name):
         logger.warning("Setting initiator name failed")
     system_closefds("service iscsi restart &> /dev/null")
 
+
 def get_current_iscsi_initiator_name():
     iscsi_config = open(INITIATOR_FILE)
     initiator_name = ""
     for line in iscsi_config:
         if "InitiatorName" in line:
-            initiator_name = line.replace("InitiatorName=","")
+            initiator_name = line.replace("InitiatorName=", "")
             return initiator_name.strip()
 
+
 def iscsi_auto():
-    if not OVIRT_VARS.has_key("OVIRT_ISCSI_NAME"):
+    if "OVIRT_ISCSI_NAME" not in OVIRT_VARS:
         logger.info("Generating iSCSI IQN")
         iscsi_iqn_cmd = subprocess_closefds("/sbin/iscsi-iname", stdout=PIPE)
         iscsi_iqn, err = iscsi_iqn_cmd.communicate()
