@@ -22,15 +22,17 @@ import libuser
 import random
 import crypt
 
+
 def cryptPassword(password):
     saltlen = 2
     algo = 'sha512'
     saltlen = 16
     saltstr = '$6$'
     for i in range(saltlen):
-        saltstr = saltstr + random.choice (string.letters +
-                                           string.digits + './')
-    return crypt.crypt (password, saltstr)
+        saltstr = saltstr + random.choice(string.letters +
+                                          string.digits + './')
+    return crypt.crypt(password, saltstr)
+
 
 def set_password(password, user):
     admin = libuser.admin()
@@ -41,18 +43,23 @@ def set_password(password, user):
     ovirt_store_config("/etc/shadow")
     return True
 
+
 def check_ssh_password_auth():
     password_auth_status = augeas.Augeas("root=/")
-    password_auth_status.get("/files/etc/ssh/sshd_config/PasswordAuthentication")
+    password_auth_status.get("/files/etc/ssh/sshd_config/" +
+                             "PasswordAuthentication")
     return password_auth_status
+
 
 def toggle_ssh_access():
     ssh_config = augeas.Augeas("root=/")
-    ssh_config.set("/files/etc/ssh/sshd_config", OVIRT_VARS["ssh_pass_enabled"])
+    ssh_config.set("/files/etc/ssh/sshd_config",
+                   OVIRT_VARS["ssh_pass_enabled"])
     ssh_config.save()
     ovirt_store_config("/etc/ssh/sshd_config")
     rc = system_closefds("service sshd reload")
     return rc
+
 
 def set_sasl_password(user, password):
     system_closefds("saslpasswd2 -a libvirt -p %s") % user
