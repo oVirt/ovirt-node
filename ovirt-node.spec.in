@@ -75,19 +75,34 @@ BuildArch:      noarch
 %description
 Provides a series of daemons and support utilities for hypervisor distribution.
 
-%package tools
-Summary:        Tools for building and running %{product_family} image
+%package recipe
+Summary:        Recipes for building and running %{product_family} image
 Group:          Applications/System
 Requires:       pykickstart  >= 1.54
+Requires:       livecd-tools >= 020-2
+Obsoletes:      ovirt-node-tools <= 2.3.0-999
+
+%define recipe_root %{_datadir}/ovirt-node-recipe
+
+%description recipe
+This package provides recipe (Kickstart files), client tools,
+documentation for building and running an %{product_family} image.
+This package is not to be installed on the %{product_family},
+however on a development machine to help to build the image.
+
+%package tools
+Summary:        Recipes for building and running %{product_family} image
+Group:          Applications/System
 Requires:       livecd-tools >= 020-2
 
 %define tools_root %{_datadir}/ovirt-node-tools
 
 %description tools
-This package provides recipe (Kickstart files), client tools,
-documentation for building and running an %{product_family} image.
+This package provides plugin tools for modifying and working with the
+%{product_family} image.
 This package is not to be installed on the %{product_family},
-however on a development machine to help to build the image.
+however on a development machine to work with the image.
+
 
 %prep
 %setup -q
@@ -283,19 +298,21 @@ if [ $1 -eq 0 ] ; then
     /bin/systemctl --no-reload disable ovirt-early.service > /dev/null 2>&1 || :
     /bin/systemctl --no-reload disable ovirt-cim.service > /dev/null 2>&1 || :
 
-    /bin/systemctl stop ovirt.service > /dev/null 
+    /bin/systemctl stop ovirt.service > /dev/null
     /bin/systemctl stop ovirt-post.service > /dev/null
     /bin/systemctl stop ovirt-early.service > /dev/null
     /bin/systemctl stop ovirt-cim.service > /dev/null
 fi
 %endif
 
-%files tools
+%files recipe
 %defattr(0644,root,root,0755)
 %doc README COPYING
-%{tools_root}/*.ks
+%{recipe_root}/*.ks
 %defattr(0755,root,root,0755)
 %{_sbindir}/node-creator
+
+%files tools
 %{_sbindir}/edit-node
 
 

@@ -37,8 +37,8 @@ CUR_DEVEL         = 17
 CENTOS_MIRROR     = http://mirrorlist.centos.org/
 CENTOS_RELEASE    = 6
 
-OVIRT_NODE_TOOLSdir = $(datadir)/ovirt-node-tools
-OVIRT_NODE_TOOLS_DATA =         \
+OVIRT_NODE_RECIPEdir = $(datadir)/ovirt-node-recipe
+OVIRT_NODE_RECIPE_DATA =         \
         repos.ks                \
         *-install.ks     \
         *-pkgs.ks        \
