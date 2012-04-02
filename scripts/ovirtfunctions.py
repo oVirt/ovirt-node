@@ -840,6 +840,8 @@ def finish_install():
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
+    # store keyboard config
+    ovirt_store_config("/etc/sysconfig/keyboard")
     return True
 
 def is_valid_ipv4(ip_address):
