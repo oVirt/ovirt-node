@@ -23,33 +23,33 @@ import sys
 import logging
 import os
 
-class Network:
 
+class Network:
     def __init__(self):
         OVIRT_VARS = parse_defaults()
-        self.WORKDIR=tempfile.mkdtemp()
-        self.IFSCRIPTS_PATH ="/etc/sysconfig/network-scripts/ifcfg-"
-        self.IFCONFIG_FILE_ROOT="/files%s" % self.IFSCRIPTS_PATH
-        self.NTP_CONFIG_FILE="/etc/ntp.conf"
-        self.NTPSERVERS=""
+        self.WORKDIR = tempfile.mkdtemp()
+        self.IFSCRIPTS_PATH = "/etc/sysconfig/network-scripts/ifcfg-"
+        self.IFCONFIG_FILE_ROOT = "/files%s" % self.IFSCRIPTS_PATH
+        self.NTP_CONFIG_FILE = "/etc/ntp.conf"
+        self.NTPSERVERS = ""
         self.CONFIGURED_NIC = ""
         self.CONFIGURED_NICS = []
         self.IF_CONFIG = ""
         self.BR_CONFIG = ""
         self.VL_CONFIG = ""
-        self.VLAN_ID=""
-        self.VL_ROOT=""
-        self.VL_FILENAME =""
-        self.nic=""
-        self.bridge=""
-        self.vlan_id=""
+        self.VLAN_ID = ""
+        self.VL_ROOT = ""
+        self.VL_FILENAME = ""
+        self.nic = ""
+        self.bridge = ""
+        self.vlan_id = ""
         self.localhost_entry = self.get_localhost_entry()
         self.alias_count = self.get_num_localhost_aliases()
 
     def configure_interface(self):
         logger.info("Configuring Interface")
         self.disabled_nic = 0
-        if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
+        if "OVIRT_IP_ADDRESS" in OVIRT_VARS:
             IPADDR = OVIRT_VARS["OVIRT_IP_ADDRESS"]
             NETMASK = OVIRT_VARS["OVIRT_IP_NETMASK"]
             GATEWAY = OVIRT_VARS["OVIRT_IP_GATEWAY"]
@@ -58,7 +58,7 @@ class Network:
             logger.warn("Aborting Network Configuration")
             return False
 
-        if OVIRT_VARS.has_key("OVIRT_BOOTIF"):
+        if "OVIRT_BOOTIF" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_BOOTIF"].endswith("-DISABLED"):
                 self.disabled_nic = 1
             self.CONFIGURED_NIC = OVIRT_VARS["OVIRT_BOOTIF"].strip("-DISABLED")
@@ -71,17 +71,20 @@ class Network:
         self.CONFIGURED_NICS.append(BRIDGE)
         IF_FILENAME = self.WORKDIR + "/augtool-" + self.CONFIGURED_NIC
         BR_FILENAME = self.WORKDIR + "/augtool-" + BRIDGE
-        logger.info("Configure %s for use by %s" % (BRIDGE, self.CONFIGURED_NIC))
+        logger.info("Configure %s for use by %s" % (BRIDGE, \
+                                                    self.CONFIGURED_NIC))
         IF_ROOT = "%s%s" % (self.IFCONFIG_FILE_ROOT, self.CONFIGURED_NIC)
-        self.IF_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (IF_ROOT, IF_ROOT, self.CONFIGURED_NIC)
+        self.IF_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (IF_ROOT, IF_ROOT, \
+                                                         self.CONFIGURED_NIC)
         self.IF_CONFIG += "set %s/HWADDR %s\n" % (IF_ROOT, nic_hwaddr)
         BR_ROOT = "%s%s" % (self.IFCONFIG_FILE_ROOT, BRIDGE)
-        self.BR_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (BR_ROOT, BR_ROOT, BRIDGE)
+        self.BR_CONFIG += "rm %s\nset %s/DEVICE %s\n" % (BR_ROOT, BR_ROOT, \
+                                                         BRIDGE)
         self.BR_CONFIG += "set %s/TYPE Bridge\n" % BR_ROOT
         self.BR_CONFIG += "set %s/PEERNTP yes\n" % BR_ROOT
         self.BR_CONFIG += "set %s/DELAY 0\n" % BR_ROOT
-        if OVIRT_VARS.has_key("OVIRT_IPV6"):
-            if OVIRT_VARS["OVIRT_IPV6"]  == "auto":
+        if "OVIRT_IPV6" in OVIRT_VARS:
+            if OVIRT_VARS["OVIRT_IPV6"] == "auto":
                 self.BR_CONFIG += "set %s/IPV6INIT yes\n" % BR_ROOT
                 self.BR_CONFIG += "set %s/IPV6FORWARDING no\n" % BR_ROOT
                 self.BR_CONFIG += "set %s/IPV6_AUTOCONF yes\n" % BR_ROOT
@@ -92,47 +95,56 @@ class Network:
                 self.BR_CONFIG += "set %s/DHCPV6C yes\n" % BR_ROOT
             elif OVIRT_VARS["OVIRT_IPV6"] == "static":
                 self.BR_CONFIG += "set %s/IPV6INIT yes\n" % BR_ROOT
-                self.BR_CONFIG += "set %s/IPV6ADDR %s/%s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IPV6_ADDRESS"], OVIRT_VARS["OVIRT_IPV6_NETMASK"])
+                self.BR_CONFIG += "set %s/IPV6ADDR %s/%s\n" % (BR_ROOT, \
+                                            OVIRT_VARS["OVIRT_IPV6_ADDRESS"], \
+                                            OVIRT_VARS["OVIRT_IPV6_NETMASK"])
                 self.BR_CONFIG += "set %s/IPV6_AUTOCONF no\n" % BR_ROOT
                 self.BR_CONFIG += "set %s/IPV6FORWARDING no\n" % BR_ROOT
-                self.BR_CONFIG += "set %s/IPV6_DEFAULTGW %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IPV6_GATEWAY"])
+                self.BR_CONFIG += "set %s/IPV6_DEFAULTGW %s\n" % (BR_ROOT, \
+                                            OVIRT_VARS["OVIRT_IPV6_GATEWAY"])
         else:
             self.BR_CONFIG += "set %s/IPV6INIT no\n" % BR_ROOT
             self.BR_CONFIG += "set %s/IPV6_AUTOCONF no\n" % BR_ROOT
             self.BR_CONFIG += "set %s/IPV6FORWARDING no\n" % BR_ROOT
 
-
-        if OVIRT_VARS.has_key("OVIRT_VLAN"):
-            VLAN_ID=OVIRT_VARS["OVIRT_VLAN"]
-            self.CONFIGURED_NICS.append("%s.%s" % (self.CONFIGURED_NIC, VLAN_ID))
+        if "OVIRT_VLAN" in OVIRT_VARS:
+            VLAN_ID = OVIRT_VARS["OVIRT_VLAN"]
+            self.CONFIGURED_NICS.append("%s.%s" % (self.CONFIGURED_NIC, \
+                                                   VLAN_ID))
             VL_ROOT = "%s.%s" % (IF_ROOT, VLAN_ID)
             self.VL_CONFIG += "rm %s\n" % VL_ROOT
-            self.VL_CONFIG += "set %s/DEVICE %s.%s\n" % (VL_ROOT, self.CONFIGURED_NIC, VLAN_ID)
+            self.VL_CONFIG += "set %s/DEVICE %s.%s\n" % (VL_ROOT, \
+                                                self.CONFIGURED_NIC, VLAN_ID)
             self.VL_CONFIG += "set %s/HWADDR %s\n" % (VL_ROOT, nic_hwaddr)
             self.VL_CONFIG += "set %s/BRIDGE %s\n" % (VL_ROOT, BRIDGE)
             self.VL_CONFIG += "set %s/VLAN yes\n" % VL_ROOT
-            self.VL_FILENAME = "%s.%s" % (IF_FILENAME, OVIRT_VARS["OVIRT_VLAN"])
-            self.VL_CONFIG +="set %s/ONBOOT yes" % VL_ROOT
+            self.VL_FILENAME = "%s.%s" % (IF_FILENAME, \
+                                          OVIRT_VARS["OVIRT_VLAN"])
+            self.VL_CONFIG += "set %s/ONBOOT yes" % VL_ROOT
 
-
-        if not OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
-            if OVIRT_VARS.has_key("OVIRT_BOOTIF") and self.disabled_nic == 0:
+        if not "OVIRT_IP_ADDRESS" in OVIRT_VARS:
+            if "OVIRT_BOOTIF" in OVIRT_VARS and self.disabled_nic == 0:
                 if not self.VL_CONFIG:
-	            self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
+                    self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
                 self.BR_CONFIG += "set %s/BOOTPROTO dhcp\n" % BR_ROOT
             elif self.disabled_nic == 1:
                 self.BR_CONFIG += "set %s/BOOTPROTO none\n" % BR_ROOT
 
-        elif OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
-            if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS") and OVIRT_VARS["OVIRT_IP_ADDRESS"] != "off":
+        elif "OVIRT_IP_ADDRESS" in OVIRT_VARS:
+            if ("OVIRT_IP_ADDRESS" in OVIRT_VARS and \
+                OVIRT_VARS["OVIRT_IP_ADDRESS"] != "off"):
                 self.BR_CONFIG += "set %s/BOOTPROTO static\n" % (BR_ROOT)
-		if self.VL_CONFIG == "":
+                # FIXME was the following line correctly migrated (pep8)
+                if self.VL_CONFIG == "":
                     self.IF_CONFIG += "set %s/BRIDGE %s\n" % (IF_ROOT, BRIDGE)
-                self.BR_CONFIG += "set %s/IPADDR %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_ADDRESS"])
-                if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
-                    self.BR_CONFIG += "set %s/NETMASK %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_NETMASK"])
-                if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
-                    self.BR_CONFIG += "set %s/GATEWAY %s\n" % (BR_ROOT, OVIRT_VARS["OVIRT_IP_GATEWAY"])
+                self.BR_CONFIG += "set %s/IPADDR %s\n" % (BR_ROOT, \
+                                                OVIRT_VARS["OVIRT_IP_ADDRESS"])
+                if "OVIRT_IP_NETMASK" in OVIRT_VARS:
+                    self.BR_CONFIG += "set %s/NETMASK %s\n" % (BR_ROOT, \
+                                                OVIRT_VARS["OVIRT_IP_NETMASK"])
+                if "OVIRT_IP_GATEWAY" in OVIRT_VARS:
+                    self.BR_CONFIG += "set %s/GATEWAY %s\n" % (BR_ROOT, \
+                                                OVIRT_VARS["OVIRT_IP_GATEWAY"])
 
         self.IF_CONFIG += "set %s/ONBOOT yes" % IF_ROOT
         self.BR_CONFIG += "set %s/ONBOOT yes" % BR_ROOT
@@ -145,38 +157,40 @@ class Network:
         return True
 
     def get_localhost_entry(self):
-        entries = augtool("match","/files/etc/hosts/*","")
+        entries = augtool("match", "/files/etc/hosts/*", "")
         for entry in entries:
-            ipaddr = augtool("get",entry + "/ipaddr", "")
+            ipaddr = augtool("get", entry + "/ipaddr", "")
             if ipaddr == "127.0.0.1":
                 return entry
         return None
 
     def get_num_localhost_aliases(self):
         if self.localhost_entry:
-            aliases = augtool("match", self.localhost_entry+"/alias", "")
+            aliases = augtool("match", self.localhost_entry + "/alias", "")
             return len(aliases)
         return 0
 
     def remove_non_localhost(self):
-        last_alias = augtool("get", self.localhost_entry+"/alias["+str(self.alias_count)+"]", "")
+        last_alias = augtool("get", self.localhost_entry + "/alias[" + \
+                                    str(self.alias_count) + "]", "")
         while self.alias_count != 0:
             if last_alias == "localhost":
                 break
             elif last_alias == "localhost.localdomain":
                 break
-            augtool("rm", self.localhost_entry+"/alias["+str(self.alias_count)+"]", "")
+            augtool("rm", self.localhost_entry + "/alias[" + \
+                          str(self.alias_count) + "]", "")
             self.alias_count = self.alias_count - 1
 
     def add_localhost_alias(self, alias):
         self.alias_count = self.alias_count + 1
-        augtool("set", self.localhost_entry+"/alias["+str(self.alias_count)+"]",alias)
-
+        augtool("set", self.localhost_entry + "/alias[" + \
+                       str(self.alias_count) + "]", alias)
 
     def configure_dns(self):
         OVIRT_VARS = parse_defaults()
-        if OVIRT_VARS.has_key("OVIRT_DNS"):
-            DNS=OVIRT_VARS["OVIRT_DNS"]
+        if "OVIRT_DNS" in OVIRT_VARS:
+            DNS = OVIRT_VARS["OVIRT_DNS"]
             try:
                 if DNS is not None:
                     tui_cmt = ("Please make changes through the TUI. " + \
@@ -201,14 +215,14 @@ class Network:
                     augtool("rm", "/files/etc/resolv.conf/nameserver[2]", "")
                 for nic in glob("/etc/sysconfig/network-scripts/ifcfg-*"):
                     if not "ifcfg-lo" in nic:
-                        path="/files%s/PEERDNS" % nic
+                        path = "/files%s/PEERDNS" % nic
                         augtool("set", path, "no")
 
     def configure_ntp(self):
-        if OVIRT_VARS.has_key("OVIRT_NTP"):
-            NTPSERVERS=OVIRT_VARS["OVIRT_NTP"]
+        if "OVIRT_NTP" in OVIRT_VARS:
+            NTPSERVERS = OVIRT_VARS["OVIRT_NTP"]
         else:
-            NTPSERVERS=""
+            NTPSERVERS = ""
 
     def save_ntp_configuration(self):
         ntproot = "/files/etc/ntp.conf"
@@ -225,8 +239,8 @@ class Network:
                 oper, key = line.split()
                 augtool(oper, key, "")
 
-        if OVIRT_VARS.has_key("OVIRT_NTP"):
-            offset=1
+        if "OVIRT_NTP" in OVIRT_VARS:
+            offset = 1
             SERVERS = OVIRT_VARS["OVIRT_NTP"].split(",")
             for server in SERVERS:
                 if offset == 1:
@@ -240,7 +254,7 @@ class Network:
 
     def save_network_configuration(self):
         aug.load()
-        net_configured=0
+        net_configured = 0
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
         logger.info("Configuring network for NIC %s" % self.CONFIGURED_NIC)
         # Wee need to bring down all network stuff, with the current network
@@ -306,13 +320,13 @@ class Network:
         # preserve current MAC mappings for *all physical* network interfaces
         logger.debug("Preserving current MAC mappings")
         for nicdev in glob('/sys/class/net/*/device'):
-            nic=nicdev.split('/')[4]
+            nic = nicdev.split('/')[4]
             if nic != self.CONFIGURED_NIC:
-                f=open('/sys/class/net/%s/address' % nic)
-                mac=f.read().strip()
+                f = open('/sys/class/net/%s/address' % nic)
+                mac = f.read().strip()
                 f.close()
                 if len(mac) > 0:
-                    logger.debug ("Mapping for %s" % nic)
+                    logger.debug("Mapping for %s" % nic)
                     self.CONFIGURED_NICS.append(nic)
                     nicroot = "%s%s" % (self.IFCONFIG_FILE_ROOT, nic)
                     # XXX augtool does save every time!
@@ -321,15 +335,15 @@ class Network:
                     augtool("set", "%s/ONBOOT" % nicroot, "no")
 
         logger.debug("Storing configured NICs")
-        net_configured=1
+        net_configured = 1
         for nic in self.CONFIGURED_NICS:
             logger.debug("Storing %s" % nic)
-            ovirt_store_config("%s%s" % (self.IFSCRIPTS_PATH, nic) )
+            ovirt_store_config("%s%s" % (self.IFSCRIPTS_PATH, nic))
         ovirt_store_config(self.NTP_CONFIG_FILE)
         augtool("set", "/files/etc/sysconfig/network/NETWORKING", "yes")
         ovirt_store_config("/etc/sysconfig/network")
-        ovirt_store_config ("/etc/hosts")
-        ovirt_store_config ("/etc/udev/rules.d/70-persistent-net.rules")
+        ovirt_store_config("/etc/hosts")
+        ovirt_store_config("/etc/udev/rules.d/70-persistent-net.rules")
         logger.info("Network configured successfully")
         if net_configured == 1:
             logger.info("Stopping Network services")
@@ -337,7 +351,8 @@ class Network:
             system_closefds("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
             brctl_cmd = "brctl show| awk 'NR>1 && /^br[ep]/ {print $1}'"
-            brctl = subprocess_closefds(brctl_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            brctl = subprocess_closefds(brctl_cmd, shell=True, stdout=PIPE,
+                                        stderr=STDOUT)
             brctl_output = brctl.stdout.read()
             for i in brctl_output.split():
                 if_down_cmd = "ifconfig %s down &> /dev/null" % i
@@ -353,9 +368,10 @@ class Network:
             system_closefds("service nfslock start &> /dev/null")
             system_closefds("service rpcidmapd start &> /dev/null")
             system_closefds("service rpcgssd start &> /dev/null")
-            if OVIRT_VARS.has_key("NTP"):
+            if "NTP" in OVIRT_VARS:
                 logger.info("Testing NTP Configuration")
                 test_ntp_configuration()
+
 
 def get_system_nics():
     client = gudev.Client(['net'])
@@ -372,14 +388,17 @@ def get_system_nics():
                 dev_vendor = dev_vendor.replace(",", "")
             except AttributeError:
                 try:
-                    # rhevh workaround since udev version doesn't have vendor info
+                    # rhevh workaround since udev version
+                    # doesn't have vendor info
                     dev_path = dev_path.split('/')
                     if "virtio" in dev_path[4]:
-                        pci_dev = dev_path[3].replace("0000:","")
+                        pci_dev = dev_path[3].replace("0000:", "")
                     else:
-                        pci_dev = dev_path[4].replace("0000:","")
-                    pci_lookup_cmd = " lspci|grep %s|awk -F \":\" {'print $3'}" % pci_dev
-                    pci_lookup = subprocess_closefds(pci_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                        pci_dev = dev_path[4].replace("0000:", "")
+                    pci_lookup_cmd = ((" lspci|grep %s|awk -F \":\" " +
+                                     "{'print $3'}" % pci_dev))
+                    pci_lookup = subprocess_closefds(pci_lookup_cmd,
+                                 shell=True, stdout=PIPE, stderr=STDOUT)
                     dev_vendor = pci_lookup.stdout.read().strip()
                 except:
                     dev_vendor = "unknown"
@@ -389,26 +408,33 @@ def get_system_nics():
                 dev_vendor = "unknown"
             dev_vendor = pad_or_trim(25, dev_vendor)
             try:
-                dev_driver = os.readlink("/sys/class/net/" + dev_interface + "/device/driver")
+                dev_driver = os.readlink("/sys/class/net/" + dev_interface + \
+                                         "/device/driver")
                 dev_driver = os.path.basename(dev_driver)
             except:
                 pass
-            nic_addr_file = open("/sys/class/net/" + dev_interface + "/address")
+            nic_addr_file = open("/sys/class/net/" + dev_interface + \
+                                 "/address")
             dev_address = nic_addr_file.read().strip()
-            cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(dev_interface)
+            cmd = ("/files/etc/sysconfig/network-scripts/" + \
+                   "ifcfg-%s/BOOTPROTO") % str(dev_interface)
             dev_bootproto = augtool_get(cmd)
-            type_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/TYPE" % str(dev_interface)
-            bridge_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BRIDGE" % str(dev_interface)
-            dev_bridge =  augtool_get(bridge_cmd)
+            type_cmd = ("/files/etc/sysconfig/network-scripts/" + \
+                        "ifcfg-%s/TYPE") % str(dev_interface)
+            bridge_cmd = ("/files/etc/sysconfig/network-scripts/" + \
+                          "ifcfg-%s/BRIDGE") % str(dev_interface)
+            dev_bridge = augtool_get(bridge_cmd)
             if dev_bootproto is None:
-                cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(dev_bridge)
+                cmd = ("/files/etc/sysconfig/network-scripts/" + \
+                       "ifcfg-%s/BOOTPROTO") % str(dev_bridge)
                 dev_bootproto = augtool_get(cmd)
                 if dev_bootproto is None:
                     dev_bootproto = "Disabled"
                     dev_conf_status = "Unconfigured"
                     # check for vlans
                     logger.debug("checking for vlan")
-                    if len(glob("/etc/sysconfig/network-scripts/ifcfg-" + dev_interface + ".*")) > 0:
+                    if (len(glob("/etc/sysconfig/network-scripts/ifcfg-" + \
+                        dev_interface + ".*")) > 0):
                         logger.debug("found vlan")
                         dev_conf_status = "Configured  "
                 else:
@@ -421,12 +447,20 @@ def get_system_nics():
             pass
         if "." in dev_interface:
             dev_interface = dev_interface.split(".")[0]
-        if not dev_interface == "lo" and not dev_interface.startswith("bond") and not dev_interface.startswith("sit") and not "." in dev_interface:
+        if (not dev_interface == "lo" and \
+            not dev_interface.startswith("bond") and \
+            not dev_interface.startswith("sit") and \
+            not "." in dev_interface):
             if not dev_type == "bridge":
-                nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % (dev_interface,dev_bootproto,dev_vendor,dev_address, dev_driver, dev_conf_status,dev_bridge)
+                nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % ( \
+                                          dev_interface, dev_bootproto, \
+                                          dev_vendor, dev_address, \
+                                          dev_driver, dev_conf_status, \
+                                          dev_bridge)
                 if dev_bootproto == "dhcp":
                     ntp_dhcp = 1
     return nic_dict, configured_nics, ntp_dhcp
+
 
 def get_system_vlans():
     """Retrieves a list of VLANs on this host
@@ -438,11 +472,13 @@ def get_system_vlans():
         vlans.remove("config")
     return vlans
 
+
 def convert_to_biosdevname():
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
         nics = {}
         cmd = "biosdevname -d"
-        biosdevname, err = subprocess.Popen(cmd, shell=True, stdout=PIPE).communicate()
+        biosdevname, err = subprocess.Popen(cmd, shell=True,
+                                            stdout=PIPE).communicate()
         biosdevname_output = biosdevname.splitlines()
 
         for line in biosdevname_output:
@@ -453,12 +489,12 @@ def convert_to_biosdevname():
                     mac = line.split()[2]
                     nics[mac.upper()] = nic
         logger.debug(nics)
-        scripts_path="/etc/sysconfig/network-scripts"
+        scripts_path = "/etc/sysconfig/network-scripts"
         logger.debug(glob(scripts_path + "/ifcfg-*"))
         for file in glob(scripts_path + "/ifcfg-*"):
             logger.debug("Processing %s" % file)
             # get mac for matching
-            existing_mac = augtool_get("/files/"+file+"/HWADDR")
+            existing_mac = augtool_get("/files/" + file + "/HWADDR")
             # check dictionary for mac
             if not existing_mac is None and existing_mac.upper() in nics:
                 old_nic_script = os.path.basename(file)
@@ -466,12 +502,13 @@ def convert_to_biosdevname():
                 logger.debug("Found %s in %s" % (existing_mac, file))
                 # change device name within script file
                 logger.debug("Setting to new device name: %s" % new_nic_name)
-                augtool("set","/files"+file+"/DEVICE", new_nic_name)
+                augtool("set", "/files" + file + "/DEVICE", new_nic_name)
                 new_nic_file = "%s/ifcfg-%s" % (scripts_path, new_nic_name)
-                cmd = "cp %s %s" % (file,new_nic_file)
+                cmd = "cp %s %s" % (file, new_nic_file)
                 remove_config(file)
                 if system(cmd):
-                    logging.debug("Conversion on %s to %s succeed" % (file,new_nic_file))
+                    logging.debug("Conversion on %s to %s succeed" % (file,
+                                  new_nic_file))
                     ovirt_store_config(new_nic_file)
                 else:
                     return False
@@ -479,6 +516,8 @@ def convert_to_biosdevname():
         augtool("set", "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
         ovirt_store_config("/etc/default/ovirt")
     return True
+
+
 def network_auto():
     try:
         network = Network()
