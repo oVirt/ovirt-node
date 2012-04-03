@@ -28,12 +28,13 @@ from ovirtnode.log import *
 from ovirtnode.kdump import *
 from ovirtnode.snmp import *
 
+
 def config_networking():
    # network configuration
     print "Configuring Network"
     if OVIRT_VARS["OVIRT_BOOTIF"] != "":
         network_auto()
-    if OVIRT_VARS.has_key("OVIRT_HOSTNAME"):
+    if "OVIRT_HOSTNAME" in OVIRT_VARS:
         augtool("set","/files/etc/sysconfig/network/HOSTNAME", \
                 OVIRT_VARS["OVIRT_HOSTNAME"])
         system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
@@ -48,7 +49,8 @@ if not is_stateless():
 
     if storage_auto():
         print "Completed automatic disk partitioning"
-        # store /etc/shadow if adminpw/rootpw are set, handled already in ovirt-early
+        # store /etc/shadow if adminpw/rootpw are set,
+        # handled already in ovirt-early
         file = open("/proc/cmdline")
         args = file.read()
         if "adminpw" in args or "rootpw" in args:
@@ -63,11 +65,13 @@ if not is_stateless():
 
 config_networking()
 #set ssh_passwd_auth
-if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
+if "OVIRT_SSH_PWAUTH" in OVIRT_VARS:
     if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "yes":
-        augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
+        augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", \
+                "yes")
     elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "no":
-        augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
+        augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", \
+                "no")
     ovirt_store_config("/etc/ssh/sshd_config")
     system_closefds("service sshd restart &> /dev/null")
 
