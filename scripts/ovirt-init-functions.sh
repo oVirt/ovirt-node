@@ -32,6 +32,7 @@ VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/ovirt-early
 VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/ovirt-post
 VAR_SUBSYS_OVIRT_CIM=/var/lock/subsys/ovirt-cim
+VAR_SUBSYS_OVIRT=/var/lock/subsys/ovirt
 
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
@@ -893,8 +894,7 @@ EOF
 }
 
 stop_ovirt_early () {
-    echo -n "Stopping ovirt-early: "
-    success
+    return 0
 }
 
 reload_ovirt_early () {
@@ -1005,8 +1005,7 @@ start_ovirt_awake () {
 }
 
 stop_ovirt_awake () {
-    echo -n "Stopping ovirt-awake: "
-    success
+    return 0
 }
 
 reload_ovirt_awake () {
@@ -1118,11 +1117,10 @@ reload_ovirt_firstboot () {
     start_ovirt_firstboot
 }
 
+
 #
 # ovirt
 #
-VAR_SUBSYS_OVIRT=/var/lock/subsys/ovirt
-
 ovirt_start() {
     if is_standalone; then
         return 0
@@ -1299,8 +1297,7 @@ start_ovirt_post() {
 }
 
 stop_ovirt_post () {
-    echo -n "Stopping ovirt-post: "
-    success
+    return 0
 }
 
 reload_ovirt_post () {
@@ -1331,12 +1328,11 @@ start_ovirt_cim() {
 }
 
 stop_ovirt_cim () {
-    echo -n "Stopping ovirt-cim: "
-    if service sblim-sfcb status >/dev/null; then
+    if service sblim-sfcb status >/dev/null;
+    then
         python -c 'from ovirtnode.ovirtfunctions import *; manage_firewall_port("5989","close","tcp")'
         service sblim-sfcb stop
     fi
-    success
 }
 
 reload_ovirt_cim () {
@@ -1346,6 +1342,14 @@ reload_ovirt_cim () {
 
 
 #
-# If called with a param from service file:
+# If called with a param from .service file:
 #
-$@
+case "$@" in
+    "start"|"stop"|"restart"|"reload"|"status")
+        return 0;
+        ;;
+
+    *)
+        $@
+        ;;
+esac

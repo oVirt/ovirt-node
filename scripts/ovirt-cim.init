@@ -31,7 +31,10 @@ case "$1" in
         reload_ovirt_cim
         ;;
     stop)
+        echo -n "Stopping ovirt-cim: "
         stop_ovirt_cim
+        test $? == 0 && success || failure
+        echo
         ;;
     *)
         echo "Usage: ovirt-cim {start}"

@@ -40,10 +40,14 @@ case "$1" in
         echo -n "Starting ovirt-awake: "
         start_ovirt_awake
         test $? == 0 && success || failure
+        echo
         ;;
 
     stop)
+        echo -n "Stopping ovirt-awake: "
         stop_ovirt_awake
+        test $? == 0 && success || failure
+        echo
         ;;
 
     reload)

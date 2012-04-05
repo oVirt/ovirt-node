@@ -13,16 +13,16 @@
 . /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt
-VAR_SUBSYS_OVIRT=/var/lock/subsys/$prog
 
 case "$1" in
     start)
         echo -n "Starting ovirt: "
         start_ovirt
         test $? == 0 && success || failure
+        echo
         ;;
     status)
-        status $prog
+        status -l $prog
         ;;
     reload)
         reload_ovirt
@@ -31,6 +31,7 @@ case "$1" in
         echo -n "Stopping ovirt: "
         stop_ovirt
         success
+        echo
         ;;
     *)
         echo "Usage: ovirt {start}"

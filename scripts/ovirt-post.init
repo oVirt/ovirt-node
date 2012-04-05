@@ -13,7 +13,6 @@
 . /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt-post
-VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/$prog
 
 case "$1" in
     start)
@@ -23,13 +22,16 @@ case "$1" in
         echo
         ;;
     status)
-        status $prog
+        status -l $prog
         ;;
     reload)
         reload_ovirt_post
         ;;
     stop)
+        echo -n "Stopping ovirt-post: "
         stop_ovirt_post
+        test $? == 0 && success || failure
+        echo
         ;;
     *)
         echo "Usage: ovirt-post {start}"

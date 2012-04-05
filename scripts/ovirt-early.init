@@ -14,22 +14,25 @@
 . /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt-early
-VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/$prog
 
 case "$1" in
     start)
         echo -n "Starting ovirt-early: "
         start_ovirt_early
         test $? == 0 && success || failure
+        echo
         ;;
     status)
-        status $prog
+        status -l $prog
         ;;
     reload)
         reload_ovirt_early
         ;;
     stop)
+        echo -n "Stopping ovirt-early: "
         stop_ovirt_early
+        test $? == 0 && success || failure
+        echo
         ;;
     *)
         echo "Usage: ovirt-early {start}"
