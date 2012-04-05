@@ -1764,17 +1764,21 @@ class NodeConfigScreen():
                                 elif pressed == APPLY_BUTTON:
                                     self.__current_page == NETWORK_PAGE
                                 else:
+                                    # We want to enter the NIC details ...
                                     warn = "ok"
                                     current_network_config = self.get_tui_field_network_config()
                                     if not self.is_same_network_config (self.original_system_network_config, current_network_config):
                                         self._create_warn_screen()
                                         title = "Confirm NIC Configuration"
-                                        message = "The network changes will be lost when configuring a NIC, proceed?"
+                                        message = "Unsaved network changes detected, save and continue to NIC configuration?"
                                         warn = ButtonChoiceWindow(self.screen, title, message)
                                     if warn == "ok":
+                                        # apply and continue
+                                        self.process_network_config()
                                         self.__current_page = NETWORK_DETAILS_PAGE
                                         self.preset_network_config = None
                                     else:
+                                        # Do not apply, return
                                         self.preset_network_config = current_network_config
                             else:
                                 self.__current_page = menu_choice
