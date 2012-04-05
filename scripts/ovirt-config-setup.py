@@ -804,6 +804,8 @@ class NodeConfigScreen():
           return [Label(""), elements]
 
       def network_configuration_page(self, screen):
+          self.network_config_fields = []
+
           grid = Grid(2,15)
           self.heading = Label("System Identification")
           grid.setField(self.heading, 0, 1, anchorLeft = 1)
@@ -812,12 +814,14 @@ class NodeConfigScreen():
           self.current_hostname = os.uname()[1]
           hostname = os.uname()[1]
           self.net_hostname = Entry(35, hostname)
+          self.network_config_fields += [self.net_hostname]
           self.net_hostname.setCallback(self.valid_hostname_callback)
           self.ntp_dhcp = 0
           hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft = 1, padding=(0,0,0,0))
           grid.setField(hostname_grid, 0, 3, anchorLeft=1)
           dns_grid = Grid(2,2)
           self.dns_host1 = Entry(25)
+          self.network_config_fields += [self.dns_host1]
           self.dns_host1.setCallback(self.dns_host1_callback)
           self.current_dns_host1 = augtool_get("/files/etc/resolv.conf/nameserver[1]")
           if self.current_dns_host1:
@@ -825,6 +829,7 @@ class NodeConfigScreen():
           else:
               self.dns_host1.set("")
           self.dns_host2 = Entry(25)
+          self.network_config_fields += [self.dns_host2]
           self.dns_host2.setCallback(self.dns_host2_callback)
           self.current_dns_host2 = augtool_get("/files/etc/resolv.conf/nameserver[2]")
           if self.current_dns_host2:
@@ -840,9 +845,11 @@ class NodeConfigScreen():
           grid.setField(Label("  "), 0, 7)
           ntp_grid = Grid(2,2)
           self.ntp_host1 = Entry(25)
+          self.network_config_fields += [self.ntp_host1]
           self.ntp_host1.setCallback(self.ntp_host1_callback)
 
           self.ntp_host2 = Entry(25)
+          self.network_config_fields += [self.ntp_host2]
           self.ntp_host2.setCallback(self.ntp_host2_callback)
 
           self.current_ntp_host1 = augtool_get("/files/etc/ntp.conf/server[1]")
@@ -878,6 +885,13 @@ class NodeConfigScreen():
           if self.ntp_dhcp == 1:
               for item in self.ntp_host1, self.ntp_host2:
                   item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+
+          self.original_system_network_config = self.get_tui_field_network_config()
+          if (hasattr(self, "preset_network_config") 
+              and self.preset_network_config is not None):
+              for field, value in zip(self.network_config_fields, self.preset_network_config):
+                  field.set(value)
+
           return [Label(""),
                   grid]
 
@@ -1252,6 +1266,12 @@ class NodeConfigScreen():
               if self.menu_list.current() != self.__current_page:
                   self.__current_page = self.menu_list.current()
                   screen.start()
+
+      def get_tui_field_network_config(self):
+          return [ f.value() for f in self.network_config_fields ]
+
+      def is_same_network_config(self, a, b):
+          return all (x == y for x, y in zip(a, b))
 
       def process_network_config(self):
           network = Network()
@@ -1733,7 +1753,18 @@ class NodeConfigScreen():
                                 elif pressed == APPLY_BUTTON:
                                     self.__current_page == NETWORK_PAGE
                                 else:
-                                    self.__current_page = NETWORK_DETAILS_PAGE
+                                    warn = "ok"
+                                    current_network_config = self.get_tui_field_network_config()
+                                    if not self.is_same_network_config (self.original_system_network_config, current_network_config):
+                                        self._create_warn_screen()
+                                        title = "Confirm NIC Configuration"
+                                        message = "The network changes will be lost when configuring a NIC, proceed?"
+                                        warn = ButtonChoiceWindow(self.screen, title, message)
+                                    if warn == "ok":
+                                        self.__current_page = NETWORK_DETAILS_PAGE
+                                        self.preset_network_config = None
+                                    else:
+                                        self.preset_network_config = current_network_config
                             else:
                                 self.__current_page = menu_choice
                             if self.net_apply_config == 1:
