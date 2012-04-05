@@ -1648,8 +1648,6 @@ class NodeConfigScreen():
                     if plugin_page > LAST_PLUGIN_PAGE :
                         # should not happen
                         raise "Too many plugins installed: max. %d are allowed." % ((LAST_PLUGIN_PAGE-FIRST_PLUGIN_PAGE)/2+1)
-                for filler in range(plugin_page, LAST_PLUGIN_PAGE):
-                    self.menu_list.append("", filler)
                 if self.__current_page != LOCKED_PAGE and self.__current_page != NETWORK_DETAILS_PAGE and self.__current_page != SUPPORT_PAGE:
                     self.menu_list.setCurrent(self.__current_page)
                 if not self.screen_locked:
