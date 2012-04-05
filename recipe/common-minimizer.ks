@@ -11,7 +11,6 @@ droprpm setools-libs
 
 droprpm gamin
 droprpm pm-utils
-droprpm kbd
 droprpm usermode
 droprpm vbetool
 droprpm ConsoleKit
@@ -338,7 +337,6 @@ droprpm gamin
 droprpm gnupg2
 droprpm hdparm
 droprpm isomd5sum
-droprpm kbd
 droprpm libicu
 droprpm libsemanage-python
 droprpm linux-atm-libs

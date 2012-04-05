@@ -52,7 +52,6 @@ setools-console
 -prelink
 -newt
 -libselinux-python
--kbd
 -usermode
 -gzip
 -less
