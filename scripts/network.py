@@ -171,6 +171,7 @@ class Network:
 
 
     def configure_dns(self):
+        OVIRT_VARS = parse_defaults()
         if OVIRT_VARS.has_key("OVIRT_DNS"):
             DNS=OVIRT_VARS["OVIRT_DNS"]
             try:
