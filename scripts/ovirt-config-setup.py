@@ -805,7 +805,7 @@ class NodeConfigScreen():
 
       def network_configuration_page(self, screen):
           self.network_config_fields = []
-
+          aug.load()
           grid = Grid(2,15)
           self.heading = Label("System Identification")
           grid.setField(self.heading, 0, 1, anchorLeft = 1)
