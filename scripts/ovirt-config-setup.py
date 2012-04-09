@@ -1587,8 +1587,15 @@ class NodeConfigScreen():
                   ovirt_store_config("/root/.ssh/config")
           if self.kdump_restore_type.value() == 1:
               restore_kdump_config()
-          ovirt_store_config("/etc/kdump.conf")
-          os.system("service kdump restart &> /dev/null")
+          if not system("service kdump restart"):
+              self._create_warn_screen()
+              ButtonChoiceWindow(self.screen, "KDump Status", "KDump configuration failed, location unreachable", buttons = ['Ok'])
+              self.reset_screen_colors()
+              unmount_config("/etc/kdump.conf")
+              if os.path.exists("/etc/kdump.conf"):
+                  os.remove("/etc/kdump.conf")
+          else:
+              ovirt_store_config("/etc/kdump.conf")
 
       def process_remote_storage_config(self):
           set_iscsi_initiator(self.iscsi_initiator_config.value())
