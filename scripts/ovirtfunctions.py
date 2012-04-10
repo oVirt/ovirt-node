@@ -219,6 +219,7 @@ def is_console():
         return True
     else:
         return False
+
 def manual_setup():
     logger.info("Checking For Setup Lockfile")
     tty = get_ttyname()
@@ -226,6 +227,12 @@ def manual_setup():
         return True
     else:
         return False
+
+def manual_teardown():
+    logger.info("Removing Setup Lockfile")
+    tty = get_ttyname()
+    os.unlink("/tmp/ovirt-setup.%s" % tty):
+
 # was firstboot menu already shown?
 # state is stored in persistent config partition
 def is_firstboot():

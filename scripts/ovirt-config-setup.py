@@ -1597,6 +1597,10 @@ class NodeConfigScreen():
             ButtonChoiceWindow(self.screen, "Host Key", ssh_hostkey_msg, buttons = ['Ok'])
             self.reset_screen_colors()
 
+      def quit(self):
+          manual_teardown()
+          sys.exit(2)
+
       def start(self):
             self.plugins = []
             self.last_option = LAST_OPTION
@@ -1728,7 +1732,7 @@ class NodeConfigScreen():
                             os.system("/usr/bin/clear;shutdown -h now")
                     elif pressed == LOG_OFF_BUTTON:
                         # will exit and ovirt-admin-shell cleans up tty lockfile and drops to login
-                        sys.exit(2)
+                        self.quit()
                     elif (result is self.ssh_hostkey_btn):
                         self.ssh_hostkey_btn_cb()
 
