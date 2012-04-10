@@ -1598,8 +1598,8 @@ class NodeConfigScreen():
             self.reset_screen_colors()
 
       def quit(self):
-          manual_teardown()
-          sys.exit(2)
+            manual_teardown()
+            sys.exit(2)
 
       def start(self):
             self.plugins = []

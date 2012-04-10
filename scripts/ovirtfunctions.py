@@ -231,7 +231,7 @@ def manual_setup():
 def manual_teardown():
     logger.info("Removing Setup Lockfile")
     tty = get_ttyname()
-    os.unlink("/tmp/ovirt-setup.%s" % tty):
+    os.unlink("/tmp/ovirt-setup.%s" % tty)
 
 # was firstboot menu already shown?
 # state is stored in persistent config partition
