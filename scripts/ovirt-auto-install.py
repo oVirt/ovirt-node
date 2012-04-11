@@ -68,6 +68,7 @@ if OVIRT_VARS.has_key("OVIRT_SSH_PWAUTH"):
         augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
     elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "no":
         augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
+    ovirt_store_config("/etc/ssh/sshd_config")
     os.system("service sshd restart &> /dev/null")
 
 # iscsi handled in install.py
