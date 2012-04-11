@@ -34,7 +34,10 @@ def config_networking():
     if OVIRT_VARS["OVIRT_BOOTIF"] != "":
         network_auto()
     if OVIRT_VARS.has_key("OVIRT_HOSTNAME"):
+        augtool("set","/files/etc/sysconfig/network/HOSTNAME", \
+                OVIRT_VARS["OVIRT_HOSTNAME"])
         system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
+        ovirt_store_config("/etc/sysconfig/network")
 
 # setup network before storage for iscsi installs
 if is_iscsi_install():
