@@ -361,24 +361,29 @@ class Storage:
                         logger.info("Running gptsync to create legacy mbr")
                         system("gptsync \"" + self.ROOTDRIVE + "\"")
 
-                partpv = drv + hostvgpart
-                if not os.path.exists(partpv):
-                    # e.g. /dev/cciss/c0d0p2
-                    partpv = drv + "p" + hostvgpart
-                self.physical_vols.append(partpv)
+                self.physical_vols.append((drv, hostvgpart))
         drv_count = 0
         logger.debug(self.physical_vols)
-        for partpv in self.physical_vols:
-            logger.info("Creating physical volume on " + partpv)
-            for drv in self.HOSTVGDRIVE.strip(",").split(","):
-                self.reread_partitions(drv)
-            i = 0
-            while not os.path.exists(partpv):
-                logger.error(partpv + "is not available!")
-                i = i + i
+        for drv, hostvgpart in self.physical_vols:
+            partpv = None
+            logger.info("Creating physical volume on (%s, %s)" % (drv,
+                        hostvgpart))
+            for _drv in self.HOSTVGDRIVE.strip(",").split(","):
+                self.reread_partitions(_drv)
+            i = 15
+            while i > 0 and partpv is None:
+                # e.g. /dev/cciss/c0d0p2
+                for _partpv in [drv + hostvgpart, drv + "p" + hostvgpart]:
+                    if os.path.exists(_partpv):
+                        partpv = _partpv
+                        break
+                    logger.error(_partpv + " is not available!")
+                i -= 1
                 time.sleep(1)
-                if i == 15:
-                    return False
+            if i is 0:
+                return False
+            assert(partpv is not None)
+
             if not system("dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1"):
                 logger.error("Failed to wipe lvm partition")
                 return False
