@@ -1017,6 +1017,13 @@ def is_valid_port(port_number):
 
 # Cleans partition tables
 def wipe_partitions(drive):
+    logger.info("Removing HostVG")
+    if os.path.exists("/dev/mapper/HostVG-Swap"):
+        os.system("swapoff -a")
+    # remove remaining HostVG entries from dmtable
+    for lv in os.listdir("/dev/mapper/"):
+        if "HostVG" in lv:
+            os.system("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
     logger.info("Wiping old boot sector")
     os.system("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     # zero out the GPT secondary header
@@ -1024,13 +1031,7 @@ def wipe_partitions(drive):
     disk_kb = subprocess.Popen("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
     disk_kb_count = disk_kb.stdout.read()
     os.system("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
-    if os.path.exists("/dev/mapper/HostVG-Swap"):
-        os.system("swapoff -a")
-    # remove remaining HostVG entries from dmtable
-    for lv in os.listdir("/dev/mapper/"):
-        if "HostVG" in lv:
-            os.system("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
-
+    os.system("sync")
 
 def test_ntp_configuration(self):
     # stop ntpd service for testing
