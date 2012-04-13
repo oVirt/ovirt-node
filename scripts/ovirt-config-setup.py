@@ -485,6 +485,7 @@ class NodeConfigScreen():
                   self.reset_screen_colors()
                   self.gridform.draw()
                   self.netvlanid.set("")
+
       def password_check_callback(self):
           resp, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
           if self.__current_page == SNMP_PAGE:
@@ -502,6 +503,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Log File Size", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.logrotate_max_size.set("1024")
               self.gridform.draw()
 
       def valid_syslog_port_callback(self):
@@ -509,6 +511,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Port Number", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.syslog_port.set("514")
               self.gridform.draw()
 
       def valid_syslog_server_callback(self):
@@ -516,6 +519,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.syslog_server.set("")
               self.gridform.draw()
 
       def kdump_nfs_callback(self):
@@ -529,6 +533,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NFS Entry", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.kdump_nfs_config.set("")
               self.gridform.draw()
 
       def kdump_ssh_callback(self):
@@ -542,6 +547,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid SSH Entry", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.kdump_ssh_config.set("")
               self.gridform.draw()
 
       def kdump_restore_callback(self):
@@ -555,6 +561,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Hostname or Address", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.netconsole_server.set("")
               self.gridform.draw()
 
       def valid_netconsole_server_port_callback(self):
@@ -562,6 +569,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Server Port", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.netconsole_server_port.set("6666")
               self.gridform.draw()
 
       def valid_hostname_callback(self):
@@ -570,6 +578,7 @@ class NodeConfigScreen():
                   self._create_warn_screen()
                   ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname", buttons = ['Ok'])
                   self.reset_screen_colors()
+                  self.net_hostname.set("localhost")
                   self.gridform.draw()
 
       def valid_iqn_callback(self):
@@ -579,7 +588,8 @@ class NodeConfigScreen():
                   ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid IQN Format", buttons = ['Ok'])
                   self.reset_screen_colors()
                   self.gridform.draw()
-
+                  self.iscsi_initiator_config.set("iqn.1994-05.com.example:1234567890")
+                  self.gridform.draw()
 
       def valid_fqdn_or_ipv4(self):
           warn = 0
