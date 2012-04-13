@@ -128,10 +128,13 @@ class Storage:
 
     def wipe_lvm_on_disk(self, dev):
         logger.debug("Considering '%s' for LVM removal." % dev)
+        if not os.path.exists(dev):
+            logger.warn("'%s' is no device." % dev)
+            return
         part_delim="p"
-        if "/dev/sd" in dev:
+        if "/dev/sd" in dev or "dev/vd" in dev:  # FIXME this should be more intelligent
             part_delim=""
-        vg_cmd = "pvs -o vg_uuid --noheadings \"%s\" \"%s%s\"[0-9]* 2>/dev/null|sort -u" % (dev, dev, part_delim)
+        vg_cmd = "pvs -o vg_uuid --noheadings \"%s\" \"%s%s\"[0-9]* 2>/dev/null | sort -u" % (dev, dev, part_delim)
         vg_proc = passthrough(vg_cmd, log_func=logger.debug)
         for vg in vg_proc.stdout.split():
             pvs_cmd="pvs -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \"" % (vg, dev, part_delim, dev)
