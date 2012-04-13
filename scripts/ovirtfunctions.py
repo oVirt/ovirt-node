@@ -134,6 +134,22 @@ def augtool(oper, key, value):
 def augtool_get(key):
     value = aug.get(key)
     return value
+
+class passthrough(object):
+    proc = None
+    retval = None
+    stdout = None
+    def __init__(self, cmd, log_func=None):
+        import subprocess as sp
+        if log_func is not None:
+            log_func ("Running: %s" % cmd)
+        self.proc = sp.Popen(cmd, shell=True, stdout=sp.PIPE, \
+                             stderr=sp.STDOUT)
+        self.stdout = self.proc.stdout.read()
+        self.retval = self.proc.wait()
+    def __str__(self):
+        return self.stdout
+
 # return 1 if oVirt Node is running in standalone mode
 # return 0 if oVirt Node is managed by the oVirt Server
 def is_managed():
@@ -285,6 +301,7 @@ def wipe_volume_group(vg):
     files_cmd = "grep '%s' /proc/mounts|awk '{print $2}'|sort -r" % vg
     files = subprocess.Popen(files_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     files_output = files.stdout.read()
+    logger.debug("Mounts:\n" + files_output)
     for file in files_output.split():
         os.system("umount %s &>/dev/null" % file)
     swap_cmd = "grep '%s' /proc/swaps|awk '{print $1}'" % vg
@@ -292,12 +309,17 @@ def wipe_volume_group(vg):
     swap_output = swap.stdout.read().strip()
     for d in swap_output.split():
         os.system("swapoff %s &>/dev/null" % d)
-    system("vgchange -an %s" % vg)
-    vgremove_cmd = "vgremove -ff %s &>> %s" % (vg, OVIRT_TMP_LOGFILE)
-    ret = os.system(vgremove_cmd)
-    if ret != 0:
-        #retry one more time before failing
-        os.system(vgremove_cmd)
+    # Deactivate VG
+    passthrough("vgchange -a n -v %s" % vg)
+    ret = -1
+    i = 1
+    vgremove_cmd = "vgremove -f -v %s" % vg
+    # Try to remove VG for i-times
+    while ret is not 0 and i > 0:
+        logger.debug("Removing VG '%s' (Try #%d)" % (vg, i))
+        vgremove_proc = passthrough(vgremove_cmd, logger.debug)
+        ret = vgremove_proc.retval
+        i -= 1
 
 # find_srv SERVICE PROTO
 #

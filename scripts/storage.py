@@ -127,12 +127,13 @@ class Storage:
 
 
     def wipe_lvm_on_disk(self, dev):
+        logger.debug("Considering '%s' for LVM removal." % dev)
         part_delim="p"
         if "/dev/sd" in dev:
             part_delim=""
         vg_cmd = "pvs -o vg_uuid --noheadings \"%s\" \"%s%s\"[0-9]* 2>/dev/null|sort -u" % (dev, dev, part_delim)
-        vg_proc = subprocess.Popen(vg_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        for vg in vg_proc.stdout.read().split():
+        vg_proc = passthrough(vg_cmd, log_func=logger.debug)
+        for vg in vg_proc.stdout.split():
             pvs_cmd="pvs -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \"" % (vg, dev, part_delim, dev)
             if system(pvs_cmd):
                 logger.error("The volume group \"%s\" spans multiple disks." % vg)
@@ -143,6 +144,8 @@ class Storage:
 
 
     def reread_partitions(self, drive):
+        logger.debug("Rereading pt")
+        system("sync")
         if "dev/mapper" in drive:
             # kpartx -a -p p "$drive"
             # XXX fails with spaces in device names (TBI)
@@ -154,7 +157,7 @@ class Storage:
             system("service multipathd reload")
 
         else:
-            system("blockdev --rereadpt " + drive + " &>>/dev/null")
+            passthrough("blockdev --rereadpt \"%s\"" % drive, logger.debug)
 
 
     def get_sd_name(self, id):
@@ -580,6 +583,9 @@ class Storage:
         self.wipe_lvm_on_disk(self.ROOTDRIVE)
         logger.info("Wiping LVM on BOOTDRIVE %s" % self.BOOTDRIVE)
         self.wipe_lvm_on_disk(self.BOOTDRIVE)
+        logger.debug("Old LVM partitions should be gone.")
+        logger.debug(passthrough("vgdisplay -v"))
+
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
         if is_iscsi_install():
             # login to target and setup disk"
@@ -636,27 +642,22 @@ class Storage:
             self.reread_partitions(self.ROOTDRIVE)
             logger.info("Labeling Drive: " + self.ROOTDRIVE)
             parted_cmd = "parted \""+ self.ROOTDRIVE +"\" -s \"mklabel "+ self.LABEL_TYPE+"\""
-            logger.debug(parted_cmd)
-            system(parted_cmd)
+            passthrough(parted_cmd, logger.debug)
             logger.debug("Creating Root and RootBackup Partitions")
             # efi partition should at 0M
             if is_efi_boot():
                 efi_start = 0
                 parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart EFI " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
-                logger.debug(parted_cmd)
-                system(parted_cmd)
+                passthrough(parted_cmd, logger.debug)
             else:
                 efi_start = 1
                 # create partition labeled bios_grub
                 parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary " + str(efi_start) + "M " + str(self.EFI_SIZE)+"M\""
-                logger.debug(parted_cmd)
-                system(parted_cmd)
+                passthrough(parted_cmd, logger.debug)
                 parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"set 1 bios_grub on\""
-                logger.debug(parted_cmd)
-                system(parted_cmd)
+                passthrough(parted_cmd, logger.debug)
             parted_cmd = "parted \"" + self.ROOTDRIVE + "\" -s \"mkpart primary ext2 "+str(self.EFI_SIZE)+"M "+ str(self.Root_end)+"M\""
-            logger.debug(parted_cmd)
-            system(parted_cmd)
+            passthrough(parted_cmd, logger.debug)
             parted_cmd = "parted \""+self.ROOTDRIVE+"\" -s \"mkpart primary ext2 "+str(self.Root_end)+"M "+str(self.RootBackup_end)+"M\""
             logger.debug(parted_cmd)
             system(parted_cmd)
