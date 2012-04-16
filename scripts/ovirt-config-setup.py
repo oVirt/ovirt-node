@@ -891,6 +891,7 @@ class NodeConfigScreen():
               and self.preset_network_config is not None):
               for field, value in zip(self.network_config_fields, self.preset_network_config):
                   field.set(value)
+              self.preset_network_config = None
 
           return [Label(""),
                   grid]
