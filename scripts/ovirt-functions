@@ -1148,6 +1148,14 @@ get_boot_device() {
     fi
 }
 
+load_keyboard_config ()
+{
+    python <<EOP
+import ovirtnode.ovirtfunctions as ovirtfunctions
+ovirtfunctions.load_keyboard_config()
+EOP
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 

@@ -1308,6 +1308,12 @@ def is_iscsi_install():
     else:
         return False
 
+def load_keyboard_config():
+    import system_config_keyboard.keyboard as keyboard
+    kbd = keyboard.Keyboard()
+    kbd.read()
+    kbd.activate()
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

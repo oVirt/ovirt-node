@@ -1213,6 +1213,10 @@ start_ovirt_post() {
     [ -f "$VAR_SUBSYS_OVIRT_POST" ] && exit 0
     {
         log "Starting ovirt-post"
+
+        # Re-load keyboard settings
+        load_keyboard_config 2> /dev/null
+
         # wait for libvirt to finish initializing
         local count=0
         while true; do
