@@ -1281,7 +1281,8 @@ def manage_firewall_port(port, action="open", proto="tcp"):
         opt = "-D"
         logger.info("Closing port " + port)
     os.system("iptables %s INPUT -p %s --dport %s -j ACCEPT" % (opt, proto, port))
-    os.system("iptables-save")
+    # service iptables save can not be used, bc of mv on bind mounted file
+    os.system("iptables-save -c > /etc/sysconfig/iptables")
     ovirt_store_config("/etc/sysconfig/iptables")
 
 def is_iscsi_install():

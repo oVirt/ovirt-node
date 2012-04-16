@@ -1332,17 +1332,31 @@ start_ovirt_cim() {
 }
 
 stop_ovirt_cim () {
-    if service sblim-sfcb status >/dev/null;
-    then
-        python -c 'from ovirtnode.ovirtfunctions import *; manage_firewall_port("5989","close","tcp")'
-        service sblim-sfcb stop
-    fi
+    {
+        log "Stopping ovirt-cim"
+        if service sblim-sfcb status >/dev/null;
+        then
+            python -c 'from ovirtnode.ovirtfunctions import *; manage_firewall_port("5989","close","tcp")'
+            service sblim-sfcb stop
+        fi
+        log "Stopped ovirt-cim"
+    } >> $OVIRT_LOGFILE 2>&1
 }
 
 reload_ovirt_cim () {
     stop_ovirt_cim
     start_ovirt_cim
 }
+
+status_ovirt_cim () {
+    service sblim-sfcb status > /dev/null 2>&1
+    ret_sblim=$?
+    iptables-save | grep -q -- "-A INPUT -p tcp -m tcp --dport 5989 -j ACCEPT"
+    ret_port=$?
+    test $ret_sblim == 0 -a $ret_port == 0
+    return $?
+}
+
 
 
 #

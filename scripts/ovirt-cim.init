@@ -22,13 +22,16 @@ case "$1" in
         echo
         ;;
     status)
-        status $prog
+        echo -n "ovirt-cim is "
+        status_ovirt_cim
+        test $? == 0 || echo -n "not "
+        echo "running..."
         ;;
-    restart)
+    restart|reload)
+        echo -n "Restarting ovirt-cim: "
         reload_ovirt_cim
-        ;;
-    reload)
-        reload_ovirt_cim
+        test $? == 0 && success || failure
+        echo
         ;;
     stop)
         echo -n "Stopping ovirt-cim: "
