@@ -68,4 +68,17 @@ device qla4xxx
 device qlogicfas408
 device stex
 device tmscsim
-
+#usb mass storage devices / blade cd devices / similar
+device ums-sddr09
+device ums-realtek
+device ums-sddr55
+device ums-isd200
+device ums-alauda
+device ums-freecom
+device ums-cypress
+device ums-jumpshot
+device ums-onetouch
+device ums-karma
+device ums-usbat
+device ums-datafab
+device ums-eneub6250

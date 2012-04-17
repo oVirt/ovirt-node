@@ -118,6 +118,7 @@ drop /lib/modules/*/kernel/drivers/usb/class
 drop /lib/modules/*/kernel/drivers/usb/image
 drop /lib/modules/*/kernel/drivers/usb/misc
 drop /lib/modules/*/kernel/drivers/usb/serial
+keep /lib/modules/*/kernel/drivers/usb/storage
 keep /lib/modules/*/kernel/drivers/vhost
 keep /lib/modules/*/kernel/drivers/virtio
 
