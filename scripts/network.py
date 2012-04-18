@@ -231,7 +231,7 @@ class Network:
         aug.load()
         net_configured=0
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
-        logger.info("Configuring network")
+        logger.info("Configuring network for NIC %s" % self.CONFIGURED_NIC)
         system("ifdown br" + self.CONFIGURED_NIC)
         for vlan in os.listdir("/proc/net/vlan/"):
             # XXX wrong match e.g. eth10.1 with eth1
@@ -240,12 +240,16 @@ class Network:
                 ovirt_safe_delete_config(self.IFSCRIPTS_PATH + vlan)
                 os.system("rm -rf " + self.IFSCRIPTS_PATH + vlan)
 
-        for script in glob("%s%s*" % (self.IFSCRIPTS_PATH, self.CONFIGURED_NIC)):
-            # XXX wrong match e.g. eth10 with eth1* (need * to cover VLANs)
+        logger.debug("Removing persisted network configs")
+        # This should cover NICs, VLANs and bridges
+        for script in glob("%s*" % (self.IFSCRIPTS_PATH)):
+            if not is_persisted(script):
+                continue
             logger.debug("Removing Script: " + script)
             ovirt_safe_delete_config(script)
-        augtool("rm", self.IFCONFIG_FILE_ROOT+"br"+self.CONFIGURED_NIC, "")
+        aug.load()
 
+        logger.debug("Updating interface config")
         for line in self.IF_CONFIG:
             logger.debug(line)
             try:
@@ -255,6 +259,7 @@ class Network:
                 oper, key = line.split()
                 augtool(oper, key, "")
 
+        logger.debug("Updating bridge config")
         for line in self.BR_CONFIG:
             logger.debug(line)
             try:
@@ -267,6 +272,7 @@ class Network:
                 except:
                     pass
 
+        logger.debug("Updating VLAN config")
         for line in self.VL_CONFIG.split("\n"):
             logger.debug(line)
             try:
@@ -280,6 +286,7 @@ class Network:
                     pass
 
         # preserve current MAC mappings for *all physical* network interfaces
+        logger.debug("Preserving current MAC mappings")
         for nicdev in glob('/sys/class/net/*/device'):
             nic=nicdev.split('/')[4]
             if nic != self.CONFIGURED_NIC:
@@ -287,6 +294,7 @@ class Network:
                 mac=f.read().strip()
                 f.close()
                 if len(mac) > 0:
+                    logger.debug ("Mapping for %s" % nic)
                     self.CONFIGURED_NICS.append(nic)
                     nicroot = "%s%s" % (self.IFCONFIG_FILE_ROOT, nic)
                     # XXX augtool does save every time!
@@ -294,8 +302,10 @@ class Network:
                     augtool("set", "%s/HWADDR" % nicroot, mac)
                     augtool("set", "%s/ONBOOT" % nicroot, "no")
 
+        logger.debug("Storing configured NICs")
         net_configured=1
         for nic in self.CONFIGURED_NICS:
+            logger.debug("Storing %s" % nic)
             ovirt_store_config("%s%s" % (self.IFSCRIPTS_PATH, nic) )
         ovirt_store_config(self.NTP_CONFIG_FILE)
         augtool("set", "/files/etc/sysconfig/network/NETWORKING", "yes")
