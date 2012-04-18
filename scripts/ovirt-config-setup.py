@@ -138,7 +138,7 @@ class NodeConfigScreen():
       def _create_blank_screen(self):
           self.screen = SnackScreen()
           self.reset_screen_colors()
-          self.gridform = GridForm(self.screen, "", 2, 2)
+          self._gridform = GridForm(self.screen, "", 2, 2)
           self.screen.pushHelpLine(" ")
           self._set_title()
 
@@ -284,6 +284,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.dns_host1.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def dns_host2_callback(self):
@@ -297,6 +298,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.dns_host2.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ntp_host1_callback(self):
@@ -311,6 +313,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ntp_host1.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ntp_host2_callback(self):
@@ -325,6 +328,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ntp_host2.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ipv4_ip_callback(self):
@@ -337,6 +341,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv4_netdevip.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ipv4_netmask_callback(self):
@@ -349,6 +354,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv4_netdevmask.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ipv4_gateway_callback(self):
@@ -361,6 +367,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv4_netdevgateway.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ipv4_disabled_callback(self):
@@ -432,6 +439,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv6_netdevip.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ipv6_netmask_callback(self):
@@ -447,6 +455,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IPv6 Netmask", buttons = ['Ok'])
               self.ipv6_netdevmask.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def ipv6_gateway_callback(self):
@@ -459,6 +468,7 @@ class NodeConfigScreen():
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons = ['Ok'])
               self.ipv6_netdevgateway.set("")
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def netvlanid_callback(self):
@@ -474,6 +484,7 @@ class NodeConfigScreen():
                   self._create_warn_screen()
                   ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid VLAN ID", buttons = ['Ok'])
                   self.reset_screen_colors()
+                  self.gridform.draw()
                   self.netvlanid.set("")
       def password_check_callback(self):
           resp, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
@@ -485,18 +496,21 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Log File Size", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
 
       def valid_syslog_port_callback(self):
           if not is_valid_port(self.syslog_port.value()):
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Port Number", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
 
       def valid_syslog_server_callback(self):
           if not is_valid_host_or_ip(self.syslog_server.value()):
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname or Address", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
 
       def kdump_nfs_callback(self):
           self.kdump_ssh_type.setValue(" 0")
@@ -509,6 +523,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NFS Entry", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
 
       def kdump_ssh_callback(self):
           self.kdump_nfs_type.setValue(" 0")
@@ -521,6 +536,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid SSH Entry", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
 
       def kdump_restore_callback(self):
           self.kdump_ssh_type.setValue(" 0")
@@ -533,12 +549,14 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Hostname or Address", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
 
       def valid_netconsole_server_port_callback(self):
           if not is_valid_port(self.netconsole_server_port.value()):
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Server Port", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
 
       def valid_hostname_callback(self):
           if not self.net_hostname.value() == "":
@@ -546,6 +564,7 @@ class NodeConfigScreen():
                   self._create_warn_screen()
                   ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname", buttons = ['Ok'])
                   self.reset_screen_colors()
+                  self.gridform.draw()
 
       def valid_iqn_callback(self):
           if not self.iscsi_initiator_config.value() =="":
@@ -553,7 +572,7 @@ class NodeConfigScreen():
                   self._create_warn_screen()
                   ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid IQN Format", buttons = ['Ok'])
                   self.reset_screen_colors()
-
+                  self.gridform.draw()
 
 
       def valid_fqdn_or_ipv4(self):
@@ -581,6 +600,7 @@ class NodeConfigScreen():
               self._create_warn_screen()
               ButtonChoiceWindow(self.screen, "Network", "Invalid IP/Hostname", buttons = ['Ok'])
               self.reset_screen_colors()
+              self.gridform.draw()
           return
 
       def screen_locked_page(self, screen):
@@ -1606,6 +1626,7 @@ class NodeConfigScreen():
             ssh_hostkey_msg = "RSA Host Key Fingerprint:\n%s\n\nRSA Host Key:\n%s" % get_ssh_hostkey()
             ButtonChoiceWindow(self.screen, "Host Key", ssh_hostkey_msg, buttons = ['Ok'])
             self.reset_screen_colors()
+            self.gridform.draw()
 
       def quit(self):
             manual_teardown()
@@ -1635,7 +1656,7 @@ class NodeConfigScreen():
                 else:
                     screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
-                gridform = GridForm(screen, "", 2, 1)
+                self.gridform = GridForm(screen, "", 2, 1)
                 self._set_title()
                 content = Grid(1, len(elements) + 3)
                 self.menuo = 1
@@ -1661,7 +1682,7 @@ class NodeConfigScreen():
                 if not self.screen_locked:
                     if not self.__current_page == NETWORK_DETAILS_PAGE and not self.__current_page == SUPPORT_PAGE:
                         self.menu_list.setCallback(self.menuSpacing)
-                        gridform.add(self.menu_list, 0, 0,
+                        self.gridform.add(self.menu_list, 0, 0,
                                      anchorTop = 1, anchorLeft = 1,
                                      growx = 0)
                 current_element = 0
@@ -1696,12 +1717,12 @@ class NodeConfigScreen():
                 else:
                     pad = 0
                 content.setField(buttonbar, 0, current_element, anchorLeft = 1, padding = (pad,0,0,0))
-                gridform.add(content, 1, 0, anchorTop = 1, padding = (2,0,0,0))
-                gridform.addHotKey("F2")
-                gridform.addHotKey("F8")
+                self.gridform.add(content, 1, 0, anchorTop = 1, padding = (2,0,0,0))
+                self.gridform.addHotKey("F2")
+                self.gridform.addHotKey("F8")
                 try:
                     (top, left) = (1, 4)
-                    result = gridform.runOnce(top, left)
+                    result = self.gridform.runOnce(top, left)
                     menu_choice = self.menu_list.current()
                     pressed = buttonbar.buttonPressed(result)
                     self.menu_list.setCurrent(menu_choice)
