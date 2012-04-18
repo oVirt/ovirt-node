@@ -327,8 +327,6 @@ initrd /initrd0.img
         self.bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace("console=tty0","")
         if is_efi_boot():
             self.bootparams = self.bootparams.replace("quiet","")
-        # remove nomodeset, efi/non-uefi fail to output to console
-        self.bootparams = self.bootparams.replace("nomodeset","")
         if " " in self.disk or os.path.exists("/dev/cciss"):
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
