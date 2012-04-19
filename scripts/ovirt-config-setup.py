@@ -1628,7 +1628,7 @@ class NodeConfigScreen():
       def ssh_hostkey_btn_cb(self):
             self._create_warn_screen()
             ssh_hostkey_msg = "RSA Host Key Fingerprint:\n%s\n\nRSA Host Key:\n%s" % get_ssh_hostkey()
-            ButtonChoiceWindow(self.screen, "Host Key", ssh_hostkey_msg, buttons = ['Ok'])
+            ButtonChoiceWindow(self.screen, "Host Key", ssh_hostkey_msg, buttons = ['Ok'], width = 70)
             self.reset_screen_colors()
             self.gridform.draw()
 
