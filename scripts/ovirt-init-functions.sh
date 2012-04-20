@@ -838,7 +838,7 @@ _start_ovirt_early () {
         # so make sure we persist it after a successful login
         cat >> /etc/profile << EOF
 # added by ovirt-early
-if [ "$USER" = "root" -o "$USER" = "admin" ]; then
+if [ "\$USER" = "root" -o "\$USER" = "admin" ]; then
     sudo persist /etc/passwd /etc/shadow
     if LC_ALL=C sudo chage -l root | grep  -q "password must be changed" \
         || LC_ALL=C sudo chage -l admin | grep -q "password must be changed"; then
