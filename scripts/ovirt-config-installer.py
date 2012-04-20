@@ -453,10 +453,10 @@ class NodeInstallScreen:
             if not self.displayed_disks.has_key(dev):
                 if self.disk_dict.has_key(dev) and dev != self.live_disk:
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
-                    dev_desc = pad_or_trim(33, dev_desc)
+                    dev_desc = pad_or_trim(32, dev_desc)
                     self.valid_disks.append(dev_name)
                     dev_name = os.path.basename(dev_name).replace(" ", "")
-                    dev_name = pad_or_trim(33, dev_name)
+                    dev_name = pad_or_trim(32, dev_name)
                     dev_entry = " %6s  %11s  %5s GB" % (dev_bus,dev_name, dev_size)
                     dev_name = translate_multipath_device(dev_name)
                     self.root_disk_menu_list.append(dev_entry, dev)
@@ -518,14 +518,14 @@ class NodeInstallScreen:
             if not self.displayed_disks.has_key(dev) and dev != self.live_disk:
                 if self.disk_dict.has_key(dev):
                     dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = self.disk_dict[dev].split(",",5)
-                    dev_desc = pad_or_trim(33, dev_desc)
+                    dev_desc = pad_or_trim(32, dev_desc)
                     if dev_name == self.root_disk_menu_list.current():
                         select_status = 1
                     else:
                         select_status = 0
                     # strip all "/dev/*/" references and leave just basename
                     dev_name = os.path.basename(dev_name).replace(" ", "")
-                    dev_name = pad_or_trim(33, dev_name)
+                    dev_name = pad_or_trim(32, dev_name)
                     dev_entry = " %6s %10s %2s GB" % (dev_bus,dev_name, dev_size)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
