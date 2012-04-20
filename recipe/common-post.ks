@@ -42,7 +42,7 @@ cat >> /root/.bashrc << \EOF_bashrc
 # aliases used for the temporary
 function mod_vi() {
   /bin/vi $@
-  restorecon -v $@
+  restorecon -v $@ >/dev/null 2>&1
 }
 alias vi="mod_vi"
 alias ping='ping -c 3'
