@@ -80,7 +80,7 @@ repos.ks:
       if [ -n "$(CENTOS)" ]; then \
         CENTOS_REPO_LINE="repo --name=centos --mirrorlist=$(CENTOS_MIRROR)?release=$(CENTOS_RELEASE)&arch=${ARCH}&repo=os" ;\
         UPDATES_REPO_LINE="repo --name=centos-updates --mirrorlist=$(CENTOS_MIRROR)?release=$(CENTOS_RELEASE)&arch=${ARCH}&repo=updates" ;\
-        EPEL_REPO_LINE="repo --name=epel --baseurl=http://download.fedora.redhat.com/pub/epel/$(CENTOS_RELEASE)/${ARCH}/" ;\
+        EPEL_REPO_LINE="repo --name=epel --baseurl=http://dl.fedoraproject.org/pub/epel/$(CENTOS_RELEASE)/${ARCH}/" ;\
         echo "$${CENTOS_REPO_LINE}" > repos.ks ;\
         echo "$${UPDATES_REPO_LINE}" >> repos.ks ;\
         echo "$${EPEL_REPO_LINE}" >> repos.ks ;\
