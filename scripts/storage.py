@@ -82,12 +82,23 @@ class Storage:
             BASE_SWAP_SIZE=8192
         else:
             BASE_SWAP_SIZE=16384
-        self.SWAP_SIZE = int(BASE_SWAP_SIZE) + int(OVERCOMMIT_SWAP_SIZE)
-
-        for i in ['OVIRT_VOL_BOOT_SIZE','OVIRT_VOL_SWAP_SIZE','OVIRT_VOL_ROOT_SIZE','OVIRT_VOL_CONFIG_SIZE','OVIRT_VOL_LOGGING_SIZE', \
+        if OVIRT_VARS.has_key("OVIRT_VOL_SWAP_SIZE"):
+            if int(OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]) < self.MIN_SWAP_SIZE:
+                logger.error("Swap size is smaller than minimum required size of: %s" % self.MIN_SWAP_SIZE)
+                print "\n\nSwap size is smaller than minimum required size of: %s" % self.MIN_SWAP_SIZE
+                return False
+            else:
+                self.SWAP_SIZE = OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]
+        else:
+            self.SWAP_SIZE = int(BASE_SWAP_SIZE) + int(OVERCOMMIT_SWAP_SIZE)
+        for i in ['OVIRT_VOL_BOOT_SIZE','OVIRT_VOL_ROOT_SIZE','OVIRT_VOL_CONFIG_SIZE','OVIRT_VOL_LOGGING_SIZE', \
                   'OVIRT_VOL_DATA_SIZE','OVIRT_VOL_SWAP2_SIZE','OVIRT_VOL_DATA2_SIZE']:
             i_short = i.replace("OVIRT_VOL_","")
             if OVIRT_VARS.has_key(i):
+                if int(OVIRT_VARS[i]) < int(self.__dict__[i_short]):
+                    logger.error("%s is smaller than minimum required size of: %s" % (i, self.__dict__[i_short]))
+                    print "\n%s is smaller than minimum required size of: %s" % (i, self.__dict__[i_short])
+                    return False
                 logging.info("Setting value for %s to %s " % (self.__dict__[i_short], OVIRT_VARS[i]))
                 self.__dict__[i_short] = int(OVIRT_VARS[i])
             else:
@@ -103,11 +114,11 @@ class Storage:
                     self.APPVGDRIVE.append(DRIVE)
             if not self.cross_check_host_app:
                 logger.error("Skip disk partitioning, AppVG overlaps with HostVG")
-                sys.exit(1)
+                return False
         else:
             if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
                 logger.error("Missing device parameter for AppVG: unable to partition any disk")
-                sys.exit(2)
+                return False
 
 
     def cross_check_host_app(self):
@@ -143,7 +154,7 @@ class Storage:
             if system(pvs_cmd):
                 logger.error("The volume group \"%s\" spans multiple disks." % vg)
                 logger.error("This operation cannot complete.  Please manually cleanup the storage using standard disk tools.")
-                sys.exit(1)
+                return False
             wipe_volume_group(vg)
         return
 
@@ -160,7 +171,17 @@ class Storage:
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
             system("service multipathd reload")
-
+            system("multipath -r &>/dev/null")
+            # wait for device to exit
+            i = 0
+            timeout = 15
+            while not os.path.exists(drive):
+                logger.error(drive + " is not available, waiting %s more secs" % (timeout-i))
+                i = i + i
+                time.sleep(1)
+                if i == timeout:
+                    logger.error("Timed out waiting for: %s" % drive)
+                    return False
         else:
             passthrough("blockdev --rereadpt \"%s\"" % drive, logger.debug)
 
@@ -288,50 +309,6 @@ class Storage:
                 self.disk_dict[dev_name] = "%s,%s,%s,%s,%s,%s" % (dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model)
         devs = self.get_dev_name()
         return (sorted(devs), self.disk_dict)
-
-    def check_partition_sizes(self):
-        drive_list = []
-        drive_space_dict = {}
-        min_data_size = self.DATA_SIZE
-        if self.DATA_SIZE == -1 :
-            min_data_size=5
-        if is_iscsi_install():
-            BOOTDRIVESPACE = get_drive_size(self.BOOTDRIVE)
-            drive_list.append("BOOT")
-            drive_space_dict["BOOTDRIVESPACE"] = BOOTDRIVESPACE
-            drive_space_dict["BOOT_NEED_SIZE"] = self.BOOT_SIZE
-        else:
-            ROOTDRIVESPACE = get_drive_size(self.ROOTDRIVE)
-            HOSTVGDRIVESPACE = get_drive_size(self.HOSTVGDRIVE)
-            ROOT_NEED_SIZE=self.ROOT_SIZE * 2
-            HOSTVG_NEED_SIZE=self.SWAP_SIZE + self.CONFIG_SIZE + self.LOGGING_SIZE + min_data_size
-            drive_space_dict["ROOTDRIVESPACE"] = ROOTDRIVESPACE
-            drive_space_dict["ROOT_NEED_SIZE"] = ROOT_NEED_SIZE
-            drive_space_dict["HOSTVGDRIVESPACE"] = HOSTVGDRIVESPACE
-            drive_space_dict["HOSTVG_NEED_SIZE"] = HOSTVG_NEED_SIZE
-            if self.ROOTDRIVE == self.HOSTVGDRIVE:
-                drive_list.append("ROOT")
-                ROOT_NEED_SIZE=self.ROOT_SIZE * 2 + HOSTVG_NEED_SIZE
-                drive_space_dict["ROOT_NEED_SIZE"] = ROOT_NEED_SIZE
-            else:
-                drive_list.append("ROOT")
-                drive_list.append("HOSTVG")
-
-            for drive in drive_list:
-                drive_need_size = drive_space_dict[drive + "NEED_SIZE"]
-                drive_disk_size= drive_space_dict[drive + "DRIVESPACE"]
-    
-            if drive_need_size > drive_disk_size:
-                gap_size = drive_need_size - drive_disk_size
-                logger.error("The target storage device is too small for the desired sizes:")
-                logger.error(" Disk Target: " + drive)
-                logger.error(" Size of target storage device: " + drive_disk_size + "MB")
-                logger.error(" Total storage size to be used: " + drive_need_size + "MB")
-                logger.error("You need an additional " + gap_size + "MB of storage.")
-                sys.exit(1)
-            else:
-                logger.info("Required Space : " + drive_need_size + "MB")
-                return True
 
     def create_hostvg(self):
         logger.info("Creating LVM partition")
@@ -520,7 +497,7 @@ class Storage:
             logger.info("Creating physical volume")
             if not os.path.exists(partpv):
                 logger.error(partpv + " is not available!")
-                sys.exit(1)
+                return False
             dd_cmd = "dd if=/dev/zero of=\""+ partpv + "\" bs=1024k count=1"
             logger.info(dd_cmd)
             system(dd_cmd)
@@ -756,9 +733,10 @@ class Storage:
                 logger.error(" Size of target storage device: " + str(drive_disk_size) + "MB")
                 logger.error(" Total storage size to be used: " + str(drive_need_size) + "MB")
                 logger.error("You need an additional " + str(gap_size) + "MB of storage.")
-                sys.exit(1)
+                return False
             else:
                 logger.info("Required Space : " + str(drive_need_size) + "MB")
+                return True
 
 def wipe_fakeraid(device):
     dmraid_cmd = "echo y | dmraid -rE $(readlink -f \"%s\")" % device

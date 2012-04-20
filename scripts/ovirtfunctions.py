@@ -818,24 +818,6 @@ def get_live_disk():
                         live_disk = os.path.basename(dev)
     return live_disk
 
-def backup_file(self, file):
-    dir = os.path.dirname(file)
-    if dir in os.listdir("/"):
-        print "unexpected non-absolute dir: %s" % dir
-        sys.exit(1)
-    os.system("mkdir -p '%s%s'") % (OVIRT_BACKUP_DIR, dir)
-    if os.path.exists(file):
-        shutil.copy(file, OVIRT_BACKUP_DIR + file)
-    #test -f "$1" && cp -pf "$1" "$OVIRT_BACKUP_DIR/${dir:1}"
-
-#add_if_not_exist() {
-#    string="$1"
-#    file="$2"
-#
-#    grep -qE "^[[:space:]]*$string($|#|[[:space:]])" "$file" \
-#        || echo "$string" >> "$file"
-#}
-
 # reboot wrapper
 #   cleanup before reboot
 

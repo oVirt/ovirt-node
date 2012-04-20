@@ -419,4 +419,4 @@ def network_auto():
         network.save_network_configuration()
     except:
         logger.warn("Network Configuration Failed....")
-        sys.exit(1)
+        return False
