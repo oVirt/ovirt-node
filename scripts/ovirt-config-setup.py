@@ -1331,7 +1331,11 @@ class NodeConfigScreen():
 
       def process_nic_config(self):
           self._create_warn_screen()
-          warn = ButtonChoiceWindow(self.screen, "Confirm Network Settings", "Network Configuration may take a few moments, proceed?")
+          message = "Network Configuration may take a few moments, proceed?"
+          if self.configured_nics > 0 and \
+             "Unconfigured" in self.nic_dict[self.nic_lb.current()]:
+              message = "Network Configuration detected an already configured NIC the configuration for that NIC is going to be removed and the reconfiguration may take a few moments, proceed?"
+          warn = ButtonChoiceWindow(self.screen, "Confirm Network Settings", message)
           self.reset_screen_colors()
           if warn == "ok":
               self._create_blank_screen()
