@@ -738,9 +738,9 @@ def remove_config(files):
                                else:
                                    logger.info("%s successully unpersisted" % filename)
                     # clean up the persistent store
-                    os.system('rm -Rf /config"%s"' % filename)
+                    system('rm -Rf /config"%s"' % filename)
                     # unregister in /config/files used by rc.sysinit
-                    os.system('sed --copy -i "\|^%s$|d" /config/files' % filename)
+                    system('sed --copy -i "\|^%s$|d" /config/files' % filename)
                 else:
                     logger.warn("%s is not a persisted file." % filename)
             else:
@@ -763,16 +763,16 @@ def ovirt_safe_delete_config(files):
         if check_bind_mount(filename):
             os.system('umount -n "%s" &>/dev/null' % filename)
 
-        os.system('sed --copy -i "\|%s$|d" /config/files' % filename)
+        system('sed --copy -i "\|%s$|d" /config/files' % filename)
 
         if os.path.isdir(filename):
             for child in subprocess.Popen("ls -d '%s'" % filename, shell=True, stdout=PIPE, stderr=STDOUT).stdout.read():
                 ovirt_safe_delete_config(child)
-            os.system("rm -rf /config'%s'" % filename)
-            os.system("rm -rf '%s'" % filename)
+            system("rm -rf /config'%s'" % filename)
+            system("rm -rf '%s'" % filename)
         else:
-            os.system("shred -u /config'%s'" % filename)
-            os.system("shred -u '%s'" % filename)
+            system("shred -u /config'%s'" % filename)
+            system("shred -u '%s'" % filename)
 
 
 # compat function to handle different udev versions
@@ -1168,6 +1168,7 @@ def findfs(label):
 def system(command):
     system_cmd = subprocess.Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
     output, err = system_cmd.communicate()
+    logger.propagate = False
     logger.debug(command)
     logger.debug(output)
     if system_cmd.returncode == 0:
