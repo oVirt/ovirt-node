@@ -16,3 +16,5 @@ vhostmd
 #VDSM
 vdsm-cli
 vdsm-reg
+# keyboard layout
+system-config-keyboard-base
