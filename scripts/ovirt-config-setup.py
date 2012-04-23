@@ -1715,7 +1715,10 @@ class NodeConfigScreen():
                 buttons = []
                 if self.__current_page == NETWORK_PAGE:
                     buttons.append (["Flash Lights to Identify", IDENTIFY_BUTTON])
-                if self.__current_page != STATUS_PAGE and self.__current_page < 20 :
+                if self.__current_page != STATUS_PAGE \
+                   and self.__current_page < 20 \
+                   and not (self.__current_page is NETWORK_DETAILS_PAGE and \
+                            is_engine_configured()):
                     buttons.append (["Apply", APPLY_BUTTON])
                 if self.__current_page == NETWORK_DETAILS_PAGE:
                     buttons.append(["Back", BACK_BUTTON])
@@ -1727,7 +1730,10 @@ class NodeConfigScreen():
                     buttons.append(["Power Off", POWER_OFF_BUTTON])
                 if self.__current_page == LOCKED_PAGE:
                     buttons.append(["Unlock", UNLOCK_BUTTON])
-                if self.__current_page != STATUS_PAGE and self.__current_page < 20:
+                if self.__current_page != STATUS_PAGE \
+                   and self.__current_page < 20 \
+                   and not (self.__current_page is NETWORK_DETAILS_PAGE and \
+                            is_engine_configured()):
                     buttons.append(["Reset", RESET_BUTTON])
                 if self.__current_page == SUPPORT_PAGE:
                     buttons.append(["Back to Menu", MENU_BUTTON])

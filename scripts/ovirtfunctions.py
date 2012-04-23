@@ -1308,6 +1308,23 @@ def load_keyboard_config():
     kbd.read()
     kbd.activate()
 
+def is_engine_configured():
+    '''
+    Checks if the rhevm bridge is there, an indicator if we are managed
+    by engine.
+    A simple doctest:
+
+    >>> bridge_file = os.path.exists("/etc/sysconfig/network-scripts/" + \
+                                     "ifcfg-rhevm")
+    >>> bridge_test = is_engine_configured()
+    >>> bridge_file is bridge_test
+    '''
+    if os.system("brctl show | egrep -iq 'ovirtmgmt|rhevm'") is 0:
+        return True
+    else:
+        return False
+
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 
