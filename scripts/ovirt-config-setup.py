@@ -140,6 +140,7 @@ class NodeConfigScreen():
           self.reset_screen_colors()
           self._gridform = GridForm(self.screen, "", 2, 2)
           self._set_title()
+          return self._gridform
 
       def _create_warn_screen(self):
           self._create_blank_screen()
@@ -1571,8 +1572,8 @@ class NodeConfigScreen():
       def process_config(self):
           self._create_blank_screen()
           self._set_title()
-          self.gridform.add(Label("Applying Configuration"), 0, 0)
-          self.gridform.draw()
+          self._gridform.add(Label("Applying Configuration"), 0, 0)
+          self._gridform.draw()
           self.screen.refresh()
           if self.__current_page == NETWORK_PAGE:
               ret = self.process_network_config()
