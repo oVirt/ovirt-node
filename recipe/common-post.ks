@@ -119,7 +119,6 @@ set /files/etc/sysconfig/kdump/MKDUMPRD_ARGS --allow-missing
 save
 EOF_kdump
 
-echo 'OPTIONS="-v -Lf /dev/null"' >> /etc/sysconfig/snmpd
 cat > /etc/snmp/snmpd.conf << \EOF_snmpd
 master agentx
 dontLogTCPWrappersConnects yes
