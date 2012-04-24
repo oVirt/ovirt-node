@@ -74,11 +74,15 @@ class Plugin(PluginBase):
     def action(self):
         self.ncs.screen.setColor("BUTTON", "black", "red")
         self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
-        if self.cim_status.value() == 0 and self.current_cim_status == 1:
+        is_transition_to_disabled = self.cim_status.value() == 0 and self.current_cim_status == 1
+        is_transition_to_enabled = self.cim_status.value() == 1 and self.current_cim_status == 0
+        is__enabled = self.cim_status.value() == 1
+        if is_transition_to_disabled:
             if disable_cim():
                 ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Successfully Disabled", buttons = ['Ok'])
                 self.ncs.reset_screen_colors()
-        elif self.cim_status.value() == 1 and self.current_cim_status == 0:
+                return True
+        elif is_transition_to_enabled or is_enabled:
             if enable_cim():
                 ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Successfully Enabled", buttons = ['Ok'])
                 self.ncs.reset_screen_colors()
