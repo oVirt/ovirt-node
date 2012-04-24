@@ -487,6 +487,13 @@ class NodeConfigScreen():
                   self.netvlanid.set("")
       def password_check_callback(self):
           resp, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
+          if self.__current_page == SNMP_PAGE:
+              if len(self.root_password_1.value()) < 8:
+                  self.root_password_1.set("")
+                  msg = "Password must be at least 8 characters"
+              if len(self.root_password_2.value()) < 8:
+                  self.root_password_2.set("")
+                  msg = "Password must be at least 8 characters"
           self.pw_msg.setText(msg)
           return
 
