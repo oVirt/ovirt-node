@@ -119,10 +119,12 @@ class Storage:
                 return True
 
     def get_drive_size(self, drive):
-        size_cmd = "sfdisk -s " + drive + " 2>null"
+        logger.debug("Getting Drive Size For: %s" % drive)
+        size_cmd = "sfdisk -s " + drive + " 2>/dev/null"
         size = subprocess.Popen(size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        size = size.stdout.read()
+        size = size.stdout.read().strip()
         size = int(int(size) / 1024)
+        logger.debug(size)
         return size
 
 
@@ -582,7 +584,8 @@ class Storage:
 
         logger.info("Saving parameters")
         unmount_config("/etc/default/ovirt")
-
+        if not self.check_partition_sizes():
+            return False
         logger.info("Removing old LVM partitions")
         # HostVG must not exist at this point
         # we wipe only foreign LVM here
@@ -721,7 +724,8 @@ class Storage:
             drive_space_dict["BOOT_NEED_SIZE"] = self.BOOT_SIZE
         else:
             ROOTDRIVESPACE = self.get_drive_size(self.ROOTDRIVE)
-            for drive in self.HOSTVGDRIVE.split(","):
+            HOSTVGDRIVESPACE = 0
+            for drive in self.HOSTVGDRIVE.strip(",").split(","):
                 space = self.get_drive_size(drive)
                 HOSTVGDRIVESPACE = HOSTVGDRIVESPACE + space
             ROOT_NEED_SIZE=self.ROOT_SIZE * 2
@@ -743,6 +747,8 @@ class Storage:
                 drive_need_size = drive_space_dict[drive + "_NEED_SIZE"]
                 drive_disk_size= drive_space_dict[drive + "DRIVESPACE"]
 
+            self.drive_disk_size = drive_disk_size
+            self.drive_need_size = drive_need_size
             if drive_need_size > drive_disk_size:
                 gap_size = drive_need_size - drive_disk_size
                 logger.error("The target storage device is too small for the desired sizes:")

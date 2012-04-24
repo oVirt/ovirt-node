@@ -844,7 +844,13 @@ class NodeInstallScreen:
                                         continue
                                     hostvg_list += dev + ","
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
-                                self.__current_page = PASSWORD_PAGE
+                                s = storage.Storage()
+                                if not s.check_partition_sizes():
+                                    msg = "Not enough space for installation\nPlease select a bigger drive\n\nAvailable Space: %sMB\nRequired Space: %sMB\n" % (s.drive_disk_size, s.drive_need_size)
+                                    warn = ButtonChoiceWindow(self.screen, "Disk Space Check", msg, buttons = ['Ok'])
+                                    self.__current_page = ROOT_STORAGE_PAGE
+                                else:
+                                    self.__current_page = PASSWORD_PAGE
                                 if check_existing_hostvg(""):
                                     self.screen.setColor("BUTTON", "black", "red")
                                     self.screen.setColor("ACTBUTTON", "blue", "white")
