@@ -53,11 +53,18 @@ class Storage:
             if "," in OVIRT_VARS["OVIRT_INIT"]:
                 disk_count = 0
                 for disk in OVIRT_VARS["OVIRT_INIT"].split(","):
+                    skip = False
                     if disk_count < 1:
                         self.ROOTDRIVE = disk
                         disk_count = disk_count + 1
+                        self.HOSTVGDRIVE = disk
                     else:
-                        self.HOSTVGDRIVE = self.HOSTVGDRIVE + disk + ","
+                        for hostvg in self.HOSTVGDRIVE.split(","):
+                            if hostvg == disk:
+                                skip = True
+                                break
+                        if not skip:
+                            self.HOSTVGDRIVE = self.HOSTVGDRIVE + "," + disk
             else:
                 self.ROOTDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
                 self.HOSTVGDRIVE = translate_multipath_device(OVIRT_VARS["OVIRT_INIT"])
@@ -139,24 +146,32 @@ class Storage:
         return size
 
 
-    def wipe_lvm_on_disk(self, dev):
-        logger.debug("Considering '%s' for LVM removal." % dev)
-        if not os.path.exists(dev):
-            logger.warn("'%s' is no device." % dev)
-            return
-        part_delim="p"
-        if "/dev/sd" in dev or "dev/vd" in dev:  # FIXME this should be more intelligent
-            part_delim=""
-        vg_cmd = "pvs -o vg_uuid --noheadings \"%s\" \"%s%s\"[0-9]* 2>/dev/null | sort -u" % (dev, dev, part_delim)
-        vg_proc = passthrough(vg_cmd, log_func=logger.debug)
-        for vg in vg_proc.stdout.split():
-            pvs_cmd="pvs -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s%s[0-9]+|%s \"" % (vg, dev, part_delim, dev)
-            if system(pvs_cmd):
-                logger.error("The volume group \"%s\" spans multiple disks." % vg)
-                logger.error("This operation cannot complete.  Please manually cleanup the storage using standard disk tools.")
-                return False
-            wipe_volume_group(vg)
-        return
+    def wipe_lvm_on_disk(self, _devs):
+        devs = set(_devs.split(","))
+        logger.debug("Considering to wipe LVM on: %s / %s" % (_devs, devs))
+        for dev in devs:
+            logger.debug("Considering device '%s'" % dev)
+            if not os.path.exists(dev):
+                logger.warn("'%s' is no device, let's try the next one." % dev)
+                continue
+            part_delim="p"
+            if "/dev/sd" in dev or "dev/vd" in dev:  # FIXME this should be more intelligent
+                part_delim=""
+            vg_cmd = "pvs -o vg_uuid --noheadings \"%s\" \"%s%s\"[0-9]* 2>/dev/null | sort -u" % (dev, dev, part_delim)
+            vg_proc = passthrough(vg_cmd, log_func=logger.debug)
+            vgs_on_dev = vg_proc.stdout.split()
+            for vg in vgs_on_dev:
+                pvs_cmd="pvs -o pv_name,vg_uuid --noheadings | grep \"%s\" | egrep -v -q \"%s" % (vg, dev)
+                for fdev in devs:
+                    pvs_cmd += "|%s%s[0-9]+|%s" % (fdev, part_delim, fdev)
+                pvs_cmd += "\""
+                remaining_pvs = system(pvs_cmd)
+                if remaining_pvs:
+                    logger.error("The volume group \"%s\" spans multiple disks." % vg)
+                    logger.error("This operation cannot complete.  Please manually cleanup the storage using standard disk tools.")
+                    return False
+                wipe_volume_group(vg)
+        return True
 
 
     def reread_partitions(self, drive):
@@ -569,11 +584,17 @@ class Storage:
         # HostVG must not exist at this point
         # we wipe only foreign LVM here
         logger.info("Wiping LVM on HOSTVGDRIVE %s" % self.HOSTVGDRIVE)
-        self.wipe_lvm_on_disk(self.HOSTVGDRIVE)
+        if not self.wipe_lvm_on_disk(self.HOSTVGDRIVE):
+            logger.error("Wiping LVM on %s Failed" % self.HOSTVGDRIVE)
+            return False
         logger.info("Wiping LVM on ROOTDRIVE %s" % self.ROOTDRIVE)
-        self.wipe_lvm_on_disk(self.ROOTDRIVE)
+        if not self.wipe_lvm_on_disk(self.ROOTDRIVE):
+            logger.error("Wiping LVM on %s Failed" % self.ROOTDRIVE)
+            return False
         logger.info("Wiping LVM on BOOTDRIVE %s" % self.BOOTDRIVE)
-        self.wipe_lvm_on_disk(self.BOOTDRIVE)
+        if not self.wipe_lvm_on_disk(self.BOOTDRIVE):
+            logger.error("Wiping LVM on %s Failed" % self.BOOTDRIVE)
+            return False
         logger.debug("Old LVM partitions should be gone.")
         logger.debug(passthrough("vgdisplay -v"))
 
