@@ -78,18 +78,20 @@ class Plugin(PluginBase):
             if disable_cim():
                 ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Successfully Disabled", buttons = ['Ok'])
                 self.ncs.reset_screen_colors()
-                return True
         elif self.cim_status.value() == 1 and self.current_cim_status == 0:
             if enable_cim():
-                if len(self.cim_password_1.value()) > 0  and len(self.cim_password_2.value()) > 0 :
-                    if set_password(self.cim_password_1.value(), "cim"):
-                        ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Successfully Enabled", buttons = ['Ok'])
-                        self.ncs.reset_screen_colors()
-                        return True
-                    else:
-                        ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Configuration Failed", buttons = ['Ok'])
-                        self.ncs.reset_screen_colors()
-                        return False
+                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Successfully Enabled", buttons = ['Ok'])
+                self.ncs.reset_screen_colors()
+            else:
+                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Configuration Failed", buttons = ['Ok'])
+                self.ncs.reset_screen_colors()
+        if len(self.cim_password_1.value()) > 0  and len(self.cim_password_2.value()) > 0 :
+            if set_password(self.cim_password_1.value(), "cim"):
+                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Password Successfully Set", buttons = ['Ok'])
+                self.ncs.reset_screen_colors()
+            else:
+                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Password Failed", buttons = ['Ok'])
+                self.ncs.reset_screen_colors()
 
     def password_check_callback(self):
         resp, msg = password_check(self.cim_password_1.value(), self.cim_password_2.value())
