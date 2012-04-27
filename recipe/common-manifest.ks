@@ -9,7 +9,27 @@ rpm -qa --qf '%{license}\n' | sort -u > /manifest-license.txt
 # dependencies
 rpm -qa | xargs -n1 rpm -e --test 2> /manifest-deps.txt
 echo -n "."
-find / -xdev -print -exec rpm -qf {} \; > /manifest-owns.txt
+
+# Takes about 4min
+#find / -xdev -print -exec rpm -qf {} \; > /manifest-owns.txt
+# Alternative takes about 8sec, results are slightly different
+{
+    # Get all owned files
+    rpm -qa | while read PKG
+    do
+        rpm -ql $PKG | while read FIL
+        do
+            [[ -e "$FIL" ]] && echo $FIL
+        done | sed "s#\$#\t\t\t$PKG#"
+    done
+    # Get all files on fs and mark them as not owned
+    find / -xdev | sed "s#\$#\t\t\tNot owned by any package.#"
+# Just keep the first occurence of a file entry
+# Unowned files will just occur once,
+# owned once twice (just the firts entry is kept)
+} | sort -u -k1,1 | sed "s#\t\t\t#\n#" > /manifest-owns.txt
+
+
 # this one is kept in root for ovirt-rpmquery
 rpm -qa --qf '%{NAME}\t%{VERSION}\t%{RELEASE}\t%{BUILDTIME}\n' | \
     sort > /rpm-qa.txt
