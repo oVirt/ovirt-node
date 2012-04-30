@@ -243,13 +243,20 @@ class Network:
         net_configured=0
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
         logger.info("Configuring network for NIC %s" % self.CONFIGURED_NIC)
-        system("ifdown br" + self.CONFIGURED_NIC)
+        # Wee need to bring down all network stuff, with the current network
+        # config, before we change the config. Otherwise the interfaces can
+        # not be brought down correctly.
+        logger.info("Stopping Network services")
+        system("service network stop")
+        # FIXME can't this be done further down were we remove the bridges?
         for vlan in get_system_vlans():
             # XXX wrong match e.g. eth10.1 with eth1
             if self.CONFIGURED_NIC in vlan:
                 system_closefds("vconfig rem " + vlan + "&> /dev/null")
                 ovirt_safe_delete_config(self.IFSCRIPTS_PATH + vlan)
                 system_closefds("rm -rf " + self.IFSCRIPTS_PATH + vlan)
+
+        # All old config files are gone, the new ones are created step by step
 
         logger.debug("Removing persisted network configs")
         # This should cover NICs, VLANs and bridges
