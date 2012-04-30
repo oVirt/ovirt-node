@@ -1195,6 +1195,15 @@ ovirtfunctions.load_keyboard_config()
 EOP
 }
 
+configure_dns ()
+{
+    python <<EOP
+import ovirtnode.network
+network = ovirtnode.network.Network()
+network.configure_dns()
+EOP
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 

@@ -1217,6 +1217,9 @@ start_ovirt_post() {
         # Re-load keyboard settings
         load_keyboard_config 2> /dev/null
 
+        # Rewrite resolv.conf, rhbz#742365
+        configure_dns
+
         # wait for libvirt to finish initializing
         local count=0
         while true; do

@@ -175,14 +175,22 @@ class Network:
         if OVIRT_VARS.has_key("OVIRT_DNS"):
             DNS=OVIRT_VARS["OVIRT_DNS"]
             try:
-                if not DNS is None:
+                if DNS is not None:
+                    tui_cmt = ("Please make changes through the TUI. " + \
+                               "Manual edits to this file will be " + \
+                               "lost on reboot")
+                    augtool("set", "/files/etc/resolv.conf/#comment[1]", \
+                            tui_cmt)
                     DNS = DNS.split(",")
                     i = 1
                     for server in DNS:
+                        logger.debug("Setting DNS server %d: %s" % (i, server))
                         setting = "/files/etc/resolv.conf/nameserver[%s]" % i
                         augtool("set", setting, server)
                         i = i + i
                     ovirt_store_config("/etc/resolv.conf")
+                else:
+                    logger.debug("No DNS servers given.")
             except:
                 logger.warn("Failed to set DNS servers")
             finally:
