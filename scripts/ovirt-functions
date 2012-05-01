@@ -469,7 +469,11 @@ mount_logging() {
         cp -av /var/log/* $log2
         # save temporary log
         if [ -e /tmp/ovirt.log ]; then
-            cp /tmp/ovirt.log $log2/ovirt.log-tmp
+            {
+                echo 'BEGIN of temporary log' ;
+                cat /tmp/ovirt.log ;
+                echo 'END of temporary log' ;
+            } &>> $log2/ovirt.log
         fi
         mount --move $log2 /var/log
         rmdir $log2
@@ -1160,6 +1164,9 @@ autoinstall_failed(){
     plymouth --hide-splash
     log "Automatic installation failed. Please review console messages."
     log "Press Enter to drop to emergency shell."
+    [[ -f "/tmp/ovirt.log" ]] && {
+        cat /tmp/ovirt.log >> /var/log/ovirt.log
+    }
     read < /dev/console
     bash < /dev/console > /dev/console 2> /dev/console
     plymouth --show-splash

@@ -523,7 +523,7 @@ def mount_logging():
     system_closefds("cp -av /var/log/* %s &>/dev/null" % log2)
     # save temporary log
     if os.path.exists("/tmp/ovirt.log"):
-        system_closefds("cat /tmp/ovirt.log >> %s/ovirt.log &>/dev/null" % log2)
+        system_closefds("{ echo 'BEGIN of temporary log' ; cat /tmp/ovirt.log; echo 'END of temporary log' ; } &>> %s/ovirt.log" % (log2))
     system_closefds("mount --move %s /var/log &>/dev/null" % log2)
     shutil.rmtree(log2)
     system_closefds("restorecon -r /var/log &>/dev/null")

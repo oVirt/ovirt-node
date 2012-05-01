@@ -58,7 +58,7 @@ if not is_stateless():
         file.close()
     else:
         config_networking()
-        print "Automatic installation failed. Please review /tmp/ovirt.log"
+        print "Automatic installation failed. Please review /var/log/ovirt.log"
         sys.exit(1)
 
 config_networking()
