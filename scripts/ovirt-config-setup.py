@@ -139,7 +139,6 @@ class NodeConfigScreen():
           self.screen = SnackScreen()
           self.reset_screen_colors()
           self._gridform = GridForm(self.screen, "", 2, 2)
-          self.screen.pushHelpLine(" ")
           self._set_title()
 
       def _create_warn_screen(self):
@@ -1655,10 +1654,6 @@ class NodeConfigScreen():
                 if is_console():
                     self.set_console_colors()
                     screen.setColor(customColorset(1), "black", "magenta")
-                if self.__current_page == STATUS_PAGE:
-                    screen.pushHelpLine(" Use arrow keys to choose option, then press Enter to select it ")
-                else:
-                    screen.pushHelpLine(" ")
                 elements = self.get_elements_for_page(screen, self.__current_page)
                 self.gridform = GridForm(screen, "", 2, 1)
                 self._set_title()
