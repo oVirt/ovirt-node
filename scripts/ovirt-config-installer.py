@@ -210,6 +210,16 @@ class NodeInstallScreen:
             self.pw_msg.setText(msg)
         return
 
+    def password_check_w_empty_callback(self):
+        self.valid_password, msg = password_check(self.root_password_1.value(), self.root_password_2.value(), 0)
+        if self.current_password_fail == 0:
+            if len(self.root_password_1.value()) is 0 and \
+               len(self.root_password_2.value()) is 0:
+                msg = "You have not provided a new password, " + \
+                      "current admin password will be used."
+            self.pw_msg.setText(msg)
+        return
+
     def current_password_callback(self):
         auth = PAM.pam()
         auth.start("passwd")
@@ -223,14 +233,14 @@ class NodeInstallScreen:
             except PAM.error, (resp, code):
                 logger.error(resp)
                 self.current_password_fail = 1
-                self.pw_msg.setText("Current Password Invalid")
+                self.pw_msg.setText("Current Password Invalid\n\n\n\n")
                 return False
             except:
                 logger.error("Internal error")
                 return False
             else:
                 self.current_password_fail = 0
-                self.pw_msg.setText(" ")
+                self.pw_msg.setText(" \n\n\n\n")
                 return True
 
     def other_device_root_callback(self):
@@ -603,29 +613,31 @@ class NodeInstallScreen:
         return [Label(""), elements]
 
     def upgrade_page(self):
-        elements = Grid(2, 8)
+        elements = Grid(2, 9)
         pw_elements = Grid (3,8)
         self.current_password = Entry(15,password = 1)
         self.root_password_1 = Entry(15,password = 1)
         self.root_password_2 = Entry(15,password = 1)
 
         if pwd_set_check("admin"):
-            elements.setField(Label(" "), 0, 1, anchorLeft = 1)
-            elements.setField(Label("To reset password, please enter the current password "), 0, 2, anchorLeft = 1)
+            elements.setField(Label("Please enter the current admin password. You may also change the"), 0, 1, anchorLeft = 1)
+            elements.setField(Label("admin password if required. If new password fields are left blank"), 0, 2, anchorLeft = 1)
+            elements.setField(Label("the password will remain the same."), 0, 3, anchorLeft = 1)
+
             pw_elements.setField(Label("Current Password: "), 0, 1, anchorLeft = 1)
             self.current_password.setCallback(self.current_password_callback)
-            pw_elements.setField(self.current_password, 1,1)
-        elements.setField(Label("Password for local console access"), 0, 3, anchorLeft = 1)
-        elements.setField(Label(" "), 0, 4)
+            pw_elements.setField(self.current_password, 1, 1)
+        elements.setField(Label("Password for local console access"), 0, 4, anchorLeft = 1)
+        elements.setField(Label(" "), 0, 5)
         pw_elements.setField(Label("Password: "), 0, 2, anchorLeft = 1)
         pw_elements.setField(Label("Confirm Password: "), 0, 3, anchorLeft = 1)
-        self.root_password_1.setCallback(self.password_check_callback)
-        self.root_password_2.setCallback(self.password_check_callback)
+        self.root_password_1.setCallback(self.password_check_w_empty_callback)
+        self.root_password_2.setCallback(self.password_check_w_empty_callback)
         pw_elements.setField(self.root_password_1, 1,2)
         pw_elements.setField(self.root_password_2, 1,3)
-        elements.setField(pw_elements, 0, 5, anchorLeft = 1)
+        elements.setField(pw_elements, 0, 6, anchorLeft = 1)
         self.pw_msg = Textbox(60, 6, "", wrap=1)
-        elements.setField(self.pw_msg, 0, 6, padding = (0,1,0,3))
+        elements.setField(self.pw_msg, 0, 7, padding = (0,1,0,1))
         return [Label(""), elements]
 
     def get_elements_for_page(self, screen, page):
@@ -698,7 +710,12 @@ class NodeInstallScreen:
         gridform.add(progress_bar, 0, 1)
         gridform.draw()
         self.screen.refresh()
-        admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
+        admin_pw_set = False
+        if len(self.root_password_1.value()) is 0:
+            # Use the old password if no password is given.
+            admin_pw_set = True
+        else:
+            admin_pw_set = password.set_password(self.root_password_1.value(), "admin")
         if admin_pw_set:
             install = Install()
             boot_setup = install.ovirt_boot_setup()
@@ -873,8 +890,12 @@ class NodeInstallScreen:
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
                             self.__current_page = PASSWORD_PAGE
                     elif self.__current_page == UPGRADE_PAGE:
-                        if not self.current_password_fail == 1:
-                            self.upgrade_node()
+                        if self.current_password_fail is not 1:
+                            if self.valid_password == 0:
+                                self.upgrade_node()
+                            else:
+                                ButtonChoiceWindow(self.screen, "Password Check", "You must enter a valid password", buttons = ['Ok'])
+                                self.__current_page = UPGRADE_PAGE
                     elif self.__current_page == PASSWORD_PAGE:
                         if self.valid_password == 0:
                             self.install_node()

@@ -1158,20 +1158,31 @@ def system(command):
     else:
         return False
 
-def password_check(password_1, password_2):
-          if password_1 != "" and password_2 != "":
-              if password_1 != password_2:
-                  return (1, "Passwords Do Not Match\n\n\n\n\n\n")
-              try:
-                  cracklib.FascistCheck(password_1)
-              except ValueError, e:
-                  return (0, "You have provided a weak password!\nStrong passwords contain a mix of uppercase,\
-                          lowercase, numeric and punctuation characters.\n\nThey are six or more characters long and \
-                          do not contain dictionary words")
-              return (0, "\n\n\n\n\n\n")
-          elif password_1 != "" and password_2 == "":
-              return (1, "Please Confirm Password\n\n\n\n\n\n")
-          return (1, "\n\n\n\n\n\n")
+def password_check(password_1, password_2, min_length = 1):
+    '''
+    Do some password checks
+
+    >>> r, msg = password_check("", "")
+    >>> r
+    1
+    >>> msg is "\n\n\n\n\n\n"
+    True
+    '''
+    if len(password_1) is 0 and min_length is not 0:
+      return (1, "\n\n\n\n\n")
+    if len(password_1) < min_length:
+      return (1, "Password must be at least %d characters" % min_length)
+    if password_1 != "" and password_2 == "":
+      return (1, "Please Confirm Password\n\n\n\n\n")
+    if password_1 != password_2:
+      return (1, "Passwords Do Not Match\n\n\n\n\n")
+    try:
+      cracklib.FascistCheck(password_1)
+    except ValueError, e:
+      return (0, "You have provided a weak password!\nStrong passwords contain a mix of uppercase,\n" + \
+              "lowercase, numeric and punctuation characters.\nThey are six or more characters long and\n" + \
+              "do not contain dictionary words")
+    return (0, "\n\n\n\n\n")
 
 def get_logrotate_size():
     size = augtool_get("/files/etc/logrotate.d/ovirt-node/rule/size")
