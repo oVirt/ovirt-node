@@ -270,10 +270,16 @@ class Storage:
                     dev_desc = "unknown"
             if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name and not "/dev/loop" in dev_name and size_failed == 0:
                 dev_name = translate_multipath_device(dev_name)
-                if dev_bus == "usb":
-                    dev_bus = "USB Device          "
-                elif dev_bus == "ata" or dev_bus == "scsi" or dev_bus == "cciss" or "/dev/vd" in dev_name:
-                    dev_bus = "Local / FibreChannel"
+                busmap = { \
+                    "usb"  : "USB Device          ", \
+                    "ata"  : "Local / FibreChannel", \
+                    "scsi" : "Local / FibreChannel", \
+                    "cciss": "CCISS               " \
+                }
+                if dev_bus in busmap:
+                    dev_bus = busmap[dev_bus]
+                elif "/dev/vd" in dev_name:
+                    dev_bus = "Local (Virtio)      "
                 else:
                     dev_bus = "                    "
 
