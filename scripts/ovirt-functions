@@ -1069,6 +1069,45 @@ get_dm_device ()
     return $rc
 }
 
+#get Multipath device for given /dev/sdX device
+#return sdX device if no multipath device
+translate_multipath_device() {
+    #trim so that only sdX is stored, but support passing /dev/sdX
+    local dev="$1"
+    local dm_dev
+
+    if [ -z "$dev" ]; then
+        return 1
+    fi
+    if [[ "$dev" =~ "/dev/mapper" ]]; then
+        echo "$dev"
+        return 0
+    elif [[ "$dev" =~ "/dev/cciss" ]]; then
+        #rename to cciss!device
+        dev2="cciss\!$(basename "$dev")"
+        dm_dev="/dev/$(basename $(ls -d /sys/block/$dev2/holders/dm* | head -n1))"
+        if [ -z "$dm_dev" ]; then
+            echo "$dev"
+            return
+        fi
+    else
+
+        if ! multipath -ll "$dev" 2>&1 >/dev/null; then
+            echo "$dev"
+            return
+        fi
+        dm_dev=/dev/$(multipath -ll "$dev" | egrep dm-[0-9]+ | sed -r 's/^.* (dm-[0-9]+) .*$/\1/')
+    fi
+
+    local mpath_device=$(get_dm_device "$dm_dev")
+
+    if [ -z "$mpath_device" ]; then
+        echo "$dev"
+    else
+        echo "$mpath_device"
+    fi
+}
+
 #Function to determine partition and device names
 get_part_info() {
     local drive_in="$1"
@@ -1079,14 +1118,14 @@ get_part_info() {
     local rc=0
 
     if [ -z "$grub_dev" ]; then
-        eval "$(readlink -f "$drive_in" | awk '{
+        eval "$(translate_multipath_device "$drive_in" | awk '{
             print "devname_1=\"" substr($0,1,length($0)-1) "\"";
             print "devname_2=\"" substr($0,1,length($0)-2) "\"";
             part_number=substr($0,length($0),1);
             print "part_number=" part_number;
         }')"
     else
-        eval "$(readlink -f "$drive_in" | awk '{
+        eval "$(translate_multipath_device "$drive_in" | awk '{
             print "devname_1=\"" substr($0,1,length($0)-1) "\"";
             print "devname_2=\"" substr($0,1,length($0)-2) "\"";
             part_number=substr($0,length($0),1); part_number--;

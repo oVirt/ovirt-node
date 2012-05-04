@@ -140,7 +140,7 @@ ovirt_boot_setup() {
     fi
 
     # find partition number for GRUB, $4 is to allow 0 as a partition number for grub
-    get_part_info "$(readlink -f "$grub_dev")" disk partN y
+    get_part_info "$grub_dev" disk partN y
     rc=$?
     if [ $rc -ne 0 -o "$partN" -lt 0 ]; then
       log_error "unable to determine Root partition"
