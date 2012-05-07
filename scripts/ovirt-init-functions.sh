@@ -1284,9 +1284,20 @@ start_ovirt_post() {
         # successfull boot from /dev/HostVG/Root
         if grep -q -w root=live:LABEL=Root /proc/cmdline; then
             # set first boot entry as permanent default
-            ln -snf /dev/.initramfs/live/grub /boot/grub
             mount -o rw,remount LABEL=Root /dev/.initramfs/live > /tmp/grub-savedefault.log 2>&1
-            echo "savedefault --default=0" | grub >> /tmp/grub-savedefault.log 2>&1
+            if [[ -f "/etc/default/grub" ]];
+            then
+                # if grub2: GRUB_DEFAULT=saved in Fedora, thus it's already the way we need it
+                # rhbz#790532
+                {
+                    echo "grub2 is used:"
+                    egrep "^GRUB_DEFAULT" /etc/default/grub
+                } >> /tmp/grub-savedefault.log 2>&1
+            else
+                # if we are using legacy grub:
+                ln -snf /dev/.initramfs/live/grub /boot/grub
+                echo "savedefault --default=0" | grub >> /tmp/grub-savedefault.log 2>&1
+            fi
             mount -o ro,remount LABEL=Root /dev/.initramfs/live >> /tmp/grub-savedefault.log 2>&1
         fi
 
