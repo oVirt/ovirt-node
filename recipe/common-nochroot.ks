@@ -78,3 +78,37 @@ ln -snf $PACKAGE-release $INSTALL_ROOT/etc/system-release
 cp $INSTALL_ROOT/etc/$PACKAGE-release $INSTALL_ROOT/etc/issue
 echo "Kernel \r on an \m (\l)" >> $INSTALL_ROOT/etc/issue
 cp $INSTALL_ROOT/etc/issue $INSTALL_ROOT/etc/issue.net
+
+NAME=$(grep CDLABEL $LIVE_ROOT/isolinux/isolinux.cfg |head -n1|sed -r 's/^.*CDLABEL\=([a-zA-Z0-9_-]+) .*$/\1/g')
+
+#setup efi boot menu
+cat > $LIVE_ROOT/EFI/BOOT/BOOTX64.conf <<EOF
+default=0
+splashimage=/EFI/BOOT/splash.xpm.gz
+timeout 30
+hiddenmenu
+title Install or Upgrade
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0
+  initrd /EFI/BOOT/initrd0.img
+title Install or Upgrade (Basic Video)
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0
+  initrd /EFI/BOOT/initrd0.img
+title Install or Upgrade with serial console
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  console=ttyS0,115200n8
+  initrd /EFI/BOOT/initrd0.img
+title Reinstall
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
+  initrd /EFI/BOOT/initrd0.img
+title Reinstall (Basic Video)
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
+  initrd /EFI/BOOT/initrd0.img
+title Reinstall with serial console
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall console=ttyS0,115200n8
+  initrd /EFI/BOOT/initrd0.img
+title Uninstall
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  uninstall
+  initrd /EFI/BOOT/initrd0.img
+title Start $PRODUCT in basic graphics mode.
+  kernel /EFI/BOOT/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0 nomodeset
+  initrd /EFI/BOOT/initrd0.img
+EOF
