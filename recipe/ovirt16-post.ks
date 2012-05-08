@@ -92,7 +92,16 @@ require {
     type setfiles_t;
     type shadow_t;
     type unconfined_t;
-    class file { append mounton open getattr read execute ioctl lock entrypoint };
+    type passwd_t;
+    type user_tmp_t;
+    type var_log_t;
+    type consoletype_t;
+    type net_conf_t;
+    type collectd_t;
+    type virt_etc_t;
+    type loadkeys_t;
+    type initrc_tmp_t;
+    class file { append mounton open getattr read execute ioctl lock entrypoint write };
     class fd { use };
     class process { sigchld signull transition noatsecure siginh rlimitinh getattr };
     class fifo_file { getattr open read write append lock ioctl };
@@ -124,6 +133,15 @@ require {
 }
 allow mount_t shadow_t:file mounton;
 allow setfiles_t initrc_tmp_t:file append;
+allow setfiles_t net_conf_t:file read;
+allow consoletype_t var_log_t:file append;
+allow passwd_t user_tmp_t:file write;
+allow brctl_t net_conf_t:file read;
+# Suppose because of collectd libvirt plugin
+allow collectd_t virt_etc_t:file read;
+# Suppose because etc is on tmpfs
+allow loadkeys_t initrc_tmp_t:file read;
+
 type ovirt_exec_t;
 init_daemon_domain(unconfined_t,ovirt_exec_t)
 EOF_OVIRT_TE
