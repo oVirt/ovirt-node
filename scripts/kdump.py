@@ -24,6 +24,8 @@ from ovirtnode.ovirtfunctions import *
 def write_kdump_config(config):
     kdump_config_file = open("/etc/kdump.conf", "w")
     kdump_config_file.write("default reboot\n")
+    # adds a 60 sec delay to make sure the nic is up
+    kdump_config_file.write("link_delay 60\n")
     kdump_config_file.write("net " + config + "\n")
     kdump_config_file.close()
     ovirt_store_config("/etc/kdump.conf")
