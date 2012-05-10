@@ -130,6 +130,7 @@ class NodeInstallScreen:
         self.dev_desc = ""
         self.current_password_fail = 0
         self.failed_block_dev = 0
+        self.failed_install = False
         self.live_disk = "/dev/" + get_live_disk().rstrip('0123456789')
         logger.info("::::live device::::\n" + self.live_disk)
     def set_console_colors(self):
@@ -346,6 +347,7 @@ class NodeInstallScreen:
                             self.menu_list.append(" Reinstall " + m_full_ver, 3)
                     except:
                         self.menu_list.append(" Invalid installation, please reboot from media and choose Reinstall", 0)
+                        self.failed_install = True
                         logger.error("Unable to get version numbers for upgrade, invalid installation or media")
                         pass
                 else:
@@ -792,7 +794,7 @@ class NodeInstallScreen:
                 elif pressed == BACK_BUTTON:
                     self.get_back_page()
                 elif not result == "F2":
-                    if self.__current_page == WELCOME_PAGE:
+                    if self.__current_page == WELCOME_PAGE and self.failed_install == False:
                         self.__current_page = KEYBOARD_PAGE
                     elif self.__current_page == KEYBOARD_PAGE:
                         self.process_keyboard_config()
