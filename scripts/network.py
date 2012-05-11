@@ -325,7 +325,7 @@ class Network:
             os.system("service network stop &> /dev/null")
             os.system("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
-            brctl_cmd = "brctl show|grep breth|awk '{print $1}'"
+            brctl_cmd = "brctl show| awk 'NR>1 && /^br[ep]/ {print $1}'"
             brctl = subprocess.Popen(brctl_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             brctl_output = brctl.stdout.read()
             for i in brctl_output.split():

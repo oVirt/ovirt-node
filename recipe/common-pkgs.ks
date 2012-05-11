@@ -114,3 +114,5 @@ sblim-sfcb
 libvirt-cim
 # yum for plugins
 yum
+# Consistent ethernet device naming
+biosdevname

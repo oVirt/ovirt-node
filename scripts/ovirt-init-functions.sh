@@ -104,7 +104,11 @@ configure_ovirt_management_nic() {
     else
         # for non-PXE boot when BOOTIF parameter is not specified
         # otherwise default network config is invalid
-        DEVICE=eth0
+        # set to the first interface on the system
+        DEVICE=`/sbin/biosdevname -d | awk 'FNR == 2 {print $3}'`
+        if [ -z $DEVICE ]; then
+            DEVICE=eth0
+        fi
     fi
     # default oVirt network configuration:
     # bridge each ethernet device in the system
@@ -390,11 +394,11 @@ _start_ovirt_early () {
             BOOTIF=*)
             i=${i#BOOTIF=}
             case "$i" in
-                eth*)
+                [ep]*)
                 bootif=$i
                 ;;
                 link)
-                for eth in $(cd /sys/class/net; echo eth*); do
+                for eth in $(cd /sys/class/net; echo [ep]*); do
                     if ethtool $eth 2>/dev/null|grep -q "Link detected: yes"
                     then
                         bootif=$eth
@@ -404,7 +408,7 @@ _start_ovirt_early () {
                 ;;
                 ??-??-??-??-??-??-??)
                 i=${i#??-}
-                bootif=$(grep -il $(echo $i|sed 's/-/:/g') /sys/class/net/eth*/address|rev|cut -d/ -f2|rev)
+                bootif=$(grep -il $(echo $i|sed 's/-/:/g') /sys/class/net/[ep]*/address|rev|cut -d/ -f2|rev)
                 ;;
             esac
             ;;
