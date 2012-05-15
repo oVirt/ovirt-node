@@ -331,7 +331,6 @@ droprpm openslp
 #remove rpms added by dmraid
 droprpm ConsoleKit
 droprpm checkpolicy
-droprpm dmraid
 droprpm dmraid-events
 droprpm gamin
 droprpm gnupg2
