@@ -116,3 +116,5 @@ libvirt-cim
 yum
 # Consistent ethernet device naming
 biosdevname
+# yum for plugins
+yum
