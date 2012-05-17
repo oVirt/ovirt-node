@@ -42,9 +42,6 @@ droprpm mysql*
 
 droprpm sysklogd
 
-# unneeded rhn deps
-droprpm yum*
-
 # pam complains when this is missing
 keeprpm ConsoleKit-libs
 
@@ -200,6 +197,7 @@ keep /usr/share/augeas/lenses/dist/shellvars_list.aug
 keep /usr/share/augeas/lenses/dist/sshd.aug
 keep /usr/share/augeas/lenses/dist/sudoers.aug
 keep /usr/share/augeas/lenses/dist/utill.aug
+keep /usr/share/augeas/lenses/dist/yum.aug
 drop /usr/share/tc
 drop /usr/share/emacs
 drop /usr/share/info
@@ -261,7 +259,6 @@ drop /usr/share/i18n
 drop /boot/*
 keep /boot/efi
 drop /var/lib/builder
-drop /var/lib/yum
 drop /usr/sbin/rhn_register
 drop /usr/sbin/*-channel
 

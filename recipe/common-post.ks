@@ -44,8 +44,19 @@ function mod_vi() {
   /bin/vi $@
   restorecon -v $@ >/dev/null 2>&1
 }
-alias vi="mod_vi"
+
+function mod_yum() {
+  if [ "$1" == "--force" ]; then
+      echo $@ > /dev/null
+      shift
+      /usr/bin/yum $@
+  else
+      printf "\nUsing yum is not supported\n\n"
+  fi
+}
+
 alias ping='ping -c 3'
+alias yum="mod_yum"
 export MALLOC_CHECK_=1
 export LVM_SUPPRESS_FD_WARNINGS=0
 EOF_bashrc
@@ -100,6 +111,8 @@ empty	/live
 files	/boot
 empty	/boot-kdump
 empty	/cgroup
+files	/var/lib/yum
+files	/var/cache/yum
 EOF_rwtab_ovirt
 
 # fix iSCSI/LVM startup issue
@@ -227,3 +240,10 @@ EOF_sshd_config
 # set read-only
 echo "readonly = true;" > /etc/libvirt-cim.conf
 useradd -G sfcb cim
+
+# disable yum repos by default
+augtool << \EOF_yum
+set /files/etc/yum.repos.d/fedora.repo/fedora/enabled 0
+set /files/etc/yum.repos.d/fedora-updates.repo/updates/enabled 0
+save
+EOF_yum

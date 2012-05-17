@@ -112,3 +112,5 @@ efibootmgr
 # libvirt-cim
 sblim-sfcb
 libvirt-cim
+# yum for plugins
+yum
