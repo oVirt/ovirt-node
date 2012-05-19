@@ -417,6 +417,47 @@ def get_system_nics():
                     ntp_dhcp = 1
     return nic_dict, configured_nics, ntp_dhcp
 
+def convert_to_biosdevname():
+    if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
+        nics = {}
+        cmd = "biosdevname -d"
+        biosdevname, err = subprocess.Popen(cmd, shell=True, stdout=PIPE).communicate()
+        biosdevname_output = biosdevname.splitlines()
+
+        for line in biosdevname_output:
+            if line is not None:
+                if "BIOS device:" in line:
+                    nic = line.split()[2]
+                if "Permanent" in line:
+                    mac = line.split()[2]
+                    nics[mac.upper()] = nic
+        logger.debug(nics)
+        scripts_path="/etc/sysconfig/network-scripts"
+        logger.debug(glob(scripts_path + "/ifcfg-*"))
+        for file in glob(scripts_path + "/ifcfg-*"):
+            logger.debug("Processing %s" % file)
+            # get mac for matching
+            existing_mac = augtool_get("/files/"+file+"/HWADDR")
+            # check dictionary for mac
+            if not existing_mac is None and existing_mac.upper() in nics:
+                old_nic_script = os.path.basename(file)
+                new_nic_name = nics[existing_mac.upper()]
+                logger.debug("Found %s in %s" % (existing_mac, file))
+                # change device name within script file
+                logger.debug("Setting to new device name: %s" % new_nic_name)
+                augtool("set","/files"+file+"/DEVICE", new_nic_name)
+                new_nic_file = "%s/ifcfg-%s" % (scripts_path, new_nic_name)
+                cmd = "cp %s %s" % (file,new_nic_file)
+                remove_config(file)
+                if system(cmd):
+                    logging.debug("Conversion on %s to %s succeed" % (file,new_nic_file))
+                    ovirt_store_config(new_nic_file)
+                else:
+                    return False
+        system("service network restart")
+        augtool("set", "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
+        ovirt_store_config("/etc/default/ovirt")
+    return True
 def network_auto():
     try:
         network = Network()
