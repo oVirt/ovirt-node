@@ -37,7 +37,7 @@ OVIRT_CONFIG_FILES="\
  /etc/logrotate.d/ovirt-node
 "
 
-. /usr/libexec/ovirt-boot-functions
+. /usr/lib/dracut/modules.d/91ovirtnode/ovirt-boot-functions
 LF=$'\n'
 SEP=','
 TAB=$'\t'

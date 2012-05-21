@@ -24,7 +24,7 @@
 . /etc/init.d/functions
 . /usr/libexec/ovirt-functions
 
-. /usr/libexec/ovirt-boot-functions
+. /usr/lib/dracut/modules.d/91ovirtnode/ovirt-boot-functions
 
 NODE_CONFIG=/etc/sysconfig/node-config
 

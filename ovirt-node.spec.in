@@ -151,15 +151,8 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/modprobe.d
 %{__install} -p -m0755 ovirt-qla4xxx.conf %{buildroot}%{_sysconfdir}/modprobe.d
 
-#dracut module for disk cleanup
-%{__install} -d -m0755 %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
-%{__install} -p -m0755 dracut/check %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
-%{__install} -p -m0755 dracut/install %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
-%{__install} -p -m0755 scripts/ovirt-boot-functions %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
-%{__install} -p -m0755 dracut/ovirt-cleanup.sh %{buildroot}%{_datadir}/dracut/modules.d/91ovirtnode
-%{__install} -p -m0644 dracut/ovirt-dracut.conf %{buildroot}%{_sysconfdir}/dracut.conf.d
-%if 0%{?rhel}
 # dracut patches for rhel6
+%if 0%{?rhel}
 %{__install} -p -m0644 dracut/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch %{buildroot}%{app_root}
 %{__install} -p -m0644 dracut/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch %{buildroot}%{app_root}
 %endif
@@ -318,10 +311,9 @@ fi
 %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
 %endif
 
-%{_datadir}/dracut/modules.d/91ovirtnode/check
-%{_datadir}/dracut/modules.d/91ovirtnode/install
-%{_datadir}/dracut/modules.d/91ovirtnode/ovirt-boot-functions
-%{_datadir}/dracut/modules.d/91ovirtnode/ovirt-cleanup.sh
+%{_prefix}/lib/dracut/modules.d/91ovirtnode/module-setup.sh
+%{_prefix}/lib/dracut/modules.d/91ovirtnode/ovirt-boot-functions
+%{_prefix}/lib/dracut/modules.d/91ovirtnode/ovirt-cleanup.sh
 %{_sysconfdir}/dracut.conf.d/ovirt-dracut.conf
 %{_libexecdir}/ovirt-auto-install
 %{_libexecdir}/ovirt-config-boot
@@ -336,7 +328,6 @@ fi
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-config-view-logs
 %{_libexecdir}/ovirt-functions
-%{_libexecdir}/ovirt-boot-functions
 %{_libexecdir}/ovirt-process-config
 %{_libexecdir}/ovirt-rpmquery
 %{_libexecdir}/ovirt-config-installer

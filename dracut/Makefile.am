@@ -15,10 +15,19 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
+dracutdir = $(prefix)/lib/dracut/modules.d/91ovirtnode
+dracutconfdir = $(sysconfdir)/dracut.conf.d
+
+dist_dracut_SCRIPTS = \
+  module-setup.sh \
+  ovirt-cleanup.sh \
+  ovirt-boot-functions
+
+dist_dracutconf_DATA = \
+  ovirt-dracut.conf
+
 EXTRA_DIST = \
   dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch \
-  dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch \
-  ovirt-dracut.conf \
-  check \
-  install \
-  ovirt-cleanup.sh
+  dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
+
+# vim: ts=2
