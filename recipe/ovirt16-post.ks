@@ -156,8 +156,5 @@ cd /
 rm -rf /tmp/SELinux
 echo "-w /etc/shadow -p wa" >> /etc/audit/audit.rules
 
-# Workaround for rhbz#755464
-/sbin/service zfs-fuse stop 2>/dev/null
-
 # Workaround for vdsm needing /etc/ovirt-node-image-release
 ln -s /etc/system-release /etc/ovirt-node-image-release
