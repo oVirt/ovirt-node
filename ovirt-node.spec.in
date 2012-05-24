@@ -170,8 +170,6 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 
 # ovirt-early vendor commandline variables
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-commandline.d
-# edit-node
-%{__install} -p -m0755 tools/edit-node %{buildroot}%{_sbindir}/edit-node
 
 
 %clean

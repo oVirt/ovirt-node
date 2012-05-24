@@ -15,5 +15,5 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-EXTRA_DIST = \
+dist_sbin_SCRIPTS = \
   edit-node
