@@ -107,21 +107,18 @@ however on a development machine to work with the image.
 %prep
 %setup -q
 
+
 %build
 aclocal && autoheader && automake --add-missing && autoconf
+
+
 %configure --with-image-minimizer @ARCHIPEL_FLAGS@
 make
+
 
 %install
 %{__rm} -rf %{buildroot}
 make install DESTDIR=%{buildroot}
-
-# FIXME move all installs into makefile
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.hourly
-%{__install} -d -m0755 %{buildroot}%{mgmt_scripts_dir}
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/dracut.conf.d
-
 
 %if %is_f16
 # install libvirtd systemd service
@@ -139,27 +136,14 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0644 dracut/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch %{buildroot}%{app_root}
 %endif
 
-mkdir -p %{buildroot}/%{_sysconfdir}/default
-echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/default/ovirt
-
-# ovirt-config-boot post-install hooks
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
-# default hook for local_boot_trigger
-%{__install} -p -m0755 scripts/local_boot_trigger.sh %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
-
 # python-augeas is not in RHEL-6
 # specific version of python-augeas is not available in Fedora yet
 %{__install} -p -m0644 scripts/augeas.py %{buildroot}%{python_sitelib}
 
-# ovirt-early vendor hook dir
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-early.d
-
-# ovirt-early vendor commandline variables
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/ovirt-commandline.d
-
 
 %clean
 %{__rm} -rf %{buildroot}
+
 
 %post
 /sbin/chkconfig --level 35 netconsole on
@@ -199,6 +183,7 @@ EOF_multipath_conf
 rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
 
+
 %preun
 /sbin/chkconfig --level 35 netconsole off
 %if 0%{?rhel}
@@ -231,12 +216,14 @@ if [ $1 -eq 0 ] ; then
 fi
 %endif
 
+
 %files recipe
 %defattr(0644,root,root,0755)
 %doc README COPYING
 %{recipe_root}/*.ks
 %defattr(0755,root,root,0755)
 %{_sbindir}/node-creator
+
 
 %files tools
 %{_sbindir}/edit-node
@@ -262,6 +249,7 @@ fi
 
 %{_sysconfdir}/sysconfig/modules/vlan.modules
 %{_sysconfdir}/modprobe.d/ovirt-qla4xxx.conf
+
 
 %doc COPYING
 # should be ifarch i386
@@ -318,6 +306,7 @@ fi
 %{_initrddir}/ovirt-post
 %{_initrddir}/ovirt-cim
 %endif
+
 
 %changelog
 * Mon Jun 20 2011 Alan Pevec <apevec@redhat.com> 2.0.0-1

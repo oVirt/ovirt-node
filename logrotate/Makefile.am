@@ -26,5 +26,6 @@ dist_logrotateconf_DATA = \
 
 install-data-hook:
 	mv $(DESTDIR)$(logrotateconfdir)/ovirt-logrotate.conf $(DESTDIR)$(logrotateconfdir)/ovirt-node
+	mkdir -p $(DESTDIR)$(sysconfdir)/cron.hourly
 
 # vim: ts=2

@@ -16,6 +16,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 nodeconfdir = $(sysconfdir)/sysconfig
+localboottriggerdir=$(sysconfdir)/ovirt-config-boot.d
+
 dist_nodeconf_DATA = \
   node-config
 
@@ -44,10 +46,21 @@ dist_libexec_SCRIPTS = \
   ovirt-auto-install.py \
   ovirt-admin-shell
 
+# default hook for local_boot_trigger
+dist_localboottrigger_SCRIPTS = \
+  local_boot_trigger.sh
+
 install-exec-hook:
 	mv $(DESTDIR)$(libexecdir)/ovirt-config-installer.py $(DESTDIR)$(libexecdir)/ovirt-config-installer
 	mv $(DESTDIR)$(libexecdir)/ovirt-config-setup.py $(DESTDIR)$(libexecdir)/ovirt-config-setup
 	mv $(DESTDIR)$(libexecdir)/ovirt-auto-install.py $(DESTDIR)$(libexecdir)/ovirt-auto-install
+	mkdir -p --mode=0755 \
+	  $(DESTDIR)$(localboottriggerdir) \
+	  $(DESTDIR)$(sysconfdir)/node.d \
+	  $(DESTDIR)$(sysconfdir)/ovirt-early.d \
+	  $(DESTDIR)$(sysconfdir)/ovirt-commandline.d \
+	  $(DESTDIR)$(sysconfdir)/default
+	echo "# File where default configuration is kept" > $(DESTDIR)$(sysconfdir)/default/ovirt
 
 #
 # newt tui
@@ -86,7 +99,6 @@ pyovirtnode_PYTHON = \
   snmp.py
 
 EXTRA_DIST = \
-  local_boot_trigger.sh
-
+  augeas.py
 
 # vim: ts=2
