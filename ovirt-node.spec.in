@@ -161,19 +161,6 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 # default hook for local_boot_trigger
 %{__install} -p -m0755 scripts/local_boot_trigger.sh %{buildroot}%{_sysconfdir}/ovirt-config-boot.d
 
-# newt UI
-%{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirt_config_setup
-%{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirt_config_setup
-%if 0%{?fedora}
-%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
-%endif
-%if 0%{?centos}
-%{__install} -p -m0644 scripts/collectd.py %{buildroot}%{python_sitelib}/ovirt_config_setup
-%endif
-%if 0%{?rhel} && ! 0%{?centos}
-%{__install} -p -m0644 scripts/rhn.py %{buildroot}%{python_sitelib}/ovirt_config_setup
-%endif
-%{__install} -p -m0644 scripts/cim.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %{__install} -p -m0755 scripts/ovirt-config-installer.py %{buildroot}%{_libexecdir}/ovirt-config-installer
 %{__install} -p -m0755 scripts/ovirt-config-setup.py %{buildroot}%{_libexecdir}/ovirt-config-setup
 %{__install} -p -m0755 scripts/ovirt-admin-shell %{buildroot}%{_libexecdir}

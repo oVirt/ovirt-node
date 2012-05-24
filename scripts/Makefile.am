@@ -20,8 +20,6 @@ EXTRA_DIST = \
   local_boot_trigger.sh \
   augeas.py \
   __init__.py \
-  collectd.py \
-  rhn.py \
   ovirt-config-installer.py \
   ovirt-config-setup.py \
   ovirt-auto-install.py \
@@ -53,8 +51,28 @@ dist_libexec_SCRIPTS = \
   ovirt-init-functions.sh
 
 #
+# newt tui
 #
-#
+pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
+pyovirtconfigsetup_PYTHON = \
+  __init__.py \
+  cim.py
+
+if TARGET_FEDORA
+pyovirtconfigsetup_PYTHON += \
+  collectd.py
+endif
+
+if TARGET_CENTOS
+pyovirtconfigsetup_PYTHON += \
+  collectd.py
+endif
+
+if TARGET_RHEL
+pyovirtconfigsetup_PYTHON += \
+  rhn.py
+endif
+
 pyovirtnodedir = $(pythondir)/ovirtnode
 pyovirtnode_PYTHON = \
   __init__.py \
