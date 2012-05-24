@@ -8,7 +8,6 @@ AC_SUBST([DISTRO])
 AC_SUBST([PACKAGE_NAME])
 AC_SUBST([PRODUCT_NAME])
 
-
 if test "$FEDORA"; then
     DISTRO=ovirt$FEDORA
 fi
@@ -18,6 +17,10 @@ fi
 if test "$CENTOS"; then
     DISTRO=centos$CENTOS
 fi
+
+AM_CONDITIONAL(TARGET_FEDORA, test x"$FEDORA" != x)
+AM_CONDITIONAL(TARGET_RHEL, test x"$RHEL" != x)
+AM_CONDITIONAL(TARGET_CENTOS, test x"$CENTOS" != x)
 
 AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
             [enable aggresive reduction of the image size])],
@@ -58,6 +61,7 @@ AC_CONFIG_FILES([Makefile
                 scripts/Makefile
                 tools/Makefile
                 scripts/collectd.conf
+                services/Makefile
                 recipe/Makefile
                 $MAIN_KS
                 recipe/image-minimizer.ks

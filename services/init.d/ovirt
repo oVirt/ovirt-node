@@ -37,4 +37,3 @@ case "$1" in
         echo "Usage: ovirt {start}"
         exit 2
 esac
-

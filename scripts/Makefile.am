@@ -17,18 +17,6 @@
 
 EXTRA_DIST = \
   node-config \
-  ovirt-awake.init \
-  ovirt-awake.service \
-  ovirt-early.init \
-  ovirt-early.service \
-  ovirt.init \
-  ovirt.service \
-  ovirt-post.init \
-  ovirt-post.service \
-  ovirt-firstboot.init \
-  ovirt-firstboot.service \
-  ovirt-cim.init \
-  ovirt-cim.service \
   cim.py \
   local_boot_trigger.sh \
   augeas.py \

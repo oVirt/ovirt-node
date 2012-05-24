@@ -23,6 +23,7 @@ SUBDIRS =   \
   kinit \
   recipe \
   scripts \
+  services \
   tools
 
 EXTRA_DIST = \
@@ -66,3 +67,5 @@ iso: publish
 	make node
 
 .PHONY: rpms publish srpms
+
+# vim: ts=2
