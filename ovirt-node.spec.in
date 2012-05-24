@@ -1,7 +1,7 @@
 %global product_family oVirt Node
 %global product_release %{version} (0)
 %global mgmt_scripts_dir %{_sysconfdir}/node.d
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %define is_f16 %(test "0%{?fedora}" == "016" && echo 1 || echo 0)
 
 
@@ -16,7 +16,7 @@ Group:          Applications/System
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
-BuildRequires:  python-setuptools
+BuildRequires:  python-setuptools python-devel
 BuildRequires:  automake autoconf
 %if 0%{?fedora}
 BuildRequires:  systemd-units
@@ -205,17 +205,6 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__install} -p -m0644 scripts/rhn.py %{buildroot}%{python_sitelib}/ovirt_config_setup
 %endif
 %{__install} -p -m0644 scripts/cim.py %{buildroot}%{python_sitelib}/ovirt_config_setup
-%{__install} -d -m0755 %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/__init__.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/storage.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/password.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/install.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/iscsi.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/kdump.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/log.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/ovirtfunctions.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/network.py %{buildroot}%{python_sitelib}/ovirtnode
-%{__install} -p -m0644 scripts/snmp.py %{buildroot}%{python_sitelib}/ovirtnode
 %{__install} -p -m0755 scripts/ovirt-config-installer.py %{buildroot}%{_libexecdir}/ovirt-config-installer
 %{__install} -p -m0755 scripts/ovirt-config-setup.py %{buildroot}%{_libexecdir}/ovirt-config-setup
 %{__install} -p -m0755 scripts/ovirt-admin-shell %{buildroot}%{_libexecdir}

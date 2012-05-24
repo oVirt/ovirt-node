@@ -33,17 +33,8 @@ EXTRA_DIST = \
   local_boot_trigger.sh \
   augeas.py \
   __init__.py \
-  ovirtfunctions.py \
-  install.py \
-  storage.py \
-  iscsi.py \
-  network.py \
-  password.py \
   collectd.py \
-  log.py \
-  kdump.py \
   rhn.py \
-  snmp.py \
   ovirt-config-installer.py \
   ovirt-config-setup.py \
   ovirt-auto-install.py \
@@ -70,3 +61,21 @@ dist_libexec_SCRIPTS = \
   ovirt-process-config \
   ovirt-rpmquery \
   ovirt-init-functions.sh
+
+#
+#
+#
+pyovirtnodedir = $(pythondir)/ovirtnode
+pyovirtnode_PYTHON = \
+  __init__.py \
+  storage.py \
+  password.py \
+  install.py \
+  iscsi.py \
+  kdump.py \
+  log.py \
+  ovirtfunctions.py \
+  network.py \
+  snmp.py
+
+# vim: ts=2

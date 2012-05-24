@@ -49,6 +49,7 @@ else
     MAIN_KS=recipe/ovirt-node-image.ks
 fi
 
+AM_PATH_PYTHON
 
 AC_CONFIG_FILES([Makefile
                 dracut/Makefile
