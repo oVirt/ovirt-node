@@ -24,6 +24,7 @@ SUBDIRS =   \
   recipe \
   scripts \
   services \
+  logrotate \
   tools
 
 EXTRA_DIST = \
@@ -32,9 +33,7 @@ EXTRA_DIST = \
   libvirtd.service \
   libvirtd.upstart \
   ovirt-node.spec \
-  ovirt-node.spec.in \
-  logrotate/ovirt-logrotate \
-  logrotate/ovirt-logrotate.conf
+  ovirt-node.spec.in
 
 DISTCLEANFILES = $(PACKAGE)-$(VERSION).tar.gz
 

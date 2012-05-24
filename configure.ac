@@ -63,6 +63,7 @@ AC_CONFIG_FILES([Makefile
                 scripts/collectd.conf
                 services/Makefile
                 recipe/Makefile
+                logrotate/Makefile
                 $MAIN_KS
                 recipe/image-minimizer.ks
                 ovirt-node.spec])

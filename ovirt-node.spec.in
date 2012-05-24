@@ -120,15 +120,9 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.hourly
 %{__install} -d -m0755 %{buildroot}%{mgmt_scripts_dir}
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/dracut.conf.d
 
-# Init stuff
-%{__install} -p -m0755 scripts/ovirt-init-functions.sh %{buildroot}%{_libexecdir}/ovirt-init-functions.sh
 
-%{__install} -p -m0644 logrotate/ovirt-logrotate %{buildroot}%{_sysconfdir}/cron.d
-%{__install} -p -m0644 logrotate/ovirt-logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/ovirt-node
 %if %is_f16
 # install libvirtd systemd service
 %{__install} -p -m0644 libvirtd.service %{buildroot}%{_unitdir}
