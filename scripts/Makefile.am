@@ -16,7 +16,6 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 EXTRA_DIST = \
-  node-config \
   cim.py \
   local_boot_trigger.sh \
   augeas.py \
@@ -27,6 +26,10 @@ EXTRA_DIST = \
   ovirt-config-setup.py \
   ovirt-auto-install.py \
   ovirt-admin-shell
+
+nodeconfdir = $(sysconfdir)/sysconfig
+dist_nodeconf_DATA = \
+  node-config
 
 dist_sbin_SCRIPTS = \
   persist \

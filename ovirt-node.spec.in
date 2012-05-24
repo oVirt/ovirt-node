@@ -119,14 +119,10 @@ make install DESTDIR=%{buildroot}
 # FIXME move all installs into makefile
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.hourly
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig
 %{__install} -d -m0755 %{buildroot}%{mgmt_scripts_dir}
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/logrotate.d
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/dracut.conf.d
-
-%{__install} -p -m0755 scripts/node-config %{buildroot}%{_sysconfdir}/sysconfig
-
 
 # Init stuff
 %{__install} -p -m0755 scripts/ovirt-init-functions.sh %{buildroot}%{_libexecdir}/ovirt-init-functions.sh
