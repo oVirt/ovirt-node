@@ -15,16 +15,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-EXTRA_DIST = \
-  cim.py \
-  local_boot_trigger.sh \
-  augeas.py \
-  __init__.py \
-  ovirt-config-installer.py \
-  ovirt-config-setup.py \
-  ovirt-auto-install.py \
-  ovirt-admin-shell
-
 nodeconfdir = $(sysconfdir)/sysconfig
 dist_nodeconf_DATA = \
   node-config
@@ -48,7 +38,16 @@ dist_libexec_SCRIPTS = \
   ovirt-functions \
   ovirt-process-config \
   ovirt-rpmquery \
-  ovirt-init-functions.sh
+  ovirt-init-functions.sh \
+  ovirt-config-installer.py \
+  ovirt-config-setup.py \
+  ovirt-auto-install.py \
+  ovirt-admin-shell
+
+install-exec-hook:
+	mv $(DESTDIR)$(libexecdir)/ovirt-config-installer.py $(DESTDIR)$(libexecdir)/ovirt-config-installer
+	mv $(DESTDIR)$(libexecdir)/ovirt-config-setup.py $(DESTDIR)$(libexecdir)/ovirt-config-setup
+	mv $(DESTDIR)$(libexecdir)/ovirt-auto-install.py $(DESTDIR)$(libexecdir)/ovirt-auto-install
 
 #
 # newt tui
@@ -85,5 +84,9 @@ pyovirtnode_PYTHON = \
   ovirtfunctions.py \
   network.py \
   snmp.py
+
+EXTRA_DIST = \
+  local_boot_trigger.sh
+
 
 # vim: ts=2
