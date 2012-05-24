@@ -25,11 +25,10 @@ SUBDIRS =   \
   scripts \
   services \
   logrotate \
+  modules \
   tools
 
 EXTRA_DIST = \
-  ovirt-qla4xxx.conf \
-  vlan.modules \
   libvirtd.service \
   libvirtd.upstart \
   ovirt-node.spec \

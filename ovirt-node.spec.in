@@ -133,14 +133,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0644 libvirtd.upstart %{buildroot}%{_sysconfdir}/init/libvirtd.conf
 %endif
 
-# load vlan module
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/sysconfig/modules
-%{__install} -p -m0755 vlan.modules %{buildroot}%{_sysconfdir}/sysconfig/modules
-
-# qla4xxx iscsi hba workaround: rhbz#742433#c32
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/modprobe.d
-%{__install} -p -m0755 ovirt-qla4xxx.conf %{buildroot}%{_sysconfdir}/modprobe.d
-
 # dracut patches for rhel6
 %if 0%{?rhel}
 %{__install} -p -m0644 dracut/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch %{buildroot}%{app_root}
