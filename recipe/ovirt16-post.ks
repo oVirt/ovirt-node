@@ -12,7 +12,6 @@
        /etc/libvirt/qemu.conf
     # set up libvirtd to listen on TCP (for kerberos)
     sed -i -e "s/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/" \
-       -e "s/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/" \
        /etc/libvirt/libvirtd.conf
 
     # disable mdns/avahi
