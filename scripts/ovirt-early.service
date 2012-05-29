@@ -1,5 +1,5 @@
 [Unit]
-Description=Managed node early configuration service
+Description=oVirt Node early configuration service
 After=fedora-readonly.target local-fs.target network.target
 Wants=fedora-readonly.target local-fs.target network.target
 

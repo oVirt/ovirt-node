@@ -1,5 +1,5 @@
 [Unit]
-Description=Performs managed node configuration functions.
+Description=oVirt Node managed/standalone configuration service
 After=ovirt-awake.service
 Wants=ovirt-awake.service
 

@@ -1,5 +1,5 @@
 [Unit]
-Description=Puts the node into configuration mode.
+Description=oVirt Node installation and configuration service
 After=ovirt-early.service
 Wants=ovirt-early.service
 Before=getty@tty1.service

@@ -1,5 +1,5 @@
 [Unit]
-Description=Managed node service to alert management servers.
+Description=oVirt Node management server alert service
 After=ovirt-early.service
 Wants=ovirt-early.service
 

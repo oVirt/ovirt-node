@@ -1,5 +1,5 @@
 [Unit]
-Description=Performs managed node cim configuration setup.
+Description=oVirt Node CIM configuration service
 After=ovirt-post.service
 Wants=ovirt-post.service
 
