@@ -289,6 +289,8 @@ class Storage:
             if not dev_desc:
                 if "/dev/vd" in dev_name:
                     dev_desc = "virtio disk"
+                elif dev_serial is not None:
+                    dev_desc = dev_serial
                 else:
                     dev_desc = "unknown"
             if not device.get_property("ID_CDROM") and not "/dev/dm-" in dev_name and not "/dev/loop" in dev_name and size_failed == 0:
