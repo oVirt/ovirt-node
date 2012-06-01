@@ -489,6 +489,14 @@ def get_system_vlans():
 
 def convert_to_biosdevname():
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
+        # check for appropriate bios version
+        cmd="dmidecode|grep SMBIOS|awk {'print $2'}"
+        proc = passthrough(cmd, log_func=logger.debug)
+        ver = proc.stdout.split()[0]
+        if not float(ver) >= 2.6:
+            logger.debug("Skipping biosdevname conversion, SMBIOS too old")
+            augtool("set", "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
+            return
         nics = {}
         cmd = "biosdevname -d"
         biosdevname, err = subprocess.Popen(cmd, shell=True,
