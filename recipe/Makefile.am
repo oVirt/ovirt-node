@@ -32,7 +32,7 @@ FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
 OVIRT_URL	  = http://ovirt.org/releases/stable/fedora
 OVIRT_NIGHTLY_URL = http://ovirt.org/releases/nightly/fedora
 CUR_RAWHIDE       = 18
-CUR_DEVEL         = 17
+CUR_DEVEL         = 18
 
 CENTOS_MIRROR     = http://mirrorlist.centos.org/
 CENTOS_RELEASE    = 6
