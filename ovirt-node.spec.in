@@ -238,6 +238,7 @@ echo "# File where default configuration is kept" > %{buildroot}/%{_sysconfdir}/
 %{__rm} -rf %{buildroot}
 
 %post
+/sbin/chkconfig --level 35 netconsole on
 %if 0%{?rhel}
 /sbin/chkconfig --add ovirt-awake
 /sbin/chkconfig --add ovirt-early
@@ -275,6 +276,7 @@ rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
 
 %preun
+/sbin/chkconfig --level 35 netconsole off
 %if 0%{?rhel}
 if [ $1 = 0 ] ; then
     /sbin/service ovirt-early stop >/dev/null 2>&1
