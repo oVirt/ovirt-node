@@ -227,21 +227,20 @@ class NodeInstallScreen:
         global current_password
         current_password = self.current_password.value()
         auth.set_item(PAM.PAM_CONV, pam_conv)
-        if self.current_password.value() != "":
-            try:
-                auth.authenticate()
-            except PAM.error, (resp, code):
-                logger.error(resp)
-                self.current_password_fail = 1
-                self.pw_msg.setText("Current Password Invalid\n\n\n\n")
-                return False
-            except:
-                logger.error("Internal error")
-                return False
-            else:
-                self.current_password_fail = 0
-                self.pw_msg.setText(" \n\n\n\n")
-                return True
+        try:
+            auth.authenticate()
+        except PAM.error, (resp, code):
+            logger.error(resp)
+            self.current_password_fail = 1
+            self.pw_msg.setText("Current Password Invalid\n\n\n\n")
+            return False
+        except:
+            logger.error("Internal error")
+            return False
+        else:
+            self.current_password_fail = 0
+            self.pw_msg.setText(" \n\n\n\n")
+            return True
 
     def other_device_root_callback(self):
         ret = os.system("test -b " + self.root_device.value())
