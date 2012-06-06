@@ -2,7 +2,6 @@
 Description=oVirt Node post configuration service
 After=ovirt.service
 Wants=ovirt.service
-After=libvirtd.service
 Before=getty@tty1.service
 
 [Service]

@@ -1244,16 +1244,13 @@ start_ovirt_post() {
                 sleep 1
             fi
 
-            touch $VAR_SUBSYS_OVIRT_POST
-
-        done
         BACKUP=$(mktemp)
         ISSUE=/etc/issue
         ISSUE_NET=/etc/issue.net
         egrep -v "[Vv]irtualization hardware" $ISSUE > $BACKUP
         cp -f $BACKUP $ISSUE
         rm $BACKUP
-        hwvirt=$(virsh --readonly capabilities)
+        hwvirt=$(systemd-detect-virt)
         if [[ $hwvirt =~ kvm ]]; then
             log "Hardware virtualization detected"
         else
