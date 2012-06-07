@@ -3,16 +3,9 @@
     # just to get a boot warning to shut up
     touch /etc/resolv.conf
 
-    # make libvirtd listen on the external interfaces
-    sed -i -e 's/^#\(LIBVIRTD_ARGS="--listen"\).*/\1/' \
-       /etc/sysconfig/libvirtd
-
     # set up qemu daemon to allow outside VNC connections
     sed -i -e 's/^[[:space:]]*#[[:space:]]*\(vnc_listen = "0.0.0.0"\).*/\1/' \
        /etc/libvirt/qemu.conf
-    # set up libvirtd to listen on TCP (for kerberos)
-    sed -i -e "s/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/" \
-       /etc/libvirt/libvirtd.conf
 
     # disable mdns/avahi
     sed -i -e 's/^[[:space:]]*#[[:space:]]*\(mdns_adv = 0\).*/\1/' \
