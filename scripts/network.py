@@ -152,8 +152,10 @@ class Network:
         return None
 
     def get_num_localhost_aliases(self):
-        aliases = augtool("match", self.localhost_entry+"/alias", "")
-        return len(aliases)
+        if self.localhost_entry:
+            aliases = augtool("match", self.localhost_entry+"/alias", "")
+            return len(aliases)
+        return 0
 
     def remove_non_localhost(self):
         last_alias = augtool("get", self.localhost_entry+"/alias["+str(self.alias_count)+"]", "")
