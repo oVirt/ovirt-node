@@ -509,33 +509,34 @@ def unmount_logging_services():
 # this only gets executed when disk is re-partitioned, HostVG/Logging is empty
 def mount_logging():
     if os.path.ismount("/var/log"):
-        return True
-    if os.path.exists("/dev/HostVG/Logging"):
-        logger.info("Mounting log partition")
-        # temporary mount-point
-        log2 = tempfile.mkdtemp()
-        system_closefds("mount /dev/HostVG/Logging " + log2)
-        logging_services = unmount_logging_services()
-        # save logs from tmpfs
-        system_closefds("cp -av /var/log/* " + log2 + " &>/dev/null")
-        # save temporary log
-        if os.path.exists("/tmp/ovirt.log"):
-            system_closefds("cp /tmp/ovirt.log " + log2 +"/ovirt.log-tmp &>> /tmp/ovirt.log")
-        system_closefds("mount --move " + log2 + " /var/log")
-        shutil.rmtree(log2)
-        system_closefds("restorecon -rv /var/log &>/dev/null")
-        for srv in logging_services:
-            system_closefds("service " + srv + " start &>/dev/null")
-        # make sure rsyslog restarts
-        system_closefds("service rsyslog start &>/dev/null")
-        return
-    else:
+        logger.warning("Is mounted: /var/log, suppose it's tmpfs")
+    if not os.path.exists("/dev/HostVG/Logging"):
         # /var/log is not available
         logger.error("The logging partion has not been created. Please create it at the main menu.")
         return False
+    logger.info("Mounting log partition")
+    # temporary mount-point
+    log2 = tempfile.mkdtemp()
+    os.system("mount /dev/HostVG/Logging %s" % log2)
+    logging_services = unmount_logging_services()
+    # save logs from tmpfs
+    os.system("cp -av /var/log/* %s &>/dev/null" % log2)
+    # save temporary log
+    if os.path.exists("/tmp/ovirt.log"):
+        os.system("cat /tmp/ovirt.log >> %s/ovirt.log &>/dev/null" % log2)
+    os.system("mount --move %s /var/log &>/dev/null" % log2)
+    shutil.rmtree(log2)
+    os.system("restorecon -r /var/log &>/dev/null")
+    for srv in logging_services:
+        os.system("service " + srv + " start &>/dev/null")
+    # make sure rsyslog restarts
+    os.system("service rsyslog restart &>/dev/null")
+    return
+
 
 def unmount_logging():
     if not os.path.ismount("/var/log"):
+        logger.warning("Is not mounted: /var/log, returning")
         return True
     logger.info("Unmounting log partition")
     # plymouthd keeps /var/log/boot.log
