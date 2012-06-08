@@ -1230,6 +1230,9 @@ start_ovirt_post() {
         # Rewrite resolv.conf, rhbz#742365
         configure_dns
 
+        # Create a minimalistic /etc/hosts if it's empty, rhbz#829753
+        create_minimal_etc_hosts_file
+
         # wait for libvirt to finish initializing
         local count=0
         while true; do

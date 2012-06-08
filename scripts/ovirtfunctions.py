@@ -1336,6 +1336,20 @@ def is_engine_configured():
     else:
         return False
 
+def create_minimal_etc_hosts_file():
+    filename = "/etc/hosts"
+    if open(filename, "r").read().strip() == "":
+        logger.info("Won't update %s, it's not empty." % filename)
+        return
+    if not is_persisted(filename):
+        logger.warning("Want but can't update %s, it's not persisted." % filename)
+        return
+    with open(filename, "w") as f:
+        f.write("""
+# Created by create_minimal_etc_hosts_file
+127.0.0.1		localhost.localdomain localhost
+::1		localhost6.localdomain6 localhost6
+""")
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.

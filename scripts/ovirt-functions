@@ -1189,6 +1189,19 @@ get_boot_device() {
     fi
 }
 
+_pyovirtfunctions()
+{
+    python <<EOP
+from ovirtnode.ovirtfunctions import *
+$@
+EOP
+}
+
+create_minimal_etc_hosts_file()
+{
+    _pyovirtfunctions "create_minimal_etc_hosts_file()"
+}
+
 load_keyboard_config ()
 {
     python <<EOP
