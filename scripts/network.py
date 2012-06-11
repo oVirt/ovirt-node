@@ -326,7 +326,7 @@ class Network:
             os.system("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
             brctl_cmd = "brctl show| awk 'NR>1 && /^br[ep]/ {print $1}'"
-            brctl = subprocess.Popen(brctl_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            brctl = subprocess_closefds(brctl_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             brctl_output = brctl.stdout.read()
             for i in brctl_output.split():
                 if_down_cmd = "ifconfig %s down &> /dev/null" % i
@@ -368,7 +368,7 @@ def get_system_nics():
                     else:
                         pci_dev = dev_path[4].replace("0000:","")
                     pci_lookup_cmd = " lspci|grep %s|awk -F \":\" {'print $3'}" % pci_dev
-                    pci_lookup = subprocess.Popen(pci_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                    pci_lookup = subprocess_closefds(pci_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                     dev_vendor = pci_lookup.stdout.read().strip()
                 except:
                     dev_vendor = "unknown"

@@ -673,7 +673,7 @@ class NodeConfigScreen():
                       if dev_bootproto is None:
                           dev_bootproto = "Disabled"
                     link_status_cmd = "ethtool %s|grep \"Link detected\"" % key
-                    link_status = subprocess.Popen(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                    link_status = subprocess_closefds(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                     link_status = link_status.stdout.read()
                     if not "yes" in link_status:
                         ipv4_addr = "(Link Inactive)"

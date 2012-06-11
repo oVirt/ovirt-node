@@ -94,7 +94,7 @@ def run_rhnreg( serverurl="", cacert="", activationkey="", username="", password
         os.unlink("/etc/sysconfig/rhn/up2date")
     logged_args = str(args).replace(password, "XXXXXXXX")
     logger.debug(logged_args)
-    rhn_reg = subprocess.Popen(args, shell=False, stdout=PIPE, stderr=STDOUT)
+    rhn_reg = subprocess_closefds(args, shell=False, stdout=PIPE, stderr=STDOUT)
     rhn_reg_output = rhn_reg.stdout.read()
     logger.debug(rhn_reg_output)
     if rhn_reg.wait() == 0:
@@ -185,7 +185,7 @@ def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="
         smconf.append('--rhsm.repo_ca_cert')
         smconf.append('/etc/rhsm/ca/candlepin-local.pem')
     log(str(smconf))
-    smconf_proc = subprocess.Popen(smconf, shell=False, stdout=PIPE, stderr=STDOUT)
+    smconf_proc = subprocess_closefds(smconf, shell=False, stdout=PIPE, stderr=STDOUT)
     smconf_output = smconf_proc.stdout.read()
     log(smconf_proc)
     if smconf_proc.wait() == 0:
@@ -221,7 +221,7 @@ def run_rhsm( serverurl="", cacert="", activationkey="", username="", password="
 
     logged_args = str(args).replace(password, "XXXXXXXX")
     log(logged_args)
-    smreg_proc = subprocess.Popen(args, shell=False, stdout=PIPE, stderr=STDOUT)
+    smreg_proc = subprocess_closefds(args, shell=False, stdout=PIPE, stderr=STDOUT)
     smreg_output = smreg_proc.stdout.read()
     log(smreg_output)
     smreg_proc.wait()
@@ -255,7 +255,7 @@ def get_rhn_config():
         return rhn_conf
 
 def rhn_check():
-    rhncheck_cmd = subprocess.Popen("rhn_check", shell=False, stdout=PIPE, stderr=STDOUT)
+    rhncheck_cmd = subprocess_closefds("rhn_check", shell=False, stdout=PIPE, stderr=STDOUT)
     rhncheck = rhncheck_cmd.communicate()[0]
     if rhncheck_cmd.returncode == 0:
         return True
@@ -263,7 +263,7 @@ def rhn_check():
         return False
 
 def sam_check():
-    samcheck_cmd = subprocess.Popen("subscription-manager identity", shell=True, stdout=PIPE, stderr=open('/dev/null', 'w'))
+    samcheck_cmd = subprocess_closefds("subscription-manager identity", shell=True, stdout=PIPE, stderr=open('/dev/null', 'w'))
     samcheck = samcheck_cmd.communicate()[0]
     if samcheck_cmd.returncode == 0:
         return True

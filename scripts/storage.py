@@ -66,7 +66,7 @@ class Storage:
                 logger.info(self.ROOTDRIVE)
                 self.BOOTDRIVE = translate_multipath_device(self.ROOTDRIVE)
         mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
-        mem_size_mb = subprocess.Popen(mem_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        mem_size_mb = subprocess_closefds(mem_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         MEM_SIZE_MB = mem_size_mb.stdout.read()
         MEM_SIZE_MB= int(MEM_SIZE_MB) / 1024
         # we multiply the overcommit coefficient by 10 then divide the
@@ -132,7 +132,7 @@ class Storage:
     def get_drive_size(self, drive):
         logger.debug("Getting Drive Size For: %s" % drive)
         size_cmd = "sfdisk -s " + drive + " 2>/dev/null"
-        size = subprocess.Popen(size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        size = subprocess_closefds(size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         size = size.stdout.read().strip()
         size = int(int(size) / 1024)
         logger.debug(size)
@@ -188,7 +188,7 @@ class Storage:
 
     def get_sd_name(self, id):
         device_sys_cmd = "grep -H \"^%s$\" /sys/block/*/dev | cut -d: -f1" % id
-        device_sys = subprocess.Popen(device_sys_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        device_sys = subprocess_closefds(device_sys_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         device_sys_output = device_sys.stdout.read().strip()
         if not device_sys_output is "":
             device = os.path.basename(os.path.dirname(device_sys_output))
@@ -201,7 +201,7 @@ class Storage:
         #get dependencies for multipath device
         deps_cmd = "dmsetup deps -u mpath-%s | sed 's/^.*: //' \
         | sed 's/, /:/g' | sed 's/[\(\)]//g'" % mpath_device
-        deps = subprocess.Popen(deps_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        deps = subprocess_closefds(deps_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         deps_output = deps.stdout.read()
         for dep in deps_output.split():
             device=self.get_sd_name(dep)
@@ -225,7 +225,7 @@ class Storage:
             if re.match("^[hsv]+d", d):
                 devices.append("/dev/%s" % d)
             byid_list_cmd = "find /dev/disk/by-id -mindepth 1 -not -name '*-part*' 2>/dev/null"
-            byid_list = subprocess.Popen(byid_list_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            byid_list = subprocess_closefds(byid_list_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             byid_list_output = byid_list.stdout.read()
         for d in byid_list_output.split():
             d = os.readlink(d)
@@ -242,7 +242,7 @@ class Storage:
         # include multipath devices
         devs_to_remove=""
         multipath_list_cmd = "dmsetup ls --target=multipath | cut -f1"
-        multipath_list = subprocess.Popen(multipath_list_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        multipath_list = subprocess_closefds(multipath_list_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         multipath_list_output = multipath_list.stdout.read()
 
         for d in multipath_list_output.split():
@@ -251,7 +251,7 @@ class Storage:
             sd_devs = self.get_multipath_deps(d)
 
             dm_dev_cmd = "multipath -ll \"%s\" | grep \"%s\" | sed -r 's/^.*(dm-[0-9]+ ).*$/\\1/'" % (d, d)
-            dm_dev = subprocess.Popen(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            dm_dev = subprocess_closefds(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             dm_dev_output = dm_dev.stdout.read()
             devs_to_remove="%s %s %s" % (devs_to_remove, sd_devs, dm_dev_output)
         # Remove /dev/sd* devices that are part of a multipath device
@@ -278,7 +278,7 @@ class Storage:
             dev_serial = device.get_property("ID_SERIAL")
             dev_desc = device.get_property("ID_SCSI_COMPAT")
             dev_size_cmd = "sfdisk -s %s 2>/dev/null" % dev_name
-            dev_size = subprocess.Popen(dev_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            dev_size = subprocess_closefds(dev_size_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             dev_size = dev_size.stdout.read()
             size_failed = 0
             if not device.get_property("ID_CDROM"):
@@ -740,7 +740,7 @@ class Storage:
 
 def wipe_fakeraid(device):
     dmraid_cmd = "echo y | dmraid -rE $(readlink -f \"%s\")" % device
-    dmraid=subprocess.Popen(dmraid_cmd, stdout=PIPE, stderr=STDOUT, shell=True)
+    dmraid=subprocess_closefds(dmraid_cmd, stdout=PIPE, stderr=STDOUT, shell=True)
     dmraid.communicate()
     dmraid.poll()
     if dmraid.returncode == 0:

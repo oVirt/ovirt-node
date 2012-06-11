@@ -123,7 +123,7 @@ EOF
                 system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f, self.grub_dir))
             grub_setup_out = GRUB_SETUP_TEMPLATE % self.grub_dict
             logger.debug(grub_setup_out)
-            grub_setup = subprocess.Popen(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_setup = subprocess_closefds(grub_setup_out, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             grub_results = grub_setup.stdout.read()
             logger.debug(grub_results)
             if grub_setup.wait() != 0 or "Error" in grub_results:
@@ -163,7 +163,7 @@ initrd /initrd0.img
                 disk = self.disk
             grub_setup_cmd = "/sbin/grub2-install " + disk + " --boot-directory=" + self.initrd_dest + " --force"
             logger.info(grub_setup_cmd)
-            grub_setup = subprocess.Popen(grub_setup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_setup = subprocess_closefds(grub_setup_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             grub_results = grub_setup.stdout.read()
             logger.info(grub_results)
             if grub_setup.wait() != 0 or "Error" in grub_results:
@@ -260,7 +260,7 @@ initrd /initrd0.img
             label_debug = ''
             for label in os.listdir("/dev/disk/by-label"):
                 label_debug += "%s\n" % label
-            label_debug += subprocess.Popen("blkid", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.read()
+            label_debug += subprocess_closefds("blkid", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.read()
             logger.debug(label_debug)
             return False
         logger.debug("candidate: " + candidate)
@@ -333,7 +333,7 @@ initrd /initrd0.img
             self.disk = re.sub("p[1,2,3]$", "", self.disk)
             grub_disk_cmd= "multipath -l \"" + os.path.basename(self.disk) + "\" | awk '/ active / {print $3}' | head -n1"
             logger.debug(grub_disk_cmd)
-            grub_disk = subprocess.Popen(grub_disk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            grub_disk = subprocess_closefds(grub_disk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.disk = grub_disk.stdout.read().strip()
             if "cciss" in self.disk:
                 self.disk = self.disk.replace("!","/")

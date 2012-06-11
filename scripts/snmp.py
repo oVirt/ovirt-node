@@ -30,7 +30,7 @@ def enable_snmpd(password):
     else:
         conf = snmp_conf
     cmd="cat %s|grep createUser|awk '{print $4}'" % conf
-    oldpwd = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    oldpwd = subprocess_closefds(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     oldpwd = oldpwd.stdout.read().strip()
     system("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
     f = open(snmp_conf, "a")

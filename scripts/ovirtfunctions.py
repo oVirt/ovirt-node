@@ -135,6 +135,13 @@ def augtool_get(key):
     value = aug.get(key)
     return value
 
+def subprocess_closefds(*args, **kwargs):
+    kwargs.update({
+        "close_fds": True
+    })
+    #logger.debug("Running in subprocess: %s" % ((args, kwargs),))
+    return subprocess.Popen(*args, **kwargs)
+
 class passthrough(object):
     proc = None
     retval = None
@@ -296,16 +303,16 @@ def disable_firstboot():
 # The input (vg) is accepted as either the vg_name or vg_uuid
 def wipe_volume_group(vg):
     vg_name_cmd = "vgs -o vg_name,vg_uuid --noheadings 2>/dev/null | grep -w \"" + vg + "\" | awk '{print $1}'"
-    vg_name = subprocess.Popen(vg_name_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    vg_name = subprocess_closefds(vg_name_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     vg = vg_name.stdout.read().strip()
     files_cmd = "grep '%s' /proc/mounts|awk '{print $2}'|sort -r" % vg
-    files = subprocess.Popen(files_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    files = subprocess_closefds(files_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     files_output = files.stdout.read()
     logger.debug("Mounts:\n" + files_output)
     for file in files_output.split():
         os.system("umount %s &>/dev/null" % file)
     swap_cmd = "grep '%s' /proc/swaps|awk '{print $1}'" % vg
-    swap = subprocess.Popen(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    swap = subprocess_closefds(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     swap_output = swap.stdout.read().strip()
     for d in swap_output.split():
         os.system("swapoff %s &>/dev/null" % d)
@@ -328,20 +335,20 @@ def wipe_volume_group(vg):
 # Example usage:
 # find_srv ovirt tcp
 def find_srv(srv, proto):
-    domain = subprocess.Popen("dnsdomainname 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
+    domain = subprocess_closefds("dnsdomainname 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
     domain_output = domain.stdout.read()
     if domain_output == "localdomain":
         domain=""
     # FIXME dig +search does not seem to work with -t srv
     # dnsreply=$(dig +short +search -t srv _$1._$2)
     # This is workaround:
-    search = subprocess.Popen("grep search /etc/resolv.conf", shell=True, stdout=PIPE, stderr=STDOUT)
+    search = subprocess_closefds("grep search /etc/resolv.conf", shell=True, stdout=PIPE, stderr=STDOUT)
     search_output = search.stdout.read()
     search = search_output.replace("search ","")
     domain_search = domain_output + search_output
     for d in domain_search.split():
         dig_cmd = "dig +short -t srv _%s._%s.%s" % (srv, proto,search)
-        dig = subprocess.Popen(dig_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dig = subprocess_closefds(dig_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dig_output = dig.stdout.read()
         dig.poll()
         dig_rc = dig.returncode
@@ -448,7 +455,7 @@ def mount_config():
 
         # bind mount all persisted configs to rootfs
         filelist_cmd = "find /config -type f"
-        filelist = subprocess.Popen(filelist_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        filelist = subprocess_closefds(filelist_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         filelist = filelist.stdout.read()
         for f in filelist.split():
             logger.debug("Bind Mounting: " + f)
@@ -482,7 +489,7 @@ def unmount_logging_services():
     # mapping command->service is lame, but works for most initscripts
     logging_services= []
     prgs_cmd = "cd /etc/init.d|lsof -Fc +D /var/log|grep ^c|sort -u"
-    prgs = subprocess.Popen(prgs_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    prgs = subprocess_closefds(prgs_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     prgs_output = prgs.stdout.read()
     for prg in prgs_output.split():
         svc = prg = prg[1:]
@@ -766,7 +773,7 @@ def ovirt_safe_delete_config(files):
         system('sed --copy -i "\|%s$|d" /config/files' % filename)
 
         if os.path.isdir(filename):
-            for child in subprocess.Popen("ls -d '%s'" % filename, shell=True, stdout=PIPE, stderr=STDOUT).stdout.read():
+            for child in subprocess_closefds("ls -d '%s'" % filename, shell=True, stdout=PIPE, stderr=STDOUT).stdout.read():
                 ovirt_safe_delete_config(child)
             system("rm -rf /config'%s'" % filename)
             system("rm -rf '%s'" % filename)
@@ -779,13 +786,13 @@ def ovirt_safe_delete_config(files):
 def udev_info(name, query):
     # old udev command with shortopts
     udev_cmd = "udevadm info -n %s -q %s" % (name, query)
-    udev = subprocess.Popen(udev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    udev = subprocess_closefds(udev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     udev_output = udev.stdout.read()
     udev.poll()
     udev_rc = udev.returncode
     if udev_rc > 0:
         udev_cmd = "udevadm info --name=%s --query=%s" % (name, query)
-        udev = subprocess.Popen(udev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        udev = subprocess_closefds(udev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         udev_output = udev.stdout.read()
         udev.poll()
         udev_rc = udev.returncode
@@ -831,8 +838,8 @@ def finish_install():
         e2label_root_cmd = "e2label '%s' Root" % root_update_dev
         logger.debug(e2label_rootbackup_cmd)
         logger.debug(e2label_root_cmd)
-        subprocess.Popen(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        subprocess.Popen(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        subprocess_closefds(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        subprocess_closefds(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
@@ -960,13 +967,13 @@ def get_netmask(ifname):
 
 def get_gateway(ifname):
     cmd = "ip route list dev "+ ifname + " | awk ' /^default/ {print $3}'"
-    result = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    result = subprocess_closefds(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     result = result.stdout.read().strip()
     return result
 
 def get_ipv6_address(interface):
     inet6_lookup_cmd = "ip addr show dev %s | awk '$1==\"inet6\" && $4==\"global\" { print $2 }'" % interface
-    inet6_lookup = subprocess.Popen(inet6_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    inet6_lookup = subprocess_closefds(inet6_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     ipv6_addr = inet6_lookup.stdout.read().strip()
     try:
         ip, netmask = ipv6_addr.split("/")
@@ -977,7 +984,7 @@ def get_ipv6_address(interface):
 
 def get_ipv6_gateway(ifname):
     cmd = "ip route list dev "+ ifname + " | awk ' /^default/ {print $3}'"
-    result = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    result = subprocess_closefds(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     result = result.stdout.read().strip()
     return result
 
@@ -1010,7 +1017,7 @@ def wipe_partitions(drive):
     os.system("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     # zero out the GPT secondary header
     logger.info("Wiping secondary gpt header")
-    disk_kb = subprocess.Popen("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
+    disk_kb = subprocess_closefds("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
     disk_kb_count = disk_kb.stdout.read()
     os.system("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
     os.system("sync")
@@ -1029,18 +1036,18 @@ def test_ntp_configuration(self):
 def get_dm_device(device):
     dev_major_cmd="stat -c '%t' " + "\"/dev/" + device + "\""
     dev_minor_cmd="stat -c '%T' " + "\"/dev/" + device + "\""
-    major_lookup = subprocess.Popen(dev_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    minor_lookup = subprocess.Popen(dev_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    major_lookup = subprocess_closefds(dev_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    minor_lookup = subprocess_closefds(dev_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     major_lookup = major_lookup.stdout.read().strip()
     minor_lookup = minor_lookup.stdout.read().strip()
     dm_cmd = "ls /dev/mapper"
-    dm_cmd = subprocess.Popen(dm_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    dm_cmd = subprocess_closefds(dm_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     devices = dm_cmd.stdout.read().strip()
     for dm in devices.split("\n"):
         dm_major_cmd="stat -c '%t' " + "\"/dev/mapper/" + dm + "\""
         dm_minor_cmd="stat -c '%T' " + "\"/dev/mapper/" + dm + "\""
-        dm_major_lookup = subprocess.Popen(dm_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        dm_minor_lookup = subprocess.Popen(dm_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dm_major_lookup = subprocess_closefds(dm_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dm_minor_lookup = subprocess_closefds(dm_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dm_major_lookup = dm_major_lookup.stdout.read().strip()
         dm_minor_lookup = dm_minor_lookup.stdout.read().strip()
         if dm_major_lookup == major_lookup and minor_lookup == dm_minor_lookup:
@@ -1052,7 +1059,7 @@ def check_existing_hostvg(install_dev):
         devices_cmd = "pvs --separator=\":\" -o pv_name,vg_name --noheadings 2>/dev/null| grep HostVG |awk -F \":\" {'print $1'}"
     else:
         devices_cmd="pvs --separator=: -o pv_name,vg_name --noheadings 2>/dev/null| grep -v '%s' | grep HostVG | awk -F: {'print $1'}" % install_dev
-    devices_cmd = subprocess.Popen(devices_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    devices_cmd = subprocess_closefds(devices_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     devices = devices_cmd.stdout.read().strip()
     if len(devices) > 0:
         logger.error("There appears to already be an installation on another device:")
@@ -1073,10 +1080,10 @@ def translate_multipath_device(dev):
         return dev
     if "/dev/cciss" in dev:
         cciss_dev_cmd = "cciss_id " + dev
-        cciss_dev = subprocess.Popen(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        cciss_dev = subprocess_closefds(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         dev = "/dev/mapper/" + cciss_dev.stdout.read().strip()
     dm_dev_cmd = "multipath -ll '%s' | egrep dm-[0-9]+" % dev
-    dm_dev = subprocess.Popen(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    dm_dev = subprocess_closefds(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     (dm_dev_output, dummy) = dm_dev.communicate()
     if dm_dev.returncode > 0:
         return dev
@@ -1086,7 +1093,7 @@ def translate_multipath_device(dev):
 
 def pwd_lock_check(user):
     passwd_cmd = "passwd -S %s" % user
-    passwd = subprocess.Popen(passwd_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    passwd = subprocess_closefds(passwd_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     passwd, err = passwd.communicate()
     if "locked" in passwd:
         return True
@@ -1095,7 +1102,7 @@ def pwd_lock_check(user):
 
 def pwd_set_check(user):
     passwd_cmd = "passwd -S %s" % user
-    passwd = subprocess.Popen(passwd_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    passwd = subprocess_closefds(passwd_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     passwd, err = passwd.communicate()
     if "set" in passwd:
         return True
@@ -1143,12 +1150,12 @@ def findfs(label):
     system("partprobe /dev/mapper/*")
     system("udevadm settle")
     blkid_cmd = "/sbin/blkid -c /dev/null -l -o device -t LABEL=\"" + label + "\""
-    blkid = subprocess.Popen(blkid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    blkid = subprocess_closefds(blkid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     blkid_output = blkid.stdout.read().strip()
     return blkid_output
 
 def system(command):
-    system_cmd = subprocess.Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+    system_cmd = subprocess_closefds(command, shell=True, stdout=PIPE, stderr=PIPE)
     output, err = system_cmd.communicate()
     logger.propagate = False
     logger.debug(command)
@@ -1206,7 +1213,7 @@ def get_virt_hw_status():
     else:
         hwvirt_msg = "Virtualization hardware is unavailable."
         cpuflags_cmd = "cat /proc/cpuinfo |grep ^flags|tail -n 1"
-        cpuflags_lookup = subprocess.Popen(cpuflags_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        cpuflags_lookup = subprocess_closefds(cpuflags_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         cpuflags = cpuflags_lookup.stdout.read().strip()
         if "vmx" in cpuflags or "svm" in cpuflags:
             hwvirt_msg = "(Virtualization hardware detected but disabled)"
@@ -1218,7 +1225,7 @@ def get_ssh_hostkey(variant="rsa"):
     fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant
     hostkey = open(fn_hostkey).read ()
     hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
-    hostkey_fp_lookup = subprocess.Popen(hostkey_fp_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    hostkey_fp_lookup = subprocess_closefds(hostkey_fp_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     fingerprint = hostkey_fp_lookup.stdout.read().strip().split(" ")[1]
     return (fingerprint, hostkey)
 
@@ -1244,7 +1251,7 @@ def logical_to_physical_networks():
 
 def has_fakeraid(device):
     fakeraid_cmd = "dmraid -r $(readlink -f \"" + device + "\")"
-    fakeraid = subprocess.Popen(fakeraid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    fakeraid = subprocess_closefds(fakeraid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     fakeraid.communicate()
     fakeraid.poll()
     if fakeraid.returncode == 0:
