@@ -517,20 +517,20 @@ def mount_logging():
     logger.info("Mounting log partition")
     # temporary mount-point
     log2 = tempfile.mkdtemp()
-    os.system("mount /dev/HostVG/Logging %s" % log2)
+    system_closefds("mount /dev/HostVG/Logging %s" % log2)
     logging_services = unmount_logging_services()
     # save logs from tmpfs
-    os.system("cp -av /var/log/* %s &>/dev/null" % log2)
+    system_closefds("cp -av /var/log/* %s &>/dev/null" % log2)
     # save temporary log
     if os.path.exists("/tmp/ovirt.log"):
-        os.system("cat /tmp/ovirt.log >> %s/ovirt.log &>/dev/null" % log2)
-    os.system("mount --move %s /var/log &>/dev/null" % log2)
+        system_closefds("cat /tmp/ovirt.log >> %s/ovirt.log &>/dev/null" % log2)
+    system_closefds("mount --move %s /var/log &>/dev/null" % log2)
     shutil.rmtree(log2)
-    os.system("restorecon -r /var/log &>/dev/null")
+    system_closefds("restorecon -r /var/log &>/dev/null")
     for srv in logging_services:
-        os.system("service " + srv + " start &>/dev/null")
+        system_closefds("service " + srv + " start &>/dev/null")
     # make sure rsyslog restarts
-    os.system("service rsyslog restart &>/dev/null")
+    system_closefds("service rsyslog restart &>/dev/null")
     return
 
 
