@@ -44,7 +44,7 @@ def process_kdump_config():
     if self.kdump_restore_config.value() == 1:
         restore_kdump_config()
     ovirt_store_config("/etc/kdump.conf")
-    os.system("service kdump restart &> /dev/null")
+    system_closefds("service kdump restart &> /dev/null")
     return True
 
 

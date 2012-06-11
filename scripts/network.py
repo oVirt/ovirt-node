@@ -231,9 +231,9 @@ class Network:
                 elif offset == 2:
                     augtool("set", "/files/etc/ntp.conf/server[2]", server)
                 offset = offset + 1
-            os.system("service ntpd stop &> /dev/null")
-            os.system("service ntpdate start &> /dev/null")
-            os.system("service ntpd start &> /dev/null")
+            system_closefds("service ntpd stop &> /dev/null")
+            system_closefds("service ntpdate start &> /dev/null")
+            system_closefds("service ntpd start &> /dev/null")
 
     def save_network_configuration(self):
         aug.load()
@@ -244,9 +244,9 @@ class Network:
         for vlan in os.listdir("/proc/net/vlan/"):
             # XXX wrong match e.g. eth10.1 with eth1
             if self.CONFIGURED_NIC in vlan:
-                os.system("vconfig rem " + vlan + "&> /dev/null")
+                system_closefds("vconfig rem " + vlan + "&> /dev/null")
                 ovirt_safe_delete_config(self.IFSCRIPTS_PATH + vlan)
-                os.system("rm -rf " + self.IFSCRIPTS_PATH + vlan)
+                system_closefds("rm -rf " + self.IFSCRIPTS_PATH + vlan)
 
         logger.debug("Removing persisted network configs")
         # This should cover NICs, VLANs and bridges
@@ -322,26 +322,26 @@ class Network:
         logger.info("Network configured successfully")
         if net_configured == 1:
             logger.info("Stopping Network services")
-            os.system("service network stop &> /dev/null")
-            os.system("service ntpd stop &> /dev/null")
+            system_closefds("service network stop &> /dev/null")
+            system_closefds("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
             brctl_cmd = "brctl show| awk 'NR>1 && /^br[ep]/ {print $1}'"
             brctl = subprocess_closefds(brctl_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             brctl_output = brctl.stdout.read()
             for i in brctl_output.split():
                 if_down_cmd = "ifconfig %s down &> /dev/null" % i
-                os.system(if_down_cmd)
+                system_closefds(if_down_cmd)
                 del_br_cmd = "brctl delbr %s &> /dev/null" % i
-                os.system(del_br_cmd)
+                system_closefds(del_br_cmd)
             logger.info("Starting Network service")
-            os.system("service network start &> /dev/null")
-            os.system("service ntpdate start &> /dev/null")
-            os.system("service ntpd start &> /dev/null")
+            system_closefds("service network start &> /dev/null")
+            system_closefds("service ntpdate start &> /dev/null")
+            system_closefds("service ntpd start &> /dev/null")
             # rhbz#745541
-            os.system("service rpcbind start &> /dev/null")
-            os.system("service nfslock start &> /dev/null")
-            os.system("service rpcidmapd start &> /dev/null")
-            os.system("service rpcgssd start &> /dev/null")
+            system_closefds("service rpcbind start &> /dev/null")
+            system_closefds("service nfslock start &> /dev/null")
+            system_closefds("service rpcidmapd start &> /dev/null")
+            system_closefds("service rpcgssd start &> /dev/null")
             if OVIRT_VARS.has_key("NTP"):
                 logger.info("Testing NTP Configuration")
                 test_ntp_configuration()

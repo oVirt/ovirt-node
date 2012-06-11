@@ -75,7 +75,7 @@ def ovirt_rsyslog(server, port, protocol):
     rsyslog_config = open(RSYSLOG_FILE, "w")
     rsyslog_config.write(rsyslog_config_out)
     rsyslog_config.close()
-    os.system("/sbin/service rsyslog restart &> /dev/null")
+    system_closefds("/sbin/service rsyslog restart &> /dev/null")
     if ovirt_store_config("/etc/rsyslog.conf"):
         logger.info("Syslog Configuration Updated")
     return True
@@ -83,7 +83,7 @@ def ovirt_rsyslog(server, port, protocol):
 def ovirt_netconsole(server, port):
     augtool("set","/files/etc/sysconfig/netconsole/SYSLOGADDR", server)
     augtool("set","/files/etc/sysconfig/netconsole/SYSLOGPORT", port)
-    os.system("/sbin/service netconsole restart &> /dev/null")
+    system_closefds("/sbin/service netconsole restart &> /dev/null")
     if ovirt_store_config("/etc/sysconfig/netconsole"):
         logger.info("Netconsole Configuration Updated")
     return True

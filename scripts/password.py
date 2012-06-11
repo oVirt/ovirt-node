@@ -51,8 +51,8 @@ def toggle_ssh_access():
     ssh_config.set("/files/etc/ssh/sshd_config", OVIRT_VARS["ssh_pass_enabled"])
     ssh_config.save()
     ovirt_store_config("/etc/ssh/sshd_config")
-    rc = os.system("service sshd reload")
+    rc = system_closefds("service sshd reload")
     return rc
 
 def set_sasl_password(user, password):
-    os.system("saslpasswd2 -a libvirt -p %s") % user
+    system_closefds("saslpasswd2 -a libvirt -p %s") % user

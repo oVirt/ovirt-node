@@ -231,7 +231,7 @@ class Storage:
             d = os.readlink(d)
             d_basename = os.path.basename(d)
             udev_cmd = "udevadm info --name=/dev/" + d_basename + " --query=property | grep -q ^ID_BUS: &>>/dev/null"
-            if os.system(udev_cmd):
+            if system_closefds(udev_cmd):
                 devices.append("/dev/%s" % d_basename)
         # FIXME: workaround for detecting cciss devices
         if os.path.exists("/dev/cciss"):
@@ -396,9 +396,9 @@ class Storage:
             logger.info("Creating swap partition")
             system("lvcreate --name Swap --size "+str(self.SWAP_SIZE) + "M /dev/HostVG")
             system("mkswap -L \"SWAP\" /dev/HostVG/Swap")
-            os.system("echo \"/dev/HostVG/Swap swap swap defaults 0 0\" >> /etc/fstab")
+            system_closefds("echo \"/dev/HostVG/Swap swap swap defaults 0 0\" >> /etc/fstab")
             if OVIRT_VARS.has_key("OVIRT_CRYPT_SWAP"):
-                os.system("echo \"SWAP /dev/HostVG/Swap /dev/mapper/ovirt-crypt-swap " + OVIRT_VARS["OVIRT_CRYPT_SWAP"] + "\" >> /etc/ovirt-crypttab")
+                system_closefds("echo \"SWAP /dev/HostVG/Swap /dev/mapper/ovirt-crypt-swap " + OVIRT_VARS["OVIRT_CRYPT_SWAP"] + "\" >> /etc/ovirt-crypttab")
         if self.CONFIG_SIZE > 0:
             logger.info("Creating config partition")
             system("lvcreate --name Config --size "+str(self.CONFIG_SIZE)+"M /dev/HostVG")
@@ -409,7 +409,7 @@ class Storage:
             system("lvcreate --name Logging --size "+str(self.LOGGING_SIZE)+"M /dev/HostVG")
             system("mke2fs -j -t ext4 /dev/HostVG/Logging -L \"LOGGING\"")
             system("tune2fs -c 0 -i 0 /dev/HostVG/Logging")
-            os.system("echo \"/dev/HostVG/Logging /var/log ext4 defaults,noatime 0 0\" >> /etc/fstab")
+            system_closefds("echo \"/dev/HostVG/Logging /var/log ext4 defaults,noatime 0 0\" >> /etc/fstab")
         use_data=1
         if self.DATA_SIZE == -1:
             logger.info("Creating data partition with remaining free space")
@@ -422,9 +422,9 @@ class Storage:
         if use_data == 0:
             system("mke2fs -j -t ext4 /dev/HostVG/Data -L \"DATA\"")
             system("tune2fs -c 0 -i 0 /dev/HostVG/Data")
-            os.system("echo \"/dev/HostVG/Data /data ext4 defaults,noatime 0 0\" >> /etc/fstab")
-            os.system("echo \"/data/images /var/lib/libvirt/images bind bind 0 0\" >> /etc/fstab")
-            os.system("echo \"/data/core /var/log/core bind bind 0 0\" >> /etc/fstab")
+            system_closefds("echo \"/dev/HostVG/Data /data ext4 defaults,noatime 0 0\" >> /etc/fstab")
+            system_closefds("echo \"/data/images /var/lib/libvirt/images bind bind 0 0\" >> /etc/fstab")
+            system_closefds("echo \"/data/core /var/log/core bind bind 0 0\" >> /etc/fstab")
 
         logger.info("Mounting config partition")
         mount_config()
@@ -519,10 +519,10 @@ class Storage:
             logger.debug(lv_cmd)
             system(lv_cmd)
             if OVIRT_VARS.has_key("OVIRT_CRYPT_SWAP2"):
-                os.system("echo \"SWAP2 /dev/AppVG/Swap2 /dev/mapper/ovirt-crypt-swap2 " + OVIRT_VARS["OVIRT_CRYPT_SWAP2"] + "\" >> /etc/ovirt-crypttab")
+                system_closefds("echo \"SWAP2 /dev/AppVG/Swap2 /dev/mapper/ovirt-crypt-swap2 " + OVIRT_VARS["OVIRT_CRYPT_SWAP2"] + "\" >> /etc/ovirt-crypttab")
             else:
                 system("mkswap -L \"SWAP2\" /dev/AppVG/Swap2")
-                os.system("echo \"/dev/AppVG/Swap2 swap swap defaults 0 0\" >> /etc/fstab")
+                system_closefds("echo \"/dev/AppVG/Swap2 swap swap defaults 0 0\" >> /etc/fstab")
 
         use_data = "1"
         if self.DATA2_SIZE == -1:
@@ -537,7 +537,7 @@ class Storage:
         if use_data == 0:
             system("mke2fs -j -t ext4 /dev/AppVG/Data2 -L \"DATA2\"")
             system("tune2fs -c 0 -i 0 /dev/AppVG/Data2")
-            os.system("echo \"/dev/AppVG/Data2 /data2 ext4 defaults,noatime 0 0\" >> /etc/fstab")
+            system_closefds("echo \"/dev/AppVG/Data2 /data2 ext4 defaults,noatime 0 0\" >> /etc/fstab")
             logger.info("Mounting data2 partition")
             mount_data2()
             logger.info("Completed AppVG!")

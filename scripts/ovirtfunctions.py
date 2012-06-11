@@ -142,6 +142,10 @@ def subprocess_closefds(*args, **kwargs):
     #logger.debug("Running in subprocess: %s" % ((args, kwargs),))
     return subprocess.Popen(*args, **kwargs)
 
+def system_closefds(cmd):
+    proc = subprocess_closefds(cmd, shell=True)
+    return proc.wait()
+
 class passthrough(object):
     proc = None
     retval = None
@@ -175,7 +179,7 @@ def is_standalone(self):
 # return 0 if local storage is configured
 # return 1 if local storage is not configured
 def is_local_storage_configured():
-    ret = os.system("lvs HostVG/Config &>/dev/null")
+    ret = system_closefds("lvs HostVG/Config &>/dev/null")
     if ret > 0:
         return False
     return True
@@ -203,19 +207,19 @@ def is_upgrade(self):
 # return 0 if booted from local disk
 # return 1 if booted from other media
 def is_booted_from_local_disk():
-    ret = os.system("grep -q LABEL=Root /proc/cmdline")
+    ret = system_closefds("grep -q LABEL=Root /proc/cmdline")
     if ret == 0:
         return True
     else:
         return False
 
 def is_rescue_mode():
-    ret = os.system("grep -q rescue /proc/cmdline")
+    ret = system_closefds("grep -q rescue /proc/cmdline")
     if ret == 0:
         return True
     # check for runlevel 1/single
     else:
-        ret = os.system("runlevel|grep -q '1\|S'")
+        ret = system_closefds("runlevel|grep -q '1\|S'")
         if ret == 0:
             return True
         return False
@@ -310,12 +314,12 @@ def wipe_volume_group(vg):
     files_output = files.stdout.read()
     logger.debug("Mounts:\n" + files_output)
     for file in files_output.split():
-        os.system("umount %s &>/dev/null" % file)
+        system_closefds("umount %s &>/dev/null" % file)
     swap_cmd = "grep '%s' /proc/swaps|awk '{print $1}'" % vg
     swap = subprocess_closefds(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     swap_output = swap.stdout.read().strip()
     for d in swap_output.split():
-        os.system("swapoff %s &>/dev/null" % d)
+        system_closefds("swapoff %s &>/dev/null" % d)
     # Deactivate VG
     passthrough("vgchange -a n -v %s" % vg)
     ret = -1
@@ -362,15 +366,15 @@ def find_srv(srv, proto):
 
 def ovirt_setup_libvirtd(self):
     # just to get a boot warning to shut up
-    os.system("touch /etc/resolv.conf")
+    system_closefds("touch /etc/resolv.conf")
 
     # make libvirtd listen on the external interfaces
-    os.system("sed -i -e 's/^#\(LIBVIRTD_ARGS=\"--listen\"\).*/\1/' /etc/sysconfig/libvirtd")
+    system_closefds("sed -i -e 's/^#\(LIBVIRTD_ARGS=\"--listen\"\).*/\1/' /etc/sysconfig/libvirtd")
 
     # set up qemu daemon to allow outside VNC connections
-    os.system("sed -i -e 's/^[[:space:]]*#[[:space:]]*\(vnc_listen = \"0.0.0.0\"\).*/\1/' /etc/libvirt/qemu.conf")
+    system_closefds("sed -i -e 's/^[[:space:]]*#[[:space:]]*\(vnc_listen = \"0.0.0.0\"\).*/\1/' /etc/libvirt/qemu.conf")
     # set up libvirtd to listen on TCP (for kerberos)
-    os.system('sed -i -e "s/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/" \
+    system_closefds('sed -i -e "s/^[[:space:]]*#[[:space:]]*\(listen_tcp\)\>.*/\1 = 1/" \
        -e "s/^[[:space:]]*#[[:space:]]*\(listen_tls\)\>.*/\1 = 0/" \
        /etc/libvirt/libvirtd.conf')
 
@@ -381,7 +385,7 @@ def ovirt_setup_anyterm():
    anyterm_conf.write("ANYTERM_LOCAL_ONLY=false")
    anyterm_conf.close()
    # permit it to run the virsh console
-   os.system("echo 'anyterm ALL=NOPASSWD: /usr/bin/virsh console *' >> /etc/sudoers")
+   system_closefds("echo 'anyterm ALL=NOPASSWD: /usr/bin/virsh console *' >> /etc/sudoers")
 
 # mount livecd media
 # e.g. CD /dev/sr0, USB /dev/sda1,
@@ -413,8 +417,8 @@ def mount_live():
     else:
         live_dev="/dev/live"
 
-    os.system("mkdir -p /live")
-    os.system("mount -r " + live_dev + " /live &>/dev/null")
+    system_closefds("mkdir -p /live")
+    system_closefds("mount -r " + live_dev + " /live &>/dev/null")
     if os.path.ismount("/live"):
         return True
     else:
@@ -426,7 +430,7 @@ def mount_liveos():
     if os.path.ismount("/liveos"):
         return True
     else:
-        os.system("mkdir -p /liveos")
+        system_closefds("mkdir -p /liveos")
         if not system("mount LABEL=Root /liveos"):
             # just in case /dev/disk/by-label is not using devmapper and fails
             for dev in os.listdir("/dev/mapper"):
@@ -443,15 +447,15 @@ def mount_liveos():
 def mount_config():
     # Only try to mount /config if the persistent storage exists
     if os.path.exists("/dev/HostVG/Config"):
-        os.system("mkdir -p /config")
+        system_closefds("mkdir -p /config")
         if not os.path.ismount("/config"):
-            ret = os.system("mount /dev/HostVG/Config /config")
+            ret = system_closefds("mount /dev/HostVG/Config /config")
             if ret > 0:
                 return False
 
         # optional config embedded in the livecd image
         if os.path.exists("/live/config"):
-            os.system("cp -rv --update /live/config/* /config")
+            system_closefds("cp -rv --update /live/config/* /config")
 
         # bind mount all persisted configs to rootfs
         filelist_cmd = "find /config -type f"
@@ -462,15 +466,15 @@ def mount_config():
             if os.path.isfile(f) and f != "/config/files":
                 target = string.replace(f, "/config", "")
                 mounted_cmd = "grep -q " + target + " /proc/mounts"
-                mounted = os.system(mounted_cmd)
+                mounted = system_closefds(mounted_cmd)
                 if mounted == 0:
                     # skip if already bind-mounted
                     pass
                 else:
                     dirname = os.path.dirname(target)
-                    os.system("mkdir -p '%s'" % dirname)
-                    os.system("touch '%s'" % target)
-                    os.system("mount -n --bind '%s' '%s'" % (f,target))
+                    system_closefds("mkdir -p '%s'" % dirname)
+                    system_closefds("touch '%s'" % target)
+                    system_closefds("mount -n --bind '%s' '%s'" % (f,target))
         return True
     else:
         # /config is not available
@@ -480,8 +484,8 @@ def mount_boot(self):
     if os.path.ismount("/boot"):
        return
     else:
-        os.system("mkdir -p /boot")
-        os.system("mount LABEL=Boot /boot")
+        system_closefds("mkdir -p /boot")
+        system_closefds("mount LABEL=Boot /boot")
 
 # stop any service which keeps /var/log busy
 # keep the list of services
@@ -493,13 +497,13 @@ def unmount_logging_services():
     prgs_output = prgs.stdout.read()
     for prg in prgs_output.split():
         svc = prg = prg[1:]
-        ret = os.system("service " + svc +" stop &>/dev/null")
+        ret = system_closefds("service " + svc +" stop &>/dev/null")
         if ret != 0:
-            os.system("pkill " + svc)
+            system_closefds("pkill " + svc)
         logging_services.append(svc)
     return logging_services
     # debugging help
-    #os.system("lsof +D /var/log")
+    #system_closefds("lsof +D /var/log")
 
 # mount logging partition
 # this only gets executed when disk is re-partitioned, HostVG/Logging is empty
@@ -510,20 +514,20 @@ def mount_logging():
         logger.info("Mounting log partition")
         # temporary mount-point
         log2 = tempfile.mkdtemp()
-        os.system("mount /dev/HostVG/Logging " + log2)
+        system_closefds("mount /dev/HostVG/Logging " + log2)
         logging_services = unmount_logging_services()
         # save logs from tmpfs
-        os.system("cp -av /var/log/* " + log2 + " &>/dev/null")
+        system_closefds("cp -av /var/log/* " + log2 + " &>/dev/null")
         # save temporary log
         if os.path.exists("/tmp/ovirt.log"):
-            os.system("cp /tmp/ovirt.log " + log2 +"/ovirt.log-tmp &>> /tmp/ovirt.log")
-        os.system("mount --move " + log2 + " /var/log")
+            system_closefds("cp /tmp/ovirt.log " + log2 +"/ovirt.log-tmp &>> /tmp/ovirt.log")
+        system_closefds("mount --move " + log2 + " /var/log")
         shutil.rmtree(log2)
-        os.system("restorecon -rv /var/log &>/dev/null")
+        system_closefds("restorecon -rv /var/log &>/dev/null")
         for srv in logging_services:
-            os.system("service " + srv + " start &>/dev/null")
+            system_closefds("service " + srv + " start &>/dev/null")
         # make sure rsyslog restarts
-        os.system("service rsyslog start &>/dev/null")
+        system_closefds("service rsyslog start &>/dev/null")
         return
     else:
         # /var/log is not available
@@ -535,16 +539,16 @@ def unmount_logging():
         return True
     logger.info("Unmounting log partition")
     # plymouthd keeps /var/log/boot.log
-    ret = os.system("plymouth --ping")
+    ret = system_closefds("plymouth --ping")
     if ret == 0:
-        os.system("plymouth --quit")
+        system_closefds("plymouth --quit")
     logging_services = unmount_logging_services()
 
-    ret = os.system("umount /var/log &>/dev/null")
+    ret = system_closefds("umount /var/log &>/dev/null")
     if ret > 0:
         return ret
     for srv in logging_services:
-        os.system("service " + srv + " start &> /dev/null")
+        system_closefds("service " + srv + " start &> /dev/null")
     return
 
 # mount data partition
@@ -553,18 +557,18 @@ def mount_data():
         return
 
     if os.path.exists("/dev/HostVG/Data"):
-        os.system("mkdir -p /data")
-        os.system("mount /data")
-        os.system("mkdir -p /data/images")
-        os.system("mkdir -p /data/images/rhev")
-        os.system("chown 36:36 /data/images/rhev")
-        os.system("mkdir -p /var/lib/libvirt/images")
-        os.system("mount /var/lib/libvirt/images")
-        os.system("restorecon -rv /var/lib/libvirt/images &>/dev/null")
-        os.system("mkdir -p /data/core")
-        os.system("mkdir -p /var/log/core")
-        os.system("mount /var/log/core")
-        os.system("restorecon -rv /var/log/core &>/dev/null")
+        system_closefds("mkdir -p /data")
+        system_closefds("mount /data")
+        system_closefds("mkdir -p /data/images")
+        system_closefds("mkdir -p /data/images/rhev")
+        system_closefds("chown 36:36 /data/images/rhev")
+        system_closefds("mkdir -p /var/lib/libvirt/images")
+        system_closefds("mount /var/lib/libvirt/images")
+        system_closefds("restorecon -rv /var/lib/libvirt/images &>/dev/null")
+        system_closefds("mkdir -p /data/core")
+        system_closefds("mkdir -p /var/log/core")
+        system_closefds("mount /var/log/core")
+        system_closefds("restorecon -rv /var/log/core &>/dev/null")
         return
     else:
         # /data is not available
@@ -653,9 +657,9 @@ def ovirt_store_config(files):
                     logger.info("File: " + filename + " persisted")
                     rc = True
         # register in /config/files used by rc.sysinit
-        ret = os.system("grep -q \"^$" + filename +"$\" /config/files 2> /dev/null")
+        ret = system_closefds("grep -q \"^$" + filename +"$\" /config/files 2> /dev/null")
         if ret > 0:
-            os.system("echo "+filename+" >> /config/files")
+            system_closefds("echo "+filename+" >> /config/files")
             logger.info("Successfully persisted: " + filename)
             rc = 0
     else:
@@ -681,7 +685,7 @@ def is_persisted(filename):
 
 def check_bind_mount(config_file):
     bind_mount_cmd = 'grep -q "%s ext4" /proc/mounts' % config_file
-    if os.system(bind_mount_cmd) == 0:
+    if system_closefds(bind_mount_cmd) == 0:
         return True
     else:
         return False
@@ -696,11 +700,11 @@ def unmount_config(files):
       for f in files_list:
         filename = os.path.abspath(f)
         if check_bind_mount(filename):
-            ret = os.system('umount -n "%s" &>/dev/null' % filename)
+            ret = system_closefds('umount -n "%s" &>/dev/null' % filename)
             if ret == 0:
                 if os.path.exists('/config%s' % filename):
                     # refresh the file in rootfs if it was mounted over
-                    if os.system('cp -a /config"%s" "%s" &> /dev/null' % (filename,filename)):
+                    if system_closefds('cp -a /config"%s" "%s" &> /dev/null' % (filename,filename)):
                         return True
 
 # remove persistent config files
@@ -722,13 +726,13 @@ def remove_config(files):
         files_list=files
       for f in files_list:
             filename = os.path.abspath(f)
-            ret = os.system('grep "^%s$" /config/files > /dev/null 2>&1' % filename)
+            ret = system_closefds('grep "^%s$" /config/files > /dev/null 2>&1' % filename)
             if ret == 0:
                 if check_bind_mount(filename):
-                    ret = os.system('umount -n "%s" &>/dev/null' % filename)
+                    ret = system_closefds('umount -n "%s" &>/dev/null' % filename)
                     if ret == 0:
                         if os.path.isdir(filename):
-                            ret = os.system('cp -ar /config/"%s"/* "%s"' % (filename,filename))
+                            ret = system_closefds('cp -ar /config/"%s"/* "%s"' % (filename,filename))
                             if ret > 0:
                                 logger.error(" Failed to unpersist %s" % filename)
                                 return False
@@ -738,7 +742,7 @@ def remove_config(files):
                         else:
                             if os.path.isfile(filename):
                                 # refresh the file in rootfs if it was mounted over
-                               ret = os.system('cp -a /config"%s" "%s"' % (filename,filename))
+                               ret = system_closefds('cp -a /config"%s" "%s"' % (filename,filename))
                                if ret > 0:
                                     logger.error("Failed to unpersist %s" % filename)
                                     return False
@@ -768,7 +772,7 @@ def ovirt_safe_delete_config(files):
     for f in files_list:
         filename = os.path.abspath(f)
         if check_bind_mount(filename):
-            os.system('umount -n "%s" &>/dev/null' % filename)
+            system_closefds('umount -n "%s" &>/dev/null' % filename)
 
         system('sed --copy -i "\|%s$|d" /config/files' % filename)
 
@@ -809,7 +813,7 @@ def get_live_disk():
         if "block" in live_disk:
             live_disk = os.path.basename(udev_info("/dev/disk/by-label/LIVE","path")).strip()
     else:
-        ret = os.system("losetup /dev/loop0|grep -q '\.iso'")
+        ret = system_closefds("losetup /dev/loop0|grep -q '\.iso'")
         if ret != 0:
             client = gudev.Client(['block'])
             version = open("/etc/default/version")
@@ -820,7 +824,7 @@ def get_live_disk():
                 if device.has_property("ID_CDROM"):
                     dev = device.get_property("DEVNAME")
                     blkid_cmd = "blkid '%s'|grep -q '%s' " % (dev, pkg_name)
-                    ret = os.system(blkid_cmd)
+                    ret = system_closefds(blkid_cmd)
                     if ret == 0:
                         live_disk = os.path.basename(dev)
     return live_disk
@@ -847,7 +851,7 @@ def finish_install():
     #   -O /dev/null
     hookdir="/etc/ovirt-config-boot.d"
     for hook in os.listdir(hookdir):
-        os.system(os.path.join(hookdir,hook))
+        system_closefds(os.path.join(hookdir,hook))
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
@@ -939,7 +943,7 @@ def is_valid_iqn(iqn):
 
 # Check if networking is already up
 def network_up():
-    ret = os.system("ip addr show | grep -q 'inet.*scope global'")
+    ret = system_closefds("ip addr show | grep -q 'inet.*scope global'")
     if ret == 0:
         return True
     return False
@@ -1008,30 +1012,30 @@ def is_valid_port(port_number):
 def wipe_partitions(drive):
     logger.info("Removing HostVG")
     if os.path.exists("/dev/mapper/HostVG-Swap"):
-        os.system("swapoff -a")
+        system_closefds("swapoff -a")
     # remove remaining HostVG entries from dmtable
     for lv in os.listdir("/dev/mapper/"):
         if "HostVG" in lv:
-            os.system("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
+            system_closefds("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
     logger.info("Wiping old boot sector")
-    os.system("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     # zero out the GPT secondary header
     logger.info("Wiping secondary gpt header")
     disk_kb = subprocess_closefds("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
     disk_kb_count = disk_kb.stdout.read()
-    os.system("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
-    os.system("sync")
+    system_closefds("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("sync")
 
 def test_ntp_configuration(self):
     # stop ntpd service for testing
-    os.system("service ntpd stop > /dev/null 2>&1")
+    system_closefds("service ntpd stop > /dev/null 2>&1")
     for server in OVIRT_VARS["NTP"].split():
-        ret = os.system("ntpdate %s > /dev/null 2>&1" % server)
+        ret = system_closefds("ntpdate %s > /dev/null 2>&1" % server)
         if ret > 0:
             logger.error("Unable to verify NTP server: %s" % server)
         else:
             logger.info("Verified NTP server: %s" % server)
-    os.system("service ntpd start")
+    system_closefds("service ntpd start")
 
 def get_dm_device(device):
     dev_major_cmd="stat -c '%t' " + "\"/dev/" + device + "\""
@@ -1298,9 +1302,9 @@ def manage_firewall_port(port, action="open", proto="tcp"):
     elif action == "close":
         opt = "-D"
         logger.info("Closing port " + port)
-    os.system("iptables %s INPUT -p %s --dport %s -j ACCEPT" % (opt, proto, port))
+    system_closefds("iptables %s INPUT -p %s --dport %s -j ACCEPT" % (opt, proto, port))
     # service iptables save can not be used, bc of mv on bind mounted file
-    os.system("iptables-save -c > /etc/sysconfig/iptables")
+    system_closefds("iptables-save -c > /etc/sysconfig/iptables")
     ovirt_store_config("/etc/sysconfig/iptables")
 
 def is_iscsi_install():
@@ -1326,7 +1330,7 @@ def is_engine_configured():
     >>> bridge_test = is_engine_configured()
     >>> bridge_file is bridge_test
     '''
-    if os.system("brctl show | egrep -iq 'ovirtmgmt|rhevm'") is 0:
+    if system_closefds("brctl show | egrep -iq 'ovirtmgmt|rhevm'") is 0:
         return True
     else:
         return False

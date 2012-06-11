@@ -1333,12 +1333,12 @@ class NodeConfigScreen():
           if self.net_hostname.value() == "":
               network.remove_non_localhost()
               augtool("set", "/files/etc/sysconfig/network/HOSTNAME", "")
-              os.system("hostname \"" + self.net_hostname.value()+"\"")
+              system_closefds("hostname \"" + self.net_hostname.value()+"\"")
           elif self.net_hostname.value() != self.current_hostname and is_valid_hostname(self.net_hostname.value()):
               network.remove_non_localhost()
               network.add_localhost_alias(self.net_hostname.value())
               augtool("set", "/files/etc/sysconfig/network/HOSTNAME", self.net_hostname.value())
-              os.system("hostname " + self.net_hostname.value())
+              system_closefds("hostname " + self.net_hostname.value())
           ovirt_store_config("/etc/sysconfig/network")
           ovirt_store_config("/etc/hosts")
           if len(dns_servers) > 0:
@@ -1530,7 +1530,7 @@ class NodeConfigScreen():
               self.current_ssh_pwd_status = augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
               ssh_restart = True
           if ssh_restart:
-              os.system("service sshd restart &>/dev/null")
+              system_closefds("service sshd restart &>/dev/null")
               ButtonChoiceWindow(self.screen, "Remote Access", "SSH Restarted", buttons = ['Ok'])
               logger.info("SSH service restarted")
               ovirt_store_config("/etc/ssh/sshd_config")
@@ -1624,7 +1624,7 @@ class NodeConfigScreen():
                   kdump_prop_cmd = "kdumpctl propagate"
               else:
                   kdump_prop_cmd = "service kdump propagate"
-              ret = os.system("clear; %s" % kdump_prop_cmd)
+              ret = system_closefds("clear; %s" % kdump_prop_cmd)
               if ret == 0:
                   ovirt_store_config("/root/.ssh/kdump_id_rsa.pub")
                   ovirt_store_config("/root/.ssh/kdump_id_rsa")
@@ -1765,7 +1765,7 @@ class NodeConfigScreen():
                         warn_message= "Unable to verify any running vms\n\n"
                     self._create_warn_screen()
                     if pressed == IDENTIFY_BUTTON:
-                        os.system("ethtool -p " + self.nic_lb.current() + " 10")
+                        system_closefds("ethtool -p " + self.nic_lb.current() + " 10")
                     elif pressed == APPLY_BUTTON or pressed == UNLOCK_BUTTON:
                         errors = []
                         self.process_config()
@@ -1777,14 +1777,14 @@ class NodeConfigScreen():
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
-                            os.system("reboot")
+                            system_closefds("reboot")
                     elif pressed == POWER_OFF_BUTTON:
                         self._create_warn_screen()
                         warn = ButtonChoiceWindow(self.screen, "Confirm System Shutdown", warn_message + "This will shutdown the system, proceed?")
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
-                            os.system("/usr/bin/clear;shutdown -h now")
+                            system_closefds("/usr/bin/clear;shutdown -h now")
                     elif pressed == LOG_OFF_BUTTON:
                         # will exit and ovirt-admin-shell cleans up tty lockfile and drops to login
                         self.quit()
@@ -1803,7 +1803,7 @@ class NodeConfigScreen():
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
-                            os.system("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
+                            system_closefds("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
                     else:
                         if self.__current_page == NETWORK_PAGE:
                             if menu_choice == NETWORK_PAGE:
@@ -1851,7 +1851,7 @@ class NodeConfigScreen():
                                f = self.log_menu_list.current()
                                screen.popWindow()
                                screen.finish()
-                               os.system("/usr/bin/clear;SHELL=/bin/false /usr/bin/less -R " + f)
+                               system_closefds("/usr/bin/clear;SHELL=/bin/false /usr/bin/less -R " + f)
                         else:
                             self.__current_page = menu_choice
                 except Exception, error:

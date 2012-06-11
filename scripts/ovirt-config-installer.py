@@ -243,7 +243,7 @@ class NodeInstallScreen:
             return True
 
     def other_device_root_callback(self):
-        ret = os.system("test -b " + self.root_device.value())
+        ret = system_closefds("test -b " + self.root_device.value())
         if ret != 0:
             self.screen.setColor("BUTTON", "black", "red")
             self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -256,7 +256,7 @@ class NodeInstallScreen:
 
     def other_device_hostvg_callback(self):
         for dev in self.hostvg_device.value().split(","):
-            ret = os.system("test -b " + dev)
+            ret = system_closefds("test -b " + dev)
             if ret != 0:
                 self.screen.setColor("BUTTON", "black", "red")
                 self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -382,7 +382,7 @@ class NodeInstallScreen:
         return [Label(""), elements]
 
     def failed_install_page(self):
-        os.system("cat " + OVIRT_TMP_LOGFILE + ">> " + OVIRT_LOGFILE)
+        system_closefds("cat " + OVIRT_TMP_LOGFILE + ">> " + OVIRT_LOGFILE)
         elements = Grid(2, 5)
         elements.setField(Label("%s Installation Failed " %
             PRODUCT_SHORT), 0, 0)
@@ -794,19 +794,19 @@ class NodeInstallScreen:
                     if warn == "ok":
                         screen.popWindow()
                         screen.finish()
-                        os.system("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
+                        system_closefds("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
                 elif pressed == QUIT_BUTTON:
                     abort = ButtonChoiceWindow(self.screen, "Abort Installation","The installation of %s is not complete." %
              PRODUCT_SHORT, buttons = ['Back','Reboot','Shutdown'])
                     if abort == "reboot":
-                        os.system("/usr/bin/clear;reboot")
+                        system_closefds("/usr/bin/clear;reboot")
                     elif abort == "shutdown":
-                        os.system("/usr/bin/clear;halt")
+                        system_closefds("/usr/bin/clear;halt")
                 elif pressed == REBOOT_BUTTON:
                     screen.finish()
-                    os.system("/usr/bin/clear;/sbin/reboot")
+                    system_closefds("/usr/bin/clear;/sbin/reboot")
                 elif pressed == POWEROFF_BUTTON:
-                    os.system("/usr/bin/clear;halt")
+                    system_closefds("/usr/bin/clear;halt")
                 elif pressed == BACK_BUTTON:
                     self.get_back_page()
                 elif not result == "F2":

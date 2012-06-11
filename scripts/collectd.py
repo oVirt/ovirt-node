@@ -17,8 +17,8 @@ def write_collectd_config(server, port):
             -e \"s/@COLLECTD_PORT@/%s/\" %s.in \
             > %s" % (server, port, collectd_conf, collectd_conf)
         sed = subprocess_closefds(sed_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    os.system("chkconfig collectd on &> /dev/null")
-    os.system("service collectd restart &> /dev/null")
+    system_closefds("chkconfig collectd on &> /dev/null")
+    system_closefds("service collectd restart &> /dev/null")
     return True
 
 def get_collectd_config():
