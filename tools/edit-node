@@ -309,6 +309,165 @@ class LiveImageEditor(LiveImageCreator):
         except IOError, e:
             raise CreatorError("Failed to open '%s' : %s" % (fpath, e))
         else:
+
+        try:
+            subprocess.call([script], preexec_fn = self._chroot)
+        except OSError, e:
+            raise CreatorError("Failed to execute script %s, %s " % (script, e))
+        finally:
+            os.unlink(path)
+
+    def mount(self, base_on, cachedir = None):
+        """mount existing file system.
+
+        We have to override mount b/c we many not be creating an new install
+        root nor do we need to setup the file system, i.e., makedirs(/etc/,
+        /boot, ...), nor do we want to overwrite fstab, or create selinuxfs.
+
+        We also need to get some info about the image before we can mount it.
+
+        base_on --  the <LIVEIMG.src> a LiveOS.iso file or an attached LiveOS
+                    device, such as, /dev/live for a currently running image.
+
+        cachedir -- a directory in which to store a Yum cache;
+                    Not used in edit-liveos.
+
+        """
+
+        if not base_on:
+            raise CreatorError("No base LiveOS image specified.")
+
+        self.__ensure_builddir()
+
+        self._ImageCreator_instroot = self._ImageCreator__builddir + "/install_root"
+        self._LoopImageCreator__imagedir = self._ImageCreator__builddir + "/ex"
+        self._ImageCreator_outdir = self._ImageCreator__builddir + "/out"
+
+        makedirs(self._ImageCreator_instroot)
+        makedirs(self._LoopImageCreator__imagedir)
+        makedirs(self._ImageCreator_outdir)
+
+        LiveImageCreator._base_on(self, base_on)
+        self._LoopImageCreator__fstype = get_fsvalue(self._image, 'TYPE')
+        self._get_fslabel()
+
+        self.fslabel = self._LoopImageCreator__fslabel
+        if self._LoopImageCreator__image_size == None:
+            self._LoopImageCreator__image_size = os.stat(self._image)[stat.ST_SIZE]
+
+        self._LoopImageCreator__instloop = ExtDiskMount(
+                ExistingSparseLoopbackDisk(self._image,
+                                           self._LoopImageCreator__image_size),
+                self._ImageCreator_instroot,
+                self._fstype,
+                self._LoopImageCreator__blocksize,
+                self.fslabel,
+                self.tmpdir)
+        try:
+            self._LoopImageCreator__instloop.mount()
+        except MountError, e:
+            raise CreatorError("Failed to loopback mount '%s' : %s" %
+                               (self._image, e))
+
+        cachesrc = cachedir or (self._ImageCreator__builddir + "/yum-cache")
+        makedirs(cachesrc)
+
+        for (f, dest) in [("/sys", None), ("/proc", None),
+                          ("/dev/pts", None), ("/dev/shm", None),
+                          (cachesrc, "/var/cache/yum")]:
+            self._ImageCreator__bindmounts.append(BindChrootMount(f, self._instroot, dest))
+
+        self._do_bindmounts()
+        self.__copy_img_root(base_on)
+        self._brand(self._builder)
+
+    def _base_on(self, base_on):
+        """Clone the running LiveOS image as the basis for the new image."""
+
+        self.__fstype = 'ext4'
+        self.__image_size = 4096L * 1024 * 1024
+        self.__blocksize = 4096
+
+        self.__instloop = ExtDiskMount(SparseLoopbackDisk(self._image,
+                                                          self.__image_size),
+                                       self._instroot,
+                                       self.__fstype,
+                                       self.__blocksize,
+                                       self.fslabel,
+                                       self.tmpdir)
+        try:
+            self.__instloop.mount()
+        except MountError, e:
+            raise CreatorError("Failed to loopback mount '%s' : %s" %
+                               (self._image, e))
+
+        subprocess.call(['rsync', '-ptgorlHASx', '--specials', '--progress',
+                         '--include', '/*/',
+                         '--exclude', '/etc/mtab',
+                         '--exclude', '/etc/blkid/*',
+                         '--exclude', '/dev/*',
+                         '--exclude', '/proc/*',
+                         '--exclude', '/home/*',
+                         '--exclude', '/media/*',
+                         '--exclude', '/mnt/live',
+                         '--exclude', '/sys/*',
+                         '--exclude', '/tmp/*',
+                         '--exclude', '/.liveimg*',
+                         '--exclude', '/.autofsck',
+                         '/', self._instroot])
+        subprocess.call(['sync'])
+
+        self._ImageCreator__create_minimal_dev()
+
+        self.__instloop.cleanup()
+
+
+    def __copy_img_root(self, base_on):
+        """helper function to copy root content of the base LiveIMG to
+        ISOdir"""
+
+        ignore_list = ['ext3fs.img', 'squashfs.img', 'osmin.img', 'home.img',
+                       'overlay-*']
+
+        imgmnt = DiskMount(LoopbackDisk(base_on, 0), self._mkdtemp())
+
+        self._LiveImageCreatorBase__isodir = self._ImageCreator__builddir + "/iso"
+
+        try:
+            imgmnt.mount()
+        except MountError, e:
+            raise CreatorError("Failed to mount '%s' : %s" % (base_on, e))
+        else:
+            # include specified files or directories
+            #copy over everything but squashfs.img or ext3fs.img
+            shutil.copytree(imgmnt.mountdir,
+                            self._LiveImageCreatorBase__isodir,
+                            ignore=shutil.ignore_patterns(*ignore_list))
+            subprocess.call(['sync'])
+        finally:
+            imgmnt.cleanup()
+
+
+    def _brand (self, _builder):
+        """Adjust the image branding to show its variation from original
+        source by builder and build date."""
+
+        self.fslabel = self.name
+        dt = time.strftime('%d-%b-%Y')
+
+        lst = ['isolinux/isolinux.cfg', 'syslinux/syslinux.cfg',
+               'syslinux/extlinux.conf']
+        for f in lst:
+            fpath = os.path.join(self._LiveImageCreatorBase__isodir, f)
+            if os.path.exists(fpath):
+                break
+
+        # Get build name from boot configuration file.
+        try:
+            cfgf = open(fpath, 'r')
+        except IOError, e:
+            raise CreatorError("Failed to open '%s' : %s" % (fpath, e))
+        else:
             release = None
             for line in cfgf:
                 i = line.find('Welcome to ')
@@ -358,7 +517,7 @@ class LiveImageEditor(LiveImageCreator):
             args.append('-e')
             args.append('s/Welcome to .*/Welcome to ' + self._releasefile + '!/')
         args.append('-e')
-        args.append('s/root=[^ ]*/root=live:CDLABEL=' + self.name + '/')
+        args.append('s/root=[^ ]*/root=live:CDLABEL=' + self.name[:32] + '/')
         if self.ks:
             # bootloader --append "!opt-to-remove opt-to-add"
             for param in kickstart.get_kernel_args(self.ks,"").split():
@@ -498,6 +657,123 @@ gpgcheck=0
         #    os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
         return
 
+            if not s.inChroot:
+                env["INSTALL_ROOT"] = self._instroot
+                preexec = None
+                script = path
+            else:
+                preexec = self._chroot
+                script = "/tmp/" + os.path.basename(path)
+
+            try:
+                subprocess.check_call([s.interp, script],
+                                      preexec_fn = preexec, env = env)
+            except OSError, e:
+                raise CreatorError("Failed to execute %%post script "
+                                   "with '%s' : %s" % (s.interp, e.strerror))
+            except subprocess.CalledProcessError, err:
+                if s.errorOnFail:
+                    raise CreatorError("%%post script failed with code %d "
+                                       % err.returncode)
+                logging.warning("ignoring %%post failure (code %d)"
+                                % err.returncode)
+            finally:
+                os.unlink(path)
+
+    class simpleCallback:
+        def __init__(self):
+            self.fdnos = {}
+
+        def callback(self, what, amount, total, mydata, wibble):
+            if what == rpm.RPMCALLBACK_TRANS_START:
+                pass
+
+            elif what == rpm.RPMCALLBACK_INST_OPEN_FILE:
+                hdr, path = mydata
+                print "Installing %s\r" % (hdr["name"])
+                fd = os.open(path, os.O_RDONLY)
+                nvr = '%s-%s-%s' % ( hdr['name'], hdr['version'], hdr['release'] )
+                self.fdnos[nvr] = fd
+                return fd
+
+            elif what == rpm.RPMCALLBACK_INST_CLOSE_FILE:
+                hdr, path = mydata
+                nvr = '%s-%s-%s' % ( hdr['name'], hdr['version'], hdr['release'] )
+                os.close(self.fdnos[nvr])
+
+            elif what == rpm.RPMCALLBACK_INST_PROGRESS:
+                hdr, path = mydata
+                print "%s:  %.5s%% done\r" % (hdr["name"], (float(amount) / total) * 100),
+
+    def install_rpms(self):
+        if kickstart.exclude_docs(self.ks):
+            rpm.addMacro("_excludedocs", "1")
+        if not kickstart.selinux_enabled(self.ks):
+            rpm.addMacro("__file_context_path", "%{nil}")
+        if kickstart.inst_langs(self.ks) != None:
+            rpm.addMacro("_install_langs", kickstart.inst_langs(self.ks))
+        # start RPM transaction
+        ts=rpm.TransactionSet(self._instroot)
+        for repo in kickstart.get_repos(self.ks):
+            (name, baseurl, mirrorlist, proxy, inc, exc) = repo
+            if baseurl.startswith("file://"):
+               baseurl=baseurl[7:]
+            elif not baseurl.startswith("/"):
+                raise CreatorError("edit-node accepts only --baseurl pointing to a local folder with RPMs (not YUM repo)")
+            if not baseurl.endswith("/"):
+                baseurl+="/"
+            for pkg_from_list in kickstart.get_packages(self.ks):
+                # TODO report if package listed in ks is missing
+                for pkg in glob.glob(baseurl+pkg_from_list+"-[0-9]*.rpm"):
+                    fdno = os.open(pkg, os.O_RDONLY)
+                    hdr = ts.hdrFromFdno(fdno)
+                    os.close(fdno)
+                    ts.addInstall(hdr,(hdr,pkg), "u")
+        ts.run(self.simpleCallback().callback,'')
+
+    def _setup_dns(self):
+        print "Setting Up DNS For Chroot"
+        # bind mount resolv.conf
+        os.system("touch %s/etc/resolv.conf" % self._instroot)
+        os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
+
+    def _setup_yum_repo(self,repo_url):
+       print "Configuring Yum Repo"
+       if len(repo_url) > 0:
+       # create repo file from url
+           repo_template = """[plugin_repo]
+name=plugin repo
+baseurl=%(repo_url)s
+enabled=1
+gpgcheck=0
+"""
+           repo_dict = {
+          "repo_url" : repo_url,
+        }
+
+           f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
+           f.write(repo_template % repo_dict)
+           f.close()
+           return True
+
+    def _cleanup_editing(self):
+        os.system("umount %s/etc/resolv.conf" % self._instroot)
+        os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
+        return
+
+    def _install_dup(self,plugins,repo_url):
+        self._setup_dns()
+        self._setup_yum_repo(repo_url)
+        plugins = plugins.replace(","," ")
+        yum_cmd = "yum install -y %s" % plugins
+        if len(repo_url) > 0:
+            try:
+                subprocess.call([yum_cmd], preexec_fn = self._chroot, shell=True)
+            except OSError, e:
+                raise CreatorError("Failed to install plugin %s, %s " % (plugins, e))
+            finally:
+                self._cleanup_editing()
+
     def _set_password(self,options):
         cmd = "/usr/sbin/usermod -p \"%s\" admin" % options.password
         try:
@@ -537,6 +813,7 @@ def parse_options(args):
                       [-b <builder>]
                       [-p <plugin>]
                       [-r <plugin_repo>
+                      [--repo <plugin_repo>
                       <LIVEIMG.src>""")
 
     parser.add_option("-n", "--name", type="string", dest="name",
@@ -577,6 +854,10 @@ def parse_options(args):
                       dest="plugin", help="Specify plugins to install")
 
     parser.add_option("", "--repo", type="string",
+    parser.add_option("--install-dup", type="string",
+                      dest="install_dup", help="Specify driver update packages to install")
+
+    parser.add_option("--repo", type="string",
                       dest="repo", help="Specify repo to install plugin from")
 
     setup_logging(parser)
@@ -622,7 +903,7 @@ def main():
     (LiveOS, options) = parse_options(sys.argv[1:])
 
     if os.geteuid () != 0:
-        print >> sys.stderr, "You must run edit-liveos as root"
+        print >> sys.stderr, "You must run edit-node as root"
         return 1
 
     if options.name:
@@ -659,6 +940,12 @@ def main():
                 return 1
         editor.mount(LiveOS, cachedir = None)
         editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
+        if not options.ssh_keys is None:
+            for key in options.ssh_keys.split(","):
+                if not os.path.exists(key):
+                    print "Invalid Script Path '%s'" % key
+                    return 1
+        editor.mount(LiveOS, cachedir = None)
         if editor.ks:
             editor._run_pre_scripts()
             editor.install_rpms()
@@ -669,12 +956,16 @@ def main():
         if options.plugin:
             print "Installing Plugins"
             editor._install_plugins(options.plugin,options.repo)
+        if options.install_dup:
+            print "Installing DUP"
+            editor._install_dup(options.install_dup,options.repo)
         if not options.password is None:
             print "Setting Admin Password"
             editor._set_password(options)
         if not options.ssh_keys is None:
             editor._setup_ssh_keys(options)
         print "Editing Complete"
+        editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
         rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
         editor.unmount()
         editor.package(output)
