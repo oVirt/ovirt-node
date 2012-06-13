@@ -1549,6 +1549,7 @@ class NodeConfigScreen():
           self.kbd.activate()
           # store keyboard config
           ovirt_store_config("/etc/sysconfig/keyboard")
+          ovirt_store_config("/etc/vconsole.conf")
 
       def process_locked_screen(self):
           auth = PAM.pam()

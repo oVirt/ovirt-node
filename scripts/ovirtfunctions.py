@@ -858,6 +858,7 @@ def finish_install():
         ovirt_store_config("%s.pub" % f)
     # store keyboard config
     ovirt_store_config("/etc/sysconfig/keyboard")
+    ovirt_store_config("/etc/vconsole.conf")
     return True
 
 def is_valid_ipv4(ip_address):
