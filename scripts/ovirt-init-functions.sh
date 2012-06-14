@@ -1224,8 +1224,7 @@ start_ovirt_post() {
         egrep -v "[Vv]irtualization hardware" $ISSUE > $BACKUP
         cp -f $BACKUP $ISSUE
         rm $BACKUP
-        hwvirt=$(systemd-detect-virt)
-        if [[ $hwvirt =~ kvm ]]; then
+        if [ -e /dev/kvm ] && lsmod | egrep -q "kvm_intel|kvm_amd"; then
             log "Hardware virtualization detected"
         else
             log "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
