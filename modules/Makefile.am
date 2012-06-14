@@ -19,7 +19,7 @@ modulesdir=$(sysconfdir)/sysconfig/modules
 modprobedir=$(sysconfdir)/modprobe.d
 
 # load vlan module
-dist_modules_DATA = \
+dist_modules_SCRIPTS = \
   vlan.modules
 
 # qla4xxx iscsi hba workaround: rhbz#742433#c32
