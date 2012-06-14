@@ -1110,7 +1110,7 @@ class NodeConfigScreen():
           vlan_grid = Grid(2,2)
           self.netvlanid = Entry(4, "", scroll = 0)
           self.netvlanid.setCallback(self.netvlanid_callback)
-          for vlan in os.listdir("/proc/net/vlan/"):
+          for vlan in get_system_vlans():
             # XXX wrong match e.g. eth10.1 with eth1
             if self.nic_lb.current() in vlan:
               vlan_id = vlan.replace(self.nic_lb.current()+".","")

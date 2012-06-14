@@ -21,6 +21,7 @@ from glob import glob
 import tempfile
 import sys
 import logging
+import os
 
 class Network:
 
@@ -243,7 +244,7 @@ class Network:
         augtool_workdir_list = "ls %s/augtool-* >/dev/null"
         logger.info("Configuring network for NIC %s" % self.CONFIGURED_NIC)
         system("ifdown br" + self.CONFIGURED_NIC)
-        for vlan in os.listdir("/proc/net/vlan/"):
+        for vlan in get_system_vlans():
             # XXX wrong match e.g. eth10.1 with eth1
             if self.CONFIGURED_NIC in vlan:
                 system_closefds("vconfig rem " + vlan + "&> /dev/null")
@@ -418,6 +419,16 @@ def get_system_nics():
                 if dev_bootproto == "dhcp":
                     ntp_dhcp = 1
     return nic_dict, configured_nics, ntp_dhcp
+
+def get_system_vlans():
+    """Retrieves a list of VLANs on this host
+    """
+    vlandir = "/proc/net/vlan/"
+    vlans = []
+    if os.path.exists(vlandir):
+        vlans = os.listdir(vlandir)
+        vlans.remove("config")
+    return vlans
 
 def convert_to_biosdevname():
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
