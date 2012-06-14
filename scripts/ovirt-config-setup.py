@@ -1814,21 +1814,23 @@ class NodeConfigScreen():
                                     self.__current_page == NETWORK_PAGE
                                 else:
                                     # We want to enter the NIC details ...
-                                    warn = "ok"
                                     current_network_config = self.get_tui_field_network_config()
-                                    if not self.is_same_network_config (self.original_system_network_config, current_network_config):
+                                    if self.is_same_network_config (self.original_system_network_config, current_network_config):
+                                        self.__current_page = NETWORK_DETAILS_PAGE
+                                    else:
+                                        warn = None
                                         self._create_warn_screen()
                                         title = "Confirm NIC Configuration"
                                         message = "Unsaved network changes detected, save and continue to NIC configuration?"
                                         warn = ButtonChoiceWindow(self.screen, title, message)
-                                    if warn == "ok":
-                                        # apply and continue
-                                        self.process_network_config()
-                                        self.__current_page = NETWORK_DETAILS_PAGE
-                                        self.preset_network_config = None
-                                    else:
-                                        # Do not apply, return
-                                        self.preset_network_config = current_network_config
+                                        if warn == "ok":
+                                            # apply and continue
+                                            self.process_network_config()
+                                            self.__current_page = NETWORK_DETAILS_PAGE
+                                            self.preset_network_config = None
+                                        else:
+                                            # Do not apply, return
+                                            self.preset_network_config = current_network_config
                             else:
                                 self.__current_page = menu_choice
                             if self.net_apply_config == 1:
