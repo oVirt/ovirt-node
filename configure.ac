@@ -1,4 +1,4 @@
-AC_INIT([ovirt-node], [2.3.0], [node-devel@ovirt.org])
+AC_INIT([ovirt-node], [2.4.0], [node-devel@ovirt.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability tar-pax])
 
 AC_SUBST([FEDORA],[[`rpm --eval '%{fedora}'|sed 's/[^0-9]//g'`]])
