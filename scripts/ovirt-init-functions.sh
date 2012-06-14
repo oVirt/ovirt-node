@@ -1233,20 +1233,6 @@ start_ovirt_post() {
         # Create a minimalistic /etc/hosts if it's empty, rhbz#829753
         create_minimal_etc_hosts_file
 
-        # wait for libvirt to finish initializing
-        local count=0
-        while true; do
-            if virsh connect qemu:///system --readonly >/dev/null 2>&1; then
-                break
-            elif [ "$count" == "100" ]; then
-                log "Libvirt did not initialize in time..."
-                return 1
-            else
-                log "Waiting for libvirt to finish initializing..."
-                count=$(expr $count + 1)
-                sleep 1
-            fi
-
         BACKUP=$(mktemp)
         ISSUE=/etc/issue
         ISSUE_NET=/etc/issue.net
