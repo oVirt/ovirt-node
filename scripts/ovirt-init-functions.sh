@@ -1166,21 +1166,6 @@ ovirt_start() {
         log "skipping collectd configuration, collectd service not available"
     fi
 
-    find_srv qpidd tcp
-    if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-        libvirt_qpid_conf=/etc/sysconfig/libvirt-qpid
-        if [ -f $libvirt_qpid_conf ]; then
-            echo "LIBVIRT_QPID_ARGS=\"--broker $SRV_HOST --port $SRV_PORT\"" >> $libvirt_qpid_conf
-            echo "/usr/kerberos/bin/kinit -k -t /etc/libvirt/krb5.tab qpidd/`hostname`" >> $libvirt_qpid_conf
-        fi
-        matahari_conf=/etc/sysconfig/matahari
-        if [ -f $matahari_conf ]; then
-            echo "MATAHARI_ARGS=\"--broker $SRV_HOST --port $SRV_PORT\"" >> $matahari_conf
-            echo "/usr/kerberos/bin/kinit -k -t /etc/libvirt/krb5.tab qpidd/`hostname`" >> $matahari_conf
-        fi
-    else
-        log "skipping libvirt-qpid and matahari configuration, could not find $libvirt_qpid_conf"
-    fi
 }
 
 start_ovirt () {
