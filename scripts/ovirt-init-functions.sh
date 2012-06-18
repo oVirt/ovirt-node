@@ -399,6 +399,7 @@ _start_ovirt_early () {
                 ;;
                 link)
                 for eth in $(cd /sys/class/net; echo [ep]*); do
+                    ip link set dev $eth up
                     if ethtool $eth 2>/dev/null|grep -q "Link detected: yes"
                     then
                         bootif=$eth

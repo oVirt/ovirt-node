@@ -1352,6 +1352,12 @@ def create_minimal_etc_hosts_file():
 ::1		localhost6.localdomain6 localhost6
 """)
 
+def nic_link_detected(iface):
+    link_status_cmd = "ip link set dev {dev} up ; ethtool {dev} |grep \"Link detected\"".format(dev=iface)
+    link_status = subprocess_closefds(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    link_status = link_status.stdout.read()
+    return ("yes" in link_status)
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

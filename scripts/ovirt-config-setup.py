@@ -672,10 +672,7 @@ class NodeConfigScreen():
                       dev_bootproto = augtool_get(cmd)
                       if dev_bootproto is None:
                           dev_bootproto = "Disabled"
-                    link_status_cmd = "ethtool %s|grep \"Link detected\"" % key
-                    link_status = subprocess_closefds(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-                    link_status = link_status.stdout.read()
-                    if not "yes" in link_status:
+                    if not nic_link_detected(key):
                         ipv4_addr = "(Link Inactive)"
                     if ipv4_addr.strip() == "" and dev_bootproto.strip() == "dhcp":
                         if "Inactive" in ipv4_addr:
@@ -934,7 +931,7 @@ class NodeConfigScreen():
 
       def network_details_page(self,screen):
           grid = Grid(1,15)
-          if system("ethtool %s|grep \"Link detected\"|grep yes" % self.nic_lb.current()):
+          if nic_link_detected(self.nic_lb.current()):
               link_status = "Active"
           else:
               link_status = "Inactive"
