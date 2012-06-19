@@ -80,6 +80,8 @@ for dev in $storage_init; do
     device=$(IFS=$oldIFS parse_disk_id "$dev")
     info "After parsing \"$dev\", we got \"$device\""
     echo "Wiping LVM from device: ${device}"
+    # Ensure that it's not read-only locking
+    sed -i "s/locking_type =.*/locking_type = 0/" /etc/lvm/lvm.conf
     IFS=$oldIFS
     for i in $(lvm pvs --noheadings -o pv_name,vg_name --separator=, $device* 2>/dev/null); do
         pv="${i%%,*}"
@@ -92,6 +94,7 @@ for dev in $storage_init; do
         yes | lvm pvremove -ff "$pv"
     done
     IFS=,
+    sed -i "s/locking_type =.*/locking_type = 4/" /etc/lvm/lvm.conf
 done
 
 IFS=$oldIFS
