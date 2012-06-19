@@ -30,6 +30,7 @@ import logging
 import rpm
 import glob
 
+from subprocess import PIPE, STDOUT
 from imgcreate.debug import *
 from imgcreate.errors import *
 from imgcreate.fs import *
@@ -737,18 +738,22 @@ gpgcheck=0
         os.system("touch %s/etc/resolv.conf" % self._instroot)
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
 
-    def _setup_yum_repo(self,repo_url):
+    def _setup_yum_repo(self, options):
        print "Configuring Yum Repo"
-       if len(repo_url) > 0:
+       gpgcheck = 1
+       if not options.gpgcheck:
+           gpgcheck = 0
+       if len(options.repo) > 0:
        # create repo file from url
            repo_template = """[plugin_repo]
 name=plugin repo
+gpgcheck=%(gpg_check)s
 baseurl=%(repo_url)s
 enabled=1
-gpgcheck=0
 """
            repo_dict = {
-          "repo_url" : repo_url,
+          "repo_url" : options.repo,
+          "gpg_check" : gpgcheck
         }
 
            f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
@@ -761,18 +766,21 @@ gpgcheck=0
         os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
         return
 
-    def _install_dup(self,plugins,repo_url):
+    def _install_dup(self, options):
         self._setup_dns()
-        self._setup_yum_repo(repo_url)
-        plugins = plugins.replace(","," ")
-        yum_cmd = "yum install -y %s" % plugins
-        if len(repo_url) > 0:
-            try:
-                subprocess.call([yum_cmd], preexec_fn = self._chroot, shell=True)
-            except OSError, e:
-                raise CreatorError("Failed to install plugin %s, %s " % (plugins, e))
-            finally:
+        self._setup_yum_repo(options)
+        pkgs = options.install_dup.replace(","," ")
+        yum_cmd = "yum install -y %s " % pkgs
+        if len(options.repo) > 0:
+            yum = subprocess.Popen(yum_cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+            output, err = yum.communicate()
+            if yum.returncode > 0:
+                logging.error(output)
                 self._cleanup_editing()
+                return False
+            else:
+                self._cleanup_editing()
+                return True
 
     def _set_password(self,options):
         cmd = "/usr/sbin/usermod -p \"%s\" admin" % options.password
@@ -813,6 +821,7 @@ def parse_options(args):
                       [-b <builder>]
                       [-p <plugin>]
                       [-r <plugin_repo>
+                      [--install-dup <dup_pkg_name>
                       [--repo <plugin_repo>
                       <LIVEIMG.src>""")
 
@@ -859,6 +868,8 @@ def parse_options(args):
 
     parser.add_option("--repo", type="string",
                       dest="repo", help="Specify repo to install plugin from")
+    parser.add_option("--nogpgcheck", action="store_false", default=True,
+                      dest="gpgcheck", help="Allow unsigned packages to be installed")
 
     setup_logging(parser)
 
@@ -958,7 +969,10 @@ def main():
             editor._install_plugins(options.plugin,options.repo)
         if options.install_dup:
             print "Installing DUP"
-            editor._install_dup(options.install_dup,options.repo)
+            if not editor._install_dup(options):
+                editor.unmount()
+                logging.error("Error Installing Drive Update Package : %s" % options.install_dup)
+                return 1
         if not options.password is None:
             print "Setting Admin Password"
             editor._set_password(options)
