@@ -290,34 +290,6 @@ class LiveImageEditor(LiveImageCreator):
             imgmnt.cleanup()
 
 
-    def _brand (self, _builder):
-        """Adjust the image branding to show its variation from original
-        source by builder and build date."""
-
-        self.fslabel = self.name
-        dt = time.strftime('%d-%b-%Y')
-
-        lst = ['isolinux/isolinux.cfg', 'syslinux/syslinux.cfg',
-               'syslinux/extlinux.conf']
-        for f in lst:
-            fpath = os.path.join(self._LiveImageCreatorBase__isodir, f)
-            if os.path.exists(fpath):
-                break
-
-        # Get build name from boot configuration file.
-        try:
-            cfgf = open(fpath, 'r')
-        except IOError, e:
-            raise CreatorError("Failed to open '%s' : %s" % (fpath, e))
-        else:
-
-        try:
-            subprocess.call([script], preexec_fn = self._chroot)
-        except OSError, e:
-            raise CreatorError("Failed to execute script %s, %s " % (script, e))
-        finally:
-            os.unlink(path)
-
     def mount(self, base_on, cachedir = None):
         """mount existing file system.
 
@@ -658,29 +630,6 @@ gpgcheck=0
         #    os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
         return
 
-            if not s.inChroot:
-                env["INSTALL_ROOT"] = self._instroot
-                preexec = None
-                script = path
-            else:
-                preexec = self._chroot
-                script = "/tmp/" + os.path.basename(path)
-
-            try:
-                subprocess.check_call([s.interp, script],
-                                      preexec_fn = preexec, env = env)
-            except OSError, e:
-                raise CreatorError("Failed to execute %%post script "
-                                   "with '%s' : %s" % (s.interp, e.strerror))
-            except subprocess.CalledProcessError, err:
-                if s.errorOnFail:
-                    raise CreatorError("%%post script failed with code %d "
-                                       % err.returncode)
-                logging.warning("ignoring %%post failure (code %d)"
-                                % err.returncode)
-            finally:
-                os.unlink(path)
-
     class simpleCallback:
         def __init__(self):
             self.fdnos = {}
@@ -901,7 +850,6 @@ def parse_options(args):
     parser.add_option("-p", "--install-plugin", type="string",
                       dest="plugin", help="Specify plugins to install")
 
-    parser.add_option("", "--repo", type="string",
     parser.add_option("--install-dup", type="string",
                       dest="install_dup", help="Specify driver update packages to install")
 
@@ -980,21 +928,6 @@ def main():
             editor.ks = read_kickstart(options.kscfg)
             # part / --size <new rootfs size to be resized to>
             editor._LoopImageCreator__image_size = kickstart.get_image_size(editor.ks)
-        if options.script:
-            if not os.path.exists(options.script):
-                print "Invalid Script Path '%s'" % options.script
-                return 1
-        for key in options.ssh_keys.split(","):
-            if not os.path.exists(key):
-                print "Invalid Script Path '%s'" % key
-                return 1
-        editor.mount(LiveOS, cachedir = None)
-        editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
-        if not options.ssh_keys is None:
-            for key in options.ssh_keys.split(","):
-                if not os.path.exists(key):
-                    print "Invalid Script Path '%s'" % key
-                    return 1
         editor.mount(LiveOS, cachedir = None)
         if editor.ks:
             editor._run_pre_scripts()
