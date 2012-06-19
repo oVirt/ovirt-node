@@ -2,7 +2,6 @@
 #
 # edit-node Copyright (C) 2012 Red Hat, Inc.
 # Written by Joey Boggs <jboggs@redhat.com>
-# Cloned from edit-livecd, minimized and edited for plugin specifics
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,681 +20,86 @@
 
 import os
 import sys
-import stat
-import tempfile
-import shutil
-import subprocess
 import optparse
-import logging
-import rpm
-import glob
+from tempfile import mktemp
+import subprocess
 
-from imgcreate.debug import *
-from imgcreate.errors import *
-from imgcreate.fs import *
-from imgcreate.live import *
-from imgcreate.creator import *
-import imgcreate.kickstart as kickstart
-from imgcreate import read_kickstart
+class PluginTool():
 
-class ExistingSparseLoopbackDisk(SparseLoopbackDisk):
-    """don't want to expand the disk"""
-    def __init__(self, lofile, size):
-        SparseLoopbackDisk.__init__(self, lofile, size)
+    def __init__(self):
+        self.script = []
 
-    def create(self):
-        #self.expand(create = True)
-        LoopbackDisk.create(self)
+    def parse_options(self, args):
+        parser = optparse.OptionParser(usage = """
+           %prog   [-p <encrypted_password>]
+                       [-k <comma delimited ssh key files>]
+                       <LIVEIMG.src>""")
 
-class LiveImageEditor(LiveImageCreator):
-    def __init__(self, name):
-        self.name = name
-        self.tmpdir = "/var/tmp"
-        """The directory in which all temporary files will be created."""
+        parser.add_option("-p", "--passwd", type="string", dest="password",
+                          help="encrypted password")
+        parser.add_option("-k", "--sshkey", type="string", dest="ssh_keys",
+                          help="comma delimited list of ssh public key files")
+        parser.add_option("-u", "--key_users", type="string", dest="key_users",
+                          help="comma delimited list of user account for ssh public key files")
 
-        self.compress_type = None
-        """mksquashfs compressor to use. Use 'None' to force reading of the
-        existing image, or enter a -p --compress_type value to override the
-        current compression or lack thereof. Compression type options vary with
-        the version of the kernel and SquashFS used."""
-
-        self.skip_compression = False
-        """Controls whether to use squashfs to compress the image."""
-
-        self.skip_minimize = False
-        """Controls whether an image minimizing snapshot should be created."""
-
-        self._builder = os.getlogin()
-        """The name of the Remix builder for _branding.
-        Default = os.getlogin()"""
-
-        self._isofstype = "iso9660"
-        self.__isodir = None
-
-        self._ImageCreator__builddir = None
-        """working directory"""
-
-        self._ImageCreator_outdir = None
-        """where final iso gets written"""
-
-        self._ImageCreator__bindmounts = []
-
-        self._LoopImageCreator__blocksize = 4096
-        self._LoopImageCreator__fslabel = None
-        self._LoopImageCreator__instloop = None
-        self._LoopImageCreator__fstype = None
-        self._LoopImageCreator__image_size = None
-
-        self.__instroot = None
-
-        self._LiveImageCreatorBase__isodir = None
-        """directory where the iso is staged"""
-
-        self.ks = None
-        """optional kickstart file as a recipe for editing the image"""
-
-        self._ImageCreator__selinux_mountpoint = "/sys/fs/selinux"
-        with open("/proc/self/mountinfo", "r") as f:
-            for line in f.readlines():
-                fields = line.split()
-                if fields[-2] == "selinuxfs":
-                    self.__ImageCreator__selinux_mountpoint = fields[4]
-                    break
-
-    # properties
-    def __get_image(self):
-        if self._LoopImageCreator__imagedir is None:
-            self.__ensure_builddir()
-            self._LoopImageCreator__imagedir = \
-                tempfile.mkdtemp(dir = os.path.abspath(self.tmpdir),
-                                                       prefix = self.name + "-")
-        rtn = self._LoopImageCreator__imagedir + "/ext3fs.img"
-        return rtn
-    _image = property(__get_image)
-    """The location of the filesystem image file."""
-
-    def _get_fslabel(self):
-        dev_null = os.open("/dev/null", os.O_WRONLY)
-        try:
-            out = subprocess.Popen(["/sbin/e2label", self._image],
-                                   stdout = subprocess.PIPE,
-                                   stderr = dev_null).communicate()[0]
-
-            self._LoopImageCreator__fslabel = out.strip()
-
-        except IOError, e:
-            raise CreatorError("Failed to determine fsimage LABEL: %s" % e )
-        finally:
-            os.close(dev_null)
-
-    def __ensure_builddir(self):
-        if not self._ImageCreator__builddir is None:
-            return
-
-        try:
-            self._ImageCreator__builddir = tempfile.mkdtemp(dir =  os.path.abspath(self.tmpdir),
-                                               prefix = "edit-liveos-")
-        except OSError, (err, msg):
-            raise CreatorError("Failed create build directory in %s: %s" %
-                               (self.tmpdir, msg))
-
-    def _run_script(self, script):
-
-        (fd, path) = tempfile.mkstemp(prefix = "script-",
-                                          dir = self._instroot + "/tmp")
-
-        logging.debug("copying script to install root: %s" % path)
-        shutil.copy(os.path.abspath(script), path)
-        os.close(fd)
-        os.chmod(path, 0700)
-
-        script = "/tmp/" + os.path.basename(path)
-
-        try:
-            subprocess.call([script], preexec_fn = self._chroot)
-        except OSError, e:
-            raise CreatorError("Failed to execute script %s, %s " % (script, e))
-        finally:
-            os.unlink(path)
-
-    def mount(self, base_on, cachedir = None):
-        """mount existing file system.
-
-        We have to override mount b/c we many not be creating an new install
-        root nor do we need to setup the file system, i.e., makedirs(/etc/,
-        /boot, ...), nor do we want to overwrite fstab, or create selinuxfs.
-
-        We also need to get some info about the image before we can mount it.
-
-        base_on --  the <LIVEIMG.src> a LiveOS.iso file or an attached LiveOS
-                    device, such as, /dev/live for a currently running image.
-
-        cachedir -- a directory in which to store a Yum cache;
-                    Not used in edit-liveos.
-
-        """
-
-        if not base_on:
-            raise CreatorError("No base LiveOS image specified.")
-
-        self.__ensure_builddir()
-
-        self._ImageCreator_instroot = self._ImageCreator__builddir + "/install_root"
-        self._LoopImageCreator__imagedir = self._ImageCreator__builddir + "/ex"
-        self._ImageCreator_outdir = self._ImageCreator__builddir + "/out"
-
-        makedirs(self._ImageCreator_instroot)
-        makedirs(self._LoopImageCreator__imagedir)
-        makedirs(self._ImageCreator_outdir)
-
-        LiveImageCreator._base_on(self, base_on)
-        self._LoopImageCreator__fstype = get_fsvalue(self._image, 'TYPE')
-        self._get_fslabel()
-
-        self.fslabel = self._LoopImageCreator__fslabel
-        if self._LoopImageCreator__image_size == None:
-            self._LoopImageCreator__image_size = os.stat(self._image)[stat.ST_SIZE]
-
-        self._LoopImageCreator__instloop = ExtDiskMount(
-                ExistingSparseLoopbackDisk(self._image,
-                                           self._LoopImageCreator__image_size),
-                self._ImageCreator_instroot,
-                self._fstype,
-                self._LoopImageCreator__blocksize,
-                self.fslabel,
-                self.tmpdir)
-        try:
-            self._LoopImageCreator__instloop.mount()
-        except MountError, e:
-            raise CreatorError("Failed to loopback mount '%s' : %s" %
-                               (self._image, e))
-
-        cachesrc = cachedir or (self._ImageCreator__builddir + "/yum-cache")
-        makedirs(cachesrc)
-
-        for (f, dest) in [("/sys", None), ("/proc", None),
-                          ("/dev/pts", None), ("/dev/shm", None),
-                          (cachesrc, "/var/cache/yum")]:
-            self._ImageCreator__bindmounts.append(BindChrootMount(f, self._instroot, dest))
-
-        self._do_bindmounts()
-        self.__copy_img_root(base_on)
-        self._brand(self._builder)
-
-    def _base_on(self, base_on):
-        """Clone the running LiveOS image as the basis for the new image."""
-
-        self.__fstype = 'ext4'
-        self.__image_size = 4096L * 1024 * 1024
-        self.__blocksize = 4096
-
-        self.__instloop = ExtDiskMount(SparseLoopbackDisk(self._image,
-                                                          self.__image_size),
-                                       self._instroot,
-                                       self.__fstype,
-                                       self.__blocksize,
-                                       self.fslabel,
-                                       self.tmpdir)
-        try:
-            self.__instloop.mount()
-        except MountError, e:
-            raise CreatorError("Failed to loopback mount '%s' : %s" %
-                               (self._image, e))
-
-        subprocess.call(['rsync', '-ptgorlHASx', '--specials', '--progress',
-                         '--include', '/*/',
-                         '--exclude', '/etc/mtab',
-                         '--exclude', '/etc/blkid/*',
-                         '--exclude', '/dev/*',
-                         '--exclude', '/proc/*',
-                         '--exclude', '/home/*',
-                         '--exclude', '/media/*',
-                         '--exclude', '/mnt/live',
-                         '--exclude', '/sys/*',
-                         '--exclude', '/tmp/*',
-                         '--exclude', '/.liveimg*',
-                         '--exclude', '/.autofsck',
-                         '/', self._instroot])
-        subprocess.call(['sync'])
-
-        self._ImageCreator__create_minimal_dev()
-
-        self.__instloop.cleanup()
-
-
-    def __copy_img_root(self, base_on):
-        """helper function to copy root content of the base LiveIMG to
-        ISOdir"""
-
-        ignore_list = ['ext3fs.img', 'squashfs.img', 'osmin.img', 'home.img',
-                       'overlay-*']
-
-        imgmnt = DiskMount(LoopbackDisk(base_on, 0), self._mkdtemp())
-
-        self._LiveImageCreatorBase__isodir = self._ImageCreator__builddir + "/iso"
-
-        try:
-            imgmnt.mount()
-        except MountError, e:
-            raise CreatorError("Failed to mount '%s' : %s" % (base_on, e))
+        (self.options, self.args) = parser.parse_args()
+        if len(self.args) != 1:
+            parser.print_usage()
+            sys.exit(1)
         else:
-            # include specified files or directories
-            #copy over everything but squashfs.img or ext3fs.img
-            shutil.copytree(imgmnt.mountdir,
-                            self._LiveImageCreatorBase__isodir,
-                            ignore=shutil.ignore_patterns(*ignore_list))
-            subprocess.call(['sync'])
-        finally:
-            imgmnt.cleanup()
+            self.args=self.args[0]
+            if not os.path.exists(self.args):
+                print "iso file does not exist"
+                sys,exit(1)
 
-
-    def _brand (self, _builder):
-        """Adjust the image branding to show its variation from original
-        source by builder and build date."""
-
-        self.fslabel = self.name
-        dt = time.strftime('%d-%b-%Y')
-
-        lst = ['isolinux/isolinux.cfg', 'syslinux/syslinux.cfg',
-               'syslinux/extlinux.conf']
-        for f in lst:
-            fpath = os.path.join(self._LiveImageCreatorBase__isodir, f)
-            if os.path.exists(fpath):
-                break
-
-        # Get build name from boot configuration file.
-        try:
-            cfgf = open(fpath, 'r')
-        except IOError, e:
-            raise CreatorError("Failed to open '%s' : %s" % (fpath, e))
-        else:
-            release = None
-            for line in cfgf:
-                i = line.find('Welcome to ')
-                if i > -1:
-                    release = line[i+11:-2]
-                    break
-            cfgf.close()
-        if not release:
-            return
-
-        ntext = dt.translate(None, '-') + '-' + _builder + '-Remix-' + release
-
-        # Update fedora-release message with Remix details.
-        releasefiles = '/etc/fedora-release, /etc/generic-release'
-        if self._releasefile:
-            releasefiles += ', ' + self._releasefile
-        for fn in releasefiles.split(', '):
-            if os.path.exists(fn):
-                try:
-                    with open(self._instroot + fn, 'r') as f:
-                        text = ntext + '\n' + f.read()
-                        open(f.name, 'w').write(text)
-                except IOError, e:
-                    raise CreatorError("Failed to open or write '%s' : %s" %
-                                       (f.name, e))
-
-        self._releasefile = ntext
-        self.name += '-' + os.uname()[4] + '-' + time.strftime('%Y%m%d.%H%M')
-
-
-    def _configure_bootloader(self, isodir):
-        """Restore the boot configuration files for an iso image boot."""
-
-        bootfolder = os.path.join(isodir, 'isolinux')
-        oldpath = os.path.join(isodir, 'syslinux')
-        if os.path.exists(oldpath):
-            os.rename(oldpath, bootfolder)
-
-        cfgf = os.path.join(bootfolder, 'isolinux.cfg')
-        for f in ['syslinux.cfg', 'extlinux.conf']:
-            src = os.path.join(bootfolder, f)
-            if os.path.exists(src):
-                os.rename(src, cfgf)
-
-        args = ['/bin/sed', '-i']
-        if self._releasefile:
-            args.append('-e')
-            args.append('s/Welcome to .*/Welcome to ' + self._releasefile + '!/')
-        args.append('-e')
-        args.append('s/root=[^ ]*/root=live:CDLABEL=' + self.name + '/')
-        if self.ks:
-            # bootloader --append "!opt-to-remove opt-to-add"
-            for param in kickstart.get_kernel_args(self.ks,"").split():
-                if param.startswith('!'):
-                    param=param[1:]
-                    # remove parameter prefixed with !
-                    args.append('-e')
-                    args.append("/^  append/s/%s //" % param)
-                    # special case for last parameter
-                    args.append('-e')
-                    args.append("/^  append/s/%s$//" % param)
+    def create_script(self):
+        if not self.options.password is None:
+            print "Appending Password Change"
+            self.script.append("/usr/sbin/usermod -p \"%s\" admin" % self.options.password)
+        if not self.options.ssh_keys is None:
+            for key in self.options.ssh_keys.split(","):
+                if os.path.exists(key):
+                   # if no users defined, default is admin
+                   if self.options.key_users is None:
+                       self.options.key_users = "admin"
+                   for user in self.options.key_users.split(","):
+                       if user == "root":
+                           home = "/root/.ssh"
+                       else:
+                           home = "/home/%s/.ssh" % user
+                       self.script.append("mkdir -p %s" % home)
+                       self.script.append("cat > %s/authorized_keys <<EOF_%s" % (home,user))
+                       f = open(key)
+                       for line in f:
+                           self.script.append (line.strip())
+                       self.script.append("EOF_%s" % user)
                 else:
-                    # append parameter
-                    args.append('-e')
-                    args.append("/^  append/s/$/ %s/" % param)
-        args.append(cfgf)
-        dev_null = os.open("/dev/null", os.O_WRONLY)
-        try:
-            subprocess.Popen(args,
-                             stdout = subprocess.PIPE,
-                             stderr = dev_null).communicate()[0]
-            return 0
-
-        except IOError, e:
-            raise CreatorError("Failed to configure bootloader file: %s" % e)
-            return 1
-        finally:
-            os.close(dev_null)
-
-    def _run_pre_scripts(self):
-        for s in kickstart.get_pre_scripts(self.ks):
-            (fd, path) = tempfile.mkstemp(prefix = "ks-script-",
-                                          dir = self._instroot + "/tmp")
-
-            os.write(fd, s.script)
-            os.close(fd)
-            os.chmod(path, 0700)
-
-            env = self._get_post_scripts_env(s.inChroot)
-
-            if not s.inChroot:
-                env["INSTALL_ROOT"] = self._instroot
-                preexec = None
-                script = path
-            else:
-                preexec = self._chroot
-                script = "/tmp/" + os.path.basename(path)
-
-            try:
-                subprocess.check_call([s.interp, script],
-                                      preexec_fn = preexec, env = env)
-            except OSError, e:
-                raise CreatorError("Failed to execute %%post script "
-                                   "with '%s' : %s" % (s.interp, e.strerror))
-            except subprocess.CalledProcessError, err:
-                if s.errorOnFail:
-                    raise CreatorError("%%post script failed with code %d "
-                                       % err.returncode)
-                logging.warning("ignoring %%post failure (code %d)"
-                                % err.returncode)
-            finally:
-                os.unlink(path)
-
-    class simpleCallback:
-        def __init__(self):
-            self.fdnos = {}
-
-        def callback(self, what, amount, total, mydata, wibble):
-            if what == rpm.RPMCALLBACK_TRANS_START:
-                pass
-
-            elif what == rpm.RPMCALLBACK_INST_OPEN_FILE:
-                hdr, path = mydata
-                print "Installing %s\r" % (hdr["name"])
-                fd = os.open(path, os.O_RDONLY)
-                nvr = '%s-%s-%s' % ( hdr['name'], hdr['version'], hdr['release'] )
-                self.fdnos[nvr] = fd
-                return fd
-
-            elif what == rpm.RPMCALLBACK_INST_CLOSE_FILE:
-                hdr, path = mydata
-                nvr = '%s-%s-%s' % ( hdr['name'], hdr['version'], hdr['release'] )
-                os.close(self.fdnos[nvr])
-
-            elif what == rpm.RPMCALLBACK_INST_PROGRESS:
-                hdr, path = mydata
-                print "%s:  %.5s%% done\r" % (hdr["name"], (float(amount) / total) * 100),
-
-    def install_rpms(self):
-        if kickstart.exclude_docs(self.ks):
-            rpm.addMacro("_excludedocs", "1")
-        if not kickstart.selinux_enabled(self.ks):
-            rpm.addMacro("__file_context_path", "%{nil}")
-        if kickstart.inst_langs(self.ks) != None:
-            rpm.addMacro("_install_langs", kickstart.inst_langs(self.ks))
-        # start RPM transaction
-        ts=rpm.TransactionSet(self._instroot)
-        for repo in kickstart.get_repos(self.ks):
-            (name, baseurl, mirrorlist, proxy, inc, exc) = repo
-            if baseurl.startswith("file://"):
-               baseurl=baseurl[7:]
-            elif not baseurl.startswith("/"):
-                raise CreatorError("edit-node accepts only --baseurl pointing to a local folder with RPMs (not YUM repo)")
-            if not baseurl.endswith("/"):
-                baseurl+="/"
-            for pkg_from_list in kickstart.get_packages(self.ks):
-                # TODO report if package listed in ks is missing
-                for pkg in glob.glob(baseurl+pkg_from_list+"-[0-9]*.rpm"):
-                    fdno = os.open(pkg, os.O_RDONLY)
-                    hdr = ts.hdrFromFdno(fdno)
-                    os.close(fdno)
-                    ts.addInstall(hdr,(hdr,pkg), "u")
-        ts.run(self.simpleCallback().callback,'')
-
-    def _install_plugins(self,plugins,repo_url):
-        # create repo file from url
-        repo_template = """[plugin repo]
-name=plugin repo
-baseurl=%(repo_url)s
-enabled=1
-gpgcheck=0
-"""
-        repo_dict = {
-        "repo_url" : repo_url,
-    }
-
-        f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
-        f.write(repo_template % repo_dict)
-        f.close()
-        plugins = plugins.replace(","," ")
-        yum_cmd = "yum install -y %s" % plugins
-        try:
-            subprocess.call([yum_cmd], preexec_fn = self._chroot, shell=True)
-        except OSError, e:
-            raise CreatorError("Failed to install plugin %s, %s " % (plugins, e))
-        #finally:
-        #    os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
+                    print "Invalid Key File: %s" % key
         return
 
-    def _set_password(self,options):
-        cmd = "/usr/sbin/usermod -p \"%s\" admin" % options.password
-        try:
-            print self._chroot
-            subprocess.call([cmd], preexec_fn = self._chroot, shell=True)
-        except OSError, e:
-            raise CreatorError("Failed to set password, %s " % e)
-
-    def _setup_ssh_keys(self,options):
-        for key in options.ssh_keys.split(","):
-            # if no users defined, default is admin
-            if options.key_users is None:
-                options.key_users = "admin"
-            for user in options.key_users.split(","):
-                if user == "root":
-                    home = "/root/.ssh"
-                else:
-                    home = "/home/%s/.ssh" % user
-                if not os.path.exists(self._instroot + home):
-                    os.mkdir(self._instroot + home)
-                k = open(key).read()
-                f = open(self._instroot + home + "/authorized_keys", "a")
-                f.write(k)
-                f.close()
-
-def parse_options(args):
-    parser = optparse.OptionParser(usage = """
-       %prog [-n=<name>]
-                      [-o <output>]
-                      [-k <kickstart-file>]
-                      [-s <script.sh>]
-                      [-w <encrypted password>
-                      [-l <sshkeyfile>
-                      [-u <ssh_key_users>
-                      [-t <tmpdir>]
-                      [-r <releasefile>]
-                      [-b <builder>]
-                      [-p <plugin>]
-                      [-r <plugin_repo>
-                      <LIVEIMG.src>""")
-
-    parser.add_option("-n", "--name", type="string", dest="name",
-                      help="name of new LiveOS (don't include .iso, it will "
-                           "be added)")
-
-    parser.add_option("-o", "--output", type="string", dest="output",
-                      help="specify directory for new iso file.")
-
-    parser.add_option("-k", "--kickstart", type="string", dest="kscfg",
-                      help="Path or url to kickstart config file")
-
-    parser.add_option("-s", "--script", type="string", dest="script",
-                      help="specify script to run chrooted in the LiveOS "
-                           "fsimage")
-
-    parser.add_option("-w", "--passwd", type="string", dest="password",
-                      help="encrypted password")
-
-    parser.add_option("-l", "--sshkey", type="string", dest="ssh_keys",
-                      help="comma delimited list of ssh public key files")
-
-    parser.add_option("-u", "--key_users", type="string", dest="key_users",
-                      help="comma delimited list of user account for ssh public key files")
-
-    parser.add_option("-t", "--tmpdir", type="string",
-                      dest="tmpdir", default="/var/tmp",
-                      help="Temporary directory to use (default: /var/tmp)")
-
-    parser.add_option("-r", "--releasefile", type="string", dest="releasefile",
-                      help="Specify release file/s for branding.")
-
-    parser.add_option("-b", "--builder", type="string",
-                      dest="builder", default=os.getlogin(),
-                      help="Specify the builder of a Remix.")
-
-    parser.add_option("-p", "--install-plugin", type="string",
-                      dest="plugin", help="Specify plugins to install")
-
-    parser.add_option("", "--repo", type="string",
-                      dest="repo", help="Specify repo to install plugin from")
-
-    setup_logging(parser)
-
-    (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.print_usage()
-        sys.exit(1)
-
-    print args[0]
-
-    return (args[0], options)
-
-def get_fsvalue(filesystem, tag):
-    dev_null = os.open('/dev/null', os.O_WRONLY)
-    args = ['/sbin/blkid', '-s', tag, '-o', 'value', filesystem]
-    try:
-        fs_type = subprocess.Popen(args,
-                               stdout=subprocess.PIPE,
-                               stderr=dev_null).communicate()[0]
-    except IOError, e:
-        raise CreatorError("Failed to determine fs %s: %s" % value, e )
-    finally:
-        os.close(dev_null)
-
-    return fs_type.rstrip()
-
-def rebuild_iso_symlinks(isodir):
-    # remove duplicate files and rebuild symlinks to reduce iso size
-    efi_vmlinuz = "%s/EFI/BOOT/vmlinuz0" % isodir
-    isolinux_vmlinuz = "%s/isolinux/vmlinuz0" % isodir
-    efi_initrd = "%s/EFI/BOOT/initrd0.img" % isodir
-    isolinux_initrd = "%s/isolinux/initrd0.img" % isodir
-
-    if os.path.exists(efi_vmlinuz):
-        os.remove(efi_vmlinuz)
-        os.remove(efi_initrd)
-        os.symlink(isolinux_vmlinuz,efi_vmlinuz)
-        os.symlink(isolinux_initrd,efi_initrd)
-
-def main():
-    # LiveOS set to <LIVEIMG.src>
-    (LiveOS, options) = parse_options(sys.argv[1:])
-
-    if os.geteuid () != 0:
-        print >> sys.stderr, "You must run edit-liveos as root"
-        return 1
-
-    if options.name:
-        name = options.name
-    elif stat.S_ISBLK(os.stat(LiveOS).st_mode):
-        name = get_fsvalue(LiveOS, 'LABEL') + '.edited'
-    else:
-        name = os.path.basename(LiveOS) + ".edited"
-
-    if options.output:
-        output = options.output
-    else:
-        output = os.path.dirname(LiveOS)
-        if output == '/dev':
-            output = options.tmpdir
-
-    editor = LiveImageEditor(name)
-    editor.tmpdir = options.tmpdir
-    editor._builder = options.builder
-    editor._releasefile = options.releasefile
-
-    try:
-        if options.kscfg:
-            editor.ks = read_kickstart(options.kscfg)
-            # part / --size <new rootfs size to be resized to>
-            editor._LoopImageCreator__image_size = kickstart.get_image_size(editor.ks)
-        if options.script:
-            if not os.path.exists(options.script):
-                print "Invalid Script Path '%s'" % options.script
-                return 1
-        for key in options.ssh_keys.split(","):
-            if not os.path.exists(key):
-                print "Invalid Script Path '%s'" % key
-                return 1
-        editor.mount(LiveOS, cachedir = None)
-        editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
-        if editor.ks:
-            editor._run_pre_scripts()
-            editor.install_rpms()
-            editor._run_post_scripts()
-        if options.script:
-            print "Running edit script '%s'" % options.script
-            editor._run_script(options.script)
-        if options.plugin:
-            print "Installing Plugins"
-            editor._install_plugins(options.plugin,options.repo)
-        if not options.password is None:
-            print "Setting Admin Password"
-            editor._set_password(options)
-        if not options.ssh_keys is None:
-            editor._setup_ssh_keys(options)
-        print "Editing Complete"
-        rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
-        editor.unmount()
-        editor.package(output)
-        logging.info("%s.iso saved to %s"  % (editor.name, output))
-    except CreatorError, e:
-        logging.error(u"Error editing LiveOS : %s" % e)
-        return 1
-    finally:
-        editor.cleanup()
-
-    return 0
+    def main(self):
+        self.parse_options(sys.argv[1:])
+        self.scriptfile = mktemp()
+        self.create_script()
+        print("Script Temp File: %s" % self.scriptfile)
+        f = open(self.scriptfile, "w")
+        f.write("#!/bin/bash\n")
+        for item in self.script:
+            f.write(item+"\n")
+        f.close()
+        #list wont recognize iso file arg in edit-livecd
+        edit_args="edit-livecd -s %s %s" % (self.scriptfile, self.args)
+        edit_cmd = subprocess.Popen(edit_args, shell=True)
+        edit_cmd.wait()
+        if edit_cmd.returncode == 0:
+            print "\n\nEdited ISO is: " + self.args + ".edited.iso\n"
+            return True
+        else:
+            print "Editing Failed"
+            sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    tool = PluginTool()
+    if tool.main():
+        sys.exit(0)
 
-arch = rpmUtils.arch.getBaseArch()
-if arch in ("i386", "x86_64"):
-    LiveImageCreator = x86LiveImageCreator
-elif arch in ("ppc",):
-    LiveImageCreator = ppcLiveImageCreator
-elif arch in ("ppc64",):
-    LiveImageCreator = ppc64LiveImageCreator
-else:
-    raise CreatorError("Architecture not supported!")
