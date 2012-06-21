@@ -98,6 +98,7 @@ keep /lib/modules/*/kernel/drivers/edac
 keep /lib/modules/*/kernel/drivers/firmware
 keep /lib/modules/*/kernel/drivers/idle
 keep /lib/modules/*/kernel/drivers/infiniband
+keep /lib/modules/*/kernel/drivers/input/misc/uinput.ko
 keep /lib/modules/*/kernel/drivers/md
 keep /lib/modules/*/kernel/drivers/message
 keep /lib/modules/*/kernel/drivers/net
