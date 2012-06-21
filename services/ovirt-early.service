@@ -2,6 +2,7 @@
 Description=oVirt Node early configuration service
 After=fedora-readonly.target local-fs.target network.target
 Wants=fedora-readonly.target local-fs.target network.target
+Before=sshd.service
 
 [Service]
 Type=oneshot
