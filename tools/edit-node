@@ -748,16 +748,22 @@ enabled=1
         os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
         return
 
+    def _run_yum_install(self, pkgs):
+        pkgs = pkgs.replace(","," ")
+        yum_cmd = "yum install -y %s " % pkgs
+        yum = subprocess.Popen(yum_cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = yum.communicate()
+        print output
+        if yum.returncode > 0:
+            logging.error(output)
+            return False
+        return True
+
     def _install_dup(self, options):
         self._setup_dns()
         self._setup_yum_repo(options)
-        pkgs = options.install_dup.replace(","," ")
-        yum_cmd = "yum install -y %s " % pkgs
         if len(options.repo) > 0:
-            yum = subprocess.Popen(yum_cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
-            output, err = yum.communicate()
-            print output
-            if yum.returncode > 0:
+            if not self._run_yum_install(options.install_dup):
                 logging.error(output)
                 self._cleanup_editing()
                 return False
