@@ -605,30 +605,27 @@ class LiveImageEditor(LiveImageCreator):
                     ts.addInstall(hdr,(hdr,pkg), "u")
         ts.run(self.simpleCallback().callback,'')
 
-    def _install_plugins(self,plugins,repo_url):
-        # create repo file from url
-        repo_template = """[plugin repo]
-name=plugin repo
-baseurl=%(repo_url)s
-enabled=1
-gpgcheck=0
-"""
-        repo_dict = {
-        "repo_url" : repo_url,
-    }
+    def _install_pkgs(self,options):
+        self._setup_dns()
+        self._setup_yum_repo(options)
+        if not self._run_yum_install(options.install):
+            logging.error(output)
+            self._cleanup_editing()
+            return False
+        else:
+            self._cleanup_editing()
+            return True
 
-        f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
-        f.write(repo_template % repo_dict)
-        f.close()
-        plugins = plugins.replace(","," ")
-        yum_cmd = "yum install -y %s" % plugins
-        try:
-            subprocess.call([yum_cmd], preexec_fn = self._chroot, shell=True)
-        except OSError, e:
-            raise CreatorError("Failed to install plugin %s, %s " % (plugins, e))
-        #finally:
-        #    os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
-        return
+    def _install_plugins(self,options):
+        self._setup_dns()
+        self._setup_yum_repo(options)
+        if not self._run_yum_install(options.plugin):
+            logging.error(output)
+            self._cleanup_editing()
+            return False
+        else:
+            self._cleanup_editing()
+            return True
 
     class simpleCallback:
         def __init__(self):
@@ -686,7 +683,6 @@ gpgcheck=0
         # bind mount resolv.conf
         os.system("touch %s/etc/resolv.conf" % self._instroot)
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
-
     def _setup_yum_repo(self, options):
        print "Configuring Yum Repo"
        gpgcheck = 1
@@ -745,11 +741,11 @@ enabled=1
 
     def _cleanup_editing(self):
         os.system("umount %s/etc/resolv.conf" % self._instroot)
-        os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
+        if os.path.exists(self._instroot + "/etc/yum.repos.d/plugin.repo"):
+            os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
         return
 
     def _run_yum_install(self, pkgs):
-        pkgs = pkgs.replace(","," ")
         yum_cmd = "yum install -y %s " % pkgs
         yum = subprocess.Popen(yum_cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = yum.communicate()
@@ -762,19 +758,18 @@ enabled=1
     def _install_dup(self, options):
         self._setup_dns()
         self._setup_yum_repo(options)
-        if len(options.repo) > 0:
-            if not self._run_yum_install(options.install_dup):
-                logging.error(output)
+        if not self._run_yum_install(options.install_dup):
+            logging.error(output)
+            self._cleanup_editing()
+            return False
+        else:
+            #validate files added by dup
+            for rpm in options.install_dup.split(","):
                 self._cleanup_editing()
-                return False
-            else:
-                #validate files added by dup
-                for rpm in options.install_dup.split(","):
-                    self._cleanup_editing()
-                    if self._validate_dup_files(rpm):
-                        return True
-                    else:
-                        return False
+                if self._validate_dup_files(rpm):
+                    return True
+                else:
+                    return False
 
     def _set_password(self,options):
         cmd = "/usr/sbin/usermod -p \"%s\" admin" % options.password
@@ -813,9 +808,9 @@ def parse_options(args):
                       [-t <tmpdir>]
                       [-r <releasefile>]
                       [-b <builder>]
-                      [-p <plugin>]
-                      [-r <plugin_repo>
-                      [--install-dup <dup_pkg_name>
+                      [--install-kmod <kmod_pkg_name>
+                      [--install-plugin <plugin_name>
+                      [--install <pkg_name>
                       [--repo <plugin_repo>
                       <LIVEIMG.src>""")
 
@@ -856,7 +851,10 @@ def parse_options(args):
     parser.add_option("-p", "--install-plugin", type="string",
                       dest="plugin", help="Specify plugins to install")
 
-    parser.add_option("--install-dup", type="string",
+    parser.add_option("--install", type="string",
+                      dest="install", help="Specify packages to install")
+
+    parser.add_option("--install-kmod", type="string",
                       dest="install_dup", help="Specify driver update packages to install")
 
     parser.add_option("--repo", type="string",
@@ -942,10 +940,17 @@ def main():
         if options.script:
             print "Running edit script '%s'" % options.script
             editor._run_script(options.script)
-        if options.plugin:
+        if options.install:
+            print "Installing Packages"
+            if not editor._install_pkgs(options):
+                logging.error("Error Installing Requested Package(s) : %s" % options.install)
+                return 1
+        elif options.plugin:
             print "Installing Plugins"
-            editor._install_plugins(options.plugin,options.repo)
-        if options.install_dup:
+            if not editor._install_plugins(options):
+                logging.error("Error Installing Plugin(s) : %s" % options.plugin)
+                return 1
+        elif options.install_dup:
             print "Installing DUP"
             if not editor._install_dup(options):
                 editor.unmount()
