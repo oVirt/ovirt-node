@@ -20,3 +20,11 @@ vdsm-reg
 ltrace
 # keyboard layout
 system-config-keyboard-base
+# plymouth stuff
+plymouth
+plymouth-system-theme
+plymouth-plugin-label
+plymouth-graphics-libs
+plymouth-scripts
+plymouth-plugin-two-step
+plymouth-theme-charge
