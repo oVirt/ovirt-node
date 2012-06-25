@@ -605,6 +605,57 @@ class LiveImageEditor(LiveImageCreator):
                     ts.addInstall(hdr,(hdr,pkg), "u")
         ts.run(self.simpleCallback().callback,'')
 
+    def _print_version(self):
+       f = open("%s/etc/system-release" % self._instroot)
+       output = f.readline()
+       f.close()
+       print "\n%s\n" % output
+       return True
+
+    def _create_manifests(self, options):
+        if options.plugin:
+            pkg = options.plugin
+        elif options.install_dup:
+            pkg = options.install_dup
+        elif options.install:
+            pkg = options.install
+        print "Creating Manifests"
+        # Create post-image processing manifests
+        cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort > /manifest-%s-rpm.txt" % pkg
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+
+        cmd = "rpm -qa --qf '%%{sourcerpm}\n' | sort -u > /manifest-%s-srpm.txt" % pkg
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+
+        # collect all included licenses rhbz#601927
+        cmd = "rpm -qa --qf '%%{license}\n' | sort -u > /manifest-%s-license.txt" % pkg
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+
+        cmd = "du -akx --exclude=/var/cache/yum / > /manifest-%s-file.txt" % pkg
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+
+        cmd = "du -x --exclude=/var/cache/yum / > /manifest-%s-dir.txt" % pkg
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+
+        # move self._instroot/manifest-* to isolinux
+        print "Copying Manifests"
+        for file in glob.glob("%s/manifest-%s*" % (self._instroot, pkg)):
+           cmd = "mv %s %s/iso/isolinux" % (file, self._ImageCreator__builddir)
+           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+           output, err = f.communicate()
+           if f.returncode > 0:
+               cmd = "ls -al %s" % self._ImageCreator__builddir
+               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+               output, err = f.communicate()
+               print output
+               print "Failed to copy %s to %s/iso/isolinux" % (file,self._ImageCreator__builddir)
+               return False
+
     def _install_pkgs(self,options):
         self._setup_dns()
         if not self._setup_yum_repo(options):
@@ -905,6 +956,12 @@ def parse_options(args):
     parser.add_option("--nogpgcheck", action="store_false", default=True,
                       dest="gpgcheck", help="Allow unsigned packages to be installed")
 
+    m_grp = optparse.OptionGroup(parser, ("Manifest Options"))
+    m_grp.add_option("", "--print-version", action="store_true", default=False,
+                     dest="printversion", help="Print Current Version of ISO")
+    parser.add_option_group(m_grp)
+
+
     setup_logging(parser)
 
     (options, args) = parser.parse_args()
@@ -969,13 +1026,16 @@ def main():
     editor.tmpdir = options.tmpdir
     editor._builder = options.builder
     editor._releasefile = options.releasefile
-
     try:
+        rebuild = 1
         if options.kscfg:
             editor.ks = read_kickstart(options.kscfg)
             # part / --size <new rootfs size to be resized to>
             editor._LoopImageCreator__image_size = kickstart.get_image_size(editor.ks)
         editor.mount(LiveOS, cachedir = None)
+        if options.printversion:
+            editor._print_version()
+            rebuild = 0
         if editor.ks:
             editor._run_pre_scripts()
             editor.install_rpms()
@@ -1004,11 +1064,18 @@ def main():
             editor._set_password(options)
         if not options.ssh_keys is None:
             editor._setup_ssh_keys(options)
-        print "Editing Complete"
-        editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
-        rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
-        editor.unmount()
-        editor.package(output)
+        if rebuild == 1:
+            editor._create_manifests(options)
+            print "Editing Complete"
+            editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
+            rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
+            editor.unmount()
+            editor.package(output)
+            logging.info("%s.iso saved to %s"  % (editor.name, output))
+        else:
+            # in manifest mode print do necessary items
+            editor.unmount()
+
         logging.info("%s.iso saved to %s"  % (editor.name, output))
     except CreatorError, e:
         logging.error(u"Error editing LiveOS : %s" % e)
