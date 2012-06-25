@@ -607,7 +607,8 @@ class LiveImageEditor(LiveImageCreator):
 
     def _install_pkgs(self,options):
         self._setup_dns()
-        self._setup_yum_repo(options)
+        if not self._setup_yum_repo(options):
+            return False
         if not self._run_yum_install(options.install):
             logging.error(output)
             self._cleanup_editing()
@@ -618,7 +619,8 @@ class LiveImageEditor(LiveImageCreator):
 
     def _install_plugins(self,options):
         self._setup_dns()
-        self._setup_yum_repo(options)
+        if not self._setup_yum_repo(options):
+            return False
         if not self._run_yum_install(options.plugin):
             logging.error(output)
             self._cleanup_editing()
@@ -626,6 +628,7 @@ class LiveImageEditor(LiveImageCreator):
         else:
             self._cleanup_editing()
             return True
+        return True
 
     class simpleCallback:
         def __init__(self):
@@ -685,19 +688,45 @@ class LiveImageEditor(LiveImageCreator):
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
     def _setup_yum_repo(self, options):
        print "Configuring Yum Repo"
-       gpgcheck = 1
-       if not options.gpgcheck:
-           gpgcheck = 0
-       if len(options.repo) > 0:
-       # create repo file from url
+       if os.path.isfile(options.repo):
+           cmd = "touch /etc/yum.repos.d/plugin.repo"
+           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+           output, err = f.communicate()
+           if f.returncode > 0:
+               print output
+               print "Can't Create Repo File"
+               return False
+           cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % (options.repo,self._instroot)
+           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+           output, err = f.communicate()
+           if f.returncode > 0:
+               print "Can't Bind Mount Repo File"
+               print output
+               return False
+           return True
+       elif os.path.isdir(options.repo):
+           os.system("mkdir %s/tmp/yumrepo" % self._instroot)
+           cmd = "mount -o bind %s %s/tmp/yumrepo" % (options.repo, self._instroot)
+           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+           output, err = f.communicate()
+           if f.returncode > 0:
+               print cmd
+               print output
+               print "Can't Bind Mount Yum Repo"
+               return False
+
+           # build repo file
+           gpgcheck = 1
+           if not options.gpgcheck:
+               gpgcheck = 0
+           # create repo file from url
            repo_template = """[plugin_repo]
 name=plugin repo
 gpgcheck=%(gpg_check)s
-baseurl=%(repo_url)s
+baseurl=file:///tmp/yumrepo
 enabled=1
 """
            repo_dict = {
-          "repo_url" : options.repo,
           "gpg_check" : gpgcheck
         }
 
@@ -705,6 +734,9 @@ enabled=1
            f.write(repo_template % repo_dict)
            f.close()
            return True
+       else:
+           print "Invalid Yum Repo Type"
+           return False
 
     def _validate_dup_files(self, rpm):
         dup_write_locations = ["/etc/modprobe.d",
@@ -740,9 +772,17 @@ enabled=1
         return True
 
     def _cleanup_editing(self):
+        print "Cleaning Up Yum Configuration"
         os.system("umount %s/etc/resolv.conf" % self._instroot)
         if os.path.exists(self._instroot + "/etc/yum.repos.d/plugin.repo"):
-            os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
+            try:
+                os.remove(self._instroot + "/etc/yum.repos.d/plugin.repo")
+            except:
+                os.system("umount %s/etc/yum.repos.d/plugin.repo" % self._instroot)
+        if os.path.exists(self._instroot + "/tmp/yumrepo"):
+            # cleanup local repo if exists
+            if os.system("umount %s/tmp/yumrepo" % self._instroot):
+                os.system("rm -rf %s/tmp/yumrepo" % self._instroot)
         return
 
     def _run_yum_install(self, pkgs):
@@ -751,25 +791,28 @@ enabled=1
         output, err = yum.communicate()
         print output
         if yum.returncode > 0:
+            print "Yum Install Failed"
             logging.error(output)
             return False
         return True
 
     def _install_dup(self, options):
         self._setup_dns()
-        self._setup_yum_repo(options)
-        if not self._run_yum_install(options.install_dup):
-            logging.error(output)
-            self._cleanup_editing()
-            return False
-        else:
-            #validate files added by dup
-            for rpm in options.install_dup.split(","):
+        if self._setup_yum_repo(options):
+            if not self._run_yum_install(options.install_dup):
+                logging.error(output)
                 self._cleanup_editing()
-                if self._validate_dup_files(rpm):
-                    return True
-                else:
-                    return False
+                return False
+            else:
+                #validate files added by dup
+                for rpm in options.install_dup.split(","):
+                    self._cleanup_editing()
+                    if self._validate_dup_files(rpm):
+                        return True
+                    else:
+                        return False
+        else:
+            return False
 
     def _set_password(self,options):
         cmd = "/usr/sbin/usermod -p \"%s\" admin" % options.password
@@ -858,7 +901,7 @@ def parse_options(args):
                       dest="install_dup", help="Specify driver update packages to install")
 
     parser.add_option("--repo", type="string",
-                      dest="repo", help="Specify repo to install plugin from")
+                      dest="repo", help="Specify yum repo file or yum repository on the filesystem")
     parser.add_option("--nogpgcheck", action="store_false", default=True,
                       dest="gpgcheck", help="Allow unsigned packages to be installed")
 
