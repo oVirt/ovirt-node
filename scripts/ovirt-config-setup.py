@@ -1606,12 +1606,17 @@ class NodeConfigScreen():
 
       def process_snmp_config(self):
           if self.snmp_status.value() == 1:
-              if self.root_password_1.value() != "" or self.root_password_2.value() != "":
-                  if self.root_password_1.value() != self.root_password_2.value():
-                      self._create_warn_screen()
-                      ButtonChoiceWindow(self.screen, "SNMP", "SNMP was not enabled because passwords do not match", buttons = ['Ok'])
-                      return
-              enable_snmpd(self.root_password_1.value())
+              if len(self.root_password_1.value()) > 0:
+                  if self.root_password_1.value() != "" or self.root_password_2.value() != "":
+                      if self.root_password_1.value() != self.root_password_2.value():
+                          self._create_warn_screen()
+                          ButtonChoiceWindow(self.screen, "SNMP", "SNMP was not enabled because passwords do not match", buttons = ['Ok'])
+                          return
+                  enable_snmpd(self.root_password_1.value())
+              else:
+                  self._create_warn_screen()
+                  ButtonChoiceWindow(self.screen, "SNMP Error", "Unable to configure SNMP without a password!", buttons = ['Ok'])
+                  self.reset_screen_colors()
           elif self.snmp_status.value() == 0:
               disable_snmpd()
 
