@@ -36,6 +36,9 @@ class Plugin(PluginBase):
     """Plugin for Monitoring configuration option.
     """
 
+    valid_password = False
+    valid_password_msg = ""
+
     def __init__(self, ncs):
         PluginBase.__init__(self, "CIM", ncs)
 
@@ -76,7 +79,14 @@ class Plugin(PluginBase):
         self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
         is_transition_to_disabled = self.cim_status.value() == 0 and self.current_cim_status == 1
         is_transition_to_enabled = self.cim_status.value() == 1 and self.current_cim_status == 0
-        is__enabled = self.cim_status.value() == 1
+        is_enabled = self.cim_status.value() == 1
+
+        setting_password_failed = False
+        if len(self.cim_password_1.value()) > 0  or len(self.cim_password_2.value()) > 0 :
+            setting_password_failed = self.__set_cim_password()
+            if setting_password_failed:
+                return
+
         if is_transition_to_disabled:
             if disable_cim():
                 ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Successfully Disabled", buttons = ['Ok'])
@@ -89,17 +99,30 @@ class Plugin(PluginBase):
             else:
                 ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Configuration Failed", buttons = ['Ok'])
                 self.ncs.reset_screen_colors()
-        if len(self.cim_password_1.value()) > 0  and len(self.cim_password_2.value()) > 0 :
+
+    def __set_cim_password(self):
+        msg = None
+        failed = True
+        if self.valid_password:
             if set_password(self.cim_password_1.value(), "cim"):
-                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Password Successfully Set", buttons = ['Ok'])
-                self.ncs.reset_screen_colors()
+                msg = "CIM Password Successfully Set"
+                failed = False
             else:
-                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration", "CIM Password Failed", buttons = ['Ok'])
-                self.ncs.reset_screen_colors()
+                msg = "CIM Password Failed"
+        else:
+            self.ncs._create_warn_screen()
+            msg = "CIM Password Is Invalid: %s" %  self.valid_password_msg
+        ButtonChoiceWindow(self.ncs.screen, "CIM Access", msg, buttons = ['Ok'])
+        self.ncs.reset_screen_colors()
+        return failed
 
     def password_check_callback(self):
         resp, msg = password_check(self.cim_password_1.value(), self.cim_password_2.value())
         self.pw_msg.setText(msg)
+
+        self.valid_password = resp == 0
+        self.valid_password_msg = msg
+
         return
 
 def get_plugin(ncs):
