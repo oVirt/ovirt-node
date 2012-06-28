@@ -322,6 +322,7 @@ class Network:
         augtool("set", "/files/etc/sysconfig/network/NETWORKING", "yes")
         ovirt_store_config("/etc/sysconfig/network")
         ovirt_store_config ("/etc/hosts")
+        ovirt_store_config ("/etc/udev/rules.d/70-persistent-net.rules")
         logger.info("Network configured successfully")
         if net_configured == 1:
             logger.info("Stopping Network services")

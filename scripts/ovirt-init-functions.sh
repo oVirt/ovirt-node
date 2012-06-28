@@ -823,6 +823,9 @@ EOP
         fi
     fi
 
+    # Rename the interfaces after bind-mounting the udev rules, rhbz#831658
+    udevadm trigger
+
     if [ -n "$cim_passwd" ]; then
         log "Setting temporary admin password: $cim_passwd"
         unmount_config /etc/passwd /etc/shadow
