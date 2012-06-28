@@ -612,6 +612,13 @@ class LiveImageEditor(LiveImageCreator):
        print "\n%s\n" % output
        return True
 
+    def _print_file_manifest(self):
+       cmd = "find /"
+       f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+       output, err = f.communicate()
+       print "\n%s\n" % output
+       return True
+
     def _create_manifests(self, options):
         if options.plugin:
             pkg = options.plugin
@@ -1002,6 +1009,8 @@ def parse_options(args):
                      dest="printversion", help="Print Current Version of ISO")
     m_grp.add_option("", "--get-manifests", action="store_true", default=False,
                      dest="getmanifests", help="Creates a tar file of manifests files within the iso")
+    m_grp.add_option("", "--print-file-manifest", action="store_true", default=False,
+                     dest="filemanifest", help="Prints contents of rootfs on iso to stdout")
 
     parser.add_option_group(m_grp)
 
@@ -1085,6 +1094,9 @@ def main():
             editor.mount(LiveOS, cachedir = None)
             if options.printversion:
                 editor._print_version()
+                rebuild = 0
+            if options.filemanifest:
+                editor._print_file_manifest()
                 rebuild = 0
             if editor.ks:
                 editor._run_pre_scripts()
