@@ -410,8 +410,8 @@ class NodeInstallScreen:
         self.kbd = keyboard.Keyboard()
         self.kbd.read()
         self.kbdDict = self.kbd.modelDict
-        self.kbdKeys = self.kbdDict.keys()
-        self.kbdKeys.sort()
+        self.kbdKeys = [k[0] for k in sorted(self.kbdDict.items(), \
+                                             key=lambda e: e[1][0].lower())]
         self.kb_list = Listbox(10, scroll = 1, returnExit = 1)
         default = ""
         for kbd in self.kbdKeys:
