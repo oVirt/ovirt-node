@@ -711,6 +711,24 @@ class LiveImageEditor(LiveImageCreator):
             return False
         return
 
+    def _print_manifests(self, iso):
+        isodir = self._mount_iso(iso)
+        li = os.listdir("%s/isolinux" % isodir)
+        li.sort()
+        for entry in li:
+            if os.path.islink(entry):
+                link = os.readlink(entry)
+                if "manifest" in link:
+                    print "%s -> %s" % (entry, link)
+            else:
+                if "manifest" in entry:
+                    print entry
+        cmd = "umount %s" % isodir
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        output, err = f.communicate()
+        os.system("rm -rf %s" % isodir)
+        return
+
     def _install_pkgs(self,options):
         self._setup_dns()
         if not self._setup_yum_repo(options):
@@ -1014,6 +1032,8 @@ def parse_options(args):
     m_grp = optparse.OptionGroup(parser, ("Manifest Options"))
     m_grp.add_option("", "--print-version", action="store_true", default=False,
                      dest="printversion", help="Print Current Version of ISO")
+    m_grp.add_option("", "--print-manifests", action="store_true", default=False,
+                     dest="printmanifests", help="Print a list of manifests files within the iso")
     m_grp.add_option("", "--get-manifests", action="store_true", default=False,
                      dest="getmanifests", help="Creates a tar file of manifests files within the iso")
     m_grp.add_option("", "--print-file-manifest", action="store_true", default=False,
@@ -1098,6 +1118,10 @@ def main():
         if options.getmanifests:
             editor._get_manifests(LiveOS)
             mount = False
+        if options.printmanifests:
+            editor._print_manifests(LiveOS)
+            mount = False
+
         # only mount rootfs as required since it's not necesary for all operations
         if mount:
             editor.mount(LiveOS, cachedir = None)
