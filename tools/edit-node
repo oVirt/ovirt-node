@@ -612,6 +612,13 @@ class LiveImageEditor(LiveImageCreator):
        print "\n%s\n" % output
        return True
 
+    def _print_rpm_manifest(self):
+       cmd = "rpm -qa|sort"
+       f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+       output, err = f.communicate()
+       print "%s" % output
+       return True
+
     def _print_file_manifest(self):
        cmd = "find /"
        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
@@ -1011,6 +1018,8 @@ def parse_options(args):
                      dest="getmanifests", help="Creates a tar file of manifests files within the iso")
     m_grp.add_option("", "--print-file-manifest", action="store_true", default=False,
                      dest="filemanifest", help="Prints contents of rootfs on iso to stdout")
+    m_grp.add_option("", "--print-rpm-manifest", action="store_true", default=False,
+                     dest="rpmmanifest", help="Prints installed rpms within rootfs on iso to stdout")
 
     parser.add_option_group(m_grp)
 
@@ -1097,6 +1106,9 @@ def main():
                 rebuild = 0
             if options.filemanifest:
                 editor._print_file_manifest()
+                rebuild = 0
+            if options.rpmmanifest:
+                editor._print_rpm_manifest()
                 rebuild = 0
             if editor.ks:
                 editor._run_pre_scripts()
