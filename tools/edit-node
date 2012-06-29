@@ -669,6 +669,16 @@ class LiveImageEditor(LiveImageCreator):
                print output
                print "Failed to copy %s to %s/iso/isolinux" % (file,self._ImageCreator__builddir)
                return False
+        # update symlink
+        for f in ["srpm", "license", "file", "dir" ]:
+            if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, f)):
+                os.system("rm -rf %s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, f))
+            cwd = os.getcwd()
+            os.chdir("%s/iso/isolinux" % self._ImageCreator__builddir)
+            src = "manifest-%s-%s.txt" % (pkg, f)
+            dest = "current-manifest-%s.txt" % f
+            os.symlink(src, dest)
+            os.chdir(cwd)
 
     def _mount_iso(self, iso):
         t = tempfile.mkdtemp(dir =  os.path.abspath(self.tmpdir),
@@ -687,7 +697,7 @@ class LiveImageEditor(LiveImageCreator):
         dirname = "manifests-%s" % timestamp
         cmd = "mkdir /tmp/%s" % dirname
         os.system(cmd)
-        for file in glob.glob("%s/isolinux/manifest*" % isodir):
+        for file in glob.glob("%s/isolinux/*manifest*" % isodir):
             cmd = "cp -a %s /tmp/%s" % (file, dirname)
             os.system(cmd)
         cmd = "tar cjvf %s.tar.bz2 %s"  % (dirname, dirname)
@@ -715,9 +725,10 @@ class LiveImageEditor(LiveImageCreator):
         isodir = self._mount_iso(iso)
         li = os.listdir("%s/isolinux" % isodir)
         li.sort()
+        print "\n"
         for entry in li:
-            if os.path.islink(entry):
-                link = os.readlink(entry)
+            if os.path.islink("%s/isolinux/%s" % (isodir,entry)):
+                link = os.readlink("%s/isolinux/%s" % (isodir,entry))
                 if "manifest" in link:
                     print "%s -> %s" % (entry, link)
             else:
