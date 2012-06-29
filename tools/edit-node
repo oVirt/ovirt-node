@@ -761,6 +761,14 @@ class LiveImageEditor(LiveImageCreator):
             self._cleanup_editing()
             return False
         else:
+            #validate files added
+            for rpm in options.plugin.split(","):
+                self._cleanup_editing()
+                if self._validate_installed_files(options, rpm):
+                    return True
+                else:
+                    return False
+
             self._cleanup_editing()
             return True
         return True
@@ -873,13 +881,23 @@ enabled=1
            print "Invalid Yum Repo Type"
            return False
 
-    def _validate_dup_files(self, rpm):
-        dup_write_locations = ["/etc/modprobe.d",
-                               "/etc/depmod.d",
-                               "/usr/share",
-                               "/lib/modules",
-                               "/lib/firmware",
-                               "/usr/share" ]
+    def _validate_installed_files(self, options, rpm):
+        _usr_loc = glob.glob("/usr/share/%s*" % rpm)
+        _doc_loc = glob.glob("/usr/share/doc/%s*" % rpm)
+        if options.plugin:
+            valid_write_locations = [ "/etc",
+                                      "/opt",
+                                      "/usr/share/man" ]
+        elif options.install_dup:
+            valid_write_locations = [ "/etc/modprobe.d",
+                                      "/etc/depmod.d",
+                                      "/usr/share",
+                                      "/lib/modules",
+                                      "/lib/firmware" ]
+        for entry in _usr_loc:
+            valid_write_locations.append(entry)
+        for entry in _doc_loc:
+            valid_write_locations.append(entry)
         cmd = "rpm -ql %s" % rpm
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
@@ -887,22 +905,22 @@ enabled=1
         i_files = []
         for line in output:
             if line.startswith("/"):
-                i = 1
-                for dir in dup_write_locations:
+                i = 0
+                for dir in valid_write_locations:
                     # checking list against valid paths
-                    if not dir in line and i <= len(dup_write_locations):
+                    if not dir in line and i <= len(valid_write_locations):
                         i = i + 1
                         # check for last iteration
-                        if i == len(dup_write_locations):
+                        if i == len(valid_write_locations):
                             i_files.append(line)
                     else:
                         # file is valid
                         break
-        print "Driver Update Package Validation Completed For: %s" % rpm
+        print "Package Validation Completed For: %s" % rpm
         if len(i_files) > 0:
-            print "Unable to install driver update due to directory restrictions on:\n"
+            print "Unable to install package due to directory restrictions on:\n"
             for file in i_files:
-                print "%s\n" % file
+                print "%s" % file
             return False
         return True
 
@@ -942,7 +960,7 @@ enabled=1
                 #validate files added by dup
                 for rpm in options.install_dup.split(","):
                     self._cleanup_editing()
-                    if self._validate_dup_files(rpm):
+                    if self._validate_installed_files(options, rpm):
                         return True
                     else:
                         return False
