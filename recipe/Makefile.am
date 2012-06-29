@@ -70,7 +70,7 @@ git_head	= $$(git log -1 --pretty=format:%h)
 GIT_RELEASE	= git$(git_head)
 EXTRA_RELEASE = $(if $(_ovirt_dev),.$(GIT_RELEASE),${nil})
 BUILD_NUMBER := .1
-RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" --define "extra_release $(EXTRA_RELEASE)" --define "BUILD_NUMBER $(BUILD_NUMBER)" --specfile ../ovirt-node.spec | head -n1)
+RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" $(if $(EXTRA_RELEASE), --define "extra_release $(EXTRA_RELEASE)") --define "BUILD_NUMBER $(BUILD_NUMBER)" --specfile ../ovirt-node.spec | head -n1)
 
 dist_sbin_SCRIPTS = node-creator
 
