@@ -222,6 +222,7 @@ fi
 %doc README COPYING
 %{recipe_root}/*.ks
 %defattr(0755,root,root,0755)
+%{_mandir}/man8/node-creator.8.gz
 %{_sbindir}/node-creator
 
 

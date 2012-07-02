@@ -58,7 +58,8 @@ EXTRA_DIST =                    \
         common-manifest.ks \
         image-minimizer.ks.in   \
         $(PACKAGE).ks.in        \
-        $(PACKAGE).ks
+        $(PACKAGE).ks           \
+        node-creator.8
 
 # For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
 # annotated rpm version strings.
@@ -73,6 +74,7 @@ BUILD_NUMBER := .1
 RELEASE := $(shell rpm -q --qf "%{RELEASE}\n" $(if $(EXTRA_RELEASE), --define "extra_release $(EXTRA_RELEASE)") --define "BUILD_NUMBER $(BUILD_NUMBER)" --specfile ../ovirt-node.spec | head -n1)
 
 dist_sbin_SCRIPTS = node-creator
+man_MANS = node-creator.8
 
 $(PACKAGE).ks: repos.ks version.ks
 
