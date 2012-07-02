@@ -25,7 +25,7 @@ else
 fi
 
 if [ "$fb" = "no" -o "$fb" = 0 ]; then
-    info "firtboot reinstall or uninstall parameter set to 0 or no, exitting"
+    info "firtboot reinstall or uninstall parameter set to 0 or no, exiting"
     return 0
 fi
 info "Found valid firstboot reinstall or uninstall parameter"
