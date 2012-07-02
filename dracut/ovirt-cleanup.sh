@@ -87,6 +87,20 @@ for dev in $storage_init; do
         pv="${i%%,*}"
         vg="${i##*,}"
         if [ -n "$vg" ]; then
+            for ipv in $(lvm vgs --noheadings -o pv_name $vg 2>/dev/null); do
+                imach=0
+                IFS=","
+                for idev in $storage_init; do
+                     if [ $idev = $ipv ]; then
+                        imach=1
+                     fi
+                done
+                IFS=$oldIFS
+                if [ $imach -eq 0 ]; then
+                    info "Not all member PVs of '$vg' are given in the storage_init parameter ,exiting"
+                    return 0
+                fi
+            done
             info "Found and removing vg: $vg"
             yes | lvm vgremove -ff "$vg"
         fi
