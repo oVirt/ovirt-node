@@ -99,8 +99,14 @@ def run_rhnreg(serverurl="", cacert="", activationkey="", username="",
     # regenerate up2date config
     if os.path.exists("/etc/sysconfig/rhn/up2date"):
         os.unlink("/etc/sysconfig/rhn/up2date")
-    logged_args = str(args).replace(password, "XXXXXXXX")
-    logged_args = str(logged_args).replace(proxypass, "XXXXXXXX")
+
+    logged_args = args
+    remove_values_from_args = ["--password", "--proxyPassword"]
+    for idx, arg in enumerate(logged_args):
+        if arg in remove_values_from_args:
+            logged_args[idx+1] = "XXXXXXX"
+    logged_args = str(logged_args)
+
     logger.debug(logged_args)
     rhn_reg = subprocess_closefds(args, shell=False, stdout=PIPE,
                                   stderr=STDOUT)
@@ -244,8 +250,13 @@ def run_rhsm(serverurl="", cacert="", activationkey="", username="",
     for f in all_rhsm_configs:
         unlink_if_exists(f)
 
-    logged_args = str(args).replace(password, "XXXXXXXX")
-    logged_args = str(logged_args).replace(proxypass, "XXXXXXXX")
+    logged_args = args
+    remove_values_from_args = ["--password", "--proxypassword"]
+    for idx, arg in enumerate(logged_args):
+        if arg in remove_values_from_args:
+            logged_args[idx+1] = "XXXXXXX"
+    logged_args = str(logged_args)
+
     log(logged_args)
     smreg_proc = subprocess_closefds(args, shell=False, stdout=PIPE,
                                      stderr=STDOUT)
