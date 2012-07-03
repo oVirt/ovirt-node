@@ -54,6 +54,7 @@ if [ -f /usr/bin/rpmbuild ]; then
   rpmbuild --nodeps --define "extra_release $EXTRA_RELEASE" -ta --clean *.tar.gz
 fi
 
+mkdir -p ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 # regenerate repo so iso uses new ovirt-node rpms
 createrepo -d ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 
