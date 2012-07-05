@@ -656,9 +656,29 @@ class LiveImageEditor(LiveImageCreator):
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
-        # move self._instroot/manifest-* to isolinux
+        # create deltas
+        timestamp = date("%Y-%m-%d_%H-%M-%S")
+        for i in ["file", "dir","owns", "deps" ]:
+            cmd =  "bzcat %s/iso/isolinux/manifest-%s.txt.bz2|sort > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
+            cmd = "diff -u /manifest-%s.txt /manifest-%s-%s.txt |egrep -v \"^@|^ \"> /delta-%s-manifest-%s-%s.txt" % (i, pkg, i, timestamp, i, pkg)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+            output, err = f.communicate()
+        for i in ["rpm", "srpm", "license"]:
+            cmd =  "cat %s/iso/isolinux/manifest-%s.txt|sort >  %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
+            cmd = "diff -u /manifest-%s.txt /manifest-%s-%s.txt |egrep -v \"^@|^ \"> /delta-%s-manifest-%s-%s.txt" % (i, pkg, i, timestamp, i, pkg)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+            output, err = f.communicate()
+        # cleanup copied manifests
+        for i in ["rpm", "srpm", "license", "file", "dir","owns", "deps"]:
+            cmd = "rm -rf %s/manifest-%s.txt" % (self._instroot ,i)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
         print "Copying Manifests"
-        for file in glob.glob("%s/manifest-%s*" % (self._instroot, pkg)):
+        for file in glob.glob("%s/*manifest-*" % self._instroot):
            cmd = "mv %s %s/iso/isolinux" % (file, self._ImageCreator__builddir)
            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
            output, err = f.communicate()
