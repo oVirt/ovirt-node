@@ -22,6 +22,7 @@ import os
 
 snmp_conf = "/etc/snmp/snmpd.conf"
 
+
 def enable_snmpd(password):
     system("service snmpd stop")
     # get old password #
@@ -29,7 +30,7 @@ def enable_snmpd(password):
         conf = "/tmp/snmpd.conf"
     else:
         conf = snmp_conf
-    cmd="cat %s|grep createUser|awk '{print $4}'" % conf
+    cmd = "cat %s|grep createUser|awk '{print $4}'" % conf
     oldpwd = subprocess_closefds(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     oldpwd = oldpwd.stdout.read().strip()
     system("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
@@ -40,10 +41,12 @@ def enable_snmpd(password):
     system("service snmpd start")
     # change existing password
     if len(oldpwd) > 0:
-        pwd_change_cmd = "snmpusm -v 3 -u root -n \"\" -l authNoPriv -a SHA -A %s localhost passwd %s %s -x AES" % (oldpwd, oldpwd, password)
+        pwd_change_cmd = ("snmpusm -v 3 -u root -n \"\" -l authNoPriv -a " +
+        "SHA -A %s localhost passwd %s %s -x AES") % (oldpwd, oldpwd, password)
         if system(pwd_change_cmd):
             system("rm -rf /tmp/snmpd.conf")
     ovirt_store_config(snmp_conf)
+
 
 def disable_snmpd():
     system("service snmpd stop")
@@ -51,6 +54,8 @@ def disable_snmpd():
     system("cp /etc/snmp/snmpd.conf /tmp")
     system("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
     remove_config(snmp_conf)
+
+
 def snmp_auto():
-    if OVIRT_VARS.has_key("OVIRT_SNMP_PASSWORD"):
+    if "OVIRT_SNMP_PASSWORD" in OVIRT_VARS:
         enable_snmpd(OVIRT_VARS["OVIRT_SNMP_PASSWORD"])
