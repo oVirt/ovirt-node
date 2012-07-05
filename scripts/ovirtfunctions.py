@@ -1177,10 +1177,11 @@ def password_check(password_1, password_2, min_length = 1):
     Do some password checks
 
     >>> r, msg = password_check("", "")
-    >>> r
-    1
-    >>> msg is "\n\n\n\n\n\n"
-    True
+    >>> (r,  len(msg))
+    (1, 5)
+    >>> r, msg = password_check("foo", "bar")
+    >>> (r,  "Not Match" in msg)
+    (1, True)
     '''
     if len(password_1) is 0 and min_length is not 0:
       return (1, "\n\n\n\n\n")
@@ -1332,6 +1333,7 @@ def is_engine_configured():
                                      "ifcfg-rhevm")
     >>> bridge_test = is_engine_configured()
     >>> bridge_file is bridge_test
+    True
     '''
     if system_closefds("brctl show | egrep -iq 'ovirtmgmt|rhevm'") is 0:
         return True
