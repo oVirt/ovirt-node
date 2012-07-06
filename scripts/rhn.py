@@ -524,8 +524,8 @@ class Plugin(PluginBase):
                 rhn_msg = "RHN Registration\n\nRegistration Status: %s" % msg
             elements.setField(Textbox(62, 4, rhn_msg), 0, 2, anchorLeft=1)
         else:
-            elements.setField(Textbox(62, 3, "Network Down,
-                                      Red Hat Network Registration Disabled"),
+            elements.setField(Textbox(62, 3, "Network Down, Red " +
+                                      "Hat Network Registration Disabled"),
                                       0, 2, anchorLeft=1)
             for i in (self.rhn_user, self.rhn_pass, self.profilename,
                      self.public_rhn, self.rhn_satellite, self.sam,
