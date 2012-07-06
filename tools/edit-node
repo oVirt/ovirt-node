@@ -851,55 +851,58 @@ class LiveImageEditor(LiveImageCreator):
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
     def _setup_yum_repo(self, options):
        print "Configuring Yum Repo"
-       if os.path.isfile(options.repo):
-           cmd = "touch /etc/yum.repos.d/plugin.repo"
-           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
-           output, err = f.communicate()
-           if f.returncode > 0:
-               print output
-               print "Can't Create Repo File"
-               return False
-           cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % (options.repo,self._instroot)
-           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-           output, err = f.communicate()
-           if f.returncode > 0:
-               print "Can't Bind Mount Repo File"
-               print output
-               return False
+       if not options.repo:
            return True
-       elif os.path.isdir(options.repo):
-           os.system("mkdir %s/tmp/yumrepo" % self._instroot)
-           cmd = "mount -o bind %s %s/tmp/yumrepo" % (options.repo, self._instroot)
-           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-           output, err = f.communicate()
-           if f.returncode > 0:
-               print cmd
-               print output
-               print "Can't Bind Mount Yum Repo"
-               return False
+       else:
+           if os.path.isfile(options.repo):
+               cmd = "touch /etc/yum.repos.d/plugin.repo"
+               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+               output, err = f.communicate()
+               if f.returncode > 0:
+                   print output
+                   print "Can't Create Repo File"
+                   return False
+               cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % (options.repo,self._instroot)
+               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+               output, err = f.communicate()
+               if f.returncode > 0:
+                   print "Can't Bind Mount Repo File"
+                   print output
+                   return False
+               return True
+           elif os.path.isdir(options.repo):
+               os.system("mkdir %s/tmp/yumrepo" % self._instroot)
+               cmd = "mount -o bind %s %s/tmp/yumrepo" % (options.repo, self._instroot)
+               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+               output, err = f.communicate()
+               if f.returncode > 0:
+                   print cmd
+                   print output
+                   print "Can't Bind Mount Yum Repo"
+                   return False
 
-           # build repo file
-           gpgcheck = 1
-           if not options.gpgcheck:
-               gpgcheck = 0
-           # create repo file from url
-           repo_template = """[plugin_repo]
+               # build repo file
+               gpgcheck = 1
+               if not options.gpgcheck:
+                   gpgcheck = 0
+               # create repo file from url
+               repo_template = """[plugin_repo]
 name=plugin repo
 gpgcheck=%(gpg_check)s
 baseurl=file:///tmp/yumrepo
 enabled=1
 """
-           repo_dict = {
-          "gpg_check" : gpgcheck
-        }
+               repo_dict = {
+              "gpg_check" : gpgcheck
+            }
 
-           f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
-           f.write(repo_template % repo_dict)
-           f.close()
-           return True
-       else:
-           print "Invalid Yum Repo Type"
-           return False
+               f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
+               f.write(repo_template % repo_dict)
+               f.close()
+               return True
+           else:
+               print "Invalid Yum Repo Type"
+               return False
 
     def _validate_installed_files(self, options, rpm):
         _usr_loc = glob.glob("/usr/share/%s*" % rpm)
@@ -959,7 +962,15 @@ enabled=1
         return
 
     def _run_yum_install(self, pkgs):
-        yum_cmd = "yum install -y %s " % pkgs
+        print "Running Yum Install"
+        if os.path.isfile(pkgs):
+            os.system("mkdir %s/tmp/yumrepo" % self._instroot)
+            os.system("touch %s/tmp/yumrepo/%s" % (self._instroot,os.path.basename(pkgs)))
+            os.system("mount -o bind %s %s/tmp/yumrepo/%s" % (pkgs, self._instroot,os.path.basename(pkgs)))
+            print os.listdir("%s/tmp/yumrepo" % self._instroot)
+            yum_cmd = "yum localinstall -y /tmp/yumrepo/%s" % os.path.basename(pkgs)
+        else:
+            yum_cmd = "yum install -y %s " % pkgs
         yum = subprocess.Popen(yum_cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = yum.communicate()
         print output
@@ -967,6 +978,9 @@ enabled=1
             print "Yum Install Failed"
             logging.error(output)
             return False
+        if "localinstall" in yum_cmd:
+            os.system("umount %s/tmp/yumrepo/%s" % (self._instroot,os.path.basename(pkgs)))
+            os.system("rm -rf %s/tmp/yumrepo" % self._instroot)
         return True
 
     def _install_dup(self, options):
@@ -1171,6 +1185,20 @@ def main():
             editor._print_manifests(LiveOS)
             mount = False
 
+        if options.repo is None:
+            p = ""
+            if options.install:
+                p = options.install
+            elif options.install_dup:
+                p = options.install_dup
+            elif options.plugin:
+                p = options.plugin
+            else:
+                print "A Package Must Be Defined"
+                return False
+            if not os.path.isfile(p):
+                print "\nInvalid Package Path: %s" % os.path.abspath(p)
+                return False
         # only mount rootfs as required since it's not necesary for all operations
         if mount:
             editor.mount(LiveOS, cachedir = None)
