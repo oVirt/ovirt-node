@@ -591,7 +591,7 @@ class LiveImageEditor(LiveImageCreator):
         for repo in kickstart.get_repos(self.ks):
             (name, baseurl, mirrorlist, proxy, inc, exc) = repo
             if baseurl.startswith("file://"):
-               baseurl=baseurl[7:]
+                baseurl=baseurl[7:]
             elif not baseurl.startswith("/"):
                 raise CreatorError("edit-node accepts only --baseurl pointing to a local folder with RPMs (not YUM repo)")
             if not baseurl.endswith("/"):
@@ -606,25 +606,25 @@ class LiveImageEditor(LiveImageCreator):
         ts.run(self.simpleCallback().callback,'')
 
     def _print_version(self):
-       f = open("%s/etc/system-release" % self._instroot)
-       output = f.readline()
-       f.close()
-       print "\n%s\n" % output
-       return True
+        f = open("%s/etc/system-release" % self._instroot)
+        output = f.readline()
+        f.close()
+        print "\n%s\n" % output
+        return True
 
     def _print_rpm_manifest(self):
-       cmd = "rpm -qa|sort"
-       f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
-       output, err = f.communicate()
-       print "%s" % output
-       return True
+        cmd = "rpm -qa|sort"
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+        print "%s" % output
+        return True
 
     def _print_file_manifest(self):
-       cmd = "find /"
-       f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
-       output, err = f.communicate()
-       print "\n%s\n" % output
-       return True
+        cmd = "find /"
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+        print "\n%s\n" % output
+        return True
 
     def _create_manifests(self, options):
         if options.plugin:
@@ -679,16 +679,16 @@ class LiveImageEditor(LiveImageCreator):
             output, err = f.communicate()
         print "Copying Manifests"
         for file in glob.glob("%s/*manifest-*" % self._instroot):
-           cmd = "mv %s %s/iso/isolinux" % (file, self._ImageCreator__builddir)
-           f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-           output, err = f.communicate()
-           if f.returncode > 0:
-               cmd = "ls -al %s" % self._ImageCreator__builddir
-               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-               output, err = f.communicate()
-               print output
-               print "Failed to copy %s to %s/iso/isolinux" % (file,self._ImageCreator__builddir)
-               return False
+            cmd = "mv %s %s/iso/isolinux" % (file, self._ImageCreator__builddir)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
+            if f.returncode > 0:
+                cmd = "ls -al %s" % self._ImageCreator__builddir
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                output, err = f.communicate()
+                print output
+                print "Failed to copy %s to %s/iso/isolinux" % (file,self._ImageCreator__builddir)
+                return False
         # update symlink
         for f in ["srpm", "license", "file", "dir" ]:
             if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, f)):
@@ -830,7 +830,7 @@ class LiveImageEditor(LiveImageCreator):
         for repo in kickstart.get_repos(self.ks):
             (name, baseurl, mirrorlist, proxy, inc, exc) = repo
             if baseurl.startswith("file://"):
-               baseurl=baseurl[7:]
+                baseurl=baseurl[7:]
             elif not baseurl.startswith("/"):
                 raise CreatorError("edit-node accepts only --baseurl pointing to a local folder with RPMs (not YUM repo)")
             if not baseurl.endswith("/"):
@@ -850,59 +850,59 @@ class LiveImageEditor(LiveImageCreator):
         os.system("touch %s/etc/resolv.conf" % self._instroot)
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
     def _setup_yum_repo(self, options):
-       print "Configuring Yum Repo"
-       if not options.repo:
-           return True
-       else:
-           if os.path.isfile(options.repo):
-               cmd = "touch /etc/yum.repos.d/plugin.repo"
-               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
-               output, err = f.communicate()
-               if f.returncode > 0:
-                   print output
-                   print "Can't Create Repo File"
-                   return False
-               cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % (options.repo,self._instroot)
-               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-               output, err = f.communicate()
-               if f.returncode > 0:
-                   print "Can't Bind Mount Repo File"
-                   print output
-                   return False
-               return True
-           elif os.path.isdir(options.repo):
-               os.system("mkdir %s/tmp/yumrepo" % self._instroot)
-               cmd = "mount -o bind %s %s/tmp/yumrepo" % (options.repo, self._instroot)
-               f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-               output, err = f.communicate()
-               if f.returncode > 0:
-                   print cmd
-                   print output
-                   print "Can't Bind Mount Yum Repo"
-                   return False
+        print "Configuring Yum Repo"
+        if not options.repo:
+            return True
+        else:
+            if os.path.isfile(options.repo):
+                cmd = "touch /etc/yum.repos.d/plugin.repo"
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+                output, err = f.communicate()
+                if f.returncode > 0:
+                    print output
+                    print "Can't Create Repo File"
+                    return False
+                cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % (options.repo,self._instroot)
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                output, err = f.communicate()
+                if f.returncode > 0:
+                    print "Can't Bind Mount Repo File"
+                    print output
+                    return False
+                return True
+            elif os.path.isdir(options.repo):
+                os.system("mkdir %s/tmp/yumrepo" % self._instroot)
+                cmd = "mount -o bind %s %s/tmp/yumrepo" % (options.repo, self._instroot)
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                output, err = f.communicate()
+                if f.returncode > 0:
+                    print cmd
+                    print output
+                    print "Can't Bind Mount Yum Repo"
+                    return False
 
-               # build repo file
-               gpgcheck = 1
-               if not options.gpgcheck:
-                   gpgcheck = 0
-               # create repo file from url
-               repo_template = """[plugin_repo]
+                # build repo file
+                gpgcheck = 1
+                if not options.gpgcheck:
+                    gpgcheck = 0
+                # create repo file from url
+                repo_template = """[plugin_repo]
 name=plugin repo
 gpgcheck=%(gpg_check)s
 baseurl=file:///tmp/yumrepo
 enabled=1
-"""
-               repo_dict = {
-              "gpg_check" : gpgcheck
-            }
+ """
+                repo_dict = {
+               "gpg_check" : gpgcheck
+             }
 
-               f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
-               f.write(repo_template % repo_dict)
-               f.close()
-               return True
-           else:
-               print "Invalid Yum Repo Type"
-               return False
+                f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
+                f.write(repo_template % repo_dict)
+                f.close()
+                return True
+            else:
+                print "Invalid Yum Repo Type"
+                return False
 
     def _validate_installed_files(self, options, rpm):
         _usr_loc = glob.glob("/usr/share/%s*" % rpm)
