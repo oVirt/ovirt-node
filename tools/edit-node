@@ -741,6 +741,20 @@ class LiveImageEditor(LiveImageCreator):
             return False
         return
 
+    def _print_manifest(self, iso, manifest):
+        isodir = self._mount_iso(iso)
+        m_path = "%s/isolinux/%s" % (isodir, manifest)
+        if os.path.exists(m_path):
+            cmd = "cat %s" % m_path
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
+            print output
+        else:
+            print "\nInvalid Manifest Filename"
+        os.system("umount %s" % isodir)
+        os.system("rm -rf %s" % isodir)
+        return
+
     def _print_manifests(self, iso):
         isodir = self._mount_iso(iso)
         li = os.listdir("%s/isolinux" % isodir)
@@ -1097,6 +1111,8 @@ def parse_options(args):
                      dest="printversion", help="Print Current Version of ISO")
     m_grp.add_option("", "--print-manifests", action="store_true", default=False,
                      dest="printmanifests", help="Print a list of manifests files within the iso")
+    m_grp.add_option("", "--print-manifest", type="string", default="",
+                     dest="printmanifest", help="Print manifest file to stdout")
     m_grp.add_option("", "--get-manifests", action="store_true", default=False,
                      dest="getmanifests", help="Creates a tar file of manifests files within the iso")
     m_grp.add_option("", "--print-file-manifest", action="store_true", default=False,
@@ -1181,11 +1197,14 @@ def main():
         if options.getmanifests:
             editor._get_manifests(LiveOS)
             mount = False
-        if options.printmanifests:
+        elif len(options.printmanifest) > 0:
+            editor._print_manifest(LiveOS, options.printmanifest)
+            mount = False
+        elif options.printmanifests:
             editor._print_manifests(LiveOS)
             mount = False
 
-        if options.repo is None:
+        elif options.repo is None:
             p = ""
             if options.install:
                 p = options.install
