@@ -1167,15 +1167,17 @@ def get_fsvalue(filesystem, tag):
 def rebuild_iso_symlinks(isodir):
     # remove duplicate files and rebuild symlinks to reduce iso size
     efi_vmlinuz = "%s/EFI/BOOT/vmlinuz0" % isodir
-    isolinux_vmlinuz = "%s/isolinux/vmlinuz0" % isodir
     efi_initrd = "%s/EFI/BOOT/initrd0.img" % isodir
-    isolinux_initrd = "%s/isolinux/initrd0.img" % isodir
 
     if os.path.exists(efi_vmlinuz):
         os.remove(efi_vmlinuz)
         os.remove(efi_initrd)
-        os.symlink(isolinux_vmlinuz,efi_vmlinuz)
-        os.symlink(isolinux_initrd,efi_initrd)
+        # build relative symlinks instead of absolute
+        cwd = os.getcwd()
+        os.chdir("%s/EFI/BOOT" % isodir)
+        os.system("ln -s ../../isolinux/vmlinuz0 .")
+        os.system("ln -s ../../isolinux/initrd0.img .")
+        os.chdir(cwd)
 
 def main():
     # LiveOS set to <LIVEIMG.src>
