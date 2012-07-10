@@ -856,7 +856,6 @@ def finish_install():
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
-        system(os.path.join(hookdir,hook))
     # store keyboard config
     ovirt_store_config("/etc/sysconfig/keyboard")
     ovirt_store_config("/etc/vconsole.conf")
