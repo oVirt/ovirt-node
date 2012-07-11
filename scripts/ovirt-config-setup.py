@@ -665,7 +665,7 @@ class NodeConfigScreen():
             for key in sorted(self.network_status.iterkeys()):
                 if key.startswith("br"):
                     parent_dev = key[+2:]
-                    if self.network_status.has_key(parent_dev):
+                    if parent_dev in self.network_status:
                         del self.network_status[parent_dev]
             for key in sorted(self.network_status.iterkeys()):
                 ipv4_addr, ipv6_addr = self.network_status[key]
@@ -683,7 +683,7 @@ class NodeConfigScreen():
                         ipv4_addr = "(Link Inactive)"
                     else:
                         ipv4_addr = "(DHCP Failed)"
-                if OVIRT_VARS.has_key("OVIRT_IPV6") and ipv6_addr != "":
+                if "OVIRT_IPV6" in OVIRT_VARS and ipv6_addr != "":
                         status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip(), ipv6_addr.strip())
                 else:
                     status_text += "%1s: %5s %14s \n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip())
@@ -1101,7 +1101,7 @@ class NodeConfigScreen():
         grid.setField(ipv4_main_grid, 0, 5, anchorLeft=1)
         grid.setField(Label(" "), 0, 6, anchorLeft=1)
         # only display ipv6 settings if OVIRT_IPV6 key is in defaults file
-        if OVIRT_VARS.has_key("OVIRT_IPV6"):
+        if "OVIRT_IPV6" in OVIRT_VARS:
             grid.setField(ipv6_main_grid, 0, 7, anchorLeft=1)
         else:
             grid.setField(Label(" "), 0, 7, anchorLeft=1, padding=(0, 4, 0, 0))
@@ -1395,21 +1395,21 @@ class NodeConfigScreen():
                 return
             else:
                 # if exists remove static keys from dictionary
-                if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
+                if "OVIRT_IP_ADDRESS" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IP_ADDRESS"]
-                if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
+                if "OVIRT_IP_NETMASK" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IP_NETMASK"]
-                if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
+                if "OVIRT_IP_GATEWAY" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IP_GATEWAY"]
-                if OVIRT_VARS.has_key("OVIRT_IPV6"):
+                if "OVIRT_IPV6" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6"]
-                if OVIRT_VARS.has_key("OVIRT_ADDRESS"):
+                if "OVIRT_ADDRESS" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6_ADDRESS"]
-                if OVIRT_VARS.has_key("OVIRT_IPV6_NETMASK"):
+                if "OVIRT_IPV6_NETMASK" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
-                if OVIRT_VARS.has_key("OVIRT_IPV6_GATEWAY"):
+                if "OVIRT_IPV6_GATEWAY" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
-                if OVIRT_VARS.has_key("OVIRT_VLAN"):
+                if "OVIRT_VLAN" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_VLAN"]
 
             gridform = GridForm(self.screen, "", 2, 2)
@@ -1465,19 +1465,19 @@ class NodeConfigScreen():
                 return
             else:
                 # if exists remove static keys from dictionary
-                if OVIRT_VARS.has_key("OVIRT_IP_ADDRESS"):
+                if "OVIRT_IP_ADDRESS" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IP_ADDRESS"]
-                if OVIRT_VARS.has_key("OVIRT_IP_NETMASK"):
+                if "OVIRT_IP_NETMASK" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IP_NETMASK"]
-                if OVIRT_VARS.has_key("OVIRT_IP_GATEWAY"):
+                if "OVIRT_IP_GATEWAY" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IP_GATEWAY"]
-                if OVIRT_VARS.has_key("OVIRT_IPV6"):
+                if "OVIRT_IPV6" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6"]
-                if OVIRT_VARS.has_key("OVIRT_ADDRESS"):
+                if "OVIRT_ADDRESS" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6_ADDRESS"]
-                if OVIRT_VARS.has_key("OVIRT_IPV6_NETMASK"):
+                if "OVIRT_IPV6_NETMASK" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
-                if OVIRT_VARS.has_key("OVIRT_IPV6_GATEWAY"):
+                if "OVIRT_IPV6_GATEWAY" in OVIRT_VARS:
                     del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
 
             if self.netvlanid.value() != "":
