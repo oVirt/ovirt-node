@@ -132,7 +132,8 @@ class NodeConfigScreen():
         self.net_apply_config = 0
 
     def _set_title(self):
-        PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION, PRODUCT_RELEASE)
+        PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION,
+                                      PRODUCT_RELEASE)
         self.screen.drawRootText(1, 0, "".ljust(78))
         self.screen.drawRootText(1, 1, "  %s" % PRODUCT_TITLE.ljust(76))
         self.screen.drawRootText(1, 2, "  %s" % os.uname()[1].ljust(76))
@@ -169,7 +170,8 @@ class NodeConfigScreen():
     def _set_colors(self, tty_file):
         GIO_CMAP = 0x4B70
         PIO_CMAP = 0x4B71
-        self.existing_color_array = bytearray(fcntl.ioctl(tty_file.fileno(), GIO_CMAP, b"\x00" * 48))
+        self.existing_color_array = bytearray(fcntl.ioctl(tty_file.fileno(),
+                                              GIO_CMAP, b"\x00" * 48))
         color_array = self.existing_color_array
         color_array[3] = 0xde
         color_array[4] = 0xde
@@ -215,7 +217,8 @@ class NodeConfigScreen():
     def _restore_colors(self, tty_file):
         GIO_CMAP = 0x4B70
         PIO_CMAP = 0x4B71
-        fcntl.ioctl(tty_file.fileno(), PIO_CMAP, bytes(self.existing_color_array))
+        fcntl.ioctl(tty_file.fileno(), PIO_CMAP,
+                    bytes(self.existing_color_array))
 
     def reset_screen_colors(self):
         for item in self.__colorset.keys():
@@ -261,7 +264,8 @@ class NodeConfigScreen():
     def nic_lb_callback(self):
         try:
             get_ip_address(self.nic_lb.current())
-            self.nic_disabled.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+            self.nic_disabled.setFlags(_snack.FLAG_DISABLED,
+                                       _snack.FLAGS_RESET)
         except:
             self.nic_disabled.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         return
@@ -277,13 +281,15 @@ class NodeConfigScreen():
 
     def dns_host1_callback(self):
         warn = 0
-        if not self.dns_host1.value() is None and not self.dns_host1.value() == "":
+        if (not self.dns_host1.value() is None and
+                    not self.dns_host1.value() == ""):
             if not is_valid_ipv4(self.dns_host1.value()):
                 if not is_valid_ipv6(self.dns_host1.value()):
                     warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.dns_host1.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -291,13 +297,15 @@ class NodeConfigScreen():
 
     def dns_host2_callback(self):
         warn = 0
-        if not self.dns_host2.value() is None and not self.dns_host2.value() == "":
+        if (not self.dns_host2.value() is None and
+                    not self.dns_host2.value() == ""):
             if not is_valid_ipv4(self.dns_host2.value()):
                 if not is_valid_ipv6(self.dns_host1.value()):
                     warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.dns_host2.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -305,14 +313,16 @@ class NodeConfigScreen():
 
     def ntp_host1_callback(self):
         warn = 0
-        if not self.ntp_host1.value() is None and not self.ntp_host1.value() == "":
+        if (not self.ntp_host1.value() is None and
+            not self.ntp_host1.value() == ""):
             if not is_valid_ipv4(self.ntp_host1.value()):
                 if not is_valid_ipv6(self.ntp_host1.value()):
                     if not is_valid_hostname(self.ntp_host1.value()):
                         warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.ntp_host1.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -320,14 +330,16 @@ class NodeConfigScreen():
 
     def ntp_host2_callback(self):
         warn = 0
-        if not self.ntp_host2.value() is None and not self.ntp_host2.value() == "":
+        if (not self.ntp_host2.value() is None and
+                    not self.ntp_host2.value() == ""):
             if not is_valid_ipv4(self.ntp_host2.value()):
                 if not is_valid_ipv6(self.ntp_host2.value()):
                     if not is_valid_hostname(self.ntp_host2.value()):
                         warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.ntp_host2.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -335,12 +347,14 @@ class NodeConfigScreen():
 
     def ipv4_ip_callback(self):
         warn = 0
-        if not self.ipv4_netdevip.value() is None and not self.ipv4_netdevip.value() == "":
+        if (not self.ipv4_netdevip.value() is None and
+                    not self.ipv4_netdevip.value() == ""):
             if not is_valid_ipv4(self.ipv4_netdevip.value()):
                 warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.ipv4_netdevip.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -348,12 +362,14 @@ class NodeConfigScreen():
 
     def ipv4_netmask_callback(self):
         warn = 0
-        if not self.ipv4_netdevmask.value() is None and not self.ipv4_netdevmask.value() == "":
+        if (not self.ipv4_netdevmask.value() is None and
+                    not self.ipv4_netdevmask.value() == ""):
             if not is_valid_ipv4(self.ipv4_netdevmask.value()):
                 warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.ipv4_netdevmask.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -361,12 +377,14 @@ class NodeConfigScreen():
 
     def ipv4_gateway_callback(self):
         warn = 0
-        if not self.ipv4_netdevgateway.value() is None and not self.ipv4_netdevgateway.value() == "":
+        if (not self.ipv4_netdevgateway.value() is None and
+                not self.ipv4_netdevgateway.value() == ""):
             if not is_valid_ipv4(self.ipv4_netdevgateway.value()):
                 warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.ipv4_netdevgateway.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -375,7 +393,8 @@ class NodeConfigScreen():
     def ipv4_disabled_callback(self):
         if self.disabled_ipv4_nic_proto.value() == 1:
             flag = _snack.FLAGS_SET
-            for i in self.ipv4_netdevip, self.ipv4_netdevmask, self.ipv4_netdevgateway:
+            for i in (self.ipv4_netdevip, self.ipv4_netdevmask,
+                        self.ipv4_netdevgateway):
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.dhcp_ipv4_nic_proto.setValue(" 0")
                 self.static_ipv4_nic_proto.setValue(" 0")
@@ -383,7 +402,8 @@ class NodeConfigScreen():
     def ipv4_dhcp_callback(self):
         if self.dhcp_ipv4_nic_proto.value() == 1:
             flag = _snack.FLAGS_SET
-            for i in self.ipv4_netdevip, self.ipv4_netdevmask, self.ipv4_netdevgateway:
+            for i in (self.ipv4_netdevip, self.ipv4_netdevmask,
+                        self.ipv4_netdevgateway):
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.disabled_ipv4_nic_proto.setValue(" 0")
                 self.static_ipv4_nic_proto.setValue(" 0")
@@ -391,7 +411,8 @@ class NodeConfigScreen():
     def ipv4_static_callback(self):
         if self.static_ipv4_nic_proto.value() == 1:
             flag = _snack.FLAGS_RESET
-            for i in self.ipv4_netdevip, self.ipv4_netdevmask, self.ipv4_netdevgateway:
+            for i in (self.ipv4_netdevip, self.ipv4_netdevmask,
+                        self.ipv4_netdevgateway):
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.disabled_ipv4_nic_proto.setValue(" 0")
                 self.dhcp_ipv4_nic_proto.setValue(" 0")
@@ -399,7 +420,8 @@ class NodeConfigScreen():
     def ipv6_disabled_callback(self):
         if self.disabled_ipv6_nic_proto.value() == 1:
             flag = _snack.FLAGS_SET
-            for i in self.ipv6_netdevip, self.ipv6_netdevmask, self.ipv6_netdevgateway:
+            for i in (self.ipv6_netdevip, self.ipv6_netdevmask,
+                        self.ipv6_netdevgateway):
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.dhcp_ipv6_nic_proto.setValue(" 0")
                 self.static_ipv6_nic_proto.setValue(" 0")
@@ -408,7 +430,8 @@ class NodeConfigScreen():
     def ipv6_dhcp_callback(self):
         if self.dhcp_ipv6_nic_proto.value() == 1:
             flag = _snack.FLAGS_SET
-            for i in self.ipv6_netdevip, self.ipv6_netdevmask, self.ipv6_netdevgateway:
+            for i in (self.ipv6_netdevip, self.ipv6_netdevmask,
+                        self.ipv6_netdevgateway):
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.disabled_ipv6_nic_proto.setValue(" 0")
                 self.static_ipv6_nic_proto.setValue(" 0")
@@ -417,7 +440,8 @@ class NodeConfigScreen():
     def ipv6_static_callback(self):
         if self.static_ipv6_nic_proto.value() == 1:
             flag = _snack.FLAGS_RESET
-            for i in self.ipv6_netdevip, self.ipv6_netdevmask, self.ipv6_netdevgateway:
+            for i in (self.ipv6_netdevip, self.ipv6_netdevmask,
+                    self.ipv6_netdevgateway):
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.disabled_ipv6_nic_proto.setValue(" 0")
                 self.dhcp_ipv6_nic_proto.setValue(" 0")
@@ -426,7 +450,8 @@ class NodeConfigScreen():
     def ipv6_auto_callback(self):
         if self.auto_ipv6_nic_proto.value() == 1:
             flag = _snack.FLAGS_SET
-            for i in self.ipv6_netdevip, self.ipv6_netdevmask, self.ipv6_netdevgateway:
+            for i in (self.ipv6_netdevip, self.ipv6_netdevmask,
+                      self.ipv6_netdevgateway):
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.disabled_ipv6_nic_proto.setValue(" 0")
                 self.dhcp_ipv6_nic_proto.setValue(" 0")
@@ -434,12 +459,14 @@ class NodeConfigScreen():
 
     def ipv6_ip_callback(self):
         warn = 0
-        if not self.ipv6_netdevip.value() is None and not self.ipv6_netdevip.value() == "":
+        if (not self.ipv6_netdevip.value() is None and
+            not self.ipv6_netdevip.value() == ""):
             if not is_valid_ipv6(self.ipv6_netdevip.value()):
                 warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.ipv6_netdevip.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -447,7 +474,8 @@ class NodeConfigScreen():
 
     def ipv6_netmask_callback(self):
         warn = 0
-        if not self.ipv6_netdevmask.value() is None and not self.ipv6_netdevmask.value() == "":
+        if (not self.ipv6_netdevmask.value() is None and
+            not self.ipv6_netdevmask.value() == ""):
             try:
                 if not int(self.ipv6_netdevmask.value()) in range(1, 128):
                     warn = 1
@@ -455,7 +483,8 @@ class NodeConfigScreen():
                 warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IPv6 Netmask", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IPv6 Netmask",
+                               buttons=['Ok'])
             self.ipv6_netdevmask.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -463,12 +492,14 @@ class NodeConfigScreen():
 
     def ipv6_gateway_callback(self):
         warn = 0
-        if not self.ipv6_netdevgateway.value() is None and not self.ipv6_netdevgateway.value() == "":
+        if (not self.ipv6_netdevgateway.value() is None and
+                not self.ipv6_netdevgateway.value() == ""):
             if not is_valid_ipv6(self.ipv6_netdevgateway.value()):
                 warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP Address",
+                               buttons=['Ok'])
             self.ipv6_netdevgateway.set("")
             self.reset_screen_colors()
             self.gridform.draw()
@@ -478,20 +509,23 @@ class NodeConfigScreen():
         warn = 0
         try:
             if not self.netvlanid.value() == "":
-                if not int(self.netvlanid.value()) in range(1, 4095) or " " in self.netvlanid.value():
+                if (not int(self.netvlanid.value()) in range(1, 4095) or
+                    " " in self.netvlanid.value()):
                     warn = 1
         except:
             warn = 1
         finally:
             if warn == 1:
                 self._create_warn_screen()
-                ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid VLAN ID", buttons=['Ok'])
+                ButtonChoiceWindow(self.screen, "Configuration Check",
+                                   "Invalid VLAN ID", buttons=['Ok'])
                 self.reset_screen_colors()
                 self.gridform.draw()
                 self.netvlanid.set("")
 
     def password_check_callback(self):
-        resp, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
+        resp, msg = password_check(self.root_password_1.value(),
+                                   self.root_password_2.value())
         if self.__current_page == SNMP_PAGE:
             if len(self.root_password_1.value()) < 8:
                 self.root_password_1.set("")
@@ -505,7 +539,8 @@ class NodeConfigScreen():
     def valid_logrotate_max_size_callback(self):
         if not self.logrotate_max_size.value().isdigit():
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Log File Size", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Configuration Check",
+                               "Invalid Log File Size", buttons=['Ok'])
             self.reset_screen_colors()
             self.logrotate_max_size.set("1024")
             self.gridform.draw()
@@ -513,7 +548,8 @@ class NodeConfigScreen():
     def valid_syslog_port_callback(self):
         if not is_valid_port(self.syslog_port.value()):
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Port Number", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Configuration Check",
+                               "Invalid Port Number", buttons=['Ok'])
             self.reset_screen_colors()
             self.syslog_port.set("514")
             self.gridform.draw()
@@ -521,7 +557,8 @@ class NodeConfigScreen():
     def valid_syslog_server_callback(self):
         if not is_valid_host_or_ip(self.syslog_server.value()):
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname or Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Configuration Check",
+                               "Invalid Hostname or Address", buttons=['Ok'])
             self.reset_screen_colors()
             self.syslog_server.set("")
             self.gridform.draw()
@@ -529,13 +566,15 @@ class NodeConfigScreen():
     def kdump_nfs_callback(self):
         self.kdump_ssh_type.setValue(" 0")
         self.kdump_restore_type.setValue(" 0")
-        self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+        self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED,
+                                       _snack.FLAGS_RESET)
         self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
 
     def kdump_valid_nfs_callback(self):
         if not is_valid_nfs(self.kdump_nfs_config.value()):
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NFS Entry", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Configuration Check",
+                               "Invalid NFS Entry", buttons=['Ok'])
             self.reset_screen_colors()
             self.kdump_nfs_config.set("")
             self.gridform.draw()
@@ -544,12 +583,14 @@ class NodeConfigScreen():
         self.kdump_nfs_type.setValue(" 0")
         self.kdump_restore_type.setValue(" 0")
         self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-        self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
+        self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED,
+                                       _snack.FLAGS_RESET)
 
     def kdump_valid_ssh_callback(self):
         if not is_valid_user_host(self.kdump_ssh_config.value()):
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid SSH Entry", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Configuration Check",
+                               "Invalid SSH Entry", buttons=['Ok'])
             self.reset_screen_colors()
             self.kdump_ssh_config.set("")
             self.gridform.draw()
@@ -563,7 +604,9 @@ class NodeConfigScreen():
     def valid_netconsole_server_callback(self):
         if not is_valid_host_or_ip(self.netconsole_server.value()):
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Hostname or Address", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Configuration Check",
+                               "Invalid NetConsole Hostname or Address",
+                               buttons=['Ok'])
             self.reset_screen_colors()
             self.netconsole_server.set("")
             self.gridform.draw()
@@ -571,7 +614,8 @@ class NodeConfigScreen():
     def valid_netconsole_server_port_callback(self):
         if not is_valid_port(self.netconsole_server_port.value()):
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid NetConsole Server Port", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Configuration Check",
+                             "Invalid NetConsole Server Port", buttons=['Ok'])
             self.reset_screen_colors()
             self.netconsole_server_port.set("6666")
             self.gridform.draw()
@@ -580,7 +624,8 @@ class NodeConfigScreen():
         if not self.net_hostname.value() == "":
             if not is_valid_hostname(self.net_hostname.value()):
                 self._create_warn_screen()
-                ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid Hostname", buttons=['Ok'])
+                ButtonChoiceWindow(self.screen, "Configuration Check",
+                                   "Invalid Hostname", buttons=['Ok'])
                 self.reset_screen_colors()
                 self.net_hostname.set("localhost")
                 self.gridform.draw()
@@ -589,10 +634,12 @@ class NodeConfigScreen():
         if not self.iscsi_initiator_config.value() == "":
             if not is_valid_iqn(self.iscsi_initiator_config.value()):
                 self._create_warn_screen()
-                ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid IQN Format", buttons=['Ok'])
+                ButtonChoiceWindow(self.screen, "Configuration Check",
+                                   "Invalid IQN Format", buttons=['Ok'])
                 self.reset_screen_colors()
                 self.gridform.draw()
-                self.iscsi_initiator_config.set("iqn.1994-05.com.example:1234567890")
+                self.iscsi_initiator_config.set(
+                            "iqn.1994-05.com.example:1234567890")
                 self.gridform.draw()
 
     def valid_fqdn_or_ipv4(self):
@@ -618,7 +665,8 @@ class NodeConfigScreen():
                     warn = 1
         if warn == 1:
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid IP/Hostname", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Network", "Invalid IP/Hostname",
+                               buttons=['Ok'])
             self.reset_screen_colors()
             self.gridform.draw()
         return
@@ -628,7 +676,8 @@ class NodeConfigScreen():
         elements = Grid(1, 3)
         pw_elements = Grid(2, 2)
         pad = 34 - len(os.uname()[1]) / 2
-        elements.setField(Label("Unlock " + os.uname()[1]), 0, 0, padding=(pad - 3, 1, 0, 1))
+        elements.setField(Label("Unlock " + os.uname()[1]), 0, 0,
+                                padding=(pad - 3, 1, 0, 1))
         self.login_username = os.getlogin()
         self.login_password = Entry(15, "", password=1)
         pw_elements.setField(Label("Username: "), 0, 0, padding=(pad, 1, 0, 1))
@@ -652,13 +701,16 @@ class NodeConfigScreen():
                     interface = nic.get_property("INTERFACE")
                     logger.debug(interface)
                     if not interface == "lo":
-                        if has_ip_address(interface) or get_ipv6_address(interface):
+                        if has_ip_address(interface) or get_ipv6_address(
+                                                                interface):
                             ipv4_address = get_ip_address(interface)
                             try:
-                                ipv6_address, netmask = get_ipv6_address(interface)
+                                ipv6_address, netmask = get_ipv6_address(
+                                                                interface)
                             except:
                                 ipv6_address = ""
-                            self.network_status[interface] = (ipv4_address, ipv6_address)
+                            self.network_status[interface] = (ipv4_address,
+                                                              ipv6_address)
                 except:
                     pass
             # remove parent/bridge duplicates
@@ -669,10 +721,12 @@ class NodeConfigScreen():
                         del self.network_status[parent_dev]
             for key in sorted(self.network_status.iterkeys()):
                 ipv4_addr, ipv6_addr = self.network_status[key]
-                cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BOOTPROTO" % str(key)
+                cmd = ("/files/etc/sysconfig/network-scripts/" +
+                      "ifcfg-%s/BOOTPROTO") % str(key)
                 dev_bootproto = augtool_get(cmd)
                 if dev_bootproto is None:
-                    cmd = "/files/etc/sysconfig/network-scripts/ifcfg-br%s/BOOTPROTO" % str(key)
+                    cmd = ("/files/etc/sysconfig/network-scripts/" +
+                          "ifcfg-br%s/BOOTPROTO") % str(key)
                     dev_bootproto = augtool_get(cmd)
                     if dev_bootproto is None:
                         dev_bootproto = "Disabled"
@@ -684,9 +738,12 @@ class NodeConfigScreen():
                     else:
                         ipv4_addr = "(DHCP Failed)"
                 if "OVIRT_IPV6" in OVIRT_VARS and ipv6_addr != "":
-                        status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip(), ipv6_addr.strip())
+                        status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (
+                                        key.strip(), dev_bootproto.strip(),
+                                        ipv4_addr.strip(), ipv6_addr.strip())
                 else:
-                    status_text += "%1s: %5s %14s \n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip())
+                    status_text += "%1s: %5s %14s \n" % (key.strip(),
+                                    dev_bootproto.strip(), ipv4_addr.strip())
                 status_text.strip()
                 networking = TextboxReflowed(32, status_text, maxHeight=3)
                 networking.setText(status_text)
@@ -694,9 +751,11 @@ class NodeConfigScreen():
             logger.debug(self.network_status)
         else:
             networking = Textbox(25, 1, "Not Connected")
-        elements.setField(Label("Networking:"), 0, 0, anchorLeft=1, anchorTop=1)
+        elements.setField(Label("Networking:"), 0, 0, anchorLeft=1,
+                          anchorTop=1)
         elements.setField(networking, 1, 0, anchorLeft=1, padding=(4, 0, 0, 1))
-        elements.setField(Label("Logical Network   Device    MAC Address"), 1, 4, anchorLeft=1)
+        elements.setField(Label("Logical Network   Device    MAC Address"), 1,
+                                4, anchorLeft=1)
         networks = logical_to_physical_networks()
         if len(networks) >= 3:
             net_scroll = 1
@@ -709,21 +768,26 @@ class NodeConfigScreen():
             key = pad_or_trim(12, key)
             device = pad_or_trim(8, device)
             net_entry += " %1s %6s  %9s\n" % (key, device, mac)
-        elements.setField(self.network_list, 1, 5, anchorLeft=1, padding=(4, 0, 0, 1))
+        elements.setField(self.network_list, 1, 5, anchorLeft=1,
+                          padding=(4, 0, 0, 1))
         self.network_list.setText(net_entry)
         logging_status_text = ""
         if not get_rsyslog_config() is None:
             host, port = get_rsyslog_config()
             logging_status_text += "Rsyslog: %s:%s\n" % (host, port)
-        netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGADDR")
-        netconsole_server_port = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGPORT")
+        netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/" +
+                                        "SYSLOGADDR")
+        netconsole_server_port = augtool_get("/files/etc/sysconfig/" +
+                                             "netconsole/SYSLOGPORT")
         if netconsole_server and netconsole_server_port:
-            logging_status_text += "Netconsole: %s:%s" % (netconsole_server, netconsole_server_port)
+            logging_status_text += "Netconsole: %s:%s" % (netconsole_server,
+                                                netconsole_server_port)
         if len(logging_status_text) == 0:
             logging_status_text = "Local Only"
         logging_status = Textbox(45, 2, logging_status_text)
         elements.setField(Label("Logs:"), 0, 6, anchorLeft=1)
-        elements.setField(logging_status, 1, 6, anchorLeft=1, padding=(4, 0, 0, 0))
+        elements.setField(logging_status, 1, 6, anchorLeft=1,
+                          padding=(4, 0, 0, 0))
         try:
             conn = libvirt.openReadOnly(None)
             self.dom_count = conn.numOfDomains()
@@ -738,15 +802,19 @@ class NodeConfigScreen():
         hwvirt_msg = get_virt_hw_status()
         if not hwvirt_msg is "":
             self.hwvirt = Textbox(50, 1, hwvirt_msg)
-            main_grid.setField(self.hwvirt, 0, 3, anchorLeft=1, padding=(0, 1, 0, 0))
+            main_grid.setField(self.hwvirt, 0, 3, anchorLeft=1,
+                               padding=(0, 1, 0, 0))
         else:
-            main_grid.setField(running_vms_grid, 0, 3, anchorLeft=1, padding=(0, 0, 0, 0))
+            main_grid.setField(running_vms_grid, 0, 3, anchorLeft=1,
+                               padding=(0, 0, 0, 0))
 
         help_text = Textbox(62, 1, "Press F8 For Support Menu")
-        main_grid.setField(help_text, 0, 4, anchorLeft=1, padding=(0, 0, 0, 0))
+        main_grid.setField(help_text, 0, 4, anchorLeft=1,
+                           padding=(0, 0, 0, 0))
 
         self.ssh_hostkey_btn = CompactButton("View Host Key")
-        main_grid.setField(self.ssh_hostkey_btn, 0, 5, anchorLeft=1, padding=(1, 1, 0, 0))
+        main_grid.setField(self.ssh_hostkey_btn, 0, 5, anchorLeft=1,
+                           padding=(1, 1, 0, 0))
 
         return [Label(""), main_grid]
 
@@ -757,24 +825,31 @@ class NodeConfigScreen():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft=1)
         logrotate_grid = Grid(2, 2)
-        logrotate_grid.setField(Label("  Logrotate Max Log Size (KB): "), 0, 0, anchorLeft=1)
+        logrotate_grid.setField(Label("  Logrotate Max Log Size (KB): "), 0,
+                                      0, anchorLeft=1)
         self.logrotate_max_size = Entry(5, "", scroll=0)
-        self.logrotate_max_size.setCallback(self.valid_logrotate_max_size_callback)
+        self.logrotate_max_size.setCallback(
+                        self.valid_logrotate_max_size_callback)
         logrotate_grid.setField(self.logrotate_max_size, 1, 0, anchorLeft=1)
         current_logrotate_size = get_logrotate_size()
         self.logrotate_max_size.set(current_logrotate_size)
-        elements.setField(logrotate_grid, 0, 1, anchorLeft=1, padding=(0, 1, 0, 0))
+        elements.setField(logrotate_grid, 0, 1, anchorLeft=1,
+                          padding=(0, 1, 0, 0))
         elements.setField(Label(" "), 0, 2, anchorLeft=1)
-        elements.setField(Textbox(45, 2, "Rsyslog is an enhanced multi-threaded syslogd"), 0, 3, anchorLeft=1)
+        elements.setField(Textbox(45, 2, "Rsyslog is an enhanced " +
+                                 "multi-threaded syslogd"), 0, 3, anchorLeft=1)
         rsyslog_grid = Grid(2, 2)
         rsyslog_grid.setField(Label("  Server Address:"), 0, 0, anchorLeft=1)
         self.syslog_server = Entry(25, "")
         self.syslog_server.setCallback(self.valid_syslog_server_callback)
-        rsyslog_grid.setField(self.syslog_server, 1, 0, anchorLeft=1, padding=(2, 0, 0, 1))
+        rsyslog_grid.setField(self.syslog_server, 1, 0, anchorLeft=1,
+                              padding=(2, 0, 0, 1))
         self.syslog_port = Entry(6, "", scroll=0)
         self.syslog_port.setCallback(self.valid_syslog_port_callback)
-        rsyslog_grid.setField(Label("  Server Port:"), 0, 1, anchorLeft=1, padding=(0, 0, 0, 1))
-        rsyslog_grid.setField(self.syslog_port, 1, 1, anchorLeft=1, padding=(2, 0, 0, 1))
+        rsyslog_grid.setField(Label("  Server Port:"), 0, 1, anchorLeft=1,
+                              padding=(0, 0, 0, 1))
+        rsyslog_grid.setField(self.syslog_port, 1, 1, anchorLeft=1,
+                              padding=(2, 0, 0, 1))
         rsyslog_config = get_rsyslog_config()
         logger.debug(rsyslog_config)
         if not rsyslog_config is None:
@@ -784,19 +859,30 @@ class NodeConfigScreen():
         else:
             self.syslog_port.set("514")
         elements.setField(rsyslog_grid, 0, 4, anchorLeft=1)
-        elements.setField(Textbox(48, 3, "Netconsole service allows a remote syslog daemon\nto record kernel printk() messages"), 0, 5, anchorLeft=1, padding=(0, 0, 0, 0))
+        elements.setField(Textbox(48, 3, "Netconsole service allows a " +
+                          "remote syslog daemon\nto record kernel printk() " +
+                          "messages"), 0, 5, anchorLeft=1,
+                          padding=(0, 0, 0, 0))
         netconsole_grid = Grid(2, 2)
-        netconsole_grid.setField(Label("  Server Address:"), 0, 0, anchorLeft=1)
+        netconsole_grid.setField(Label("  Server Address:"), 0, 0,
+                                       anchorLeft=1)
         self.netconsole_server = Entry(25, "")
-        self.netconsole_server.setCallback(self.valid_netconsole_server_callback)
+        self.netconsole_server.setCallback(
+                        self.valid_netconsole_server_callback)
         netconsole_grid.setField(Label("  Server Port:"), 0, 1, anchorLeft=1)
         self.netconsole_server_port = Entry(5, "", scroll=0)
-        self.netconsole_server_port.setCallback(self.valid_netconsole_server_port_callback)
-        netconsole_grid.setField(self.netconsole_server, 1, 0, anchorLeft=1, padding=(2, 0, 0, 1))
-        netconsole_grid.setField(self.netconsole_server_port, 1, 1, anchorLeft=1, padding=(2, 0, 0, 0))
-        elements.setField(netconsole_grid, 0, 6, anchorLeft=1, padding=(0, 0, 0, 1))
-        netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGADDR")
-        netconsole_server_port = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGPORT")
+        self.netconsole_server_port.setCallback(
+                        self.valid_netconsole_server_port_callback)
+        netconsole_grid.setField(self.netconsole_server, 1, 0, anchorLeft=1,
+                                 padding=(2, 0, 0, 1))
+        netconsole_grid.setField(self.netconsole_server_port, 1, 1,
+                                 anchorLeft=1, padding=(2, 0, 0, 0))
+        elements.setField(netconsole_grid, 0, 6, anchorLeft=1,
+                          padding=(0, 0, 0, 1))
+        netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/" +
+                                        "SYSLOGADDR")
+        netconsole_server_port = augtool_get("/files/etc/sysconfig/" +
+                                             "netconsole/SYSLOGPORT")
         if netconsole_server is None:
             self.netconsole_server.set("")
         else:
@@ -814,17 +900,20 @@ class NodeConfigScreen():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft=1)
         pw_elements = Grid(3, 3)
-        self.current_ssh_pwd_status = augtool_get("/files/etc/ssh/sshd_config/PasswordAuthentication")
+        self.current_ssh_pwd_status = augtool_get("/files/etc/ssh/" +
+                                      "sshd_config/PasswordAuthentication")
         if self.current_ssh_pwd_status == "yes":
             self.current_ssh_pwd_status = 1
         else:
             self.current_ssh_pwd_status = 0
-        self.ssh_passwd_status = Checkbox("Enable ssh password authentication", isOn=self.current_ssh_pwd_status)
+        self.ssh_passwd_status = Checkbox("Enable ssh password authentication",
+                                          isOn=self.current_ssh_pwd_status)
         elements.setField(self.ssh_passwd_status, 0, 1, anchorLeft=1)
         local_heading = Label("Local Access")
         if is_console():
             local_heading.setColors(customColorset(1))
-        elements.setField(local_heading, 0, 3, anchorLeft=1, padding=(0, 2, 0, 0))
+        elements.setField(local_heading, 0, 3, anchorLeft=1,
+                          padding=(0, 2, 0, 0))
         elements.setField(Label(" "), 0, 6)
         pw_elements.setField(Label("Password: "), 0, 1, anchorLeft=1)
         pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft=1)
@@ -846,20 +935,23 @@ class NodeConfigScreen():
         self.heading = Label("System Identification")
         grid.setField(self.heading, 0, 1, anchorLeft=1)
         hostname_grid = Grid(2, 2)
-        hostname_grid.setField(Label("Hostname: "), 0, 1, anchorLeft=1, padding=(0, 0, 4, 0))
+        hostname_grid.setField(Label("Hostname: "), 0, 1, anchorLeft=1,
+                               padding=(0, 0, 4, 0))
         self.current_hostname = os.uname()[1]
         hostname = os.uname()[1]
         self.net_hostname = Entry(35, hostname)
         self.network_config_fields += [self.net_hostname]
         self.net_hostname.setCallback(self.valid_hostname_callback)
         self.ntp_dhcp = 0
-        hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft=1, padding=(0, 0, 0, 0))
+        hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft=1,
+                               padding=(0, 0, 0, 0))
         grid.setField(hostname_grid, 0, 3, anchorLeft=1)
         dns_grid = Grid(2, 2)
         self.dns_host1 = Entry(25)
         self.network_config_fields += [self.dns_host1]
         self.dns_host1.setCallback(self.dns_host1_callback)
-        self.current_dns_host1 = augtool_get("/files/etc/resolv.conf/nameserver[1]")
+        self.current_dns_host1 = augtool_get("/files/etc/resolv.conf/" +
+                                             "nameserver[1]")
         if self.current_dns_host1:
             self.dns_host1.set(self.current_dns_host1)
         else:
@@ -867,7 +959,8 @@ class NodeConfigScreen():
         self.dns_host2 = Entry(25)
         self.network_config_fields += [self.dns_host2]
         self.dns_host2.setCallback(self.dns_host2_callback)
-        self.current_dns_host2 = augtool_get("/files/etc/resolv.conf/nameserver[2]")
+        self.current_dns_host2 = augtool_get("/files/etc/resolv.conf" +
+                                             "/nameserver[2]")
         if self.current_dns_host2:
             self.dns_host2.set(self.current_dns_host2)
         else:
@@ -906,26 +999,32 @@ class NodeConfigScreen():
         else:
             self.nic_lb = Listbox(height=5, width=56, returnExit=1, scroll=0)
         for key in sorted(self.nic_dict.iterkeys()):
-            dev_interface, dev_bootproto, dev_vendor, dev_address, dev_driver, dev_conf_status, dev_bridge = self.nic_dict[key].split(",", 6)
+            (dev_interface, dev_bootproto, dev_vendor, dev_address,
+            dev_driver, dev_conf_status, dev_bridge) = (
+                    self.nic_dict[key].split(",", 6))
             dev_vendor = pad_or_trim(10, dev_vendor)
             dev_interface = pad_or_trim(6, dev_interface)
-            nic_option = '%2s %13s %10s %19s\n' % (dev_interface, dev_conf_status, dev_vendor, dev_address)
+            nic_option = '%2s %13s %10s %19s\n' % (dev_interface,
+                        dev_conf_status, dev_vendor, dev_address)
             self.nic_lb.append(nic_option, dev_interface.strip())
         NIC_LABEL = Label("Device  Status          Model     MAC Address")
         grid.setField(NIC_LABEL, 0, 11, (0, 0, 0, 0), anchorLeft=1)
         grid.setField(self.nic_lb, 0, 12)
         if os.path.exists("/etc/sysconfig/network-scripts/ifcfg-rhevm"):
-            for item in self.dns_host1, self.dns_host2, self.ntp_host1, self.ntp_host2:
+            for item in (self.dns_host1, self.dns_host2, self.ntp_host1,
+                        self.ntp_host2):
                 item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
             self.heading.setText("Managed by RHEV-M (Read Only)")
         if self.ntp_dhcp == 1:
             for item in self.ntp_host1, self.ntp_host2:
                 item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
 
-        self.original_system_network_config = self.get_tui_field_network_config()
+        self.original_system_network_config = (
+                    self.get_tui_field_network_config())
         if (hasattr(self, "preset_network_config")
             and self.preset_network_config is not None):
-            for field, value in zip(self.network_config_fields, self.preset_network_config):
+            for field, value in zip(self.network_config_fields,
+                                    self.preset_network_config):
                 field.set(value)
             self.preset_network_config = None
 
@@ -938,20 +1037,33 @@ class NodeConfigScreen():
         else:
             link_status = "Inactive"
         dev = self.nic_lb.current()
-        interface, bootproto, vendor, address, driver, conf_status, dev_bridge = self.nic_dict[dev].split(",", 6)
+        (interface, bootproto, vendor, address, driver, conf_status,
+                dev_bridge) = self.nic_dict[dev].split(",", 6)
         nic_detail_grid = Grid(6, 10)
-        nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft=1, padding=(0, 0, 1, 0))
-        nic_detail_grid.setField(Label("Protocol:    "), 0, 2, anchorLeft=1, padding=(0, 0, 1, 0))
-        nic_detail_grid.setField(Label("Link Status: "), 0, 3, anchorLeft=1, padding=(0, 0, 1, 0))
-        nic_detail_grid.setField(Label("Driver:      "), 3, 1, anchorLeft=1, padding=(0, 0, 1, 0))
-        nic_detail_grid.setField(Label("Vendor:      "), 3, 2, anchorLeft=1, padding=(0, 0, 1, 0))
-        nic_detail_grid.setField(Label("MAC Address: "), 3, 3, anchorLeft=1, padding=(0, 0, 1, 0))
-        nic_detail_grid.setField(Label(interface), 1, 1, anchorLeft=1, padding=(0, 0, 5, 0))
-        nic_detail_grid.setField(Label(bootproto), 1, 2, anchorLeft=1, padding=(0, 0, 5, 0))
-        nic_detail_grid.setField(Label(link_status), 1, 3, anchorLeft=1, padding=(0, 0, 5, 0))
-        nic_detail_grid.setField(Label(driver), 4, 1, anchorLeft=1, padding=(0, 0, 0, 0))
-        nic_detail_grid.setField(Label(vendor), 4, 2, anchorLeft=1, padding=(0, 0, 0, 0))
-        nic_detail_grid.setField(Label(address), 4, 3, anchorLeft=1, padding=(0, 0, 0, 0))
+        nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft=1,
+                                 padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Protocol:    "), 0, 2, anchorLeft=1,
+                                 padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Link Status: "), 0, 3, anchorLeft=1,
+                                 padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Driver:      "), 3, 1, anchorLeft=1,
+                                 padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Vendor:      "), 3, 2, anchorLeft=1,
+                                 padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("MAC Address: "), 3, 3, anchorLeft=1,
+                                 padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label(interface), 1, 1, anchorLeft=1,
+                                 padding=(0, 0, 5, 0))
+        nic_detail_grid.setField(Label(bootproto), 1, 2, anchorLeft=1,
+                                 padding=(0, 0, 5, 0))
+        nic_detail_grid.setField(Label(link_status), 1, 3, anchorLeft=1,
+                                 padding=(0, 0, 5, 0))
+        nic_detail_grid.setField(Label(driver), 4, 1, anchorLeft=1,
+                                 padding=(0, 0, 0, 0))
+        nic_detail_grid.setField(Label(vendor), 4, 2, anchorLeft=1,
+                                 padding=(0, 0, 0, 0))
+        nic_detail_grid.setField(Label(address), 4, 3, anchorLeft=1,
+                                 padding=(0, 0, 0, 0))
         grid.setField(nic_detail_grid, 0, 1)
         ipv4_main_grid = Grid(6, 8)
         self.disabled_ipv4_nic_proto = Checkbox("Disabled ")
@@ -967,9 +1079,11 @@ class NodeConfigScreen():
         else:
             self.disabled_ipv4_nic_proto.setValue("*")
         ipv4_proto_grid = Grid(6, 1)
-        ipv4_proto_grid.setField(self.disabled_ipv4_nic_proto, 0, 0, anchorLeft=1)
+        ipv4_proto_grid.setField(self.disabled_ipv4_nic_proto, 0, 0,
+                                 anchorLeft=1)
         ipv4_proto_grid.setField(self.dhcp_ipv4_nic_proto, 2, 0, anchorLeft=1)
-        ipv4_proto_grid.setField(self.static_ipv4_nic_proto, 4, 0, anchorLeft=1)
+        ipv4_proto_grid.setField(self.static_ipv4_nic_proto, 4, 0,
+                                 anchorLeft=1)
         ipv4_main_grid.setField(Label("IPv4 Settings"), 0, 0, anchorLeft=1)
         ipv4_main_grid.setField(ipv4_proto_grid, 0, 2, anchorLeft=1)
         self.ipv4_netdevip = Entry(16, "", scroll=0)
@@ -1023,15 +1137,19 @@ class NodeConfigScreen():
         self.static_ipv6_nic_proto.setCallback(self.ipv6_static_callback)
         self.auto_ipv6_nic_proto = Checkbox("Auto")
         self.auto_ipv6_nic_proto.setCallback(self.ipv6_auto_callback)
-        ipv6_autoconf_lookup_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/IPV6_AUTOCONF" % self.nic_lb.current()
+        ipv6_autoconf_lookup_cmd = ("/files/etc/sysconfig/network-scripts/" +
+                        "ifcfg-%s/IPV6_AUTOCONF") % self.nic_lb.current()
         ipv6_autoconf = augtool_get(ipv6_autoconf_lookup_cmd)
         if ipv6_autoconf is None:
-            ipv6_autoconf_lookup_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-br%s/IPV6_AUTOCONF" % self.nic_lb.current()
+            ipv6_autoconf_lookup_cmd = ("/files/etc/sysconfig/network-" +
+                   "scripts/ifcfg-br%s/IPV6_AUTOCONF") % self.nic_lb.current()
             ipv6_autoconf = augtool_get(ipv6_autoconf_lookup_cmd)
-        ipv6_dhcp_lookup_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/DHCPV6C" % self.nic_lb.current()
+        ipv6_dhcp_lookup_cmd = ("/files/etc/sysconfig/network-scripts/" +
+                                "ifcfg-%s/DHCPV6C") % self.nic_lb.current()
         ipv6_dhcp = augtool_get(ipv6_dhcp_lookup_cmd)
         if ipv6_dhcp is None:
-            ipv6_dhcp_lookup_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-br%s/DHCPV6C" % self.nic_lb.current()
+            ipv6_dhcp_lookup_cmd = ("/files/etc/sysconfig/network-scripts/" +
+                                 "ifcfg-br%s/DHCPV6C") % self.nic_lb.current()
             ipv6_dhcp = augtool_get(ipv6_dhcp_lookup_cmd)
         ipv6_bootproto = ""
         if ipv6_autoconf == "yes":
@@ -1045,9 +1163,11 @@ class NodeConfigScreen():
         else:
             self.disabled_ipv6_nic_proto.setValue("*")
         ipv6_proto_grid = Grid(6, 1)
-        ipv6_proto_grid.setField(self.disabled_ipv6_nic_proto, 0, 0, anchorLeft=1)
+        ipv6_proto_grid.setField(self.disabled_ipv6_nic_proto, 0, 0,
+                                 anchorLeft=1)
         ipv6_proto_grid.setField(self.dhcp_ipv6_nic_proto, 1, 0, anchorLeft=1)
-        ipv6_proto_grid.setField(self.static_ipv6_nic_proto, 2, 0, anchorLeft=1)
+        ipv6_proto_grid.setField(self.static_ipv6_nic_proto, 2, 0,
+                                 anchorLeft=1)
         ipv6_proto_grid.setField(self.auto_ipv6_nic_proto, 3, 0, anchorLeft=1)
         ipv6_main_grid.setField(Label("IPv6 Settings"), 0, 0, anchorLeft=1)
         ipv6_main_grid.setField(ipv6_proto_grid, 0, 2, anchorLeft=1)
@@ -1061,13 +1181,15 @@ class NodeConfigScreen():
             self.ipv6_netdevip.set(OVIRT_VARS["OVIRT_IPV6_ADDRESS"])
         else:
             try:
-                current_ip, current_netmask = get_ipv6_address(self.nic_lb.current())
+                current_ip, current_netmask = get_ipv6_address(
+                                                   self.nic_lb.current())
             except:
                 current_ip = ""
                 current_netmask = ""
             if current_ip == "":
                 try:
-                    current_ip, current_netmask = get_ipv6_address("br" + self.nic_lb.current())
+                    current_ip, current_netmask = get_ipv6_address("br" +
+                                                self.nic_lb.current())
                 except:
                     pass
             if current_ip != "":
@@ -1119,15 +1241,21 @@ class NodeConfigScreen():
         grid.setField(vlan_grid, 0, 9, anchorLeft=1)
         # disable all items if registered to rhevm server
         if os.path.exists("/etc/sysconfig/network-scripts/ifcfg-rhevm"):
-            for item in self.disabled_ipv4_nic_proto, self.dhcp_ipv4_nic_proto, self.static_ipv4_nic_proto, \
-                self.ipv4_netdevip, self.ipv4_netdevmask, self.ipv4_netdevgateway, self.disabled_ipv6_nic_proto, \
-                self.dhcp_ipv6_nic_proto, self.static_ipv6_nic_proto, self.auto_ipv6_nic_proto, \
-                self.ipv6_netdevip, self.ipv6_netdevmask, self.ipv6_netdevgateway, self.netvlanid:
+            for item in (self.disabled_ipv4_nic_proto,
+                         self.dhcp_ipv4_nic_proto, self.static_ipv4_nic_proto,
+                         self.ipv4_netdevip, self.ipv4_netdevmask,
+                         self.ipv4_netdevgateway, self.disabled_ipv6_nic_proto,
+                         self.dhcp_ipv6_nic_proto, self.static_ipv6_nic_proto,
+                         self.auto_ipv6_nic_proto, self.ipv6_netdevip,
+                         self.ipv6_netdevmask, self.ipv6_netdevgateway,
+                         self.netvlanid):
                 item.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         try:
-            current_ip = get_ipv6_address("br" + self.nic_lb.current()).split("\n")
+            current_ip = get_ipv6_address("br" +
+                            self.nic_lb.current()).split("\n")
             if current_ip == "":
-                current_ip = get_ipv6_address(self.nic_lb.current()).split("\n")
+                current_ip = get_ipv6_address(
+                                   self.nic_lb.current()).split("\n")
             if current_ip != "":
                 if len(current_ip) > 1:
                     current_ip = current_ip[0]
@@ -1155,12 +1283,14 @@ class NodeConfigScreen():
                 if "createUser" in line:
                     self.current_snmp_status = 1
             f.close()
-        self.snmp_status = Checkbox("Enable SNMP", isOn=self.current_snmp_status)
+        self.snmp_status = Checkbox("Enable SNMP",
+                                    isOn=self.current_snmp_status)
         elements.setField(self.snmp_status, 0, 1, anchorLeft=1)
         local_heading = Label("SNMP Password")
         if is_console():
             local_heading.setColors(customColorset(1))
-        elements.setField(local_heading, 0, 3, anchorLeft=1, padding=(0, 2, 0, 0))
+        elements.setField(local_heading, 0, 3, anchorLeft=1,
+                          padding=(0, 2, 0, 0))
         elements.setField(Label(" "), 0, 6)
         pw_elements.setField(Label("Password: "), 0, 1, anchorLeft=1)
         pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft=1)
@@ -1203,7 +1333,8 @@ class NodeConfigScreen():
         except:
             pass
         elements.setField(heading, 0, 0, anchorLeft=1)
-        elements.setField(self.kb_list, 0, 1, anchorLeft=1, padding=(1, 1, 0, 3))
+        elements.setField(self.kb_list, 0, 1, anchorLeft=1,
+                          padding=(1, 1, 0, 3))
         return [Label(""), elements]
 
     def kdump_configuration_page(self, screen):
@@ -1213,7 +1344,8 @@ class NodeConfigScreen():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft=1)
         if not network_up():
-            elements.setField(Label(" * Network Down, Configuration Disabled * "), 0, 1, anchorLeft=1)
+            elements.setField(Label(" * Network Down, Configuration " +
+                              "Disabled * "), 0, 1, anchorLeft=1)
         else:
             elements.setField(Label(" "), 0, 1, anchorLeft=1)
         kdump_type_grid = Grid(5, 2)
@@ -1228,15 +1360,18 @@ class NodeConfigScreen():
         kdump_type_grid.setField(self.kdump_restore_type, 2, 0, anchorLeft=1)
         elements.setField(kdump_type_grid, 0, 2, anchorLeft=1)
         elements.setField(Label(" "), 0, 3, anchorLeft=1)
-        elements.setField(Label("NFS Location (example.redhat.com:/var/crash):"), 0, 4, anchorLeft=1)
+        elements.setField(Label("NFS Location (example.redhat.com:" +
+                          "/var/crash):"), 0, 4, anchorLeft=1)
         self.kdump_nfs_config = Entry(30, "")
         self.kdump_nfs_config.setCallback(self.kdump_valid_nfs_callback)
         elements.setField(self.kdump_nfs_config, 0, 5, anchorLeft=1)
         elements.setField(Label(" "), 0, 6, anchorLeft=1)
-        elements.setField(Label("SSH Location (root@example.redhat.com)"), 0, 7, anchorLeft=1)
+        elements.setField(Label("SSH Location (root@example.redhat.com)"), 0,
+                          7, anchorLeft=1)
         self.kdump_ssh_config = Entry(30, "")
         self.kdump_ssh_config.setCallback(self.kdump_valid_ssh_callback)
-        elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft=1, padding=(0, 0, 0, 6))
+        elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft=1,
+                          padding=(0, 0, 0, 6))
         try:
             kdump_config_file = open("/etc/kdump.conf")
             for line in kdump_config_file:
@@ -1246,37 +1381,51 @@ class NodeConfigScreen():
                         if "@" in line:
                             self.kdump_ssh_type.setValue("*")
                             self.kdump_ssh_config.set(line.strip())
-                            self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+                            self.kdump_nfs_config.setFlags(
+                                    _snack.FLAG_DISABLED, _snack.FLAGS_SET)
                         elif ":" in line:
                             self.kdump_nfs_type.setValue("*")
                             self.kdump_nfs_config.set(line.strip())
-                            self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+                            self.kdump_ssh_config.setFlags(
+                                    _snack.FLAG_DISABLED, _snack.FLAGS_SET)
                     elif "/dev/HostVG/Data" in line:
                         self.kdump_restore_type.setValue("*")
             kdump_config_file.close()
         except:
             pass
         if not network_up():
-            self.kdump_nfs_type.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-            self.kdump_ssh_type.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-            self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-            self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+            self.kdump_nfs_type.setFlags(_snack.FLAG_DISABLED,
+                                         _snack.FLAGS_SET)
+            self.kdump_ssh_type.setFlags(_snack.FLAG_DISABLED,
+                                         _snack.FLAGS_SET)
+            self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED,
+                                           _snack.FLAGS_SET)
+            self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED,
+                                           _snack.FLAGS_SET)
         return [Label(""), elements]
 
     def support_page(self, screen):
         logger.info("Loading Support Page")
         elements = Grid(2, 8)
-        elements.setField(Label(" View Log Files "), 0, 1, anchorLeft=1, padding=(0, 1, 0, 1))
-        self.log_menu_list = Listbox(5, width=40, returnExit=1, border=0, showCursor=0, scroll=0)
-        self.log_menu_list.append(" oVirt Log (ovirt.log)", "/var/log/ovirt.log")
-        self.log_menu_list.append(" System Messages (messages)", "/var/log/messages")
+        elements.setField(Label(" View Log Files "), 0, 1, anchorLeft=1,
+                                padding=(0, 1, 0, 1))
+        self.log_menu_list = Listbox(5, width=40, returnExit=1, border=0,
+                                     showCursor=0, scroll=0)
+        self.log_menu_list.append(" oVirt Log (ovirt.log)",
+                                  "/var/log/ovirt.log")
+        self.log_menu_list.append(" System Messages (messages)",
+                                  "/var/log/messages")
         self.log_menu_list.append(" Security Log (secure)", "/var/log/secure")
         if os.path.exists("/var/log/vdsm/vdsm.log"):
-            self.log_menu_list.append(" VDSM Log (vdsm.log)", "/var/log/vdsm/vdsm.log")
+            self.log_menu_list.append(" VDSM Log (vdsm.log)",
+                                      "/var/log/vdsm/vdsm.log")
         if os.path.exists("/var/log/vdsm-reg/vdsm-reg.log"):
-            self.log_menu_list.append(" VDSM Registration Log (vdsm-reg.log)", "/var/log/vdsm-reg/vdsm-reg.log")
-        elements.setField(self.log_menu_list, 0, 2, anchorLeft=1, padding=(0, 0, 0, 6))
-        elements.setField(Label(" After viewing press \"q\" to quit "), 0, 3, anchorLeft=1, padding=(0, 1, 0, 0))
+            self.log_menu_list.append(" VDSM Registration Log (vdsm-reg.log)",
+                                      "/var/log/vdsm-reg/vdsm-reg.log")
+        elements.setField(self.log_menu_list, 0, 2, anchorLeft=1,
+                          padding=(0, 0, 0, 6))
+        elements.setField(Label(" After viewing press \"q\" to quit "), 0,
+                                3, anchorLeft=1, padding=(0, 1, 0, 0))
 
         return [Label(""), elements]
 
@@ -1290,7 +1439,8 @@ class NodeConfigScreen():
         elements.setField(Label("iSCSI Initiator Name:"), 0, 2, anchorLeft=1)
         self.iscsi_initiator_config = Entry(50, "")
         self.iscsi_initiator_config.setCallback(self.valid_iqn_callback)
-        elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft=1, padding=(0, 0, 0, 11))
+        elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft=1,
+                          padding=(0, 0, 0, 11))
         current_iscsi_initiator_name = get_current_iscsi_initiator_name()
         if current_iscsi_initiator_name is not None:
             self.iscsi_initiator_config.set(current_iscsi_initiator_name)
@@ -1322,9 +1472,11 @@ class NodeConfigScreen():
         if not self.ntp_host2.value() == "":
             ntp_servers += "," + self.ntp_host2.value()
         if not dns_servers == "":
-            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS", '"' + dns_servers + '"')
+            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS",
+                    '"' + dns_servers + '"')
         if not ntp_servers == "":
-            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP", '"' + ntp_servers + '"')
+            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP",
+                    '"' + ntp_servers + '"')
         aug.load()
 
         # Then apply the configuration
@@ -1333,10 +1485,12 @@ class NodeConfigScreen():
             network.remove_non_localhost()
             augtool("set", "/files/etc/sysconfig/network/HOSTNAME", "")
             system_closefds("hostname \"" + self.net_hostname.value() + "\"")
-        elif self.net_hostname.value() != self.current_hostname and is_valid_hostname(self.net_hostname.value()):
+        elif (self.net_hostname.value() != self.current_hostname and
+                is_valid_hostname(self.net_hostname.value())):
             network.remove_non_localhost()
             network.add_localhost_alias(self.net_hostname.value())
-            augtool("set", "/files/etc/sysconfig/network/HOSTNAME", self.net_hostname.value())
+            augtool("set", "/files/etc/sysconfig/network/HOSTNAME",
+                    self.net_hostname.value())
             system_closefds("hostname " + self.net_hostname.value())
         ovirt_store_config("/etc/sysconfig/network")
         ovirt_store_config("/etc/hosts")
@@ -1353,8 +1507,12 @@ class NodeConfigScreen():
         message = "Network Configuration may take a few moments, proceed?"
         if self.configured_nics > 0 and \
            "Unconfigured" in self.nic_dict[self.nic_lb.current()]:
-            message = "Network Configuration detected an already configured NIC the configuration for that NIC is going to be removed and the reconfiguration may take a few moments, proceed?"
-        warn = ButtonChoiceWindow(self.screen, "Confirm Network Settings", message)
+            message = ("Network Configuration detected an already " +
+                       "configured NIC the configuration for that NIC " +
+                       "is going to be removed and the reconfiguration " +
+                       "may take a few moments, proceed?")
+        warn = ButtonChoiceWindow(self.screen, "Confirm Network Settings",
+                                  message)
         self.reset_screen_colors()
         if warn == "ok":
             self._create_blank_screen()
@@ -1373,9 +1531,15 @@ class NodeConfigScreen():
                     msg += "  - IPv4 Netmask Address\n"
                 if self.ipv4_netdevgateway.value() == "":
                     msg = "  - IPv4 Gateway Address\n"
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                        "/OVIRT_IP_ADDRESS", '"' +
+                        self.ipv4_netdevip.value() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                        "/OVIRT_IP_NETMASK", '"' +
+                        self.ipv4_netdevmask.value() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                        "/OVIRT_IP_GATEWAY", '"' +
+                        self.ipv4_netdevgateway.value() + '"')
 
             if self.static_ipv6_nic_proto.value() == 1:
                 if self.ipv6_netdevmask.value() == "":
@@ -1386,11 +1550,13 @@ class NodeConfigScreen():
             if msg != "":
                 msg = "Please Input:\n" + msg
                 self._create_warn_screen()
-                warn = ButtonChoiceWindow(self.screen, "Network Settings", msg, buttons=['Ok'])
+                warn = ButtonChoiceWindow(self.screen, "Network Settings",
+                                          msg, buttons=['Ok'])
                 self.__nic_config_failed = 1
                 self.ipv4_current_netdevip = self.ipv4_netdevip.value()
                 self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
-                self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
+                self.ipv4_current_netdevgateway = (
+                    self.ipv4_netdevgateway.value())
                 self.reset_screen_colors()
                 return
             else:
@@ -1424,16 +1590,21 @@ class NodeConfigScreen():
             if self.netvlanid.value() == "":
                 augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", "")
             if self.disabled_ipv4_nic_proto.value() == 1:
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '-DISABLED"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '-DISABLED"')
             else:
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                        "/OVIRT_BOOTIF", '"' + self.nic_lb.current() + '"')
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", "")
-            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", "")
-            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", "")
-            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", "")
+            augtool("rm", "/files/" + OVIRT_DEFAULTS +
+                    "/OVIRT_IPV6_ADDRESS", "")
+            augtool("rm", "/files/" + OVIRT_DEFAULTS +
+                    "/OVIRT_IPV6_NETMASK", "")
+            augtool("rm", "/files/" + OVIRT_DEFAULTS +
+                    "/OVIRT_IPV6_GATEWAY", "")
 
             msg = ""
             if self.static_ipv4_nic_proto.value() == 1:
@@ -1443,9 +1614,15 @@ class NodeConfigScreen():
                     msg += "  - IPv4 Netmask Address\n"
                 if self.ipv4_netdevgateway.value() == "":
                     msg = "  - IPv4 Gateway Address\n"
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", '"' + self.ipv4_netdevip.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", '"' + self.ipv4_netdevmask.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", '"' + self.ipv4_netdevgateway.value() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                        "/OVIRT_IP_ADDRESS", '"' +
+                        self.ipv4_netdevip.value() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                        "/OVIRT_IP_NETMASK", '"' +
+                        self.ipv4_netdevmask.value() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS +
+                        "/OVIRT_IP_GATEWAY", '"' +
+                        self.ipv4_netdevgateway.value() + '"')
 
             if self.static_ipv6_nic_proto.value() == 1:
                 if self.ipv6_netdevmask.value() == "":
@@ -1456,11 +1633,13 @@ class NodeConfigScreen():
             if msg != "":
                 msg = "Please Input:\n" + msg
                 self._create_warn_screen()
-                warn = ButtonChoiceWindow(self.screen, "Network Settings", msg, buttons=['Ok'])
+                warn = ButtonChoiceWindow(self.screen, "Network Settings",
+                                          msg, buttons=['Ok'])
                 self.__nic_config_failed = 1
                 self.ipv4_current_netdevip = self.ipv4_netdevip.value()
                 self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
-                self.ipv4_current_netdevgateway = self.ipv4_netdevgateway.value()
+                self.ipv4_current_netdevgateway = (
+                            self.ipv4_netdevgateway.value())
                 self.reset_screen_colors()
                 return
             else:
@@ -1481,19 +1660,29 @@ class NodeConfigScreen():
                     del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
 
             if self.netvlanid.value() != "":
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN", '"' + self.netvlanid.value() + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN",
+                        '"' + self.netvlanid.value() + '"')
             if self.dhcp_ipv6_nic_proto.value() == 1:
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "dhcp" + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6",
+                        '"' + "dhcp" + '"')
             if self.auto_ipv6_nic_proto.value() == 1:
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "auto" + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6",
+                        '"' + "auto" + '"')
             if self.static_ipv6_nic_proto.value() == 1:
-                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", '"' + "static" + '"')
+                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6",
+                        '"' + "static" + '"')
                 if self.ipv6_netdevip.value():
-                    augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", '"' + self.ipv6_netdevip.value() + '"')
+                    augtool("set", "/files/" + OVIRT_DEFAULTS +
+                            "/OVIRT_IPV6_ADDRESS", '"' +
+                            self.ipv6_netdevip.value() + '"')
                 if self.ipv6_netdevmask.value():
-                    augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", '"' + self.ipv6_netdevmask.value() + '"')
+                    augtool("set", "/files/" + OVIRT_DEFAULTS +
+                            "/OVIRT_IPV6_NETMASK", '"' +
+                            self.ipv6_netdevmask.value() + '"')
                 if self.ipv6_netdevgateway.value():
-                    augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", '"' + self.ipv6_netdevgateway.value() + '"')
+                    augtool("set", "/files/" + OVIRT_DEFAULTS +
+                            "/OVIRT_IPV6_GATEWAY", '"' +
+                            self.ipv6_netdevgateway.value() + '"')
 
             network = Network()
             network.configure_interface()
@@ -1515,30 +1704,43 @@ class NodeConfigScreen():
     def process_authentication_config(self):
         self._create_warn_screen()
         ssh_restart = False
-        if self.root_password_1.value() != "" or self.root_password_2.value() != "":
+        if (self.root_password_1.value() != "" or
+            self.root_password_2.value() != ""):
             if self.root_password_1.value() != self.root_password_2.value():
-                ButtonChoiceWindow(self.screen, "Remote Access", "Passwords Do Not Match", buttons=['Ok'])
+                ButtonChoiceWindow(self.screen, "Remote Access",
+                                   "Passwords Do Not Match", buttons=['Ok'])
             else:
                 set_password(self.root_password_1.value(), "admin")
-                ButtonChoiceWindow(self.screen, "Remote Access", "Password Successfully Changed", buttons=['Ok'])
+                ButtonChoiceWindow(self.screen, "Remote Access",
+                                   "Password Successfully Changed",
+                                   buttons=['Ok'])
                 logger.info("Admin Password Changed")
-        if self.ssh_passwd_status.value() == 1 and self.current_ssh_pwd_status == 0:
-            self.current_ssh_pwd_status = augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
+        if (self.ssh_passwd_status.value() == 1 and
+               self.current_ssh_pwd_status == 0):
+            self.current_ssh_pwd_status = augtool("set",
+                     "/files/etc/ssh/sshd_config/PasswordAuthentication",
+                     "yes")
             ssh_restart = True
-        elif self.ssh_passwd_status.value() == 0 and self.current_ssh_pwd_status == 1:
-            self.current_ssh_pwd_status = augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
+        elif (self.ssh_passwd_status.value() == 0 and
+              self.current_ssh_pwd_status == 1):
+            self.current_ssh_pwd_status = augtool("set",
+                    "/files/etc/ssh/sshd_config/PasswordAuthentication",
+                    "no")
             ssh_restart = True
         if ssh_restart:
             system_closefds("service sshd restart &>/dev/null")
-            ButtonChoiceWindow(self.screen, "Remote Access", "SSH Restarted", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "Remote Access",
+                               "SSH Restarted", buttons=['Ok'])
             logger.info("SSH service restarted")
             ovirt_store_config("/etc/ssh/sshd_config")
         self.reset_screen_colors()
         return True
 
     def process_logging_config(self):
-        ovirt_rsyslog(self.syslog_server.value(), self.syslog_port.value(), "udp")
-        ovirt_netconsole(self.netconsole_server.value(), self.netconsole_server_port.value())
+        ovirt_rsyslog(self.syslog_server.value(),
+                      self.syslog_port.value(), "udp")
+        ovirt_netconsole(self.netconsole_server.value(),
+                         self.netconsole_server_port.value())
         set_logrotate_size(self.logrotate_max_size.value())
         return True
 
@@ -1609,15 +1811,21 @@ class NodeConfigScreen():
     def process_snmp_config(self):
         if self.snmp_status.value() == 1:
             if len(self.root_password_1.value()) > 0:
-                if self.root_password_1.value() != "" or self.root_password_2.value() != "":
-                    if self.root_password_1.value() != self.root_password_2.value():
+                if (self.root_password_1.value() != "" or
+                    self.root_password_2.value() != ""):
+                    if (self.root_password_1.value() !=
+                        self.root_password_2.value()):
                         self._create_warn_screen()
-                        ButtonChoiceWindow(self.screen, "SNMP", "SNMP was not enabled because passwords do not match", buttons=['Ok'])
+                        ButtonChoiceWindow(self.screen, "SNMP", "SNMP was " +
+                                           "not enabled because passwords " +
+                                           "do not match", buttons=['Ok'])
                         return
                 enable_snmpd(self.root_password_1.value())
             else:
                 self._create_warn_screen()
-                ButtonChoiceWindow(self.screen, "SNMP Error", "Unable to configure SNMP without a password!", buttons=['Ok'])
+                ButtonChoiceWindow(self.screen, "SNMP Error",
+                              "Unable to configure SNMP without a password!",
+                              buttons=['Ok'])
                 self.reset_screen_colors()
         elif self.snmp_status.value() == 0:
             disable_snmpd()
@@ -1644,7 +1852,9 @@ class NodeConfigScreen():
             restore_kdump_config()
         if not system("service kdump restart"):
             self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "KDump Status", "KDump configuration failed, location unreachable", buttons=['Ok'])
+            ButtonChoiceWindow(self.screen, "KDump Status",
+                               "KDump configuration failed, " +
+                               "location unreachable", buttons=['Ok'])
             self.reset_screen_colors()
             unmount_config("/etc/kdump.conf")
             if os.path.exists("/etc/kdump.conf"):
@@ -1657,8 +1867,10 @@ class NodeConfigScreen():
 
     def ssh_hostkey_btn_cb(self):
         self._create_warn_screen()
-        ssh_hostkey_msg = "RSA Host Key Fingerprint:\n%s\n\nRSA Host Key:\n%s" % get_ssh_hostkey()
-        ButtonChoiceWindow(self.screen, "Host Key", ssh_hostkey_msg, buttons=['Ok'], width=70)
+        ssh_hostkey_msg = ("RSA Host Key Fingerprint:\n%s\n\nRSA Host " +
+                          "Key:\n%s") % get_ssh_hostkey()
+        ButtonChoiceWindow(self.screen, "Host Key", ssh_hostkey_msg,
+                           buttons=['Ok'], width=70)
         self.reset_screen_colors()
         self.gridform.draw()
 
@@ -1669,7 +1881,8 @@ class NodeConfigScreen():
     def start(self):
         self.plugins = []
         self.last_option = LAST_OPTION
-        for imp, mod, ispkg in pkgutil.iter_modules(ovirt_config_setup.__path__, "ovirt_config_setup."):
+        for imp, mod, ispkg in pkgutil.iter_modules(
+                     ovirt_config_setup.__path__, "ovirt_config_setup."):
             module = __import__(mod, fromlist="dummy")
             self.plugins.append(module.get_plugin(self))
             self.last_option += 1
@@ -1690,7 +1903,8 @@ class NodeConfigScreen():
             self._set_title()
             content = Grid(1, len(elements) + 3)
             self.menuo = 1
-            self.menu_list = Listbox(18, width=20, returnExit=0, border=0, showCursor=0)
+            self.menu_list = Listbox(18, width=20, returnExit=0,
+                                     border=0, showCursor=0)
             self.menu_list.append(" Status", 1)
             self.menu_list.append(" Network", 2)
             self.menu_list.append(" Security", 3)
