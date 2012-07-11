@@ -1229,13 +1229,14 @@ def main():
             elif options.plugin:
                 p = options.plugin
             else:
-                print "A Package Must Be Defined"
+                print "An Editing Option Must Be Specified"
                 return False
-            if not os.path.isfile(p):
-                print "\nInvalid Package Path: %s" % os.path.abspath(p)
+            if not os.path.isfile(p) and len(p) > 0:
+                print "\nInvalid Package Path: %s Or Missing --repo Option" \
+                       % os.path.abspath(p)
                 return False
         # only mount rootfs as required since it's not necesary for all operations
-        if mount:
+        elif mount:
             editor.mount(LiveOS, cachedir = None)
             if options.printversion:
                 editor._print_version()
