@@ -109,7 +109,7 @@ def log(log_entry):
         log_file = open(OVIRT_TMP_LOGFILE, "a")
     else:
         log_file = open(OVIRT_LOGFILE, "a")
-    try: 
+    try:
         log_file.write(log_entry +"\n")
     except:
         log_file.write(str(log_entry))
@@ -379,13 +379,13 @@ def ovirt_setup_libvirtd(self):
        /etc/libvirt/libvirtd.conf')
 
 def ovirt_setup_anyterm():
-   # configure anyterm
-   anyterm_conf = open("/etc/sysconfig/anyterm", "w")
-   anyterm_conf.write("ANYTERM_CMD='sudo /usr/bin/virsh console %p'")
-   anyterm_conf.write("ANYTERM_LOCAL_ONLY=false")
-   anyterm_conf.close()
-   # permit it to run the virsh console
-   system_closefds("echo 'anyterm ALL=NOPASSWD: /usr/bin/virsh console *' >> /etc/sudoers")
+    # configure anyterm
+    anyterm_conf = open("/etc/sysconfig/anyterm", "w")
+    anyterm_conf.write("ANYTERM_CMD='sudo /usr/bin/virsh console %p'")
+    anyterm_conf.write("ANYTERM_LOCAL_ONLY=false")
+    anyterm_conf.close()
+    # permit it to run the virsh console
+    system_closefds("echo 'anyterm ALL=NOPASSWD: /usr/bin/virsh console *' >> /etc/sudoers")
 
 # mount livecd media
 # e.g. CD /dev/sr0, USB /dev/sda1,
@@ -482,7 +482,7 @@ def mount_config():
 
 def mount_boot(self):
     if os.path.ismount("/boot"):
-       return
+        return
     else:
         system_closefds("mkdir -p /boot")
         system_closefds("mount LABEL=Boot /boot")
@@ -607,19 +607,19 @@ STRING_TYPE=(str,unicode)
 #   copy to /config and bind-mount back
 
 def ovirt_store_config(files):
-  if is_stateless():
-      return True
-  if not os.path.ismount("/config"):
-    logger.error("/config is not mounted")
-    return False
-  if isinstance(files,STRING_TYPE):
-    files_list = []
-    files_list.append(files)
-  else:
-    files_list=files
-  for f in files_list:
-    filename = os.path.abspath(f)
-    persist_it=True
+    if is_stateless():
+        return True
+    if not os.path.ismount("/config"):
+        logger.error("/config is not mounted")
+        return False
+    if isinstance(files,STRING_TYPE):
+        files_list = []
+        files_list.append(files)
+    else:
+        files_list=files
+    for f in files_list:
+        filename = os.path.abspath(f)
+        persist_it=True
     # ensure that, if this is a directory
     # that it's not already persisted
     if os.path.isdir(filename):
@@ -693,20 +693,20 @@ def check_bind_mount(config_file):
 
 def unmount_config(files):
     if os.path.ismount("/config"):
-      if isinstance(files,STRING_TYPE):
-        files_list = []
-        files_list.append(files)
-      else:
-        files_list=files
-      for f in files_list:
-        filename = os.path.abspath(f)
-        if check_bind_mount(filename):
-            ret = system_closefds('umount -n "%s" &>/dev/null' % filename)
-            if ret == 0:
-                if os.path.exists('/config%s' % filename):
-                    # refresh the file in rootfs if it was mounted over
-                    if system_closefds('cp -a /config"%s" "%s" &> /dev/null' % (filename,filename)):
-                        return True
+        if isinstance(files,STRING_TYPE):
+            files_list = []
+            files_list.append(files)
+        else:
+            files_list=files
+        for f in files_list:
+            filename = os.path.abspath(f)
+            if check_bind_mount(filename):
+                ret = system_closefds('umount -n "%s" &>/dev/null' % filename)
+                if ret == 0:
+                    if os.path.exists('/config%s' % filename):
+                        # refresh the file in rootfs if it was mounted over
+                        if system_closefds('cp -a /config"%s" "%s" &> /dev/null' % (filename,filename)):
+                            return True
 
 # remove persistent config files
 #       remove_config /etc/config /etc/config2 ...
@@ -720,12 +720,12 @@ def remove_config(files):
             print "There are currently no persisted files."
             return True
     if os.path.ismount("/config"):
-      if isinstance(files,STRING_TYPE):
-        files_list = []
-        files_list.append(files)
-      else:
-        files_list=files
-      for f in files_list:
+        if isinstance(files,STRING_TYPE):
+            files_list = []
+            files_list.append(files)
+        else:
+            files_list=files
+        for f in files_list:
             filename = os.path.abspath(f)
             ret = system_closefds('grep "^%s$" /config/files > /dev/null 2>&1' % filename)
             if ret == 0:
@@ -743,12 +743,12 @@ def remove_config(files):
                         else:
                             if os.path.isfile(filename):
                                 # refresh the file in rootfs if it was mounted over
-                               ret = system_closefds('cp -a /config"%s" "%s"' % (filename,filename))
-                               if ret > 0:
+                                ret = system_closefds('cp -a /config"%s" "%s"' % (filename,filename))
+                                if ret > 0:
                                     logger.error("Failed to unpersist %s" % filename)
                                     return False
-                               else:
-                                   logger.info("%s successully unpersisted" % filename)
+                                else:
+                                    logger.info("%s successully unpersisted" % filename)
                     # clean up the persistent store
                     system('rm -Rf /config"%s"' % filename)
                     # unregister in /config/files used by rc.sysinit
@@ -891,11 +891,11 @@ def is_valid_nfs(nfs_entry):
     if re.match(regex, nfs_entry):
         ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}', nfs_entry)
         try:
-           if ip[0]:
-               if is_valid_ipv4(ip[0]):
-                   return True
-               else:
-                   return False
+            if ip[0]:
+                if is_valid_ipv4(ip[0]):
+                    return True
+                else:
+                    return False
         except:
             # hostname will fail on purpose
             return True
@@ -1183,17 +1183,17 @@ def password_check(password_1, password_2, min_length = 1):
     (1, True)
     '''
     if len(password_1) is 0 and min_length is not 0:
-      return (1, "\n\n\n\n\n")
+        return (1, "\n\n\n\n\n")
     if len(password_1) < min_length:
-      return (1, "Password must be at least %d characters" % min_length)
+        return (1, "Password must be at least %d characters" % min_length)
     if password_1 != "" and password_2 == "":
-      return (1, "Please Confirm Password\n\n\n\n\n")
+        return (1, "Please Confirm Password\n\n\n\n\n")
     if password_1 != password_2:
-      return (1, "Passwords Do Not Match\n\n\n\n\n")
+        return (1, "Passwords Do Not Match\n\n\n\n\n")
     try:
-      cracklib.FascistCheck(password_1)
+        cracklib.FascistCheck(password_1)
     except ValueError, e:
-      return (0, "You have provided a weak password!\nStrong passwords contain a mix of uppercase,\n" + \
+        return (0, "You have provided a weak password!\nStrong passwords contain a mix of uppercase,\n" + \
               "lowercase, numeric and punctuation characters.\nThey are six or more characters long and\n" + \
               "do not contain dictionary words")
     return (0, "\n\n\n\n\n")
