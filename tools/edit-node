@@ -627,6 +627,7 @@ class LiveImageEditor(LiveImageCreator):
         return True
 
     def _create_manifests(self, options):
+        timestamp = date("%Y-%m-%d_%H-%M-%S")
         if options.plugin:
             pkg = options.plugin
         elif options.install_dup:
@@ -635,41 +636,55 @@ class LiveImageEditor(LiveImageCreator):
             pkg = options.install
         print "Creating Manifests"
         # Create post-image processing manifests
-        cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort > /manifest-%s-rpm.txt" % pkg
+        cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
-        cmd = "rpm -qa --qf '%%{sourcerpm}\n' | sort -u > /manifest-%s-srpm.txt" % pkg
+        cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+
+        cmd = "rpm -qa --qf '%%{sourcerpm}\n' | sort -u > /manifest-%s-%s-srpm.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
         # collect all included licenses rhbz#601927
-        cmd = "rpm -qa --qf '%%{license}\n' | sort -u > /manifest-%s-license.txt" % pkg
+        cmd = "rpm -qa --qf '%%{license}\n' | sort -u > /manifest-%s-%s-license.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
-        cmd = "du -akx --exclude=/var/cache/yum / > /manifest-%s-file.txt" % pkg
+        cmd = "du -akx --exclude=/var/cache/yum / > /manifest-%s-%s-file.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
-        cmd = "du -x --exclude=/var/cache/yum / > /manifest-%s-dir.txt" % pkg
+        cmd = "du -x --exclude=/var/cache/yum / > /manifest-%s-%s-dir.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
         # create deltas
-        timestamp = date("%Y-%m-%d_%H-%M-%S")
         for i in ["file", "dir","owns", "deps" ]:
-            cmd =  "bzcat %s/iso/isolinux/manifest-%s.txt.bz2|sort > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
-            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-            output, err = f.communicate()
-            cmd = "diff -u /manifest-%s.txt /manifest-%s-%s.txt |egrep -v \"^@|^ \"> /delta-%s-manifest-%s-%s.txt" % (i, pkg, i, timestamp, i, pkg)
+            # if current-XXX-manifest exists run delta based on it
+            if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, i)):
+                cmd = "cp %s/iso/isolinux/current-manifest-%s.txt > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                output, err = f.communicate()
+            else:
+                cmd =  "bzcat %s/iso/isolinux/manifest-%s.txt.bz2|sort > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                output, err = f.communicate()
+            cmd = "diff -u /manifest-%s.txt /manifest-%s-%s-%s.txt |egrep -v \"^@|^ \"> /delta-%s-manifest-%s-%s.txt" % (i, timestamp, pkg, i, timestamp, i, pkg)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
             output, err = f.communicate()
         for i in ["rpm", "srpm", "license"]:
-            cmd =  "cat %s/iso/isolinux/manifest-%s.txt|sort >  %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
-            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-            output, err = f.communicate()
-            cmd = "diff -u /manifest-%s.txt /manifest-%s-%s.txt |egrep -v \"^@|^ \"> /delta-%s-manifest-%s-%s.txt" % (i, pkg, i, timestamp, i, pkg)
+            if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, i)):
+                cmd =  "cat %s/iso/isolinux/current-manifest-%s.txt|sort -u > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                output, err = f.communicate()
+            else:
+                cmd =  "cat %s/iso/isolinux/manifest-%s.txt|sort -u > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                output, err = f.communicate()
+            cmd = "diff -u /manifest-%s.txt /manifest-%s-%s-%s.txt |egrep -v \"^@|^ \" > /delta-%s-manifest-%s-%s.txt" % (i, timestamp, pkg, i, timestamp, i, pkg)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
             output, err = f.communicate()
         # cleanup copied manifests
@@ -690,12 +705,12 @@ class LiveImageEditor(LiveImageCreator):
                 print "Failed to copy %s to %s/iso/isolinux" % (file,self._ImageCreator__builddir)
                 return False
         # update symlink
-        for f in ["srpm", "license", "file", "dir" ]:
+        for f in ["rpm", "srpm", "license", "file", "dir" ]:
             if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, f)):
                 os.system("rm -rf %s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, f))
             cwd = os.getcwd()
             os.chdir("%s/iso/isolinux" % self._ImageCreator__builddir)
-            src = "manifest-%s-%s.txt" % (pkg, f)
+            src = "manifest-%s-%s-%s.txt" % (timestamp, pkg, f)
             dest = "current-manifest-%s.txt" % f
             os.symlink(src, dest)
             os.chdir(cwd)
@@ -717,9 +732,10 @@ class LiveImageEditor(LiveImageCreator):
         dirname = "manifests-%s" % timestamp
         cmd = "mkdir /tmp/%s" % dirname
         os.system(cmd)
-        for file in glob.glob("%s/isolinux/*manifest*" % isodir):
+        for file in glob.glob("%s/isolinux/*manifest-*" % isodir):
             cmd = "cp -a %s /tmp/%s" % (file, dirname)
-            os.system(cmd)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
         cmd = "tar cjvf %s.tar.bz2 %s"  % (dirname, dirname)
         cwd = os.getcwd()
         os.chdir("/tmp")
