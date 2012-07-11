@@ -131,9 +131,9 @@ class NodeConfigScreen():
 
     def _set_title(self):
         PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION, PRODUCT_RELEASE)
-        self.screen.drawRootText(1,0, "".ljust(78))
-        self.screen.drawRootText(1,1, "  %s" % PRODUCT_TITLE.ljust(76))
-        self.screen.drawRootText(1,2, "  %s" % os.uname()[1].ljust(76))
+        self.screen.drawRootText(1, 0, "".ljust(78))
+        self.screen.drawRootText(1, 1, "  %s" % PRODUCT_TITLE.ljust(76))
+        self.screen.drawRootText(1, 2, "  %s" % os.uname()[1].ljust(76))
 
     def _create_blank_screen(self):
         self.screen = SnackScreen()
@@ -448,7 +448,7 @@ class NodeConfigScreen():
         warn = 0
         if not self.ipv6_netdevmask.value() is None and not self.ipv6_netdevmask.value() == "":
             try:
-                if not int(self.ipv6_netdevmask.value()) in range(1,128):
+                if not int(self.ipv6_netdevmask.value()) in range(1, 128):
                     warn = 1
             except:
                 warn = 1
@@ -477,7 +477,7 @@ class NodeConfigScreen():
         warn = 0
         try:
             if not self.netvlanid.value() == "":
-                if not int(self.netvlanid.value()) in range(1,4095) or " " in self.netvlanid.value():
+                if not int(self.netvlanid.value()) in range(1, 4095) or " " in self.netvlanid.value():
                     warn = 1
         except:
             warn = 1
@@ -627,12 +627,12 @@ class NodeConfigScreen():
         elements = Grid(1, 3)
         pw_elements = Grid(2, 2)
         pad = 34 - len(os.uname()[1]) / 2
-        elements.setField(Label("Unlock " + os.uname()[1]), 0, 0, padding=(pad - 3,1,0,1))
+        elements.setField(Label("Unlock " + os.uname()[1]), 0, 0, padding=(pad - 3, 1, 0, 1))
         self.login_username = os.getlogin()
         self.login_password = Entry(15, "", password = 1)
-        pw_elements.setField(Label("Username: "), 0, 0, padding=(pad,1,0,1))
+        pw_elements.setField(Label("Username: "), 0, 0, padding=(pad, 1, 0, 1))
         pw_elements.setField(Label(self.login_username), 1, 0)
-        pw_elements.setField(Label("Password: "), 0, 1, padding=(pad,0,0,1))
+        pw_elements.setField(Label("Password: "), 0, 1, padding=(pad, 0, 0, 1))
         pw_elements.setField(self.login_password, 1, 1)
         elements.setField(pw_elements, 0, 1)
         return [Label(""), elements]
@@ -657,7 +657,7 @@ class NodeConfigScreen():
                                 ipv6_address, netmask = get_ipv6_address(interface)
                             except:
                                 ipv6_address = ""
-                            self.network_status[interface] = (ipv4_address,ipv6_address)
+                            self.network_status[interface] = (ipv4_address, ipv6_address)
                 except:
                     pass
             # remove parent/bridge duplicates
@@ -683,9 +683,9 @@ class NodeConfigScreen():
                     else:
                         ipv4_addr = "(DHCP Failed)"
                 if OVIRT_VARS.has_key("OVIRT_IPV6") and ipv6_addr != "" :
-                        status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip(),ipv6_addr.strip())
+                        status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip(), ipv6_addr.strip())
                 else:
-                    status_text += "%1s: %5s %14s \n" % (key.strip(),dev_bootproto.strip(),ipv4_addr.strip())
+                    status_text += "%1s: %5s %14s \n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip())
                 status_text.strip()
                 networking = TextboxReflowed(32, status_text, maxHeight=3)
                 networking.setText(status_text)
@@ -695,7 +695,7 @@ class NodeConfigScreen():
             networking = Textbox(25, 1, "Not Connected")
         elements.setField(Label("Networking:"), 0, 0, anchorLeft = 1, anchorTop = 1)
         elements.setField(networking, 1, 0, anchorLeft = 1, padding=(4, 0, 0, 1))
-        elements.setField(Label("Logical Network   Device    MAC Address"),1,4,anchorLeft =1)
+        elements.setField(Label("Logical Network   Device    MAC Address"), 1, 4, anchorLeft =1)
         networks = logical_to_physical_networks()
         if len(networks) >= 3:
             net_scroll = 1
@@ -706,18 +706,18 @@ class NodeConfigScreen():
         for key in networks.iterkeys():
             device, mac = networks[key]
             key = pad_or_trim(12, key)
-            device = pad_or_trim(8,device)
+            device = pad_or_trim(8, device)
             net_entry += " %1s %6s  %9s\n" % (key, device, mac)
         elements.setField(self.network_list, 1, 5, anchorLeft = 1, padding=(4, 0, 0, 1))
         self.network_list.setText(net_entry)
         logging_status_text = ""
         if not get_rsyslog_config() is None:
-            host,port = get_rsyslog_config()
-            logging_status_text += "Rsyslog: %s:%s\n" % (host,port)
+            host, port = get_rsyslog_config()
+            logging_status_text += "Rsyslog: %s:%s\n" % (host, port)
         netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGADDR")
         netconsole_server_port = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGPORT")
         if netconsole_server and netconsole_server_port:
-            logging_status_text += "Netconsole: %s:%s" % (netconsole_server,netconsole_server_port)
+            logging_status_text += "Netconsole: %s:%s" % (netconsole_server, netconsole_server_port)
         if len(logging_status_text) == 0:
             logging_status_text = "Local Only"
         logging_status = Textbox(45, 2, logging_status_text)
@@ -730,22 +730,22 @@ class NodeConfigScreen():
         except:
             self.dom_count = "Failed to connect"
         self.jobs_status = Textbox(18, 1, str(self.dom_count))
-        running_vms_grid = Grid(2,1)
+        running_vms_grid = Grid(2, 1)
         running_vms_grid.setField(Label("Running VMs:   "), 0, 0, anchorLeft = 1)
         running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)
         main_grid.setField(elements, 0, 1, anchorLeft = 1)
         hwvirt_msg =  get_virt_hw_status()
         if not hwvirt_msg is "":
             self.hwvirt = Textbox(50, 1, hwvirt_msg)
-            main_grid.setField(self.hwvirt, 0, 3, anchorLeft = 1, padding=(0,1,0,0))
+            main_grid.setField(self.hwvirt, 0, 3, anchorLeft = 1, padding=(0, 1, 0, 0))
         else:
-            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0,0,0,0))
+            main_grid.setField(running_vms_grid, 0, 3, anchorLeft = 1, padding=(0, 0, 0, 0))
 
         help_text = Textbox(62, 1, "Press F8 For Support Menu")
-        main_grid.setField(help_text, 0, 4, anchorLeft = 1, padding=(0,0,0,0))
+        main_grid.setField(help_text, 0, 4, anchorLeft = 1, padding=(0, 0, 0, 0))
 
         self.ssh_hostkey_btn = CompactButton("View Host Key")
-        main_grid.setField(self.ssh_hostkey_btn, 0, 5, anchorLeft = 1, padding=(1,1,0,0))
+        main_grid.setField(self.ssh_hostkey_btn, 0, 5, anchorLeft = 1, padding=(1, 1, 0, 0))
 
         return [Label(""), main_grid]
 
@@ -755,17 +755,17 @@ class NodeConfigScreen():
         if is_console():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft = 1)
-        logrotate_grid = Grid(2,2)
+        logrotate_grid = Grid(2, 2)
         logrotate_grid.setField(Label("  Logrotate Max Log Size (KB): "), 0, 0, anchorLeft = 1)
         self.logrotate_max_size = Entry(5, "", scroll = 0)
         self.logrotate_max_size.setCallback(self.valid_logrotate_max_size_callback)
         logrotate_grid.setField(self.logrotate_max_size, 1, 0, anchorLeft = 1)
         current_logrotate_size = get_logrotate_size()
         self.logrotate_max_size.set(current_logrotate_size)
-        elements.setField(logrotate_grid, 0, 1, anchorLeft = 1, padding = (0,1,0,0))
+        elements.setField(logrotate_grid, 0, 1, anchorLeft = 1, padding = (0, 1, 0, 0))
         elements.setField(Label(" "), 0, 2, anchorLeft = 1)
-        elements.setField(Textbox(45,2,"Rsyslog is an enhanced multi-threaded syslogd"), 0, 3, anchorLeft = 1)
-        rsyslog_grid = Grid(2,2)
+        elements.setField(Textbox(45, 2, "Rsyslog is an enhanced multi-threaded syslogd"), 0, 3, anchorLeft = 1)
+        rsyslog_grid = Grid(2, 2)
         rsyslog_grid.setField(Label("  Server Address:"), 0, 0, anchorLeft = 1)
         self.syslog_server = Entry(25, "")
         self.syslog_server.setCallback(self.valid_syslog_server_callback)
@@ -783,8 +783,8 @@ class NodeConfigScreen():
         else:
             self.syslog_port.set("514")
         elements.setField(rsyslog_grid, 0, 4, anchorLeft = 1)
-        elements.setField(Textbox(48,3,"Netconsole service allows a remote syslog daemon\nto record kernel printk() messages"), 0, 5, anchorLeft = 1, padding = (0,0,0,0))
-        netconsole_grid = Grid(2,2)
+        elements.setField(Textbox(48, 3, "Netconsole service allows a remote syslog daemon\nto record kernel printk() messages"), 0, 5, anchorLeft = 1, padding = (0, 0, 0, 0))
+        netconsole_grid = Grid(2, 2)
         netconsole_grid.setField(Label("  Server Address:"), 0, 0, anchorLeft = 1)
         self.netconsole_server = Entry(25, "")
         self.netconsole_server.setCallback(self.valid_netconsole_server_callback)
@@ -793,7 +793,7 @@ class NodeConfigScreen():
         self.netconsole_server_port.setCallback(self.valid_netconsole_server_port_callback)
         netconsole_grid.setField(self.netconsole_server, 1, 0, anchorLeft = 1, padding=(2, 0, 0, 1))
         netconsole_grid.setField(self.netconsole_server_port, 1, 1, anchorLeft = 1, padding=(2, 0, 0, 0))
-        elements.setField(netconsole_grid, 0, 6, anchorLeft = 1, padding = (0,0,0,1))
+        elements.setField(netconsole_grid, 0, 6, anchorLeft = 1, padding = (0, 0, 0, 1))
         netconsole_server = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGADDR")
         netconsole_server_port = augtool_get("/files/etc/sysconfig/netconsole/SYSLOGPORT")
         if netconsole_server is None:
@@ -813,7 +813,7 @@ class NodeConfigScreen():
         if is_console():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft = 1)
-        pw_elements = Grid (3,3)
+        pw_elements = Grid (3, 3)
         self.current_ssh_pwd_status = augtool_get("/files/etc/ssh/sshd_config/PasswordAuthentication")
         if self.current_ssh_pwd_status == "yes":
             self.current_ssh_pwd_status = 1
@@ -824,38 +824,38 @@ class NodeConfigScreen():
         local_heading = Label("Local Access")
         if is_console():
             local_heading.setColors(customColorset(1))
-        elements.setField(local_heading, 0, 3, anchorLeft = 1, padding = (0,2,0,0))
+        elements.setField(local_heading, 0, 3, anchorLeft = 1, padding = (0, 2, 0, 0))
         elements.setField(Label(" "), 0, 6)
         pw_elements.setField(Label("Password: "), 0, 1, anchorLeft = 1)
         pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft = 1)
-        self.root_password_1 = Entry(15,password = 1)
+        self.root_password_1 = Entry(15, password = 1)
         self.root_password_1.setCallback(self.password_check_callback)
-        self.root_password_2 = Entry(15,password = 1)
+        self.root_password_2 = Entry(15, password = 1)
         self.root_password_2.setCallback(self.password_check_callback)
-        pw_elements.setField(self.root_password_1, 1,1)
-        pw_elements.setField(self.root_password_2, 1,2)
+        pw_elements.setField(self.root_password_1, 1, 1)
+        pw_elements.setField(self.root_password_2, 1, 2)
         self.pw_msg = Textbox(60, 6, "", wrap=1)
         elements.setField(pw_elements, 0, 7, anchorLeft=1)
-        elements.setField(self.pw_msg, 0, 8, padding = (0,1,0,0))
+        elements.setField(self.pw_msg, 0, 8, padding = (0, 1, 0, 0))
         return [Label(""), elements]
 
     def network_configuration_page(self, screen):
         self.network_config_fields = []
         aug.load()
-        grid = Grid(2,15)
+        grid = Grid(2, 15)
         self.heading = Label("System Identification")
         grid.setField(self.heading, 0, 1, anchorLeft = 1)
-        hostname_grid = Grid(2,2)
-        hostname_grid.setField(Label("Hostname: "), 0, 1, anchorLeft = 1, padding=(0,0,4,0))
+        hostname_grid = Grid(2, 2)
+        hostname_grid.setField(Label("Hostname: "), 0, 1, anchorLeft = 1, padding=(0, 0, 4, 0))
         self.current_hostname = os.uname()[1]
         hostname = os.uname()[1]
         self.net_hostname = Entry(35, hostname)
         self.network_config_fields += [self.net_hostname]
         self.net_hostname.setCallback(self.valid_hostname_callback)
         self.ntp_dhcp = 0
-        hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft = 1, padding=(0,0,0,0))
+        hostname_grid.setField(self.net_hostname, 1, 1, anchorLeft = 1, padding=(0, 0, 0, 0))
         grid.setField(hostname_grid, 0, 3, anchorLeft=1)
-        dns_grid = Grid(2,2)
+        dns_grid = Grid(2, 2)
         self.dns_host1 = Entry(25)
         self.network_config_fields += [self.dns_host1]
         self.dns_host1.setCallback(self.dns_host1_callback)
@@ -879,7 +879,7 @@ class NodeConfigScreen():
         grid.setField(Label("  "), 0, 4)
         grid.setField(dns_grid, 0, 6, anchorLeft =1)
         grid.setField(Label("  "), 0, 7)
-        ntp_grid = Grid(2,2)
+        ntp_grid = Grid(2, 2)
         self.ntp_host1 = Entry(25)
         self.network_config_fields += [self.ntp_host1]
         self.ntp_host1.setCallback(self.ntp_host1_callback)
@@ -906,10 +906,10 @@ class NodeConfigScreen():
         else:
             self.nic_lb = Listbox(height = 5, width = 56, returnExit = 1, scroll = 0)
         for key in sorted(self.nic_dict.iterkeys()):
-            dev_interface,dev_bootproto,dev_vendor,dev_address,dev_driver,dev_conf_status,dev_bridge = self.nic_dict[key].split(",", 6)
+            dev_interface, dev_bootproto, dev_vendor, dev_address, dev_driver, dev_conf_status, dev_bridge = self.nic_dict[key].split(",", 6)
             dev_vendor = pad_or_trim(10, dev_vendor)
             dev_interface = pad_or_trim(6, dev_interface)
-            nic_option = '%2s %13s %10s %19s\n' % (dev_interface,dev_conf_status,dev_vendor,dev_address)
+            nic_option = '%2s %13s %10s %19s\n' % (dev_interface, dev_conf_status, dev_vendor, dev_address)
             self.nic_lb.append(nic_option, dev_interface.strip())
         NIC_LABEL = Label("Device  Status          Model     MAC Address")
         grid.setField(NIC_LABEL, 0, 11, (0, 0, 0, 0), anchorLeft = 1)
@@ -931,29 +931,29 @@ class NodeConfigScreen():
 
         return [Label(""), grid]
 
-    def network_details_page(self,screen):
-        grid = Grid(1,15)
+    def network_details_page(self, screen):
+        grid = Grid(1, 15)
         if nic_link_detected(self.nic_lb.current()):
             link_status = "Active"
         else:
             link_status = "Inactive"
         dev = self.nic_lb.current()
-        interface,bootproto,vendor,address,driver,conf_status,dev_bridge = self.nic_dict[dev].split(",", 6)
+        interface, bootproto, vendor, address, driver, conf_status, dev_bridge = self.nic_dict[dev].split(",", 6)
         nic_detail_grid = Grid(6, 10)
-        nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft = 1, padding=(0,0,1,0))
-        nic_detail_grid.setField(Label("Protocol:    "), 0, 2, anchorLeft = 1, padding=(0,0,1,0))
-        nic_detail_grid.setField(Label("Link Status: "), 0, 3, anchorLeft = 1, padding=(0,0,1,0))
-        nic_detail_grid.setField(Label("Driver:      "), 3, 1, anchorLeft = 1, padding=(0,0,1,0))
-        nic_detail_grid.setField(Label("Vendor:      "), 3, 2, anchorLeft = 1, padding=(0,0,1,0))
-        nic_detail_grid.setField(Label("MAC Address: "), 3, 3, anchorLeft = 1, padding=(0,0,1,0))
-        nic_detail_grid.setField(Label(interface), 1, 1, anchorLeft = 1, padding=(0,0,5,0))
-        nic_detail_grid.setField(Label(bootproto), 1, 2, anchorLeft = 1, padding=(0,0,5,0))
-        nic_detail_grid.setField(Label(link_status), 1, 3, anchorLeft = 1, padding=(0,0,5,0))
-        nic_detail_grid.setField(Label(driver), 4, 1, anchorLeft = 1, padding=(0,0,0,0))
-        nic_detail_grid.setField(Label(vendor), 4, 2, anchorLeft = 1, padding=(0,0,0,0))
-        nic_detail_grid.setField(Label(address), 4, 3, anchorLeft = 1, padding=(0,0,0,0))
+        nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft = 1, padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Protocol:    "), 0, 2, anchorLeft = 1, padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Link Status: "), 0, 3, anchorLeft = 1, padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Driver:      "), 3, 1, anchorLeft = 1, padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("Vendor:      "), 3, 2, anchorLeft = 1, padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label("MAC Address: "), 3, 3, anchorLeft = 1, padding=(0, 0, 1, 0))
+        nic_detail_grid.setField(Label(interface), 1, 1, anchorLeft = 1, padding=(0, 0, 5, 0))
+        nic_detail_grid.setField(Label(bootproto), 1, 2, anchorLeft = 1, padding=(0, 0, 5, 0))
+        nic_detail_grid.setField(Label(link_status), 1, 3, anchorLeft = 1, padding=(0, 0, 5, 0))
+        nic_detail_grid.setField(Label(driver), 4, 1, anchorLeft = 1, padding=(0, 0, 0, 0))
+        nic_detail_grid.setField(Label(vendor), 4, 2, anchorLeft = 1, padding=(0, 0, 0, 0))
+        nic_detail_grid.setField(Label(address), 4, 3, anchorLeft = 1, padding=(0, 0, 0, 0))
         grid.setField(nic_detail_grid, 0, 1)
-        ipv4_main_grid = Grid(6,8)
+        ipv4_main_grid = Grid(6, 8)
         self.disabled_ipv4_nic_proto = Checkbox("Disabled ")
         self.disabled_ipv4_nic_proto.setCallback(self.ipv4_disabled_callback)
         self.dhcp_ipv4_nic_proto = Checkbox("DHCP ")
@@ -966,7 +966,7 @@ class NodeConfigScreen():
             self.static_ipv4_nic_proto.setValue("*")
         else:
             self.disabled_ipv4_nic_proto.setValue("*")
-        ipv4_proto_grid = Grid(6,1)
+        ipv4_proto_grid = Grid(6, 1)
         ipv4_proto_grid.setField(self.disabled_ipv4_nic_proto, 0, 0, anchorLeft = 1)
         ipv4_proto_grid.setField(self.dhcp_ipv4_nic_proto, 2, 0, anchorLeft = 1)
         ipv4_proto_grid.setField(self.static_ipv4_nic_proto, 4, 0, anchorLeft = 1)
@@ -989,14 +989,14 @@ class NodeConfigScreen():
         current_gateway = get_gateway(dev)
         if is_valid_ipv4(current_gateway) or is_valid_ipv6(current_gateway):
             self.ipv4_netdevgateway.set(current_gateway)
-        ipv4_grid = Grid (5,3)
+        ipv4_grid = Grid (5, 3)
         ipv4_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)
         ipv4_grid.setField(Label(" Netmask: "), 3, 1, anchorLeft = 1)
         ipv4_grid.setField(Label("Gateway:"), 0, 2, anchorLeft = 1)
         ipv4_grid.setField(self.ipv4_netdevip, 2, 1)
         ipv4_grid.setField(self.ipv4_netdevmask, 4, 1)
         ipv4_grid.setField(self.ipv4_netdevgateway, 2, 2)
-        ipv4_main_grid.setField(ipv4_grid, 0,3)
+        ipv4_main_grid.setField(ipv4_grid, 0, 3)
         if self.dhcp_ipv4_nic_proto.value() == 1:
             self.ipv4_dhcp_callback()
         elif self.static_ipv4_nic_proto.value() == 1:
@@ -1014,7 +1014,7 @@ class NodeConfigScreen():
             except:
                 pass
         # ipv6 grids
-        ipv6_main_grid = Grid(6,8)
+        ipv6_main_grid = Grid(6, 8)
         self.disabled_ipv6_nic_proto = Checkbox("Disabled ")
         self.disabled_ipv6_nic_proto.setCallback(self.ipv6_disabled_callback)
         self.dhcp_ipv6_nic_proto = Checkbox("DHCP ")
@@ -1044,7 +1044,7 @@ class NodeConfigScreen():
             self.auto_ipv6_nic_proto.setValue("*")
         else:
             self.disabled_ipv6_nic_proto.setValue("*")
-        ipv6_proto_grid = Grid(6,1)
+        ipv6_proto_grid = Grid(6, 1)
         ipv6_proto_grid.setField(self.disabled_ipv6_nic_proto, 0, 0, anchorLeft = 1)
         ipv6_proto_grid.setField(self.dhcp_ipv6_nic_proto, 1, 0, anchorLeft = 1)
         ipv6_proto_grid.setField(self.static_ipv6_nic_proto, 2, 0, anchorLeft = 1)
@@ -1083,14 +1083,14 @@ class NodeConfigScreen():
             current_gateway = get_ipv6_gateway(self.nic_lb.current())
             if current_gateway == "":
                 current_gateway = get_gateway("br" + self.nic_lb.current())
-        ipv6_grid = Grid (5,4)
+        ipv6_grid = Grid (5, 4)
         ipv6_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)
         ipv6_grid.setField(Label("Netmask: "), 0, 2, anchorLeft = 1)
         ipv6_grid.setField(Label("Gateway:"), 0, 3, anchorLeft = 1)
         ipv6_grid.setField(self.ipv6_netdevip, 2, 1)
         ipv6_grid.setField(self.ipv6_netdevmask, 2, 2)
         ipv6_grid.setField(self.ipv6_netdevgateway, 2, 3)
-        ipv6_main_grid.setField(ipv6_grid, 0,3)
+        ipv6_main_grid.setField(ipv6_grid, 0, 3)
         if self.dhcp_ipv6_nic_proto.value() == 1:
             self.ipv6_dhcp_callback()
         elif self.static_ipv6_nic_proto.value() == 1:
@@ -1104,15 +1104,15 @@ class NodeConfigScreen():
         if OVIRT_VARS.has_key("OVIRT_IPV6"):
             grid.setField(ipv6_main_grid, 0, 7, anchorLeft = 1)
         else:
-            grid.setField(Label(" "), 0, 7, anchorLeft = 1, padding=(0,4,0,0))
+            grid.setField(Label(" "), 0, 7, anchorLeft = 1, padding=(0, 4, 0, 0))
         grid.setField(Label(" "), 0, 8, anchorLeft = 1)
-        vlan_grid = Grid(2,2)
+        vlan_grid = Grid(2, 2)
         self.netvlanid = Entry(4, "", scroll = 0)
         self.netvlanid.setCallback(self.netvlanid_callback)
         for vlan in get_system_vlans():
             # XXX wrong match e.g. eth10.1 with eth1
             if self.nic_lb.current() in vlan:
-                vlan_id = vlan.replace(self.nic_lb.current()+".","")
+                vlan_id = vlan.replace(self.nic_lb.current()+".", "")
                 self.netvlanid.set(vlan_id)
         vlan_grid.setField(Label("VLAN ID: "), 0, 0, anchorLeft = 1)
         vlan_grid.setField(self.netvlanid, 1, 0)
@@ -1147,7 +1147,7 @@ class NodeConfigScreen():
         if is_console():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft = 1)
-        pw_elements = Grid (3,3)
+        pw_elements = Grid (3, 3)
         self.current_snmp_status = 0
         if os.path.exists("/etc/snmp/snmpd.conf"):
             f = open("/etc/snmp/snmpd.conf")
@@ -1160,19 +1160,19 @@ class NodeConfigScreen():
         local_heading = Label("SNMP Password")
         if is_console():
             local_heading.setColors(customColorset(1))
-        elements.setField(local_heading, 0, 3, anchorLeft = 1, padding = (0,2,0,0))
+        elements.setField(local_heading, 0, 3, anchorLeft = 1, padding = (0, 2, 0, 0))
         elements.setField(Label(" "), 0, 6)
         pw_elements.setField(Label("Password: "), 0, 1, anchorLeft = 1)
         pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft = 1)
-        self.root_password_1 = Entry(15,password = 1)
+        self.root_password_1 = Entry(15, password = 1)
         self.root_password_1.setCallback(self.password_check_callback)
-        self.root_password_2 = Entry(15,password = 1)
+        self.root_password_2 = Entry(15, password = 1)
         self.root_password_2.setCallback(self.password_check_callback)
-        pw_elements.setField(self.root_password_1, 1,1)
-        pw_elements.setField(self.root_password_2, 1,2)
+        pw_elements.setField(self.root_password_1, 1, 1)
+        pw_elements.setField(self.root_password_2, 1, 2)
         self.pw_msg = Textbox(60, 6, "", wrap=1)
         elements.setField(pw_elements, 0, 7, anchorLeft=1)
-        elements.setField(self.pw_msg, 0, 8, padding = (0,1,0,0))
+        elements.setField(self.pw_msg, 0, 8, padding = (0, 1, 0, 0))
         return [Label(""), elements]
 
 
@@ -1204,7 +1204,7 @@ class NodeConfigScreen():
         except:
             pass
         elements.setField(heading, 0, 0, anchorLeft = 1)
-        elements.setField(self.kb_list, 0, 1, anchorLeft = 1, padding=(1,1,0,3))
+        elements.setField(self.kb_list, 0, 1, anchorLeft = 1, padding=(1, 1, 0, 3))
         return [Label(""), elements]
 
     def kdump_configuration_page(self, screen):
@@ -1237,7 +1237,7 @@ class NodeConfigScreen():
         elements.setField(Label("SSH Location (root@example.redhat.com)"), 0, 7, anchorLeft = 1)
         self.kdump_ssh_config = Entry(30, "")
         self.kdump_ssh_config.setCallback(self.kdump_valid_ssh_callback)
-        elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft = 1, padding =(0,0,0,6))
+        elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft = 1, padding =(0, 0, 0, 6))
         try:
             kdump_config_file = open("/etc/kdump.conf")
             for line in kdump_config_file:
@@ -1267,7 +1267,7 @@ class NodeConfigScreen():
     def support_page(self, screen):
         logger.info("Loading Support Page")
         elements = Grid(2, 8)
-        elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0,1,0,1))
+        elements.setField(Label(" View Log Files "), 0, 1, anchorLeft = 1, padding = (0, 1, 0, 1))
         self.log_menu_list = Listbox(5, width = 40, returnExit = 1, border = 0, showCursor = 0, scroll = 0)
         self.log_menu_list.append(" oVirt Log (ovirt.log)", "/var/log/ovirt.log")
         self.log_menu_list.append(" System Messages (messages)", "/var/log/messages")
@@ -1276,8 +1276,8 @@ class NodeConfigScreen():
             self.log_menu_list.append(" VDSM Log (vdsm.log)", "/var/log/vdsm/vdsm.log")
         if os.path.exists("/var/log/vdsm-reg/vdsm-reg.log"):
             self.log_menu_list.append(" VDSM Registration Log (vdsm-reg.log)", "/var/log/vdsm-reg/vdsm-reg.log")
-        elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0,0,0,6))
-        elements.setField(Label(" After viewing press \"q\" to quit "), 0, 3, anchorLeft = 1, padding = (0,1,0,0))
+        elements.setField(self.log_menu_list, 0, 2, anchorLeft = 1, padding = (0, 0, 0, 6))
+        elements.setField(Label(" After viewing press \"q\" to quit "), 0, 3, anchorLeft = 1, padding = (0, 1, 0, 0))
 
         return [Label(""), elements]
 
@@ -1291,7 +1291,7 @@ class NodeConfigScreen():
         elements.setField(Label("iSCSI Initiator Name:"), 0, 2, anchorLeft = 1)
         self.iscsi_initiator_config = Entry(50, "")
         self.iscsi_initiator_config.setCallback(self.valid_iqn_callback)
-        elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft = 1, padding =(0,0,0,11))
+        elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft = 1, padding =(0, 0, 0, 11))
         current_iscsi_initiator_name = get_current_iscsi_initiator_name()
         if current_iscsi_initiator_name is not None:
             self.iscsi_initiator_config.set(current_iscsi_initiator_name)
@@ -1360,7 +1360,7 @@ class NodeConfigScreen():
             self._create_blank_screen()
             gridform = GridForm(self.screen, "", 2, 2)
             gridform.add(Label("Verifying Networking Configuration"), 0, 0)
-            progress_bar = Scale(50,100)
+            progress_bar = Scale(50, 100)
             gridform.add(progress_bar, 0, 1)
             progress_bar.set(25)
             gridform.draw()
@@ -1414,7 +1414,7 @@ class NodeConfigScreen():
 
             gridform = GridForm(self.screen, "", 2, 2)
             gridform.add(Label("Configuring Networking"), 0, 0)
-            progress_bar = Scale(50,100)
+            progress_bar = Scale(50, 100)
             gridform.add(progress_bar, 0, 1)
             progress_bar.set(50)
             gridform.draw()
@@ -1430,7 +1430,7 @@ class NodeConfigScreen():
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
-            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6" ,"")
+            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6" , "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", "")
@@ -1499,7 +1499,7 @@ class NodeConfigScreen():
             network.configure_interface()
             gridform = GridForm(self.screen, "", 2, 2)
             gridform.add(Label("Enabling Network Configuration"), 0, 0)
-            progress_bar = Scale(50,100)
+            progress_bar = Scale(50, 100)
             gridform.add(progress_bar, 0, 1)
             progress_bar.set(75)
             gridform.draw()
@@ -1523,10 +1523,10 @@ class NodeConfigScreen():
                 ButtonChoiceWindow(self.screen, "Remote Access", "Password Successfully Changed", buttons = ['Ok'])
                 logger.info("Admin Password Changed")
         if self.ssh_passwd_status.value() == 1 and self.current_ssh_pwd_status == 0:
-            self.current_ssh_pwd_status = augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
+            self.current_ssh_pwd_status = augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", "yes")
             ssh_restart = True
         elif self.ssh_passwd_status.value() == 0 and self.current_ssh_pwd_status == 1:
-            self.current_ssh_pwd_status = augtool("set","/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
+            self.current_ssh_pwd_status = augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", "no")
             ssh_restart = True
         if ssh_restart:
             system_closefds("service sshd restart &>/dev/null")
@@ -1669,7 +1669,7 @@ class NodeConfigScreen():
     def start(self):
         self.plugins = []
         self.last_option = LAST_OPTION
-        for imp,mod,ispkg in pkgutil.iter_modules(ovirt_config_setup.__path__, "ovirt_config_setup."):
+        for imp, mod, ispkg in pkgutil.iter_modules(ovirt_config_setup.__path__, "ovirt_config_setup."):
             module = __import__(mod, fromlist="dummy")
             self.plugins.append(module.get_plugin(self))
             self.last_option+=1
@@ -1694,7 +1694,7 @@ class NodeConfigScreen():
             self.menu_list.append(" Status", 1)
             self.menu_list.append(" Network", 2)
             self.menu_list.append(" Security", 3)
-            self.menu_list.append(" Keyboard",4)
+            self.menu_list.append(" Keyboard", 4)
             self.menu_list.append(" SNMP", 5)
             self.menu_list.append(" Logging", 6)
             self.menu_list.append(" Kernel Dump", 7)
