@@ -35,7 +35,7 @@ def config_networking():
     if OVIRT_VARS["OVIRT_BOOTIF"] != "":
         network_auto()
     if "OVIRT_HOSTNAME" in OVIRT_VARS:
-        augtool("set","/files/etc/sysconfig/network/HOSTNAME", \
+        augtool("set", "/files/etc/sysconfig/network/HOSTNAME", \
                 OVIRT_VARS["OVIRT_HOSTNAME"])
         system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
         ovirt_store_config("/etc/sysconfig/network")
