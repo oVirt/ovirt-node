@@ -38,6 +38,19 @@ from imgcreate.live import *
 from imgcreate.creator import *
 import imgcreate.kickstart as kickstart
 from imgcreate import read_kickstart
+from optparse import Option
+
+class MultipleOption(Option):
+    ACTIONS = Option.ACTIONS + ("extend",)
+    STORE_ACTIONS = Option.STORE_ACTIONS + ("extend",)
+    TYPED_ACTIONS = Option.TYPED_ACTIONS + ("extend",)
+    ALWAYS_TYPED_ACTIONS = Option.ALWAYS_TYPED_ACTIONS + ("extend",)
+
+    def take_action(self, action, dest, opt, value, values, parser):
+        if action == "extend":
+            values.ensure_value(dest, []).append(value)
+        else:
+            Option.take_action(self, action, dest, opt, value, values, parser)
 
 class ExistingSparseLoopbackDisk(SparseLoopbackDisk):
     """don't want to expand the disk"""
@@ -634,6 +647,8 @@ class LiveImageEditor(LiveImageCreator):
             pkg = options.install_dup
         elif options.install:
             pkg = options.install
+        elif options.ssh_keys:
+            pkg = "ssh-key-edit"
         print "Creating Manifests"
         # Create post-image processing manifests
         cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
@@ -1040,24 +1055,26 @@ enabled=1
             raise CreatorError("Failed to set password, %s " % e)
 
     def _setup_ssh_keys(self,options):
-        for key in options.ssh_keys.split(","):
+        for key in options.ssh_keys:
             # if no users defined, default is admin
-            if options.key_users is None:
-                options.key_users = "admin"
-            for user in options.key_users.split(","):
-                if user == "root":
-                    home = "/root/.ssh"
-                else:
-                    home = "/home/%s/.ssh" % user
-                if not os.path.exists(self._instroot + home):
-                    os.mkdir(self._instroot + home)
-                k = open(key).read()
+            if "," in key:
+                user, keyfile = key.split(",")
+            else:
+                user = "admin"
+                keyfile = key
+            if user == "root":
+                home = "/root/.ssh"
+            else:
+                home = "/home/%s/.ssh" % user
+            if not os.path.exists(self._instroot + home):
+                os.system("mkdir -p %s%s" % (self._instroot, home))
+                k = open(keyfile).read()
                 f = open(self._instroot + home + "/authorized_keys", "a")
                 f.write(k)
                 f.close()
 
 def parse_options(args):
-    parser = optparse.OptionParser(usage = """
+    parser = optparse.OptionParser(option_class=MultipleOption, usage = """
        %prog [-n=<name>]
                       [-o <output>]
                       [-k <kickstart-file>]
@@ -1091,7 +1108,7 @@ def parse_options(args):
     parser.add_option("-w", "--passwd", type="string", dest="password",
                       help="encrypted password")
 
-    parser.add_option("-l", "--sshkey", type="string", dest="ssh_keys",
+    parser.add_option("-l", "--sshkey", action="extend", dest="ssh_keys",
                       help="comma delimited list of ssh public key files")
 
     parser.add_option("-u", "--key_users", type="string", dest="key_users",
@@ -1208,10 +1225,26 @@ def main():
     try:
         rebuild = 1
         mount = True
+        p = ""
+        if options.install:
+            p = options.install
+        elif options.install_dup:
+            p = options.install_dup
+        elif options.plugin:
+            p = options.plugin
         if options.kscfg:
             editor.ks = read_kickstart(options.kscfg)
             # part / --size <new rootfs size to be resized to>
             editor._LoopImageCreator__image_size = kickstart.get_image_size(editor.ks)
+        if options.ssh_keys:
+            for key in options.ssh_keys:
+                if "," in key:
+                    user, keyfile = key.split(",")
+                else:
+                    keyfile = key
+                if not os.path.exists(keyfile):
+                    print "\nInvalid Key Path: %s" % os.path.abspath(keyfile)
+                    return False
         if options.getmanifests:
             editor._get_manifests(LiveOS)
             mount = False
@@ -1221,22 +1254,9 @@ def main():
         elif options.printmanifests:
             editor._print_manifests(LiveOS)
             mount = False
-
-        elif options.repo is None:
-            p = ""
-            if options.install:
-                p = options.install
-            elif options.install_dup:
-                p = options.install_dup
-            elif options.plugin:
-                p = options.plugin
-            else:
-                print "An Editing Option Must Be Specified"
-                return False
-            if not os.path.isfile(p) and len(p) > 0:
-                print "\nInvalid Package Path: %s Or Missing --repo Option" \
-                       % os.path.abspath(p)
-                return False
+        elif options.repo is None and len(p) > 0:
+            print "An Editing Option Must Be Specified"
+            return False
         # only mount rootfs as required since it's not necesary for all operations
         elif mount:
             editor.mount(LiveOS, cachedir = None)
