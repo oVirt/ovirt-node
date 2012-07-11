@@ -69,12 +69,14 @@ LOCKED_PAGE = 99
 
 OVIRT_VARS = parse_defaults()
 
+
 def pam_conv(auth, query_list):
     global login_password
     resp = []
     for i in range(len(query_list)):
         resp.append((login_password, 0))
     return resp
+
 
 class NodeConfigScreen():
     """
@@ -244,11 +246,11 @@ class NodeConfigScreen():
         if page == LOCKED_PAGE:
             return self.screen_locked_page(screen)
         # plugin pages
-        plugin_page=FIRST_PLUGIN_PAGE
+        plugin_page = FIRST_PLUGIN_PAGE
         for p in self.plugins:
             if page == plugin_page:
                 return p.form()
-            plugin_page+=1
+            plugin_page += 1
             if plugin_page > LAST_PLUGIN_PAGE:
                 # should not happen
                 return None
@@ -430,7 +432,6 @@ class NodeConfigScreen():
                 self.dhcp_ipv6_nic_proto.setValue(" 0")
                 self.static_ipv6_nic_proto.setValue(" 0")
 
-
     def ipv6_ip_callback(self):
         warn = 0
         if not self.ipv6_netdevip.value() is None and not self.ipv6_netdevip.value() == "":
@@ -585,7 +586,7 @@ class NodeConfigScreen():
                 self.gridform.draw()
 
     def valid_iqn_callback(self):
-        if not self.iscsi_initiator_config.value() =="":
+        if not self.iscsi_initiator_config.value() == "":
             if not is_valid_iqn(self.iscsi_initiator_config.value()):
                 self._create_warn_screen()
                 ButtonChoiceWindow(self.screen, "Configuration Check", "Invalid IQN Format", buttons = ['Ok'])
@@ -734,7 +735,7 @@ class NodeConfigScreen():
         running_vms_grid.setField(Label("Running VMs:   "), 0, 0, anchorLeft = 1)
         running_vms_grid.setField(self.jobs_status, 1, 0, anchorLeft = 1)
         main_grid.setField(elements, 0, 1, anchorLeft = 1)
-        hwvirt_msg =  get_virt_hw_status()
+        hwvirt_msg = get_virt_hw_status()
         if not hwvirt_msg is "":
             self.hwvirt = Textbox(50, 1, hwvirt_msg)
             main_grid.setField(self.hwvirt, 0, 3, anchorLeft = 1, padding=(0, 1, 0, 0))
@@ -805,7 +806,6 @@ class NodeConfigScreen():
         else:
             self.netconsole_server_port.set(netconsole_server_port)
         return [Label(""), elements]
-
 
     def authentication_configuration_page(self, screen):
         elements = Grid(2, 9)
@@ -1112,7 +1112,7 @@ class NodeConfigScreen():
         for vlan in get_system_vlans():
             # XXX wrong match e.g. eth10.1 with eth1
             if self.nic_lb.current() in vlan:
-                vlan_id = vlan.replace(self.nic_lb.current()+".", "")
+                vlan_id = vlan.replace(self.nic_lb.current() + ".", "")
                 self.netvlanid.set(vlan_id)
         vlan_grid.setField(Label("VLAN ID: "), 0, 0, anchorLeft = 1)
         vlan_grid.setField(self.netvlanid, 1, 0)
@@ -1174,7 +1174,6 @@ class NodeConfigScreen():
         elements.setField(pw_elements, 0, 7, anchorLeft=1)
         elements.setField(self.pw_msg, 0, 8, padding =(0, 1, 0, 0))
         return [Label(""), elements]
-
 
     def keyboard_configuration_page(self, screen):
         # placeholder for system-config-keyboard-base, will remove move later
@@ -1298,7 +1297,8 @@ class NodeConfigScreen():
         return [Label(""), elements]
 
     def menuSpacing(self):
-        if not self.__current_page == NETWORK_DETAILS_PAGE: # pages that dont use main listbox
+        # pages that dont use main listbox
+        if not self.__current_page == NETWORK_DETAILS_PAGE:
             if self.menu_list.current() != self.__current_page:
                 self.__current_page = self.menu_list.current()
                 screen.start()
@@ -1332,7 +1332,7 @@ class NodeConfigScreen():
         if self.net_hostname.value() == "":
             network.remove_non_localhost()
             augtool("set", "/files/etc/sysconfig/network/HOSTNAME", "")
-            system_closefds("hostname \"" + self.net_hostname.value()+"\"")
+            system_closefds("hostname \"" + self.net_hostname.value() + "\"")
         elif self.net_hostname.value() != self.current_hostname and is_valid_hostname(self.net_hostname.value()):
             network.remove_non_localhost()
             network.add_localhost_alias(self.net_hostname.value())
@@ -1595,12 +1595,12 @@ class NodeConfigScreen():
         if self.__current_page == LOCKED_PAGE:
             ret = self.process_locked_screen()
         # plugin pages
-        plugin_page=FIRST_PLUGIN_PAGE
+        plugin_page = FIRST_PLUGIN_PAGE
         for p in self.plugins:
             if self.__current_page == plugin_page:
                 ret = p.action()
                 break
-            plugin_page+=1
+            plugin_page += 1
             if plugin_page > LAST_PLUGIN_PAGE:
                 # should not happen
                 break
@@ -1672,7 +1672,7 @@ class NodeConfigScreen():
         for imp, mod, ispkg in pkgutil.iter_modules(ovirt_config_setup.__path__, "ovirt_config_setup."):
             module = __import__(mod, fromlist="dummy")
             self.plugins.append(module.get_plugin(self))
-            self.last_option+=1
+            self.last_option += 1
 
         active = True
         # check for screenlock status
