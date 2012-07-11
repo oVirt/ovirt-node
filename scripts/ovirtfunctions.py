@@ -150,14 +150,16 @@ class passthrough(object):
     proc = None
     retval = None
     stdout = None
+
     def __init__(self, cmd, log_func=None):
         import subprocess as sp
         if log_func is not None:
-            log_func ("Running: %s" % cmd)
+            log_func("Running: %s" % cmd)
         self.proc = sp.Popen(cmd, shell=True, stdout=sp.PIPE, \
                              stderr=sp.STDOUT)
         self.stdout = self.proc.stdout.read()
         self.retval = self.proc.wait()
+
     def __str__(self):
         return self.stdout
 
@@ -889,7 +891,7 @@ def is_valid_hostname(hostname):
 def is_valid_nfs(nfs_entry):
     regex = "^([a-zA-Z0-9_\-]+)([\.][a-zA-Z0-9_\-]+)+([:][/][a-zA-Z0-9\~\(\)_\-]*)+([\.][a-zA-Z0-9\(\)_\-]+)*"
     if re.match(regex, nfs_entry):
-        ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}', nfs_entry)
+        ip = re.findall(r'[0-9]+(?:\.[0-9]+){3}', nfs_entry)
         try:
             if ip[0]:
                 if is_valid_ipv4(ip[0]):
@@ -917,7 +919,7 @@ def is_valid_url(host):
         return False
 
 def is_valid_host_or_ip(host_or_ip):
-    if host_or_ip != "" :
+    if host_or_ip != "":
         if is_valid_ipv4(host_or_ip):
             return True
         if is_valid_ipv6(host_or_ip):
@@ -1171,7 +1173,7 @@ def system(command):
     else:
         return False
 
-def password_check(password_1, password_2, min_length = 1):
+def password_check(password_1, password_2, min_length=1):
     '''
     Do some password checks
 
@@ -1230,7 +1232,7 @@ def get_virt_hw_status():
 
 def get_ssh_hostkey(variant="rsa"):
     fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant
-    hostkey = open(fn_hostkey).read ()
+    hostkey = open(fn_hostkey).read()
     hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
     hostkey_fp_lookup = subprocess_closefds(hostkey_fp_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     fingerprint = hostkey_fp_lookup.stdout.read().strip().split(" ")[1]
@@ -1249,7 +1251,7 @@ def logical_to_physical_networks():
             dev_interface = device.get_property("INTERFACE")
             dev_address = get_mac_address(dev_interface)
             bridge_cmd = "/files/etc/sysconfig/network-scripts/ifcfg-%s/BRIDGE" % str(dev_interface)
-            dev_bridge =  augtool_get(bridge_cmd)
+            dev_bridge = augtool_get(bridge_cmd)
         except:
             pass
         if not dev_bridge is None:
