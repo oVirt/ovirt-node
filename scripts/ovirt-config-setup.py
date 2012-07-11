@@ -1699,36 +1699,43 @@ class NodeConfigScreen():
                 self.menu_list.append(" Kernel Dump", 7)
                 self.menu_list.append(" Remote Storage", 8)
                 # plugin menu options
-                plugin_page=FIRST_PLUGIN_PAGE
-                for p in self.plugins :
+                plugin_page = FIRST_PLUGIN_PAGE
+                for p in self.plugins:
                     self.menu_list.append(" " + p.label(), plugin_page)
-                    plugin_page+=1
-                    if plugin_page > LAST_PLUGIN_PAGE :
+                    plugin_page += 1
+                    if plugin_page > LAST_PLUGIN_PAGE:
                         # should not happen
-                        raise "Too many plugins installed: max. %d are allowed." % ((LAST_PLUGIN_PAGE-FIRST_PLUGIN_PAGE)/2+1)
-                if self.__current_page != LOCKED_PAGE and self.__current_page != NETWORK_DETAILS_PAGE and self.__current_page != SUPPORT_PAGE:
+                        raise ("Too many plugins installed: max. %d are " +
+                              "allowed.") % ((LAST_PLUGIN_PAGE -
+                                              FIRST_PLUGIN_PAGE) / 2 + 1)
+                if (self.__current_page != LOCKED_PAGE and
+                    self.__current_page != NETWORK_DETAILS_PAGE and
+                    self.__current_page != SUPPORT_PAGE):
                     self.menu_list.setCurrent(self.__current_page)
                 if not self.screen_locked:
-                    if not self.__current_page == NETWORK_DETAILS_PAGE and not self.__current_page == SUPPORT_PAGE:
+                    if (not self.__current_page == NETWORK_DETAILS_PAGE and
+                        not self.__current_page == SUPPORT_PAGE):
                         self.menu_list.setCallback(self.menuSpacing)
                         self.gridform.add(self.menu_list, 0, 0,
-                                     anchorTop = 1, anchorLeft = 1,
-                                     growx = 0)
+                                     anchorTop=1, anchorLeft=1,
+                                     growx=0)
                 current_element = 0
                 for element in elements:
-                    content.setField(element, 0, current_element, anchorLeft = 1)
+                    content.setField(element, 0, current_element,
+                                     anchorLeft=1)
                     current_element += 1
                 (fullwidth, fullheight) = _snack.size()
                 screen.height = fullheight
                 current_element += 1
                 buttons = []
                 if self.__current_page == NETWORK_PAGE:
-                    buttons.append (["Flash Lights to Identify", IDENTIFY_BUTTON])
+                    buttons.append(["Flash Lights to Identify",
+                                    IDENTIFY_BUTTON])
                 if self.__current_page != STATUS_PAGE \
                    and self.__current_page < 20 \
                    and not (self.__current_page is NETWORK_DETAILS_PAGE and \
                             is_engine_configured()):
-                    buttons.append (["Apply", APPLY_BUTTON])
+                    buttons.append(["Apply", APPLY_BUTTON])
                 if self.__current_page == NETWORK_DETAILS_PAGE:
                     buttons.append(["Back", BACK_BUTTON])
                 if self.__current_page == STATUS_PAGE:
@@ -1746,13 +1753,15 @@ class NodeConfigScreen():
                     buttons.append(["Reset", RESET_BUTTON])
                 if self.__current_page == SUPPORT_PAGE:
                     buttons.append(["Back to Menu", MENU_BUTTON])
-                buttonbar = ButtonBar(screen, buttons, compact = 1)
+                buttonbar = ButtonBar(screen, buttons, compact=1)
                 if self.__current_page == LOCKED_PAGE:
                     pad = 28
                 else:
                     pad = 0
-                content.setField(buttonbar, 0, current_element, anchorLeft = 1, padding = (pad,0,0,0))
-                self.gridform.add(content, 1, 0, anchorTop = 1, padding = (2,0,0,0))
+                content.setField(buttonbar, 0, current_element, anchorLeft=1,
+                                 padding=(pad, 0, 0, 0))
+                self.gridform.add(content, 1, 0, anchorTop=1,
+                                  padding=(2, 0, 0, 0))
                 self.gridform.addHotKey("F2")
                 self.gridform.addHotKey("F8")
                 try:
@@ -1769,12 +1778,14 @@ class NodeConfigScreen():
                     except:
                         self.dom_count = "Failed to connect"
                     if str(self.dom_count).isdigit():
-                        warn_message= "There are %s Virtual Machines running\n\n" % str(self.dom_count)
+                        warn_message = ("There are %s Virtual Machines " +
+                                       "running\n\n") % str(self.dom_count)
                     else:
-                        warn_message= "Unable to verify any running vms\n\n"
+                        warn_message = "Unable to verify any running vms\n\n"
                     self._create_warn_screen()
                     if pressed == IDENTIFY_BUTTON:
-                        system_closefds("ethtool -p " + self.nic_lb.current() + " 10")
+                        system_closefds("ethtool -p " + self.nic_lb.current() +
+                                        " 10")
                     elif pressed == APPLY_BUTTON or pressed == UNLOCK_BUTTON:
                         errors = []
                         self.process_config()
@@ -1782,20 +1793,25 @@ class NodeConfigScreen():
                         self.__current_page = LOCKED_PAGE
                     elif pressed == RESTART_BUTTON:
                         self._create_warn_screen()
-                        warn = ButtonChoiceWindow(self.screen, "Confirm System Restart", warn_message + "This will restart the system, proceed?")
+                        warn = ButtonChoiceWindow(self.screen,
+                               "Confirm System Restart", warn_message +
+                               "This will restart the system, proceed?")
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
                             system_closefds("reboot")
                     elif pressed == POWER_OFF_BUTTON:
                         self._create_warn_screen()
-                        warn = ButtonChoiceWindow(self.screen, "Confirm System Shutdown", warn_message + "This will shutdown the system, proceed?")
+                        warn = ButtonChoiceWindow(self.screen,
+                               "Confirm System Shutdown", warn_message +
+                               "This will shutdown the system, proceed?")
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
                             system_closefds("/usr/bin/clear;shutdown -h now")
                     elif pressed == LOG_OFF_BUTTON:
-                        # will exit and ovirt-admin-shell cleans up tty lockfile and drops to login
+                        # will exit and ovirt-admin-shell cleans up
+                        # tty lockfile and drops to login
                         self.quit()
                     elif (result is self.ssh_hostkey_btn):
                         self.ssh_hostkey_btn_cb()
@@ -1807,12 +1823,16 @@ class NodeConfigScreen():
                     elif result == "F2" and self.__current_page != LOCKED_PAGE:
                         self._create_warn_screen()
                         title = "Shell Access"
-                        message = "This is a non persistent filesystem.  Any changes will be lost on reboot.  RPM installations may succeed, but changes will be lost when rebooted."
+                        message = ("This is a non persistent filesystem.  " +
+                                  "Any changes will be lost on reboot.  RPM " +
+                                  "installations may succeed, but changes " +
+                                  "will be lost when rebooted.")
                         warn = ButtonChoiceWindow(self.screen, title, message)
                         if warn == "ok":
                             screen.popWindow()
                             screen.finish()
-                            system_closefds("/usr/bin/clear;SHELL=/bin/bash /bin/bash")
+                            system_closefds("/usr/bin/clear;" +
+                                            "SHELL=/bin/bash /bin/bash")
                     else:
                         if self.__current_page == NETWORK_PAGE:
                             if menu_choice == NETWORK_PAGE:
@@ -1822,23 +1842,32 @@ class NodeConfigScreen():
                                     self.__current_page == NETWORK_PAGE
                                 else:
                                     # We want to enter the NIC details ...
-                                    current_network_config = self.get_tui_field_network_config()
-                                    if self.is_same_network_config (self.original_system_network_config, current_network_config):
-                                        self.__current_page = NETWORK_DETAILS_PAGE
+                                    current_network_config = (
+                                        self.get_tui_field_network_config())
+                                    if self.is_same_network_config(
+                                           self.original_system_network_config,
+                                           current_network_config):
+                                        self.__current_page = (
+                                             NETWORK_DETAILS_PAGE)
                                     else:
                                         warn = None
                                         self._create_warn_screen()
                                         title = "Confirm NIC Configuration"
-                                        message = "Unsaved network changes detected, save and continue to NIC configuration?"
-                                        warn = ButtonChoiceWindow(self.screen, title, message)
+                                        message = ("Unsaved network changes " +
+                                          "detected, save and continue to " +
+                                          "NIC configuration?")
+                                        warn = ButtonChoiceWindow(self.screen,
+                                               title, message)
                                         if warn == "ok":
                                             # apply and continue
                                             self.process_network_config()
-                                            self.__current_page = NETWORK_DETAILS_PAGE
+                                            self.__current_page = (
+                                                NETWORK_DETAILS_PAGE)
                                             self.preset_network_config = None
                                         else:
                                             # Do not apply, return
-                                            self.preset_network_config = current_network_config
+                                            self.preset_network_config = (
+                                                current_network_config)
                             else:
                                 self.__current_page = menu_choice
                             if self.net_apply_config == 1:
@@ -1853,25 +1882,26 @@ class NodeConfigScreen():
                             elif is_managed():
                                 self.__current_page = NETWORK_PAGE
                             else:
-                               self.__current_page = menu_choice
+                                self.__current_page = menu_choice
                         elif self.__current_page == SUPPORT_PAGE:
-                           logger.debug("Pressed: " + str(pressed))
-                           if pressed == MENU_BUTTON:
-                               self.__current_page = STATUS_PAGE
-                           else:
-                               f = self.log_menu_list.current()
-                               screen.popWindow()
-                               screen.finish()
-                               system_closefds("/usr/bin/clear;SHELL=/bin/false /usr/bin/less -R " + f)
+                            logger.debug("Pressed: " + str(pressed))
+                            if pressed == MENU_BUTTON:
+                                self.__current_page = STATUS_PAGE
+                            else:
+                                f = self.log_menu_list.current()
+                                screen.popWindow()
+                                screen.finish()
+                                system_closefds("/usr/bin/clear;" +
+                                "SHELL=/bin/false /usr/bin/less -R " + f)
                         else:
                             self.__current_page = menu_choice
                 except Exception, error:
                     self._create_warn_screen()
                     os.remove(lockfile)
                     ButtonChoiceWindow(screen,
-                                       "An Exception Has Occurred",
-                                       str(error) + "\n" + traceback.format_exc(),
-                                       buttons = ["OK"])
+                                   "An Exception Has Occurred",
+                                   str(error) + "\n" + traceback.format_exc(),
+                                   buttons=["OK"])
                 screen.popWindow()
                 screen.finish()
                 self.restore_console_colors()
@@ -1880,9 +1910,11 @@ if __name__ == "__main__":
     if is_rescue_mode():
         print "Unable to run setup in rescue mode"
         sys.exit(1)
-    elif is_booted_from_local_disk() or is_stateless() or "--force" in sys.argv:
+    elif (is_booted_from_local_disk() or is_stateless() or
+          "--force" in sys.argv):
         if manual_setup() and "--force" not in sys.argv:
-            print "Unable to run setup manually, Run \"exit\" to return to setup"
+            print ("Unable to run setup manually, Run \"exit\" to return " +
+                  "to setup")
         else:
             tty = get_ttyname()
             lockfile = "/tmp/ovirt-setup.%s" % tty
