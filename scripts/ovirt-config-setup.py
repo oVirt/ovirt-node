@@ -83,41 +83,41 @@ class NodeConfigScreen():
 
     def __init__(self):
         _console_colorset = {
-                        "ROOT"           : ("gray",  "magenta"),
-                        "BORDER"         : ("magenta", "magenta"),
-                        "WINDOW"         : ("magenta", "magenta"),
-                         "ACTBUTTON"     : ("blue",  "white"),
-                         "BUTTON"        : ("blue",  "white"),
-                         "COMPACTBUTTON" : ("black", "magenta"),
-                         "LISTBOX"       : ("green",  "red"),
-                         "ACTLISTBOX"    : ("cyan", "red"),
-                         "ACTSELLISTBOX" : ("blue",  "white"),
-                         "TEXTBOX"       : ("cyan",  "magenta"),
-                         "ENTRY"         : ("cyan", "magenta"),
-                         "DISENTRY"      : ("white", "cyan"),
-                         "SHADOW"        : ("magenta",  "magenta"),
-                         "LABEL"         : ("brown",  "magenta"),
-                         "TITLE"         : ("white",  "blue"),
-                         "HELPLINE"      : ("cyan",  "magenta"),
-                         "EMPTYSCALE"    : ("white",  "cyan"),
-                         "FULLSCALE"     : ("cyan",  "white"),
-                         "CHECKBOX"      : ("black",  "red"),
-                         "ACTCHECKBOX"   : ("blue", "white")
+                        "ROOT": ("gray",  "magenta"),
+                        "BORDER": ("magenta", "magenta"),
+                        "WINDOW": ("magenta", "magenta"),
+                         "ACTBUTTON": ("blue",  "white"),
+                         "BUTTON": ("blue",  "white"),
+                         "COMPACTBUTTON": ("black", "magenta"),
+                         "LISTBOX": ("green",  "red"),
+                         "ACTLISTBOX": ("cyan", "red"),
+                         "ACTSELLISTBOX": ("blue",  "white"),
+                         "TEXTBOX": ("cyan",  "magenta"),
+                         "ENTRY": ("cyan", "magenta"),
+                         "DISENTRY": ("white", "cyan"),
+                         "SHADOW": ("magenta",  "magenta"),
+                         "LABEL": ("brown",  "magenta"),
+                         "TITLE": ("white",  "blue"),
+                         "HELPLINE": ("cyan",  "magenta"),
+                         "EMPTYSCALE": ("white",  "cyan"),
+                         "FULLSCALE": ("cyan",  "white"),
+                         "CHECKBOX": ("black",  "red"),
+                         "ACTCHECKBOX": ("blue", "white")
                          }
         _alternate_colorset = {
-                        "ROOT"          : ("white",  "white"),
-                        "HELPLINE"      : ("white",  "white"),
-                        "SHADOW"        : ("white",  "white"),
-                        "BORDER"        : ("white", "white"),
-                        "ACTBUTTON"     : ("white",  "blue"),
-                        "BUTTON"        : ("blue",  "white"),
-                        "TITLE"         : ("white",  "blue"),
-                        "EMPTYSCALE"    : ("white",  "cyan"),
-                        "FULLSCALE"     : ("black",  "white"),
-                        "CHECKBOX"      : ("blue",  "white"),
-                        "ROOTTEXT"      : ("white",  "blue"),
-                        "ACTSELLISTBOX" : ("white",  "black"),
-                        "LABEL"         : ("black",  "white"),
+                        "ROOT": ("white",  "white"),
+                        "HELPLINE": ("white",  "white"),
+                        "SHADOW": ("white",  "white"),
+                        "BORDER": ("white", "white"),
+                        "ACTBUTTON": ("white",  "blue"),
+                        "BUTTON": ("blue",  "white"),
+                        "TITLE": ("white",  "blue"),
+                        "EMPTYSCALE": ("white",  "cyan"),
+                        "FULLSCALE": ("black",  "white"),
+                        "CHECKBOX": ("blue",  "white"),
+                        "ROOTTEXT": ("white",  "blue"),
+                        "ACTSELLISTBOX": ("white",  "black"),
+                        "LABEL": ("black",  "white"),
                          }
 
         if is_console():
@@ -221,35 +221,35 @@ class NodeConfigScreen():
             self.screen.setColor(item, colors[0], colors[1])
 
     def get_elements_for_page(self, screen, page):
-        if page == STATUS_PAGE :
+        if page == STATUS_PAGE:
             return self.status_page(screen)
-        if page == NETWORK_PAGE :
+        if page == NETWORK_PAGE:
             return self.network_configuration_page(screen)
-        if page == AUTHENTICATION_PAGE :
+        if page == AUTHENTICATION_PAGE:
             return self.authentication_configuration_page(screen)
         if page == KEYBOARD_PAGE:
             return self.keyboard_configuration_page(screen)
         if page == SNMP_PAGE:
             return self.snmp_configuration_page(screen)
-        if page == LOGGING_PAGE :
+        if page == LOGGING_PAGE:
             return self.logging_configuration_page(screen)
-        if page == KDUMP_PAGE :
+        if page == KDUMP_PAGE:
             return self.kdump_configuration_page(screen)
-        if page == REMOTE_STORAGE_PAGE :
+        if page == REMOTE_STORAGE_PAGE:
             return self.remote_storage_configuration_page(screen)
-        if page == NETWORK_DETAILS_PAGE :
+        if page == NETWORK_DETAILS_PAGE:
             return self.network_details_page(screen)
-        if page == SUPPORT_PAGE :
+        if page == SUPPORT_PAGE:
             return self.support_page(screen)
-        if page == LOCKED_PAGE :
+        if page == LOCKED_PAGE:
             return self.screen_locked_page(screen)
         # plugin pages
         plugin_page=FIRST_PLUGIN_PAGE
-        for p in self.plugins :
+        for p in self.plugins:
             if page == plugin_page:
                 return p.form()
             plugin_page+=1
-            if plugin_page > LAST_PLUGIN_PAGE :
+            if plugin_page > LAST_PLUGIN_PAGE:
                 # should not happen
                 return None
 
@@ -682,7 +682,7 @@ class NodeConfigScreen():
                         ipv4_addr = "(Link Inactive)"
                     else:
                         ipv4_addr = "(DHCP Failed)"
-                if OVIRT_VARS.has_key("OVIRT_IPV6") and ipv6_addr != "" :
+                if OVIRT_VARS.has_key("OVIRT_IPV6") and ipv6_addr != "":
                         status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip(), ipv6_addr.strip())
                 else:
                     status_text += "%1s: %5s %14s \n" % (key.strip(), dev_bootproto.strip(), ipv4_addr.strip())
@@ -813,7 +813,7 @@ class NodeConfigScreen():
         if is_console():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft = 1)
-        pw_elements = Grid (3, 3)
+        pw_elements = Grid(3, 3)
         self.current_ssh_pwd_status = augtool_get("/files/etc/ssh/sshd_config/PasswordAuthentication")
         if self.current_ssh_pwd_status == "yes":
             self.current_ssh_pwd_status = 1
@@ -989,7 +989,7 @@ class NodeConfigScreen():
         current_gateway = get_gateway(dev)
         if is_valid_ipv4(current_gateway) or is_valid_ipv6(current_gateway):
             self.ipv4_netdevgateway.set(current_gateway)
-        ipv4_grid = Grid (5, 3)
+        ipv4_grid = Grid(5, 3)
         ipv4_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)
         ipv4_grid.setField(Label(" Netmask: "), 3, 1, anchorLeft = 1)
         ipv4_grid.setField(Label("Gateway:"), 0, 2, anchorLeft = 1)
@@ -1083,7 +1083,7 @@ class NodeConfigScreen():
             current_gateway = get_ipv6_gateway(self.nic_lb.current())
             if current_gateway == "":
                 current_gateway = get_gateway("br" + self.nic_lb.current())
-        ipv6_grid = Grid (5, 4)
+        ipv6_grid = Grid(5, 4)
         ipv6_grid.setField(Label("IP Address: "), 0, 1, anchorLeft = 1)
         ipv6_grid.setField(Label("Netmask: "), 0, 2, anchorLeft = 1)
         ipv6_grid.setField(Label("Gateway:"), 0, 3, anchorLeft = 1)
@@ -1147,7 +1147,7 @@ class NodeConfigScreen():
         if is_console():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft = 1)
-        pw_elements = Grid (3, 3)
+        pw_elements = Grid(3, 3)
         self.current_snmp_status = 0
         if os.path.exists("/etc/snmp/snmpd.conf"):
             f = open("/etc/snmp/snmpd.conf")
@@ -1160,7 +1160,7 @@ class NodeConfigScreen():
         local_heading = Label("SNMP Password")
         if is_console():
             local_heading.setColors(customColorset(1))
-        elements.setField(local_heading, 0, 3, anchorLeft = 1, padding = (0, 2, 0, 0))
+        elements.setField(local_heading, 0, 3, anchorLeft = 1, padding =(0, 2, 0, 0))
         elements.setField(Label(" "), 0, 6)
         pw_elements.setField(Label("Password: "), 0, 1, anchorLeft = 1)
         pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft = 1)
@@ -1172,7 +1172,7 @@ class NodeConfigScreen():
         pw_elements.setField(self.root_password_2, 1, 2)
         self.pw_msg = Textbox(60, 6, "", wrap=1)
         elements.setField(pw_elements, 0, 7, anchorLeft=1)
-        elements.setField(self.pw_msg, 0, 8, padding = (0, 1, 0, 0))
+        elements.setField(self.pw_msg, 0, 8, padding =(0, 1, 0, 0))
         return [Label(""), elements]
 
 
@@ -1304,10 +1304,10 @@ class NodeConfigScreen():
                 screen.start()
 
     def get_tui_field_network_config(self):
-        return [ f.value() for f in self.network_config_fields ]
+        return [f.value() for f in self.network_config_fields]
 
     def is_same_network_config(self, a, b):
-        return all (x == y for x, y in zip(a, b))
+        return all(x == y for x, y in zip(a, b))
 
     def process_network_config(self):
         # First update the central "model" (defaults/ovirt)
@@ -1430,7 +1430,7 @@ class NodeConfigScreen():
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_ADDRESS", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_NETMASK", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IP_GATEWAY", "")
-            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6" , "")
+            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_ADDRESS", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_NETMASK", "")
             augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_IPV6_GATEWAY", "")
@@ -1596,12 +1596,12 @@ class NodeConfigScreen():
             ret = self.process_locked_screen()
         # plugin pages
         plugin_page=FIRST_PLUGIN_PAGE
-        for p in self.plugins :
+        for p in self.plugins:
             if self.__current_page == plugin_page:
                 ret = p.action()
                 break
             plugin_page+=1
-            if plugin_page > LAST_PLUGIN_PAGE :
+            if plugin_page > LAST_PLUGIN_PAGE:
                 # should not happen
                 break
         return
