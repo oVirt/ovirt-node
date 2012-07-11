@@ -488,6 +488,7 @@ class LiveImageEditor(LiveImageCreator):
         """Restore the boot configuration files for an iso image boot."""
 
         bootfolder = os.path.join(isodir, 'isolinux')
+        efifolder = os.path.join(isodir, 'EFI/BOOT')
         oldpath = os.path.join(isodir, 'syslinux')
         if os.path.exists(oldpath):
             os.rename(oldpath, bootfolder)
@@ -520,11 +521,20 @@ class LiveImageEditor(LiveImageCreator):
                     args.append('-e')
                     args.append("/^  append/s/$/ %s/" % param)
         args.append(cfgf)
+        # update BOOTX64.conf
+        eficfgf = os.path.join(efifolder, 'BOOTX64.conf')
+        efiargs = ['/bin/sed', '-i']
+        efiargs.append('-e')
+        efiargs.append('s/root=[^ ]*/root=live:CDLABEL=' + self.name[:32] + '/')
+        efiargs.append(eficfgf)
         dev_null = os.open("/dev/null", os.O_WRONLY)
         try:
             subprocess.Popen(args,
-                             stdout = subprocess.PIPE,
-                             stderr = dev_null).communicate()[0]
+                             stdout=subprocess.PIPE,
+                             stderr=dev_null).communicate()[0]
+            subprocess.Popen(efiargs,
+                             stdout=subprocess.PIPE,
+                             stderr=dev_null).communicate()[0]
             return 0
 
         except IOError, e:
