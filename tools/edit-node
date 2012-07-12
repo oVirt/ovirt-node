@@ -830,8 +830,6 @@ class LiveImageEditor(LiveImageCreator):
         if not self._setup_yum_repo(options):
             return False
         if not self._run_yum_install(options.install):
-            logging.error(output)
-            self._cleanup_editing()
             return False
         else:
             self._cleanup_editing()
@@ -1028,6 +1026,10 @@ enabled=1
 
     def _run_yum_install(self, pkgs):
         print "Running Yum Install"
+        if not os.path.exists("%s/usr/bin/yum" % self._instroot):
+            print "\nERROR: Yum Is Not Installed Within The ISO\n"
+            self._cleanup_editing()
+            return False
         if os.path.isfile(pkgs):
             os.system("mkdir %s/tmp/yumrepo" % self._instroot)
             os.system("touch %s/tmp/yumrepo/%s" % (self._instroot,os.path.basename(pkgs)))
