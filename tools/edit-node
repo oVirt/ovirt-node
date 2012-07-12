@@ -632,7 +632,17 @@ class LiveImageEditor(LiveImageCreator):
         f = open("%s/etc/system-release" % self._instroot)
         output = f.readline()
         f.close()
-        print "\n%s\n" % output
+        return output
+
+    def _update_version(self, options):
+        ver = self._print_version().strip()
+        f = open("%s/etc/system-release" % self._instroot, "w")
+        status = "Edited"
+        if not options.gpgcheck:
+            status += ", Unsigned"
+        f.write("%s (%s)" % (ver, status))
+        f.close()
+        print "done"
         return True
 
     def _print_rpm_manifest(self):
@@ -1026,7 +1036,13 @@ enabled=1
             yum_cmd = "yum localinstall -y /tmp/yumrepo/%s" % os.path.basename(pkgs)
         else:
             yum_cmd = "yum install -y %s " % pkgs
-        yum = subprocess.Popen(yum_cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        # make sure rpm keys are imported
+        rpm_cmd = "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY*"
+        rpm = subprocess.Popen(rpm_cmd, shell=True, stdout=PIPE, \
+                                stderr=STDOUT, preexec_fn=self._chroot)
+        output, err = rpm.communicate()
+        yum = subprocess.Popen(yum_cmd, shell=True, stdout=PIPE, \
+                               stderr=STDOUT, preexec_fn=self._chroot)
         output, err = yum.communicate()
         print output
         if yum.returncode > 0:
@@ -1271,7 +1287,8 @@ def main():
         elif mount:
             editor.mount(LiveOS, cachedir = None)
             if options.printversion:
-                editor._print_version()
+                ver = editor._print_version()
+                print "\n%s\n" % ver
                 rebuild = 0
             if options.filemanifest:
                 editor._print_file_manifest()
@@ -1308,6 +1325,7 @@ def main():
             if not options.ssh_keys is None:
                 editor._setup_ssh_keys(options)
             if rebuild == 1:
+                editor._update_version(options)
                 editor._create_manifests(options)
                 print "Editing Complete"
                 editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
