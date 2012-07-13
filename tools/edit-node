@@ -1091,12 +1091,20 @@ enabled=1
             return False
 
     def _set_password(self,options):
-        cmd = "/usr/sbin/usermod -p \"%s\" admin" % options.password
-        try:
-            print self._chroot
-            subprocess.call([cmd], preexec_fn = self._chroot, shell=True)
-        except OSError, e:
-            raise CreatorError("Failed to set password, %s " % e)
+        for key in options.password:
+            # if no users defined, default is admin
+            if "," in key:
+                user, password = key.split(",")
+            else:
+                user = "root"
+                password = key
+            cmd = "/usr/sbin/usermod -p \"%s\" %s" % (password, user)
+            print cmd
+            try:
+                print self._chroot
+                subprocess.call([cmd], preexec_fn = self._chroot, shell=True)
+            except OSError, e:
+                raise CreatorError("Failed to set password, %s " % e)
 
     def _setup_ssh_keys(self,options):
         for key in options.ssh_keys:
@@ -1123,9 +1131,8 @@ def parse_options(args):
                       [-o <output>]
                       [-k <kickstart-file>]
                       [-s <script.sh>]
-                      [-w <encrypted password>
+                      [-w <user,encrypted password>
                       [-l <sshkeyfile>
-                      [-u <ssh_key_users>
                       [-t <tmpdir>]
                       [-r <releasefile>]
                       [-b <builder>]
@@ -1149,14 +1156,11 @@ def parse_options(args):
                       help="specify script to run chrooted in the LiveOS "
                            "fsimage")
 
-    parser.add_option("-w", "--passwd", type="string", dest="password",
-                      help="encrypted password")
+    parser.add_option("-w", "--passwd", action="extend", dest="password",
+                      help="comma delimited list of user and encrypted password")
 
     parser.add_option("-l", "--sshkey", action="extend", dest="ssh_keys",
                       help="comma delimited list of ssh public key files")
-
-    parser.add_option("-u", "--key_users", type="string", dest="key_users",
-                      help="comma delimited list of user account for ssh public key files")
 
     parser.add_option("-t", "--tmpdir", type="string",
                       dest="tmpdir", default="/var/tmp",
@@ -1243,7 +1247,6 @@ def rebuild_iso_symlinks(isodir):
 def main():
     # LiveOS set to <LIVEIMG.src>
     (LiveOS, options) = parse_options(sys.argv[1:])
-
     if os.geteuid () != 0:
         print >> sys.stderr, "You must run edit-node as root"
         return 1
@@ -1338,7 +1341,7 @@ def main():
                     logging.error("Error Installing Drive Update Package : %s" % options.install_dup)
                     return 1
             if not options.password is None:
-                print "Setting Admin Password"
+                print "Setting Account Passwords"
                 editor._set_password(options)
             if not options.ssh_keys is None:
                 editor._setup_ssh_keys(options)
