@@ -914,10 +914,11 @@ class LiveImageEditor(LiveImageCreator):
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
     def _setup_yum_repo(self, options):
         print "Configuring Yum Repo"
+        self.dd_dir = tempfile.mkdtemp(dir =  os.path.abspath(self.tmpdir), prefix = "dd-iso")
         if not options.repo:
             return True
         else:
-            if os.path.isfile(options.repo):
+            if os.path.isfile(options.repo) and not options.repo.lower().endswith(".iso"):
                 cmd = "touch /etc/yum.repos.d/plugin.repo"
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
                 output, err = f.communicate()
@@ -933,7 +934,21 @@ class LiveImageEditor(LiveImageCreator):
                     print output
                     return False
                 return True
-            elif os.path.isdir(options.repo):
+            elif os.path.isdir(options.repo) or options.repo.lower().endswith(".iso"):
+                if options.repo.lower().endswith(".iso"):
+                    cmd = "mount -o loop %s %s" % (options.repo, self.dd_dir)
+                    f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                    output, err = f.communicate()
+                    if f.returncode > 0:
+                        print cmd
+                        print output
+                        print "Can't Mount Driver Disk ISO"
+                        return False
+                    if os.path.exists("%s/rpms/x86_64" % self.dd_dir):
+                        options.repo = "%s/rpms/x86_64" % self.dd_dir
+                    else:
+                        print "Cant find rpm directory: %s/rpms/x86_64" % self.dd_dir
+                        return False
                 os.system("mkdir %s/tmp/yumrepo" % self._instroot)
                 cmd = "mount -o bind %s %s/tmp/yumrepo" % (options.repo, self._instroot)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -1050,6 +1065,7 @@ enabled=1
         if yum.returncode > 0:
             print "Yum Install Failed"
             logging.error(output)
+            self._cleanup_editing()
             return False
         if "localinstall" in yum_cmd:
             os.system("umount %s/tmp/yumrepo/%s" % (self._instroot,os.path.basename(pkgs)))
