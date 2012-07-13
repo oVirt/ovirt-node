@@ -846,7 +846,7 @@ EOP
     # check if root or admin password is expired, this might be upon reboot
     # in case of automated installed with rootpw or adminpw parameter!
     if LC_ALL=C chage -l root | grep  -q "password must be changed" \
-        || LC_ALL=c chage -l admin | grep -q "password must be changed"; then
+        || LC_ALL=C chage -l admin | grep -q "password must be changed"; then
         unmount_config /etc/passwd /etc/shadow
         # PAM will force password change at first login
         # so make sure we persist it after a successful login
