@@ -37,6 +37,7 @@ class Install:
         self.disk = None
         self.partN = -1
         self.s = Storage()
+        self.efi_hd = ""
 
     def kernel_image_copy(self):
         if not system("cp -p /live/" + self.syslinux + "/vmlinuz0 " +
@@ -90,9 +91,11 @@ class Install:
         device_map_conf.close()
 
         GRUB_CONFIG_TEMPLATE = """
+%(efi_hd)s
 default saved
 timeout 5
 hiddenmenu
+splashimage=(hd0,%(partN)s)/grub/splash.xpm.gz
 title %(product)s %(version)s-%(release)s
     root (hd0,%(partN)d)
     kernel /vmlinuz0 %(root_param)s %(bootparams)s
@@ -110,8 +113,19 @@ root (hd0,%(partN)d)
 setup --prefix=%(grub_prefix)s (hd0)
 EOF
 """
+
         if is_efi_boot():
-            self.grub_config_file = "/liveos/efi/EFI/ovirt/grub.conf"
+            self.grub_config_file = "/liveos/efi/EFI/redhat/grub.conf"
+            """ The EFI product path.
+                eg: HD(1,800,64000,faacb4ef-e361-455e-bd97-ca33632550c3)
+            """
+            efi_cmd = "efibootmgr -v"
+            efi = subprocess_closefds(efi_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            efi_out = efi.stdout.read().strip()
+            matches = re.search(PRODUCT_SHORT + r'\s+(HD\(.+?\))', efi_out)
+            if matches and matches.groups():
+                self.grub_dict['efi_hd'] = "device (hd0) " + matches.group(1)
+            GRUB_CONFIG_TEMPLATE % self.grub_dict
         grub_conf = open(self.grub_config_file, "w")
         grub_conf.write(GRUB_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
@@ -122,6 +136,8 @@ EOF
             self.grub_dict['partB'] = partB
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
         grub_conf.close()
+        # splashscreen
+        system("cp /live/EFI/BOOT/splash.xpm.gz /liveos/grub")
         if not is_efi_boot():
             for f in ["stage1", "stage2", "e2fs_stage1_5"]:
                 system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f,
@@ -333,12 +349,24 @@ initrd /initrd0.img
                     if i == 5:
                         logger.error("Timed out waiting for /liveos/efi mount")
                         return False
-                system("mkdir -p /liveos/efi/EFI/ovirt")
+                system("mkdir -p /liveos/efi/EFI/redhat")
                 system("cp /boot/efi/EFI/redhat/grub.efi " +
-                       "/liveos/efi/EFI/ovirt/grub.efi")
+                       "/liveos/efi/EFI/redhat/grub.efi")
                 efi_disk = re.sub("p[1,2,3]$", "", self.disk)
                 # generate grub legacy config for efi partition
-                efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\ovirt\\grub.efi' " +
+                #remove existing efi entries
+                efi_mgr_cmd = "efibootmgr|grep '%s'" % PRODUCT_SHORT
+                efi_mgr = subprocess_closefds(efi_mgr_cmd, shell=True, \
+                                              stdout=PIPE, stderr=STDOUT)
+                efi_out = efi_mgr.stdout.read().strip()
+                logger.debug(efi_mgr_cmd)
+                logger.debug(efi_out)
+                for line in efi_out.splitlines():
+                    if not "Warning" in line:
+                        num = line[4:8] # grabs 4 digit hex id
+                        cmd = "efibootmgr -B -b %s" % num
+                        system(cmd)
+                efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\redhat\\grub.efi' " +
                               "-L '%s' -d %s -v") % (PRODUCT_SHORT, efi_disk)
                 logger.info(efi_mgr_cmd)
                 system(efi_mgr_cmd)
@@ -410,7 +438,8 @@ initrd /initrd0.img
         "bootparams": self.bootparams,
         "disk": self.disk,
         "grub_dir": self.grub_dir,
-        "grub_prefix": self.grub_prefix
+        "grub_prefix": self.grub_prefix,
+        "efi_hd": self.efi_hd
     }
 
         if os.path.exists("/sbin/grub2-install"):
