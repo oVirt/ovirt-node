@@ -1,0 +1,3 @@
+[submodule "libs/uinput"]
+	path = tests/igor/libs/uinput
+	url = https://github.com/tuomasjjrasanen/python-uinput.git

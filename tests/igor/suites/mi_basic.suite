@@ -2,7 +2,8 @@
 #
 # On eset per line, this is no script
 #
-
+# Where to look for testsets.
+# By default it's the dirname of this file
 searchpath:../sets/
 
 tui/installation.set

@@ -4,12 +4,18 @@
 #
 
 # Where to look for testsets.
-# By default it's the dirname of this file (basic.suite)
+# By default it's the dirname of this file
 searchpath:../sets/
 
 # Now all the sets that form this suite:
+after_auto_install.set
+
 basic.set
 reboot.set
 services.set
+python.set
+
+tui/login.set
+tui/check_navigation.set
 
 after_testing.set
