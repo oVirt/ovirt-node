@@ -3,6 +3,8 @@
 # On eset per line, this is no script
 #
 
+description:Automated installation with minimal additional (no TUI) tests.
+
 # Where to look for testsets.
 # By default it's the dirname of this file
 searchpath:../sets/
