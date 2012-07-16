@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#
+# DESCRIPTION
+#
+
+COMMONLIB=${IGOR_LIBDIR}/common/common.sh
+[[ -e $COMMONLIB ]] && . $COMMONLIB
+
+FAILED=false
+
+# work …
+
+if $FAILED;
+then
+  return 1
+fi
+
+exit 0

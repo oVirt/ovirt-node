@@ -1,0 +1,14 @@
+#
+# Does some checks on services
+# One testcase per line, this is no script
+#
+
+searchpath:../
+
+
+lib:libs/common
+
+# First wait for boot process to finish
+tcs/wait_for_getty.sh
+
+tcs/services_are_running.sh

@@ -1,0 +1,17 @@
+This repository [1] contains all sorts of Igor [2] tests for oVirt Node.
+
+Look into docs/ to learn how to write testsuites, testsets and testcases.
+
+The remaining folders are organized as follows:
+suites/		Contains testsuites (and testsuites reference testsets)
+sets/		Contains testsets (and testsets reference testcases and libraries)
+tcs/		Contains testcases (which are scripts)
+
+
+Feel free to suggest more cases and join us at
+  http://www.ovirt.org
+  irc://irc.oftc.net/#ovirt
+
+--
+[1] http://gerrit.ovirt.org/gitweb?p=ovirt-node-tests.git
+[2] http://www.gitorious.org/ovirt/igord

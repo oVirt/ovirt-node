@@ -1,0 +1,14 @@
+#
+# Does some basic checks
+# One testcase per line, this is no script
+#
+
+searchpath:../
+
+
+lib:libs/common
+
+
+tcs/installation_completed.sh   timeout=900
+
+tcs/set_admin_password.sh

@@ -1,0 +1,20 @@
+#
+# Does some TUI navigation checks
+# One testcase per line, this is no script
+#
+
+#
+# Libraries
+#
+searchpath:../../libs
+
+lib:common
+lib:uinput
+
+
+#
+# Testcases
+#
+searchpath:../../tcs
+
+uinput/enter_all_top_menus.py

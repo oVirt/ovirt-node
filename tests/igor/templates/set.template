@@ -1,0 +1,12 @@
+#
+# Does some basic checks
+# One testcase per line, this is no script
+#
+
+searchpath:../
+
+
+lib:libs/common
+
+
+# On testcase after another …

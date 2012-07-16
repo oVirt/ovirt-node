@@ -1,0 +1,21 @@
+#
+# A basic TUI installation
+# One testcase per line, this is no script
+#
+
+#
+# Libraries
+#
+searchpath:../../libs
+
+lib:common
+lib:uinput
+
+
+#
+# Testcases
+#
+searchpath:../../tcs
+
+sleep_60.sh                             timeout=70
+uinput/basic_tui_installation.py        timeout=600     # Timeout for install and reboot

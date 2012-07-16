@@ -1,0 +1,15 @@
+#
+#
+# On eset per line, this is no script
+#
+
+# Where to look for testsets.
+# By default it's the dirname of this file (basic.suite)
+searchpath:../sets/
+
+# Now all the sets that form this suite:
+basic.set
+reboot.set
+services.set
+
+after_testing.set

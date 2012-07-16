@@ -1,0 +1,19 @@
+#
+# Does some basic checks
+# One testcase per line, this is no script
+#
+
+#
+# Libraries
+#
+searchpath:../libs
+
+lib:common
+
+
+#
+# Testcases
+#
+searchpath:../tcs
+
+python/run_doctests.py

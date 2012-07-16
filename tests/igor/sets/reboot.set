@@ -1,0 +1,13 @@
+#
+# Runs a reboot cycle
+# One testcase per line, this is no script
+#
+
+searchpath:../
+
+
+lib:libs/common
+
+
+tcs/reboot_initiate.sh      timeout=10
+tcs/reboot_completed.sh     timeout=240         # Rebooting takes a while

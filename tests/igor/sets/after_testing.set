@@ -1,0 +1,14 @@
+#
+# Does some stuff after all testcases were run
+# One testcase per line, this is no script
+#
+
+searchpath:../
+
+
+lib:libs/common
+
+
+searchpath:../tcs/
+
+check_dmesg.sh

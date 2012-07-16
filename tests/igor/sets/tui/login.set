@@ -1,0 +1,21 @@
+#
+# Does some basic TUI checks
+# One testcase per line, this is no script
+#
+
+#
+# Libraries
+#
+searchpath:../../libs
+
+lib:common
+lib:uinput
+
+
+#
+# Testcases
+#
+searchpath:../../tcs
+
+wait_for_getty.sh
+uinput/login_as_admin.py
