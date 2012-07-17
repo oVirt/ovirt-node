@@ -1217,21 +1217,37 @@ def password_check(password_1, password_2, min_length=1):
     >>> (r,  "Not Match" in msg)
     (1, True)
     '''
+    num_o_lines_to_expand = 5
+    accepted = False
+    message = ""
+
+    if is_capslock_on():
+        message = "Hint: Caps lock is on.\n"
+
     if len(password_1) is 0 and min_length is not 0:
-        return (1, "\n\n\n\n\n")
-    if len(password_1) < min_length:
-        return (1, "Password must be at least %d characters" % min_length)
-    if password_1 != "" and password_2 == "":
-        return (1, "Please Confirm Password\n\n\n\n\n")
-    if password_1 != password_2:
-        return (1, "Passwords Do Not Match\n\n\n\n\n")
-    try:
-        cracklib.FascistCheck(password_1)
-    except ValueError, e:
-        return (0, "You have provided a weak password!\nStrong passwords contain a mix of uppercase,\n" + \
-              "lowercase, numeric and punctuation characters.\nThey are six or more characters long and\n" + \
-              "do not contain dictionary words")
-    return (0, "\n\n\n\n\n")
+        message += ""  # Intentional dummy
+    elif len(password_1) < min_length:
+        message += "Password must be at least %d characters" % min_length
+    elif password_1 != "" and password_2 == "":
+        message += "Please Confirm Password"
+    elif password_1 != password_2:
+        message += "Passwords Do Not Match"
+    else:
+        try:
+            cracklib.FascistCheck(password_1)
+            accepted = True
+        except ValueError, e:
+            message += "You have provided a weak password!\n"
+            message += "Strong passwords contain a mix of uppercase,\n"
+            message += "lowercase, numeric and punctuation characters.\n"
+            message += "They are six or more characters long and\n"
+            message += "do not contain dictionary words"
+            accepted = True
+
+    # Modify message to span num_o_lines_to_expand lines
+    message += (num_o_lines_to_expand - message.count("\n")) * "\n"
+    accepted = 0 if accepted else 1
+    return (accepted, message)
 
 def get_logrotate_size():
     size = augtool_get("/files/etc/logrotate.d/ovirt-node/rule/size")
@@ -1461,6 +1477,18 @@ def nic_link_detected(iface):
     link_status = subprocess_closefds(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     link_status = link_status.stdout.read()
     return ("yes" in link_status)
+
+def is_capslock_on():
+    """Returns True if Caps Lock is on.
+    """
+    tty =  get_ttyname()
+    if "S" in tty:
+        # It is assumed to be a serial console, we can't get the state of
+        # CapsLock, so return nothing
+        return None
+    cmd = "LC_ALL=C setleds < /dev/%s | awk '/Current flags:/{print $6;}'" % tty
+    return "on" == subprocess_closefds(cmd, shell=True, stdout=PIPE, \
+                                       stderr=STDOUT).stdout.read().strip()
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
