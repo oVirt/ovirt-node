@@ -3,13 +3,13 @@
 # On eset per line, this is no script
 #
 
-description:Manual TUI installation with no additional tests.
+description:Manual TUI installation with additional tests.
 
 # Where to look for testsets.
 # By default it's the dirname of this file
 searchpath:../sets/
 
 # Now all the sets that form this suite:
-tui/manual_installation_basic.set
+tui/manual_installation_extended.set
 
 after_testing.set

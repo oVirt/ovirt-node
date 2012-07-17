@@ -1,0 +1,28 @@
+#
+# A extended TUI installation, one testcase per page
+# One testcase per line, this is no script
+#
+
+#
+# Libraries
+#
+searchpath:../../libs
+
+lib:common
+lib:uinput
+
+
+#
+# Testcases
+#
+searchpath:../../tcs
+
+sleep_60.sh                             timeout=70
+
+searchpath:../../tcs/uinput/installer
+01_welcome_page.py
+02_keyboard_page.py
+03_boot_device_page.py
+04_installation_device_page.py
+05_password_page.py
+06_progress_page.py                     timeout=120
