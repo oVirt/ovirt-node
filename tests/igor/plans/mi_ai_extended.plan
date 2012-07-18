@@ -7,7 +7,7 @@ description:AI and MI with {tbd_profile} on VMs
 # Testsuite         Profile         Host                Optional: kargs
 
 # A basic TUI installation
-mi_basic            {tbd_profile}   default-libvirt
+mi_extended         {tbd_profile}   default-libvirt
 
 # A basic auto installation with more testcases, including TUI tests
 ai_extended         {tbd_profile}   default-libvirt     kargs='storage_init BOOTIF=link'
