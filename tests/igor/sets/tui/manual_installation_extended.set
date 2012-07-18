@@ -17,7 +17,7 @@ lib:uinput
 #
 searchpath:../../tcs
 
-sleep_60.sh                             timeout=70
+wait_for_installer_welcome_page.sh      timeout=70
 
 searchpath:../../tcs/uinput/installer
 01_welcome_page.py

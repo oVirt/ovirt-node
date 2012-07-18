@@ -17,5 +17,5 @@ lib:uinput
 #
 searchpath:../../tcs
 
-sleep_60.sh                             timeout=70
+wait_for_installer_welcome_page.sh      timeout=70
 uinput/basic_tui_installation.py        timeout=600     # Timeout for install and reboot
