@@ -14,6 +14,18 @@ import common.input
 
 logger = logging.getLogger(__name__)
 
+def wait_for_last_page():
+    """We poll to see when the installation has finished, it's done this way
+    to avoid a niave sleep for 240 seconds
+    """
+    n = 240
+    while n > 0:
+        time.sleep(1)
+        if common.input.is_regex_on_screen("Installation Finished"):
+            return True
+        n -= 1
+    return False
+
 story = [
     # P. 1 Welcome
     # Press nothing, wait 0 seconds, expect "Install …"
@@ -39,7 +51,7 @@ story = [
     (["ovirt\tovirt\t"],    2, "a weak password"),
 
     # P. 6: Start installation, and give it at most 240 seconds to complete
-    (["\t\t\n"],          180, "Installation Finished"),
+    (["\t\t\n"],   wait_for_last_page, "Installation Finished"),
 ]
 
 reboot_seq = [
