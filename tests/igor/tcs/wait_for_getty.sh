@@ -4,16 +4,25 @@
 # Wait for a getty to appear
 #
 
-TIMEOUT=20
+TIMEOUT=50
 
-timestamp() { date +%s ; }
+[[ -x /bin/systemctl ]] && systemctl start getty@tty1.service
 
-STARTTIME=$(timestamp)
-
-while [[ $(timestamp) -lt $(($STARTTIME + $TIMEOUT)) ]];
+while [[ $TIMEOUT -gt 0 ]];
 do
-    ps -A | grep getty && exit 0
-    sleep 5
+    echo "Timeout: $TIMEOUT"
+    if [[ -x /bin/systemctl ]];
+    then
+        systemctl -a
+        systemctl is-active getty.target && exit 0
+    else
+        ps -Af
+        ps -A | grep getty && exit 0
+    fi
+    sleep 1
+    TIMEOUT=$(($TIMEOUT - 1))
 done
+
+echo "No getty disocovered."
 
 exit 1
