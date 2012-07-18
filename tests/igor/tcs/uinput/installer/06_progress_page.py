@@ -16,9 +16,15 @@ logger = logging.getLogger(__name__)
 
 title = "TUI Installer Last/Progress Page"
 
+def wait_for_last_page():
+    """We poll to see when the installation has finished, it's done this way
+    to avoid a niave sleep for 240 seconds
+    """
+    return common.input.wait_for_regex_on_screen("Installation Finished", 240)
+
 story = [
     # P. 6: Start installation, and give it at most 240 seconds to complete
-    (None, 180, "Installation Finished"),
+    (None, wait_for_last_page, "Installation Finished"),
 ]
 
 if __name__ == "__main__":

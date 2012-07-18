@@ -18,13 +18,7 @@ def wait_for_last_page():
     """We poll to see when the installation has finished, it's done this way
     to avoid a niave sleep for 240 seconds
     """
-    n = 240
-    while n > 0:
-        time.sleep(1)
-        if common.input.is_regex_on_screen("Installation Finished"):
-            return True
-        n -= 1
-    return False
+    return common.input.wait_for_regex_on_screen("Installation Finished", 240)
 
 story = [
     # P. 1 Welcome

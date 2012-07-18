@@ -124,6 +124,17 @@ def is_regex_on_screen(expr, vcsn=1):
     regex = re.compile(expr)
     return regex.search(content) is not None
 
+def wait_for_regex_on_screen(expr, timeout, vcsn=1):
+    """Check for at max timeout seconds if expr appears on the screen
+    """
+    found = False
+    while timeout > 0:
+        time.sleep(1)
+        if is_regex_on_screen(expr, vcsn):
+            found = True
+            break
+        timeout -= 1
+    return found
 
 class Storyboard(object):
     title = None
