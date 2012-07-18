@@ -25,4 +25,8 @@ searchpath:../../tcs/uinput/installer
 03_boot_device_page.py
 04_installation_device_page.py
 05_password_page.py
-06_progress_page.py                     timeout=120
+06_progress_page.py                     timeout=120  # Timeout for installation
+# Ends with a reboot
+
+searchpath:../../tcs/
+reboot_completed.sh                     timeout=70   # Timeout for reboot
