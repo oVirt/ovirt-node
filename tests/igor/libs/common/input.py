@@ -154,7 +154,10 @@ class Storyboard(object):
             else:
                 play(input)
 
-            time.sleep(wait)
+            if callable(wait):
+                wait()
+            else:
+                time.sleep(wait)
 
             if output is None:
                 logger.debug("No output expected")
