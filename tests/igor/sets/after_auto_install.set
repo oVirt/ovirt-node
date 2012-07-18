@@ -5,10 +5,12 @@
 
 searchpath:../
 
-
 lib:libs/common
 
 
-tcs/installation_completed.sh   timeout=900
+searchpath:../tcs
 
-tcs/set_admin_password.py
+# This includes the first boot, the installation and the associated reboot
+installation_completed.sh   timeout=900
+
+set_admin_password.py
