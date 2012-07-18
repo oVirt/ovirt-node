@@ -13,7 +13,7 @@ FAILED=false
 
 if $FAILED;
 then
-  return 1
+  exit 1
 fi
 
 exit 0
