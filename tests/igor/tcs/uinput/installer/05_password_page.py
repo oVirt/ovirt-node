@@ -16,9 +16,23 @@ logger = logging.getLogger(__name__)
 
 title = "TUI Installer Password Page"
 
+# Tab sequence: Password - Confirm Password - Quit - Back - Install
+
 story = [
     # P. 5: Enter password dialog
     (None,                  4, "Require a password"),
+]
+
+# Check if the Caps Lock hint appears
+story += [
+    # Actiavte Caps Lock and change the field, hint appears
+    ([common.input.uinput.KEY_CAPSLOCK, "\t"],    1,  "Hint: Caps Lock is on"),
+    # Deactivate Caps Lock and tab until back in password field
+    ([common.input.uinput.KEY_CAPSLOCK, "\t\t\t\t"],    0,  None) # FIXME negative case
+]
+
+story += [
+    # Set a default password
     (["ovirt\tovirt\t"],    2, "a weak password"),
 
     # P. 6: Start installation, and give it at most 240 seconds to complete
