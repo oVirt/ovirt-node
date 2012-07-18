@@ -395,8 +395,9 @@ def ovirt_setup_anyterm():
 # not available when booted from local disk installation
 def mount_live():
     live_dev = ""
-    if system('cat /proc/mounts|grep -q "none /live"'):
-        system("umount /live")
+    if os.path.ismount("/live"):
+        if os.path.exists("/live/isolinux") or os.path.exists("/live/syslinux"):
+            return True
     if not os.path.exists("/dev/live"):
         if system("losetup /dev/loop0|grep -q '\.iso'"):
             # PXE boot
@@ -404,14 +405,14 @@ def mount_live():
         else:
             # /dev/live if not exist alternative
             client = gudev.Client(['block'])
-            version = open("/etc/default/version")
-            for line in version.readlines():
-                if "PACKAGE" in line:
-                    pkg, pkg_name = line.split("=")
+            cmdline = open("/proc/cmdline")
+            cdlabel = re.search('CDLABEL\=([a-zA-Z0-9_\.-]+)', cmdline.read())
+            cdlabel = cdlabel.group(0).split("=")[1]
+            cmdline.close()
             for device in client.query_by_subsystem("block"):
                 if device.has_property("ID_CDROM"):
                     dev = device.get_property("DEVNAME")
-                    if system("blkid '%s'|grep -q '%s'" % (dev, pkg_name)):
+                    if system("blkid '%s'|grep -q '%s'" % (dev, cdlabel)):
                         live_dev = dev
             if not live_dev:
                 # usb devices with LIVE label
@@ -420,7 +421,13 @@ def mount_live():
         live_dev="/dev/live"
 
     system_closefds("mkdir -p /live")
-    system_closefds("mount -r " + live_dev + " /live &>/dev/null")
+    if not system_closefds("mount -r " + live_dev + " /live &>/dev/null"):
+        # check if live device was setup under alternate locations
+        if os.path.ismount("/dev/.initramfs/live"):
+            system_closefds("mount -o bind /dev/.initramfs/live /live")
+        elif os.path.ismount("/run/initramfs/live"):
+            system_closefds("mount -o bind /run/initramfs/live /live")
+
     if os.path.ismount("/live"):
         return True
     else:
