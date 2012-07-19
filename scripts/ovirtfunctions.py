@@ -403,17 +403,20 @@ def mount_live():
             # PXE boot
             live_dev="/dev/loop0"
         else:
-            # /dev/live if not exist alternative
-            client = gudev.Client(['block'])
-            cmdline = open("/proc/cmdline")
-            cdlabel = re.search('CDLABEL\=([a-zA-Z0-9_\.-]+)', cmdline.read())
-            cdlabel = cdlabel.group(0).split("=")[1]
-            cmdline.close()
-            for device in client.query_by_subsystem("block"):
-                if device.has_property("ID_CDROM"):
-                    dev = device.get_property("DEVNAME")
-                    if system("blkid '%s'|grep -q '%s'" % (dev, cdlabel)):
-                        live_dev = dev
+            try:
+                # /dev/live if not exist alternative
+                client = gudev.Client(['block'])
+                cmdline = open("/proc/cmdline")
+                cdlabel = re.search('CDLABEL\=([a-zA-Z0-9_\.-]+)', cmdline.read())
+                cdlabel = cdlabel.group(0).split("=")[1]
+                cmdline.close()
+                for device in client.query_by_subsystem("block"):
+                    if device.has_property("ID_CDROM"):
+                        dev = device.get_property("DEVNAME")
+                        if system("blkid '%s'|grep -q '%s'" % (dev, cdlabel)):
+                            live_dev = dev
+            except:
+                pass
             if not live_dev:
                 # usb devices with LIVE label
                 live_dev = findfs("LIVE")
