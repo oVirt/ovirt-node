@@ -673,6 +673,15 @@ class NodeConfigScreen():
             self.gridform.draw()
         return
 
+    def valid_nfsv4_domain_callback(self):
+        if not is_valid_hostname(self.nfsv4_domain.value()):
+            self.nfsv4_domain.set("")
+            self._create_warn_screen()
+            ButtonChoiceWindow(self.screen, "Network", "Invalid NFS Domain",
+                               buttons=['Ok'])
+            self.reset_screen_colors()
+            self.gridform.draw()
+
     def screen_locked_page(self, screen):
         self.screen_locked = True
         elements = Grid(1, 3)
@@ -1450,10 +1459,18 @@ class NodeConfigScreen():
         self.iscsi_initiator_config = Entry(50, "")
         self.iscsi_initiator_config.setCallback(self.valid_iqn_callback)
         elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft=1,
-                          padding=(0, 0, 0, 11))
+                          padding=(0, 0, 0, 1))
+        elements.setField(Label("NFSv4 Domain:"), 0, 4, anchorLeft=1)
+        self.nfsv4_domain = Entry(30, "")
+        self.nfsv4_domain.setCallback(self.valid_nfsv4_domain_callback)
+        elements.setField(self.nfsv4_domain, 0, 5, anchorLeft=1,
+                          padding=(0, 0, 0, 8))
         current_iscsi_initiator_name = get_current_iscsi_initiator_name()
         if current_iscsi_initiator_name is not None:
             self.iscsi_initiator_config.set(current_iscsi_initiator_name)
+        current_nfsv4_domain = get_current_nfsv4_domain()
+        if not current_nfsv4_domain.startswith("#"):
+            self.nfsv4_domain.set(current_nfsv4_domain)
         return [Label(""), elements]
 
     def menuSpacing(self):
@@ -1837,7 +1854,7 @@ class NodeConfigScreen():
 
     def process_remote_storage_config(self):
         set_iscsi_initiator(self.iscsi_initiator_config.value())
-
+        set_nfsv4_domain(self.nfsv4_domain.value())
     def ssh_hostkey_btn_cb(self):
         self._create_warn_screen()
         ssh_hostkey_msg = ("RSA Host Key Fingerprint:\n%s\n\nRSA Host " +
