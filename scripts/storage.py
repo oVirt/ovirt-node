@@ -892,7 +892,6 @@ def storage_auto():
         OVIRT_VARS["OVIRT_ROOT_INSTALL"] = "y"
         if storage.perform_partitioning():
             return True
-        else:
-            return False
     else:
         logger.error("Storage Device Is Required for Auto Installation")
+    return False
