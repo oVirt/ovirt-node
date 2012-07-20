@@ -4,6 +4,10 @@
 
 . /usr/libexec/ovirt-functions
 
+echo "Setting marker to detect reboot."
+igor_set_reboot_marker
+
+echo "Reboot initiated"
 igor_step_succeeded
 reboot
 

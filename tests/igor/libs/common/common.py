@@ -107,4 +107,8 @@ def add_artifact(dst, filename):
   request.get_method = lambda: 'PUT'
   resp = opener.open(request)
 
+def set_reboot_marker():
+  with open("/tmp/reboot-requested", "w") as f:
+    f.write("This file was created to track if a reboot happened.")
+
 # vim: set sw=2:

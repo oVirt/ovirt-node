@@ -57,6 +57,7 @@ if __name__ == "__main__":
     passed = common.input.Storyboard("Basic TUI installation", story).run()
 
     if passed:
+        common.common.set_reboot_marker()
         common.common.step_succeeded()
         common.input.play(reboot_seq)
 

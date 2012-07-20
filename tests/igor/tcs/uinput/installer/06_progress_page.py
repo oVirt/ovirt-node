@@ -27,5 +27,20 @@ story = [
     (None, wait_for_last_page, "Installation Finished"),
 ]
 
+reboot_seq = [
+    # P. 7: Reboot
+    "\n"
+]
+
 if __name__ == "__main__":
-    common.input.Storyboard(title, story).run_and_exit()
+    passed = common.input.Storyboard("Basic TUI installation", story).run()
+
+    if passed:
+        common.common.set_reboot_marker()
+        common.common.step_succeeded()
+        common.input.play(reboot_seq)
+
+        # Now block (because we are rebooting)
+        time.sleep(60)
+
+    sys.exit(1)
