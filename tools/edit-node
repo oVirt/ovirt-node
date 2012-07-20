@@ -645,6 +645,42 @@ class LiveImageEditor(LiveImageCreator):
         print "done"
         return True
 
+    def _change_uid(self, options):
+        if "," in options.uidmod:
+            try:
+                user, new_uid = options.uidmod.split(",")
+            except:
+                print "Failed Parsing %s" % options.uidmod
+                return False
+            cmd = "id -u %s" % user
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
+                                 preexec_fn = self._chroot)
+            old_uid, err = f.communicate()
+            cmd = "usermod -u %s %s" % (new_uid, user)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+            output, err = f.communicate()
+            cmd = "find / -uid %s -exec chown %s {} \;" % (old_uid, new_uid)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+            output, err = f.communicate()
+
+    def _change_gid(self, options):
+        if "," in options.gidmod:
+            try:
+                group, new_gid = options.gidmod.split(",")
+            except:
+                print "Failed Parsing %s" % options.gidmod
+                return False
+            cmd = "getent group %s | cut -d: -f3" % group
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
+                                 preexec_fn = self._chroot)
+            old_gid, err = f.communicate()
+            cmd = "groupmod -g %s %s" % (new_gid, group)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+            output, err = f.communicate()
+            cmd = "find / -gid %s -exec chgrp %s {} \;" % (old_gid.strip(), new_gid)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+            output, err = f.communicate()
+
     def _print_rpm_manifest(self):
         cmd = "rpm -qa|sort"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
@@ -669,6 +705,10 @@ class LiveImageEditor(LiveImageCreator):
             pkg = options.install
         elif options.ssh_keys:
             pkg = "ssh-key-edit"
+        elif options.uidmod:
+            pkg = "uid-mod"
+        elif options.gidmod:
+            pkg = "gid-mod"
         print "Creating Manifests"
         # Create post-image processing manifests
         cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
@@ -1162,6 +1202,12 @@ def parse_options(args):
     parser.add_option("-l", "--sshkey", action="extend", dest="ssh_keys",
                       help="comma delimited list of ssh public key files")
 
+    parser.add_option("--uidmod", type="string", dest="uidmod",
+                      help="Change a user uid number and correct filesystem")
+
+    parser.add_option("--gidmod", type="string", dest="gidmod",
+                      help="Change a group id number and correct filesystem")
+
     parser.add_option("-t", "--tmpdir", type="string",
                       dest="tmpdir", default="/var/tmp",
                       help="Temporary directory to use (default: /var/tmp)")
@@ -1345,6 +1391,10 @@ def main():
                 editor._set_password(options)
             if not options.ssh_keys is None:
                 editor._setup_ssh_keys(options)
+            if not options.uidmod is None:
+                editor._change_uid(options)
+            if not options.gidmod is None:
+                editor._change_gid(options)
             if rebuild == 1:
                 editor._update_version(options)
                 editor._create_manifests(options)
