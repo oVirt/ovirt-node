@@ -25,7 +25,7 @@ import _snack
 
 def get_plugins_list():
     plugin_dict = []
-    plugin_dir = "/etc/ovirt.plugins.d/"
+    plugin_dir = "/etc/ovirt-plugins.d/"
     if os.path.exists(plugin_dir):
         plugin_dict = {}
         for f in os.listdir(plugin_dir):
@@ -62,7 +62,7 @@ class Plugin(PluginBase):
         elements.setField(heading, 0, 0, anchorLeft=1)
         self.plugins = get_plugins_list()
         elements.setField(Label(" "), 0, 1)
-        if not os.path.exists("/etc/ovirt.plugins.d"):
+        if not os.path.exists("/etc/ovirt-plugins.d"):
             return [Label(""), elements]
         self.plugin_lb = Listbox(height=8, width=30, returnExit=1, scroll=1)
         self.plugin_lb.setCallback(self.plugin_details_callback)

@@ -736,6 +736,27 @@ class LiveImageEditor(LiveImageCreator):
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
+        # create plugin info
+        if options.install or options.plugin:
+            plugin_info_dir =  "%s/etc/ovirt.plugins.d" % self._instroot
+            os.system("mkdir -p %s" % plugin_info_dir)
+            # get version-release
+            cmd = "rpm -q %s --qf '%%{version}-%%{release}.%%{arch}\n'" % pkg
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
+                                 preexec_fn = self._chroot)
+            vr, err = f.communicate()
+            # get install date
+            cmd = "rpm -q %s --qf '%%{INSTALLTIME:date}\n'" % pkg
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
+                                 preexec_fn = self._chroot)
+            install_date, err = f.communicate()
+            plugin_file = "%s/%s" % (plugin_info_dir, pkg)
+            pfile = open(plugin_file, "w")
+            pfile.write("Name:%s\n" % pkg)
+            pfile.write("Version:%s-%s" % (pkg,vr))
+            pfile.write("Install Date:%s" % install_date)
+            pfile.close()
+
         # create deltas
         for i in ["file", "dir","owns", "deps" ]:
             # if current-XXX-manifest exists run delta based on it
