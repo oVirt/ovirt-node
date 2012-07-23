@@ -13,4 +13,6 @@ searchpath:../tcs
 # This includes the first boot, the installation and the associated reboot
 installation_completed.sh   timeout=900
 
+collect_logs.sh
+
 set_admin_password.py
