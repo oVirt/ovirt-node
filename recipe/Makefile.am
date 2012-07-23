@@ -131,6 +131,7 @@ version.ks:
 	) > $@
 
 $(PACKAGE).$(PKG_FMT) node: version.ks repos.ks
+	rm -f $(PACKAGE_NAME).iso
 	$(NODE_CREATOR) $(RECIPE)
 	mv $(PACKAGE_NAME).iso $(PACKAGE_NAME)-$(VERSION)-$(RELEASE).iso
 	ln -snf $(PACKAGE_NAME)-$(VERSION)-$(RELEASE).iso $(PACKAGE_NAME).iso
