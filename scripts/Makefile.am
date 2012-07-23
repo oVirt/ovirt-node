@@ -68,7 +68,8 @@ install-exec-hook:
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigsetup_PYTHON = \
   __init__.py \
-  cim.py
+  cim.py \
+  plugins.py
 
 if TARGET_FEDORA
 pyovirtconfigsetup_PYTHON += \
