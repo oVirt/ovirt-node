@@ -221,6 +221,10 @@ mkdir -p /root/.virt-manager /home/admin/.virt-manager
 #symlink virt-manager-tui pointer file to .pyc version
 sed -i "s/tui.py/tui.pyc/g" /usr/bin/virt-manager-tui
 
+#symlink ovirt-config-setup into $PATH
+ln -s /usr/libexec/ovirt-config-setup /usr/sbin/setup
+
+
 #set NETWORKING off by default
 augtool << \EOF_NETWORKING
 set /files/etc/sysconfig/network/NETWORKING no

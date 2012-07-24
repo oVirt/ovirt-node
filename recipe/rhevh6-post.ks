@@ -11,7 +11,6 @@ EOF_RWTAB_RHEVH
 
 # convenience symlinks
 ln -s /usr/libexec/ovirt-config-rhn /sbin/rhn_register
-ln -s /usr/libexec/ovirt-config-setup /usr/sbin/setup
 
 # in RHEV-H *.py are blacklisted
 cat > /etc/cron.d/rhn-virtualization.cron << \EOF_cron-rhn
