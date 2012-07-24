@@ -1,8 +1,6 @@
-#
-# A simple plan for a basic TUI and auto-simple
-#
 
 description:AI with {tbd_profile} on VMs
+
 
 # Testsuite             Profile         Host                Optional: kargs
 

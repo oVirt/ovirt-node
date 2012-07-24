@@ -1,0 +1,8 @@
+
+description:MI with {tbd_profile} and more tests on VMs
+
+
+# Testsuite         Profile         Host                Optional: kargs
+
+# A basic TUI installation
+mi_extended         {tbd_profile}   default-libvirt
