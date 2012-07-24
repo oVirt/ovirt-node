@@ -738,8 +738,8 @@ class LiveImageEditor(LiveImageCreator):
 
         # create plugin info
         if options.install or options.plugin:
-            plugin_info_dir =  "%s/etc/ovirt.plugins.d" % self._instroot
-            os.system("mkdir -p %s" % plugin_info_dir)
+            plugin_info_dir =  "%s/etc/ovirt-plugins.d" % self._instroot
+            os.system("mkdir %s" % plugin_info_dir)
             # get version-release
             cmd = "rpm -q %s --qf '%%{version}-%%{release}.%%{arch}\n'" % pkg
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
@@ -790,6 +790,15 @@ class LiveImageEditor(LiveImageCreator):
             output, err = f.communicate()
         print "Copying Manifests"
         for file in glob.glob("%s/*manifest-*" % self._instroot):
+            rootfs_manifest_dir = "%s/etc/ovirt-plugins-manifests.d" % self._instroot
+            os.system("mkdir -p %s" % rootfs_manifest_dir)
+            cmd = "cp %s %s" % (file, rootfs_manifest_dir)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            if f.returncode > 0:
+                output, err = f.communicate()
+                print output
+                print "Failed to copy %s to %s/manifests" % (file, plugin_info_dir)
+                return False
             cmd = "mv %s %s/iso/isolinux" % (file, self._ImageCreator__builddir)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             output, err = f.communicate()
