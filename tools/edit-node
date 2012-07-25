@@ -711,20 +711,20 @@ class LiveImageEditor(LiveImageCreator):
             pkg = "gid-mod"
         print "Creating Manifests"
         # Create post-image processing manifests
-        cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
+        cmd = "LC_ALL=C rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
-        cmd = "rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
+        cmd = "LC_ALL=C rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
-        cmd = "rpm -qa --qf '%%{sourcerpm}\n' | sort -u > /manifest-%s-%s-srpm.txt" % (timestamp, pkg)
+        cmd = "LC_ALL=C rpm -qa --qf '%%{sourcerpm}\n' | sort -u > /manifest-%s-%s-srpm.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
         # collect all included licenses rhbz#601927
-        cmd = "rpm -qa --qf '%%{license}\n' | sort -u > /manifest-%s-%s-license.txt" % (timestamp, pkg)
+        cmd = "LC_ALL=C rpm -qa --qf '%%{license}\n' | sort -u > /manifest-%s-%s-license.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
 
@@ -746,7 +746,7 @@ class LiveImageEditor(LiveImageCreator):
                                  preexec_fn = self._chroot)
             vr, err = f.communicate()
             # get install date
-            cmd = "rpm -q %s --qf '%%{INSTALLTIME:date}\n'" % pkg
+            cmd = "LC_ALL rpm -q %s --qf '%%{INSTALLTIME:date}\n'" % pkg
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
                                  preexec_fn = self._chroot)
             install_date, err = f.communicate()
