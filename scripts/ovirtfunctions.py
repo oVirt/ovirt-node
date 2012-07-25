@@ -511,7 +511,13 @@ def unmount_logging_services():
         svc = prg = prg[1:]
         ret = system_closefds("service " + svc +" stop &>/dev/null")
         if ret != 0:
-            system_closefds("pkill " + svc)
+            # make sure we don't kill ourselves.
+            pids_cmd = "pidof " + svc
+            pids = subprocess_closefds(pids_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            pids_output = pids.stdout.read()
+            for pid in pids_output.split():
+                if int(pid) != os.getpid():
+                    system_closefds("kill -9 "+ pid)
         logging_services.append(svc)
     return logging_services
     # debugging help
