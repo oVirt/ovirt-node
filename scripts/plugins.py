@@ -21,7 +21,7 @@
 from ovirtnode.ovirtfunctions import *
 from snack import *
 import _snack
-
+import glob
 
 def get_plugins_list():
     plugin_dict = []
@@ -87,12 +87,30 @@ class Plugin(PluginBase):
             detail_grid.setField(self.version_label, 1, 1, anchorLeft=1)
             detail_grid.setField(self.install_date_label, 1, 2, anchorLeft=1)
             elements.setField(detail_grid, 0, 7, anchorLeft=1)
-        elements.setField(Label(" "), 0, 8, anchorLeft=1, padding=(0, 0, 0, 2))
         return [Label(""), elements]
 
     def action(self):
+        p_manifests_dir = "/etc/ovirt-plugins-manifests.d"
+        try:
+            p_name = self.plugin_lb.current()
+        except:
+            return
+        # display rpm and srpm differences for now
+        rpm_man = glob.glob("%s/delta-*-manifest-rpm-%s.txt" % \
+                  (p_manifests_dir,p_name))[0]
+        srpm_man = glob.glob("%s/delta-*-manifest-srpm-%s.txt" % \
+                   (p_manifests_dir, p_name))[0]
+        details = ""
+        for f in [ rpm_man, srpm_man ]:
+            d = open(f)
+            for line in d:
+                details += line
+            d.close()
+        self.ncs._create_warn_screen()
+        ButtonChoiceWindow(self.ncs.screen, "Plugin Details", details,
+                           buttons=['Ok'], width=78)
+        self.ncs.reset_screen_colors()
         return
-
 
 def get_plugin(ncs):
     return Plugin(ncs)

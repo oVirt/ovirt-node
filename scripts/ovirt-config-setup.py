@@ -130,6 +130,9 @@ class NodeConfigScreen():
         self.__finished = False
         self.__nic_config_failed = 0
         self.net_apply_config = 0
+        self._plugins_enabled = False
+        self._plugins_pagenum = 0
+
 
     def _set_title(self):
         PRODUCT_TITLE = "%s %s-%s" % (PRODUCT_SHORT, PRODUCT_VERSION,
@@ -142,7 +145,8 @@ class NodeConfigScreen():
         self.screen = SnackScreen()
         self.reset_screen_colors()
         self._gridform = GridForm(self.screen, "", 2, 2)
-        self._set_title()
+        if not self._plugins_enabled:
+            self._set_title()
         return self._gridform
 
     def _create_warn_screen(self):
@@ -1916,6 +1920,9 @@ class NodeConfigScreen():
             # plugin menu options
             plugin_page = FIRST_PLUGIN_PAGE
             for p in self.plugins:
+                if p.label() == "Plugins":
+                    self._plugins_enabled = True
+                    self._plugins_pagenum = plugin_page
                 self.menu_list.append(" " + p.label(), plugin_page)
                 plugin_page += 1
                 if plugin_page > LAST_PLUGIN_PAGE:
@@ -1943,6 +1950,7 @@ class NodeConfigScreen():
             screen.height = fullheight
             current_element += 1
             buttons = []
+            plugin_page = False
             if self.__current_page == NETWORK_PAGE:
                 buttons.append(["Flash Lights to Identify",
                                 IDENTIFY_BUTTON])
@@ -1950,7 +1958,11 @@ class NodeConfigScreen():
                and self.__current_page < 20 \
                and not (self.__current_page is NETWORK_DETAILS_PAGE and \
                     is_engine_configured()):
-                buttons.append(["Apply", APPLY_BUTTON])
+               if (self._plugins_enabled and self._plugins_pagenum > 0 and \
+                   self.__current_page == self._plugins_pagenum):
+                   buttons.append(["View Details", APPLY_BUTTON])
+               else:
+                   buttons.append(["Apply", APPLY_BUTTON])
             if self.__current_page == NETWORK_DETAILS_PAGE:
                 buttons.append(["Back", BACK_BUTTON])
             if self.__current_page == STATUS_PAGE:
