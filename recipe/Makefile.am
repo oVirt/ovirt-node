@@ -29,9 +29,9 @@ ARCH              = $(shell rpm --eval '%{_arch}')
 NODE_CREATOR      = $(shell test -e node-creator && echo "./node-creator" || echo "/usr/sbin/node-creator")
 
 FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
-OVIRT_URL	  = http://ovirt.org/releases/stable/fedora
-OVIRT_NIGHTLY_URL = http://ovirt.org/releases/nightly/fedora
-OVIRT_BETA_URL = http://ovirt.org/releases/beta/fedora
+OVIRT_URL	      = http://ovirt.org/releases/stable/rpm/Fedora
+OVIRT_NIGHTLY_URL = http://ovirt.org/releases/nightly/rpm/Fedora
+OVIRT_BETA_URL    = http://ovirt.org/releases/beta/rpm/Fedora
 CUR_RAWHIDE       = 18
 CUR_DEVEL         = 18
 
