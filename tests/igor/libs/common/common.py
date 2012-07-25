@@ -82,11 +82,11 @@ def api_call(p):
   return debug_curl(api_url(p))
 
 def step_succeeded():
-  api_call("job/step/{session}/{step}/success".format(session=igor.session, \
+  api_call("jobs/{session}/step/{step}/success".format(session=igor.session, \
                                                       step=igor.current_step))
 
 def step_failed():
-  api_call("job/step/{session}/{step}/failed".format(session=igor.session, \
+  api_call("jobs/{session}/step/{step}/failed".format(session=igor.session, \
                                                      step=igor.current_step))
 
 def add_artifact(dst, filename):
@@ -95,7 +95,7 @@ def add_artifact(dst, filename):
                      "not exist") % (dst, filename))
 
   debug("Adding artifact '%s': '%s'" % (dst, filename))
-  url = api_url("job/artifact/for/{session}/{dst}".format(
+  url = api_url("jobs/{session}/artifacts/{dst}".format(
                                                         session=igor.session, \
                                                         dst=dst))
 
