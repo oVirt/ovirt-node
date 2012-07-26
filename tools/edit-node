@@ -1146,7 +1146,6 @@ enabled=1
         self._setup_dns()
         if self._setup_yum_repo(options):
             if not self._run_yum_install(options.install_dup):
-                logging.error(output)
                 self._cleanup_editing()
                 return False
             else:
