@@ -107,8 +107,28 @@ def add_artifact(dst, filename):
   request.get_method = lambda: 'PUT'
   resp = opener.open(request)
 
+
+def touch(filename, comment=""):
+  with open(filename, "w") as f:
+    f.write(comment)
+
+
+def quit_testing():
+  """This function ends the looping through all testcases, this is needed for
+  e.g. reboots
+  """
+  logger.info("Request to end testing service loop")
+  touch("/tmp/quit-testing")
+
+
 def set_reboot_marker():
-  with open("/tmp/reboot-requested", "w") as f:
-    f.write("This file was created to track if a reboot happened.")
+  logger.info("Setting reboot marker")
+  touch("/tmp/reboot-requested", "This file was created to track if a " + \
+                                 "reboot happened.")
+
+def request_reboot():
+  logger.info("Express request to reboot")
+  set_reboot_marker()
+  quit_testing()
 
 # vim: set sw=2:
