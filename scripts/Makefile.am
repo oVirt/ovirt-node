@@ -67,9 +67,9 @@ install-exec-hook:
 #
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigsetup_PYTHON = \
-  __init__.py \
-  cim.py \
-  plugins.py
+  ovirt_config_setup/__init__.py \
+  ovirt_config_setup/cim.py \
+  ovirt_config_setup/plugins.py
 
 if TARGET_FEDORA
 pyovirtconfigsetup_PYTHON += \
@@ -88,16 +88,16 @@ endif
 
 pyovirtnodedir = $(pythondir)/ovirtnode
 pyovirtnode_PYTHON = \
-  __init__.py \
-  storage.py \
-  password.py \
-  install.py \
-  iscsi.py \
-  kdump.py \
-  log.py \
-  ovirtfunctions.py \
-  network.py \
-  snmp.py
+  ovirtnode/__init__.py \
+  ovirtnode/install.py \
+  ovirtnode/iscsi.py \
+  ovirtnode/kdump.py \
+  ovirtnode/log.py \
+  ovirtnode/network.py \
+  ovirtnode/ovirtfunctions.py \
+  ovirtnode/password.py \
+  ovirtnode/snmp.py \
+  ovirtnode/storage.py
 
 EXTRA_DIST = \
   augeas.py
