@@ -11,6 +11,8 @@ description:Manual TUI installation with no additional tests.
 searchpath:../sets/
 
 # Now all the sets that form this suite:
+before_testing.set
+
 tui/manual_installation_basic.set
 
 after_testing.set

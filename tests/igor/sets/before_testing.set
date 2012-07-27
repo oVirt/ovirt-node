@@ -1,0 +1,11 @@
+#
+# Does some stuff before all testcases run
+# One testcase per line, this is no script
+#
+
+searchpath:../libs
+lib:common
+
+
+searchpath:../tcs/
+collect_logs.sh
