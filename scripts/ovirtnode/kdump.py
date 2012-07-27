@@ -41,18 +41,6 @@ def restore_kdump_config():
     return True
 
 
-def process_kdump_config():
-    if self.kdump_nfs.value() == 1:
-        write_kdump_config(self.kdump_nfs_config)
-    if self.kdump_ssh.value() == 1:
-        write_kdump_config(self.kdump_ssh_config)
-    if self.kdump_restore_config.value() == 1:
-        restore_kdump_config()
-    _functions.ovirt_store_config("/etc/kdump.conf")
-    _functions.system_closefds("service kdump restart &> /dev/null")
-    return True
-
-
 def kdump_auto():
     try:
         if "OVIRT_KDUMP_NFS" in _functions.OVIRT_VARS:
