@@ -91,7 +91,6 @@ class Install:
         device_map_conf.close()
 
         GRUB_CONFIG_TEMPLATE = """
-%(efi_hd)s
 default saved
 timeout 5
 hiddenmenu
@@ -124,6 +123,8 @@ EOF
             efi_out = efi.stdout.read().strip()
             matches = re.search(PRODUCT_SHORT + r'\s+(HD\(.+?\))', efi_out)
             if matches and matches.groups():
+                GRUB_EFIONLY_CONFIG = """%(efi_hd)s"""
+                GRUB_CONFIG_TEMPLATE = GRUB_EFIONLY_CONFIG + GRUB_CONFIG_TEMPLATE
                 self.grub_dict['efi_hd'] = "device (hd0) " + matches.group(1)
             GRUB_CONFIG_TEMPLATE % self.grub_dict
         grub_conf = open(self.grub_config_file, "w")
