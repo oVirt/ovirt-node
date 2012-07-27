@@ -17,19 +17,22 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-from ovirtnode.ovirtfunctions import *
+import ovirtnode.ovirtfunctions as _functions
 import os
+import sys
 import time
 import re
 import gudev
 import logging
+import subprocess
 
+logger = logging.getLogger(__name__)
 
 class Storage:
     def __init__(self):
-        logger = logging.getLogger(PRODUCT_SHORT)
+        logger = logging.getLogger(_functions.PRODUCT_SHORT)
         logger.propagate = False
-        OVIRT_VARS = parse_defaults()
+        OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5
         self.BOOT_SIZE = 50
         self.ROOT_SIZE = 256
@@ -49,10 +52,10 @@ class Storage:
         # gpt or msdos partition table type
         self.LABEL_TYPE = "gpt"
         if "OVIRT_INIT" in OVIRT_VARS:
-            OVIRT_VARS["OVIRT_INIT"] = OVIRT_VARS["OVIRT_INIT"].strip(",")
-            if "," in OVIRT_VARS["OVIRT_INIT"]:
+            _functions.OVIRT_VARS["OVIRT_INIT"] = _functions.OVIRT_VARS["OVIRT_INIT"].strip(",")
+            if "," in _functions.OVIRT_VARS["OVIRT_INIT"]:
                 disk_count = 0
-                for disk in OVIRT_VARS["OVIRT_INIT"].split(","):
+                for disk in _functions.OVIRT_VARS["OVIRT_INIT"].split(","):
                     skip = False
                     if disk_count < 1:
                         self.ROOTDRIVE = disk
@@ -66,17 +69,17 @@ class Storage:
                         if not skip:
                             self.HOSTVGDRIVE = self.HOSTVGDRIVE + "," + disk
             else:
-                self.ROOTDRIVE = translate_multipath_device(
-                                    OVIRT_VARS["OVIRT_INIT"])
-                self.HOSTVGDRIVE = translate_multipath_device(
-                                    OVIRT_VARS["OVIRT_INIT"])
-            if is_iscsi_install():
+                self.ROOTDRIVE = _functions.translate_multipath_device(
+                                    _functions.OVIRT_VARS["OVIRT_INIT"])
+                self.HOSTVGDRIVE = _functions.translate_multipath_device(
+                                    _functions.OVIRT_VARS["OVIRT_INIT"])
+            if _functions.is_iscsi_install():
                 logger.info(self.BOOTDRIVE)
                 logger.info(self.ROOTDRIVE)
-                self.BOOTDRIVE = translate_multipath_device(self.ROOTDRIVE)
+                self.BOOTDRIVE = _functions.translate_multipath_device(self.ROOTDRIVE)
         mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
-        mem_size_mb = subprocess_closefds(mem_size_cmd, shell=True,
-                                          stdout=PIPE, stderr=STDOUT)
+        mem_size_mb = _functions.subprocess_closefds(mem_size_cmd, shell=True,
+                                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         MEM_SIZE_MB = mem_size_mb.stdout.read()
         MEM_SIZE_MB = int(MEM_SIZE_MB) / 1024
         # we multiply the overcommit coefficient by 10 then divide the
@@ -102,7 +105,7 @@ class Storage:
                 return False
                 sys.exit(1)
             else:
-                self.SWAP_SIZE = OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]
+                self.SWAP_SIZE = _functions.OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]
         else:
             self.SWAP_SIZE = int(BASE_SWAP_SIZE) + int(OVERCOMMIT_SWAP_SIZE)
         for i in ['OVIRT_VOL_BOOT_SIZE', 'OVIRT_VOL_ROOT_SIZE',
@@ -118,7 +121,7 @@ class Storage:
                           "%s" % (i, self.__dict__[i_short]))
                     return False
                 logging.info(("Setting value for %s to %s " %
-                             (self.__dict__[i_short], OVIRT_VARS[i])))
+                             (self.__dict__[i_short], _functions.OVIRT_VARS[i])))
                 self.__dict__[i_short] = int(OVIRT_VARS[i])
             else:
                 logging.info("Using default value for: %s" % i_short)
@@ -127,8 +130,8 @@ class Storage:
 
         if "OVIRT_INIT_APP" in OVIRT_VARS:
             if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
-                for drv in OVIRT_VARS["OVIRT_INIT_APP"].split(","):
-                    DRIVE = translate_multipath_device(drv)
+                for drv in _functions.OVIRT_VARS["OVIRT_INIT_APP"].split(","):
+                    DRIVE = _functions.translate_multipath_device(drv)
                     self.APPVGDRIVE.append(DRIVE)
             if not self.cross_check_host_app:
                 logger.error("Skip disk partitioning, " +
@@ -151,8 +154,8 @@ class Storage:
     def get_drive_size(self, drive):
         logger.debug("Getting Drive Size For: %s" % drive)
         size_cmd = "sfdisk -s " + drive + " 2>/dev/null"
-        size = subprocess_closefds(size_cmd, shell=True, stdout=PIPE,
-                                   stderr=STDOUT)
+        size = _functions.subprocess_closefds(size_cmd, shell=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
         size = size.stdout.read().strip()
         size = int(int(size) / 1024)
         logger.debug(size)
@@ -172,7 +175,7 @@ class Storage:
                 part_delim = ""
             vg_cmd = ("pvs -o vg_uuid --noheadings \"%s\" \"%s%s\"[0-9]* " +
                       "2>/dev/null | sort -u") % (dev, dev, part_delim)
-            vg_proc = passthrough(vg_cmd, log_func=logger.debug)
+            vg_proc = _functions.passthrough(vg_cmd, log_func=logger.debug)
             vgs_on_dev = vg_proc.stdout.split()
             for vg in vgs_on_dev:
                 pvs_cmd = ("pvs -o pv_name,vg_uuid --noheadings | " +
@@ -180,7 +183,7 @@ class Storage:
                 for fdev in devs:
                     pvs_cmd += "|%s%s[0-9]+|%s" % (fdev, part_delim, fdev)
                 pvs_cmd += "\""
-                remaining_pvs = system(pvs_cmd)
+                remaining_pvs = _functions.system(pvs_cmd)
                 if remaining_pvs:
                     logger.error("The volume group \"%s\" spans multiple " +
                                  "disks.") % vg
@@ -188,22 +191,22 @@ class Storage:
                                  "Please manually cleanup the storage using " +
                                  "standard disk tools.")
                     return False
-                wipe_volume_group(vg)
+                _functions.wipe_volume_group(vg)
         return True
 
     def reread_partitions(self, drive):
         logger.debug("Rereading pt")
-        system("sync")
+        _functions.system("sync")
         if "dev/mapper" in drive:
             # kpartx -a -p p "$drive"
             # XXX fails with spaces in device names (TBI)
             # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
             # create/reload failed on 0QEMU   QEMU HARDDISK  drive-scsi0-0-0p1
-            system("partprobe")
+            _functions.system("partprobe")
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
-            system("service multipathd reload")
-            system("multipath -r &>/dev/null")
+            _functions.system("service multipathd reload")
+            _functions.system("multipath -r &>/dev/null")
             # wait for device to exit
             i = 0
             timeout = 15
@@ -216,12 +219,12 @@ class Storage:
                     logger.error("Timed out waiting for: %s" % drive)
                     return False
         else:
-            passthrough("blockdev --rereadpt \"%s\"" % drive, logger.debug)
+            _functions.passthrough("blockdev --rereadpt \"%s\"" % drive, logger.debug)
 
     def get_sd_name(self, id):
         device_sys_cmd = "grep -H \"^%s$\" /sys/block/*/dev | cut -d: -f1" % id
-        device_sys = subprocess_closefds(device_sys_cmd, shell=True,
-                                         stdout=PIPE, stderr=STDOUT)
+        device_sys = _functions.subprocess_closefds(device_sys_cmd, shell=True,
+                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         device_sys_output = device_sys.stdout.read().strip()
         if not device_sys_output is "":
             device = os.path.basename(os.path.dirname(device_sys_output))
@@ -233,8 +236,8 @@ class Storage:
         #get dependencies for multipath device
         deps_cmd = "dmsetup deps -u mpath-%s | sed 's/^.*: //' \
         | sed 's/, /:/g' | sed 's/[\(\)]//g'" % mpath_device
-        deps = subprocess_closefds(deps_cmd, shell=True, stdout=PIPE,
-                                   stderr=STDOUT)
+        deps = _functions.subprocess_closefds(deps_cmd, shell=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
         deps_output = deps.stdout.read()
         for dep in deps_output.split():
             device = self.get_sd_name(dep)
@@ -259,15 +262,15 @@ class Storage:
                 devices.append("/dev/%s" % d)
             byid_list_cmd = ("find /dev/disk/by-id -mindepth 1 -not -name " +
                             "'*-part*' 2>/dev/null")
-            byid_list = subprocess_closefds(byid_list_cmd, shell=True,
-                                            stdout=PIPE, stderr=STDOUT)
+            byid_list = _functions.subprocess_closefds(byid_list_cmd, shell=True,
+                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             byid_list_output = byid_list.stdout.read()
         for d in byid_list_output.split():
             d = os.readlink(d)
             d_basename = os.path.basename(d)
             udev_cmd = ("udevadm info --name=/dev/" + d_basename +
                         " --query=property | grep -q ^ID_BUS: &>>/dev/null")
-            if system_closefds(udev_cmd):
+            if _functions.system_closefds(udev_cmd):
                 devices.append("/dev/%s" % d_basename)
         # FIXME: workaround for detecting cciss devices
         if os.path.exists("/dev/cciss"):
@@ -278,8 +281,8 @@ class Storage:
         # include multipath devices
         devs_to_remove = ""
         multipath_list_cmd = "dmsetup ls --target=multipath | cut -f1"
-        multipath_list = subprocess_closefds(multipath_list_cmd, shell=True,
-                                             stdout=PIPE, stderr=STDOUT)
+        multipath_list = _functions.subprocess_closefds(multipath_list_cmd, shell=True,
+                                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         multipath_list_output = multipath_list.stdout.read()
 
         for d in multipath_list_output.split():
@@ -289,8 +292,8 @@ class Storage:
 
             dm_dev_cmd = ("multipath -ll \"%s\" | grep \"%s\" | " +
                           "sed -r 's/^.*(dm-[0-9]+ ).*$/\\1/'") % (d, d)
-            dm_dev = subprocess_closefds(dm_dev_cmd, shell=True,
-                                         stdout=PIPE, stderr=STDOUT)
+            dm_dev = _functions.subprocess_closefds(dm_dev_cmd, shell=True,
+                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             dm_dev_output = dm_dev.stdout.read()
             devs_to_remove = ("%s %s %s" % (devs_to_remove, sd_devs,
                                           dm_dev_output))
@@ -319,8 +322,8 @@ class Storage:
             dev_serial = device.get_property("ID_SERIAL")
             dev_desc = device.get_property("ID_SCSI_COMPAT")
             dev_size_cmd = "sfdisk -s %s 2>/dev/null" % dev_name
-            dev_size = subprocess_closefds(dev_size_cmd, shell=True,
-                       stdout=PIPE, stderr=STDOUT)
+            dev_size = _functions.subprocess_closefds(dev_size_cmd, shell=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             dev_size = dev_size.stdout.read()
             size_failed = 0
             if not device.get_property("ID_CDROM"):
@@ -338,7 +341,7 @@ class Storage:
             if (not device.get_property("ID_CDROM") and
                     not "/dev/dm-" in dev_name and
                     not "/dev/loop" in dev_name and size_failed == 0):
-                dev_name = translate_multipath_device(dev_name)
+                dev_name = _functions.translate_multipath_device(dev_name)
                 busmap = { \
                     "usb": "USB Device          ", \
                     "ata": "Local / FibreChannel", \
@@ -362,7 +365,7 @@ class Storage:
         logger.info("Creating LVM partition")
         self.physical_vols = []
         for drv in self.HOSTVGDRIVE.strip(",").split(","):
-            drv = translate_multipath_device(drv)
+            drv = _functions.translate_multipath_device(drv)
             if drv != "":
                 if self.ROOTDRIVE == drv:
                     self.reread_partitions(self.ROOTDRIVE)
@@ -370,43 +373,43 @@ class Storage:
                                   "primary ext2 " + str(self.RootBackup_end) +
                                   "M -1\"")
                     logger.debug(parted_cmd)
-                    system(parted_cmd)
+                    _functions.system(parted_cmd)
                     hostvgpart = "4"
                 elif self.BOOTDRIVE == drv:
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
                                   "primary ext2 " + str(self.boot_size_si) +
                                   " -1\"")
                     logger.debug(parted_cmd)
-                    system(parted_cmd)
+                    _functions.system(parted_cmd)
                     hostvgpart = "2"
                     self.ROOTDRIVE = self.BOOTDRIVE
                 elif self.ISCSIDRIVE == drv:
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
                                   "primary ext2 512M -1\"")
                     logger.debug(parted_cmd)
-                    system(parted_cmd)
+                    _functions.system(parted_cmd)
                     hostvgpart = "3"
                 else:
-                    system("parted \"" + drv + "\" -s \"mklabel " +
+                    _functions.system("parted \"" + drv + "\" -s \"mklabel " +
                             self.LABEL_TYPE + "\"")
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
                                   "primary ext2 1M -1 \"")
                     logger.debug(parted_cmd)
-                    system(parted_cmd)
+                    _functions.system(parted_cmd)
                     hostvgpart = "1"
                 logger.info("Toggling LVM on")
                 parted_cmd = ("parted \"" + drv + "\" -s \"set " +
                               str(hostvgpart) + " lvm on\"")
                 logger.debug(parted_cmd)
-                system(parted_cmd)
-                system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
-                system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
+                _functions.system(parted_cmd)
+                _functions.system("parted \"" + self.ROOTDRIVE + "\" -s \"print\"")
+                _functions.system("udevadm settle 2> /dev/null || udevsettle &>/dev/null")
                 # sync GPT to the legacy MBR partitions
-                if ("OVIRT_INSTALL_ROOT" in OVIRT_VARS and
-                     OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y"):
+                if ("OVIRT_INSTALL_ROOT" in _functions.OVIRT_VARS and
+                     _functions.OVIRT_VARS["OVIRT_INSTALL_ROOT"] == "y"):
                     if self.LABEL_TYPE == "gpt":
                         logger.info("Running gptsync to create legacy mbr")
-                        system("gptsync \"" + self.ROOTDRIVE + "\"")
+                        _functions.system("gptsync \"" + self.ROOTDRIVE + "\"")
 
                 self.physical_vols.append((drv, hostvgpart))
         drv_count = 0
@@ -431,118 +434,118 @@ class Storage:
                 return False
             assert(partpv is not None)
 
-            if not system("dd if=/dev/zero of=\"" + partpv +
+            if not _functions.system("dd if=/dev/zero of=\"" + partpv +
                           "\" bs=1024k count=1"):
                 logger.error("Failed to wipe lvm partition")
                 return False
-            if not system("pvcreate -ff -y \"" + partpv + "\""):
+            if not _functions.system("pvcreate -ff -y \"" + partpv + "\""):
                 logger.error("Failed to pvcreate on " + partpv)
                 return False
             if drv_count < 1:
                 logger.info("Creating volume group on " + partpv)
-                if not system("vgcreate /dev/HostVG \"" + partpv + "\""):
+                if not _functions.system("vgcreate /dev/HostVG \"" + partpv + "\""):
                     logger.error("Failed to vgcreate /dev/HostVG on " + partpv)
                     return False
             else:
                 logger.info("Extending volume group on " + partpv)
-                if not system("vgextend /dev/HostVG \"" + partpv + "\""):
+                if not _functions.system("vgextend /dev/HostVG \"" + partpv + "\""):
                     logger.error("Failed to vgextend /dev/HostVG on " + partpv)
                     return False
             drv_count = drv_count + 1
         if self.SWAP_SIZE > 0:
             logger.info("Creating swap partition")
-            system("lvcreate --name Swap --size " + str(self.SWAP_SIZE) +
+            _functions.system("lvcreate --name Swap --size " + str(self.SWAP_SIZE) +
                    "M /dev/HostVG")
-            system("mkswap -L \"SWAP\" /dev/HostVG/Swap")
-            system_closefds("echo \"/dev/HostVG/Swap swap swap " +
+            _functions.system("mkswap -L \"SWAP\" /dev/HostVG/Swap")
+            _functions.system_closefds("echo \"/dev/HostVG/Swap swap swap " +
                             "defaults 0 0\" >> /etc/fstab")
-            if "OVIRT_CRYPT_SWAP" in OVIRT_VARS:
-                system_closefds("echo \"SWAP /dev/HostVG/Swap " +
+            if "OVIRT_CRYPT_SWAP" in _functions.OVIRT_VARS:
+                _functions.system_closefds("echo \"SWAP /dev/HostVG/Swap " +
                                 "/dev/mapper/ovirt-crypt-swap " +
-                                OVIRT_VARS["OVIRT_CRYPT_SWAP"] +
+                                _functions.OVIRT_VARS["OVIRT_CRYPT_SWAP"] +
                                 "\" >> /etc/ovirt-crypttab")
         if self.CONFIG_SIZE > 0:
             logger.info("Creating config partition")
-            system("lvcreate --name Config --size " +
+            _functions.system("lvcreate --name Config --size " +
                     str(self.CONFIG_SIZE) + "M /dev/HostVG")
-            system("mke2fs -j -t ext4 /dev/HostVG/Config -L \"CONFIG\"")
-            system("tune2fs -c 0 -i 0 /dev/HostVG/Config")
+            _functions.system("mke2fs -j -t ext4 /dev/HostVG/Config -L \"CONFIG\"")
+            _functions.system("tune2fs -c 0 -i 0 /dev/HostVG/Config")
         if self.LOGGING_SIZE > 0:
             logger.info("Creating log partition")
-            system("lvcreate --name Logging --size " +
+            _functions.system("lvcreate --name Logging --size " +
                     str(self.LOGGING_SIZE) + "M /dev/HostVG")
-            system("mke2fs -j -t ext4 /dev/HostVG/Logging -L \"LOGGING\"")
-            system("tune2fs -c 0 -i 0 /dev/HostVG/Logging")
-            system_closefds("echo \"/dev/HostVG/Logging /var/log ext4 " +
+            _functions.system("mke2fs -j -t ext4 /dev/HostVG/Logging -L \"LOGGING\"")
+            _functions.system("tune2fs -c 0 -i 0 /dev/HostVG/Logging")
+            _functions.system_closefds("echo \"/dev/HostVG/Logging /var/log ext4 " +
                             "defaults,noatime 0 0\" >> /etc/fstab")
         use_data = 1
         if self.DATA_SIZE == -1:
             logger.info("Creating data partition with remaining free space")
-            system("lvcreate --name Data -l 100%FREE /dev/HostVG")
+            _functions.system("lvcreate --name Data -l 100%FREE /dev/HostVG")
             use_data = 0
         elif self.DATA_SIZE > 0:
             logger.info("Creating data partition")
-            system("lvcreate --name Data --size " + str(self.DATA_SIZE) +
+            _functions.system("lvcreate --name Data --size " + str(self.DATA_SIZE) +
                    "M /dev/HostVG")
             use_data = 0
         if use_data == 0:
-            system("mke2fs -j -t ext4 /dev/HostVG/Data -L \"DATA\"")
-            system("tune2fs -c 0 -i 0 /dev/HostVG/Data")
-            system_closefds("echo \"/dev/HostVG/Data /data ext4 " +
+            _functions.system("mke2fs -j -t ext4 /dev/HostVG/Data -L \"DATA\"")
+            _functions.system("tune2fs -c 0 -i 0 /dev/HostVG/Data")
+            _functions.system_closefds("echo \"/dev/HostVG/Data /data ext4 " +
                             "defaults,noatime 0 0\" >> /etc/fstab")
-            system_closefds("echo \"/data/images /var/lib/libvirt/images " +
+            _functions.system_closefds("echo \"/data/images /var/lib/libvirt/images " +
                             "bind bind 0 0\" >> /etc/fstab")
-            system_closefds("echo \"/data/core /var/log/core bind bind " +
+            _functions.system_closefds("echo \"/data/core /var/log/core bind bind " +
                             "0 0\" >> /etc/fstab")
 
         logger.info("Mounting config partition")
-        mount_config()
+        _functions.mount_config()
         if os.path.ismount("/config"):
-            ovirt_store_config("/etc/fstab")
+            _functions.ovirt_store_config("/etc/fstab")
         # remount /var/log from tmpfs to HostVG/Logging
-        unmount_logging()
-        mount_logging()
+        _functions.unmount_logging()
+        _functions.mount_logging()
         if use_data == 0:
             logger.info("Mounting data partition")
-            mount_data()
+            _functions.mount_data()
         logger.info("Completed HostVG Setup!")
         return True
 
     def create_iscsiroot(self):
         logger.info("Partitioning iscsi root drive: " + self.ISCSIDRIVE)
-        wipe_partitions(self.ISCSIDRIVE)
+        _functions.wipe_partitions(self.ISCSIDRIVE)
         self.reread_partitions(self.ISCSIDRIVE)
         logger.info("Labeling Drive: " + self.ISCSIDRIVE)
         parted_cmd = ("parted \"" + self.ISCSIDRIVE +
                      "\" -s \"mklabel " + self.LABEL_TYPE + "\"")
         logger.debug(parted_cmd)
-        system(parted_cmd)
+        _functions.system(parted_cmd)
         logger.debug("Creating Root and RootBackup Partitions")
         parted_cmd = ("parted \"" + self.ISCSIDRIVE +
                      "\" -s \"mkpart primary ext2 1M 256M\"")
         logger.debug(parted_cmd)
-        system(parted_cmd)
+        _functions.system(parted_cmd)
         parted_cmd = ("parted \"" + self.ISCSIDRIVE +
                      "\" -s \"mkpart primary ext2 256M 512M\"")
         logger.debug(parted_cmd)
-        system(parted_cmd)
+        _functions.system(parted_cmd)
         # sleep to ensure filesystems are created before continuing
         time.sleep(5)
         # force reload some cciss devices will fail to mkfs
-        system("multipath -r")
+        _functions.system("multipath -r")
         self.reread_partitions(self.ISCSIDRIVE)
         partroot = self.ISCSIDRIVE + "1"
         partrootbackup = self.ISCSIDRIVE + "2"
         if not os.path.exists(partroot):
             partroot = self.ISCSIDRIVE + "p1"
             partrootbackup = self.ISCSIDRIVE + "p2"
-        system("ln -snf \"" + partroot + "\" /dev/disk/by-label/Root")
-        system("mke2fs \"" + partroot + "\" -L Root")
-        system("tune2fs -c 0 -i 0 \"" + partroot + "\"")
-        system("ln -snf \"" + partrootbackup +
+        _functions.system("ln -snf \"" + partroot + "\" /dev/disk/by-label/Root")
+        _functions.system("mke2fs \"" + partroot + "\" -L Root")
+        _functions.system("tune2fs -c 0 -i 0 \"" + partroot + "\"")
+        _functions.system("ln -snf \"" + partrootbackup +
                "\" /dev/disk/by-label/RootBackup")
-        system("mke2fs \"" + partrootbackup + "\" -L RootBackup")
-        system("tune2fs -c 0 -i 0 \"" + partrootbackup + "\"")
+        _functions.system("mke2fs \"" + partrootbackup + "\" -L RootBackup")
+        _functions.system("tune2fs -c 0 -i 0 \"" + partrootbackup + "\"")
         return True
 
     def create_appvg(self):
@@ -552,7 +555,7 @@ class Storage:
         logger.debug("SWAP2_SIZE: " + str(self.SWAP2_SIZE))
         logger.debug("DATA2_SIZE: " + str(self.DATA2_SIZE))
         for drv in self.APPVGDRIVE:
-            wipe_partitions(drv)
+            _functions.wipe_partitions(drv)
             self.reread_partitions(drv)
             logger.info("Labeling Drive: " + drv)
             appvgpart = "1"
@@ -561,7 +564,7 @@ class Storage:
                               self.LABEL_TYPE +
                               " mkpart primary ext2 2048s -1 set " +
                               appvgpart + " lvm on print\"")
-                system(parted_cmd)
+                _functions.system(parted_cmd)
                 self.reread_partitions(drv)
                 if (os.path.exists(drv + appvgpart) or
                     os.path.exists(drv + "p" + appvgpart)):
@@ -577,74 +580,74 @@ class Storage:
                 return False
             dd_cmd = "dd if=/dev/zero of=\"" + partpv + "\" bs=1024k count=1"
             logger.info(dd_cmd)
-            system(dd_cmd)
-            system("pvcreate -ff -y \"" + partpv + "\"")
+            _functions.system(dd_cmd)
+            _functions.system("pvcreate -ff -y \"" + partpv + "\"")
             physical_vols.append(partpv)
 
         logger.info("Creating volume group AppVG")
         is_first = True
         for drv in physical_vols:
             if is_first:
-                system("vgcreate AppVG \"" + drv + "\"")
+                _functions.system("vgcreate AppVG \"" + drv + "\"")
                 is_first = False
             else:
-                system("vgextend AppVG \"" + drv + "\"")
+                _functions.system("vgextend AppVG \"" + drv + "\"")
 
         if self.SWAP2_SIZE > 0:
             logger.info("Creating swap2 partition")
             lv_cmd = ("lvcreate --name Swap2 --size \"" +
                       str(self.SWAP2_SIZE) + "M\" /dev/AppVG")
             logger.debug(lv_cmd)
-            system(lv_cmd)
-            if "OVIRT_CRYPT_SWAP2" in OVIRT_VARS:
-                system_closefds("echo \"SWAP2 /dev/AppVG/Swap2 " +
+            _functions.system(lv_cmd)
+            if "OVIRT_CRYPT_SWAP2" in _functions.OVIRT_VARS:
+                _functions.system_closefds("echo \"SWAP2 /dev/AppVG/Swap2 " +
                                 "/dev/mapper/ovirt-crypt-swap2 " +
-                                OVIRT_VARS["OVIRT_CRYPT_SWAP2"] +
+                                _functions.OVIRT_VARS["OVIRT_CRYPT_SWAP2"] +
                                 "\" >> /etc/ovirt-crypttab")
             else:
-                system("mkswap -L \"SWAP2\" /dev/AppVG/Swap2")
-                system_closefds("echo \"/dev/AppVG/Swap2 swap swap " +
+                _functions.system("mkswap -L \"SWAP2\" /dev/AppVG/Swap2")
+                _functions.system_closefds("echo \"/dev/AppVG/Swap2 swap swap " +
                                 "defaults 0 0\" >> /etc/fstab")
 
         use_data = "1"
         if self.DATA2_SIZE == -1:
             logger.info("Creating data2 partition with remaining free space")
-            system("lvcreate --name Data2 -l 100%FREE /dev/AppVG")
+            _functions.system("lvcreate --name Data2 -l 100%FREE /dev/AppVG")
             use_data = 0
         elif self.DATA2_SIZE > 0:
             logger.info("Creating data2 partition")
-            system("lvcreate --name Data2 --size " + str(self.DATA2_SIZE) +
+            _functions.system("lvcreate --name Data2 --size " + str(self.DATA2_SIZE) +
                    "M /dev/AppVG")
             use_data = 0
 
         if use_data == 0:
-            system("mke2fs -j -t ext4 /dev/AppVG/Data2 -L \"DATA2\"")
-            system("tune2fs -c 0 -i 0 /dev/AppVG/Data2")
-            system_closefds("echo \"/dev/AppVG/Data2 /data2 ext4 " +
+            _functions.system("mke2fs -j -t ext4 /dev/AppVG/Data2 -L \"DATA2\"")
+            _functions.system("tune2fs -c 0 -i 0 /dev/AppVG/Data2")
+            _functions.system_closefds("echo \"/dev/AppVG/Data2 /data2 ext4 " +
                             "defaults,noatime 0 0\" >> /etc/fstab")
             logger.info("Mounting data2 partition")
-            mount_data2()
+            _functions.mount_data2()
             logger.info("Completed AppVG!")
             return True
 
     def perform_partitioning(self):
-        if self.HOSTVGDRIVE is None and not is_iscsi_install():
+        if self.HOSTVGDRIVE is None and not _functions.is_iscsi_install():
             logger.error("\nNo storage device selected.")
             return False
 
-        if self.BOOTDRIVE is None and is_iscsi_install():
+        if self.BOOTDRIVE is None and _functions.is_iscsi_install():
             logger.error("No storage device selected.")
             return False
 
-        if has_fakeraid(self.HOSTVGDRIVE):
+        if _functions.has_fakeraid(self.HOSTVGDRIVE):
             if not handle_fakeraid(self.HOSTVGDRIVE):
                 return False
-        if has_fakeraid(self.ROOTDRIVE):
+        if _functions.has_fakeraid(self.ROOTDRIVE):
             if not handle_fakeraid(self.ROOTDRIVE):
                 return False
 
         logger.info("Saving parameters")
-        unmount_config("/etc/default/ovirt")
+        _functions.unmount_config("/etc/default/ovirt")
         if not self.check_partition_sizes():
             return False
         logger.info("Removing old LVM partitions")
@@ -663,42 +666,42 @@ class Storage:
             logger.error("Wiping LVM on %s Failed" % self.BOOTDRIVE)
             return False
         logger.debug("Old LVM partitions should be gone.")
-        logger.debug(passthrough("vgdisplay -v"))
+        logger.debug(_functions.passthrough("vgdisplay -v"))
 
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
-        if is_iscsi_install():
+        if _functions.is_iscsi_install():
             # login to target and setup disk"
             get_targets = ("iscsiadm -m discovery -p %s:%s -t sendtargets" %
-                           (OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
-                           OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
-            system(get_targets)
+                           (_functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
+                           _functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
+            _functions.system(get_targets)
             before_login_drvs = self.get_dev_name()
             logger.debug(before_login_drvs)
             login_cmd = ("iscsiadm -m node -T %s -p %s:%s -l" %
-                        (OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
-                        OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
-                        OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
-            system(login_cmd)
-            system("multipath -r")
+                        (_functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
+                        _functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
+                        _functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
+            _functions.system(login_cmd)
+            _functions.system("multipath -r")
             after_login_drvs = self.get_dev_name()
             logger.debug(after_login_drvs)
             logger.info("iSCSI enabled, partitioning boot drive: %s" %
                         self.BOOTDRIVE)
-            wipe_partitions(self.BOOTDRIVE)
+            _functions.wipe_partitions(self.BOOTDRIVE)
             self.reread_partitions(self.BOOTDRIVE)
             logger.info("Creating boot partition")
             parted_cmd = "parted %s -s \"mklabel %s\"" % (self.BOOTDRIVE,
                                                           self.LABEL_TYPE)
-            system(parted_cmd)
+            _functions.system(parted_cmd)
             parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 1M 256M\"" %
                        self.BOOTDRIVE)
-            system(parted_cmd)
+            _functions.system(parted_cmd)
             parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 256M " +
                           "512M\"") % self.BOOTDRIVE
-            system(parted_cmd)
+            _functions.system(parted_cmd)
             parted_cmd = ("parted \"" + self.BOOTDRIVE + "\" -s \"set 1 " +
                          "boot on\"")
-            system(parted_cmd)
+            _functions.system(parted_cmd)
             self.reread_partitions(self.BOOTDRIVE)
             partboot = self.BOOTDRIVE + "1"
             if not os.path.exists(partboot):
@@ -709,17 +712,17 @@ class Storage:
                 logger.debug("%s does not exist" % partbootbackup)
                 partbootbackup = self.BOOTDRIVE + "p2"
             # sleep to ensure filesystems are created before continuing
-            system("udevadm settle")
+            _functions.system("udevadm settle")
             time.sleep(10)
-            system("mke2fs \"" + str(partboot) + "\" -L Boot")
-            system("tune2fs -c 0 -i 0 \"" + str(partboot) + "\"")
-            system("ln -snf \"" + partboot + "\" /dev/disk/by-label/Boot")
-            system("mke2fs \"" + str(partbootbackup) + "\" -L BootBackup")
-            system("tune2fs -c 0 -i 0 \"" + str(partbootbackup) + "\"")
-            system("ln -snf \"" + partbootbackup +
+            _functions.system("mke2fs \"" + str(partboot) + "\" -L Boot")
+            _functions.system("tune2fs -c 0 -i 0 \"" + str(partboot) + "\"")
+            _functions.system("ln -snf \"" + partboot + "\" /dev/disk/by-label/Boot")
+            _functions.system("mke2fs \"" + str(partbootbackup) + "\" -L BootBackup")
+            _functions.system("tune2fs -c 0 -i 0 \"" + str(partbootbackup) + "\"")
+            _functions.system("ln -snf \"" + partbootbackup +
                    "\" /dev/disk/by-label/BootBackup")
-            self.ISCSIDRIVE = translate_multipath_device(
-                               OVIRT_VARS["OVIRT_ISCSI_INIT"])
+            self.ISCSIDRIVE = _functions.translate_multipath_device(
+                               _functions.OVIRT_VARS["OVIRT_ISCSI_INIT"])
             logger.debug(self.ISCSIDRIVE)
             if self.create_iscsiroot():
                 logger.info("iSCSI Root Partitions Created")
@@ -727,49 +730,49 @@ class Storage:
                     logger.info("Completed!")
                     return True
 
-        if ("OVIRT_ROOT_INSTALL" in OVIRT_VARS and
-                  OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "y"):
+        if ("OVIRT_ROOT_INSTALL" in _functions.OVIRT_VARS and
+                  _functions.OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "y"):
             logger.info("Partitioning root drive: " + self.ROOTDRIVE)
-            wipe_partitions(self.ROOTDRIVE)
+            _functions.wipe_partitions(self.ROOTDRIVE)
             self.reread_partitions(self.ROOTDRIVE)
             logger.info("Labeling Drive: " + self.ROOTDRIVE)
             parted_cmd = ("parted \"" + self.ROOTDRIVE + "\" -s \"mklabel " +
                          self.LABEL_TYPE + "\"")
-            passthrough(parted_cmd, logger.debug)
+            _functions.passthrough(parted_cmd, logger.debug)
             logger.debug("Creating Root and RootBackup Partitions")
             # efi partition should at 0M
-            if is_efi_boot():
+            if _functions.is_efi_boot():
                 parted_cmd = ("parted \"" + self.ROOTDRIVE +
                              "\" -s \"mkpart EFI 1M " +
                              str(self.EFI_SIZE) + "M\"")
-                passthrough(parted_cmd, logger.debug)
+                _functions.passthrough(parted_cmd, logger.debug)
             else:
                 # create partition labeled bios_grub
                 parted_cmd = ("parted \"" + self.ROOTDRIVE +
                              "\" -s \"mkpart primary 1M " +
                              str(self.EFI_SIZE) + "M\"")
-                passthrough(parted_cmd, logger.debug)
+                _functions.passthrough(parted_cmd, logger.debug)
                 parted_cmd = ("parted \"" + self.ROOTDRIVE +
                              "\" -s \"set 1 bios_grub on\"")
-                passthrough(parted_cmd, logger.debug)
+                _functions.passthrough(parted_cmd, logger.debug)
             parted_cmd = ("parted \"" + self.ROOTDRIVE +
                          "\" -s \"mkpart primary ext2 " + str(self.EFI_SIZE) +
                          "M " + str(self.Root_end) + "M\"")
-            passthrough(parted_cmd, logger.debug)
+            _functions.passthrough(parted_cmd, logger.debug)
             parted_cmd = ("parted \"" + self.ROOTDRIVE +
                          "\" -s \"mkpart primary ext2 " +
                          str(self.Root_end) + "M " +
                          str(self.RootBackup_end) + "M\"")
             logger.debug(parted_cmd)
-            system(parted_cmd)
+            _functions.system(parted_cmd)
             parted_cmd = ("parted \"" + self.ROOTDRIVE +
                          "\" -s \"set 2 boot on\"")
             logger.debug(parted_cmd)
-            system(parted_cmd)
+            _functions.system(parted_cmd)
             # sleep to ensure filesystems are created before continuing
             time.sleep(5)
             # force reload some cciss devices will fail to mkfs
-            system("multipath -r &>/dev/null")
+            _functions.system("multipath -r &>/dev/null")
             self.reread_partitions(self.ROOTDRIVE)
             partefi = self.ROOTDRIVE + "1"
             partroot = self.ROOTDRIVE + "2"
@@ -778,29 +781,29 @@ class Storage:
                 partefi = self.ROOTDRIVE + "p1"
                 partroot = self.ROOTDRIVE + "p2"
                 partrootbackup = self.ROOTDRIVE + "p3"
-            if is_efi_boot():
-                system("ln -snf \"" + partefi + "\" /dev/disk/by-label/EFI")
-                system("mkfs.vfat \"" + partefi + "\"")
-            system("ln -snf \"" + partroot + "\" /dev/disk/by-label/Root")
-            system("mke2fs \"" + partroot + "\" -L Root")
-            system("tune2fs -c 0 -i 0 \"" + partroot + "\"")
-            system("ln -snf \"" + partrootbackup +
+            if _functions.is_efi_boot():
+                _functions.system("ln -snf \"" + partefi + "\" /dev/disk/by-label/EFI")
+                _functions.system("mkfs.vfat \"" + partefi + "\"")
+            _functions.system("ln -snf \"" + partroot + "\" /dev/disk/by-label/Root")
+            _functions.system("mke2fs \"" + partroot + "\" -L Root")
+            _functions.system("tune2fs -c 0 -i 0 \"" + partroot + "\"")
+            _functions.system("ln -snf \"" + partrootbackup +
                    "\" /dev/disk/by-label/RootBackup")
-            system("mke2fs \"" + partrootbackup + "\" -L RootBackup")
-            system("tune2fs -c 0 -i 0 \"" + partrootbackup + "\"")
+            _functions.system("mke2fs \"" + partrootbackup + "\" -L RootBackup")
+            _functions.system("tune2fs -c 0 -i 0 \"" + partrootbackup + "\"")
         hostvg1 = self.HOSTVGDRIVE.split(",")[0]
         self.reread_partitions(self.ROOTDRIVE)
         if self.ROOTDRIVE != hostvg1:
-            system("parted \"" + hostvg1 + "\" -s \"mklabel " +
+            _functions.system("parted \"" + hostvg1 + "\" -s \"mklabel " +
                    self.LABEL_TYPE + "\"")
         if self.create_hostvg():
             if len(self.APPVGDRIVE) > 0:
                 self.create_appvg()
         else:
             return False
-        if ("OVIRT_CRYPT_SWAP2" in OVIRT_VARS or
-            "OVIRT_CRYPT_SWAP" in OVIRT_VARS):
-            ovirt_store_config("/etc/ovirt-crypttab")
+        if ("OVIRT_CRYPT_SWAP2" in _functions.OVIRT_VARS or
+            "OVIRT_CRYPT_SWAP" in _functions.OVIRT_VARS):
+            _functions.ovirt_store_config("/etc/ovirt-crypttab")
         return True
 
     def check_partition_sizes(self):
@@ -810,7 +813,7 @@ class Storage:
         if self.DATA_SIZE == -1:
             min_data_size = 5
 
-        if is_iscsi_install():
+        if _functions.is_iscsi_install():
             BOOTDRIVESPACE = self.get_drive_size(self.BOOTDRIVE)
             drive_list.append("BOOT")
             drive_space_dict["BOOTDRIVESPACE"] = BOOTDRIVESPACE
@@ -862,7 +865,7 @@ class Storage:
 
 def wipe_fakeraid(device):
     dmraid_cmd = "echo y | dmraid -rE $(readlink -f \"%s\")" % device
-    dmraid = subprocess_closefds(dmraid_cmd, stdout=PIPE, stderr=STDOUT,
+    dmraid = _functions.subprocess_closefds(dmraid_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                  shell=True)
     dmraid.communicate()
     dmraid.poll()
@@ -873,7 +876,7 @@ def wipe_fakeraid(device):
 
 
 def handle_fakeraid(device):
-    if is_wipe_fakeraid():
+    if _functions.is_wipe_fakeraid():
         return wipe_fakeraid(device)
     #don't wipe fakeraid
     logger.error(("Fakeraid metadata detected on %s, Aborting install."
@@ -887,9 +890,9 @@ def handle_fakeraid(device):
 
 def storage_auto():
     storage = Storage()
-    if not OVIRT_VARS["OVIRT_INIT"] == "":
+    if not _functions.OVIRT_VARS["OVIRT_INIT"] == "":
         #force root install variable for autoinstalls
-        OVIRT_VARS["OVIRT_ROOT_INSTALL"] = "y"
+        _functions.OVIRT_VARS["OVIRT_ROOT_INSTALL"] = "y"
         if storage.perform_partitioning():
             return True
     else:
