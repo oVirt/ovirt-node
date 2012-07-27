@@ -26,7 +26,6 @@ import augeas
 
 def cryptPassword(password):
     saltlen = 2
-    algo = 'sha512'
     saltlen = 16
     saltstr = '$6$'
     for i in range(saltlen):
