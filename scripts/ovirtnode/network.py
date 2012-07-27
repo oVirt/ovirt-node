@@ -220,9 +220,9 @@ class Network:
 
     def configure_ntp(self):
         if "OVIRT_NTP" in OVIRT_VARS:
-            NTPSERVERS = OVIRT_VARS["OVIRT_NTP"]
+            self.NTPSERVERS = OVIRT_VARS["OVIRT_NTP"]
         else:
-            NTPSERVERS = ""
+            self.NTPSERVERS = ""
 
     def save_ntp_configuration(self):
         ntproot = "/files/etc/ntp.conf"
