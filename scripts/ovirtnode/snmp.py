@@ -17,45 +17,46 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-from ovirtnode.ovirtfunctions import *
+import ovirtnode.ovirtfunctions as _functions
 import os
+import subprocess
 
 snmp_conf = "/etc/snmp/snmpd.conf"
 
 
 def enable_snmpd(password):
-    system("service snmpd stop")
+    _functions.system("service snmpd stop")
     # get old password #
     if os.path.exists("/tmp/snmpd.conf"):
         conf = "/tmp/snmpd.conf"
     else:
         conf = snmp_conf
     cmd = "cat %s|grep createUser|awk '{print $4}'" % conf
-    oldpwd = subprocess_closefds(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    oldpwd = _functions.subprocess_closefds(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     oldpwd = oldpwd.stdout.read().strip()
-    system("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
+    _functions.system("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
     f = open(snmp_conf, "a")
     # create user account
     f.write("createUser root SHA %s AES\n" % password)
     f.close()
-    system("service snmpd start")
+    _functions.system("service snmpd start")
     # change existing password
     if len(oldpwd) > 0:
         pwd_change_cmd = ("snmpusm -v 3 -u root -n \"\" -l authNoPriv -a " +
         "SHA -A %s localhost passwd %s %s -x AES") % (oldpwd, oldpwd, password)
-        if system(pwd_change_cmd):
-            system("rm -rf /tmp/snmpd.conf")
-    ovirt_store_config(snmp_conf)
+        if _functions.system(pwd_change_cmd):
+            _functions.system("rm -rf /tmp/snmpd.conf")
+    _functions.ovirt_store_config(snmp_conf)
 
 
 def disable_snmpd():
-    system("service snmpd stop")
+    _functions.system("service snmpd stop")
     # copy to /tmp for enable/disable toggles w/o reboot
-    system("cp /etc/snmp/snmpd.conf /tmp")
-    system("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
-    remove_config(snmp_conf)
+    _functions.system("cp /etc/snmp/snmpd.conf /tmp")
+    _functions.system("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
+    _functions.remove_config(snmp_conf)
 
 
 def snmp_auto():
-    if "OVIRT_SNMP_PASSWORD" in OVIRT_VARS:
-        enable_snmpd(OVIRT_VARS["OVIRT_SNMP_PASSWORD"])
+    if "OVIRT_SNMP_PASSWORD" in _functions.OVIRT_VARS:
+        enable_snmpd(_functions.OVIRT_VARS["OVIRT_SNMP_PASSWORD"])
