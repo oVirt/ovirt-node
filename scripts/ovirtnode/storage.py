@@ -245,8 +245,6 @@ class Storage:
                 deplist = "%s %s" % (device, deplist)
         return deplist
 
-        return (dev_names.sort(), self.disk_dict)
-
     # Find a usable/selected storage device.
     # If there are none, give a diagnostic and return nonzero.
     # If there is just one, e.g., /dev/sda, treat it as selected (see below).
