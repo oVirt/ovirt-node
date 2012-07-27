@@ -12,3 +12,5 @@ lib:libs/common
 searchpath:../tcs/
 
 check_dmesg.sh
+
+collect_logs.sh
