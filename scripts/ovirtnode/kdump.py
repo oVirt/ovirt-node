@@ -18,7 +18,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-from ovirtnode.ovirtfunctions import *
+import ovirtnode.ovirtfunctions as _functions
 
 
 def write_kdump_config(config):
@@ -28,7 +28,7 @@ def write_kdump_config(config):
     kdump_config_file.write("link_delay 60\n")
     kdump_config_file.write("net " + config + "\n")
     kdump_config_file.close()
-    ovirt_store_config("/etc/kdump.conf")
+    _functions.ovirt_store_config("/etc/kdump.conf")
     return True
 
 
@@ -48,17 +48,17 @@ def process_kdump_config():
         write_kdump_config(self.kdump_ssh_config)
     if self.kdump_restore_config.value() == 1:
         restore_kdump_config()
-    ovirt_store_config("/etc/kdump.conf")
-    system_closefds("service kdump restart &> /dev/null")
+    _functions.ovirt_store_config("/etc/kdump.conf")
+    _functions.system_closefds("service kdump restart &> /dev/null")
     return True
 
 
 def kdump_auto():
     try:
-        if "OVIRT_KDUMP_NFS" in OVIRT_VARS:
-            write_kdump_config(OVIRT_VARS["OVIRT_KDUMP_NFS"])
-            ovirt_store_config("/etc/kdump.conf")
-            logger.info("Syslog Configuration Completed")
+        if "OVIRT_KDUMP_NFS" in _functions.OVIRT_VARS:
+            write_kdump_config(_functions.OVIRT_VARS["OVIRT_KDUMP_NFS"])
+            _functions.ovirt_store_config("/etc/kdump.conf")
+            _functions.logger.info("Syslog Configuration Completed")
             return True
     except:
-        logger.error("KDump Configuration Failed")
+        _functions.logger.error("KDump Configuration Failed")
