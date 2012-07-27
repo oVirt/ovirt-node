@@ -20,9 +20,7 @@
 #
 # Configures the rsyslog daemon.
 
-import os
-import sys
-from ovirtnode.ovirtfunctions import *
+import ovirtnode.ovirtfunctions as _functions
 
 RSYSLOG_FILE = "/etc/rsyslog.conf"
 
@@ -82,7 +80,7 @@ def ovirt_rsyslog(server, port, protocol):
     else:
         DELIM = "@"
 
-    if is_valid_ipv6(server):
+    if _functions.is_valid_ipv6(server):
         server = "[" + server + "]"
 
     rsyslog_dict = {
@@ -95,25 +93,25 @@ def ovirt_rsyslog(server, port, protocol):
     rsyslog_config = open(RSYSLOG_FILE, "w")
     rsyslog_config.write(rsyslog_config_out)
     rsyslog_config.close()
-    system_closefds("/sbin/service rsyslog restart &> /dev/null")
-    if ovirt_store_config("/etc/rsyslog.conf"):
-        logger.info("Syslog Configuration Updated")
+    _functions.system_closefds("/sbin/service rsyslog restart &> /dev/null")
+    if _functions.ovirt_store_config("/etc/rsyslog.conf"):
+        _functions.logger.info("Syslog Configuration Updated")
     return True
 
 
 def ovirt_netconsole(server, port):
-    augtool("set", "/files/etc/sysconfig/netconsole/SYSLOGADDR", server)
-    augtool("set", "/files/etc/sysconfig/netconsole/SYSLOGPORT", port)
-    system_closefds("/sbin/service netconsole restart &> /dev/null")
-    if ovirt_store_config("/etc/sysconfig/netconsole"):
-        logger.info("Netconsole Configuration Updated")
+    _functions.augtool("set", "/files/etc/sysconfig/netconsole/SYSLOGADDR", server)
+    _functions.augtool("set", "/files/etc/sysconfig/netconsole/SYSLOGPORT", port)
+    _functions.system_closefds("/sbin/service netconsole restart &> /dev/null")
+    if _functions.ovirt_store_config("/etc/sysconfig/netconsole"):
+        _functions.logger.info("Netconsole Configuration Updated")
     return True
 
 
 def set_logrotate_size(size):
     try:
-        augtool("set", "/files/etc/logrotate.d/ovirt-node/rule/size", size)
-        ovirt_store_config("/etc/logrotate.d/ovirt-node")
+        _functions.augtool("set", "/files/etc/logrotate.d/ovirt-node/rule/size", size)
+        _functions.ovirt_store_config("/etc/logrotate.d/ovirt-node")
         return True
     except:
         return False
@@ -139,70 +137,70 @@ def get_rsyslog_config():
                     if not server.startswith("#"):
                         return (server, port.strip())
                 except:
-                    logger.error("rsyslog config parsing failed " + line)
+                    _functions.logger.error("rsyslog config parsing failed " + line)
                     return
 
 
 def syslog_auto():
     host = ""
     port = ""
-    if (not "OVIRT_SYSLOG_SERVER" in OVIRT_VARS or
-        not "OVIRT_SYSLOG_PORT" in OVIRT_VARS):
-        logger.info("Attempting to locate remote syslog server...")
+    if (not "OVIRT_SYSLOG_SERVER" in _functions.OVIRT_VARS or
+        not "OVIRT_SYSLOG_PORT" in _functions.OVIRT_VARS):
+        _functions.logger.info("Attempting to locate remote syslog server...")
         try:
-            host, port = find_srv("syslog", "udp")
+            host, port = _functions.find_srv("syslog", "udp")
         except:
             pass
         if not host is "" and not port is "":
-            logger.info("Found! Using syslog server " + host + ":" + port)
+            _functions.logger.info("Found! Using syslog server " + host + ":" + port)
             ovirt_rsyslog(host, port, "udp")
             return True
         else:
-            logger.warn("Syslog server not found!")
+            _functions.logger.warn("Syslog server not found!")
             return False
     else:
-        logger.info("Using default syslog server " +
-                    OVIRT_VARS["OVIRT_SYSLOG_SERVER"] + ":" +
-                    OVIRT_VARS["OVIRT_SYSLOG_PORT"] + ".")
-        ovirt_rsyslog(OVIRT_VARS["OVIRT_SYSLOG_SERVER"],
-                      OVIRT_VARS["OVIRT_SYSLOG_PORT"], "udp")
+        _functions.logger.info("Using default syslog server " +
+                    _functions.OVIRT_VARS["OVIRT_SYSLOG_SERVER"] + ":" +
+                    _functions.OVIRT_VARS["OVIRT_SYSLOG_PORT"] + ".")
+        ovirt_rsyslog(_functions.OVIRT_VARS["OVIRT_SYSLOG_SERVER"],
+                      _functions.OVIRT_VARS["OVIRT_SYSLOG_PORT"], "udp")
         return True
 
 
 def netconsole_auto():
     host = ""
     port = ""
-    if (not "OVIRT_NETCONSOLE_SERVER" in OVIRT_VARS or not
-        "OVIRT_NETCONSOLE_PORT" in OVIRT_VARS):
-        logger.info("Attempting to locate remote netconsole server...")
+    if (not "OVIRT_NETCONSOLE_SERVER" in _functions.OVIRT_VARS or not
+        "OVIRT_NETCONSOLE_PORT" in _functions.OVIRT_VARS):
+        _functions.logger.info("Attempting to locate remote netconsole server...")
         try:
-            host, port = find_srv("netconsole", "udp")
+            host, port = _functions.find_srv("netconsole", "udp")
         except:
             pass
         if not host is "" and not port is "":
-            logger.info("Found! Using netconsole server " + host + ":" + port)
+            _functions.logger.info("Found! Using netconsole server " + host + ":" + port)
             ovirt_netconsole(host, port)
             return True
         else:
-            logger.warn("Netconsole server not found!")
+            _functions.logger.warn("Netconsole server not found!")
             return False
     else:
-        logger.info("Using default netconsole server " +
-                    OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"] + ":" +
-                    OVIRT_VARS["OVIRT_NETCONSOLE_PORT"] + ".")
-        ovirt_netconsole(OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"],
-                         OVIRT_VARS["OVIRT_NETCONSOLE_PORT"])
+        _functions.logger.info("Using default netconsole server " +
+                    _functions.OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"] + ":" +
+                    _functions.OVIRT_VARS["OVIRT_NETCONSOLE_PORT"] + ".")
+        ovirt_netconsole(_functions.OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"],
+                         _functions.OVIRT_VARS["OVIRT_NETCONSOLE_PORT"])
         return True
 
 
 def logging_auto():
     try:
         syslog_auto()
-        logger.info("Syslog Configuration Completed")
+        _functions.logger.info("Syslog Configuration Completed")
     except:
-        logger.warn("Syslog Configuration Failed")
+        _functions.logger.warn("Syslog Configuration Failed")
     try:
         netconsole_auto()
-        logger.info("Syslog Configuration Completed")
+        _functions.logger.info("Syslog Configuration Completed")
     except:
-        logger.warn("Netconsole Configuration Failed")
+        _functions.logger.warn("Netconsole Configuration Failed")
