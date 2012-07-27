@@ -17,11 +17,12 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-from ovirtnode.ovirtfunctions import *
+import ovirtnode.ovirtfunctions as _functions
 import libuser
 import random
 import crypt
-
+import string
+import augeas
 
 def cryptPassword(password):
     saltlen = 2
@@ -38,9 +39,9 @@ def set_password(password, user):
     admin = libuser.admin()
     root = admin.lookupUserByName(user)
     passwd = cryptPassword(password)
-    unmount_config("/etc/shadow")
+    _functions.unmount_config("/etc/shadow")
     admin.setpassUser(root, passwd, "is_crypted")
-    ovirt_store_config("/etc/shadow")
+    _functions.ovirt_store_config("/etc/shadow")
     return True
 
 
@@ -54,12 +55,12 @@ def check_ssh_password_auth():
 def toggle_ssh_access():
     ssh_config = augeas.Augeas("root=/")
     ssh_config.set("/files/etc/ssh/sshd_config",
-                   OVIRT_VARS["ssh_pass_enabled"])
+                   _functions.OVIRT_VARS["ssh_pass_enabled"])
     ssh_config.save()
-    ovirt_store_config("/etc/ssh/sshd_config")
-    rc = system_closefds("service sshd reload")
+    _functions.ovirt_store_config("/etc/ssh/sshd_config")
+    rc = _functions.system_closefds("service sshd reload")
     return rc
 
 
 def set_sasl_password(user, password):
-    system_closefds("saslpasswd2 -a libvirt -p %s") % user
+    _functions.system_closefds("saslpasswd2 -a libvirt -p %s") % user
