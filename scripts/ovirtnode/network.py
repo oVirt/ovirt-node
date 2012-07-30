@@ -170,13 +170,15 @@ class Network:
 
     def get_num_localhost_aliases(self):
         if self.localhost_entry:
-            aliases = _functions.augtool("match", self.localhost_entry + "/alias", "")
+            aliases = _functions.augtool("match", self.localhost_entry + \
+                                         "/alias", "")
             return len(aliases)
         return 0
 
     def remove_non_localhost(self):
-        last_alias = _functions.augtool("get", self.localhost_entry + "/alias[" + \
-                                    str(self.alias_count) + "]", "")
+        last_alias = _functions.augtool("get", self.localhost_entry + \
+                                        "/alias[" + \
+                                        str(self.alias_count) + "]", "")
         while self.alias_count != 0:
             if last_alias == "localhost":
                 break
@@ -200,8 +202,9 @@ class Network:
                     tui_cmt = ("Please make changes through the TUI. " + \
                                "Manual edits to this file will be " + \
                                "lost on reboot")
-                    _functions.augtool("set", "/files/etc/resolv.conf/#comment[1]", \
-                            tui_cmt)
+                    _functions.augtool("set", \
+                                       "/files/etc/resolv.conf/#comment[1]", \
+                                       tui_cmt)
                     DNS = DNS.split(",")
                     i = 1
                     for server in DNS:
@@ -216,7 +219,8 @@ class Network:
                 logger.warn("Failed to set DNS servers")
             finally:
                 if len(DNS) < 2:
-                    _functions.augtool("rm", "/files/etc/resolv.conf/nameserver[2]", "")
+                    _functions.augtool("rm", \
+                                    "/files/etc/resolv.conf/nameserver[2]", "")
                 for nic in glob("/etc/sysconfig/network-scripts/ifcfg-*"):
                     if not "ifcfg-lo" in nic:
                         path = "/files%s/PEERDNS" % nic
@@ -248,9 +252,11 @@ class Network:
             SERVERS = OVIRT_VARS["OVIRT_NTP"].split(",")
             for server in SERVERS:
                 if offset == 1:
-                    _functions.augtool("set", "/files/etc/ntp.conf/server[1]", server)
+                    _functions.augtool("set", \
+                                       "/files/etc/ntp.conf/server[1]", server)
                 elif offset == 2:
-                    _functions.augtool("set", "/files/etc/ntp.conf/server[2]", server)
+                    _functions.augtool("set", \
+                                       "/files/etc/ntp.conf/server[2]", server)
                 offset = offset + 1
             _functions.system_closefds("service ntpd stop &> /dev/null")
             _functions.system_closefds("service ntpdate start &> /dev/null")
@@ -270,9 +276,11 @@ class Network:
         for vlan in get_system_vlans():
             # XXX wrong match e.g. eth10.1 with eth1
             if self.CONFIGURED_NIC in vlan:
-                _functions.system_closefds("vconfig rem " + vlan + "&> /dev/null")
+                _functions.system_closefds("vconfig rem " + vlan + \
+                                           "&> /dev/null")
                 _functions.ovirt_safe_delete_config(self.IFSCRIPTS_PATH + vlan)
-                _functions.system_closefds("rm -rf " + self.IFSCRIPTS_PATH + vlan)
+                _functions.system_closefds("rm -rf " + \
+                                           self.IFSCRIPTS_PATH + vlan)
 
         # All old config files are gone, the new ones are created step by step
 
@@ -344,10 +352,12 @@ class Network:
             logger.debug("Storing %s" % nic)
             _functions.ovirt_store_config("%s%s" % (self.IFSCRIPTS_PATH, nic))
         _functions.ovirt_store_config(self.NTP_CONFIG_FILE)
-        _functions.augtool("set", "/files/etc/sysconfig/network/NETWORKING", "yes")
+        _functions.augtool("set", \
+                           "/files/etc/sysconfig/network/NETWORKING", "yes")
         _functions.ovirt_store_config("/etc/sysconfig/network")
         _functions.ovirt_store_config("/etc/hosts")
-        _functions.ovirt_store_config("/etc/udev/rules.d/70-persistent-net.rules")
+        _functions.ovirt_store_config("/etc/udev/rules.d/" + \
+                                      "70-persistent-net.rules")
         logger.info("Network configured successfully")
         if net_configured == 1:
             logger.info("Stopping Network services")
@@ -355,7 +365,8 @@ class Network:
             _functions.system_closefds("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
             brctl_cmd = "brctl show| awk 'NR>1 && /^br[ep]/ {print $1}'"
-            brctl = _functions.subprocess_closefds(brctl_cmd, shell=True, stdout=subprocess.PIPE,
+            brctl = _functions.subprocess_closefds(brctl_cmd, shell=True,
+                                                   stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT)
             brctl_output = brctl.stdout.read()
             for i in brctl_output.split():
@@ -402,7 +413,8 @@ def get_system_nics():
                     pci_lookup_cmd = ((" lspci|grep %s|awk -F \":\" " +
                                      "{'print $3'}" % pci_dev))
                     pci_lookup = _functions.subprocess_closefds(pci_lookup_cmd,
-                                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                 shell=True, stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT)
                     dev_vendor = pci_lookup.stdout.read().strip()
                 except:
                     dev_vendor = "unknown"
@@ -480,7 +492,7 @@ def convert_to_biosdevname():
         nics = {}
         cmd = "biosdevname -d"
         biosdevname, err = subprocess.Popen(cmd, shell=True,
-                                            stdout=subprocess.PIPE).communicate()
+                                          stdout=subprocess.PIPE).communicate()
         biosdevname_output = biosdevname.splitlines()
 
         for line in biosdevname_output:
@@ -504,7 +516,8 @@ def convert_to_biosdevname():
                 logger.debug("Found %s in %s" % (existing_mac, file))
                 # change device name within script file
                 logger.debug("Setting to new device name: %s" % new_nic_name)
-                _functions.augtool("set", "/files" + file + "/DEVICE", new_nic_name)
+                _functions.augtool("set", \
+                                   "/files" + file + "/DEVICE", new_nic_name)
                 new_nic_file = "%s/ifcfg-%s" % (scripts_path, new_nic_name)
                 cmd = "cp %s %s" % (file, new_nic_file)
                 _functions.remove_config(file)
@@ -515,7 +528,8 @@ def convert_to_biosdevname():
                 else:
                     return False
         _functions.system("service network restart")
-        _functions.augtool("set", "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
+        _functions.augtool("set", \
+                       "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
         _functions.ovirt_store_config("/etc/default/ovirt")
     return True
 
