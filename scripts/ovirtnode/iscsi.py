@@ -47,7 +47,8 @@ def get_current_iscsi_initiator_name():
 def iscsi_auto():
     if "OVIRT_ISCSI_NAME" not in _functions.OVIRT_VARS:
         _functions.logger.info("Generating iSCSI IQN")
-        iscsi_iqn_cmd = _functions.subprocess_closefds("/sbin/iscsi-iname", stdout=subprocess.PIPE)
+        iscsi_iqn_cmd = _functions.subprocess_closefds("/sbin/iscsi-iname", \
+                                                       stdout=subprocess.PIPE)
         iscsi_iqn, err = iscsi_iqn_cmd.communicate()
         set_iscsi_initiator(iscsi_iqn.strip())
     else:
