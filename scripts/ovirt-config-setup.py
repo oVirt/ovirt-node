@@ -1123,6 +1123,8 @@ class NodeConfigScreen():
             self.ipv4_disabled_callback()
         # prepopulate current values only in case of missing values
         if self.__nic_config_failed == 1:
+            for opt in [self.dhcp_ipv4_nic_proto, self.disabled_ipv4_nic_proto]:
+                opt.setValue(" ")
             try:
                 self.ipv4_netdevip.set(self.ipv4_current_netdevip)
                 self.ipv4_netdevmask.set(self.ipv4_current_netdevmask)
@@ -1131,6 +1133,7 @@ class NodeConfigScreen():
                 self.ipv4_static_callback()
             except:
                 pass
+            self.__nic_config_failed = 0
         # ipv6 grids
         ipv6_main_grid = Grid(6, 8)
         self.disabled_ipv6_nic_proto = Checkbox("Disabled ")
@@ -1530,20 +1533,21 @@ class NodeConfigScreen():
             msg = ""
             if self.static_ipv4_nic_proto.value() == 1:
                 if self.ipv4_netdevip.value() == "":
-                    msg = "  - IPv4 Address\n"
+                    msg += "  - IPv4 Address\n"
                 if self.ipv4_netdevmask.value() == "":
                     msg += "  - IPv4 Netmask Address\n"
                 if self.ipv4_netdevgateway.value() == "":
-                    msg = "  - IPv4 Gateway Address\n"
-                augtool("set", "/files/" + OVIRT_DEFAULTS +
-                        "/OVIRT_IP_ADDRESS", '"' +
-                        self.ipv4_netdevip.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS +
-                        "/OVIRT_IP_NETMASK", '"' +
-                        self.ipv4_netdevmask.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS +
-                        "/OVIRT_IP_GATEWAY", '"' +
-                        self.ipv4_netdevgateway.value() + '"')
+                    msg += "  - IPv4 Gateway Address\n"
+                if msg == "":
+                    augtool("set", "/files/" + OVIRT_DEFAULTS +
+                            "/OVIRT_IP_ADDRESS", '"' +
+                            self.ipv4_netdevip.value() + '"')
+                    augtool("set", "/files/" + OVIRT_DEFAULTS +
+                            "/OVIRT_IP_NETMASK", '"' +
+                            self.ipv4_netdevmask.value() + '"')
+                    augtool("set", "/files/" + OVIRT_DEFAULTS +
+                            "/OVIRT_IP_GATEWAY", '"' +
+                            self.ipv4_netdevgateway.value() + '"')
 
             if self.static_ipv6_nic_proto.value() == 1:
                 if self.ipv6_netdevmask.value() == "":
@@ -1559,8 +1563,8 @@ class NodeConfigScreen():
                 self.__nic_config_failed = 1
                 self.ipv4_current_netdevip = self.ipv4_netdevip.value()
                 self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
-                self.ipv4_current_netdevgateway = (
-                    self.ipv4_netdevgateway.value())
+                self.ipv4_current_netdevgateway = \
+                                                self.ipv4_netdevgateway.value()
                 self.reset_screen_colors()
                 return
             else:
