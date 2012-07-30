@@ -24,6 +24,7 @@ import crypt
 import string
 import augeas
 
+
 def cryptPassword(password):
     saltlen = 2
     saltlen = 16
