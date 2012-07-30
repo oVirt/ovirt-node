@@ -445,8 +445,6 @@ def get_system_nics():
                 configured_nics = configured_nics + 1
         except:
             pass
-        if "." in dev_interface:
-            dev_interface = dev_interface.split(".")[0]
         if (not dev_interface == "lo" and \
             not dev_interface.startswith("bond") and \
             not dev_interface.startswith("sit") and \
