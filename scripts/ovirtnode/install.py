@@ -32,6 +32,7 @@ from ovirtnode.storage import Storage
 
 logger = logging.getLogger(_functions.PRODUCT_SHORT)
 
+
 class Install:
     def __init__(self):
         logger.propagate = False
@@ -365,7 +366,7 @@ initrd /initrd0.img
                 logger.debug(efi_out)
                 for line in efi_out.splitlines():
                     if not "Warning" in line:
-                        num = line[4:8] # grabs 4 digit hex id
+                        num = line[4:8]  # grabs 4 digit hex id
                         cmd = "efibootmgr -B -b %s" % num
                         _functions.system(cmd)
                 efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\redhat\\grub.efi' " +
