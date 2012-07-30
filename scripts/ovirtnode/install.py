@@ -42,18 +42,20 @@ class Install:
         self.efi_hd = ""
 
     def kernel_image_copy(self):
-        if not _functions.system("cp -p /live/" + self.syslinux + "/vmlinuz0 " +
-                      self.initrd_dest):
+        if (not _functions.system("cp -p /live/" + self.syslinux + \
+                                 "/vmlinuz0 " + self.initrd_dest)):
             logger.error("kernel image copy failed.")
             return False
-        if not _functions.system("cp -p /live/" + self.syslinux + "/initrd0.img " +
-                      self.initrd_dest):
+        if (not _functions.system("cp -p /live/" + self.syslinux + \
+                                 "/initrd0.img " + self.initrd_dest)):
             logger.error("initrd image copy failed.")
             return False
-        if not _functions.system("cp -p /live/" + self.syslinux + "/version /liveos"):
+        if (not _functions.system("cp -p /live/" + self.syslinux + \
+                                 "/version /liveos")):
             logger.error("version details copy failed.")
             return False
-        if not _functions.system("cp -p /live/LiveOS/squashfs.img /liveos/LiveOS"):
+        if (not _functions.system("cp -p /live/LiveOS/squashfs.img " + \
+                                  "/liveos/LiveOS")):
             logger.error("squashfs image copy failed.")
             return False
         return True
@@ -78,7 +80,8 @@ class Install:
             self.grub_dir = "/liveos/grub"
             self.grub_prefix = "/grub"
 
-        if os.path.exists("/sbin/grub2-install") and not _functions.is_efi_boot():
+        if (os.path.exists("/sbin/grub2-install") and \
+            not _functions.is_efi_boot()):
             self.grub_prefix = self.grub_prefix + "2"
             self.grub_dir = self.grub_dir + "2"
             self.grub_config_file = "%s/grub.cfg" % self.grub_dir
@@ -121,9 +124,12 @@ EOF
                 eg: HD(1,800,64000,faacb4ef-e361-455e-bd97-ca33632550c3)
             """
             efi_cmd = "efibootmgr -v"
-            efi = _functions.subprocess_closefds(efi_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            efi = _functions.subprocess_closefds(efi_cmd, shell=True,
+                                                 stdout=subprocess.PIPE,
+                                                 stderr=subprocess.STDOUT)
             efi_out = efi.stdout.read().strip()
-            matches = re.search(_functions.PRODUCT_SHORT + r'\s+(HD\(.+?\))', efi_out)
+            matches = re.search(_functions.PRODUCT_SHORT + r'\s+(HD\(.+?\))', \
+                                                                       efi_out)
             if matches and matches.groups():
                 GRUB_EFIONLY_CONFIG = """%(efi_hd)s"""
                 GRUB_CONFIG_TEMPLATE = GRUB_EFIONLY_CONFIG + GRUB_CONFIG_TEMPLATE
@@ -143,11 +149,12 @@ EOF
         _functions.system("cp /live/EFI/BOOT/splash.xpm.gz /liveos/grub")
         if not _functions.is_efi_boot():
             for f in ["stage1", "stage2", "e2fs_stage1_5"]:
-                _functions.system("cp /usr/share/grub/x86_64-redhat/%s %s" % (f,
-                                                                self.grub_dir))
+                _functions.system("cp /usr/share/grub/x86_64-redhat/%s %s" % \
+                                                            (f, self.grub_dir))
             grub_setup_out = GRUB_SETUP_TEMPLATE % self.grub_dict
             logger.debug(grub_setup_out)
-            grub_setup = _functions.subprocess_closefds(grub_setup_out, shell=True,
+            grub_setup = _functions.subprocess_closefds(grub_setup_out,
+                                             shell=True,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.STDOUT)
             grub_results = grub_setup.stdout.read()
@@ -184,14 +191,16 @@ initrd /initrd0.img
         if not _functions.is_efi_boot():
             logger.info("efi not detected, installing grub2 configuraton")
             if _functions.is_iscsi_install():
-                disk = re.sub("p[1,2,3]$", "", _functions.findfs(self.boot_candidate))
+                disk = re.sub("p[1,2,3]$", "", \
+                                        _functions.findfs(self.boot_candidate))
             else:
                 disk = self.disk
             grub_setup_cmd = ("/sbin/grub2-install " + disk +
                               " --boot-directory=" + self.initrd_dest +
                               " --force")
             logger.info(grub_setup_cmd)
-            grub_setup = _functions.subprocess_closefds(grub_setup_cmd, shell=True,
+            grub_setup = _functions.subprocess_closefds(grub_setup_cmd, \
+                                             shell=True,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.STDOUT)
             grub_results = grub_setup.stdout.read()
@@ -308,7 +317,8 @@ initrd /initrd0.img
             logger.info(self.disk)
             # grub2 starts at part 1
             self.partN = int(self.disk[-1:])
-            if not os.path.exists("/sbin/grub2-install") or _functions.is_efi_boot():
+            if (not os.path.exists("/sbin/grub2-install") \
+                or _functions.is_efi_boot()):
                 self.partN = self.partN - 1
         except:
             logger.debug(traceback.format_exc())
@@ -341,12 +351,14 @@ initrd /initrd0.img
                 # determine proper efi partition
                 self.efi_part = _functions.findfs("Root")
                 self.efi_part = self.efi_part[:-1] + "1"
-                _functions.system("mount -t vfat " + self.efi_part + " /liveos/efi")
+                _functions.system("mount -t vfat " + self.efi_part + \
+                                  " /liveos/efi")
                 i = 0
                 while not os.path.ismount("/liveos/efi"):
                     self.s.reread_partitions(self.efi_part)
                     time.sleep(3)
-                    _functions.system("mount -t vfat " + self.efi_part + " /liveos/efi")
+                    _functions.system("mount -t vfat " + self.efi_part + \
+                                      " /liveos/efi")
                     _functions.system("mount")
                     i = i + 1
                     if i == 5:
@@ -359,8 +371,10 @@ initrd /initrd0.img
                 # generate grub legacy config for efi partition
                 #remove existing efi entries
                 efi_mgr_cmd = "efibootmgr|grep '%s'" % _functions.PRODUCT_SHORT
-                efi_mgr = _functions.subprocess_closefds(efi_mgr_cmd, shell=True, \
-                                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                efi_mgr = _functions.subprocess_closefds(efi_mgr_cmd, \
+                                              shell=True, \
+                                              stdout=subprocess.PIPE, \
+                                              stderr=subprocess.STDOUT)
                 efi_out = efi_mgr.stdout.read().strip()
                 logger.debug(efi_mgr_cmd)
                 logger.debug(efi_out)
@@ -370,7 +384,8 @@ initrd /initrd0.img
                         cmd = "efibootmgr -B -b %s" % num
                         _functions.system(cmd)
                 efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\redhat\\grub.efi' " +
-                              "-L '%s' -d %s -v") % (_functions.PRODUCT_SHORT, efi_disk)
+                              "-L '%s' -d %s -v") % (_functions.PRODUCT_SHORT,
+                                                     efi_disk)
                 logger.info(efi_mgr_cmd)
                 _functions.system(efi_mgr_cmd)
         self.kernel_image_copy()
@@ -397,7 +412,8 @@ initrd /initrd0.img
             grub_disk_cmd = "multipath -l \"" + os.path.basename(self.disk) + \
                             "\" | awk '/ active / {print $3}' | head -n1"
             logger.debug(grub_disk_cmd)
-            grub_disk = _functions.subprocess_closefds(grub_disk_cmd, shell=True,
+            grub_disk = _functions.subprocess_closefds(grub_disk_cmd,
+                                            shell=True,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT)
             self.disk = grub_disk.stdout.read().strip()
@@ -480,7 +496,8 @@ initrd /initrd0.img
         _functions.disable_firstboot()
         if _functions.finish_install():
             _iscsi.iscsi_auto()
-            logger.info("Installation of %s Completed" % _functions.PRODUCT_SHORT)
+            logger.info("Installation of %s Completed" % \
+                                                      _functions.PRODUCT_SHORT)
             return True
         else:
             return False
