@@ -8,7 +8,6 @@ import logging
 import time
 import re
 import random
-import time
 
 import common
 
@@ -17,9 +16,12 @@ logger = logging.getLogger(__name__)
 #
 # Import python-uinput
 #
-UINPUTPYDIR = os.path.join(common.igor.libdir, \
-                           "uinput/dst/lib64/python2.7/site-packages/")
+version = "%d.%d" % sys.version_info[0:2]
+uinput_include_path = "uinput/dst/lib64/python%s/site-packages/" % version
+UINPUTPYDIR = os.path.join(common.igor.libdir, uinput_include_path)
 
+if not os.path.exists(UINPUTPYDIR):
+    raise Exception("No uinput for this python version: %s" % UINPUTPYDIR)
 common.run("modprobe uinput")
 common.add_searchpath(UINPUTPYDIR)
 import uinput
