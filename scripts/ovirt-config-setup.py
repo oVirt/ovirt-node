@@ -402,6 +402,8 @@ class NodeConfigScreen():
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.dhcp_ipv4_nic_proto.setValue(" 0")
                 self.static_ipv4_nic_proto.setValue(" 0")
+            if self.netvlanid:
+                self.netvlanid.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
 
     def ipv4_dhcp_callback(self):
         if self.dhcp_ipv4_nic_proto.value() == 1:
@@ -411,6 +413,8 @@ class NodeConfigScreen():
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.disabled_ipv4_nic_proto.setValue(" 0")
                 self.static_ipv4_nic_proto.setValue(" 0")
+            if self.netvlanid:
+                self.netvlanid.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
 
     def ipv4_static_callback(self):
         if self.static_ipv4_nic_proto.value() == 1:
@@ -420,6 +424,8 @@ class NodeConfigScreen():
                 i.setFlags(_snack.FLAG_DISABLED, flag)
                 self.disabled_ipv4_nic_proto.setValue(" 0")
                 self.dhcp_ipv4_nic_proto.setValue(" 0")
+            if self.netvlanid:
+                self.netvlanid.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_RESET)
 
     def ipv6_disabled_callback(self):
         if self.disabled_ipv6_nic_proto.value() == 1:
@@ -1070,6 +1076,8 @@ class NodeConfigScreen():
                                  padding=(0, 0, 0, 0))
         grid.setField(nic_detail_grid, 0, 1)
         ipv4_main_grid = Grid(6, 8)
+        # Needs to be defined here, b/c callbacks are referencing it
+        self.netvlanid = None
         self.disabled_ipv4_nic_proto = Checkbox("Disabled ")
         self.disabled_ipv4_nic_proto.setCallback(self.ipv4_disabled_callback)
         self.dhcp_ipv4_nic_proto = Checkbox("DHCP ")
@@ -1243,6 +1251,8 @@ class NodeConfigScreen():
             if self.nic_lb.current() in vlan:
                 vlan_id = vlan.replace(self.nic_lb.current() + ".", "")
                 self.netvlanid.set(vlan_id)
+        if self.disabled_ipv4_nic_proto.value() == 1:
+            self.netvlanid.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
         vlan_grid.setField(Label("VLAN ID: "), 0, 0, anchorLeft=1)
         vlan_grid.setField(self.netvlanid, 1, 0)
         grid.setField(vlan_grid, 0, 9, anchorLeft=1)
