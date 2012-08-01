@@ -403,8 +403,6 @@ initrd /initrd0.img
             self.bootparams = "ro rootfstype=auto rootflags=ro "
         self.bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace(
                                                             "console=tty0", "")
-        if _functions.is_efi_boot():
-            self.bootparams = self.bootparams.replace("quiet", "")
         if " " in self.disk or os.path.exists("/dev/cciss"):
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
