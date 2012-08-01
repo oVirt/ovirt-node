@@ -73,7 +73,7 @@ ln -nf *iso .. ||:
 #Don't error out if this doesn't work.
 set +e
 TMPDIR=$(mktemp -d)
-sudo mount -o loop *iso $TMPDIR
+sudo mount -o loop ovirt-node-image.iso $TMPDIR
 cp $TMPDIR/isolinux/manifest-srpm.txt ..
 cp $TMPDIR/isolinux/manifest-rpm.txt ..
 cp $TMPDIR/isolinux/manifest-file.txt.bz2 ..
