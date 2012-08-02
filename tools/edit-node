@@ -694,6 +694,13 @@ class LiveImageEditor(LiveImageCreator):
         output, err = f.communicate()
         print "\n%s\n" % output
         return True
+    def _list_plugins(self):
+        plugin_info_dir =  "%s/etc/ovirt-plugins.d" % self._instroot
+        if os.path.exists(plugin_info_dir):
+            print "\nInstalled Plugins:\n"
+            for p in os.listdir(plugin_info_dir):
+                print "%s\n" % p
+        return True
 
     def _create_manifests(self, options):
         timestamp = date("%Y-%m-%d_%H-%M-%S")
@@ -737,7 +744,7 @@ class LiveImageEditor(LiveImageCreator):
         output, err = f.communicate()
 
         # create plugin info
-        if options.install or options.plugin:
+        if options.install or options.plugin or options.install_dup:
             plugin_info_dir =  "%s/etc/ovirt-plugins.d" % self._instroot
             os.system("mkdir %s" % plugin_info_dir)
             # get version-release
@@ -1263,6 +1270,8 @@ def parse_options(args):
                       dest="gpgcheck", help="Allow unsigned packages to be installed")
 
     m_grp = optparse.OptionGroup(parser, ("Manifest Options"))
+    m_grp.add_option("", "--list-plugins", action="store_true", default=False,
+                     dest="listplugins", help="List Installed Plugins")
     m_grp.add_option("", "--print-version", action="store_true", default=False,
                      dest="printversion", help="Print Current Version of ISO")
     m_grp.add_option("", "--print-manifests", action="store_true", default=False,
@@ -1391,6 +1400,9 @@ def main():
                 rebuild = 0
             if options.rpmmanifest:
                 editor._print_rpm_manifest()
+                rebuild = 0
+            if options.listplugins:
+                editor._list_plugins()
                 rebuild = 0
             if editor.ks:
                 editor._run_pre_scripts()
