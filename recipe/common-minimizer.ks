@@ -259,6 +259,8 @@ drop /usr/share/X11
 drop /usr/share/i18n
 drop /boot/*
 keep /boot/efi
+keep /boot/System.map*
+keep /boot/symvers*
 drop /var/lib/builder
 drop /usr/sbin/rhn_register
 drop /usr/sbin/*-channel
