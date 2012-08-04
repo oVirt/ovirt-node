@@ -1201,6 +1201,31 @@ enabled=1
                 f.write(k)
                 f.close()
 
+    def _rebuild_initramfs(self):
+        cmd = "rpm -q kernel"
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+        kver = output.strip().replace("kernel-","")
+        cmd = "new-kernel-pkg --package kernel --mkinitrd --dracut --depmod --update %s" % kver
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
+        output, err = f.communicate()
+        if f.returncode > 0:
+            print output
+            print "Failed to generate new initramfs"
+            return False
+        else:
+            initramfs_file = glob.glob("%s/boot/initramfs*" % self._instroot)[0]
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
+            cmd = "mv %s %s/isolinux/initrd0.img" % (initramfs_file, self._LiveImageCreatorBase__isodir)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
+            if f.returncode > 0:
+                print output
+                print "Failed to generate new initramfs"
+                return False
+
+
 def parse_options(args):
     parser = optparse.OptionParser(option_class=MultipleOption, usage = """
        %prog [-n=<name>]
@@ -1442,6 +1467,7 @@ def main():
                 print "Editing Complete"
                 editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
                 rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
+                editor._rebuild_initramfs()
                 editor.unmount()
                 editor.package(output)
                 logging.info("%s.iso saved to %s"  % (editor.name, output))
