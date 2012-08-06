@@ -1250,6 +1250,8 @@ start_ovirt_post() {
         fi
         cp -f $ISSUE $ISSUE_NET
 
+        # Hack to fix rhbz#844997
+        mount --make-rshared /
         # Small hack to fix https://bugzilla.redhat.com/show_bug.cgi?id=805313
 
         service network restart 2>/dev/null
