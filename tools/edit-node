@@ -753,7 +753,7 @@ class LiveImageEditor(LiveImageCreator):
                                  preexec_fn = self._chroot)
             vr, err = f.communicate()
             # get install date
-            cmd = "LC_ALL rpm -q %s --qf '%%{INSTALLTIME:date}\n'" % pkg
+            cmd = "LC_ALL=C rpm -q %s --qf '%%{INSTALLTIME:date}\n'" % pkg
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
                                  preexec_fn = self._chroot)
             install_date, err = f.communicate()
