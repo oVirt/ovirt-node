@@ -118,3 +118,4 @@ yum
 biosdevname
 # yum for plugins
 yum
+fcoe-utils
