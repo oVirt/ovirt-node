@@ -16,7 +16,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 systemunitdir=$(prefix)/lib/systemd/system
-initddir=$(sysconfdir)/init.d
+initddir=$(sysconfdir)/init.d/rc.d
 
 if TARGET_FEDORA
 dist_systemunit_DATA = \
