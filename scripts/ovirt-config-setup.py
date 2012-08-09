@@ -647,7 +647,6 @@ class NodeConfigScreen():
                 ButtonChoiceWindow(self.screen, "Configuration Check",
                                    "Invalid IQN Format", buttons=['Ok'])
                 self.reset_screen_colors()
-                self.gridform.draw()
                 self.iscsi_initiator_config.set(
                             "iqn.1994-05.com.example:1234567890")
                 self.gridform.draw()
