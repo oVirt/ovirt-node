@@ -232,9 +232,9 @@ def run_rhsm(serverurl="", cacert="", activationkey="", username="",
     log("Registering to RHN account.....")
 
     import glob
-    all_rhsm_configs = ("/var/lib/rhsm/productid.js " +
-                        "/var/lib/rhsm/cache/installed_products.json " +
-                        "/var/lib/rhsm/facts/facts.json".split())
+    all_rhsm_configs = (["/var/lib/rhsm/productid.js ",
+                        "/var/lib/rhsm/cache/installed_products.json ",
+                        "/var/lib/rhsm/facts/facts.json"])
     unmount_config(all_rhsm_configs)
     unmount_config(glob.glob("/etc/pki/consumer/*pem"))
 
@@ -485,7 +485,8 @@ class Plugin(PluginBase):
 
         # optional: profilename, proxyhost, proxyuser, proxypass
         self.rhn_conf = get_rhn_config()
-        if not "https://xmlrpc.rhn.redhat.com/XMLRPC" in self.rv("serverURL"):
+        if not "https://xmlrpc.rhn.redhat.com/XMLRPC" in self.rv("serverURL") \
+            and not sam_check():
             self.rhn_url.set(self.rv("serverURL"))
             self.rhn_ca.set(self.rv("sslCACert"))
         elif sam_check():
