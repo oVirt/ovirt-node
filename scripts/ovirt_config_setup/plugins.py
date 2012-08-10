@@ -100,16 +100,41 @@ class Plugin(PluginBase):
                   (p_manifests_dir,p_name))[0]
         srpm_man = glob.glob("%s/delta-*-manifest-srpm-%s.txt" % \
                    (p_manifests_dir, p_name))[0]
-        details = ""
-        for f in [ rpm_man, srpm_man ]:
-            d = open(f)
-            for line in d:
-                details += line
-            d.close()
-        self.ncs._create_warn_screen()
-        ButtonChoiceWindow(self.ncs.screen, "Plugin Details", details,
-                           buttons=['Ok'], width=78)
-        self.ncs.reset_screen_colors()
+        file_man = glob.glob("%s/delta-*-manifest-file-%s.txt" % \
+                   (p_manifests_dir, p_name))[0]
+        items = {}
+        items["RPM Diff"] = rpm_man
+        items["SRPM Diff"] = srpm_man
+        items["File Diff"] = file_man
+        loop = True
+        while loop:
+            self.ncs._create_warn_screen()
+            (button, choice) = \
+                ListboxChoiceWindow(self.ncs.screen, "Manifest Selection",
+                        "Pick a manifest to view:", items,
+                        buttons = ("View", "Return"), width = 15, scroll = 1,
+                                height = 8)
+            k = items.keys()[choice]
+            if button == "return":
+                loop = False
+            else:
+                self.ncs._create_blank_screen()
+                self.ncs._set_title()
+                self._gridform = GridForm(self.ncs.screen, "", 2, 2)
+                self._gridform.add(Label("Reading Manifest..."), 0, 0)
+                self._gridform.draw()
+                self.ncs.screen.refresh()
+                details = ""
+                d = open(items[k])
+                for line in d:
+                    details += line
+                d.close()
+                if is_console():
+                    self.ncs.screen.setColor("BUTTON", "black", "red")
+                    self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+                ButtonChoiceWindow(self.ncs.screen, "Manifest Details", details,
+                                   buttons=['Ok'], width=68)
+                self.ncs.reset_screen_colors()
         return
 
 def get_plugin(ncs):
