@@ -254,7 +254,8 @@ def run_rhsm(serverurl="", cacert="", activationkey="", username="",
     smreg_proc.wait()
     if "been registered" in smreg_output:
         ovirt_store_config(all_rhsm_configs)
-        ovirt_store_config(glob.glob("/etc/pki/consumer/*pem"))
+        ovirt_store_config("/etc/pki/consumer/key.pem")
+        ovirt_store_config("/etc/pki/consumer/cert.pem")
         log("System %s sucessfully registered to %s" % (profilename,
                                                         serverurl))
         return 0
