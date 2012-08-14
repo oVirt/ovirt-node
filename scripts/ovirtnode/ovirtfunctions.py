@@ -454,6 +454,15 @@ def mount_liveos():
         else:
             return True
 
+def mount_efi():
+    efi_part = findfs("Root")
+    efi_part = efi_part[:-1] + "1"
+    if system_closefds("mount -t vfat " + efi_part + " /liveos/efi"):
+        return True
+    else:
+        logger.error("Unable to mount EFI partition")
+        return False
+
 # mount config partition
 # /config for persistance
 def mount_config():

@@ -86,7 +86,11 @@ class Install:
             self.grub_dir = self.grub_dir + "2"
             self.grub_config_file = "%s/grub.cfg" % self.grub_dir
         else:
-            self.grub_config_file = "%s/grub.conf" % self.grub_dir
+            if not _functions.is_efi_boot():
+                self.grub_config_file = "%s/grub.conf" % self.grub_dir
+            else:
+                self.grub_config_file = "/liveos/efi/EFI/redhat/grub.conf"
+                _functions.mount_efi()
 
     def grub_install(self):
         device_map = "(hd0) %s" % self.disk
@@ -119,7 +123,6 @@ EOF
 """
 
         if _functions.is_efi_boot():
-            self.grub_config_file = "/liveos/efi/EFI/redhat/grub.conf"
             """ The EFI product path.
                 eg: HD(1,800,64000,faacb4ef-e361-455e-bd97-ca33632550c3)
             """
@@ -348,22 +351,7 @@ initrd /initrd0.img
             if _functions.is_efi_boot():
                 logger.info("efi detected, installing efi configuration")
                 _functions.system("mkdir /liveos/efi")
-                # determine proper efi partition
-                self.efi_part = _functions.findfs("Root")
-                self.efi_part = self.efi_part[:-1] + "1"
-                _functions.system("mount -t vfat " + self.efi_part + \
-                                  " /liveos/efi")
-                i = 0
-                while not os.path.ismount("/liveos/efi"):
-                    self.s.reread_partitions(self.efi_part)
-                    time.sleep(3)
-                    _functions.system("mount -t vfat " + self.efi_part + \
-                                      " /liveos/efi")
-                    _functions.system("mount")
-                    i = i + 1
-                    if i == 5:
-                        logger.error("Timed out waiting for /liveos/efi mount")
-                        return False
+                _functions.mount_efi()
                 _functions.system("mkdir -p /liveos/efi/EFI/redhat")
                 _functions.system("cp /boot/efi/EFI/redhat/grub.efi " +
                        "/liveos/efi/EFI/redhat/grub.efi")
