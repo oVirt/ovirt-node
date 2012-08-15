@@ -192,8 +192,8 @@ def is_local_storage_configured():
 #       if other ip bootparams are not specified, IPv4 DHCP is assumed
 # for storage - OVIRT_INIT, local disk to use
 #       if ovirt_vol is not specified, default volume sizes are set
-def is_auto_install(self):
-    if self.OVIRT_VARS.has_key("OVIRT_BOOTIF") and self.OVIRT_VARS.has_key("OVIRT_INIT"):
+def is_auto_install():
+    if OVIRT_VARS.has_key("OVIRT_BOOTIF") and OVIRT_VARS.has_key("OVIRT_INIT"):
         return True
     else:
         return False
@@ -885,7 +885,8 @@ def finish_install():
     #   -O /dev/null
     hookdir="/etc/ovirt-config-boot.d"
     for hook in os.listdir(hookdir):
-        system_closefds(os.path.join(hookdir,hook))
+        if not is_auto_install():
+            system_closefds(os.path.join(hookdir,hook))
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
