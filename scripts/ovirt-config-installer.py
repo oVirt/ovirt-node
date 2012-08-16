@@ -131,7 +131,9 @@ class NodeInstallScreen:
         self.current_password_fail = 0
         self.failed_block_dev = 0
         self.failed_install = False
-        self.live_disk = "/dev/" + get_live_disk().rstrip('0123456789')
+        self.live_disk = get_live_disk()
+        if not "/dev/mapper" in self.live_disk:
+            self.live_disk = "/dev/" + get_live_disk().rstrip('0123456789')
         logger.info("::::live device::::\n" + self.live_disk)
     def set_console_colors(self):
         self.existing_color_array = None

@@ -835,10 +835,17 @@ def get_live_disk():
         live_disk = os.path.dirname(udev_info("/dev/live","path"))
         if "block" in live_disk:
             live_disk = os.path.basename(udev_info("/dev/live","path")).strip()
+            # if dm-XX, not enough detail to map correctly
+            if "dm-" in live_disk:
+                live_disk = findfs("LIVE")[:-2]
+    # fallback in case LIVE label point elsewhere
     elif os.path.exists("/dev/disk/by-label/LIVE"):
         live_disk = os.path.dirname(udev_info("/dev/disk/by-label/LIVE","path"))
         if "block" in live_disk:
             live_disk = os.path.basename(udev_info("/dev/disk/by-label/LIVE","path")).strip()
+            # if dm-XX, not enough detail to map correctly
+            if "dm-" in live_disk:
+                live_disk = findfs("LIVE")[:-2]
     else:
         ret = system_closefds("losetup /dev/loop0|grep -q '\.iso'")
         if ret != 0:
