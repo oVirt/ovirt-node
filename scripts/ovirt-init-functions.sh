@@ -429,9 +429,6 @@ _start_ovirt_early () {
                     init=
                     for d in $hostvgdisks; do
                         did="$(IFS="$oldIFS" parse_disk_id "$d")"
-                        if [ -z "$did" -a $iscsi_install == 1 ]; then
-                            autoinstall_failed
-                        fi
                         if [ -n "$init" ]; then
                             init="$init${SEP}$did"
                         else
