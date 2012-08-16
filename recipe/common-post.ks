@@ -251,3 +251,6 @@ set /files/etc/yum.repos.d/fedora.repo/fedora/enabled 0
 set /files/etc/yum.repos.d/fedora-updates.repo/updates/enabled 0
 save
 EOF_yum
+
+#cleanup tmp directory from cim setup
+rm -rf /tmp/cim_schema*
