@@ -1,0 +1,1 @@
+ovirt18-minimizer.ks

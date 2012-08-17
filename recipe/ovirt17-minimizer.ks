@@ -1,1 +1,2 @@
-ovirt16-minimizer.ks
+# Fedora specific image minimization
+keep /usr/share/virt-manager
