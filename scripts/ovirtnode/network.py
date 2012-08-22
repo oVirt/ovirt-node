@@ -150,8 +150,13 @@ class Network:
                     self.BR_CONFIG += "set %s/GATEWAY %s\n" % (BR_ROOT, \
                                                 OVIRT_VARS["OVIRT_IP_GATEWAY"])
 
-        self.IF_CONFIG += "set %s/ONBOOT yes" % IF_ROOT
-        self.BR_CONFIG += "set %s/ONBOOT yes" % BR_ROOT
+        if self.disabled_nic == 1:
+            self.BR_CONFIG += "set %s/ONBOOT no" % BR_ROOT
+            self.IF_CONFIG += "set %s/ONBOOT no" % IF_ROOT
+        else:
+            self.IF_CONFIG += "set %s/ONBOOT yes" % IF_ROOT
+            self.BR_CONFIG += "set %s/ONBOOT yes" % BR_ROOT
+
         self.IF_CONFIG = self.IF_CONFIG.split("\n")
         self.BR_CONFIG = self.BR_CONFIG.split("\n")
         try:
@@ -304,30 +309,31 @@ class Network:
                 _functions.augtool(oper, key, "")
 
         logger.debug("Updating bridge config")
-        for line in self.BR_CONFIG:
-            logger.debug(line)
-            try:
-                oper, key, value = line.split()
-                _functions.augtool(oper, key, value)
-            except:
+        if not self.disabled_nic == 1:
+            for line in self.BR_CONFIG:
+                logger.debug(line)
                 try:
-                    oper, key = line.split()
-                    _functions.augtool(oper, key, "")
+                    oper, key, value = line.split()
+                    _functions.augtool(oper, key, value)
                 except:
-                    pass
+                    try:
+                        oper, key = line.split()
+                        _functions.augtool(oper, key, "")
+                    except:
+                        pass
 
-        logger.debug("Updating VLAN config")
-        for line in self.VL_CONFIG.split("\n"):
-            logger.debug(line)
-            try:
-                oper, key, value = line.split()
-                _functions.augtool(oper, key, value)
-            except:
+            logger.debug("Updating VLAN config")
+            for line in self.VL_CONFIG.split("\n"):
+                logger.debug(line)
                 try:
-                    oper, key = line.split()
-                    _functions.augtool(oper, key, "")
+                    oper, key, value = line.split()
+                    _functions.augtool(oper, key, value)
                 except:
-                    pass
+                    try:
+                        oper, key = line.split()
+                        _functions.augtool(oper, key, "")
+                    except:
+                        pass
 
         # preserve current MAC mappings for *all physical* network interfaces
         logger.debug("Preserving current MAC mappings")
@@ -352,8 +358,12 @@ class Network:
             logger.debug("Storing %s" % nic)
             _functions.ovirt_store_config("%s%s" % (self.IFSCRIPTS_PATH, nic))
         _functions.ovirt_store_config(self.NTP_CONFIG_FILE)
-        _functions.augtool("set", \
-                           "/files/etc/sysconfig/network/NETWORKING", "yes")
+        if self.disabled_nic == 1:
+            _functions.augtool("set", \
+                               "/files/etc/sysconfig/network/NETWORKING", "no")
+        else:
+            _functions.augtool("set", \
+                               "/files/etc/sysconfig/network/NETWORKING", "yes")
         _functions.ovirt_store_config("/etc/sysconfig/network")
         _functions.ovirt_store_config("/etc/hosts")
         _functions.ovirt_store_config("/etc/udev/rules.d/" + \
