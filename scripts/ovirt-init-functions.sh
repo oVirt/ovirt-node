@@ -466,17 +466,20 @@ _start_ovirt_early () {
             storage_vol* | ovirt_vol=*)
             i=${i#ovirt_vol=}
             i=${i#storage_vol=}
-            eval $(printf $i|awk -F: '{ print "lv1="$1; print "lv2="$2; print "lv3="$3; print "lv4="$4; print "lv5="$5; print "lv6="$6; print "lv7="$7; print "lv8="$8; }')
+            eval $(printf $i|awk -F: '{ print "lv1="$1; print "lv2="$2; print "lv3="$3; print "lv4="$4; print "lv5="$5; print "lv6="$6; print "lv7="$7; print "lv8="$8; print "lv9="$9; }')
             # Reads each provided LV size and assign them
             # NOTE: Boot and Root size are ignored by o-c-storage
-            for p in $(seq 1 8); do
+            for p in $(seq 1 9); do
                 var=lv$p
                 size=
                 lv=
                 if [ -n "${!var}" ]; then
-                    eval $(printf '${!var}'|awk -F, '{ print "size="$1; print "lv="$2; }')
+                    eval $(printf "${!var}"|awk -F, '{ print "size="$1; print "lv="$2; }')
                     if [ -n "${size}" ]; then
                         case "${lv}" in
+                            EFI)
+                            vol_efi_size=$size
+                            ;;
                             Boot)
                             vol_boot_size=$size
                             ;;
@@ -789,7 +792,7 @@ _start_ovirt_early () {
 
 
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init init_app vol_boot_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install"
+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config

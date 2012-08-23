@@ -115,7 +115,7 @@ class Storage:
         for i in ['OVIRT_VOL_BOOT_SIZE', 'OVIRT_VOL_ROOT_SIZE',
                   'OVIRT_VOL_CONFIG_SIZE', 'OVIRT_VOL_LOGGING_SIZE',
                   'OVIRT_VOL_DATA_SIZE', 'OVIRT_VOL_SWAP2_SIZE',
-                  'OVIRT_VOL_DATA2_SIZE']:
+                  'OVIRT_VOL_DATA2_SIZE', 'OVIRT_VOL_EFI_SIZE']:
             i_short = i.replace("OVIRT_VOL_", "")
             if i in OVIRT_VARS:
                 if int(OVIRT_VARS[i]) < int(self.__dict__[i_short]):
