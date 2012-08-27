@@ -491,7 +491,7 @@ def convert_to_biosdevname():
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
         # check for appropriate bios version
         cmd="dmidecode|grep SMBIOS|awk {'print $2'}"
-        proc = passthrough(cmd, log_func=logger.debug)
+        proc = _functions.passthrough(cmd, log_func=logger.debug)
         ver = proc.stdout.split()[0]
         if not float(ver) >= 2.6:
             logger.debug("Skipping biosdevname conversion, SMBIOS too old")
