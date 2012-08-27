@@ -552,7 +552,6 @@ def mount_logging():
     if os.path.exists("/tmp/ovirt.log"):
         system_closefds("{ echo 'BEGIN of temporary log' ; cat /tmp/ovirt.log; echo 'END of temporary log' ; } &>> %s/ovirt.log" % (log2))
     system_closefds("mount --move %s /var/log &>/dev/null" % log2)
-    shutil.rmtree(log2)
     system_closefds("restorecon -r /var/log &>/dev/null")
     for srv in logging_services:
         system_closefds("service " + srv + " start &>/dev/null")
