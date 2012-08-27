@@ -172,7 +172,7 @@ class Storage:
         for dev in devs:
             logger.debug("Considering device '%s'" % dev)
             if not os.path.exists(dev):
-                logger.warn("'%s' is no device, let's try the next one." % dev)
+                logger.info("'%s' is no device, let's try the next one." % dev)
                 continue
             part_delim = "p"
             # FIXME this should be more intelligent
