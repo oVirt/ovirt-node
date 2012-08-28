@@ -495,9 +495,14 @@ class Plugin(PluginBase):
                 self.rhn_url.set("https://" + self.rv("hostname"))
                 if os.path.exists("/etc/rhsm/ca/candlepin-local.pem"):
                     self.rhn_ca.set("/etc/rhsm/ca/candlepin-local.pem")
-        self.proxyhost.set(self.rv("httpProxy"))
         self.proxyuser.set(self.rv("proxyUser"))
         self.proxypass.set(self.rv("proxyPassword"))
+        try:
+            p_server, p_port = self.rv("httpProxy").split(":")
+            self.proxyhost.set(p_server)
+            self.proxyport.set(p_port)
+        except:
+            pass
         self.rhn_actkey = Entry(40, "")
         if rhn_check():
             if self.rhn_url.value() == ("https://xmlrpc.rhn.redhat.com/XMLRPC"
