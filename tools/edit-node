@@ -757,6 +757,11 @@ class LiveImageEditor(LiveImageCreator):
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
                                  preexec_fn = self._chroot)
             install_date, err = f.communicate()
+            if os.path.isfile(pkg):
+                #get rpm name
+                cmd = "rpm -qp %s --qf '%%{name}'" % pkg
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                pkg, err = f.communicate()
             plugin_file = "%s/%s" % (plugin_info_dir, pkg)
             pfile = open(plugin_file, "w")
             pfile.write("Name:%s\n" % pkg)
@@ -1410,7 +1415,7 @@ def main():
         elif options.printmanifests:
             editor._print_manifests(LiveOS)
             mount = False
-        elif options.repo is None and len(p) > 0:
+        elif options.repo is None and len(p) < 0:
             print "An Editing Option Must Be Specified"
             return False
         # only mount rootfs as required since it's not necesary for all operations
