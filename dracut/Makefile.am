@@ -15,7 +15,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-dracutdir = $(prefix)/lib/dracut/modules.d/91ovirtnode
+dracutdir = @DRACUTDIR@/91ovirtnode
 dracutconfdir = $(sysconfdir)/dracut.conf.d
 
 dist_dracut_SCRIPTS = \
