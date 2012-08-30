@@ -7,7 +7,7 @@
 %define is_rhel_systemd %(test 0%{?rhel} -ne 0 && test %{?rhel} -ge 7 && echo 1 || echo 0)
 %define is_centos_systemd %(test 0%{?centos} -ne 0 && test %{?centos} -ge 7 && echo 1 || echo 0)
 %define is_systemd %( test %{is_rhel_systemd} -eq 1 || test %{is_centos_systemd} = 1 || test %{is_fedora_systemd} = 1 && echo 1 || echo 0)
-
+%define dracutdir %(test -e /usr/share/dracut && echo "/usr/share/dracut/modules.d" || echo "/usr/lib/dracut/modules.d")
 
 
 Summary:        The %{product_family} daemons/scripts
@@ -20,7 +20,7 @@ Group:          Applications/System
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
-BuildRequires:  python-setuptools python-devel
+BuildRequires:  python-setuptools python-devel dracut
 BuildRequires:  automake autoconf
 %if %{is_systemd}
 BuildRequires:  systemd-units
@@ -267,9 +267,9 @@ fi
 %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
 %endif
 
-%{_prefix}/lib/dracut/modules.d/91ovirtnode/module-setup.sh
-%{_prefix}/lib/dracut/modules.d/91ovirtnode/ovirt-boot-functions
-%{_prefix}/lib/dracut/modules.d/91ovirtnode/ovirt-cleanup.sh
+%{dracutdir}/91ovirtnode/module-setup.sh
+%{dracutdir}/91ovirtnode/ovirt-boot-functions
+%{dracutdir}/91ovirtnode/ovirt-cleanup.sh
 %{_sysconfdir}/dracut.conf.d/ovirt-dracut.conf
 %{_libexecdir}/ovirt-auto-install
 %{_libexecdir}/ovirt-config-boot
