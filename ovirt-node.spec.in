@@ -3,6 +3,10 @@
 %global mgmt_scripts_dir %{_sysconfdir}/node.d
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %define is_f16 %(test "0%{?fedora}" == "016" && echo 1 || echo 0)
+%define is_fedora_systemd %(test 0%{?fedora} -ne 0 && test %{?fedora} -ge 16 && echo 1 || echo 0)
+%define is_rhel_systemd %(test 0%{?rhel} -ne 0 && test %{?rhel} -ge 7 && echo 1 || echo 0)
+%define is_centos_systemd %(test 0%{?centos} -ne 0 && test %{?centos} -ge 7 && echo 1 || echo 0)
+%define is_systemd %( test %{is_rhel_systemd} -eq 1 || test %{is_centos_systemd} = 1 || test %{is_fedora_systemd} = 1 && echo 1 || echo 0)
 
 
 
@@ -18,13 +22,13 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
 BuildRequires:  python-setuptools python-devel
 BuildRequires:  automake autoconf
-%if 0%{?fedora}
+%if %{is_systemd}
 BuildRequires:  systemd-units
 %endif
 
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
-%if 0%{?fedora}
+%if %{is_systemd}
 Requires:       systemd-units
 Requires(post):     systemd-units
 Requires(preun):    systemd-units
@@ -58,10 +62,10 @@ Requires:       PyPAM
 Requires:       ethtool
 Requires:       cracklib-python
 Requires:       dracut
-%if 0%{?rhel}
+%if ! %{is_systemd}
 Requires:       grub
 # for applying patches in %post
-Requires:       patch
+Requires(post):       patch
 %endif
 %if 0%{?rhel} && ! 0%{?centos}
 Requires:       system-release
@@ -120,18 +124,18 @@ make
 %{__rm} -rf %{buildroot}
 make install DESTDIR=%{buildroot}
 
-%if %is_f16
+%if %{is_f16}
 # install libvirtd systemd service
 %{__install} -p -m0644 libvirtd.service %{buildroot}%{_unitdir}
 %endif
-%if 0%{?rhel}
+%if ! %{is_systemd}
 # install libvirtd upstart job
 %{__install} -d -m0755 %{buildroot}%{_sysconfdir}/init
 %{__install} -p -m0644 libvirtd.upstart %{buildroot}%{_sysconfdir}/init/libvirtd.conf
 %endif
 
 # dracut patches for rhel6
-%if 0%{?rhel}
+%if ! %{is_systemd}
 %{__install} -p -m0644 dracut/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch %{buildroot}%{app_root}
 %{__install} -p -m0644 dracut/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch %{buildroot}%{app_root}
 %endif
@@ -147,7 +151,7 @@ make install DESTDIR=%{buildroot}
 
 %post
 /sbin/chkconfig --level 35 netconsole on
-%if 0%{?rhel}
+%if ! %{is_systemd}
 /sbin/chkconfig --add ovirt-awake
 /sbin/chkconfig --add ovirt-early
 /sbin/chkconfig --add ovirt-firstboot
@@ -164,7 +168,7 @@ fi
 if [ ! -e /boot/grub/splash.xpm.gz ]; then
   cp %{app_root}/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
 fi
-%if 0%{?rhel} && ! 0%{?centos}
+%if ! %{is_systemd}
 # apply dracut fixes not in rhel6
 # rhbz#683330
 # dracut.git commits rediffed for dracut-004-53.el6
@@ -186,7 +190,7 @@ echo "%{product_family} release %{product_release}" > /etc/system-release
 
 %preun
 /sbin/chkconfig --level 35 netconsole off
-%if 0%{?rhel}
+%if ! %{is_systemd}
 if [ $1 = 0 ] ; then
     /sbin/service ovirt-early stop >/dev/null 2>&1
     /sbin/service ovirt-firstboot stop >/dev/null 2>&1
@@ -242,10 +246,10 @@ fi
 %{_sysconfdir}/ovirt-config-boot.d
 %config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
-%if %is_f16
+%if %{is_f16}
 %{_unitdir}/libvirtd.service
 %endif
-%if 0%{?rhel}
+%if ! %{is_systemd}
 %{_sysconfdir}/init/libvirtd.conf
 %endif
 
@@ -258,7 +262,7 @@ fi
 %{app_root}/grub-splash.xpm.gz
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
-%if 0%{?rhel}
+%if ! %{is_systemd}
 %{app_root}/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch
 %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
 %endif
@@ -293,7 +297,7 @@ fi
 %{python_sitelib}/augeas*
 %{_sysconfdir}/ovirt-early.d
 %{_sysconfdir}/ovirt-commandline.d
-%if 0%{?fedora}
+%if %{is_systemd}
 %{_unitdir}/ovirt.service
 %{_unitdir}/ovirt-awake.service
 %{_unitdir}/ovirt-firstboot.service

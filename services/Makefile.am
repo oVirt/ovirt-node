@@ -16,9 +16,9 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 systemunitdir=$(prefix)/lib/systemd/system
-initddir=$(sysconfdir)/init.d
+initddir=$(sysconfdir)/rc.d/init.d
 
-if TARGET_FEDORA
+if TARGET_SYSTEMD
 dist_systemunit_DATA = \
   ovirt-awake.service \
   ovirt-early.service \
@@ -26,9 +26,7 @@ dist_systemunit_DATA = \
   ovirt-post.service \
   ovirt-firstboot.service \
   ovirt-cim.service
-endif
-
-if TARGET_RHEL
+else
 dist_initd_SCRIPTS = \
   init.d/ovirt-awake \
   init.d/ovirt-early \
@@ -37,16 +35,5 @@ dist_initd_SCRIPTS = \
   init.d/ovirt-firstboot \
   init.d/ovirt-cim
 endif
-
-if TARGET_CENTOS
-dist_initd_SCRIPTS = \
-  init.d/ovirt-awake \
-  init.d/ovirt-early \
-  init.d/ovirt \
-  init.d/ovirt-post \
-  init.d/ovirt-firstboot \
-  init.d/ovirt-cim
-endif
-
 
 # vim: ts=2

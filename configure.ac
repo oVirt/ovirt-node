@@ -21,6 +21,8 @@ fi
 AM_CONDITIONAL(TARGET_FEDORA, test x"$FEDORA" != x)
 AM_CONDITIONAL(TARGET_RHEL, test x"$RHEL" != x)
 AM_CONDITIONAL(TARGET_CENTOS, test x"$CENTOS" != x)
+AM_CONDITIONAL(TARGET_SYSTEMD, test 0$RHEL -ge 7 || test 0$FEDORA -ge 16 || test 0$CENTOS -ge 7)
+
 
 AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
             [enable aggresive reduction of the image size])],
