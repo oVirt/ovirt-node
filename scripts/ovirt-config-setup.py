@@ -820,11 +820,15 @@ class NodeConfigScreen():
         help_text = Textbox(62, 1, "Press F8 For Support Menu")
         main_grid.setField(help_text, 0, 4, anchorLeft=1,
                            padding=(0, 0, 0, 0))
-
+        details_grid = Grid(2, 1)
         self.ssh_hostkey_btn = CompactButton("View Host Key")
-        main_grid.setField(self.ssh_hostkey_btn, 0, 5, anchorLeft=1,
+        details_grid.setField(self.ssh_hostkey_btn, 0, 0, anchorLeft=1,
                            padding=(1, 1, 0, 0))
-
+        self.cpu_details_btn = CompactButton("View CPU Details")
+        details_grid.setField(self.cpu_details_btn, 1, 0, anchorLeft=1,
+                           padding=(1, 1, 0, 0))
+        main_grid.setField(details_grid, 0, 5, anchorLeft=1,
+                           padding=(0, 0, 0, 0))
         return [Label(""), main_grid]
 
     def logging_configuration_page(self, screen):
@@ -1891,6 +1895,13 @@ class NodeConfigScreen():
         self.reset_screen_colors()
         self.gridform.draw()
 
+    def cpu_details_btn_cb(self):
+        self._create_warn_screen()
+        ButtonChoiceWindow(self.screen, "CPU Details", cpu_details(),
+                           buttons=['Ok'], width=40)
+        self.reset_screen_colors()
+        self.gridform.draw()
+
     def quit(self):
         manual_teardown()
         sys.exit(2)
@@ -2055,6 +2066,8 @@ class NodeConfigScreen():
                     self.quit()
                 elif (result is self.ssh_hostkey_btn):
                     self.ssh_hostkey_btn_cb()
+                elif (result is self.cpu_details_btn):
+                    self.cpu_details_btn_cb()
 
                 if self.__current_page == LOCKED_PAGE:
                     self.screen_locked = True

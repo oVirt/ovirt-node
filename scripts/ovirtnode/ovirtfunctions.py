@@ -19,6 +19,7 @@
 
 import subprocess
 from subprocess import Popen, PIPE, STDOUT
+from xml.dom.minidom import parseString
 import os
 import tempfile
 import string
@@ -1242,25 +1243,92 @@ def get_logrotate_size():
     size = int(size) * multiplier
     return str(size)
 
+def get_cpu_flags():
+    cpuflags_cmd = "cat /proc/cpuinfo |grep ^flags|tail -n 1"
+    cpuflags_lookup = subprocess_closefds(cpuflags_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    return cpuflags_lookup.stdout.read().strip()
+
+def kvm_enabled():
+    try:
+        conn = libvirt.openReadOnly(None)
+        libvirt_capabilities = conn.getCapabilities()
+    except:
+        return 0
+    if "kvm" in libvirt_capabilities:
+        return 1
+    else:
+        return 2
+
+def virt_cpu_flags_enabled():
+    cpuflags = get_cpu_flags()
+    if "vmx" in cpuflags or "svm" in cpuflags:
+        return True
+    else:
+        return False
+
 def get_virt_hw_status():
     hwvirt_msg = ""
+    kvm_status = kvm_enabled()
+    if kvm_status == 0:
+        return "(Failed to Establish Libvirt Connection)"
+    elif kvm_status == 1:
+        logger.info("Hardware virtualization detected")
+    elif kvm_status == 2:
+        hwvirt_msg = "Virtualization hardware is unavailable."
+        if virt_cpu_flags_enabled():
+            hwvirt_msg = "(Virtualization hardware detected but disabled)"
+        else:
+            hwvirt_msg = "(Virtualization hardware was not detected)"
+    return hwvirt_msg
+
+
+def cpu_details():
+    status_msg = ""
+    cpu_info_cmd = "cat /proc/cpuinfo"
+    cpu_info = subprocess.Popen(cpu_info_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    cpu_info = cpu_info.stdout.read().strip()
+    cpu_dict = {}
+    for line in cpu_info.splitlines():
+        try:
+            key, value = line.split(":")
+            cpu_dict[key.replace("\t","")] = value
+        except:
+            pass
+    # get capabilities from libvirt
     try:
         conn = libvirt.openReadOnly(None)
         libvirt_capabilities = conn.getCapabilities()
     except:
         return "(Failed to Establish Libvirt Connection)"
-    if "kvm" in libvirt_capabilities:
-        logger.info("Hardware virtualization detected")
+    dom = parseString(libvirt_capabilities)
+    vendorTag = dom.getElementsByTagName('vendor')[0].toxml()
+    modelTag = dom.getElementsByTagName('model')[0].toxml()
+    topologyTag = dom.getElementsByTagName('topology')[0].toxml()
+    cpu_model = modelTag.replace('<model>','').replace('</model>','')
+    cpu_vendor = vendorTag.replace('<vendor>','').replace('</vendor>','')
+    cpu_topology = topologyTag.replace('<topology>','').replace('</topology>','').split()
+    status_msg += "CPU Name: %s\n" % cpu_dict["model name"].replace("  "," ")
+    status_msg += "CPU Type: %s %s\n" % (cpu_vendor, cpu_model)
+    if kvm_enabled() and virt_cpu_flags_enabled():
+        status_msg += "Virtualization Extensions Enabled: Yes\n"
     else:
-        hwvirt_msg = "Virtualization hardware is unavailable."
-        cpuflags_cmd = "cat /proc/cpuinfo |grep ^flags|tail -n 1"
-        cpuflags_lookup = subprocess_closefds(cpuflags_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        cpuflags = cpuflags_lookup.stdout.read().strip()
-        if "vmx" in cpuflags or "svm" in cpuflags:
-            hwvirt_msg = "(Virtualization hardware detected but disabled)"
+        status_msg += "Virtualization Extensions Enabled: \n%s\n" \
+            % get_virt_hw_status()
+    if cpu_vendor == "Intel":
+        if "nx" in cpu_dict["flags"]:
+            status_msg += "NX Flag: Yes\n"
         else:
-            hwvirt_msg = "(Virtualization hardware was not detected)"
-    return hwvirt_msg
+            status_msg += "NX Flag: No\n"
+    if cpu_vendor == "AMD":
+        if "evp" in cpu_dict["flags"]:
+            status_msg += "EVP Flag: Yes\n"
+        else:
+            status_msg += "EVP Flag: No\n"
+    cpu_sockets=cpu_topology[2].split("=")[1].replace('"',"")
+    status_msg += "CPU Sockets: %s\n" % cpu_sockets
+    cpu_cores=cpu_topology[1].split("=")[1].replace('"',"")
+    status_msg += "CPU Cores: %s\n" % cpu_cores
+    return status_msg
 
 def get_ssh_hostkey(variant="rsa"):
     fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant
