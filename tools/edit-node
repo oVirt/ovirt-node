@@ -1207,6 +1207,11 @@ enabled=1
                 f.close()
 
     def _rebuild_initramfs(self):
+        # ensure dmsquash-live dracut module is included
+        d_conf = "%s/etc/dracut.conf" % self._instroot
+        dracut_conf = open(d_conf, "a")
+        dracut_conf.write('add_dracutmodules+="dmsquash-live"')
+        dracut_conf.close()
         cmd = "rpm -q kernel"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn = self._chroot)
         output, err = f.communicate()
