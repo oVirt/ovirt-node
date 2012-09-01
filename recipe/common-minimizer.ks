@@ -3,7 +3,6 @@ keeprpm system-config-keyboard-base
 droprpm libsemanage-python
 
 droprpm mkinitrd
-droprpm isomd5sum
 droprpm checkpolicy
 droprpm make
 droprpm setools-libs-python
@@ -334,7 +333,6 @@ droprpm dmraid-events
 droprpm gamin
 droprpm gnupg2
 droprpm hdparm
-droprpm isomd5sum
 droprpm libicu
 droprpm libsemanage-python
 droprpm linux-atm-libs
