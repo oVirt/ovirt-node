@@ -143,8 +143,11 @@ configure_management_interface() {
                     $BONDING_MODCONF_FILE
                 if [ $upgrade = 1 ]; then
                     # local disk installation for managed mode
-                    mount_live
-                    /usr/libexec/ovirt-config-boot /live "$bootparams"
+                    python <<EOP
+from ovirtnode.install import Install
+install = Install()
+install.ovirt_boot_setup()
+EOP
                 fi
             fi
             ;;
@@ -1090,7 +1093,11 @@ start_ovirt_firstboot ()
         check_version
         # auto install covers this already
         if ! is_auto_install; then
-            /usr/libexec/ovirt-config-boot /live "$OVIRT_BOOTPARAMS" no
+            python <<EOP
+from ovirtnode.install import Install
+install = Install()
+install.ovirt_boot_setup()
+EOP
         fi
         if [ $? -ne 0 ]; then
             autoinstall_failed

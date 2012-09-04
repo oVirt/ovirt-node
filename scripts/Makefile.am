@@ -26,7 +26,6 @@ dist_sbin_SCRIPTS = \
   unpersist
 
 dist_libexec_SCRIPTS = \
-  ovirt-config-boot \
   ovirt-config-hostname \
   ovirt-config-iscsi \
   ovirt-config-kdump \

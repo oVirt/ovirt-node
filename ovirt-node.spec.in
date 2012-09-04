@@ -269,7 +269,6 @@ fi
 %{_prefix}/lib/dracut/modules.d/91ovirtnode/ovirt-cleanup.sh
 %{_sysconfdir}/dracut.conf.d/ovirt-dracut.conf
 %{_libexecdir}/ovirt-auto-install
-%{_libexecdir}/ovirt-config-boot
 %{_libexecdir}/ovirt-config-hostname
 %{_libexecdir}/ovirt-config-iscsi
 %{_libexecdir}/ovirt-config-kdump
