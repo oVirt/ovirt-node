@@ -108,6 +108,14 @@ This package provides plugin tools for modifying and working with the
 This package is not to be installed on the %{product_family},
 however on a development machine to work with the image.
 
+%package plugin-snmp
+Summary:        SNMP plugin for %{product_family} image
+Group:          Applications/System
+
+%define snmp_root %{_datadir}/%{name}
+
+%description plugin-snmp
+This package provides an snmp plugin tools for use with%{product_family} image.
 
 %prep
 %setup -q
@@ -235,6 +243,8 @@ fi
 %{_sbindir}/edit-node
 %{_mandir}/man8/edit-node.8.gz
 
+%files plugin-snmp
+%{python_sitelib}/ovirt_config_setup/snmp.py
 
 %files
 %defattr(-,root,root)
@@ -293,6 +303,7 @@ fi
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{python_sitelib}/ovirt_config_setup
+%exclude %{python_sitelib}/ovirt_config_setup/snmp.py*
 %{python_sitelib}/ovirtnode
 %{python_sitelib}/augeas*
 %{_sysconfdir}/ovirt-early.d

@@ -68,7 +68,8 @@ pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigsetup_PYTHON = \
   ovirt_config_setup/__init__.py \
   ovirt_config_setup/cim.py \
-  ovirt_config_setup/plugins.py
+  ovirt_config_setup/plugins.py \
+  ovirt_config_setup/snmp.py
 
 if TARGET_FEDORA
 pyovirtconfigsetup_PYTHON += \
@@ -95,7 +96,6 @@ pyovirtnode_PYTHON = \
   ovirtnode/network.py \
   ovirtnode/ovirtfunctions.py \
   ovirtnode/password.py \
-  ovirtnode/snmp.py \
   ovirtnode/storage.py
 
 EXTRA_DIST = \

@@ -35,7 +35,6 @@ from ovirtnode.log import *
 from ovirtnode.network import *
 from ovirtnode.kdump import *
 from ovirtnode.iscsi import *
-from ovirtnode.snmp import *
 
 OK_BUTTON = "OK"
 BACK_BUTTON = "Back"
@@ -55,12 +54,11 @@ STATUS_PAGE = 1
 NETWORK_PAGE = 2
 AUTHENTICATION_PAGE = 3
 KEYBOARD_PAGE = 4
-SNMP_PAGE = 5
-LOGGING_PAGE = 6
-KDUMP_PAGE = 7
-LAST_OPTION = REMOTE_STORAGE_PAGE = 8
+LOGGING_PAGE = 5
+KDUMP_PAGE = 6
+LAST_OPTION = REMOTE_STORAGE_PAGE = 7
 # max. 3 plugin menu options/pages: 13,15,17
-FIRST_PLUGIN_PAGE = 9
+FIRST_PLUGIN_PAGE = 8
 LAST_PLUGIN_PAGE = 13
 #
 NETWORK_DETAILS_PAGE = 19
@@ -238,8 +236,6 @@ class NodeConfigScreen():
             return self.authentication_configuration_page(screen)
         if page == KEYBOARD_PAGE:
             return self.keyboard_configuration_page(screen)
-        if page == SNMP_PAGE:
-            return self.snmp_configuration_page(screen)
         if page == LOGGING_PAGE:
             return self.logging_configuration_page(screen)
         if page == KDUMP_PAGE:
@@ -1303,41 +1299,6 @@ class NodeConfigScreen():
         return [Label(""),
                 grid]
 
-    def snmp_configuration_page(self, screen):
-        elements = Grid(2, 9)
-        heading = Label("SNMP")
-        if is_console():
-            heading.setColors(customColorset(1))
-        elements.setField(heading, 0, 0, anchorLeft=1)
-        pw_elements = Grid(3, 3)
-        self.current_snmp_status = 0
-        if os.path.exists("/etc/snmp/snmpd.conf"):
-            f = open("/etc/snmp/snmpd.conf")
-            for line in f:
-                if "createUser" in line:
-                    self.current_snmp_status = 1
-            f.close()
-        self.snmp_status = Checkbox("Enable SNMP",
-                                    isOn=self.current_snmp_status)
-        elements.setField(self.snmp_status, 0, 1, anchorLeft=1)
-        local_heading = Label("SNMP Password")
-        if is_console():
-            local_heading.setColors(customColorset(1))
-        elements.setField(local_heading, 0, 3, anchorLeft=1,
-                          padding=(0, 2, 0, 0))
-        elements.setField(Label(" "), 0, 6)
-        pw_elements.setField(Label("Password: "), 0, 1, anchorLeft=1)
-        pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft=1)
-        self.root_password_1 = Entry(15, password=1)
-        self.root_password_1.setCallback(self.password_check_callback)
-        self.root_password_2 = Entry(15, password=1)
-        self.root_password_2.setCallback(self.password_check_callback)
-        pw_elements.setField(self.root_password_1, 1, 1)
-        pw_elements.setField(self.root_password_2, 1, 2)
-        self.pw_msg = Textbox(60, 6, "", wrap=1)
-        elements.setField(pw_elements, 0, 7, anchorLeft=1)
-        elements.setField(self.pw_msg, 0, 8, padding=(0, 1, 0, 0))
-        return [Label(""), elements]
 
     def keyboard_configuration_page(self, screen):
         # placeholder for system-config-keyboard-base, will remove move later
@@ -1772,8 +1733,6 @@ class NodeConfigScreen():
             ret = self.process_nic_config()
         if self.__current_page == KEYBOARD_PAGE:
             ret = self.process_keyboard_config()
-        if self.__current_page == SNMP_PAGE:
-            ret = self.process_snmp_config()
         if self.__current_page == KDUMP_PAGE:
             ret = self.process_kdump_config()
         if self.__current_page == REMOTE_STORAGE_PAGE:
@@ -1791,28 +1750,6 @@ class NodeConfigScreen():
                 # should not happen
                 break
         return
-
-    def process_snmp_config(self):
-        if self.snmp_status.value() == 1:
-            if len(self.root_password_1.value()) > 0:
-                if (self.root_password_1.value() != "" or
-                    self.root_password_2.value() != ""):
-                    if (self.root_password_1.value() !=
-                        self.root_password_2.value()):
-                        self._create_warn_screen()
-                        ButtonChoiceWindow(self.screen, "SNMP", "SNMP was " +
-                                           "not enabled because passwords " +
-                                           "do not match", buttons=['Ok'])
-                        return
-                enable_snmpd(self.root_password_1.value())
-            else:
-                self._create_warn_screen()
-                ButtonChoiceWindow(self.screen, "SNMP Error",
-                              "Unable to configure SNMP without a password!",
-                              buttons=['Ok'])
-                self.reset_screen_colors()
-        elif self.snmp_status.value() == 0:
-            disable_snmpd()
 
     def process_kdump_config(self):
         if self.kdump_nfs_type.value() == 1:
@@ -1900,7 +1837,6 @@ class NodeConfigScreen():
             self.menu_list.append(" Network", 2)
             self.menu_list.append(" Security", 3)
             self.menu_list.append(" Keyboard", 4)
-            self.menu_list.append(" SNMP", 5)
             self.menu_list.append(" Logging", 6)
             self.menu_list.append(" Kernel Dump", 7)
             self.menu_list.append(" Remote Storage", 8)
