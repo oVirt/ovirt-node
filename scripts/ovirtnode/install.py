@@ -484,7 +484,7 @@ initrd /initrd0.img
             _iscsi.iscsi_auto()
             logger.info("Installation of %s Completed" % \
                                                       _functions.PRODUCT_SHORT)
-            if reboot is not None and reboot="Y":
+            if reboot is not None and reboot == "Y":
                 f = open('/var/spool/cron/root', 'w')
                 f.write('* * * * * sleep 10 && /sbin/reboot')
                 f.close()
