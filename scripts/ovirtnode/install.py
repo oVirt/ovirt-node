@@ -240,7 +240,7 @@ initrd /initrd0.img
             logger.info("Grub2 Install Completed")
             return True
 
-    def ovirt_boot_setup(self):
+    def ovirt_boot_setup(self, reboot="N"):
         self.generate_paths()
         logger.info("Installing the image.")
 
@@ -484,6 +484,14 @@ initrd /initrd0.img
             _iscsi.iscsi_auto()
             logger.info("Installation of %s Completed" % \
                                                       _functions.PRODUCT_SHORT)
+            if reboot is not None and reboot="Y":
+                f = open('/var/spool/cron/root', 'w')
+                f.write('* * * * * sleep 10 && /sbin/reboot')
+                f.close()
+                #ensure crond is started
+                subprocess_closefds("crond", shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
             return True
         else:
             return False
