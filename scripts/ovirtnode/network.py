@@ -474,6 +474,7 @@ def get_system_nics():
         if (not dev_interface == "lo" and \
             not dev_interface.startswith("bond") and \
             not dev_interface.startswith("sit") and \
+            not dev_interface.startswith("vnet") and \
             not "." in dev_interface):
             if not dev_type == "bridge":
                 nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % ( \
