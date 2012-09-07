@@ -119,3 +119,8 @@ biosdevname
 # yum for plugins
 yum
 fcoe-utils
+#glusterfs client packages
+glusterfs
+glusterfs-devel
+glusterfs-fuse
+glusterfs-rdma
