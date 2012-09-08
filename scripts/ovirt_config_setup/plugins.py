@@ -29,13 +29,14 @@ def get_plugins_list():
     if os.path.exists(plugin_dir):
         plugin_dict = {}
         for f in os.listdir(plugin_dir):
-            p = open(plugin_dir + f)
-            lines = p.readlines()
-            name = lines[0].strip().split(":")[1]
-            ver = lines[1].strip().split(":")[1]
-            install_date = lines[2].strip().replace("Install Date:", "")
-            p.close()
-            plugin_dict[name] = "%s,%s" % (ver, install_date)
+            if not f.endswith(".minimize"):
+                p = open(plugin_dir + f)
+                lines = p.readlines()
+                name = lines[0].strip().split(":")[1]
+                ver = lines[1].strip().split(":")[1]
+                install_date = lines[2].strip().replace("Install Date:", "")
+                p.close()
+                plugin_dict[name] = "%s,%s" % (ver, install_date)
     return plugin_dict
 
 
