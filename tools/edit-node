@@ -746,7 +746,7 @@ class LiveImageEditor(LiveImageCreator):
         # create plugin info
         if options.install or options.plugin or options.install_dup:
             plugin_info_dir =  "%s/etc/ovirt-plugins.d" % self._instroot
-            os.system("mkdir %s" % plugin_info_dir)
+            os.system("mkdir -p %s" % plugin_info_dir)
             # get version-release
             cmd = "rpm -q %s --qf '%%{version}-%%{release}.%%{arch}\n'" % pkg
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, \
@@ -922,7 +922,6 @@ class LiveImageEditor(LiveImageCreator):
         if not self._setup_yum_repo(options):
             return False
         if not self._run_yum_install(options.plugin):
-            logging.error(output)
             self._cleanup_editing()
             return False
         else:
@@ -1070,7 +1069,8 @@ enabled=1
         if options.plugin:
             valid_write_locations = [ "/etc",
                                       "/opt",
-                                      "/usr/share/man" ]
+                                      "/usr/share/man",
+                                      "/usr/lib/python"]
         elif options.install_dup:
             valid_write_locations = [ "/etc/modprobe.d",
                                       "/etc/depmod.d",
@@ -1106,6 +1106,19 @@ enabled=1
                 print "%s" % file
             return False
         return True
+
+    def _minimize(self):
+        print "Running Minimizer"
+        minimizer = "/usr/bin/image-minimizer"
+        if os.path.exists(minimizer):
+            print glob.glob("%s/etc/ovirt-plugins.d/*.minimize" % self._instroot)
+            for f in glob.glob("%s/etc/ovirt-plugins.d/*.minimize" % self._instroot):
+                cmd = "%s -v -i %s %s" % (minimizer, self._instroot, f)
+                print cmd
+                minimize = subprocess.Popen(cmd, shell=True, stdout=PIPE, \
+                                stderr=STDOUT)
+                output, err = minimize.communicate()
+                print output
 
     def _cleanup_editing(self):
         print "Cleaning Up Yum Configuration"
@@ -1473,6 +1486,7 @@ def main():
                 editor._change_gid(options)
             if rebuild == 1:
                 editor._update_version(options)
+                editor._minimize()
                 editor._create_manifests(options)
                 print "Editing Complete"
                 editor._configure_bootloader(editor._LiveImageCreatorBase__isodir)
