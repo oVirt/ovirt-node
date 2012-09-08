@@ -77,8 +77,6 @@ less
 dosfstools
 # kdump
 kexec-tools
-# SNMP support rhbz#614870
-net-snmp
 # qlogic firmware
 ql2100-firmware
 ql2200-firmware

@@ -30,6 +30,7 @@ SUBDIRS =   \
   scripts \
   services \
   logrotate \
+  plugins \
   modules \
   tools
 

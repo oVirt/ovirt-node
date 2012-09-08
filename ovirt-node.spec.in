@@ -111,11 +111,16 @@ however on a development machine to work with the image.
 %package plugin-snmp
 Summary:        SNMP plugin for %{product_family} image
 Group:          Applications/System
+Requires:       net-snmp
+Requires:       perl-libs
 
 %define snmp_root %{_datadir}/%{name}
 
 %description plugin-snmp
 This package provides an snmp plugin tools for use with%{product_family} image.
+
+%post plugin-snmp
+systemctl enable snmpd.service
 
 %prep
 %setup -q
@@ -245,6 +250,7 @@ fi
 
 %files plugin-snmp
 %{python_sitelib}/ovirt_config_setup/snmp.py
+%{_sysconfdir}/ovirt-plugins.d/snmp.minimize
 
 %files
 %defattr(-,root,root)

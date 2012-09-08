@@ -1,0 +1,7 @@
+drop /etc/rc.d/init.d/snmptrapd
+drop /etc/snmp/snmptrapd.conf
+drop /etc/sysconfig/snmptrapd
+drop /usr/sbin/snmptrapd
+drop /usr/bin/net-snmp-create-v3-user
+drop /usr/bin/snmpconf
+drop /usr/share/snmp/snmpconf-data

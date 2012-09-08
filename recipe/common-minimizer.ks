@@ -34,8 +34,6 @@ droprpm febootstrap
 # cronie pulls in exim (sendmail) which pulls in all kinds of perl deps
 droprpm exim
 droprpm perl*
-# keep libperl for snmpd
-keeprpm perl-libs
 droprpm postfix
 droprpm mysql*
 
@@ -301,14 +299,6 @@ keep /etc/pki/tls/openssl.cnf
 drop /etc/pki/java
 drop /etc/pki/nssdb
 
-# minimize net-snmp
-drop /etc/rc.d/init.d/snmptrapd
-drop /etc/snmp/snmptrapd.conf
-drop /etc/sysconfig/snmptrapd
-drop /usr/sbin/snmptrapd
-drop /usr/bin/net-snmp-create-v3-user
-drop /usr/bin/snmpconf
-drop /usr/share/snmp/snmpconf-data
 
 #desktop files
 drop /etc/xdg/autostart/restorecond.desktop
@@ -320,6 +310,8 @@ drop /sbin/ebtables-restore
 # remove bogus kdump script (rpmdiff complains)
 drop /etc/kdump-adv-conf
 
+# drop net-snmp
+droprpm net-snmp
 #cim
 droprpm tog-pegasus
 droprpm tog-pegasus-libs

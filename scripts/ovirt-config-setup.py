@@ -536,17 +536,6 @@ class NodeConfigScreen():
     def password_check_callback(self):
         resp, msg = password_check(self.root_password_1.value(),
                                    self.root_password_2.value())
-        if self.__current_page == SNMP_PAGE:
-            if (len(self.root_password_1.value()) < 8) and \
-               (len(self.root_password_2.value()) < 8):
-                self.root_password_1.set("")
-                self.root_password_2.set("")
-                msg = "Password must be at least 8 characters\n\n\n\n\n"
-            elif (" " in self.root_password_1.value()) or \
-                 (" " in self.root_password_2.value()):
-                self.root_password_1.set("")
-                self.root_password_2.set("")
-                msg = "Password may not contain spaces\n\n\n\n\n"
         self.pw_msg.setText(msg)
         return
 
