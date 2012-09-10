@@ -933,12 +933,30 @@ class NodeConfigScreen():
         self.ssh_passwd_status = Checkbox("Enable ssh password authentication",
                                           isOn=self.current_ssh_pwd_status)
         elements.setField(self.ssh_passwd_status, 0, 1, anchorLeft=1)
+        rng_heading = Label("Strong Random Number Generator")
+        if is_console():
+            rng_heading.setColors(customColorset(1))
+        elements.setField(rng_heading, 0, 2, anchorLeft=1,
+                          padding = (0, 1, 0, 0))
+
+        self.current_rng_bytes, self.current_aes_ni_status = rng_status()
+        rng_elements = Grid(2, 2)
+        rng_bit_elements = Grid(2, 1)
+        self.disable_aes_ni = Checkbox("Disable AES-NI",
+                                       isOn=self.current_aes_ni_status)
+        rng_elements.setField(self.disable_aes_ni, 0, 0, anchorLeft=1)
+        rng_bit_elements.setField(Label("Bytes Used: "), 0, 0, anchorLeft=1)
+        self.rng_bytes = Entry(3, scroll=0)
+        if self.current_rng_bytes > 0:
+            self.rng_bytes.set(self.current_rng_bytes)
+        rng_bit_elements.setField(self.rng_bytes, 1, 0, anchorLeft=1)
+        rng_elements.setField(rng_bit_elements, 0, 1, anchorLeft=1)
+        elements.setField(rng_elements, 0, 3, anchorLeft=1)
         local_heading = Label("Local Access")
         if is_console():
             local_heading.setColors(customColorset(1))
-        elements.setField(local_heading, 0, 3, anchorLeft=1,
-                          padding=(0, 2, 0, 0))
-        elements.setField(Label(" "), 0, 6)
+        elements.setField(local_heading, 0, 4, anchorLeft=1,
+                          padding=(0, 1, 0, 0))
         pw_elements.setField(Label("Password: "), 0, 1, anchorLeft=1)
         pw_elements.setField(Label("Confirm Password: "), 0, 2, anchorLeft=1)
         self.root_password_1 = Entry(15, password=1)
@@ -1656,6 +1674,29 @@ class NodeConfigScreen():
     def process_authentication_config(self):
         self._create_warn_screen()
         ssh_restart = False
+        profile_template = ""
+        if self.current_rng_bytes != self.rng_bytes.value():
+            self.rng_bytes = self.rng_bytes.value()
+            if len(self.rng_bytes) > 0 and not self.rng_bytes.isdigit():
+                ButtonChoiceWindow(self.screen, "Random Number Generator",
+                                   "Invalid Byte Entry", buttons=['Ok'])
+                return False
+            unmount_config("/etc/profile")
+            system_closefds("sed -i '/SSH_USE_STRONG_RNG/d' /etc/profile")
+            if len(self.rng_bytes) > 0:
+                profile_template += "export SSH_USE_STRONG_RNG=%s\n" \
+                                    % self.rng_bytes
+        if self.current_aes_ni_status != self.disable_aes_ni.value():
+            unmount_config("/etc/profile")
+            system_closefds("sed -i '/OPENSSL_DISABLE_AES_NI/d' /etc/profile")
+            if self.disable_aes_ni.value() == 1:
+                profile_template += "export OPENSSL_DISABLE_AES_NI=1\n"
+        if len(profile_template) > 0:
+            f = open("/etc/profile", "a")
+            f.write(profile_template)
+            f.close()
+            ssh_restart = True
+            ovirt_store_config("/etc/profile")
         if (self.root_password_1.value() != "" or
             self.root_password_2.value() != ""):
             if self.root_password_1.value() != self.root_password_2.value():

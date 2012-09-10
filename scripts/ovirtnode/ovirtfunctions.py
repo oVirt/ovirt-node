@@ -894,6 +894,7 @@ def finish_install():
     # store keyboard config
     ovirt_store_config("/etc/sysconfig/keyboard")
     ovirt_store_config("/etc/vconsole.conf")
+    ovirt_store_config("/var/lib/random-seed")
     return True
 
 def is_valid_ipv4(ip_address):
@@ -1491,6 +1492,23 @@ def is_capslock_on():
     cmd = "LC_ALL=C setleds < /dev/%s | awk '/Current flags:/{print $6;}'" % tty
     return "on" == subprocess_closefds(cmd, shell=True, stdout=PIPE, \
                                        stderr=STDOUT).stdout.read().strip()
+def rng_status():
+    bit_value = 0
+    disable_aes_ni = 0
+    try:
+        with open("/etc/profile") as f:
+            for line in f:
+                try:
+                    if "SSH_USE_STRONG_RNG" in line:
+                        export , kv = line.split()
+                        key, bit_value = kv.split("=")
+                    elif "OPENSSL_DISABLE_AES_NI=" in line:
+                        disable_aes_ni = 1
+                except:
+                    pass
+    except:
+        pass
+    return (bit_value, disable_aes_ni)
 
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
