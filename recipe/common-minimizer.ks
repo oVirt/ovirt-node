@@ -140,7 +140,6 @@ drop /usr/share/backgrounds
 drop /usr/share/wallpapers
 drop /usr/share/kde-settings
 drop /usr/share/gnome-background-properties
-drop /usr/share/dracut
 drop /usr/share/setuptool
 drop /usr/share/hwdata/MonitorsDB
 drop /usr/share/hwdata/oui.txt
