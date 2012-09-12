@@ -1,14 +1,19 @@
 A simple system to build a TUI (based on urwid) by plugins.
 
+$ sudo yum install python python-urwind
+$ cd src
 $ ./app
 
 Features
 --------
-- Resizable UI
-- Event based
-- Pluggable
 - Clean separation between UI and data
-- Mouse support
+- Pluggable
+- UI
+  - Resizable UI
+  - Mouse support
+  - Event based
+- Model
+  - With validation support
 
 
 Sources

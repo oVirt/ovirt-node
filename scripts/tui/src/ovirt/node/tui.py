@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__name__)
 class SelectableText(urwid.Text):
     def selectable(self):
         return True
+
     def keypress(self, size, key):
         return key
 
@@ -37,8 +38,12 @@ class UrwidTUI(object):
                ('reveal focus', 'white', 'light blue', 'standout'),
                ('main.menu', 'black', ''),
                ('main.menu.frame', 'light gray', ''),
-               ('plugin.entry', 'dark gray', ''),
-               ('plugin.entry.frame', 'light gray', ''),]
+               ('plugin.widget.entry', 'dark gray', ''),
+               ('plugin.widget.entry.frame', 'light gray', ''),
+               ('plugin.widget.disabled', 'light gray', 'dark gray'),
+               ('plugin.widget.notice', 'light red', ''),
+               ('plugin.widget.header', 'light blue', 'light gray'),
+               ]
 
     def __init__(self):
         pass
@@ -46,18 +51,22 @@ class UrwidTUI(object):
     def __build_pages_list(self):
         items = []
         for title, plugin in self.__pages.items():
-            item = SelectableText(title)
-            item.plugin = plugin
-            item = urwid.AttrMap(item, None, 'reveal focus')
-            items.append(item)
+            if plugin.has_ui():
+                item = SelectableText(title)
+                item.plugin = plugin
+                item = urwid.AttrMap(item, None, 'reveal focus')
+                items.append(item)
+            else:
+                LOGGER.info("No UI page for plugin %s" % plugin)
         walker = urwid.SimpleListWalker(items)
         self.__menu_list = urwid.ListBox(walker)
-        def __on_page_change():
+
+        def __on_item_change():
             widget, position = self.__menu_list.get_focus()
             plugin = widget.original_widget.plugin
-            page = self.__build_plugin_widget(plugin)
-            self.__page_frame.body = page
-        urwid.connect_signal(walker, 'modified', __on_page_change)
+            self.__change_to_page(plugin)
+
+        urwid.connect_signal(walker, 'modified', __on_item_change)
         attr_listbox = urwid.AttrMap(self.__menu_list, "main.menu")
         return attr_listbox
 
@@ -76,36 +85,105 @@ class UrwidTUI(object):
         footer = urwid.Text(self.footer, wrap='clip')
         return urwid.Frame(body, header, footer)
 
+    def __build_widget_for_item(self, plugin, path, item):
+        widget = None
+
+        if type(item) is ovirt.node.plugins.Entry or \
+            type(item) is ovirt.node.plugins.Password:
+            label_text = urwid.Text("\n" + item.label + ":")
+            label = label_text
+            mask = None
+            if type(item) is ovirt.node.plugins.Password:
+                mask = "*"
+            edit = urwid.Edit(mask=mask)
+            edit_attrmap = urwid.AttrMap(edit, "plugin.widget.entry")
+            linebox = urwid.LineBox(edit_attrmap)
+            linebox_attrmap = urwid.AttrMap(linebox,
+                                            "plugin.widget.entry.frame")
+            entry = linebox_attrmap
+            main_widget = urwid.Columns([label, entry])
+
+            notice_text = urwid.Text("")
+            notice_attrmap = urwid.AttrMap(notice_text, "plugin.widget.notice")
+            notice_widget = notice_attrmap
+
+            widget = urwid.Pile([main_widget, notice_widget])
+
+            if item.initial_value_from_model:
+                value = plugin.model()[path]
+                if value:
+                    edit.set_edit_text(value)
+
+            def on_change(widget, new_value):
+                LOGGER.debug("Widget content changed for path '%s'" % path)
+
+                try:
+                    if path in plugin.validators():
+                        msg = plugin.validators()[path](new_value)
+                        # True and None are allowed
+                        if msg not in [True, None]:
+                            raise ovirt.node.plugins.InvalidData(msg)
+
+                    plugin._on_ui_change({path: new_value})
+                    notice_text.set_text("")
+
+                except ovirt.node.plugins.Concern as e:
+                    LOGGER.error("Concern when updating: %s" % e)
+
+                except ovirt.node.plugins.InvalidData as e:
+                    notice_text.set_text(e.message)
+                    LOGGER.error("Invalid data when updating: %s" % e)
+
+            urwid.connect_signal(edit, 'change', on_change)
+
+            def foo(w, v):
+                if edit.selectable() == v:
+                    return True
+                else:
+                    edit.selectable = lambda: v
+                    LOGGER.debug("dissing")
+                    if v:
+                        edit_attrmap.set_attr_map({None: ""})
+                    else:
+                        edit_attrmap.set_attr_map({
+                            None: "plugin.widget.disabled"
+                            })
+            item.connect_signal("enabled[change]", foo)
+
+        elif type(item) is ovirt.node.plugins.Header:
+            label = urwid.Text("\n  %s\n" % item.label)
+            label_attrmap = urwid.AttrMap(label, "plugin.widget.header")
+            widget = label_attrmap
+
+        elif type(item) is ovirt.node.plugins.Label:
+            label = urwid.Text(item.label)
+            widget = urwid.AttrMap(label, "plugin.widget.label")
+
+        return widget
+
     def __build_plugin_widget(self, plugin):
         """This method is building the widget for a plugin
         """
         widgets = []
-        for item in plugin.ui_content():
-            widget = None
-            if type(item) is ovirt.node.plugins.Entry:
-                label = urwid.Filler(urwid.Text(item.label + ":"))
-                edit = urwid.Edit()
-                def on_change(a, b):
-                    plugin.ui_on_change({item.path: edit.get_text()[0]})
-                urwid.connect_signal(edit, 'change', on_change)
-                entry = edit
-                entry = urwid.AttrMap(entry, "plugin.entry")
-                entry = urwid.LineBox(entry)
-                entry = urwid.AttrMap(entry, "plugin.entry.frame")
-                entry = urwid.Filler(entry)
-                widget = urwid.Columns([label, entry])
-            elif type(item) is ovirt.node.plugins.Label:
-                widget = urwid.Filler(urwid.Text(item.label))
-                widget = urwid.AttrMap(widget, "plugin.label")
-            widgets.append(widget)
 
-        save = urwid.Button("Save", self.popup) #plugin.ui_on_save)
+        for path, item in plugin.ui_content():
+            widget = self.__build_widget_for_item(plugin, path, item)
+            widgets.append(("flow", widget))
+
+        save = urwid.Button("Save", lambda x: plugin._on_ui_save())
         save = urwid.Padding(save, "left", width=8)
-        save = urwid.Filler(save, ("fixed bottom", 1))
+        save = urwid.Filler(save, ("fixed top", 1))
         widgets.append(save)
 
-        widget = urwid.Pile(widgets)
+        pile = urwid.Pile(widgets)
+        # FIXME why is this fixed?
+        widget = urwid.Filler(pile, ("fixed top", 1), height=20)
         return widget
+
+    def __change_to_page(self, plugin):
+        plugin_widget = self.__build_plugin_widget(plugin)
+        page = plugin_widget
+        self.__page_frame.body = page
 
     def __filter_hotkeys(self, keys, raw):
         key = str(keys)
@@ -120,11 +198,17 @@ class UrwidTUI(object):
 
     def popup(self, msg=None, buttons=None):
         LOGGER.debug("Launching popup")
+
         class Dialog(urwid.PopUpLauncher):
+
             def create_pop_up(self):
                 return urwid.Filler(urwid.Text("Fooo"))
+
             def get_pop_up_parameters(self):
-                return {'left':0, 'top':1, 'overlay_width':30, 'overlay_height':4}
+                return {'left': 0,
+                        'top': 1,
+                        'overlay_width': 30,
+                        'overlay_height': 4}
         dialog = Dialog(self.__page_frame)
         dialog.open_pop_up()
 
@@ -135,9 +219,11 @@ class UrwidTUI(object):
         class SuspendedScreen(object):
             def __init__(self, loop):
                 self.__loop = loop
+
             def __enter__(self):
                 self.screen = urwid.raw_display.Screen()
                 self.screen.stop()
+
             def __exit__(self, a, b, c):
                 self.screen.start()
                 # Hack to force a screen refresh
@@ -187,7 +273,7 @@ class App(object):
         self.plugins = [m.Plugin() for m in ovirt.node.plugins.load_all()]
 
         for plugin in self.plugins:
-            LOGGER.debug("Adding plugin " + plugin.name())
+            LOGGER.debug("Adding plugin %s" % plugin)
             self.ui.register_plugin(plugin.ui_name(), plugin)
 
     def __drop_to_shell(self):

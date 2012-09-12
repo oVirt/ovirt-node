@@ -1,9 +1,9 @@
 
 
-import os.path
 import logging
 
 import ovirt.node.plugins
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -14,11 +14,13 @@ features = """
 - Press <ESC>
 """
 
+
 class Plugin(ovirt.node.plugins.NodePlugin):
     def name(self):
         return "Features"
 
     def ui_content(self):
-        widgets = []
-        widgets.append(ovirt.node.plugins.Label(features))
+        widgets = [
+            ("features.info", ovirt.node.plugins.Label(features))
+        ]
         return widgets
