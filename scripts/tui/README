@@ -1,0 +1,16 @@
+A simple system to build a TUI (based on urwid) by plugins.
+
+$ ./app
+
+Features
+--------
+- Resizable UI
+- Event based
+- Pluggable
+- Clean separation between UI and data
+- Mouse support
+
+
+Sources
+-------
+http://excess.org/urwid/
