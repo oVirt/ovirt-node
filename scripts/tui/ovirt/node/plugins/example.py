@@ -8,9 +8,6 @@ import ovirt.node.plugins
 LOGGER = logging.getLogger(__name__)
 
 class Plugin(ovirt.node.plugins.NodePlugin):
-    def __init__(self, tui):
-        pass
-
     def name(self):
         return os.path.basename(__file__)
 

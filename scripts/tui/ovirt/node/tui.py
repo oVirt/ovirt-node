@@ -10,7 +10,7 @@ import ovirt.node.plugins
 
 
 logging.basicConfig(level=logging.DEBUG,
-                    filename="app.log")
+                    filename="app.log", filemode="w")
 LOGGER = logging.getLogger(__name__)
 
 
@@ -27,6 +27,7 @@ class UrwidTUI(object):
 
     __loop = None
     __main_frame = None
+    __menu_list = None
     __page_frame = None
 
     header = u"\n Configuration TUI\n"
@@ -42,10 +43,7 @@ class UrwidTUI(object):
     def __init__(self):
         pass
 
-    def page_selected(self, widget, user_data):
-        LOGGER.debug(user_data)
-
-    def __pages_list(self):
+    def __build_pages_list(self):
         items = []
         for title, plugin in self.__pages.items():
             item = SelectableText(title)
@@ -53,24 +51,26 @@ class UrwidTUI(object):
             item = urwid.AttrMap(item, None, 'reveal focus')
             items.append(item)
         walker = urwid.SimpleListWalker(items)
-        listbox = urwid.ListBox(walker)
+        self.__menu_list = urwid.ListBox(walker)
         def __on_page_change():
-            widget, position = listbox.get_focus()
+            widget, position = self.__menu_list.get_focus()
             plugin = widget.original_widget.plugin
             page = self.__build_plugin_widget(plugin)
             self.__page_frame.body = page
         urwid.connect_signal(walker, 'modified', __on_page_change)
-        attr_listbox = urwid.AttrMap(listbox, "main.menu")
+        attr_listbox = urwid.AttrMap(self.__menu_list, "main.menu")
         return attr_listbox
 
-    def __create_screen(self):
-        menu = urwid.LineBox(self.__pages_list())
+    def __build_menu(self):
+        menu = urwid.LineBox(self.__build_pages_list())
         menu = urwid.AttrMap(menu, "main.menu.frame")
-        self.__page_frame = urwid.Frame(urwid.Filler(urwid.Text("-")))
-        page = self.__page_frame
-        body = urwid.Columns([
-            ("weight", 0.5, menu), page
-            ], 4)
+        return menu
+
+    def __create_screen(self):
+        menu = self.__build_menu()
+        self.__page_frame = urwid.Frame(urwid.Filler(urwid.Text("")))
+        self.__menu_list.set_focus(0)
+        body = urwid.Columns([("weight", 0.5, menu), self.__page_frame], 4)
         header = urwid.Text(self.header, wrap='clip')
         header = urwid.AttrMap(header, 'header')
         footer = urwid.Text(self.footer, wrap='clip')
@@ -99,7 +99,7 @@ class UrwidTUI(object):
                 widget = urwid.AttrMap(widget, "plugin.label")
             widgets.append(widget)
 
-        save = urwid.Button("Save", plugin.ui_on_save)
+        save = urwid.Button("Save", self.popup) #plugin.ui_on_save)
         save = urwid.Padding(save, "left", width=8)
         save = urwid.Filler(save, ("fixed bottom", 1))
         widgets.append(save)
@@ -118,12 +118,32 @@ class UrwidTUI(object):
         self.register_hotkey(["esc"], self.quit)
         self.register_hotkey(["q"], self.quit)
 
+    def popup(self, msg=None, buttons=None):
+        LOGGER.debug("Launching popup")
+        class Dialog(urwid.PopUpLauncher):
+            def create_pop_up(self):
+                return urwid.Filler(urwid.Text("Fooo"))
+            def get_pop_up_parameters(self):
+                return {'left':0, 'top':1, 'overlay_width':30, 'overlay_height':4}
+        dialog = Dialog(self.__page_frame)
+        dialog.open_pop_up()
 
-    def suspend(self):
-        urwid.raw_display.Screen.stop()
-
-    def resume(self):
-        urwid.raw_display.Screen.start()
+    def suspended(self):
+        """Supspends the screen to do something in the foreground
+        TODO resizing is curently broken after resuming
+        """
+        class SuspendedScreen(object):
+            def __init__(self, loop):
+                self.__loop = loop
+            def __enter__(self):
+                self.screen = urwid.raw_display.Screen()
+                self.screen.stop()
+            def __exit__(self, a, b, c):
+                self.screen.start()
+                # Hack to force a screen refresh
+                self.__loop.process_input(["up"])
+                self.__loop.process_input(["down"])
+        return SuspendedScreen(self.__loop)
 
     def register_plugin(self, title, plugin):
         """Register a plugin to be shown in the UI
@@ -164,16 +184,15 @@ class App(object):
         self.ui = ui
 
     def __load_plugins(self):
-        self.plugins = [m.Plugin(self) for m in ovirt.node.plugins.load_all()]
+        self.plugins = [m.Plugin() for m in ovirt.node.plugins.load_all()]
 
         for plugin in self.plugins:
             LOGGER.debug("Adding plugin " + plugin.name())
             self.ui.register_plugin(plugin.ui_name(), plugin)
 
     def __drop_to_shell(self):
-        self.ui.suspend()
-        os.system("reset ; bash")
-        self.ui.resume()
+        with self.ui.suspended():
+            os.system("reset ; bash")
 
     def run(self):
         self.__load_plugins()
