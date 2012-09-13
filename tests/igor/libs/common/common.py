@@ -89,6 +89,13 @@ def step_failed():
   api_call("jobs/{session}/step/{step}/failed".format(session=igor.session, \
                                                      step=igor.current_step))
 
+def annotate_step(annotation):
+  debug("Adding annotation to current step: '%s'" % annotation)
+  url = api_url("jobs/{session}/step/current/annotate".format(
+                                                        session=igor.session))
+  __put_data(url, annotation)
+
+
 def add_artifact(dst, filename):
   if not os.path.exists(filename):
     raise Exception(("Failed to add artifact '%s', because file '%s' does " + \
@@ -100,18 +107,20 @@ def add_artifact(dst, filename):
                                                         dst=dst))
 
   data = open(filename, "rb").read()
-
-  opener = urllib2.build_opener(urllib2.HTTPHandler)
-  request = urllib2.Request(url, data=data)
-  request.add_header('Content-Type', 'text/plain')
-  request.get_method = lambda: 'PUT'
-  resp = opener.open(request)
+  __put_data(url, data)
 
 
 def touch(filename, comment=""):
   with open(filename, "w") as f:
     f.write(comment)
 
+
+def __put_data(url, data):
+  opener = urllib2.build_opener(urllib2.HTTPHandler)
+  request = urllib2.Request(url, data=data)
+  request.add_header('Content-Type', 'text/plain')
+  request.get_method = lambda: 'PUT'
+  resp = opener.open(request)
 
 def quit_testing():
   """This function ends the looping through all testcases, this is needed for
