@@ -87,6 +87,12 @@ class Network:
         self.BR_CONFIG += "set %s/TYPE Bridge\n" % BR_ROOT
         self.BR_CONFIG += "set %s/PEERNTP yes\n" % BR_ROOT
         self.BR_CONFIG += "set %s/DELAY 0\n" % BR_ROOT
+
+        if "OVIRT_DNS" in OVIRT_VARS:
+            if OVIRT_VARS["OVIRT_DNS"]:
+                self.IF_CONFIG += "set %s/PEERDNS no\n" % IF_ROOT
+                self.BR_CONFIG += "set %s/PEERDNS no\n" % BR_ROOT
+
         if "OVIRT_IPV6" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_IPV6"] == "auto":
                 self.BR_CONFIG += "set %s/IPV6INIT yes\n" % BR_ROOT
