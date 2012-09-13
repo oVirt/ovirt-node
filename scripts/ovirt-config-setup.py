@@ -29,6 +29,7 @@ import gudev
 import pkgutil
 import ovirt_config_setup
 import sys
+import time
 from ovirtnode.ovirtfunctions import *
 from ovirtnode.password import *
 from ovirtnode.log import *
@@ -1870,14 +1871,24 @@ class NodeConfigScreen():
         self.screen_locked = False
         while active and (self.__finished == False):
             logger.debug("Current Page: " + str(self.__current_page))
+
             self._create_blank_screen()
             screen = self.screen
+
             # apply any colorsets that were provided.
             if is_console():
                 self.set_console_colors()
                 screen.setColor(customColorset(1), "black", "magenta")
             screen.pushHelpLine(" ")
+
+            if self.__current_page < FIRST_PLUGIN_PAGE:
+                self._set_title()
+                screen.drawRootText(15, 10, "Loading page ...")
+                screen.refresh()
+                time.sleep(0.3)
+
             elements = self.get_elements_for_page(screen, self.__current_page)
+
             self.gridform = GridForm(screen, "", 2, 1)
             self._set_title()
             content = Grid(1, len(elements) + 3)
