@@ -834,7 +834,10 @@ class NodeConfigScreen():
 
     def logging_configuration_page(self, screen):
         elements = Grid(2, 8)
-        heading = Label("Logging")
+        if network_up():
+            heading = Label("Logging")
+        else:
+            heading = Label("Network Down, Logging Configuration Disabled")
         if is_console():
             heading.setColors(customColorset(1))
         elements.setField(heading, 0, 0, anchorLeft=1)
@@ -905,6 +908,12 @@ class NodeConfigScreen():
             self.netconsole_server_port.set("6666")
         else:
             self.netconsole_server_port.set(netconsole_server_port)
+
+        input_fields = [self.syslog_server, self.syslog_port,
+                        self.netconsole_server, self.netconsole_server_port]
+        if not network_up():
+            for field in input_fields:
+                field.setFlags(FLAG_DISABLED, FLAGS_SET)
         return [Label(""), elements]
 
     def authentication_configuration_page(self, screen):
