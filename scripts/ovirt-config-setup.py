@@ -2033,6 +2033,8 @@ class NodeConfigScreen():
                     elif self.__current_page == NETWORK_DETAILS_PAGE:
                         if pressed == BACK_BUTTON:
                             self.__current_page = NETWORK_PAGE
+                        elif pressed == RESET_BUTTON:
+                            self.__current_page = NETWORK_DETAILS_PAGE
                         elif self.net_apply_config == 1:
                             self.__current_page = NETWORK_PAGE
                         elif self.__nic_config_failed == 1:
