@@ -739,20 +739,21 @@ class NodeConfigScreen():
                     dev_bootproto = augtool_get(cmd)
                     if dev_bootproto is None:
                         dev_bootproto = "Disabled"
+                dev_bootproto = dev_bootproto.strip().lower().replace("none", "static")
                 if not nic_link_detected(key):
                     ipv4_addr = "(Link Inactive)"
-                if ipv4_addr.strip() == "" and dev_bootproto.strip() == "dhcp":
+                if ipv4_addr.strip() == "" and dev_bootproto == "dhcp":
                     if "Inactive" in ipv4_addr:
                         ipv4_addr = "(Link Inactive)"
                     else:
                         ipv4_addr = "(DHCP Failed)"
                 if "OVIRT_IPV6" in OVIRT_VARS and ipv6_addr != "":
                         status_text += "%1s: %5s %14s \nIPv6: %1s\n\n" % (
-                                        key.strip(), dev_bootproto.strip(),
+                                        key.strip(), dev_bootproto,
                                         ipv4_addr.strip(), ipv6_addr.strip())
                 else:
                     status_text += "%1s: %5s %14s \n" % (key.strip(),
-                                    dev_bootproto.strip(), ipv4_addr.strip())
+                                    dev_bootproto, ipv4_addr.strip())
                 status_text.strip()
                 networking = TextboxReflowed(32, status_text, maxHeight=3)
                 networking.setText(status_text)
@@ -1089,7 +1090,7 @@ class NodeConfigScreen():
         self.static_ipv4_nic_proto.setCallback(self.ipv4_static_callback)
         if bootproto.lower() == "dhcp":
             self.dhcp_ipv4_nic_proto.setValue("*")
-        elif bootproto.lower() == "static":
+        elif bootproto.lower() == "static" or bootproto.lower() == "none":
             self.static_ipv4_nic_proto.setValue("*")
         else:
             self.disabled_ipv4_nic_proto.setValue("*")
