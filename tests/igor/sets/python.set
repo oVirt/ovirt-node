@@ -1,19 +1,10 @@
-#
-# Does some basic checks
-# One testcase per line, this is no script
-#
-
-#
-# Libraries
-#
-searchpath:../libs
-
-lib:common
+---
+description: 'Does python checks whcih can just be run at runtime.'
+lib: ['../libs/common']
+searchpath: '../tcs'
 
 
-#
-# Testcases
-#
-searchpath:../tcs
+---
+filename: 'python/run_doctests.py'
 
-python/run_doctests.py
+---

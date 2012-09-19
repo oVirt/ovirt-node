@@ -1,9 +1,7 @@
-#
-# Include some basic libraries
-# One testcase per line, this is no script
-#
-
-searchpath:../
+---
+description: 'Inlcude the common library'
+lib: ['../libs/common']
+searchpath: '../tcs'
 
 
-lib:libs/common
+---

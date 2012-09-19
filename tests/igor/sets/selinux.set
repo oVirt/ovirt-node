@@ -1,12 +1,10 @@
-#
-# Does some basic selinux checks
-# One testcase per line, this is no script
-#
-
-searchpath:../
+---
+description: 'Does some basic selinux checks'
+lib: ['../libs/common']
+searchpath: '../tcs'
 
 
-lib:libs/common
+---
+filename: 'selinux-denials.sh'
 
-
-tcs/selinux-denials.sh
+---

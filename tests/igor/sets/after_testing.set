@@ -1,16 +1,13 @@
-#
-# Does some stuff after all testcases were run
-# One testcase per line, this is no script
-#
-
-searchpath:../
+---
+description: 'Collect logs after all testing has been done (for debugging e.g.)'
+lib: ['../libs/common']
+searchpath: '../tcs'
 
 
-lib:libs/common
+---
+filename: 'check_dmesg.sh'
 
+---
+filename: 'collect_logs.sh'
 
-searchpath:../tcs/
-
-check_dmesg.sh
-
-collect_logs.sh
+---

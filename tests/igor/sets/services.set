@@ -1,14 +1,14 @@
-#
-# Does some checks on services
-# One testcase per line, this is no script
-#
-
-searchpath:../
+---
+description: 'Does some checks on services'
+lib: ['libs/common']
+searchpath: '../tcs'
 
 
-lib:libs/common
-
+---
 # First wait for boot process to finish
-tcs/wait_for_getty.sh
+filename: 'wait_for_getty.sh'
 
-tcs/services_are_running.sh
+---
+filename: 'services_are_running.sh'
+
+---

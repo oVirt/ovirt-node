@@ -1,13 +1,16 @@
-#
-# Runs a reboot cycle
-# One testcase per line, this is no script
-#
-
-searchpath:../
+---
+description: 'Covers a reboot cycle - initiate and back up'
+lib: ['../libs/common']
+searchpath: '../tcs'
 
 
-lib:libs/common
+---
+filename: 'reboot_initiate.sh'
+timeout: 10
 
+---
+filename: 'reboot_completed.sh'
+# Rebooting takes a while
+timeout: 240
 
-tcs/reboot_initiate.sh      timeout=10
-tcs/reboot_completed.sh     timeout=240         # Rebooting takes a while
+---

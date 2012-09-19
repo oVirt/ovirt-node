@@ -1,11 +1,10 @@
-#
-# Does some stuff before all testcases run
-# One testcase per line, this is no script
-#
-
-searchpath:../libs
-lib:common
+---
+description: 'Collect some logs before duoing anything'
+lib: ['../libs/common']
+searchpath: '../tcs'
 
 
-searchpath:../tcs/
-collect_logs.sh
+---
+filename: 'collect_logs.sh'
+
+---

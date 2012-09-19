@@ -1,18 +1,17 @@
-#
-# After auto install
-# One testcase per line, this is no script
-#
-
-searchpath:../
-
-lib:libs/common
+---
+description: 'Notes the server about a successfull auto-installation.'
+lib: ['../libs/common']
+searchpath: '../tcs'
 
 
-searchpath:../tcs
+---
+filename: 'installation_completed.sh'
+timeout: 900
 
-# This includes the first boot, the installation and the associated reboot
-installation_completed.sh   timeout=900
+---
+filename: 'collect_logs.sh'
 
-collect_logs.sh
+---
+filename: 'set_admin_password.py'
 
-set_admin_password.py
+---

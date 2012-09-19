@@ -1,20 +1,10 @@
-#
-# Does some TUI navigation checks
-# One testcase per line, this is no script
-#
-
-#
-# Libraries
-#
-searchpath:../../libs
-
-lib:common
-lib:uinput
+---
+description: 'Do some basic TUI checks'
+lib: ['../../libs/common', '../../libs/uinput']
+searchpath: '../../tcs'
 
 
-#
-# Testcases
-#
-searchpath:../../tcs
+---
+filename: 'uinput/enter_all_top_menus.py'
 
-uinput/enter_all_top_menus.py
+---

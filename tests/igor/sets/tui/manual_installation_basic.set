@@ -1,25 +1,24 @@
-#
-# A basic TUI installation
-# One testcase per line, this is no script
-#
-
-#
-# Libraries
-#
-searchpath:../../libs
-
-lib:common
-lib:uinput
+---
+description: 'A basic TUI installation'
+lib: ['../../libs/common', '../../libs/uinput']
+searchpath: '../../tcs'
 
 
-#
-# Testcases
-#
-searchpath:../../tcs
+---
+filename: 'boot_completed.sh'
 
-boot_completed.sh
+---
+filename: 'wait_for_installer_welcome_page.sh'
+timeout: 70
 
-wait_for_installer_welcome_page.sh      timeout=70
-uinput/basic_tui_installation.py        timeout=300  # Timeout for install
+---
+filename: 'uinput/basic_tui_installation.py'
+# Timeout for install
+timeout: 300
 
-reboot_completed.sh                     timeout=70   # Timeout for reboot
+---
+filename: 'reboot_completed.sh'
+# Timeout for reboot
+timeout: 70
+
+---

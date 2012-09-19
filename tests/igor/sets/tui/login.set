@@ -1,21 +1,13 @@
-#
-# Does some basic TUI checks
-# One testcase per line, this is no script
-#
-
-#
-# Libraries
-#
-searchpath:../../libs
-
-lib:common
-lib:uinput
+---
+description: 'Log in to the TUI using teh passwod in after_auto_install.set'
+lib: ['../../libs/common', '../../libs/uinput']
+searchpath: '../../tcs'
 
 
-#
-# Testcases
-#
-searchpath:../../tcs
+---
+filename: 'wait_for_getty.sh'
 
-wait_for_getty.sh
-uinput/login_as_admin.py
+---
+filename: 'uinput/login_as_admin.py'
+
+---
