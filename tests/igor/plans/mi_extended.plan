@@ -1,8 +1,11 @@
+---
+description: 'MI with {tbd_profile} and more tests on VMs'
 
-description:MI with {tbd_profile} and more tests on VMs
 
+---
+description: 'A basic TUI installation'
+testsuite: 'mi_extended'
+profile: '{tbd_profile}'
+host: 'default-libvirt'
 
-# Testsuite         Profile         Host                Optional: kargs
-
-# A basic TUI installation
-mi_extended         {tbd_profile}   default-libvirt
+---

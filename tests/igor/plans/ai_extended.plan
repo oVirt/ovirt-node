@@ -1,8 +1,11 @@
+---
+description: 'AI with {tbd_profile} and more tests on VMs'
 
-description:AI with {tbd_profile} and more tests on VMs
 
-
-# Testsuite         Profile         Host                Optional: kargs
-
-# A basic auto installation with more testcases, including TUI tests
-ai_extended         {tbd_profile}   default-libvirt     kargs='storage_init BOOTIF=link'
+---
+description: 'A basic auto installation with more testcases, including TUI tests'
+testsuite: 'ai_extended'
+profile: '{tbd_profile}'
+host: 'default-libvirt'
+additional_kargs: 'storage_init BOOTIF=link'
+---
