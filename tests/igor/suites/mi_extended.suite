@@ -1,23 +1,23 @@
-#
-#
-# On eset per line, this is no script
-#
-
-description:Manual TUI installation with additional tests (including TUI).
+---
+description: 'Manual TUI installation with additional tests (including TUI).'
 
 
-# Where to look for testsets.
-# By default it's the dirname of this file
-searchpath:../sets/
+---
+searchpath: '../sets/'
+sets:
+  - 'before_testing.set'
+  - 'tui/manual_installation_extended.set'
+  - 'reboot.set'
 
-# Now all the sets that form this suite:
-before_testing.set
+---
+searchpath: '../sets/'
+sets:
+  - 'tui/login.set'
+  - 'tui/check_navigation.set'
 
-tui/manual_installation_extended.set
+---
+searchpath: '../sets/'
+sets:
+  - 'after_testing.set'
 
-reboot.set
-
-tui/login.set
-tui/check_navigation.set
-
-after_testing.set
+---

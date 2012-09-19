@@ -1,20 +1,16 @@
-#
-#
-# On eset per line, this is no script
-#
-
-description:Automated installation without TUI tests.
+---
+description: 'Automated installation without TUI tests.'
 
 
+---
 # Where to look for testsets.
 # By default it's the dirname of this file
-searchpath:../sets/
+searchpath: '../sets/'
+sets:
+  - 'after_auto_install.set'
+  - 'basic.set'
+  - 'reboot.set'
+  - 'services.set'
+  - 'after_testing.set'
 
-# Now all the sets that form this suite:
-after_auto_install.set
-
-basic.set
-reboot.set
-services.set
-
-after_testing.set
+---
