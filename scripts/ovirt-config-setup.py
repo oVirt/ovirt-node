@@ -1414,15 +1414,15 @@ class NodeConfigScreen():
             kdump_config_file.close()
         except:
             pass
+        disable_fields = []
         if not network_up():
-            self.kdump_nfs_type.setFlags(_snack.FLAG_DISABLED,
-                                         _snack.FLAGS_SET)
-            self.kdump_ssh_type.setFlags(_snack.FLAG_DISABLED,
-                                         _snack.FLAGS_SET)
-            self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED,
-                                           _snack.FLAGS_SET)
-            self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED,
-                                           _snack.FLAGS_SET)
+            disable_fields += [self.kdump_nfs_type, self.kdump_ssh_type]
+        if not network_up() or (self.kdump_nfs_type.value() == 0 and \
+                                self.kdump_ssh_type.value() == 0):
+            disable_fields += [self.kdump_nfs_config, self.kdump_ssh_config]
+        for field in disable_fields:
+            field.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+
         return [Label(""), elements]
 
     def support_page(self, screen):
