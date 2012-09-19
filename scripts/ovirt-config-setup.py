@@ -1387,8 +1387,8 @@ class NodeConfigScreen():
         self.kdump_nfs_config.setCallback(self.kdump_valid_nfs_callback)
         elements.setField(self.kdump_nfs_config, 0, 5, anchorLeft=1)
         elements.setField(Label(" "), 0, 6, anchorLeft=1)
-        elements.setField(Label("SSH Location (root@example.redhat.com)"), 0,
-                          7, anchorLeft=1)
+        elements.setField(Label("SSH Location (root@example.redhat.com):"),
+                                0, 7, anchorLeft=1)
         self.kdump_ssh_config = Entry(30, "")
         self.kdump_ssh_config.setCallback(self.kdump_valid_ssh_callback)
         elements.setField(self.kdump_ssh_config, 0, 8, anchorLeft=1,
