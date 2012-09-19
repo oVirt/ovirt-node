@@ -3,6 +3,8 @@ This repository [1] contains all sorts of Igor [2] tests for oVirt Node.
 Look into docs/ to learn how to write testsuites, testsets and testcases.
 Run make pdfs to create pdfs from the .rst files.
 
+Run 'make check' in this directory to do some basic validation of the test related files.
+
 The remaining folders are organized as follows:
 suites/		Contains testsuites (and testsuites reference testsets)
 sets/		Contains testsets (and testsets reference testcases and libraries)
