@@ -263,10 +263,10 @@ class NodeInstallScreen:
                 self.screen.setColor("BUTTON", "black", "red")
                 self.screen.setColor("ACTBUTTON", "blue", "white")
                 ButtonChoiceWindow(self.screen, "Storage Check", "Invalid Block Device: " + dev, buttons = ['Ok'])
-            self.reset_screen_colors()
-            self.failed_block_dev = 1
-        else:
-            self.failed_block_dev = 0
+                self.reset_screen_colors()
+                self.failed_block_dev = 1
+            else:
+                self.failed_block_dev = 0
         return
 
     def menuSpacing(self):
@@ -882,14 +882,17 @@ class NodeInstallScreen:
                         if not self.hostvg_device.value():
                             ButtonChoiceWindow(self.screen, "HostVG Storage Selection", "You must enter a valid device", buttons = ['Ok'])
                         else:
-                            self.hostvg_init = translate_multipath_device(self.hostvg_device.value())
-                            hostvg_list = ""
-                            for dev in self.hostvg_init.split(","):
-                                if not tui_check_fakeraid(dev, self.screen):
-                                    continue
-                                hostvg_list += dev + ","
-                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
-                            self.__current_page = PASSWORD_PAGE
+                            if self.failed_block_dev == 0:
+                                self.hostvg_init = translate_multipath_device(self.hostvg_device.value())
+                                hostvg_list = ""
+                                for dev in self.hostvg_init.split(","):
+                                    if not tui_check_fakeraid(dev, self.screen):
+                                        continue
+                                    hostvg_list += dev + ","
+                                augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
+                                self.__current_page = PASSWORD_PAGE
+                            else:
+                                self.__current_page = OTHER_DEVICE_HOSTVG_PAGE
                     elif self.__current_page == UPGRADE_PAGE:
                         if self.current_password_fail is not 1:
                             if self.valid_password == 0:
