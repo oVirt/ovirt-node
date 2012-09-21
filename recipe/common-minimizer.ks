@@ -61,6 +61,7 @@ keep /lib/modules/*/kernel/fs/fscache
 keep /lib/modules/*/kernel/fs/lockd
 keep /lib/modules/*/kernel/fs/nls/nls_utf8.ko
 keep /lib/modules/*/kernel/fs/configfs/configfs.ko
+keep /lib/modules/*/kernel/fs/fuse
 # autofs4     configfs  exportfs *fat     *jbd    mbcache.ko  nls       xfs
 #*btrfs       cramfs   *ext2     *fscache *jbd2  *nfs         squashfs
 # cachefiles  dlm      *ext3      fuse     jffs2 *nfs_common  ubifs
