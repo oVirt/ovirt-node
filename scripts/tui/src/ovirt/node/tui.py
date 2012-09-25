@@ -214,21 +214,16 @@ class UrwidTUI(object):
 
     def suspended(self):
         """Supspends the screen to do something in the foreground
-        TODO resizing is curently broken after resuming
         """
         class SuspendedScreen(object):
             def __init__(self, loop):
                 self.__loop = loop
 
             def __enter__(self):
-                self.screen = urwid.raw_display.Screen()
-                self.screen.stop()
+                self.__loop.screen.stop()
 
             def __exit__(self, a, b, c):
-                self.screen.start()
-                # Hack to force a screen refresh
-                self.__loop.process_input(["up"])
-                self.__loop.process_input(["down"])
+                self.__loop.screen.start()
         return SuspendedScreen(self.__loop)
 
     def register_plugin(self, title, plugin):

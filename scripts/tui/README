@@ -1,6 +1,6 @@
 A simple system to build a TUI (based on urwid) by plugins.
 
-$ sudo yum install python python-urwind
+$ sudo yum install python python-urwid
 $ cd src
 $ ./app
 

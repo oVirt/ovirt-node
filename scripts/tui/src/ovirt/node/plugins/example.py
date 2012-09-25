@@ -4,7 +4,7 @@ import os.path
 import logging
 
 import ovirt.node.plugins
-import ovirt.node.pattern
+import ovirt.node.valid
 from ovirt.node.plugins import Header, Entry, Password
 
 LOGGER = logging.getLogger(__name__)
@@ -30,11 +30,12 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return self._model
 
     def validators(self):
+        nospace = lambda v: "No space allowed." if " " in v else None
+
         return {
-                "foo.hostname": ovirt.node.pattern.ValidHostname(),
-                "foo.port": ovirt.node.pattern.Number(),
-                "foo.password": lambda v: "No space allowed." \
-                                          if " " in v else None
+                "foo.hostname": ovirt.node.valid.Hostname(),
+                "foo.port": ovirt.node.valid.Number(),
+                "foo.password": nospace
             }
 
     def ui_content(self):
