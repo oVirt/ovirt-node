@@ -119,7 +119,6 @@ class Network:
             self.VL_CONFIG += "rm %s\n" % VL_ROOT
             self.VL_CONFIG += "set %s/DEVICE %s.%s\n" % (VL_ROOT, \
                                                 self.CONFIGURED_NIC, VLAN_ID)
-            self.VL_CONFIG += "set %s/HWADDR %s\n" % (VL_ROOT, nic_hwaddr)
             self.VL_CONFIG += "set %s/BRIDGE %s\n" % (VL_ROOT, BRIDGE)
             self.VL_CONFIG += "set %s/VLAN yes\n" % VL_ROOT
             self.VL_FILENAME = "%s.%s" % (IF_FILENAME, \
