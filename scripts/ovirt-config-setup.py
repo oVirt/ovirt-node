@@ -1802,7 +1802,7 @@ class NodeConfigScreen():
     def process_kdump_config(self):
         if self.kdump_nfs_type.value() == 1:
             write_kdump_config(self.kdump_nfs_config.value())
-        if self.kdump_ssh_type.value() == 1:
+        elif self.kdump_ssh_type.value() == 1:
             write_kdump_config(self.kdump_ssh_config.value())
             self.screen.popWindow()
             self.screen.finish()
@@ -1817,8 +1817,10 @@ class NodeConfigScreen():
                 ovirt_store_config("/root/.ssh/kdump_id_rsa")
                 ovirt_store_config("/root/.ssh/known_hosts")
                 ovirt_store_config("/root/.ssh/config")
-        if self.kdump_restore_type.value() == 1:
+        elif self.kdump_restore_type.value() == 1:
             restore_kdump_config()
+        else:
+            return
         if not system("service kdump restart"):
             self._create_warn_screen()
             ButtonChoiceWindow(self.screen, "KDump Status",
