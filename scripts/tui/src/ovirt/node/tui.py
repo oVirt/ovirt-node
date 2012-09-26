@@ -3,90 +3,18 @@
 import urwid
 
 import logging
-import os
 
 import ovirt.node
+import ovirt.node.widgets
 import ovirt.node.plugins
+import ovirt.node.utils
 
-
-logging.basicConfig(level=logging.DEBUG,
-                    filename="app.log", filemode="w")
 LOGGER = logging.getLogger(__name__)
 
 
-class SelectableText(urwid.Text):
-    """A Text widget that can be selected to be highlighted
-    """
-    def selectable(self):
-        return True
-
-    def keypress(self, size, key):
-        return key
-
-
-class PluginMenuEntry(urwid.AttrMap):
-    """An entry in the main menu
-    """
-    __text = None
-
-    def __init__(self, title, plugin):
-        self.__text = SelectableText(title)
-        self.__text.plugin = plugin
-        super(PluginMenuEntry, self).__init__(self.__text, 'menu.entry',
-                                              'menu.entry:focus')
-
-
-class PluginMenu(urwid.WidgetWrap):
-    """The main menu listing all available plugins (which have a UI)
-    """
-    __pages = None
-    __walker = None
-    __list = None
-    __list_attrmap = None
-    __linebox = None
-    __linebox_attrmap = None
-
-    signals = ['changed']
-
-    def __init__(self, pages):
-        self.__pages = pages
-        self.__build_walker()
-        self.__build_list()
-        self.__build_linebox()
-        super(PluginMenu, self).__init__(self.__linebox_attrmap)
-
-    def __build_walker(self):
-        items = []
-        for title, plugin in self.__pages.items():
-            if plugin.has_ui():
-                item = PluginMenuEntry(title, plugin)
-                items.append(item)
-            else:
-                LOGGER.warning("No UI page for plugin %s" % plugin)
-        self.__walker = urwid.SimpleListWalker(items)
-
-    def __build_list(self):
-        self.__list = urwid.ListBox(self.__walker)
-
-        def __on_item_change():
-            widget, position = self.__list.get_focus()
-            plugin = widget.original_widget.plugin
-            urwid.emit_signal(self, "changed", plugin)
-
-        urwid.connect_signal(self.__walker, 'modified', __on_item_change)
-
-        self.__list_attrmap = urwid.AttrMap(self.__list, "main.menu")
-
-    def __build_linebox(self):
-        self.__linebox = urwid.LineBox(self.__list_attrmap)
-        self.__linebox_attrmap = urwid.AttrMap(self.__linebox,
-                                               "main.menu.frame")
-
-    def set_focus(self, n):
-        self.__list.set_focus(n)
-
-
 class UrwidTUI(object):
+    app = None
+
     __pages = {}
     __hotkeys = {}
 
@@ -105,16 +33,17 @@ class UrwidTUI(object):
                ('main.menu.frame', 'light gray', ''),
                ('plugin.widget.entry', 'dark gray', ''),
                ('plugin.widget.entry.frame', 'light gray', ''),
-               ('plugin.widget.disabled', 'light gray', 'dark gray'),
+               ('plugin.widget.disabled', 'dark gray', 'light gray'),
                ('plugin.widget.notice', 'light red', ''),
                ('plugin.widget.header', 'light blue', 'light gray'),
                ]
 
-    def __init__(self):
-        pass
+    def __init__(self, app):
+        LOGGER.info("Creating urwid tui for '%s'" % app)
+        self.app = app
 
     def __build_menu(self):
-        self.__menu = PluginMenu(self.__pages)
+        self.__menu = ovirt.node.widgets.PluginMenu(self.__pages)
 
         def menu_item_changed(plugin):
             self.__change_to_page(plugin)
@@ -132,78 +61,58 @@ class UrwidTUI(object):
         return urwid.Frame(body, header, footer)
 
     def __build_widget_for_item(self, plugin, path, item):
+        item_to_widget_map = {
+            ovirt.node.plugins.Label: ovirt.node.widgets.Label,
+            ovirt.node.plugins.Header: ovirt.node.widgets.Header,
+            ovirt.node.plugins.Entry: ovirt.node.widgets.Entry,
+            ovirt.node.plugins.PasswordEntry: ovirt.node.widgets.PasswordEntry
+        }
+
+        assert type(item) in item_to_widget_map.keys(), \
+               "No widget for item type"
+
         widget = None
+        widget_class = item_to_widget_map[type(item)]
 
-        if type(item) is ovirt.node.plugins.Entry or \
-            type(item) is ovirt.node.plugins.Password:
-            label_text = urwid.Text("\n" + item.label + ":")
-            label = label_text
-            mask = None
-            if type(item) is ovirt.node.plugins.Password:
-                mask = "*"
-            edit = urwid.Edit(mask=mask)
-            edit_attrmap = urwid.AttrMap(edit, "plugin.widget.entry")
-            linebox = urwid.LineBox(edit_attrmap)
-            linebox_attrmap = urwid.AttrMap(linebox,
-                                            "plugin.widget.entry.frame")
-            entry = linebox_attrmap
-            main_widget = urwid.Columns([label, entry])
-
-            notice_text = urwid.Text("")
-            notice_attrmap = urwid.AttrMap(notice_text, "plugin.widget.notice")
-            notice_widget = notice_attrmap
-
-            widget = urwid.Pile([main_widget, notice_widget])
-
+        if type(item) in [ovirt.node.plugins.Entry, \
+                          ovirt.node.plugins.PasswordEntry]:
+            value = None
             if item.initial_value_from_model:
                 value = plugin.model()[path]
-                if value:
-                    edit.set_edit_text(value)
 
-            def on_change(widget, new_value):
-                LOGGER.debug("Widget content changed for path '%s'" % path)
+            widget = widget_class(item.label, value)
+
+            def on_item_enabled_change_cb(w, v):
+                LOGGER.debug("Model changed, updating widget '%s': %s" % (w, v))
+                if widget.selectable() != v:
+                    widget.enable(v)
+            item.connect_signal("enabled[change]", on_item_enabled_change_cb)
+
+            def on_widget_value_change(widget, new_value):
+                LOGGER.debug("Widget changed, updating model '%s'" % path)
 
                 try:
-                    if path in plugin.validators():
-                        msg = plugin.validators()[path](new_value)
-                        # True and None are allowed
-                        if msg not in [True, None]:
-                            raise ovirt.node.plugins.InvalidData(msg)
-
+                    plugin.validate(path, new_value)
                     plugin._on_ui_change({path: new_value})
-                    notice_text.set_text("")
+                    widget.notice = ""
 
                 except ovirt.node.plugins.Concern as e:
                     LOGGER.error("Concern when updating: %s" % e)
 
                 except ovirt.node.plugins.InvalidData as e:
-                    notice_text.set_text(e.message)
+                    widget.notice = e.message
                     LOGGER.error("Invalid data when updating: %s" % e)
+            urwid.connect_signal(widget, 'change', on_widget_value_change)
 
-            urwid.connect_signal(edit, 'change', on_change)
+        elif type(item) in [ovirt.node.plugins.Header, \
+                            ovirt.node.plugins.Label]:
+            widget = widget_class(item.text())
 
-            def foo(w, v):
-                if edit.selectable() == v:
-                    return True
-                else:
-                    edit.selectable = lambda: v
-                    LOGGER.debug("dissing")
-                    if v:
-                        edit_attrmap.set_attr_map({None: ""})
-                    else:
-                        edit_attrmap.set_attr_map({
-                            None: "plugin.widget.disabled"
-                            })
-            item.connect_signal("enabled[change]", foo)
-
-        elif type(item) is ovirt.node.plugins.Header:
-            label = urwid.Text("\n  %s\n" % item.label)
-            label_attrmap = urwid.AttrMap(label, "plugin.widget.header")
-            widget = label_attrmap
-
-        elif type(item) is ovirt.node.plugins.Label:
-            label = urwid.Text(item.label)
-            widget = urwid.AttrMap(label, "plugin.widget.label")
+            def on_item_text_change_cb(w, v):
+                LOGGER.debug("Model changed, updating widget '%s': %s" % (w, v))
+#                widget.text(v)
+                self.popup("foo")
+            item.connect_signal("text[change]", on_item_text_change_cb)
 
         return widget
 
@@ -234,7 +143,15 @@ class UrwidTUI(object):
     def __filter_hotkeys(self, keys, raw):
         key = str(keys)
         LOGGER.debug("Keypress: %s" % key)
+        if type(self.__loop.widget) is ovirt.node.widgets.ModalDialog:
+            LOGGER.debug("Modal dialog escape: %s" % key)
+            dialog = self.__loop.widget
+            if dialog.escape_key in keys:
+                self.__loop.widget = dialog.previous_widget
+            return
+
         if key in self.__hotkeys.keys():
+            LOGGER.debug("Running hotkeys: %s" % key)
             self.__hotkeys[key]()
         return keys
 
@@ -245,18 +162,9 @@ class UrwidTUI(object):
     def popup(self, msg=None, buttons=None):
         LOGGER.debug("Launching popup")
 
-        class Dialog(urwid.PopUpLauncher):
-
-            def create_pop_up(self):
-                return urwid.Filler(urwid.Text("Fooo"))
-
-            def get_pop_up_parameters(self):
-                return {'left': 0,
-                        'top': 1,
-                        'overlay_width': 30,
-                        'overlay_height': 4}
-        dialog = Dialog(self.__page_frame)
-        dialog.open_pop_up()
+        dialog = ovirt.node.widgets.ModalDialog(urwid.Filler(urwid.Text(msg)), "Title",
+                        "esc", self.__loop.widget)
+        self.__loop.widget = dialog
 
     def suspended(self):
         """Supspends the screen to do something in the foreground
@@ -300,34 +208,3 @@ class UrwidTUI(object):
                               self.palette,
                               input_filter=self.__filter_hotkeys)
         self.__loop.run()
-
-
-class App(object):
-    plugins = []
-
-    ui = None
-
-    def __init__(self, ui):
-        self.ui = ui
-
-    def __load_plugins(self):
-        self.plugins = [m.Plugin() for m in ovirt.node.plugins.load_all()]
-
-        for plugin in self.plugins:
-            LOGGER.debug("Adding plugin %s" % plugin)
-            self.ui.register_plugin(plugin.ui_name(), plugin)
-
-    def __drop_to_shell(self):
-        with self.ui.suspended():
-            os.system("reset ; bash")
-
-    def run(self):
-        self.__load_plugins()
-        self.ui.register_hotkey("f12", self.__drop_to_shell)
-        self.ui.footer = "Press ctrl+x or esc to quit."
-        self.ui.run()
-
-if __name__ == '__main__':
-    ui = UrwidTUI()
-    app = App(ui)
-    app.run()

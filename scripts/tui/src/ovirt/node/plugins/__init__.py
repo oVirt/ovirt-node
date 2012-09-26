@@ -79,6 +79,26 @@ class NodePlugin(object):
             A dict of validators
         """
 
+    def validate(self, path, value):
+        """Validates a value against the validator of a given path
+
+        Args:
+            path: A model path for a validator
+            value: The value to be validated
+
+        Returns:
+            True on a valid value or if there is no validator for a path
+
+        Raises:
+            InvalidData on any invalid data
+        """
+        if path in self.validators():
+            msg = self.validators()[path](value)
+            # True and None are allowed values
+            if msg not in [True, None]:
+                raise ovirt.node.plugins.InvalidData(msg)
+        return True
+
     def has_ui(self):
         """Determins if a page for this should be displayed in the UI
 
@@ -152,55 +172,100 @@ class NodePlugin(object):
 
 
 class Widget(object):
-    _enabled = True
-    _signals = None
+    _signal_cbs = None
+    signals = []
+    signaling_properties = []
 
-    def enabled(self, is_enabled=None):
-        if is_enabled in [True, False]:
-            self.emit_signal("enabled[change]", is_enabled)
-            self._enabled = is_enabled
-        return self._enabled
+    def __init__(self):
+        """Registers all widget signals.
+        All signals must be given in self.signals
+        """
+        for name in self.signals:
+            self._register_signal(name)
+        for name in self.signaling_properties:
+            self._register_signaling_property(name)
+
+    def _register_signal(self, name):
+        """Each signal that get's emitted must be registered using this
+        function.
+
+        This is just to have an overview over the signals.
+        """
+        if self._signal_cbs is None:
+            self._signal_cbs = {}
+        if name not in self._signal_cbs:
+            self._signal_cbs[name] = []
+#            LOGGER.debug("Registered new signal '%s' for '%s'" % (name, self))
 
     def connect_signal(self, name, cb):
-        if self._signals is None:
-            self._signals = {}
-        if name not in self._signals:
-            self._signals[name] = []
-        self._signals[name].append(cb)
+        """Connect an callback to a signal
+        """
+        assert name in self._signal_cbs, "Unregistered signal '%s'" % name
+        self._signal_cbs[name].append(cb)
 
     def emit_signal(self, name, userdata=None):
-        if self._signals is None or \
-           name not in self._signals:
+        """Emit a signal
+        """
+        if self._signal_cbs is None or name not in self._signal_cbs:
             return False
-        for cb in self._signals[name]:
+        for cb in self._signal_cbs[name]:
             LOGGER.debug("CB for sig %s: %s" % (name, cb))
             cb(self, userdata)
+
+    def _register_signaling_property(self, name):
+        LOGGER.debug("Registered new property '%s' for '%s'" % (name, self))
+        if "_%s" % name not in self.__dict__:
+            self.__dict__["_%s" % name] = None
+        self._register_signal("%s[change]" % name)
+
+    def _signaling_property(self, name, valid_value_cb, new_value):
+        if valid_value_cb():
+            self.emit_signal("%s[change]" % name, new_value)
+            self.__dict__["_%s" % name] = new_value
+        return self.__dict__["_%s" % name]
+
+class InputWidget(Widget):
+    signaling_properties = ["enabled"]
+
+    def enabled(self, is_enabled=None):
+        return self._signaling_property("enabled", \
+                                        lambda: is_enabled in [True, False],
+                                        is_enabled)
 
 
 class Label(Widget):
     """Represents a r/o label
     """
-    def __init__(self, label):
-        self.label = label
+    signaling_properties = ["text"]
 
+    def __init__(self, text):
+        self._text = text
+        super(Label, self).__init__()
+
+    def text(self, value=None):
+        return self._signaling_property("text", \
+                                        lambda: value != None,
+                                        value)
 
 class Header(Label):
     pass
 
 
-class Entry(Widget):
+class Entry(InputWidget):
     """Represents an entry field
     TODO multiline
     """
+
     def __init__(self, label, value=None, initial_value_from_model=True,
                  enabled=True):
         self.label = label
         self.value = value
         self.initial_value_from_model = initial_value_from_model
         self._enabled = enabled
+        super(Entry, self).__init__()
 
 
-class Password(Entry):
+class PasswordEntry(Entry):
     pass
 
 

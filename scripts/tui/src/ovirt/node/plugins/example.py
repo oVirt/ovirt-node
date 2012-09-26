@@ -7,7 +7,7 @@ import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
-from ovirt.node.plugins import Header, Entry, Password
+from ovirt.node.plugins import Header, Entry, PasswordEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("foo.section", Header("Subsection")),
             ("foo.hostname", Entry(label="Hostname")),
             ("foo.port", Entry(label="Port")),
-            ("foo.password", Password(label="Password")),
+            ("foo.password", PasswordEntry(label="Password")),
         ]
         self._widgets = dict(widgets)
         return widgets
@@ -57,28 +57,29 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """Applies the changes to the plugins model, will do all required logic
         """
         LOGGER.debug("checking %s" % changes)
-        if "foo.bar" in changes:
-            LOGGER.debug("Found foo.bar")
+        if "foo.hostname" in changes:
+            LOGGER.debug("Found foo.hostname")
 
-            if "/" in changes["foo.bar"]:
+            if "/" in changes["foo.hostname"]:
                 raise ovirt.node.plugins.InvalidData("No slash allowed")
 
-            if len(changes["foo.bar"]) < 5:
+            if len(changes["foo.hostname"]) < 5:
                 raise ovirt.node.plugins.Concern("Should be at least 5 chars")
 
             self._model.update(changes)
 
-            if "dis" in changes["foo.bar"]:
-                self._widgets["foo.bar2"].enabled(False)
+            if "dis" in changes["foo.hostname"]:
+                self._widgets["foo.port"].enabled(False)
                 LOGGER.debug("change to dis")
+                self._widgets["foo.section"].text(changes["foo.hostname"])
                 #raise ovirt.node.plugins.ContentRefreshRequest()
             else:
-                self._widgets["foo.bar2"].enabled(True)
+                self._widgets["foo.port"].enabled(True)
 
-        if "foo.bar2" in changes:
-            LOGGER.debug("Found foo.bar2")
+        if "foo.port" in changes:
+            LOGGER.debug("Found foo.port")
 
-            if "/" in changes["foo.bar2"]:
+            if "/" in changes["foo.port"]:
                 raise ovirt.node.plugins.InvalidData("No slashes allowed")
 
         return True
