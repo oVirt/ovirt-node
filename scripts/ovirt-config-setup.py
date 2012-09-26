@@ -1521,6 +1521,12 @@ class NodeConfigScreen():
             gridform.draw()
             self.screen.refresh()
             msg = ""
+
+            if self.static_ipv4_nic_proto.value() == 0 and \
+               self.dhcp_ipv4_nic_proto.value() == 0 and \
+               self.disabled_ipv4_nic_proto.value() == 0:
+                msg += "  - IPv4 boot protocol (Disabled, Static, DHCP)"
+
             if self.static_ipv4_nic_proto.value() == 1:
                 if self.ipv4_netdevip.value() == "":
                     msg += "  - IPv4 Address\n"
