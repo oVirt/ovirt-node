@@ -1,5 +1,7 @@
 
-
+"""
+Example doc
+"""
 import os.path
 import logging
 

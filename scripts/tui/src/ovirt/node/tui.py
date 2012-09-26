@@ -15,11 +15,75 @@ LOGGER = logging.getLogger(__name__)
 
 
 class SelectableText(urwid.Text):
+    """A Text widget that can be selected to be highlighted
+    """
     def selectable(self):
         return True
 
     def keypress(self, size, key):
         return key
+
+
+class PluginMenuEntry(urwid.AttrMap):
+    """An entry in the main menu
+    """
+    __text = None
+
+    def __init__(self, title, plugin):
+        self.__text = SelectableText(title)
+        self.__text.plugin = plugin
+        super(PluginMenuEntry, self).__init__(self.__text, 'menu.entry',
+                                              'menu.entry:focus')
+
+
+class PluginMenu(urwid.WidgetWrap):
+    """The main menu listing all available plugins (which have a UI)
+    """
+    __pages = None
+    __walker = None
+    __list = None
+    __list_attrmap = None
+    __linebox = None
+    __linebox_attrmap = None
+
+    signals = ['changed']
+
+    def __init__(self, pages):
+        self.__pages = pages
+        self.__build_walker()
+        self.__build_list()
+        self.__build_linebox()
+        super(PluginMenu, self).__init__(self.__linebox_attrmap)
+
+    def __build_walker(self):
+        items = []
+        for title, plugin in self.__pages.items():
+            if plugin.has_ui():
+                item = PluginMenuEntry(title, plugin)
+                items.append(item)
+            else:
+                LOGGER.warning("No UI page for plugin %s" % plugin)
+        self.__walker = urwid.SimpleListWalker(items)
+
+    def __build_list(self):
+        self.__list = urwid.ListBox(self.__walker)
+
+        def __on_item_change():
+            widget, position = self.__list.get_focus()
+            plugin = widget.original_widget.plugin
+            urwid.emit_signal(self, "changed", plugin)
+
+        urwid.connect_signal(self.__walker, 'modified', __on_item_change)
+
+        self.__list_attrmap = urwid.AttrMap(self.__list, "main.menu")
+
+    def __build_linebox(self):
+        self.__linebox = urwid.LineBox(self.__list_attrmap)
+        self.__linebox_attrmap = urwid.AttrMap(self.__linebox,
+                                               "main.menu.frame")
+
+    def set_focus(self, n):
+        self.__list.set_focus(n)
 
 
 class UrwidTUI(object):
@@ -28,14 +92,15 @@ class UrwidTUI(object):
 
     __loop = None
     __main_frame = None
-    __menu_list = None
+    __menu = None
     __page_frame = None
 
     header = u"\n Configuration TUI\n"
     footer = u"Press ctrl+c to exit"
 
     palette = [('header', 'white', 'dark blue'),
-               ('reveal focus', 'white', 'light blue', 'standout'),
+               ('menu.entry', '', ''),
+               ('menu.entry:focus', 'white', 'light blue', 'standout'),
                ('main.menu', 'black', ''),
                ('main.menu.frame', 'light gray', ''),
                ('plugin.widget.entry', 'dark gray', ''),
@@ -48,38 +113,19 @@ class UrwidTUI(object):
     def __init__(self):
         pass
 
-    def __build_pages_list(self):
-        items = []
-        for title, plugin in self.__pages.items():
-            if plugin.has_ui():
-                item = SelectableText(title)
-                item.plugin = plugin
-                item = urwid.AttrMap(item, None, 'reveal focus')
-                items.append(item)
-            else:
-                LOGGER.info("No UI page for plugin %s" % plugin)
-        walker = urwid.SimpleListWalker(items)
-        self.__menu_list = urwid.ListBox(walker)
-
-        def __on_item_change():
-            widget, position = self.__menu_list.get_focus()
-            plugin = widget.original_widget.plugin
-            self.__change_to_page(plugin)
-
-        urwid.connect_signal(walker, 'modified', __on_item_change)
-        attr_listbox = urwid.AttrMap(self.__menu_list, "main.menu")
-        return attr_listbox
-
     def __build_menu(self):
-        menu = urwid.LineBox(self.__build_pages_list())
-        menu = urwid.AttrMap(menu, "main.menu.frame")
-        return menu
+        self.__menu = PluginMenu(self.__pages)
+
+        def menu_item_changed(plugin):
+            self.__change_to_page(plugin)
+        urwid.connect_signal(self.__menu, 'changed', menu_item_changed)
 
     def __create_screen(self):
-        menu = self.__build_menu()
+        self.__build_menu()
         self.__page_frame = urwid.Frame(urwid.Filler(urwid.Text("")))
-        self.__menu_list.set_focus(0)
-        body = urwid.Columns([("weight", 0.5, menu), self.__page_frame], 4)
+        self.__menu.set_focus(0)
+        body = urwid.Columns([("weight", 0.5, self.__menu),
+                              self.__page_frame], 4)
         header = urwid.Text(self.header, wrap='clip')
         header = urwid.AttrMap(header, 'header')
         footer = urwid.Text(self.footer, wrap='clip')
