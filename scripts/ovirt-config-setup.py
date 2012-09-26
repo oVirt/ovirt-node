@@ -1643,59 +1643,6 @@ class NodeConfigScreen():
             augtool("rm", "/files/" + OVIRT_DEFAULTS +
                     "/OVIRT_IPV6_GATEWAY", "")
 
-            msg = ""
-            if self.static_ipv4_nic_proto.value() == 1:
-                if self.ipv4_netdevip.value() == "":
-                    msg = "  - IPv4 Address\n"
-                if self.ipv4_netdevmask.value() == "":
-                    msg += "  - IPv4 Netmask Address\n"
-                if self.ipv4_netdevgateway.value() == "":
-                    msg = "  - IPv4 Gateway Address\n"
-                augtool("set", "/files/" + OVIRT_DEFAULTS +
-                        "/OVIRT_IP_ADDRESS", '"' +
-                        self.ipv4_netdevip.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS +
-                        "/OVIRT_IP_NETMASK", '"' +
-                        self.ipv4_netdevmask.value() + '"')
-                augtool("set", "/files/" + OVIRT_DEFAULTS +
-                        "/OVIRT_IP_GATEWAY", '"' +
-                        self.ipv4_netdevgateway.value() + '"')
-
-            if self.static_ipv6_nic_proto.value() == 1:
-                if self.ipv6_netdevmask.value() == "":
-                    msg += "  - IPv6 Netmask Address\n"
-                if self.ipv6_netdevgateway.value() == "":
-                    msg += "  - IPv6 Gateway Address\n"
-                # left out gateway check to prevent multiple ones
-            if msg != "":
-                msg = "Please Input:\n" + msg
-                self._create_warn_screen()
-                warn = ButtonChoiceWindow(self.screen, "Network Settings",
-                                          msg, buttons=['Ok'])
-                self.__nic_config_failed = 1
-                self.ipv4_current_netdevip = self.ipv4_netdevip.value()
-                self.ipv4_current_netdevmask = self.ipv4_netdevmask.value()
-                self.ipv4_current_netdevgateway = (
-                            self.ipv4_netdevgateway.value())
-                self.reset_screen_colors()
-                return
-            else:
-                # if exists remove static keys from dictionary
-                if "OVIRT_IP_ADDRESS" in OVIRT_VARS:
-                    del OVIRT_VARS["OVIRT_IP_ADDRESS"]
-                if "OVIRT_IP_NETMASK" in OVIRT_VARS:
-                    del OVIRT_VARS["OVIRT_IP_NETMASK"]
-                if "OVIRT_IP_GATEWAY" in OVIRT_VARS:
-                    del OVIRT_VARS["OVIRT_IP_GATEWAY"]
-                if "OVIRT_IPV6" in OVIRT_VARS:
-                    del OVIRT_VARS["OVIRT_IPV6"]
-                if "OVIRT_ADDRESS" in OVIRT_VARS:
-                    del OVIRT_VARS["OVIRT_IPV6_ADDRESS"]
-                if "OVIRT_IPV6_NETMASK" in OVIRT_VARS:
-                    del OVIRT_VARS["OVIRT_IPV6_NETMASK"]
-                if "OVIRT_IPV6_GATEWAY" in OVIRT_VARS:
-                    del OVIRT_VARS["OVIRT_IPV6_GATEWAY"]
-
             if self.netvlanid.value() != "":
                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VLAN",
                         '"' + self.netvlanid.value() + '"')
