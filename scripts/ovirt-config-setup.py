@@ -1496,19 +1496,20 @@ class NodeConfigScreen():
     def process_network_config(self):
         # First update the central "model" (defaults/ovirt)
         dns_servers = ""
-        ntp_servers = ""
+        ntp_servers = []
         if not self.dns_host1.value() == "":
             dns_servers += self.dns_host1.value()
         if not self.dns_host2.value() == "":
             dns_servers += "," + self.dns_host2.value()
         if not self.ntp_host1.value() == "":
-            ntp_servers += self.ntp_host1.value()
+            ntp_servers.append(self.ntp_host1.value())
         if not self.ntp_host2.value() == "":
-            ntp_servers += "," + self.ntp_host2.value()
+            ntp_servers.append(self.ntp_host2.value())
         if not dns_servers == "":
             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS",
                     '"' + dns_servers + '"')
-        if not ntp_servers == "":
+        if len(ntp_servers) > 0:
+            ntp_servers = ",".join(ntp_servers)
             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP",
                     '"' + ntp_servers + '"')
         aug.load()
