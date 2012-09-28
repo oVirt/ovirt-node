@@ -36,6 +36,8 @@ class UrwidTUI(object):
                ('plugin.widget.disabled', 'dark gray', 'light gray'),
                ('plugin.widget.notice', 'light red', ''),
                ('plugin.widget.header', 'light blue', 'light gray'),
+               ('plugin.widget.divider', 'dark gray', ''),
+               ('plugin.widget.button', 'dark blue', ''),
                ]
 
     def __init__(self, app):
@@ -65,7 +67,10 @@ class UrwidTUI(object):
             ovirt.node.plugins.Label: ovirt.node.widgets.Label,
             ovirt.node.plugins.Header: ovirt.node.widgets.Header,
             ovirt.node.plugins.Entry: ovirt.node.widgets.Entry,
-            ovirt.node.plugins.PasswordEntry: ovirt.node.widgets.PasswordEntry
+            ovirt.node.plugins.PasswordEntry: ovirt.node.widgets.PasswordEntry,
+            ovirt.node.plugins.Button: ovirt.node.widgets.Button,
+            ovirt.node.plugins.SaveButton: ovirt.node.widgets.Button,
+            ovirt.node.plugins.Divider: ovirt.node.widgets.Divider,
         }
 
         assert type(item) in item_to_widget_map.keys(), \
@@ -117,6 +122,20 @@ class UrwidTUI(object):
                 self.__loop.draw_screen()
             item.connect_signal("text[change]", on_item_text_change_cb)
 
+        elif type(item) in [ovirt.node.plugins.Button,
+                            ovirt.node.plugins.SaveButton]:
+            widget = widget_class(item.text())
+            def on_widget_click_cb(widget, data=None):
+                if type(item) is ovirt.node.plugins.SaveButton:
+                    plugin._on_ui_save()
+                else:
+#                   Nit propagating the signal as a signal to the plugin
+#                   item.emit_signal("click", widget)
+                    plugin._on_ui_change({path: True})
+            urwid.connect_signal(widget, "click", on_widget_click_cb)
+
+        elif type(item) in [ovirt.node.plugins.Divider]:
+            widget = widget_class(item.char)
         return widget
 
     def __build_plugin_widget(self, plugin):
@@ -128,10 +147,12 @@ class UrwidTUI(object):
             widget = self.__build_widget_for_item(plugin, path, item)
             widgets.append(("flow", widget))
 
-        save = urwid.Button("Save", lambda x: plugin._on_ui_save())
-        save = urwid.Padding(save, "left", width=8)
-        save = urwid.Filler(save, ("fixed top", 1))
-        widgets.append(save)
+#            save = urwid.Button("Save", lambda x: plugin._on_ui_save())
+#            save = urwid.Padding(save, "left", width=8)
+#            save = urwid.Filler(save, ("fixed top", 1))
+
+        widgets.append(urwid.Filler(urwid.Text("")))
+
 
         pile = urwid.Pile(widgets)
         # FIXME why is this fixed?

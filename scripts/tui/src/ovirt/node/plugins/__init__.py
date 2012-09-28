@@ -270,6 +270,20 @@ class PasswordEntry(Entry):
     pass
 
 
+class Button(Label, InputWidget):
+    def __init__(self, label="Save", enabled=True):
+        self._enabled = enabled
+        super(Button, self).__init__(label)
+
+
+class SaveButton(Button):
+    pass
+
+
+class Divider(Widget):
+    def __init__(self, char=u" "):
+        self.char = char
+
 class InvalidData(Exception):
     """E.g. if a string contains characters which are not allowed
     """

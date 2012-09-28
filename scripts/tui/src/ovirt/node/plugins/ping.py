@@ -5,7 +5,7 @@ import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
-from ovirt.node.plugins import Header, Label, Entry, PasswordEntry
+import ovirt.node.plugins
 import ovirt.node.utils
 
 LOGGER = logging.getLogger(__name__)
@@ -41,15 +41,22 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 "ping.count": ovirt.node.valid.Number(min=1, max=20),
             }
 
+    def ui_metadata(self):
+        meta = super(Plugin, self).ui_metadata()
+#        meta.save_button = False
+        return meta
+
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("ping.header", Header("Ping a remote host")),
-            ("ping.address", Entry("Address")),
-            ("ping.count", Entry("Count")),
-            ("ping.result", Label("Result:")),
+            ("ping.header", ovirt.node.plugins.Header("Ping a remote host")),
+            ("ping.address", ovirt.node.plugins.Entry("Address")),
+            ("ping.count", ovirt.node.plugins.Entry("Count")),
+            ("ping.do_ping", ovirt.node.plugins.Button("Ping")),
+            ("ping.result-divider", ovirt.node.plugins.Divider("-")),
+            ("ping.result", ovirt.node.plugins.Label("Result:")),
         ]
         self._widgets = dict(widgets)
         return widgets
@@ -62,9 +69,13 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             self._model.update(changes)
         if "ping.count" in changes:
             self._model.update(changes)
+        if "ping.do_ping" in changes:
+            self.on_merge(changes)
 
     def on_merge(self, changes):
         """Applies the changes to the plugins model, will do all required logic
+        Normally on_merge is called by pushing the SaveButton instance, in this
+        case it is called by on_change
         """
 
         if "ping.address" in self._model:
@@ -77,8 +88,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 cmd = "ping6"
 
             cmd = "%s -c %s %s" % (cmd, count, addr)
-            out = cmd
+            out = ""
             for line in ovirt.node.utils.pipe_async(cmd):
-                LOGGER.debug("xx" + line)
                 out += line
                 self._widgets["ping.result"].text("Result:\n\n%s" % out)

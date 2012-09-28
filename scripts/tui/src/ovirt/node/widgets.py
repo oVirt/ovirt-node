@@ -145,7 +145,6 @@ class Header(Label):
 
 
 class Entry(urwid.WidgetWrap):
-
     signals = ['change']
 
     notice = property(lambda self: self._notice.get_text(), \
@@ -190,3 +189,28 @@ class Entry(urwid.WidgetWrap):
 class PasswordEntry(Entry):
     def __init__(self, label, value=None):
         super(PasswordEntry, self).__init__(label, value, mask="*")
+
+
+class Button(urwid.WidgetWrap):
+    signals = ["click"]
+
+    def __init__(self, label):
+        self._button = urwid.Button(label)
+
+        def on_click_cb(widget, data=None):
+            urwid.emit_signal(self, 'click', self)
+        urwid.connect_signal(self._button, 'click', on_click_cb)
+
+        self._button_attrmap = urwid.AttrMap(self._button,
+                                              "plugin.widget.button")
+
+        self._padding = urwid.Padding(self._button_attrmap, width=len(label)+4)
+
+        super(Button, self).__init__(self._padding)
+
+class Divider(urwid.WidgetWrap):
+    def __init__(self, char=u" "):
+        self._divider = urwid.Divider(char)
+        self._divider_attrmap = urwid.AttrMap(self._divider,
+                                              "plugin.widget.divider")
+        super(Divider, self).__init__(self._divider_attrmap)

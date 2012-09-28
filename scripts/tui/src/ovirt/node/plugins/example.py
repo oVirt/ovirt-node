@@ -7,7 +7,6 @@ import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
-from ovirt.node.plugins import Header, Entry, PasswordEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,10 +44,12 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("foo.section", Header("Subsection")),
-            ("foo.hostname", Entry(label="Hostname")),
-            ("foo.port", Entry(label="Port")),
-            ("foo.password", PasswordEntry(label="Password")),
+            ("foo.section", ovirt.node.plugins.Header("Subsection")),
+            ("foo.hostname", ovirt.node.plugins.Entry(label="Hostname")),
+            ("foo.port", ovirt.node.plugins.Entry(label="Port")),
+            ("foo.password", ovirt.node.plugins.PasswordEntry(label="Password")),
+            # This SaveButton will automatuically trigger the do_merge at the end
+            ("foo.do_save", ovirt.node.plugins.SaveButton()),
         ]
         self._widgets = dict(widgets)
         return widgets
