@@ -157,18 +157,17 @@ class NodePlugin(object):
         Calls merge_changes, but only with values that really changed
         """
         LOGGER.debug("Request to apply model changes")
+        real_changes = {}
         if self._changes:
-            real_changes = {}
             for key, value in self._changes.items():
                 if value == self.model()[key]:
                     LOGGER.debug(("Skipping pseudo-change of '%s', value " + \
                                   "did not change") % key)
                 else:
                     real_changes[key] = value
-            return self.on_merge(real_changes)
         else:
             LOGGER.debug("No changes detected")
-        return True
+        return self.on_merge(real_changes)
 
 
 class Widget(object):
@@ -224,6 +223,7 @@ class Widget(object):
             self.__dict__["_%s" % name] = new_value
         return self.__dict__["_%s" % name]
 
+
 class InputWidget(Widget):
     signaling_properties = ["enabled"]
 
@@ -246,6 +246,7 @@ class Label(Widget):
         return self._signaling_property("text", \
                                         lambda: value != None,
                                         value)
+
 
 class Header(Label):
     pass
