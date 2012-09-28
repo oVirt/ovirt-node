@@ -18,6 +18,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def name(self):
         return "Tools (ping)"
 
+    def rank(self):
+        return 70
+
     def model(self):
         """Returns the model of this plugin
         This is expected to parse files and all stuff to build up the model.
@@ -40,11 +43,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 "ping.address": ovirt.node.valid.FQDNOrIPAddress(),
                 "ping.count": ovirt.node.valid.Number(min=1, max=20),
             }
-
-    def ui_metadata(self):
-        meta = super(Plugin, self).ui_metadata()
-#        meta.save_button = False
-        return meta
 
     def ui_content(self):
         """Describes the UI this plugin requires

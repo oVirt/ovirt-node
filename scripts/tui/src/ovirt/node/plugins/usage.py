@@ -21,6 +21,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def name(self):
         return "Usage"
 
+    rank = lambda self: 10
+
     def ui_content(self):
         widgets = [
             ("usage.info", ovirt.node.plugins.Label(usage))

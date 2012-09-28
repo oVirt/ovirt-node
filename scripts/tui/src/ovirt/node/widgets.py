@@ -50,12 +50,17 @@ class PluginMenu(urwid.WidgetWrap):
 
     def __build_walker(self):
         items = []
-        for title, plugin in self.__pages.items():
+
+        plugins = self.__pages.items()
+        plugins = sorted(plugins, key=lambda two: two[1].rank())
+
+        for title, plugin in plugins:
             if plugin.has_ui():
                 item = PluginMenuEntry(title, plugin)
                 items.append(item)
             else:
                 LOGGER.warning("No UI page for plugin %s" % plugin)
+
         self.__walker = urwid.SimpleListWalker(items)
 
     def __build_list(self):

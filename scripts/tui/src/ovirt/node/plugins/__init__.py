@@ -58,6 +58,11 @@ class NodePlugin(object):
         """
         raise Exception("Not yet implemented.")
 
+    def rank(self):
+        """Is used to add a order in-between plugins 0<n<100
+        """
+        return 50
+
     def model(self):
         """Returns the model of the plugin.
         A model is just a dict (key-PatternObj) where each path (key) maps to a

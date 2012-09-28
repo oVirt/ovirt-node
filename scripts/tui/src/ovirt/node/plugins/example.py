@@ -16,7 +16,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     _widgets = None
 
     def name(self):
-        return os.path.basename(__file__)
+        return "Example Page"
 
     def model(self):
         """Returns the model of this plugin
