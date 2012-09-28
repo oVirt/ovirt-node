@@ -35,7 +35,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         nospace = lambda v: "No space allowed." if " " in v else None
 
         return {
-                "foo.hostname": ovirt.node.valid.Hostname(),
+                "foo.hostname": ovirt.node.valid.FQDN(),
                 "foo.port": ovirt.node.valid.Number(),
                 "foo.password": nospace
             }

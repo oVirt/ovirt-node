@@ -83,7 +83,8 @@ class UrwidTUI(object):
             widget = widget_class(item.label, value)
 
             def on_item_enabled_change_cb(w, v):
-                LOGGER.debug("Model changed, updating widget '%s': %s" % (w, v))
+                LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
+                                                                          v))
                 if widget.selectable() != v:
                     widget.enable(v)
             item.connect_signal("enabled[change]", on_item_enabled_change_cb)
@@ -102,6 +103,7 @@ class UrwidTUI(object):
                 except ovirt.node.plugins.InvalidData as e:
                     widget.notice = e.message
                     LOGGER.error("Invalid data when updating: %s" % e)
+                self.__loop.draw_screen()
             urwid.connect_signal(widget, 'change', on_widget_value_change)
 
         elif type(item) in [ovirt.node.plugins.Header, \
@@ -109,9 +111,10 @@ class UrwidTUI(object):
             widget = widget_class(item.text())
 
             def on_item_text_change_cb(w, v):
-                LOGGER.debug("Model changed, updating widget '%s': %s" % (w, v))
-#                widget.text(v)
-                self.popup("foo")
+                LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
+                                                                          v))
+                widget.text(v)
+                self.__loop.draw_screen()
             item.connect_signal("text[change]", on_item_text_change_cb)
 
         return widget
@@ -159,11 +162,12 @@ class UrwidTUI(object):
         self.register_hotkey(["esc"], self.quit)
         self.register_hotkey(["q"], self.quit)
 
-    def popup(self, msg=None, buttons=None):
+    def popup(self, title, msg, buttons=None):
         LOGGER.debug("Launching popup")
 
-        dialog = ovirt.node.widgets.ModalDialog(urwid.Filler(urwid.Text(msg)), "Title",
-                        "esc", self.__loop.widget)
+        dialog = ovirt.node.widgets.ModalDialog(urwid.Filler(urwid.Text(msg)),
+                                                title, "esc",
+                                                self.__loop.widget)
         self.__loop.widget = dialog
 
     def suspended(self):

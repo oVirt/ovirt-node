@@ -55,3 +55,23 @@ def pipe(cmd, stdin=None):
     if stderr:
         LOGGER.warning("error '%s'" % stderr)
     return (system_cmd.returncode == 0, stdout)
+
+
+def pipe_async(cmd, stdin=None):
+    """Run a command interactively and yields the process output.
+    This functions allows to pass smoe input to a running command.
+
+    Args:
+        cmd: Commandline to be run
+        stdin: Data to be written to cmd's stdin
+
+    Yields:
+        Lines read from stdout
+    """
+    LOGGER.debug("run async '%s'" % cmd)
+    process = popen_closefds(cmd, shell=True, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    if stdin:
+        process.stdin.write(stdin)
+    while process.poll() != 0:
+        yield process.stdout.readline()

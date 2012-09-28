@@ -134,6 +134,7 @@ class Label(urwid.WidgetWrap):
             self._label.set_text(value)
         return self._label.get_text()
 
+
 class Header(Label):
     """A read only widget representing a header
     """
@@ -184,6 +185,7 @@ class Entry(urwid.WidgetWrap):
         urwid.connect_signal(self._edit, 'change', on_widget_change_cb)
 
         super(Entry, self).__init__(self._pile)
+
 
 class PasswordEntry(Entry):
     def __init__(self, label, value=None):
