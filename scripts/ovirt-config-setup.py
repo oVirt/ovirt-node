@@ -1801,6 +1801,8 @@ class NodeConfigScreen():
         return
 
     def process_kdump_config(self):
+        if os.path.exists("/etc/kdump.conf"):
+            system("cp /etc/kdump.conf /etc/kdump.conf.old")
         if self.kdump_nfs_type.value() == 1:
             write_kdump_config(self.kdump_nfs_config.value())
         elif self.kdump_ssh_type.value() == 1:
@@ -1831,8 +1833,12 @@ class NodeConfigScreen():
             unmount_config("/etc/kdump.conf")
             if os.path.exists("/etc/kdump.conf"):
                 os.remove("/etc/kdump.conf")
+            system("cat /etc/kdump.conf.old > /etc/kdump.conf")
+            system("service kdump restart")
         else:
             ovirt_store_config("/etc/kdump.conf")
+        if os.path.exists("/etc/kdump.conf.old"):
+            system("rm /etc/kdump.conf.old")
 
     def process_remote_storage_config(self):
         set_iscsi_initiator(self.iscsi_initiator_config.value())
