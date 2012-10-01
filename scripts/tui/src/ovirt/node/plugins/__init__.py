@@ -58,7 +58,7 @@ class NodePlugin(object):
         Returns:
             The name of the plugin
         """
-        raise Exception("Not yet implemented.")
+        raise NotImplementedError()
 
     def rank(self):
         """Is used to add a order in-between plugins 0<n<100
@@ -73,7 +73,7 @@ class NodePlugin(object):
         Returns:
             The model (dict) of the plugin
         """
-        raise Exception("Not yet implemented.")
+        raise NotImplementedError()
 
     def validators(self):
         """Returns a dict of validators.
@@ -85,6 +85,7 @@ class NodePlugin(object):
         Returns:
             A dict of validators
         """
+        raise NotImplementedError()
 
     def validate(self, path, value):
         """Validates a value against the validator of a given path
@@ -123,7 +124,7 @@ class NodePlugin(object):
         Returns:
             List of (path, widget)
         """
-        raise Exception("Not yet implemented.")
+        raise NotImplementedError()
 
     def ui_config(self):
         """Specifies additional details for the UI
@@ -147,7 +148,29 @@ class NodePlugin(object):
         Raises:
             Errors
         """
-        raise Exception("Not yet implemented.")
+        raise NotImplementedError()
+
+    def validate_model(self):
+        """Simulate a complete model change.
+        This runs all current model values throught the checks to see
+        if the model validates.
+
+        Returns:
+            True if the model validates
+        Raises:
+            An exception on a problem
+        """
+        LOGGER.debug("Triggering revalidation of model")
+        is_valid = True
+        try:
+            for path, value in self.model().items():
+                self.on_change({path: value})
+        except NotImplementedError:
+            LOGGER.debug("Plugin has no model")
+        except InvalidData:
+            LOGGER.warning("Plugin has invalid model")
+            is_valid = False
+        return is_valid
 
     def on_merge(self, changes):
         """Handles the changes and throws an Exception if something goes wrong
@@ -160,7 +183,7 @@ class NodePlugin(object):
         Raises:
             Errors
         """
-        raise Exception("Not yet implemented.")
+        raise NotImplementedError()
 
     def ui_name(self):
         return self.name()

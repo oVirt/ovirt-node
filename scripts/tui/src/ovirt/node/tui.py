@@ -34,11 +34,12 @@ class UrwidTUI(object):
                ('main.menu.frame', 'light gray', ''),
                ('plugin.widget.entry', 'dark gray', ''),
                ('plugin.widget.entry.frame', 'light gray', ''),
-               ('plugin.widget.disabled', 'dark gray', 'light gray'),
+               ('plugin.widget.entry.disabled', 'dark gray', 'light gray'),
                ('plugin.widget.notice', 'light red', ''),
                ('plugin.widget.header', 'light blue', 'light gray'),
                ('plugin.widget.divider', 'dark gray', ''),
                ('plugin.widget.button', 'dark blue', ''),
+               ('plugin.widget.button.disabled', 'light gray', ''),
                ]
 
     def __init__(self, app):
@@ -105,14 +106,16 @@ class UrwidTUI(object):
                     plugin.validate(path, new_value)
                     plugin._on_ui_change({path: new_value})
                     widget.notice = ""
-                    # FIXME change state of Save button
+                    plugin.__save_button.enable(True)
 
                 except ovirt.node.plugins.Concern as e:
                     LOGGER.error("Concern when updating: %s" % e)
 
                 except ovirt.node.plugins.InvalidData as e:
-                    widget.notice = e.message
                     LOGGER.error("Invalid data when updating: %s" % e)
+                    widget.notice = e.message
+                    plugin.__save_button.enable(False)
+
                 self.__loop.draw_screen()
             urwid.connect_signal(widget, 'change', on_widget_value_change)
 
@@ -172,10 +175,18 @@ class UrwidTUI(object):
 
         if config["save_button"]:
             save = ovirt.node.widgets.Button("Save")
+            save.enable(False)
             urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
             widgets.append(urwid.Filler(save))
+            plugin.__save_button = save
 
         widgets.append(urwid.Filler(urwid.Text("")))
+
+        LOGGER.debug("Triggering initial sematic checks for '%s'" % plugin)
+        try:
+            plugin.validate_model()
+        except:
+            self.notify("error", "Initial model validation failed.")
 
         pile = urwid.Pile(widgets)
         # FIXME why is this fixed?
@@ -205,6 +216,10 @@ class UrwidTUI(object):
     def __register_default_hotkeys(self):
         self.register_hotkey(["esc"], self.quit)
         self.register_hotkey(["q"], self.quit)
+
+    def notify(self, category, msg):
+        LOGGER.info("UI notification (%s): %s" % (category, msg))
+        # FIXME do notification
 
     def popup(self, title, msg, buttons=None):
         LOGGER.debug("Launching popup")

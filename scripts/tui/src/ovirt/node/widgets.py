@@ -163,7 +163,7 @@ class Entry(urwid.WidgetWrap):
             self._edit_attrmap.set_attr_map({None: ""})
         else:
             self._edit_attrmap.set_attr_map({
-                None: "plugin.widget.disabled"
+                None: "plugin.widget.entry.disabled"
                 })
 
     def __init__(self, label, value=None, mask=None):
@@ -199,6 +199,9 @@ class PasswordEntry(Entry):
 class Button(urwid.WidgetWrap):
     signals = ["click"]
 
+    selectable = lambda self: True
+
+
     def __init__(self, label):
         self._button = urwid.Button(label)
 
@@ -213,6 +216,15 @@ class Button(urwid.WidgetWrap):
                                       width=len(label) + 4)
 
         super(Button, self).__init__(self._padding)
+
+    def enable(self, is_enabled):
+        self.selectable = lambda: is_enabled
+        if is_enabled:
+            self._button_attrmap.set_attr_map({None: ""})
+        else:
+            self._button_attrmap.set_attr_map({
+                None: "plugin.widget.button.disabled"
+                })
 
 
 class Divider(urwid.WidgetWrap):

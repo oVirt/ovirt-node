@@ -44,7 +44,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """Validators validate the input on change and give UI feedback
         """
         return {
-                "kdump.type": ovirt.node.valid.Options([t[1] for t in self._types]),
+                "kdump.type": ovirt.node.valid.Options(dict(self._types).keys()),
                 "kdump.ssh_location": ovirt.node.valid.Text(),
                 "kdump.nfs_location": ovirt.node.valid.Text(),
             }
