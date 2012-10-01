@@ -172,6 +172,7 @@ class NodePlugin(object):
         self.on_change(change)
         self._changes.update(change)
         LOGGER.debug(self._changes)
+        return True
 
     def _on_ui_save(self):
         """Called when data should be saved

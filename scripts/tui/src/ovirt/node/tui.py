@@ -101,6 +101,7 @@ class UrwidTUI(object):
                     plugin.validate(path, new_value)
                     plugin._on_ui_change({path: new_value})
                     widget.notice = ""
+                    # FIXME change state of Save button
 
                 except ovirt.node.plugins.Concern as e:
                     LOGGER.error("Concern when updating: %s" % e)
@@ -154,9 +155,6 @@ class UrwidTUI(object):
             widgets.append(("flow", widget))
 
         if config["save_button"]:
-#            save = urwid.Button("Save", lambda x: plugin._on_ui_save())
-#            save = urwid.Padding(save, "left", width=8)
-#            save = urwid.Filler(save, ("fixed top", 1))
             save = ovirt.node.widgets.Button("Save")
             urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
             widgets.append(urwid.Filler(save))
