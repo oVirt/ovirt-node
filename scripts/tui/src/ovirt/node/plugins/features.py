@@ -26,3 +26,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("features.info", ovirt.node.plugins.Label(features))
         ]
         return widgets
+
+    def ui_config(self):
+        return {
+            "save_button": False
+        }

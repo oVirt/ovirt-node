@@ -48,8 +48,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("foo.hostname", ovirt.node.plugins.Entry(label="Hostname")),
             ("foo.port", ovirt.node.plugins.Entry(label="Port")),
             ("foo.password", ovirt.node.plugins.PasswordEntry(label="Password")),
-            # This SaveButton will automatuically trigger the do_merge at the end
-            ("foo.do_save", ovirt.node.plugins.SaveButton()),
         ]
         self._widgets = dict(widgets)
         return widgets

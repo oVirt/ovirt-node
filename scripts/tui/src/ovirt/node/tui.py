@@ -142,14 +142,24 @@ class UrwidTUI(object):
         """This method is building the widget for a plugin
         """
         widgets = []
+        config = {
+            "save_button": True
+        }
 
-        for path, item in plugin.ui_content():
+        ui_content = plugin.ui_content()
+        config.update(plugin.ui_config())
+
+        for path, item in ui_content:
             widget = self.__build_widget_for_item(plugin, path, item)
             widgets.append(("flow", widget))
 
+        if config["save_button"]:
 #            save = urwid.Button("Save", lambda x: plugin._on_ui_save())
 #            save = urwid.Padding(save, "left", width=8)
 #            save = urwid.Filler(save, ("fixed top", 1))
+            save = ovirt.node.widgets.Button("Save")
+            urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
+            widgets.append(urwid.Filler(save))
 
         widgets.append(urwid.Filler(urwid.Text("")))
 

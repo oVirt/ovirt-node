@@ -114,9 +114,25 @@ class NodePlugin(object):
 
     def ui_content(self):
         """Describes the UI this plugin requires
-        This is an ordered list of (path, widget) tuples.
+        This is an ordered list of (path, widget) tuples or a tuple with the
+        previous specified list of items and a second element with a dict
+        serving additional ui configs.
+
+        Returns:
+            List of (path, widget)
         """
         raise Exception("Not yet implemented.")
+
+    def ui_config(self):
+        """Specifies additional details for the UI
+        E.g. if some defaults should be omitted (default save button).
+
+        save_button: If the save button shall be displayed (True)
+
+        Returns:
+            A dict of config items and their values.
+        """
+        return {}
 
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic

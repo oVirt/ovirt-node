@@ -56,8 +56,14 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("ping.result-divider", ovirt.node.plugins.Divider("-")),
             ("ping.result", ovirt.node.plugins.Label("Result:")),
         ]
+        # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
         return widgets
+
+    def ui_config(self):
+        return {
+            "save_button": False
+        }
 
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
