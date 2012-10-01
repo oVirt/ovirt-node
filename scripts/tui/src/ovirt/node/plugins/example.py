@@ -35,7 +35,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         return {
                 "foo.hostname": ovirt.node.valid.FQDN(),
-                "foo.port": ovirt.node.valid.Number(),
+                "foo.port": ovirt.node.valid.Port(),
                 "foo.password": nospace
             }
 
