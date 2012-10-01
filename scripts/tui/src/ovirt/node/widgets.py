@@ -213,9 +213,67 @@ class Button(urwid.WidgetWrap):
 
         super(Button, self).__init__(self._padding)
 
+
 class Divider(urwid.WidgetWrap):
     def __init__(self, char=u" "):
         self._divider = urwid.Divider(char)
         self._divider_attrmap = urwid.AttrMap(self._divider,
                                               "plugin.widget.divider")
         super(Divider, self).__init__(self._divider_attrmap)
+
+
+class Options(urwid.WidgetWrap):
+    signals = ["change"]
+
+    def __init__(self, label, options, selected_option_key):
+        self._options = options
+        self._button_to_key = {}
+        self._bgroup = []
+        self._buttons = [urwid.Text(label + ":")]
+        for option_key, option_label in self._options:
+            widget = urwid.RadioButton(self._bgroup, option_label,
+                                       on_state_change=self._on_state_change)
+            self._button_to_key[widget] = option_key
+            if option_key == selected_option_key:
+                widget.set_state(True)
+            self._buttons.append(widget)
+        self._columns = urwid.Columns(self._buttons)
+        super(Options, self).__init__(self._columns)
+
+    def _on_state_change(self, widget, new_state):
+        if new_state:
+            data = self._button_to_key[widget]
+            urwid.emit_signal(self, "change", widget, data)
+
+
+#https://github.com/pazz/alot/blob/master/alot/widgets/globals.py
+class ChoiceWidget(urwid.Text):
+    def __init__(self, choices, callback, cancel=None, select=None,
+                 separator=' '):
+        self.choices = choices
+        self.callback = callback
+        self.cancel = cancel
+        self.select = select
+        self.separator = separator
+
+        items = []
+        for k, v in choices.items():
+            if v == select and select is not None:
+                items += ['[', k, ']:', v]
+            else:
+                items += ['(', k, '):', v]
+            items += [self.separator]
+        urwid.Text.__init__(self, items)
+
+    def selectable(self):
+        return True
+
+    def keypress(self, size, key):
+        if key == 'enter' and self.select is not None:
+            self.callback(self.select)
+        elif key == 'esc' and self.cancel is not None:
+            self.callback(self.cancel)
+        elif key in self.choices:
+            self.callback(self.choices[key])
+        else:
+            return key

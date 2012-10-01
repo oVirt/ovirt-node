@@ -71,6 +71,7 @@ class UrwidTUI(object):
             ovirt.node.plugins.Button: ovirt.node.widgets.Button,
             ovirt.node.plugins.SaveButton: ovirt.node.widgets.Button,
             ovirt.node.plugins.Divider: ovirt.node.widgets.Divider,
+            ovirt.node.plugins.Options: ovirt.node.widgets.Options,
         }
 
         assert type(item) in item_to_widget_map.keys(), \
@@ -86,6 +87,8 @@ class UrwidTUI(object):
                 value = plugin.model()[path]
 
             widget = widget_class(item.label, value)
+
+            widget.enable(item.enabled)
 
             def on_item_enabled_change_cb(w, v):
                 LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
@@ -137,6 +140,16 @@ class UrwidTUI(object):
 
         elif type(item) in [ovirt.node.plugins.Divider]:
             widget = widget_class(item.char)
+
+        elif type(item) in [ovirt.node.plugins.Options]:
+            widget = widget_class(item.label, item.options,
+                                  plugin.model()[path])
+            def on_widget_change_cb(widget, data):
+                LOGGER.debug(data)
+                item.option(data)
+                plugin._on_ui_change({path: data})
+            urwid.connect_signal(widget, "change", on_widget_change_cb)
+
         return widget
 
     def __build_plugin_widget(self, plugin):

@@ -306,6 +306,22 @@ class Divider(Widget):
     def __init__(self, char=u" "):
         self.char = char
 
+
+class Options(Widget):
+    signals = ["change"]
+    signaling_properties = ["option"]
+
+    def __init__(self, label, options):
+        self.label = label
+        self.options = options
+        super(Options, self).__init__()
+
+    def option(self, option=None):
+        return self._signaling_property("option", \
+                                        lambda: option in self.options,
+                                        option)
+
+
 class InvalidData(Exception):
     """E.g. if a string contains characters which are not allowed
     """

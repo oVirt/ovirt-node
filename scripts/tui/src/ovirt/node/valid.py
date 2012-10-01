@@ -222,3 +222,16 @@ class FQDNOrIPAddress(Validator):
         return (FQDN().validate(value) or \
                 IPv4Address().validate(value) or \
                 IPv6Address().validate(value))
+
+
+class Options(Validator):
+    options = None
+    description = "one of: %s"
+
+    def __init__(self, options):
+        assert type(options) is list, "Options must be a list"
+        self.options = options
+
+    def validate(self, value):
+        self.description = self.description % self.options
+        return value in self.options
