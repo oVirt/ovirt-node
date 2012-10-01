@@ -35,7 +35,7 @@ class Storage:
         logger.propagate = False
         OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5
-        self.BOOT_SIZE = 50
+        self.BOOT_SIZE = 256
         self.ROOT_SIZE = 256
         self.CONFIG_SIZE = 5
         self.LOGGING_SIZE = 2048
@@ -360,7 +360,7 @@ class Storage:
         for drv in self.HOSTVGDRIVE.strip(",").split(","):
             drv = _functions.translate_multipath_device(drv)
             if drv != "":
-                if self.ROOTDRIVE == drv:
+                if self.ROOTDRIVE == drv and not is_iscsi_install():
                     self.reread_partitions(self.ROOTDRIVE)
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
                                   "primary ext2 " + str(self.RootBackup_end) +
@@ -370,11 +370,11 @@ class Storage:
                     hostvgpart = "4"
                 elif self.BOOTDRIVE == drv:
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
-                                  "primary ext2 " + str(self.boot_size_si) +
+                                  "primary ext2 " + str(self.boot_size_si * 2) +
                                   " -1\"")
                     logger.debug(parted_cmd)
                     _functions.system(parted_cmd)
-                    hostvgpart = "2"
+                    hostvgpart = "3"
                     self.ROOTDRIVE = self.BOOTDRIVE
                 elif self.ISCSIDRIVE == drv:
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
@@ -739,7 +739,8 @@ class Storage:
                     return True
 
         if ("OVIRT_ROOT_INSTALL" in _functions.OVIRT_VARS and
-                  _functions.OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "y"):
+                  _functions.OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "y" and not \
+                      is_iscsi_install()):
             logger.info("Partitioning root drive: " + self.ROOTDRIVE)
             _functions.wipe_partitions(self.ROOTDRIVE)
             self.reread_partitions(self.ROOTDRIVE)
@@ -829,6 +830,9 @@ class Storage:
             drive_list.append("BOOT")
             drive_space_dict["BOOTDRIVESPACE"] = BOOTDRIVESPACE
             drive_space_dict["BOOT_NEED_SIZE"] = self.BOOT_SIZE
+            if BOOTDRIVESPACE > self.BOOT_SIZE:
+                return True
+
         else:
             ROOTDRIVESPACE = self.get_drive_size(self.ROOTDRIVE)
             HOSTVGDRIVESPACE = 0

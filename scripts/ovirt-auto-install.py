@@ -58,11 +58,13 @@ if not is_stateless():
             ovirt_store_config("/etc/shadow")
         file.close()
     else:
-        config_networking()
+        if not is_iscsi_install():
+            config_networking()
         print "Automatic installation failed. Please review /var/log/ovirt.log"
         sys.exit(1)
 
-config_networking()
+if not is_iscsi_install():
+    config_networking()
 #set ssh_passwd_auth
 if "OVIRT_SSH_PWAUTH" in OVIRT_VARS:
     if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "yes":
