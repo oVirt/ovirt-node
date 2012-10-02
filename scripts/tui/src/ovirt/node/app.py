@@ -7,6 +7,7 @@ which communicate with each other.
 import logging
 
 import ovirt.node.tui
+import ovirt.node.utils
 
 logging.basicConfig(level=logging.DEBUG,
                     filename="app.log", filemode="w")
@@ -30,7 +31,7 @@ class Application(object):
 
     def __drop_to_shell(self):
         with self.ui.suspended():
-            ovirt.node.utils.system("reset ; bash")
+            ovirt.node.utils.process.system("reset ; bash")
 
     def run(self):
         self.__load_plugins()

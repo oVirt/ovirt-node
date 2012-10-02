@@ -1,4 +1,6 @@
-
+"""
+This contains much stuff related to plugins
+"""
 import pkgutil
 import logging
 

@@ -6,7 +6,7 @@ import logging
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.plugins
-import ovirt.node.utils
+import ovirt.node.utils.process
 
 LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +93,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
             cmd = "%s -c %s %s" % (cmd, count, addr)
             out = ""
-            for line in ovirt.node.utils.pipe_async(cmd):
+            for line in ovirt.node.utils.process.pipe_async(cmd):
                 out += line
                 self._widgets["ping.result"].text("Result:\n\n%s" % out)

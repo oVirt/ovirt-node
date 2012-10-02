@@ -209,7 +209,8 @@ class Button(urwid.WidgetWrap):
         self._button_attrmap = urwid.AttrMap(self._button,
                                               "plugin.widget.button")
 
-        self._padding = urwid.Padding(self._button_attrmap, width=len(label)+4)
+        self._padding = urwid.Padding(self._button_attrmap,
+                                      width=len(label) + 4)
 
         super(Button, self).__init__(self._padding)
 

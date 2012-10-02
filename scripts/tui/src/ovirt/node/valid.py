@@ -4,7 +4,6 @@ A module with several validators for common user inputs.
 import re
 import logging
 import socket
-import urlparse
 
 import ovirt.node.plugins
 
@@ -48,6 +47,7 @@ class Validator(object):
     def raise_exception(self):
         msg = self.__exception_msg.format(description=self.description)
         raise ovirt.node.plugins.InvalidData(msg)
+
 
 class RegexValidator(Validator):
     """A validator which uses a regular expression to validate a value.
@@ -122,6 +122,7 @@ class Port(Number):
     """
 
     description = "a port number"
+
     def __init__(self):
         super(Port, self).__init__(1, 65535)
 
@@ -174,6 +175,7 @@ class IPv4Address(Validator):
 
     description = "a valid IPv4 address"
     family = socket.AF_INET
+
     def validate(self, value):
         valid = True
         try:

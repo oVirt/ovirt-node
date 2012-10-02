@@ -1,8 +1,6 @@
-
 """
-Example doc
+Example plugin with TUI
 """
-import os.path
 import logging
 
 import ovirt.node.plugins
@@ -44,10 +42,14 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("foo.section", ovirt.node.plugins.Header("Subsection")),
-            ("foo.hostname", ovirt.node.plugins.Entry(label="Hostname")),
-            ("foo.port", ovirt.node.plugins.Entry(label="Port")),
-            ("foo.password", ovirt.node.plugins.PasswordEntry(label="Password")),
+            ("foo.section",
+                ovirt.node.plugins.Header("Subsection")),
+            ("foo.hostname",
+                ovirt.node.plugins.Entry(label="Hostname")),
+            ("foo.port",
+                ovirt.node.plugins.Entry(label="Port")),
+            ("foo.password",
+                ovirt.node.plugins.PasswordEntry(label="Password")),
         ]
         self._widgets = dict(widgets)
         return widgets

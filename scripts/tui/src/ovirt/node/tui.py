@@ -1,5 +1,6 @@
-#!/bin/env python
-
+"""
+The urwid TUI base library
+"""
 import urwid
 
 import logging
@@ -129,6 +130,7 @@ class UrwidTUI(object):
         elif type(item) in [ovirt.node.plugins.Button,
                             ovirt.node.plugins.SaveButton]:
             widget = widget_class(item.text())
+
             def on_widget_click_cb(widget, data=None):
                 if type(item) is ovirt.node.plugins.SaveButton:
                     plugin._on_ui_save()
@@ -144,6 +146,7 @@ class UrwidTUI(object):
         elif type(item) in [ovirt.node.plugins.Options]:
             widget = widget_class(item.label, item.options,
                                   plugin.model()[path])
+
             def on_widget_change_cb(widget, data):
                 LOGGER.debug(data)
                 item.option(data)
@@ -173,7 +176,6 @@ class UrwidTUI(object):
             widgets.append(urwid.Filler(save))
 
         widgets.append(urwid.Filler(urwid.Text("")))
-
 
         pile = urwid.Pile(widgets)
         # FIXME why is this fixed?

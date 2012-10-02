@@ -1,5 +1,6 @@
-
-
+"""
+A plugin illustrating the features of the TUI
+"""
 import logging
 
 import ovirt.node.plugins

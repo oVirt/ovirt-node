@@ -1,1 +1,3 @@
-# oVirt Node Module
+"""
+oVirt Node Module
+"""
