@@ -1217,7 +1217,7 @@ def password_check(password_1, password_2, min_length=1):
     >>> (r,  "Not Match" in msg)
     (1, True)
     '''
-    num_o_lines_to_expand = 5
+    num_o_lines_to_expand = 6
     accepted = False
     message = ""
 
@@ -1244,8 +1244,10 @@ def password_check(password_1, password_2, min_length=1):
             message += "do not contain dictionary words"
             accepted = True
 
+    num_lines = message.count("\n") + 1
+
     # Modify message to span num_o_lines_to_expand lines
-    message += (num_o_lines_to_expand - message.count("\n")) * "\n"
+    message += (num_o_lines_to_expand - num_lines) * "\n"
     accepted = 0 if accepted else 1
     return (accepted, message)
 
