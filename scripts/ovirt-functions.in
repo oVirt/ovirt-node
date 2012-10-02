@@ -382,15 +382,14 @@ mount_config() {
             cp -rv --update /live/config/* /config
         fi
         # bind mount all persisted configs to rootfs
-        for f in $(find /config -type f); do
-            target=${f#/config}
-            if grep -q " $target ext[234]" /proc/mounts ; then
+        for f in $(cat /config/files); do
+            if grep -q " $f ext[234]" /proc/mounts ; then
                 # skip if already bind-mounted
                 true
             else
-                mkdir -p "$(dirname $target)"
-                touch "$target"
-                mount -n --bind $f "$target"
+                mkdir -p "$(dirname "$f")"
+                touch "$f"
+                mount -n --bind "/config/$f" "$target"
             fi
         done
 
