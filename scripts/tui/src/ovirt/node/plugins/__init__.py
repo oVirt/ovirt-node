@@ -150,7 +150,7 @@ class NodePlugin(object):
         """
         raise NotImplementedError()
 
-    def validate_model(self):
+    def validate(self, model=None):
         """Simulate a complete model change.
         This runs all current model values throught the checks to see
         if the model validates.
@@ -163,8 +163,8 @@ class NodePlugin(object):
         LOGGER.debug("Triggering revalidation of model")
         is_valid = True
         try:
-            for path, value in self.model().items():
-                self.on_change({path: value})
+            model = model or self.model()
+            self.on_change(model)
         except NotImplementedError:
             LOGGER.debug("Plugin has no model")
         except InvalidData:

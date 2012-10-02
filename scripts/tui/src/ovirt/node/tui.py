@@ -191,7 +191,7 @@ class UrwidTUI(object):
 
         LOGGER.debug("Triggering initial sematic checks for '%s'" % plugin)
         try:
-            plugin.validate_model()
+            plugin.validate()
         except:
             self.notify("error", "Initial model validation failed.")
 
