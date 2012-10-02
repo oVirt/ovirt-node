@@ -43,8 +43,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def validators(self):
         """Validators validate the input on change and give UI feedback
         """
+        options = dict(self._types).keys()
         return {
-                "kdump.type": ovirt.node.valid.Options(dict(self._types).keys()),
+                "kdump.type": ovirt.node.valid.Options(options),
                 "kdump.ssh_location": ovirt.node.valid.NoSpaces(),
                 "kdump.nfs_location": ovirt.node.valid.NoSpaces(),
             }
@@ -86,6 +87,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """
 
         if effective_changes:
-            LOGGER.debug("Generating kdump.conf according to model and changes")
+            LOGGER.debug("Generating conf according to model and changes")
         else:
-            LOGGER.debug("Generating no new kdump.conf as there are no changes")
+            LOGGER.debug("Generating no new conf as there are no changes")

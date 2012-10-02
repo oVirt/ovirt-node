@@ -41,6 +41,8 @@ class UrwidTUI(object):
                ('plugin.widget.divider', 'dark gray', ''),
                ('plugin.widget.button', 'dark blue', ''),
                ('plugin.widget.button.disabled', 'light gray', ''),
+               ('plugin.widget.label', '', ''),
+               ('plugin.widget.label.keyword', 'bold', ''),
                ]
 
     def __init__(self, app):
@@ -75,6 +77,7 @@ class UrwidTUI(object):
             ovirt.node.plugins.SaveButton: ovirt.node.widgets.Button,
             ovirt.node.plugins.Divider: ovirt.node.widgets.Divider,
             ovirt.node.plugins.Options: ovirt.node.widgets.Options,
+            ovirt.node.plugins.KeywordLabel: ovirt.node.widgets.KeywordLabel,
         }
 
         assert type(item) in item_to_widget_map.keys(), \
@@ -85,11 +88,7 @@ class UrwidTUI(object):
 
         if type(item) in [ovirt.node.plugins.Entry, \
                           ovirt.node.plugins.PasswordEntry]:
-            value = None
-            if item.initial_value_from_model:
-                value = plugin.model()[path]
-
-            widget = widget_class(item.label, value)
+            widget = widget_class(item.label)
 
             widget.enable(item.enabled)
 
@@ -98,14 +97,15 @@ class UrwidTUI(object):
                                                                           v))
                 if widget.selectable() != v:
                     widget.enable(v)
-            item.connect_signal("enabled[change]", on_item_enabled_change_cb)
+            item.connect_signal("enabled", on_item_enabled_change_cb)
 
             def on_widget_value_change(widget, new_value):
                 LOGGER.debug("Widget changed, updating model '%s'" % path)
 
                 try:
-                    plugin.validate(path, new_value)
-                    plugin._on_ui_change({path: new_value})
+                    change = {path: new_value}
+                    plugin.validate(change)
+                    plugin._on_ui_change(change)
                     widget.notice = ""
                     widget.valid(True)
                     plugin.__save_button.enable(True)
@@ -126,15 +126,19 @@ class UrwidTUI(object):
             urwid.connect_signal(widget, 'change', on_widget_value_change)
 
         elif type(item) in [ovirt.node.plugins.Header, \
-                            ovirt.node.plugins.Label]:
-            widget = widget_class(item.text())
+                            ovirt.node.plugins.Label,
+                            ovirt.node.plugins.KeywordLabel]:
+            if type(item) is ovirt.node.plugins.KeywordLabel:
+                widget = widget_class(item.keyword, item.text())
+            else:
+                widget = widget_class(item.text())
 
             def on_item_text_change_cb(w, v):
                 LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
                                                                           v))
                 widget.text(v)
                 self.__loop.draw_screen()
-            item.connect_signal("text[change]", on_item_text_change_cb)
+            item.connect_signal("text", on_item_text_change_cb)
 
         elif type(item) in [ovirt.node.plugins.Button,
                             ovirt.node.plugins.SaveButton]:
@@ -162,6 +166,12 @@ class UrwidTUI(object):
                 plugin._on_ui_change({path: data})
             urwid.connect_signal(widget, "change", on_widget_change_cb)
 
+        if type(item) in [ovirt.node.plugins.Entry,
+                          ovirt.node.plugins.PasswordEntry,
+                          ovirt.node.plugins.KeywordLabel,
+                          ovirt.node.plugins.Options]:
+            widget.set_text(plugin.model()[path])
+
         return widget
 
     def __build_plugin_widget(self, plugin):
@@ -175,15 +185,16 @@ class UrwidTUI(object):
         ui_content = plugin.ui_content()
         config.update(plugin.ui_config())
 
-        for path, item in ui_content:
-            widget = self.__build_widget_for_item(plugin, path, item)
-            widgets.append(("flow", widget))
-
         # Always create the SaveButton, but only display it if requested
         # FIXME introduce a widget for the plugin page
         save = ovirt.node.widgets.Button("Save")
         urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
         plugin.__save_button = save
+
+        for path, item in ui_content:
+            widget = self.__build_widget_for_item(plugin, path, item)
+            widgets.append(("flow", widget))
+
         if config["save_button"]:
             widgets.append(urwid.Filler(save))
 
@@ -191,7 +202,7 @@ class UrwidTUI(object):
 
         LOGGER.debug("Triggering initial sematic checks for '%s'" % plugin)
         try:
-            plugin.validate()
+            plugin.check_semantics()
         except:
             self.notify("error", "Initial model validation failed.")
 

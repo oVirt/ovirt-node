@@ -139,14 +139,40 @@ class Label(urwid.WidgetWrap):
             self._label.set_text(value)
         return self._label.get_text()
 
+    def set_text(self, txt):
+        self.text(txt)
+
 
 class Header(Label):
     """A read only widget representing a header
     """
+    _header_attr = "plugin.widget.header"
 
     def __init__(self, text):
         super(Header, self).__init__("\n  %s\n" % text)
-        self._label_attrmap.set_attr_map({None: "plugin.widget.header"})
+        self._label_attrmap.set_attr_map({None: self._header_attr})
+
+
+class KeywordLabel(Label):
+    """A read only widget consisting of a "<b><keyword>:</b> <value>"
+    """
+    _keyword_attr = "plugin.widget.label.keyword"
+    _text_attr = "plugin.widget.label"
+
+    def __init__(self, keyword, text=""):
+        super(KeywordLabel, self).__init__(text)
+        self._keyword = keyword
+        self.text(text)
+#        self._label_attrmap.set_attr_map({None: ""})
+
+    def text(self, text=None):
+        if text is not None:
+            self._text = text
+            keyword_markup = (self._keyword_attr, self._keyword)
+            text_markup = (self._text_attr, self._text)
+            markup = [keyword_markup, ": ", text_markup]
+            self._label.set_text(markup)
+        return self._text
 
 
 class Entry(urwid.WidgetWrap):
@@ -170,7 +196,7 @@ class Entry(urwid.WidgetWrap):
             attr_map = {None: "plugin.widget.entry.frame.invalid"}
         self._linebox_attrmap.set_attr_map(attr_map)
 
-    def __init__(self, label, value=None, mask=None):
+    def __init__(self, label, mask=None):
         self._label = urwid.Text("\n" + label + ":")
         self._edit = urwid.Edit(mask=mask)
         self._edit_attrmap = urwid.AttrMap(self._edit, "plugin.widget.entry")
@@ -185,26 +211,25 @@ class Entry(urwid.WidgetWrap):
 
         self._pile = urwid.Pile([self._columns, self._notice_attrmap])
 
-        if value:
-            self._edit.set_edit_text(value)
-
         def on_widget_change_cb(widget, new_value):
             urwid.emit_signal(self, 'change', self, new_value)
         urwid.connect_signal(self._edit, 'change', on_widget_change_cb)
 
         super(Entry, self).__init__(self._pile)
 
+    def set_text(self, txt):
+        self._edit.set_edit_text(txt)
+
 
 class PasswordEntry(Entry):
-    def __init__(self, label, value=None):
-        super(PasswordEntry, self).__init__(label, value, mask="*")
+    def __init__(self, label):
+        super(PasswordEntry, self).__init__(label, mask="*")
 
 
 class Button(urwid.WidgetWrap):
     signals = ["click"]
 
     selectable = lambda self: True
-
 
     def __init__(self, label):
         self._button = urwid.Button(label)
@@ -263,6 +288,16 @@ class Options(urwid.WidgetWrap):
         if new_state:
             data = self._button_to_key[widget]
             urwid.emit_signal(self, "change", widget, data)
+
+    def select(self, key):
+        for button in self._buttons:
+            if button in self._button_to_key:
+                bkey = self._button_to_key[button]
+                if key == bkey:
+                    button.set_state(True)
+
+    def set_text(self, txt):
+        self.select(txt)
 
 
 #https://github.com/pazz/alot/blob/master/alot/widgets/globals.py

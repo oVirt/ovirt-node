@@ -87,24 +87,23 @@ class NodePlugin(object):
         """
         raise NotImplementedError()
 
-    def validate(self, path, value):
-        """Validates a value against the validator of a given path
+    def validate(self, changes):
+        """Test changes against the validators
 
         Args:
-            path: A model path for a validator
-            value: The value to be validated
+            changes: A dict of (path, value) to be checked
 
         Returns:
             True on a valid value or if there is no validator for a path
-
         Raises:
             InvalidData on any invalid data
         """
-        if path in self.validators():
-            msg = self.validators()[path](value)
-            # True and None are allowed values
-            if msg not in [True, None]:
-                raise ovirt.node.plugins.InvalidData(msg)
+        for path, value in changes.items():
+            if path in self.validators():
+                msg = self.validators()[path](value)
+                # True and None are allowed values
+                if msg not in [True, None]:
+                    raise ovirt.node.plugins.InvalidData(msg)
         return True
 
     def has_ui(self):
@@ -150,7 +149,7 @@ class NodePlugin(object):
         """
         raise NotImplementedError()
 
-    def validate(self, model=None):
+    def check_semantics(self, model=None):
         """Simulate a complete model change.
         This runs all current model values throught the checks to see
         if the model validates.
@@ -217,19 +216,26 @@ class NodePlugin(object):
         return self.on_merge(real_changes)
 
 
+# http://stackoverflow.com/questions/739654/understanding-python-decorators
 class Widget(object):
     _signal_cbs = None
-    signals = []
-    signaling_properties = []
 
     def __init__(self):
         """Registers all widget signals.
         All signals must be given in self.signals
         """
-        for name in self.signals:
-            self._register_signal(name)
-        for name in self.signaling_properties:
-            self._register_signaling_property(name)
+        LOGGER.debug("Initializing new %s" % self)
+
+    @staticmethod
+    def signal_change(func):
+        """A decorator for methods which should emit signals
+        """
+        def wrapper(self, userdata=None, *args, **kwargs):
+            signame = func.__name__
+            self._register_signal(signame)
+            self.emit_signal(signame, userdata)
+            return func(self, userdata)
+        return wrapper
 
     def _register_signal(self, name):
         """Each signal that get's emitted must be registered using this
@@ -241,12 +247,15 @@ class Widget(object):
             self._signal_cbs = {}
         if name not in self._signal_cbs:
             self._signal_cbs[name] = []
-#            LOGGER.debug("Registered new signal '%s' for '%s'" % (name, self))
+            LOGGER.debug("Registered new signal '%s' for '%s'" % (name, self))
 
     def connect_signal(self, name, cb):
         """Connect an callback to a signal
         """
-        assert name in self._signal_cbs, "Unregistered signal '%s'" % name
+        if not self._signal_cbs:
+            raise Exception("Signals not initialized %s for %s" % (name, self))
+        if name not in self._signal_cbs:
+            raise Exception("Unregistered signal %s for %s" % (name, self))
         self._signal_cbs[name].append(cb)
 
     def emit_signal(self, name, userdata=None):
@@ -258,45 +267,67 @@ class Widget(object):
             LOGGER.debug("CB for sig %s: %s" % (name, cb))
             cb(self, userdata)
 
-    def _register_signaling_property(self, name):
-        LOGGER.debug("Registered new property '%s' for '%s'" % (name, self))
-        if "_%s" % name not in self.__dict__:
-            self.__dict__["_%s" % name] = None
-        self._register_signal("%s[change]" % name)
-
-    def _signaling_property(self, name, valid_value_cb, new_value):
-        if valid_value_cb():
-            self.emit_signal("%s[change]" % name, new_value)
-            self.__dict__["_%s" % name] = new_value
-        return self.__dict__["_%s" % name]
+    def set_text(self, value):
+        """A general way to set the "text" of a widget
+        """
+        raise NotImplementedError
 
 
 class InputWidget(Widget):
-    signaling_properties = ["enabled"]
+    """
+    """
 
+    def __init__(self, is_enabled):
+        self.enabled(is_enabled)
+        super(InputWidget, self).__init__()
+
+    @Widget.signal_change
     def enabled(self, is_enabled=None):
-        return self._signaling_property("enabled", \
-                                        lambda: is_enabled in [True, False],
-                                        is_enabled)
+        if is_enabled in [True, False]:
+            self._enabled = is_enabled
+        return self._enabled
+
+    @Widget.signal_change
+    def text(self, text=None):
+        if text != None:
+            self._text = text
+        return self._text
+
+    def set_text(self, txt):
+        self.text(txt)
 
 
 class Label(Widget):
     """Represents a r/o label
     """
-    signaling_properties = ["text"]
 
     def __init__(self, text):
-        self._text = text
+        self.text(text)
         super(Label, self).__init__()
 
-    def text(self, value=None):
-        return self._signaling_property("text", \
-                                        lambda: value != None,
-                                        value)
+    @Widget.signal_change
+    def text(self, text=None):
+        if text != None:
+            self._text = text
+        return self._text
+
+    def set_text(self, txt):
+        self.text(txt)
 
 
 class Header(Label):
     pass
+
+
+class KeywordLabel(Label):
+    """A label consisting of a prominent keyword and a value.
+    E.g.: <b>Networking:</b> Enabled
+    """
+
+    def __init__(self, keyword, text=""):
+        super(Label, self).__init__()
+        self.keyword = keyword
+        self.text(text)
 
 
 class Entry(InputWidget):
@@ -304,27 +335,25 @@ class Entry(InputWidget):
     TODO multiline
     """
 
-    def __init__(self, label, value=None, initial_value_from_model=True,
-                 enabled=True):
+    def __init__(self, label, value=None, enabled=True):
         self.label = label
-        self.value = value
-        self.initial_value_from_model = initial_value_from_model
-        self._enabled = enabled
-        super(Entry, self).__init__()
+        self._text = value
+        super(Entry, self).__init__(enabled)
 
 
 class PasswordEntry(Entry):
     pass
 
 
-class Button(Label, InputWidget):
-    def __init__(self, label="Save", enabled=True):
-        self._enabled = enabled
-        super(Button, self).__init__(label)
+class Button(Label):
+    def __init__(self, label, enabled=True):
+        Label.__init__(self, label)
+#        InputWidget.__init__(self, enabled)
 
 
 class SaveButton(Button):
-    pass
+    def __init__(self, enabled=True):
+        super(SaveButton, self).__init__(self, "Save", enabled)
 
 
 class Divider(Widget):
@@ -333,18 +362,21 @@ class Divider(Widget):
 
 
 class Options(Widget):
-    signals = ["change"]
-    signaling_properties = ["option"]
 
     def __init__(self, label, options):
         self.label = label
         self.options = options
+        self.option(options[0])
         super(Options, self).__init__()
 
+    @Widget.signal_change
     def option(self, option=None):
-        return self._signaling_property("option", \
-                                        lambda: option in self.options,
-                                        option)
+        if option in self.options:
+            self._option = option
+        return self._option
+
+    def set_text(self, txt):
+        self.option(txt)
 
 
 class InvalidData(Exception):
