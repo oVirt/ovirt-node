@@ -45,8 +45,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """
         return {
                 "kdump.type": ovirt.node.valid.Options(dict(self._types).keys()),
-                "kdump.ssh_location": ovirt.node.valid.Text(),
-                "kdump.nfs_location": ovirt.node.valid.Text(),
+                "kdump.ssh_location": ovirt.node.valid.NoSpaces(),
+                "kdump.nfs_location": ovirt.node.valid.NoSpaces(),
             }
 
     def ui_content(self):
@@ -62,11 +62,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
         return widgets
-
-    def ui_config(self):
-        return {
-            "save_button": False
-        }
 
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
@@ -84,23 +79,13 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
             self._model.update(changes)
 
-    def on_merge(self, changes):
+    def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
         Normally on_merge is called by pushing the SaveButton instance, in this
         case it is called by on_change
         """
 
-        if "ping.address" in self._model:
-            addr = self._model["ping.address"]
-            count = self._model["ping.count"]
-            LOGGER.debug("Pinging %s" % addr)
-
-            cmd = "ping"
-            if ovirt.node.valid.IPv6Address().validate(addr):
-                cmd = "ping6"
-
-            cmd = "%s -c %s %s" % (cmd, count, addr)
-            out = ""
-            for line in ovirt.node.utils.pipe_async(cmd):
-                out += line
-                self._widgets["ping.result"].text("Result:\n\n%s" % out)
+        if effective_changes:
+            LOGGER.debug("Generating kdump.conf according to model and changes")
+        else:
+            LOGGER.debug("Generating no new kdump.conf as there are no changes")

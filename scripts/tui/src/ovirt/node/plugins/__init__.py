@@ -172,7 +172,7 @@ class NodePlugin(object):
             is_valid = False
         return is_valid
 
-    def on_merge(self, changes):
+    def on_merge(self, effective_changes):
         """Handles the changes and throws an Exception if something goes wrong
         Needs to be implemented by any subclass
 

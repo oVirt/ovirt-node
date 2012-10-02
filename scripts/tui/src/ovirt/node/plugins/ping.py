@@ -76,7 +76,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         if "ping.do_ping" in changes:
             self.on_merge(changes)
 
-    def on_merge(self, changes):
+    def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
         Normally on_merge is called by pushing the SaveButton instance, in this
         case it is called by on_change

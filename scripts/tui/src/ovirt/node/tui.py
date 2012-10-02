@@ -33,8 +33,9 @@ class UrwidTUI(object):
                ('main.menu', 'black', ''),
                ('main.menu.frame', 'light gray', ''),
                ('plugin.widget.entry', 'dark gray', ''),
-               ('plugin.widget.entry.frame', 'light gray', ''),
                ('plugin.widget.entry.disabled', 'dark gray', 'light gray'),
+               ('plugin.widget.entry.frame', 'light gray', ''),
+               ('plugin.widget.entry.frame.invalid', 'dark red', ''),
                ('plugin.widget.notice', 'light red', ''),
                ('plugin.widget.header', 'light blue', 'light gray'),
                ('plugin.widget.divider', 'dark gray', ''),
@@ -106,6 +107,7 @@ class UrwidTUI(object):
                     plugin.validate(path, new_value)
                     plugin._on_ui_change({path: new_value})
                     widget.notice = ""
+                    widget.valid(True)
                     plugin.__save_button.enable(True)
 
                 except ovirt.node.plugins.Concern as e:
@@ -114,7 +116,11 @@ class UrwidTUI(object):
                 except ovirt.node.plugins.InvalidData as e:
                     LOGGER.error("Invalid data when updating: %s" % e)
                     widget.notice = e.message
+                    widget.valid(False)
                     plugin.__save_button.enable(False)
+
+                # FIXME page validation must happen within tui, not plugin
+                # as UI data should be handled in tui
 
                 self.__loop.draw_screen()
             urwid.connect_signal(widget, 'change', on_widget_value_change)
@@ -173,12 +179,13 @@ class UrwidTUI(object):
             widget = self.__build_widget_for_item(plugin, path, item)
             widgets.append(("flow", widget))
 
+        # Always create the SaveButton, but only display it if requested
+        # FIXME introduce a widget for the plugin page
+        save = ovirt.node.widgets.Button("Save")
+        urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
+        plugin.__save_button = save
         if config["save_button"]:
-            save = ovirt.node.widgets.Button("Save")
-            save.enable(False)
-            urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
             widgets.append(urwid.Filler(save))
-            plugin.__save_button = save
 
         widgets.append(urwid.Filler(urwid.Text("")))
 

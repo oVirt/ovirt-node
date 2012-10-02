@@ -85,9 +85,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         return True
 
-    def on_merge(self, changes):
+    def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
         """
-        LOGGER.debug("saving %s" % changes)
+        LOGGER.debug("saving %s" % effective_changes)
         # Look for conflicts etc
-        self._model.update(changes)
+        self._model.update(effective_changes)

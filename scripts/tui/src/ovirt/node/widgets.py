@@ -159,12 +159,16 @@ class Entry(urwid.WidgetWrap):
 
     def enable(self, is_enabled):
         self.selectable = lambda: is_enabled
-        if is_enabled:
-            self._edit_attrmap.set_attr_map({None: ""})
-        else:
-            self._edit_attrmap.set_attr_map({
-                None: "plugin.widget.entry.disabled"
-                })
+        attr_map = {None: "plugin.widget.entry"}
+        if not is_enabled:
+            attr_map = {None: "plugin.widget.entry.disabled"}
+        self._edit_attrmap.set_attr_map(attr_map)
+
+    def valid(self, is_valid):
+        attr_map = {None: "plugin.widget.entry.frame"}
+        if not is_valid:
+            attr_map = {None: "plugin.widget.entry.frame.invalid"}
+        self._linebox_attrmap.set_attr_map(attr_map)
 
     def __init__(self, label, value=None, mask=None):
         self._label = urwid.Text("\n" + label + ":")
@@ -251,7 +255,9 @@ class Options(urwid.WidgetWrap):
                 widget.set_state(True)
             self._buttons.append(widget)
         self._columns = urwid.Columns(self._buttons)
-        super(Options, self).__init__(self._columns)
+        self._pile = urwid.Pile([urwid.Divider(), self._columns,
+                                 urwid.Divider()])
+        super(Options, self).__init__(self._pile)
 
     def _on_state_change(self, widget, new_state):
         if new_state:
