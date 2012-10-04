@@ -28,7 +28,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-def popen_closefds(*args, **kwargs):
+def popen(*args, **kwargs):
     """subprocess.Popen wrapper to not leak file descriptors
 
     Args:
@@ -52,7 +52,7 @@ def system(cmd):
     Returns:
         retval of the process
     """
-    return popen_closefds(cmd, shell=True).wait()
+    return popen(cmd, shell=True).wait()
 
 
 def pipe(cmd, stdin=None):
@@ -67,8 +67,8 @@ def pipe(cmd, stdin=None):
     """
 
     LOGGER.debug("run '%s'" % cmd)
-    system_cmd = popen_closefds(cmd, shell=True, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+    system_cmd = popen(cmd, shell=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
     stdout, stderr = system_cmd.communicate(stdin)
     if stdout:
         LOGGER.debug("out '%s'" % stdout)
@@ -88,9 +88,10 @@ def pipe_async(cmd, stdin=None):
     Yields:
         Lines read from stdout
     """
+    # https://github.com/wardi/urwid/blob/master/examples/subproc.py
     LOGGER.debug("run async '%s'" % cmd)
-    process = popen_closefds(cmd, shell=True, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    process = popen(cmd, shell=True, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE, stdin=stdin)
     if stdin:
         process.stdin.write(stdin)
     while process.poll() != 0:

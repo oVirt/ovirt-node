@@ -25,6 +25,7 @@ import pkgutil
 import logging
 
 import ovirt.node.plugins
+import ovirt.node.exceptions
 
 LOGGER = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ class NodePlugin(object):
                 msg = self.validators()[path](value)
                 # True and None are allowed values
                 if msg not in [True, None]:
-                    raise ovirt.node.plugins.InvalidData(msg)
+                    raise ovirt.node.exceptions.InvalidData(msg)
         return True
 
     def has_ui(self):
@@ -144,17 +145,6 @@ class NodePlugin(object):
             List of (path, widget)
         """
         raise NotImplementedError()
-
-    def ui_config(self):
-        """Specifies additional details for the UI
-        E.g. if some defaults should be omitted (default save button).
-
-        save_button: If the save button shall be displayed (True)
-
-        Returns:
-            A dict of config items and their values.
-        """
-        return {}
 
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
@@ -186,7 +176,7 @@ class NodePlugin(object):
             self.on_change(model)
         except NotImplementedError:
             LOGGER.debug("Plugin has no model")
-        except InvalidData:
+        except ovirt.node.exceptions.InvalidData:
             LOGGER.warning("Plugin has invalid model")
             is_valid = False
         return is_valid
@@ -234,190 +224,3 @@ class NodePlugin(object):
         else:
             LOGGER.debug("No changes detected")
         return self.on_merge(real_changes)
-
-
-# http://stackoverflow.com/questions/739654/understanding-python-decorators
-class Widget(object):
-    _signal_cbs = None
-
-    def __init__(self):
-        """Registers all widget signals.
-        All signals must be given in self.signals
-        """
-        LOGGER.debug("Initializing new %s" % self)
-
-    @staticmethod
-    def signal_change(func):
-        """A decorator for methods which should emit signals
-        """
-        def wrapper(self, userdata=None, *args, **kwargs):
-            signame = func.__name__
-            self._register_signal(signame)
-            self.emit_signal(signame, userdata)
-            return func(self, userdata)
-        return wrapper
-
-    def _register_signal(self, name):
-        """Each signal that get's emitted must be registered using this
-        function.
-
-        This is just to have an overview over the signals.
-        """
-        if self._signal_cbs is None:
-            self._signal_cbs = {}
-        if name not in self._signal_cbs:
-            self._signal_cbs[name] = []
-            LOGGER.debug("Registered new signal '%s' for '%s'" % (name, self))
-
-    def connect_signal(self, name, cb):
-        """Connect an callback to a signal
-        """
-        if not self._signal_cbs:
-            raise Exception("Signals not initialized %s for %s" % (name, self))
-        if name not in self._signal_cbs:
-            raise Exception("Unregistered signal %s for %s" % (name, self))
-        self._signal_cbs[name].append(cb)
-
-    def emit_signal(self, name, userdata=None):
-        """Emit a signal
-        """
-        if self._signal_cbs is None or name not in self._signal_cbs:
-            return False
-        for cb in self._signal_cbs[name]:
-            LOGGER.debug("CB for sig %s: %s" % (name, cb))
-            cb(self, userdata)
-
-    def set_text(self, value):
-        """A general way to set the "text" of a widget
-        """
-        raise NotImplementedError
-
-
-class InputWidget(Widget):
-    """
-    """
-
-    def __init__(self, is_enabled):
-        self.enabled(is_enabled)
-        super(InputWidget, self).__init__()
-
-    @Widget.signal_change
-    def enabled(self, is_enabled=None):
-        if is_enabled in [True, False]:
-            self._enabled = is_enabled
-        return self._enabled
-
-    @Widget.signal_change
-    def text(self, text=None):
-        if text != None:
-            self._text = text
-        return self._text
-
-    def set_text(self, txt):
-        self.text(txt)
-
-
-class Label(Widget):
-    """Represents a r/o label
-    """
-
-    def __init__(self, text):
-        self.text(text)
-        super(Label, self).__init__()
-
-    @Widget.signal_change
-    def text(self, text=None):
-        if text != None:
-            self._text = text
-        return self._text
-
-    def set_text(self, txt):
-        self.text(txt)
-
-
-class Header(Label):
-    pass
-
-
-class KeywordLabel(Label):
-    """A label consisting of a prominent keyword and a value.
-    E.g.: <b>Networking:</b> Enabled
-    """
-
-    def __init__(self, keyword, text=""):
-        super(Label, self).__init__()
-        self.keyword = keyword
-        self.text(text)
-
-
-class Entry(InputWidget):
-    """Represents an entry field
-    TODO multiline
-    """
-
-    def __init__(self, label, value=None, enabled=True):
-        self.label = label
-        self._text = value
-        super(Entry, self).__init__(enabled)
-
-
-class PasswordEntry(Entry):
-    pass
-
-
-class Button(Label):
-    def __init__(self, label, enabled=True):
-        Label.__init__(self, label)
-#        InputWidget.__init__(self, enabled)
-
-
-class SaveButton(Button):
-    def __init__(self, enabled=True):
-        super(SaveButton, self).__init__(self, "Save", enabled)
-
-
-class Divider(Widget):
-    def __init__(self, char=u" "):
-        self.char = char
-
-
-class Options(Widget):
-
-    def __init__(self, label, options):
-        self.label = label
-        self.options = options
-        self.option(options[0])
-        super(Options, self).__init__()
-
-    @Widget.signal_change
-    def option(self, option=None):
-        if option in self.options:
-            self._option = option
-        return self._option
-
-    def set_text(self, txt):
-        self.option(txt)
-
-
-class InvalidData(Exception):
-    """E.g. if a string contains characters which are not allowed
-    """
-    def __init__(self, msg):
-        self.message = msg
-
-    def __str__(self):
-        return repr(self.message)
-
-
-class Concern(InvalidData):
-    """E.g. if a password is not secure enough
-    """
-    def __init__(self, msg):
-        self.message = msg
-
-    def __str__(self):
-        return repr(self.message)
-
-
-class ContentRefreshRequest(Exception):
-    pass

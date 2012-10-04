@@ -24,6 +24,8 @@ Example plugin with TUI
 import logging
 
 import ovirt.node.plugins
+import ovirt.node.ui
+import ovirt.node.exceptions
 import ovirt.node.valid
 
 LOGGER = logging.getLogger(__name__)
@@ -63,16 +65,17 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """
         widgets = [
             ("foo.section",
-                ovirt.node.plugins.Header("Subsection")),
+                ovirt.node.ui.Header("Subsection")),
             ("foo.hostname",
-                ovirt.node.plugins.Entry(label="Hostname")),
+                ovirt.node.ui.Entry(label="Hostname")),
             ("foo.port",
-                ovirt.node.plugins.Entry(label="Port")),
+                ovirt.node.ui.Entry(label="Port")),
             ("foo.password",
-                ovirt.node.plugins.PasswordEntry(label="Password")),
+                ovirt.node.ui.PasswordEntry(label="Password")),
         ]
         self._widgets = dict(widgets)
-        return widgets
+        page = ovirt.node.ui.Page(widgets)
+        return page
 
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
@@ -82,10 +85,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             LOGGER.debug("Found foo.hostname")
 
             if "/" in changes["foo.hostname"]:
-                raise ovirt.node.plugins.InvalidData("No slash allowed")
+                raise ovirt.node.exceptions.InvalidData("No slash allowed")
 
             if len(changes["foo.hostname"]) < 5:
-                raise ovirt.node.plugins.Concern("Should be at least 5 chars")
+                raise ovirt.node.exceptions.Concern(
+                                                "Should be at least 5 chars")
 
             self._model.update(changes)
 
@@ -101,7 +105,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             LOGGER.debug("Found foo.port")
 
             if "/" in changes["foo.port"]:
-                raise ovirt.node.plugins.InvalidData("No slashes allowed")
+                raise ovirt.node.exceptions.InvalidData("No slashes allowed")
 
         return True
 
@@ -111,3 +115,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         LOGGER.debug("saving %s" % effective_changes)
         # Look for conflicts etc
         self._model.update(effective_changes)
+
+        page = ovirt.node.ui.Dialog("Saved!",
+                [("foo.text", ovirt.node.ui.Label("Saved"))])
+        return page

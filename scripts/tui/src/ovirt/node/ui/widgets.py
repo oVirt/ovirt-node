@@ -351,3 +351,7 @@ class ChoiceWidget(urwid.Text):
             self.callback(self.choices[key])
         else:
             return key
+
+
+class PageWidget(urwid.Pile):
+    save_button = None

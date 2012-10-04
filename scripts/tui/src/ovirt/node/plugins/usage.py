@@ -24,6 +24,7 @@ A plugin illustrating how to use the TUI
 import logging
 
 import ovirt.node.plugins
+import ovirt.node.ui
 
 
 LOGGER = logging.getLogger(__name__)
@@ -46,11 +47,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def ui_content(self):
         widgets = [
-            ("usage.info", ovirt.node.plugins.Label(usage))
+            ("usage.info", ovirt.node.ui.Label(usage))
         ]
-        return widgets
 
-    def ui_config(self):
-        return {
-            "save_button": False
-        }
+        page = ovirt.node.ui.Page(widgets)
+        page.has_save_button = False
+        return page

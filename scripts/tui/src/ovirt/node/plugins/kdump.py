@@ -25,7 +25,7 @@ import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
-import ovirt.node.plugins
+import ovirt.node.ui
 import ovirt.node.utils
 
 LOGGER = logging.getLogger(__name__)
@@ -75,14 +75,16 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("kdump.header", ovirt.node.plugins.Header("Configure Kdump")),
-            ("kdump.type", ovirt.node.plugins.Options("Type", self._types)),
-            ("kdump.ssh_location", ovirt.node.plugins.Entry("SSH Location")),
-            ("kdump.nfs_location", ovirt.node.plugins.Entry("NFS Location")),
+            ("kdump.header", ovirt.node.ui.Header("Configure Kdump")),
+            ("kdump.type", ovirt.node.ui.Options("Type", self._types)),
+            ("kdump.ssh_location", ovirt.node.ui.Entry("SSH Location")),
+            ("kdump.nfs_location", ovirt.node.ui.Entry("NFS Location")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
-        return widgets
+
+        page = ovirt.node.ui.Page(widgets)
+        return page
 
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic

@@ -25,7 +25,7 @@ import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
-import ovirt.node.plugins
+import ovirt.node.ui
 import ovirt.node.utils.process
 
 LOGGER = logging.getLogger(__name__)
@@ -69,21 +69,19 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("ping.header", ovirt.node.plugins.Header("Ping a remote host")),
-            ("ping.address", ovirt.node.plugins.Entry("Address")),
-            ("ping.count", ovirt.node.plugins.Entry("Count")),
-            ("ping.do_ping", ovirt.node.plugins.Button("Ping")),
-            ("ping.result-divider", ovirt.node.plugins.Divider("-")),
-            ("ping.result", ovirt.node.plugins.Label("Result:")),
+            ("ping.header", ovirt.node.ui.Header("Ping a remote host")),
+            ("ping.address", ovirt.node.ui.Entry("Address")),
+            ("ping.count", ovirt.node.ui.Entry("Count")),
+            ("ping.do_ping", ovirt.node.ui.Button("Ping")),
+            ("ping.result-divider", ovirt.node.ui.Divider("-")),
+            ("ping.result", ovirt.node.ui.Label("Result:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
-        return widgets
 
-    def ui_config(self):
-        return {
-            "save_button": False
-        }
+        page = ovirt.node.ui.Page(widgets)
+        page.has_save_button = False
+        return page
 
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic

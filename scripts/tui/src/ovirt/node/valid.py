@@ -26,6 +26,7 @@ import logging
 import socket
 
 import ovirt.node.plugins
+import ovirt.node.exceptions
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -66,7 +67,7 @@ class Validator(object):
 
     def raise_exception(self):
         msg = self.__exception_msg.format(description=self.description)
-        raise ovirt.node.plugins.InvalidData(msg)
+        raise ovirt.node.exceptions.InvalidData(msg)
 
 
 class RegexValidator(Validator):

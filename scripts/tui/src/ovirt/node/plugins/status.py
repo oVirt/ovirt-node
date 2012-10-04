@@ -25,13 +25,18 @@ import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
-import ovirt.node.plugins
+import ovirt.node.ui
 import ovirt.node.utils
 
 LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
+    """This is the summary page, summarizing all sorts of informations
+
+    There are no validators, as there is no input.
+    """
+
     _model = None
     _widgets = None
 
@@ -50,28 +55,21 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             }
         return self._model
 
-    def validators(self):
-        """Validators validate the input on change and give UI feedback
-        """
-        return {}
-
-    def ui_config(self):
-        return {
-            "save_button": False
-        }
-
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
             ("status.networking",
-                ovirt.node.plugins.KeywordLabel("Networking")),
+                ovirt.node.ui.KeywordLabel("Networking")),
             ("status.logs",
-                ovirt.node.plugins.KeywordLabel("Logs")),
+                ovirt.node.ui.KeywordLabel("Logs")),
             ("status.vms.running",
-                ovirt.node.plugins.KeywordLabel("Running VMs")),
+                ovirt.node.ui.KeywordLabel("Running VMs")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
-        return widgets
+
+        page = ovirt.node.ui.Page(widgets)
+        page.has_save_button = False
+        return page

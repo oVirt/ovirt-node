@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# features.py - Copyright (C) 2012 Red Hat, Inc.
+# __init__.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,35 +19,26 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-A plugin illustrating the features of the TUI
-"""
-import logging
-
-import ovirt.node.plugins
-import ovirt.node.ui
-
-
-LOGGER = logging.getLogger(__name__)
-
-features = """
-- Resize the terminal window and watch
-- Point your mouse cursor at one of the left side list items and click
-- In the background: Event based
-- Press <ESC>
+oVirt Node specific exceptions
 """
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
-    def name(self):
-        return "Features"
+class InvalidData(Exception):
+    """E.g. if a string contains characters which are not allowed
+    """
+    def __init__(self, msg):
+        self.message = msg
 
-    rank = lambda self: 10
+    def __str__(self):
+        return repr(self.message)
 
-    def ui_content(self):
-        widgets = [
-            ("features.info", ovirt.node.ui.Label(features))
-        ]
 
-        page = ovirt.node.ui.Page(widgets)
-        page.has_save_button = False
-        return page
+class Concern(InvalidData):
+    """E.g. if a password is not secure enough
+    FIXME very ... unspecific
+    """
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return repr(self.message)

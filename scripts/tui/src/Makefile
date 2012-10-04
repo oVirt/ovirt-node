@@ -3,7 +3,7 @@ PYTHONSOURCES=$(shell find . -name \*.py -not -path */hacks.py)
 XMLSOURCES=$(shell find . -name \*.xml -or -name \*.xsl)
 CLEANFILES=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~)
 
-check-local: doctests pep8 pyflakes pylint
+check-local: doctests pep8 pyflakes
 	@echo -e "---\n Passed.\n---"
 
 doctests:
