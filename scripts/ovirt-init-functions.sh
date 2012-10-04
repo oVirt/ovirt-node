@@ -827,7 +827,8 @@ EOP
     fi
 
     # Rename the interfaces after bind-mounting the udev rules, rhbz#831658
-    udevadm trigger
+    udevadm control --reload-rules
+    udevadm trigger --action=add --subsystem-match=net
 
     if [ -n "$cim_passwd" ]; then
         log "Setting temporary admin password: $cim_passwd"
