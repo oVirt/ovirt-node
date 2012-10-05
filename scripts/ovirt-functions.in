@@ -389,7 +389,7 @@ mount_config() {
             else
                 mkdir -p "$(dirname "$f")"
                 touch "$f"
-                mount -n --bind "/config/$f" "$target"
+                mount -n --bind "/config/$f" "$f"
             fi
         done
 
