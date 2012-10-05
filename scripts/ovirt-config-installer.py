@@ -333,7 +333,7 @@ class NodeInstallScreen:
         elif self.__current_page == PASSWORD_PAGE:
             self.__current_page = HOSTVG_STORAGE_PAGE
         elif self.__current_page == UPGRADE_PAGE:
-            self.__current_page = WELCOME_PAGE
+            self.__current_page = KEYBOARD_PAGE
         return
 
     def install_page(self):
