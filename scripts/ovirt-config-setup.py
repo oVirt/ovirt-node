@@ -43,6 +43,7 @@ RESET_BUTTON = "Reset"
 CANCEL_BUTTON = "Cancel"
 APPLY_BUTTON = "Apply"
 IDENTIFY_BUTTON = "Identify NIC"
+PING_BUTTON = "Ping Test"
 LOCK_BUTTON = "Lock"
 RESTART_BUTTON = "Restart"
 POWER_OFF_BUTTON = "Power Off"
@@ -131,6 +132,7 @@ class NodeConfigScreen():
         self.net_apply_config = 0
         self._plugins_enabled = False
         self._plugins_pagenum = 0
+        self._ping_test = False
 
 
     def _set_title(self):
@@ -1943,6 +1945,9 @@ class NodeConfigScreen():
             buttons = []
             plugin_page = False
             if self.__current_page == NETWORK_PAGE:
+                buttons.append(["Ping Test",
+                                PING_BUTTON])
+            if self.__current_page == NETWORK_DETAILS_PAGE:
                 buttons.append(["Flash Lights to Identify",
                                 IDENTIFY_BUTTON])
             if self.__current_page != STATUS_PAGE \
@@ -2004,6 +2009,20 @@ class NodeConfigScreen():
                 if pressed == IDENTIFY_BUTTON:
                     system_closefds("ethtool -p " + self.nic_lb.current() +
                                     " 10")
+                elif pressed == PING_BUTTON:
+                    self._ping_test = True
+                    ping_window = EntryWindow(self.screen, 'Network Ping Test', 'Enter Host to Ping', ['Host:'])
+                    res = ping_window[1]
+                    host = res[0]
+                    if len(host) > 0:
+                        cmd = "ping -c 3 %s" % host
+                        gridform = GridForm(self.screen, "", 1, 1)
+                        gridform.add(Label("Performing Ping Test"), 0, 0)
+                        gridform.draw()
+                        self.screen.refresh()
+                        proc = passthrough(cmd, log_func=logger.debug)
+                        ButtonChoiceWindow(self.screen, "Ping Test Results",
+                               proc.stdout, buttons=["OK"], width = 60)
                 elif pressed == APPLY_BUTTON or pressed == UNLOCK_BUTTON:
                     errors = []
                     self.process_config()
@@ -2067,8 +2086,12 @@ class NodeConfigScreen():
                                 if self.is_same_network_config(
                                        self.original_system_network_config,
                                        current_network_config):
-                                    self.__current_page = (
-                                         NETWORK_DETAILS_PAGE)
+                                    if self._ping_test:
+                                        self._ping_test = False
+                                        self.__current_page = (NETWORK_PAGE)
+                                    else:
+                                        self.__current_page = (
+                                             NETWORK_DETAILS_PAGE)
                                 else:
                                     warn = None
                                     self._create_warn_screen()
@@ -2096,6 +2119,8 @@ class NodeConfigScreen():
                         if pressed == BACK_BUTTON:
                             self.__current_page = NETWORK_PAGE
                         elif pressed == RESET_BUTTON:
+                            self.__current_page = NETWORK_DETAILS_PAGE
+                        elif pressed == IDENTIFY_BUTTON:
                             self.__current_page = NETWORK_DETAILS_PAGE
                         elif self.net_apply_config == 1:
                             self.__current_page = NETWORK_PAGE
