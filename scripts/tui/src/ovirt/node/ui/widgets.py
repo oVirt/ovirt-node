@@ -104,32 +104,10 @@ class PluginMenu(urwid.WidgetWrap):
         self.__list.set_focus(n)
 
 
-class DialogBox(urwid.WidgetWrap):
-    def __init__(self, body, title, bodyattr=None, titleattr=None):
-        self.body = urwid.LineBox(body)
-        self.title = urwid.Text(title)
-        if titleattr is not None:
-            self.title = urwid.AttrMap(self.title, titleattr)
-        if bodyattr is not None:
-            self.body = urwid.AttrMap(self.body, bodyattr)
+class ModalDialog(urwid.WidgetWrap):
+    signals = ['close']
 
-        box = urwid.Overlay(self.title, self.body,
-                            align='center',
-                            valign='top',
-                            width=len(title),
-                            height=None,
-                            )
-        urwid.WidgetWrap.__init__(self, box)
-
-    def selectable(self):
-        return self.body.selectable()
-
-    def keypress(self, size, key):
-        return self.body.keypress(size, key)
-
-
-class ModalDialog(urwid.Overlay):
-    def __init__(self, body, title, escape_key, previous_widget, bodyattr=None,
+    def __init__(self, title, body, escape_key, previous_widget, bodyattr=None,
                  titleattr=None):
         self.escape_key = escape_key
         self.previous_widget = previous_widget
@@ -137,11 +115,15 @@ class ModalDialog(urwid.Overlay):
         if type(body) in [str, unicode]:
             body = urwid.Text(body)
 
-        box = DialogBox(body, title, bodyattr, titleattr)
+        body = urwid.LineBox(body, title)
 
-        super(ModalDialog, self).__init__(box, previous_widget, 'center',
+        overlay = urwid.Overlay(body, previous_widget, 'center',
                                           ('relative', 70), 'middle',
                                           ('relative', 70))
+        super(ModalDialog, self).__init__(overlay)
+
+    def close(self):
+        urwid.emit_signal(self, "close")
 
 
 class Label(urwid.WidgetWrap):

@@ -191,13 +191,18 @@ def build_button(path, item, tui, plugin):
         if type(item) is ovirt.node.ui.SaveButton:
             r = plugin._on_ui_save()
             LOGGER.debug("Got save: %s" % r)
-            # FIXME hacks to display page or dialog
+
             if type(r) in [ovirt.node.ui.Page]:
                 w = build_page(tui, plugin, r)
-                tui.display(w)
+                tui.display_page(w)
+
             elif type(r) in [ovirt.node.ui.Dialog]:
                 w = build_page(tui, plugin, r)
-                tui._display_dialog(w, r.title)
+                dialog = tui.display_dialog(w, r.title)
+                def on_item_close_changed_cb(i, v):
+                    dialog.close()
+                r.connect_signal("close", on_item_close_changed_cb)
+
         else:
 #           Not propagating the signal as a signal to the plugin
 #           item.emit_signal("click", widget)

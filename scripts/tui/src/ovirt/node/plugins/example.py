@@ -107,6 +107,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             if "/" in changes["foo.port"]:
                 raise ovirt.node.exceptions.InvalidData("No slashes allowed")
 
+        if "dialog.button" in changes:
+            LOGGER.debug("Request to close the dialog")
+            self._widgets["dialog.dialog"].close()
+
         return True
 
     def on_merge(self, effective_changes):
@@ -121,9 +125,15 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return dialog
 
     def _create_dialog(self, txt):
-        page = ovirt.node.ui.Dialog("Information", [
+        LOGGER.debug("Building dialog")
+        widgets = [
                 ("dialog.text", ovirt.node.ui.Label(txt)),
                 ("dialog.button", ovirt.node.ui.Button("Close"))
-                ])
+                ]
+        page = ovirt.node.ui.Dialog("Information", widgets)
         page.has_save_button = False
+
+        self._widgets.update(dict(widgets))
+        self._widgets["dialog.dialog"] = page
+
         return page

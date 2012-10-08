@@ -48,6 +48,8 @@ class UrwidTUI(object):
     __menu = None
     __page_frame = None
 
+    __dialogs = []
+
     header = u"\n Configuration TUI\n"
     footer = u"Press ctrl+c to exit"
 
@@ -93,43 +95,48 @@ class UrwidTUI(object):
 
     def __change_to_plugin(self, plugin):
         page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
-        self._display_page(page)
+        self.display_page(page)
 
-    def _display_page(self, page):
+    def display_page(self, page):
         # FIXME why is this fixed?
         filler = urwid.Filler(page, ("fixed top", 1), height=20)
         self.__page_frame.body = filler
 
-    def _display_dialog(self, body, title):
+    def display_dialog(self, body, title):
         filler = urwid.Filler(body, ("fixed top", 1), height=20)
-        dialog = ovirt.node.ui.widgets.ModalDialog(filler,
-                                                   title, "esc",
+        dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, "esc",
                                                    self.__loop.widget)
+        urwid.connect_signal(dialog, "close", lambda: self.close_dialog())
         self.__loop.widget = dialog
+        return dialog
 
-    def display(self, widget):
-        return {
-                   ovirt.node.ui.widgets.PageWidget: self._display_page
-               }[type(widget)](widget)
+    def close_dialog(self):
+        # FIXME stack to allow more than one dialog
+        if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
+            self.__loop.widget = self.__loop.widget.previous_widget
+            LOGGER.debug("Dialog closed")
 
     def popup(self, title, msg, buttons=None):
         LOGGER.debug("Launching popup")
         body = urwid.Filler(urwid.Text(msg))
-        self._display_dialog(body)
+        self.display_dialog(body)
 
     def __filter_hotkeys(self, keys, raw):
         key = str(keys)
-        LOGGER.debug("Keypress: %s" % key)
+
         if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
             LOGGER.debug("Modal dialog escape: %s" % key)
             dialog = self.__loop.widget
             if dialog.escape_key in keys:
-                self.__loop.widget = dialog.previous_widget
-            return
+                self.close_dialog()
+#            return
 
         if key in self.__hotkeys.keys():
             LOGGER.debug("Running hotkeys: %s" % key)
             self.__hotkeys[key]()
+
+        LOGGER.debug("Keypress: %s" % key)
+
         return keys
 
     def __register_default_hotkeys(self):

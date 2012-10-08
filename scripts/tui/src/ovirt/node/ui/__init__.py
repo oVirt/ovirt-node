@@ -124,6 +124,7 @@ class ContainerElement(Element):
 
     def __init__(self, children):
         self.children = children
+        super(ContainerElement, self).__init__()
 
     @property
     @deprecated
@@ -144,9 +145,15 @@ class Page(ContainerElement):
 class Dialog(Page):
     """An abstract dialog, similar to a page
     """
+
     def __init__(self, title, children):
         self.title = title
+        self.close(False) # FIXME hack
         super(Dialog, self).__init__(children)
+
+    @Element.signal_change
+    def close(self, v=True):
+        self._close = v
 
 
 class Row(ContainerElement):
