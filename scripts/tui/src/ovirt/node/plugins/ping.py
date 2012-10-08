@@ -91,6 +91,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             self._model.update(changes)
         if "ping.count" in changes:
             self._model.update(changes)
+
         if "ping.do_ping" in changes:
             self.on_merge(changes)
 

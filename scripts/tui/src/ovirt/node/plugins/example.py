@@ -116,6 +116,14 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         # Look for conflicts etc
         self._model.update(effective_changes)
 
-        page = ovirt.node.ui.Dialog("Saved!",
-                [("foo.text", ovirt.node.ui.Label("Saved"))])
+        dialog = self._create_dialog("Everything was saved.")
+
+        return dialog
+
+    def _create_dialog(self, txt):
+        page = ovirt.node.ui.Dialog("Information", [
+                ("dialog.text", ovirt.node.ui.Label(txt)),
+                ("dialog.button", ovirt.node.ui.Button("Close"))
+                ])
+        page.has_save_button = False
         return page

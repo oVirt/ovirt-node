@@ -49,9 +49,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def model(self):
         if not self._model:
             self._model = {
-                "status.networking": "On",
-                "status.logs": "Local",
-                "status.vms.running": "42",
+                "status": "Virtualization hardware was not detected",
+                "networking": "On",
+                "networking.bridge": "breth0: 192.168.122.1",
+                "logs": "Local Only",
+                "libvirt.num_guests": "42",
             }
         return self._model
 
@@ -59,14 +61,38 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
+        # Function to expand all "keywords" to the same length
         aligned = lambda l: l.ljust(16)
+
+        # Network related widgets, appearing in one row
+        network_widgets = [
+                ("networking",
+                    ovirt.node.ui.KeywordLabel(aligned("Networking: "))),
+                ("networking.bridge",
+                    ovirt.node.ui.Label("N/A")),
+            ]
         widgets = [
-            ("status.networking",
-                ovirt.node.ui.KeywordLabel(aligned("Networking: "))),
-            ("status.logs",
+            ("status",
+                ovirt.node.ui.KeywordLabel(aligned("Status: "))),
+            ("status._space", ovirt.node.ui.Divider()),
+
+            ("network._column", ovirt.node.ui.Row(network_widgets)),
+            ("network._space", ovirt.node.ui.Divider()),
+
+            ("logs",
                 ovirt.node.ui.KeywordLabel(aligned("Logs: "))),
-            ("status.vms.running",
+            ("logs._space", ovirt.node.ui.Divider()),
+
+            ("libvirt.num_guests",
                 ovirt.node.ui.KeywordLabel(aligned("Running VMs: "))),
+            ("libvirt._space", ovirt.node.ui.Divider()),
+
+            ("support.hint", ovirt.node.ui.Label("Press F8 for support menu")),
+            ("support._space", ovirt.node.ui.Divider()),
+
+            ("action.hostkey", ovirt.node.ui.Button("View Host Key")),
+#            ("action", ovirt.node.ui.Buttons(["Lock", "Log Off", "Restart",
+#                                              "Power Off"])),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

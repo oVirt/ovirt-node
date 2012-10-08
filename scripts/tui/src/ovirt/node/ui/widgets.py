@@ -320,39 +320,6 @@ class Options(urwid.WidgetWrap):
         self.select(txt)
 
 
-#https://github.com/pazz/alot/blob/master/alot/widgets/globals.py
-class ChoiceWidget(urwid.Text):
-    def __init__(self, choices, callback, cancel=None, select=None,
-                 separator=' '):
-        self.choices = choices
-        self.callback = callback
-        self.cancel = cancel
-        self.select = select
-        self.separator = separator
-
-        items = []
-        for k, v in choices.items():
-            if v == select and select is not None:
-                items += ['[', k, ']:', v]
-            else:
-                items += ['(', k, '):', v]
-            items += [self.separator]
-        urwid.Text.__init__(self, items)
-
-    def selectable(self):
-        return True
-
-    def keypress(self, size, key):
-        if key == 'enter' and self.select is not None:
-            self.callback(self.select)
-        elif key == 'esc' and self.cancel is not None:
-            self.callback(self.cancel)
-        elif key in self.choices:
-            self.callback(self.choices[key])
-        else:
-            return key
-
-
 class PageWidget(urwid.WidgetWrap):
     save_button = None
 
