@@ -53,3 +53,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         page = ovirt.node.ui.Page(widgets)
         page.has_save_button = False
         return page
+
+    def model(self):
+        return {}
