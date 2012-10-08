@@ -215,8 +215,9 @@ class NodePlugin(object):
         LOGGER.debug("Request to apply model changes")
         real_changes = {}
         if self._changes:
+            model = self.model()
             for key, value in self._changes.items():
-                if value == self.model()[key]:
+                if key in model and value == model[key]:
                     LOGGER.debug(("Skipping pseudo-change of '%s', value " + \
                                   "did not change") % key)
                 else:
