@@ -190,7 +190,7 @@ class KeywordLabel(Label):
             self._text = text
             keyword_markup = (self._keyword_attr, self._keyword)
             text_markup = (self._text_attr, self._text)
-            markup = [keyword_markup, ": ", text_markup]
+            markup = [keyword_markup, text_markup]
             self._label.set_text(markup)
         return self._text
 
@@ -353,5 +353,11 @@ class ChoiceWidget(urwid.Text):
             return key
 
 
-class PageWidget(urwid.Pile):
+class PageWidget(urwid.WidgetWrap):
     save_button = None
+
+    def __init__(self, widgets):
+#        self._listwalker = urwid.SimpleListWalker(widgets)
+#        self._listbox = urwid.ListBox(self._listwalker)
+        self._pile = urwid.Pile(widgets)
+        super(PageWidget, self).__init__(self._pile)

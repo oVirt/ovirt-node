@@ -59,13 +59,14 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
+        aligned = lambda l: l.ljust(16)
         widgets = [
             ("status.networking",
-                ovirt.node.ui.KeywordLabel("Networking")),
+                ovirt.node.ui.KeywordLabel(aligned("Networking: "))),
             ("status.logs",
-                ovirt.node.ui.KeywordLabel("Logs")),
+                ovirt.node.ui.KeywordLabel(aligned("Logs: "))),
             ("status.vms.running",
-                ovirt.node.ui.KeywordLabel("Running VMs")),
+                ovirt.node.ui.KeywordLabel(aligned("Running VMs: "))),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
