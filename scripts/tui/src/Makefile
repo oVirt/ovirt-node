@@ -1,7 +1,26 @@
 
 PYTHONSOURCES=$(shell find . -name \*.py -not -path */hacks.py)
 XMLSOURCES=$(shell find . -name \*.xml -or -name \*.xsl)
-CLEANFILES=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~)
+CLEANFILES=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~ -o -name MANIFEST)
+
+ifndef python
+python := "python"
+endif
+
+all:
+	@echo targets: dist, install
+
+manifest:
+	find . -name \*.py > MANIFEST
+
+dist: manifest
+	${python} setup.py sdist
+
+build:
+	:
+
+install: manifest
+	${python} setup.py install ${root} ${lib}
 
 check-local: doctests pep8 pyflakes
 	@echo -e "---\n Passed.\n---"
