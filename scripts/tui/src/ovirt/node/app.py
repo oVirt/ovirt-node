@@ -26,12 +26,13 @@ which communicate with each other.
 
 import logging
 
-import ovirt.node.tui
-import ovirt.node.utils
-
 logging.basicConfig(level=logging.DEBUG,
                     filename="app.log", filemode="w")
 LOGGER = logging.getLogger(__name__)
+
+
+import ovirt.node.tui
+import ovirt.node.utils
 
 
 class Application(object):
