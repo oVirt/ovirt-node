@@ -91,6 +91,7 @@ def widget_for_item(tui, plugin, path, item):
         ovirt.node.ui.SaveButton: build_button,
         ovirt.node.ui.Divider: build_divider,
         ovirt.node.ui.Options: build_options,
+        ovirt.node.ui.Row: build_row,
     }
 
     # Check if builder is available for UI Element
@@ -217,3 +218,12 @@ def build_options(path, item, tui, plugin):
     urwid.connect_signal(widget, "change", on_widget_change_cb)
 
     return widget
+
+
+def build_row(path, container_item, tui, plugin):
+    widgets = []
+    for path, element in container_item.children:
+        child = widget_for_item(tui, plugin, path, element)
+        widgets.append(child)
+
+    return urwid.Columns(widgets)

@@ -361,3 +361,7 @@ class PageWidget(urwid.WidgetWrap):
 #        self._listbox = urwid.ListBox(self._listwalker)
         self._pile = urwid.Pile(widgets)
         super(PageWidget, self).__init__(self._pile)
+
+
+class RowWidget(urwid.Columns):
+    pass

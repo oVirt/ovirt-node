@@ -26,6 +26,11 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
+def deprecated(func):
+    LOGGER.warning("Deprecated %s" % func)
+    return lambda *args, **kwargs: func(*args, **kwargs)
+
+
 # http://stackoverflow.com/questions/739654/understanding-python-decorators
 class Element(object):
     """An abstract UI Element.
@@ -115,8 +120,19 @@ class InputElement(Element):
 class ContainerElement(Element):
     """An abstract container Element containing other Elements
     """
-    widgets = []
-    pass
+    children = []
+
+    def __init__(self, children):
+        self.children = children
+
+    @property
+    @deprecated
+    def widgets(self):
+        return self.children
+
+    @widgets.setter
+    def widgets(self, v):
+        self.children = v
 
 
 class Page(ContainerElement):
@@ -124,16 +140,19 @@ class Page(ContainerElement):
     """
     has_save_button = True
 
-    def __init__(self, widgets):
-        self.widgets = widgets
-
 
 class Dialog(Page):
     """An abstract dialog, similar to a page
     """
-    def __init__(self, title, widgets):
+    def __init__(self, title, children):
         self.title = title
-        super(Dialog, self).__init__(widgets)
+        super(Dialog, self).__init__(children)
+
+
+class Row(ContainerElement):
+    """Align elements horizontally in one row
+    """
+    pass
 
 
 class Label(Element):
@@ -210,7 +229,6 @@ class Divider(Element):
 
 
 class Options(Element):
-
     def __init__(self, label, options):
         self.label = label
         self.options = options
