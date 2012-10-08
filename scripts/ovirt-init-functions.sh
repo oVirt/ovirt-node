@@ -826,9 +826,12 @@ EOP
         fi
     fi
 
-    # Rename the interfaces after bind-mounting the udev rules, rhbz#831658
-    udevadm control --reload-rules
-    udevadm trigger --action=add --subsystem-match=net
+    [[ -f "/etc/udev/rules.d/71-persistent-node-net.rules" ]] && {
+        # Rename the interfaces after bind-mounting the udev rules, rhbz#831658
+        rm -f /etc/udev/rules.d/70-persistent-net.rules
+        udevadm control --reload-rules
+        udevadm trigger --action=add --subsystem-match=net
+    }
 
     if [ -n "$cim_passwd" ]; then
         log "Setting temporary admin password: $cim_passwd"

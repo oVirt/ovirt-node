@@ -374,16 +374,17 @@ class Network:
 
         # Copy the initial net rules to a file that get's not
         # overwritten at each boot, rhbz#773495
-        _functions.system_closefds("cp" +
-                        " /etc/udev/rules.d/70-persistent-net.rules" +
-                        " /etc/udev/rules.d/71-persistent-node-net.rules" +
-                        " >> /var/log/ovirt.log");
-        _functions.ovirt_store_config("/etc/udev/rules.d/" +
-                                      "71-persistent-node-net.rules")
+        rulesfile = "/etc/udev/rules.d/70-persistent-net.rules"
+        newrulesfile = "/etc/udev/rules.d/71-persistent-node-net.rules"
+        if os.path.exists(rulesfile):
+            _functions.system_closefds("cp %s %s >> /var/log/ovirt.log" % (
+                                                                rulesfile,
+                                                                newrulesfile))
+            _functions.ovirt_store_config(newrulesfile)
 
-        # Eventully it makes sense to rename the NICs
-        #system_closefds("sed -ic 's/NAME=\"eth/NAME=\"eth00/' " +
-        #                 "/etc/udev/rules.d/71-persistent-node-net.rules")
+            # Eventully it makes sense to rename the NICs
+            #system_closefds("sed -ic 's/NAME=\"eth/NAME=\"eth00/' " +
+            #                 "/etc/udev/rules.d/71-persistent-node-net.rules")
 
 
 
