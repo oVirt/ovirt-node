@@ -105,9 +105,13 @@ def widget_for_item(tui, plugin, path, item):
     # Populate with values
     if type(item) in [ovirt.node.ui.Entry,
                       ovirt.node.ui.PasswordEntry,
+                      ovirt.node.ui.Label,
                       ovirt.node.ui.KeywordLabel,
                       ovirt.node.ui.Options]:
-        widget.set_text(plugin.model()[path])
+        model = plugin.model()
+        if path in model:
+            text = model[path]
+            widget.set_text(text)
 
     return widget
 
