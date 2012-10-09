@@ -250,6 +250,7 @@ initrd /initrd0.img
                 return True
 
         self.oldtitle = None
+        _functions.system("mount -r LABEL=Root /liveos")
         if os.path.ismount("/liveos"):
             if (os.path.exists("/liveos/vmlinuz0") and
                 os.path.exists("/liveos/initrd0.img")):
