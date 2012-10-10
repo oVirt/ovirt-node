@@ -69,6 +69,9 @@ class UrwidTUI(object):
                ('plugin.widget.button.disabled', 'light gray', ''),
                ('plugin.widget.label', '', ''),
                ('plugin.widget.label.keyword', 'bold', ''),
+               ('plugin.widget.progressbar.box', 'light gray', ''),
+               ('plugin.widget.progressbar.uncomplete', '', ''),
+               ('plugin.widget.progressbar.complete', '', 'light gray'),
                ]
 
     def __init__(self, app):
@@ -99,7 +102,7 @@ class UrwidTUI(object):
 
     def display_page(self, page):
         # FIXME why is this fixed?
-        filler = urwid.Filler(page, ("fixed top", 1), height=20)
+        filler = urwid.Filler(page, ("fixed top", 1), height=30)
         self.__page_frame.body = filler
 
     def display_dialog(self, body, title):

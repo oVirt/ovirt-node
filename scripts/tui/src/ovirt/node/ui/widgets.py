@@ -314,3 +314,18 @@ class PageWidget(urwid.WidgetWrap):
 
 class RowWidget(urwid.Columns):
     pass
+
+
+class ProgressBarWidget(urwid.WidgetWrap):
+    def __init__(self, current, done):
+        self._progressbar = urwid.ProgressBar(
+                               "plugin.widget.progressbar.uncomplete",
+                               "plugin.widget.progressbar.complete",
+                               current, done)
+        self._linebox = urwid.LineBox(self._progressbar)
+        self._linebox_attrmap = urwid.AttrMap(self._linebox,
+                                        "plugin.widget.progressbar.box")
+        super(ProgressBarWidget, self).__init__(self._linebox_attrmap)
+
+    def set_completion(self, v):
+        self._progressbar.set_completion(v)

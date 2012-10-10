@@ -92,6 +92,7 @@ def widget_for_item(tui, plugin, path, item):
         ovirt.node.ui.Divider: build_divider,
         ovirt.node.ui.Options: build_options,
         ovirt.node.ui.Row: build_row,
+        ovirt.node.ui.ProgressBar: build_progressbar,
     }
 
     # Check if builder is available for UI Element
@@ -236,3 +237,16 @@ def build_row(path, container_item, tui, plugin):
         widgets.append(child)
 
     return urwid.Columns(widgets)
+
+
+def build_progressbar(path, item, tui, plugin):
+    widget = ovirt.node.ui.widgets.ProgressBarWidget(item.current(), item.done)
+
+    def on_item_current_change_cb(w, v):
+        LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
+                                                                  v))
+        widget.set_completion(v)
+        tui.draw_screen()
+    item.connect_signal("current", on_item_current_change_cb)
+
+    return widget

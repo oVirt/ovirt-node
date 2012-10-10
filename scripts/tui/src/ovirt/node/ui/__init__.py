@@ -250,3 +250,16 @@ class Options(Element):
 
     def set_text(self, txt):
         self.option(txt)
+
+
+class ProgressBar(Element):
+    def __init__(self, current=0, done=100):
+        self.current(current)
+        self.done = done
+        super(ProgressBar, self).__init__()
+
+    @Element.signal_change
+    def current(self, current=None):
+        if current is not None:
+            self._current = current
+        return self._current

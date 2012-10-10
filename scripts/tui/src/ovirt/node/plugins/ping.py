@@ -50,8 +50,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 # The target address
                 "ping.address": "127.0.0.1",
                 "ping.count": "3",
+                "ping.progress": "0",
                 # The result field
-                "ping.result": ""
+                "ping.result": "",
             }
         return self._model
 
@@ -73,7 +74,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("ping.address", ovirt.node.ui.Entry("Address")),
             ("ping.count", ovirt.node.ui.Entry("Count")),
             ("ping.do_ping", ovirt.node.ui.Button("Ping")),
-            ("ping.result-divider", ovirt.node.ui.Divider("-")),
+            ("ping.progress._space", ovirt.node.ui.Divider()),
+            ("ping.progress", ovirt.node.ui.ProgressBar()),
+            ("ping.result._space", ovirt.node.ui.Divider("-")),
             ("ping.result", ovirt.node.ui.Label("Result:")),
         ]
         # Save it "locally" as a dict, for better accessability
@@ -112,6 +115,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
             cmd = "%s -c %s %s" % (cmd, count, addr)
             out = ""
+            current = 0
             for line in ovirt.node.utils.process.pipe_async(cmd):
                 out += line
+                if "icmp_req" in line:
+                    current += 100.0 / float(count)
+                    self._widgets["ping.progress"].current(current)
                 self._widgets["ping.result"].text("Result:\n\n%s" % out)
