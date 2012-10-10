@@ -60,6 +60,7 @@ class UrwidTUI(object):
                ('main.menu.frame', 'light gray', ''),
                ('plugin.widget.entry', 'dark gray', ''),
                ('plugin.widget.entry.disabled', 'dark gray', 'light gray'),
+               ('plugin.widget.entry.label', 'bold', ''),
                ('plugin.widget.entry.frame', 'light gray', ''),
                ('plugin.widget.entry.frame.invalid', 'dark red', ''),
                ('plugin.widget.notice', 'light red', ''),

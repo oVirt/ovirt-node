@@ -200,12 +200,15 @@ class Entry(urwid.WidgetWrap):
 
     def __init__(self, label, mask=None):
         self._label = urwid.Text("\n" + label + ":")
+        self._label_attrmap = urwid.AttrMap(self._label,
+                                            "plugin.widget.entry.label")
         self._edit = urwid.Edit(mask=mask)
         self._edit_attrmap = urwid.AttrMap(self._edit, "plugin.widget.entry")
         self._linebox = urwid.LineBox(self._edit_attrmap)
         self._linebox_attrmap = urwid.AttrMap(self._linebox,
                                               "plugin.widget.entry.frame")
-        self._columns = urwid.Columns([self._label, self._linebox_attrmap])
+        self._columns = urwid.Columns([self._label_attrmap,
+                                       self._linebox_attrmap])
 
         self._notice = urwid.Text("")
         self._notice_attrmap = urwid.AttrMap(self._notice,
