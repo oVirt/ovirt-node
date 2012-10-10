@@ -490,7 +490,7 @@ initrd /initrd0.img
                 f.write('* * * * * sleep 10 && /sbin/reboot')
                 f.close()
                 #ensure crond is started
-                subprocess_closefds("crond", shell=True,
+                _functions.subprocess_closefds("crond", shell=True,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
             return True
