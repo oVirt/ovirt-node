@@ -1084,6 +1084,10 @@ class NodeConfigScreen():
         dev = self.nic_lb.current()
         (interface, bootproto, vendor, address, driver, conf_status,
                 dev_bridge) = self.nic_dict[dev].split(",", 6)
+        if dev_bridge == "rhevm" or dev_bridge == "ovirtmgmt":
+            cmd = ("/files/etc/sysconfig/network-scripts/" + \
+                   "ifcfg-%s/BOOTPROTO" % dev_bridge)
+            bootproto = augtool_get(cmd)
         nic_detail_grid = Grid(6, 10)
         nic_detail_grid.setField(Label("Interface:   "), 0, 1, anchorLeft=1,
                                  padding=(0, 0, 1, 0))
