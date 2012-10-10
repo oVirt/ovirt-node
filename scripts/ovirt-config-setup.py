@@ -1900,9 +1900,9 @@ class NodeConfigScreen():
             self.menu_list.append(" Network", 2)
             self.menu_list.append(" Security", 3)
             self.menu_list.append(" Keyboard", 4)
-            self.menu_list.append(" Logging", 6)
-            self.menu_list.append(" Kernel Dump", 7)
-            self.menu_list.append(" Remote Storage", 8)
+            self.menu_list.append(" Logging", 5)
+            self.menu_list.append(" Kernel Dump", 6)
+            self.menu_list.append(" Remote Storage", 7)
             # plugin menu options
             plugin_page = FIRST_PLUGIN_PAGE
             for p in self.plugins:
