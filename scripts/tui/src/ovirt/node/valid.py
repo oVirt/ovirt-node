@@ -69,6 +69,26 @@ class Validator(object):
         msg = self.__exception_msg.format(description=self.description)
         raise ovirt.node.exceptions.InvalidData(msg)
 
+    def __or__(self, other):
+        """This allows to combin validators using |
+        """
+        validator = Validator()
+        validator.description = " or ".join([self.description,
+                                             other.description])
+        validator.validate = lambda value: (self.validate(value) or \
+                                            other.validate(value))
+        return validator
+
+    def __and__(self, other):
+        """This allows to combin validators using &
+        """
+        validator = Validator()
+        validator.description = " and ".join([self.description,
+                                             other.description])
+        validator.validate = lambda value: (self.validate(value) and \
+                                            other.validate(value))
+        return validator
+
 
 class RegexValidator(Validator):
     """A validator which uses a regular expression to validate a value.
@@ -225,6 +245,27 @@ class IPv6Address(IPv4Address):
     family = socket.AF_INET6
 
 
+class IPAddress(Validator):
+    """Allows any IPv4 or IPv6 address
+
+    >>> FQDNOrIPAddress()("127.0.0.1")
+    True
+    >>> FQDNOrIPAddress()("::1")
+    True
+    >>> FQDNOrIPAddress().validate("example.com")
+    False
+    >>> FQDNOrIPAddress().validate("")
+    False
+    """
+
+    def __init__(self):
+        self._validator = IPv4Address() | IPv6Address()
+        self.description = self._validator.description
+
+    def validate(self, value):
+        return self._validator.validate(value)
+
+
 class FQDNOrIPAddress(Validator):
     """Allows any FQDN, IPv4 or IPv6 address
 
@@ -238,13 +279,12 @@ class FQDNOrIPAddress(Validator):
     False
     """
 
-    description = " or ".join([FQDN.description, IPv4Address.description,
-                               IPv6Address.description])
+    def __init__(self):
+        self._validator = FQDN() | IPAddress()
+        self.description = self._validator.description
 
     def validate(self, value):
-        return (FQDN().validate(value) or \
-                IPv4Address().validate(value) or \
-                IPv6Address().validate(value))
+        return self._validator.validate(value)
 
 
 class Options(Validator):
@@ -258,3 +298,10 @@ class Options(Validator):
     def validate(self, value):
         self.description = self.description % self.options
         return value in self.options
+
+
+class Empty(Validator):
+    description = "an empty string"
+
+    def validate(self, value):
+        return value == ""
