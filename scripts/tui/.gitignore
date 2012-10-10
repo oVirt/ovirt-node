@@ -2,3 +2,7 @@
 app.log
 *.pyc
 *.pyo
+MANIFEST
+scm_hash.txt
+dist
+build

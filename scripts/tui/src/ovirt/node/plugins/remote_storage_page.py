@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# usage.py - Copyright (C) 2012 Red Hat, Inc.
+# remote_storage_page.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,40 +19,58 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-A plugin illustrating how to use the TUI
+Configure Remote Storage
 """
 import logging
 
 import ovirt.node.plugins
+import ovirt.node.valid
 import ovirt.node.ui
-
+import ovirt.node.utils
 
 LOGGER = logging.getLogger(__name__)
 
-usage = """Plugins need to be derived from a provided class and need to \
-implement a couple of methods.
-Data is only passed via a dictionary between the UI and the plugin, this way \
-it should be also easier to test plugins.
-
-The plugin (one python file) just needs to be dropped into a specififc \
-directory to get picked up (ovirt/node/plugins/) and is  a python file.
-"""
-
 
 class Plugin(ovirt.node.plugins.NodePlugin):
-    def name(self):
-        return "Usage"
+    _model = None
+    _widgets = None
 
-    rank = lambda self: 999
+    def name(self):
+        return "Remote Storage"
+
+    def rank(self):
+        return 70
+
+    def model(self):
+        if not self._model:
+            self._model = {
+                "iscsi.initiator_name": "",
+            }
+        return self._model
+
+    def validators(self):
+        is_initiator_name = lambda v: (None if len(v.split(":")) == 2
+                                            else "Invalid IQN.")
+        return {
+                "iscsi.initiator_name": is_initiator_name,
+            }
 
     def ui_content(self):
         widgets = [
-            ("usage.info", ovirt.node.ui.Label(usage))
+            ("header", ovirt.node.ui.Header("Remote Storage")),
+
+            ("iscsi.initiator_name", ovirt.node.ui.Entry("iSCSI Initiator " +
+                                                         "Name")),
         ]
+        # Save it "locally" as a dict, for better accessability
+        self._widgets = dict(widgets)
 
         page = ovirt.node.ui.Page(widgets)
-        page.has_save_button = False
         return page
 
-    def model(self):
-        return {}
+    def on_change(self, changes):
+        pass
+        self._model.update(changes)
+
+    def on_merge(self, effective_changes):
+        pass

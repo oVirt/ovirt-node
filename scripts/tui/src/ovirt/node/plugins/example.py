@@ -38,6 +38,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def name(self):
         return "Example Page"
 
+    def rank(self):
+        return 999
+
     def model(self):
         """Returns the model of this plugin
         This is expected to parse files and all stuff to build up the model.

@@ -21,3 +21,33 @@
 """
 Utility functions
 """
+
+import augeas as _augeas
+import logging
+
+LOGGER = logging.getLogger(__name__)
+
+
+class AugeasWrapper(object):
+    _aug = _augeas.Augeas()
+
+    def __init__(self):
+#        self._aug = _augeas.Augeas() # Is broken
+        self._aug.set("/augeas/save/copy_if_rename_fails", "")
+
+    def get(self, p):
+        return self._aug.get(p)
+
+    def set(self, p, v):
+        self._aug.set(p, v)
+        self.save()
+
+    def remove(self, p):
+        self._aug.remove(p)
+        self.save()
+
+    def save(self):
+        return self._aug.save()
+
+    def match(self, p):
+        return self._aug.match(p)

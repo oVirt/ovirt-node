@@ -45,7 +45,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return "Kdump"
 
     def rank(self):
-        return 70
+        return 60
 
     def model(self):
         """Returns the model of this plugin
@@ -63,9 +63,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def validators(self):
         """Validators validate the input on change and give UI feedback
         """
-        options = dict(self._types).keys()
         return {
-                "kdump.type": ovirt.node.valid.Options(options),
+                "kdump.type": ovirt.node.valid.Options(self._types),
                 "kdump.ssh_location": ovirt.node.valid.NoSpaces(),
                 "kdump.nfs_location": ovirt.node.valid.NoSpaces(),
             }

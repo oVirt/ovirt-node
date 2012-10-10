@@ -37,20 +37,81 @@ class SelectableText(urwid.Text):
         return key
 
 
-class PluginMenuEntry(urwid.AttrMap):
-    """An entry in the main menu
+class TableEntryWidget(urwid.AttrMap):
+    """An entry in a table
     """
-    __text = None
+    _text = None
 
+    signals = ["click"]
+
+    def __init__(self, title):
+        self._text = SelectableText(title)
+#        self._text = Button(title)
+#        self._text.button_left = ""
+#        self._text.button_right = ""
+        super(TableEntryWidget, self).__init__(self._text, 'table.entry',
+                                                           'table.entry:focus')
+
+    def keypress(self, size, key):
+        if self._command_map[key] != 'activate':
+            return key
+        self._emit('click')
+
+    def mouse_event(self, size, event, button, x, y, focus):
+        if button != 1 or not urwid.util.is_mouse_press(event):
+            return False
+
+        self._emit('click')
+        return True
+
+
+class TableWidget(urwid.WidgetWrap):
+    """A table, with a single column
+    """
+    __walker = None
+    __list = None
+    __list_attrmap = None
+    __linebox = None
+    __linebox_attrmap = None
+
+    signals = ['changed']
+
+    _table_attr = "table"
+    _header_attr = "table.header"
+
+    def __init__(self, header, items, height):
+        self.__label = urwid.Text(header)
+        self.__label_attrmap = urwid.AttrMap(self.__label, self._header_attr)
+        self.__items = items
+        self.__walker = urwid.SimpleListWalker(self.__items)
+        self.__list = urwid.ListBox(self.__walker)
+#        self.__list_linebox = urwid.LineBox(self.__list)
+
+        def __on_item_change():
+            widget, position = self.__list.get_focus()
+            urwid.emit_signal(self, "changed", widget)
+        urwid.connect_signal(self.__walker, 'modified', __on_item_change)
+
+        self.__box = urwid.BoxAdapter(self.__list, height)
+        self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
+
+        self.__pile = urwid.Pile([self.__label_attrmap, self.__box])
+
+        super(TableWidget, self).__init__(self.__pile)
+
+    def set_focus(self, n):
+        self.__list.set_focus(n)
+
+
+class PluginMenuEntry(TableEntryWidget):
     def __init__(self, title, plugin):
-        self.__text = SelectableText(title)
-        self.__text.plugin = plugin
-        super(PluginMenuEntry, self).__init__(self.__text, 'menu.entry',
-                                              'menu.entry:focus')
+        super(PluginMenuEntry, self).__init__(title)
+        self._text.plugin = plugin
 
 
 class PluginMenu(urwid.WidgetWrap):
     """The main menu listing all available plugins (which have a UI)
+    FIXME Use TableWidget
     """
     __pages = None
     __walker = None
@@ -236,6 +297,9 @@ class Button(urwid.WidgetWrap):
 
     selectable = lambda self: True
 
+    _button_attr = "plugin.widget.button"
+    _button_disabled_attr = "plugin.widget.button.disabled"
+
     def __init__(self, label):
         self._button = urwid.Button(label)
 
@@ -243,8 +307,7 @@ class Button(urwid.WidgetWrap):
             urwid.emit_signal(self, 'click', self)
         urwid.connect_signal(self._button, 'click', on_click_cb)
 
-        self._button_attrmap = urwid.AttrMap(self._button,
-                                              "plugin.widget.button")
+        self._button_attrmap = urwid.AttrMap(self._button, self._button_attr)
 
         self._padding = urwid.Padding(self._button_attrmap,
                                       width=len(label) + 4)
@@ -254,10 +317,10 @@ class Button(urwid.WidgetWrap):
     def enable(self, is_enabled):
         self.selectable = lambda: is_enabled
         if is_enabled:
-            self._button_attrmap.set_attr_map({None: ""})
+            self._button_attrmap.set_attr_map({None: self._button_attr})
         else:
             self._button_attrmap.set_attr_map({
-                None: "plugin.widget.button.disabled"
+                None: self._button_disabled_attr
                 })
 
 

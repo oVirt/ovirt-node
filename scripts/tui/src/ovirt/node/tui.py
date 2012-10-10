@@ -54,8 +54,10 @@ class UrwidTUI(object):
     footer = u"Press ctrl+c to exit"
 
     palette = [('header', 'white', 'dark blue'),
-               ('menu.entry', '', ''),
-               ('menu.entry:focus', 'white', 'light blue', 'standout'),
+               ('table', 'dark gray', ''),
+               ('table.header', 'bold', ''),
+               ('table.entry', 'dark gray', ''),
+               ('table.entry:focus', 'white', 'light blue', 'standout'),
                ('main.menu', 'black', ''),
                ('main.menu.frame', 'light gray', ''),
                ('plugin.widget.entry', 'dark gray', ''),

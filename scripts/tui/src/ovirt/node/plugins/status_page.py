@@ -44,7 +44,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return "Status"
 
     def rank(self):
-        return 10
+        return 0
 
     def model(self):
         if not self._model:

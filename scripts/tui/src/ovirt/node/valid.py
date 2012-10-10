@@ -248,13 +248,13 @@ class IPv6Address(IPv4Address):
 class IPAddress(Validator):
     """Allows any IPv4 or IPv6 address
 
-    >>> FQDNOrIPAddress()("127.0.0.1")
+    >>> IPAddress()("127.0.0.1")
     True
-    >>> FQDNOrIPAddress()("::1")
+    >>> IPAddress()("::1")
     True
-    >>> FQDNOrIPAddress().validate("example.com")
+    >>> IPAddress().validate("example.com")
     False
-    >>> FQDNOrIPAddress().validate("")
+    >>> IPAddress().validate("")
     False
     """
 

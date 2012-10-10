@@ -39,7 +39,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return "Tools (ping)"
 
     def rank(self):
-        return 70
+        return 999
 
     def model(self):
         """Returns the model of this plugin

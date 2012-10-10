@@ -93,6 +93,7 @@ def widget_for_item(tui, plugin, path, item):
         ovirt.node.ui.Options: build_options,
         ovirt.node.ui.Row: build_row,
         ovirt.node.ui.ProgressBar: build_progressbar,
+        ovirt.node.ui.Table: build_table,
     }
 
     # Check if builder is available for UI Element
@@ -200,8 +201,10 @@ def build_button(path, item, tui, plugin):
             elif type(r) in [ovirt.node.ui.Dialog]:
                 w = build_page(tui, plugin, r)
                 dialog = tui.display_dialog(w, r.title)
+
                 def on_item_close_changed_cb(i, v):
                     dialog.close()
+
                 r.connect_signal("close", on_item_close_changed_cb)
 
         else:
@@ -250,3 +253,20 @@ def build_progressbar(path, item, tui, plugin):
     item.connect_signal("current", on_item_current_change_cb)
 
     return widget
+
+
+def build_table(path, item, tui, plugin):
+    children = []
+    for key, label in item.items:
+        c = _build_tableitem(path, plugin, key, label)
+        children.append(c)
+    widget = ovirt.node.ui.widgets.TableWidget(item.header, children,
+                                               item.height)
+
+    return widget
+
+def _build_tableitem(path, plugin, key, label):
+    c = ovirt.node.ui.widgets.TableEntryWidget(label)
+    urwid.connect_signal(c, "click",
+                         lambda w, d: plugin._on_ui_change(d), {path: key})
+    return c

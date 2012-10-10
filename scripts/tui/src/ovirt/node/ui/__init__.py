@@ -132,7 +132,7 @@ class ContainerElement(Element):
         return self.children
 
     @widgets.setter
-    def widgets(self, v):
+    def set_widgets(self, v):
         self.children = v
 
 
@@ -148,7 +148,7 @@ class Dialog(Page):
 
     def __init__(self, title, children):
         self.title = title
-        self.close(False) # FIXME hack
+        self.close(False)
         super(Dialog, self).__init__(children)
 
     @Element.signal_change
@@ -236,6 +236,12 @@ class Divider(Element):
 
 
 class Options(Element):
+    """A selection of options
+
+    Args:
+        label: The caption of the options
+        options:
+    """
     def __init__(self, label, options):
         self.label = label
         self.options = options
@@ -253,6 +259,12 @@ class Options(Element):
 
 
 class ProgressBar(Element):
+    """A abstract progress bar.
+
+    Args:
+        current: The initial value
+        done: The maximum value
+    """
     def __init__(self, current=0, done=100):
         self.current(current)
         self.done = done
@@ -260,6 +272,29 @@ class ProgressBar(Element):
 
     @Element.signal_change
     def current(self, current=None):
+        """Get/Set the current status
+
+        Args:
+            current: New value or None
+
+        Returns:
+            The current progress
+        """
         if current is not None:
             self._current = current
         return self._current
+
+
+class Table(Element):
+    """Represents a simple Table with one column
+
+    Args:
+        header: A string
+        items: A list of tuples (key, label)
+        height: The height of the Table
+    """
+
+    def __init__(self, header, items, height=3):
+        self.header = header
+        self.items = items
+        self.height = height
