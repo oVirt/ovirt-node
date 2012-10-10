@@ -526,7 +526,7 @@ def convert_to_biosdevname():
         ver = proc.stdout.split()[0]
         if not float(ver) >= 2.6:
             logger.debug("Skipping biosdevname conversion, SMBIOS too old")
-            augtool("set", "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
+            _functions.augtool("set", "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
             return
         nics = {}
         cmd = "biosdevname -d"
