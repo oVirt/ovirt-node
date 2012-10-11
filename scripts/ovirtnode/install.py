@@ -114,6 +114,7 @@ title BACKUP %(oldtitle)s
     root (hd0,%(partB)d)
     kernel /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
     initrd /initrd0.img
+    savedefault
     """
         GRUB_SETUP_TEMPLATE = """
     grub --device-map=%(grub_dir)s/device.map <<EOF
