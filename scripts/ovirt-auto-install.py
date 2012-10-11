@@ -26,7 +26,6 @@ from ovirtnode.install import *
 from ovirtnode.network import *
 from ovirtnode.log import *
 from ovirtnode.kdump import *
-from ovirtnode.snmp import *
 
 
 def config_networking():
@@ -87,8 +86,6 @@ except:
 install = Install()
 print "Configuring KDump"
 kdump_auto()
-print "Configuring SNMP"
-snmp_auto()
 try:
     from ovirt_config_setup.rhn import *
     print "Configuring RHN"
