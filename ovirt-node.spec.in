@@ -84,7 +84,7 @@ Provides a series of daemons and support utilities for hypervisor distribution.
 Summary:        Recipes for building and running %{product_family} image
 Group:          Applications/System
 Requires:       pykickstart  >= 1.54
-Requires:       livecd-tools >= 16.0
+Requires:       livecd-tools >= 1:16.0
 Obsoletes:      ovirt-node-tools <= 2.3.0-999
 
 %define recipe_root %{_datadir}/ovirt-node-recipe
@@ -98,7 +98,7 @@ however on a development machine to help to build the image.
 %package tools
 Summary:        Recipes for building and running %{product_family} image
 Group:          Applications/System
-Requires:       livecd-tools >= 16.0
+Requires:       livecd-tools >= 1:16.0
 Requires:       appliance-tools-minimizer
 
 %define tools_root %{_datadir}/ovirt-node-tools
