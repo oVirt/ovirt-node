@@ -349,33 +349,33 @@ def get_rhn_status():
 
 
 def rhn_auto():
+    rhn_parameters = ["OVIRT_RHN_CA_CERT", "OVIRT_RHN_USERNAME",
+        "OVIRT_RHN_PASSWORD", "OVIRT_RHN_ACTIVATIONKEY", "OVIRT_RHN_PROFILE",
+        "OVIRT_RHN_ACTIVATIONKEY", "OVIRT_RHN_PROXY", "OVIRT_RHN_PROXYUSER",
+        "OVIRT_RHN_PROXYPASSWORD"]
+
+    # RHN_TYPE & RHN_URL have defaults if not present, set them here
     if not "OVIRT_RHN_TYPE" in OVIRT_VARS:
-        OVIRT_VARS["OVIRT_RHN_TYPE"] = classic
+        OVIRT_VARS["OVIRT_RHN_TYPE"] = "classic"
     if not "OVIRT_RHN_URL" in OVIRT_VARS:
         OVIRT_VARS["OVIRT_RHN_URL"] = "https://xmlrpc.rhn.redhat.com/XMLRPC"
-    if not "OVIRT_RHN_CA_CERT" in OVIRT_VARS:
-        OVIRT_VARS["OVIRT_RHN_CA_CERT"] = ""
-    if (not "OVIRT_RHN_USERNAME" in OVIRT_VARS and
-        not "OVIRT_RHN_ACTIVATIONKEY" in OVIRT_VARS):
-            logger.debug("RHN registration requires a username")
+
+    # Default everything else to ""
+    for parameter in rhn_parameters:
+        if not parameter in OVIRT_VARS:
+            OVIRT_VARS[parameter] = ""
+
+    # We know USERNAME, PASSWORD & ACTIVATIONKEY are present
+    # verify if username+password or activationkey is not ""
+    if ((not OVIRT_VARS['OVIRT_RHN_USERNAME'] or
+            not OVIRT_VARS['OVIRT_RHN_PASSWORD']) and
+        not OVIRT_VARS['OVIRT_RHN_ACTIVATIONKEY']):
+            logger.debug("RHN registration requires a username and " +
+                "password, or an activation key.")
             return False
-    if (not "OVIRT_RHN_PASSWORD" in OVIRT_VARS and
-        not "OVIRT_RHN_ACTIVATIONKEY" in OVIRT_VARS):
-        logger.debug("RHN registration requires a password")
-        return False
-    if not "OVIRT_RHN_PROFILE" in OVIRT_VARS:
-        OVIRT_VARS["OVIRT_RHN_PROFILE"] = ""
-    if not "OVIRT_RHN_ACTIVATIONKEY" in OVIRT_VARS:
-        OVIRT_VARS["OVIRT_RHN_ACTIVATIONKEY"] = ""
-    if not "OVIRT_RHN_PROXY" in OVIRT_VARS:
-        OVIRT_VARS["OVIRT_RHN_PROXY"] = ""
-    if not "OVIRT_RHN_PROXYUSER" in OVIRT_VARS:
-        OVIRT_VARS["OVIRT_RHN_PROXYUSER"] = ""
-    if not "OVIRT_RHN_PROXYPASSWORD" in OVIRT_VARS:
-        OVIRT_VARS["OVIRT_RHN_PROXYPASSWORD"] = ""
 
     if (not "https://xmlrpc.rhn.redhat.com/XMLRPC" in
-        OVIRT_VARS["OVIRT_RHN_URL"] and OVIRT_VARS["OVIRT_RHN_CA_CERT"] == ""):
+        OVIRT_VARS["OVIRT_RHN_URL"] and not OVIRT_VARS["OVIRT_RHN_CA_CERT"]):
         logger.debug("Missing Satellite CA certificate URL")
         return False
 
