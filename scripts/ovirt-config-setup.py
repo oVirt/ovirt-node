@@ -1957,9 +1957,6 @@ class NodeConfigScreen():
             if self.__current_page == NETWORK_PAGE:
                 buttons.append(["Ping Test",
                                 PING_BUTTON])
-            if self.__current_page == NETWORK_DETAILS_PAGE:
-                buttons.append(["Flash Lights to Identify",
-                                IDENTIFY_BUTTON])
             if self.__current_page != STATUS_PAGE \
                and self.__current_page < 20 \
                and not (self.__current_page is NETWORK_DETAILS_PAGE and \
@@ -1986,6 +1983,9 @@ class NodeConfigScreen():
                 buttons.append(["Reset", RESET_BUTTON])
             if self.__current_page == SUPPORT_PAGE:
                 buttons.append(["Back to Menu", MENU_BUTTON])
+            if self.__current_page == NETWORK_DETAILS_PAGE:
+                buttons.append(["Flash Lights to Identify",
+                                IDENTIFY_BUTTON])
             buttonbar = ButtonBar(screen, buttons, compact=1)
             if self.__current_page == LOCKED_PAGE:
                 pad = 28
