@@ -187,6 +187,40 @@ def is_local_storage_configured():
         return False
     return True
 
+# Caluclate the default Swap Size
+# based on overcommit ratio and amount of RAM
+def calculate_swap_size(overcommit=0.5):
+    mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
+    mem_size_mb = subprocess_closefds(mem_size_cmd, shell=True,
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT)
+    MEM_SIZE_MB = mem_size_mb.stdout.read()
+    MEM_SIZE_MB = int(MEM_SIZE_MB) / 1024
+    # we multiply the overcommit coefficient by 10 then divide the
+    # product by 10 to avoid decimals in the result
+    OVERCOMMIT_SWAP_SIZE = int(MEM_SIZE_MB) * overcommit * 10 / 10
+    # add to the swap the amounts from
+    # http://kbase.redhat.com/faq/docs/DOC-15252
+    MEM_SIZE_GB = int(MEM_SIZE_MB) / 1024
+    if MEM_SIZE_GB < 4:
+        BASE_SWAP_SIZE = 2048
+    elif MEM_SIZE_GB < 16:
+        BASE_SWAP_SIZE = 4096
+    elif MEM_SIZE_GB < 64:
+        BASE_SWAP_SIZE = 8192
+    else:
+        BASE_SWAP_SIZE = 16384
+    return int(BASE_SWAP_SIZE + OVERCOMMIT_SWAP_SIZE)
+
+# return true if the variable is a postitive integer
+# false otherwise
+def check_int(var):
+    try:
+        value = int(var)
+    except:
+        return False
+    return True
+
 # perform automatic local disk installation
 # when at least following boot parameters are present:
 # for networking - OVIRT_BOOTIF, management NIC

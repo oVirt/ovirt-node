@@ -47,7 +47,8 @@ ROOT_STORAGE_PAGE = 3
 OTHER_DEVICE_ROOT_PAGE = 4
 HOSTVG_STORAGE_PAGE = 5
 OTHER_DEVICE_HOSTVG_PAGE = 6
-PASSWORD_PAGE = 7
+STORAGE_VOL_PAGE = 7
+PASSWORD_PAGE = 8
 UPGRADE_PAGE = 9
 FAILED_PAGE = 11
 FINISHED_PAGE = 13
@@ -132,6 +133,14 @@ class NodeInstallScreen:
         self.failed_block_dev = 0
         self.failed_install = False
         self.live_disk = get_live_disk()
+        self.config_vol_msg = None
+        self.data_vol_msg = None
+        self.swap_vol_msg = None
+        self.log_vol_msg = None
+        self.swap_vol_failed = False
+        self.log_vol_failed = False
+        self.data_vol_failed = False
+        self.config_vol_failed = False
         if not "/dev/mapper" in self.live_disk:
             self.live_disk = "/dev/" + get_live_disk().rstrip('0123456789')
         logger.info("::::live device::::\n" + self.live_disk)
@@ -205,6 +214,79 @@ class NodeInstallScreen:
         for item in self.__colorset.keys():
             colors = self.__colorset.get(item)
             self.screen.setColor(item, colors[0], colors[1])
+
+    def get_def_swap_size(self, overcommit):
+        if "OVIRT_OVERCOMMIT" in OVIRT_VARS:
+            return calculate_swap_size(OVIRT_VARS["OVIRT_OVERCOMMIT"])
+        else:
+            return calculate_swap_size(overcommit)
+
+    def swap_size_callback(self):
+        Storage = storage.Storage()
+        if not check_int(self.SWAP_SIZE.value()):
+            self.swap_vol_failed = True
+            self.swap_vol_msg = "Swap Size must be an integer."
+        elif int(self.SWAP_SIZE.value()) < int(Storage.MIN_SWAP_SIZE):
+            self.swap_vol_failed = True
+            self.swap_vol_msg = "Minimum Swap size is %s MB." % Storage.MIN_SWAP_SIZE
+        else:
+            self.swap_vol_failed = False
+            self.swap_vol_msg = None
+        self.write_storage_vol_msg()
+        return
+
+    def config_size_callback(self):
+        if not check_int(self.CONFIG_SIZE.value()):
+            self.config_vol_failed = True
+            self.config_vol_msg = "Config Partition Size must be a positive integer."
+        elif int(self.CONFIG_SIZE.value()) < 5:
+            self.config_vol_failed = True
+            self.config_vol_msg = "Minimum Config size is 5 MB."
+        else:
+            self.config_vol_failed = False
+            self.config_vol_msg = None
+        self.write_storage_vol_msg()
+        return
+
+    def log_size_callback(self):
+        if not check_int(self.LOGGING_SIZE.value()):
+            self.log_vol_failed = True
+            self.log_vol_msg = "Logging Partition Size must be a positive integer."
+        else:
+            self.log_vol_failed = False
+            self.log_vol_msg = None
+        self.write_storage_vol_msg()
+        return
+
+    def data_size_callback(self):
+        if self.DATA_SIZE.value() == "-1":
+            self.data_vol_failed = False
+            self.data_vol_msg = None
+        elif not check_int(self.DATA_SIZE.value()):
+            self.data_vol_failed = True
+            self.data_vol_msg = "Data Partition Size must be a positive integer or -1."
+        else:
+            self.data_vol_failed = False
+            self.data_size_msg = None
+        self.write_storage_vol_msg()
+        return
+
+    def write_storage_vol_msg(self):
+        self.vol_msg.setText("\n\n\n\n\n")
+        self.vol_msg.setText(self.format_storage_vol_msg())
+
+    def format_storage_vol_msg(self):
+        counter = 4
+        msg = ""
+        if self.swap_vol_msg is not None:
+            msg += "%s\n" % self.swap_vol_msg
+        if self.config_vol_msg is not None:
+            msg += "%s\n" % self.config_vol_msg
+        if self.log_vol_msg is not None:
+            msg += "%s\n" % self.log_vol_msg
+        if self.data_vol_msg is not None:
+            msg += "%s\n" % self.data_vol_msg
+        return msg
 
     def password_check_callback(self):
         self.valid_password, msg = password_check(self.root_password_1.value(), self.root_password_2.value())
@@ -330,8 +412,10 @@ class NodeInstallScreen:
             self.__current_page = HOSTVG_STORAGE_PAGE
         elif self.__current_page == HOSTVG_STORAGE_PAGE:
             self.__current_page = ROOT_STORAGE_PAGE
-        elif self.__current_page == PASSWORD_PAGE:
+        elif self.__current_page == STORAGE_VOL_PAGE:
             self.__current_page = HOSTVG_STORAGE_PAGE
+        elif self.__current_page == PASSWORD_PAGE:
+            self.__current_page = STORAGE_VOL_PAGE
         elif self.__current_page == UPGRADE_PAGE:
             self.__current_page = KEYBOARD_PAGE
         return
@@ -594,6 +678,67 @@ class NodeInstallScreen:
         elements.setField(self.hostvg_device, 0, 2, anchorLeft = 1, padding = (0,1,0,13))
         return [Label(""), elements]
 
+    def storage_vol_page(self):
+        elements = Grid(2,8)
+        Storage = storage.Storage()
+        elements.setField(Label("Please enter the sizes for the following partitions in MB"),0,0,anchorLeft=1)
+        vol_elements = Grid(3,8)
+        vol_elements.setField(Label("UEFI/Bios: "),0,0,anchorLeft=1)
+        self.UEFI_SIZE = Entry(10)
+        if "OVIRT_VOL_EFI_SIZE" in OVIRT_VARS:
+            self.UEFI_SIZE.set(OVIRT_VARS["OVIRT_VOL_EFI_SIZE"])
+        else:
+            self.UEFI_SIZE.set(str(Storage.EFI_SIZE))
+        self.UEFI_SIZE.setFlags(_snack.FLAG_DISABLED, 0)
+        vol_elements.setField(self.UEFI_SIZE,1,0)
+        vol_elements.setField(Label("Root & RootBackup: "),0,1,anchorLeft=1)
+        self.ROOT_SIZE = Entry(10)
+        if "OVIRT_VOL_ROOT_SIZE" in OVIRT_VARS:
+            self.ROOT_SIZE.set(OVIRT_VARS["OVIRT_VOL_ROOT_SIZE"])
+        else:
+            self.ROOT_SIZE.set(str(Storage.ROOT_SIZE))
+        self.ROOT_SIZE.setFlags(_snack.FLAG_DISABLED, 0)
+        vol_elements.setField(self.ROOT_SIZE,1,1)
+        vol_elements.setField(Label("  (2 partitions at 256MB each)"),2,1,anchorLeft=1)
+        vol_elements.setField(Label("Swap: "),0,2,anchorLeft=1)
+        self.SWAP_SIZE = Entry(10)
+        if "OVIRT_VOL_SWAP_SIZE" in OVIRT_VARS:
+            self.SWAP_SIZE.set(OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"])
+        else:
+            self.SWAP_SIZE.set(str(self.get_def_swap_size(Storage.overcommit)))
+        self.SWAP_SIZE.setCallback(self.swap_size_callback)
+        vol_elements.setField(self.SWAP_SIZE,1,2)
+        vol_elements.setField(Label("Config: "),0,3,anchorLeft=1)
+        self.CONFIG_SIZE = Entry(10)
+        if "OVIRT_VOL_CONFIG_SIZE" in OVIRT_VARS:
+            self.CONFIG_SIZE.set(OVIRT_VARS["OVIRT_VOL_CONFIG_SIZE"])
+        else:
+            self.CONFIG_SIZE.set(str(Storage.CONFIG_SIZE))
+        self.CONFIG_SIZE.setCallback(self.config_size_callback)
+        vol_elements.setField(self.CONFIG_SIZE,1,3)
+        vol_elements.setField(Label("Logging: "),0,4,anchorLeft=1)
+        self.LOGGING_SIZE = Entry(10)
+        if "OVIRT_VOL_LOGGING_SIZE" in OVIRT_VARS:
+            self.LOGGING_SIZE.set(OVIRT_VARS["OVIRT_VOL_LOGGING_SIZE"])
+        else:
+            self.LOGGING_SIZE.set(str(Storage.LOGGING_SIZE))
+        self.LOGGING_SIZE.setCallback(self.log_size_callback)
+        vol_elements.setField(self.LOGGING_SIZE,1,4)
+        vol_elements.setField(Label("Data: "),0,5,anchorLeft=1)
+        self.DATA_SIZE = Entry(10)
+        if "OVIRT_VOL_DATA_SIZE" in OVIRT_VARS:
+            self.DATA_SIZE.set(OVIRT_VARS["OVIRT_VOL_DATA_SIZE"])
+        else:
+            self.DATA_SIZE.set(str(Storage.DATA_SIZE))
+        self.DATA_SIZE.setCallback(self.data_size_callback)
+        vol_elements.setField(self.DATA_SIZE,1,5)
+        elements.setField(Label(""),0,1)
+        elements.setField(vol_elements,0,2,anchorLeft=1)
+        self.vol_msg = Textbox(60,4,"",wrap=1)
+        elements.setField(self.vol_msg,0,3,padding=(0,1,0,4))
+        return [Label(""), elements]
+
+
     def password_page(self):
         elements = Grid(2, 8)
         pw_elements = Grid (3,3)
@@ -654,6 +799,8 @@ class NodeInstallScreen:
             return self.other_device_hostvg_page()
         if page == HOSTVG_STORAGE_PAGE:
             return self.hostvg_disk_page()
+        if page == STORAGE_VOL_PAGE:
+            return self.storage_vol_page()
         if page == PASSWORD_PAGE:
             return self.password_page()
         if page == FAILED_PAGE:
@@ -758,7 +905,7 @@ class NodeInstallScreen:
                 buttons.append(["Quit", QUIT_BUTTON])
             if self.__current_page != WELCOME_PAGE and self.__current_page != FAILED_PAGE and self.__current_page != FINISHED_PAGE:
                 buttons.append(["Back", BACK_BUTTON])
-            if self.__current_page == HOSTVG_STORAGE_PAGE or self.__current_page == ROOT_STORAGE_PAGE or self.__current_page == UPGRADE_PAGE:
+            if self.__current_page == HOSTVG_STORAGE_PAGE or self.__current_page == ROOT_STORAGE_PAGE or self.__current_page == UPGRADE_PAGE or self.__current_page == STORAGE_VOL_PAGE:
                 buttons.append(["Continue", CONTINUE_BUTTON])
             if self.__current_page == OTHER_DEVICE_ROOT_PAGE or self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
                 buttons.append(["Continue", CONTINUE_BUTTON])
@@ -862,13 +1009,6 @@ class NodeInstallScreen:
                                         continue
                                     hostvg_list += dev + ","
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
-                                s = storage.Storage()
-                                if not s.check_partition_sizes():
-                                    msg = "Not enough space for installation\nPlease select a bigger drive\n\nAvailable Space: %sMB\nRequired Space: %sMB\n" % (s.drive_disk_size, s.drive_need_size)
-                                    warn = ButtonChoiceWindow(self.screen, "Disk Space Check", msg, buttons = ['Ok'])
-                                    self.__current_page = ROOT_STORAGE_PAGE
-                                else:
-                                    self.__current_page = PASSWORD_PAGE
                                 if check_existing_hostvg(""):
                                     self.screen.setColor("BUTTON", "black", "red")
                                     self.screen.setColor("ACTBUTTON", "blue", "white")
@@ -878,6 +1018,8 @@ class NodeInstallScreen:
                                     if warn != "ok":
                                         self.__current_page = HOSTVG_STORAGE_PAGE
                                         augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
+                                else:
+                                    self.__current_page = STORAGE_VOL_PAGE
                     elif self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
                         if not self.hostvg_device.value():
                             ButtonChoiceWindow(self.screen, "HostVG Storage Selection", "You must enter a valid device", buttons = ['Ok'])
@@ -890,9 +1032,29 @@ class NodeInstallScreen:
                                         continue
                                     hostvg_list += dev + ","
                                 augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
-                                self.__current_page = PASSWORD_PAGE
+                                self.__current_page = STORAGE_VOL_PAGE
                             else:
                                 self.__current_page = OTHER_DEVICE_HOSTVG_PAGE
+                    elif self.__current_page == STORAGE_VOL_PAGE:
+                        if ( self.swap_vol_failed or self.log_vol_failed or
+                             self.config_vol_failed or self.data_vol_failed):
+                            ButtonChoiceWindow(self.screen, "Error", self.format_storage_vol_msg(), buttons=['OK'])
+                            self.__current_page=STORAGE_VOL_PAGE
+                            continue
+                        else:
+                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VOL_ROOT_SIZE", '"' + self.ROOT_SIZE.value() + '"')
+                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VOL_EFI_SIZE", '"' + self.UEFI_SIZE.value() + '"')
+                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VOL_SWAP_SIZE", '"' + self.SWAP_SIZE.value() + '"')
+                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VOL_LOGGING_SIZE", '"' + self.LOGGING_SIZE.value() + '"')
+                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VOL_CONFIG_SIZE", '"' + self.CONFIG_SIZE.value() + '"')
+                            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VOL_DATA_SIZE", '"' + self.DATA_SIZE.value() + '"')
+                        s = storage.Storage()
+                        if not s.check_partition_sizes():
+                            msg = "Not enough space for installation\nPlease select a bigger drive\no change the partition sizes.\n\nAvailable Space: %sMB\nRequired Space: %sMB\n" % (s.drive_disk_size, s.drive_need_size)
+                            warn = ButtonChoiceWindow(self.screen, "Disk Space Check", msg, buttons = ['Ok'])
+                            self.__current_page = STORAGE_VOL_PAGE
+                        else:
+                            self.__current_page=PASSWORD_PAGE
                     elif self.__current_page == UPGRADE_PAGE:
                         if self.current_password_fail is not 1:
                             if self.valid_password == 0:

@@ -82,26 +82,6 @@ class Storage:
                 logger.info(self.ROOTDRIVE)
                 self.BOOTDRIVE = _functions.translate_multipath_device( \
                                                                 self.ROOTDRIVE)
-        mem_size_cmd = "awk '/MemTotal:/ { print $2 }' /proc/meminfo"
-        mem_size_mb = _functions.subprocess_closefds(mem_size_cmd, shell=True,
-                                          stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT)
-        MEM_SIZE_MB = mem_size_mb.stdout.read()
-        MEM_SIZE_MB = int(MEM_SIZE_MB) / 1024
-        # we multiply the overcommit coefficient by 10 then divide the
-        # product by 10 to avoid decimals in the result
-        OVERCOMMIT_SWAP_SIZE = int(MEM_SIZE_MB) * self.overcommit * 10 / 10
-        # add to the swap the amounts from
-        # http://kbase.redhat.com/faq/docs/DOC-15252
-        MEM_SIZE_GB = int(MEM_SIZE_MB) / 1024
-        if MEM_SIZE_GB < 4:
-            BASE_SWAP_SIZE = 2048
-        elif MEM_SIZE_GB < 16:
-            BASE_SWAP_SIZE = 4096
-        elif MEM_SIZE_GB < 64:
-            BASE_SWAP_SIZE = 8192
-        else:
-            BASE_SWAP_SIZE = 16384
         if "OVIRT_VOL_SWAP_SIZE" in OVIRT_VARS:
             if int(OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]) < self.MIN_SWAP_SIZE:
                 logger.error("Swap size is smaller than minimum required + "
@@ -113,7 +93,7 @@ class Storage:
             else:
                 self.SWAP_SIZE = _functions.OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]
         else:
-            self.SWAP_SIZE = int(BASE_SWAP_SIZE) + int(OVERCOMMIT_SWAP_SIZE)
+            self.SWAP_SIZE = _functions.calculate_swap_size(self.overcommit)
         for i in ['OVIRT_VOL_BOOT_SIZE', 'OVIRT_VOL_ROOT_SIZE',
                   'OVIRT_VOL_CONFIG_SIZE', 'OVIRT_VOL_LOGGING_SIZE',
                   'OVIRT_VOL_DATA_SIZE', 'OVIRT_VOL_SWAP2_SIZE',
