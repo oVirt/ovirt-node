@@ -22,6 +22,8 @@ from ovirtnode.ovirtfunctions import *
 from ovirtnode.password import *
 from snack import *
 import _snack
+import grp
+import pwd
 
 
 def enable_cim():
@@ -45,6 +47,10 @@ class Plugin(PluginBase):
 
     def __init__(self, ncs):
         PluginBase.__init__(self, "CIM", ncs)
+        self.username = "cim"
+        self.shell = "/sbin/nologin"
+        self.main_group = "cim"
+        self.group_list = ["sfcb"]
 
     def form(self):
         elements = Grid(2, 9)
@@ -119,6 +125,7 @@ class Plugin(PluginBase):
     def __set_cim_password(self):
         msg = None
         failed = True
+        self.create_cim_user()
         if self.valid_password:
             if set_password(self.cim_password_1.value(), "cim"):
                 msg = "CIM Password Successfully Set"
@@ -142,6 +149,23 @@ class Plugin(PluginBase):
         self.valid_password_msg = msg
 
         return
+
+    def create_cim_user(self):
+        if not check_user_exists(self.username):
+            add_user(self.username, self.shell, self.main_group, self.group_list)
+        else:
+            userinfo = pwd.getpwnam(self.username)
+            if not userinfo.pw_gid == grp.getgrnam(self.main_group).gr_gid:
+                system_closefds("usermod -g %s %s" % (self.main_group,
+                                                      self.username))
+            if not userinfo.pw_shell == self.shell:
+                system_closefds("usermod -s %s %s" % (self.shell,
+                                                      self.username))
+            for group in self.group_list:
+                if self.username not in grp.getgrnam(group).gr_mem:
+                    system_closefds("usermod -G %s %s" % (self.group_list.join(",",
+                                                          self.username)))
+                    break
 
 
 def get_plugin(ncs):

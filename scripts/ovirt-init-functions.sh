@@ -551,7 +551,7 @@ _start_ovirt_early () {
             fi
             if ! grep -q ^cim /etc/passwd; then
                 unmount_config /etc/passwd /etc/shadow
-                useradd -g cim -s /usr/libexec/ovirt-admin-shell cim
+                useradd -G sfcb -g cim -s /sbin/nologin cim
                 persist /etc/shadow /etc/passwd
             fi
             ;;

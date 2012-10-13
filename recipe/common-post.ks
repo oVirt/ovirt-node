@@ -245,7 +245,8 @@ EOF_sshd_config
 #CIM related changes
 # set read-only
 echo "readonly = true;" > /etc/libvirt-cim.conf
-useradd -G sfcb cim
+groupadd cim
+useradd -g cim -G sfcb -s /sbin/nologin cim
 
 # disable yum repos by default
 augtool << \EOF_yum

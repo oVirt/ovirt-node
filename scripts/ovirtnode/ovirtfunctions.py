@@ -35,6 +35,8 @@ import gudev
 import cracklib
 import libvirt
 import logging
+import grp
+import pwd
 
 OVIRT_LOGFILE="/var/log/ovirt.log"
 OVIRT_TMP_LOGFILE="/tmp/ovirt.log"
@@ -1185,6 +1187,23 @@ def pwd_set_check(user):
         return True
     else:
         return False
+
+# Check if a user exists on the system
+def check_user_exists(name):
+    try:
+        pwd.getpwnam(name)
+        return True
+    except KeyError:
+        return False
+
+def add_user(username, shell="/usr/libexec/ovirt-admin-shell", group="",
+             sec_groups=[""], locked=True):
+    cmd = "useradd -g %s -G %s -s %s %s" % (group, ",".join(sec_groups),
+                                            shell, username)
+    system_closefds(cmd)
+    if locked:
+        cmd = "passwd -l %s" % username
+        system_closefds(cmd)
 
 def get_installed_version_number():
     if mount_liveos():
