@@ -100,7 +100,7 @@ def run_rhnreg(serverurl="", cacert="", activationkey="", username="",
     if os.path.exists("/etc/sysconfig/rhn/up2date"):
         os.unlink("/etc/sysconfig/rhn/up2date")
 
-    logged_args = args
+    logged_args = list(args)
     remove_values_from_args = ["--password", "--proxyPassword"]
     for idx, arg in enumerate(logged_args):
         if arg in remove_values_from_args:
@@ -250,7 +250,7 @@ def run_rhsm(serverurl="", cacert="", activationkey="", username="",
     for f in all_rhsm_configs:
         unlink_if_exists(f)
 
-    logged_args = args
+    logged_args = list(args)
     remove_values_from_args = ["--password", "--proxypassword"]
     for idx, arg in enumerate(logged_args):
         if arg in remove_values_from_args:
