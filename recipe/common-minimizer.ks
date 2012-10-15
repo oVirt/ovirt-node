@@ -72,6 +72,7 @@ drop /lib/modules/*/kernel/net
 keep /lib/modules/*/kernel/net/802*
 keep /lib/modules/*/kernel/net/bridge
 keep /lib/modules/*/kernel/net/core
+keep /lib/modules/*/kernel/net/dns_resolver
 keep /lib/modules/*/kernel/net/ipv*
 keep /lib/modules/*/kernel/net/key
 keep /lib/modules/*/kernel/net/llc
