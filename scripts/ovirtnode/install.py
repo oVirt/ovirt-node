@@ -383,15 +383,9 @@ initrd /initrd0.img
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation
-<<<<<<< HEAD:scripts/ovirtnode/install.py
         if _functions.is_iscsi_install():
-            self.root_param = "root=LABEL=Root"
-            self.bootparams = "root=iscsi:%s::%s::%s ip=%s:dhcp" % (
-=======
-        if is_iscsi_install():
             self.root_param = "root=live:LABEL=Root"
             self.bootparams = "netroot=iscsi:%s::%s::%s ip=br%s:dhcp bridge=br%s:%s " % (
->>>>>>> c0fdc03... installer: Finish iscsiroot installation code:scripts/install.py
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"],
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
