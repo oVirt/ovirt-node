@@ -663,6 +663,7 @@ STRING_TYPE=(str,unicode)
 #   copy to /config and bind-mount back
 
 def ovirt_store_config(files):
+    rc = True
     if is_stateless():
         return True
     if not os.path.ismount("/config"):
@@ -676,33 +677,33 @@ def ovirt_store_config(files):
     for f in files_list:
         filename = os.path.abspath(f)
         persist_it=True
-        # ensure that, if this is a directory
-        # that it's not already persisted
+
         if os.path.isdir(filename):
+            # ensure that, if this is a directory
+            # that it's not already persisted
             if os.path.isdir("/config/" + filename):
                 logger.warn("Directory already persisted: " + filename)
                 logger.warn("You need to unpersist its child directories " +
                             "and/or files and try again.")
                 persist_it=False
-                rc = True
-
-        # if it's a file then make sure it's not already persisted
-        if os.path.isfile(filename):
+        elif os.path.isfile(filename):
+            # if it's a file then make sure it's not already persisted
             if os.path.isfile("/config/" + filename):
                 md5root=md5sum(filename)
                 md5stored=md5sum("/config" + filename)
                 if md5root == md5stored:
                     logger.warn("File already persisted: " + filename)
                     persist_it=False
-                    rc = True
                 else:
                     # persistent copy needs refresh
                     if system("umount -n " + filename + " 2> /dev/null"):
                         system("rm -f /config"+ filename)
-        if persist_it:
+        else:
             # skip if file does not exist
-            if not os.path.exists(filename):
-                logger.warn("Skipping, file: " + filename + " does not exist")
+            logger.warn("Skipping, file '" + filename + "' does not exist")
+            continue
+
+        if persist_it:
             # skip if already bind-mounted
             if not check_bind_mount(filename):
                 dirname = os.path.dirname(filename)
@@ -714,19 +715,19 @@ def ovirt_store_config(files):
                         rc = False
                     else:
                         logger.info("File: " + filename + " persisted")
-                        rc = True
+                        rc = rc and True
             # register in /config/files used by rc.sysinit
             ret = system_closefds("grep -q \"^$" + filename +"$\" " + \
                                   " /config/files 2> /dev/null")
             if ret > 0:
                 system_closefds("echo "+filename+" >> /config/files")
                 logger.info("Successfully persisted: " + filename)
-                rc = True
+                rc = rc and True
         else:
             logger.warn(filename + " Already persisted")
-            rc = True
-    if rc:
-        return True
+            rc = rc and True
+    return rc
+
 
 def is_persisted(filename):
     abspath = os.path.abspath(filename)
