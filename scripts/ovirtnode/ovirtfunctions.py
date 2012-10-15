@@ -676,52 +676,52 @@ def ovirt_store_config(files):
     for f in files_list:
         filename = os.path.abspath(f)
         persist_it=True
-    # ensure that, if this is a directory
-    # that it's not already persisted
-    if os.path.isdir(filename):
-        if os.path.isdir("/config/" + filename):
-            logger.warn("Directory already persisted: " + filename)
-            logger.warn("You need to unpersist its child directories and/or files and try again.")
-            persist_it=False
-            rc = 0
-
-    # if it's a file then make sure it's not already persisted
-    if os.path.isfile(filename):
-        if os.path.isfile("/config/" + filename):
-            md5root=md5sum(filename)
-            md5stored=md5sum("/config" + filename)
-            if md5root == md5stored:
-                logger.warn("File already persisted: " + filename)
+        # ensure that, if this is a directory
+        # that it's not already persisted
+        if os.path.isdir(filename):
+            if os.path.isdir("/config/" + filename):
+                logger.warn("Directory already persisted: " + filename)
+                logger.warn("You need to unpersist its child directories and/or files and try again.")
                 persist_it=False
                 rc = 0
-            else:
-                # persistent copy needs refresh
-                if system("umount -n " + filename + " 2> /dev/null"):
-                    system("rm -f /config"+ filename)
-    if persist_it:
-        # skip if file does not exist
-        if not os.path.exists(filename):
-            logger.warn("Skipping, file: " + filename + " does not exist")
-        # skip if already bind-mounted
-        if not check_bind_mount(filename):
-            dirname = os.path.dirname(filename)
-            system("mkdir -p /config/" + dirname)
-            if system("cp -a " + filename + " /config"+filename):
-                if not system("mount -n --bind /config"+filename+ " "+filename):
-                    logger.error("Failed to persist: " + filename)
-                    rc = 1
+
+        # if it's a file then make sure it's not already persisted
+        if os.path.isfile(filename):
+            if os.path.isfile("/config/" + filename):
+                md5root=md5sum(filename)
+                md5stored=md5sum("/config" + filename)
+                if md5root == md5stored:
+                    logger.warn("File already persisted: " + filename)
+                    persist_it=False
+                    rc = 0
                 else:
-                    logger.info("File: " + filename + " persisted")
-                    rc = True
-        # register in /config/files used by rc.sysinit
-        ret = system_closefds("grep -q \"^$" + filename +"$\" /config/files 2> /dev/null")
-        if ret > 0:
-            system_closefds("echo "+filename+" >> /config/files")
-            logger.info("Successfully persisted: " + filename)
+                    # persistent copy needs refresh
+                    if system("umount -n " + filename + " 2> /dev/null"):
+                        system("rm -f /config"+ filename)
+        if persist_it:
+            # skip if file does not exist
+            if not os.path.exists(filename):
+                logger.warn("Skipping, file: " + filename + " does not exist")
+            # skip if already bind-mounted
+            if not check_bind_mount(filename):
+                dirname = os.path.dirname(filename)
+                system("mkdir -p /config/" + dirname)
+                if system("cp -a " + filename + " /config"+filename):
+                    if not system("mount -n --bind /config"+filename+ " "+filename):
+                        logger.error("Failed to persist: " + filename)
+                        rc = 1
+                    else:
+                        logger.info("File: " + filename + " persisted")
+                        rc = True
+            # register in /config/files used by rc.sysinit
+            ret = system_closefds("grep -q \"^$" + filename +"$\" /config/files 2> /dev/null")
+            if ret > 0:
+                system_closefds("echo "+filename+" >> /config/files")
+                logger.info("Successfully persisted: " + filename)
+                rc = 0
+        else:
+            logger.warn(filename + " Already persisted")
             rc = 0
-    else:
-        logger.warn(filename + " Already persisted")
-        rc = 0
     if rc == 0:
         return True
 
