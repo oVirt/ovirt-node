@@ -407,6 +407,9 @@ def rhn_auto():
         return False
     if reg_rc == 0 and not False:
         logger.info("RHN Registration Successful")
+        # sync profile if reregistering, fixes problem with virt guests not showing
+        subprocess_closefds("rhn-profile-sync", shell=True, stdout=PIPE,
+                                  stderr=STDOUT)
         return True
     elif reg_rc > 0:
         logger.debug(reg_rc)
