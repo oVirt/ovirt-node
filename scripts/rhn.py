@@ -150,15 +150,17 @@ def parse_host_port(u):
 
 def run_rhsm(serverurl="", cacert="", activationkey="", username="",
              password="", profilename="", proxyhost="", proxyuser="",
-             proxypass=""):
+             proxypass="", org=""):
     extra_args = ['--force', '--autosubscribe']
     sm = ['/usr/sbin/subscription-manager']
 
     args = list(sm)
     args.append('register')
-    if len(activationkey):
+    if len(activationkey) and len(org):
         args.append('--activationkey')
         args.append(activationkey)
+        args.append('--org')
+        args.append(org)
     elif len(username):
         args.append('--username')
         args.append(username)
@@ -388,6 +390,7 @@ def rhn_auto():
             profilename=OVIRT_VARS["OVIRT_RHN_PROFILE"],
             proxyhost=OVIRT_VARS["OVIRT_RHN_PROXY"],
             proxyuser=OVIRT_VARS["OVIRT_RHN_PROXYUSER"],
+            org=OVIRT_VARS["OVIRT_RHN_ORG"],
             proxypass=OVIRT_VARS["OVIRT_RHN_PROXYPASSWORD"])
     elif OVIRT_VARS["OVIRT_RHN_TYPE"] == "classic":
         reg_rc = run_rhnreg(serverurl=OVIRT_VARS["OVIRT_RHN_URL"],
@@ -583,6 +586,7 @@ class Plugin(PluginBase):
                 proxyhost=self.proxyhost.value() + ":" +
                           self.proxyport.value(),
                 proxyuser=self.proxyuser.value(),
+                org="",
                 proxypass=self.proxypass.value())
         else:
             # clear sam registration
