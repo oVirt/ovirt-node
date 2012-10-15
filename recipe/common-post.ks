@@ -22,6 +22,8 @@ passwd -l root
 semanage  boolean -m -S targeted -F /dev/stdin  << \EOF_semanage
 allow_execstack=0
 virt_use_nfs=1
+virt_use_sanlock=1
+sanlock_use_nfs=1
 EOF_semanage
 
 # make sure we don't autostart virbr0 on libvirtd startup
