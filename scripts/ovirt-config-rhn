@@ -213,8 +213,8 @@ print 'port=%s' % port
     log "Registering to RHN account....."
 
     unmount_config /etc/pki/consumer/*pem
-    unmount_config /var/lib/rhsm/productid.js /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
-    rm -rf /var/lib/rhsm/productid.js /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
+    unmount_config /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
+    rm -rf /var/lib/rhsm/cache/installed_products.json /var/lib/rhsm/facts/facts.json
     args="subscription-manager register ${args}"
     # cant rely on return code in RHEVH's case
     eval $args
@@ -223,7 +223,6 @@ print 'port=%s' % port
     if [ $rc -eq 0 ]; then
         ovirt_store_config \
             /etc/pki/consumer/*pem \
-            /var/lib/rhsm/productid.js \
             /var/lib/rhsm/cache/installed_products.json \
             /var/lib/rhsm/facts/facts.json
         log "System "$profileName" successfully registered "$serverUrl""

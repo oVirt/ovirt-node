@@ -240,8 +240,7 @@ def run_rhsm(serverurl="", cacert="", activationkey="", username="",
     log("Registering to RHN account.....")
 
     import glob
-    all_rhsm_configs = (["/var/lib/rhsm/productid.js ",
-                        "/var/lib/rhsm/cache/installed_products.json ",
+    all_rhsm_configs = (["/var/lib/rhsm/cache/installed_products.json",
                         "/var/lib/rhsm/facts/facts.json"])
     unmount_config(all_rhsm_configs)
     unmount_config(glob.glob("/etc/pki/consumer/*pem"))
