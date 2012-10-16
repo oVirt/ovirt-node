@@ -455,6 +455,8 @@ def mount_live():
             if not live_dev:
                 # usb devices with LIVE label
                 live_dev = findfs("LIVE")
+    elif os.path.exists("/data/updates/ovirt-node-image.iso"):
+        live_dev = "-o loop /data/updates/ovirt-node-image.iso"
     else:
         live_dev="/dev/live"
 
