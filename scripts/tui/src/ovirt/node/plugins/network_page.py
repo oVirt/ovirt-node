@@ -132,7 +132,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         pass
 
     def on_merge(self, effective_changes):
-        effective_model = self._model.update(changes)
+        effective_model = self._model.update(effective_changes)
 
         if "dns[0]" in effective_changes or \
            "dns[1]" in effective_changes:

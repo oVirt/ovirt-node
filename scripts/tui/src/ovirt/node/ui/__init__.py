@@ -126,14 +126,10 @@ class ContainerElement(Element):
         self.children = children
         super(ContainerElement, self).__init__()
 
-    @property
-    @deprecated
-    def widgets(self):
+    def children(self, v=None):
+        if v:
+            self.children = v
         return self.children
-
-    @widgets.setter
-    def set_widgets(self, v):
-        self.children = v
 
 
 class Page(ContainerElement):

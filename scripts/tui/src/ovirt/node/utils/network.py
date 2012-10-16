@@ -72,7 +72,8 @@ def _collect_nic_informations(nics):
 #                "udev informations are incomplete (udevadm re-trigger?)"
 
         info = {"name": d.get_property("INTERFACE"),
-                "vendor": d.get_property("ID_VENDOR_FROM_DATABASE") or "unkown",
+                "vendor": d.get_property("ID_VENDOR_FROM_DATABASE") \
+                          or "unkown",
                 "devtype": d.get_property("DEVTYPE") or "unknown",
                 "devpath": d.get_property("DEVPATH")
                }
@@ -95,10 +96,10 @@ def _collect_nic_informations(nics):
             try:
                 driver = os.path.basename(os.readlink(driver_symlink))
             except Exception as e:
-                LOGGER.warning("Exception while reading driver " +
-                               "of '%s' from '%s'" % (name, driver_symlink))
+                LOGGER.warning(("Exception %s while reading driver " +
+                                "of '%s' from '%s'") % (e, name,
+                                                        driver_symlink))
         infos[name]["driver"] = driver
-
 
         hwaddr = "unkown"
         with open("/sys/class/net/%s/address" % name) as macfile:
@@ -131,7 +132,6 @@ def _collect_nic_informations(nics):
             info["parent"] = ".".join(parts[:-1])
 
             info["type"] = "vlan"
-
 
     return infos
 
@@ -226,7 +226,7 @@ def _aug_get_or_set(augpath, new_servers=None):
         servers.append(aug.get(path))
 
     if new_servers:
-        itempath = lambda idx: "%s[%d]" % (augpath, idx+1)
+        itempath = lambda idx: "%s[%d]" % (augpath, idx + 1)
         for idx, server in enumerate(new_servers):
             aug.set(itempath(idx), server)
         if len(servers) > len(new_servers):

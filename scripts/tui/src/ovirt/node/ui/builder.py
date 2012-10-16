@@ -60,7 +60,7 @@ def build_page(tui, plugin, container):
     save = build_button("", ovirt.node.ui.SaveButton(), tui, plugin)
     plugin._save_button = save
 
-    for path, item in container.widgets:
+    for path, item in container.children:
         widget = widget_for_item(tui, plugin, path, item)
         widgets.append(("flow", widget))
 
@@ -128,14 +128,13 @@ def build_entry(path, item, tui, plugin):
     widget.enable(item.enabled)
 
     def on_item_enabled_change_cb(w, v):
-        LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
-                                                                  v))
+        LOGGER.debug("Element changed, updating entry '%s': %s" % (w, v))
         if widget.selectable() != v:
             widget.enable(v)
     item.connect_signal("enabled", on_item_enabled_change_cb)
 
     def on_widget_value_change(widget, new_value):
-        LOGGER.debug("Widget changed, updating model '%s'" % path)
+        LOGGER.debug("Entry changed, calling callback: '%s'" % path)
 
         try:
             change = {path: new_value}
@@ -143,7 +142,6 @@ def build_entry(path, item, tui, plugin):
             plugin._on_ui_change(change)
             widget.notice = ""
             widget.valid(True)
-            LOGGER.debug(plugin.__dict__)
             plugin._save_button.enable(True)
 
         except ovirt.node.exceptions.Concern as e:
@@ -174,8 +172,7 @@ def build_label(path, item, tui, plugin):
         widget = ovirt.node.ui.widgets.Label(item.text())
 
     def on_item_text_change_cb(w, v):
-        LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
-                                                                  v))
+        LOGGER.debug("Element changed, updating label '%s': %s" % (w, v))
         widget.text(v)
         # Redraw the screen if widget text is updated "outside" of the
         # mainloop
@@ -192,7 +189,7 @@ def build_button(path, item, tui, plugin):
         LOGGER.debug("Button click: %s" % widget)
         if type(item) is ovirt.node.ui.SaveButton:
             r = plugin._on_ui_save()
-            LOGGER.debug("Got save: %s" % r)
+            LOGGER.debug("SaveButton clicked: %s" % r)
 
             if type(r) in [ovirt.node.ui.Page]:
                 w = build_page(tui, plugin, r)
@@ -225,8 +222,8 @@ def build_options(path, item, tui, plugin):
                                            plugin.model()[path])
 
     def on_widget_change_cb(widget, data):
-        LOGGER.debug(data)
         item.option(data)
+        LOGGER.debug("Options changed, calling callback: %s" % data)
         plugin._on_ui_change({path: data})
     urwid.connect_signal(widget, "change", on_widget_change_cb)
 
@@ -246,8 +243,7 @@ def build_progressbar(path, item, tui, plugin):
     widget = ovirt.node.ui.widgets.ProgressBarWidget(item.current(), item.done)
 
     def on_item_current_change_cb(w, v):
-        LOGGER.debug("Model changed, updating widget '%s': %s" % (w,
-                                                                  v))
+        LOGGER.debug("Model changed, updating progressbar '%s': %s" % (w, v))
         widget.set_completion(v)
         tui.draw_screen()
     item.connect_signal("current", on_item_current_change_cb)
@@ -264,6 +260,7 @@ def build_table(path, item, tui, plugin):
                                                item.height)
 
     return widget
+
 
 def _build_tableitem(path, plugin, key, label):
     c = ovirt.node.ui.widgets.TableEntryWidget(label)

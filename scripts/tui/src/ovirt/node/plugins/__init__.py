@@ -67,10 +67,8 @@ class NodePlugin(object):
     Errors are propagated back by using Errors/Exceptions.
     """
 
-    _changes = None
-
     def __init__(self):
-        self._changes = {}
+        self.__changes = {}
 
     def name(self):
         """Returns the name of the plugin.
@@ -127,6 +125,15 @@ class NodePlugin(object):
                     raise ovirt.node.exceptions.InvalidData(msg)
         return True
 
+    def ui_name(self):
+        """Returns the UI friendly name for this plugin.
+        Is e.g. used for the menu entry.
+
+        Returns:
+            Title of the plugin as a string
+        """
+        return self.name()
+
     def has_ui(self):
         """Determins if a page for this should be displayed in the UI
 
@@ -149,6 +156,7 @@ class NodePlugin(object):
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
         return True if succeeds, otherwie false or throw an error
+        This is expected to do semanitcal checks on the model.
 
         Args:
             changes (dict): changes which shall be checked against the model
@@ -177,8 +185,11 @@ class NodePlugin(object):
         except NotImplementedError:
             LOGGER.debug("Plugin has no model")
         except ovirt.node.exceptions.InvalidData:
-            LOGGER.warning("Plugin has invalid model")
+            LOGGER.warning("Plugins model does not pass sematic check: %s" % \
+                           model)
             is_valid = False
+        finally:
+            self.__changes = {}
         return is_valid
 
     def on_merge(self, effective_changes):
@@ -188,24 +199,23 @@ class NodePlugin(object):
         Args:
             changes (dict): changes which shall be applied to the model
         Returns:
-            True on success, or False otherwie
+            True on success, or False otherwise
         Raises:
             Errors
         """
         raise NotImplementedError()
 
-    def ui_name(self):
-        return self.name()
-
     def _on_ui_change(self, change):
         """Called when some widget was changed
         change is expected to be a dict.
         """
-        assert type(change) is dict
-        LOGGER.debug("Model change: " + str(change))
+        if type(change) is not dict:
+            LOGGER.warning("Change is not a dict: %s" % change)
+
+        LOGGER.debug("Passing UI change to callback on_change: %s" % change)
         self.on_change(change)
-        self._changes.update(change)
-        LOGGER.debug(self._changes)
+        self.__changes.update(change)
+        LOGGER.debug("Sum of all UI changes up to now: %s" % self.__changes)
         return True
 
     def _on_ui_save(self):
@@ -213,15 +223,40 @@ class NodePlugin(object):
         Calls merge_changes, but only with values that really changed
         """
         LOGGER.debug("Request to apply model changes")
-        real_changes = {}
-        if self._changes:
+        effective_changes = self.pending_changes() or {}
+        successfull_merge = self.on_merge(effective_changes)
+        if successfull_merge:
+            self.__changes = {}
+        return successfull_merge
+
+    def pending_changes(self, only_effective_changes=True):
+        """Return all changes which happened since the last on_merge call
+
+        Args:
+            only_effective_changes: Boolean if all or only the effective
+                changes are returned.
+        Returns:
+            dict of changes
+        """
+        return self.__effective_changes() if only_effective_changes \
+                                          else self.__changes
+
+    def __effective_changes(self):
+        """Calculates the effective changes, so changes which change the
+        value of a path.
+
+        Returns:
+            dict of effective changes
+        """
+        effective_changes = {}
+        if self.__changes:
             model = self.model()
-            for key, value in self._changes.items():
+            for key, value in self.__changes.items():
                 if key in model and value == model[key]:
                     LOGGER.debug(("Skipping pseudo-change of '%s', value " + \
-                                  "did not change") % key)
+                                  "(%s) did not change") % (key, value))
                 else:
-                    real_changes[key] = value
+                    effective_changes[key] = value
         else:
-            LOGGER.debug("No changes detected")
-        return self.on_merge(real_changes)
+            LOGGER.debug("No effective changes detected.")
+        return effective_changes if len(effective_changes) > 0 else None
