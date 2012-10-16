@@ -360,7 +360,7 @@ class Storage:
         for drv in self.HOSTVGDRIVE.strip(",").split(","):
             drv = _functions.translate_multipath_device(drv)
             if drv != "":
-                if self.ROOTDRIVE == drv and not is_iscsi_install():
+                if self.ROOTDRIVE == drv and not _functions.is_iscsi_install():
                     self.reread_partitions(self.ROOTDRIVE)
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
                                   "primary ext2 " + str(self.RootBackup_end) +
@@ -740,7 +740,7 @@ class Storage:
 
         if ("OVIRT_ROOT_INSTALL" in _functions.OVIRT_VARS and
                   _functions.OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "y" and not \
-                      is_iscsi_install()):
+                      _functions.is_iscsi_install()):
             logger.info("Partitioning root drive: " + self.ROOTDRIVE)
             _functions.wipe_partitions(self.ROOTDRIVE)
             self.reread_partitions(self.ROOTDRIVE)
