@@ -26,18 +26,9 @@ dist_sbin_SCRIPTS = \
   unpersist
 
 dist_libexec_SCRIPTS = \
-  ovirt-config-hostname \
-  ovirt-config-iscsi \
-  ovirt-config-kdump \
-  ovirt-config-logging \
-  ovirt-config-networking \
-  ovirt-config-rhn \
   ovirt-config-password \
-  ovirt-config-storage \
   ovirt-config-uninstall \
-  ovirt-config-view-logs \
   ovirt-functions \
-  ovirt-process-config \
   ovirt-rpmquery \
   ovirt-init-functions.sh \
   ovirt-config-installer.py \
