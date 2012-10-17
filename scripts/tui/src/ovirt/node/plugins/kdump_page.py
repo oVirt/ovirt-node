@@ -74,10 +74,12 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("kdump.header", ovirt.node.ui.Header("Configure Kdump")),
+            ("kdump._header", ovirt.node.ui.Header("Configure Kdump")),
             ("kdump.type", ovirt.node.ui.Options("Type", self._types)),
-            ("kdump.ssh_location", ovirt.node.ui.Entry("SSH Location")),
-            ("kdump.nfs_location", ovirt.node.ui.Entry("NFS Location")),
+            ("kdump.ssh_location", ovirt.node.ui.Entry("SSH Location:",
+                                                       align_vertical=True)),
+            ("kdump.nfs_location", ovirt.node.ui.Entry("NFS Location:",
+                                                       align_vertical=True)),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

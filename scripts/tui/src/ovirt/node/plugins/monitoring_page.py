@@ -64,8 +64,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                             "performance bottlenecks and predict future " +
                             "system load.")),
 
-            ("collectd.address", ovirt.node.ui.Entry("Server Address")),
-            ("collectd.port", ovirt.node.ui.Entry("Server Port")),
+            ("collectd.address", ovirt.node.ui.Entry("Server Address:")),
+            ("collectd.port", ovirt.node.ui.Entry("Server Port:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

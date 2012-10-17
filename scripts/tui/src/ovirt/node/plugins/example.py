@@ -70,11 +70,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("foo.section",
                 ovirt.node.ui.Header("Subsection")),
             ("foo.hostname",
-                ovirt.node.ui.Entry(label="Hostname")),
+                ovirt.node.ui.Entry("Hostname:")),
             ("foo.port",
-                ovirt.node.ui.Entry(label="Port")),
+                ovirt.node.ui.Entry("Port:")),
             ("foo.password",
-                ovirt.node.ui.PasswordEntry(label="Password")),
+                ovirt.node.ui.PasswordEntry("Password:")),
         ]
         self._widgets = dict(widgets)
         page = ovirt.node.ui.Page(widgets)

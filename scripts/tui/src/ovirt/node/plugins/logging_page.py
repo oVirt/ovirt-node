@@ -69,19 +69,19 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("header", ovirt.node.ui.Header("Logging")),
 
             ("max_log_size", ovirt.node.ui.Entry("Logrotate Max Log " +
-                                                 "Size (KB)")),
+                                                 "Size (KB):")),
 
             ("rsyslog.header", ovirt.node.ui.Label(
                                     "RSyslog is an enhanced multi-threaded " +
                                     "syslogd")),
-            ("rsyslog.address", ovirt.node.ui.Entry("Server Address")),
-            ("rsyslog.port", ovirt.node.ui.Entry("Server Port")),
+            ("rsyslog.address", ovirt.node.ui.Entry("Server Address:")),
+            ("rsyslog.port", ovirt.node.ui.Entry("Server Port:")),
 
             ("netconsole.header", ovirt.node.ui.Label(
                                     "Netconsole service allows a remote sys" +
                                     "log daemon to record printk() messages")),
-            ("netconsole.address", ovirt.node.ui.Entry("Server Address")),
-            ("netconsole.port", ovirt.node.ui.Entry("Server Port")),
+            ("netconsole.address", ovirt.node.ui.Entry("Server Address:")),
+            ("netconsole.port", ovirt.node.ui.Entry("Server Port:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

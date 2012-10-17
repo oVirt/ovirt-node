@@ -196,9 +196,9 @@ class Entry(InputElement):
     TODO multiline
     """
 
-    def __init__(self, label, value=None, enabled=True):
+    def __init__(self, label, enabled=True, align_vertical=False):
         self.label = label
-        self._text = value
+        self.align_vertical = align_vertical
         super(Entry, self).__init__(enabled)
 
 

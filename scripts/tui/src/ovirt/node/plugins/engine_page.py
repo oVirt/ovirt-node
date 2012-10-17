@@ -64,8 +64,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         widgets = [
             ("header", ovirt.node.ui.Header("oVirt Engine Configuration")),
 
-            ("vdsm.address", ovirt.node.ui.Entry("Server Address")),
-            ("vdsm.port", ovirt.node.ui.Entry("Server Port")),
+            ("vdsm.address", ovirt.node.ui.Entry("Server Address:")),
+            ("vdsm.port", ovirt.node.ui.Entry("Server Port:")),
             ("vdsm.connect_and_validate", ovirt.node.ui.Options(
                     "Connect to oVirt Engine and Validate Certificate",
                     [("yes", "Yes"), ("no", "No")])),
@@ -74,9 +74,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                     "Optional password for adding Node through oVirt " +
                     "Engine UI")),
 
-            ("vdsm.password", ovirt.node.ui.PasswordEntry("Password")),
+            ("vdsm.password", ovirt.node.ui.PasswordEntry("Password:")),
             ("vdsm.password_confirmation", ovirt.node.ui.PasswordEntry(
-                    "Confirm Password")),
+                    "Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

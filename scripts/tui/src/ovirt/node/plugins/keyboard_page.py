@@ -58,8 +58,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("layout.label",
-                ovirt.node.ui.Label("Keyboard Layout Selection")),
+            ("layout._header",
+                ovirt.node.ui.Header("Keyboard Layout Selection")),
             ("layout", ovirt.node.ui.Table("", self._get_layouts())),
 
         ]

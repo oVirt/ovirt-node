@@ -246,21 +246,14 @@ class Entry(urwid.WidgetWrap):
 
     selectable = lambda self: True
 
-    def enable(self, is_enabled):
-        self.selectable = lambda: is_enabled
-        attr_map = {None: "plugin.widget.entry"}
-        if not is_enabled:
-            attr_map = {None: "plugin.widget.entry.disabled"}
-        self._edit_attrmap.set_attr_map(attr_map)
+    def __init__(self, label, mask=None, align_vertical=False):
+        with_linebox = True
+        self._align_vertical = align_vertical
 
-    def valid(self, is_valid):
-        attr_map = {None: "plugin.widget.entry.frame"}
-        if not is_valid:
-            attr_map = {None: "plugin.widget.entry.frame.invalid"}
-        self._linebox_attrmap.set_attr_map(attr_map)
+        if with_linebox:
+            label = "\n" + label
 
-    def __init__(self, label, mask=None):
-        self._label = urwid.Text("\n" + label + ":")
+        self._label = urwid.Text(label)
         self._label_attrmap = urwid.AttrMap(self._label,
                                             "plugin.widget.entry.label")
         self._edit = urwid.Edit(mask=mask)
@@ -268,8 +261,18 @@ class Entry(urwid.WidgetWrap):
         self._linebox = urwid.LineBox(self._edit_attrmap)
         self._linebox_attrmap = urwid.AttrMap(self._linebox,
                                               "plugin.widget.entry.frame")
-        self._columns = urwid.Columns([self._label_attrmap,
-                                       self._linebox_attrmap])
+
+        input_widget = self._edit_attrmap
+        if with_linebox:
+            input_widget = self._linebox_attrmap
+
+        alignment_widget = urwid.Columns
+        if self._align_vertical:
+            alignment_widget = urwid.Pile
+        self._columns = alignment_widget([
+                                            self._label_attrmap,
+                                            input_widget
+                                        ])
 
         self._notice = urwid.Text("")
         self._notice_attrmap = urwid.AttrMap(self._notice,
@@ -283,13 +286,27 @@ class Entry(urwid.WidgetWrap):
 
         super(Entry, self).__init__(self._pile)
 
+    def enable(self, is_enabled):
+        self.selectable = lambda: is_enabled
+        attr_map = {None: "plugin.widget.entry"}
+        if not is_enabled:
+            attr_map = {None: "plugin.widget.entry.disabled"}
+        self._edit_attrmap.set_attr_map(attr_map)
+
+    def valid(self, is_valid):
+        attr_map = {None: "plugin.widget.entry.frame"}
+        if not is_valid:
+            attr_map = {None: "plugin.widget.entry.frame.invalid"}
+        self._linebox_attrmap.set_attr_map(attr_map)
+
     def set_text(self, txt):
         self._edit.set_edit_text(txt)
 
 
 class PasswordEntry(Entry):
-    def __init__(self, label):
-        super(PasswordEntry, self).__init__(label, mask="*")
+    def __init__(self, label, align_vertical=False):
+        super(PasswordEntry, self).__init__(label, mask="*",
+                                            align_vertical=align_vertical)
 
 
 class Button(urwid.WidgetWrap):

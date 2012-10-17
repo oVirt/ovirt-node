@@ -64,10 +64,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("ssh._divider", ovirt.node.ui.Divider()),
 
 
-            ("snmp.password._label", ovirt.node.ui.Label("SNMP Password")),
-            ("snmp.password", ovirt.node.ui.PasswordEntry("Password")),
+            ("snmp.password._header", ovirt.node.ui.Header("SNMP Password")),
+            ("snmp.password", ovirt.node.ui.PasswordEntry("Password:")),
             ("snmp.password_confirmation", ovirt.node.ui.PasswordEntry(
-                "Confirm Password")),
+                "Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

@@ -71,8 +71,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """
         widgets = [
             ("ping.header", ovirt.node.ui.Header("Ping a remote host")),
-            ("ping.address", ovirt.node.ui.Entry("Address")),
-            ("ping.count", ovirt.node.ui.Entry("Count")),
+            ("ping.address", ovirt.node.ui.Entry("Address:")),
+            ("ping.count", ovirt.node.ui.Entry("Count:")),
             ("ping.do_ping", ovirt.node.ui.Button("Ping")),
             ("ping.progress._space", ovirt.node.ui.Divider()),
             ("ping.progress", ovirt.node.ui.ProgressBar()),

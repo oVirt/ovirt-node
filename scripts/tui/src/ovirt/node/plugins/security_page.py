@@ -66,9 +66,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
 
             ("passwd._label", ovirt.node.ui.Label("Local Access")),
-            ("passwd.admin.password", ovirt.node.ui.PasswordEntry("Password")),
+            ("passwd.admin.password", ovirt.node.ui.PasswordEntry("Password:")),
             ("passwd.admin.password_confirmation", ovirt.node.ui.PasswordEntry(
-                "Confirm Password")),
+                "Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

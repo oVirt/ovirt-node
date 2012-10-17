@@ -60,7 +60,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("header", ovirt.node.ui.Header("Remote Storage")),
 
             ("iscsi.initiator_name", ovirt.node.ui.Entry("iSCSI Initiator " +
-                                                         "Name")),
+                                                         "Name:",
+                                                         align_vertical=True)),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)

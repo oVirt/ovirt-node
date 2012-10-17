@@ -119,12 +119,13 @@ def widget_for_item(tui, plugin, path, item):
 
 
 def build_entry(path, item, tui, plugin):
-    widget = None
+    widget_class = None
     if type(item) is ovirt.node.ui.Entry:
-        widget = ovirt.node.ui.widgets.Entry(item.label)
+        widget_class = ovirt.node.ui.widgets.Entry
     else:
-        widget = ovirt.node.ui.widgets.PasswordEntry(item.label)
+        widget_class = ovirt.node.ui.widgets.PasswordEntry
 
+    widget = widget_class(item.label, align_vertical=item.align_vertical)
     widget.enable(item.enabled)
 
     def on_item_enabled_change_cb(w, v):

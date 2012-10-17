@@ -83,7 +83,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """
         widgets = [
             ("hostname",
-                ovirt.node.ui.Entry("Hostname")),
+                ovirt.node.ui.Entry("Hostname:")),
             ("hostname._space", ovirt.node.ui.Divider()),
 
             ("nics", ovirt.node.ui.Table(
@@ -91,12 +91,12 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                         self._get_nics())),
             ("nics._space", ovirt.node.ui.Divider()),
 
-            ("dns[0]", ovirt.node.ui.Entry("DNS Server 1")),
-            ("dns[1]", ovirt.node.ui.Entry("DNS Server 2")),
+            ("dns[0]", ovirt.node.ui.Entry("DNS Server 1:")),
+            ("dns[1]", ovirt.node.ui.Entry("DNS Server 2:")),
             ("dns._space", ovirt.node.ui.Divider()),
 
-            ("ntp[0]", ovirt.node.ui.Entry("NTP Server 1")),
-            ("ntp[1]", ovirt.node.ui.Entry("NTP Server 2")),
+            ("ntp[0]", ovirt.node.ui.Entry("NTP Server 1:")),
+            ("ntp[1]", ovirt.node.ui.Entry("NTP Server 2:")),
             ("ntp._space", ovirt.node.ui.Divider()),
 
 #            ("action", ovirt.node.ui.Buttons(["Lock", "Log Off", "Restart",
