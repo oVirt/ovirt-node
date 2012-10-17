@@ -21,10 +21,13 @@ filename: '03_boot_device_page.py'
 filename: '04_installation_device_page.py'
 
 ---
-filename: '05_password_page.py'
+filename: '05_sizes_page.py'
 
 ---
-filename: '06_progress_page.py'
+filename: '06_password_page.py'
+
+---
+filename: '07_progress_page.py'
 # Timeout for installation
 timeout: 120
 
