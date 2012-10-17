@@ -76,6 +76,7 @@ keep /lib/modules/*/kernel/net/llc
 keep /lib/modules/*/kernel/net/netfilter
 keep /lib/modules/*/kernel/net/rds
 keep /lib/modules/*/kernel/net/sctp
+keep /lib/modules/*/kernel/net/sched
 keep /lib/modules/*/kernel/net/sunrpc
 #*802    atm        can   ieee802154 *key      *netfilter  rfkill *sunrpc  xfrm
 #*8021q  bluetooth *core *ipv4       *llc       phonet     sched   wimax
