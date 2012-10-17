@@ -40,11 +40,15 @@ story = [
     # P. 4: Enter installation device selection
     (["\n"],                4, "installation of oVirt Node"),
 
-    # P. 5: Enter password dialog
-    (["\t\t\t\n"],          4, "Require a password"),
+    # P. 5: Enter sizes dialog
+    (["\t\t\t\n"],           4, "enter the sizes for"),
+
+    # P. 6: Enter password dialog
+    (["\t\t\t\t\t\t\n"],           4, "Require a password"),
+    # P. 6: Enter password
     (["ovirt\tovirt\t"],    2, "a weak password"),
 
-    # P. 6: Start installation, and give it at most 240 seconds to complete
+    # P. 7: Start installation, and give it at most 240 seconds to complete
     (["\t\t\n"],   wait_for_last_page, "Installation Finished"),
 ]
 
