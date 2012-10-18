@@ -419,6 +419,10 @@ class Network:
 
 
 def get_system_nics():
+    # Re-trigger udev for rhbz#866584
+    for sysfspath in glob("/sys/class/net/*"):
+        _functions.system_closefds("udevadm test %s > /dev/null 2> /dev/null" % sysfspath)
+
     client = _functions.gudev.Client(['net'])
     configured_nics = 0
     ntp_dhcp = 0
