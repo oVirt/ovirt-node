@@ -429,9 +429,22 @@ def get_system_nics():
             dev_vendor = device.get_property("ID_VENDOR_FROM_DATABASE")
             dev_type = device.get_property("DEVTYPE")
             dev_path = device.get_property("DEVPATH")
+
+            if (dev_interface == "lo" or \
+                dev_interface.startswith("bond") or \
+                dev_interface.startswith("sit") or \
+                dev_interface.startswith("vnet") or \
+                "." in dev_interface or \
+                dev_type == "bridge"):
+                logger.info("Skipping interface '%s'" % dev_interface)
+                continue
+            else:
+                logger.info("Gathering informations for '%s'" % dev_interface)
+
             try:
                 dev_vendor = dev_vendor.replace(",", "")
             except AttributeError:
+                logger.debug("2. vendor approach: %s" % dev_vendor)
                 try:
                     # rhevh workaround since udev version
                     # doesn't have vendor info
@@ -448,17 +461,22 @@ def get_system_nics():
                     dev_vendor = pci_lookup.stdout.read().strip()
                 except:
                     dev_vendor = "unknown"
+                    logger.debug("3. vendor approach: %s" % dev_vendor)
             try:
                 dev_vendor = dev_vendor.replace(",", "")
             except AttributeError:
                 dev_vendor = "unknown"
+                logger.debug("4. vendor approach: %s" % dev_vendor)
+
             dev_vendor = _functions.pad_or_trim(25, dev_vendor)
+            dev_driver = ""
             try:
                 dev_driver = os.readlink("/sys/class/net/" + dev_interface + \
                                          "/device/driver")
                 dev_driver = os.path.basename(dev_driver)
-            except:
-                pass
+            except Exception as e:
+                logger.debug("Exception while determining NIC driver: %s" % (
+                             repr(e)))
             nic_addr_file = open("/sys/class/net/" + dev_interface + \
                                  "/address")
             dev_address = nic_addr_file.read().strip()
@@ -489,21 +507,19 @@ def get_system_nics():
                 dev_conf_status = "Configured  "
             if dev_conf_status == "Configured  ":
                 configured_nics = configured_nics + 1
-        except:
-            pass
-        if (not dev_interface == "lo" and \
-            not dev_interface.startswith("bond") and \
-            not dev_interface.startswith("sit") and \
-            not dev_interface.startswith("vnet") and \
-            not "." in dev_interface):
-            if not dev_type == "bridge":
-                nic_dict[dev_interface] = "%s,%s,%s,%s,%s,%s,%s" % ( \
-                                          dev_interface, dev_bootproto, \
-                                          dev_vendor, dev_address, \
-                                          dev_driver, dev_conf_status, \
-                                          dev_bridge)
-                if dev_bootproto == "dhcp":
-                    ntp_dhcp = 1
+        except Exception as e:
+            logger.warning("Error while determining NICs: %s" % repr(e))
+
+        nic_info = "%s,%s,%s,%s,%s,%s,%s" % ( \
+                   dev_interface, dev_bootproto, \
+                   dev_vendor, dev_address, \
+                   dev_driver, dev_conf_status, \
+                   dev_bridge)
+        logger.debug("NIC info: %s" % nic_info)
+        nic_dict[dev_interface] = nic_info
+
+        if dev_bootproto == "dhcp":
+            ntp_dhcp = 1
     return nic_dict, configured_nics, ntp_dhcp
 
 
