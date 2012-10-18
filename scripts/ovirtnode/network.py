@@ -492,19 +492,33 @@ def get_system_nics():
             bridge_cmd = ("/files/etc/sysconfig/network-scripts/" + \
                           "ifcfg-%s/BRIDGE") % str(dev_interface)
             dev_bridge = _functions.augtool_get(bridge_cmd)
+
+            # check for vlans
+            logger.debug("checking for vlan")
+            vlans = glob("/etc/sysconfig/network-scripts/ifcfg-%s.*" %
+                                                                 dev_interface)
+            if (len(vlans) > 0):
+                dev_conf_status = "Configured  "
+                vlanid = vlans[0].split(".")[-1]
+                logger.debug("found vlan %s" % vlanid)
+
+                # if no bridge in nic, check clan-nic for bridge
+                if not dev_bridge:
+                    vlancfg = "ifcfg-%s.%s" % (str(dev_interface), vlanid)
+                    cmd = ("/files/etc/sysconfig/network-scripts/%s/" +
+                           "BRIDGE") % vlancfg
+                    dev_bridge = augtool_get(cmd)
+                    logger.debug("Getting bridge '%s' from vlan: %s" % (
+                                                              dev_bridge, cmd))
+
             if dev_bootproto is None:
+                logger.debug("Looking for bootproto in %s" % dev_bridge)
                 cmd = ("/files/etc/sysconfig/network-scripts/" + \
                        "ifcfg-%s/BOOTPROTO") % str(dev_bridge)
                 dev_bootproto = _functions.augtool_get(cmd)
                 if dev_bootproto is None:
                     dev_bootproto = "Disabled"
                     dev_conf_status = "Unconfigured"
-                    # check for vlans
-                    logger.debug("checking for vlan")
-                    if (len(glob("/etc/sysconfig/network-scripts/ifcfg-" + \
-                        dev_interface + ".*")) > 0):
-                        logger.debug("found vlan")
-                        dev_conf_status = "Configured  "
                 else:
                     dev_conf_status = "Configured  "
             else:
