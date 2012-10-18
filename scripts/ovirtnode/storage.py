@@ -124,10 +124,6 @@ class Storage:
                 for drv in _functions.OVIRT_VARS["OVIRT_INIT_APP"].split(","):
                     DRIVE = _functions.translate_multipath_device(drv)
                     self.APPVGDRIVE.append(DRIVE)
-            if not self.cross_check_host_app:
-                logger.error("Skip disk partitioning, " +
-                             "AppVG overlaps with HostVG")
-                return False
         else:
             if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
                 logger.error("Missing device parameter for AppVG: " +
@@ -135,12 +131,41 @@ class Storage:
                 return False
 
     def cross_check_host_app(self):
-        for hdrv in self.HOSTVGDRIVE:
-            if hdrv in self.APPDRIVE:
-                # Skip disk partitioning, AppVG overlaps with HostVG
-                return False
-            else:
-                return True
+        logger.debug("Doing cross-check (if a device is a member of appvg " +
+                     "and hostvg)")
+        hostvg_drives = self.HOSTVGDRIVE.strip(",").split(",")
+        if self.ROOTDRIVE:
+            hostvg_drives.append(self.ROOTDRIVE)
+        # Translate to DM name as APPVG is using it
+        hostvg_drives = [_functions.translate_multipath_device(drv)
+                         for drv in hostvg_drives]
+        return Storage._xcheck_vgs(hostvg_drives, self.APPVGDRIVE)
+
+    @staticmethod
+    def _xcheck_vgs(hostvg_drives, appvg_drives):
+        """Semi-internal method to allow a better testing
+
+        APPVG and HOSTVG do not overlap:
+        >>> Storage._xcheck_vgs(["/dev/sda"], ["/dev/sdb"])
+        True
+
+        APPVG and HOSTVG do overlap (sda):
+        >>> Storage._xcheck_vgs(["sda"], ["sda", "sdb"])
+        False
+
+        APPVG and HOSTVG do not overlap:
+        >>> Storage._xcheck_vgs([], [])
+        True
+        """
+        assert type(hostvg_drives) is list
+        assert type(appvg_drives) is list
+        drives_in_both = set.intersection(set(hostvg_drives),
+                                          set(appvg_drives))
+        if drives_in_both:
+            logger.warning("The following drives are members of " +
+                           "APPVG and HOSTVG: %s" % drives_in_both)
+            return False
+        return True
 
     def get_drive_size(self, drive):
         logger.debug("Getting Drive Size For: %s" % drive)
@@ -666,6 +691,10 @@ class Storage:
 
         if self.BOOTDRIVE is None and _functions.is_iscsi_install():
             logger.error("No storage device selected.")
+            return False
+
+        if not self.cross_check_host_app():
+            logger.error("Skip disk partitioning, AppVG overlaps with HostVG")
             return False
 
         if _functions.has_fakeraid(self.HOSTVGDRIVE):

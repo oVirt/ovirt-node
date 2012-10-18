@@ -317,7 +317,7 @@ initrd /initrd0.img
         elif _functions.findfs("RootNew"):
             candidate = "RootNew"
         else:
-            logger.error("Unable to find %s partition" % candidate)
+            logger.error("Unable to find root partition")
             label_debug = ''
             for label in os.listdir("/dev/disk/by-label"):
                 label_debug += "%s\n" % label
