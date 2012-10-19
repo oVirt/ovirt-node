@@ -42,6 +42,7 @@ class Storage:
         self.EFI_SIZE = 256
         self.SWAP_SIZE = 0
         self.MIN_SWAP_SIZE = 5
+        self.MIN_LOGGING_SIZE = 5
         self.SWAP2_SIZE = 0
         self.DATA2_SIZE = 0
         self.BOOTDRIVE = ""
@@ -98,13 +99,15 @@ class Storage:
                   'OVIRT_VOL_CONFIG_SIZE', 'OVIRT_VOL_LOGGING_SIZE',
                   'OVIRT_VOL_DATA_SIZE', 'OVIRT_VOL_SWAP2_SIZE',
                   'OVIRT_VOL_DATA2_SIZE', 'OVIRT_VOL_EFI_SIZE']:
-            i_short = i.replace("OVIRT_VOL_", "")
+            i_short = i.replace("OVIRT_VOL_", "MIN_")
+            if not i_short in self.__dict__:
+                i_short = i_short.replace("MIN_", "")
             if i in OVIRT_VARS:
                 if int(OVIRT_VARS[i]) < int(self.__dict__[i_short]):
-                    logger.error("%s is smaller than minimum required size " +
-                                 "of: %s" % (i, self.__dict__[i_short]))
-                    print ("\n%s is smaller than minimum required size of: " +
-                          "%s" % (i, self.__dict__[i_short]))
+                    logger.error(("%s is smaller than minimum required size " +
+                                 "of: %s") % (i, self.__dict__[i_short]))
+                    print (("\n%s is smaller than minimum required size of: " +
+                          "%s") % (i, self.__dict__[i_short]))
                     return False
                 logging.info(("Setting value for %s to %s " %
                            (self.__dict__[i_short], _functions.OVIRT_VARS[i])))

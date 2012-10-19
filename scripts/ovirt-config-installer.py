@@ -249,9 +249,13 @@ class NodeInstallScreen:
         return
 
     def log_size_callback(self):
+        Storage = storage.Storage()
         if not check_int(self.LOGGING_SIZE.value()):
             self.log_vol_failed = True
             self.log_vol_msg = "Logging Partition Size must be a positive integer."
+        elif int(self.LOGGING_SIZE.value()) < int(Storage.MIN_LOGGING_SIZE):
+            self.log_vol_failed = True
+            self.log_vol_msg = "Minimum Logging size is %s MB." % Storage.MIN_LOGGING_SIZE
         else:
             self.log_vol_failed = False
             self.log_vol_msg = None
