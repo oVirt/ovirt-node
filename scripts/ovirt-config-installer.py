@@ -1050,7 +1050,7 @@ class NodeInstallScreen:
                             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_VOL_DATA_SIZE", '"' + self.DATA_SIZE.value() + '"')
                         s = storage.Storage()
                         if not s.check_partition_sizes():
-                            msg = "Not enough space for installation\nPlease select a bigger drive\no change the partition sizes.\n\nAvailable Space: %sMB\nRequired Space: %sMB\n" % (s.drive_disk_size, s.drive_need_size)
+                            msg = "Not enough space for installation\nPlease select a bigger drive\nor change the partition sizes.\n\nAvailable Space: %sMB\nRequired Space: %sMB\n" % (s.drive_disk_size, s.drive_need_size)
                             warn = ButtonChoiceWindow(self.screen, "Disk Space Check", msg, buttons = ['Ok'])
                             self.__current_page = STORAGE_VOL_PAGE
                         else:
