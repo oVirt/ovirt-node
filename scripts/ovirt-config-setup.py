@@ -133,6 +133,7 @@ class NodeConfigScreen():
         self._plugins_enabled = False
         self._plugins_pagenum = 0
         self._ping_test = False
+        self.INVALID_KDUMP_MSG = ""
 
 
     def _set_title(self):
@@ -588,14 +589,17 @@ class NodeConfigScreen():
         self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
 
     def kdump_valid_nfs_callback(self):
-        if not is_valid_nfs(self.kdump_nfs_config.value()):
-            self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check",
-                               "Invalid NFS Entry", buttons=['Ok'])
-            self.reset_screen_colors()
-            self.kdump_nfs_config.set("")
-            self.gridform.draw()
-            self._set_title()
+        if len(self.kdump_nfs_config.value()) > 0:
+            if not is_valid_nfs(self.kdump_nfs_config.value()):
+                self._create_warn_screen()
+                ButtonChoiceWindow(self.screen, "Configuration Check",
+                                "Invalid NFS Entry", buttons=['Ok'])
+                self.reset_screen_colors()
+                self.kdump_nfs_config.set("")
+                self.gridform.draw()
+                self._set_title()
+        else:
+            self.INVALID_KDUMP_MSG = "KDump NFS location cannot be empty"
 
     def kdump_ssh_callback(self):
         self.kdump_nfs_type.setValue(" 0")
@@ -605,14 +609,17 @@ class NodeConfigScreen():
                                        _snack.FLAGS_RESET)
 
     def kdump_valid_ssh_callback(self):
-        if not is_valid_user_host(self.kdump_ssh_config.value()):
-            self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Configuration Check",
-                               "Invalid SSH Entry", buttons=['Ok'])
-            self.reset_screen_colors()
-            self.kdump_ssh_config.set("")
-            self.gridform.draw()
-            self._set_title()
+        if len(self.kdump_nfs_config.value()) > 0:
+            if not is_valid_user_host(self.kdump_ssh_config.value()):
+                self._create_warn_screen()
+                ButtonChoiceWindow(self.screen, "Configuration Check",
+                                "Invalid SSH Entry", buttons=['Ok'])
+                self.reset_screen_colors()
+                self.kdump_ssh_config.set("")
+                self.gridform.draw()
+                self._set_title()
+        else:
+            self.INVALID_KDUMP_MSG = "KDump SSH location cannot be empty"
 
     def kdump_restore_callback(self):
         self.kdump_ssh_type.setValue(" 0")
@@ -703,14 +710,15 @@ class NodeConfigScreen():
         return
 
     def valid_nfsv4_domain_callback(self):
-        if not is_valid_hostname(self.nfsv4_domain.value()):
-            self.nfsv4_domain.set("")
-            self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "Network", "Invalid NFS Domain",
-                               buttons=['Ok'])
-            self.reset_screen_colors()
-            self.gridform.draw()
-            self._set_title()
+        if len(self.nfsv4_domain.value()) > 0:
+            if not is_valid_hostname(self.nfsv4_domain.value()):
+                self.nfsv4_domain.set("")
+                self._create_warn_screen()
+                ButtonChoiceWindow(self.screen, "Network", "Invalid NFS Domain",
+                                   buttons=['Ok'])
+                self.reset_screen_colors()
+                self.gridform.draw()
+                self._set_title()
 
     def valid_rng_bytes_callback(self):
         rng_bytes = self.rng_bytes.value()
@@ -1860,6 +1868,11 @@ class NodeConfigScreen():
     def process_kdump_config(self):
         try:
             ret = 0
+            if len(self.INVALID_KDUMP_MSG) > 0:
+                self._create_warn_screen()
+                ButtonChoiceWindow(self.screen, "Configuration Check",
+                                   self.INVALID_KDUMP_MSG, buttons=["Ok"])
+                return False
             if os.path.exists("/etc/kdump.conf"):
                 system("cp /etc/kdump.conf /etc/kdump.conf.old")
             if self.kdump_nfs_type.value() == 1:

@@ -438,6 +438,8 @@ class Plugin(PluginBase):
     def __init__(self, ncs):
         PluginBase.__init__(self, "Red Hat Network", ncs)
         self.rhn_conf = {}
+        self.INVALID_CA_CONFIG_MSG = ""
+        self.INVALID_URL_CONFIG_MSG = ""
 
     def form(self):
         elements = Grid(2, 12)
@@ -569,6 +571,14 @@ class Plugin(PluginBase):
         self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
         if not network_up():
             return False
+        if (len(self.INVALID_URL_CONFIG_MSG) > 0 or
+                len(self.INVALID_CA_CONFIG_MSG) > 0):
+            self.ncs._create_warn_screen()
+            msg = "\n%s\n%s\n" % (self.INVALID_URL_CONFIG_MSG, self.INVALID_CA_CONFIG_MSG)
+            ButtonChoiceWindow(self.ncs.screen, "Configuration Check",
+                                msg, buttons=['Ok'])
+            self.ncs._set_title()
+            return False
         if self.rhn_satellite.value() == 1 and self.rhn_ca.value() == "":
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration",
                                "Please input a CA certificate URL",
@@ -647,14 +657,10 @@ class Plugin(PluginBase):
     def rhn_url_callback(self):
         # TODO URL validation
         if not is_valid_url(self.rhn_url.value()):
-            self.ncs._create_warn_screen()
-            self.ncs.screen.setColor("BUTTON", "black", "red")
-            self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
-            ButtonChoiceWindow(self.ncs.screen, "Configuration Check",
-                               "Invalid Hostname or Address", buttons=['Ok'])
-            self.ncs.reset_screen_colors()
-            self.ncs.gridform.draw()
-            self.ncs._set_title()
+            self.INVALID_URL_CONFIG_MSG = "Invalid RHN URL entered"
+        else:
+            self.INVALID_URL_CONFIG_MSG = ""
+
         if self.rhn_satellite.value() == 1:
             host = self.rhn_url.value().replace("/XMLRPC", "")
 
@@ -664,18 +670,13 @@ class Plugin(PluginBase):
         if not self.rhn_ca.value() == "":
             if not is_valid_url(self.rhn_ca.value()):
                 if not os.path.exists(self.rhn_ca.value()):
-                    msg = "Invalid URL or Path"
+                    self.INVALID_CA_CONFIG_MSG = "Invalid CA URL or Path"
+                else:
+                    self.INVALID_CA_CONFIG_MSG = ""
+            else:
+                self.INVALID_CA_CONFIG_MSG = ""
         elif self.rhn_ca.value() == "":
-            msg = "Please input a CA certificate URL"
-        if not msg == "":
-            self.ncs.screen.setColor("BUTTON", "black", "red")
-            self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
-            self.ncs._create_warn_screen()
-            ButtonChoiceWindow(self.ncs.screen, "Configuration Check", msg,
-                               buttons=['Ok'])
-            self.ncs.reset_screen_colors()
-            self.ncs.gridform.draw()
-            self.ncs._set_title()
+            self.INVALID_CA_CONFIG_MSG = "Please input a CA certificate URL"
 
     def rv(self, var):
         if var in self.rhn_conf:
