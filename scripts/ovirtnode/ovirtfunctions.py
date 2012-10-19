@@ -1564,6 +1564,21 @@ def rng_status():
         pass
     return (bit_value, disable_aes_ni)
 
+def get_cmdline_args():
+    with open("/proc/cmdline") as cmdline:
+        args = cmdline.read().split()
+        args_dict = {}
+        for opt in args:
+            if "=" in opt:
+                if opt.count("=") == 1:
+                    key, value = opt.split("=")
+                    args_dict[key] = value
+                elif "root=" in opt:
+                    args_dict["root"] = opt.replace("root=","")
+            else:
+                args_dict[opt] = opt
+    return args_dict
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

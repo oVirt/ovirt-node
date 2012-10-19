@@ -252,7 +252,7 @@ fi
 %files plugin-snmp
 %{python_sitelib}/ovirt_config_setup/snmp.py
 %{_sysconfdir}/ovirt-plugins.d/snmp.minimize
-
+%{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py
 %files
 %defattr(-,root,root)
 %config(noreplace) %attr(0644,root,root) %{_sysconfdir}/default/ovirt
@@ -262,6 +262,7 @@ fi
 
 %{mgmt_scripts_dir}
 %{_sysconfdir}/ovirt-config-boot.d
+%exclude %{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py*
 %config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
 %if %{is_f16}

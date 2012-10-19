@@ -1,4 +1,6 @@
-# Copyright (C) 2012 Red Hat, Inc.
+#!/usr/bin/python
+# snmp_autoinstall.py - Copyright (C) 2012 Red Hat, Inc.
+# Written by Joey Boggs <jboggs@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,15 +17,9 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-pluginsdir = $(sysconfdir)/ovirt-plugins.d
-pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
-pyovirtconfigbootdir = $(sysconfdir)/ovirt-config-boot.d
+from ovirt_config_setup.snmp import enable_snmpd
+import ovirtnode.ovirtfunctions as _functions
 
-dist_pyovirtconfigsetup_SCRIPTS = \
-  snmp.py
-
-dist_plugins_DATA = \
-  snmp.minimize
-
-dist_pyovirtconfigboot_SCRIPTS = \
-  snmp_autoinstall.py
+args = _functions.get_cmdline_args()
+if "snmp_password" in args:
+        enable_snmpd(args["snmp_password"])
