@@ -75,6 +75,7 @@ class UrwidTUI(object):
                ('plugin.widget.progressbar.box', 'light gray', ''),
                ('plugin.widget.progressbar.uncomplete', '', ''),
                ('plugin.widget.progressbar.complete', '', 'light gray'),
+               ('plugin.widget.options.label', 'dark gray, bold', ''),
                ]
 
     def __init__(self, app):

@@ -352,11 +352,16 @@ class Divider(urwid.WidgetWrap):
 class Options(urwid.WidgetWrap):
     signals = ["change"]
 
+    _label_attr = "plugin.widget.options.label"
+
     def __init__(self, label, options, selected_option_key):
         self._options = options
         self._button_to_key = {}
         self._bgroup = []
-        self._buttons = [urwid.Text(label + ":")]
+        self._label = urwid.Text(label + ":")
+        self._label_attrmap = urwid.AttrMap(self._label, self._label_attr)
+
+        self._buttons = []
         for option_key, option_label in self._options:
             widget = urwid.RadioButton(self._bgroup, option_label,
                                        on_state_change=self._on_state_change)
@@ -364,7 +369,7 @@ class Options(urwid.WidgetWrap):
             if option_key == selected_option_key:
                 widget.set_state(True)
             self._buttons.append(widget)
-        self._columns = urwid.Columns(self._buttons)
+        self._columns = urwid.Columns([self._label_attrmap] + self._buttons)
         self._pile = urwid.Pile([urwid.Divider(), self._columns,
                                  urwid.Divider()])
         super(Options, self).__init__(self._pile)
