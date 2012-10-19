@@ -401,7 +401,7 @@ initrd /initrd0.img
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
             self.disk = re.sub("p[1,2,3]$", "", self.disk)
-            grub_disk_cmd = "multipath -l \"" + os.path.basename(self.disk) + \
+            grub_disk_cmd = "multipath -l \"" + self.disk + \
                             "\" | awk '/ active / {print $3}' | head -n1"
             logger.debug(grub_disk_cmd)
             grub_disk = _functions.subprocess_closefds(grub_disk_cmd,
