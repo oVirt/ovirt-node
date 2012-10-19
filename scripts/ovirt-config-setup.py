@@ -2061,7 +2061,7 @@ class NodeConfigScreen():
                     ping_window = EntryWindow(self.screen, 'Network Ping Test', 'Enter Host to Ping', ['Host:'])
                     res = ping_window[1]
                     host = res[0]
-                    if len(host) > 0:
+                    if len(host) > 0 and ping_window[0] == "ok":
                         cmd = "ping -c 3 %s" % host
                         gridform = GridForm(self.screen, "", 1, 1)
                         gridform.add(Label("Performing Ping Test"), 0, 0)
