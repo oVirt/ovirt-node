@@ -632,7 +632,7 @@ class Plugin(PluginBase):
                                "Invalid Hostname or Address", buttons=['Ok'])
             self.ncs.reset_screen_colors()
             self.ncs.gridform.draw()
-
+            self.ncs._set_title()
         if self.rhn_satellite.value() == 1:
             host = self.rhn_url.value().replace("/XMLRPC", "")
 
@@ -653,6 +653,7 @@ class Plugin(PluginBase):
                                buttons=['Ok'])
             self.ncs.reset_screen_colors()
             self.ncs.gridform.draw()
+            self.ncs._set_title()
 
     def rv(self, var):
         if var in self.rhn_conf:

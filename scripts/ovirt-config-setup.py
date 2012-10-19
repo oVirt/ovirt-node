@@ -297,6 +297,7 @@ class NodeConfigScreen():
             self.dns_host1.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def dns_host2_callback(self):
@@ -313,6 +314,7 @@ class NodeConfigScreen():
             self.dns_host2.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ntp_host1_callback(self):
@@ -330,6 +332,7 @@ class NodeConfigScreen():
             self.ntp_host1.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ntp_host2_callback(self):
@@ -347,6 +350,7 @@ class NodeConfigScreen():
             self.ntp_host2.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ipv4_ip_callback(self):
@@ -362,6 +366,7 @@ class NodeConfigScreen():
             self.ipv4_netdevip.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ipv4_netmask_callback(self):
@@ -377,6 +382,7 @@ class NodeConfigScreen():
             self.ipv4_netdevmask.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ipv4_gateway_callback(self):
@@ -392,6 +398,7 @@ class NodeConfigScreen():
             self.ipv4_netdevgateway.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ipv4_disabled_callback(self):
@@ -480,6 +487,7 @@ class NodeConfigScreen():
             self.ipv6_netdevip.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ipv6_netmask_callback(self):
@@ -498,6 +506,7 @@ class NodeConfigScreen():
             self.ipv6_netdevmask.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def ipv6_gateway_callback(self):
@@ -513,6 +522,7 @@ class NodeConfigScreen():
             self.ipv6_netdevgateway.set("")
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def netvlanid_callback(self):
@@ -531,6 +541,7 @@ class NodeConfigScreen():
                                    "Invalid VLAN ID", buttons=['Ok'])
                 self.reset_screen_colors()
                 self.gridform.draw()
+                self._set_title()
                 self.netvlanid.set("")
 
     def password_check_callback(self):
@@ -547,6 +558,7 @@ class NodeConfigScreen():
             self.reset_screen_colors()
             self.logrotate_max_size.set("1024")
             self.gridform.draw()
+            self._set_title()
 
     def valid_syslog_port_callback(self):
         if not is_valid_port(self.syslog_port.value()):
@@ -556,6 +568,7 @@ class NodeConfigScreen():
             self.reset_screen_colors()
             self.syslog_port.set("514")
             self.gridform.draw()
+            self._set_title()
 
     def valid_syslog_server_callback(self):
         if not is_valid_host_or_ip(self.syslog_server.value()):
@@ -565,6 +578,7 @@ class NodeConfigScreen():
             self.reset_screen_colors()
             self.syslog_server.set("")
             self.gridform.draw()
+            self._set_title()
 
     def kdump_nfs_callback(self):
         self.kdump_ssh_type.setValue(" 0")
@@ -581,6 +595,7 @@ class NodeConfigScreen():
             self.reset_screen_colors()
             self.kdump_nfs_config.set("")
             self.gridform.draw()
+            self._set_title()
 
     def kdump_ssh_callback(self):
         self.kdump_nfs_type.setValue(" 0")
@@ -597,6 +612,7 @@ class NodeConfigScreen():
             self.reset_screen_colors()
             self.kdump_ssh_config.set("")
             self.gridform.draw()
+            self._set_title()
 
     def kdump_restore_callback(self):
         self.kdump_ssh_type.setValue(" 0")
@@ -613,6 +629,7 @@ class NodeConfigScreen():
             self.reset_screen_colors()
             self.netconsole_server.set("")
             self.gridform.draw()
+            self._set_title()
 
     def valid_netconsole_server_port_callback(self):
         if not is_valid_port(self.netconsole_server_port.value()):
@@ -622,6 +639,7 @@ class NodeConfigScreen():
             self.reset_screen_colors()
             self.netconsole_server_port.set("6666")
             self.gridform.draw()
+            self._set_title()
 
     def valid_hostname_callback(self):
         if not self.net_hostname.value() == "":
@@ -632,6 +650,7 @@ class NodeConfigScreen():
                 self.reset_screen_colors()
                 self.net_hostname.set("localhost")
                 self.gridform.draw()
+                self._set_title()
 
     def valid_iqn_callback(self):
         if not self.iscsi_initiator_config.value() == "":
@@ -640,9 +659,10 @@ class NodeConfigScreen():
                 ButtonChoiceWindow(self.screen, "Configuration Check",
                                    "Invalid IQN Format", buttons=['Ok'])
                 self.reset_screen_colors()
+                self.gridform.draw()
+                self._set_title()
                 self.iscsi_initiator_config.set(
                             "iqn.1994-05.com.example:1234567890")
-                self.gridform.draw()
 
     def valid_fqdn_or_ipv4(self):
         warn = 0
@@ -671,6 +691,7 @@ class NodeConfigScreen():
                                buttons=['Ok'])
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
         return
 
     def valid_nfsv4_domain_callback(self):
@@ -681,6 +702,7 @@ class NodeConfigScreen():
                                buttons=['Ok'])
             self.reset_screen_colors()
             self.gridform.draw()
+            self._set_title()
 
     def screen_locked_page(self, screen):
         self.screen_locked = True
@@ -1861,6 +1883,7 @@ class NodeConfigScreen():
                            buttons=['Ok'], width=70)
         self.reset_screen_colors()
         self.gridform.draw()
+        self._set_title()
 
     def cpu_details_btn_cb(self):
         self._create_warn_screen()
@@ -1868,6 +1891,7 @@ class NodeConfigScreen():
                            buttons=['Ok'], width=40)
         self.reset_screen_colors()
         self.gridform.draw()
+        self._set_title()
 
     def quit(self):
         manual_teardown()
