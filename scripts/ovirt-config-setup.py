@@ -969,7 +969,7 @@ class NodeConfigScreen():
                                        isOn=self.current_aes_ni_status)
         rng_elements.setField(self.disable_aes_ni, 0, 0, anchorLeft=1)
         rng_bit_elements.setField(Label("Bytes Used: "), 0, 0, anchorLeft=1)
-        self.rng_bytes = Entry(3, scroll=0)
+        self.rng_bytes = Entry(5, scroll=0)
         if self.current_rng_bytes > 0:
             self.rng_bytes.set(self.current_rng_bytes)
         rng_bit_elements.setField(self.rng_bytes, 1, 0, anchorLeft=1)
