@@ -521,8 +521,8 @@ class Plugin(PluginBase):
             pass
         self.rhn_actkey = Entry(40, "")
         if rhn_check():
-            if self.rhn_url.value() == ("https://xmlrpc.rhn.redhat.com/XMLRPC"
-                                        or len(self.rhn_url.value()) == 0):
+            if self.rhn_url.value() == "https://xmlrpc.rhn.redhat.com/XMLRPC" \
+                                        or len(self.rhn_url.value()) == 0:
                 self.public_rhn.setValue("*")
                 self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
                 self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
