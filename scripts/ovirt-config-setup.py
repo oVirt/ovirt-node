@@ -1477,7 +1477,7 @@ class NodeConfigScreen():
         self.iscsi_initiator_config.setCallback(self.valid_iqn_callback)
         elements.setField(self.iscsi_initiator_config, 0, 3, anchorLeft=1,
                           padding=(0, 0, 0, 1))
-        elements.setField(Label("NFSv4 Domain:"), 0, 4, anchorLeft=1)
+        elements.setField(Label("NFSv4 Domain (example.redhat.com):"), 0, 4, anchorLeft=1)
         self.nfsv4_domain = Entry(30, "")
         self.nfsv4_domain.setCallback(self.valid_nfsv4_domain_callback)
         elements.setField(self.nfsv4_domain, 0, 5, anchorLeft=1,
