@@ -25,7 +25,6 @@ Some convenience functions related to virtualization
 import os.path
 import logging
 import libvirt
-import ovirt.node.utils.process as process
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,10 +40,10 @@ def virtualization_hardware_is_available():
     has_module = False
     with open("/proc/modules") as modules:
         for line in modules:
-           has_module = (line.startswith("kvm_intel") or \
-                         line.startswith("kvm_amd"))
-           if has_module:
-               break
+            has_module = (line.startswith("kvm_intel") or \
+                          line.startswith("kvm_amd"))
+            if has_module:
+                break
 
     if has_module and os.path.exists("/dev/kvm"):
         has_virtualization = True
@@ -64,7 +63,7 @@ def virtualization_hardware_is_enabled():
             for line in cpuinfo:
                 if line.startswith("flags"):
                     if "vmx" in line or "svm" in line:
-                        is_enabled= True
+                        is_enabled = True
     return is_enabled
 
 

@@ -54,7 +54,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def validators(self):
         return {
-                "stringrng.bytes_used": ovirt.node.valid.Number(min=0) | ovirt.node.valid.Empty,
+                "stringrng.bytes_used": ovirt.node.valid.Number(min=0) | \
+                                        ovirt.node.valid.Empty,
                 "passwd.admin.password": ovirt.node.valid.Text(),
                 "passwd.admin.password_confirmation": ovirt.node.valid.Text(),
             }
@@ -67,7 +68,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 [("yes", "Yes"), ("no", "No")])),
             ("ssh._divider", ovirt.node.ui.Divider()),
 
-            ("strongrng._label", ovirt.node.ui.Header("Strong Random Number Generator")),
+            ("strongrng._label", ovirt.node.ui.Header(
+                                            "Strong Random Number Generator")),
             ("strongrng.enabled", ovirt.node.ui.Options(
                 "Enable AES-NI",
                 [("yes", "Yes"), ("no", "No")])),
@@ -76,7 +78,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
 
             ("passwd._label", ovirt.node.ui.Label("Local Access")),
-            ("passwd.admin.password", ovirt.node.ui.PasswordEntry("Password:")),
+            ("passwd.admin.password", ovirt.node.ui.PasswordEntry(
+                                                                "Password:")),
             ("passwd.admin.password_confirmation", ovirt.node.ui.PasswordEntry(
                 "Confirm Password:")),
         ]

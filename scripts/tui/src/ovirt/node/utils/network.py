@@ -22,18 +22,54 @@
 Some convenience functions related to networking
 """
 
-import gudev
+
 import os.path
 import logging
+import re
 from ovirt.node.utils import AugeasWrapper as Augeas
+import ovirt.node.utils.process as process
 
 LOGGER = logging.getLogger(__name__)
 
 
-def _query_udev_nics():
+#
+# Try to use NM if available
+#
+_nm_client = None
+try:
+    from gi.repository import NetworkManager, NMClient
+    import socket
+    import struct
+    NetworkManager
+    _nm_client = NMClient.Client.new()
+except Exception as e:
+    LOGGER.warning("NetworkManager support disabled: " +
+                   "NM Client not found (%s)" % e)
+import gudev
+
+
+class UnknownNicError(Exception):
+    pass
+
+
+def _query_udev_ifaces():
     client = gudev.Client(['net'])
     devices = client.query_by_subsystem("net")
     return [d.get_property("INTERFACE") for d in devices]
+
+
+def _nm_ifaces():
+    return [d.get_iface() for d in _nm_client.get_devices()]
+
+
+def nm_managed(iface):
+    """Wether an intreface is managed by NM or not (if it's running)
+    """
+    return _nm_client and iface in _nm_ifaces()
+
+
+def all_ifaces():
+    return _query_udev_ifaces()
 
 
 def all_nics():
@@ -45,13 +81,13 @@ def all_nics():
     Returns:
         Dict with NIC (name, info) mappings for all known NICS
     """
-    return _collect_nic_informations(_query_udev_nics())
+    return _collect_nic_informations(_query_udev_ifaces())
 
 
 def _collect_nic_informations(nics):
     """Collects all NIC relevant informations for a list of NICs
 
-    >>> infos = _collect_nic_informations(_query_udev_nics())
+    >>> infos = _collect_nic_informations(_query_udev_ifaces())
     >>> "lo" in infos
     True
     >>> "driver" in infos["lo"]
@@ -86,7 +122,7 @@ def _collect_nic_informations(nics):
         raise Exception("Couldn't gather informations for unknown NICs: %s" %
                         unknown_nics)
 
-    for name, info in infos.items():
+    for name, info in {k: v for k, v in infos.items() if k in nics}.items():
         LOGGER.debug("Getting additional information for '%s'" % name)
 
         # Driver
@@ -166,13 +202,13 @@ def relevant_nics(filter_bridges=True, filter_vlans=True):
             n.startswith("vnet") or \
             n.startswith("tun") or \
             n.startswith("wlan") or \
-            (("." in n) and filter_vlans) or \
-            ((p["type"] == "bridge") and filter_bridges))
+            (filter_vlans and ("." in n)) or \
+            (filter_bridges and (p["type"] == "bridge")))
 
     relevant_nics = {n: p for n, p in all_nics().items() \
                           if not is_irrelevant(n, p)}
 
-    irrelevant_names = set(all_nics().keys()) - set(relevant_nics.keys())
+    irrelevant_names = set(all_ifaces()) - set(relevant_nics.keys())
     LOGGER.debug("Irrelevant interfaces: %s" % irrelevant_names)
 
     return relevant_nics
@@ -216,6 +252,23 @@ def node_nics():
     return node_nics
 
 
+def node_bridge():
+    """Returns the main bridge of this node
+
+    Returns:
+        Bridge of this node
+    """
+
+    all_nics = relevant_nics(filter_bridges=False, filter_vlans=False)
+
+    bridges = [nic for nic, info in all_nics.items() \
+               if info["type"] == "bridge"]
+
+    assert len(bridges) == 1, "Expected only one bridge: %s" % bridges
+
+    return bridges[0]
+
+
 def _aug_get_or_set(augpath, new_servers=None):
     """Get or set some servers
     """
@@ -237,6 +290,7 @@ def _aug_get_or_set(augpath, new_servers=None):
 
 def nameservers(new_servers=None):
     """Get or set DNS servers
+
     >>> len(nameservers()) > 0
     True
     """
@@ -246,8 +300,94 @@ def nameservers(new_servers=None):
 
 def timeservers(new_servers=None):
     """Get or set TIME servers
+
     >>> len(nameservers()) > 0
     True
     """
     augpath = "/files/etc/ntp.conf/server"
     return _aug_get_or_set(augpath, new_servers)
+
+
+def nic_link_detected(iface):
+    """Determin if L1 is up on a given interface
+
+    >>> nic_link_detected("lo")
+    True
+
+    >>> iface = all_ifaces()[0]
+    >>> cmd = "ip link set dev {dev} up ; ip link show {dev}".format(dev=iface)
+    >>> has_carrier = "LOWER_UP" in process.pipe(cmd, without_retval=True)
+    >>> has_carrier == nic_link_detected(iface)
+    True
+
+    Args:
+        iface: The interface to be checked
+    Returns:
+        True if L1 (the-link-is-up) is detected (depends on driver support)
+    """
+
+    if iface not in all_ifaces():
+        raise UnknownNicError("Unknown network interface: '%s'" % iface)
+
+    if nm_managed(iface):
+        device = _nm_client.get_device_by_iface(iface)
+        if device:
+            return device.get_carrier()
+
+    # Fallback
+    has_carrier = False
+    try:
+        with open("/sys/class/net/%s/carrier" % iface) as c:
+            content = c.read()
+            has_carrier = "1" in content
+    except:
+        LOGGER.debug("Carrier down for %s" % iface)
+    return has_carrier
+
+
+def nic_ip_addresses(iface, families=["inet", "inet6"]):
+    """Get IP addresses for an iface
+
+    FIXME NM client.get_device_by_iface(iface).get_ip?_config()
+    """
+    if iface not in all_ifaces():
+        raise UnknownNicError("Unknown network interface: '%s'" % iface)
+
+    addresses = {f: None for f in families}
+
+    if nm_managed(iface):
+        device = _nm_client.get_device_by_iface(iface)
+        if device:
+            for family, addrs in [
+                ("inet", device.get_ipv4_config().get_addresses()),
+                ("inet6", device.get_ipv6_config().get_addresses())]:
+                addr = addrs[0] if len(addrs) > 0 else None
+                addresses[family] = _nm_address_to_str(addr) if addr else None
+        return addresses
+
+    # Fallback
+    cmd = "ip -o addr show {dev}".format(dev=iface)
+    for line in process.pipe(cmd, without_retval=True).split("\n"):
+        token = re.split("\s+", line)
+        if re.search("\sinet[6]\s", line):
+            addresses[token[1]] = token[3]
+
+    return addresses
+
+
+def _nm_address_to_str(ipaddr):
+    packed = struct.pack('L', ipaddr)
+    return socket.inet_ntoa(packed)
+
+
+def networking_status():
+    status = "Not connected"
+
+    bridge = node_bridge()
+    addresses = nic_ip_addresses(bridge)
+    has_address = any([a != None for a in addresses.values()])
+
+    if nic_link_detected(bridge) and has_address:
+        status = "Connected"
+
+    return (status, bridge, addresses)

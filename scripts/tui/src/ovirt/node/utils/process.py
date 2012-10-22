@@ -55,12 +55,21 @@ def system(cmd):
     return popen(cmd, shell=True).wait()
 
 
-def pipe(cmd, stdin=None):
+def pipe(cmd, stdin=None, without_retval=False):
     """Run a command interactively and cath it's output.
     This functions allows to pass smoe input to a running command.
 
+    >>> r = pipe("echo -n Hi")
+    >>> type(r[1])
+    <type 'str'>
+
+    >>> r
+    (True, 'Hi')
+
     Args:
         cmd: Commandline to be run
+        stdin: Optional string passed as stdin
+        without_retval: Optional if no retval should be passed
 
     Returns:
         A tuple (success, stdout)
@@ -74,6 +83,8 @@ def pipe(cmd, stdin=None):
         LOGGER.debug("out '%s'" % stdout)
     if stderr:
         LOGGER.warning("error '%s'" % stderr)
+    if without_retval:
+        return stdout
     return (system_cmd.returncode == 0, stdout)
 
 
