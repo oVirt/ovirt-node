@@ -45,6 +45,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     rank = lambda self: 999
 
+    has_ui = lambda self: False
+
     def ui_content(self):
         widgets = [
             ("usage.info", ovirt.node.ui.Label(usage))

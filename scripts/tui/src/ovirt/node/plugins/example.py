@@ -62,6 +62,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 "foo.password": nospace
             }
 
+    def has_ui(self):
+        return False
+
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
