@@ -290,7 +290,7 @@ class Table(Element):
         height: The height of the Table
     """
 
-    def __init__(self, header, items, height=3):
+    def __init__(self, header, items, height=5):
         self.header = header
         self.items = items
         self.height = height

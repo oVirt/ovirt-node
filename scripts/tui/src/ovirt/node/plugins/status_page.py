@@ -22,11 +22,14 @@
 Status plugin
 """
 import logging
+import textwrap
 
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
-import ovirt.node.utils
+import ovirt.node.utils as utils
+import ovirt.node.utils.virt as virt
+import ovirt.node.utils.security
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,15 +50,20 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return 0
 
     def model(self):
-        if not self._model:
-            self._model = {
-                "status": "Virtualization hardware was not detected",
-                "networking": "On",
-                "networking.bridge": "breth0: 192.168.122.1",
-                "logs": "Local Only",
-                "libvirt.num_guests": "42",
-            }
-        return self._model
+        net_status, net_br, net_addrs = utils.network.networking_status()
+        net_addrs_str = "\nIPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)
+
+        num_domains = "N/A"
+        with virt.LibvirtConnection() as con:
+            num_domains = str(con.numOfDomains())
+
+        return {
+            "status": virt.virtualization_hardware_status(),
+            "networking": net_status,
+            "networking.bridge": "%s %s" % (net_br, net_addrs_str),
+            "logs": "Local Only",
+            "libvirt.num_guests": num_domains,
+        }
 
     def ui_content(self):
         """Describes the UI this plugin requires
@@ -69,8 +77,16 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 ("networking",
                     ovirt.node.ui.KeywordLabel(aligned("Networking: "))),
                 ("networking.bridge",
-                    ovirt.node.ui.Label("N/A")),
+                    ovirt.node.ui.KeywordLabel("Bridge: ")),
             ]
+
+        action_widgets = [
+            ("action.lock", ovirt.node.ui.Button("Lock")),
+            ("action.logoff", ovirt.node.ui.Button("Log Off")),
+            ("action.restart", ovirt.node.ui.Button("Restart")),
+            ("action.poweroff", ovirt.node.ui.Button("Poweroff")),
+        ]
+
         widgets = [
             ("status",
                 ovirt.node.ui.KeywordLabel(aligned("Status: "))),
@@ -91,8 +107,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("support._space", ovirt.node.ui.Divider()),
 
             ("action.hostkey", ovirt.node.ui.Button("View Host Key")),
-#            ("action", ovirt.node.ui.Buttons(["Lock", "Log Off", "Restart",
-#                                              "Power Off"])),
+
+            ("action._row", ovirt.node.ui.Row(action_widgets)),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
@@ -100,3 +116,51 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         page = ovirt.node.ui.Page(widgets)
         page.has_save_button = False
         return page
+
+    def on_change(self, changes):
+        pass
+
+    def on_merge(self, changes):
+        # Handle button presses
+        if "action.lock" in changes:
+            LOGGER.info("Locking screen")
+
+        elif "action.logoff" in changes:
+            LOGGER.info("Logging off")
+            self.application.quit()
+
+        elif "action.restart" in changes:
+            LOGGER.info("Restarting")
+
+        elif "action.poweroff" in changes:
+            LOGGER.info("Shutting down")
+
+        elif "action.hostkey" in changes:
+            LOGGER.info("Showing hostkey")
+            return self._build_hostkey_dialog()
+
+        elif "_save" in changes:
+            self._widgets["dialog.hostkey"].close()
+
+
+    def _build_dialog(self, path, txt, widgets):
+        self._widgets.update(dict(widgets))
+        self._widgets[path] = ovirt.node.ui.Dialog(txt, widgets)
+        return self._widgets[path]
+
+
+    def _build_hostkey_dialog(self):
+        fp, hk = ovirt.node.utils.security.get_ssh_hostkey()
+        return self._build_dialog("dialog.hostkey", "Host Key", [
+            ("hostkey.fp._label",
+                ovirt.node.ui.Label("RSA Host Key Fingerprint:")),
+            ("hostkey.fp",
+                ovirt.node.ui.Label(fp)),
+
+            ("hostkey._divider", ovirt.node.ui.Divider()),
+
+            ("hostkey._label",
+                ovirt.node.ui.Label("RSA Host Key:")),
+            ("hostkey",
+                ovirt.node.ui.Label("\n".join(textwrap.wrap(hk, 64)))),
+        ])

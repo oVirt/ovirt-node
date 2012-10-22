@@ -57,7 +57,7 @@ def build_page(tui, plugin, container):
     # Always create the SaveButton, but only display it if requested
     #save = ovirt.node.ui.widgets.Button("Save")
     #urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
-    save = build_button("", ovirt.node.ui.SaveButton(), tui, plugin)
+    save = build_button("_save", ovirt.node.ui.SaveButton(), tui, plugin)
     plugin._save_button = save
 
     for path, item in container.children:
@@ -187,28 +187,16 @@ def build_button(path, item, tui, plugin):
     widget = ovirt.node.ui.widgets.Button(item.text())
 
     def on_widget_click_cb(widget, data=None):
-        LOGGER.debug("Button click: %s" % widget)
-        if type(item) is ovirt.node.ui.SaveButton:
-            r = plugin._on_ui_save()
-            LOGGER.debug("SaveButton clicked: %s" % r)
+        LOGGER.debug("Button click: %s %s" % (path, widget))
+#        if type(item) is ovirt.node.ui.SaveButton:
+        plugin._on_ui_change({path: True})
+        r = plugin._on_ui_save()
+        parse_plugin_result(tui, plugin, r)
 
-            if type(r) in [ovirt.node.ui.Page]:
-                w = build_page(tui, plugin, r)
-                tui.display_page(w)
-
-            elif type(r) in [ovirt.node.ui.Dialog]:
-                w = build_page(tui, plugin, r)
-                dialog = tui.display_dialog(w, r.title)
-
-                def on_item_close_changed_cb(i, v):
-                    dialog.close()
-
-                r.connect_signal("close", on_item_close_changed_cb)
-
-        else:
+#        else:
 #           Not propagating the signal as a signal to the plugin
 #           item.emit_signal("click", widget)
-            plugin._on_ui_change({path: True})
+#            plugin._on_ui_change({path: True})
     urwid.connect_signal(widget, "click", on_widget_click_cb)
 
     return widget
@@ -255,16 +243,41 @@ def build_progressbar(path, item, tui, plugin):
 def build_table(path, item, tui, plugin):
     children = []
     for key, label in item.items:
-        c = _build_tableitem(path, plugin, key, label)
+        c = _build_tableitem(tui, path, plugin, key, label)
         children.append(c)
     widget = ovirt.node.ui.widgets.TableWidget(item.header, children,
                                                item.height)
+    urwid.connect_signal(widget, "changed",
+                         lambda w: plugin._on_ui_change({path: w._key}))
 
     return widget
 
 
-def _build_tableitem(path, plugin, key, label):
+def _build_tableitem(tui, path, plugin, key, label):
     c = ovirt.node.ui.widgets.TableEntryWidget(label)
-    urwid.connect_signal(c, "click",
-                         lambda w, d: plugin._on_ui_change(d), {path: key})
+    c._key = key
+
+    def on_click_cb(widget, data):
+        parse_plugin_result(tui, plugin, plugin._on_ui_save())
+    urwid.connect_signal(c, "click", on_click_cb)
     return c
+
+
+def parse_plugin_result(tui, plugin, result):
+        LOGGER.debug("Parsing: %s" % result)
+
+        if type(result) in [ovirt.node.ui.Page]:
+            LOGGER.debug("Page requested.")
+            w = build_page(tui, plugin, result)
+            tui.display_page(w)
+
+        elif type(result) in [ovirt.node.ui.Dialog]:
+            LOGGER.debug("Dialog requested.")
+            w = build_page(tui, plugin, result)
+            dialog = tui.display_dialog(w, result.title)
+
+            def on_item_close_changed_cb(i, v):
+                dialog.close()
+            result.connect_signal("close", on_item_close_changed_cb)
+
+        return result

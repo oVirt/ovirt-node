@@ -65,7 +65,7 @@ class Application(object):
     def run(self):
         self.__load_plugins()
         self.ui.register_hotkey("f12", self.__drop_to_shell)
-        self.ui.footer = "Press ctrl+x or esc to quit."
+        self.ui.footer = "Press esc to quit."
         self.ui.run()
 
     def quit(self):

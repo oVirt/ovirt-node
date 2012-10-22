@@ -26,6 +26,7 @@ Some convenience functions related to networking
 import os.path
 import logging
 import re
+
 from ovirt.node.utils import AugeasWrapper as Augeas
 import ovirt.node.utils.process as process
 
@@ -62,7 +63,7 @@ def _nm_ifaces():
     return [d.get_iface() for d in _nm_client.get_devices()]
 
 
-def nm_managed(iface):
+def is_nm_managed(iface):
     """Wether an intreface is managed by NM or not (if it's running)
     """
     return _nm_client and iface in _nm_ifaces()
@@ -72,20 +73,8 @@ def all_ifaces():
     return _query_udev_ifaces()
 
 
-def all_nics():
+def iface_informations(ifaces, with_live=False):
     """Retuns all system NICs (via udev)
-
-    >>> "lo" in all_nics()
-    True
-
-    Returns:
-        Dict with NIC (name, info) mappings for all known NICS
-    """
-    return _collect_nic_informations(_query_udev_ifaces())
-
-
-def _collect_nic_informations(nics):
-    """Collects all NIC relevant informations for a list of NICs
 
     >>> infos = _collect_nic_informations(_query_udev_ifaces())
     >>> "lo" in infos
@@ -117,12 +106,13 @@ def _collect_nic_informations(nics):
         infos[info["name"]] = info
 
     # Check if we cover all req. NICs
-    unknown_nics = (set(nics) - set(infos))
-    if unknown_nics != set():
+    unknown_ifaces = (set(ifaces) - set(infos))
+    if unknown_ifaces != set():
         raise Exception("Couldn't gather informations for unknown NICs: %s" %
-                        unknown_nics)
+                        unknown_ifaces)
 
-    for name, info in {k: v for k, v in infos.items() if k in nics}.items():
+    _infos = {}
+    for name, info in {k: v for k, v in infos.items() if k in ifaces}.items():
         LOGGER.debug("Getting additional information for '%s'" % name)
 
         # Driver
@@ -135,24 +125,28 @@ def _collect_nic_informations(nics):
                 LOGGER.warning(("Exception %s while reading driver " +
                                 "of '%s' from '%s'") % (e, name,
                                                         driver_symlink))
-        infos[name]["driver"] = driver
+        info["driver"] = driver
 
         hwaddr = "unkown"
         with open("/sys/class/net/%s/address" % name) as macfile:
             hwaddr = macfile.read().strip()
-        infos[name]["hwaddr"] = hwaddr
+        info["hwaddr"] = hwaddr
 
         aug = Augeas()
         augbasepath = "/files/etc/sysconfig/network-scripts/ifcfg-%s"
         augdevicepath = augbasepath % name
 
-        # Bootprotocol
+        # Type
         info["type"] = aug.get(augdevicepath + "/TYPE")
         if os.path.exists("/sys/class/net/%s/bridge" % name):
             info["type"] = "bridge"
 
         # Bootprotocol
         info["bootproto"] = aug.get(augdevicepath + "/BOOTPROTO")
+        for p in ["IPADDR", "NETMASK", "GATEWAY"]:
+            info[p.lower()] = aug.get(augdevicepath + "/" + p)
+
+        # FIXME IPv6
 
         # Parent bridge
         info["bridge"] = aug.get(augdevicepath + "/BRIDGE")
@@ -169,10 +163,28 @@ def _collect_nic_informations(nics):
 
             info["type"] = "vlan"
 
-    return infos
+        if with_live:
+            info.update(_collect_live_informations(name))
+
+        _infos[name] = info
+
+    return _infos
 
 
-def relevant_nics(filter_bridges=True, filter_vlans=True):
+def _collect_live_informations(iface):
+    LOGGER.debug("Gathering live informations for '%s'" % iface)
+    info = {}
+
+    # Current IP addresses
+    info["addresses"] = nic_ip_addresses(iface)
+
+    # Current link state
+    info["link_detected"] = nic_link_detected(iface)
+
+    return info
+
+
+def relevant_ifaces(filter_bridges=True, filter_vlans=True):
     """Retuns relevant system NICs (via udev)
 
     Filters out
@@ -183,10 +195,10 @@ def relevant_nics(filter_bridges=True, filter_vlans=True):
     - sit
     - vlans
 
-    >>> "lo" in relevant_nics()
+    >>> "lo" in relevant_ifaces()
     False
 
-    >>> "eth0" in relevant_nics() or "em1" in relevant_nics()
+    >>> "eth0" in relevant_ifaces() or "em1" in relevant_ifaces()
     True
 
     Args:
@@ -195,33 +207,37 @@ def relevant_nics(filter_bridges=True, filter_vlans=True):
     Returns:
         List of strings, the NIC names
     """
-    is_irrelevant = lambda n, p: ( \
+    valid_name = lambda n: not ( \
             n == "lo" or \
             n.startswith("bond") or \
             n.startswith("sit") or \
             n.startswith("vnet") or \
             n.startswith("tun") or \
             n.startswith("wlan") or \
-            (filter_vlans and ("." in n)) or \
-            (filter_bridges and (p["type"] == "bridge")))
+            (filter_vlans and ("." in n)))
+    valid_props = lambda i, p: (filter_bridges and (p["type"] == "bridge"))
 
-    relevant_nics = {n: p for n, p in all_nics().items() \
-                          if not is_irrelevant(n, p)}
+    relevant_ifaces = [iface for iface in all_ifaces() if valid_name(iface)]
+#    relevant_ifaces = {iface: props for iface, props \
+#                     in _collect_nic_informations(relevant_ifaces).items() \
+#                     if valid_props(iface, props)}
 
-    irrelevant_names = set(all_ifaces()) - set(relevant_nics.keys())
+    irrelevant_names = set(all_ifaces()) - set(relevant_ifaces)
     LOGGER.debug("Irrelevant interfaces: %s" % irrelevant_names)
+    LOGGER.debug("Relevant interfaces: %s" % relevant_ifaces)
 
-    return relevant_nics
+    return relevant_ifaces
 
 
-def node_nics():
+def node_nics(with_live=False):
     """Returns Node's NIC model.
     This squashes nic, bridge and vlan informations.
 
     >>> node_nics() != None
     True
     """
-    all_nics = relevant_nics(filter_bridges=False, filter_vlans=False)
+    all_nics = relevant_ifaces(filter_bridges=False, filter_vlans=False)
+    all_nics = iface_informations(all_nics, with_live)
 
     bridges = [nic for nic, info in all_nics.items() \
                if info["type"] == "bridge"]
@@ -239,7 +255,9 @@ def node_nics():
         info = all_nics[name]
         if info["bridge"]:
             bridge = all_nics[info["bridge"]]
-            info["bootproto"] = bridge["bootproto"]
+            for k in ["bootproto", "ipaddr", "netmask", "gateway"]:
+                if k in bridge:
+                    info[k] = bridge[k]
         node_nics[name] = info
 
     for name in vlans:
@@ -252,19 +270,21 @@ def node_nics():
     return node_nics
 
 
-def node_bridge():
+def node_bridge(with_live=False):
     """Returns the main bridge of this node
 
     Returns:
         Bridge of this node
     """
 
-    all_nics = relevant_nics(filter_bridges=False, filter_vlans=False)
+    all_nics = relevant_ifaces(filter_bridges=False, filter_vlans=False)
+    all_nics = iface_informations(all_nics, with_live)
 
     bridges = [nic for nic, info in all_nics.items() \
                if info["type"] == "bridge"]
 
-    assert len(bridges) == 1, "Expected only one bridge: %s" % bridges
+    if len(bridges) != 1:
+        LOGGER.warning("Expected exactly one bridge: %s" % bridges)
 
     return bridges[0]
 
@@ -329,10 +349,13 @@ def nic_link_detected(iface):
     if iface not in all_ifaces():
         raise UnknownNicError("Unknown network interface: '%s'" % iface)
 
-    if nm_managed(iface):
-        device = _nm_client.get_device_by_iface(iface)
-        if device:
-            return device.get_carrier()
+    if is_nm_managed(iface):
+        try:
+            device = _nm_client.get_device_by_iface(iface)
+            if device:
+                return device.get_carrier()
+        except:
+            LOGGER.debug("Failed to retrieve carrier with NM")
 
     # Fallback
     has_carrier = False
@@ -355,39 +378,52 @@ def nic_ip_addresses(iface, families=["inet", "inet6"]):
 
     addresses = {f: None for f in families}
 
-    if nm_managed(iface):
+    if False: # FIXME to hackish to convert addr - is_nm_managed(iface):
         device = _nm_client.get_device_by_iface(iface)
+        LOGGER.debug("Got '%s' for '%s'" % (device, iface))
         if device:
-            for family, addrs in [
-                ("inet", device.get_ipv4_config().get_addresses()),
-                ("inet6", device.get_ipv6_config().get_addresses())]:
-                addr = addrs[0] if len(addrs) > 0 else None
-                addresses[family] = _nm_address_to_str(addr) if addr else None
+            for family, cfgfunc, sf in [
+                ("inet", device.get_ip4_config, socket.AF_INET),
+                ("inet6", device.get_ip6_config, socket.AF_INET6)]:
+                cfg = cfgfunc()
+                if not cfg:
+                    LOGGER.debug("No %s configuration for %s" % (family,
+                                                                 iface))
+                    break
+                addrs = cfg.get_addresses()
+                addr = addrs[0].get_address() if len(addrs) > 0 else None
+                addresses[family] = _nm_address_to_str(sf, addr) if addr \
+                                                                 else None
         return addresses
 
     # Fallback
     cmd = "ip -o addr show {dev}".format(dev=iface)
     for line in process.pipe(cmd, without_retval=True).split("\n"):
         token = re.split("\s+", line)
-        if re.search("\sinet[6]\s", line):
-            addresses[token[1]] = token[3]
+        if re.search("\sinet[6]?\s", line):
+            addresses[token[2]] = token[3]
 
     return addresses
 
 
-def _nm_address_to_str(ipaddr):
-    packed = struct.pack('L', ipaddr)
-    return socket.inet_ntoa(packed)
+def _nm_address_to_str(family, ipaddr):
+    if family == socket.AF_INET:
+        packed = struct.pack('L', ipaddr)
+    elif family == socket.AF_INET6:
+        packed = ipaddr
+    return socket.inet_ntop(family, packed)
 
 
-def networking_status():
+def networking_status(iface=None):
     status = "Not connected"
 
-    bridge = node_bridge()
-    addresses = nic_ip_addresses(bridge)
+    iface = iface or node_bridge()
+    addresses = nic_ip_addresses(iface)
     has_address = any([a != None for a in addresses.values()])
 
-    if nic_link_detected(bridge) and has_address:
+    if nic_link_detected(iface) and has_address:
         status = "Connected"
 
-    return (status, bridge, addresses)
+    summary = (status, iface, addresses)
+    LOGGER.debug(summary)
+    return summary

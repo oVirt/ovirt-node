@@ -55,7 +55,7 @@ class TableEntryWidget(urwid.AttrMap):
     def keypress(self, size, key):
         if self._command_map[key] != 'activate':
             return key
-        self._emit('click')
+        self._emit('click', None)
 
     def mouse_event(self, size, event, button, x, y, focus):
         if button != 1 or not urwid.util.is_mouse_press(event):

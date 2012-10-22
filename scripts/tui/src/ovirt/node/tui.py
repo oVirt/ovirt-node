@@ -49,7 +49,7 @@ class UrwidTUI(object):
     __menu = None
     __page_frame = None
 
-    __dialogs = []
+    __widget_stack = []
 
     header = u"\n Configuration TUI\n"
     footer = u"Press ctrl+c to exit"
@@ -61,6 +61,7 @@ class UrwidTUI(object):
                ('table.entry:focus', 'white', 'light blue', 'standout'),
                ('main.menu', 'black', ''),
                ('main.menu.frame', 'light gray', ''),
+               ('notice', 'light red', ''),
                ('plugin.widget.entry', 'dark gray', ''),
                ('plugin.widget.entry.disabled', 'dark gray', 'light gray'),
                ('plugin.widget.entry.label', 'dark gray, bold', ''),
@@ -87,21 +88,31 @@ class UrwidTUI(object):
         self.__menu = ovirt.node.ui.widgets.PluginMenu(self.__pages)
 
         def menu_item_changed(plugin):
-            self.__change_to_plugin(plugin)
+            self.display_plugin(plugin)
         urwid.connect_signal(self.__menu, 'changed', menu_item_changed)
 
     def __create_screen(self):
         self.__build_menu()
         self.__page_frame = urwid.Frame(urwid.Filler(urwid.Text("")))
         self.__menu.set_focus(0)
-        body = urwid.Columns([("weight", 0.5, self.__menu),
+
+        self.__notice = urwid.Text("Note: ")
+        self.__notice_filler = urwid.Filler(self.__notice)
+        self.__notice_attrmap = urwid.AttrMap(self.__notice_filler, "notice")
+
+        menu_frame_columns = urwid.Columns([("weight", 0.5, self.__menu),
                               self.__page_frame], 4)
+
+        body = urwid.Pile([("fixed", 3, self.__notice_attrmap),
+                           menu_frame_columns
+                        ])
+
         header = urwid.Text(self.header, wrap='clip')
         header = urwid.AttrMap(header, 'header')
         footer = urwid.Text(self.footer, wrap='clip')
         return urwid.Frame(body, header, footer)
 
-    def __change_to_plugin(self, plugin):
+    def display_plugin(self, plugin):
         timer = timeit.Timer()
         page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
         self.display_page(page)
@@ -114,17 +125,24 @@ class UrwidTUI(object):
         self.__page_frame.body = filler
 
     def display_dialog(self, body, title):
+        LOGGER.debug("Displaying dialog: %s / %s" % (body, title))
         filler = urwid.Filler(body, ("fixed top", 1), height=20)
         dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, "esc",
                                                    self.__loop.widget)
-        urwid.connect_signal(dialog, "close", lambda: self.close_dialog())
+        urwid.connect_signal(dialog, "close", lambda: self.close_dialog(dialog))
         self.__loop.widget = dialog
+        self.__widget_stack.append(dialog)
         return dialog
 
-    def close_dialog(self):
+    def close_dialog(self, dialog):
         # FIXME stack to allow more than one dialog
         if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
-            self.__loop.widget = self.__loop.widget.previous_widget
+            if dialog == self.__widget_stack[-1]:
+                self.__widget_stack.pop()
+                if len(self.__widget_stack) > 0:
+                    self.__loop.widget = self.__widget_stack[:-1]
+                else:
+                    self.__loop.widget = self.__main_frame
             LOGGER.debug("Dialog closed")
 
     def popup(self, title, msg, buttons=None):
@@ -137,10 +155,9 @@ class UrwidTUI(object):
 
         if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
             LOGGER.debug("Modal dialog escape: %s" % key)
-            dialog = self.__loop.widget
-            if dialog.escape_key in keys:
-                self.close_dialog()
-#            return
+            if self.__loop.widget.escape_key in keys:
+                self.close_dialog(self.__widget_stack[-1])
+                return
 
         if key in self.__hotkeys.keys():
             LOGGER.debug("Running hotkeys: %s" % key)
