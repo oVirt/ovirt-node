@@ -28,3 +28,6 @@ plymouth-graphics-libs
 plymouth-scripts
 plymouth-plugin-two-step
 plymouth-theme-charge
+
+# urwid - for the alternate tui
+python-urwid
