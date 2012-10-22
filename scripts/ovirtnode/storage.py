@@ -861,6 +861,20 @@ class Storage:
 
             self.drive_disk_size = drive_disk_size
             self.drive_need_size = drive_need_size
+
+            if ROOT_NEED_SIZE > ROOTDRIVESPACE:
+                gap_size = ROOT_NEED_SIZE - ROOTDRIVESPACE
+                logger.error("The target storage device is too small for " +
+                             "the desired sizes:")
+                logger.error(" Disk Target: Root")
+                logger.error(" Size of target storage device: " +
+                             str(ROOTDRIVESPACE) + "MB")
+                logger.error(" Total storage size to be used: " +
+                             str(ROOT_NEED_SIZE) + "MB")
+                logger.error("You need an additional " + str(gap_size) +
+                             "MB of storage.")
+                return False
+
             if drive_need_size > drive_disk_size:
                 gap_size = drive_need_size - drive_disk_size
                 logger.error("The target storage device is too small for " +
