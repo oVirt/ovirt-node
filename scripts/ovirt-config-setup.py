@@ -704,6 +704,18 @@ class NodeConfigScreen():
             self.gridform.draw()
             self._set_title()
 
+    def valid_rng_bytes_callback(self):
+        rng_bytes = self.rng_bytes.value()
+        if len(rng_bytes) > 0 and not rng_bytes.isdigit() \
+                or rng_bytes.startswith("0"):
+            self.rng_bytes.set("")
+            self._create_warn_screen()
+            ButtonChoiceWindow(self.screen, "Network", "Invalid RNG Bytes Value",
+                               buttons=['Ok'])
+            self.reset_screen_colors()
+            self.gridform.draw()
+            self._set_title()
+
     def screen_locked_page(self, screen):
         self.screen_locked = True
         elements = Grid(1, 3)
@@ -970,6 +982,7 @@ class NodeConfigScreen():
         rng_elements.setField(self.disable_aes_ni, 0, 0, anchorLeft=1)
         rng_bit_elements.setField(Label("Bytes Used: "), 0, 0, anchorLeft=1)
         self.rng_bytes = Entry(5, scroll=0)
+        self.rng_bytes.setCallback(self.valid_rng_bytes_callback)
         if self.current_rng_bytes > 0:
             self.rng_bytes.set(self.current_rng_bytes)
         rng_bit_elements.setField(self.rng_bytes, 1, 0, anchorLeft=1)
