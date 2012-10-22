@@ -25,6 +25,7 @@ The urwid TUI base library
 import urwid
 
 import logging
+import timeit
 
 import ovirt.node
 import ovirt.node.plugins
@@ -101,12 +102,15 @@ class UrwidTUI(object):
         return urwid.Frame(body, header, footer)
 
     def __change_to_plugin(self, plugin):
+        timer = timeit.Timer()
         page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
         self.display_page(page)
+        LOGGER.debug("Build and displayed page in %ss" % timer.timeit())
 
     def display_page(self, page):
         # FIXME why is this fixed?
         filler = urwid.Filler(page, ("fixed top", 1), height=30)
+#        filler = urwid.Filler(page)
         self.__page_frame.body = filler
 
     def display_dialog(self, body, title):
@@ -192,6 +196,7 @@ class UrwidTUI(object):
     def quit(self):
         """Quit the UI
         """
+        LOGGER.info("Quitting, exitting mainloop")
         raise urwid.ExitMainLoop()
 
     def run(self):

@@ -67,8 +67,9 @@ class NodePlugin(object):
     Errors are propagated back by using Errors/Exceptions.
     """
 
-    def __init__(self):
+    def __init__(self, application):
         self.__changes = {}
+        self.application = application
 
     def name(self):
         """Returns the name of the plugin.

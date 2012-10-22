@@ -45,7 +45,7 @@ class Application(object):
         self.ui = ovirt.node.tui.UrwidTUI(self)
 
     def __load_plugins(self):
-        self.plugins = [m.Plugin() for m in ovirt.node.plugins.load_all()]
+        self.plugins = [m.Plugin(self) for m in ovirt.node.plugins.load_all()]
 
         for plugin in self.plugins:
             LOGGER.debug("Loading plugin %s" % plugin)
@@ -55,8 +55,19 @@ class Application(object):
         with self.ui.suspended():
             ovirt.node.utils.process.system("reset ; bash")
 
+    def model(self, plugin_name):
+        model = None
+        for plugin in self.plugins:
+            if plugin.name() == plugin_name:
+                model = plugin.model()
+        return model
+
     def run(self):
         self.__load_plugins()
         self.ui.register_hotkey("f12", self.__drop_to_shell)
         self.ui.footer = "Press ctrl+x or esc to quit."
         self.ui.run()
+
+    def quit(self):
+        LOGGER.info("Quitting")
+        self.ui.quit()

@@ -395,9 +395,9 @@ class PageWidget(urwid.WidgetWrap):
 
     def __init__(self, widgets):
 #        self._listwalker = urwid.SimpleListWalker(widgets)
-#        self._listbox = urwid.ListBox(self._listwalker)
-        self._pile = urwid.Pile(widgets)
-        super(PageWidget, self).__init__(self._pile)
+#        self._container = urwid.ListBox(self._listwalker)
+        self._container = urwid.Pile(widgets)
+        super(PageWidget, self).__init__(self._container)
 
 
 class RowWidget(urwid.Columns):
