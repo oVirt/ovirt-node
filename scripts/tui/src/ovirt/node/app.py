@@ -27,7 +27,8 @@ which communicate with each other.
 import logging
 
 logging.basicConfig(level=logging.DEBUG,
-                    filename="app.log", filemode="w")
+                    filename="app.log", filemode="w",
+                    format="%(asctime)s %(levelname)s %(name)s %(message)s")
 LOGGER = logging.getLogger(__name__)
 
 
