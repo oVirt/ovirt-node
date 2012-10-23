@@ -26,9 +26,10 @@ Some convenience functions related to networking
 import os.path
 import logging
 import re
+import glob
 
-from ovirt.node.utils import AugeasWrapper as Augeas
 import ovirt.node.utils.process as process
+import ovirt.node.config.network
 
 LOGGER = logging.getLogger(__name__)
 
@@ -73,106 +74,70 @@ def all_ifaces():
     return _query_udev_ifaces()
 
 
-def iface_informations(ifaces, with_live=False):
+def iface_information(iface, with_slow=True):
     """Retuns all system NICs (via udev)
-
-    >>> infos = _collect_nic_informations(_query_udev_ifaces())
-    >>> "lo" in infos
-    True
-    >>> "driver" in infos["lo"]
-    True
-    >>> infos["lo"]["driver"]
-    'unknown'
 
     Args:
         nics: List of NIC names
     Returns:
         A dict of (nic-name, nic-infos-dict)
     """
-    infos = {}
+    info = None
 
     client = gudev.Client(['net'])
     for d in client.query_by_subsystem("net"):
 #        assert d.has_property("ID_VENDOR_FROM_DATABASE"), \
 #                "udev informations are incomplete (udevadm re-trigger?)"
 
-        info = {"name": d.get_property("INTERFACE"),
-                "vendor": d.get_property("ID_VENDOR_FROM_DATABASE") \
-                          or "unkown",
-                "devtype": d.get_property("DEVTYPE") or "unknown",
-                "devpath": d.get_property("DEVPATH")
-               }
+        uinfo = {"name": d.get_property("INTERFACE"),
+                 "vendor": d.get_property("ID_VENDOR_FROM_DATABASE") \
+                           or "unkown",
+                 "devtype": d.get_property("DEVTYPE") or "unknown",
+                 "devpath": d.get_property("DEVPATH")
+                }
 
-        infos[info["name"]] = info
+        if uinfo["name"] == iface:
+            info = uinfo
 
-    # Check if we cover all req. NICs
-    unknown_ifaces = (set(ifaces) - set(infos))
-    if unknown_ifaces != set():
-        raise Exception("Couldn't gather informations for unknown NICs: %s" %
-                        unknown_ifaces)
+    assert info, "Unknown nic %s" % iface
 
-    _infos = {}
-    for name, info in {k: v for k, v in infos.items() if k in ifaces}.items():
-        LOGGER.debug("Getting additional information for '%s'" % name)
+    LOGGER.debug("Getting live information for '%s'" % iface)
 
-        # Driver
-        driver_symlink = "/sys/class/net/%s/device/driver" % name
-        driver = "unknown"
-        if os.path.islink(driver_symlink):
-            try:
-                driver = os.path.basename(os.readlink(driver_symlink))
-            except Exception as e:
-                LOGGER.warning(("Exception %s while reading driver " +
-                                "of '%s' from '%s'") % (e, name,
-                                                        driver_symlink))
-        info["driver"] = driver
+    # Driver
+    driver_symlink = "/sys/class/net/%s/device/driver" % iface
+    driver = "unknown"
+    if os.path.islink(driver_symlink):
+        try:
+            driver = os.path.basename(os.readlink(driver_symlink))
+        except Exception as e:
+            LOGGER.warning(("Exception %s while reading driver " +
+                            "of '%s' from '%s'") % (e, iface, driver_symlink))
+    info["driver"] = driver
 
-        hwaddr = "unkown"
-        with open("/sys/class/net/%s/address" % name) as macfile:
-            hwaddr = macfile.read().strip()
-        info["hwaddr"] = hwaddr
+    # Hwaddr
+    hwaddr = "unkown"
+    with open("/sys/class/net/%s/address" % iface) as macfile:
+        hwaddr = macfile.read().strip()
+    info["hwaddr"] = hwaddr
 
-        aug = Augeas()
-        augbasepath = "/files/etc/sysconfig/network-scripts/ifcfg-%s"
-        augdevicepath = augbasepath % name
+    # Check bridge
+    if os.path.exists("/sys/class/net/%s/bridge" % iface):
+        info["type"] = "bridge"
 
-        # Type
-        info["type"] = aug.get(augdevicepath + "/TYPE")
-        if os.path.exists("/sys/class/net/%s/bridge" % name):
-            info["type"] = "bridge"
+    # Check vlan
+    if len(glob.glob("/proc/net/vlan/%s.*" % iface)) > 0:
+        info["type"] = "vlan"
 
-        # Bootprotocol
-        info["bootproto"] = aug.get(augdevicepath + "/BOOTPROTO")
-        for p in ["IPADDR", "NETMASK", "GATEWAY"]:
-            info[p.lower()] = aug.get(augdevicepath + "/" + p)
+    if "type" not in info:
+        info["type"] = info["devtype"]
 
-        # FIXME IPv6
+    if with_slow:
+        info.update(_slow_iface_information(iface))
 
-        # Parent bridge
-        info["bridge"] = aug.get(augdevicepath + "/BRIDGE")
-
-        # VLAN
-        info["is_vlan"] = aug.get(augdevicepath + "/VLAN") is not None
-        if info["is_vlan"] != "." in name:
-            LOGGER.warning("NIC config says VLAN, name doesn't reflect " + \
-                           "that: %s" % name)
-        if info["is_vlan"]:
-            parts = name.split(".")
-            info["vlanid"] = parts[-1:]
-            info["parent"] = ".".join(parts[:-1])
-
-            info["type"] = "vlan"
-
-        if with_live:
-            info.update(_collect_live_informations(name))
-
-        _infos[name] = info
-
-    return _infos
+    return info
 
 
-def _collect_live_informations(iface):
-    LOGGER.debug("Gathering live informations for '%s'" % iface)
+def _slow_iface_information(iface):
     info = {}
 
     # Current IP addresses
@@ -215,12 +180,12 @@ def relevant_ifaces(filter_bridges=True, filter_vlans=True):
             n.startswith("tun") or \
             n.startswith("wlan") or \
             (filter_vlans and ("." in n)))
-    valid_props = lambda i, p: (filter_bridges and (p["type"] == "bridge"))
+    valid_props = lambda i, p: (filter_bridges and (p["type"] != "bridge"))
 
     relevant_ifaces = [iface for iface in all_ifaces() if valid_name(iface)]
-#    relevant_ifaces = {iface: props for iface, props \
-#                     in _collect_nic_informations(relevant_ifaces).items() \
-#                     if valid_props(iface, props)}
+#    relevant_ifaces = {iface: iface_information(iface) for iface \
+#                       in relevant_ifaces \
+#                       if valid_props(iface, iface_information(iface, False))}
 
     irrelevant_names = set(all_ifaces()) - set(relevant_ifaces)
     LOGGER.debug("Irrelevant interfaces: %s" % irrelevant_names)
@@ -229,103 +194,75 @@ def relevant_ifaces(filter_bridges=True, filter_vlans=True):
     return relevant_ifaces
 
 
-def node_nics(with_live=False):
+def node_nics():
     """Returns Node's NIC model.
     This squashes nic, bridge and vlan informations.
 
     >>> node_nics() != None
     True
     """
-    all_nics = relevant_ifaces(filter_bridges=False, filter_vlans=False)
-    all_nics = iface_informations(all_nics, with_live)
+    all_ifaces = relevant_ifaces(filter_bridges=False, filter_vlans=False)
+    all_infos = {i: iface_information(i) for i in all_ifaces}
+    all_cfgs = {i: ovirt.node.config.network.iface(i) for i in all_ifaces}
 
-    bridges = [nic for nic, info in all_nics.items() \
+    bridges = [nic for nic, info in all_infos.items() \
                if info["type"] == "bridge"]
-    vlans = [nic for nic, info in all_nics.items() \
+    vlans = [nic for nic, info in all_infos.items() \
              if info["type"] == "vlan"]
-    nics = [nic for nic, info in all_nics.items() \
+    nics = [nic for nic, info in all_infos.items() \
             if info["name"] not in bridges + vlans]
 
     LOGGER.debug("Bridges: %s" % bridges)
     LOGGER.debug("VLANs: %s" % vlans)
     LOGGER.debug("NICs: %s" % nics)
 
-    node_nics = {}
+    node_infos = {}
+    bridge_found = False
     for name in nics:
-        info = all_nics[name]
-        if info["bridge"]:
-            bridge = all_nics[info["bridge"]]
+        info = all_infos[name]
+        cfg = all_cfgs[name]
+        bridge = cfg["bridge"]
+        if bridge:
+            bridge_found = True
+            bridge_cfg = all_cfgs[bridge]
             for k in ["bootproto", "ipaddr", "netmask", "gateway"]:
-                if k in bridge:
-                    info[k] = bridge[k]
-        node_nics[name] = info
+                if k in bridge_cfg:
+                    info[k] = bridge_cfg[k]
+        node_infos[name] = info
+    assert bridge_found
 
     for name in vlans:
-        info = all_nics[name]
+        info = all_infos[name]
+        cfg = all_cfgs[name]
         if info["vlanid"]:
-            node_nics[info["parent"]]["vlanid"] = info["vlanid"][0]
+            parent = info["vlan_parent"]
+            node_infos[parent]["vlanid"] = info["vlanid"][0]
 
-    LOGGER.debug("Node NICs: %s" % node_nics)
+    LOGGER.debug("Node NICs: %s" % node_infos)
 
-    return node_nics
+    return node_infos
 
 
-def node_bridge(with_live=False):
+def node_bridge():
     """Returns the main bridge of this node
+
+    >>> node_bridge() is not None
+    True
 
     Returns:
         Bridge of this node
     """
 
-    all_nics = relevant_ifaces(filter_bridges=False, filter_vlans=False)
-    all_nics = iface_informations(all_nics, with_live)
+    all_ifaces = relevant_ifaces(filter_bridges=False, filter_vlans=False)
+    all_infos = [iface_information(i) for i in all_ifaces]
 
-    bridges = [nic for nic, info in all_nics.items() \
-               if info["type"] == "bridge"]
+    bridges = [info["name"] for info in all_infos \
+               if info["devtype"] == "bridge"]
 
     if len(bridges) != 1:
         LOGGER.warning("Expected exactly one bridge: %s" % bridges)
 
-    return bridges[0]
-
-
-def _aug_get_or_set(augpath, new_servers=None):
-    """Get or set some servers
-    """
-    aug = Augeas()
-
-    servers = []
-    for path in aug.match(augpath):
-        servers.append(aug.get(path))
-
-    if new_servers:
-        itempath = lambda idx: "%s[%d]" % (augpath, idx + 1)
-        for idx, server in enumerate(new_servers):
-            aug.set(itempath(idx), server)
-        if len(servers) > len(new_servers):
-            for idx in range(len(servers) + 1, len(new_servers)):
-                aug.remove(itempath(idx))
-    return servers
-
-
-def nameservers(new_servers=None):
-    """Get or set DNS servers
-
-    >>> len(nameservers()) > 0
-    True
-    """
-    augpath = "/files/etc/resolv.conf/nameserver"
-    return _aug_get_or_set(augpath, new_servers)
-
-
-def timeservers(new_servers=None):
-    """Get or set TIME servers
-
-    >>> len(nameservers()) > 0
-    True
-    """
-    augpath = "/files/etc/ntp.conf/server"
-    return _aug_get_or_set(augpath, new_servers)
+    return bridges[0] if len(bridges) else None
 
 
 def nic_link_detected(iface):
@@ -378,7 +315,8 @@ def nic_ip_addresses(iface, families=["inet", "inet6"]):
 
     addresses = {f: None for f in families}
 
-    if False: # FIXME to hackish to convert addr - is_nm_managed(iface):
+    if False:
+        # FIXME to hackish to convert addr - is_nm_managed(iface):
         device = _nm_client.get_device_by_iface(iface)
         LOGGER.debug("Got '%s' for '%s'" % (device, iface))
         if device:
