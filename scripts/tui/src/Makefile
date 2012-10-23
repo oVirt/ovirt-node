@@ -4,11 +4,12 @@ XMLSOURCES=$(shell find . -name \*.xml -or -name \*.xsl)
 CLEANFILES=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~ -o -name MANIFEST)
 
 
-check: doctests
-	@echo -e "---\n Passed.\n---"
+check-local: syntax-checks doctests
+	@echo -e "---\n Passed all.\n---"
 
-check-local: check pep8 pyflakes
-	@echo -e "---\n Passed.\n---"
+
+syntax-checks: pep8 pyflakes
+	@echo -e "---\n Passed syntax checks.\n---"
 
 doctests:
 	@for M in $(PYTHONSOURCES); \
