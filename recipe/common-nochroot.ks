@@ -17,8 +17,12 @@ sed -i -e 's/ quiet//' $LIVE_ROOT/isolinux/isolinux.cfg
 # Remove Verify and Boot option
 sed -i -e '/label check0/{N;N;N;d;}' $LIVE_ROOT/isolinux/isolinux.cfg
 
+# remove extra Boot menu option
+sed -i -e '0,/linux0/s/linux0/linux00/' $LIVE_ROOT/isolinux/isolinux.cfg
+sed -i -e '/label linux00/{N;N;N;d;}' $LIVE_ROOT/isolinux/isolinux.cfg
+
 # Rename Boot option to Install or Upgrade
-sed -i 's/^  menu label Boot$/  menu label Install or Upgrade/' $LIVE_ROOT/isolinux/isolinux.cfg
+sed -i 's/^  menu label Boot (Basic Video)$/  menu label Install or Upgrade/' $LIVE_ROOT/isolinux/isolinux.cfg
 
 # add serial console boot entry
 menu=$(mktemp)
