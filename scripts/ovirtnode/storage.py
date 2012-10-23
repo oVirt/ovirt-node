@@ -35,7 +35,7 @@ class Storage:
         logger.propagate = False
         OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5
-        self.BOOT_SIZE = 256
+        self.BOOT_SIZE = 50
         self.ROOT_SIZE = 256
         self.CONFIG_SIZE = 5
         self.LOGGING_SIZE = 2048
@@ -698,11 +698,11 @@ class Storage:
             parted_cmd = "parted %s -s \"mklabel %s\"" % (self.BOOTDRIVE,
                                                           self.LABEL_TYPE)
             _functions.system(parted_cmd)
-            parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 1M 256M\"" %
-                       self.BOOTDRIVE)
+            parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 1M %sM\"" %
+                         (self.BOOTDRIVE, self.BOOT_SIZE))
             _functions.system(parted_cmd)
-            parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 256M " +
-                          "512M\"") % self.BOOTDRIVE
+            parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 %sM %sM\"" %
+                         (self.BOOTDRIVE, self.BOOT_SIZE, self.BOOT_SIZE*2))
             _functions.system(parted_cmd)
             parted_cmd = ("parted \"" + self.BOOTDRIVE + "\" -s \"set 1 " +
                          "boot on\"")
