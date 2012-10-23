@@ -54,30 +54,32 @@ class UrwidTUI(object):
     header = u"\n Configuration TUI\n"
     footer = u"Press ctrl+c to exit"
 
-    palette = [('header', 'white', 'dark blue'),
-               ('table', 'dark gray', ''),
-               ('table.header', 'dark gray, bold', ''),
-               ('table.entry', 'dark gray', ''),
-               ('table.entry:focus', 'white', 'light blue', 'standout'),
-               ('main.menu', 'black', ''),
-               ('main.menu.frame', 'light gray', ''),
-               ('notice', 'light red', ''),
-               ('plugin.widget.entry', 'dark gray', ''),
+    palette = [(None, 'default', 'light gray', 'bold', None, None),
+               ('screen', None),
+               ('header', 'white', 'dark blue'),
+               ('table', 'dark gray'),
+               ('table.header', 'dark gray, bold'),
+               ('table.entry', 'dark gray'),
+               ('table.entry:focus', 'white', 'light blue'),
+               ('main.menu', 'black'),
+               ('main.menu.frame', 'dark gray'),
+               ('notice', 'light red'),
+               ('plugin.widget.entry', 'dark gray'),
                ('plugin.widget.entry.disabled', 'dark gray', 'light gray'),
-               ('plugin.widget.entry.label', 'dark gray, bold', ''),
-               ('plugin.widget.entry.frame', 'light gray', ''),
-               ('plugin.widget.entry.frame.invalid', 'dark red', ''),
-               ('plugin.widget.notice', 'light red', ''),
-               ('plugin.widget.header', 'black, bold', ''),
-               ('plugin.widget.divider', 'dark gray', ''),
-               ('plugin.widget.button', 'dark blue', ''),
-               ('plugin.widget.button.disabled', 'light gray', ''),
-               ('plugin.widget.label', 'dark gray', ''),
-               ('plugin.widget.label.keyword', 'dark gray, bold', ''),
-               ('plugin.widget.progressbar.box', 'light gray', ''),
-               ('plugin.widget.progressbar.uncomplete', '', ''),
-               ('plugin.widget.progressbar.complete', '', 'light gray'),
-               ('plugin.widget.options.label', 'dark gray, bold', ''),
+               ('plugin.widget.entry.label', 'dark gray, bold'),
+               ('plugin.widget.entry.frame', 'dark gray'),
+               ('plugin.widget.entry.frame.invalid', 'dark red'),
+               ('plugin.widget.notice', 'light red'),
+               ('plugin.widget.header', 'black, bold'),
+               ('plugin.widget.divider', 'dark gray'),
+               ('plugin.widget.button', 'dark blue'),
+               ('plugin.widget.button.disabled', 'light gray'),
+               ('plugin.widget.label', 'dark gray'),
+               ('plugin.widget.label.keyword', 'black,bold'),
+               ('plugin.widget.progressbar.box', 'light gray'),
+               ('plugin.widget.progressbar.uncomplete', None),
+               ('plugin.widget.progressbar.complete', None, 'light gray'),
+               ('plugin.widget.options.label', 'dark gray, bold'),
                ]
 
     def __init__(self, app):
@@ -99,8 +101,7 @@ class UrwidTUI(object):
         self.__notice = urwid.Text("Note: ")
         self.__notice_filler = urwid.Filler(self.__notice)
         self.__notice_attrmap = urwid.AttrMap(self.__notice_filler, "notice")
-
-        menu_frame_columns = urwid.Columns([("weight", 0.5, self.__menu),
+        menu_frame_columns = urwid.Columns([("weight", 0.3, self.__menu),
                               self.__page_frame], 4)
 
         body = urwid.Pile([("fixed", 3, self.__notice_attrmap),
@@ -129,7 +130,8 @@ class UrwidTUI(object):
         filler = urwid.Filler(body, ("fixed top", 1), height=20)
         dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, "esc",
                                                    self.__loop.widget)
-        urwid.connect_signal(dialog, "close", lambda: self.close_dialog(dialog))
+        urwid.connect_signal(dialog, "close",
+                             lambda: self.close_dialog(dialog))
         self.__loop.widget = dialog
         self.__widget_stack.append(dialog)
         return dialog
@@ -216,13 +218,35 @@ class UrwidTUI(object):
         LOGGER.info("Quitting, exitting mainloop")
         raise urwid.ExitMainLoop()
 
+    def _convert_palette(self):
+        """Convert our palette to the format urwid understands.
+
+        Non existsing or None values are filled with the defaults.
+        """
+        p = {}
+        for t in self.palette:
+            k = t[0]
+            v = list(t[1:])
+            p[k] = v
+
+        palette = []
+        default = p[None]
+        for k, v in p.items():
+            if k == None:
+                continue
+            colors = [e or default[idx] for idx, e in enumerate(v)]
+            rest = default[ len(colors): ]
+            palette.append(tuple([k] + colors + rest))
+        return palette
+
     def run(self):
         """Run the UI
         """
         self.__main_frame = self.__create_screen()
+        self.__main_frame_attrmap = urwid.AttrMap(self.__main_frame, "screen")
         self.__register_default_hotkeys()
 
-        self.__loop = urwid.MainLoop(self.__main_frame,
-                              self.palette,
+        self.__loop = urwid.MainLoop(self.__main_frame_attrmap,
+                              self._convert_palette(),
                               input_filter=self.__filter_hotkeys)
         self.__loop.run()
