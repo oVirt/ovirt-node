@@ -61,7 +61,7 @@ class TableEntryWidget(urwid.AttrMap):
         if button != 1 or not urwid.util.is_mouse_press(event):
             return False
 
-        self._emit('click')
+        self._emit('click', self)
         return True
 
 
@@ -168,8 +168,7 @@ class PluginMenu(urwid.WidgetWrap):
 class ModalDialog(urwid.WidgetWrap):
     signals = ['close']
 
-    def __init__(self, title, body, escape_key, previous_widget, bodyattr=None,
-                 titleattr=None):
+    def __init__(self, title, body, escape_key, previous_widget):
         self.escape_key = escape_key
         self.previous_widget = previous_widget
 
@@ -177,11 +176,11 @@ class ModalDialog(urwid.WidgetWrap):
             body = urwid.Text(body)
 
         body = urwid.LineBox(body, title)
-
         overlay = urwid.Overlay(body, previous_widget, 'center',
                                           ('relative', 70), 'middle',
                                           ('relative', 70))
-        super(ModalDialog, self).__init__(overlay)
+        overlay_attrmap = urwid.AttrMap(overlay, "plugin.widget.dialog")
+        super(ModalDialog, self).__init__(overlay_attrmap)
 
     def close(self):
         urwid.emit_signal(self, "close")
@@ -385,6 +384,8 @@ class Options(urwid.WidgetWrap):
                 bkey = self._button_to_key[button]
                 if key == bkey:
                     button.set_state(True)
+                    LOGGER.debug("Selected option %s (%s)" % (key, button))
+        LOGGER.warning("Could not set selection '%s'" % key)
 
     def set_text(self, txt):
         self.select(txt)

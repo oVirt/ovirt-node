@@ -80,6 +80,7 @@ class UrwidTUI(object):
                ('plugin.widget.progressbar.uncomplete', None),
                ('plugin.widget.progressbar.complete', None, 'light gray'),
                ('plugin.widget.options.label', 'dark gray, bold'),
+               ('plugin.widget.dialog', None),
                ]
 
     def __init__(self, app):
@@ -104,7 +105,8 @@ class UrwidTUI(object):
         menu_frame_columns = urwid.Columns([("weight", 0.3, self.__menu),
                               self.__page_frame], 4)
 
-        body = urwid.Pile([("fixed", 3, self.__notice_attrmap),
+        body = urwid.Pile([
+#                           ("fixed", 3, self.__notice_attrmap),
                            menu_frame_columns
                         ])
 

@@ -35,8 +35,11 @@ class AugeasWrapper(object):
 #        self._aug = _augeas.Augeas() # Is broken
         self._aug.set("/augeas/save/copy_if_rename_fails", "")
 
-    def get(self, p):
-        return self._aug.get(p)
+    def get(self, p, strip_quotes=False):
+        v = self._aug.get(p)
+        if v and strip_quotes:
+            v = v.strip("'\"")
+        return v
 
     def set(self, p, v):
         self._aug.set(p, v)

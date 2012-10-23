@@ -54,8 +54,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         net_addrs_str = "\nIPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)
 
         num_domains = "N/A"
-        with virt.LibvirtConnection() as con:
-            num_domains = str(con.numOfDomains())
+#        with virt.LibvirtConnection() as con:
+#            num_domains = str(con.numOfDomains())
 
         return {
             "status": virt.virtualization_hardware_status(),
@@ -70,7 +70,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         # Function to expand all "keywords" to the same length
-        aligned = lambda l: l.ljust(16)
+        aligned = lambda l: l.ljust(14)
 
         # Network related widgets, appearing in one row
         network_widgets = [
@@ -142,12 +142,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         elif "_save" in changes:
             self._widgets["dialog.hostkey"].close()
 
-
     def _build_dialog(self, path, txt, widgets):
         self._widgets.update(dict(widgets))
         self._widgets[path] = ovirt.node.ui.Dialog(txt, widgets)
         return self._widgets[path]
-
 
     def _build_hostkey_dialog(self):
         fp, hk = ovirt.node.utils.security.get_ssh_hostkey()

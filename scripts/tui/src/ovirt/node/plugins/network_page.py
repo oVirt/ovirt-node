@@ -28,6 +28,7 @@ import ovirt.node.valid
 import ovirt.node.ui
 import ovirt.node.utils
 import ovirt.node.utils.network
+import ovirt.node.config.network
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,11 +53,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return 10
 
     def model(self):
-        nameservers = ovirt.node.utils.network.nameservers()
+        nameservers = ovirt.node.config.network.nameservers()
         for idx, nameserver in enumerate(nameservers):
             self._model["dns[%d]" % idx] = nameserver
 
-        timeservers = ovirt.node.utils.network.timeservers()
+        timeservers = ovirt.node.config.network.timeservers()
         for idx, timeserver in enumerate(timeservers):
             self._model["ntp[%d]" % idx] = timeserver
 
@@ -135,21 +136,22 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         # Populate model with nic specific informations
         iface = self._model["nics"]
         LOGGER.debug("Getting informations for NIC details page")
-        info = ovirt.node.utils.network.node_nics(with_live=True)[iface]
+        cfg = ovirt.node.config.network.iface(iface)
+        live = ovirt.node.utils.network.node_nics()[iface]
 
         self._model.update({
-            "dialog.nic.iface": info["name"],
-            "dialog.nic.driver": info["driver"],
-            "dialog.nic.protocol": info["bootproto"] or "N/A",
-            "dialog.nic.vendor": info["vendor"],
-            "dialog.nic.link_status": "Connected" if info["link_detected"]
+            "dialog.nic.iface": live["name"],
+            "dialog.nic.driver": live["driver"],
+            "dialog.nic.protocol": cfg["bootproto"] or "N/A",
+            "dialog.nic.vendor": live["vendor"],
+            "dialog.nic.link_status": "Connected" if live["link_detected"]
                                                   else "Disconnected",
-            "dialog.nic.hwaddress": info["hwaddr"],
-            "dialog.nic.ipv4.bootproto": info["bootproto"],
-            "dialog.nic.ipv4.address": info["ipaddr"] or "",
-            "dialog.nic.ipv4.netmask": info["netmask"] or "",
-            "dialog.nic.ipv4.gateway": info["gateway"] or "",
-            "dialog.nic.vlanid": "none",
+            "dialog.nic.hwaddress": live["hwaddr"],
+            "dialog.nic.ipv4.bootproto": cfg["bootproto"],
+            "dialog.nic.ipv4.address": cfg["ipaddr"] or "",
+            "dialog.nic.ipv4.netmask": cfg["netmask"] or "",
+            "dialog.nic.ipv4.gateway": cfg["gateway"] or "",
+            "dialog.nic.vlanid": cfg["vlanid"] or "",
         })
 
         padd = lambda l: l.ljust(14)

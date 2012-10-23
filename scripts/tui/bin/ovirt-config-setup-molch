@@ -2,4 +2,7 @@
 
 export PYTHONPATH=$PYTHONPATH:
 export PYTHONDONTWRITEBYTECODE=x
-python -B -m ovirt.node.main "$@"
+#export PYTHONUNBUFFERED=x
+#export PYTHONDEBUG=
+#export PYTHONVERBOSE=x
+python -t -m ovirt.node.main "$@"

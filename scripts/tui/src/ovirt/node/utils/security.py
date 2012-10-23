@@ -38,7 +38,6 @@ def get_ssh_hostkey(variant="rsa"):
     with open(fn_hostkey) as hkf:
         hostkey = hkf.read()
 
-
     hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
     stdout = process.pipe(hostkey_fp_cmd, without_retval=True)
     fingerprint = stdout.strip().split(" ")[1]
