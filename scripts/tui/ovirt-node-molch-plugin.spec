@@ -19,6 +19,9 @@ BuildArch:      noarch
 
 BuildRequires:  python2-devel
 Requires:       python-urwid
+Requires:       python-augeas
+Requires:       python-gudev
+Requires:       libvirt-python
 
 
 %description
