@@ -1070,7 +1070,8 @@ enabled=1
             valid_write_locations = [ "/etc",
                                       "/opt",
                                       "/usr/share/man",
-                                      "/usr/lib/python"]
+                                      "/usr/lib/python",
+                                      "/usr/lib/systemd"]
         elif options.install_dup:
             valid_write_locations = [ "/etc/modprobe.d",
                                       "/etc/depmod.d",

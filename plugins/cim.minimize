@@ -1,0 +1,4 @@
+droprpm tog-pegasus
+droprpm tog-pegasus-libs
+droprpm mailcap
+droprpm openslp

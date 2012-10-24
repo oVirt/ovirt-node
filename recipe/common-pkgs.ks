@@ -107,9 +107,6 @@ febootstrap-supermin-helper
 rpm-python
 # for efi installs
 efibootmgr
-# libvirt-cim
-sblim-sfcb
-libvirt-cim
 # yum for plugins
 yum
 # Consistent ethernet device naming
