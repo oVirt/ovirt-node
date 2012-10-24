@@ -144,6 +144,16 @@ parse_disk_id() {
     echo "$disk"
 }
 
+lvm_name_for()
+{
+    # A small hack to get the devname used by lvm for a given device
+    DEVICE="$1"
+    LVM2_VARS=$(lvm pvs --noheadings --nameprefixes --unquoted -o pv_name,vg_name "$DEVICE" 2> /dev/null)
+    if [ -n "$LVM2_VARS" ]; then
+        export $LVM2_VARS
+        echo $LVM2_PV_NAME
+    fi
+}
 
 # execute a function if called as a script, e.g.
 #   ovirt-boot-functions ovirt_store_config /etc/hosts
