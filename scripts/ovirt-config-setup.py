@@ -1846,6 +1846,7 @@ class NodeConfigScreen():
         return
 
     def process_kdump_config(self):
+        ret = 0
         if os.path.exists("/etc/kdump.conf"):
             system("cp /etc/kdump.conf /etc/kdump.conf.old")
         if self.kdump_nfs_type.value() == 1:
@@ -1859,7 +1860,8 @@ class NodeConfigScreen():
                 kdump_prop_cmd = "kdumpctl propagate"
             else:
                 kdump_prop_cmd = "service kdump propagate"
-            ret = system_closefds("clear; %s" % kdump_prop_cmd)
+            propagate_proc = passthrough("clean; %s" % kdump_prop_cmd, logger.debug)
+            ret = propagate_proc.retval
             if ret == 0:
                 ovirt_store_config("/root/.ssh/kdump_id_rsa.pub")
                 ovirt_store_config("/root/.ssh/kdump_id_rsa")
@@ -1869,7 +1871,7 @@ class NodeConfigScreen():
             restore_kdump_config()
         else:
             return
-        if not system("service kdump restart"):
+        if not system("service kdump restart") or ret > 0:
             self._create_warn_screen()
             ButtonChoiceWindow(self.screen, "KDump Status",
                                "KDump configuration failed, " +
