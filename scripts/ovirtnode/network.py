@@ -243,6 +243,8 @@ class Network:
             self.NTPSERVERS = ""
 
     def save_ntp_configuration(self):
+        _functions.ovirt_store_config(self.NTP_CONFIG_FILE)
+
         ntproot = "/files/etc/ntp.conf"
         ntpconf = "rm %s\n" % ntproot
         ntpconf += "set %s/driftfile /var/lib/ntp/drift\n" % ntproot
