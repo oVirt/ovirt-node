@@ -1168,14 +1168,10 @@ class NodeConfigScreen():
             self.ipv4_disabled_callback()
         # prepopulate current values only in case of missing values
         if self.__nic_config_failed == 1:
-            for opt in [self.dhcp_ipv4_nic_proto, self.disabled_ipv4_nic_proto]:
-                opt.setValue(" ")
             try:
                 self.ipv4_netdevip.set(self.ipv4_current_netdevip)
                 self.ipv4_netdevmask.set(self.ipv4_current_netdevmask)
                 self.ipv4_netdevgateway.set(self.ipv4_current_netdevgateway)
-                self.static_ipv4_nic_proto.setValue("*")
-                self.ipv4_static_callback()
             except:
                 pass
             self.__nic_config_failed = 0
