@@ -1889,7 +1889,8 @@ class NodeConfigScreen():
 
     def process_remote_storage_config(self):
         set_iscsi_initiator(self.iscsi_initiator_config.value())
-        set_nfsv4_domain(self.nfsv4_domain.value())
+        if len(self.nfsv4_domain.value()) > 0:
+            set_nfsv4_domain(self.nfsv4_domain.value())
     def ssh_hostkey_btn_cb(self):
         self._create_warn_screen()
         ssh_hostkey_msg = ("RSA Host Key Fingerprint:\n%s\n\nRSA Host " +
