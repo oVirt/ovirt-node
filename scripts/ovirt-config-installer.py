@@ -522,7 +522,14 @@ class NodeInstallScreen:
         if self.__current_page == ROOT_STORAGE_PAGE:
             dev = self.root_disk_menu_list.current()
         elif self.__current_page == HOSTVG_STORAGE_PAGE:
+            self.hostvg_checkbox.getEntryValue("OtherDevice")[1]
             dev = self.hostvg_checkbox.getCurrent()
+            if self.hostvg_checkbox.getEntryValue(dev)[1] == 1 and dev != "OtherDevice":
+                self.hostvg_checkbox.setEntryValue("OtherDevice", selected = 0)
+            if self.hostvg_checkbox.getEntryValue("OtherDevice")[1] == 1 and dev == "OtherDevice":
+                for dev in self.dev_names:
+                    dev = translate_multipath_device(dev)
+                    self.hostvg_checkbox.setEntryValue(dev, selected = 0)
         if "Location" in dev or "NoDevices" in dev:
             blank_entry = ",,,,,"
             dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = blank_entry.split(",",5)
@@ -609,6 +616,7 @@ class NodeInstallScreen:
         for dev in devs:
             dev_names.append(dev)
         dev_names.sort()
+        self.dev_names = dev_names
         self.displayed_disks = {}
         for dev in dev_names:
             dev = translate_multipath_device(dev)
