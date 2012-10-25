@@ -2061,15 +2061,20 @@ class NodeConfigScreen():
                     ping_window = EntryWindow(self.screen, 'Network Ping Test', 'Enter Host to Ping', ['Host:'])
                     res = ping_window[1]
                     host = res[0]
-                    if len(host) > 0 and ping_window[0] == "ok":
-                        cmd = "ping -c 3 %s" % host
-                        gridform = GridForm(self.screen, "", 1, 1)
-                        gridform.add(Label("Performing Ping Test"), 0, 0)
-                        gridform.draw()
-                        self.screen.refresh()
-                        proc = passthrough(cmd, log_func=logger.debug)
-                        ButtonChoiceWindow(self.screen, "Ping Test Results",
-                               proc.stdout, buttons=["OK"], width = 60)
+                    if ping_window[0] == "ok":
+                        # scrub host variable
+                        if len(host) > 0 and " " not in host and ";" not in host:
+                            cmd = "ping -c 3 %s" % host
+                            gridform = GridForm(self.screen, "", 1, 1)
+                            gridform.add(Label("Performing Ping Test"), 0, 0)
+                            gridform.draw()
+                            self.screen.refresh()
+                            proc = passthrough(cmd, log_func=logger.debug)
+                            ButtonChoiceWindow(self.screen, "Ping Test Results",
+                                   proc.stdout, buttons=["OK"], width = 60)
+                        else:
+                            ButtonChoiceWindow(self.screen, "Ping Test Results",
+                                   "Invalid Hostname: %s" % host, buttons=["OK"], width = 60)
                 elif pressed == APPLY_BUTTON or pressed == UNLOCK_BUTTON:
                     errors = []
                     self.process_config()
