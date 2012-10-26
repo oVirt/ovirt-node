@@ -204,37 +204,52 @@ class Network:
                        str(self.alias_count) + "]", alias)
 
     def configure_dns(self):
+        logger.warn("Configuring DNS")
         OVIRT_VARS = _functions.parse_defaults()
+        have_peerdns = False
+        DNS = ""
         if "OVIRT_DNS" in OVIRT_VARS:
             DNS = OVIRT_VARS["OVIRT_DNS"]
+            logger.debug("Found DNS key with value '%s'" % DNS)
             try:
-                if DNS is not None:
-                    tui_cmt = ("Please make changes through the TUI. " + \
-                               "Manual edits to this file will be " + \
-                               "lost on reboot")
-                    _functions.augtool("set", \
-                                       "/files/etc/resolv.conf/#comment[1]", \
-                                       tui_cmt)
-                    DNS = DNS.split(",")
-                    i = 1
-                    for server in DNS:
-                        logger.debug("Setting DNS server %d: %s" % (i, server))
-                        setting = "/files/etc/resolv.conf/nameserver[%s]" % i
-                        _functions.augtool("set", setting, server)
-                        i = i + i
-                    _functions.ovirt_store_config("/etc/resolv.conf")
-                else:
-                    logger.debug("No DNS servers given.")
+                if DNS is None or DNS == "":
+                    logger.debug("No DNS servers given, removing PEERDNS=no")
+                    have_peerdns = True
+
+                # Write resolv.conf any way, sometimes without servers
+                tui_cmt = ("Please make changes through the TUI. " + \
+                           "Manual edits to this file will be " + \
+                           "lost on reboot")
+                _functions.augtool("set", \
+                                   "/files/etc/resolv.conf/#comment[1]", \
+                                   tui_cmt)
+                DNS = [s for s in DNS.split(",") if s]
+                i = 1
+                for server in DNS:
+                    logger.debug("Setting DNS server %d: %s" % (i, server))
+                    setting = "/files/etc/resolv.conf/nameserver[%s]" % i
+                    _functions.augtool("set", setting, server)
+                    i = i + i
+                _functions.ovirt_store_config("/etc/resolv.conf")
             except:
                 logger.warn("Failed to set DNS servers")
-            finally:
-                if len(DNS) < 2:
-                    _functions.augtool("rm", \
-                                    "/files/etc/resolv.conf/nameserver[2]", "")
-                for nic in glob("/etc/sysconfig/network-scripts/ifcfg-*"):
-                    if not "ifcfg-lo" in nic:
-                        path = "/files%s/PEERDNS" % nic
-                        _functions.augtool("set", path, "no")
+
+        # Remove all spare DNS servers
+        logger.debug("Removing DNS servers")
+        if len(DNS) < 2:
+            _functions.augtool("rm", "/files/etc/resolv.conf/nameserver[1]", "")
+        if len(DNS) < 1:
+            _functions.augtool("rm", "/files/etc/resolv.conf/nameserver", "")
+
+        # Set or remove PEERDNS for all ifcfg-*
+        for nic in glob("/etc/sysconfig/network-scripts/ifcfg-*"):
+            if "ifcfg-lo" in nic:
+                continue
+            path = "/files%s/PEERDNS" % nic
+            if have_peerdns:
+                _functions.augtool("rm", path, "")
+            else:
+                _functions.augtool("set", path, "no")
 
     def configure_ntp(self):
         if "OVIRT_NTP" in OVIRT_VARS:
@@ -260,16 +275,14 @@ class Network:
                 _functions.augtool(oper, key, "")
 
         if "OVIRT_NTP" in OVIRT_VARS:
-            offset = 1
-            SERVERS = OVIRT_VARS["OVIRT_NTP"].split(",")
-            for server in SERVERS:
-                if offset == 1:
-                    _functions.augtool("set", \
-                                       "/files/etc/ntp.conf/server[1]", server)
-                elif offset == 2:
-                    _functions.augtool("set", \
-                                       "/files/etc/ntp.conf/server[2]", server)
-                offset = offset + 1
+            SERVERS = [s for s in OVIRT_VARS["OVIRT_NTP"].split(",") if s]
+            for n in [1, 2]:
+                _functions.augtool("rm", \
+                                   "/files/etc/ntp.conf/server[%d]" % n, "")
+            for idx, server in enumerate(SERVERS):
+                n = idx + 1  # Augeas starts at 1
+                _functions.augtool("set", \
+                                   "/files/etc/ntp.conf/server[%d]" % n, server)
             _functions.system_closefds("service ntpd stop &> /dev/null")
             _functions.system_closefds("service ntpdate start &> /dev/null")
             _functions.system_closefds("service ntpd start &> /dev/null")

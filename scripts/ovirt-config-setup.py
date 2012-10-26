@@ -1536,14 +1536,23 @@ class NodeConfigScreen():
             ntp_servers.append(self.ntp_host1.value())
         if not self.ntp_host2.value() == "":
             ntp_servers.append(self.ntp_host2.value())
-        if len(dns_servers) > 0:
-            dns_servers = ",".join(dns_servers)
+
+        # Save DNS servers
+        dns_servers = ",".join(dns_servers)
+        if dns_servers:
             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS",
                     '"' + dns_servers + '"')
-        if len(ntp_servers) > 0:
-            ntp_servers = ",".join(ntp_servers)
+        else:
+            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS", "")
+
+        # Save NTP servers
+        ntp_servers = ",".join(ntp_servers)
+        if ntp_servers:
             augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP",
                     '"' + ntp_servers + '"')
+        else:
+            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP", "")
+
         aug.load()
 
         # Then apply the configuration
@@ -1561,11 +1570,10 @@ class NodeConfigScreen():
             system_closefds("hostname " + self.net_hostname.value())
         ovirt_store_config("/etc/sysconfig/network")
         ovirt_store_config("/etc/hosts")
-        if len(dns_servers) > 0:
-            network.configure_dns()
-        if len(ntp_servers) > 0:
-            network.configure_ntp()
-            network.save_ntp_configuration()
+        logger.debug("Calling DNS and NTP configuration")
+        network.configure_dns()
+        network.configure_ntp()
+        network.save_ntp_configuration()
         self.net_apply_config = 1
         return
 
