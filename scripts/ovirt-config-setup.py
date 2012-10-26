@@ -1542,8 +1542,8 @@ class NodeConfigScreen():
         network = Network()
         if self.net_hostname.value() == "":
             network.remove_non_localhost()
-            augtool("set", "/files/etc/sysconfig/network/HOSTNAME", "")
-            system_closefds("hostname \"" + self.net_hostname.value() + "\"")
+            augtool("set", "/files/etc/sysconfig/network/HOSTNAME", "localhost.localdomain")
+            system_closefds("hostname localhost.localdomain")
         elif (self.net_hostname.value() != self.current_hostname and
                 is_valid_hostname(self.net_hostname.value())):
             network.remove_non_localhost()
