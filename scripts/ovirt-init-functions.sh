@@ -1267,9 +1267,14 @@ start_ovirt_post() {
 
         # Hack to fix rhbz#844997
         mount --make-rshared /
-        # Small hack to fix https://bugzilla.redhat.com/show_bug.cgi?id=805313
 
+        # Small hack to fix https://bugzilla.redhat.com/show_bug.cgi?id=805313
         service network restart 2>/dev/null
+
+        # Restarting netconsole, now that the network is up, rhbz#869984
+        [[ -f "/config/etc/sysconfig/netconsole" ]] && {
+            service netconsole restart
+        }
 
         if is_standalone; then
             return 0
