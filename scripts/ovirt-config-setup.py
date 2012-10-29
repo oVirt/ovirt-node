@@ -617,8 +617,11 @@ class NodeConfigScreen():
     def kdump_restore_callback(self):
         self.kdump_ssh_type.setValue(" 0")
         self.kdump_nfs_type.setValue(" 0")
-        self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
-        self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+        if self.kdump_restore_type.value() == 1:
+            self.kdump_nfs_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+            self.kdump_ssh_config.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
+        if self.kdump_ssh_type.value() == 0 and self.kdump_nfs_type.value() == 0:
+            self.kdump_restore_type.setValue("*")
 
     def valid_netconsole_server_callback(self):
         if not is_valid_host_or_ip(self.netconsole_server.value()):
