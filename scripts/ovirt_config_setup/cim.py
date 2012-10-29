@@ -102,13 +102,18 @@ class Plugin(PluginBase):
                 self.ncs.reset_screen_colors()
                 return True
         elif is_transition_to_enabled or is_enabled:
-            if enable_cim():
-                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration",
-                    "CIM Successfully Enabled", buttons=['Ok'])
-                self.ncs.reset_screen_colors()
+            if len(self.cim_password_1.value()) > 0:
+                if enable_cim():
+                    ButtonChoiceWindow(self.ncs.screen, "CIM Configuration",
+                        "CIM Successfully Enabled", buttons=['Ok'])
+                    self.ncs.reset_screen_colors()
+                else:
+                    ButtonChoiceWindow(self.ncs.screen, "CIM Configuration",
+                        "CIM Configuration Failed", buttons=['Ok'])
+                    self.ncs.reset_screen_colors()
             else:
                 ButtonChoiceWindow(self.ncs.screen, "CIM Configuration",
-                    "CIM Configuration Failed", buttons=['Ok'])
+                    "Please Enter a Password", buttons=['Ok'])
                 self.ncs.reset_screen_colors()
 
     def __set_cim_password(self):
