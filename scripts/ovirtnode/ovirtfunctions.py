@@ -38,6 +38,7 @@ import logging
 import grp
 import pwd
 
+OVIRT_CONFIG="/config"
 OVIRT_LOGFILE="/var/log/ovirt.log"
 OVIRT_TMP_LOGFILE="/tmp/ovirt.log"
 
@@ -734,6 +735,80 @@ def ovirt_store_config(files):
         else:
             logger.warn(filename + " Already persisted")
             rc = rc and True
+    return rc
+
+def ovirt_store_config_atomic(filename, source=None):
+    rc = True
+    persist_it = True
+    if os.path.isdir(filename):
+        # ensure that, if this is a directory
+        # that it's not already persisted
+        if os.path.isdir(OVIRT_CONFIG + filename):
+            logger.warn("Directory already persisted: " + filename)
+            logger.warn("You need to unpersist its child directories " +
+                        "and/or files and try again.")
+            persist_it = False
+    elif os.path.isfile(filename):
+        # if it's a file then make sure it's not already persisted
+        if os.path.isfile(OVIRT_CONFIG + filename):
+            if not source is None:
+                md5root = md5sum(source)
+            else:
+                md5root = md5sum(filename)
+            md5stored = md5sum(OVIRT_CONFIG + filename)
+            if md5root == md5stored:
+                logger.warn("File already persisted: " + filename)
+                persist_it = False
+            else:
+                if source is not None:
+                    persist_it = True
+    if persist_it:
+        # filename - file to be persisted
+        # source - defaults to filename unless specified
+        # tmp_destination - temp file under /config before final placement
+        # final_destination - final resting place under /config
+        filename = os.path.abspath(filename)
+        dirname = os.path.dirname(filename).lstrip("/")
+        if source is None:
+            source = filename
+        final_destination = os.path.join(OVIRT_CONFIG, filename.lstrip("/"))
+        tmp_destination = None
+        try:
+            handle, tmp_destination = \
+                tempfile.mkstemp(prefix=final_destination)
+            os.close(handle)
+            if not os.path.exists(os.path.join(OVIRT_CONFIG,  dirname)):
+                os.makedirs(os.path.join(OVIRT_CONFIG,  dirname))
+            logger.debug("Copying: %s to %s" % (source, tmp_destination))
+            shutil.copyfile(source, tmp_destination)
+            shutil.copymode(source, tmp_destination)
+            f_stat = os.stat(source)
+            uid = f_stat.st_uid
+            gid = f_stat.st_gid
+            os.chown(tmp_destination, uid, gid)
+            logger.debug("Moving %s to %s" %
+                        (tmp_destination, final_destination))
+            os.rename(tmp_destination, final_destination)
+            tmp_destination = None
+            # handle non-existent files that need to be created
+            if source is not None:
+                open(filename, 'a+').close()
+            with open('/config/files', 'r') as f:
+                if not filename in f:
+                    with open('/config/files', 'a+') as f:
+                        f.write("%s\n" % filename)
+                    logger.info("Successfully persisted: " + filename)
+        except:
+            if tmp_destination is not None and os.path.exists(tmp_destination):
+                os.remove(tmp_destination)
+            return False
+        finally:
+            system("umount /" + final_destination.lstrip(OVIRT_CONFIG))
+            system("mount -n --bind %s /%s " %
+                  (final_destination, final_destination.lstrip(OVIRT_CONFIG)))
+    else:
+        logger.warn(filename + " Already persisted")
+        rc = rc and True
     return rc
 
 
