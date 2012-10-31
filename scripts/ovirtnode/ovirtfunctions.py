@@ -562,7 +562,7 @@ def unmount_logging_services():
             if ret != 0:
                 system_closefds("pkill " + svc)
             logging_services.append(svc)
-        return logging_services
+    return logging_services
     # debugging help
     #system_closefds("lsof +D /var/log")
 
