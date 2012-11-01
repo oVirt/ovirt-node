@@ -1873,6 +1873,9 @@ class NodeConfigScreen():
         elif self.kdump_restore_type.value() == 1:
             restore_kdump_config()
         else:
+            remove_config("/etc/kdump.conf")
+            system("service kdump stop")
+            open('/etc/kdump.conf', 'w').close()
             return
         if not system("service kdump restart") or ret > 0:
             self._create_warn_screen()
