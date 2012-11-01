@@ -49,9 +49,14 @@ def run_rhnreg(serverurl="", cacert="", activationkey="", username="",
             logger.debug("Location: " + location)
             logger.info("Downloading Satellite CA cert.....")
             logger.debug("From: " + cacert + " To: " + location)
-            system_closefds("wget -q -nd --no-check-certificate " +
-                            "--timeout=30 --tries=3 -O \"" + location +
-                            "\" \"" + cacert + "\"")
+            wget_cmd = "wget -nd --no-check-certificate " + \
+                            "--timeout=30 --tries=3 -O \"" + location + \
+                            "\" \"" + cacert + "\""
+            wget_proc = passthrough(wget_cmd, logger.debug)
+            if wget_proc.retval > 0:
+                logger.error("Error Downloading Satellite CA cert!")
+                logger.debug(wget_proc.stdout)
+                return 3
         if os.path.isfile(location):
             if os.stat(location).st_size > 0:
                 args.append('--sslCACert')
