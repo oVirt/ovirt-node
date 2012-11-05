@@ -472,8 +472,8 @@ def get_system_nics():
                         pci_dev = dev_path[3].replace("0000:", "")
                     else:
                         pci_dev = dev_path[4].replace("0000:", "")
-                    pci_lookup_cmd = ((" lspci|grep %s|awk -F \":\" " +
-                                     "{'print $3'}" % pci_dev))
+                    pci_lookup_cmd = (("lspci|grep '%s'|awk -F \":\" " % pci_dev) +
+                                     "{'print $3'}")
                     pci_lookup = _functions.subprocess_closefds(pci_lookup_cmd,
                                  shell=True, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
