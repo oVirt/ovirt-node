@@ -645,15 +645,20 @@ class NodeConfigScreen():
             self._set_title()
 
     def valid_hostname_callback(self):
-        if not self.net_hostname.value() == "":
+        if not self.net_hostname.value() == "" or \
+            len(self.net_hostname.value()) > 64:
+            self._create_warn_screen()
+            if len(self.net_hostname.value()) > 64:
+                ButtonChoiceWindow(self.screen, "Configuration Check",
+                                   "Hostname Too Long", buttons=['Ok'])
+                self.net_hostname.set(self.net_hostname.value()[:64])
             if not is_valid_hostname(self.net_hostname.value()):
-                self._create_warn_screen()
                 ButtonChoiceWindow(self.screen, "Configuration Check",
                                    "Invalid Hostname", buttons=['Ok'])
-                self.reset_screen_colors()
-                self.net_hostname.set("localhost")
-                self.gridform.draw()
-                self._set_title()
+                self.net_hostname.set("localhost.localdomain")
+            self.reset_screen_colors()
+            self.gridform.draw()
+            self._set_title()
 
     def valid_iqn_callback(self):
         if not self.iscsi_initiator_config.value() == "":
