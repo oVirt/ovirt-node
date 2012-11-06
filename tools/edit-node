@@ -1495,7 +1495,20 @@ def main():
                 editor._rebuild_initramfs()
                 editor.unmount()
                 editor.package(output)
-                logging.info("%s.iso saved to %s"  % (editor.name, output))
+                edited_iso = os.path.join(output, editor.name + ".iso")
+                if options.install_dup:
+                    n = options.install_dup
+                elif options.install_plugin:
+                    n = options.install_plugin
+                elif options.install:
+                    n = options.install
+                else:
+                    n = ""
+                finished_iso = "%s.%s.iso" % \
+                    (edited_iso.strip("edited.iso"), n.replace(" ","-"))
+                shutil.move(edited_iso, finished_iso)
+
+                logging.info("%s.iso saved to %s"  % (editor.name, finished_iso))
             else:
                 # in manifest mode print do necessary items
                 editor.unmount()
