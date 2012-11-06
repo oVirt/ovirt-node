@@ -25,6 +25,8 @@ Some convenience functions realted to the filesystem
 import logging
 import shutil
 import os
+import ovirt.node.utils
+from ovirt.node.utils import checksum, is_bind_mount
 
 LOGGER = logging.getLogger(__name__)
 
@@ -102,3 +104,103 @@ class BackupedFiles(object):
         """Restore contens of a previously backupe file
         """
         copy_contents(self.of(fn), fn)
+
+
+def persist_config(filename):
+    LOGGER.info("Persisting: %s" % filename)
+    filenames = []
+
+#    if is_stateless():
+#        return True
+    if not os.path.ismount(persist_path()):
+        LOGGER.warning("/config is not mounted")
+        return False
+    if type(filename) in [str, unicode]:
+        filenames.append(filename)
+    elif type(filename) is list:
+        filenames = filename
+    else:
+        LOGGER.error("Unknown type: %s" % filename)
+        return False
+
+    persist_failed = False
+    for f in filenames:
+        filename = os.path.abspath(f)
+
+        if os.path.isdir(filename):
+            # ensure that, if this is a directory
+            # that it's not already persisted
+            if os.path.isdir(persist_path(filename)):
+                LOGGER.warn("Directory already persisted: %s" % filename)
+                LOGGER.warn("You need to unpersist its child directories " +
+                            "and/or files and try again.")
+                continue
+
+        elif os.path.isfile(filename):
+            # if it's a file then make sure it's not already persisted
+            persist_filename = persist_path(filename)
+            if os.path.isfile(persist_filename):
+                if checksum(filename) == checksum(persist_filename):
+                    # FIXME yes, there could be collisions ...
+                    LOGGER.info("Persisted file is equal: %s" % filename)
+                    continue
+                else:
+                    # Remove persistent copy - needs refresh
+                    if system("umount -n %s 2> /dev/null" % filename):
+                        system("rm -f %s" % persist_filename)
+
+        else:
+            # skip if file does not exist
+            logger.warn("Skipping, file '%s' does not exist" % filename)
+            continue
+
+        # At this poitn we know that we want to persist the file.
+
+        # skip if already bind-mounted
+        if is_bind_mount(filename):
+            logger.warn("%s is already persisted" % filename)
+        else:
+            dirname = os.path.dirname(filename)
+            system("mkdir -p %s" %s persist_path(dirname))
+            persist_filename = persist_path(filename)
+            if system("cp -a %s %s" % (filename, persist_filename)):
+                if not system("mount -n --bind %s %s" % (persist_filename,
+                                                         filename)):
+                    LOGGER.error("Failed to persist: " + filename)
+                    persist_failed = True
+                else:
+                    logger.info("Persisted: $s" % filename)
+
+        with open(persist_path("files"), "r") as files:
+            if filename not in files.read().split("\n"):
+                # register in /config/files used by rc.sysinit
+            system_closefds("echo "+filename+" >> /config/files")
+            logger.info("Successfully persisted (reg): %s" % filename)
+
+
+    return not persist_failed
+
+
+def persist_path(filename=""):
+    """Returns the path a file will be persisted in
+
+    Returns:
+        Path to the persisted variant of the file.
+    """
+    return os.path.join("/config", os.path.abspath(filename))
+
+
+def is_persisted(filename):
+    """Check if the file is persisted
+
+    Args:
+        filename: Filename to be checked
+    Returns:
+        True if the file exists in the /config hierarchy
+    """
+    return os.path.exists(persist_path(filename))
+
+
+def unpersist_config(filename):
+    LOGGER.info("Unpersisting: %s" % filename)
+    # FIXME

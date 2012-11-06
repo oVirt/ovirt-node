@@ -63,15 +63,21 @@ def iface(iface):
 
     # VLAN
     info["is_vlan"] = aug.get(augdevicepath + "/VLAN", True) is not None
-    if info["is_vlan"] != "." in iface:
-        LOGGER.warning("NIC config says VLAN, name doesn't reflect " + \
-                       "that: %s" % iface)
-    if info["is_vlan"]:
+    name_says_vlan = "." in iface
+    if info["is_vlan"] != name_says_vlan:
+        LOGGER.warning("NIC config says the device is a VLAN, but the name" + \
+                       "doesn't reflect that: %s (%s vs %s)" % (iface,
+                                                            info["is_vlan"],
+                                                            name_says_vlan))
+
+    if info["is_vlan"] is True:
         parts = iface.split(".")
-        info["vlanid"] = parts[-1:]
+        vlanid = parts[-1:][0]
+        info["vlanid"] = vlanid
         info["vlan_parent"] = ".".join(parts[:-1])
 
         info["type"] = "vlan"
+        LOGGER.debug("Found VLAN %s on %s" % (str(vlanid), iface))
     else:
         info["vlanid"] = None
 
@@ -90,8 +96,10 @@ def _aug_get_or_set(augpath, new_servers=None):
     if new_servers:
         itempath = lambda idx: "%s[%d]" % (augpath, idx + 1)
         for idx, server in enumerate(new_servers):
+            LOGGER.debug("Setting server: %s" % server)
             aug.set(itempath(idx), server)
         if len(servers) > len(new_servers):
+            LOGGER.debug("Less servers than before, removing old ones")
             for idx in range(len(servers) + 1, len(new_servers)):
                 aug.remove(itempath(idx))
     return servers

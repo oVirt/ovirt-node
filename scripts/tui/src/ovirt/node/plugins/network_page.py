@@ -136,22 +136,21 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         # Populate model with nic specific informations
         iface = self._model["nics"]
         LOGGER.debug("Getting informations for NIC details page")
-        cfg = ovirt.node.config.network.iface(iface)
         live = ovirt.node.utils.network.node_nics()[iface]
 
         self._model.update({
             "dialog.nic.iface": live["name"],
             "dialog.nic.driver": live["driver"],
-            "dialog.nic.protocol": cfg["bootproto"] or "N/A",
+            "dialog.nic.protocol": live["bootproto"] or "N/A",
             "dialog.nic.vendor": live["vendor"],
             "dialog.nic.link_status": "Connected" if live["link_detected"]
                                                   else "Disconnected",
             "dialog.nic.hwaddress": live["hwaddr"],
-            "dialog.nic.ipv4.bootproto": cfg["bootproto"],
-            "dialog.nic.ipv4.address": cfg["ipaddr"] or "",
-            "dialog.nic.ipv4.netmask": cfg["netmask"] or "",
-            "dialog.nic.ipv4.gateway": cfg["gateway"] or "",
-            "dialog.nic.vlanid": cfg["vlanid"] or "",
+            "dialog.nic.ipv4.bootproto": live["bootproto"],
+            "dialog.nic.ipv4.address": live["ipaddr"] or "",
+            "dialog.nic.ipv4.netmask": live["netmask"] or "",
+            "dialog.nic.ipv4.gateway": live["gateway"] or "",
+            "dialog.nic.vlanid": live["vlanid"] or "",
         })
 
         padd = lambda l: l.ljust(14)

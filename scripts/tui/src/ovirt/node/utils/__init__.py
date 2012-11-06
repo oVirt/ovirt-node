@@ -22,8 +22,10 @@
 Utility functions
 """
 
-import augeas as _augeas
 import logging
+import hashlib
+import re
+import augeas as _augeas
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,3 +56,35 @@ class AugeasWrapper(object):
 
     def match(self, p):
         return self._aug.match(p)
+
+
+
+def checksum(filename, algo="md5"):
+    """Calculcate the checksum for a file.
+    """
+    # FIXME switch to some other later on
+    m = hashlib.md5()
+    with open(filename) as f:
+        data = f.read(4096)
+        while data:
+            m.update(data)
+            data = f.read(4096)
+        return m.hexdigest()
+
+
+
+def is_bind_mount(filename, fsprefix="ext"):
+    """Checks if a given file is bind mounted
+
+    Args:
+        filename: File to be checked
+    Returns:
+        True if the file is a bind mount target
+    """
+    bind_mount_found = False
+    with open("/proc/mounts") as mounts:
+        pattern = "%s %s" % (filename, fsprefix)
+        for mount in mounts:
+            if pattern in mount:
+                bind_mount_found = True
+    return bind_mount_found

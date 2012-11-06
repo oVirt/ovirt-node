@@ -125,10 +125,11 @@ def iface_information(iface, with_slow=True):
         info["type"] = "bridge"
 
     # Check vlan
-    if len(glob.glob("/proc/net/vlan/%s.*" % iface)) > 0:
+    if len(glob.glob("/proc/net/vlan/%s" % iface)) > 0:
         info["type"] = "vlan"
 
     if "type" not in info:
+        LOGGER.warning("Type of %s still unknown, using devtype" % iface)
         info["type"] = info["devtype"]
 
     if with_slow:
@@ -198,6 +199,13 @@ def node_nics():
     """Returns Node's NIC model.
     This squashes nic, bridge and vlan informations.
 
+    All valid NICs of the system are returned, live and cfg informations merged
+    into one dict.
+    A NIC is "Configured" if itself or a vlan child is a member of a bridge.
+    If a NIC is configured, merge the info+cfg of the bridge into the slave.
+    If the slave is a vlan NIC set the vlanidof the parent device according to
+    this vlan NICs id.
+
     >>> node_nics() != None
     True
     """
@@ -217,26 +225,41 @@ def node_nics():
     LOGGER.debug("NICs: %s" % nics)
 
     node_infos = {}
-    bridge_found = False
-    for name in nics:
-        info = all_infos[name]
-        cfg = all_cfgs[name]
-        bridge = cfg["bridge"]
-        if bridge:
-            bridge_found = True
-            bridge_cfg = all_cfgs[bridge]
-            for k in ["bootproto", "ipaddr", "netmask", "gateway"]:
-                if k in bridge_cfg:
-                    info[k] = bridge_cfg[k]
-        node_infos[name] = info
-    assert bridge_found
+    slaves = []
+    # Build dict with all NICs
+    for iface in nics:
+        LOGGER.debug("Adding physical NIC: %s" % iface)
+        info = all_infos[iface]
+        info.update(all_cfgs[iface])
+        node_infos[iface] = info
+        if info["bridge"]:
+            LOGGER.debug("Physical NIC '%s' is slave of '%s'" % (iface,
+                                                            info["bridge"]))
+            slaves.append(iface)
 
-    for name in vlans:
-        info = all_infos[name]
-        cfg = all_cfgs[name]
-        if info["vlanid"]:
-            parent = info["vlan_parent"]
-            node_infos[parent]["vlanid"] = info["vlanid"][0]
+    # Merge informations of VLANs into parent
+    for iface in vlans:
+        info = all_infos[iface]
+        info.update(all_cfgs[iface])
+        parent = info["vlan_parent"]
+        LOGGER.debug("Updating VLANID of '%s': %s" % (parent, info["vlanid"]))
+        node_infos[parent]["vlanid"] = info["vlanid"]
+        if info["bridge"]:
+            LOGGER.debug("VLAN NIC '%s' is slave of '%s'" % (iface,
+                                                            info["bridge"]))
+            slaves.append(iface)
+
+    for slave in slaves:
+        info = all_infos[slave]
+        info.update(all_cfgs[slave])
+        bridge = info["bridge"]
+        LOGGER.debug("Found slave for bridge '%s': %s" % (bridge, slave))
+        bridge_cfg = all_cfgs[bridge]
+        dst = slave
+        if info["is_vlan"]:
+            dst = info["vlan_parent"]
+        for k in ["bootproto", "ipaddr", "netmask", "gateway"]:
+            node_infos[dst][k] = bridge_cfg[k] if k in bridge_cfg else None
 
     LOGGER.debug("Node NICs: %s" % node_infos)
 

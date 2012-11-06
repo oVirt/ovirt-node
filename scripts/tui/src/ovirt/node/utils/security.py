@@ -24,6 +24,7 @@ Some convenience functions related to security
 
 import os.path
 import logging
+
 import ovirt.node.utils.process as process
 
 LOGGER = logging.getLogger(__name__)
