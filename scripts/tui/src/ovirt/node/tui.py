@@ -123,13 +123,13 @@ class UrwidTUI(object):
 
     def display_page(self, page):
         # FIXME why is this fixed?
-        filler = urwid.Filler(page, ("fixed top", 1), height=30)
+        filler = urwid.Filler(page, ("fixed top", 1), height=35)
 #        filler = urwid.Filler(page)
         self.__page_frame.body = filler
 
     def display_dialog(self, body, title):
         LOGGER.debug("Displaying dialog: %s / %s" % (body, title))
-        filler = urwid.Filler(body, ("fixed top", 1), height=20)
+        filler = urwid.Filler(body, ("fixed top", 1), height=35)
         dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, "esc",
                                                    self.__loop.widget)
         urwid.connect_signal(dialog, "close",
