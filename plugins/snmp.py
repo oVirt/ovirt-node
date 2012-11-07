@@ -141,6 +141,13 @@ class Plugin(PluginBase):
                               buttons=['Ok'])
                 self.ncs.reset_screen_colors()
         elif self.snmp_status.value() == 0:
+            if len(self.root_password_1.value()) > 0:
+                ButtonChoiceWindow(self.screen, "SNMP Error",
+                      "SNMP must be enabled to set a password!",
+                      buttons=['Ok'])
+            else:
+                disable_snmpd()
+
             disable_snmpd()
 
 def snmp_auto():

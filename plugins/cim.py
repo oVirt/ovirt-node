@@ -97,9 +97,18 @@ class Plugin(PluginBase):
         setting_password_failed = False
         if (len(self.cim_password_1.value()) > 0  or
             len(self.cim_password_2.value()) > 0):
-            setting_password_failed = self.__set_cim_password()
-            if setting_password_failed:
-                return
+            if is_enabled:
+                setting_password_failed = self.__set_cim_password()
+                if setting_password_failed:
+                    ButtonChoiceWindow(self.ncs.screen, "CIM Configuration",
+                        "Unable to Set CIM Password", buttons=['Ok'])
+                    self.ncs.reset_screen_colors()
+                    return False
+            else:
+                ButtonChoiceWindow(self.ncs.screen, "CIM Configuration",
+                    "CIM Must Be Enabled to Set Password", buttons=['Ok'])
+                self.ncs.reset_screen_colors()
+                return False
 
         if is_transition_to_disabled:
             if disable_cim():
