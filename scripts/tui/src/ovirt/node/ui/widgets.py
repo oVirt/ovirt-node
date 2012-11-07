@@ -42,7 +42,7 @@ class TableEntryWidget(urwid.AttrMap):
     """
     _text = None
 
-    signals = ["click"]
+    signals = ["activate"]
 
     def __init__(self, title):
         self._text = SelectableText(title)
@@ -53,15 +53,15 @@ class TableEntryWidget(urwid.AttrMap):
                                                            'table.entry:focus')
 
     def keypress(self, size, key):
-        if self._command_map[key] != 'activate':
-            return key
-        self._emit('click', None)
+        if urwid.Button._command_map[key] == 'activate':
+            self._emit('activate', None)
+        return key
 
     def mouse_event(self, size, event, button, x, y, focus):
         if button != 1 or not urwid.util.is_mouse_press(event):
             return False
 
-        self._emit('click', self)
+        self._emit('activate', self)
         return True
 
 
@@ -238,7 +238,7 @@ class KeywordLabel(Label):
 
 
 class Entry(urwid.WidgetWrap):
-    signals = ['change']
+    signals = ['change', 'click']
 
     notice = property(lambda self: self._notice.get_text(), \
                       lambda self, v: self._notice.set_text(v))

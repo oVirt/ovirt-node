@@ -294,3 +294,9 @@ class Table(Element):
         self.header = header
         self.items = items
         self.height = height
+
+    @Element.signal_change
+    def select(self, selected=None):
+        if selected in dict(self.items).keys():
+            self._selected = selected
+        return self._selected

@@ -247,8 +247,10 @@ def build_table(path, item, tui, plugin):
         children.append(c)
     widget = ovirt.node.ui.widgets.TableWidget(item.header, children,
                                                item.height)
-    urwid.connect_signal(widget, "changed",
-                         lambda w: plugin._on_ui_change({path: w._key}))
+    def on_change_cb(w, d=None):
+        plugin._on_ui_change({path: w._key})
+        item.select(w._key)
+    urwid.connect_signal(widget, "changed", on_change_cb)
 
     return widget
 
@@ -257,9 +259,10 @@ def _build_tableitem(tui, path, plugin, key, label):
     c = ovirt.node.ui.widgets.TableEntryWidget(label)
     c._key = key
 
-    def on_click_cb(widget, data):
+    def on_activate_cb(w, data):
+        plugin._on_ui_change({path: w._key})
         parse_plugin_result(tui, plugin, plugin._on_ui_save())
-    urwid.connect_signal(c, "click", on_click_cb)
+    urwid.connect_signal(c, "activate", on_activate_cb)
     return c
 
 
