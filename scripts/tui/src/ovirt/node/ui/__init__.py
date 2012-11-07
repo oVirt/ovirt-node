@@ -282,7 +282,7 @@ class ProgressBar(Element):
         return self._current
 
 
-class Table(Element):
+class Table(InputElement):
     """Represents a simple Table with one column
 
     Args:
@@ -291,10 +291,12 @@ class Table(Element):
         height: The height of the Table
     """
 
-    def __init__(self, header, items, height=5):
+    def __init__(self, label, header, items, height=5, enabled=True):
+        self.label = label
         self.header = header
         self.items = items
         self.height = height
+        super(Table, self).__init__(label, enabled)
 
     @Element.signal_change
     def select(self, selected=None):

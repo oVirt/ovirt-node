@@ -60,6 +60,7 @@ class UrwidTUI(object):
                ('screen', None),
                ('header', 'white', 'dark blue'),
                ('table', 'dark gray'),
+               ('table.label', 'dark gray, bold'),
                ('table.header', 'dark gray, bold'),
                ('table.entry', 'dark gray'),
                ('table.entry:focus', 'white', 'light blue'),
@@ -125,9 +126,15 @@ class UrwidTUI(object):
             pending_changes = self._current_plugin.pending_changes()
             if pending_changes:
                 LOGGER.warning("Pending changes: %s" % pending_changes)
+                msg = ""
+                widgets = dict(self._current_plugin.ui_content().children)
+                LOGGER.debug("Available widgets: %s" % widgets)
+                for path, value in pending_changes.items():
+                    field = widgets[path].name
+                    msg += "- %s\n" % (field.strip(":"))
                 self.display_dialog(urwid.Filler(urwid.Text(
-                                    "Pending changes:\n%s" % pending_changes)),
-                                    "There are pending changes")
+                            "The following fields were changed:\n%s" % msg)),
+                            "Pending changes")
                 return
 
         timer = timeit.Timer()

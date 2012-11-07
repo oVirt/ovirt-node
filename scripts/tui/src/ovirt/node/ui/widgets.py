@@ -77,11 +77,14 @@ class TableWidget(urwid.WidgetWrap):
     signals = ['changed']
 
     _table_attr = "table"
+    _label_attr = "table.label"
     _header_attr = "table.header"
 
-    def __init__(self, header, items, height):
-        self.__label = urwid.Text(header)
-        self.__label_attrmap = urwid.AttrMap(self.__label, self._header_attr)
+    def __init__(self, label, header, items, height, enabled):
+        self.__label = urwid.Text(label)
+        self.__label_attrmap = urwid.AttrMap(self.__label, self._label_attr)
+        self.__header = urwid.Text(header)
+        self.__header_attrmap = urwid.AttrMap(self.__header, self._header_attr)
         self.__items = items
         self.__walker = urwid.SimpleListWalker(self.__items)
         self.__list = urwid.ListBox(self.__walker)
@@ -95,7 +98,8 @@ class TableWidget(urwid.WidgetWrap):
         self.__box = urwid.BoxAdapter(self.__list, height)
         self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
 
-        self.__pile = urwid.Pile([self.__label_attrmap, self.__box])
+        self.__pile = urwid.Pile([self.__label_attrmap,
+                                  self.__header_attrmap, self.__box])
 
         super(TableWidget, self).__init__(self.__pile)
 

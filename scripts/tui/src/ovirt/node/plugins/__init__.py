@@ -129,7 +129,6 @@ class NodePlugin(object):
                     msg = e.message
                 # True and None are allowed values
                 if msg not in [True, None]:
-#                    field = dict(self.ui_content().children)[path].name
                     raise ovirt.node.exceptions.InvalidData(msg)
         return True
 

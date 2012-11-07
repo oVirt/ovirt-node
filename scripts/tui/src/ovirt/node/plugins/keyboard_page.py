@@ -60,7 +60,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         widgets = [
             ("layout._header",
                 ovirt.node.ui.Header("Keyboard Layout Selection")),
-            ("layout", ovirt.node.ui.Table("", self._get_layouts())),
+            ("layout", ovirt.node.ui.Table("Available Keyboard Layouts",
+                                           "", self._get_layouts())),
 
         ]
         # Save it "locally" as a dict, for better accessability

@@ -84,7 +84,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 ovirt.node.ui.Entry("Hostname:")),
             ("hostname._space", ovirt.node.ui.Divider()),
 
-            ("nics", ovirt.node.ui.Table(
+            ("nics", ovirt.node.ui.Table("Available System NICs",
                         "Device   Status         Model    MAC Address",
                         self._get_nics())),
             ("nics._space", ovirt.node.ui.Divider()),
