@@ -243,7 +243,7 @@ class Entry(urwid.WidgetWrap):
     notice = property(lambda self: self._notice.get_text(), \
                       lambda self, v: self._notice.set_text(v))
 
-    selectable = lambda self: True
+    _selectable = True
 
     def __init__(self, label, mask=None, align_vertical=False):
         with_linebox = True
@@ -286,7 +286,7 @@ class Entry(urwid.WidgetWrap):
         super(Entry, self).__init__(self._pile)
 
     def enable(self, is_enabled):
-        self.selectable = lambda: is_enabled
+        self._selectable = is_enabled
         attr_map = {None: "plugin.widget.entry"}
         if not is_enabled:
             attr_map = {None: "plugin.widget.entry.disabled"}
@@ -300,6 +300,10 @@ class Entry(urwid.WidgetWrap):
 
     def set_text(self, txt):
         self._edit.set_edit_text(txt)
+
+    def selectable(self):
+        return self._selectable
+
 
 
 class PasswordEntry(Entry):
@@ -398,7 +402,9 @@ class PageWidget(urwid.WidgetWrap):
 #        self._listwalker = urwid.SimpleListWalker(widgets)
 #        self._container = urwid.ListBox(self._listwalker)
         self._container = urwid.Pile(widgets)
-        super(PageWidget, self).__init__(self._container)
+        self._container_attrmap = urwid.AttrMap(self._container,
+                                                "plugin.widget.page")
+        super(PageWidget, self).__init__(self._container_attrmap)
 
 
 class RowWidget(urwid.Columns):

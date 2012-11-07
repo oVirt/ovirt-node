@@ -76,6 +76,7 @@ def build_page(tui, plugin, container):
         tui.notify("error", "Initial model validation failed.")
 
     page = ovirt.node.ui.widgets.PageWidget(widgets)
+    page.plugin = plugin
 
     return page
 

@@ -51,6 +51,8 @@ class UrwidTUI(object):
 
     __widget_stack = []
 
+    _current_plugin = None
+
     header = u"\n Configuration TUI\n"
     footer = u"Press ctrl+c to exit"
 
@@ -81,6 +83,8 @@ class UrwidTUI(object):
                ('plugin.widget.progressbar.complete', None, 'light gray'),
                ('plugin.widget.options.label', 'dark gray, bold'),
                ('plugin.widget.dialog', None),
+               ('plugin.widget.page', None),
+               ('plugin.widget.page.frame', None),
                ]
 
     def __init__(self, app):
@@ -113,23 +117,35 @@ class UrwidTUI(object):
         header = urwid.Text(self.header, wrap='clip')
         header = urwid.AttrMap(header, 'header')
         footer = urwid.Text(self.footer, wrap='clip')
-        return urwid.Frame(body, header, footer)
+        screen = urwid.Frame(body, header, footer)
+        return urwid.AttrMap(screen, "screen")
 
     def display_plugin(self, plugin):
+        if self._current_plugin:
+            pending_changes = self._current_plugin.pending_changes()
+            if pending_changes:
+                LOGGER.warning("Pending changes: %s" % pending_changes)
+                self.display_dialog(urwid.Filler(urwid.Text(
+                                    "Pending changes:\n%s" % pending_changes)),
+                                    "There are pending changes")
+                return
+
         timer = timeit.Timer()
+        self._current_plugin = plugin
         page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
         self.display_page(page)
         LOGGER.debug("Build and displayed page in %ss" % timer.timeit())
 
     def display_page(self, page):
-        # FIXME why is this fixed?
-        filler = urwid.Filler(page, ("fixed top", 1), height=35)
-#        filler = urwid.Filler(page)
+        LOGGER.debug("Displaying page %s" % page)
+#        filler = urwid.Filler(page, ("fixed top", 1), height=35)
+        filler = urwid.Pile([page])
         self.__page_frame.body = filler
 
     def display_dialog(self, body, title):
         LOGGER.debug("Displaying dialog: %s / %s" % (body, title))
-        filler = urwid.Filler(body, ("fixed top", 1), height=35)
+#        filler = urwid.Filler(body, ("fixed top", 1), height=35)
+        filler = urwid.Pile([body])
         dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, "esc",
                                                    self.__loop.widget)
         urwid.connect_signal(dialog, "close",
@@ -146,7 +162,10 @@ class UrwidTUI(object):
                 if len(self.__widget_stack) > 0:
                     self.__loop.widget = self.__widget_stack[:-1]
                 else:
+                    LOGGER.debug("No more dialog, main frame " + \
+                                 "%s" % self.__main_frame)
                     self.__loop.widget = self.__main_frame
+            self.draw_screen()
             LOGGER.debug("Dialog closed")
 
     def popup(self, title, msg, buttons=None):
@@ -245,10 +264,9 @@ class UrwidTUI(object):
         """Run the UI
         """
         self.__main_frame = self.__create_screen()
-        self.__main_frame_attrmap = urwid.AttrMap(self.__main_frame, "screen")
         self.__register_default_hotkeys()
 
-        self.__loop = urwid.MainLoop(self.__main_frame_attrmap,
+        self.__loop = urwid.MainLoop(self.__main_frame,
                               self._convert_palette(),
                               input_filter=self.__filter_hotkeys)
         self.__loop.run()

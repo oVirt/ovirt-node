@@ -98,7 +98,7 @@ class RegexValidator(Validator):
     def validate(self, value):
         if type(self.pattern) in [str, unicode]:
             self.pattern = (self.pattern, )
-        return re.compile(*self.pattern).search(str(value)) != None
+        return re.compile(*self.pattern).search(value) != None
 
 
 class Text(RegexValidator):
