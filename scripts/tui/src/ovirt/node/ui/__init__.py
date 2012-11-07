@@ -97,7 +97,8 @@ class InputElement(Element):
     """An abstract UI Element pfor user input
     """
 
-    def __init__(self, is_enabled):
+    def __init__(self, name, is_enabled):
+        self.name = name
         self.enabled(is_enabled)
         super(InputElement, self).__init__()
 
@@ -199,7 +200,7 @@ class Entry(InputElement):
     def __init__(self, label, enabled=True, align_vertical=False):
         self.label = label
         self.align_vertical = align_vertical
-        super(Entry, self).__init__(enabled)
+        super(Entry, self).__init__(label, enabled)
 
 
 class PasswordEntry(Entry):
@@ -208,7 +209,7 @@ class PasswordEntry(Entry):
 
 class Button(InputElement):
     def __init__(self, label, enabled=True):
-        super(Button, self).__init__(enabled)
+        super(Button, self).__init__(label, enabled)
         self.text(label)
 
     @Element.signal_change

@@ -67,6 +67,8 @@ class NodePlugin(object):
     Errors are propagated back by using Errors/Exceptions.
     """
 
+    validate_changes = True
+
     def __init__(self, application):
         self.__changes = {}
         self.application = application
@@ -120,9 +122,14 @@ class NodePlugin(object):
         """
         for path, value in changes.items():
             if path in self.validators():
-                msg = self.validators()[path](value)
+                msg = None
+                try:
+                    msg = self.validators()[path](value)
+                except ovirt.node.exceptions.InvalidData as e:
+                    msg = e.message
                 # True and None are allowed values
                 if msg not in [True, None]:
+#                    field = dict(self.ui_content().children)[path].name
                     raise ovirt.node.exceptions.InvalidData(msg)
         return True
 
@@ -214,6 +221,8 @@ class NodePlugin(object):
             LOGGER.warning("Change is not a dict: %s" % change)
 
         LOGGER.debug("Passing UI change to callback on_change: %s" % change)
+        if self.validate_changes:
+            self.validate(change)
         self.on_change(change)
         self.__changes.update(change)
         LOGGER.debug("Sum of all UI changes up to now: %s" % self.__changes)

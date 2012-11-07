@@ -140,7 +140,6 @@ def build_entry(path, item, tui, plugin):
 
         try:
             change = {path: new_value}
-            plugin.validate(change)
             plugin._on_ui_change(change)
             widget.notice = ""
             widget.valid(True)
