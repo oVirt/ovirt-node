@@ -21,6 +21,6 @@ done
 
 if [ -n "$trigger_url" ]; then
     trigger_url=$(echo $trigger_url | sed -e "s/@HOSTNAME@/$(hostname)/")
-    wget "$trigger_url" -O /dev/null
+    wget --no-check-certificate "$trigger_url" -O /dev/null
 fi
 
