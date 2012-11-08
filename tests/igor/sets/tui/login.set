@@ -1,6 +1,6 @@
 ---
 description: 'Log in to the TUI using teh passwod in after_auto_install.set'
-lib: ['../../libs/common', '../../libs/uinput']
+libs: ['../../libs/common', '../../libs/uinput']
 searchpath: '../../tcs'
 
 

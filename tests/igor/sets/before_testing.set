@@ -1,6 +1,6 @@
 ---
 description: 'Collect some logs before duoing anything'
-lib: ['../libs/common']
+libs: ['../libs/common']
 searchpath: '../tcs'
 
 

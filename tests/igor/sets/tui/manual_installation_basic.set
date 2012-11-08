@@ -1,6 +1,6 @@
 ---
 description: 'A basic TUI installation'
-lib: ['../../libs/common', '../../libs/uinput']
+libs: ['../../libs/common', '../../libs/uinput']
 searchpath: '../../tcs'
 
 

@@ -1,6 +1,6 @@
 ---
 description: 'Covers a reboot cycle - initiate and back up'
-lib: ['../libs/common']
+libs: ['../libs/common']
 searchpath: '../tcs'
 
 

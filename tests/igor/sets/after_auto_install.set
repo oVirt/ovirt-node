@@ -1,6 +1,6 @@
 ---
 description: 'Notes the server about a successfull auto-installation.'
-lib: ['../libs/common']
+libs: ['../libs/common']
 searchpath: '../tcs'
 
 

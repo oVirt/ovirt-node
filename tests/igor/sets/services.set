@@ -1,6 +1,6 @@
 ---
 description: 'Does some checks on services'
-lib: ['libs/common']
+libs: ['libs/common']
 searchpath: '../tcs'
 
 

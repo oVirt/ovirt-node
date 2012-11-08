@@ -1,6 +1,6 @@
 ---
 description: 'Collect logs after all testing has been done (for debugging e.g.)'
-lib: ['../libs/common']
+libs: ['../libs/common']
 searchpath: '../tcs'
 
 

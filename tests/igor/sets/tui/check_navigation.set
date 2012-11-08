@@ -1,6 +1,6 @@
 ---
 description: 'Do some basic TUI checks'
-lib: ['../../libs/common', '../../libs/uinput']
+libs: ['../../libs/common', '../../libs/uinput']
 searchpath: '../../tcs'
 
 
