@@ -20,13 +20,13 @@ title = "TUI Installer Password Page"
 
 story = [
     # P. 5: Enter password dialog
-    (None,                  4, "Require a password"),
+    (None,                  10, "Require a password"),
 ]
 
 # Check if the Caps Lock hint appears
 story += [
     # Actiavte Caps Lock and change the field, hint appears
-    ([common.input.uinput.KEY_CAPSLOCK, "\t"],    1,  "Hint: Caps Lock is on"),
+    ([common.input.uinput.KEY_CAPSLOCK, "\t"],    5,  "Hint: Caps Lock is on"),
     # Deactivate Caps Lock and tab until back in password field
     ([common.input.uinput.KEY_CAPSLOCK, "\t\t\t\t"],    0,  None) # FIXME negative case
 ]

@@ -18,7 +18,7 @@ title = "TUI Installer Sizes Page"
 
 story = [
     # Expect sizes page
-    (None,                  4, "Please enter the sizes for"),
+    (None,                  10, "Please enter the sizes for"),
 ]
 
 story += [

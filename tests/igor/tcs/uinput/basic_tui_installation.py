@@ -27,26 +27,26 @@ story = [
 
     # P. 2: Enter keyboard selection
     # Press ENTER, wait 4 seconds, expect "Keyboard …"
-    (["\n"],                4, "Keyboard Layout Selection"),
+    (["\n"],                10, "Keyboard Layout Selection"),
 
     # P. 2: Select german keyboard layout
     # Press 53 times UP, wait 0 seconds and expect "German"
-    (39 * [common.input.uinput.KEY_UP], 2, "German"),
+    (39 * [common.input.uinput.KEY_UP], 10, "German"),
 
     # P. 3: Enter boot device selection
     # Press ENTER wait 4 seconds and expect "booting …"
-    (["\n"],                4, "booting oVirt Node"),
+    (["\n"],               10, "booting oVirt Node"),
 
     # P. 4: Enter installation device selection
-    (["\n"],                4, "installation of oVirt Node"),
+    (["\n"],               10, "installation of oVirt Node"),
 
     # P. 5: Enter sizes dialog
-    (["\t\t\t\n"],           4, "enter the sizes for"),
+    (["\t\t\t\n"],         10, "enter the sizes for"),
 
     # P. 6: Enter password dialog
-    (["\t\t\t\t\t\t\n"],           4, "Require a password"),
+    (["\t\t\t\t\t\t\n"],   10, "Require a password"),
     # P. 6: Enter password
-    (["ovirt\tovirt\t"],    2, "a weak password"),
+    (["ovirt\tovirt\t"],   10, "a weak password"),
 
     # P. 7: Start installation, and give it at most 240 seconds to complete
     (["\t\t\n"],   wait_for_last_page, "Installation Finished"),

@@ -19,11 +19,11 @@ title = "TUI Installer Keyboard Page"
 story = [
     # P. 2: Enter keyboard selection
     # Press ENTER, wait 4 seconds, expect "Keyboard …"
-    (None,      4, "Keyboard Layout Selection"),
+    (None,      10, "Keyboard Layout Selection"),
 
     # P. 2: Select german keyboard layout
     # Press 53 times UP, wait 0 seconds and expect "German"
-    (39 * [common.input.uinput.KEY_UP], 2, "German"),
+    (39 * [common.input.uinput.KEY_UP], 10, "German"),
 
     # P. 3: Enter boot device selection
     # Press ENTER wait 4 seconds and expect "booting …"
