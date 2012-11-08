@@ -26,7 +26,7 @@ story = [
 # Check if the Caps Lock hint appears
 story += [
     # Actiavte Caps Lock and change the field, hint appears
-    ([common.input.uinput.KEY_CAPSLOCK, "\t"],    5,  "Hint: Caps Lock is on"),
+    ([common.input.uinput.KEY_CAPSLOCK, "\t"],    5,  "Hint: Caps lock is on"),
     # Deactivate Caps Lock and tab until back in password field
     ([common.input.uinput.KEY_CAPSLOCK, "\t\t\t\t"],    0,  None) # FIXME negative case
 ]
