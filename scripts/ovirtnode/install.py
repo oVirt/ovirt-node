@@ -251,20 +251,26 @@ initrd /initrd0.img
             if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
                 logger.info("Root Installation Not Required, Finished.")
                 return True
-
-        self.oldtitle = None
-        _functions.system("mount -r LABEL=Root /liveos")
+        self.oldtitle=None
+        grub_config_file = None
         if os.path.ismount("/liveos"):
-            if (os.path.exists("/liveos/vmlinuz0") and
-                os.path.exists("/liveos/initrd0.img")):
-                f = open(self.grub_config_file)
-                oldgrub = f.read()
-                f.close()
-                m = re.search("^title (.*)$", oldgrub, re.MULTILINE)
-                if m is not None:
-                    self.oldtitle = m.group(1)
+            if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
+                grub_config_file = self.grub_config_file
 
-            _functions.system("umount /liveos")
+        elif not _functions.is_firstboot():
+            if os.path.ismount("/dev/.initramfs/live"):
+                grub_config_file = "/dev/.initramfs/live/grub/grub.conf"
+            elif os.path.ismount("/run/initramfs/live"):
+                grub_config_file = "/run/initramfs/live/grub/grub.conf"
+
+        if not grub_config_file is None:
+            f=open(grub_config_file)
+            oldgrub=f.read()
+            f.close()
+            m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
+            if m is not None:
+                self.oldtitle=m.group(1)
+        _functions.system("umount /liveos")
 
         if _functions.findfs("BootBackup"):
             self.boot_candidate = "BootBackup"
@@ -452,6 +458,16 @@ initrd /initrd0.img
         "grub_prefix": self.grub_prefix,
         "efi_hd": self.efi_hd
     }
+        if not _functions.is_firstboot():
+            if os.path.ismount("/live"):
+                with open("/live/isolinux/version") as version:
+                    for line in version.readlines():
+                        if "VERSION" in line:
+                            key, value = line.split("=")
+                            self.grub_dict["version"] = value.strip()
+                        if "RELEASE" in line:
+                            key, value = line.split("=")
+                            self.grub_dict["release"] = value.strip()
 
         if os.path.exists("/sbin/grub2-install"):
             if not _functions.is_efi_boot():

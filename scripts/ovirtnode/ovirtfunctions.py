@@ -463,7 +463,8 @@ def mount_live():
         live_dev="/dev/live"
 
     system_closefds("mkdir -p /live")
-    if not system_closefds("mount -r " + live_dev + " /live &>/dev/null"):
+    system_closefds("mount -r " + live_dev + " /live &>/dev/null")
+    if not os.path.ismount("/live"):
         # check if live device was setup under alternate locations
         if os.path.ismount("/dev/.initramfs/live"):
             system_closefds("mount -o bind /dev/.initramfs/live /live")
