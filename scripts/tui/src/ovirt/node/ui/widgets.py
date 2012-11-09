@@ -399,6 +399,23 @@ class Options(urwid.WidgetWrap):
         self.select(txt)
 
 
+class Checkbox(urwid.WidgetWrap):
+    def __init__(self, label, state):
+        self._label = urwid.Text(label)
+        self._label_attrmap = urwid.AttrMap(self._label,
+                                            "plugin.widget.checkbox.label")
+        self._checkbox = urwid.CheckBox("", state)
+        self._divider = urwid.Divider()
+        self._container = urwid.Columns([self._label_attrmap,
+                                         self._checkbox])
+        super(Checkbox, self).__init__(urwid.Pile([self._container,
+                                                   self._divider]))
+
+    def set_text(self, s):
+        if s in [True, False]:
+            self._checkbox.set_state(s)
+
+
 class PageWidget(urwid.WidgetWrap):
     save_button = None
 

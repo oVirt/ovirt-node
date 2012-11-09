@@ -255,6 +255,24 @@ class Options(Element):
         self.option(txt)
 
 
+class Checkbox(InputElement):
+    """A simple Checkbox
+
+    Args:
+        label: Caption of this checkbox
+        state: The initial change
+    """
+    def __init__(self, label, state):
+        self.label = label
+        self.state(state)
+
+    @Element.signal_change
+    def state(self, s):
+        if s in [True, False]:
+            self._state = s
+        return self._state
+
+
 class ProgressBar(Element):
     """A abstract progress bar.
 

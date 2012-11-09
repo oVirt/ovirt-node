@@ -95,6 +95,7 @@ def widget_for_item(tui, plugin, path, item):
         ovirt.node.ui.Row: build_row,
         ovirt.node.ui.ProgressBar: build_progressbar,
         ovirt.node.ui.Table: build_table,
+        ovirt.node.ui.Checkbox: build_checkbox,
     }
 
     # Check if builder is available for UI Element
@@ -110,7 +111,8 @@ def widget_for_item(tui, plugin, path, item):
                       ovirt.node.ui.PasswordEntry,
                       ovirt.node.ui.Label,
                       ovirt.node.ui.KeywordLabel,
-                      ovirt.node.ui.Options]:
+                      ovirt.node.ui.Options,
+                      ovirt.node.ui.Checkbox]:
         model = plugin.model()
         if path in model:
             text = model[path]
@@ -216,6 +218,11 @@ def build_options(path, item, tui, plugin):
         plugin._on_ui_change({path: data})
     urwid.connect_signal(widget, "change", on_widget_change_cb)
 
+    return widget
+
+
+def build_checkbox(path, item, tui, plugin):
+    widget = ovirt.node.ui.widgets.Checkbox(item.label, item.state())
     return widget
 
 

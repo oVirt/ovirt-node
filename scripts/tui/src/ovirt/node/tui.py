@@ -86,6 +86,7 @@ class UrwidTUI(object):
                ('plugin.widget.dialog', None),
                ('plugin.widget.page', None),
                ('plugin.widget.page.frame', None),
+               ('plugin.widget.checkbox.label', 'dark gray, bold'),
                ]
 
     def __init__(self, app):
