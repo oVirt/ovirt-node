@@ -262,7 +262,7 @@ class Checkbox(InputElement):
         label: Caption of this checkbox
         state: The initial change
     """
-    def __init__(self, label, state):
+    def __init__(self, label, state=False):
         self.label = label
         self.state(state)
 

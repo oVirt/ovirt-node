@@ -46,7 +46,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             self._model = {
                 "vdsm.address": "",
                 "vdsm.port": "7634",
-                "vdsm.connect_and_validate": True,
+                "vdsm.connect_and_validate": ovirt.node.utils.parse_bool(True),
                 "vdsm.password": "",
                 "vdsm.password_confirmation": "",
             }
@@ -66,10 +66,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
             ("vdsm.address", ovirt.node.ui.Entry("Server Address:")),
             ("vdsm.port", ovirt.node.ui.Entry("Server Port:")),
-            ("vdsm.connect_and_validate", ovirt.node.ui.Options(
-                    "Connect to oVirt Engine and Validate Certificate",
-                    [("yes", "Yes"), ("no", "No")])),
+            ("vdsm.connect_and_validate", ovirt.node.ui.Checkbox(
+                    "Connect to oVirt Engine and Validate Certificate")),
 
+            ("vdsm.password._divider", ovirt.node.ui.Divider("-")),
             ("vdsm.password._label", ovirt.node.ui.Label(
                     "Optional password for adding Node through oVirt " +
                     "Engine UI")),
