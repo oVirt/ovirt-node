@@ -514,7 +514,7 @@ initrd /initrd0.img
                                                       _functions.PRODUCT_SHORT)
             if reboot is not None and reboot == "Y":
                 f = open('/var/spool/cron/root', 'w')
-                f.write('* * * * * sleep 10 && /sbin/reboot')
+                f.write('* * * * * sleep 10 && /sbin/reboot\n')
                 f.close()
                 #ensure crond is started
                 _functions.subprocess_closefds("crond", shell=True,
