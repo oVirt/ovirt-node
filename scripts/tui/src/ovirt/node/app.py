@@ -58,6 +58,11 @@ class Application(object):
         with self.ui.suspended():
             ovirt.node.utils.process.system("reset ; bash")
 
+    def __check_terminal_size(self):
+        cols, rows = self.ui.size()
+        if cols < 80 or rows < 24:
+            LOGGER.warning("Window size is too small: %dx%d" % (cols, rows))
+
     def model(self, plugin_name):
         model = None
         for plugin in self.plugins:
@@ -68,6 +73,7 @@ class Application(object):
     def run(self):
         self.__load_plugins()
         self.ui.register_hotkey("f12", self.__drop_to_shell)
+        self.ui.register_hotkey("window resize", self.__check_terminal_size)
         self.ui.footer = "Press esc to quit."
         self.ui.run()
 

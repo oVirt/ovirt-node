@@ -211,6 +211,9 @@ class UrwidTUI(ovirt.node.ui.Window):
     def draw_screen(self):
         self.__loop.draw_screen()
 
+    def size(self):
+        return self.__loop.screen.get_cols_rows()
+
     def watch_pipe(self, cb):
         """Return a fd to be used as stdout, cb called for each line
         """
