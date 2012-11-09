@@ -111,6 +111,7 @@ class Storage:
                     return False
                 logging.info(("Setting value for %s to %s " %
                            (self.__dict__[i_short], _functions.OVIRT_VARS[i])))
+                i_short = i_short.replace("MIN_", "")
                 self.__dict__[i_short] = int(OVIRT_VARS[i])
             else:
                 logging.info("Using default value for: %s" % i_short)
