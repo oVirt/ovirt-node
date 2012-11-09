@@ -181,8 +181,8 @@ class ModalDialog(urwid.WidgetWrap):
 
         body = urwid.LineBox(body, title)
         overlay = urwid.Overlay(body, previous_widget, 'center',
-                                          ('relative', 70), 'middle',
-                                          ('relative', 70))
+                                          ('relative', 100), 'bottom',
+                                          ('relative', 100))
         overlay_attrmap = urwid.AttrMap(overlay, "plugin.widget.dialog")
         super(ModalDialog, self).__init__(overlay_attrmap)
 

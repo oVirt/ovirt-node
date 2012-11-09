@@ -154,7 +154,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         })
 
         padd = lambda l: l.ljust(14)
-        return self._build_dialog("dialog.nic", "NIC Details: %s" % iface, [
+        dialog = self._build_dialog("dialog.nic", "NIC Details: %s" % iface, [
             ("dialog.nic._row[0]", ovirt.node.ui.Row([
                 ("dialog.nic.iface",
                     ovirt.node.ui.KeywordLabel(padd("Interface: "))),
@@ -196,7 +196,17 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
             ("dialog.nic.vlanid",
                     ovirt.node.ui.Entry(padd("VLAN ID: "))),
+
+            ("dialog.nic._buttons", ovirt.node.ui.Row([
+                ("dialog.nic.save",
+                        ovirt.node.ui.Button("Save & Close")),
+                ("dialog.nic.close",
+                        ovirt.node.ui.Button("Close")),
+            ]))
         ])
+
+        dialog.has_save_button = False
+        return dialog
 
     def on_change(self, changes):
         pass
