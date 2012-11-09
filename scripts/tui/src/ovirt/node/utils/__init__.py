@@ -58,7 +58,6 @@ class AugeasWrapper(object):
         return self._aug.match(p)
 
 
-
 def checksum(filename, algo="md5"):
     """Calculcate the checksum for a file.
     """
@@ -70,7 +69,6 @@ def checksum(filename, algo="md5"):
             m.update(data)
             data = f.read(4096)
         return m.hexdigest()
-
 
 
 def is_bind_mount(filename, fsprefix="ext"):
@@ -88,3 +86,29 @@ def is_bind_mount(filename, fsprefix="ext"):
             if pattern in mount:
                 bind_mount_found = True
     return bind_mount_found
+
+
+def parse_bool(txt):
+    """Parse common "bool" values (yes, no, true, false, 1)
+
+    >>> parse_bool(True)
+    True
+
+    >>> txts = ["yes", "YES!", "1", 1]
+    >>> all((parse_bool(txt) for txt in txts))
+    True
+
+    >>> txts = ["no", "NO!", "0", 0, False, None, "foo"]
+    >>> all((not parse_bool(txt) for txt in txts))
+    True
+
+    Args:
+        txt: Text to be parsed
+    Returns:
+        True if it looks like a bool representing True, False otherwise
+    """
+    if txt != None and type(txt) in [str, unicode, int, bool]:
+        utxt = unicode(txt)
+        if len(utxt) > 0 and utxt[0] in ["y", "t", "Y", "T", "1"]:
+            return True
+    return False
