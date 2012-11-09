@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.DEBUG,
 LOGGER = logging.getLogger(__name__)
 
 
-import ovirt.node.tui
+import ovirt.node.ui.tui
 import ovirt.node.utils
 
 
@@ -41,8 +41,11 @@ class Application(object):
 
     ui = None
 
-    def __init__(self):
-        self.ui = ovirt.node.tui.UrwidTUI(self)
+    def __init__(self, ui_backend="urwid"):
+        ui_backend_class = {
+            "urwid": ovirt.node.ui.tui.UrwidTUI
+        }[ui_backend]
+        self.ui = ui_backend_class(self)
 
     def __load_plugins(self):
         self.plugins = [m.Plugin(self) for m in ovirt.node.plugins.load_all()]

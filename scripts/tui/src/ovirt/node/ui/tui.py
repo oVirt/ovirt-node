@@ -38,11 +38,11 @@ import ovirt.node.utils
 LOGGER = logging.getLogger(__name__)
 
 
-class UrwidTUI(object):
+class UrwidTUI(ovirt.node.ui.Window):
     app = None
 
-    __pages = {}
-    __hotkeys = {}
+    _plugins = {}
+    _hotkeys = {}
 
     __loop = None
     __main_frame = None
@@ -97,9 +97,10 @@ class UrwidTUI(object):
     def __init__(self, app):
         LOGGER.info("Creating urwid tui for '%s'" % app)
         self.app = app
+        super(UrwidTUI, self).__init__(app)
 
     def __build_menu(self):
-        self.__menu = ovirt.node.ui.widgets.PluginMenu(self.__pages)
+        self.__menu = ovirt.node.ui.widgets.PluginMenu(self._plugins)
 
         def menu_item_changed(plugin):
             self.display_plugin(plugin)
@@ -195,9 +196,9 @@ class UrwidTUI(object):
                 self.close_dialog(self.__widget_stack[-1])
                 return
 
-        if key in self.__hotkeys.keys():
+        if key in self._hotkeys.keys():
             LOGGER.debug("Running hotkeys: %s" % key)
-            self.__hotkeys[key]()
+            self._hotkeys[key]()
 
         LOGGER.debug("Keypress: %s" % key)
 
@@ -232,19 +233,6 @@ class UrwidTUI(object):
             def __exit__(self, a, b, c):
                 self.__loop.screen.start()
         return SuspendedScreen(self.__loop)
-
-    def register_plugin(self, title, plugin):
-        """Register a plugin to be shown in the UI
-        """
-        self.__pages[title] = plugin
-
-    def register_hotkey(self, hotkey, cb):
-        """Register a hotkey
-        """
-        if type(hotkey) is str:
-            hotkey = [hotkey]
-        LOGGER.debug("Registering hotkey '%s': %s" % (hotkey, cb))
-        self.__hotkeys[str(hotkey)] = cb
 
     def quit(self):
         """Quit the UI

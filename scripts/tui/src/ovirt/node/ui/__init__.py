@@ -321,3 +321,34 @@ class Table(InputElement):
         if selected in dict(self.items).keys():
             self._selected = selected
         return self._selected
+
+
+class Window(Element):
+    """Abstract Window definition
+    """
+
+    def __init__(self, app):
+        LOGGER.info("Creating UI for application '%s'" % app)
+        self.app = app
+
+        self._plugins = {}
+        self._hotkeys = {}
+
+        self.footer = None
+
+
+    def register_plugin(self, title, plugin):
+        """Register a plugin to be shown in the UI
+        """
+        self._plugins[title] = plugin
+
+    def register_hotkey(self, hotkey, cb):
+        """Register a hotkey
+        """
+        if type(hotkey) is str:
+            hotkey = [hotkey]
+        LOGGER.debug("Registering hotkey '%s': %s" % (hotkey, cb))
+        self._hotkeys[str(hotkey)] = cb
+
+    def run(self):
+        raise NotImplementedError
