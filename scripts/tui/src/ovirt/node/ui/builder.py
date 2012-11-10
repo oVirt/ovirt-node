@@ -27,13 +27,8 @@ import urwid
 
 import logging
 
-import ovirt.node
-import ovirt.node.plugins
-import ovirt.node.ui
 import ovirt.node.ui.widgets
-import ovirt.node.ui.builder
 import ovirt.node.exceptions
-import ovirt.node.utils
 
 LOGGER = logging.getLogger(__name__)
 

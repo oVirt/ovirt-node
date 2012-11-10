@@ -34,6 +34,7 @@ LOGGER = logging.getLogger(__name__)
 
 import ovirt.node.ui.tui
 import ovirt.node.utils
+import ovirt.node.plugins
 
 
 class Application(object):

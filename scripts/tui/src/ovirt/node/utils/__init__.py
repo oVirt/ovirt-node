@@ -19,7 +19,11 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-Utility functions
+Utility functions.
+It is aimed that the modules in trhis package display live informations and not
+informations based on static config files.
+Use the .config package for stuff related to configuration files.
+And use the model.py module for oVirt Node's defaults file.
 """
 
 import logging
@@ -92,7 +96,7 @@ class AugeasWrapper(object):
         values = {}
         for path in paths:
             if strip_basepath:
-                path = path[len(basepath):]
+                path = path[len(strip_basepath):]
             values[path] = self.get(path)
         return values
 

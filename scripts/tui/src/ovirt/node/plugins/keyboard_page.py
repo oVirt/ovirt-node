@@ -24,10 +24,7 @@ Configure Keyboard Layout
 import logging
 
 import ovirt.node.plugins
-import ovirt.node.valid
 import ovirt.node.ui
-import ovirt.node.utils
-import ovirt.node.utils.network
 
 LOGGER = logging.getLogger(__name__)
 

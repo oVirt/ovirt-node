@@ -25,7 +25,6 @@ import logging
 import textwrap
 
 import ovirt.node.plugins
-import ovirt.node.valid
 import ovirt.node.ui
 import ovirt.node.utils as utils
 import ovirt.node.utils.virt as virt

@@ -26,7 +26,6 @@ import logging
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
-import ovirt.node.utils
 import ovirt.node.utils.network
 import ovirt.node.config.network
 
@@ -105,12 +104,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def _get_nics(self):
         justify = lambda txt, l: txt.ljust(l)[0:l]
-        node_nics = [
-                ("em1",
-                    "em1      Configured     e1000    00:11:22:33:44:55"),
-                ("p1p6",
-                    "p1p6     Unconfigured   bnx2     10:21:32:43:54:65"),
-                ]
         node_nics = []
         first_nic = None
         for name, nic in ovirt.node.utils.network.node_nics().items():
@@ -224,14 +217,16 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             new_servers = [v for k, v in effective_model \
                              if k.startswith("dns[")]
             LOGGER.info("Setting new nameservers: %s" % new_servers)
-            ovirt.node.utils.network.nameservers(new_servers)
+            model = ovirt.node.config.defaults.Nameservers()
+            model.configure(new_servers)
 
         if "ntp[0]" in effective_changes or \
            "ntp[1]" in effective_changes:
             new_servers = [v for k, v in effective_model \
                              if k.startswith("ntp[")]
             LOGGER.info("Setting new timeservers: %s" % new_servers)
-            ovirt.node.utils.network.timeservers(new_servers)
+            model = ovirt.node.config.defaults.Timeservers()
+            model.configure(new_servers)
 
         if "nics" in changes:
             iface = changes["nics"]
