@@ -181,7 +181,8 @@ def relevant_ifaces(filter_bridges=True, filter_vlans=True):
             n.startswith("tun") or \
             n.startswith("wlan") or \
             (filter_vlans and ("." in n)))
-    valid_props = lambda i, p: (filter_bridges and (p["type"] != "bridge"))
+# FIXME!!!
+#    valid_props = lambda i, p: (filter_bridges and (p["type"] != "bridge"))
 
     relevant_ifaces = [iface for iface in all_ifaces() if valid_name(iface)]
 #    relevant_ifaces = {iface: iface_information(iface) for iface \

@@ -108,7 +108,9 @@ def _aug_get_or_set(augpath, new_servers=None):
 def nameservers(new_servers=None):
     """Get or set DNS servers
 
-    >>> len(nameservers()) > 0
+    >>> import ovirt.node.utils.process as p
+    >>> _, stdout = p.pipe("egrep '^nameserver' /etc/resolv.conf | wc -l")
+    >>> len(nameservers()) == int(stdout)
     True
     """
     augpath = "/files/etc/resolv.conf/nameserver"
@@ -117,9 +119,6 @@ def nameservers(new_servers=None):
 
 def timeservers(new_servers=None):
     """Get or set TIME servers
-
-    >>> len(nameservers()) > 0
-    True
     """
     augpath = "/files/etc/ntp.conf/server"
     return _aug_get_or_set(augpath, new_servers)

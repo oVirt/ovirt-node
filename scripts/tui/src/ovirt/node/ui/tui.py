@@ -260,7 +260,7 @@ class UrwidTUI(ovirt.node.ui.Window):
             if k == None:
                 continue
             colors = [e or default[idx] for idx, e in enumerate(v)]
-            rest = default[ len(colors): ]
+            rest = default[len(colors):]
             palette.append(tuple([k] + colors + rest))
         return palette
 

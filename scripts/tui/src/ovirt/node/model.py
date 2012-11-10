@@ -29,14 +29,27 @@ import ovirt.node.utils
 
 LOGGER = logging.getLogger(__name__)
 
+OVIRT_NODE_DEFAULTS_FILENAME = "/etc/defaults/ovirt"
 
-def parse_defaults():
+
+def defaults(new_dict=None, filename=OVIRT_NODE_DEFAULTS_FILENAME):
     """Reads /etc/defaults/ovirt
 
+    Args:
+        new_dict: New values to be used for setting the defaults
     Returns:
         A dict
     """
-    pass
+    aug = ovirt.node.utils.AugeasWrapper()
+    basepath = "/files/%s/" % filename.strip("/")
+    if new_dict:
+        # If values are given, update the file
+        aug.set_many(new_dict, basepath + "OVIRT_")
+
+    # Retrieve all entries of the default file and return their values
+    paths = aug.match(basepath + "*")
+    return aug.get_many(paths)
+
 
 def configure_networking(iface, bootproto, ipaddr=None, netmask=None, gw=None,
                          vlanid=None):
@@ -46,23 +59,19 @@ def configure_networking(iface, bootproto, ipaddr=None, netmask=None, gw=None,
         - OVIRT_VLAN
         - OVIRT_IPV6
     """
-    if bootproto == "dhcp":
-        pass
-    elif bootproto == "static":
-        pass
+    config = {
+        "BOOTIF": iface,
+        "BOOTPROTO": bootproto,
+        "IP_ADDRESS": ipaddr,
+        "IP_NETMASK": netmask,
+        "IP_GATEWAY": gw,
+        "VLAN": vlanid
+    }
+    defaults(config)
+    # FIXME also remove keys with None value?
 
 
-def disable_networking():
-    """Unsets
-        - OVIRT_BOOTIF
-        - OVIRT_IP_ADDRESS, OVIRT_IP_NETMASK, OVIRT_IP_GATEWAY
-        - OVIRT_VLAN
-        - OVIRT_IPV6
-    """
-    pass
-
-
-def nameservers(servers):
+def configure_nameservers(servers):
     """Sets OVIRT_DNS
 
     1. Parse nameservers from defaults
@@ -73,7 +82,7 @@ def nameservers(servers):
     Args:
         servers: List of servers (str)
     """
-    ovirt_config = parse_defaults()
+    ovirt_config = defaults()
     if "OVIRT_DNS" not in ovirt_config:
         LOGGER.debug("No DNS server entry in default config")
         return

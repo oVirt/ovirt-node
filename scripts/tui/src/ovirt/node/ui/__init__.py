@@ -336,7 +336,6 @@ class Window(Element):
 
         self.footer = None
 
-
     def register_plugin(self, title, plugin):
         """Register a plugin to be shown in the UI
         """

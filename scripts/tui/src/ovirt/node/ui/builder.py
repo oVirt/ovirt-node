@@ -255,6 +255,7 @@ def build_table(path, item, tui, plugin):
     widget = ovirt.node.ui.widgets.TableWidget(item.label, item.header,
                                                children,
                                                item.height, item.enabled())
+
     def on_change_cb(w, d=None):
         plugin._on_ui_change({path: w._key})
         item.select(w._key)

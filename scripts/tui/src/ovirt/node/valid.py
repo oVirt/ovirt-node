@@ -98,6 +98,8 @@ class RegexValidator(Validator):
     def validate(self, value):
         if type(self.pattern) in [str, unicode]:
             self.pattern = (self.pattern, )
+        if type(value) in [bool, int]:
+            value = str(value)
         return re.compile(*self.pattern).search(value) != None
 
 

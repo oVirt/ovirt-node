@@ -25,8 +25,8 @@ Some convenience functions realted to the filesystem
 import logging
 import shutil
 import os
-import ovirt.node.utils
 from ovirt.node.utils import checksum, is_bind_mount
+from ovirt.node.utils.process import system
 
 LOGGER = logging.getLogger(__name__)
 
@@ -151,17 +151,17 @@ def persist_config(filename):
 
         else:
             # skip if file does not exist
-            logger.warn("Skipping, file '%s' does not exist" % filename)
+            LOGGER.warn("Skipping, file '%s' does not exist" % filename)
             continue
 
         # At this poitn we know that we want to persist the file.
 
         # skip if already bind-mounted
         if is_bind_mount(filename):
-            logger.warn("%s is already persisted" % filename)
+            LOGGER.warn("%s is already persisted" % filename)
         else:
             dirname = os.path.dirname(filename)
-            system("mkdir -p %s" %s persist_path(dirname))
+            system("mkdir -p %s" % persist_path(dirname))
             persist_filename = persist_path(filename)
             if system("cp -a %s %s" % (filename, persist_filename)):
                 if not system("mount -n --bind %s %s" % (persist_filename,
@@ -169,15 +169,13 @@ def persist_config(filename):
                     LOGGER.error("Failed to persist: " + filename)
                     persist_failed = True
                 else:
-                    logger.info("Persisted: $s" % filename)
+                    LOGGER.info("Persisted: $s" % filename)
 
         with open(persist_path("files"), "r") as files:
             if filename not in files.read().split("\n"):
                 # register in /config/files used by rc.sysinit
-            system_closefds("echo "+filename+" >> /config/files")
-            logger.info("Successfully persisted (reg): %s" % filename)
-
-
+                system("echo " + filename + " >> /config/files")
+                LOGGER.info("Successfully persisted (reg): %s" % filename)
     return not persist_failed
 
 

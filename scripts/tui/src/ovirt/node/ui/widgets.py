@@ -309,7 +309,6 @@ class Entry(urwid.WidgetWrap):
         return self._selectable
 
 
-
 class PasswordEntry(Entry):
     def __init__(self, label, align_vertical=False):
         super(PasswordEntry, self).__init__(label, mask="*",

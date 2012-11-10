@@ -24,7 +24,6 @@ Utility functions
 
 import logging
 import hashlib
-import re
 import augeas as _augeas
 
 LOGGER = logging.getLogger(__name__)
@@ -43,19 +42,59 @@ class AugeasWrapper(object):
             v = v.strip("'\"")
         return v
 
-    def set(self, p, v):
+    def set(self, p, v, do_save=True):
         self._aug.set(p, v)
-        self.save()
+        if do_save:
+            self.save()
 
-    def remove(self, p):
+    def remove(self, p, do_save=True):
         self._aug.remove(p)
-        self.save()
+        if do_save:
+            self.save()
 
     def save(self):
         return self._aug.save()
 
     def match(self, p):
         return self._aug.match(p)
+
+    def set_many(self, new_dict, basepath=""):
+        """Set's many augpaths at once
+
+        Args:
+            new_dict: A dict with a mapping (path, value)
+            basepath: An optional prefix for each path of new_dict
+        """
+        for key, value in new_dict.items():
+            path = basepath + key
+            self.set(path, value)
+        return self.save()
+
+    def remove_many(self, paths, basepath=None):
+        """Removes many keys at once
+
+        Args:
+            paths: The paths to be removed
+            basepath: An optional prefix for each path of new_dict
+        """
+        for key in paths:
+            path = basepath + key
+            self.remove(path, False)
+        return self.save()
+
+    def get_many(self, paths, strip_basepath=""):
+        """Get all values for all the paths
+
+        Args:
+            paths: Paths from which to fetch the values
+            strip_basepath: Prefix to be stripped from all paths
+        """
+        values = {}
+        for path in paths:
+            if strip_basepath:
+                path = path[len(basepath):]
+            values[path] = self.get(path)
+        return values
 
 
 def checksum(filename, algo="md5"):
