@@ -48,6 +48,7 @@ device hptiop
 device imm
 device initio
 device ips
+device isci
 device libosd
 device libsas
 device libsrp
