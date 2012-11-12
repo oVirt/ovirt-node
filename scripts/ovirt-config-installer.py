@@ -565,7 +565,7 @@ class NodeInstallScreen:
                     dev_desc = pad_or_trim(32, dev_desc)
                     self.valid_disks.append(dev_name)
                     dev_name = os.path.basename(dev_name).replace(" ", "")
-                    dev_name = pad_or_trim(32, dev_name)
+                    dev_name = pad_or_trim(31, dev_name)
                     dev_entry = " %6s  %11s  %5s GB" % (dev_bus,dev_name, dev_size)
                     dev_name = translate_multipath_device(dev_name)
                     self.root_disk_menu_list.append(dev_entry, dev)
@@ -635,7 +635,7 @@ class NodeInstallScreen:
                         select_status = 0
                     # strip all "/dev/*/" references and leave just basename
                     dev_name = os.path.basename(dev_name).replace(" ", "")
-                    dev_name = pad_or_trim(32, dev_name)
+                    dev_name = pad_or_trim(31, dev_name)
                     dev_entry = " %6s %10s %2s GB" % (dev_bus,dev_name, dev_size)
                     self.hostvg_checkbox.addItem(dev_entry, (0, snackArgs['append']), item = dev, selected = select_status)
                     self.displayed_disks[dev] = ""
