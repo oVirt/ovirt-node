@@ -21,13 +21,10 @@
 """
 A plugin illustrating how to use the TUI
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.ui
 
-
-LOGGER = logging.getLogger(__name__)
 
 usage = """Plugins need to be derived from a provided class and need to \
 implement a couple of methods.

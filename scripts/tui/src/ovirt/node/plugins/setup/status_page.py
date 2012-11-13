@@ -21,7 +21,6 @@
 """
 Status plugin
 """
-import logging
 import textwrap
 
 import ovirt.node.plugins
@@ -29,8 +28,6 @@ import ovirt.node.ui
 import ovirt.node.utils as utils
 import ovirt.node.utils.virt as virt
 import ovirt.node.utils.security
-
-LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -122,20 +119,20 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def on_merge(self, changes):
         # Handle button presses
         if "action.lock" in changes:
-            LOGGER.info("Locking screen")
+            self.logger.info("Locking screen")
 
         elif "action.logoff" in changes:
-            LOGGER.info("Logging off")
+            self.logger.info("Logging off")
             self.application.quit()
 
         elif "action.restart" in changes:
-            LOGGER.info("Restarting")
+            self.logger.info("Restarting")
 
         elif "action.poweroff" in changes:
-            LOGGER.info("Shutting down")
+            self.logger.info("Shutting down")
 
         elif "action.hostkey" in changes:
-            LOGGER.info("Showing hostkey")
+            self.logger.info("Showing hostkey")
             return self._build_hostkey_dialog()
 
         elif "_save" in changes:

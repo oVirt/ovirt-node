@@ -21,14 +21,10 @@
 """
 Example plugin with TUI
 """
-import logging
-
 import ovirt.node.plugins
 import ovirt.node.ui
 import ovirt.node.exceptions
 import ovirt.node.valid
-
-LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -86,9 +82,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
         """
-        LOGGER.debug("checking %s" % changes)
+        self.logger.debug("checking %s" % changes)
         if "foo.hostname" in changes:
-            LOGGER.debug("Found foo.hostname")
+            self.logger.debug("Found foo.hostname")
 
             if "/" in changes["foo.hostname"]:
                 raise ovirt.node.exceptions.InvalidData("No slash allowed")
@@ -101,20 +97,20 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
             if "dis" in changes["foo.hostname"]:
                 self._widgets["foo.port"].enabled(False)
-                LOGGER.debug("change to dis")
+                self.logger.debug("change to dis")
                 self._widgets["foo.section"].text(changes["foo.hostname"])
                 #raise ovirt.node.plugins.ContentRefreshRequest()
             else:
                 self._widgets["foo.port"].enabled(True)
 
         if "foo.port" in changes:
-            LOGGER.debug("Found foo.port")
+            self.logger.debug("Found foo.port")
 
             if "/" in changes["foo.port"]:
                 raise ovirt.node.exceptions.InvalidData("No slashes allowed")
 
         if "dialog.button" in changes:
-            LOGGER.debug("Request to close the dialog")
+            self.logger.debug("Request to close the dialog")
             self._widgets["dialog.dialog"].close()
 
         return True
@@ -122,7 +118,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
         """
-        LOGGER.debug("saving %s" % effective_changes)
+        self.logger.debug("saving %s" % effective_changes)
         # Look for conflicts etc
         self._model.update(effective_changes)
 
@@ -131,7 +127,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return dialog
 
     def _create_dialog(self, txt):
-        LOGGER.debug("Building dialog")
+        self.logger.debug("Building dialog")
         widgets = [
                 ("dialog.text", ovirt.node.ui.Label(txt)),
                 ("dialog.button", ovirt.node.ui.Button("Close"))

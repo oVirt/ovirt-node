@@ -5,4 +5,4 @@ export PYTHONDONTWRITEBYTECODE=x
 #export PYTHONUNBUFFERED=x
 #export PYTHONDEBUG=
 #export PYTHONVERBOSE=x
-python -t -m ovirt.node.main "$@"
+python -t -m ovirt.node.app.setup "$@"

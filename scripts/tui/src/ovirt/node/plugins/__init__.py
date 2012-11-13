@@ -22,11 +22,9 @@
 This contains much stuff related to plugins
 """
 import pkgutil
-import logging
 
+from ovirt.node import base
 import ovirt.node.exceptions
-
-LOGGER = logging.getLogger(__name__)
 
 
 def __walk_plugins(module):
@@ -48,7 +46,7 @@ def load(basemodule):
     return modules
 
 
-class NodePlugin(object):
+class NodePlugin(base.Base):
     """
     Basically a plugin provides a model which is changed by the UI (using the
     model() method)
@@ -68,6 +66,7 @@ class NodePlugin(object):
     validate_changes = True
 
     def __init__(self, application):
+        super(NodePlugin, self).__init__()
         self.__changes = {}
         self.application = application
 
@@ -182,15 +181,15 @@ class NodePlugin(object):
         Raises:
             An exception on a problem
         """
-        LOGGER.debug("Triggering revalidation of model")
+        self.logger.debug("Triggering revalidation of model")
         is_valid = True
         try:
             model = model or self.model()
             self.on_change(model)
         except NotImplementedError:
-            LOGGER.debug("Plugin has no model")
+            self.logger.debug("Plugin has no model")
         except ovirt.node.exceptions.InvalidData:
-            LOGGER.warning("Plugins model does not pass sematic check: %s" % \
+            self.logger.warning("Plugins model does not pass sematic check: %s" % \
                            model)
             is_valid = False
         finally:
@@ -215,21 +214,21 @@ class NodePlugin(object):
         change is expected to be a dict.
         """
         if type(change) is not dict:
-            LOGGER.warning("Change is not a dict: %s" % change)
+            self.logger.warning("Change is not a dict: %s" % change)
 
-        LOGGER.debug("Passing UI change to callback on_change: %s" % change)
+        self.logger.debug("Passing UI change to callback on_change: %s" % change)
         if self.validate_changes:
             self.validate(change)
         self.on_change(change)
         self.__changes.update(change)
-        LOGGER.debug("Sum of all UI changes up to now: %s" % self.__changes)
+        self.logger.debug("Sum of all UI changes up to now: %s" % self.__changes)
         return True
 
     def _on_ui_save(self):
         """Called when data should be saved
         Calls merge_changes, but only with values that really changed
         """
-        LOGGER.debug("Request to apply model changes")
+        self.logger.debug("Request to apply model changes")
         effective_changes = self.pending_changes() or {}
         successfull_merge = self.on_merge(effective_changes)
         if successfull_merge:
@@ -260,10 +259,10 @@ class NodePlugin(object):
             model = self.model()
             for key, value in self.__changes.items():
                 if key in model and value == model[key]:
-                    LOGGER.debug(("Skipping pseudo-change of '%s', value " + \
+                    self.logger.debug(("Skipping pseudo-change of '%s', value " + \
                                   "(%s) did not change") % (key, value))
                 else:
                     effective_changes[key] = value
         else:
-            LOGGER.debug("No effective changes detected.")
+            self.logger.debug("No effective changes detected.")
         return effective_changes if len(effective_changes) > 0 else None

@@ -90,9 +90,8 @@ class UrwidTUI(ovirt.node.ui.Window):
                ]
 
     def __init__(self, app):
-        LOGGER.info("Creating urwid tui for '%s'" % app)
-        self.app = app
         super(UrwidTUI, self).__init__(app)
+        self.logger.info("Creating urwid tui for '%s'" % app)
 
     def __build_menu(self):
         self.__menu = ovirt.node.ui.widgets.PluginMenu(self._plugins)

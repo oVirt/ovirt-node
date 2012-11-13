@@ -21,13 +21,10 @@
 """
 A plugin illustrating the features of the TUI
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.ui
 
-
-LOGGER = logging.getLogger(__name__)
 
 features = """
 - Resize the terminal window and watch

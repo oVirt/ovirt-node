@@ -23,10 +23,9 @@ Some convenience functions related to virtualization
 """
 
 import os.path
-import logging
 import libvirt
 
-LOGGER = logging.getLogger(__name__)
+from ovirt.node import base
 
 
 def virtualization_hardware_is_available():
@@ -81,8 +80,9 @@ def virtualization_hardware_status():
     return "No virtualization hardware was detected on this system"
 
 
-class LibvirtConnection(object):
+class LibvirtConnection(base.Base):
     def __init__(self, readonly=True):
+        super(LibvirtConnection, self).__init__()
         if readonly:
             self.con = libvirt.openReadOnly(None)
         else:

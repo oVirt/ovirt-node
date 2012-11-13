@@ -23,11 +23,8 @@ Some convenience functions related to security
 """
 
 import os.path
-import logging
 
-import ovirt.node.utils.process as process
-
-LOGGER = logging.getLogger(__name__)
+from . import process
 
 
 def get_ssh_hostkey(variant="rsa"):
@@ -35,7 +32,6 @@ def get_ssh_hostkey(variant="rsa"):
     if not os.path.exists(fn_hostkey):
         raise Exception("SSH hostkey does not yet exist.")
 
-    hostkey = None
     with open(fn_hostkey) as hkf:
         hostkey = hkf.read()
 

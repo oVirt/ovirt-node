@@ -21,18 +21,12 @@
 """
 This contains abstract UI Elements
 """
-import logging
 
-LOGGER = logging.getLogger(__name__)
-
-
-def deprecated(func):
-    LOGGER.warning("Deprecated %s" % func)
-    return lambda *args, **kwargs: func(*args, **kwargs)
+from ovirt.node import base
 
 
 # http://stackoverflow.com/questions/739654/understanding-python-decorators
-class Element(object):
+class Element(base.Base):
     """An abstract UI Element.
     This basically provides signals to communicate between real UI widget and
     the plugins
@@ -43,7 +37,8 @@ class Element(object):
         """Registers all widget signals.
         All signals must be given in self.signals
         """
-        LOGGER.debug("Initializing new %s" % self)
+        super(Element, self).__init__()
+        self.logger.debug("Initializing new %s" % self)
 
     @staticmethod
     def signal_change(func):
@@ -66,7 +61,7 @@ class Element(object):
             self._signal_cbs = {}
         if name not in self._signal_cbs:
             self._signal_cbs[name] = []
-            LOGGER.debug("Registered new signal '%s' for '%s'" % (name, self))
+            self.logger.debug("Registered new signal '%s' for '%s'" % (name, self))
 
     def connect_signal(self, name, cb):
         """Connect an callback to a signal
@@ -82,9 +77,9 @@ class Element(object):
         """
         if self._signal_cbs is None or name not in self._signal_cbs:
             return False
-        LOGGER.debug("Emitting '%s'" % name)
+        self.logger.debug("Emitting '%s'" % name)
         for cb in self._signal_cbs[name]:
-            LOGGER.debug("... %s" % cb)
+            self.logger.debug("... %s" % cb)
             cb(self, userdata)
 
     def set_text(self, value):
@@ -98,9 +93,9 @@ class InputElement(Element):
     """
 
     def __init__(self, name, is_enabled):
+        super(InputElement, self).__init__()
         self.name = name
         self.enabled(is_enabled)
-        super(InputElement, self).__init__()
 
     @Element.signal_change
     def enabled(self, is_enabled=None):
@@ -124,8 +119,8 @@ class ContainerElement(Element):
     children = []
 
     def __init__(self, children):
-        self.children = children
         super(ContainerElement, self).__init__()
+        self.children = children
 
     def children(self, v=None):
         if v:
@@ -144,9 +139,9 @@ class Dialog(Page):
     """
 
     def __init__(self, title, children):
+        super(Dialog, self).__init__(children)
         self.title = title
         self.close(False)
-        super(Dialog, self).__init__(children)
 
     @Element.signal_change
     def close(self, v=True):
@@ -164,8 +159,8 @@ class Label(Element):
     """
 
     def __init__(self, text):
-        self.text(text)
         super(Label, self).__init__()
+        self.text(text)
 
     @Element.signal_change
     def text(self, text=None):
@@ -187,9 +182,8 @@ class KeywordLabel(Label):
     """
 
     def __init__(self, keyword, text=""):
-        super(Label, self).__init__()
+        super(KeywordLabel, self).__init__(text)
         self.keyword = keyword
-        self.text(text)
 
 
 class Entry(InputElement):
@@ -198,9 +192,9 @@ class Entry(InputElement):
     """
 
     def __init__(self, label, enabled=True, align_vertical=False):
+        super(Entry, self).__init__(label, enabled)
         self.label = label
         self.align_vertical = align_vertical
-        super(Entry, self).__init__(label, enabled)
 
 
 class PasswordEntry(Entry):
@@ -229,6 +223,7 @@ class SaveButton(Button):
 
 class Divider(Element):
     def __init__(self, char=u" "):
+        super(Divider, self).__init__()
         self.char = char
 
 
@@ -240,10 +235,10 @@ class Options(Element):
         options:
     """
     def __init__(self, label, options):
+        super(Options, self).__init__()
         self.label = label
         self.options = options
         self.option(options[0])
-        super(Options, self).__init__()
 
     @Element.signal_change
     def option(self, option=None):
@@ -263,6 +258,7 @@ class Checkbox(InputElement):
         state: The initial change
     """
     def __init__(self, label, state=False):
+        super(Checkbox, self).__init__()
         self.label = label
         self.state(state)
 
@@ -281,9 +277,9 @@ class ProgressBar(Element):
         done: The maximum value
     """
     def __init__(self, current=0, done=100):
+        super(ProgressBar, self).__init__()
         self.current(current)
         self.done = done
-        super(ProgressBar, self).__init__()
 
     @Element.signal_change
     def current(self, current=None):
@@ -310,11 +306,11 @@ class Table(InputElement):
     """
 
     def __init__(self, label, header, items, height=5, enabled=True):
+        super(Table, self).__init__(label, enabled)
         self.label = label
         self.header = header
         self.items = items
         self.height = height
-        super(Table, self).__init__(label, enabled)
 
     @Element.signal_change
     def select(self, selected=None):
@@ -328,7 +324,8 @@ class Window(Element):
     """
 
     def __init__(self, app):
-        LOGGER.info("Creating UI for application '%s'" % app)
+        super(Window, self).__init__()
+        self.logger.info("Creating UI for application '%s'" % app)
         self.app = app
 
         self._plugins = {}
@@ -346,7 +343,7 @@ class Window(Element):
         """
         if type(hotkey) is str:
             hotkey = [hotkey]
-        LOGGER.debug("Registering hotkey '%s': %s" % (hotkey, cb))
+        self.logger.debug("Registering hotkey '%s': %s" % (hotkey, cb))
         self._hotkeys[str(hotkey)] = cb
 
     def run(self):

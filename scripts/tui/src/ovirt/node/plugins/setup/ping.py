@@ -21,14 +21,11 @@
 """
 A ping tool page
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
 import ovirt.node.utils.process
-
-LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -89,7 +86,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
         """
-        LOGGER.debug("New (valid) address: %s" % changes)
+        self.logger.debug("New (valid) address: %s" % changes)
         if "ping.address" in changes:
             self._model.update(changes)
         if "ping.count" in changes:
@@ -107,7 +104,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         if "ping.address" in self._model:
             addr = self._model["ping.address"]
             count = self._model["ping.count"]
-            LOGGER.debug("Pinging %s" % addr)
+            self.logger.debug("Pinging %s" % addr)
 
             cmd = "ping"
             if ovirt.node.valid.IPv6Address().validate(addr):

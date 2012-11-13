@@ -21,13 +21,10 @@
 """
 Configure KDump
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
-
-LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -89,7 +86,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def on_change(self, changes):
         """Applies the changes to the plugins model, will do all required logic
         """
-        LOGGER.debug("New (valid) address: %s" % changes)
+        self.logger.debug("New (valid) address: %s" % changes)
         if "kdump.type" in changes:
             net_types = ["kdump.ssh_location", "kdump.nfs_location"]
 
@@ -109,6 +106,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """
 
         if effective_changes:
-            LOGGER.debug("Generating conf according to model and changes")
+            self.logger.debug("Generating conf according to model and changes")
         else:
-            LOGGER.debug("Generating no new conf as there are no changes")
+            self.logger.debug("Generating no new conf as there are no changes")

@@ -26,17 +26,17 @@ Use the .config package for stuff related to configuration files.
 And use the model.py module for oVirt Node's defaults file.
 """
 
-import logging
 import hashlib
 import augeas as _augeas
 
-LOGGER = logging.getLogger(__name__)
+from ovirt.node import base
 
 
-class AugeasWrapper(object):
+class AugeasWrapper(base.Base):
     _aug = _augeas.Augeas()
 
     def __init__(self):
+        super(AugeasWrapper, self).__init__()
 #        self._aug = _augeas.Augeas() # Is broken
         self._aug.set("/augeas/save/copy_if_rename_fails", "")
 

@@ -39,6 +39,8 @@ import glob
 
 import ovirt.node.utils
 import ovirt.node.config
+from ovirt.node import base
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +101,7 @@ def map_and_update_defaults(func):
     return wrapper
 
 
-class CentralNodeConfiguration(object):
+class CentralNodeConfiguration(base.Base):
     def __init__(self, keys):
         assert type(keys) is tuple, "Keys need to have an order, " + \
                                     "therefor a tuple expected"
@@ -175,12 +177,12 @@ class Nameservers(CentralNodeConfiguration):
         """
         ovirt_config = defaults()
         if "OVIRT_DNS" not in ovirt_config:
-            LOGGER.debug("No DNS server entry in default config")
+            self.logger.debug("No DNS server entry in default config")
             return
 
         servers = ovirt_config["OVIRT_DNS"]
         if servers is None or servers == "":
-            LOGGER.debug("No DNS servers configured in default config")
+            self.logger.debug("No DNS servers configured in default config")
 
         servers = servers.split(",")
 

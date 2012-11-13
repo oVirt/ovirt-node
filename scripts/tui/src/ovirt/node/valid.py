@@ -22,18 +22,13 @@
 A module with several validators for common user inputs.
 """
 import re
-import logging
 import socket
 
-import ovirt.node.plugins
-import ovirt.node.exceptions
+from . import base
+from . import exceptions
 
 
-logging.basicConfig(level=logging.DEBUG)
-LOGGER = logging.getLogger(__name__)
-
-
-class Validator(object):
+class Validator(base.Base):
     """This class is used to validate user inputs
     Basically an exception is raised if an invalid value was given. The value
     is validated using the self.validate(value) method raises an exception.
@@ -67,7 +62,7 @@ class Validator(object):
 
     def raise_exception(self):
         msg = self.__exception_msg.format(description=self.description)
-        raise ovirt.node.exceptions.InvalidData(msg)
+        raise exceptions.InvalidData(msg)
 
     def __or__(self, other):
         """This allows to combin validators using |

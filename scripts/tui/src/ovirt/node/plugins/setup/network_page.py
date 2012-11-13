@@ -21,15 +21,12 @@
 """
 Network plugin
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
 import ovirt.node.utils.network
 import ovirt.node.config.network
-
-LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -129,7 +126,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def _build_nic_details_dialog(self):
         # Populate model with nic specific informations
         iface = self._model["nics"]
-        LOGGER.debug("Getting informations for NIC details page")
+        self.logger.debug("Getting informations for NIC details page")
         live = ovirt.node.utils.network.node_nics()[iface]
 
         self._model.update({
@@ -209,15 +206,15 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         changes = self.pending_changes(False)
         effective_model = dict(self._model)
         effective_model.update(effective_changes)
-        LOGGER.info("effm %s" % effective_model)
-        LOGGER.info("effc %s" % effective_changes)
-        LOGGER.info("allc %s" % changes)
+        self.logger.info("effm %s" % effective_model)
+        self.logger.info("effc %s" % effective_changes)
+        self.logger.info("allc %s" % changes)
 
         if "dns[0]" in effective_changes or \
            "dns[1]" in effective_changes:
             new_servers = [v for k, v in effective_model \
                              if k.startswith("dns[")]
-            LOGGER.info("Setting new nameservers: %s" % new_servers)
+            self.logger.info("Setting new nameservers: %s" % new_servers)
             model = ovirt.node.config.defaults.Nameservers()
             model.configure(new_servers)
 
@@ -225,11 +222,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
            "ntp[1]" in effective_changes:
             new_servers = [v for k, v in effective_model \
                              if k.startswith("ntp[")]
-            LOGGER.info("Setting new timeservers: %s" % new_servers)
+            self.logger.info("Setting new timeservers: %s" % new_servers)
             model = ovirt.node.config.defaults.Timeservers()
             model.configure(new_servers)
 
         if "nics" in changes:
             iface = changes["nics"]
-            LOGGER.debug("Opening NIC Details dialog for '%s'" % iface)
+            self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
             return self._build_nic_details_dialog()

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# support_page.py - Copyright (C) 2012 Red Hat, Inc.
+# base.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,34 +19,20 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-A plugin for a support page
+Base for all classes
 """
 
-import ovirt.node.plugins
-import ovirt.node.ui
+import logging
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
-    def __init__(self, application):
-        # Register F8: Display this plugin when F( is pressed
-        application.ui.register_hotkey(["f8"],
-                                lambda: application.ui.display_plugin(self))
+class Base(object):
+    """Base class for all objects."""
 
-    def name(self):
-        return "Support"
+    @property
+    def logger(self):
+        """Logger."""
+        return self._logger
 
-    rank = lambda self: 999
-
-    has_ui = lambda self: False
-
-    def ui_content(self):
-        widgets = [
-            ("features.info", ovirt.node.ui.Label("FIXME Support info"))
-        ]
-
-        page = ovirt.node.ui.Page(widgets)
-        page.has_save_button = False
-        return page
-
-    def model(self):
-        return {}
+    def __init__(self):
+        """Contructor."""
+        self._logger = logging.getLogger(self.__module__)

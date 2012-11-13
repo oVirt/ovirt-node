@@ -21,14 +21,10 @@
 """
 Configure Logging
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
-
-LOGGER = logging.getLogger(__name__)
-
 
 class Plugin(ovirt.node.plugins.NodePlugin):
     _model = None

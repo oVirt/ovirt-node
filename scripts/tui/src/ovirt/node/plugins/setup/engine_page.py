@@ -21,14 +21,11 @@
 """
 Configure Engine
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
 import ovirt.node.utils
-
-LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):

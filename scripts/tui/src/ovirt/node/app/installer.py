@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# support_page.py - Copyright (C) 2012 Red Hat, Inc.
+# ovirt-config-setup.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,34 +19,13 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-A plugin for a support page
+Create an installer application instance an start it.
 """
 
-import ovirt.node.plugins
-import ovirt.node.ui
+import ovirt.node.app
+import ovirt.node.plugins.installer
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
-    def __init__(self, application):
-        # Register F8: Display this plugin when F( is pressed
-        application.ui.register_hotkey(["f8"],
-                                lambda: application.ui.display_plugin(self))
-
-    def name(self):
-        return "Support"
-
-    rank = lambda self: 999
-
-    has_ui = lambda self: False
-
-    def ui_content(self):
-        widgets = [
-            ("features.info", ovirt.node.ui.Label("FIXME Support info"))
-        ]
-
-        page = ovirt.node.ui.Page(widgets)
-        page.has_save_button = False
-        return page
-
-    def model(self):
-        return {}
+if __name__ == '__main__':
+    app = ovirt.node.app.Application(ovirt.node.plugins.installer)
+    app.run()

@@ -21,12 +21,9 @@
 """
 Configure Keyboard Layout
 """
-import logging
 
 import ovirt.node.plugins
 import ovirt.node.ui
-
-LOGGER = logging.getLogger(__name__)
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
