@@ -42,14 +42,15 @@ class Application(object):
 
     ui = None
 
-    def __init__(self, ui_backend="urwid"):
+    def __init__(self, plugin_base, ui_backend="urwid"):
         ui_backend_class = {
             "urwid": ovirt.node.ui.tui.UrwidTUI
         }[ui_backend]
         self.ui = ui_backend_class(self)
+        self.plugin_base = plugin_base
 
     def __load_plugins(self):
-        self.plugins = [m.Plugin(self) for m in ovirt.node.plugins.load_all()]
+        self.plugins = [m.Plugin(self) for m in ovirt.node.plugins.load(self.plugin_base)]
 
         for plugin in self.plugins:
             LOGGER.debug("Loading plugin %s" % plugin)

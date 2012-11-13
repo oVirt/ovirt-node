@@ -24,27 +24,25 @@ This contains much stuff related to plugins
 import pkgutil
 import logging
 
-import ovirt.node.plugins
 import ovirt.node.exceptions
 
 LOGGER = logging.getLogger(__name__)
 
 
-def __walk_plugins():
+def __walk_plugins(module):
     """Used to find all plugins
     """
-    package = ovirt.node.plugins
-    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
+    for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
         yield (importer, modname, ispkg)
 
 
-def load_all():
+def load(basemodule):
     """Load all plugins
     """
     modules = []
-    for importer, modname, ispkg in __walk_plugins():
+    for importer, modname, ispkg in __walk_plugins(basemodule):
         #print("Found submodule %s (is a package: %s)" % (modname, ispkg))
-        module = __import__("ovirt.node.plugins." + modname, fromlist="dummy")
+        module = __import__(basemodule.__name__ + "." + modname, fromlist="dummy")
         #print("Imported", module)
         modules += [module]
     return modules

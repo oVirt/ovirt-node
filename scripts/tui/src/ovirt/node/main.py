@@ -19,12 +19,13 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-Create an application instance an start it.
+Create an setup application instance an start it.
 """
 
 import ovirt.node.app
+import ovirt.node.plugins.setup
 
 
 if __name__ == '__main__':
-    app = ovirt.node.app.Application()
+    app = ovirt.node.app.Application(ovirt.node.plugins.setup)
     app.run()

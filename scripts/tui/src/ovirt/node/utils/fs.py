@@ -31,6 +31,18 @@ from ovirt.node.utils.process import system
 LOGGER = logging.getLogger(__name__)
 
 
+def get_contents(src):
+    """Read the contents of a file
+
+    Args:
+        src: The file to be read
+    Returns:
+        The contents of src
+    """
+    with open(src, "r") as f:
+        contents = f.read()
+    return contents
+
 def copy_contents(src, dst):
     assert all([os.path.isfile(f) for f in [src, dst]]), \
            "Source and destination need to exist"

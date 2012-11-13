@@ -29,6 +29,9 @@ There are classes for all components which can be configured through that
 central configuration file.
 Each class (for a component) can have a configure and apply_config method. Look
 at the CentralNodeConfiguration for more informations.
+
+Each class should implement a configure method, mainly to define all the
+required arguments (or keys).
 """
 
 import logging
@@ -138,12 +141,12 @@ class Network(CentralNodeConfiguration):
     - OVIRT_VLAN
     - OVIRT_IPV6
     """
-    keys = ("BOOTIF",
-            "BOOTPROTO",
-            "IP_ADDRESS",
-            "IP_NETMASK",
-            "IP_GATEWAY",
-            "VLAN")
+    keys = ("OVIRT_BOOTIF",
+            "OVIRT_BOOTPROTO",
+            "OVIRT_IP_ADDRESS",
+            "OVIRT_IP_NETMASK",
+            "OVIRT_IP_GATEWAY",
+            "OVIRT_VLAN")
 
     @map_and_update_defaults
     def configure(self, iface, bootproto, ipaddr=None, netmask=None, gw=None,
@@ -152,7 +155,7 @@ class Network(CentralNodeConfiguration):
 
 
 class Nameservers(CentralNodeConfiguration):
-    keys = ("DNS")
+    keys = ("OVIRT_DNS")
 
     @map_and_update_defaults
     def configure(self, servers):
@@ -205,7 +208,7 @@ class Nameservers(CentralNodeConfiguration):
 
 
 class Timeservers(CentralNodeConfiguration):
-    keys = ("NTP")
+    keys = ("OVIRT_NTP")
 
     @map_and_update_defaults
     def configure(self, servers):
@@ -213,8 +216,8 @@ class Timeservers(CentralNodeConfiguration):
 
 
 class Syslog(CentralNodeConfiguration):
-    keys = ("SYSLOG_SERVER",
-            "SYSLOG_PORT")
+    keys = ("OVIRT_SYSLOG_SERVER",
+            "OVIRT_SYSLOG_PORT")
 
     @map_and_update_defaults
     def configure(self, server, port):
@@ -222,8 +225,8 @@ class Syslog(CentralNodeConfiguration):
 
 
 class Collectd(CentralNodeConfiguration):
-    keys = ("COLLECTD_SERVER",
-            "COLLECTD_PORT")
+    keys = ("OVIRT_COLLECTD_SERVER",
+            "OVIRT_COLLECTD_PORT")
 
     @map_and_update_defaults
     def configure(self, server, port):
@@ -231,17 +234,17 @@ class Collectd(CentralNodeConfiguration):
 
 
 class RHN(CentralNodeConfiguration):
-    keys = ("RHN_TYPE",
-            "RHN_URL",
-            "RHN_CA_CERT",
-            "RHN_USERNAME",
-            "RHN_PASSWORD",
-            "RHN_PROFILE",
-            "RHN_ACTIVATIONKEY",
-            "RHN_ORG",
-            "RHN_PROXY",
-            "RHN_PROXYUSER",
-            "RHN_PROXYPASSWORD")
+    keys = ("OVIRT_RHN_TYPE",
+            "OVIRT_RHN_URL",
+            "OVIRT_RHN_CA_CERT",
+            "OVIRT_RHN_USERNAME",
+            "OVIRT_RHN_PASSWORD",
+            "OVIRT_RHN_PROFILE",
+            "OVIRT_RHN_ACTIVATIONKEY",
+            "OVIRT_RHN_ORG",
+            "OVIRT_RHN_PROXY",
+            "OVIRT_RHN_PROXYUSER",
+            "OVIRT_RHN_PROXYPASSWORD")
 
     @map_and_update_defaults
     def configure(self, rhntype, url, ca_cert, username, password, profile,
@@ -250,8 +253,8 @@ class RHN(CentralNodeConfiguration):
 
 
 class KDump(CentralNodeConfiguration):
-    keys = ("KDUMP_NFS",
-            "KDUMP_SSH")
+    keys = ("OVIRT_KDUMP_NFS",
+            "OVIRT_KDUMP_SSH")
 
     @map_and_update_defaults
     def configure(self, nfs, ssh):
@@ -259,10 +262,10 @@ class KDump(CentralNodeConfiguration):
 
 
 class iSCSI(CentralNodeConfiguration):
-    keys = ("ISCSI_NODE_NAME",
-            "ISCSI_TARGET_NAME",
-            "ISCSI_TARGET_IP",
-            "ISCSI_TARGET_PORT")
+    keys = ("OVIRT_ISCSI_NODE_NAME",
+            "OVIRT_ISCSI_TARGET_NAME",
+            "OVIRT_ISCSI_TARGET_IP",
+            "OVIRT_ISCSI_TARGET_PORT")
 
     @map_and_update_defaults
     def configure(self, name, target_name, target_host, target_port):
@@ -270,7 +273,7 @@ class iSCSI(CentralNodeConfiguration):
 
 
 class SNMP(CentralNodeConfiguration):
-    keys = ("SNMP_PASSWORD")
+    keys = ("OVIRT_SNMP_PASSWORD")
 
     @map_and_update_defaults
     def configure(self, password):
@@ -278,8 +281,8 @@ class SNMP(CentralNodeConfiguration):
 
 
 class Netconsole(CentralNodeConfiguration):
-    keys = ("NETCONSOLE_SERVER",
-            "NETCONSOLE_PORT")
+    keys = ("OVIRT_NETCONSOLE_SERVER",
+            "OVIRT_NETCONSOLE_PORT")
 
     @map_and_update_defaults
     def configure(self, server, port):
@@ -287,7 +290,7 @@ class Netconsole(CentralNodeConfiguration):
 
 
 class CIM(CentralNodeConfiguration):
-    keys = ("CIM_ENABLED")
+    keys = ("OVIRT_CIM_ENABLED")
 
     @map_and_update_defaults
     def configure(self, enabled):

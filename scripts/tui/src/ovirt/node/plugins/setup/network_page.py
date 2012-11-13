@@ -52,6 +52,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return 10
 
     def model(self):
+        # Pull name-/timeservers from config files (not defaults)
         nameservers = ovirt.node.config.network.nameservers()
         for idx, nameserver in enumerate(nameservers):
             self._model["dns[%d]" % idx] = nameserver

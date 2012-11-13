@@ -29,6 +29,7 @@ import re
 import glob
 
 import ovirt.node.utils.process as process
+import ovirt.node.utils.fs
 import ovirt.node.config.network
 
 LOGGER = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ LOGGER = logging.getLogger(__name__)
 #
 _nm_client = None
 try:
-    from gi.repository import NetworkManager, NMClient
+    from gi.repository import NetworkManager, NMClient      # @UnresolvedImport
     import socket
     import struct
     NetworkManager
@@ -116,8 +117,8 @@ def iface_information(iface, with_slow=True):
 
     # Hwaddr
     hwaddr = "unkown"
-    with open("/sys/class/net/%s/address" % iface) as macfile:
-        hwaddr = macfile.read().strip()
+    hwfilename = "/sys/class/net/%s/address" % iface
+    hwaddr = ovirt.node.utils.fs.get_contents(hwfilename).strip()
     info["hwaddr"] = hwaddr
 
     # Check bridge
