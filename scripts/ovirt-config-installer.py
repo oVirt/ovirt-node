@@ -320,14 +320,14 @@ class NodeInstallScreen:
         except PAM.error, (resp, code):
             logger.error(resp)
             self.current_password_fail = 1
-            self.pw_msg.setText("Current Password Invalid\n\n\n\n")
+            self.pw_msg.setText("Current Password Invalid\n\n\n\n\n\n")
             return False
         except:
             logger.error("Internal error")
             return False
         else:
             self.current_password_fail = 0
-            self.pw_msg.setText(" \n\n\n\n")
+            self.pw_msg.setText(" \n\n\n\n\n\n")
             return True
 
     def other_device_root_callback(self):

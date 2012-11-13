@@ -1272,7 +1272,7 @@ def password_check(password_1, password_2, min_length=1):
     >>> (r,  "Not Match" in msg)
     (1, True)
     '''
-    num_o_lines_to_expand = 6
+    num_o_lines_to_expand = 7
     accepted = False
     message = ""
 
