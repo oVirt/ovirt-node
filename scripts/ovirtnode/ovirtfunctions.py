@@ -230,10 +230,13 @@ def check_int(var):
 # for storage - OVIRT_INIT, local disk to use
 #       if ovirt_vol is not specified, default volume sizes are set
 def is_auto_install():
-    if OVIRT_VARS.has_key("OVIRT_BOOTIF") and OVIRT_VARS.has_key("OVIRT_INIT"):
-        return True
-    else:
-        return False
+    with open("/proc/cmdline") as cmdline:
+        for line in cmdline.readlines():
+            if "BOOTIF" in line:
+                if "storage_init" in line or "ovirt_init" in line:
+                    return True
+            else:
+                return False
 
 # return 0 if this is an upgrade
 # return 1 otherwise
@@ -925,7 +928,7 @@ def finish_install():
     hookdir="/etc/ovirt-config-boot.d"
     for hook in os.listdir(hookdir):
         if not is_auto_install():
-            system_closefds(os.path.join(hookdir,hook))
+            system_closefds(os.path.join(hookdir,hook) + " &> /dev/null")
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
