@@ -659,6 +659,20 @@ class Storage:
         _functions.unmount_config("/etc/default/ovirt")
         if not self.check_partition_sizes():
             return False
+
+        # Check for still remaining HostVGs this can be the case when
+        # Node was installed on a disk not given in storage_init
+        # rhbz#872114
+        existing_vgs = str(_functions.passthrough("vgs"))
+        for vg in existing_vgs.split("\n"):
+            vg = vg.strip()
+            if "HostVG" in str(vg):
+                logger.error("An existing installation was found or not " +
+                     "all VGs could be removed.  " +
+                     "Please manually cleanup the storage using " +
+                     "standard disk tools.")
+                return False
+
         logger.info("Removing old LVM partitions")
         # HostVG must not exist at this point
         # we wipe only foreign LVM here
