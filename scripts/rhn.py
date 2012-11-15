@@ -99,12 +99,8 @@ def run_rhnreg(serverurl="", cacert="", activationkey="", username="",
 
     logger.info("Registering to RHN account.....")
 
-    unmount_config("/etc/sysconfig/rhn/systemid")
-    unmount_config("/etc/sysconfig/rhn/up2date")
-    # regenerate up2date config
-    if os.path.exists("/etc/sysconfig/rhn/up2date"):
-        os.unlink("/etc/sysconfig/rhn/up2date")
-
+    remove_config("/etc/sysconfig/rhn/systemid")
+    remove_config("/etc/sysconfig/rhn/up2date")
     logged_args = list(args)
     remove_values_from_args = ["--password", "--proxyPassword"]
     for idx, arg in enumerate(logged_args):
