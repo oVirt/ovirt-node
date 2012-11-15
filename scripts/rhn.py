@@ -450,6 +450,7 @@ class Plugin(PluginBase):
         elements.setField(login_grid, 0, 4, anchorLeft=1)
         profile_grid = Grid(2, 2)
         self.profilename = Entry(30, "")
+        self.profilename.setCallback(self.profilename_callback)
         profile_grid.setField(Label("Profile Name (optional): "), 0, 0,
                                     anchorLeft=1)
         profile_grid.setField(self.profilename, 1, 0, anchorLeft=1)
@@ -626,6 +627,21 @@ class Plugin(PluginBase):
                                msg, buttons=['Ok'])
             self.ncs.reset_screen_colors()
             return False
+
+    def profilename_callback(self):
+        if self.profilename.value() is None:
+            return True
+        length = len(self.profilename.value())
+        if (length > 0 and length < 3):
+            self.ncs._create_warn_screen()
+            self.ncs.screen.setColor("BUTTON", "black", "red")
+            self.ncs.screen.setColor("ACTBUTTON", "blue", "white")
+            ButtonChoiceWindow(self.ncs.screen, "Configuration Check",
+                               "RHN Profile Name must be at least 3 characters",
+                               buttons=['Ok'])
+            self.ncs.reset_screen_colors()
+            self.ncs.gridform.draw()
+            self.ncs._set_title()
 
     def rhn_url_callback(self):
         # TODO URL validation
