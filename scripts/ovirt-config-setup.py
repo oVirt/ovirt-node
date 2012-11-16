@@ -2235,6 +2235,7 @@ if __name__ == "__main__":
             print ("Unable to run setup manually, Run \"exit\" to return " +
                   "to setup")
         else:
+            sys.setrecursionlimit(50000)
             tty = get_ttyname()
             lockfile = "/tmp/ovirt-setup.%s" % tty
             f = open(lockfile, "w").close()
