@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# kdump.py - Copyright (C) 2012 Red Hat, Inc.
+# kdump_page.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify

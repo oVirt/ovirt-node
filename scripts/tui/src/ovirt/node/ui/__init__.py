@@ -61,7 +61,8 @@ class Element(base.Base):
             self._signal_cbs = {}
         if name not in self._signal_cbs:
             self._signal_cbs[name] = []
-            self.logger.debug("Registered new signal '%s' for '%s'" % (name, self))
+            self.logger.debug("Registered new signal '%s' for '%s'" % (name,
+                                                                       self))
 
     def connect_signal(self, name, cb):
         """Connect an callback to a signal
@@ -257,8 +258,8 @@ class Checkbox(InputElement):
         label: Caption of this checkbox
         state: The initial change
     """
-    def __init__(self, label, state=False):
-        super(Checkbox, self).__init__()
+    def __init__(self, label, state=False, is_enabled=True):
+        super(Checkbox, self).__init__(label, is_enabled)
         self.label = label
         self.state(state)
 

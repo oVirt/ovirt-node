@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# model.py - Copyright (C) 2012 Red Hat, Inc.
+# defaults.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,9 +37,8 @@ required arguments (or keys).
 import logging
 import glob
 
-import ovirt.node.utils
 import ovirt.node.config
-from ovirt.node import base
+from ovirt.node import base, exceptions, valid, utils
 
 
 LOGGER = logging.getLogger(__name__)
@@ -47,93 +46,187 @@ LOGGER = logging.getLogger(__name__)
 OVIRT_NODE_DEFAULTS_FILENAME = "/etc/defaults/ovirt"
 
 
-def defaults(new_dict=None, filename=OVIRT_NODE_DEFAULTS_FILENAME,
-             remove_empty=False):
-    """Reads /etc/defaults/ovirt and creates a dictionary
-    The dict will contain all OVIRT_* entries of the defaults file.
+class AugeasProvider(base.Base):
+    def __init__(self, filename):
+        super(AugeasProvider, self).__init__()
+        self.filename = filename
 
-    Args:
-        new_dict: New values to be used for setting the defaults
-        filename: The filename to read the defaults from
-        remove_empty: Remove a key from defaults file, if the new value is None
-    Returns:
-        A dict
+    def update(self, new_dict, remove_empty):
+        aug = utils.AugeasWrapper()
+        basepath = "/files/%s/" % self.filename.strip("/")
+        if new_dict:
+            # If values are given, update the file
+            LOGGER.debug("Updating oVirtNode defaults file '%s': %s %s" % (
+                                                                self.filename,
+                                                                new_dict,
+                                                                basepath))
+            aug.set_many(new_dict, basepath)
+
+            if remove_empty:
+                paths_to_be_removed = [p for p, v in new_dict.items()
+                                       if v is None]
+                aug.remove_many(paths_to_be_removed, basepath)
+
+    def get_dict(self):
+        aug = utils.AugeasWrapper()
+        basepath = "/files/%s/" % self.filename.strip("/")
+
+        # Retrieve all entries of the default file and return their values
+        paths = aug.match(basepath + "*")
+        return aug.get_many(paths, strip_basepath=basepath)
+
+
+class SimpleProvider(base.Base):
+    """Can write our simple configuration file
+
+    >>> fn = "/tmp/cfg_dummy.simple"
+    >>> open(fn, "w").close()
+    >>> cfg = {
+    ... "IP_ADDR": "127.0.0.1",
+    ... "NETMASK": "255.255.255.0",
+    ... }
+    >>> p = SimpleProvider(fn)
+    >>> p.get_dict()
+    {}
+    >>> p.update(cfg, True)
+    >>> p.get_dict() == cfg
+    True
     """
+    def __init__(self, filename):
+        super(SimpleProvider, self).__init__()
+        self.filename = filename
+        self.logger.debug("Using %s" % self.filename)
 
-    aug = ovirt.node.utils.AugeasWrapper()
-    basepath = "/files/%s/" % filename.strip("/")
-    if new_dict:
-        # If values are given, update the file
-        LOGGER.debug("Updating oVirtNode defaults file '%s': %s %s" % (
-                                                                    filename,
-                                                                    new_dict,
-                                                                    basepath))
-        aug.set_many(new_dict, basepath)
+    def update(self, new_dict, remove_empty):
+        cfg = self.get_dict()
+        cfg.update(new_dict)
 
-        if remove_empty:
-            paths_to_be_removed = [p for p, v in new_dict.items() if v is None]
-            aug.remove_many(paths_to_be_removed, basepath)
+        for key, value in cfg.items():
+            if remove_empty and value is None:
+                del cfg[key]
+            assert type(value) in [str, unicode] or value is None
+        self._write(cfg)
 
-    # Retrieve all entries of the default file and return their values
-    paths = aug.match(basepath + "*")
-    return aug.get_many(paths, strip_basepath=basepath)
+    def get_dict(self):
+        cfg = {}
+        with open(self.filename) as source:
+            for line in source:
+                if line.startswith("#"):
+                    continue
+                key, value = line.split("=", 1)
+                cfg[key] = value.strip("\"' \n")
+        return cfg
+
+    def _write(self, cfg):
+        # FIXME make atomic
+        contents = []
+        # Sort the dict, looks nicer
+        for key in sorted(cfg.iterkeys()):
+            contents.append("%s='%s'" % (key, cfg[key]))
+        with open(self.filename, "w+") as dst:
+            dst.write("\n".join(contents))
 
 
-def map_and_update_defaults(func):
-    """
-    >>> class Foo(object):
-    ...     keys = None
-    ...     def _map_config_and_update_defaults(self, *args, **kwargs):
-    ...         return kwargs
-    ...     @map_and_update_defaults
-    ...     def meth(self, a, b):
-    ...         assert type(a) is int
-    ...         assert type(b) is int
-    >>> foo = Foo()
-    >>> foo.keys = ("OVIRT_A", "OVIRT_B")
-    >>> foo.meth(1, 2)
-    {'OVIRT_A': 1, 'OVIRT_B': 2}
-    """
-    def wrapper(self, *args, **kwargs):
-        new_dict = dict(zip(self.keys, args))
-        func(self, *args, **kwargs)
-        return self._map_config_and_update_defaults(**new_dict)
-    return wrapper
+class ConfigFile(base.Base):
+    def __init__(self, filename=None, provider_class=None):
+        super(ConfigFile, self).__init__()
+        filename = filename or OVIRT_NODE_DEFAULTS_FILENAME
+        provider_class = provider_class or SimpleProvider
+        self.provider = provider_class(filename)
+
+    def update(self, new_dict, remove_empty=False):
+        """Reads /etc/defaults/ovirt and creates a dictionary
+        The dict will contain all OVIRT_* entries of the defaults file.
+
+        Args:
+            new_dict: New values to be used for setting the defaults
+            filename: The filename to read the defaults from
+            remove_empty: Remove a key from defaults file, if the new value
+                          is None
+        Returns:
+            A dict
+        """
+        self.logger.debug("Updating defaults: %s" % new_dict)
+        self.logger.debug("Removing empty entries? %s" % remove_empty)
+        self.provider.update(new_dict, remove_empty)
+
+    def get_dict(self):
+        return self.provider.get_dict()
 
 
 class CentralNodeConfiguration(base.Base):
-    def __init__(self, keys):
-        assert type(keys) is tuple, "Keys need to have an order, " + \
-                                    "therefor a tuple expected"
-        self.keys = keys
+    def __init__(self, cfgfile=None):
+        super(CentralNodeConfiguration, self).__init__()
+        self.defaults = cfgfile or ConfigFile()
 
-    def configure(self, *args, **kwargs):
+    def update(self, *args, **kwargs):
         """This function set's the correct entries in the defaults file for
         that specififc subclass.
         Is expected to call _map_config_and_update_defaults()
         """
         raise NotImplementedError
 
-    def _map_config_and_update_defaults(self, *args, **kwargs):
-        assert len(args) == 0
-        assert (set(self.keys) ^ set(kwargs.keys())) == set()
-        new_dict = {k.upper(): v for k, v in kwargs.items()}
-        defaults(new_dict, remove_empty=True)
-
-    def apply_config(self, *args, **kwargs):
-        """This method updates the to this subclass specififc configuration
+    def apply(self, *args, **kwargs):
+        """This method updates the to this subclass specific configuration
         files according to the config keys set with configure.
         """
         raise NotImplementedError
 
-    def get_config(self):
+    def retrieve(self):
         """Returns the config keys of the current component
         """
-        items = {}
-        for key, value in defaults().items():
-            if key in self.keys:
-                items[key] = value
-        return items
+        func = self.update.wrapped_func
+        varnames = func.func_code.co_varnames[1:]
+        values = ()
+        cfg = self.defaults.get_dict()
+        for key in self.keys:
+            value = cfg[key] if key in cfg else ""
+            values += (value,)
+        assert len(varnames) == len(values)
+        return zip(varnames, values)
+
+    def clear(self):
+        """Remove the configuration for this item
+        """
+        cfg = self.defaults.get_dict()
+        to_be_deleted = {k: None for k in self.keys}
+        cfg.update(to_be_deleted)
+        self.defaults.update(cfg, remove_empty=True)
+
+    def _map_config_and_update_defaults(self, *args, **kwargs):
+        assert len(args) == 0
+        assert (set(self.keys) ^ set(kwargs.keys())) == set()
+        new_dict = {k.upper(): v for k, v in kwargs.items()}
+        self.defaults.update(new_dict, remove_empty=True)
+
+    @staticmethod
+    def map_and_update_defaults_decorator(func):
+        """
+        >>> class Foo(object):
+        ...     keys = None
+        ...     def _map_config_and_update_defaults(self, *args, **kwargs):
+        ...         return kwargs
+        ...     @CentralNodeConfiguration.map_and_update_defaults_decorator
+        ...     def meth(self, a, b, c):
+        ...         assert type(a) is int
+        ...         assert type(b) is int
+        ...         return {"OVIRT_C": "c%s" % c}
+        >>> foo = Foo()
+        >>> foo.keys = ("OVIRT_A", "OVIRT_B", "OVIRT_C")
+        >>> foo.meth(1, 2, 3)
+        {'OVIRT_A': 1, 'OVIRT_B': 2, 'OVIRT_C': 'c3'}
+        """
+        def wrapper(self, *args, **kwargs):
+            if len(self.keys) != len(args):
+                raise Exception("There are not enough arguments given for " +
+                                "%s of %s" % (func, self))
+            new_cfg = dict(zip(self.keys, args))
+            custom_cfg = func(self, *args, **kwargs) or {}
+            assert type(custom_cfg) is dict, "%s must return a dict" % func
+            new_cfg.update(custom_cfg)
+            return self._map_config_and_update_defaults(**new_cfg)
+        wrapper.wrapped_func = func
+        return wrapper
 
 
 class Network(CentralNodeConfiguration):
@@ -142,29 +235,72 @@ class Network(CentralNodeConfiguration):
     - OVIRT_IP_ADDRESS, OVIRT_IP_NETMASK, OVIRT_IP_GATEWAY
     - OVIRT_VLAN
     - OVIRT_IPV6
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = Network(cfgfile)
+    >>> n.update("eth0", "static", "10.0.0.1", "255.0.0.0", "10.0.0.255",
+    ...          "20")
+    >>> data = n.retrieve()
+    >>> data[:3]
+    [('iface', 'eth0'), ('bootproto', 'static'), ('ipaddr', '10.0.0.1')]
+    >>> data [3:]
+    [('netmask', '255.0.0.0'), ('gw', '10.0.0.255'), ('vlanid', '20')]
+
+    >>> n.clear()
+    >>> data = n.retrieve()
+    >>> data [:3]
+    [('iface', None), ('bootproto', None), ('ipaddr', None)]
+    >>> data [3:]
+    [('netmask', None), ('gw', None), ('vlanid', None)]
     """
     keys = ("OVIRT_BOOTIF",
             "OVIRT_BOOTPROTO",
             "OVIRT_IP_ADDRESS",
-            "OVIRT_IP_NETMASK",
-            "OVIRT_IP_GATEWAY",
+            "OVIRT_NETMASK",
+            "OVIRT_GATEWAY",
             "OVIRT_VLAN")
 
-    @map_and_update_defaults
-    def configure(self, iface, bootproto, ipaddr=None, netmask=None, gw=None,
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, iface, bootproto, ipaddr=None, netmask=None, gw=None,
                   vlanid=None):
-        pass
+        if bootproto not in ["static", "none", "dhcp"]:
+            raise exceptions.InvalidData("Unknown bootprotocol: %s" %
+                                         bootproto)
+        (valid.IPv4Address() | valid.Empty())(ipaddr)
+        (valid.IPv4Address() | valid.Empty())(netmask)
+        (valid.IPv4Address() | valid.Empty())(gw)
 
 
 class Nameservers(CentralNodeConfiguration):
-    keys = ("OVIRT_DNS")
+    """Configure nameservers
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> servers = ["10.0.0.2", "10.0.0.3"]
+    >>> n = Nameservers(cfgfile)
+    >>> n.update(servers)
+    >>> data = n.retrieve()
+    >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
+    True
+    """
+    keys = ("OVIRT_DNS",)
 
-    @map_and_update_defaults
-    def configure(self, servers):
-        pass
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, servers):
+        assert type(servers) is list
+        servers = filter(lambda i: i.strip() not in ["", None], servers)
+        map(valid.IPv4Address(), servers)
+        return {
+                "OVIRT_DNS": ",".join(servers)
+                }
 
+    def retrieve(self):
+        cfg = dict(CentralNodeConfiguration.retrieve(self))
+        return {
+                "servers": cfg["servers"].split(",")
+                }
 
-    def apply_config(self):
+    def apply(self):
         """Derives the nameserver config from OVIRT_DNS
 
         1. Parse nameservers from defaults
@@ -175,7 +311,7 @@ class Nameservers(CentralNodeConfiguration):
         Args:
             servers: List of servers (str)
         """
-        ovirt_config = defaults()
+        ovirt_config = self.defaults.get_dict()
         if "OVIRT_DNS" not in ovirt_config:
             self.logger.debug("No DNS server entry in default config")
             return
@@ -186,7 +322,7 @@ class Nameservers(CentralNodeConfiguration):
 
         servers = servers.split(",")
 
-        aug = ovirt.node.utils.AugeasWrapper()
+        aug = utils.AugeasWrapper()
         # Write resolv.conf any way, sometimes without servers
         comment = ("Please make changes through the TUI. " + \
                    "Manual edits to this file will be " + \
@@ -206,33 +342,79 @@ class Nameservers(CentralNodeConfiguration):
             else:
                 aug.remove(path)
 
-        ovirt.node.utils.fs.persist_config("/etc/resolv.conf")
+        utils.fs.persist_config("/etc/resolv.conf")
 
 
 class Timeservers(CentralNodeConfiguration):
-    keys = ("OVIRT_NTP")
+    """Configure timeservers
 
-    @map_and_update_defaults
-    def configure(self, servers):
-        pass
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> servers = ["10.0.0.4", "10.0.0.5"]
+    >>> n = Timeservers(cfgfile)
+    >>> n.update(servers)
+    >>> data = n.retrieve()
+    >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
+    True
+    """
+    keys = ("OVIRT_NTP",)
+
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, servers):
+        assert type(servers) is list
+        servers = filter(lambda i: i.strip() not in ["", None], servers)
+        map(valid.IPv4Address(), servers)
+        return {
+                "OVIRT_NTP": ",".join(servers)
+                }
+
+    def retrieve(self):
+        cfg = dict(CentralNodeConfiguration.retrieve(self))
+        return {
+                "servers": cfg["servers"].split(",")
+                }
 
 
 class Syslog(CentralNodeConfiguration):
+    """Configure rsyslog
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> server = "10.0.0.6"
+    >>> port = "514"
+    >>> n = Syslog(cfgfile)
+    >>> n.update(server, port)
+    >>> n.retrieve()
+    [('server', '10.0.0.6'), ('port', '514')]
+    """
     keys = ("OVIRT_SYSLOG_SERVER",
             "OVIRT_SYSLOG_PORT")
 
-    @map_and_update_defaults
-    def configure(self, server, port):
-        pass
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, server, port):
+        valid.FQDNOrIPAddress()(server)
+        valid.Port()(port)
 
 
 class Collectd(CentralNodeConfiguration):
+    """Configure collectd
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> server = "10.0.0.7"
+    >>> port = "42"
+    >>> n = Collectd(cfgfile)
+    >>> n.update(server, port)
+    >>> n.retrieve()
+    [('server', '10.0.0.7'), ('port', '42')]
+    """
     keys = ("OVIRT_COLLECTD_SERVER",
             "OVIRT_COLLECTD_PORT")
 
-    @map_and_update_defaults
-    def configure(self, server, port):
-        pass
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, server, port):
+        valid.FQDNOrIPAddress()(server)
+        valid.Port()(port)
 
 
 class RHN(CentralNodeConfiguration):
@@ -248,52 +430,110 @@ class RHN(CentralNodeConfiguration):
             "OVIRT_RHN_PROXYUSER",
             "OVIRT_RHN_PROXYPASSWORD")
 
-    @map_and_update_defaults
-    def configure(self, rhntype, url, ca_cert, username, password, profile,
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, rhntype, url, ca_cert, username, password, profile,
                   activationkey, org, proxy, proxyuser, proxypassword):
         pass
 
 
 class KDump(CentralNodeConfiguration):
+    """Configure kdump
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> nfs_url = "host.example.com"
+    >>> ssh_url = "root@host.example.com"
+    >>> n = KDump(cfgfile)
+    >>> n.update(nfs_url, ssh_url)
+    >>> n.retrieve()
+    [('nfs', 'host.example.com'), ('ssh', 'root@host.example.com')]
+    """
     keys = ("OVIRT_KDUMP_NFS",
             "OVIRT_KDUMP_SSH")
 
-    @map_and_update_defaults
-    def configure(self, nfs, ssh):
-        pass
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, nfs, ssh):
+        valid.FQDNOrIPAddress()(nfs)
+        valid.URL()(ssh)
 
 
 class iSCSI(CentralNodeConfiguration):
+    """Configure iSCSI
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = iSCSI(cfgfile)
+    >>> n.update("node.example.com", "target.example.com", "10.0.0.8", "42")
+    >>> data = n.retrieve()
+    >>> data[:2]
+    [('name', 'node.example.com'), ('target_name', 'target.example.com')]
+    >>> data[2:]
+    [('target_host', '10.0.0.8'), ('target_port', '42')]
+    """
     keys = ("OVIRT_ISCSI_NODE_NAME",
             "OVIRT_ISCSI_TARGET_NAME",
             "OVIRT_ISCSI_TARGET_IP",
             "OVIRT_ISCSI_TARGET_PORT")
 
-    @map_and_update_defaults
-    def configure(self, name, target_name, target_host, target_port):
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, name, target_name, target_host, target_port):
+        # FIXME add validation
         pass
 
 
 class SNMP(CentralNodeConfiguration):
-    keys = ("OVIRT_SNMP_PASSWORD")
+    """Configure SNMP
 
-    @map_and_update_defaults
-    def configure(self, password):
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = SNMP(cfgfile)
+    >>> n.update("secret")
+    >>> n.retrieve()
+    [('password', 'secret')]
+    """
+    keys = ("OVIRT_SNMP_PASSWORD",)
+
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, password):
+        # FIXME add validation
         pass
 
 
 class Netconsole(CentralNodeConfiguration):
+    """Configure netconsole
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = Netconsole(cfgfile)
+    >>> server = "10.0.0.9"
+    >>> port = "666"
+    >>> n.update(server, port)
+    >>> n.retrieve()
+    [('server', '10.0.0.9'), ('port', '666')]
+    """
     keys = ("OVIRT_NETCONSOLE_SERVER",
             "OVIRT_NETCONSOLE_PORT")
 
-    @map_and_update_defaults
-    def configure(self, server, port):
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, server, port):
+        # FIXME add validation
         pass
 
 
 class CIM(CentralNodeConfiguration):
-    keys = ("OVIRT_CIM_ENABLED")
+    """Configure CIM
 
-    @map_and_update_defaults
-    def configure(self, enabled):
-        assert enabled in ["1", "0"]
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = CIM(cfgfile)
+    >>> n.update(True)
+    >>> n.retrieve()
+    [('enabled', '1')]
+    """
+    keys = ("OVIRT_CIM_ENABLED",)
+
+    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    def update(self, enabled):
+        return {
+                "OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else "0"
+                }

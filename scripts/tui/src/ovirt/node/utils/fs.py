@@ -26,7 +26,7 @@ import logging
 import shutil
 import os
 from ovirt.node.utils import checksum, is_bind_mount
-from ovirt.node.utils.process import system
+from process import system
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ def get_contents(src):
     with open(src, "r") as f:
         contents = f.read()
     return contents
+
 
 def copy_contents(src, dst):
     assert all([os.path.isfile(f) for f in [src, dst]]), \

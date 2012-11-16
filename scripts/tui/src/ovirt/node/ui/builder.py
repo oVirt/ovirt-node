@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# tui.py - Copyright (C) 2012 Red Hat, Inc.
+# builder.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -185,8 +185,8 @@ def build_button(path, item, tui, plugin):
 
     def on_widget_click_cb(widget, data=None):
         LOGGER.debug("Button click: %s %s" % (path, widget))
-#        if type(item) is ovirt.node.ui.SaveButton:
-        plugin._on_ui_change({path: True})
+        if type(item) is ovirt.node.ui.Button:
+            plugin._on_ui_change({path: True})
         r = plugin._on_ui_save()
         parse_plugin_result(tui, plugin, r)
 

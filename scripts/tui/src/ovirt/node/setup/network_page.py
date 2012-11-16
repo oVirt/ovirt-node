@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# status.py - Copyright (C) 2012 Red Hat, Inc.
+# network_page.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@ import ovirt.node.valid
 import ovirt.node.ui
 import ovirt.node.utils.network
 import ovirt.node.config.network
+from ovirt.node.config import defaults
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -50,11 +51,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def model(self):
         # Pull name-/timeservers from config files (not defaults)
-        nameservers = ovirt.node.config.network.nameservers()
+        nameservers = dict(defaults.Nameservers().retrieve())["servers"]
         for idx, nameserver in enumerate(nameservers):
             self._model["dns[%d]" % idx] = nameserver
 
-        timeservers = ovirt.node.config.network.timeservers()
+        timeservers = dict(defaults.Timeservers().retrieve())["servers"]
         for idx, timeserver in enumerate(timeservers):
             self._model["ntp[%d]" % idx] = timeserver
 
@@ -210,23 +211,27 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         self.logger.info("effc %s" % effective_changes)
         self.logger.info("allc %s" % changes)
 
-        if "dns[0]" in effective_changes or \
-           "dns[1]" in effective_changes:
-            new_servers = [v for k, v in effective_model \
-                             if k.startswith("dns[")]
-            self.logger.info("Setting new nameservers: %s" % new_servers)
+        nameservers = []
+        for key in ["dns[0]", "dns[1]"]:
+            if key in effective_changes:
+                nameservers.append(effective_changes[key])
+        if nameservers:
+            self.logger.info("Setting new nameservers: %s" % nameservers)
             model = ovirt.node.config.defaults.Nameservers()
-            model.configure(new_servers)
+            model.update(nameservers)
 
-        if "ntp[0]" in effective_changes or \
-           "ntp[1]" in effective_changes:
-            new_servers = [v for k, v in effective_model \
-                             if k.startswith("ntp[")]
-            self.logger.info("Setting new timeservers: %s" % new_servers)
+        timeservers = []
+        for key in ["ntp[0]", "ntp[1]"]:
+            if key in effective_changes:
+                timeservers.append(effective_changes[key])
+        if timeservers:
+            self.logger.info("Setting new timeservers: %s" % timeservers)
             model = ovirt.node.config.defaults.Timeservers()
-            model.configure(new_servers)
+            model.update(timeservers)
 
-        if "nics" in changes:
+        if "nics" in changes and len(changes) == 1:
             iface = changes["nics"]
             self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
             return self._build_nic_details_dialog()
+
+        return True

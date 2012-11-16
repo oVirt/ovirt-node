@@ -24,46 +24,69 @@ Basically the application consists of two parts: Plugins and TUI
 which communicate with each other.
 """
 
+import argparse
 import logging
 
 logging.basicConfig(level=logging.DEBUG,
                     filename="app.log", filemode="w",
                     format="%(asctime)s %(levelname)s %(name)s %(message)s")
-LOGGER = logging.getLogger(__name__)
 
 
 import ovirt.node.ui.tui
-import ovirt.node.utils
-import ovirt.node.plugins
+from ovirt.node import base, utils, plugins
+from ovirt.node.config import defaults
 
 
-class Application(object):
+class Application(base.Base):
     plugins = []
 
     ui = None
 
     def __init__(self, plugin_base, ui_backend="urwid"):
+        super(Application, self).__init__()
+        self.__parse_cmdline()
+
         ui_backend_class = {
             "urwid": ovirt.node.ui.tui.UrwidTUI
         }[ui_backend]
         self.ui = ui_backend_class(self)
         self.plugin_base = plugin_base
 
+    def __parse_cmdline(self):
+        parser = argparse.ArgumentParser(description='oVirt Node Utility')
+        parser.add_argument("--config",
+                            type=str,
+                            help="Central oVirt Node configuration file")
+        args = parser.parse_args()
+        self.logger.debug("Parsed args: %s" % args)
+        if args.config:
+            defaults.OVIRT_NODE_DEFAULTS_FILENAME = args.config
+            self.logger.debug("Setting config file: %s (%s)" % (
+                                        args.config,
+                                        defaults.OVIRT_NODE_DEFAULTS_FILENAME))
+
     def __load_plugins(self):
-        self.plugins = [m.Plugin(self) for m in ovirt.node.plugins.load(self.plugin_base)]
+        self.plugins = []
+        for m in plugins.load(self.plugin_base):
+            if hasattr(m, "Plugin"):
+                self.logger.debug("Found plugin in module: %s" % m)
+                plugin = m.Plugin(self)
+                self.plugins.append(plugin)
+            else:
+                self.logger.debug("Found no plugin in module: %s" % m)
 
         for plugin in self.plugins:
-            LOGGER.debug("Loading plugin %s" % plugin)
+            self.logger.debug("Loading plugin %s" % plugin)
             self.ui.register_plugin(plugin.ui_name(), plugin)
 
     def __drop_to_shell(self):
         with self.ui.suspended():
-            ovirt.node.utils.process.system("reset ; bash")
+            utils.process.system("reset ; bash")
 
     def __check_terminal_size(self):
         cols, rows = self.ui.size()
         if cols < 80 or rows < 24:
-            LOGGER.warning("Window size is too small: %dx%d" % (cols, rows))
+            self.logger.warning("Window size is too small: %dx%d" % (cols, rows))
 
     def model(self, plugin_name):
         model = None
@@ -82,5 +105,5 @@ class Application(object):
         self.ui.run()
 
     def quit(self):
-        LOGGER.info("Quitting")
+        self.logger.info("Quitting")
         self.ui.quit()

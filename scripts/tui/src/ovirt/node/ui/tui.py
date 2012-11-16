@@ -123,6 +123,16 @@ class UrwidTUI(ovirt.node.ui.Window):
         return urwid.AttrMap(screen, "screen")
 
     def display_plugin(self, plugin):
+        if self._check_outstanding_changes():
+            return
+        timer = timeit.Timer()
+        self._current_plugin = plugin
+        page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
+        self.display_page(page)
+        LOGGER.debug("Build and displayed page in %ss" % timer.timeit())
+
+    def _check_outstanding_changes(self):
+        has_outstanding_changes = False
         if self._current_plugin:
             pending_changes = self._current_plugin.pending_changes()
             if pending_changes:
@@ -131,18 +141,14 @@ class UrwidTUI(ovirt.node.ui.Window):
                 widgets = dict(self._current_plugin.ui_content().children)
                 LOGGER.debug("Available widgets: %s" % widgets)
                 for path, value in pending_changes.items():
-                    field = widgets[path].name
-                    msg += "- %s\n" % (field.strip(":"))
+                    if path in widgets:
+                        field = widgets[path].name
+                        msg += "- %s\n" % (field.strip(":"))
                 self.display_dialog(urwid.Filler(urwid.Text(
                             "The following fields were changed:\n%s" % msg)),
                             "Pending changes")
-                return
-
-        timer = timeit.Timer()
-        self._current_plugin = plugin
-        page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
-        self.display_page(page)
-        LOGGER.debug("Build and displayed page in %ss" % timer.timeit())
+                has_outstanding_changes = True
+        return has_outstanding_changes
 
     def display_page(self, page):
         LOGGER.debug("Displaying page %s" % page)

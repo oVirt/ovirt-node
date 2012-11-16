@@ -22,10 +22,9 @@
 Create an setup application instance an start it.
 """
 
-import ovirt.node.app
-import ovirt.node.plugins.setup
+from ovirt.node import app, setup
 
 
 if __name__ == '__main__':
-    app = ovirt.node.app.Application(ovirt.node.plugins.setup)
+    app = app.Application(setup)
     app.run()

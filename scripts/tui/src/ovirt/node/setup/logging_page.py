@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# logging.py - Copyright (C) 2012 Red Hat, Inc.
+# logging_page.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@ Configure Logging
 import ovirt.node.plugins
 import ovirt.node.valid
 import ovirt.node.ui
+
 
 class Plugin(ovirt.node.plugins.NodePlugin):
     _model = None

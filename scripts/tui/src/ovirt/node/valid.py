@@ -23,9 +23,10 @@ A module with several validators for common user inputs.
 """
 import re
 import socket
+import urlparse
 
-from . import base
-from . import exceptions
+import base
+import exceptions
 
 
 class Validator(base.Base):
@@ -302,3 +303,22 @@ class Empty(Validator):
 
     def validate(self, value):
         return value == ""
+
+
+class URL(Validator):
+    description = "a valid URL"
+
+    requires_scheme = False
+    requires_netloc = False
+    requires_path = True
+
+    def validate(self, value):
+        p = urlparse.urlparse(value)
+        is_valid = True
+        if self.requires_scheme:
+            is_valid &= p.scheme != ""
+        if self.requires_netloc:
+            is_valid &= p.netloc != ""
+        if self.requires_path:
+            is_valid &= p.path != ""
+        return is_valid

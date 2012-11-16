@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# __init__.py - Copyright (C) 2012 Red Hat, Inc.
+# plugins.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,9 @@ def load(basemodule):
     modules = []
     for importer, modname, ispkg in __walk_plugins(basemodule):
         #print("Found submodule %s (is a package: %s)" % (modname, ispkg))
-        module = __import__(basemodule.__name__ + "." + modname, fromlist="dummy")
+        modpath = basemodule.__name__ + "." + modname
+        module = __import__(modpath,
+                            fromlist="dummy")
         #print("Imported", module)
         modules += [module]
     return modules
@@ -189,8 +191,8 @@ class NodePlugin(base.Base):
         except NotImplementedError:
             self.logger.debug("Plugin has no model")
         except ovirt.node.exceptions.InvalidData:
-            self.logger.warning("Plugins model does not pass sematic check: %s" % \
-                           model)
+            self.logger.warning("Plugins model does not pass sematic " +
+                                "check: %s" % model)
             is_valid = False
         finally:
             self.__changes = {}
@@ -216,12 +218,14 @@ class NodePlugin(base.Base):
         if type(change) is not dict:
             self.logger.warning("Change is not a dict: %s" % change)
 
-        self.logger.debug("Passing UI change to callback on_change: %s" % change)
+        self.logger.debug("Passing UI change to callback on_change: %s" % \
+                          change)
         if self.validate_changes:
             self.validate(change)
         self.on_change(change)
         self.__changes.update(change)
-        self.logger.debug("Sum of all UI changes up to now: %s" % self.__changes)
+        self.logger.debug("Sum of all UI changes up to now: %s" % \
+                          self.__changes)
         return True
 
     def _on_ui_save(self):
@@ -230,8 +234,9 @@ class NodePlugin(base.Base):
         """
         self.logger.debug("Request to apply model changes")
         effective_changes = self.pending_changes() or {}
-        successfull_merge = self.on_merge(effective_changes)
+        successfull_merge = self.on_merge(effective_changes) is not False
         if successfull_merge:
+            self.logger.info("Changes were merged successfully")
             self.__changes = {}
         return successfull_merge
 
@@ -259,8 +264,9 @@ class NodePlugin(base.Base):
             model = self.model()
             for key, value in self.__changes.items():
                 if key in model and value == model[key]:
-                    self.logger.debug(("Skipping pseudo-change of '%s', value " + \
-                                  "(%s) did not change") % (key, value))
+                    self.logger.debug(("Skipping pseudo-change of '%s', " + \
+                                       "value (%s) did not change") % (key,
+                                                                       value))
                 else:
                     effective_changes[key] = value
         else:
