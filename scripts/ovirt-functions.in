@@ -638,9 +638,7 @@ save
 EOF
     /usr/bin/augtool < $tmpaug > /dev/null
     rc=$?
-    if [ $rc -eq 0 ]; then
-        rm $tmpaug
-    fi
+    rm -f $tmpaug
     return $rc
 }
 
