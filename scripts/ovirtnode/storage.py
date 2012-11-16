@@ -25,6 +25,7 @@ import re
 import gudev
 import logging
 import subprocess
+import shlex
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +153,22 @@ class Storage:
         logger.debug(size)
         return size
 
+    def _lvm_name_for_disk(self, disk):
+        name = None
+        cmd = "lvm pvs --noheadings --nameprefixes --unquoted -o pv_name,vg_name '%s' 2> /dev/null" % disk
+        lines = str(_functions.passthrough(cmd)).strip().split("\n")
+        if len(lines) > 1:
+            logger.warning("More than one PV for disk '%s' found: %s" % (disk,
+                                                                         lines))
+        for line in lines:
+            lvm2_vars = dict([tuple(e.split("=", 1)) for e \
+                              in shlex.split(line)])
+            if "LVM2_PV_NAME" in lvm2_vars:
+                name = lvm2_vars["LVM2_PV_NAME"]
+            else:
+                logger.debug("Found line '%s' but no LVM2_PV_NAME" % line)
+        return name
+
     def wipe_lvm_on_disk(self, _devs):
         devs = set(_devs.split(","))
         logger.debug("Considering to wipe LVM on: %s / %s" % (_devs, devs))
@@ -169,10 +186,13 @@ class Storage:
             vg_proc = _functions.passthrough(vg_cmd, log_func=logger.debug)
             vgs_on_dev = vg_proc.stdout.split()
             for vg in vgs_on_dev:
+                name = self._lvm_name_for_disk(dev)
                 pvs_cmd = ("pvs -o pv_name,vg_uuid --noheadings | " +
-                           "grep \"%s\" | egrep -v -q \"%s" % (vg, dev))
+                           "grep \"%s\" | egrep -v -q \"%s" % (vg, name))
                 for fdev in devs:
                     pvs_cmd += "|%s%s[0-9]+|%s" % (fdev, part_delim, fdev)
+                    name = self._lvm_name_for_disk(fdev)
+                    pvs_cmd += "|%s%s[0-9]+|%s" % (name, part_delim, name)
                 pvs_cmd += "\""
                 remaining_pvs = _functions.system(pvs_cmd)
                 if remaining_pvs:
