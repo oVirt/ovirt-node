@@ -237,8 +237,8 @@ def is_auto_install():
 
 # return 0 if this is an upgrade
 # return 1 otherwise
-def is_upgrade(self):
-    if self.OVIRT_VARS.has_key("OVIRT_UPGRADE") and self.OVIRT_VARS["OVIRT_UPGRADE"] == 1:
+def is_upgrade():
+    if OVIRT_VARS.has_key("OVIRT_UPGRADE") and OVIRT_VARS["OVIRT_UPGRADE"] == "1":
         return True
     else:
         return False

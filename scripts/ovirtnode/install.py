@@ -262,6 +262,9 @@ initrd /initrd0.img
                 grub_config_file = "/dev/.initramfs/live/grub/grub.conf"
             elif os.path.ismount("/run/initramfs/live"):
                 grub_config_file = "/run/initramfs/live/grub/grub.conf"
+            if is_upgrade():
+                mount_liveos()
+                grub_config_file = "/liveos/grub/grub.conf"
 
         if not grub_config_file is None:
             f=open(grub_config_file)
