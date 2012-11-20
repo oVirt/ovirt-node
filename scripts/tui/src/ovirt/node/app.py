@@ -87,7 +87,8 @@ class Application(base.Base):
     def __check_terminal_size(self):
         cols, rows = self.ui.size()
         if cols < 80 or rows < 24:
-            self.logger.warning("Window size is too small: %dx%d" % (cols, rows))
+            self.logger.warning("Window size is too small: %dx%d" % (cols,
+                                                                     rows))
 
     def model(self, plugin_name):
         model = None

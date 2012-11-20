@@ -60,7 +60,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return {
                 # The address must be fqdn, ipv4 or ipv6 address
                 "ping.address": ovirt.node.valid.FQDNOrIPAddress(),
-                "ping.count": ovirt.node.valid.Number(min=1, max=20),
+                "ping.count": ovirt.node.valid.Number(range=[1, 20]),
             }
 
     def ui_content(self):

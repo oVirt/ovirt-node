@@ -18,17 +18,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-
 """
-Network plugin
+Network page plugin
 """
 
-import ovirt.node.plugins
-import ovirt.node.valid
-import ovirt.node.ui
-import ovirt.node.utils.network
-import ovirt.node.config.network
+import time
+
+from ovirt.node import ui
 from ovirt.node.config import defaults
+from ovirt.node import plugins
+import ovirt.node.utils.network
+from ovirt.node import valid
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -43,6 +43,18 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         "ntp[1]": "",
     }
     _widgets = None
+
+    def __init__(self, app):
+        super(Plugin, self).__init__(app)
+        self._widgets = plugins.WidgetsHelper()
+
+            # Keys/Paths to widgets related to NIC settings
+        self._nic_details_group = self._widgets.group([
+                                                "dialog.nic.ipv4.bootproto",
+                                                "dialog.nic.ipv4.address",
+                                                "dialog.nic.ipv4.netmask",
+                                                "dialog.nic.ipv4.gateway",
+                                                "dialog.nic.vlanid"])
 
     def name(self):
         return "Network"
@@ -64,14 +76,20 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def validators(self):
         Empty = ovirt.node.valid.Empty
-        ip_or_empty = ovirt.node.valid.IPAddress() | Empty()
-        fqdn_ip_or_empty = ovirt.node.valid.FQDNOrIPAddress() | Empty()
+        ip_or_empty = valid.IPAddress() | Empty()
+        fqdn_ip_or_empty = valid.FQDNOrIPAddress() | Empty()
+
         return {
-                "hostname": ovirt.node.valid.FQDNOrIPAddress(),
-                "dns[0]": ovirt.node.valid.IPAddress(),
+                "hostname": valid.FQDNOrIPAddress(),
+                "dns[0]": valid.IPAddress(),
                 "dns[1]": ip_or_empty,
-                "ntp[0]": ovirt.node.valid.FQDNOrIPAddress(),
+                "ntp[0]": valid.FQDNOrIPAddress(),
                 "ntp[1]": fqdn_ip_or_empty,
+
+                "dialog.nic.ipv4.address": valid.IPv4Address(),
+                "dialog.nic.ipv4.netmask": valid.IPv4Address(),
+                "dialog.nic.ipv4.gateway": valid.IPv4Address(),
+                "dialog.nic.vlanid": valid.Number(range=[0, 4096]),
             }
 
     def ui_content(self):
@@ -80,33 +98,33 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """
         widgets = [
             ("hostname",
-                ovirt.node.ui.Entry("Hostname:")),
-            ("hostname._space", ovirt.node.ui.Divider()),
+                ui.Entry("Hostname:")),
+            ("hostname._space", ui.Divider()),
 
-            ("nics", ovirt.node.ui.Table("Available System NICs",
+            ("nics", ui.Table("Available System NICs",
                         "Device   Status         Model    MAC Address",
                         self._get_nics())),
-            ("nics._space", ovirt.node.ui.Divider()),
+            ("nics._space", ui.Divider()),
 
-            ("dns[0]", ovirt.node.ui.Entry("DNS Server 1:")),
-            ("dns[1]", ovirt.node.ui.Entry("DNS Server 2:")),
-            ("dns._space", ovirt.node.ui.Divider()),
+            ("dns[0]", ui.Entry("DNS Server 1:")),
+            ("dns[1]", ui.Entry("DNS Server 2:")),
+            ("dns._space", ui.Divider()),
 
-            ("ntp[0]", ovirt.node.ui.Entry("NTP Server 1:")),
-            ("ntp[1]", ovirt.node.ui.Entry("NTP Server 2:")),
-            ("ntp._space", ovirt.node.ui.Divider()),
+            ("ntp[0]", ui.Entry("NTP Server 1:")),
+            ("ntp[1]", ui.Entry("NTP Server 2:")),
+            ("ntp._space", ui.Divider()),
         ]
         # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
+        self._widgets.update(dict(widgets))
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
 
     def _get_nics(self):
         justify = lambda txt, l: txt.ljust(l)[0:l]
         node_nics = []
         first_nic = None
-        for name, nic in ovirt.node.utils.network.node_nics().items():
+        for name, nic in sorted(ovirt.node.utils.network.node_nics().items()):
             if first_nic == None:
                 first_nic = name
             bootproto = "Configured" if nic["bootproto"] else "Unconfigured"
@@ -122,7 +140,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def _build_dialog(self, path, txt, widgets):
         self._widgets.update(dict(widgets))
-        self._widgets[path] = ovirt.node.ui.Dialog(txt, widgets)
+        self._widgets[path] = ui.Dialog(txt, widgets)
         return self._widgets[path]
 
     def _build_nic_details_dialog(self):
@@ -130,7 +148,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         iface = self._model["nics"]
         self.logger.debug("Getting informations for NIC details page")
         live = ovirt.node.utils.network.node_nics()[iface]
+        cfg = dict(defaults.Network().retrieve())
 
+        self.logger.debug(cfg)
         self._model.update({
             "dialog.nic.iface": live["name"],
             "dialog.nic.driver": live["driver"],
@@ -139,100 +159,150 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             "dialog.nic.link_status": "Connected" if live["link_detected"]
                                                   else "Disconnected",
             "dialog.nic.hwaddress": live["hwaddr"],
-            "dialog.nic.ipv4.bootproto": live["bootproto"],
-            "dialog.nic.ipv4.address": live["ipaddr"] or "",
-            "dialog.nic.ipv4.netmask": live["netmask"] or "",
-            "dialog.nic.ipv4.gateway": live["gateway"] or "",
-            "dialog.nic.vlanid": live["vlanid"] or "",
+
+            "dialog.nic.ipv4.bootproto": cfg["bootproto"],
+            "dialog.nic.ipv4.address": cfg["ipaddr"] or "",
+            "dialog.nic.ipv4.netmask": cfg["netmask"] or "",
+            "dialog.nic.ipv4.gateway": cfg["gateway"] or "",
+            "dialog.nic.vlanid": cfg["vlanid"] or "",
         })
 
         padd = lambda l: l.ljust(14)
         dialog = self._build_dialog("dialog.nic", "NIC Details: %s" % iface, [
-            ("dialog.nic._row[0]", ovirt.node.ui.Row([
+            ("dialog.nic._row[0]", ui.Row([
                 ("dialog.nic.iface",
-                    ovirt.node.ui.KeywordLabel(padd("Interface: "))),
+                    ui.KeywordLabel(padd("Interface: "))),
                 ("dialog.nic.driver",
-                    ovirt.node.ui.KeywordLabel(padd("Driver: "))),
+                    ui.KeywordLabel(padd("Driver: "))),
                 ])),
 
-            ("dialog.nic._row[1]", ovirt.node.ui.Row([
+            ("dialog.nic._row[1]", ui.Row([
                 ("dialog.nic.protocol",
-                    ovirt.node.ui.KeywordLabel(padd("Protocol: "))),
+                    ui.KeywordLabel(padd("Protocol: "))),
                 ("dialog.nic.vendor",
-                    ovirt.node.ui.KeywordLabel(padd("Vendor: "))),
+                    ui.KeywordLabel(padd("Vendor: "))),
                 ])),
 
-            ("dialog.nic._row[2]", ovirt.node.ui.Row([
+            ("dialog.nic._row[2]", ui.Row([
                 ("dialog.nic.link_status",
-                    ovirt.node.ui.KeywordLabel(padd("Link Status: "))),
+                    ui.KeywordLabel(padd("Link Status: "))),
                 ("dialog.nic.hwaddress",
-                    ovirt.node.ui.KeywordLabel(padd("MAC Address: "))),
+                    ui.KeywordLabel(padd("MAC Address: "))),
                 ])),
 
-            ("dialog.nic._divider[0]", ovirt.node.ui.Divider()),
+            ("dialog.nic._divider[0]", ui.Divider()),
 
-            ("dialog.nic.ipv4._header", ovirt.node.ui.Header("IPv4 Settings")),
-            ("dialog.nic.ipv4.bootproto", ovirt.node.ui.Options(
+            ("dialog.nic.ipv4._header", ui.Header("IPv4 Settings")),
+            ("dialog.nic.ipv4.bootproto", ui.Options(
                 "Bootprotocol: ", [
                     ("none", "Disabled"),
                     ("dhcp", "DHCP"),
                     ("static", "Static")
                 ])),
             ("dialog.nic.ipv4.address",
-                    ovirt.node.ui.Entry(padd("IP Address: "))),
+                    ui.Entry(padd("IP Address: "))),
             ("dialog.nic.ipv4.netmask",
-                    ovirt.node.ui.Entry(padd("Netmask: "))),
+                    ui.Entry(padd("Netmask: "))),
             ("dialog.nic.ipv4.gateway",
-                    ovirt.node.ui.Entry(padd("Gateway: "))),
+                    ui.Entry(padd("Gateway: "))),
 
-            ("dialog.nic._divider[1]", ovirt.node.ui.Divider()),
+            ("dialog.nic._divider[1]", ui.Divider()),
 
             ("dialog.nic.vlanid",
-                    ovirt.node.ui.Entry(padd("VLAN ID: "))),
+                    ui.Entry(padd("VLAN ID: "))),
 
-            ("dialog.nic._buttons", ovirt.node.ui.Row([
+            ("dialog.nic._buttons", ui.Row([
                 ("dialog.nic.save",
-                        ovirt.node.ui.Button("Save & Close")),
+                        ui.Button("Save & Close")),
                 ("dialog.nic.close",
-                        ovirt.node.ui.Button("Close")),
+                        ui.Button("Close")),
             ]))
         ])
 
         dialog.has_save_button = False
+
+        self._nic_details_group.enabled(False)
+
         return dialog
 
     def on_change(self, changes):
-        pass
+        self.logger.info("Checking network stuff")
+        helper = plugins.ChangesHelper(changes)
+        bootproto = helper["dialog.nic.ipv4.bootproto"]
+        if bootproto:
+            if bootproto in ["static"]:
+                self._nic_details_group.enabled(True)
+            else:
+                self._nic_details_group.enabled(False)
+            self._widgets["dialog.nic.ipv4.bootproto"].enabled(True)
 
     def on_merge(self, effective_changes):
+        self.logger.info("Saving network stuff")
         changes = self.pending_changes(False)
         effective_model = dict(self._model)
         effective_model.update(effective_changes)
-        self.logger.info("effm %s" % effective_model)
-        self.logger.info("effc %s" % effective_changes)
-        self.logger.info("allc %s" % changes)
+        self.logger.info("Effective model %s" % effective_model)
+        self.logger.info("Effective changes %s" % effective_changes)
+        self.logger.info("All changes %s" % changes)
 
-        nameservers = []
-        for key in ["dns[0]", "dns[1]"]:
-            if key in effective_changes:
-                nameservers.append(effective_changes[key])
-        if nameservers:
-            self.logger.info("Setting new nameservers: %s" % nameservers)
-            model = ovirt.node.config.defaults.Nameservers()
-            model.update(nameservers)
-
-        timeservers = []
-        for key in ["ntp[0]", "ntp[1]"]:
-            if key in effective_changes:
-                timeservers.append(effective_changes[key])
-        if timeservers:
-            self.logger.info("Setting new timeservers: %s" % timeservers)
-            model = ovirt.node.config.defaults.Timeservers()
-            model.update(timeservers)
-
+        # Special case: A NIC was selected, display that dialog!
         if "nics" in changes and len(changes) == 1:
             iface = changes["nics"]
             self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
             return self._build_nic_details_dialog()
 
-        return True
+        def set_progress(txt):
+            set_progress.txt += txt + "\n"
+            progress.set_text(set_progress.txt)
+        set_progress.txt = "Applying changes ...\n"
+
+        progress = ui.Label(set_progress.txt)
+        d = self.application.ui.show_dialog(self._build_dialog("dialog.dia",
+                                                               "fooo", [
+            ("dialog.dia.text[0]", progress),
+            ]))
+
+        nameservers = []
+        for key in ["dns[0]", "dns[1]"]:
+            if key in effective_changes:
+                nameservers.append(effective_model[key])
+        if nameservers:
+            set_progress("Applying DNS changes.")
+            self.logger.info("Setting new nameservers: %s" % nameservers)
+            model = defaults.Nameservers()
+            model.update(nameservers)
+
+        timeservers = []
+        for key in ["ntp[0]", "ntp[1]"]:
+            if key in effective_changes:
+                timeservers.append(effective_model[key])
+        if timeservers:
+            set_progress("Applying NTP changes.")
+            self.logger.info("Setting new timeservers: %s" % timeservers)
+            model = defaults.Timeservers()
+            model.update(timeservers)
+
+        change_helper = plugins.ChangesHelper(effective_changes)
+        if change_helper.any_key_in_change(self._nic_details_group):
+            # If any networking related key was changed, reconfigure networking
+            helper = plugins.ChangesHelper(effective_model)
+            self._configure_nic(*helper.get_key_values(self._nic_details_group))
+
+        set_progress("All changes were applied.")
+        time.sleep(3)
+        d.close()
+
+    def _configure_nic(self, bootproto, ipaddr, netmask, gateway, vlanid):
+        model = defaults.Network()
+        iface = self._model["dialog.nic.iface"]
+        if bootproto == "none":
+            self.logger.debug("Configuring no networking")
+            model.update(None, None, None, None, None, None)
+        elif bootproto == "dhcp":
+            self.logger.debug("Configuring dhcp")
+            model.update(iface, "dhcp", None, None, None, vlanid)
+        elif bootproto == "static":
+            self.logger.debug("Configuring static ip")
+            model.update(iface, "none", ipaddr, netmask, gateway, vlanid)
+        else:
+            self.logger.debug("No interface configuration found")

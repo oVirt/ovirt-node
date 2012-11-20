@@ -23,15 +23,12 @@
 The urwid TUI base library
 """
 
+import timeit
 import urwid
 
-import logging
-import timeit
-
-import ovirt.node.ui.widgets
+from ovirt.node import ui
 import ovirt.node.ui.builder
-
-LOGGER = logging.getLogger(__name__)
+import ovirt.node.ui.widgets
 
 
 class UrwidTUI(ovirt.node.ui.Window):
@@ -50,14 +47,17 @@ class UrwidTUI(ovirt.node.ui.Window):
     _current_plugin = None
 
     header = u"\n Configuration TUI\n"
-    footer = u"Press ctrl+c to exit"
+    footer = u"Press ctrl+c to quit"
 
     element_styles = {
-        "text": "dark gray",
-        "label": "dark gray, bold",
+        "text": "black",
+        "label": "black, bold",
+        "disabled": "white",
+        "background": "light gray"
     }
 
-    palette = [(None, 'default', 'light gray', 'bold', None, None),
+    palette = [(None, 'default', element_styles["background"], 'bold',
+                None, None),
                ('screen', None),
                ('header', 'white', 'dark blue'),
                ('table', element_styles["text"]),
@@ -69,10 +69,12 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('main.menu.frame', element_styles["text"]),
                ('notice', 'light red'),
                ('plugin.widget.entry', element_styles["text"]),
-               ('plugin.widget.entry.disabled', 'dark gray', 'light gray'),
+               ('plugin.widget.entry.disabled', element_styles["disabled"]),
                ('plugin.widget.entry.label', element_styles["label"]),
                ('plugin.widget.entry.frame', element_styles["text"]),
                ('plugin.widget.entry.frame.invalid', 'dark red'),
+               ('plugin.widget.entry.frame.disabled',
+                element_styles["disabled"]),
                ('plugin.widget.notice', 'light red'),
                ('plugin.widget.header', 'black, bold'),
                ('plugin.widget.divider', element_styles["text"]),
@@ -94,11 +96,53 @@ class UrwidTUI(ovirt.node.ui.Window):
         super(UrwidTUI, self).__init__(app)
         self.logger.info("Creating urwid tui for '%s'" % app)
 
+    def show_body(self, body):
+        """
+        """
+        assert type(body) is ui.Page
+        widget = ui.builder.build_page(self, self._current_plugin, body)
+        self.__display_as_body(widget)
+
+    def show_page(self, page):
+        """Shows the ui.Page as a page.
+        This transforms the abstract ui.Page to a urwid specififc version
+        and displays it.
+        """
+        assert type(page) is ui.Page
+        widget = ui.builder.build_page(self, self._current_plugin, page)
+        self.__display_as_page(widget)
+
+    def show_dialog(self, dialog):
+        """Shows the ui.Dialog as a dialog.
+        This transforms the abstract ui.Dialog to a urwid specififc version
+        and displays it.
+        """
+        assert type(dialog) is ui.Dialog
+        widget = ui.builder.build_page(self, self._current_plugin, dialog)
+        return self.__display_as_dialog(widget, dialog.title)
+
+    def quit(self):
+        """Quit the UI
+        """
+        self.logger.info("Quitting, exitting mainloop")
+        raise urwid.ExitMainLoop()
+
+    def run(self):
+        """Run the UI
+        """
+        self.__main_frame = self.__create_screen()
+        self.__register_default_hotkeys()
+
+        self.__loop = urwid.MainLoop(self.__main_frame,
+                              self._convert_palette(),
+                              input_filter=self.__filter_hotkeys)
+        self.__loop.run()
+
     def __build_menu(self):
         self.__menu = ovirt.node.ui.widgets.PluginMenu(self._plugins)
 
         def menu_item_changed(plugin):
-            self.display_plugin(plugin)
+            self.__display_plugin(plugin)
         urwid.connect_signal(self.__menu, 'changed', menu_item_changed)
 
     def __create_screen(self):
@@ -123,97 +167,122 @@ class UrwidTUI(ovirt.node.ui.Window):
         screen = urwid.Frame(body, header, footer)
         return urwid.AttrMap(screen, "screen")
 
-    def display_plugin(self, plugin):
-        if self._check_outstanding_changes():
-            return
-        timer = timeit.Timer()
-        self._current_plugin = plugin
-        page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
-        self.display_page(page)
-        LOGGER.debug("Build and displayed page in %ss" % timer.timeit())
-
     def _check_outstanding_changes(self):
         has_outstanding_changes = False
         if self._current_plugin:
             pending_changes = self._current_plugin.pending_changes()
             if pending_changes:
-                LOGGER.warning("Pending changes: %s" % pending_changes)
+                self.logger.warning("Pending changes: %s" % pending_changes)
                 msg = ""
                 widgets = dict(self._current_plugin.ui_content().children)
-                LOGGER.debug("Available widgets: %s" % widgets)
+                self.logger.debug("Available widgets: %s" % widgets)
                 for path, value in pending_changes.items():
                     if path in widgets:
                         field = widgets[path].name
                         msg += "- %s\n" % (field.strip(":"))
-                self.display_dialog(urwid.Filler(urwid.Text(
+                self.__display_as_dialog(urwid.Filler(urwid.Text(
                             "The following fields were changed:\n%s" % msg)),
                             "Pending changes")
                 has_outstanding_changes = True
         return has_outstanding_changes
 
-    def display_page(self, page):
-        LOGGER.debug("Displaying page %s" % page)
+    def __display_as_body(self, widget):
+        self.__main_frame.body = widget
+
+    def __display_as_page(self, page):
+        self.logger.debug("Displaying page %s" % page)
 #        filler = urwid.Filler(page, ("fixed top", 1), height=35)
         filler = urwid.Pile([page])
         self.__page_frame.body = filler
 
-    def display_dialog(self, body, title):
-        LOGGER.debug("Displaying dialog: %s / %s" % (body, title))
+    def __display_plugin(self, plugin):
+        if self._check_outstanding_changes():
+            return
+        timer = timeit.Timer()
+        self._current_plugin = plugin
+        plugin_page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
+        self.__display_as_page(plugin_page)
+        self.logger.debug("Build and displayed plugin_page in %ss" %
+                          timer.timeit())
+
+    def __display_as_dialog(self, body, title):
+        self.logger.debug("Displaying dialog: %s / %s" % (body, title))
 #        filler = urwid.Filler(body, ("fixed top", 1), height=35)
         filler = urwid.Pile([body])
         dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, "esc",
                                                    self.__loop.widget)
         urwid.connect_signal(dialog, "close",
-                             lambda: self.close_dialog(dialog))
+                             lambda: self.__close_dialog(dialog))
         self.__loop.widget = dialog
         self.__widget_stack.append(dialog)
+        self._draw_screen()
         return dialog
 
-    def close_dialog(self, dialog):
-        # FIXME stack to allow more than one dialog
+    def __close_dialog(self, dialog):
         if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
             if dialog == self.__widget_stack[-1]:
                 self.__widget_stack.pop()
                 if len(self.__widget_stack) > 0:
                     self.__loop.widget = self.__widget_stack[:-1]
                 else:
-                    LOGGER.debug("No more dialog, main frame " + \
+                    self.logger.debug("No more dialog, main frame " + \
                                  "%s" % self.__main_frame)
                     self.__loop.widget = self.__main_frame
-            self.draw_screen()
-            LOGGER.debug("Dialog closed")
-
-    def popup(self, title, msg, buttons=None):
-        LOGGER.debug("Launching popup")
-        body = urwid.Filler(urwid.Text(msg))
-        self.display_dialog(body)
+            self.logger.debug("Loop widget: %s" % self.__loop.widget)
+            self._draw_screen()
+            self.logger.debug("Dialog closed")
 
     def __filter_hotkeys(self, keys, raw):
         key = str(keys)
 
         if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
-            LOGGER.debug("Modal dialog escape: %s" % key)
+            self.logger.debug("Modal dialog escape: %s" % key)
             if self.__loop.widget.escape_key in keys:
-                self.close_dialog(self.__widget_stack[-1])
+                self.__close_dialog(self.__widget_stack[-1])
                 return
 
         if key in self._hotkeys.keys():
-            LOGGER.debug("Running hotkeys: %s" % key)
+            self.logger.debug("Running hotkeys: %s" % key)
             self._hotkeys[key]()
 
-        LOGGER.debug("Keypress: %s" % key)
+        self.logger.debug("Keypress: %s" % key)
 
         return keys
 
     def __register_default_hotkeys(self):
         self.register_hotkey(["esc"], self.quit)
         self.register_hotkey(["q"], self.quit)
+        self.register_hotkey(["window resize"], self._check_min_size_cb)
 
-    def draw_screen(self):
+    def _draw_screen(self):
         self.__loop.draw_screen()
 
     def size(self):
+        if not self.__loop.screen:
+            # FIXME sometimes screen is None, but why?
+            return (0, 0)
         return self.__loop.screen.get_cols_rows()
+
+    def _min_size(self):
+            return (80, 23)
+
+    def _check_min_size_cb(self):
+        size = self.size()
+        msize = self._min_size()
+        width, height = size
+        min_width, min_height = msize
+        if width < min_width or height < min_height:
+            msg = ("The current window size %s is smaller " +
+                                 "than the minimum size %s") % (size, msize)
+            self.logger.warning(msg)
+            if not hasattr(self, "_error_dialog") or not self._error_dialog:
+                d = ui.Dialog("Error", [("dialog.error", ui.Label(msg))])
+                d.has_save_button = False
+                self._error_dialog = self.show_dialog(d)
+        else:
+            if hasattr(self, "_error_dialog") and self._error_dialog:
+                self._error_dialog.close()
+                self._error_dialog = None
 
     def watch_pipe(self, cb):
         """Return a fd to be used as stdout, cb called for each line
@@ -221,7 +290,7 @@ class UrwidTUI(ovirt.node.ui.Window):
         return self.__loop.watch_pipe(cb)
 
     def notify(self, category, msg):
-        LOGGER.info("UI notification (%s): %s" % (category, msg))
+        self.logger.info("UI notification (%s): %s" % (category, msg))
         # FIXME do notification
 
     def suspended(self):
@@ -237,12 +306,6 @@ class UrwidTUI(ovirt.node.ui.Window):
             def __exit__(self, a, b, c):
                 self.__loop.screen.start()
         return SuspendedScreen(self.__loop)
-
-    def quit(self):
-        """Quit the UI
-        """
-        LOGGER.info("Quitting, exitting mainloop")
-        raise urwid.ExitMainLoop()
 
     def _convert_palette(self):
         """Convert our palette to the format urwid understands.
@@ -264,14 +327,3 @@ class UrwidTUI(ovirt.node.ui.Window):
             rest = default[len(colors):]
             palette.append(tuple([k] + colors + rest))
         return palette
-
-    def run(self):
-        """Run the UI
-        """
-        self.__main_frame = self.__create_screen()
-        self.__register_default_hotkeys()
-
-        self.__loop = urwid.MainLoop(self.__main_frame,
-                              self._convert_palette(),
-                              input_filter=self.__filter_hotkeys)
-        self.__loop.run()

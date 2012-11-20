@@ -29,7 +29,7 @@ created based on this file. This module provides an high level to this model.
 There are classes for all components which can be configured through that
 central configuration file.
 Each class (for a component) can have a configure and apply_config method. Look
-at the CentralNodeConfiguration for more informations.
+at the NodeConfigFileSection for more informations.
 
 Each class should implement a configure method, mainly to define all the
 required arguments (or keys).
@@ -155,9 +155,11 @@ class ConfigFile(base.Base):
         return self.provider.get_dict()
 
 
-class CentralNodeConfiguration(base.Base):
+class NodeConfigFileSection(base.Base):
+    none_value = ""
+
     def __init__(self, cfgfile=None):
-        super(CentralNodeConfiguration, self).__init__()
+        super(NodeConfigFileSection, self).__init__()
         self.defaults = cfgfile or ConfigFile()
 
     def update(self, *args, **kwargs):
@@ -181,7 +183,7 @@ class CentralNodeConfiguration(base.Base):
         values = ()
         cfg = self.defaults.get_dict()
         for key in self.keys:
-            value = cfg[key] if key in cfg else ""
+            value = cfg[key] if key in cfg else self.none_value
             values += (value,)
         assert len(varnames) == len(values)
         return zip(varnames, values)
@@ -196,7 +198,8 @@ class CentralNodeConfiguration(base.Base):
 
     def _map_config_and_update_defaults(self, *args, **kwargs):
         assert len(args) == 0
-        assert (set(self.keys) ^ set(kwargs.keys())) == set()
+        assert (set(self.keys) ^ set(kwargs.keys())) == set(), \
+               "Keys: %s, Args: %s" % (self.keys, kwargs)
         new_dict = {k.upper(): v for k, v in kwargs.items()}
         self.defaults.update(new_dict, remove_empty=True)
 
@@ -207,7 +210,7 @@ class CentralNodeConfiguration(base.Base):
         ...     keys = None
         ...     def _map_config_and_update_defaults(self, *args, **kwargs):
         ...         return kwargs
-        ...     @CentralNodeConfiguration.map_and_update_defaults_decorator
+        ...     @NodeConfigFileSection.map_and_update_defaults_decorator
         ...     def meth(self, a, b, c):
         ...         assert type(a) is int
         ...         assert type(b) is int
@@ -218,6 +221,7 @@ class CentralNodeConfiguration(base.Base):
         {'OVIRT_A': 1, 'OVIRT_B': 2, 'OVIRT_C': 'c3'}
         """
         def wrapper(self, *args, **kwargs):
+            assert kwargs == {}, "kwargs are not allowed for these functions"
             if len(self.keys) != len(args):
                 raise Exception("There are not enough arguments given for " +
                                 "%s of %s" % (func, self))
@@ -230,7 +234,7 @@ class CentralNodeConfiguration(base.Base):
         return wrapper
 
 
-class Network(CentralNodeConfiguration):
+class Network(NodeConfigFileSection):
     """Sets network stuff
     - OVIRT_BOOTIF
     - OVIRT_IP_ADDRESS, OVIRT_IP_NETMASK, OVIRT_IP_GATEWAY
@@ -246,14 +250,14 @@ class Network(CentralNodeConfiguration):
     >>> data[:3]
     [('iface', 'eth0'), ('bootproto', 'static'), ('ipaddr', '10.0.0.1')]
     >>> data [3:]
-    [('netmask', '255.0.0.0'), ('gw', '10.0.0.255'), ('vlanid', '20')]
+    [('netmask', '255.0.0.0'), ('gateway', '10.0.0.255'), ('vlanid', '20')]
 
     >>> n.clear()
     >>> data = n.retrieve()
     >>> data [:3]
-    [('iface', None), ('bootproto', None), ('ipaddr', None)]
+    [('iface', ''), ('bootproto', ''), ('ipaddr', '')]
     >>> data [3:]
-    [('netmask', None), ('gw', None), ('vlanid', None)]
+    [('netmask', ''), ('gateway', ''), ('vlanid', '')]
     """
     keys = ("OVIRT_BOOTIF",
             "OVIRT_BOOTPROTO",
@@ -262,18 +266,18 @@ class Network(CentralNodeConfiguration):
             "OVIRT_GATEWAY",
             "OVIRT_VLAN")
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
-    def update(self, iface, bootproto, ipaddr=None, netmask=None, gw=None,
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, iface, bootproto, ipaddr=None, netmask=None, gateway=None,
                   vlanid=None):
-        if bootproto not in ["static", "none", "dhcp"]:
+        if bootproto not in ["static", "none", "dhcp", None]:
             raise exceptions.InvalidData("Unknown bootprotocol: %s" %
                                          bootproto)
-        (valid.IPv4Address() | valid.Empty())(ipaddr)
-        (valid.IPv4Address() | valid.Empty())(netmask)
-        (valid.IPv4Address() | valid.Empty())(gw)
+        (valid.IPv4Address() | valid.Empty(or_none=True))(ipaddr)
+        (valid.IPv4Address() | valid.Empty(or_none=True))(netmask)
+        (valid.IPv4Address() | valid.Empty(or_none=True))(gateway)
 
 
-class Nameservers(CentralNodeConfiguration):
+class Nameservers(NodeConfigFileSection):
     """Configure nameservers
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
@@ -286,7 +290,7 @@ class Nameservers(CentralNodeConfiguration):
     """
     keys = ("OVIRT_DNS",)
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, servers):
         assert type(servers) is list
         servers = filter(lambda i: i.strip() not in ["", None], servers)
@@ -296,7 +300,7 @@ class Nameservers(CentralNodeConfiguration):
                 }
 
     def retrieve(self):
-        cfg = dict(CentralNodeConfiguration.retrieve(self))
+        cfg = dict(NodeConfigFileSection.retrieve(self))
         return {
                 "servers": cfg["servers"].split(",")
                 }
@@ -346,7 +350,7 @@ class Nameservers(CentralNodeConfiguration):
         utils.fs.persist_config("/etc/resolv.conf")
 
 
-class Timeservers(CentralNodeConfiguration):
+class Timeservers(NodeConfigFileSection):
     """Configure timeservers
 
     >>> fn = "/tmp/cfg_dummy"
@@ -360,7 +364,7 @@ class Timeservers(CentralNodeConfiguration):
     """
     keys = ("OVIRT_NTP",)
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, servers):
         assert type(servers) is list
         servers = filter(lambda i: i.strip() not in ["", None], servers)
@@ -370,13 +374,13 @@ class Timeservers(CentralNodeConfiguration):
                 }
 
     def retrieve(self):
-        cfg = dict(CentralNodeConfiguration.retrieve(self))
+        cfg = dict(NodeConfigFileSection.retrieve(self))
         return {
                 "servers": cfg["servers"].split(",")
                 }
 
 
-class Syslog(CentralNodeConfiguration):
+class Syslog(NodeConfigFileSection):
     """Configure rsyslog
 
     >>> fn = "/tmp/cfg_dummy"
@@ -391,13 +395,13 @@ class Syslog(CentralNodeConfiguration):
     keys = ("OVIRT_SYSLOG_SERVER",
             "OVIRT_SYSLOG_PORT")
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, server, port):
         valid.FQDNOrIPAddress()(server)
         valid.Port()(port)
 
 
-class Collectd(CentralNodeConfiguration):
+class Collectd(NodeConfigFileSection):
     """Configure collectd
 
     >>> fn = "/tmp/cfg_dummy"
@@ -412,13 +416,13 @@ class Collectd(CentralNodeConfiguration):
     keys = ("OVIRT_COLLECTD_SERVER",
             "OVIRT_COLLECTD_PORT")
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, server, port):
         valid.FQDNOrIPAddress()(server)
         valid.Port()(port)
 
 
-class RHN(CentralNodeConfiguration):
+class RHN(NodeConfigFileSection):
     keys = ("OVIRT_RHN_TYPE",
             "OVIRT_RHN_URL",
             "OVIRT_RHN_CA_CERT",
@@ -431,13 +435,13 @@ class RHN(CentralNodeConfiguration):
             "OVIRT_RHN_PROXYUSER",
             "OVIRT_RHN_PROXYPASSWORD")
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, rhntype, url, ca_cert, username, password, profile,
                   activationkey, org, proxy, proxyuser, proxypassword):
         pass
 
 
-class KDump(CentralNodeConfiguration):
+class KDump(NodeConfigFileSection):
     """Configure kdump
 
     >>> fn = "/tmp/cfg_dummy"
@@ -452,13 +456,13 @@ class KDump(CentralNodeConfiguration):
     keys = ("OVIRT_KDUMP_NFS",
             "OVIRT_KDUMP_SSH")
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, nfs, ssh):
         valid.FQDNOrIPAddress()(nfs)
         valid.URL()(ssh)
 
 
-class iSCSI(CentralNodeConfiguration):
+class iSCSI(NodeConfigFileSection):
     """Configure iSCSI
 
     >>> fn = "/tmp/cfg_dummy"
@@ -476,13 +480,13 @@ class iSCSI(CentralNodeConfiguration):
             "OVIRT_ISCSI_TARGET_IP",
             "OVIRT_ISCSI_TARGET_PORT")
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, name, target_name, target_host, target_port):
         # FIXME add validation
         pass
 
 
-class SNMP(CentralNodeConfiguration):
+class SNMP(NodeConfigFileSection):
     """Configure SNMP
 
     >>> fn = "/tmp/cfg_dummy"
@@ -494,13 +498,13 @@ class SNMP(CentralNodeConfiguration):
     """
     keys = ("OVIRT_SNMP_PASSWORD",)
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, password):
         # FIXME add validation
         pass
 
 
-class Netconsole(CentralNodeConfiguration):
+class Netconsole(NodeConfigFileSection):
     """Configure netconsole
 
     >>> fn = "/tmp/cfg_dummy"
@@ -515,13 +519,13 @@ class Netconsole(CentralNodeConfiguration):
     keys = ("OVIRT_NETCONSOLE_SERVER",
             "OVIRT_NETCONSOLE_PORT")
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, server, port):
         # FIXME add validation
         pass
 
 
-class CIM(CentralNodeConfiguration):
+class CIM(NodeConfigFileSection):
     """Configure CIM
 
     >>> fn = "/tmp/cfg_dummy"
@@ -533,7 +537,7 @@ class CIM(CentralNodeConfiguration):
     """
     keys = ("OVIRT_CIM_ENABLED",)
 
-    @CentralNodeConfiguration.map_and_update_defaults_decorator
+    @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, enabled):
         return {
                 "OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else "0"

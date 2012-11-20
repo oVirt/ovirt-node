@@ -229,7 +229,7 @@ class Divider(Element):
         self.char = char
 
 
-class Options(Element):
+class Options(InputElement):
     """A selection of options
 
     Args:
@@ -237,7 +237,7 @@ class Options(Element):
         options:
     """
     def __init__(self, label, options):
-        super(Options, self).__init__()
+        super(Options, self).__init__(None, True)
         self.label = label
         self.options = options
         self.option(options[0])
@@ -347,6 +347,24 @@ class Window(Element):
             hotkey = [hotkey]
         self.logger.debug("Registering hotkey '%s': %s" % (hotkey, cb))
         self._hotkeys[str(hotkey)] = cb
+
+    def show_dialog(self, dialog):
+        """Show a dialog.
+        The dialog can be closed using dialog.close()
+
+        Args:
+            dialog: The dialog to be shown
+        """
+        raise NotImplementedError
+
+    def show_page(self, page):
+        """Show / switch to a page.
+        Displays the given page (which does not need to be patr of a plugin)
+
+        Args:
+            page: The page to be shown
+        """
+        raise NotImplementedError
 
     def run(self):
         raise NotImplementedError

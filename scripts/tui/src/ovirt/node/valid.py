@@ -127,25 +127,32 @@ class Number(RegexValidator):
     True
     >>> Number()("42")
     True
+    >>> Number(range=[0, None]).validate(-10)
+    False
+    >>> Number(range=[0, 10]).validate(11)
+    False
     >>> Number().validate("4 2")
     False
     """
 
     description = "a number"
-    pattern = "^[-]?\d+$"
-    minmax = (None, None)
+    pattern = "^[-+]?\d+$"
+    range = [None, None]
 
-    def __init__(self, min=None, max=None):
-        if min or max:
-            self.minmax = (min, max)
-            self.description = "%s (%s - %s)" % (self.description, min, max)
+    def __init__(self, range=None):
+        super(Number, self).__init__()
+        if range:
+            self.range = range
+            self.description = "%s in the range %s" % (self.description, range)
 
     def validate(self, value):
         valid = RegexValidator.validate(self, value)
         if valid:
-            min, max = self.minmax
+            self.logger.debug("Checking range: %s" % self.range)
+            vmin, vmax = self.range
             value = int(value)
-            if (min and value < min) or (max and value > max):
+            if (vmin != None and value < vmin) or \
+               (vmax != None and value > vmax):
                 valid = False
         return valid
 
@@ -164,7 +171,7 @@ class Port(Number):
     description = "a port number"
 
     def __init__(self):
-        super(Port, self).__init__(1, 65535)
+        super(Port, self).__init__(range=[1, 65535])
 
 
 class NoSpaces(RegexValidator):
@@ -302,8 +309,12 @@ class Options(Validator):
 class Empty(Validator):
     description = "an empty string"
 
+    def __init__(self, or_none=False):
+        super(Empty, self).__init__()
+        self.or_none = or_none
+
     def validate(self, value):
-        return value == ""
+        return value == "" or (self.or_none and value == None)
 
 
 class URL(Validator):

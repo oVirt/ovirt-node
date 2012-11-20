@@ -206,7 +206,7 @@ class NodePlugin(base.Base):
         Args:
             changes (dict): changes which shall be applied to the model
         Returns:
-            True on success, or False otherwise
+            (False)True on (no)success or a ui.Dialog/ui.Page
         Raises:
             Errors
         """
@@ -235,7 +235,11 @@ class NodePlugin(base.Base):
         """
         self.logger.debug("Request to apply model changes")
         effective_changes = self.pending_changes() or {}
-        successfull_merge = self.on_merge(effective_changes) is not False
+        successfull_merge = self.on_merge(effective_changes)
+        if successfull_merge is None:
+            #raise Exception("on_save needs to return " +
+            #                "True/False or a Page/Dialog")
+            successfull_merge = True
         if successfull_merge:
             self.logger.info("Changes were merged successfully")
             self.__changes = {}
@@ -273,3 +277,83 @@ class NodePlugin(base.Base):
         else:
             self.logger.debug("No effective changes detected.")
         return effective_changes if len(effective_changes) > 0 else None
+
+
+class ChangesHelper(base.Base):
+    def __init__(self, changes):
+        self.changes = changes
+
+    def if_keys_exist_run(self, keys, func):
+        """Run func if all keys are present in the changes.
+        The values of the change entries for each key in keys are passed as
+        arguments to the function func
+
+        >>> changes = {
+        ... "foo": 1,
+        ... "bar": 2,
+        ... "baz": 0
+        ... }
+        >>> helper = ChangesHelper(changes)
+        >>> cb = lambda foo, bar: foo + bar
+        >>> helper.if_keys_exist_run(["foo", "bar"], cb)
+        3
+        >>> helper.if_keys_exist_run(["foo", "baz"], cb)
+        1
+        >>> helper.if_keys_exist_run(["win", "dow"], cb)
+
+        Args:
+            keys: A list of keys which need to be present in the changes
+            func: The function to be run, values of keys are passed as args
+        """
+        if self.all_keys_in_change(keys):
+            return func(*[self.changes[key] for key in keys])
+
+    def get_key_values(self, keys):
+        assert self.all_keys_in_change(keys), "Missing keys: %s" % ( \
+                                set(keys).difference(set(self.changes.keys())))
+        return [self.changes[key] for key in keys]
+
+    def all_keys_in_change(self, keys):
+        return set(keys).issubset(set(self.changes.keys()))
+
+    def any_key_in_change(self, keys):
+        return any([key in self.changes for key in keys])
+
+    def __getitem__(self, key):
+        if key in self.changes:
+            return self.changes[key]
+        return None
+
+
+class WidgetsHelper(dict, base.Base):
+    """A helper class to handle widgets
+    """
+    def __init__(self):
+        super(WidgetsHelper, self).__init__()
+        base.Base.__init__(self)
+
+    def subset(self, paths):
+        return [self[p] for p in paths]
+
+    def group(self, paths):
+        """Group the specified (by-path) widgets
+
+        Args:
+            paths: A list of paths of widgets to be grouped
+        Returns:
+            A WidgetsHelper.WidgetGroup
+        """
+        return WidgetsHelper.WidgetGroup(self, paths)
+
+    class WidgetGroup(list, base.Base):
+        def __init__(self, widgethelper, paths):
+            super(WidgetsHelper.WidgetGroup, self).__init__()
+            base.Base.__init__(self)
+            self.widgethelper = widgethelper
+            self.extend(paths)
+
+        def enabled(self, is_enable):
+            """Enable or disable all widgets of this group
+            """
+            self.logger.debug("Enabling widget group: %s" % self)
+            map(lambda w: w.enabled(is_enable), self.widgethelper.subset(self))

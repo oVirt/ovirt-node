@@ -50,9 +50,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return self._model
 
     def validators(self):
+        number_or_empty = ovirt.node.valid.Number(range=[0, None]) | \
+                          ovirt.node.valid.Empty()
         return {
-                "stringrng.bytes_used": ovirt.node.valid.Number(min=0) | \
-                                        ovirt.node.valid.Empty,
+                "strongrng.num_bytes": number_or_empty,
                 "passwd.admin.password": ovirt.node.valid.Text(),
                 "passwd.admin.password_confirmation": ovirt.node.valid.Text(),
             }

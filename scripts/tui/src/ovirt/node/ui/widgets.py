@@ -292,16 +292,21 @@ class Entry(urwid.WidgetWrap):
 
     def enable(self, is_enabled):
         self._selectable = is_enabled
-        attr_map = {None: "plugin.widget.entry"}
+        edit_attr_map = {None: "plugin.widget.entry"}
+        linebox_attr_map = {None: "plugin.widget.entry.frame"}
         if not is_enabled:
-            attr_map = {None: "plugin.widget.entry.disabled"}
-        self._edit_attrmap.set_attr_map(attr_map)
+            edit_attr_map = {None: "plugin.widget.entry.disabled"}
+            linebox_attr_map = {None: "plugin.widget.entry.frame.disabled"}
+        self._edit_attrmap.set_attr_map(edit_attr_map)
+        self._linebox_attrmap.set_attr_map(linebox_attr_map)
 
     def valid(self, is_valid):
         attr_map = {None: "plugin.widget.entry.frame"}
         if not is_valid:
             attr_map = {None: "plugin.widget.entry.frame.invalid"}
-        self._linebox_attrmap.set_attr_map(attr_map)
+        if self._selectable:
+            # Only update style if it is selectable/enabled
+            self._linebox_attrmap.set_attr_map(attr_map)
 
     def set_text(self, txt):
         self._edit.set_edit_text(txt)

@@ -182,6 +182,7 @@ def relevant_ifaces(filter_bridges=True, filter_vlans=True):
             n.startswith("vnet") or \
             n.startswith("tun") or \
             n.startswith("wlan") or \
+            n.startswith("virbr") or \
             (filter_vlans and ("." in n)))
 # FIXME!!!
 #    valid_props = lambda i, p: (filter_bridges and (p["type"] != "bridge"))
@@ -382,11 +383,15 @@ def networking_status(iface=None):
     status = "Not connected"
 
     iface = iface or node_bridge()
-    addresses = nic_ip_addresses(iface)
-    has_address = any([a != None for a in addresses.values()])
+    addresses = []
+    if iface:
+        addresses = nic_ip_addresses(iface)
+        has_address = any([a != None for a in addresses.values()])
 
-    if nic_link_detected(iface) and has_address:
-        status = "Connected"
+        if nic_link_detected(iface):
+            status = "Connected (Link only, no IP)"
+        if has_address:
+            status = "Connected"
 
     summary = (status, iface, addresses)
     LOGGER.debug(summary)

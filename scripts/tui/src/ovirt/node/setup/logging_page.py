@@ -54,7 +54,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """Validators validate the input on change and give UI feedback
         """
         return {
-                "max_log_size": ovirt.node.valid.Number(min=0),
+                "max_log_size": ovirt.node.valid.Number(range=[0, None]),
                 "rsyslog.address": ovirt.node.valid.FQDNOrIPAddress(),
                 "rsyslog.port": ovirt.node.valid.Port(),
                 "netconsole.address": ovirt.node.valid.FQDNOrIPAddress(),

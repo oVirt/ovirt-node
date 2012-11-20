@@ -125,12 +125,16 @@ def build_entry(path, item, tui, plugin):
         widget_class = ovirt.node.ui.widgets.PasswordEntry
 
     widget = widget_class(item.label, align_vertical=item.align_vertical)
-    widget.enable(item.enabled)
+    widget.enable(item.enabled())
 
     def on_item_enabled_change_cb(w, v):
         LOGGER.debug("Element changed, updating entry '%s': %s" % (w, v))
         if widget.selectable() != v:
             widget.enable(v)
+        if v == False:
+            widget.notice = ""
+            widget.valid(True)
+
     item.connect_signal("enabled", on_item_enabled_change_cb)
 
     def on_widget_value_change(widget, new_value):
@@ -148,14 +152,15 @@ def build_entry(path, item, tui, plugin):
 
         except ovirt.node.exceptions.InvalidData as e:
             LOGGER.error("Invalid data when updating: %s" % e)
-            widget.notice = e.message
+            if widget._selectable:
+                widget.notice = e.message
             widget.valid(False)
             plugin._save_button.enable(False)
 
         # FIXME page validation must happen within tui, not plugin
         # as UI data should be handled in tui
 
-        tui.draw_screen()
+        tui._draw_screen()
     urwid.connect_signal(widget, 'change', on_widget_value_change)
 
     return widget
@@ -175,7 +180,7 @@ def build_label(path, item, tui, plugin):
         widget.text(v)
         # Redraw the screen if widget text is updated "outside" of the
         # mainloop
-        tui.draw_screen()
+        tui._draw_screen()
     item.connect_signal("text", on_item_text_change_cb)
 
     return widget
@@ -237,7 +242,7 @@ def build_progressbar(path, item, tui, plugin):
     def on_item_current_change_cb(w, v):
         LOGGER.debug("Model changed, updating progressbar '%s': %s" % (w, v))
         widget.set_completion(v)
-        tui.draw_screen()
+        tui._draw_screen()
     item.connect_signal("current", on_item_current_change_cb)
 
     return widget
@@ -276,13 +281,11 @@ def parse_plugin_result(tui, plugin, result):
 
         if type(result) in [ovirt.node.ui.Page]:
             LOGGER.debug("Page requested.")
-            w = build_page(tui, plugin, result)
-            tui.display_page(w)
+            tui.show_page(result)
 
         elif type(result) in [ovirt.node.ui.Dialog]:
             LOGGER.debug("Dialog requested.")
-            w = build_page(tui, plugin, result)
-            dialog = tui.display_dialog(w, result.title)
+            dialog = tui.show_dialog(result)
 
             def on_item_close_changed_cb(i, v):
                 dialog.close()
