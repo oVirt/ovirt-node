@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # builder.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
@@ -271,7 +272,7 @@ def _build_tableitem(tui, path, plugin, key, label):
 
 
 def parse_plugin_result(tui, plugin, result):
-        LOGGER.debug("Parsing: %s" % result)
+        LOGGER.debug("Parsing plugin change/save result: %s" % result)
 
         if type(result) in [ovirt.node.ui.Page]:
             LOGGER.debug("Page requested.")
