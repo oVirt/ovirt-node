@@ -1333,7 +1333,8 @@ def kvm_enabled():
         libvirt_capabilities = conn.getCapabilities()
     except:
         return 0
-    if "kvm" in libvirt_capabilities:
+    # Look for a KVM mdomain
+    if re.search("domain type=.kvm", libvirt_capabilities):
         return 1
     else:
         return 2
