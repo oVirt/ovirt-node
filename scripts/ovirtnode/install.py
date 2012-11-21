@@ -466,7 +466,7 @@ initrd /initrd0.img
     }
         if not _functions.is_firstboot():
             if os.path.ismount("/live"):
-                with open("/live/isolinux/version") as version:
+                with open("/live/%s/version" % self.syslinux) as version:
                     for line in version.readlines():
                         if "VERSION" in line:
                             key, value = line.split("=")
