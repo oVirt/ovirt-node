@@ -206,16 +206,12 @@ class Network:
     def configure_dns(self):
         logger.warn("Configuring DNS")
         OVIRT_VARS = _functions.parse_defaults()
-        have_peerdns = False
+        have_peerdns = True
         DNS = ""
         if "OVIRT_DNS" in OVIRT_VARS:
             DNS = OVIRT_VARS["OVIRT_DNS"]
             logger.debug("Found DNS key with value '%s'" % DNS)
             try:
-                if DNS is None or DNS == "":
-                    logger.debug("No DNS servers given, removing PEERDNS=no")
-                    have_peerdns = True
-
                 # Write resolv.conf any way, sometimes without servers
                 tui_cmt = ("Please make changes through the TUI. " + \
                            "Manual edits to this file will be " + \
@@ -229,6 +225,8 @@ class Network:
                     logger.debug("Setting DNS server %d: %s" % (i, server))
                     setting = "/files/etc/resolv.conf/nameserver[%s]" % i
                     _functions.augtool("set", setting, server)
+                    # PEERDNS=no is required with manual DNS servers
+                    have_peerdns = False
                     i = i + i
                 _functions.ovirt_store_config("/etc/resolv.conf")
             except:
@@ -237,9 +235,9 @@ class Network:
         # Remove all spare DNS servers
         logger.debug("Removing DNS servers")
         if len(DNS) < 2:
-            _functions.augtool("rm", "/files/etc/resolv.conf/nameserver[1]", "")
+            _functions.augtool("rm", "/files/etc/resolv.conf/nameserver[2]", "")
         if len(DNS) < 1:
-            _functions.augtool("rm", "/files/etc/resolv.conf/nameserver", "")
+            _functions.augtool("rm", "/files/etc/resolv.conf/nameserver[1]", "")
 
         # Set or remove PEERDNS for all ifcfg-*
         for nic in glob("/etc/sysconfig/network-scripts/ifcfg-*"):

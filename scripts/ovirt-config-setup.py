@@ -1539,19 +1539,15 @@ class NodeConfigScreen():
 
         # Save DNS servers
         dns_servers = ",".join(dns_servers)
-        if dns_servers:
-            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS",
-                    '"' + dns_servers + '"')
-        else:
-            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS", "")
+        logger.debug("Setting DNS defaults to: %s" % dns_servers)
+        augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_DNS",
+                '"' + dns_servers + '"')
 
         # Save NTP servers
         ntp_servers = ",".join(ntp_servers)
-        if ntp_servers:
-            augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP",
-                    '"' + ntp_servers + '"')
-        else:
-            augtool("rm", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP", "")
+        logger.debug("Setting NTP defaults to: %s" % ntp_servers)
+        augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_NTP",
+                '"' + ntp_servers + '"')
 
         aug.load()
 
