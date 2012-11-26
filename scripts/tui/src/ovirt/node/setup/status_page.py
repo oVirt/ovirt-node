@@ -53,8 +53,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             net_addrs_str = "\nIPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)
 
         num_domains = "N/A"
-#        with virt.LibvirtConnection() as con:
-#            num_domains = str(con.numOfDomains())
+        with virt.LibvirtConnection() as con:
+            num_domains = str(con.numOfDomains())
 
         return {
             "status": virt.virtualization_hardware_status(),
