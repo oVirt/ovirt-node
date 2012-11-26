@@ -19,7 +19,7 @@ BuildArch:      noarch
 
 BuildRequires:  python2-devel
 Requires:       python-urwid
-Requires:       python-augeas
+#Requires:       python-augeas
 Requires:       python-gudev
 Requires:       libvirt-python
 
@@ -38,9 +38,10 @@ features.
 
 
 %install
-%makeinstall python=%{__python} lib=%{python_sitelib}
+%makeinstall python=%{__python} prefix=%{_prefix} root=%{buildroot}
 # Remove some extra data
 rm -rf %{buildroot}/usr/extra
+
 
 %check
 # Nothing, yet
@@ -51,9 +52,10 @@ rm -rf %{buildroot}/usr/extra
 %{python_sitelib}/ovirt_node_molch*.egg-info
 %{python_sitelib}/ovirt/__init__.*
 %{python_sitelib}/ovirt/node/*
-%{_bindir}/ovirt-config-setup-molch
+%{_bindir}/ovirt-config-setup
+#%{_bindir}/ovirt-config-installer
 
 
 %changelog
-* Oct 09 2012 Fabian Deutsch <fabiand@fedoraproject.org> - 0.0.1-1
+* Tue Oct 09 2012 Fabian Deutsch <fabiand@fedoraproject.org> - 0.0.1-1
 - Initial

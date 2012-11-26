@@ -9,15 +9,24 @@ setup(name='ovirt-node-molch',
     author_email='fabiand@fedoraproject.org',
     url='http://example.com',
     license="GPLv2+",
-    scripts=['bin/ovirt-config-setup-molch'],
+    scripts=[
+             "bin/ovirt-config-setup"
+             ],
     package_dir = {'': 'src'},
     packages=[
         'ovirt',
         'ovirt.node',
         'ovirt.node.ui',
         'ovirt.node.utils',
-        'ovirt.node.plugins',
+        'ovirt.node.config',
+        'ovirt.node.setup',
+        'ovirt.node.installer',
         ],
    data_files=[('extra', ['scm_hash.txt',
-                          'Makefile'])]
+                          'Makefile'
+                          ]),
+#               ('libexec', ['libexec/ovirt-config-setup'
+#        '                  ovirt-config-installer']
+#                           ])
+               ]
 )

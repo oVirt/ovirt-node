@@ -39,7 +39,7 @@ build:
 	${python} setup.py build
 
 install:
-	${python} setup.py install --prefix=$(prefix)
+	${python} setup.py install --prefix=$(prefix) --root=$(root)
 
 clean: clean-dist
 	-rm -f *~ scm_hash.txt
