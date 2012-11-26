@@ -44,7 +44,7 @@ from ovirt.node import base, exceptions, valid, utils
 
 LOGGER = logging.getLogger(__name__)
 
-OVIRT_NODE_DEFAULTS_FILENAME = "/etc/defaults/ovirt"
+OVIRT_NODE_DEFAULTS_FILENAME = "/etc/default/ovirt"
 
 
 class AugeasProvider(base.Base):
