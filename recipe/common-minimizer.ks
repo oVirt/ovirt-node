@@ -351,10 +351,8 @@ droprpm usermode
 
 #NFS Server
 droprpm rpcbind
-drop /usr/sbin/rpc.idmapd
 drop /usr/bin/rpcgen
 drop /usr/sbin/rpc.gssd
-drop /usr/sbin/rpc.idmapd
 drop /usr/sbin/rpc.mountd
 drop /usr/sbin/rpc.nfsd
 drop /usr/sbin/rpc.svcgssd
