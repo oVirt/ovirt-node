@@ -253,7 +253,10 @@ initrd /initrd0.img
                 return True
         self.oldtitle=None
         grub_config_file = None
+        _functions.mount_liveos()
         if os.path.ismount("/liveos"):
+            if _functions.is_efi_boot():
+                _functions.mount_efi()
             if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
                 grub_config_file = self.grub_config_file
 
@@ -266,15 +269,15 @@ initrd /initrd0.img
                 mount_liveos()
                 grub_config_file = "/liveos/grub/grub.conf"
 
-        if not grub_config_file is None:
+        if not grub_config_file is None and os.path.exists(grub_config_file):
             f=open(grub_config_file)
             oldgrub=f.read()
             f.close()
             m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
             if m is not None:
                 self.oldtitle=m.group(1)
+        _functions.system("umount /liveos/efi")
         _functions.system("umount /liveos")
-
         if _functions.findfs("BootBackup"):
             self.boot_candidate = "BootBackup"
         elif _functions.findfs("Boot"):
