@@ -101,7 +101,7 @@ class Application(base.Base):
         self.__load_plugins()
         if not self.plugins:
             raise Exception("No plugins found in '%s'" % self.plugin_base)
-        self.ui.register_hotkey("f12", self.__drop_to_shell)
+        self.ui.register_hotkey("f2", self.__drop_to_shell)
         self.ui.register_hotkey("window resize", self.__check_terminal_size)
         self.ui.footer = "Press esc to quit."
         self.ui.run()
