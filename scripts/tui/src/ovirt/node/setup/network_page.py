@@ -219,7 +219,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ]))
         ])
 
-        dialog.has_save_button = False
+        dialog.buttons = []
 
         self._nic_details_group.enabled(False)
 

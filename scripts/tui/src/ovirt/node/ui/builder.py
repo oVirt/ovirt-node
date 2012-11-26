@@ -28,8 +28,8 @@ import urwid
 
 import logging
 
-import ovirt.node.ui.widgets
 import ovirt.node.exceptions
+from ovirt.node import ui
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def page_from_plugin(tui, plugin):
     widget = None
 
     # FIXME could also be done using dict.
-    if type(element) is ovirt.node.ui.Page:
+    if type(element) is ui.Page:
         widget = build_page(tui, plugin, element)
     else:
         raise Exception("Unknown element container: %s" % element)
@@ -50,18 +50,18 @@ def page_from_plugin(tui, plugin):
 def build_page(tui, plugin, container):
     widgets = []
 
-    # Always create the SaveButton, but only display it if requested
-    #save = ovirt.node.ui.widgets.Button("Save")
-    #urwid.connect_signal(save, 'click', lambda x: plugin._on_ui_save())
-    save = build_button("_save", ovirt.node.ui.SaveButton(), tui, plugin)
-    plugin._save_button = save
-
     for path, item in container.children:
         widget = widget_for_item(tui, plugin, path, item)
         widgets.append(("flow", widget))
 
-    if container.has_save_button:
-        widgets.append(urwid.Filler(save))
+    # Add buttons
+    button_widgets = []
+    for path, item in container.buttons:
+        assert type(item) in [ui.SaveButton, ui.ResetButton, ui.Button]
+        button_widgets.append(build_button(path, item, tui, plugin))
+
+    if button_widgets:
+        widgets.append(urwid.Filler(urwid.Columns(button_widgets)))
 
     widgets.append(urwid.Filler(urwid.Text("")))
 
@@ -71,7 +71,7 @@ def build_page(tui, plugin, container):
     except:
         tui.notify("error", "Initial model validation failed.")
 
-    page = ovirt.node.ui.widgets.PageWidget(widgets)
+    page = ui.widgets.PageWidget(widgets)
     page.plugin = plugin
 
     return page
@@ -79,19 +79,25 @@ def build_page(tui, plugin, container):
 
 def widget_for_item(tui, plugin, path, item):
     item_to_builder = {
-        ovirt.node.ui.Label: build_label,
-        ovirt.node.ui.Header: build_label,
-        ovirt.node.ui.KeywordLabel: build_label,
-        ovirt.node.ui.Entry: build_entry,
-        ovirt.node.ui.PasswordEntry: build_entry,
-        ovirt.node.ui.Button: build_button,
-        ovirt.node.ui.SaveButton: build_button,
-        ovirt.node.ui.Divider: build_divider,
-        ovirt.node.ui.Options: build_options,
-        ovirt.node.ui.Row: build_row,
-        ovirt.node.ui.ProgressBar: build_progressbar,
-        ovirt.node.ui.Table: build_table,
-        ovirt.node.ui.Checkbox: build_checkbox,
+        ui.Header: build_label,
+
+        ui.Label: build_label,
+        ui.KeywordLabel: build_label,
+
+        ui.Entry: build_entry,
+        ui.PasswordEntry: build_entry,
+
+        ui.Button: build_button,
+        ui.SaveButton: build_button,
+        ui.ResetButton: build_button,
+
+        ui.Options: build_options,
+        ui.ProgressBar: build_progressbar,
+        ui.Table: build_table,
+        ui.Checkbox: build_checkbox,
+
+        ui.Divider: build_divider,
+        ui.Row: build_row,
     }
 
     # Check if builder is available for UI Element
@@ -103,12 +109,12 @@ def widget_for_item(tui, plugin, path, item):
     widget = build_func(path, item, tui, plugin)
 
     # Populate with values
-    if type(item) in [ovirt.node.ui.Entry,
-                      ovirt.node.ui.PasswordEntry,
-                      ovirt.node.ui.Label,
-                      ovirt.node.ui.KeywordLabel,
-                      ovirt.node.ui.Options,
-                      ovirt.node.ui.Checkbox]:
+    if type(item) in [ui.Entry,
+                      ui.PasswordEntry,
+                      ui.Label,
+                      ui.KeywordLabel,
+                      ui.Options,
+                      ui.Checkbox]:
         model = plugin.model()
         if path in model:
             text = model[path]
@@ -119,10 +125,10 @@ def widget_for_item(tui, plugin, path, item):
 
 def build_entry(path, item, tui, plugin):
     widget_class = None
-    if type(item) is ovirt.node.ui.Entry:
-        widget_class = ovirt.node.ui.widgets.Entry
+    if type(item) is ui.Entry:
+        widget_class = ui.widgets.Entry
     else:
-        widget_class = ovirt.node.ui.widgets.PasswordEntry
+        widget_class = ui.widgets.PasswordEntry
 
     widget = widget_class(item.label, align_vertical=item.align_vertical)
     widget.enable(item.enabled())
@@ -145,7 +151,6 @@ def build_entry(path, item, tui, plugin):
             plugin._on_ui_change(change)
             widget.notice = ""
             widget.valid(True)
-            plugin._save_button.enable(True)
 
         except ovirt.node.exceptions.Concern as e:
             LOGGER.error("Concern when updating: %s" % e)
@@ -155,10 +160,6 @@ def build_entry(path, item, tui, plugin):
             if widget._selectable:
                 widget.notice = e.message
             widget.valid(False)
-            plugin._save_button.enable(False)
-
-        # FIXME page validation must happen within tui, not plugin
-        # as UI data should be handled in tui
 
         tui._draw_screen()
     urwid.connect_signal(widget, 'change', on_widget_value_change)
@@ -167,13 +168,13 @@ def build_entry(path, item, tui, plugin):
 
 
 def build_label(path, item, tui, plugin):
-    if type(item) is ovirt.node.ui.KeywordLabel:
-        widget = ovirt.node.ui.widgets.KeywordLabel(item.keyword,
+    if type(item) is ui.KeywordLabel:
+        widget = ui.widgets.KeywordLabel(item.keyword,
                                                     item.text())
-    elif type(item) is ovirt.node.ui.Header:
-        widget = ovirt.node.ui.widgets.Header(item.text())
+    elif type(item) is ui.Header:
+        widget = ui.widgets.Header(item.text())
     else:
-        widget = ovirt.node.ui.widgets.Label(item.text())
+        widget = ui.widgets.Label(item.text())
 
     def on_item_text_change_cb(w, v):
         LOGGER.debug("Element changed, updating label '%s': %s" % (w, v))
@@ -187,13 +188,18 @@ def build_label(path, item, tui, plugin):
 
 
 def build_button(path, item, tui, plugin):
-    widget = ovirt.node.ui.widgets.Button(item.text())
+    widget = ui.widgets.Button(item.text())
 
     def on_widget_click_cb(widget, data=None):
         LOGGER.debug("Button click: %s %s" % (path, widget))
-        if type(item) is ovirt.node.ui.Button:
+        itemtype = type(item)
+        if itemtype is ui.Button:
             plugin._on_ui_change({path: True})
-        r = plugin._on_ui_save()
+        if itemtype in [ui.Button, ui.SaveButton]:
+            r = plugin._on_ui_save()
+        if itemtype in [ui.ResetButton]:
+            r = plugin._on_ui_reset()
+            tui._display_plugin(plugin)
         parse_plugin_result(tui, plugin, r)
 
 #        else:
@@ -206,11 +212,11 @@ def build_button(path, item, tui, plugin):
 
 
 def build_divider(path, item, tui, plugin):
-    return ovirt.node.ui.widgets.Divider(item.char)
+    return ui.widgets.Divider(item.char)
 
 
 def build_options(path, item, tui, plugin):
-    widget = ovirt.node.ui.widgets.Options(item.label, item.options,
+    widget = ui.widgets.Options(item.label, item.options,
                                            plugin.model()[path])
 
     def on_widget_change_cb(widget, data):
@@ -223,7 +229,7 @@ def build_options(path, item, tui, plugin):
 
 
 def build_checkbox(path, item, tui, plugin):
-    widget = ovirt.node.ui.widgets.Checkbox(item.label, item.state())
+    widget = ui.widgets.Checkbox(item.label, item.state())
     return widget
 
 
@@ -237,7 +243,7 @@ def build_row(path, container_item, tui, plugin):
 
 
 def build_progressbar(path, item, tui, plugin):
-    widget = ovirt.node.ui.widgets.ProgressBarWidget(item.current(), item.done)
+    widget = ui.widgets.ProgressBarWidget(item.current(), item.done)
 
     def on_item_current_change_cb(w, v):
         LOGGER.debug("Model changed, updating progressbar '%s': %s" % (w, v))
@@ -253,7 +259,7 @@ def build_table(path, item, tui, plugin):
     for key, label in item.items:
         c = _build_tableitem(tui, path, plugin, key, label)
         children.append(c)
-    widget = ovirt.node.ui.widgets.TableWidget(item.label, item.header,
+    widget = ui.widgets.TableWidget(item.label, item.header,
                                                children,
                                                item.height, item.enabled())
 
@@ -266,7 +272,7 @@ def build_table(path, item, tui, plugin):
 
 
 def _build_tableitem(tui, path, plugin, key, label):
-    c = ovirt.node.ui.widgets.TableEntryWidget(label)
+    c = ui.widgets.TableEntryWidget(label)
     c._key = key
 
     def on_activate_cb(w, data):
@@ -279,11 +285,11 @@ def _build_tableitem(tui, path, plugin, key, label):
 def parse_plugin_result(tui, plugin, result):
         LOGGER.debug("Parsing plugin change/save result: %s" % result)
 
-        if type(result) in [ovirt.node.ui.Page]:
+        if type(result) in [ui.Page]:
             LOGGER.debug("Page requested.")
             tui.show_page(result)
 
-        elif type(result) in [ovirt.node.ui.Dialog]:
+        elif type(result) in [ui.Dialog]:
             LOGGER.debug("Dialog requested.")
             dialog = tui.show_dialog(result)
 

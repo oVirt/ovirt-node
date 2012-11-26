@@ -113,7 +113,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         self._widgets = dict(widgets)
 
         page = ovirt.node.ui.Page(widgets)
-        page.has_save_button = False
+        page.buttons = []
         return page
 
     def on_change(self, changes):

@@ -26,6 +26,7 @@ The urwid TUI base library
 import timeit
 import urwid
 
+from ovirt.node import base
 from ovirt.node import ui
 import ovirt.node.ui.builder
 import ovirt.node.ui.widgets
@@ -95,6 +96,7 @@ class UrwidTUI(ovirt.node.ui.Window):
     def __init__(self, app):
         super(UrwidTUI, self).__init__(app)
         self.logger.info("Creating urwid tui for '%s'" % app)
+        self.logger.debug("Detected encoding: %s" % urwid.get_encoding_mode())
 
     def show_body(self, body):
         """
@@ -142,7 +144,7 @@ class UrwidTUI(ovirt.node.ui.Window):
         self.__menu = ovirt.node.ui.widgets.PluginMenu(self._plugins)
 
         def menu_item_changed(plugin):
-            self.__display_plugin(plugin)
+            self._display_plugin(plugin)
         urwid.connect_signal(self.__menu, 'changed', menu_item_changed)
 
     def __create_screen(self):
@@ -195,7 +197,7 @@ class UrwidTUI(ovirt.node.ui.Window):
         filler = urwid.Pile([page])
         self.__page_frame.body = filler
 
-    def __display_plugin(self, plugin):
+    def _display_plugin(self, plugin):
         if self._check_outstanding_changes():
             return
         timer = timeit.Timer()
@@ -277,7 +279,7 @@ class UrwidTUI(ovirt.node.ui.Window):
             self.logger.warning(msg)
             if not hasattr(self, "_error_dialog") or not self._error_dialog:
                 d = ui.Dialog("Error", [("dialog.error", ui.Label(msg))])
-                d.has_save_button = False
+                d.buttons = []
                 self._error_dialog = self.show_dialog(d)
         else:
             if hasattr(self, "_error_dialog") and self._error_dialog:
@@ -296,8 +298,9 @@ class UrwidTUI(ovirt.node.ui.Window):
     def suspended(self):
         """Supspends the screen to do something in the foreground
         """
-        class SuspendedScreen(object):
+        class SuspendedScreen(base.Base):
             def __init__(self, loop):
+                super(SuspendedScreen, self).__init__()
                 self.__loop = loop
 
             def __enter__(self):

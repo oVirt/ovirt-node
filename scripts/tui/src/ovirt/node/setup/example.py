@@ -134,7 +134,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 ("dialog.button", ovirt.node.ui.Button("Close"))
                 ]
         page = ovirt.node.ui.Dialog("Information", widgets)
-        page.has_save_button = False
+        page.buttons = []
 
         self._widgets.update(dict(widgets))
         self._widgets["dialog.dialog"] = page

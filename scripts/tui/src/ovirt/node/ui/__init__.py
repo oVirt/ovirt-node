@@ -133,7 +133,14 @@ class ContainerElement(Element):
 class Page(ContainerElement):
     """An abstract page with a couple of widgets
     """
-    has_save_button = True
+    buttons = []
+
+    def __init__(self, children):
+        super(Page, self).__init__(children)
+        self.buttons = [
+                        (None, SaveButton()),
+                        (None, ResetButton())
+                        ]
 
 
 class Dialog(Page):
@@ -221,6 +228,11 @@ class Button(InputElement):
 class SaveButton(Button):
     def __init__(self, enabled=True):
         super(SaveButton, self).__init__("Save", enabled)
+
+
+class ResetButton(Button):
+    def __init__(self, enabled=True):
+        super(ResetButton, self).__init__("Reset", enabled)
 
 
 class Divider(Element):

@@ -192,7 +192,7 @@ class NodePlugin(base.Base):
         except NotImplementedError:
             self.logger.debug("Plugin has no model")
         except ovirt.node.exceptions.InvalidData:
-            self.logger.warning("Plugins model does not pass sematic " +
+            self.logger.warning("Plugins model does not pass semantic " +
                                 "check: %s" % model)
             is_valid = False
         finally:
@@ -244,6 +244,15 @@ class NodePlugin(base.Base):
             self.logger.info("Changes were merged successfully")
             self.__changes = {}
         return successfull_merge
+
+    def _on_ui_reset(self):
+        """Called when a ResetButton was clicked
+        Discards all changes
+        """
+        changes = self.pending_changes(False)
+        self.logger.debug("Request to discard model changes: %s" % changes)
+        self.__changes = {}
+
 
     def pending_changes(self, only_effective_changes=True):
         """Return all changes which happened since the last on_merge call

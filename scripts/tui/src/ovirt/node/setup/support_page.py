@@ -30,8 +30,8 @@ import ovirt.node.ui
 class Plugin(ovirt.node.plugins.NodePlugin):
     def __init__(self, application):
         # Register F8: Display this plugin when F( is pressed
-        display_page = lambda: application.ui.display_page(self.ui_content())
-        application.ui.register_hotkey(["f8"], display_page)
+        show_page = lambda: application.ui.show_page(self.ui_content())
+        application.ui.register_hotkey(["f8"], show_page)
 
     def name(self):
         return "Support"
@@ -46,7 +46,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         ]
 
         page = ovirt.node.ui.Page(widgets)
-        page.has_save_button = False
+        page.buttons = []
         return page
 
     def model(self):
