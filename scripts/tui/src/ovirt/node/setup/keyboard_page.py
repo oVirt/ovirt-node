@@ -23,11 +23,9 @@
 Configure Keyboard Layout
 """
 
-import ovirt.node.plugins
-import ovirt.node.ui
+from ovirt.node import plugins, ui, utils
 
-
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
@@ -52,25 +50,19 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
+        kbd = utils.Keyboard()
         widgets = [
             ("layout._header",
-                ovirt.node.ui.Header("Keyboard Layout Selection")),
-            ("layout", ovirt.node.ui.Table("Available Keyboard Layouts",
-                                           "", self._get_layouts())),
+                ui.Header("Keyboard Layout Selection")),
+            ("layout", ui.Table("Available Keyboard Layouts",
+                                "", kbd.available_layouts())),
 
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
-
-    def _get_layouts(self):
-        # FIXME load from somewhere
-        return [
-                ("en_US", "U.S. English"),
-                ("de_DE", "German"),
-                ]
 
     def on_change(self, changes):
         pass

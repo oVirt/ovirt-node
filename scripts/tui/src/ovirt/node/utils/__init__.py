@@ -29,6 +29,7 @@ And use the model.py module for oVirt Node's defaults file.
 
 import hashlib
 import augeas as _augeas
+import system_config_keyboard.keyboard
 
 from ovirt.node import base
 
@@ -156,3 +157,13 @@ def parse_bool(txt):
         if len(utxt) > 0 and utxt[0] in ["y", "t", "Y", "T", "1"]:
             return True
     return False
+
+
+class Keyboard(base.Base):
+    def available_layouts(self):
+        kbd = system_config_keyboard.keyboard.Keyboard()
+        kbd.read()
+        layoutgen = ((details[0], kid)
+                     for kid, details in kbd.modelDict.items())
+        layouts = [(kid, name) for name, kid in sorted(layoutgen)]
+        return layouts
