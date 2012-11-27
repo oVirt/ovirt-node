@@ -29,7 +29,7 @@ import argparse
 import logging
 
 logging.basicConfig(level=logging.DEBUG,
-                    filename="app.log", filemode="w",
+                    filename="/tmp/app.log", filemode="w",
                     format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
 
