@@ -286,6 +286,12 @@ class NodePlugin(base.Base):
             self.logger.debug("No effective changes detected.")
         return effective_changes if len(effective_changes) > 0 else None
 
+    def dry_or(self, func):
+        if self.application.args.dry:
+            self.logger.info("Running dry, otherwise: %s" % func)
+        else:
+            func()
+
 
 class ChangesHelper(base.Base):
     def __init__(self, changes):

@@ -132,5 +132,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.get_key_values(netconsole_keys))
             txs += model.transaction()
 
-        txs.prepare()
-        # txs()
+        txs.prepare()  # Just to display something in dry mode
+        self.dry_or(lambda: txs())

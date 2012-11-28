@@ -306,14 +306,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             txs += self._configure_nic(*args)
 
         # Commit all outstanding transactions
-        txs.prepare()
+        txs.prepare()  # Just to display something in dry mode
         for idx, e in enumerate(txs):
             n = "(%s/%s) " % (idx + 1, len(txs))
             set_progress(n + e.title)
-            if self.application.args.dry:
-                self.logger.info("Not committing changes, dry-mode")
-            else:
-                e.commit()
+            self.dry_or(lambda: e.commit())
 
         set_progress("All changes were applied.")
         time.sleep(3)
