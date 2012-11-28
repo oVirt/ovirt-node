@@ -167,3 +167,107 @@ class Keyboard(base.Base):
                      for kid, details in kbd.modelDict.items())
         layouts = [(kid, name) for name, kid in sorted(layoutgen)]
         return layouts
+
+
+class Transaction(list, base.Base):
+    """A very simple transaction mechanism.
+
+    >>> class StepA(Transaction.Element):
+    ...     def commit(self):
+    ...         print "Step A"
+    ...         return "Stepped A"
+
+    >>> class StepB(Transaction.Element):
+    ...     def commit(self):
+    ...         print "Step B"
+    ...         return "Stepped B"
+
+    >>> class StepC(Transaction.Element):
+    ...     def commit(self):
+    ...         raise Exception("Step C")
+
+    >>> tx = Transaction("Steps", [StepA(), StepB()])
+    >>> tx()
+    Step A
+    Step B
+    True
+
+    >>> len(tx)
+    2
+
+    >>> tx.prepare()
+    True
+    >>> for e in tx:
+    ...     e.commit()
+    Step A
+    'Stepped A'
+    Step B
+    'Stepped B'
+
+>>> tx = Transaction("Steps", [StepA(), StepB(), StepC()])
+    >>> tx()
+    Traceback (most recent call last):
+        ...
+    RuntimeError: Transaction failed: Step C
+    """
+    def __init__(self, title, elements=[]):
+        super(Transaction, self).__init__()
+        base.Base.__init__(self)
+        self.title = title
+        self._prepared_elements = []
+        self.extend(elements)
+
+    def prepare(self):
+        for element in self:
+            self.logger.debug("Preparing element '%s'" % element)
+            if Transaction.Element not in element.__class__.mro():
+                raise Exception("%s is no Transaction.Element" % element)
+            self._prepared_elements.append(element)
+            element.prepare()
+        return True
+
+    def commit(self):
+        for element in self:
+            self.logger.debug("Committing element '%s'" % element)
+            element.commit()
+        return True
+
+    def abort(self):
+        for element in self._prepared_elements:
+            self.logger.debug("Aborting element '%s'" % element)
+            element.abort()
+        self._prepared_elements = []
+        return True
+
+    def __call__(self):
+        self.logger.debug("Running transaction '%s'" % self)
+        try:
+            self.prepare()
+            self.commit()
+        except Exception as e:
+            self.logger.warning("Transaction failed: %s" % e.message)
+            self.abort()
+            raise RuntimeError("Transaction failed: %s" % e.message)
+        self.logger.info("Transaction '%s' succeeded" % self)
+        return True
+
+    class Element(base.Base):
+        title = None
+
+        def __repr__(self):
+            return "<%s '%s'>" % (self.__class__.__name__, self.title)
+
+        def prepare(self):
+            """Is expected to be short running and not changing anything
+            """
+            pass
+
+        def commit(self):
+            """Is expected to run and change stuff
+            """
+            pass
+
+        def abort(self):
+            """Is run in case that one commit of a transaction fails.
+            """
+            pass

@@ -253,7 +253,6 @@ class NodePlugin(base.Base):
         self.logger.debug("Request to discard model changes: %s" % changes)
         self.__changes = {}
 
-
     def pending_changes(self, only_effective_changes=True):
         """Return all changes which happened since the last on_merge call
 

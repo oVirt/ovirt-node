@@ -273,9 +273,6 @@ def node_nics():
 def node_bridge():
     """Returns the main bridge of this node
 
-    >>> node_bridge() is not None
-    True
-
     Returns:
         Bridge of this node
     """

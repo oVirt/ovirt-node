@@ -169,11 +169,25 @@ class NodeConfigFileSection(base.Base):
         """
         raise NotImplementedError
 
-    def apply(self, *args, **kwargs):
-        """This method updates the to this subclass specific configuration
-        files according to the config keys set with configure.
+    def transaction(self):
+        """This method returns a transaction which needs to be performed
+        to activate the defaults config (so e.g. update cfg files and restart
+        services).
+
+        This can be used to update the UI when the transaction has many steps
         """
         raise NotImplementedError
+
+    def commit(self, *args, **kwargs):
+        """This method updates the to this subclass specific configuration
+        files according to the config keys set with configure.
+
+        A shortcut for:
+        tx = obj.ransaction()
+        tx()
+        """
+        tx = self.transaction()
+        tx()
 
     def retrieve(self):
         """Returns the config keys of the current component
@@ -305,7 +319,7 @@ class Nameservers(NodeConfigFileSection):
                 "servers": cfg["servers"].split(",")
                 }
 
-    def apply(self):
+    def transaction(self):
         """Derives the nameserver config from OVIRT_DNS
 
         1. Parse nameservers from defaults
@@ -316,6 +330,7 @@ class Nameservers(NodeConfigFileSection):
         Args:
             servers: List of servers (str)
         """
+        aug = utils.AugeasWrapper()
         ovirt_config = self.defaults.get_dict()
         if "OVIRT_DNS" not in ovirt_config:
             self.logger.debug("No DNS server entry in default config")
@@ -323,31 +338,40 @@ class Nameservers(NodeConfigFileSection):
 
         servers = ovirt_config["OVIRT_DNS"]
         if servers is None or servers == "":
-            self.logger.debug("No DNS servers configured in default config")
-
+            self.logger.debug("No DNS servers configured " +
+                              "in default config")
         servers = servers.split(",")
 
-        aug = utils.AugeasWrapper()
-        # Write resolv.conf any way, sometimes without servers
-        comment = ("Please make changes through the TUI. " + \
-                   "Manual edits to this file will be " + \
-                   "lost on reboot")
-        aug.set("/files/etc/resolv.conf/#comment[1]", comment)
+        class UpdateResolvConf(utils.Transaction.Element):
+            title = "Updateing resolv.conf"
 
-        # Now set the nameservers
-        ovirt.node.config.network.nameservers(servers)
+            def commit(self):
+                # Write resolv.conf any way, sometimes without servers
+                comment = ("Please make changes through the TUI. " + \
+                           "Manual edits to this file will be " + \
+                           "lost on reboot")
+                aug.set("/files/etc/resolv.conf/#comment[1]", comment)
+                # Now set the nameservers
+                ovirt.node.config.network.nameservers(servers)
+                utils.fs.persist_config("/etc/resolv.conf")
 
-        # Set or remove PEERDNS for all ifcfg-*
-        for nic in glob.glob("/etc/sysconfig/network-scripts/ifcfg-*"):
-            if "ifcfg-lo" in nic:
-                continue
-            path = "/files%s/PEERDNS" % nic
-            if len(servers) > 0:
-                aug.set(path, "no")
-            else:
-                aug.remove(path)
+        class UpdatePeerDNS(utils.Transaction.Element):
+            title = "Update PEERDNS statement in ifcfg-* files"
 
-        utils.fs.persist_config("/etc/resolv.conf")
+            def commit(self):
+                # Set or remove PEERDNS for all ifcfg-*
+                for nic in glob.glob("/etc/sysconfig/network-scripts/ifcfg-*"):
+                    if "ifcfg-lo" in nic:
+                        continue
+                    path = "/files%s/PEERDNS" % nic
+                    if len(servers) > 0:
+                        aug.set(path, "no")
+                    else:
+                        aug.remove(path)
+
+        return utils.Transaction("Configuring DNS", [
+                               UpdateResolvConf(),
+                               UpdatePeerDNS()])
 
 
 class Timeservers(NodeConfigFileSection):
@@ -378,6 +402,9 @@ class Timeservers(NodeConfigFileSection):
         return {
                 "servers": cfg["servers"].split(",")
                 }
+
+    def transaction(self):
+        return utils.Transaction("Configuring timeserver")
 
 
 class Syslog(NodeConfigFileSection):

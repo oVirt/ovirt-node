@@ -22,13 +22,10 @@
 Network page plugin
 """
 
-import time
-
-from ovirt.node import ui
+from ovirt.node import plugins, ui, valid, utils
 from ovirt.node.config import defaults
-from ovirt.node import plugins
 import ovirt.node.utils.network
-from ovirt.node import valid
+import time
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -262,31 +259,45 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("dialog.dia.text[0]", progress),
             ]))
 
+        # This object will contain all transaction elements to be executed
+        txs = utils.Transaction("DNS and NTP configuration")
+
+        e_changes_h = plugins.ChangesHelper(effective_changes)
+        e_model_h = plugins.ChangesHelper(effective_model)
+
         nameservers = []
-        for key in ["dns[0]", "dns[1]"]:
-            if key in effective_changes:
-                nameservers.append(effective_model[key])
+        dns_keys = ["dns[0]", "dns[1]"]
+        if e_changes_h.any_key_in_change(dns_keys):
+            nameservers += e_model_h.get_key_values(dns_keys)
         if nameservers:
-            set_progress("Applying DNS changes.")
             self.logger.info("Setting new nameservers: %s" % nameservers)
             model = defaults.Nameservers()
             model.update(nameservers)
+            txs += model.transaction()
 
         timeservers = []
-        for key in ["ntp[0]", "ntp[1]"]:
-            if key in effective_changes:
-                timeservers.append(effective_model[key])
+        ntp_keys = ["ntp[0]", "ntp[1]"]
+        if e_changes_h.any_key_in_change(ntp_keys):
+            timeservers += e_model_h.get_key_values(ntp_keys)
         if timeservers:
-            set_progress("Applying NTP changes.")
             self.logger.info("Setting new timeservers: %s" % timeservers)
             model = defaults.Timeservers()
             model.update(timeservers)
+            txs += model.transaction()
 
-        change_helper = plugins.ChangesHelper(effective_changes)
-        if change_helper.any_key_in_change(self._nic_details_group):
+        # For the NIC details dialog:
+        if e_changes_h.any_key_in_change(self._nic_details_group):
             # If any networking related key was changed, reconfigure networking
             helper = plugins.ChangesHelper(effective_model)
-            self._configure_nic(*helper.get_key_values(self._nic_details_group))
+            # Fetch the values for the nic keys, they are used as arguments
+            args = helper.get_key_values(self._nic_details_group)
+            txs += self._configure_nic(*args)
+
+        # Commit all outstanding transactions
+        txs.prepare()
+        for e in txs:
+            set_progress(e.title)
+            #e.commit()
 
         set_progress("All changes were applied.")
         time.sleep(3)
@@ -306,3 +317,5 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             model.update(iface, "none", ipaddr, netmask, gateway, vlanid)
         else:
             self.logger.debug("No interface configuration found")
+        # Return the resulting transaction
+        return model.transaction()

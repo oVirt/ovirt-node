@@ -25,6 +25,7 @@ Configure Keyboard Layout
 
 from ovirt.node import plugins, ui, utils
 
+
 class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
