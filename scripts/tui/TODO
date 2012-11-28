@@ -1,0 +1,4 @@
+- Pull common functionality into NodePlugins (changes helper)
+- Ensure that 80x23 size works
+- Improve List widget - It needs to have a scrollbar or display it's status in another way
+- Add NFSv4 support to storage page
