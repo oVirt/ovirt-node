@@ -97,6 +97,10 @@ class RegexValidator(Validator):
             self.pattern = (self.pattern, )
         if type(value) in [bool, int]:
             value = str(value)
+        elif type(value) in [str, unicode]:
+            pass
+        else:
+            self.logger.warning("Unknown type: %s %s" % (value, type(value)))
         return re.compile(*self.pattern).search(value) != None
 
 
@@ -334,3 +338,10 @@ class URL(Validator):
         if self.requires_path:
             is_valid &= p.path != ""
         return is_valid
+
+
+class Boolean(Validator):
+    description = "a valid boolean (True or False)"
+
+    def validate(self, value):
+        return value in [True, False]
