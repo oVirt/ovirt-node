@@ -18,17 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-
 """
 Configure Logging
 """
 
-import ovirt.node.plugins
-import ovirt.node.valid
-import ovirt.node.ui
+from ovirt.node import plugins, valid, ui, utils
+from ovirt.node.config import defaults
+from ovirt.node.plugins import ChangesHelper
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
@@ -39,56 +38,99 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return 50
 
     def model(self):
-        if not self._model:
-            self._model = {
-                # The target address
-                "max_log_size": "1024",
-                "rsyslog.address": "",
-                "rsyslog.port": "514",
-                "netconsole.address": "",
-                "netconsole.port": "6666",
-            }
-        return self._model
+        logrotate = dict(defaults.Logrotate().retrieve())
+        netconsole = dict(defaults.Netconsole().retrieve())
+        syslog = dict(defaults.Syslog().retrieve())
+
+        model = {
+            "logrotate.max_size": "1024",
+            "rsyslog.address": "",
+            "rsyslog.port": "514",
+            "netconsole.address": "",
+            "netconsole.port": "6666",
+        }
+        model["logrotate.max_size"] = logrotate["max_size"] or "1024"
+
+        model["rsyslog.address"] = syslog["server"] or ""
+        model["rsyslog.port"] = syslog["port"] or ""
+
+        model["netconsole.address"] = netconsole["server"] or ""
+        model["netconsole.port"] = netconsole["port"] or ""
+
+        return model
 
     def validators(self):
         """Validators validate the input on change and give UI feedback
         """
         return {
-                "max_log_size": ovirt.node.valid.Number(range=[0, None]),
-                "rsyslog.address": ovirt.node.valid.FQDNOrIPAddress(),
-                "rsyslog.port": ovirt.node.valid.Port(),
-                "netconsole.address": ovirt.node.valid.FQDNOrIPAddress(),
-                "netconsole.port": ovirt.node.valid.Port(),
+                "logrotate.max_size": valid.Number(range=[0, None]),
+                "rsyslog.address": valid.FQDNOrIPAddress(),
+                "rsyslog.port": valid.Port(),
+                "netconsole.address": valid.FQDNOrIPAddress(),
+                "netconsole.port": valid.Port(),
             }
 
     def ui_content(self):
         widgets = [
-            ("header", ovirt.node.ui.Header("Logging")),
+            ("header", ui.Header("Logging")),
 
-            ("max_log_size", ovirt.node.ui.Entry("Logrotate Max Log " +
+            ("logrotate.max_size", ui.Entry("Logrotate Max Log " +
                                                  "Size (KB):")),
 
-            ("rsyslog.header", ovirt.node.ui.Label(
+            ("rsyslog.header", ui.Label(
                                     "RSyslog is an enhanced multi-threaded " +
                                     "syslogd")),
-            ("rsyslog.address", ovirt.node.ui.Entry("Server Address:")),
-            ("rsyslog.port", ovirt.node.ui.Entry("Server Port:")),
+            ("rsyslog.address", ui.Entry("Server Address:")),
+            ("rsyslog.port", ui.Entry("Server Port:")),
 
-            ("netconsole.header", ovirt.node.ui.Label(
+            ("netconsole.header", ui.Label(
                                     "Netconsole service allows a remote sys" +
                                     "log daemon to record printk() messages")),
-            ("netconsole.address", ovirt.node.ui.Entry("Server Address:")),
-            ("netconsole.port", ovirt.node.ui.Entry("Server Port:")),
+            ("netconsole.address", ui.Entry("Server Address:")),
+            ("netconsole.port", ui.Entry("Server Port:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
 
     def on_change(self, changes):
         pass
-        self._model.update(changes)
 
     def on_merge(self, effective_changes):
-        pass
+        self.logger.debug("Saving logging page")
+        changes = ChangesHelper(self.pending_changes(False))
+        model = self.model()
+        model.update(effective_changes)
+        effective_model = ChangesHelper(model)
+
+        self.logger.debug("Saving logging page: %s" % changes.changes)
+        self.logger.debug("Logging page model: %s" % effective_model.changes)
+
+        logrotate_keys = ["logrotate.max_size"]
+        rsyslog_keys = ["rsyslog.address", "rsyslog.port"]
+        netconsole_keys = ["netconsole.address", "netconsole.port"]
+
+        txs = utils.Transaction("Updating logging related configuration")
+
+        # If any logrotate key changed ...
+        if changes.any_key_in_change(logrotate_keys):
+            # Get all logrotate values fomr the effective model
+            model = defaults.Logrotate()
+            # And update the defaults
+            model.update(*effective_model.get_key_values(logrotate_keys))
+            txs += model.transaction()
+
+        if changes.any_key_in_change(rsyslog_keys):
+            model = defaults.Syslog()
+            model.update(*effective_model.get_key_values(rsyslog_keys))
+            txs += model.transaction()
+
+        if changes.any_key_in_change(netconsole_keys):
+            model = defaults.Netconsole()
+            model.update(*effective_model.get_key_values(netconsole_keys))
+            txs += model.transaction()
+
+        txs.prepare()
+        # txs()
