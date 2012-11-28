@@ -290,6 +290,23 @@ class Network(NodeConfigFileSection):
         (valid.IPv4Address() | valid.Empty(or_none=True))(netmask)
         (valid.IPv4Address() | valid.Empty(or_none=True))(gateway)
 
+    def transaction(self):
+        class ConfigureNIC(utils.Transaction.Element):
+            title = "Configuring NIC"
+
+            def prepare(self):
+                self.logger.debug("Psuedo prewparing ovirtnode.Network")
+
+            def commit(self):
+                from ovirtnode.network import Network as oNetwork
+                net = oNetwork()
+                net.configure_interface()
+                net.save_network_configuration()
+
+        tx = utils.Transaction("Saving network configuration")
+        tx.append(ConfigureNIC())
+        return tx
+
 
 class Nameservers(NodeConfigFileSection):
     """Configure nameservers
@@ -314,6 +331,8 @@ class Nameservers(NodeConfigFileSection):
                 }
 
     def retrieve(self):
+        """We mangle the original vale a bit for py convenience
+        """
         cfg = dict(NodeConfigFileSection.retrieve(self))
         return {
                 "servers": cfg["servers"].split(",")
@@ -332,9 +351,12 @@ class Nameservers(NodeConfigFileSection):
         """
         aug = utils.AugeasWrapper()
         ovirt_config = self.defaults.get_dict()
+
+        tx = utils.Transaction("Configuring DNS")
+
         if "OVIRT_DNS" not in ovirt_config:
             self.logger.debug("No DNS server entry in default config")
-            return
+            return tx
 
         servers = ovirt_config["OVIRT_DNS"]
         if servers is None or servers == "":
@@ -369,9 +391,9 @@ class Nameservers(NodeConfigFileSection):
                     else:
                         aug.remove(path)
 
-        return utils.Transaction("Configuring DNS", [
-                               UpdateResolvConf(),
-                               UpdatePeerDNS()])
+        tx += [UpdateResolvConf(), UpdatePeerDNS()]
+
+        return tx
 
 
 class Timeservers(NodeConfigFileSection):
@@ -426,6 +448,19 @@ class Syslog(NodeConfigFileSection):
     def update(self, server, port):
         valid.FQDNOrIPAddress()(server)
         valid.Port()(port)
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        server, port = (cfg["server"], cfg["port"])
+
+        class CreateRsyslogConfig(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.log as olog
+                olog.ovirt_rsyslog(server, port, "udp")
+
+        tx = utils.Transaction("Configuring syslog")
+        tx.append(CreateRsyslogConfig())
+        return tx
 
 
 class Collectd(NodeConfigFileSection):
@@ -548,8 +583,53 @@ class Netconsole(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, server, port):
-        # FIXME add validation
-        pass
+        valid.FQDNOrIPAddress()(server)
+        valid.Port()(port)
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        server, port = (cfg["server"], cfg["port"])
+
+        class CreateNetconsoleConfig(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.log as olog
+                olog.ovirt_netconsole(server, port, "udp")
+
+        tx = utils.Transaction("Configuring netconsole")
+        tx.append(CreateNetconsoleConfig())
+        return tx
+
+
+class Logrotate(NodeConfigFileSection):
+    """Configure logrotate
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = Logrotate(cfgfile)
+    >>> max_size = "42"
+    >>> n.update(max_size)
+    >>> n.retrieve()
+    [('max_size', '42')]
+    """
+    # FIXME this key is new!
+    keys = ("OVIRT_LOGROTATE_MAX_SIZE",)
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, max_size):
+        valid.Number([0, None])(max_size)
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        max_size = cfg["max_size"]
+
+        class CreateLogrotateConfig(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.log as olog
+                olog.set_logrotate_size(max_size)
+
+        tx = utils.Transaction("Configuring logrotate")
+        tx.append(CreateLogrotateConfig())
+        return tx
 
 
 class CIM(NodeConfigFileSection):
@@ -569,3 +649,39 @@ class CIM(NodeConfigFileSection):
         return {
                 "OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else "0"
                 }
+
+
+class Keyboard(NodeConfigFileSection):
+    """Configure keyboard
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = Keyboard(cfgfile)
+    >>> layout = "de_DE.UTF-8"
+    >>> n.update(layout)
+    >>> n.retrieve()
+    [('layout', 'de_DE.UTF-8')]
+    """
+    # FIXME this key is new!
+    keys = ("OVIRT_KEYBOARD_LAYOUT",)
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, layout):
+        # FIXME Some validation that layout is in the list of available layouts
+        pass
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        layout = cfg["layout"]
+
+        class CreateKeyboardConfig(utils.Transaction.Element):
+            def commit(self):
+                from ovirtnode.ovirtfunctions import ovirt_store_config
+                kbd = utils.Keyboard()
+                kbd.set_layout(layout)
+                ovirt_store_config(["/etc/sysconfig/keyboard",
+                                    "/etc/vconsole.conf"])
+
+        tx = utils.Transaction("Configuring keyboard layout")
+        tx.append(CreateKeyboardConfig())
+        return tx

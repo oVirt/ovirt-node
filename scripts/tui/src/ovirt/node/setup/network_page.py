@@ -295,9 +295,13 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         # Commit all outstanding transactions
         txs.prepare()
-        for e in txs:
-            set_progress(e.title)
-            #e.commit()
+        for idx, e in enumerate(txs):
+            n = "(%s/%s) " % (idx + 1, len(txs))
+            set_progress(n + e.title)
+            if self.application.args.dry:
+                self.logger.info("Not committing changes, dry-mode")
+            else:
+                e.commit()
 
         set_progress("All changes were applied.")
         time.sleep(3)
