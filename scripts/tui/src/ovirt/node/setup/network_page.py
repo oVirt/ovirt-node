@@ -141,6 +141,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return self._widgets[path]
 
     def _build_nic_details_dialog(self):
+        self.logger.debug("Building NIC details dialog")
         # Populate model with nic specific informations
         iface = self._model["nics"]
         self.logger.debug("Getting informations for NIC details page")
@@ -246,7 +247,16 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         if "nics" in changes and len(changes) == 1:
             iface = changes["nics"]
             self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
-            return self._build_nic_details_dialog()
+            self._nic_dialog = self._build_nic_details_dialog()
+            return self._nic_dialog
+
+        if "dialog.nic.close" in changes:
+            self._nic_dialog.close()
+            return
+
+        if "dialog.nic.save" in changes:
+            self.logger.debug("Save and close NIC")
+            self._nic_dialog.close()
 
         def set_progress(txt):
             set_progress.txt += txt + "\n"
@@ -254,10 +264,12 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         set_progress.txt = "Applying changes ...\n"
 
         progress = ui.Label(set_progress.txt)
-        d = self.application.ui.show_dialog(self._build_dialog("dialog.dia",
+        _d = self._build_dialog("dialog.dia",
                                                                "fooo", [
             ("dialog.dia.text[0]", progress),
-            ]))
+            ])
+        _d.buttons = []
+        d = self.application.ui.show_dialog(_d)
 
         # This object will contain all transaction elements to be executed
         txs = utils.Transaction("DNS and NTP configuration")
