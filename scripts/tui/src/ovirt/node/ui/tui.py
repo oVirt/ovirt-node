@@ -221,18 +221,15 @@ class UrwidTUI(ovirt.node.ui.Window):
         return dialog
 
     def __close_dialog(self, dialog):
-        if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
-            if dialog == self.__widget_stack[-1]:
-                self.__widget_stack.pop()
-                if len(self.__widget_stack) > 0:
-                    self.__loop.widget = self.__widget_stack[:-1]
-                else:
-                    self.logger.debug("No more dialog, main frame " + \
-                                 "%s" % self.__main_frame)
-                    self.__loop.widget = self.__main_frame
-            self.logger.debug("Loop widget: %s" % self.__loop.widget)
-            self._draw_screen()
-            self.logger.debug("Dialog closed")
+        self.logger.debug("Widget stack: %s" % self.__widget_stack)
+        new_stack = [w for w in self.__widget_stack if w != dialog]
+        self.__widget_stack = new_stack
+        self.logger.debug("New widget stack: %s" % self.__widget_stack)
+        if self.__widget_stack:
+            self.__loop.widget = self.__widget_stack[-1]
+        else:
+            self.__loop.widget = self.__main_frame
+        self.logger.debug("Dialog %s closed" % dialog)
 
     def __filter_hotkeys(self, keys, raw):
         key = str(keys)
