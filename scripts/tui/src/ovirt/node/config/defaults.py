@@ -291,6 +291,11 @@ class Network(NodeConfigFileSection):
         (valid.IPv4Address() | valid.Empty(or_none=True))(gateway)
 
     def transaction(self):
+        """Return all transactions to re-configure networking
+
+        FIXME this should be rewritten o allow more fine grained progress
+        informations
+        """
         class ConfigureNIC(utils.Transaction.Element):
             title = "Configuring NIC"
 

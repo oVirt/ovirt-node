@@ -55,15 +55,19 @@ class Application(base.Base):
 
     def __parse_cmdline(self):
         parser = argparse.ArgumentParser(description='oVirt Node Utility')
-        parser.add_argument("--config",
+        parser.add_argument("--defaults",
                             type=str,
                             help="Central oVirt Node configuration file")
-        args = parser.parse_args()
-        self.logger.debug("Parsed args: %s" % args)
-        if args.config:
-            defaults.OVIRT_NODE_DEFAULTS_FILENAME = args.config
+        parser.add_argument("--dry",
+                            action='store_true',
+                            help="Just write defaults, nothing else")
+        self.args = parser.parse_args()
+        self.logger.debug("Parsed args: %s" % self.args)
+        if self.args.defaults:
+            # FIXME Should be read by clients
+            defaults.OVIRT_NODE_DEFAULTS_FILENAME = self.args.defaults
             self.logger.debug("Setting config file: %s (%s)" % (
-                                        args.config,
+                                        self.args.defaults,
                                         defaults.OVIRT_NODE_DEFAULTS_FILENAME))
 
     def __load_plugins(self):
