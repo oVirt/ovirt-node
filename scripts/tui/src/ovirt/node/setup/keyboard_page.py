@@ -18,12 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-
 """
 Configure Keyboard Layout
 """
 
 from ovirt.node import plugins, ui, utils
+from ovirt.node.config import defaults
+from ovirt.node.plugins import ChangesHelper
 
 
 class Plugin(plugins.NodePlugin):
@@ -37,12 +38,10 @@ class Plugin(plugins.NodePlugin):
         return 30
 
     def model(self):
-        if not self._model:
-            self._model = {
-                "layout": "en_US",
-            }
+        keyboard = dict(defaults.Logrotate().retrieve())
 
-        return self._model
+        model = {}
+        model["keyboard.layout"] = keyboard["layout"] or ""
 
     def validators(self):
         return {}
@@ -55,10 +54,10 @@ class Plugin(plugins.NodePlugin):
         widgets = [
             ("layout._header",
                 ui.Header("Keyboard Layout Selection")),
-            ("layout", ui.Table("Available Keyboard Layouts",
+            ("keyboard.layout", ui.Table("Available Keyboard Layouts",
                                 "", kbd.available_layouts())),
-
         ]
+
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
@@ -69,4 +68,23 @@ class Plugin(plugins.NodePlugin):
         pass
 
     def on_merge(self, effective_changes):
-        pass
+        self.logger.debug("Saving keyboard page")
+        changes = ChangesHelper(self.pending_changes(False))
+        model = self.model()
+        model.update(effective_changes)
+        effective_model = ChangesHelper(model)
+
+        self.logger.debug("Saving keyboard page: %s" % changes.changes)
+        self.logger.debug("Keyboard page model: %s" % effective_model.changes)
+
+        layout_keys = ["keyboard.layout"]
+
+        txs = utils.Transaction("Updating keyboard related configuration")
+
+        if changes.any_key_in_change(layout_keys):
+            model = defaults.Keyboard()
+            model.update(*effective_model.get_key_values(layout_keys))
+            txs += model.transaction()
+
+        txs.prepare()  # Just to display something in dry mode
+        self.dry_or(lambda: txs())
