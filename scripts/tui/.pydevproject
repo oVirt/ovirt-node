@@ -5,4 +5,8 @@
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/ovirt-node-molch/src</path>
 </pydev_pathproperty>
+
+<pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
+<path>/home/fdeutsch/git/ovirt-node/scripts</path>
+</pydev_pathproperty>
 </pydev_project>

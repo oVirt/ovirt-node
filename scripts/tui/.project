@@ -3,6 +3,7 @@
 	<name>ovirt-node-molch</name>
 	<comment></comment>
 	<projects>
+		<project>ovirt-node</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
