@@ -26,7 +26,9 @@ Some convenience functions realted to the filesystem
 import logging
 import shutil
 import os
+
 from ovirt.node.utils import checksum, is_bind_mount
+from ovirt.node import base
 from process import system
 
 LOGGER = logging.getLogger(__name__)
@@ -52,7 +54,7 @@ def copy_contents(src, dst):
         dstf.write(srcf.read())
 
 
-class BackupedFiles(object):
+class BackupedFiles(base.Base):
     """This context manager can be used to keep backup of files while messing
     with them.
 
@@ -85,24 +87,39 @@ class BackupedFiles(object):
     suffix = ".backup"
 
     def __init__(self, files, suffix=".backup"):
+        super(BackupedFiles, self).__init__()
         assert type(files) is list, "A list of files is required"
-        assert all([os.path.isfile(f) for f in files]), \
-               "Not all files exist: %s" % files
+        if any([not os.path.isfile(f) for f in files]):
+            self.logger.warning("Not all files exist: %s" % files)
         self.files = files
         self.suffix = suffix
 
     def __enter__(self):
         """Create backups when starting
         """
-        for fn in self.files:
-            backup = "%s%s" % (fn, self.suffix)
-            assert not os.path.exists(backup)
-            shutil.copy(fn, backup)
-            self.backups[fn] = backup
+        self.create()
         return self
 
     def __exit__(self, a, b, c):
         """Remove all backups when done
+        """
+        self.remove()
+
+    def create(self):
+        """Create a backup of all files
+        """
+        for fn in self.files:
+            backup = "%s%s" % (fn, self.suffix)
+            assert not os.path.exists(backup)
+            if os.path.exists(fn):
+                shutil.copy(fn, backup)
+                self.backups[fn] = backup
+            else:
+                self.logger.warning("Can not backup non-existent " +
+                                    "file: %s" % fn)
+
+    def remove(self):
+        """Remove all backups
         """
         for fn in self.files:
             backup = self.backups[fn]
@@ -111,8 +128,10 @@ class BackupedFiles(object):
     def of(self, fn):
         """Returns the backup file for the given file
         """
-        assert fn in self.backups, "No backup for '%s'" % fn
-        return self.backups[fn]
+        #assert fn in self.backups, "No backup for '%s'" % fn
+        if fn in self.backups:
+            return self.backups[fn]
+        return None
 
     def restore(self, fn):
         """Restore contens of a previously backupe file
