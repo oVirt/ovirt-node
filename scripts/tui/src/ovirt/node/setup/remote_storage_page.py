@@ -18,13 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import utils
+from ovirt.node.config import defaults
+from ovirt.node.plugins import ChangesHelper
+import ovirt.node.plugins
+import ovirt.node.ui
 
 """
 Configure Remote Storage
 """
-
-import ovirt.node.plugins
-import ovirt.node.ui
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -70,4 +72,25 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         self._model.update(changes)
 
     def on_merge(self, effective_changes):
-        pass
+        self.logger.debug("Saving remote storage page")
+        changes = ChangesHelper(self.pending_changes(False))
+        model = self.model()
+        model.update(effective_changes)
+        effective_model = ChangesHelper(model)
+
+        self.logger.debug("Saving remote storage page: %s" % changes.changes)
+        self.logger.debug("Remote storage page model: %s" %
+                          effective_model.changes)
+
+        iscsi_keys = ["iscsi.initiator_name"]
+        # FIXME nfsv4 is missing
+
+        txs = utils.Transaction("Updating remote storage configuration")
+
+        if changes.any_key_in_change(iscsi_keys):
+            model = defaults.iSCSI()
+            model.update(*effective_model.get_key_values(iscsi_keys))
+            txs += model.transaction()
+
+        txs.prepare()  # Just to display something in dry mode
+        self.dry_or(lambda: txs())

@@ -18,6 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import base, exceptions, valid, utils
+import glob
+import logging
+import os
+import ovirt.node.config
 
 """
 Classes and functions related to model of the configuration of oVirt Node.
@@ -34,13 +39,6 @@ at the NodeConfigFileSection for more informations.
 Each class should implement a configure method, mainly to define all the
 required arguments (or keys).
 """
-
-import logging
-import glob
-
-import ovirt.node.config
-from ovirt.node import base, exceptions, valid, utils
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -516,17 +514,119 @@ class KDump(NodeConfigFileSection):
     >>> nfs_url = "host.example.com"
     >>> ssh_url = "root@host.example.com"
     >>> n = KDump(cfgfile)
-    >>> n.update(nfs_url, ssh_url)
-    >>> n.retrieve()
+    >>> n.update(nfs_url, ssh_url, '')
+    >>> d = n.retrieve()
+    >>> d[:2]
     [('nfs', 'host.example.com'), ('ssh', 'root@host.example.com')]
+    >>> d[2:]
+    [('local', '')]
     """
     keys = ("OVIRT_KDUMP_NFS",
-            "OVIRT_KDUMP_SSH")
+            "OVIRT_KDUMP_SSH",
+            "OVIRT_KDUMP_LOCAL")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, nfs, ssh):
-        valid.FQDNOrIPAddress()(nfs)
-        valid.URL()(ssh)
+    def update(self, nfs, ssh, local):
+        (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(nfs)
+        (valid.Empty(or_none=True) | valid.URL())(ssh)
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        nfs, ssh, restore = (cfg["nfs"], cfg["ssh"], cfg["local"])
+
+        class BackupKdumpConfig(utils.Transaction.Element):
+            def __init__(self):
+                self.backups = utils.fs.BackupedFiles(["/etc/kdump.conf"])
+
+            def commit(self):
+                self.backups.create()
+
+        class RestoreKdumpConfig(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.kdump as okdump
+                okdump.restore_kdump_config()
+
+        class CreateNfsKdumpConfig(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.kdump as okdump
+                okdump.write_kdump_config(nfs)
+
+        class CreateSshKdumpConfig(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.kdump as okdump
+                from ovirtnode.ovirtfunctions import ovirt_store_config
+
+                okdump.write_kdump_config(ssh)
+
+                if os.path.exists("/usr/bin/kdumpctl"):
+                    cmd = "kdumpctl propagate"
+                else:
+                    cmd = "service kdump propagate"
+                cmd += "2>&1"
+
+                success, stdout = utils.process.pipe(cmd)
+
+                if success:
+                    ovirt_store_config(["/root/.ssh/kdump_id_rsa.pub",
+                                        "/root/.ssh/kdump_id_rsa",
+                                        "/root/.ssh/known_hosts",
+                                        "/root/.ssh/config"])
+                else:
+                    self.logger.warning("Failed to activate KDump with " +
+                                        "SSH: %s" % stdout)
+
+        class RemoveKdumpConfig(utils.Transaction.Element):
+            def __init__(self, backups):
+                self.backups = backups
+
+            def commit(self):
+                from ovirtnode.ovirtfunctions import remove_config
+
+                remove_config("/etc/kdump.conf")
+                utils.process.system("service kdump stop")
+                open('/etc/kdump.conf', 'w').close()
+
+                self.backups.remove()
+
+        class RestartKdumpService(utils.Transaction.Element):
+            def __init__(self, backups):
+                self.backups = backups
+
+            def commit(self):
+                from ovirtnode.ovirtfunctions import unmount_config, \
+                                                     ovirt_store_config
+                from ovirt.node.utils.process import system
+
+                if utils.process.system("service kdump restart") > 0:
+                    unmount_config("/etc/kdump.conf")
+                    self.backups.restore("/etc/kdump.conf")
+                    system("service kdump restart")
+
+                    raise RuntimeError("KDump configuration failed, " +
+                                       "location unreachable. Previous " +
+                                       "configuration was restored.")
+
+                ovirt_store_config("/etc/kdump.conf")
+                self.backups.remove()
+
+        tx = utils.Transaction("Configuring kdump")
+
+        backup_txe = BackupKdumpConfig()
+        tx.append(backup_txe)
+
+        final_txe = RestartKdumpService(backup_txe.backups)
+        if nfs:
+            tx.append(CreateNfsKdumpConfig())
+        elif ssh:
+            tx.append(CreateSshKdumpConfig())
+        elif restore:
+            tx.append(RestoreKdumpConfig())
+        else:
+            final_txe = RemoveKdumpConfig(backup_txe.backups)
+
+        tx.append(final_txe)
+
+        return tx
 
 
 class iSCSI(NodeConfigFileSection):
@@ -551,6 +651,19 @@ class iSCSI(NodeConfigFileSection):
     def update(self, name, target_name, target_host, target_port):
         # FIXME add validation
         pass
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        initiator_name = cfg["name"]
+
+        class ConfigureIscsiInitiator(utils.Transaction.Element):
+            def commit(self):
+                from ovirtnode.iscsi import set_iscsi_initiator
+                set_iscsi_initiator(initiator_name)
+
+        tx = utils.Transaction("Configuring the iSCSI Initiator")
+        tx.append(ConfigureIscsiInitiator())
+        return tx
 
 
 class SNMP(NodeConfigFileSection):
@@ -689,4 +802,94 @@ class Keyboard(NodeConfigFileSection):
 
         tx = utils.Transaction("Configuring keyboard layout")
         tx.append(CreateKeyboardConfig())
+        return tx
+
+
+class NFSv4(NodeConfigFileSection):
+    """Configure NFSv4
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = NFSv4(cfgfile)
+    >>> domain = "foo.example"
+    >>> n.update(domain)
+    >>> n.retrieve()
+    [('domain', 'foo.example')]
+    """
+    # FIXME this key is new!
+    keys = ("OVIRT_NFSV4_DOMAIN",)
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, domain):
+        # FIXME Some validation that layout is in the list of available layouts
+        pass
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        domain = cfg["domain"]
+
+        class ConfigureNfsv4(utils.Transaction.Element):
+            def commit(self):
+                from ovirtnode.network import set_nfsv4_domain
+                set_nfsv4_domain(domain)
+
+        tx = utils.Transaction("Configuring NFSv4")
+        if domain:
+            tx.append(ConfigureNfsv4())
+        return tx
+
+
+class SSH(NodeConfigFileSection):
+    """Configure SSH
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = SSH(cfgfile)
+    >>> pwauth = True
+    >>> n.update(pwauth)
+    >>> n.retrieve()
+    [('pwauth', True)]
+    """
+    keys = ("OVIRT_SSH_PWAUTH",
+            "OVIRT_USE_STRONG_RNG",
+            "OVIRT_ENABLE_AES_NI")
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, pwauth, num_bytes, aesni):
+        valid.Boolean()(pwauth)
+        valid.Number()(num_bytes)
+        valid.Boolean()(aesni)
+
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        return {
+                "pwauth": True if cfg["pwauth"] == "yes" else False
+                }
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        pwauth, num_bytes, aesni = (cfg["pwauth"], cfg["num_bytes"],
+                                    cfg["aesni"])
+
+        ssh = utils.security.Ssh()
+
+        class ConfigurePasswordAuthentication(utils.Transaction.Element):
+            def commit(self):
+                ssh.password_authentication(pwauth)
+
+        class ConfigureStrongRNG(utils.Transaction.Element):
+            def commit(self):
+                ssh.strong_rng(num_bytes)
+
+        class ConfigureAESNI(utils.Transaction.Element):
+            def commit(self):
+                ssh.aes_ni(aesni)
+
+        tx = utils.Transaction("Configuring SSH")
+        if pwauth:
+            tx.append(ConfigurePasswordAuthentication())
+        if num_bytes:
+            tx.append(ConfigureStrongRNG())
+        if aesni:
+            tx.append(ConfigureAESNI())
         return tx
