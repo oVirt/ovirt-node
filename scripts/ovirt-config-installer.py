@@ -532,8 +532,9 @@ class NodeInstallScreen:
                 self.hostvg_checkbox.setEntryValue("OtherDevice", selected = 0)
             if self.hostvg_checkbox.getEntryValue("OtherDevice")[1] == 1 and dev == "OtherDevice":
                 for d in self.dev_names:
-                    d = translate_multipath_device(d)
-                    self.hostvg_checkbox.setEntryValue(d, selected = 0)
+                    if not d == self.live_disk:
+                        d = translate_multipath_device(d)
+                        self.hostvg_checkbox.setEntryValue(d, selected = 0)
         if "Location" in dev or "NoDevices" in dev or "OtherDevice" in dev:
             blank_entry = ",,,,,"
             dev_bus,dev_name,dev_size,dev_desc,dev_serial,dev_model = blank_entry.split(",",5)
