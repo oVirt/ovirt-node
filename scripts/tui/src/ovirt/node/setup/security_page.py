@@ -18,17 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import utils, plugins, ui, valid, exceptions
+from ovirt.node.config import defaults
+from ovirt.node.plugins import ChangesHelper
 
 """
 Configure Security
 """
 
-import ovirt.node.plugins
-import ovirt.node.valid
-import ovirt.node.ui
 
-
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
@@ -42,7 +41,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         if not self._model:
             self._model = {
                 "ssh.enabled": "no",
-                "strongrng.enabled": "no",
+                "strongrng.aesni": "no",
                 "strongrng.bytes_used": "",
                 "passwd.admin.password": "",
                 "passwd.admin.password_confirmation": "",
@@ -50,41 +49,38 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return self._model
 
     def validators(self):
-        number_or_empty = ovirt.node.valid.Number(range=[0, None]) | \
-                          ovirt.node.valid.Empty()
+        number_or_empty = valid.Number(range=[0, None]) | \
+                          valid.Empty()
         return {
                 "strongrng.num_bytes": number_or_empty,
-                "passwd.admin.password": ovirt.node.valid.Text(),
-                "passwd.admin.password_confirmation": ovirt.node.valid.Text(),
+                "passwd.admin.password": valid.Text(),
+                "passwd.admin.password_confirmation": valid.Text(),
             }
 
     def ui_content(self):
         widgets = [
-            ("ssh.address", ovirt.node.ui.Header("Remote Access")),
-            ("ssh.enabled", ovirt.node.ui.Options(
-                "Enable ssh password authentication",
-                [("yes", "Yes"), ("no", "No")])),
-            ("ssh._divider", ovirt.node.ui.Divider()),
+            ("header[0]", ui.Header("Remote Access")),
+            ("ssh.enabled", ui.Options("Enable ssh password authentication",
+                                       [("yes", "Yes"), ("no", "No")])),
+            ("divider[0]", ui.Divider()),
 
-            ("strongrng._label", ovirt.node.ui.Header(
-                                            "Strong Random Number Generator")),
-            ("strongrng.enabled", ovirt.node.ui.Options(
-                "Enable AES-NI",
-                [("yes", "Yes"), ("no", "No")])),
-            ("strongrng.num_bytes", ovirt.node.ui.Entry("Bytes Used:")),
-            ("strongrng._divider", ovirt.node.ui.Divider()),
+            ("header[1]", ui.Header("Strong Random Number Generator")),
+            ("strongrng.aesni", ui.Options("Enable AES-NI",
+                                           [("yes", "Yes"), ("no", "No")])),
+            ("strongrng.num_bytes", ui.Entry("Bytes Used:")),
+            ("divider[1]", ui.Divider()),
 
 
-            ("passwd._label", ovirt.node.ui.Label("Local Access")),
-            ("passwd.admin.password", ovirt.node.ui.PasswordEntry(
+            ("header[2]", ui.Label("Local Access")),
+            ("passwd.admin.password", ui.PasswordEntry(
                                                                 "Password:")),
-            ("passwd.admin.password_confirmation", ovirt.node.ui.PasswordEntry(
+            ("passwd.admin.password_confirmation", ui.PasswordEntry(
                 "Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
 
     def on_change(self, changes):
@@ -92,7 +88,38 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         if self._model["passwd.admin.password"] != \
            self._model["passwd.admin.password_confirmation"]:
-            raise ovirt.node.exceptions.InvalidData("Passwords do not match.")
+            raise exceptions.InvalidData("Passwords do not match.")
 
     def on_merge(self, effective_changes):
-        pass
+        self.logger.debug("Saving security page")
+        changes = ChangesHelper(self.pending_changes(False))
+        model = self.model()
+        model.update(effective_changes)
+        effective_model = ChangesHelper(model)
+
+        self.logger.debug("Saving security page: %s" % changes.changes)
+        self.logger.debug("Remote security model: %s" %
+                          effective_model.changes)
+
+        ssh_keys = ["ssh.enabled", "strongrng.num_bytes", "strongrng.aesni"]
+        passwd_keys = ["passwd.admin.password",
+                       "passwd.admin.password_confirmation"]
+
+        txs = utils.Transaction("Updating security configuration")
+
+        if changes.any_key_in_change(ssh_keys):
+            model = defaults.SSH()
+            model.update(*effective_model.get_key_values(ssh_keys))
+            txs += model.transaction()
+
+        if changes.any_key_in_change(passwd_keys):
+            pw, pwc = effective_model.get_key_values(passwd_keys)
+            if pw != pwc:
+                raise exceptions.InvalidData("Passwords do not match")
+            passwd = utils.security.Passwd()
+
+            self.logger.debug("Setting admin password.")
+            self.dry_or(lambda: passwd.set_password("admin", pw))
+
+        txs.prepare()  # Just to display something in dry mode
+        self.dry_or(lambda: txs())

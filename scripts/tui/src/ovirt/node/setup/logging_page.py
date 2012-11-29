@@ -38,9 +38,9 @@ class Plugin(plugins.NodePlugin):
         return 50
 
     def model(self):
-        logrotate = dict(defaults.Logrotate().retrieve())
-        netconsole = dict(defaults.Netconsole().retrieve())
-        syslog = dict(defaults.Syslog().retrieve())
+        logrotate = defaults.Logrotate().retrieve()
+        netconsole = defaults.Netconsole().retrieve()
+        syslog = defaults.Syslog().retrieve()
 
         model = {
             "logrotate.max_size": "1024",

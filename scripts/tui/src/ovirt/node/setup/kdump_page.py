@@ -18,21 +18,21 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-
 """
 Configure KDump
 """
 
-import ovirt.node.plugins
-import ovirt.node.valid
-import ovirt.node.ui
+from ovirt.node import utils, plugins, ui, valid
+from ovirt.node.config import defaults
+from ovirt.node.plugins import ChangesHelper
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
     _types = [
+                 ("disabled", "Disable"),
                  ("local", "Local"),
                  ("ssh", "SSH"),
                  ("nfs", "NFS")
@@ -48,22 +48,30 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         """Returns the model of this plugin
         This is expected to parse files and all stuff to build up the model.
         """
-        if not self._model:
-            self._model = {
-                # The target address
-                "kdump.type": "ssh",
-                "kdump.ssh_location": "",
-                "kdump.nfs_location": "",
-            }
-        return self._model
+        cfg = defaults.KDump().retrieve()
+
+        ktype = "disabled"
+        for k in ["local", "ssh", "nfs"]:
+            if cfg[k]:
+                ktype = k
+                break
+
+        model = {
+            # The target address
+            "kdump.type": ktype,
+            "kdump.ssh_location": cfg["ssh"]or "",
+            "kdump.nfs_location": cfg["nfs"]or "",
+        }
+        return model
 
     def validators(self):
         """Validators validate the input on change and give UI feedback
         """
+        # FIXME improve validation for ssh and nfs
         return {
-                "kdump.type": ovirt.node.valid.Options(self._types),
-                "kdump.ssh_location": ovirt.node.valid.NoSpaces(),
-                "kdump.nfs_location": ovirt.node.valid.NoSpaces(),
+                "kdump.type": valid.Options(dict(self._types).keys()),
+                "kdump.ssh_location": valid.NoSpaces(),
+                "kdump.nfs_location": valid.NoSpaces(),
             }
 
     def ui_content(self):
@@ -71,17 +79,17 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("kdump._header", ovirt.node.ui.Header("Configure Kdump")),
-            ("kdump.type", ovirt.node.ui.Options("Type", self._types)),
-            ("kdump.ssh_location", ovirt.node.ui.Entry("SSH Location:",
-                                                       align_vertical=True)),
-            ("kdump.nfs_location", ovirt.node.ui.Entry("NFS Location:",
-                                                       align_vertical=True)),
+            ("kdump._header", ui.Header("Configure Kdump")),
+            ("kdump.type", ui.Options("Type", self._types)),
+            ("kdump.ssh_location", ui.Entry("SSH Location:",
+                                            align_vertical=True)),
+            ("kdump.nfs_location", ui.Entry("NFS Location:",
+                                            align_vertical=True)),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
 
     def on_change(self, changes):
@@ -98,15 +106,36 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             if w in net_types:
                 self._widgets[w].enabled(True),
 
-            self._model.update(changes)
-
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
         Normally on_merge is called by pushing the SaveButton instance, in this
         case it is called by on_change
         """
+        self.logger.debug("Saving kdump page")
+        changes = ChangesHelper(self.pending_changes(False))
+        model = self.model()
+        model.update(effective_changes)
+        effective_model = ChangesHelper(model)
 
-        if effective_changes:
-            self.logger.debug("Generating conf according to model and changes")
-        else:
-            self.logger.debug("Generating no new conf as there are no changes")
+        self.logger.debug("Saving kdump page: %s" % changes.changes)
+        self.logger.debug("Kdump page model: %s" % effective_model.changes)
+
+        kdump_keys = ["kdump.type", "kdump.ssh_location", "kdump.nfs_location"]
+
+        txs = utils.Transaction("Updating kdump related configuration")
+
+        if changes.any_key_in_change(kdump_keys):
+            model = defaults.KDump()
+            ktype, sshloc, nfsloc = effective_model.get_key_values(kdump_keys)
+            if ktype == "nfs":
+                model.update(nfsloc, None, None)
+            elif ktype == "ssh":
+                model.update(None, sshloc, None)
+            elif ktype == "local":
+                model.update(None, None, True)
+            else:
+                model.update(None, None, None)
+            txs += model.transaction()
+
+        txs.prepare()  # Just to display something in dry mode
+        self.dry_or(lambda: txs())

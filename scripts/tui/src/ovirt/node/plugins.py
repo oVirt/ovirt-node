@@ -22,10 +22,10 @@
 """
 This contains much stuff related to plugins
 """
+from ovirt.node import base, exceptions
+import ovirt.node.exceptions
 import pkgutil
 
-from ovirt.node import base
-import ovirt.node.exceptions
 
 
 def __walk_plugins(module):
@@ -67,6 +67,7 @@ class NodePlugin(base.Base):
     """
 
     validate_changes = True
+    only_merge_on_valid_changes = True
 
     def __init__(self, application):
         super(NodePlugin, self).__init__()
@@ -233,16 +234,36 @@ class NodePlugin(base.Base):
         """Called when data should be saved
         Calls merge_changes, but only with values that really changed
         """
-        self.logger.debug("Request to apply model changes")
         effective_changes = self.pending_changes() or {}
+        is_valid = False
+
+        self.logger.debug("Request to apply model changes: %s" %
+                          effective_changes)
+
+        try:
+            is_valid = self.validate(effective_changes)
+        except exceptions.InvalidData as e:
+            self.logger.info("Changes to be merged are invalid: %s" %
+                             e.message)
+
+        if self.only_merge_on_valid_changes and not is_valid:
+            msg = "There are still fields with invalid values."
+            self.logger.warning(msg)
+            raise exceptions.PreconditionFailed(msg)
+
         successfull_merge = self.on_merge(effective_changes)
+
         if successfull_merge is None:
-            #raise Exception("on_save needs to return " +
-            #                "True/False or a Page/Dialog")
+            self.logger.debug("on_save needs to return True/False or a " +
+                              "Page/Dialog")
             successfull_merge = True
+
         if successfull_merge:
             self.logger.info("Changes were merged successfully")
             self.__changes = {}
+        else:
+            self.logger.info("Changes were not merged.")
+
         return successfull_merge
 
     def _on_ui_reset(self):

@@ -89,7 +89,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         if changes.any_key_in_change(iscsi_keys):
             model = defaults.iSCSI()
-            model.update(*effective_model.get_key_values(iscsi_keys))
+            args = effective_model.get_key_values(iscsi_keys)
+            args += [None, None, None]  # No target config
+            model.update(*args)
             txs += model.transaction()
 
         txs.prepare()  # Just to display something in dry mode

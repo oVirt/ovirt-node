@@ -154,7 +154,7 @@ class ConfigFile(base.Base):
 
 
 class NodeConfigFileSection(base.Base):
-    none_value = ""
+    none_value = None
 
     def __init__(self, cfgfile=None):
         super(NodeConfigFileSection, self).__init__()
@@ -189,6 +189,11 @@ class NodeConfigFileSection(base.Base):
 
     def retrieve(self):
         """Returns the config keys of the current component
+
+        Returns:
+            A dict with a mapping (arg, value).
+            arg corresponds to the named arguments of the subclass's configure()
+            method.
         """
         func = self.update.wrapped_func
         varnames = func.func_code.co_varnames[1:]
@@ -198,7 +203,7 @@ class NodeConfigFileSection(base.Base):
             value = cfg[key] if key in cfg else self.none_value
             values += (value,)
         assert len(varnames) == len(values)
-        return zip(varnames, values)
+        return dict(zip(varnames, values))
 
     def clear(self):
         """Remove the configuration for this item
@@ -218,6 +223,9 @@ class NodeConfigFileSection(base.Base):
     @staticmethod
     def map_and_update_defaults_decorator(func):
         """
+        FIXME Use some kind of map to map between args and env_Vars
+              this would alsoallow kwargs
+
         >>> class Foo(object):
         ...     keys = None
         ...     def _map_config_and_update_defaults(self, *args, **kwargs):
@@ -258,18 +266,18 @@ class Network(NodeConfigFileSection):
     >>> n = Network(cfgfile)
     >>> n.update("eth0", "static", "10.0.0.1", "255.0.0.0", "10.0.0.255",
     ...          "20")
-    >>> data = n.retrieve()
+    >>> data = sorted(n.retrieve().items())
     >>> data[:3]
-    [('iface', 'eth0'), ('bootproto', 'static'), ('ipaddr', '10.0.0.1')]
-    >>> data [3:]
-    [('netmask', '255.0.0.0'), ('gateway', '10.0.0.255'), ('vlanid', '20')]
+    [('bootproto', 'static'), ('gateway', '10.0.0.255'), ('iface', 'eth0')]
+    >>> data[3:]
+    [('ipaddr', '10.0.0.1'), ('netmask', '255.0.0.0'), ('vlanid', '20')]
 
     >>> n.clear()
-    >>> data = n.retrieve()
-    >>> data [:3]
-    [('iface', ''), ('bootproto', ''), ('ipaddr', '')]
-    >>> data [3:]
-    [('netmask', ''), ('gateway', ''), ('vlanid', '')]
+    >>> data = sorted(n.retrieve().items())
+    >>> data[:3]
+    [('bootproto', ''), ('gateway', ''), ('iface', '')]
+    >>> data[3:]
+    [('ipaddr', ''), ('netmask', ''), ('vlanid', '')]
     """
     keys = ("OVIRT_BOOTIF",
             "OVIRT_BOOTPROTO",
@@ -337,9 +345,10 @@ class Nameservers(NodeConfigFileSection):
         """We mangle the original vale a bit for py convenience
         """
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        return {
-                "servers": cfg["servers"].split(",")
-                }
+        cfg.update({
+            "servers": cfg["servers"].split(",")
+            })
+        return cfg
 
     def transaction(self):
         """Derives the nameserver config from OVIRT_DNS
@@ -424,9 +433,10 @@ class Timeservers(NodeConfigFileSection):
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        return {
-                "servers": cfg["servers"].split(",")
-                }
+        cfg.update({
+            "servers": cfg["servers"].split(",")
+            })
+        return cfg
 
     def transaction(self):
         return utils.Transaction("Configuring timeserver")
@@ -441,8 +451,8 @@ class Syslog(NodeConfigFileSection):
     >>> port = "514"
     >>> n = Syslog(cfgfile)
     >>> n.update(server, port)
-    >>> n.retrieve()
-    [('server', '10.0.0.6'), ('port', '514')]
+    >>> sorted(n.retrieve().items())
+    [('port', '514'), ('server', '10.0.0.6')]
     """
     keys = ("OVIRT_SYSLOG_SERVER",
             "OVIRT_SYSLOG_PORT")
@@ -475,8 +485,8 @@ class Collectd(NodeConfigFileSection):
     >>> port = "42"
     >>> n = Collectd(cfgfile)
     >>> n.update(server, port)
-    >>> n.retrieve()
-    [('server', '10.0.0.7'), ('port', '42')]
+    >>> sorted(n.retrieve().items())
+    [('port', '42'), ('server', '10.0.0.7')]
     """
     keys = ("OVIRT_COLLECTD_SERVER",
             "OVIRT_COLLECTD_PORT")
@@ -514,12 +524,12 @@ class KDump(NodeConfigFileSection):
     >>> nfs_url = "host.example.com"
     >>> ssh_url = "root@host.example.com"
     >>> n = KDump(cfgfile)
-    >>> n.update(nfs_url, ssh_url, '')
-    >>> d = n.retrieve()
+    >>> n.update(nfs_url, ssh_url, True)
+    >>> d = sorted(n.retrieve().items())
     >>> d[:2]
-    [('nfs', 'host.example.com'), ('ssh', 'root@host.example.com')]
+    [('local', True), ('nfs', 'host.example.com')]
     >>> d[2:]
-    [('local', '')]
+    [('ssh', 'root@host.example.com')]
     """
     keys = ("OVIRT_KDUMP_NFS",
             "OVIRT_KDUMP_SSH",
@@ -529,6 +539,10 @@ class KDump(NodeConfigFileSection):
     def update(self, nfs, ssh, local):
         (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(nfs)
         (valid.Empty(or_none=True) | valid.URL())(ssh)
+        (valid.Empty(or_none=True) | valid.Boolean())(local)
+        return {
+                "OVIRT_KDUMP_LOCAL": "true" if local else None
+                }
 
     def transaction(self):
         cfg = dict(self.retrieve())
@@ -636,11 +650,11 @@ class iSCSI(NodeConfigFileSection):
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
     >>> n = iSCSI(cfgfile)
     >>> n.update("node.example.com", "target.example.com", "10.0.0.8", "42")
-    >>> data = n.retrieve()
+    >>> data = sorted(n.retrieve().items())
     >>> data[:2]
-    [('name', 'node.example.com'), ('target_name', 'target.example.com')]
+    [('name', 'node.example.com'), ('target_host', '10.0.0.8')]
     >>> data[2:]
-    [('target_host', '10.0.0.8'), ('target_port', '42')]
+    [('target_name', 'target.example.com'), ('target_port', '42')]
     """
     keys = ("OVIRT_ISCSI_NODE_NAME",
             "OVIRT_ISCSI_TARGET_NAME",
@@ -673,7 +687,7 @@ class SNMP(NodeConfigFileSection):
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
     >>> n = SNMP(cfgfile)
     >>> n.update("secret")
-    >>> n.retrieve()
+    >>> n.retrieve().items()
     [('password', 'secret')]
     """
     keys = ("OVIRT_SNMP_PASSWORD",)
@@ -693,8 +707,8 @@ class Netconsole(NodeConfigFileSection):
     >>> server = "10.0.0.9"
     >>> port = "666"
     >>> n.update(server, port)
-    >>> n.retrieve()
-    [('server', '10.0.0.9'), ('port', '666')]
+    >>> sorted(n.retrieve().items())
+    [('port', '666'), ('server', '10.0.0.9')]
     """
     keys = ("OVIRT_NETCONSOLE_SERVER",
             "OVIRT_NETCONSOLE_PORT")
@@ -726,7 +740,7 @@ class Logrotate(NodeConfigFileSection):
     >>> n = Logrotate(cfgfile)
     >>> max_size = "42"
     >>> n.update(max_size)
-    >>> n.retrieve()
+    >>> n.retrieve().items()
     [('max_size', '42')]
     """
     # FIXME this key is new!
@@ -758,7 +772,7 @@ class CIM(NodeConfigFileSection):
     >>> n = CIM(cfgfile)
     >>> n.update(True)
     >>> n.retrieve()
-    [('enabled', '1')]
+    {'enabled': '1'}
     """
     keys = ("OVIRT_CIM_ENABLED",)
 
@@ -778,7 +792,7 @@ class Keyboard(NodeConfigFileSection):
     >>> layout = "de_DE.UTF-8"
     >>> n.update(layout)
     >>> n.retrieve()
-    [('layout', 'de_DE.UTF-8')]
+    {'layout': 'de_DE.UTF-8'}
     """
     # FIXME this key is new!
     keys = ("OVIRT_KEYBOARD_LAYOUT",)
@@ -813,7 +827,7 @@ class NFSv4(NodeConfigFileSection):
     >>> n = NFSv4(cfgfile)
     >>> domain = "foo.example"
     >>> n.update(domain)
-    >>> n.retrieve()
+    >>> n.retrieve().items()
     [('domain', 'foo.example')]
     """
     # FIXME this key is new!
@@ -846,25 +860,34 @@ class SSH(NodeConfigFileSection):
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
     >>> n = SSH(cfgfile)
     >>> pwauth = True
-    >>> n.update(pwauth)
-    >>> n.retrieve()
-    [('pwauth', True)]
+    >>> num_bytes = "24"
+    >>> disable_aesni = True
+    >>> n.update(pwauth, num_bytes, disable_aesni)
+    >>> sorted(n.retrieve().items())
+    [('disable_aesni', True), ('num_bytes', '24'), ('pwauth', True)]
     """
     keys = ("OVIRT_SSH_PWAUTH",
             "OVIRT_USE_STRONG_RNG",
-            "OVIRT_ENABLE_AES_NI")
+            "OVIRT_DISABLE_AES_NI")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, pwauth, num_bytes, aesni):
+    def update(self, pwauth, num_bytes, disable_aesni):
         valid.Boolean()(pwauth)
         valid.Number()(num_bytes)
-        valid.Boolean()(aesni)
+        valid.Boolean()(disable_aesni)
+        return {
+                "OVIRT_SSH_PWAUTH": "yes" if pwauth else None,
+                "OVIRT_DISABLE_AES_NI": "true" if disable_aesni else None
+                }
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        return {
-                "pwauth": True if cfg["pwauth"] == "yes" else False
-                }
+        cfg.update({
+                "pwauth": True if cfg["pwauth"] == "yes" else False,
+                "disable_aesni": True if cfg["disable_aesni"] == "true" \
+                                      else False
+                })
+        return cfg
 
     def transaction(self):
         cfg = dict(self.retrieve())

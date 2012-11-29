@@ -61,11 +61,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def model(self):
         # Pull name-/timeservers from config files (not defaults)
-        nameservers = dict(defaults.Nameservers().retrieve())["servers"]
+        nameservers = defaults.Nameservers().retrieve()["servers"]
         for idx, nameserver in enumerate(nameservers):
             self._model["dns[%d]" % idx] = nameserver
 
-        timeservers = dict(defaults.Timeservers().retrieve())["servers"]
+        timeservers = defaults.Timeservers().retrieve()["servers"]
         for idx, timeserver in enumerate(timeservers):
             self._model["ntp[%d]" % idx] = timeserver
 
@@ -146,7 +146,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         iface = self._model["nics"]
         self.logger.debug("Getting informations for NIC details page")
         live = ovirt.node.utils.network.node_nics()[iface]
-        cfg = dict(defaults.Network().retrieve())
+        cfg = defaults.Network().retrieve()
 
         self.logger.debug(cfg)
         self._model.update({
