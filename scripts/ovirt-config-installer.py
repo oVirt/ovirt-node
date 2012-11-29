@@ -1037,7 +1037,9 @@ class NodeInstallScreen:
                             ButtonChoiceWindow(self.screen, "HostVG Storage Selection", "You must enter a valid device", buttons = ['Ok'])
                         else:
                             if self.failed_block_dev == 0:
-                                self.hostvg_init = translate_multipath_device(self.hostvg_device.value())
+                                self.hostvg_init = ""
+                                for device in self.hostvg_device.value().split(","):
+                                    self.hostvg_init += translate_multipath_device(device) + ","
                                 hostvg_list = ""
                                 for dev in self.hostvg_init.split(","):
                                     if not tui_check_fakeraid(dev, self.screen):
