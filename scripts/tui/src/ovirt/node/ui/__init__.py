@@ -41,49 +41,6 @@ class Element(base.Base):
         super(Element, self).__init__()
         self.logger.debug("Initializing new %s" % self)
 
-    @staticmethod
-    def signal_change(func):
-        """A decorator for methods which should emit signals
-        """
-        def wrapper(self, userdata=None, *args, **kwargs):
-            signame = func.__name__
-            self._register_signal(signame)
-            self.emit_signal(signame, userdata)
-            return func(self, userdata)
-        return wrapper
-
-    def _register_signal(self, name):
-        """Each signal that get's emitted must be registered using this
-        function.
-
-        This is just to have an overview over the signals.
-        """
-        if self._signal_cbs is None:
-            self._signal_cbs = {}
-        if name not in self._signal_cbs:
-            self._signal_cbs[name] = []
-            self.logger.debug("Registered new signal '%s' for '%s'" % (name,
-                                                                       self))
-
-    def connect_signal(self, name, cb):
-        """Connect an callback to a signal
-        """
-        if not self._signal_cbs:
-            raise Exception("Signals not initialized %s for %s" % (name, self))
-        if name not in self._signal_cbs:
-            raise Exception("Unregistered signal %s for %s" % (name, self))
-        self._signal_cbs[name].append(cb)
-
-    def emit_signal(self, name, userdata=None):
-        """Emit a signal
-        """
-        if self._signal_cbs is None or name not in self._signal_cbs:
-            return False
-        self.logger.debug("Emitting '%s'" % name)
-        for cb in self._signal_cbs[name]:
-            self.logger.debug("... %s" % cb)
-            cb(self, userdata)
-
     def set_text(self, value):
         """A general way to set the "text" of a widget
         """
