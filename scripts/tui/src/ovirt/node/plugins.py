@@ -73,6 +73,7 @@ class NodePlugin(base.Base):
         super(NodePlugin, self).__init__()
         self.__changes = {}
         self.application = application
+        self.sig_valid = self.register_signal("valid")
 
     def name(self):
         """Returns the name of the plugin.
@@ -130,7 +131,9 @@ class NodePlugin(base.Base):
                     msg = e.message
                 # True and None are allowed values
                 if msg not in [True, None]:
+                    self.sig_valid.emit(False)
                     raise ovirt.node.exceptions.InvalidData(msg)
+        self.sig_valid.emit(True)
         return True
 
     def ui_name(self):
