@@ -188,11 +188,14 @@ def build_label(path, item, tui, plugin):
 
 
 def build_button(path, item, tui, plugin):
+    itemtype = type(item)
     widget = ui.widgets.Button(item.text())
+
+    if itemtype in [ui.SaveButton]:
+        plugin.sig_valid.connect(lambda w, v: widget.enable(v))
 
     def on_widget_click_cb(widget, data=None):
         LOGGER.debug("Button click: %s %s" % (path, widget))
-        itemtype = type(item)
         if itemtype is ui.Button:
             plugin._on_ui_change({path: True})
         if itemtype in [ui.Button, ui.SaveButton]:
