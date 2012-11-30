@@ -329,6 +329,9 @@ class Nameservers(NodeConfigFileSection):
     >>> data = n.retrieve()
     >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
     True
+    >>> n.update([])
+    >>> n.retrieve()
+    {'servers': None}
     """
     keys = ("OVIRT_DNS",)
 
@@ -338,7 +341,7 @@ class Nameservers(NodeConfigFileSection):
         servers = filter(lambda i: i.strip() not in ["", None], servers)
         map(valid.IPv4Address(), servers)
         return {
-                "OVIRT_DNS": ",".join(servers)
+                "OVIRT_DNS": ",".join(servers) or None
                 }
 
     def retrieve(self):
@@ -346,7 +349,7 @@ class Nameservers(NodeConfigFileSection):
         """
         cfg = dict(NodeConfigFileSection.retrieve(self))
         cfg.update({
-            "servers": cfg["servers"].split(",")
+            "servers": cfg["servers"].split(",") if cfg["servers"] else None
             })
         return cfg
 
@@ -419,6 +422,9 @@ class Timeservers(NodeConfigFileSection):
     >>> data = n.retrieve()
     >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
     True
+    >>> n.update([])
+    >>> n.retrieve()
+    {'servers': None}
     """
     keys = ("OVIRT_NTP",)
 
@@ -428,13 +434,13 @@ class Timeservers(NodeConfigFileSection):
         servers = filter(lambda i: i.strip() not in ["", None], servers)
         map(valid.IPv4Address(), servers)
         return {
-                "OVIRT_NTP": ",".join(servers)
+                "OVIRT_NTP": ",".join(servers) or None
                 }
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
         cfg.update({
-            "servers": cfg["servers"].split(",")
+            "servers": cfg["servers"].split(",") if cfg["servers"] else None
             })
         return cfg
 
