@@ -130,9 +130,7 @@ class NodePlugin(base.Base):
                     msg = e.message
                 # True and None are allowed values
                 if msg not in [True, None]:
-                    self.sig_valid.emit(False)
                     raise ovirt.node.exceptions.InvalidData(msg)
-        self.sig_valid.emit(True)
         return True
 
     def ui_name(self):
@@ -224,12 +222,17 @@ class NodePlugin(base.Base):
 
         self.logger.debug("Passing UI change to callback on_change: %s" % \
                           change)
-        if self.validate_changes:
-            self.validate(change)
-        self.on_change(change)
+        try:
+            if self.validate_changes:
+                self.validate(change)
+            self.on_change(change)
+        except exceptions.InvalidData as e:
+            self.sig_valid.emit(False)
+            raise e
         self.__changes.update(change)
         self.logger.debug("Sum of all UI changes up to now: %s" % \
                           self.__changes)
+        self.sig_valid.emit(True)
         return True
 
     def _on_ui_save(self):
