@@ -43,6 +43,11 @@ features.
 rm -rf %{buildroot}/usr/extra
 
 
+%post
+mv %{_libexecdir}/ovirt-config-setup %{_libexecdir}/ovirt-config-setup-legacy
+ln -s %{_bindir}/ovirt-config-setup %{_libexecdir}/ovirt-config-setup
+
+
 %check
 # Nothing, yet
 
