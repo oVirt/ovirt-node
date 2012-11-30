@@ -107,6 +107,12 @@ for device in $parsed_storage_init; do
 done
 lvm_storage_init=${lvm_storage_init#,}
 
+fatal() {
+    [ -x /bin/plymouth ] && /bin/plymouth --hide-splash
+    echo "<1>dracut: FATAL: $@" > /dev/kmsg
+    echo "dracut: FATAL: $@" >&2
+}
+
 for device in $lvm_storage_init; do
     if [ -z "$device" ]; then
         continue
@@ -132,9 +138,9 @@ for device in $lvm_storage_init; do
                 done
                 IFS=$oldIFS
                 if [ $imach -eq 0 ]; then
-                    warn "LV '$lv' is not a member of VG '$vg'"
-                    die "Not all member PVs of '$vg' are given in the storage_init parameter, exiting"
-                    return 0
+                    fatal "LV '$ipv' is a member of VG '$vg' and must be included in \$storage_init"
+                    fatal "Not all member PVs of '$vg' are given in the storage_init parameter, exiting"
+                    exit 1
                 fi
             done
             info "Found and removing vg: $vg"
