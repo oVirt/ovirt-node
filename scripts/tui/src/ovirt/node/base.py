@@ -94,6 +94,8 @@ class Base(object):
             cb(self, userdata)
 
     class Signal(object):
+        """A convenience class for easier access to signals
+        """
         def __init__(self, base, name):
             self.name = name
             self.base = base
@@ -102,4 +104,4 @@ class Base(object):
             return self.base.emit_signal(self.name, userdata)
 
         def connect(self, cb):
-            return self.base.connect_signal(self.name,cb)
+            return self.base.connect_signal(self.name, cb)

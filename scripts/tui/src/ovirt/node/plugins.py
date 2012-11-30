@@ -27,7 +27,6 @@ import ovirt.node.exceptions
 import pkgutil
 
 
-
 def __walk_plugins(module):
     """Used to find all plugins
     """

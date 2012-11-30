@@ -192,8 +192,8 @@ class NodeConfigFileSection(base.Base):
 
         Returns:
             A dict with a mapping (arg, value).
-            arg corresponds to the named arguments of the subclass's configure()
-            method.
+            arg corresponds to the named arguments of the subclass's
+            configure() method.
         """
         func = self.update.wrapped_func
         varnames = func.func_code.co_varnames[1:]
@@ -275,9 +275,9 @@ class Network(NodeConfigFileSection):
     >>> n.clear()
     >>> data = sorted(n.retrieve().items())
     >>> data[:3]
-    [('bootproto', ''), ('gateway', ''), ('iface', '')]
+    [('bootproto', None), ('gateway', None), ('iface', None)]
     >>> data[3:]
-    [('ipaddr', ''), ('netmask', ''), ('vlanid', '')]
+    [('ipaddr', None), ('netmask', None), ('vlanid', None)]
     """
     keys = ("OVIRT_BOOTIF",
             "OVIRT_BOOTPROTO",
@@ -543,6 +543,13 @@ class KDump(NodeConfigFileSection):
         return {
                 "OVIRT_KDUMP_LOCAL": "true" if local else None
                 }
+
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        cfg.update({
+                "local": True if cfg["local"] == "true" else None
+                })
+        return cfg
 
     def transaction(self):
         cfg = dict(self.retrieve())

@@ -80,7 +80,7 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('plugin.widget.header', 'black, bold'),
                ('plugin.widget.divider', element_styles["text"]),
                ('plugin.widget.button', 'dark blue'),
-               ('plugin.widget.button.disabled', 'dark gray'),
+               ('plugin.widget.button.disabled', element_styles["disabled"]),
                ('plugin.widget.label', element_styles["text"]),
                ('plugin.widget.label.keyword', element_styles["label"]),
                ('plugin.widget.progressbar.box', 'light gray'),
