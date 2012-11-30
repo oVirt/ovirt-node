@@ -1862,49 +1862,54 @@ class NodeConfigScreen():
         return
 
     def process_kdump_config(self):
-        ret = 0
-        if os.path.exists("/etc/kdump.conf"):
-            system("cp /etc/kdump.conf /etc/kdump.conf.old")
-        if self.kdump_nfs_type.value() == 1:
-            write_kdump_config(self.kdump_nfs_config.value())
-        elif self.kdump_ssh_type.value() == 1:
-            write_kdump_config(self.kdump_ssh_config.value())
-            self.screen.popWindow()
-            self.screen.finish()
-            # systemctl change
-            if os.path.exists("/usr/bin/kdumpctl"):
-                kdump_prop_cmd = "kdumpctl propagate"
-            else:
-                kdump_prop_cmd = "service kdump propagate"
-            propagate_proc = passthrough("clean; %s" % kdump_prop_cmd, logger.debug)
-            ret = propagate_proc.retval
-            if ret == 0:
-                ovirt_store_config("/root/.ssh/kdump_id_rsa.pub")
-                ovirt_store_config("/root/.ssh/kdump_id_rsa")
-                ovirt_store_config("/root/.ssh/known_hosts")
-                ovirt_store_config("/root/.ssh/config")
-        elif self.kdump_restore_type.value() == 1:
-            restore_kdump_config()
-        else:
-            remove_config("/etc/kdump.conf")
-            system("service kdump stop")
-            open('/etc/kdump.conf', 'w').close()
-            return
-        if not system("service kdump restart") or ret > 0:
-            self._create_warn_screen()
-            ButtonChoiceWindow(self.screen, "KDump Status",
-                               "KDump configuration failed, " +
-                               "location unreachable", buttons=['Ok'])
-            self.reset_screen_colors()
-            unmount_config("/etc/kdump.conf")
+        try:
+            ret = 0
             if os.path.exists("/etc/kdump.conf"):
-                os.remove("/etc/kdump.conf")
-            system("cat /etc/kdump.conf.old > /etc/kdump.conf")
-            system("service kdump restart")
-        else:
-            ovirt_store_config("/etc/kdump.conf")
-        if os.path.exists("/etc/kdump.conf.old"):
-            system("rm /etc/kdump.conf.old")
+                system("cp /etc/kdump.conf /etc/kdump.conf.old")
+            if self.kdump_nfs_type.value() == 1:
+                write_kdump_config(self.kdump_nfs_config.value())
+            elif self.kdump_ssh_type.value() == 1:
+                write_kdump_config(self.kdump_ssh_config.value())
+                self.screen.popWindow()
+                self.screen.finish()
+                # systemctl change
+                if os.path.exists("/usr/bin/kdumpctl"):
+                    kdump_prop_cmd = "kdumpctl propagate"
+                else:
+                    kdump_prop_cmd = "service kdump propagate"
+                try:
+                    ret = system_closefds("clear; %s" % kdump_prop_cmd)
+                    if ret == 0:
+                        ovirt_store_config("/root/.ssh/kdump_id_rsa.pub")
+                        ovirt_store_config("/root/.ssh/kdump_id_rsa")
+                        ovirt_store_config("/root/.ssh/known_hosts")
+                        ovirt_store_config("/root/.ssh/config")
+                except KeyboardInterrupt:
+                    ret = 1
+            elif self.kdump_restore_type.value() == 1:
+                restore_kdump_config()
+            else:
+                remove_config("/etc/kdump.conf")
+                system("service kdump stop")
+                open('/etc/kdump.conf', 'w').close()
+                return
+            if not system("service kdump restart") or ret > 0:
+                self._create_warn_screen()
+                ButtonChoiceWindow(self.screen, "KDump Status",
+                                   "KDump configuration failed, " +
+                                   "location unreachable", buttons=['Ok'])
+                self.reset_screen_colors()
+                unmount_config("/etc/kdump.conf")
+                if os.path.exists("/etc/kdump.conf"):
+                    os.remove("/etc/kdump.conf")
+                system("cat /etc/kdump.conf.old > /etc/kdump.conf")
+                system("service kdump restart")
+            else:
+                ovirt_store_config("/etc/kdump.conf")
+            if os.path.exists("/etc/kdump.conf.old"):
+                system("rm /etc/kdump.conf.old")
+        except KeyboardInterrupt:
+            ret = 1
 
     def process_remote_storage_config(self):
         set_iscsi_initiator(self.iscsi_initiator_config.value())
