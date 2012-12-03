@@ -172,7 +172,7 @@ def build_label(path, item, tui, plugin):
         widget = ui.widgets.KeywordLabel(item.keyword,
                                                     item.text())
     elif type(item) is ui.Header:
-        widget = ui.widgets.Header(item.text())
+        widget = ui.widgets.Header(item.text(), item.template)
     else:
         widget = ui.widgets.Label(item.text())
 

@@ -215,8 +215,8 @@ class Header(Label):
     """
     _header_attr = "plugin.widget.header"
 
-    def __init__(self, text):
-        super(Header, self).__init__("\n  %s\n" % text)
+    def __init__(self, text, template="\n  %s\n"):
+        super(Header, self).__init__(template % text)
         self._label_attrmap.set_attr_map({None: self._header_attr})
 
 
@@ -245,13 +245,15 @@ class KeywordLabel(Label):
 class Entry(urwid.WidgetWrap):
     signals = ['change', 'click']
 
-    notice = property(lambda self: self._notice.get_text(), \
-                      lambda self, v: self._notice.set_text(v))
+    notice = property(lambda self: self.get_notice(), \
+                      lambda self, v: self.set_notice(v))
 
     _selectable = True
 
     def __init__(self, label, mask=None, align_vertical=False):
-        with_linebox = True
+        with_linebox = False
+        with_notice = False
+
         self._align_vertical = align_vertical
 
         if with_linebox:
@@ -260,7 +262,7 @@ class Entry(urwid.WidgetWrap):
         self._label = urwid.Text(label)
         self._label_attrmap = urwid.AttrMap(self._label,
                                             "plugin.widget.entry.label")
-        self._edit = urwid.Edit(mask=mask)
+        self._edit = EditWithChars(mask=mask)
         self._edit_attrmap = urwid.AttrMap(self._edit, "plugin.widget.entry")
         self._linebox = urwid.LineBox(self._edit_attrmap)
         self._linebox_attrmap = urwid.AttrMap(self._linebox,
@@ -282,7 +284,10 @@ class Entry(urwid.WidgetWrap):
         self._notice_attrmap = urwid.AttrMap(self._notice,
                                              "plugin.widget.notice")
 
-        self._pile = urwid.Pile([self._columns, self._notice_attrmap])
+        children = [self._columns]
+        if with_notice:
+            children.append(self._notice_attrmap)
+        self._pile = urwid.Pile(children)
 
         def on_widget_change_cb(widget, new_value):
             urwid.emit_signal(self, 'change', self, new_value)
@@ -301,18 +306,37 @@ class Entry(urwid.WidgetWrap):
         self._linebox_attrmap.set_attr_map(linebox_attr_map)
 
     def valid(self, is_valid):
-        attr_map = {None: "plugin.widget.entry.frame"}
+        attr_map_label = {None: "plugin.widget.entry.label"}
+        attr_map_edit = {None: "plugin.widget.entry"}
+        attr_map_linebox = {None: "plugin.widget.entry.frame"}
         if not is_valid:
-            attr_map = {None: "plugin.widget.entry.frame.invalid"}
+            attr_map_label = {None: "plugin.widget.entry.label.invalid"}
+            attr_map_edit = {None: "plugin.widget.entry.invalid"}
+            attr_map_linebox = {None: "plugin.widget.entry.frame.invalid"}
         if self._selectable:
             # Only update style if it is selectable/enabled
-            self._linebox_attrmap.set_attr_map(attr_map)
+            self._label_attrmap.set_attr_map(attr_map_label)
+            self._edit_attrmap.set_attr_map(attr_map_edit)
+            self._linebox_attrmap.set_attr_map(attr_map_linebox)
 
     def set_text(self, txt):
         self._edit.set_edit_text(txt)
 
     def selectable(self):
         return self._selectable
+
+    def set_notice(self, txt):
+        self._notice_txt= txt
+        if txt:
+            self._notice.set_text(txt)
+            if len(self._pile.contents) < 2:
+                self._pile.contents.append((self._notice_attrmap, ("pack", 0)))
+        else:
+            if len(self._pile.contents) > 1:
+                self._pile.contents.pop()
+
+    def get_notice(self):
+        return self._notice_txt
 
 
 class PasswordEntry(Entry):
@@ -430,7 +454,10 @@ class PageWidget(urwid.WidgetWrap):
         self._container = urwid.Pile(widgets)
         self._container_attrmap = urwid.AttrMap(self._container,
                                                 "plugin.widget.page")
-        super(PageWidget, self).__init__(self._container_attrmap)
+        self._header = None
+        self._frame = urwid.Frame(self._container_attrmap, self._header)
+        self._box = urwid.Padding(self._frame, width=("relative", 97))
+        super(PageWidget, self).__init__(self._box)
 
 
 class RowWidget(urwid.Columns):
@@ -450,3 +477,21 @@ class ProgressBarWidget(urwid.WidgetWrap):
 
     def set_completion(self, v):
         self._progressbar.set_completion(v)
+
+
+class EditWithChars(urwid.Edit):
+    """Is an Edit, but displaying self.char where not char is.
+    """
+    char = u"_"
+
+    def render(self, size, focus=False):
+        (maxcol,) = size
+        self._shift_view_to_cursor = bool(focus)
+
+        txt = self.get_edit_text().ljust(maxcol, self.char)[:maxcol]
+        canv = urwid.Text(txt).render((maxcol,))
+        if focus:
+            canv = urwid.CompositeCanvas(canv)
+            canv.cursor = self.get_cursor_coords((maxcol,))
+
+        return canv

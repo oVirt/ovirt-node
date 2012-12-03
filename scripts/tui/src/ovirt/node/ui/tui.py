@@ -54,7 +54,8 @@ class UrwidTUI(ovirt.node.ui.Window):
         "text": "black",
         "label": "black, bold",
         "disabled": "white",
-        "background": "light gray"
+        "background": "light gray",
+        "invalid": "dark red",
     }
 
     palette = [(None, 'default', element_styles["background"], 'bold',
@@ -71,9 +72,11 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('notice', 'light red'),
                ('plugin.widget.entry', element_styles["text"], "white"),
                ('plugin.widget.entry.disabled', element_styles["disabled"]),
+               ('plugin.widget.entry.invalid', element_styles["invalid"], "white"),
                ('plugin.widget.entry.label', element_styles["label"]),
+               ('plugin.widget.entry.label.invalid', element_styles["label"]),
                ('plugin.widget.entry.frame', element_styles["text"]),
-               ('plugin.widget.entry.frame.invalid', 'dark red'),
+               ('plugin.widget.entry.frame.invalid', element_styles["invalid"]),
                ('plugin.widget.entry.frame.disabled',
                 element_styles["disabled"]),
                ('plugin.widget.notice', 'light red'),

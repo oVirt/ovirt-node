@@ -139,7 +139,10 @@ class Label(Element):
 
 
 class Header(Label):
-    pass
+    template = "\n  %s\n"
+    def __init__(self, text, template=template):
+        super(Header, self).__init__(text)
+        self.template = template
 
 
 class KeywordLabel(Label):
