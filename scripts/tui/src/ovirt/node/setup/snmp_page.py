@@ -23,12 +23,10 @@
 Configure SNMP
 """
 
-import ovirt.node.plugins
-import ovirt.node.valid
-import ovirt.node.ui
+from ovirt.node import plugins, valid, ui, exceptions
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
@@ -49,27 +47,26 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def validators(self):
         return {
-                "passwd.admin.password": ovirt.node.valid.Text(),
-                "passwd.admin.password_confirmation": ovirt.node.valid.Text(),
+                "passwd.admin.password": valid.Text(),
+                "passwd.admin.password_confirmation": valid.Text(),
             }
 
     def ui_content(self):
         widgets = [
-            ("snmp._header", ovirt.node.ui.Header("SNMP")),
-            ("snmp.enabled", ovirt.node.ui.Options("Enable SNMP",
-                [("yes", "Yes"), ("no", "No")])),
-            ("ssh._divider", ovirt.node.ui.Divider()),
+            ("snmp._header", ui.Header("SNMP")),
+            ("snmp.enabled", ui.Checkbox("Enable SNMP")),
+            ("ssh._divider", ui.Divider()),
 
 
-            ("snmp.password._header", ovirt.node.ui.Header("SNMP Password")),
-            ("snmp.password", ovirt.node.ui.PasswordEntry("Password:")),
-            ("snmp.password_confirmation", ovirt.node.ui.PasswordEntry(
-                "Confirm Password:")),
+            ("snmp.password._header", ui.Header("SNMP Password")),
+            ("snmp.password", ui.PasswordEntry("Password:")),
+            ("snmp.password_confirmation", ui.PasswordEntry(
+                                                        "Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
 
     def on_change(self, changes):
@@ -77,7 +74,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         if self._model["snmp.password"] != \
            self._model["snmp.password_confirmation"]:
-            raise ovirt.node.exceptions.InvalidData("Passwords do not match.")
+            raise exceptions.InvalidData("Passwords do not match.")
 
     def on_merge(self, effective_changes):
         pass

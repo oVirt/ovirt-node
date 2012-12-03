@@ -206,7 +206,7 @@ class Options(InputElement):
         options:
     """
     def __init__(self, label, options):
-        super(Options, self).__init__(None, True)
+        super(Options, self).__init__(label, True)
         self.label = label
         self.options = options
         self.option(options[0])

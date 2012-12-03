@@ -69,7 +69,7 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('main.menu', 'black'),
                ('main.menu.frame', element_styles["text"]),
                ('notice', 'light red'),
-               ('plugin.widget.entry', element_styles["text"]),
+               ('plugin.widget.entry', element_styles["text"], "white"),
                ('plugin.widget.entry.disabled', element_styles["disabled"]),
                ('plugin.widget.entry.label', element_styles["label"]),
                ('plugin.widget.entry.frame', element_styles["text"]),
@@ -180,12 +180,16 @@ class UrwidTUI(ovirt.node.ui.Window):
                 self.logger.debug("Available widgets: %s" % widgets)
                 for path, value in pending_changes.items():
                     if path in widgets:
-                        field = widgets[path].name
+                        widget = widgets[path]
+                        field = widget.name
+                        self.logger.debug("Changed widget: %s %s" % (path,
+                                                                     widget))
                         msg += "- %s\n" % (field.strip(":"))
-                self.__display_as_dialog(urwid.Filler(urwid.Text(
-                            "The following fields were changed:\n%s" % msg)),
-                            "Pending changes")
-                has_outstanding_changes = True
+                if msg:
+                    self.__display_as_dialog(urwid.Filler(urwid.Text(
+                                "The following fields were changed:\n%s" % msg)),
+                                "Pending changes")
+                    has_outstanding_changes = True
         return has_outstanding_changes
 
     def __display_as_body(self, widget):

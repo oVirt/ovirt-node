@@ -60,13 +60,11 @@ class Plugin(plugins.NodePlugin):
     def ui_content(self):
         widgets = [
             ("header[0]", ui.Header("Remote Access")),
-            ("ssh.enabled", ui.Options("Enable ssh password authentication",
-                                       [("yes", "Yes"), ("no", "No")])),
+            ("ssh.enabled", ui.Checkbox("Enable ssh password authentication")),
             ("divider[0]", ui.Divider()),
 
             ("header[1]", ui.Header("Strong Random Number Generator")),
-            ("strongrng.aesni", ui.Options("Enable AES-NI",
-                                           [("yes", "Yes"), ("no", "No")])),
+            ("strongrng.aesni", ui.Checkbox("Enable AES-NI")),
             ("strongrng.num_bytes", ui.Entry("Bytes Used:")),
             ("divider[1]", ui.Divider()),
 
