@@ -64,6 +64,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             "libvirt.num_guests": num_domains,
         }
 
+    def validators(self):
+        return {}
+
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
@@ -148,7 +151,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def _build_hostkey_dialog(self):
         fp, hk = ovirt.node.utils.security.get_ssh_hostkey()
-        return self._build_dialog("dialog.hostkey", "Host Key", [
+        dialog = self._build_dialog("dialog.hostkey", "Host Key", [
             ("hostkey.fp._label",
                 ovirt.node.ui.Label("RSA Host Key Fingerprint:")),
             ("hostkey.fp",
@@ -161,3 +164,5 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("hostkey",
                 ovirt.node.ui.Label("\n".join(textwrap.wrap(hk, 64)))),
         ])
+        dialog.buttons = []
+        return dialog
