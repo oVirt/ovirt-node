@@ -888,21 +888,23 @@ def get_live_disk():
             # if dm-XX, not enough detail to map correctly
             if "dm-" in live_disk:
                 live_disk = findfs("LIVE")[:-2]
+#    else:
+    ret = system_closefds("losetup /dev/loop0|grep -q '\.iso'")
+    if ret != 0:
+        client = gudev.Client(['block'])
+        version = open("/etc/default/version")
+        for line in version.readlines():
+            if "PACKAGE" in line:
+                pkg, pkg_name = line.split("=")
+        for device in client.query_by_subsystem("block"):
+            if device.has_property("ID_CDROM"):
+                dev = device.get_property("DEVNAME")
+                blkid_cmd = "blkid '%s'|grep -q '%s' " % (dev, pkg_name)
+                ret = system_closefds(blkid_cmd)
+                if ret == 0:
+                    live_disk = os.path.basename(dev)
     else:
-        ret = system_closefds("losetup /dev/loop0|grep -q '\.iso'")
-        if ret != 0:
-            client = gudev.Client(['block'])
-            version = open("/etc/default/version")
-            for line in version.readlines():
-                if "PACKAGE" in line:
-                    pkg, pkg_name = line.split("=")
-            for device in client.query_by_subsystem("block"):
-                if device.has_property("ID_CDROM"):
-                    dev = device.get_property("DEVNAME")
-                    blkid_cmd = "blkid '%s'|grep -q '%s' " % (dev, pkg_name)
-                    ret = system_closefds(blkid_cmd)
-                    if ret == 0:
-                        live_disk = os.path.basename(dev)
+        live_disk=""
     return live_disk
 
 # reboot wrapper
