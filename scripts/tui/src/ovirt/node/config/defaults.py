@@ -203,7 +203,8 @@ class NodeConfigFileSection(base.Base):
             value = cfg[key] if key in cfg else self.none_value
             values += (value,)
         assert len(varnames) == len(values)
-        return dict(zip(varnames, values))
+        cfg = dict(zip(varnames, values))
+        return cfg
 
     def clear(self):
         """Remove the configuration for this item
@@ -354,6 +355,20 @@ class Nameservers(NodeConfigFileSection):
         return cfg
 
     def transaction(self):
+        return self.__legacy_transaction()
+
+    def __legacy_transaction(self):
+        class ConfigureNameservers(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.network as onet
+                net = onet.Network()
+                net.configure_dns()
+
+        tx = utils.Transaction("Configuring nameservers")
+        tx.append(ConfigureNameservers())
+        return tx
+
+    def __new_transaction(self):
         """Derives the nameserver config from OVIRT_DNS
 
         1. Parse nameservers from defaults
@@ -445,7 +460,18 @@ class Timeservers(NodeConfigFileSection):
         return cfg
 
     def transaction(self):
-        return utils.Transaction("Configuring timeserver")
+        return self.__legacy_transaction()
+
+    def __legacy_transaction(self):
+        class ConfigureTimeservers(utils.Transaction.Element):
+            def commit(self):
+                import ovirtnode.network as onet
+                net = onet.Network()
+                net.configure_ntp()
+
+        tx = utils.Transaction("Configuring timeservers")
+        tx.append(ConfigureTimeservers())
+        return tx
 
 
 class Syslog(NodeConfigFileSection):
@@ -469,6 +495,9 @@ class Syslog(NodeConfigFileSection):
         valid.Port()(port)
 
     def transaction(self):
+        return self.__legacy_transaction()
+
+    def __legacy_transaction(self):
         cfg = dict(self.retrieve())
         server, port = (cfg["server"], cfg["port"])
 
@@ -501,6 +530,26 @@ class Collectd(NodeConfigFileSection):
     def update(self, server, port):
         valid.FQDNOrIPAddress()(server)
         valid.Port()(port)
+
+    def transaction(self):
+        self.__legacy_transaction()
+
+    def __legacy_transaction(self):
+        cfg = dict(self.retrieve())
+        server, port = (cfg["server"], cfg["port"])
+
+        class ConfigureCollectd(utils.Transaction.Element):
+            def commit(self):
+                import ovirt_config_setup.collectd as ocollectd
+                if ocollectd.write_collectd_config(server, port):
+                    self.logger.debug("Collectd was configured successfully")
+                else:
+                    raise exceptions.TransactionError("Failed to configure " +
+                                                       "collectd")
+
+        tx = utils.Transaction("Configuring collectd")
+        tx.append(ConfigureCollectd())
+        return tx
 
 
 class RHN(NodeConfigFileSection):
@@ -662,12 +711,13 @@ class iSCSI(NodeConfigFileSection):
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
     >>> n = iSCSI(cfgfile)
-    >>> n.update("node.example.com", "target.example.com", "10.0.0.8", "42")
+    >>> n.update("iqn.1992-01.com.example:node",
+    ...          "iqn.1992-01.com.example:target", "10.0.0.8", "42")
     >>> data = sorted(n.retrieve().items())
     >>> data[:2]
-    [('name', 'node.example.com'), ('target_host', '10.0.0.8')]
+    [('name', 'iqn.1992-01.com.example:node'), ('target_host', '10.0.0.8')]
     >>> data[2:]
-    [('target_name', 'target.example.com'), ('target_port', '42')]
+    [('target_name', 'iqn.1992-01.com.example:target'), ('target_port', '42')]
     """
     keys = ("OVIRT_ISCSI_NODE_NAME",
             "OVIRT_ISCSI_TARGET_NAME",
@@ -805,15 +855,43 @@ class CIM(NodeConfigFileSection):
     >>> n = CIM(cfgfile)
     >>> n.update(True)
     >>> n.retrieve()
-    {'enabled': '1'}
+    {'enabled': True}
     """
     keys = ("OVIRT_CIM_ENABLED",)
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, enabled):
         return {
-                "OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else "0"
+                "OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else None
                 }
+
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        cfg.update({
+                "enabled": True if cfg["enabled"] == "1" else None
+                })
+        return cfg
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        enabled = cfg["enabled"]
+
+        class ConfigureCIM(utils.Transaction.Element):
+            def commit(self):
+                # FIXME snmp plugin needs to be placed somewhere else (in src)
+                import ovirt_config_setup.cim as ocim
+                if enabled:
+                    if ocim.enable_cim():
+                        self.logger.debug("Configured CIM successfully")
+                    else:
+                        raise exceptions.TransactionError("CIM configuration" +
+                                                          " failed")
+
+        # FIXME setting password is missing
+
+        tx = utils.Transaction("Configuring SNMP")
+        tx.append(ConfigureCIM())
+        return tx
 
 
 class Keyboard(NodeConfigFileSection):
@@ -924,8 +1002,8 @@ class SSH(NodeConfigFileSection):
 
     def transaction(self):
         cfg = dict(self.retrieve())
-        pwauth, num_bytes, aesni = (cfg["pwauth"], cfg["num_bytes"],
-                                    cfg["aesni"])
+        pwauth, num_bytes, disable_aesni = (cfg["pwauth"], cfg["num_bytes"],
+                                            cfg["disable_aesni"])
 
         ssh = utils.security.Ssh()
 
@@ -939,13 +1017,13 @@ class SSH(NodeConfigFileSection):
 
         class ConfigureAESNI(utils.Transaction.Element):
             def commit(self):
-                ssh.aes_ni(aesni)
+                ssh.disable_aesni(disable_aesni)
 
         tx = utils.Transaction("Configuring SSH")
         if pwauth:
             tx.append(ConfigurePasswordAuthentication())
         if num_bytes:
             tx.append(ConfigureStrongRNG())
-        if aesni:
+        if disable_aesni:
             tx.append(ConfigureAESNI())
         return tx

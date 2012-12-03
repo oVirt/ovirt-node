@@ -39,7 +39,6 @@ class Plugin(plugins.NodePlugin):
 
     def model(self):
         cfg = defaults.Keyboard().retrieve()
-        self.logger.debug(cfg)
         model = {}
         model["keyboard.layout"] = cfg["layout"] or ""
         return model

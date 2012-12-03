@@ -27,11 +27,10 @@ Use the .config package for stuff related to configuration files.
 And use the model.py module for oVirt Node's defaults file.
 """
 
-import hashlib
+from ovirt.node import base, exceptions
 import augeas as _augeas
+import hashlib
 import system_config_keyboard.keyboard
-
-from ovirt.node import base
 
 
 class AugeasWrapper(base.Base):
@@ -216,7 +215,7 @@ class Transaction(list, base.Base):
     >>> tx()
     Traceback (most recent call last):
         ...
-    RuntimeError: Transaction failed: Step C
+    TransactionError: 'Transaction failed: Step C'
     """
     def __init__(self, title, elements=[]):
         super(Transaction, self).__init__()
@@ -229,7 +228,8 @@ class Transaction(list, base.Base):
         for element in self:
             self.logger.debug("Preparing element '%s'" % element)
             if Transaction.Element not in element.__class__.mro():
-                raise Exception("%s is no Transaction.Element" % element)
+                raise exceptions.PreconditionError(("%s is no Transaction." +
+                                                     "Element") % element)
             self._prepared_elements.append(element)
             element.prepare()
         return True
@@ -255,7 +255,8 @@ class Transaction(list, base.Base):
         except Exception as e:
             self.logger.warning("Transaction failed: %s" % e.message)
             self.abort()
-            raise RuntimeError("Transaction failed: %s" % e.message)
+            raise exceptions.TransactionError("Transaction failed: " +
+                                               "%s" % e.message)
         self.logger.info("Transaction '%s' succeeded" % self)
         return True
 

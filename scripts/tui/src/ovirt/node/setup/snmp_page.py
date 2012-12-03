@@ -18,12 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import plugins, valid, ui, utils
+from ovirt.node.config import defaults
+from ovirt.node.plugins import ChangesHelper
 
 """
 Configure SNMP
 """
-
-from ovirt.node import plugins, valid, ui, exceptions
 
 
 class Plugin(plugins.NodePlugin):
@@ -37,13 +38,14 @@ class Plugin(plugins.NodePlugin):
         return 40
 
     def model(self):
-        if not self._model:
-            self._model = {
-                "snmp.enabled": "no",
-                "snmp.password": "",
-                "snmp.password_confirmation": "",
-            }
-        return self._model
+        cfg = defaults.SNMP().retrieve()
+        self.logger.debug(cfg)
+        model = {
+            "snmp.enabled": True if cfg["password"] else False,
+            "snmp.password": "",
+            "snmp.password_confirmation": "",
+        }
+        return model
 
     def validators(self):
         return {
@@ -53,15 +55,14 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         widgets = [
-            ("snmp._header", ui.Header("SNMP")),
+            ("header[0]", ui.Header("SNMP")),
             ("snmp.enabled", ui.Checkbox("Enable SNMP")),
-            ("ssh._divider", ui.Divider()),
+            ("divider[0]", ui.Divider()),
 
-
-            ("snmp.password._header", ui.Header("SNMP Password")),
+            ("header[1]", ui.Header("SNMP Password")),
             ("snmp.password", ui.PasswordEntry("Password:")),
-            ("snmp.password_confirmation", ui.PasswordEntry(
-                                                        "Confirm Password:")),
+            ("snmp.password_confirmation",
+             ui.PasswordEntry("Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
@@ -70,11 +71,39 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        self._model.update(changes)
+        m = self.model()
+        m.update(self.pending_changes() or {})
+        effective_model = ChangesHelper(m)
 
-        if self._model["snmp.password"] != \
-           self._model["snmp.password_confirmation"]:
-            raise exceptions.InvalidData("Passwords do not match.")
+        snmp_keys = ["snmp.password",
+                     "snmp.password_confirmation"]
+        if effective_model.any_key_in_change(snmp_keys):
+            passwd, passwdc = effective_model.get_key_values(snmp_keys)
+            #if passwd != passwdc:
+            #    raise exceptions.InvalidData("Passwords do not match.")
 
     def on_merge(self, effective_changes):
-        pass
+        self.logger.debug("Saving SNMP page")
+        changes = ChangesHelper(self.pending_changes(False))
+        model = self.model()
+        model.update(effective_changes)
+        effective_model = ChangesHelper(model)
+
+        self.logger.debug("Saving SNMP page: %s" % changes.changes)
+        self.logger.debug("SNMP model: %s" % effective_model.changes)
+
+        snmp_keys = ["snmp.password", "snmp.enabled"]
+
+        txs = utils.Transaction("Updating SNMP configuration")
+
+        if changes.any_key_in_change(snmp_keys):
+            values = effective_model.get_key_values(snmp_keys)
+            args = [values[0]]
+            if values[1] is False:  # If set to disabled, set password to None
+                args[0] = None
+            model = defaults.SNMP()
+            model.update(*args)
+            txs += model.transaction()
+
+        txs.prepare()
+        self.dry_or(lambda: txs())

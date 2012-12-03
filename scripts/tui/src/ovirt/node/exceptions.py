@@ -24,30 +24,30 @@ oVirt Node specific exceptions
 """
 
 
-class InvalidData(Exception):
-    """E.g. if a string contains characters which are not allowed
-    """
+class ExceptionWithMessage(Exception):
     def __init__(self, msg):
         self.message = msg
 
     def __str__(self):
         return repr(self.message)
+
+
+class InvalidData(ExceptionWithMessage):
+    """E.g. if a string contains characters which are not allowed
+    """
+    pass
 
 
 class Concern(InvalidData):
     """E.g. if a password is not secure enough
     FIXME very ... unspecific
     """
-    def __init__(self, msg):
-        self.message = msg
-
-    def __str__(self):
-        return repr(self.message)
+    pass
 
 
-class PreconditionFailed(Exception):
-    def __init__(self, msg):
-        self.message = msg
+class TransactionError(ExceptionWithMessage):
+    pass
 
-    def __str__(self):
-        return repr(self.message)
+
+class PreconditionError(TransactionError):
+    pass

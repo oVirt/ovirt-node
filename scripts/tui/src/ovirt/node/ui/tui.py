@@ -128,6 +128,12 @@ class UrwidTUI(ovirt.node.ui.Window):
         widget = ui.builder.build_page(self, self._current_plugin, dialog)
         return self.__display_as_dialog(widget, dialog.title)
 
+    def close_topmost_dialog(self):
+        dialog = [w for w in self.__widget_stack
+                  if type(w) is ovirt.node.ui.widgets.ModalDialog][-1]
+        assert len(dialog) == 1
+        self.__close_dialog(dialog)
+
     def quit(self):
         """Quit the UI
         """
@@ -192,7 +198,7 @@ class UrwidTUI(ovirt.node.ui.Window):
                         msg += "- %s\n" % (field.strip(":"))
                 if msg:
                     self.__display_as_dialog(urwid.Filler(urwid.Text(
-                                "The following fields were changed:\n%s" %
+                                "The following fields have changed:\n%s" %
                                 msg)),
                                 "Pending changes")
                     has_outstanding_changes = True

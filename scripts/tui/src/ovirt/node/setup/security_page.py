@@ -38,15 +38,16 @@ class Plugin(plugins.NodePlugin):
         return 20
 
     def model(self):
-        if not self._model:
-            self._model = {
-                "ssh.enabled": "no",
-                "strongrng.aesni": "no",
-                "strongrng.bytes_used": "",
-                "passwd.admin.password": "",
-                "passwd.admin.password_confirmation": "",
-            }
-        return self._model
+        cfg = defaults.SSH().retrieve()
+        self.logger.debug(cfg)
+        model = {
+            "ssh.pwauth": cfg["pwauth"] or False,
+            "strongrng.aesni": cfg["disable_aesni"] or False,
+            "strongrng.num_bytes": cfg["num_bytes"] or "",
+            "passwd.admin.password": "",
+            "passwd.admin.password_confirmation": "",
+        }
+        return model
 
     def validators(self):
         number_or_empty = valid.Number(range=[0, None]) | \
@@ -60,7 +61,7 @@ class Plugin(plugins.NodePlugin):
     def ui_content(self):
         widgets = [
             ("header[0]", ui.Header("Remote Access")),
-            ("ssh.enabled", ui.Checkbox("Enable ssh password authentication")),
+            ("ssh.pwauth", ui.Checkbox("Enable SSH password authentication")),
 
             ("header[1]", ui.Header("Strong Random Number Generator")),
             ("strongrng.aesni", ui.Checkbox("Enable AES-NI")),
@@ -78,11 +79,16 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        self._model.update(changes)
+        m = self.model()
+        m.update(self.pending_changes() or {})
+        effective_model = ChangesHelper(m)
 
-        if self._model["passwd.admin.password"] != \
-           self._model["passwd.admin.password_confirmation"]:
-            raise exceptions.InvalidData("Passwords do not match.")
+        passwd_keys = ["passwd.admin.password",
+                       "passwd.admin.password_confirmation"]
+        if effective_model.any_key_in_change(passwd_keys):
+            passwd, passwdc = effective_model.get_key_values(passwd_keys)
+            if passwd != passwdc:
+                raise exceptions.InvalidData("Passwords do not match.")
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving security page")
@@ -95,7 +101,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Remote security model: %s" %
                           effective_model.changes)
 
-        ssh_keys = ["ssh.enabled", "strongrng.num_bytes", "strongrng.aesni"]
+        ssh_keys = ["ssh.pwauth", "strongrng.num_bytes", "strongrng.aesni"]
         passwd_keys = ["passwd.admin.password",
                        "passwd.admin.password_confirmation"]
 
@@ -112,8 +118,11 @@ class Plugin(plugins.NodePlugin):
                 raise exceptions.InvalidData("Passwords do not match")
             passwd = utils.security.Passwd()
 
-            self.logger.debug("Setting admin password.")
-            self.dry_or(lambda: passwd.set_password("admin", pw))
+            class SetAdminPasswd(utils.Transaction.Element):
+                def commit(self):
+                    self.logger.debug("Setting admin password.")
+                    passwd.set_password("admin", pw)
+            txs += [SetAdminPasswd()]
 
         txs.prepare()  # Just to display something in dry mode
         self.dry_or(lambda: txs())

@@ -239,7 +239,7 @@ class NodePlugin(base.Base):
         """Called when data should be saved
         Calls merge_changes, but only with values that really changed
         """
-        effective_changes = self.pending_changes() or {}
+        effective_changes = self.pending_changes()
         is_valid = False
 
         self.logger.debug("Request to apply model changes: %s" %
@@ -254,7 +254,7 @@ class NodePlugin(base.Base):
         if self.only_merge_on_valid_changes and not is_valid:
             msg = "There are still fields with invalid values."
             self.logger.warning(msg)
-            raise exceptions.PreconditionFailed(msg)
+            raise exceptions.PreconditionError(msg)
 
         successfull_merge = self.on_merge(effective_changes)
 
@@ -309,13 +309,16 @@ class NodePlugin(base.Base):
                 else:
                     effective_changes[key] = value
         else:
+            self.logger.debug("No changes at all detected.")
+        if not effective_changes:
             self.logger.debug("No effective changes detected.")
-        return effective_changes if len(effective_changes) > 0 else None
+        return effective_changes
 
     def dry_or(self, func):
         if self.application.args.dry:
             self.logger.info("Running dry, otherwise: %s" % func)
         else:
+            self.logger.info("Running %s" % func)
             func()
 
 

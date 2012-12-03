@@ -52,10 +52,10 @@ class Plugin(plugins.NodePlugin):
         model["logrotate.max_size"] = logrotate["max_size"] or "1024"
 
         model["rsyslog.address"] = syslog["server"] or ""
-        model["rsyslog.port"] = syslog["port"] or ""
+        model["rsyslog.port"] = syslog["port"] or "514"
 
         model["netconsole.address"] = netconsole["server"] or ""
-        model["netconsole.port"] = netconsole["port"] or ""
+        model["netconsole.port"] = netconsole["port"] or "6666"
 
         return model
 

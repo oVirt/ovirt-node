@@ -50,15 +50,14 @@ class Passwd(base.Base):
 class Ssh(base.Base):
     def __init__(self):
         super(Ssh, self).__init__()
-        import ovirtnode.ovirtfunctions as ofunc
-        self.ofunc = ofunc
 
-    def __update_profile(self, rng_num_bytes, enable_aes):
+    def __update_profile(self, rng_num_bytes, disable_aes):
+        import ovirtnode.ovirtfunctions as ofunc
         additional_lines = []
-        self.ofunc.unmount_config("/etc/profile")
+        ofunc.unmount_config("/etc/profile")
 
         process.system("sed -i '/OPENSSL_DISABLE_AES_NI/d' /etc/profile")
-        if not enable_aes:
+        if disable_aes:
             additional_lines += ["export OPENSSL_DISABLE_AES_NI=1"]
 
         process.system("sed -i '/SSH_USE_STRONG_RNG/d' /etc/profile")
@@ -71,27 +70,29 @@ class Ssh(base.Base):
             with open("/etc/profile", "a") as f:
                 lines = "\n" + "\n".join(additional_lines)
                 f.write(lines)
-            self.ofunc.ovirt_store_config("/etc/profile")
+            ofunc.ovirt_store_config("/etc/profile")
 
             self.restart()
 
-    def aes_ni(self, enable=None):
+    def disable_aesni(self, disable=None):
         """Set/Get AES NI for OpenSSL
         Args:
             enable: True or False
         Returns:
             The status of aes_ni
         """
-        rng, aes = self.ofunc.rng_status()
-        if enable in [True, False]:
-            self.__update_profile(rng, enable)
+        import ovirtnode.ovirtfunctions as ofunc
+        rng, aes = ofunc.rng_status()
+        if disable in [True, False]:
+            self.__update_profile(rng, disable)
         else:
-            self.logger.warning("Unknown value for AES NI: %s" % enable)
-        return self.ofunc.rng_status()[1]  # FIXME should rurn bool
+            self.logger.warning("Unknown value for AES NI: %s" % disable)
+        return ofunc.rng_status()[1]  # FIXME should rurn bool
         # and does it return disable_aes_ni?
 
     def strong_rng(self, num_bytes=None):
-        rng, aes = self.ofunc.rng_status()
+        import ovirtnode.ovirtfunctions as ofunc
+        rng, aes = ofunc.rng_status()
         if valid.Number(range=[0, None]).validate(num_bytes):
             self.__update_profile(num_bytes, aes)
         elif num_bytes is None:
@@ -99,7 +100,7 @@ class Ssh(base.Base):
         else:
             self.logger.warning("Unknown value for RNG num bytes: " +
                                 "%s" % num_bytes)
-        return self.ofunc.rng_status()[0]
+        return ofunc.rng_status()[0]
 
     def restart(self):
         self.logger.debug("Restarting SSH")

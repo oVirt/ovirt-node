@@ -18,18 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import utils, valid
+from ovirt.node import utils, valid, plugins, ui
 from ovirt.node.config import defaults
 from ovirt.node.plugins import ChangesHelper
-import ovirt.node.plugins
-import ovirt.node.ui
 
 """
 Configure Remote Storage
 """
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
@@ -55,23 +53,21 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def ui_content(self):
         widgets = [
-            ("header", ovirt.node.ui.Header("Remote Storage")),
+            ("header", ui.Header("Remote Storage")),
 
-            ("iscsi.initiator_name", ovirt.node.ui.Entry("iSCSI Initiator " +
-                                                         "Name:",
-                                                         align_vertical=True)),
+            ("iscsi.initiator_name", ui.Entry("iSCSI Initiator Name:",
+                                              align_vertical=True)),
 
-            ("divider", ovirt.node.ui.Divider()),
+            ("divider", ui.Divider()),
 
-            ("nfsv4.domain", ovirt.node.ui.Entry("NFSv4 Domain " +
-                                                 "(example.redhat.com):",
-                                                 align_vertical=True)),
+            ("nfsv4.domain", ui.Entry("NFSv4 Domain (example.redhat.com):",
+                                      align_vertical=True)),
         ]
 
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
 
     def on_change(self, changes):

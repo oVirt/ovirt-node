@@ -429,6 +429,8 @@ class Options(urwid.WidgetWrap):
 
 
 class Checkbox(urwid.WidgetWrap):
+    signals = ['change']
+
     def __init__(self, label, state):
         self._label = urwid.Text(label)
         self._label_attrmap = urwid.AttrMap(self._label,
@@ -437,12 +439,19 @@ class Checkbox(urwid.WidgetWrap):
         self._divider = urwid.Divider()
         self._container = urwid.Columns([self._label_attrmap,
                                          self._checkbox])
+
+        def on_change_cb(widget, new_value):
+            urwid.emit_signal(self, 'change', self, new_value)
+        urwid.connect_signal(self._checkbox, 'change', on_change_cb)
+
         super(Checkbox, self).__init__(urwid.Pile([self._container,
                                                    self._divider]))
 
     def set_text(self, s):
         if s in [True, False]:
             self._checkbox.set_state(s)
+        else:
+            raise Exception("Invalid value: %s" % s)
 
 
 class PageWidget(urwid.WidgetWrap):
@@ -488,10 +497,21 @@ class EditWithChars(urwid.Edit):
         (maxcol,) = size
         self._shift_view_to_cursor = bool(focus)
 
-        txt = self.get_edit_text().ljust(maxcol, self.char)[:maxcol]
+        txt = self.get_edit_text()
+        txt = u"".join([self._mask] * len(txt)) if self._mask else txt
+        txt = txt.ljust(maxcol, self.char)[:maxcol]
         canv = urwid.Text(txt).render((maxcol,))
         if focus:
             canv = urwid.CompositeCanvas(canv)
             canv.cursor = self.get_cursor_coords((maxcol,))
 
         return canv
+
+
+class TabablePile(urwid.Pile):
+    def keypress(self, size, key):
+        #if "tab" in key:
+        #    self.focus_position += 1
+        #elif "shift tab" in key:
+        #    self.focus_position -= 1
+        return (size, key)

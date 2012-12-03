@@ -94,7 +94,7 @@ class Page(ContainerElement):
 
     def __init__(self, children):
         super(Page, self).__init__(children)
-        self.buttons = [
+        self.buttons = self.buttons or [
                         (None, SaveButton()),
                         (None, ResetButton())
                         ]
@@ -112,6 +112,12 @@ class Dialog(Page):
     @Element.signal_change
     def close(self, v=True):
         self._close = v
+
+
+class InfoDialog(Dialog):
+    def __init__(self, title, children):
+        super(InfoDialog, self).__init__(title, children)
+        self.buttons = [(None, CloseButton())]
 
 
 class Row(ContainerElement):
@@ -194,6 +200,11 @@ class SaveButton(Button):
 class ResetButton(Button):
     def __init__(self, enabled=True):
         super(ResetButton, self).__init__("Reset", enabled)
+
+
+class CloseButton(Button):
+    def __init__(self, enabled=True):
+        super(CloseButton, self).__init__("Close", enabled)
 
 
 class Divider(Element):

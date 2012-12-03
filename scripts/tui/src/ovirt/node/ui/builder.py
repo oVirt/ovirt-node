@@ -57,7 +57,8 @@ def build_page(tui, plugin, container):
     # Add buttons
     button_widgets = []
     for path, item in container.buttons:
-        assert type(item) in [ui.SaveButton, ui.ResetButton, ui.Button]
+        assert type(item) in [ui.SaveButton, ui.ResetButton, ui.CloseButton,
+                              ui.Button]
         button_widgets.append(build_button(path, item, tui, plugin))
 
     if button_widgets:
@@ -144,7 +145,8 @@ def build_entry(path, item, tui, plugin):
     item.connect_signal("enabled", on_item_enabled_change_cb)
 
     def on_widget_value_change(widget, new_value):
-        LOGGER.debug("Entry changed, calling callback: '%s'" % path)
+        LOGGER.debug("Entry %s changed, calling callback: '%s'" % (widget,
+                                                                   path))
 
         try:
             change = {path: new_value}
@@ -195,11 +197,13 @@ def build_button(path, item, tui, plugin):
         plugin.sig_valid.connect(lambda w, v: widget.enable(v))
 
     def on_widget_click_cb(widget, data=None):
-        LOGGER.debug("Button click: %s %s" % (path, widget))
+        LOGGER.debug("Button click: %s" % {"path": path, "widget": widget})
         if itemtype is ui.Button:
             plugin._on_ui_change({path: True})
         if itemtype in [ui.Button, ui.SaveButton]:
             r = plugin._on_ui_save()
+        if itemtype in [ui.CloseButton]:
+            r = tui.close_topmost_dialog()
         if itemtype in [ui.ResetButton]:
             r = plugin._on_ui_reset()
             tui._display_plugin(plugin)
@@ -233,6 +237,13 @@ def build_options(path, item, tui, plugin):
 
 def build_checkbox(path, item, tui, plugin):
     widget = ui.widgets.Checkbox(item.label, item.state())
+
+    def on_widget_change_cb(widget, data=None):
+        item.state(data)
+        LOGGER.debug("Checkbox changed, calling callback: %s" % data)
+        plugin._on_ui_change({path: data})
+
+    urwid.connect_signal(widget, "change", on_widget_change_cb)
     return widget
 
 
