@@ -326,7 +326,7 @@ class Entry(urwid.WidgetWrap):
         return self._selectable
 
     def set_notice(self, txt):
-        self._notice_txt= txt
+        self._notice_txt = txt
         if txt:
             self._notice.set_text(txt)
             if len(self._pile.contents) < 2:

@@ -96,14 +96,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         widgets = [
-            ("hostname",
-                ui.Entry("Hostname:")),
+            ("headers[0]", ui.Header("System Identification")),
+            ("hostname", ui.Entry("Hostname:")),
             ("hostname._space", ui.Divider()),
-
-            ("nics", ui.Table("Available System NICs",
-                        "Device   Status         Model    MAC Address",
-                        self._get_nics())),
-            ("nics._space", ui.Divider()),
 
             ("dns[0]", ui.Entry("DNS Server 1:")),
             ("dns[1]", ui.Entry("DNS Server 2:")),
@@ -112,6 +107,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("ntp[0]", ui.Entry("NTP Server 1:")),
             ("ntp[1]", ui.Entry("NTP Server 2:")),
             ("ntp._space", ui.Divider()),
+
+            ("nics", ui.Table("Available System NICs",
+                        "Device   Status         Model          MAC Address",
+                        self._get_nics())),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets.update(dict(widgets))
@@ -130,7 +129,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             description = " ".join([
                 justify(nic["name"], 8),
                 justify(bootproto, 14),
-                justify(nic["driver"], 8),
+                justify(nic["vendor"], 14),
                 justify(nic["hwaddr"], 17)
                 ])
             node_nics.append((name, description))

@@ -72,11 +72,13 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('notice', 'light red'),
                ('plugin.widget.entry', element_styles["text"], "white"),
                ('plugin.widget.entry.disabled', element_styles["disabled"]),
-               ('plugin.widget.entry.invalid', element_styles["invalid"], "white"),
+               ('plugin.widget.entry.invalid', element_styles["invalid"],
+                                               "white"),
                ('plugin.widget.entry.label', element_styles["label"]),
                ('plugin.widget.entry.label.invalid', element_styles["label"]),
                ('plugin.widget.entry.frame', element_styles["text"]),
-               ('plugin.widget.entry.frame.invalid', element_styles["invalid"]),
+               ('plugin.widget.entry.frame.invalid',
+                element_styles["invalid"]),
                ('plugin.widget.entry.frame.disabled',
                 element_styles["disabled"]),
                ('plugin.widget.notice', 'light red'),
@@ -190,7 +192,8 @@ class UrwidTUI(ovirt.node.ui.Window):
                         msg += "- %s\n" % (field.strip(":"))
                 if msg:
                     self.__display_as_dialog(urwid.Filler(urwid.Text(
-                                "The following fields were changed:\n%s" % msg)),
+                                "The following fields were changed:\n%s" %
+                                msg)),
                                 "Pending changes")
                     has_outstanding_changes = True
         return has_outstanding_changes
@@ -257,7 +260,6 @@ class UrwidTUI(ovirt.node.ui.Window):
 
     def __register_default_hotkeys(self):
         self.register_hotkey(["esc"], self.quit)
-        self.register_hotkey(["q"], self.quit)
         self.register_hotkey(["window resize"], self._check_min_size_cb)
 
     def _draw_screen(self):

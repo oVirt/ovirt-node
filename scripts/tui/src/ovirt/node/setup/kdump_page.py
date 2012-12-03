@@ -81,9 +81,11 @@ class Plugin(plugins.NodePlugin):
         widgets = [
             ("kdump._header", ui.Header("Configure Kdump")),
             ("kdump.type", ui.Options("Type", self._types)),
-            ("kdump.ssh_location", ui.Entry("SSH Location:",
+            ("kdump.ssh_location", ui.Entry("SSH Location " +
+                                            "(example.redhat.com:/var/crash):",
                                             align_vertical=True)),
-            ("kdump.nfs_location", ui.Entry("NFS Location:",
+            ("kdump.nfs_location", ui.Entry("NFS Location " +
+                                            "root@example.redhat.com):",
                                             align_vertical=True)),
         ]
         # Save it "locally" as a dict, for better accessability

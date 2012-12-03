@@ -23,13 +23,10 @@
 Configure Engine
 """
 
-import ovirt.node.plugins
-import ovirt.node.valid
-import ovirt.node.ui
-import ovirt.node.utils
+from ovirt.node import plugins, valid, ui, utils, exceptions
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
@@ -44,7 +41,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             self._model = {
                 "vdsm.address": "",
                 "vdsm.port": "7634",
-                "vdsm.connect_and_validate": ovirt.node.utils.parse_bool(True),
+                "vdsm.connect_and_validate": utils.parse_bool(True),
                 "vdsm.password": "",
                 "vdsm.password_confirmation": "",
             }
@@ -52,34 +49,37 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def validators(self):
         return {
-                "vdsm.address": ovirt.node.valid.FQDNOrIPAddress(),
-                "vdsm.port": ovirt.node.valid.Port(),
-                "vdsm.password": ovirt.node.valid.Text(),
-                "vdsm.password_confirmation": ovirt.node.valid.Text(),
+                "vdsm.address": valid.FQDNOrIPAddress() | valid.Empty(),
+                "vdsm.port": valid.Port(),
+                "vdsm.password": valid.Text(),
+                "vdsm.password_confirmation": valid.Text(),
             }
 
     def ui_content(self):
         widgets = [
-            ("header", ovirt.node.ui.Header("oVirt Engine Configuration")),
+            ("header", ui.Header("oVirt Engine Configuration")),
 
-            ("vdsm.address", ovirt.node.ui.Entry("Server Address:")),
-            ("vdsm.port", ovirt.node.ui.Entry("Server Port:")),
-            ("vdsm.connect_and_validate", ovirt.node.ui.Checkbox(
+            ("vdsm.address", ui.Entry("Management Server:")),
+            ("vdsm.port", ui.Entry("Management Server Port:")),
+
+            ("divider[1]", ui.Divider()),
+
+            ("vdsm.connect_and_validate", ui.Checkbox(
                     "Connect to oVirt Engine and Validate Certificate")),
 
-            ("vdsm.password._divider", ovirt.node.ui.Divider("-")),
-            ("vdsm.password._label", ovirt.node.ui.Label(
+            ("divider[0]", ui.Divider()),
+            ("vdsm.password._label", ui.Label(
                     "Optional password for adding Node through oVirt " +
                     "Engine UI")),
 
-            ("vdsm.password", ovirt.node.ui.PasswordEntry("Password:")),
-            ("vdsm.password_confirmation", ovirt.node.ui.PasswordEntry(
-                    "Confirm Password:")),
+            ("vdsm.password", ui.PasswordEntry("Password:")),
+            ("vdsm.password_confirmation",
+             ui.PasswordEntry("Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         return page
 
     def on_change(self, changes):
@@ -87,7 +87,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         if self._model["vdsm.password"] != \
            self._model["vdsm.password_confirmation"]:
-            raise ovirt.node.exceptions.InvalidData("Passwords do not match.")
+            raise exceptions.InvalidData("Passwords do not match.")
 
     def on_merge(self, effective_changes):
         pass

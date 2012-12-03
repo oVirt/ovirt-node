@@ -345,3 +345,18 @@ class Boolean(Validator):
 
     def validate(self, value):
         return value in [True, False]
+
+
+class IQN(RegexValidator):
+    """Matches a IQN
+
+    >>> IQN()("iqn.1994-05.com.redhat.com:6edea1b458e5")
+    True
+    >>> FQDN().validate("example.com.")
+    False
+    >>> FQDN().validate("")
+    False
+    """
+
+    description = "a valid IQN"
+    pattern = "^iqn\.(\d{4}-\d{2})\.([^:]+):"

@@ -61,17 +61,13 @@ class Plugin(plugins.NodePlugin):
         widgets = [
             ("header[0]", ui.Header("Remote Access")),
             ("ssh.enabled", ui.Checkbox("Enable ssh password authentication")),
-            ("divider[0]", ui.Divider()),
 
             ("header[1]", ui.Header("Strong Random Number Generator")),
             ("strongrng.aesni", ui.Checkbox("Enable AES-NI")),
             ("strongrng.num_bytes", ui.Entry("Bytes Used:")),
-            ("divider[1]", ui.Divider()),
 
-
-            ("header[2]", ui.Label("Local Access")),
-            ("passwd.admin.password", ui.PasswordEntry(
-                                                                "Password:")),
+            ("header[2]", ui.Header("Local Access")),
+            ("passwd.admin.password", ui.PasswordEntry("Password:")),
             ("passwd.admin.password_confirmation", ui.PasswordEntry(
                 "Confirm Password:")),
         ]

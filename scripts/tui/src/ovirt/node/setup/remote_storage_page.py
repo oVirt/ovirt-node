@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import utils
+from ovirt.node import utils, valid
 from ovirt.node.config import defaults
 from ovirt.node.plugins import ChangesHelper
 import ovirt.node.plugins
@@ -40,17 +40,17 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return 70
 
     def model(self):
-        if not self._model:
-            self._model = {
-                "iscsi.initiator_name": "",
-            }
-        return self._model
+        icfg = defaults.iSCSI().retrieve()
+        ncfg = defaults.NFSv4().retrieve()
+        model = {}
+        model["iscsi.initiator_name"] = icfg["name"]
+        model["nfsv4.domain"] = ncfg["domain"]
+        return model
 
     def validators(self):
-        is_initiator_name = lambda v: (None if len(v.split(":")) == 2
-                                            else "Invalid IQN.")
         return {
-                "iscsi.initiator_name": is_initiator_name,
+                "iscsi.initiator_name": valid.IQN(),
+                "nfsv4.domain": valid.FQDN(),
             }
 
     def ui_content(self):
@@ -60,7 +60,14 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             ("iscsi.initiator_name", ovirt.node.ui.Entry("iSCSI Initiator " +
                                                          "Name:",
                                                          align_vertical=True)),
+
+            ("divider", ovirt.node.ui.Divider()),
+
+            ("nfsv4.domain", ovirt.node.ui.Entry("NFSv4 Domain " +
+                                                 "(example.redhat.com):",
+                                                 align_vertical=True)),
         ]
+
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
@@ -69,7 +76,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def on_change(self, changes):
         pass
-        self._model.update(changes)
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving remote storage page")

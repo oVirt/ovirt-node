@@ -38,10 +38,11 @@ class Plugin(plugins.NodePlugin):
         return 30
 
     def model(self):
-        cfg = defaults.Logrotate().retrieve()
-
+        cfg = defaults.Keyboard().retrieve()
+        self.logger.debug(cfg)
         model = {}
         model["keyboard.layout"] = cfg["layout"] or ""
+        return model
 
     def validators(self):
         return {}

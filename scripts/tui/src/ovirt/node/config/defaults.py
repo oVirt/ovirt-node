@@ -676,8 +676,11 @@ class iSCSI(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, name, target_name, target_host, target_port):
-        # FIXME add validation
-        pass
+        # FIXME add more validation
+        valid.IQN()(name)
+        (valid.Empty() | valid.IQN())(target_name)
+        (valid.Empty() | valid.FQDNOrIPAddress())(target_host)
+        (valid.Empty() | valid.Port())(target_port)
 
     def transaction(self):
         cfg = dict(self.retrieve())
@@ -685,8 +688,8 @@ class iSCSI(NodeConfigFileSection):
 
         class ConfigureIscsiInitiator(utils.Transaction.Element):
             def commit(self):
-                from ovirtnode.iscsi import set_iscsi_initiator
-                set_iscsi_initiator(initiator_name)
+                iscsi = utils.storage.iSCSI()
+                iscsi.initiator_name(initiator_name)
 
         tx = utils.Transaction("Configuring the iSCSI Initiator")
         tx.append(ConfigureIscsiInitiator())
@@ -709,6 +712,23 @@ class SNMP(NodeConfigFileSection):
     def update(self, password):
         # FIXME add validation
         pass
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        password = cfg["password"]
+
+        class ConfigureSNMP(utils.Transaction.Element):
+            def commit(self):
+                # FIXME snmp plugin needs to be placed somewhere else (in src)
+                import ovirt_config_setup.snmp as osnmp
+                if password:
+                    osnmp.enable_snmpd(password)
+                else:
+                    osnmp.disable_snmpd()
+
+        tx = utils.Transaction("Configuring SNMP")
+        tx.append(ConfigureSNMP())
+        return tx
 
 
 class Netconsole(NodeConfigFileSection):

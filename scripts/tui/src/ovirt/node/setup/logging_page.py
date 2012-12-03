@@ -77,13 +77,14 @@ class Plugin(plugins.NodePlugin):
             ("logrotate.max_size", ui.Entry("Logrotate Max Log " +
                                                  "Size (KB):")),
 
-            ("rsyslog.header", ui.Label(
-                                    "RSyslog is an enhanced multi-threaded " +
-                                    "syslogd")),
+            ("divider[1]", ui.Divider()),
+            ("rsyslog.header", ui.Label("RSyslog is an enhanced multi-" +
+                                         "threaded syslogd")),
             ("rsyslog.address", ui.Entry("Server Address:")),
             ("rsyslog.port", ui.Entry("Server Port:")),
 
-            ("netconsole.header", ui.Label(
+            ("divider[1]", ui.Divider()),
+            ("netconsole.label", ui.Label(
                                     "Netconsole service allows a remote sys" +
                                     "log daemon to record printk() messages")),
             ("netconsole.address", ui.Entry("Server Address:")),

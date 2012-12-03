@@ -140,6 +140,7 @@ class Label(Element):
 
 class Header(Label):
     template = "\n  %s\n"
+
     def __init__(self, text, template=template):
         super(Header, self).__init__(text)
         self.template = template
