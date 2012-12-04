@@ -194,7 +194,9 @@ def build_button(path, item, tui, plugin):
     widget = ui.widgets.Button(item.text())
 
     if itemtype in [ui.SaveButton]:
-        plugin.sig_valid.connect(lambda w, v: widget.enable(v))
+        def on_valid_cb(w, v):
+            widget.enable(plugin.is_valid_changes())
+        plugin.sig_valid.connect(on_valid_cb)
 
     def on_widget_click_cb(widget, data=None):
         LOGGER.debug("Button click: %s" % {"path": path, "widget": widget})

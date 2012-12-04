@@ -71,6 +71,7 @@ class NodePlugin(base.Base):
     def __init__(self, application):
         super(NodePlugin, self).__init__()
         self.__changes = {}
+        self.__invalid_changes = {}
         self.application = application
         self.sig_valid = self.register_signal("valid")
 
@@ -227,11 +228,15 @@ class NodePlugin(base.Base):
                 self.validate(change)
             self.on_change(change)
         except exceptions.InvalidData as e:
+            self.__invalid_changes.update(change)
             self.sig_valid.emit(False)
             raise e
         self.__changes.update(change)
         self.logger.debug("Sum of all UI changes up to now: %s" % \
                           self.__changes)
+        self.__invalid_changes = {k: v
+                                  for k, v in self.__invalid_changes.items()
+                                  if k not in change}
         self.sig_valid.emit(True)
         return True
 
@@ -290,6 +295,14 @@ class NodePlugin(base.Base):
         """
         return self.__effective_changes() if only_effective_changes \
                                           else self.__changes
+
+    def is_valid_changes(self):
+        """If all changes are valid or not
+        Returns:
+            If there are no invalid changes - so all changes valid
+        """
+        self.logger.debug("Invalid changes: %s" % self.__invalid_changes)
+        return len(self.__invalid_changes) == 0
 
     def __effective_changes(self):
         """Calculates the effective changes, so changes which change the
