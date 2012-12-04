@@ -145,11 +145,24 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         self.logger.debug("Building NIC details dialog")
         # Populate model with nic specific informations
         iface = self._model["nics"]
+
         self.logger.debug("Getting informations for NIC details page")
         live = ovirt.node.utils.network.node_nics()[iface]
         cfg = defaults.Network().retrieve()
 
-        self.logger.debug(cfg)
+        self.logger.debug("live: %s" % live)
+        self.logger.debug("cfg: %s" % cfg)
+
+        ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
+                                            cfg["gateway"], cfg["vlanid"])
+
+        if cfg["bootproto"] == "dhcp":
+            nic = utils.network.NIC(live["bridge"])
+            routes = utils.network.Routes()
+            ipaddr, netmask, gateway, vlanid = (nic.ipv4_address().items() +
+                                               (routes.default(),) +
+                                               (nic.vlanid(),))
+
         self._model.update({
             "dialog.nic.iface": live["name"],
             "dialog.nic.driver": live["driver"],
@@ -160,11 +173,13 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             "dialog.nic.hwaddress": live["hwaddr"],
 
             "dialog.nic.ipv4.bootproto": cfg["bootproto"],
-            "dialog.nic.ipv4.address": cfg["ipaddr"] or "",
-            "dialog.nic.ipv4.netmask": cfg["netmask"] or "",
-            "dialog.nic.ipv4.gateway": cfg["gateway"] or "",
-            "dialog.nic.vlanid": cfg["vlanid"] or "",
+            "dialog.nic.ipv4.address": ipaddr,
+            "dialog.nic.ipv4.netmask": netmask,
+            "dialog.nic.ipv4.gateway": gateway,
+            "dialog.nic.vlanid": vlanid,
         })
+
+        self.logger.debug("model: %s" % self._model)
 
         padd = lambda l: l.ljust(14)
         dialog = self._build_dialog("dialog.nic", "NIC Details: %s" % iface, [
@@ -317,13 +332,17 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         time.sleep(3)
         d.close()
 
+        # Behaves like a page reload
+        return self.ui_content()
+
     def _configure_nic(self, bootproto, ipaddr, netmask, gateway, vlanid):
         vlanid = vlanid or None
         model = defaults.Network()
         iface = self._model["dialog.nic.iface"]
         if bootproto == "none":
             self.logger.debug("Configuring no networking")
-            model.update(None, None, None, None, None, None)
+            name = iface + "-DISABLED"
+            model.update(name, None, None, None, None, None)
         elif bootproto == "dhcp":
             self.logger.debug("Configuring dhcp")
             model.update(iface, "dhcp", None, None, None, vlanid)

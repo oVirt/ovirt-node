@@ -303,24 +303,30 @@ class Network(NodeConfigFileSection):
         FIXME this should be rewritten o allow more fine grained progress
         informations
         """
-        iface = self.retrieve()["iface"]
 
         class ConfigureNIC(utils.Transaction.Element):
             title = "Configuring NIC"
 
             def prepare(self):
-                self.logger.debug("Psuedo prewparing ovirtnode.Network")
+                self.logger.debug("Psuedo preparing ovirtnode.Network")
 
             def commit(self):
                 from ovirtnode.network import Network as oNetwork
                 net = oNetwork()
-                if iface:
-                    net.configure_interface()
+                net.configure_interface()
                 net.save_network_configuration()
+                #utils.AugeasWrapper.force_reload()
+
+        class ReloadNetworkConfiguration(utils.Transaction.Element):
+            title = "Reloading network configuration"
+
+            def commit(self):
                 utils.AugeasWrapper.force_reload()
 
-        tx = utils.Transaction("Saving network configuration")
+
+        tx = utils.Transaction("Applying new network configuration")
         tx.append(ConfigureNIC())
+        tx.append(ReloadNetworkConfiguration())
         return tx
 
 
@@ -988,8 +994,8 @@ class SSH(NodeConfigFileSection):
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, pwauth, num_bytes, disable_aesni):
         valid.Boolean()(pwauth)
-        valid.Number()(num_bytes)
-        valid.Boolean()(disable_aesni)
+        (valid.Number() | valid.Empty(or_none=True))(num_bytes)
+        (valid.Boolean() | valid.Empty(or_none=True))(disable_aesni)
         return {
                 "OVIRT_SSH_PWAUTH": "yes" if pwauth else None,
                 "OVIRT_DISABLE_AES_NI": "true" if disable_aesni else None
@@ -1012,22 +1018,25 @@ class SSH(NodeConfigFileSection):
         ssh = utils.security.Ssh()
 
         class ConfigurePasswordAuthentication(utils.Transaction.Element):
+            title = "Configuring SSH password authentication"
             def commit(self):
                 ssh.password_authentication(pwauth)
 
         class ConfigureStrongRNG(utils.Transaction.Element):
+            title = "Configuring strong RNG"
             def commit(self):
                 ssh.strong_rng(num_bytes)
 
         class ConfigureAESNI(utils.Transaction.Element):
+            title = "Configuring AES NI"
             def commit(self):
                 ssh.disable_aesni(disable_aesni)
 
         tx = utils.Transaction("Configuring SSH")
-        if pwauth:
+        if pwauth in [True, False]:
             tx.append(ConfigurePasswordAuthentication())
         if num_bytes:
             tx.append(ConfigureStrongRNG())
-        if disable_aesni:
+        if disable_aesni in [True, False]:
             tx.append(ConfigureAESNI())
         return tx

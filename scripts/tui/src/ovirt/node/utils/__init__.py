@@ -41,6 +41,12 @@ class AugeasWrapper(base.Base):
 #        self._aug = _augeas.Augeas() # Is broken
         self._aug.set("/augeas/save/copy_if_rename_fails", "")
 
+    @staticmethod
+    def force_reload():
+        """Needs to be called when files were changed on-disk without using Aug
+        """
+        AugeasWrapper._aug.load()
+
     def get(self, p, strip_quotes=False):
         v = self._aug.get(p)
         if v and strip_quotes:
@@ -62,6 +68,9 @@ class AugeasWrapper(base.Base):
 
     def match(self, p):
         return self._aug.match(p)
+
+    def load(self):
+        return self._aug.load()
 
     def set_many(self, new_dict, basepath=""):
         """Set's many augpaths at once

@@ -18,23 +18,23 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import base
+from socket import inet_ntoa
+from struct import pack
+import glob
+import gudev
+import logging
+import os.path
+import ovirt.node.config.network
+import ovirt.node.utils.fs
+import ovirt.node.utils.process as process
+import re
 
 """
 Some convenience functions related to networking
 """
 
-
-import os.path
-import logging
-import re
-import glob
-
-import ovirt.node.utils.process as process
-import ovirt.node.utils.fs
-import ovirt.node.config.network
-
 LOGGER = logging.getLogger(__name__)
-
 
 #
 # Try to use NM if available
@@ -49,7 +49,6 @@ try:
 except Exception as e:
     LOGGER.warning("NetworkManager support disabled: " +
                    "NM Client not found (%s)" % e)
-import gudev
 
 
 class UnknownNicError(Exception):
@@ -78,6 +77,8 @@ def all_ifaces():
 
 def iface_information(iface, with_slow=True):
     """Retuns all system NICs (via udev)
+
+    FIXME move into NIC
 
     Args:
         nics: List of NIC names
@@ -143,11 +144,12 @@ def iface_information(iface, with_slow=True):
 def _slow_iface_information(iface):
     info = {}
 
+    nic = NIC(iface)
     # Current IP addresses
-    info["addresses"] = nic_ip_addresses(iface)
+    info["addresses"] = nic.ip_addresses()
 
     # Current link state
-    info["link_detected"] = nic_link_detected(iface)
+    info["link_detected"] = nic.has_link()
 
     return info
 
@@ -263,6 +265,8 @@ def node_nics():
         if info["is_vlan"]:
             dst = info["vlan_parent"]
         for k in ["bootproto", "ipaddr", "netmask", "gateway"]:
+            LOGGER.debug("Merging cfg %s from bridge %s into device %s" % (k,
+                                                               bridge, slave))
             node_infos[dst][k] = bridge_cfg[k] if k in bridge_cfg else None
 
     LOGGER.debug("Node NICs: %s" % node_infos)
@@ -289,83 +293,133 @@ def node_bridge():
     return bridges[0] if len(bridges) else None
 
 
-def nic_link_detected(iface):
-    """Determin if L1 is up on a given interface
+class NIC(base.Base):
+    def __init__(self, iface):
+        self.iface = iface
+        super(NIC, self).__init__()
 
-    >>> nic_link_detected("lo")
-    True
+    def has_link(self):
+        """Determin if L1 is up on a given interface
 
-    >>> iface = all_ifaces()[0]
-    >>> cmd = "ip link set dev {dev} up ; ip link show {dev}".format(dev=iface)
-    >>> has_carrier = "LOWER_UP" in process.pipe(cmd, without_retval=True)
-    >>> has_carrier == nic_link_detected(iface)
-    True
+        >>> NIC("lo").has_link()
+        True
 
-    Args:
-        iface: The interface to be checked
-    Returns:
-        True if L1 (the-link-is-up) is detected (depends on driver support)
-    """
+        >>> iface = all_ifaces()[0]
+        >>> cmd = "ip link set dev {dev} up ;"
+        >>> cmd += "ip link show {dev}".format(dev=iface)
+        >>> has_carrier = "LOWER_UP" in process.pipe(cmd, without_retval=True)
+        >>> has_carrier == NIC(iface).has_link()
+        True
 
-    if iface not in all_ifaces():
-        raise UnknownNicError("Unknown network interface: '%s'" % iface)
+        Args:
+            iface: The interface to be checked
+        Returns:
+            True if L1 (the-link-is-up) is detected (depends on driver support)
+        """
 
-    if is_nm_managed(iface):
+        if self.iface not in all_ifaces():
+            raise UnknownNicError("Unknown network interface: '%s'" %
+                                  self.iface)
+
+        if is_nm_managed(self.iface):
+            try:
+                device = _nm_client.get_device_by_iface(self.iface)
+                if device:
+                    return device.get_carrier()
+            except:
+                LOGGER.debug("Failed to retrieve carrier with NM")
+
+        # Fallback
+        has_carrier = False
         try:
-            device = _nm_client.get_device_by_iface(iface)
-            if device:
-                return device.get_carrier()
+            with open("/sys/class/net/%s/carrier" % self.iface) as c:
+                content = c.read()
+                has_carrier = "1" in content
         except:
-            LOGGER.debug("Failed to retrieve carrier with NM")
+            LOGGER.debug("Carrier down for %s" % self.iface)
+        return has_carrier
 
-    # Fallback
-    has_carrier = False
-    try:
-        with open("/sys/class/net/%s/carrier" % iface) as c:
-            content = c.read()
-            has_carrier = "1" in content
-    except:
-        LOGGER.debug("Carrier down for %s" % iface)
-    return has_carrier
+    def ipv4_address(self):
+        return self.ip_addresses(["inet"])["inet"]
 
+    def ipv6_address(self):
+        return self.ip_addresses(["inet6"])["inet6"]
 
-def nic_ip_addresses(iface, families=["inet", "inet6"]):
-    """Get IP addresses for an iface
+    def ip_addresses(self, families=["inet", "inet6"]):
+        """Get IP addresses for an iface
 
-    FIXME NM client.get_device_by_iface(iface).get_ip?_config()
-    """
-    if iface not in all_ifaces():
-        raise UnknownNicError("Unknown network interface: '%s'" % iface)
+        FIXME NM client.get_device_by_iface(iface).get_ip?_config()
+        """
+        if self.iface not in all_ifaces():
+            raise UnknownNicError("Unknown network interface: '%s'" %
+                                  self.iface)
 
-    addresses = {f: None for f in families}
+        addresses = {f: (None, None) for f in families}
 
-    if False:
-        # FIXME to hackish to convert addr - is_nm_managed(iface):
-        device = _nm_client.get_device_by_iface(iface)
-        LOGGER.debug("Got '%s' for '%s'" % (device, iface))
-        if device:
-            for family, cfgfunc, sf in [
-                ("inet", device.get_ip4_config, socket.AF_INET),
-                ("inet6", device.get_ip6_config, socket.AF_INET6)]:
-                cfg = cfgfunc()
-                if not cfg:
-                    LOGGER.debug("No %s configuration for %s" % (family,
-                                                                 iface))
-                    break
-                addrs = cfg.get_addresses()
-                addr = addrs[0].get_address() if len(addrs) > 0 else None
-                addresses[family] = _nm_address_to_str(sf, addr) if addr \
-                                                                 else None
+        if False:
+            # FIXME to hackish to convert addr - is_nm_managed(iface):
+            device = _nm_client.get_device_by_iface(self.iface)
+            LOGGER.debug("Got '%s' for '%s'" % (device, self.iface))
+            if device:
+                for family, cfgfunc, sf in [
+                    ("inet", device.get_ip4_config, socket.AF_INET),
+                    ("inet6", device.get_ip6_config, socket.AF_INET6)]:
+                    cfg = cfgfunc()
+                    if not cfg:
+                        LOGGER.debug("No %s configuration for %s" % (family,
+                                                                 self.iface))
+                        break
+                    addrs = cfg.get_addresses()
+                    addr = addrs[0].get_address() if len(addrs) > 0 else None
+                    addresses[family] = _nm_address_to_str(sf, addr) if addr \
+                                                                     else None
+            return addresses
+
+        # Fallback
+        cmd = "ip -o addr show {iface}".format(iface=self.iface)
+        for line in process.pipe(cmd, without_retval=True).split("\n"):
+            token = re.split("\s+", line)
+            if re.search("\sinet[6]?\s", line):
+                addr, mask = token[3].split("/")
+                family = token[2]
+                if family == "inet":
+                    mask = calcDottedNetmask(mask)
+                addresses[family] = IPAddress(addr, mask)
+
         return addresses
 
-    # Fallback
-    cmd = "ip -o addr show {dev}".format(dev=iface)
-    for line in process.pipe(cmd, without_retval=True).split("\n"):
-        token = re.split("\s+", line)
-        if re.search("\sinet[6]?\s", line):
-            addresses[token[2]] = token[3]
+    def vlanid(self):
+        vlanids = []
+        vcfg = "/proc/net/vlan/config"
+        pat = re.compile("([0-9]+)\s*\|\s*%s$" % self.iface)
+        if os.path.exists(vcfg):
+            try:
+                with open(vcfg) as f:
+                    for line in f:
+                        r = pat.search(line)
+                        if r:
+                            vlanids.append(r.groups[0])
+            except IOError as e:
+                self.logger.warning("Could not read vlan config: %s" %
+                                    e.message)
+        if len(vlanids) > 1:
+            self.logger.info("Found more than one (expected) vlan: %s" %
+                             vlanids)
+        return vlanids[0] if vlanids else None
 
-    return addresses
+
+class Routes(base.Base):
+    def default(self):
+        """Return the default gw of the system
+        """
+        # Fallback
+        gw = None
+        cmd = "ip route list"
+        for line in process.pipe(cmd, without_retval=True).split("\n"):
+            token = re.split("\s+", line)
+            if line.startswith("default via"):
+                gw = token[2]
+        return gw
 
 
 def _nm_address_to_str(family, ipaddr):
@@ -382,10 +436,11 @@ def networking_status(iface=None):
     iface = iface or node_bridge()
     addresses = []
     if iface:
-        addresses = nic_ip_addresses(iface)
+        nic = NIC(iface)
+        addresses = nic.ip_addresses()
         has_address = any([a != None for a in addresses.values()])
 
-        if nic_link_detected(iface):
+        if nic.has_link():
             status = "Connected (Link only, no IP)"
         if has_address:
             status = "Connected"
@@ -393,3 +448,26 @@ def networking_status(iface=None):
     summary = (status, iface, addresses)
     LOGGER.debug(summary)
     return summary
+
+
+def calcDottedNetmask(mask):
+    """
+    http://code.activestate.com/recipes/576483/
+    >>> calcDottedNetmask(24)
+    '255.255.255.0'
+    """
+    mask = int(str(mask))
+    bits = 0xffffffff ^ (1 << 32 - mask) - 1
+    return inet_ntoa(pack('>I', bits))
+
+
+class IPAddress(base.Base):
+    def __init__(self, address, netmask):
+        self.address = address
+        self.netmask = netmask
+
+    def __str__(self):
+        return str(self.address)
+
+    def items(self):
+        return (self.address, self.netmask)

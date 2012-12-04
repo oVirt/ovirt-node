@@ -40,6 +40,7 @@ def iface(iface):
         A dict of (nic-name, nic-infos-dict)
     """
     LOGGER.debug("Getting configuration for '%s'" % iface)
+    Augeas.force_reload()
 
     info = {}
 
