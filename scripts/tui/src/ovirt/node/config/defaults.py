@@ -121,7 +121,7 @@ class SimpleProvider(base.Base):
         contents = []
         # Sort the dict, looks nicer
         for key in sorted(cfg.iterkeys()):
-            contents.append("%s='%s'" % (key, cfg[key]))
+            contents.append("%s=%s" % (key, cfg[key]))
         with open(self.filename, "w+") as dst:
             dst.write("\n".join(contents))
 
@@ -283,8 +283,8 @@ class Network(NodeConfigFileSection):
     keys = ("OVIRT_BOOTIF",
             "OVIRT_BOOTPROTO",
             "OVIRT_IP_ADDRESS",
-            "OVIRT_NETMASK",
-            "OVIRT_GATEWAY",
+            "OVIRT_IP_NETMASK",
+            "OVIRT_IP_GATEWAY",
             "OVIRT_VLAN")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
@@ -303,6 +303,8 @@ class Network(NodeConfigFileSection):
         FIXME this should be rewritten o allow more fine grained progress
         informations
         """
+        iface = self.retrieve()["iface"]
+
         class ConfigureNIC(utils.Transaction.Element):
             title = "Configuring NIC"
 
@@ -312,8 +314,10 @@ class Network(NodeConfigFileSection):
             def commit(self):
                 from ovirtnode.network import Network as oNetwork
                 net = oNetwork()
-                net.configure_interface()
+                if iface:
+                    net.configure_interface()
                 net.save_network_configuration()
+                utils.AugeasWrapper.force_reload()
 
         tx = utils.Transaction("Saving network configuration")
         tx.append(ConfigureNIC())

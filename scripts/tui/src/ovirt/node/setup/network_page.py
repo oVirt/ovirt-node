@@ -74,9 +74,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return self._model
 
     def validators(self):
-        Empty = ovirt.node.valid.Empty
-        ip_or_empty = valid.IPAddress() | Empty()
-        fqdn_ip_or_empty = valid.FQDNOrIPAddress() | Empty()
+        ip_or_empty = valid.IPAddress() | valid.Empty()
+        fqdn_ip_or_empty = valid.FQDNOrIPAddress() | valid.Empty()
 
         return {
                 "hostname": valid.FQDNOrIPAddress(),
@@ -85,10 +84,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 "ntp[0]": valid.FQDNOrIPAddress(),
                 "ntp[1]": fqdn_ip_or_empty,
 
-                "dialog.nic.ipv4.address": valid.IPv4Address(),
-                "dialog.nic.ipv4.netmask": valid.IPv4Address(),
-                "dialog.nic.ipv4.gateway": valid.IPv4Address(),
-                "dialog.nic.vlanid": valid.Number(range=[0, 4096]),
+                "dialog.nic.ipv4.address": valid.IPv4Address() | valid.Empty(),
+                "dialog.nic.ipv4.netmask": valid.IPv4Address() | valid.Empty(),
+                "dialog.nic.ipv4.gateway": valid.IPv4Address() | valid.Empty(),
+                "dialog.nic.vlanid": (valid.Number(range=[0, 4096]) |
+                                      valid.Empty()),
             }
 
     def ui_content(self):
@@ -318,6 +318,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         d.close()
 
     def _configure_nic(self, bootproto, ipaddr, netmask, gateway, vlanid):
+        vlanid = vlanid or None
         model = defaults.Network()
         iface = self._model["dialog.nic.iface"]
         if bootproto == "none":
