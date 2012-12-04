@@ -1025,12 +1025,11 @@ class NodeInstallScreen:
                                 if check_existing_hostvg(""):
                                     self.screen.setColor("BUTTON", "black", "red")
                                     self.screen.setColor("ACTBUTTON", "blue", "white")
-                                    msg = "Existing HostVG Detected on %s, Overwrite?" % check_existing_hostvg("")
-                                    warn = ButtonChoiceWindow(self.screen, "HostVG Check", msg)
+                                    msg = "Existing HostVG Detected on %s, Please reboot from media and choose Reinstall" % check_existing_hostvg("")
+                                    warn = ButtonChoiceWindow(self.screen, "HostVG Check", msg, buttons = ['Reboot'])
                                     self.reset_screen_colors()
                                     if warn != "ok":
-                                        self.__current_page = HOSTVG_STORAGE_PAGE
-                                        augtool("set", "/files/" + OVIRT_DEFAULTS + "/OVIRT_INIT", '"' + self.storage_init + "," + hostvg_list + '"')
+                                        self.exit_stop_boot_and_run("reboot")
                                 else:
                                     self.__current_page = STORAGE_VOL_PAGE
                     elif self.__current_page == OTHER_DEVICE_HOSTVG_PAGE:
