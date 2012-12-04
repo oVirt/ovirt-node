@@ -320,7 +320,7 @@ class Entry(urwid.WidgetWrap):
             self._linebox_attrmap.set_attr_map(attr_map_linebox)
 
     def set_text(self, txt):
-        self._edit.set_edit_text(txt)
+        self._edit.set_edit_text(txt or "")
 
     def selectable(self):
         return self._selectable

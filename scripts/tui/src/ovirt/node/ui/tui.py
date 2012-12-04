@@ -23,7 +23,7 @@
 The urwid TUI base library
 """
 
-import timeit
+import time
 import urwid
 
 from ovirt.node import base
@@ -51,8 +51,8 @@ class UrwidTUI(ovirt.node.ui.Window):
     footer = u"Press ctrl+c to quit"
 
     element_styles = {
-        "text": "black",
-        "label": "black, bold",
+        "text": "dark gray",
+        "label": "black",
         "disabled": "white",
         "background": "light gray",
         "invalid": "dark red",
@@ -70,10 +70,9 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('main.menu', 'black'),
                ('main.menu.frame', element_styles["text"]),
                ('notice', 'light red'),
-               ('plugin.widget.entry', element_styles["text"], "white"),
+               ('plugin.widget.entry', element_styles["text"]),
                ('plugin.widget.entry.disabled', element_styles["disabled"]),
-               ('plugin.widget.entry.invalid', element_styles["invalid"],
-                                               "white"),
+               ('plugin.widget.entry.invalid', element_styles["invalid"]),
                ('plugin.widget.entry.label', element_styles["label"]),
                ('plugin.widget.entry.label.invalid', element_styles["label"]),
                ('plugin.widget.entry.frame', element_styles["text"]),
@@ -81,7 +80,7 @@ class UrwidTUI(ovirt.node.ui.Window):
                 element_styles["invalid"]),
                ('plugin.widget.entry.frame.disabled',
                 element_styles["disabled"]),
-               ('plugin.widget.notice', 'light red'),
+               ('plugin.widget.notice', element_styles["invalid"]),
                ('plugin.widget.header', 'black, bold'),
                ('plugin.widget.divider', element_styles["text"]),
                ('plugin.widget.button', 'dark blue'),
@@ -216,12 +215,14 @@ class UrwidTUI(ovirt.node.ui.Window):
     def _display_plugin(self, plugin):
         if self._check_outstanding_changes():
             return
-        timer = timeit.Timer()
+        start = time.time()
         self._current_plugin = plugin
         plugin_page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
         self.__display_as_page(plugin_page)
+        stop = time.time()
+        diff = stop - start
         self.logger.debug("Build and displayed plugin_page in %ss" %
-                          timer.timeit())
+                          diff)
 
     def __display_as_dialog(self, body, title):
         self.logger.debug("Displaying dialog: %s / %s" % (body, title))

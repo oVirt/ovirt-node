@@ -102,8 +102,7 @@ def widget_for_item(tui, plugin, path, item):
     }
 
     # Check if builder is available for UI Element
-    assert type(item) in item_to_builder.keys(), \
-           "No widget for item type"
+    assert type(item) in item_to_builder, "No widget for item type"
 
     # Build widget from UI Element
     build_func = item_to_builder[type(item)]
