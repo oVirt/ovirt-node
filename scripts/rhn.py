@@ -306,13 +306,18 @@ def get_rhn_config():
 
 
 def rhn_check():
-    rhncheck_cmd = subprocess_closefds("rhn_check", shell=False,
-                                       stdout=PIPE, stderr=STDOUT)
-    rhncheck = rhncheck_cmd.communicate()[0]
-    if rhncheck_cmd.returncode == 0:
-        return True
+    filebased = True
+    registered = False
+    if filebased:
+        # Thefollowing file exists when the sys is registered with rhn
+        registered = os.path.exists("/etc/sysconfig/rhn/systemid")
     else:
-        return False
+        rhncheck_cmd = subprocess_closefds("rhn_check", shell=False,
+                                           stdout=PIPE, stderr=STDOUT)
+        rhncheck = rhncheck_cmd.communicate()[0]
+        if rhncheck_cmd.returncode == 0:
+            registered = True
+    return registered
 
 
 def sam_check():
@@ -574,13 +579,13 @@ class Plugin(PluginBase):
                                "Login/Password must not be empty\n",
                                buttons=['Ok'])
             return False
+        if os.path.exists("/etc/sysconfig/rhn/systemid"):
+            remove_config("/etc/sysconfig/rhn/systemid")
+            os.remove("/etc/sysconfig/rhn/systemid")
         if self.sam.value() == 1:
             if os.path.exists(RHN_CONFIG_FILE):
                 remove_config(RHN_CONFIG_FILE)
                 os.remove(RHN_CONFIG_FILE)
-            if os.path.exists("/etc/sysconfig/rhn/systemid"):
-                remove_config("/etc/sysconfig/rhn/systemid")
-                os.remove("/etc/sysconfig/rhn/systemid")
             reg_rc = run_rhsm(serverurl=self.rhn_url.value(),
                 cacert=self.rhn_ca.value(),
                 activationkey=self.rhn_actkey.value(),
