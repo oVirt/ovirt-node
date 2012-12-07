@@ -90,6 +90,7 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('plugin.widget.progressbar.box', 'light gray'),
                ('plugin.widget.progressbar.uncomplete', None),
                ('plugin.widget.progressbar.complete', None, 'light gray'),
+               ('plugin.widget.options', element_styles["label"]),
                ('plugin.widget.options.label', element_styles["label"]),
                ('plugin.widget.dialog', None),
                ('plugin.widget.page', None),
@@ -125,13 +126,22 @@ class UrwidTUI(ovirt.node.ui.Window):
         """
         assert type(dialog) is ui.Dialog
         widget = ui.builder.build_page(self, self._current_plugin, dialog)
-        return self.__display_as_dialog(widget, dialog.title)
+        return self.__display_as_dialog(widget, dialog.title,
+                                        dialog.escape_key)
+
+    def topmost_dialog(self):
+        dialog = [w for w in self.__widget_stack
+                  if type(w) is ovirt.node.ui.widgets.ModalDialog][-1:]
+        if dialog:
+            dialog = dialog[0]
+        else:
+            dialog = None
+        return dialog
 
     def close_topmost_dialog(self):
-        dialog = [w for w in self.__widget_stack
-                  if type(w) is ovirt.node.ui.widgets.ModalDialog][-1]
-        assert len(dialog) == 1
-        self.__close_dialog(dialog)
+        dialog = self.topmost_dialog()
+        if dialog:
+            self.__close_dialog(dialog)
 
     def quit(self):
         """Quit the UI
@@ -224,11 +234,11 @@ class UrwidTUI(ovirt.node.ui.Window):
         self.logger.debug("Build and displayed plugin_page in %ss" %
                           diff)
 
-    def __display_as_dialog(self, body, title):
+    def __display_as_dialog(self, body, title, escape_key="esc"):
         self.logger.debug("Displaying dialog: %s / %s" % (body, title))
 #        filler = urwid.Filler(body, ("fixed top", 1), height=35)
         filler = urwid.Pile([body])
-        dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, "esc",
+        dialog = ovirt.node.ui.widgets.ModalDialog(title, filler, escape_key,
                                                    self.__loop.widget)
         urwid.connect_signal(dialog, "close",
                              lambda: self.__close_dialog(dialog))
@@ -253,8 +263,10 @@ class UrwidTUI(ovirt.node.ui.Window):
 
         if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
             self.logger.debug("Modal dialog escape: %s" % key)
-            if self.__loop.widget.escape_key in keys:
-                self.__close_dialog(self.__widget_stack[-1])
+            if self.__loop.widget.escape_key is None:
+                self.logger.debug("Dialog can not be closed with magic key")
+            elif self.__loop.widget.escape_key in keys:
+                self.close_topmost_dialog()
                 return
 
         if key in self._hotkeys.keys():
@@ -266,8 +278,14 @@ class UrwidTUI(ovirt.node.ui.Window):
         return keys
 
     def __register_default_hotkeys(self):
-        self.register_hotkey(["esc"], self.quit)
+        self.register_hotkey(["esc"], self._quit_if_no_dialogs)
         self.register_hotkey(["window resize"], self._check_min_size_cb)
+
+    def _quit_if_no_dialogs(self):
+        if self.topmost_dialog() is None:
+            self.quit()
+        else:
+            self.logger.debug("There are still open dialogs")
 
     def _draw_screen(self):
         self.__loop.draw_screen()

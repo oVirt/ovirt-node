@@ -104,6 +104,8 @@ class Dialog(Page):
     """An abstract dialog, similar to a page
     """
 
+    escape_key = "esc"
+
     def __init__(self, title, children):
         super(Dialog, self).__init__(children)
         self.title = title

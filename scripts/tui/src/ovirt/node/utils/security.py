@@ -21,24 +21,11 @@
 from ovirt.node import base, valid, utils
 import process
 import os.path
+import PAM as _PAM
 
 """
 Some convenience functions related to security
 """
-
-
-def get_ssh_hostkey(variant="rsa"):
-    fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant
-    if not os.path.exists(fn_hostkey):
-        raise Exception("SSH hostkey does not yet exist.")
-
-    with open(fn_hostkey) as hkf:
-        hostkey = hkf.read()
-
-    hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
-    stdout = process.pipe(hostkey_fp_cmd, without_retval=True)
-    fingerprint = stdout.strip().split(" ")[1]
-    return (fingerprint, hostkey)
 
 
 class Passwd(base.Base):
@@ -118,3 +105,40 @@ class Ssh(base.Base):
             ofunc.ovirt_store_config("/etc/ssh/sshd_config")
             self.restart()
         return aug.get(augpath)
+
+    def get_hostkey(self, variant="rsa"):
+        fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant
+        if not os.path.exists(fn_hostkey):
+            raise Exception("SSH hostkey does not yet exist.")
+
+        with open(fn_hostkey) as hkf:
+            hostkey = hkf.read()
+
+        hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
+        stdout = process.pipe(hostkey_fp_cmd, without_retval=True)
+        fingerprint = stdout.strip().split(" ")[1]
+        return (fingerprint, hostkey)
+
+
+class PAM(base.Base):
+    def _pam_conv(self, auth, query_list):
+        resp = []
+        for i in range(len(query_list)):
+            resp.append((self._password, 0))
+        return resp
+
+    def authenticate(self, username, password):
+        is_authenticated = False
+        auth = _PAM.pam()
+        auth.start("passwd")
+        auth.set_item(_PAM.PAM_USER, username)
+        self._password = password
+        auth.set_item(_PAM.PAM_CONV, lambda a, q: self._pam_conv(a, q))
+        try:
+            auth.authenticate()
+            is_authenticated = True
+        except _PAM.error, (resp, code):
+            self.logger.debug("Failed to authenticate: %s %s" % (resp, code))
+        except Exception as e:
+            self.logger.debug("Internal error: %s" % e)
+        return is_authenticated

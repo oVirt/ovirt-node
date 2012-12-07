@@ -327,12 +327,13 @@ class Entry(urwid.WidgetWrap):
 
     def set_notice(self, txt):
         self._notice_txt = txt
+        num_children = len(list(self._pile.contents))
         if txt:
             self._notice.set_text(txt)
-            if len(self._pile.contents) < 2:
+            if num_children < 2:
                 self._pile.contents.append((self._notice_attrmap, ("pack", 0)))
         else:
-            if len(self._pile.contents) > 1:
+            if num_children > 1:
                 self._pile.contents.pop()
 
     def get_notice(self):
@@ -389,12 +390,13 @@ class Options(urwid.WidgetWrap):
     signals = ["change"]
 
     _label_attr = "plugin.widget.options.label"
+    _option_attr = "plugin.widget.options"
 
     def __init__(self, label, options, selected_option_key):
         self._options = options
         self._button_to_key = {}
         self._bgroup = []
-        self._label = urwid.Text(label + ":")
+        self._label = urwid.Text(label)
         self._label_attrmap = urwid.AttrMap(self._label, self._label_attr)
 
         self._buttons = []
@@ -404,6 +406,7 @@ class Options(urwid.WidgetWrap):
             self._button_to_key[widget] = option_key
             if option_key == selected_option_key:
                 widget.set_state(True)
+            widget_attr = urwid.AttrMap(widget, self._option_attr)
             self._buttons.append(widget)
         self._columns = urwid.Columns([self._label_attrmap] + self._buttons)
         self._pile = urwid.Pile([urwid.Divider(), self._columns,
@@ -427,6 +430,7 @@ class Options(urwid.WidgetWrap):
     def set_text(self, txt):
         self.select(txt)
 
+    # FIXME and disabling
 
 class Checkbox(urwid.WidgetWrap):
     signals = ['change']

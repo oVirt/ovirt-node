@@ -18,20 +18,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-
-"""
-Status plugin
-"""
+import os
 import textwrap
 
-import ovirt.node.plugins
-import ovirt.node.ui
-import ovirt.node.utils as utils
-import ovirt.node.utils.virt as virt
-import ovirt.node.utils.security
+from ovirt.node import ui, plugins, utils
+from ovirt.node.utils import security, virt, system
+
+"""
+Status page plugin
+"""
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     """This is the summary page, summarizing all sorts of informations
 
     There are no validators, as there is no input.
@@ -77,45 +75,45 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         # Network related widgets, appearing in one row
         network_widgets = [
                 ("networking",
-                    ovirt.node.ui.KeywordLabel(aligned("Networking: "))),
+                    ui.KeywordLabel(aligned("Networking: "))),
                 ("networking.bridge",
-                    ovirt.node.ui.KeywordLabel("Bridge: ")),
+                    ui.KeywordLabel("Bridge: ")),
             ]
 
         action_widgets = [
-            ("action.lock", ovirt.node.ui.Button("Lock")),
-            ("action.logoff", ovirt.node.ui.Button("Log Off")),
-            ("action.restart", ovirt.node.ui.Button("Restart")),
-            ("action.poweroff", ovirt.node.ui.Button("Poweroff")),
+            ("action.lock", ui.Button("Lock")),
+            ("action.logoff", ui.Button("Log Off")),
+            ("action.restart", ui.Button("Restart")),
+            ("action.poweroff", ui.Button("Poweroff")),
         ]
 
         widgets = [
             ("status",
-                ovirt.node.ui.KeywordLabel(aligned("Status: "))),
-            ("status._space", ovirt.node.ui.Divider()),
+                ui.KeywordLabel(aligned("Status: "))),
+            ("status._space", ui.Divider()),
 
-            ("network._column", ovirt.node.ui.Row(network_widgets)),
-            ("network._space", ovirt.node.ui.Divider()),
+            ("network._column", ui.Row(network_widgets)),
+            ("network._space", ui.Divider()),
 
             ("logs",
-                ovirt.node.ui.KeywordLabel(aligned("Logs: "))),
-            ("logs._space", ovirt.node.ui.Divider()),
+                ui.KeywordLabel(aligned("Logs: "))),
+            ("logs._space", ui.Divider()),
 
             ("libvirt.num_guests",
-                ovirt.node.ui.KeywordLabel(aligned("Running VMs: "))),
-            ("libvirt._space", ovirt.node.ui.Divider()),
+                ui.KeywordLabel(aligned("Running VMs: "))),
+            ("libvirt._space", ui.Divider()),
 
-            ("support.hint", ovirt.node.ui.Label("Press F8 for support menu")),
-            ("support._space", ovirt.node.ui.Divider()),
+            ("support.hint", ui.Label("Press F8 for support menu")),
+            ("support._space", ui.Divider()),
 
-            ("action.hostkey", ovirt.node.ui.Button("View Host Key")),
+            ("action.hostkey", ui.Button("View Host Key")),
 
-            ("action._row", ovirt.node.ui.Row(action_widgets)),
+            ("action._row", ui.Row(action_widgets)),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets = dict(widgets)
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page(widgets)
         page.buttons = []
         return page
 
@@ -126,6 +124,13 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         # Handle button presses
         if "action.lock" in changes:
             self.logger.info("Locking screen")
+            self._lock_dialog = self._build_lock_dialog()
+            return self._lock_dialog
+        elif "action.unlock" in changes and "password" in changes:
+            self.logger.info("UnLocking screen")
+            pam = security.PAM()
+            if pam.authenticate(os.getlogin(), changes["password"]):
+                self._lock_dialog.close()
 
         elif "action.logoff" in changes:
             self.logger.info("Logging off")
@@ -133,9 +138,11 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         elif "action.restart" in changes:
             self.logger.info("Restarting")
+            self.dry_or(lambda: system.reboot())
 
         elif "action.poweroff" in changes:
             self.logger.info("Shutting down")
+            self.dry_or(lambda: system.poweroff())
 
         elif "action.hostkey" in changes:
             self.logger.info("Showing hostkey")
@@ -146,23 +153,37 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
     def _build_dialog(self, path, txt, widgets):
         self._widgets.update(dict(widgets))
-        self._widgets[path] = ovirt.node.ui.Dialog(txt, widgets)
+        self._widgets[path] = ui.Dialog(txt, widgets)
         return self._widgets[path]
 
     def _build_hostkey_dialog(self):
-        fp, hk = ovirt.node.utils.security.get_ssh_hostkey()
+        ssh = security.Ssh()
+        fp, hk = ssh.get_hostkey()
         dialog = self._build_dialog("dialog.hostkey", "Host Key", [
             ("hostkey.fp._label",
-                ovirt.node.ui.Label("RSA Host Key Fingerprint:")),
+                ui.Label("RSA Host Key Fingerprint:")),
             ("hostkey.fp",
-                ovirt.node.ui.Label(fp)),
+                ui.Label(fp)),
 
-            ("hostkey._divider", ovirt.node.ui.Divider()),
+            ("hostkey._divider", ui.Divider()),
 
             ("hostkey._label",
-                ovirt.node.ui.Label("RSA Host Key:")),
+                ui.Label("RSA Host Key:")),
             ("hostkey",
-                ovirt.node.ui.Label("\n".join(textwrap.wrap(hk, 64)))),
+                ui.Label("\n".join(textwrap.wrap(hk, 64)))),
         ])
         dialog.buttons = []
         return dialog
+
+    def _build_lock_dialog(self):
+        widgets = [
+            ("label[0]", ui.Header("Enter the admin password to unlock")),
+            ("username", ui.KeywordLabel("Username: ", os.getlogin())),
+            ("password",
+                ui.PasswordEntry("Password:"))
+        ]
+        self._widgets = dict(widgets)
+        page = ui.Dialog("This screen is locked.", widgets)
+        page.buttons = [("action.unlock", ui.Button("Unlock"))]
+        page.escape_key = None
+        return page
