@@ -42,7 +42,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug(cfg)
         model = {
             "ssh.pwauth": cfg["pwauth"] or False,
-            "strongrng.aesni": cfg["disable_aesni"] or False,
+            "strongrng.disable_aesni": cfg["disable_aesni"] or False,
             "strongrng.num_bytes": cfg["num_bytes"] or "",
             "passwd.admin.password": "",
             "passwd.admin.password_confirmation": "",
@@ -64,7 +64,7 @@ class Plugin(plugins.NodePlugin):
             ("ssh.pwauth", ui.Checkbox("Enable SSH password authentication")),
 
             ("header[1]", ui.Header("Strong Random Number Generator")),
-            ("strongrng.aesni", ui.Checkbox("Enable AES-NI")),
+            ("strongrng.disable_aesni", ui.Checkbox("Disable AES-NI")),
             ("strongrng.num_bytes", ui.Entry("Bytes Used:")),
 
             ("header[2]", ui.Header("Local Access")),
@@ -101,7 +101,8 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Remote security model: %s" %
                           effective_model.changes)
 
-        ssh_keys = ["ssh.pwauth", "strongrng.num_bytes", "strongrng.aesni"]
+        ssh_keys = ["ssh.pwauth", "strongrng.num_bytes",
+                    "strongrng.disable_aesni"]
         passwd_keys = ["passwd.admin.password",
                        "passwd.admin.password_confirmation"]
 
