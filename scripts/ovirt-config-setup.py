@@ -1957,11 +1957,11 @@ class NodeConfigScreen():
                 screen.setColor(customColorset(1), "black", "magenta")
             screen.pushHelpLine(" ")
 
-            # Draw loading msg on background:
-            self._set_title()
-            screen.drawRootText(15, 10, "Loading page ...")
-            screen.refresh()
-            time.sleep(0.2)
+            if self.__current_page == NETWORK_PAGE:
+                # Draw loading msg on background:
+                self._set_title()
+                screen.drawRootText(15, 10, "Loading page ...")
+                screen.refresh()
 
             elements = self.get_elements_for_page(screen, self.__current_page)
 
