@@ -196,6 +196,7 @@ def build_button(path, item, tui, plugin):
         def on_valid_cb(w, v):
             widget.enable(plugin.is_valid_changes())
         plugin.sig_valid.connect(on_valid_cb)
+        on_valid_cb(None, None)
 
     def on_widget_click_cb(widget, data=None):
         LOGGER.debug("Button click: %s" % {"path": path, "widget": widget})

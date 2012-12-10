@@ -96,6 +96,7 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('plugin.widget.page', None),
                ('plugin.widget.page.frame', None),
                ('plugin.widget.checkbox.label', element_styles["label"]),
+               ('plugin.widget.checkbox', element_styles["label"]),
                ]
 
     def __init__(self, app):

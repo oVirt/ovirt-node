@@ -407,7 +407,7 @@ class Options(urwid.WidgetWrap):
             if option_key == selected_option_key:
                 widget.set_state(True)
             widget_attr = urwid.AttrMap(widget, self._option_attr)
-            self._buttons.append(widget)
+            self._buttons.append(widget_attr)
         self._columns = urwid.Columns([self._label_attrmap] + self._buttons)
         self._pile = urwid.Pile([urwid.Divider(), self._columns,
                                  urwid.Divider()])
@@ -440,9 +440,11 @@ class Checkbox(urwid.WidgetWrap):
         self._label_attrmap = urwid.AttrMap(self._label,
                                             "plugin.widget.checkbox.label")
         self._checkbox = urwid.CheckBox("", state)
+        self._checkbox_attrmap = urwid.AttrMap(self._checkbox,
+                                               "plugin.widget.checkbox")
         self._divider = urwid.Divider()
         self._container = urwid.Columns([self._label_attrmap,
-                                         self._checkbox])
+                                         self._checkbox_attrmap])
 
         def on_change_cb(widget, new_value):
             urwid.emit_signal(self, 'change', self, new_value)
