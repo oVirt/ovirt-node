@@ -101,12 +101,20 @@ class Application(base.Base):
                 model = plugin.model()
         return model
 
+    @property
+    def product(self):
+        return utils.system.ProductInformation()
+
     def run(self):
         self.__load_plugins()
         if not self.plugins:
             raise Exception("No plugins found in '%s'" % self.plugin_base)
         self.ui.register_hotkey("f2", self.__drop_to_shell)
         self.ui.register_hotkey("window resize", self.__check_terminal_size)
+
+        p = self.product
+        self.ui.header = "\n %s %s-%s\n" % (p.PRODUCT_SHORT, p.VERSION,
+                                          p.RELEASE)
         self.ui.footer = "Press esc to quit."
         self.ui.run()
 

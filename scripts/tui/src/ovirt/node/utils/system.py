@@ -24,6 +24,7 @@ A module to access system wide stuff
 e.g. services, reboot ...
 """
 
+from ovirt.node import base, utils
 from ovirt.node.utils import process
 
 
@@ -33,3 +34,23 @@ def reboot():
 
 def poweroff():
     process.system("poweroff")
+
+
+class ProductInformation(base.Base):
+    _version_filename = "/files/etc/default/version"
+    PRODUCT_SHORT = None
+    VERSION = None
+    RLEASE = None
+
+    def __init__(self):
+        self.load()
+
+    def load(self):
+        aug = utils.AugeasWrapper()
+        augg = lambda k: aug.get("\n%s/%s\n" % (self._version_filename, k),
+                                                strip_quotes=True)
+
+        # read product / version info
+        self.PRODUCT_SHORT = augg("PRODUCT_SHORT") or "oVirt"
+        self.VERSION = augg("VERSION")
+        self.RELEASE = augg("RELEASE")
