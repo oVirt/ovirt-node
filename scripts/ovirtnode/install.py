@@ -105,7 +105,7 @@ class Install:
 default saved
 timeout 5
 hiddenmenu
-splashimage=(hd0,%(partN)s)/grub/splash.xpm.gz
+%(splashscreen)s
 title %(product)s %(version)s-%(release)s
     root (hd0,%(partN)d)
     kernel /vmlinuz0 %(root_param)s %(bootparams)s
@@ -140,7 +140,13 @@ EOF
                 GRUB_EFIONLY_CONFIG = """%(efi_hd)s"""
                 GRUB_CONFIG_TEMPLATE = GRUB_EFIONLY_CONFIG + GRUB_CONFIG_TEMPLATE
                 self.grub_dict['efi_hd'] = "device (hd0) " + matches.group(1)
-            GRUB_CONFIG_TEMPLATE % self.grub_dict
+        if os.path.exists("/live/EFI/BOOT/splash.xpm.gz"):
+            splashscreen = "splashimage=(hd0,%s)/grub/splash.xpm.gz" \
+                % self.partN
+        else:
+            splashscreen = ""
+        self.grub_dict["splashscreen"] = splashscreen
+        GRUB_CONFIG_TEMPLATE % self.grub_dict
         grub_conf = open(self.grub_config_file, "w")
         grub_conf.write(GRUB_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
