@@ -140,10 +140,9 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         self._widgets[path] = ui.Dialog(txt, widgets)
         return self._widgets[path]
 
-    def _build_nic_details_dialog(self):
-        self.logger.debug("Building NIC details dialog")
+    def _build_nic_details_dialog(self, iface):
         # Populate model with nic specific informations
-        iface = self._model["nics"]
+        self.logger.debug("Building NIC details dialog for %s" % iface)
 
         self.logger.debug("Getting informations for NIC details page")
         live = ovirt.node.utils.network.node_nics()[iface]
@@ -151,6 +150,10 @@ class Plugin(ovirt.node.plugins.NodePlugin):
 
         self.logger.debug("live: %s" % live)
         self.logger.debug("cfg: %s" % cfg)
+
+        if cfg["iface"] != iface:
+            # create empty config if we are not editing the bootif
+            cfg = {k: "" for k in cfg.keys()}
 
         ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
                                             cfg["gateway"], cfg["vlanid"])
@@ -262,7 +265,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         if "nics" in changes and len(changes) == 1:
             iface = changes["nics"]
             self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
-            self._nic_dialog = self._build_nic_details_dialog()
+            self._nic_dialog = self._build_nic_details_dialog(iface)
             return self._nic_dialog
 
         if "dialog.nic.close" in changes:
@@ -326,7 +329,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             model.update(iface, "dhcp", None, None, None, vlanid)
         elif bootproto == "static":
             self.logger.debug("Configuring static ip")
-            model.update(iface, "none", ipaddr, netmask, gateway, vlanid)
+            model.update(iface, "static", ipaddr, netmask, gateway, vlanid)
         else:
             self.logger.debug("No interface configuration found")
         # Return the resulting transaction

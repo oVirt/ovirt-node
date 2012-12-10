@@ -386,7 +386,6 @@ class TransactionProgressDialog(Dialog):
         except Exception as e:
             self.add_update("\nAn error occurred when applying the changes:")
             self.add_update(e.message)
-            self.logger.warning("Exception '%s' on transaction " +
-                                "'%s': %s - %s" % (self.transaction, type(e),
-                                                      e, e.message))
+            self.logger.warning("'%s' on transaction '%s': %s - %s" %
+                                (type(e), self.transaction, e, e.message))
         self._close_button.enabled(True)
