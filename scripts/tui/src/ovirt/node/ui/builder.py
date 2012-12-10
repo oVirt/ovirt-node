@@ -72,7 +72,7 @@ def build_page(tui, plugin, container):
     except:
         tui.notify("error", "Initial model validation failed.")
 
-    page = ui.widgets.PageWidget(widgets)
+    page = ui.widgets.PageWidget(widgets, container.title)
     page.plugin = plugin
 
     return page
@@ -216,6 +216,10 @@ def build_button(path, item, tui, plugin):
 #           item.emit_signal("click", widget)
 #            plugin._on_ui_change({path: True})
     urwid.connect_signal(widget, "click", on_widget_click_cb)
+
+    def on_item_enabled_change_cb(w, v):
+        widget.enable(v)
+    item.connect_signal("enabled", on_item_enabled_change_cb)
 
     return widget
 

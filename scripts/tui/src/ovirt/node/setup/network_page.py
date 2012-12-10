@@ -25,7 +25,6 @@ Network page plugin
 from ovirt.node import plugins, ui, valid, utils
 from ovirt.node.config import defaults
 import ovirt.node.utils.network
-import time
 
 
 class Plugin(ovirt.node.plugins.NodePlugin):
@@ -274,19 +273,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             self.logger.debug("Save and close NIC")
             self._nic_dialog.close()
 
-        def set_progress(txt):
-            set_progress.txt += txt + "\n"
-            progress.set_text(set_progress.txt)
-        set_progress.txt = "Applying changes ...\n"
-
-        progress = ui.Label(set_progress.txt)
-        _d = self._build_dialog("dialog.dia",
-                                                               "fooo", [
-            ("dialog.dia.text[0]", progress),
-            ])
-        _d.buttons = []
-        d = self.application.ui.show_dialog(_d)
-
         # This object will contain all transaction elements to be executed
         txs = utils.Transaction("DNS and NTP configuration")
 
@@ -321,16 +307,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             args = helper.get_key_values(self._nic_details_group)
             txs += self._configure_nic(*args)
 
-        # Commit all outstanding transactions
-        txs.prepare()  # Just to display something in dry mode
-        for idx, e in enumerate(txs):
-            n = "(%s/%s) " % (idx + 1, len(txs))
-            set_progress(n + e.title)
-            self.dry_or(lambda: e.commit())
-
-        set_progress("All changes were applied.")
-        time.sleep(3)
-        d.close()
+        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog.run()
 
         # Behaves like a page reload
         return self.ui_content()

@@ -32,6 +32,10 @@ import ovirt.node.ui.builder
 import ovirt.node.ui.widgets
 
 
+def inherits(obj, t):
+    return t in type(obj).mro()
+
+
 class UrwidTUI(ovirt.node.ui.Window):
     app = None
 
@@ -94,6 +98,7 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('plugin.widget.options.label', element_styles["label"]),
                ('plugin.widget.dialog', None),
                ('plugin.widget.page', None),
+               ('plugin.widget.page.header', element_styles["label"]),
                ('plugin.widget.page.frame', None),
                ('plugin.widget.checkbox.label', element_styles["label"]),
                ('plugin.widget.checkbox', element_styles["label"]),
@@ -107,7 +112,7 @@ class UrwidTUI(ovirt.node.ui.Window):
     def show_body(self, body):
         """
         """
-        assert type(body) is ui.Page
+        assert inherits(body, ui.Page)
         widget = ui.builder.build_page(self, self._current_plugin, body)
         self.__display_as_body(widget)
 
@@ -116,7 +121,7 @@ class UrwidTUI(ovirt.node.ui.Window):
         This transforms the abstract ui.Page to a urwid specififc version
         and displays it.
         """
-        assert type(page) is ui.Page
+        assert inherits(page, ui.Page)
         widget = ui.builder.build_page(self, self._current_plugin, page)
         self.__display_as_page(widget)
 
@@ -125,14 +130,15 @@ class UrwidTUI(ovirt.node.ui.Window):
         This transforms the abstract ui.Dialog to a urwid specififc version
         and displays it.
         """
-        assert type(dialog) is ui.Dialog
+        if not inherits(dialog, ui.Dialog):
+            raise Exception("'%s' does not inherit from ui.Dialog" % dialog)
         widget = ui.builder.build_page(self, self._current_plugin, dialog)
         return self.__display_as_dialog(widget, dialog.title,
                                         dialog.escape_key)
 
     def topmost_dialog(self):
         dialog = [w for w in self.__widget_stack
-                  if type(w) is ovirt.node.ui.widgets.ModalDialog][-1:]
+                  if inherits(w, ovirt.node.ui.widgets.ModalDialog)][-1:]
         if dialog:
             dialog = dialog[0]
         else:
@@ -262,7 +268,7 @@ class UrwidTUI(ovirt.node.ui.Window):
     def __filter_hotkeys(self, keys, raw):
         key = str(keys)
 
-        if type(self.__loop.widget) is ovirt.node.ui.widgets.ModalDialog:
+        if inherits(self.__loop.widget, ovirt.node.ui.widgets.ModalDialog):
             self.logger.debug("Modal dialog escape: %s" % key)
             if self.__loop.widget.escape_key is None:
                 self.logger.debug("Dialog can not be closed with magic key")

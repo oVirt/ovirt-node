@@ -26,8 +26,10 @@ e.g. services, reboot ...
 
 from ovirt.node.utils import process
 
+
 def reboot():
     process.system("reboot")
+
 
 def poweroff():
     process.system("poweroff")

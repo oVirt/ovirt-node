@@ -371,11 +371,10 @@ class Button(urwid.WidgetWrap):
     def enable(self, is_enabled):
         self.selectable = lambda: is_enabled
         if is_enabled:
-            self._button_attrmap.set_attr_map({None: self._button_attr})
+            amap = {None: self._button_attr}
         else:
-            self._button_attrmap.set_attr_map({
-                None: self._button_disabled_attr
-                })
+            amap = {None: self._button_disabled_attr}
+        self._button_attrmap.set_attr_map(amap)
 
 
 class Divider(urwid.WidgetWrap):
@@ -430,7 +429,6 @@ class Options(urwid.WidgetWrap):
     def set_text(self, txt):
         self.select(txt)
 
-    # FIXME and disabling
 
 class Checkbox(urwid.WidgetWrap):
     signals = ['change']
@@ -463,13 +461,16 @@ class Checkbox(urwid.WidgetWrap):
 class PageWidget(urwid.WidgetWrap):
     save_button = None
 
-    def __init__(self, widgets):
+    def __init__(self, widgets, title=None):
 #        self._listwalker = urwid.SimpleListWalker(widgets)
 #        self._container = urwid.ListBox(self._listwalker)
         self._container = urwid.Pile(widgets)
         self._container_attrmap = urwid.AttrMap(self._container,
                                                 "plugin.widget.page")
         self._header = None
+        if title:
+            self._header = urwid.AttrMap(urwid.Text(title),
+                                         "plugin.widget.page.header")
         self._frame = urwid.Frame(self._container_attrmap, self._header)
         self._box = urwid.Padding(self._frame, width=("relative", 97))
         super(PageWidget, self).__init__(self._box)

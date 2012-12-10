@@ -86,5 +86,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.get_key_values(layout_keys))
             txs += model.transaction()
 
-        txs.prepare()  # Just to display something in dry mode
-        self.dry_or(lambda: txs())
+        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog.run()

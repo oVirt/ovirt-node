@@ -91,5 +91,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.get_key_values(collectd_keys))
             txs += model.transaction()
 
-        txs.prepare()
-        self.dry_or(lambda: txs())
+        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog.run()

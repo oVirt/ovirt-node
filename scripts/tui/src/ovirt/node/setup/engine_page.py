@@ -91,3 +91,8 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         pass
+
+        txs = utils.Transaction("Configuring oVirt Engine")
+
+        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog.run()

@@ -124,5 +124,5 @@ class Plugin(plugins.NodePlugin):
                     passwd.set_password("admin", pw)
             txs += [SetAdminPasswd()]
 
-        txs.prepare()  # Just to display something in dry mode
-        self.dry_or(lambda: txs())
+        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog.run()

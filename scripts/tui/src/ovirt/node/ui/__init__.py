@@ -18,12 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import base
 
 """
 This contains abstract UI Elements
 """
-
-from ovirt.node import base
 
 
 # http://stackoverflow.com/questions/739654/understanding-python-decorators
@@ -76,10 +75,12 @@ class ContainerElement(Element):
     """An abstract container Element containing other Elements
     """
     children = []
+    title = None
 
-    def __init__(self, children):
+    def __init__(self, children, title=None):
         super(ContainerElement, self).__init__()
         self.children = children
+        self.title = title
 
     def children(self, v=None):
         if v:
@@ -92,8 +93,8 @@ class Page(ContainerElement):
     """
     buttons = []
 
-    def __init__(self, children):
-        super(Page, self).__init__(children)
+    def __init__(self, children, title=None):
+        super(Page, self).__init__(children, title)
         self.buttons = self.buttons or [
                         (None, SaveButton()),
                         (None, ResetButton())
@@ -107,8 +108,7 @@ class Dialog(Page):
     escape_key = "esc"
 
     def __init__(self, title, children):
-        super(Dialog, self).__init__(children)
-        self.title = title
+        super(Dialog, self).__init__(children, title)
         self.close(False)
 
     @Element.signal_change
@@ -354,3 +354,39 @@ class Window(Element):
 
     def run(self):
         raise NotImplementedError
+
+
+class TransactionProgressDialog(Dialog):
+    def __init__(self, transaction, plugin, initial_text=""):
+        self.transaction = transaction
+        self.texts = [initial_text, ""]
+        self.plugin = plugin
+
+        self._close_button = CloseButton()
+        self.buttons = [(None, self._close_button)]
+        self._progress_label = Label(initial_text)
+        widgets = [("dialog.progress", self._progress_label)]
+        super(TransactionProgressDialog, self).__init__(self.transaction.title,
+                                                        widgets)
+
+    def add_update(self, txt):
+        self.texts.append(txt)
+        self._progress_label.set_text("\n".join(self.texts))
+
+    def run(self):
+        self.plugin.application.ui.show_dialog(self)
+        self._close_button.enabled(False)
+        try:
+            self.transaction.prepare()  # Just to display something in dry mode
+            for idx, e in enumerate(self.transaction):
+                txt = "(%s/%s) %s" % (idx + 1, len(self.transaction), e.title)
+                self.add_update(txt)
+                self.plugin.dry_or(lambda: e.commit())
+            self.add_update("\nAll changes were applied successfully.")
+        except Exception as e:
+            self.add_update("\nAn error occurred when applying the changes:")
+            self.add_update(e.message)
+            self.logger.warning("Exception '%s' on transaction " +
+                                "'%s': %s - %s" % (self.transaction, type(e),
+                                                      e, e.message))
+        self._close_button.enabled(True)

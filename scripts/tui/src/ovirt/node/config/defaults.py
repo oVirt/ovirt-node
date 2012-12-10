@@ -323,7 +323,6 @@ class Network(NodeConfigFileSection):
             def commit(self):
                 utils.AugeasWrapper.force_reload()
 
-
         tx = utils.Transaction("Applying new network configuration")
         tx.append(ConfigureNIC())
         tx.append(ReloadNetworkConfiguration())
@@ -369,6 +368,8 @@ class Nameservers(NodeConfigFileSection):
 
     def __legacy_transaction(self):
         class ConfigureNameservers(utils.Transaction.Element):
+            title = "Setting namservers"
+
             def commit(self):
                 import ovirtnode.network as onet
                 net = onet.Network()
@@ -405,7 +406,7 @@ class Nameservers(NodeConfigFileSection):
         servers = servers.split(",")
 
         class UpdateResolvConf(utils.Transaction.Element):
-            title = "Updateing resolv.conf"
+            title = "Updating resolv.conf"
 
             def commit(self):
                 # Write resolv.conf any way, sometimes without servers
@@ -474,6 +475,8 @@ class Timeservers(NodeConfigFileSection):
 
     def __legacy_transaction(self):
         class ConfigureTimeservers(utils.Transaction.Element):
+            title = "Setting timeservers"
+
             def commit(self):
                 import ovirtnode.network as onet
                 net = onet.Network()
@@ -512,6 +515,8 @@ class Syslog(NodeConfigFileSection):
         server, port = (cfg["server"], cfg["port"])
 
         class CreateRsyslogConfig(utils.Transaction.Element):
+            title = "Setting syslog server and port"
+
             def commit(self):
                 import ovirtnode.log as olog
                 olog.ovirt_rsyslog(server, port, "udp")
@@ -549,6 +554,8 @@ class Collectd(NodeConfigFileSection):
         server, port = (cfg["server"], cfg["port"])
 
         class ConfigureCollectd(utils.Transaction.Element):
+            title = "Setting collect server and port"
+
             def commit(self):
                 import ovirt_config_setup.collectd as ocollectd
                 if ocollectd.write_collectd_config(server, port):
@@ -621,6 +628,8 @@ class KDump(NodeConfigFileSection):
         nfs, ssh, restore = (cfg["nfs"], cfg["ssh"], cfg["local"])
 
         class BackupKdumpConfig(utils.Transaction.Element):
+            title = "Backing up config files"
+
             def __init__(self):
                 self.backups = utils.fs.BackupedFiles(["/etc/kdump.conf"])
 
@@ -628,16 +637,22 @@ class KDump(NodeConfigFileSection):
                 self.backups.create()
 
         class RestoreKdumpConfig(utils.Transaction.Element):
+            title = "Restoring default kdump config"
+
             def commit(self):
                 import ovirtnode.kdump as okdump
                 okdump.restore_kdump_config()
 
         class CreateNfsKdumpConfig(utils.Transaction.Element):
+            title = "Creating kdump NFS config"
+
             def commit(self):
                 import ovirtnode.kdump as okdump
                 okdump.write_kdump_config(nfs)
 
         class CreateSshKdumpConfig(utils.Transaction.Element):
+            title = "Creating kdump SSH config"
+
             def commit(self):
                 import ovirtnode.kdump as okdump
                 from ovirtnode.ovirtfunctions import ovirt_store_config
@@ -662,6 +677,8 @@ class KDump(NodeConfigFileSection):
                                         "SSH: %s" % stdout)
 
         class RemoveKdumpConfig(utils.Transaction.Element):
+            title = "Removing kdump backup"
+
             def __init__(self, backups):
                 self.backups = backups
 
@@ -675,6 +692,8 @@ class KDump(NodeConfigFileSection):
                 self.backups.remove()
 
         class RestartKdumpService(utils.Transaction.Element):
+            title = "Restarting kdump service"
+
             def __init__(self, backups):
                 self.backups = backups
 
@@ -705,7 +724,7 @@ class KDump(NodeConfigFileSection):
             tx.append(CreateNfsKdumpConfig())
         elif ssh:
             tx.append(CreateSshKdumpConfig())
-        elif restore:
+        elif restore in [True, False]:
             tx.append(RestoreKdumpConfig())
         else:
             final_txe = RemoveKdumpConfig(backup_txe.backups)
@@ -747,6 +766,8 @@ class iSCSI(NodeConfigFileSection):
         initiator_name = cfg["name"]
 
         class ConfigureIscsiInitiator(utils.Transaction.Element):
+            title = "Setting the iSCSI initiator name"
+
             def commit(self):
                 iscsi = utils.storage.iSCSI()
                 iscsi.initiator_name(initiator_name)
@@ -778,6 +799,8 @@ class SNMP(NodeConfigFileSection):
         password = cfg["password"]
 
         class ConfigureSNMP(utils.Transaction.Element):
+            title = "Enabling/Disabling SNMP and setting the password"
+
             def commit(self):
                 # FIXME snmp plugin needs to be placed somewhere else (in src)
                 import ovirt_config_setup.snmp as osnmp
@@ -816,6 +839,8 @@ class Netconsole(NodeConfigFileSection):
         server, port = (cfg["server"], cfg["port"])
 
         class CreateNetconsoleConfig(utils.Transaction.Element):
+            title = "Setting netconsole server and port"
+
             def commit(self):
                 import ovirtnode.log as olog
                 olog.ovirt_netconsole(server, port, "udp")
@@ -848,6 +873,8 @@ class Logrotate(NodeConfigFileSection):
         max_size = cfg["max_size"]
 
         class CreateLogrotateConfig(utils.Transaction.Element):
+            title = "Setting logrotate maximum logfile size"
+
             def commit(self):
                 import ovirtnode.log as olog
                 olog.set_logrotate_size(max_size)
@@ -899,7 +926,7 @@ class CIM(NodeConfigFileSection):
 
         # FIXME setting password is missing
 
-        tx = utils.Transaction("Configuring SNMP")
+        tx = utils.Transaction("Configuring CIM")
         tx.append(ConfigureCIM())
         return tx
 
@@ -928,6 +955,8 @@ class Keyboard(NodeConfigFileSection):
         layout = cfg["layout"]
 
         class CreateKeyboardConfig(utils.Transaction.Element):
+            title = "Setting keyboard layout"
+
             def commit(self):
                 from ovirtnode.ovirtfunctions import ovirt_store_config
                 kbd = utils.Keyboard()
@@ -964,6 +993,8 @@ class NFSv4(NodeConfigFileSection):
         domain = cfg["domain"]
 
         class ConfigureNfsv4(utils.Transaction.Element):
+            title = "Setting NFSv4 domain"
+
             def commit(self):
                 from ovirtnode.network import set_nfsv4_domain
                 set_nfsv4_domain(domain)
@@ -1019,16 +1050,19 @@ class SSH(NodeConfigFileSection):
 
         class ConfigurePasswordAuthentication(utils.Transaction.Element):
             title = "Configuring SSH password authentication"
+
             def commit(self):
                 ssh.password_authentication(pwauth)
 
         class ConfigureStrongRNG(utils.Transaction.Element):
-            title = "Configuring strong RNG"
+            title = "Configuring SSH strong RNG"
+
             def commit(self):
                 ssh.strong_rng(num_bytes)
 
         class ConfigureAESNI(utils.Transaction.Element):
-            title = "Configuring AES NI"
+            title = "Configuring SSH AES NI"
+
             def commit(self):
                 ssh.disable_aesni(disable_aesni)
 
