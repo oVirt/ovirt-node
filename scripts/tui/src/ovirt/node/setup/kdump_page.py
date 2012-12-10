@@ -84,6 +84,7 @@ class Plugin(plugins.NodePlugin):
             ("kdump.ssh_location", ui.Entry("SSH Location " +
                                             "(example.redhat.com:/var/crash):",
                                             align_vertical=True)),
+            ("divider[0]", ui.Divider()),
             ("kdump.nfs_location", ui.Entry("NFS Location " +
                                             "root@example.redhat.com):",
                                             align_vertical=True)),
