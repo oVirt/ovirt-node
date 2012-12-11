@@ -88,7 +88,8 @@ pyovirtnode_PYTHON = \
   ovirtnode/storage.py
 
 EXTRA_DIST = \
-  augeas.py
+  augeas.py \
+  tui
 
 # Requires python-pep8 package (Fedora)
 check-local: check-local-pep8

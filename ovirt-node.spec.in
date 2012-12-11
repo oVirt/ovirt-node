@@ -180,6 +180,14 @@ make install DESTDIR=%{buildroot}
 # specific version of python-augeas is not available in Fedora yet
 %{__install} -p -m0644 scripts/augeas.py %{buildroot}%{python_sitelib}
 
+# Build and install the new TUI
+pushd .
+cd scripts/tui/
+make -f makefile.legacy install python=%{__python} prefix=%{_prefix} root=%{buildroot}
+# Remove some extra data
+rm -rf %{buildroot}/usr/extra
+popd .
+
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -363,6 +371,12 @@ fi
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
 %endif
+# Files related to the new TUI
+%{python_sitelib}/ovirt_node_molch*.egg-info
+%{python_sitelib}/ovirt/__init__.*
+%{python_sitelib}/ovirt/node/*
+%{_bindir}/ovirt-config-setup
+
 
 
 %changelog

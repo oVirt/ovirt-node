@@ -4,10 +4,10 @@ from distutils.core import setup
 
 setup(name='ovirt-node-molch',
     version='0.0.1',
-    description='oVirt Node COnfiguration TUI',
+    description='oVirt Node Configuration TUI',
     author='Fabian Deutsch',
     author_email='fabiand@fedoraproject.org',
-    url='http://example.com',
+    url='http://www.ovirt.org/',
     license="GPLv2+",
     scripts=[
              "bin/ovirt-config-setup"
@@ -22,11 +22,11 @@ setup(name='ovirt-node-molch',
         'ovirt.node.setup',
         'ovirt.node.installer',
         ],
-   data_files=[('extra', ['scm_hash.txt',
-                          'Makefile'
-                          ]),
+#   data_files=[('extra', ['scm_hash.txt',
+#                          'Makefile'
+#                          ]),
 #               ('libexec', ['libexec/ovirt-config-setup'
 #        '                  ovirt-config-installer']
 #                           ])
-               ]
+#               ]
 )
