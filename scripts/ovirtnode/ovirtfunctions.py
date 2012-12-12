@@ -247,6 +247,12 @@ def is_upgrade():
     else:
         return False
 
+def is_install():
+    if OVIRT_VARS.has_key("OVIRT_INSTALL") and OVIRT_VARS["OVIRT_INSTALL"] == "1":
+        return True
+    else:
+        return False
+
 # return 0 if booted from local disk
 # return 1 if booted from other media
 def is_booted_from_local_disk():
@@ -341,6 +347,7 @@ def is_stateless():
 def disable_firstboot():
     if os.path.ismount("/config"):
         aug.set("/files/etc/default/ovirt/OVIRT_FIRSTBOOT", "0")
+        aug.set("/files/etc/default/ovirt/OVIRT_INSTALL", "0")
         aug.set("/files/etc/default/ovirt/OVIRT_INIT", '""')
         aug.set("/files/etc/default/ovirt/OVIRT_UPGRADE", "0")
         aug.save()
@@ -486,8 +493,10 @@ def mount_liveos():
     if os.path.ismount("/liveos"):
         return True
     else:
+        if is_iscsi_install():
+            connect_iscsi_root()
         system_closefds("mkdir -p /liveos")
-        if not system("mount LABEL=Root /liveos"):
+        if not system("mount LABEL=Root /liveos &>/dev/null"):
             # just in case /dev/disk/by-label is not using devmapper and fails
             for dev in os.listdir("/dev/mapper"):
                 if system("e2label \"/dev/mapper/" + dev + "\" 2>/dev/null|grep Root|grep -v Backup"):
@@ -557,12 +566,43 @@ def mount_config():
         # /config is not available
         return False
 
-def mount_boot(self):
-    if os.path.ismount("/boot"):
-        return
-    else:
-        system_closefds("mkdir -p /boot")
-        system_closefds("mount LABEL=Boot /boot")
+def mount_boot():
+    system_closefds("mkdir -p /boot")
+    system_closefds("mount LABEL=Boot /boot &>/dev/null")
+
+def connect_iscsi_root():
+    mount_boot()
+    if os.path.exists("/boot/ovirt"):
+        try:
+            f = open("/boot/ovirt", 'r')
+            for line in f:
+                try:
+                    line = line.strip()
+                    key, value = line.split("\"", 1)
+                    key = key.strip("=")
+                    key = key.strip()
+                    value = value.strip("\"")
+                    if not "FIRSTBOOT" in key and not "INSTALL" in key:
+                        OVIRT_VARS[key] = value
+                except:
+                    pass
+            f.close()
+            if is_firstboot() or is_upgrade() or is_install() \
+                or not is_booted_from_local_disk():
+                iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
+                                 "sendtargets") % (
+                                 OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
+                                 OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
+                system(iscsiadm_cmd)
+                login_cmd = ("iscsiadm -m node -T %s -p %s:%s -l" %
+                            (OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
+                            OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
+                            OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
+                system(login_cmd)
+                logger.info("Restarting iscsi service")
+                system("service iscsi restart")
+        except:
+            logger.info("Unable to connect to iscsi root")
 
 # stop any service which keeps /var/log busy
 # keep the list of services
@@ -998,16 +1038,24 @@ def get_live_disk():
 
 def finish_install():
     logger.info("Completing Installation")
-    if not OVIRT_VARS.has_key("OVIRT_ISCSI_ENABLED"):
-        # setup new Root if update is prepared
-        root_update_dev = findfs("RootUpdate")
-        root_dev = findfs("Root")
-        e2label_rootbackup_cmd = "e2label '%s' RootBackup" % root_dev
-        e2label_root_cmd = "e2label '%s' Root" % root_update_dev
-        logger.debug(e2label_rootbackup_cmd)
-        logger.debug(e2label_root_cmd)
-        subprocess_closefds(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        subprocess_closefds(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    root_update_dev = findfs("RootUpdate")
+    root_dev = findfs("Root")
+    e2label_rootbackup_cmd = "e2label '%s' RootBackup" % root_dev
+    e2label_root_cmd = "e2label '%s' Root" % root_update_dev
+    logger.debug(e2label_rootbackup_cmd)
+    logger.debug(e2label_root_cmd)
+    subprocess_closefds(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    subprocess_closefds(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+
+    if is_iscsi_install():
+        boot_update_dev = findfs("BootUpdate")
+        boot_dev = findfs("Boot")
+        e2label_bootbackup_cmd = "e2label '%s' BootBackup" % boot_dev
+        e2label_boot_cmd = "e2label '%s' Boot" % boot_update_dev
+        logger.debug(e2label_bootbackup_cmd)
+        logger.debug(e2label_boot_cmd)
+        subprocess_closefds(e2label_bootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        subprocess_closefds(e2label_boot_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
@@ -1603,6 +1651,8 @@ def manage_firewall_port(port, action="open", proto="tcp"):
 
 def is_iscsi_install():
     if OVIRT_VARS.has_key("OVIRT_ISCSI_INSTALL") and OVIRT_VARS["OVIRT_ISCSI_INSTALL"].upper() == "Y":
+        return True
+    elif findfs("Boot"):
         return True
     else:
         return False

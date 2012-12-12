@@ -153,6 +153,10 @@ EOF
             partB = 1
             if self.partN == 1:
                 partB = 2
+            if _functions.is_iscsi_install():
+                partB = 0
+                if self.partN == 0:
+                    partB = 1
             self.grub_dict['oldtitle'] = self.oldtitle
             self.grub_dict['partB'] = partB
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
@@ -276,11 +280,14 @@ initrd /initrd0.img
             if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
                 grub_config_file = self.grub_config_file
         elif not _functions.is_firstboot():
-            if os.path.ismount("/dev/.initramfs/live"):
+            # find existing iscsi install
+            if _functions.findfs("Boot"):
+                grub_config_file = "/boot/grub/grub.conf"
+            elif os.path.ismount("/dev/.initramfs/live"):
                 grub_config_file = "/dev/.initramfs/live/grub/grub.conf"
             elif os.path.ismount("/run/initramfs/live"):
                 grub_config_file = "/run/initramfs/live/grub/grub.conf"
-            if is_upgrade():
+            if is_upgrade() and not _functions.is_iscsi_install():
                 mount_liveos()
                 grub_config_file = "/liveos/grub/grub.conf"
         if _functions.is_efi_boot():
@@ -288,10 +295,12 @@ initrd /initrd0.img
             _functions.system("umount /liveos")
             _functions.mount_efi(target="/liveos")
             grub_config_file = "/liveos/EFI/%s/grub.cfg" % self.efi_dir_name
+        if _functions.is_iscsi_install():
+            grub_config_file = "/boot/grub/grub.conf"
         grub_config_file_exists = grub_config_file is not None and os.path.exists(grub_config_file)
         logger.debug("Grub config file is: %s" % grub_config_file)
         logger.debug("Grub config file exists: %s" % grub_config_file_exists)
-        if grub_config_file_exists:
+        if not grub_config_file is None and os.path.exists(grub_config_file):
             f=open(grub_config_file)
             oldgrub=f.read()
             f.close()
@@ -310,9 +319,6 @@ initrd /initrd0.img
             self.boot_candidate = "BootBackup"
         elif _functions.findfs("Boot"):
             self.boot_candidate = "Boot"
-            if not os.path.ismount("/boot"):
-                logger.error("Boot partition not available, Install Failed")
-                return False
             # Grab OVIRT_ISCSI VARIABLES from boot partition for upgrading
             # file created only if OVIRT_ISCSI_ENABLED=y
             if os.path.exists("/boot/ovirt"):
@@ -329,10 +335,6 @@ initrd /initrd0.img
                         except:
                             pass
                     f.close()
-                    if "OVIRT_ISCSI_NAME" in OVIRT_VARS and \
-                       OVIRT_VARS["OVIRT_ISCSI_NAME"]:
-                        iscsi_name = OVIRT_VARS["OVIRT_ISCSI_NAME"]
-                        _iscsi.set_iscsi_initiator(iscsi_name)
                     iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
                                      "sendtargets") % (
                                         OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"],
@@ -370,7 +372,7 @@ initrd /initrd0.img
             return False
 
         if _functions.is_iscsi_install():
-            _functions.system("mount LABEL=%s /boot" % self.boot_candidate)
+            _functions.system("mount LABEL=%s /boot &>/dev/null" % self.boot_candidate)
         try:
             candidate_dev = self.disk = _functions.findfs(candidate)
             logger.info(candidate_dev)
