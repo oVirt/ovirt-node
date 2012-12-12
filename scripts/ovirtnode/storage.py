@@ -472,7 +472,7 @@ class Storage:
                     if os.path.exists(_partpv):
                         partpv = _partpv
                         break
-                    logger.error(_partpv + " is not available!")
+                    logger.info(_partpv + " is not available!")
                 i -= 1
                 time.sleep(1)
             if i is 0:
