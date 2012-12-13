@@ -275,10 +275,8 @@ class Entry(urwid.WidgetWrap):
         alignment_widget = urwid.Columns
         if self._align_vertical:
             alignment_widget = urwid.Pile
-        self._columns = alignment_widget([
-                                            self._label_attrmap,
-                                            input_widget
-                                        ])
+        self._columns = alignment_widget([self._label_attrmap,
+                                          input_widget])
 
         self._notice = urwid.Text("")
         self._notice_attrmap = urwid.AttrMap(self._notice,
@@ -309,7 +307,9 @@ class Entry(urwid.WidgetWrap):
         attr_map_label = {None: "plugin.widget.entry.label"}
         attr_map_edit = {None: "plugin.widget.entry"}
         attr_map_linebox = {None: "plugin.widget.entry.frame"}
-        if not is_valid:
+        if is_valid:
+            self.set_notice(None)
+        else:
             attr_map_label = {None: "plugin.widget.entry.label.invalid"}
             attr_map_edit = {None: "plugin.widget.entry.invalid"}
             attr_map_linebox = {None: "plugin.widget.entry.frame.invalid"}

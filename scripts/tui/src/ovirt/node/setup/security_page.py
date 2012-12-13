@@ -73,21 +73,27 @@ class Plugin(plugins.NodePlugin):
                 "Confirm Password:")),
         ]
         # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
+        self._widgets = plugins.WidgetsHelper(dict(widgets))
 
         page = ui.Page(widgets)
         return page
 
     def on_change(self, changes):
         m = self.model()
-        m.update(self.pending_changes() or {})
+        m.update(self.pending_changes(False, True))
+        m.update(changes)
         effective_model = ChangesHelper(m)
 
         passwd_keys = ["passwd.admin.password",
                        "passwd.admin.password_confirmation"]
+        passwd_widget_group = self._widgets.group(passwd_keys)
         if effective_model.any_key_in_change(passwd_keys):
             passwd, passwdc = effective_model.get_key_values(passwd_keys)
-            if passwd != passwdc:
+            if passwd == passwdc:
+                # Remove all potential error messages
+                map(lambda e: e.valid(True), passwd_widget_group.elements())
+            else:
+                # Throw an error message
                 raise exceptions.InvalidData("Passwords do not match.")
 
     def on_merge(self, effective_changes):
@@ -119,10 +125,15 @@ class Plugin(plugins.NodePlugin):
                 raise exceptions.InvalidData("Passwords do not match")
             passwd = utils.security.Passwd()
 
+            # Create a custom transaction element, because the password
+            # is not handled/saved in the defaults file
             class SetAdminPasswd(utils.Transaction.Element):
+                title = "Setting admin password"
+
                 def commit(self):
                     self.logger.debug("Setting admin password.")
                     passwd.set_password("admin", pw)
+
             txs += [SetAdminPasswd()]
 
         progress_dialog = ui.TransactionProgressDialog(txs, self)

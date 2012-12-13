@@ -284,17 +284,22 @@ class NodePlugin(base.Base):
         self.logger.debug("Request to discard model changes: %s" % changes)
         self.__changes = {}
 
-    def pending_changes(self, only_effective_changes=True):
+    def pending_changes(self, only_effective_changes=True,
+                        include_invalid=False):
         """Return all changes which happened since the last on_merge call
 
         Args:
             only_effective_changes: Boolean if all or only the effective
                 changes are returned.
+            include_invalid: If the invalid changes should be included
         Returns:
             dict of changes
         """
-        return self.__effective_changes() if only_effective_changes \
-                                          else self.__changes
+        changes = self.__effective_changes() if only_effective_changes \
+                                             else self.__changes
+        if include_invalid:
+            changes.update(self.__invalid_changes)
+        return changes
 
     def is_valid_changes(self):
         """If all changes are valid or not
@@ -384,9 +389,10 @@ class ChangesHelper(base.Base):
 class WidgetsHelper(dict, base.Base):
     """A helper class to handle widgets
     """
-    def __init__(self):
+    def __init__(self, widgets={}):
         super(WidgetsHelper, self).__init__()
         base.Base.__init__(self)
+        self.update(widgets)
 
     def subset(self, paths):
         return [self[p] for p in paths]
@@ -412,4 +418,15 @@ class WidgetsHelper(dict, base.Base):
             """Enable or disable all widgets of this group
             """
             self.logger.debug("Enabling widget group: %s" % self)
-            map(lambda w: w.enabled(is_enable), self.widgethelper.subset(self))
+            map(lambda w: w.enabled(is_enable), self.elements())
+
+        def text(self, text):
+            """Enable or disable all widgets of this group
+            """
+            self.logger.debug("Setting text of widget group: %s" % self)
+            map(lambda w: w.set_text(text), self.elements())
+
+        def elements(self):
+            """Return the UI elements of this group
+            """
+            return self.widgethelper.subset(self)

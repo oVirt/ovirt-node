@@ -174,6 +174,13 @@ class Entry(InputElement):
         super(Entry, self).__init__(label, enabled)
         self.label = label
         self.align_vertical = align_vertical
+        self.valid(True)
+
+    @Element.signal_change
+    def valid(self, is_valid):
+        if is_valid in [True, False]:
+            self._valid = is_valid
+        return self._valid
 
 
 class PasswordEntry(Entry):
