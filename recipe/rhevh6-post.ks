@@ -273,7 +273,7 @@ EOF_sysctl
 # rhbz#734478 add virt-who (*.py are removed in rhevh image)
 cat > /usr/bin/virt-who <<EOF_virt_who
 #!/bin/sh
-exec /usr/bin/python /usr/share/virt-who/virt-who.pyc "$@"
+exec /usr/bin/python /usr/share/virt-who/virt-who.pyc "\$@"
 EOF_virt_who
 
 # set maxlogins to 3
