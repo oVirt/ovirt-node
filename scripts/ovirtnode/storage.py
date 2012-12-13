@@ -915,9 +915,9 @@ class Storage:
             drive_space_dict["HOSTVG_NEED_SIZE"] = HOSTVG_NEED_SIZE
             hostvg1 = self.HOSTVGDRIVE.split(",")[0]
             if self.ROOTDRIVE == hostvg1:
-                drive_list.append("ROOT")
-                ROOT_NEED_SIZE = self.ROOT_SIZE * 2 + HOSTVG_NEED_SIZE
-                drive_space_dict["ROOT_NEED_SIZE"] = ROOT_NEED_SIZE
+                drive_list.append("HOSTVG")
+                HOSTVG_NEED_SIZE = self.ROOT_SIZE * 2 + HOSTVG_NEED_SIZE
+                drive_space_dict["HOSTVG_NEED_SIZE"] = HOSTVG_NEED_SIZE
             else:
                 drive_list.append("ROOT")
                 drive_list.append("HOSTVG")
