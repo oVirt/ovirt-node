@@ -26,6 +26,7 @@ Some convenience functions related to networking
 
 import logging
 
+from ovirt.node import utils
 from ovirt.node.utils import AugeasWrapper as Augeas
 
 LOGGER = logging.getLogger(__name__)
@@ -124,3 +125,14 @@ def timeservers(new_servers=None):
     """
     augpath = "/files/etc/ntp.conf/server"
     return _aug_get_or_set(augpath, new_servers)
+
+
+def hostname(new_hostname=None):
+    """Get or set the current hostname
+    """
+    aug = utils.AugeasWrapper()
+    augpath = "/files/etc/sysconfig/network/HOSTNAME"
+    if new_hostname:
+        aug.set(augpath, new_hostname)
+        utils.process.system("hostname %s" % new_hostname)
+    return aug.get(augpath)

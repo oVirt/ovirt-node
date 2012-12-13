@@ -31,14 +31,8 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     """This is the network page
     """
 
-    _model = {
-        "hostname": "localhost.example.com",
-        "dns[0]": "192.168.122.1",
-        "dns[1]": "",
-        "ntp[0]": "fedora.pool.ntp.org",
-        "ntp[1]": "",
-    }
     _widgets = None
+    _model_extra = {}
 
     def __init__(self, app):
         super(Plugin, self).__init__(app)
@@ -59,28 +53,41 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         return 10
 
     def model(self):
+        model = {
+            "hostname": "",
+            "dns[0]": "",
+            "dns[1]": "",
+            "ntp[0]": "",
+            "ntp[1]": "",
+        }
+
+        model["hostname"] = defaults.Hostname().retrieve()["hostname"] or \
+                            utils.system.Hostname().hostname()
+
         # Pull name-/timeservers from config files (not defaults)
         nameservers = defaults.Nameservers().retrieve()["servers"]
         if nameservers:
             for idx, nameserver in enumerate(nameservers):
-                self._model["dns[%d]" % idx] = nameserver
+                model["dns[%d]" % idx] = nameserver
 
         timeservers = defaults.Timeservers().retrieve()["servers"]
         if timeservers:
             for idx, timeserver in enumerate(timeservers):
-                self._model["ntp[%d]" % idx] = timeserver
+                model["ntp[%d]" % idx] = timeserver
 
-        return self._model
+        model.update(self._model_extra)
+
+        return model
 
     def validators(self):
         ip_or_empty = valid.IPAddress() | valid.Empty()
         fqdn_ip_or_empty = valid.FQDNOrIPAddress() | valid.Empty()
 
         return {
-                "hostname": valid.FQDNOrIPAddress(),
-                "dns[0]": valid.IPAddress(),
+                "hostname": fqdn_ip_or_empty,
+                "dns[0]": ip_or_empty,
                 "dns[1]": ip_or_empty,
-                "ntp[0]": valid.FQDNOrIPAddress(),
+                "ntp[0]": fqdn_ip_or_empty,
                 "ntp[1]": fqdn_ip_or_empty,
 
                 "dialog.nic.ipv4.address": valid.IPv4Address() | valid.Empty(),
@@ -132,7 +139,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                 justify(nic["hwaddr"], 17)
                 ])
             node_nics.append((name, description))
-        self._model["nics"] = first_nic
         return node_nics
 
     def _build_dialog(self, path, txt, widgets):
@@ -165,7 +171,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
                                                (routes.default(),) +
                                                (nic.vlanid(),))
 
-        self._model.update({
+        self._model_extra.update({
             "dialog.nic.iface": live["name"],
             "dialog.nic.driver": live["driver"],
             "dialog.nic.protocol": live["bootproto"] or "N/A",
@@ -181,7 +187,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             "dialog.nic.vlanid": vlanid,
         })
 
-        self.logger.debug("model: %s" % self._model)
+        self.logger.debug("model: %s" % self.model())
 
         padd = lambda l: l.ljust(14)
         dialog = self._build_dialog("dialog.nic", "NIC Details: %s" % iface, [
@@ -255,7 +261,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def on_merge(self, effective_changes):
         self.logger.info("Saving network stuff")
         changes = self.pending_changes(False)
-        effective_model = dict(self._model)
+        effective_model = dict(self.model())
         effective_model.update(effective_changes)
         self.logger.info("Effective model %s" % effective_model)
         self.logger.info("Effective changes %s" % effective_changes)
@@ -302,6 +308,14 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             model.update(timeservers)
             txs += model.transaction()
 
+        hostname_keys = ["hostname"]
+        if e_changes_h.any_key_in_change(hostname_keys):
+            value = e_model_h.get_key_values(hostname_keys)
+            self.logger.info("Setting new hostname: %s" % value)
+            model = defaults.Hostname()
+            model.update(*value)
+            txs += model.transaction()
+
         # For the NIC details dialog:
         if e_changes_h.any_key_in_change(self._nic_details_group):
             # If any networking related key was changed, reconfigure networking
@@ -319,7 +333,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def _configure_nic(self, bootproto, ipaddr, netmask, gateway, vlanid):
         vlanid = vlanid or None
         model = defaults.Network()
-        iface = self._model["dialog.nic.iface"]
+        iface = self._model_extra["dialog.nic.iface"]
         if bootproto == "none":
             self.logger.debug("Configuring no networking")
             name = iface + "-DISABLED"

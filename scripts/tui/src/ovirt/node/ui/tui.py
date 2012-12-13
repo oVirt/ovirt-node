@@ -55,9 +55,9 @@ class UrwidTUI(ovirt.node.ui.Window):
     footer = u"Press ctrl+c to quit"
 
     element_styles = {
-        "text": "dark gray",
-        "label": "black",
-        "disabled": "white",
+        "text": "black",
+        "label": "dark gray",
+        "disabled": "dark gray",
         "background": "light gray",
         "invalid": "dark red",
     }
@@ -213,10 +213,10 @@ class UrwidTUI(ovirt.node.ui.Window):
                                                                      widget))
                         msg += "- %s\n" % (field.strip(":"))
                 if msg:
-                    self.__display_as_dialog(urwid.Filler(urwid.Text(
-                                "The following fields have changed:\n%s" %
-                                msg)),
-                                "Pending changes")
+                    txt = "The following fields have changed:\n%s" % msg
+                    txt += "\n\nPlease save or reset the page."
+                    self.__display_as_dialog(urwid.Filler(ui.widgets.Label(
+                                txt)), "Pending changes")
                     has_outstanding_changes = True
         return has_outstanding_changes
 

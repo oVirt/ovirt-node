@@ -18,11 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, exceptions, valid, utils
+from ovirt.node import base, exceptions, valid, utils, config
 import glob
 import logging
 import os
-import ovirt.node.config
 
 """
 Classes and functions related to model of the configuration of oVirt Node.
@@ -329,6 +328,53 @@ class Network(NodeConfigFileSection):
         return tx
 
 
+class Hostname(NodeConfigFileSection):
+    """Configure hostname
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> hostname = "host.example.com"
+    >>> n = Hostname(cfgfile)
+    >>> n.update(hostname)
+    >>> n.retrieve()
+    {'hostname': 'host.example.com'}
+    """
+    keys = ("OVIRT_HOSTNAME",)
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, hostname):
+        (valid.Empty() | valid.FQDNOrIPAddress())(hostname)
+
+    def transaction(self):
+        cfg = self.retrieve()
+        hostname = cfg["hostname"]
+
+        class UpdateHostname(utils.Transaction.Element):
+            title = "Setting hostname"
+
+            def __init__(self, hostname):
+                self.hostname = hostname
+
+            def commit(self):
+                from ovirtnode import network as onet, ovirtfunctions
+                network = onet.Network()
+
+                if self.hostname:
+                    network.remove_non_localhost()
+                    network.add_localhost_alias(self.hostname)
+                else:
+                    network.remove_non_localhost()
+                    self.hostname = "localhost.localdomain"
+
+                config.network.hostname(self.hostname)
+
+                ovirtfunctions.ovirt_store_config("/etc/sysconfig/network")
+                ovirtfunctions.ovirt_store_config("/etc/hosts")
+
+        tx = utils.Transaction("Configuring hostname")
+        tx.append(UpdateHostname(hostname))
+        return tx
+
+
 class Nameservers(NodeConfigFileSection):
     """Configure nameservers
     >>> fn = "/tmp/cfg_dummy"
@@ -415,7 +461,7 @@ class Nameservers(NodeConfigFileSection):
                            "lost on reboot")
                 aug.set("/files/etc/resolv.conf/#comment[1]", comment)
                 # Now set the nameservers
-                ovirt.node.config.network.nameservers(servers)
+                config.network.nameservers(servers)
                 utils.fs.persist_config("/etc/resolv.conf")
 
         class UpdatePeerDNS(utils.Transaction.Element):
@@ -458,7 +504,7 @@ class Timeservers(NodeConfigFileSection):
     def update(self, servers):
         assert type(servers) is list
         servers = filter(lambda i: i.strip() not in ["", None], servers)
-        map(valid.IPv4Address(), servers)
+        map(valid.FQDNOrIPAddress(), servers)
         return {
                 "OVIRT_NTP": ",".join(servers) or None
                 }
@@ -481,6 +527,7 @@ class Timeservers(NodeConfigFileSection):
                 import ovirtnode.network as onet
                 net = onet.Network()
                 net.configure_ntp()
+                net.save_ntp_configuration()
 
         tx = utils.Transaction("Configuring timeservers")
         tx.append(ConfigureTimeservers())

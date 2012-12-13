@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
+import traceback
 
 """
 This contains abstract UI Elements
@@ -388,4 +389,5 @@ class TransactionProgressDialog(Dialog):
             self.add_update(e.message)
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self.transaction, e, e.message))
+            self.logger.debug(str(traceback.format_exc()))
         self._close_button.enabled(True)
