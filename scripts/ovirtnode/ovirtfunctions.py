@@ -1393,7 +1393,7 @@ def cpu_details():
     cpu_topology = topologyTag.replace('<topology>','').replace('</topology>','').split()
     status_msg += "CPU Name: %s\n" % cpu_dict["model name"].replace("  "," ")
     status_msg += "CPU Type: %s %s\n" % (cpu_vendor, cpu_model)
-    if kvm_enabled() and virt_cpu_flags_enabled():
+    if kvm_enabled() == 1 and virt_cpu_flags_enabled():
         status_msg += "Virtualization Extensions Enabled: Yes\n"
     else:
         status_msg += "Virtualization Extensions Enabled: \n%s\n" \
