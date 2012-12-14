@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base
+from ovirt.node import base, utils
 from socket import inet_ntoa
 from struct import pack
 import glob
@@ -471,3 +471,16 @@ class IPAddress(base.Base):
 
     def items(self):
         return (self.address, self.netmask)
+
+
+def hostname(new_hostname=None):
+    """Retrieve/Set the systems hostname
+
+    Args:
+        new_hostname: (Optional) new hostname to be set
+    Returns:
+        The current hostname
+    """
+    if new_hostname:
+        utils.process.system("hostname %s" % new_hostname)
+    return utils.process.pipe("hostname", without_retval=True)

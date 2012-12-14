@@ -103,13 +103,30 @@ class SimpleProvider(base.Base):
         for key, value in cfg.items():
             if remove_empty and value is None:
                 del cfg[key]
-            assert type(value) in [str, unicode] or value is None
+            if value is not None and type(value) not in [str, unicode]:
+                raise TypeError("The type (%s) of %s is not allowed" %
+                                (type(value), key))
         self._write(cfg)
 
     def get_dict(self):
-        cfg = {}
         with open(self.filename) as source:
-            for line in source:
+            cfg = self._parse_dict(source)
+        return cfg
+
+    def _parse_dict(self, source):
+        """Parse a simple shell-var-style lines into a dict:
+
+        >>> import StringIO
+        >>> txt = "# A comment\\n"
+        >>> txt += "A=ah\\n"
+        >>> txt += "B=beh\\n"
+        >>> txt += "C=\\"ceh\\"\\n"
+        >>> p = SimpleProvider("/tmp/cfg_dummy")
+        >>> sorted(p._parse_dict(StringIO.StringIO(txt)).items())
+        [('A', 'ah'), ('B', 'beh'), ('C', 'ceh')]
+        """
+        cfg = {}
+        for line in source:
                 if line.startswith("#"):
                     continue
                 key, value = line.split("=", 1)

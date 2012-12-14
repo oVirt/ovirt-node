@@ -217,6 +217,7 @@ class Transaction(list, base.Base):
         self.extend(elements)
 
     def prepare(self):
+        self._prepared_elements = []
         for element in self:
             self.logger.debug("Preparing element '%s'" % element)
             if Transaction.Element not in element.__class__.mro():

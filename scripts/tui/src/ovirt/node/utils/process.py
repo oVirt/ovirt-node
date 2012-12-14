@@ -57,8 +57,8 @@ def system(cmd):
 
 
 def pipe(cmd, stdin=None, without_retval=False):
-    """Run a command interactively and cath it's output.
-    This functions allows to pass smoe input to a running command.
+    """Run a command interactively and catch it's output.
+    This functions allows to pass some input to a running command.
 
     >>> r = pipe("echo -n Hi")
     >>> type(r[1])

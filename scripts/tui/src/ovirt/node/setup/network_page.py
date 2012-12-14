@@ -24,10 +24,10 @@ Network page plugin
 
 from ovirt.node import plugins, ui, valid, utils
 from ovirt.node.config import defaults
-import ovirt.node.utils.network
+from ovirt.node.utils import network
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     """This is the network page
     """
 
@@ -62,7 +62,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         }
 
         model["hostname"] = defaults.Hostname().retrieve()["hostname"] or \
-                            utils.system.Hostname().hostname()
+                            network.hostname()
 
         # Pull name-/timeservers from config files (not defaults)
         nameservers = defaults.Nameservers().retrieve()["servers"]
@@ -128,7 +128,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         justify = lambda txt, l: txt.ljust(l)[0:l]
         node_nics = []
         first_nic = None
-        for name, nic in sorted(ovirt.node.utils.network.node_nics().items()):
+        for name, nic in sorted(utils.network.node_nics().items()):
             if first_nic == None:
                 first_nic = name
             bootproto = "Configured" if nic["bootproto"] else "Unconfigured"
@@ -151,7 +151,7 @@ class Plugin(ovirt.node.plugins.NodePlugin):
         self.logger.debug("Building NIC details dialog for %s" % iface)
 
         self.logger.debug("Getting informations for NIC details page")
-        live = ovirt.node.utils.network.node_nics()[iface]
+        live = utils.network.node_nics()[iface]
         cfg = defaults.Network().retrieve()
 
         self.logger.debug("live: %s" % live)

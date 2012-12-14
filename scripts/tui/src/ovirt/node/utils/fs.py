@@ -52,7 +52,7 @@ def copy_contents(src, dst):
         dstf.write(srcf.read())
 
 
-def atomic_write(self, filename, contents):
+def atomic_write(filename, contents):
     backup = BackupedFiles([filename], ".temp")
     backup.create()
     backup_filename = backup.of(filename)
@@ -61,7 +61,7 @@ def atomic_write(self, filename, contents):
         dst.write(contents)
 
     fns = (backup_filename, filename)
-    self.logger.debug("Moving '%s' to '%s' atomically" % fns)
+    LOGGER.debug("Moving '%s' to '%s' atomically" % fns)
     try:
         os.rename(*fns)
     except Exception as e:

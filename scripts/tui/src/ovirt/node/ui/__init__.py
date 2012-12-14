@@ -385,6 +385,7 @@ class TransactionProgressDialog(Dialog):
         self.plugin.application.ui.show_dialog(self)
         self._close_button.enabled(False)
         if self.transaction:
+            self.logger.debug("Initiating transaction")
             self.__run_transaction()
         else:
             self.add_update("There were no changes, nothing to do.")
@@ -392,6 +393,7 @@ class TransactionProgressDialog(Dialog):
 
     def __run_transaction(self):
         try:
+            self.logger.debug("Preparing transaction %s" % self.transaction)
             self.transaction.prepare()  # Just to display something in dry mode
             for idx, e in enumerate(self.transaction):
                 txt = "(%s/%s) %s" % (idx + 1, len(self.transaction), e.title)
@@ -399,8 +401,8 @@ class TransactionProgressDialog(Dialog):
                 self.plugin.dry_or(lambda: e.commit())
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
-            self.add_update("\nAn error occurred when applying the changes:")
-            self.add_update(e.message)
+            self.add_update("\nAn error occurred while applying the changes:")
+            self.add_update("%s" % e.message)
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self.transaction, e, e.message))
             self.logger.debug(str(traceback.format_exc()))

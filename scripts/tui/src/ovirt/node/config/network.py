@@ -121,18 +121,28 @@ def nameservers(new_servers=None):
 
 
 def timeservers(new_servers=None):
-    """Get or set TIME servers
+    """Get or set timeservers in the config files
     """
     augpath = "/files/etc/ntp.conf/server"
     return _aug_get_or_set(augpath, new_servers)
 
 
 def hostname(new_hostname=None):
-    """Get or set the current hostname
+    """Get or set the current hostname in the config files
     """
     aug = utils.AugeasWrapper()
     augpath = "/files/etc/sysconfig/network/HOSTNAME"
+    sys_hostname = None
     if new_hostname:
         aug.set(augpath, new_hostname)
-        utils.process.system("hostname %s" % new_hostname)
-    return aug.get(augpath)
+        sys_hostname = utils.network.hostname(new_hostname)
+    cfg_hostname = aug.get(augpath)
+
+    if sys_hostname and (sys_hostname != cfg_hostname):
+        # A trivial check: Check that the configured hostname equals the
+        # configured one (only check if we are configuring a new hostname)
+        raise RuntimeError(("A new hostname was configured (%s) but the " +
+                            "systems hostname (%s) wasn't set accordingly.") %
+                            (cfg_hostname, sys_hostname))
+
+    return cfg_hostname
