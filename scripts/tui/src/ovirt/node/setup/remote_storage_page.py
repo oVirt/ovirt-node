@@ -21,6 +21,7 @@
 from ovirt.node import utils, valid, plugins, ui
 from ovirt.node.config import defaults
 from ovirt.node.plugins import ChangesHelper
+from ovirt.node.utils import storage
 
 """
 Configure Remote Storage
@@ -41,14 +42,15 @@ class Plugin(plugins.NodePlugin):
         icfg = defaults.iSCSI().retrieve()
         ncfg = defaults.NFSv4().retrieve()
         model = {}
-        model["iscsi.initiator_name"] = icfg["name"]
+        model["iscsi.initiator_name"] = icfg["name"] or \
+                                        storage.iSCSI().initiator_name()
         model["nfsv4.domain"] = ncfg["domain"]
         return model
 
     def validators(self):
         return {
-                "iscsi.initiator_name": valid.IQN(),
-                "nfsv4.domain": valid.FQDN(),
+                "iscsi.initiator_name": (valid.Empty() | valid.IQN()),
+                "nfsv4.domain": (valid.Empty() | valid.FQDN()),
             }
 
     def ui_content(self):
@@ -84,15 +86,20 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Remote storage page model: %s" %
                           effective_model.changes)
 
-        iscsi_keys = ["iscsi.initiator_name"]
-        # FIXME nfsv4 is missing
-
         txs = utils.Transaction("Updating remote storage configuration")
 
+        iscsi_keys = ["iscsi.initiator_name"]
         if changes.any_key_in_change(iscsi_keys):
             model = defaults.iSCSI()
             args = effective_model.get_key_values(iscsi_keys)
             args += [None, None, None]  # No target config
+            model.update(*args)
+            txs += model.transaction()
+
+        nfsv4_keys = ["nfsv4.domain"]
+        if changes.any_key_in_change(nfsv4_keys):
+            model = defaults.NFSv4()
+            args = effective_model.get_key_values(nfsv4_keys)
             model.update(*args)
             txs += model.transaction()
 

@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, exceptions, valid, utils, config
+from ovirt.node.utils import fs, storage
 import glob
 import logging
 import os
@@ -116,13 +117,24 @@ class SimpleProvider(base.Base):
         return cfg
 
     def _write(self, cfg):
-        # FIXME make atomic
-        contents = []
+        lines = []
         # Sort the dict, looks nicer
         for key in sorted(cfg.iterkeys()):
-            contents.append("%s=%s" % (key, cfg[key]))
-        with open(self.filename, "w+") as dst:
-            dst.write("\n".join(contents))
+            lines.append("%s=%s" % (key, cfg[key]))
+        contents = "\n".join(lines) + "\n"
+
+        # The following logic is mainly needed to allow an "offline" testing
+        config_fs = fs.Config()
+        if config_fs.is_enabled():
+            with config_fs.open_file(self.filename, "w") as dst:
+                dst.write(contents)
+        else:
+            try:
+                fs.atomic_write(self.filename, contents)
+            except Exception as e:
+                self.logger.warning("Atomic write failed: %s" % e)
+                with open(self.filename, "w") as dst:
+                    dst.write(contents)
 
 
 class ConfigFile(base.Base):
@@ -594,7 +606,7 @@ class Collectd(NodeConfigFileSection):
         valid.Port()(port)
 
     def transaction(self):
-        self.__legacy_transaction()
+        return self.__legacy_transaction()
 
     def __legacy_transaction(self):
         cfg = dict(self.retrieve())
@@ -754,9 +766,9 @@ class KDump(NodeConfigFileSection):
                     self.backups.restore("/etc/kdump.conf")
                     system("service kdump restart")
 
-                    raise RuntimeError("KDump configuration failed, " +
-                                       "location unreachable. Previous " +
-                                       "configuration was restored.")
+#                    raise RuntimeError("KDump configuration failed, " +
+#                                       "location unreachable. Previous " +
+#                                       "configuration was restored.")
 
                 ovirt_store_config("/etc/kdump.conf")
                 self.backups.remove()
@@ -804,9 +816,9 @@ class iSCSI(NodeConfigFileSection):
     def update(self, name, target_name, target_host, target_port):
         # FIXME add more validation
         valid.IQN()(name)
-        (valid.Empty() | valid.IQN())(target_name)
-        (valid.Empty() | valid.FQDNOrIPAddress())(target_host)
-        (valid.Empty() | valid.Port())(target_port)
+        (valid.Empty(or_none=True) | valid.IQN())(target_name)
+        (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(target_host)
+        (valid.Empty(or_none=True) | valid.Port())(target_port)
 
     def transaction(self):
         cfg = dict(self.retrieve())
@@ -890,7 +902,7 @@ class Netconsole(NodeConfigFileSection):
 
             def commit(self):
                 import ovirtnode.log as olog
-                olog.ovirt_netconsole(server, port, "udp")
+                olog.ovirt_netconsole(server, port)
 
         tx = utils.Transaction("Configuring netconsole")
         tx.append(CreateNetconsoleConfig())
@@ -1032,8 +1044,10 @@ class NFSv4(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, domain):
-        # FIXME Some validation that layout is in the list of available layouts
-        pass
+        (valid.Empty() | valid.FQDN())(domain)
+        return {
+                "OVIRT_NFSV4_DOMAIN": domain or None
+        }
 
     def transaction(self):
         cfg = dict(self.retrieve())
@@ -1043,12 +1057,11 @@ class NFSv4(NodeConfigFileSection):
             title = "Setting NFSv4 domain"
 
             def commit(self):
-                from ovirtnode.network import set_nfsv4_domain
-                set_nfsv4_domain(domain)
+                nfsv4 = storage.NFSv4()
+                nfsv4.domain(domain)
 
         tx = utils.Transaction("Configuring NFSv4")
-        if domain:
-            tx.append(ConfigureNfsv4())
+        tx.append(ConfigureNfsv4())
         return tx
 
 

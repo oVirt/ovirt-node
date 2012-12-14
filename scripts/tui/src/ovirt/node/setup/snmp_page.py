@@ -31,6 +31,10 @@ class Plugin(plugins.NodePlugin):
     _model = None
     _widgets = None
 
+    def has_ui(self):
+        # FIXME is SNMP in a plugin?
+        return False
+
     def name(self):
         return "SNMP"
 

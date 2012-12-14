@@ -27,9 +27,7 @@ import logging
 import shutil
 import os
 
-from ovirt.node.utils import checksum, is_bind_mount
 from ovirt.node import base
-from process import system
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +50,23 @@ def copy_contents(src, dst):
            "Source and destination need to exist"
     with open(src, "r") as srcf, open(dst, "wb") as dstf:
         dstf.write(srcf.read())
+
+
+def atomic_write(self, filename, contents):
+    backup = BackupedFiles([filename], ".temp")
+    backup.create()
+    backup_filename = backup.of(filename)
+
+    with open(backup_filename, "wb") as dst:
+        dst.write(contents)
+
+    fns = (backup_filename, filename)
+    self.logger.debug("Moving '%s' to '%s' atomically" % fns)
+    try:
+        os.rename(*fns)
+    except Exception as e:
+        backup.remove()
+        raise e
 
 
 class BackupedFiles(base.Base):
@@ -110,7 +125,9 @@ class BackupedFiles(base.Base):
         """
         for fn in self.files:
             backup = "%s%s" % (fn, self.suffix)
-            assert not os.path.exists(backup)
+            if os.path.exists(backup):
+                raise RuntimeError(("Backup '%s' for '%s " +
+                                    "already exists") % (backup, fn))
             if os.path.exists(fn):
                 shutil.copy(fn, backup)
                 self.backups[fn] = backup
@@ -123,6 +140,7 @@ class BackupedFiles(base.Base):
         """
         for fn in self.files:
             backup = self.backups[fn]
+            self.logger.debug("Removing backup of '%s': %s" % (fn, backup))
             os.remove(backup)
 
     def of(self, fn):
@@ -139,99 +157,42 @@ class BackupedFiles(base.Base):
         copy_contents(self.of(fn), fn)
 
 
-def persist_config(filename):
-    LOGGER.info("Persisting: %s" % filename)
-    filenames = []
-
-#    if is_stateless():
-#        return True
-    if not os.path.ismount(persist_path()):
-        LOGGER.warning("/config is not mounted")
-        return False
-    if type(filename) in [str, unicode]:
-        filenames.append(filename)
-    elif type(filename) is list:
-        filenames = filename
-    else:
-        LOGGER.error("Unknown type: %s" % filename)
-        return False
-
-    persist_failed = False
-    for f in filenames:
-        filename = os.path.abspath(f)
-
-        if os.path.isdir(filename):
-            # ensure that, if this is a directory
-            # that it's not already persisted
-            if os.path.isdir(persist_path(filename)):
-                LOGGER.warn("Directory already persisted: %s" % filename)
-                LOGGER.warn("You need to unpersist its child directories " +
-                            "and/or files and try again.")
-                continue
-
-        elif os.path.isfile(filename):
-            # if it's a file then make sure it's not already persisted
-            persist_filename = persist_path(filename)
-            if os.path.isfile(persist_filename):
-                if checksum(filename) == checksum(persist_filename):
-                    # FIXME yes, there could be collisions ...
-                    LOGGER.info("Persisted file is equal: %s" % filename)
-                    continue
-                else:
-                    # Remove persistent copy - needs refresh
-                    if system("umount -n %s 2> /dev/null" % filename):
-                        system("rm -f %s" % persist_filename)
-
-        else:
-            # skip if file does not exist
-            LOGGER.warn("Skipping, file '%s' does not exist" % filename)
-            continue
-
-        # At this poitn we know that we want to persist the file.
-
-        # skip if already bind-mounted
-        if is_bind_mount(filename):
-            LOGGER.warn("%s is already persisted" % filename)
-        else:
-            dirname = os.path.dirname(filename)
-            system("mkdir -p %s" % persist_path(dirname))
-            persist_filename = persist_path(filename)
-            if system("cp -a %s %s" % (filename, persist_filename)):
-                if not system("mount -n --bind %s %s" % (persist_filename,
-                                                         filename)):
-                    LOGGER.error("Failed to persist: " + filename)
-                    persist_failed = True
-                else:
-                    LOGGER.info("Persisted: $s" % filename)
-
-        with open(persist_path("files"), "r") as files:
-            if filename not in files.read().split("\n"):
-                # register in /config/files used by rc.sysinit
-                system("echo " + filename + " >> /config/files")
-                LOGGER.info("Successfully persisted (reg): %s" % filename)
-    return not persist_failed
-
-
-def persist_path(filename=""):
-    """Returns the path a file will be persisted in
-
-    Returns:
-        Path to the persisted variant of the file.
-    """
-    return os.path.join("/config", os.path.abspath(filename))
-
-
-def is_persisted(filename):
-    """Check if the file is persisted
+def is_bind_mount(filename, fsprefix="ext"):
+    """Checks if a given file is bind mounted
 
     Args:
-        filename: Filename to be checked
+        filename: File to be checked
     Returns:
-        True if the file exists in the /config hierarchy
+        True if the file is a bind mount target
     """
-    return os.path.exists(persist_path(filename))
+    bind_mount_found = False
+    with open("/proc/mounts") as mounts:
+        pattern = "%s %s" % (filename, fsprefix)
+        for mount in mounts:
+            if pattern in mount:
+                bind_mount_found = True
+    return bind_mount_found
 
 
-def unpersist_config(filename):
-    LOGGER.info("Unpersisting: %s" % filename)
-    # FIXME
+class Config(base.Base):
+    basedir = "/config"
+
+    def _config_path(self, fn=""):
+        return os.path.join(self.basedir, fn.strip("/"))
+
+    def persist(self, filename):
+        from ovirtnode import ovirtfunctions
+        return ovirtfunctions.ovirt_store_config(filename)
+
+    def unpersist(self, filename):
+        from ovirtnode import ovirtfunctions
+        return ovirtfunctions.remove_config(filename)
+
+    def exists(self, filename):
+        return os.path.exists(self._config_path(filename))
+
+    def is_enabled(self):
+        return is_bind_mount(self.basedir)
+
+    def open_file(self, filename, mode="r"):
+        return open(self._config_path(filename), mode)

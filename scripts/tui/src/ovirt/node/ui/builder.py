@@ -165,7 +165,7 @@ def build_entry(path, item, tui, plugin):
             LOGGER.error("Invalid data when updating: %s" % e)
             if widget._selectable:
                 widget.notice = e.message
-            widget.valid(False)
+                widget.valid(False)
 
         tui._draw_screen()
     urwid.connect_signal(widget, 'change', on_widget_value_change)

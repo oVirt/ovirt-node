@@ -384,6 +384,13 @@ class TransactionProgressDialog(Dialog):
     def run(self):
         self.plugin.application.ui.show_dialog(self)
         self._close_button.enabled(False)
+        if self.transaction:
+            self.__run_transaction()
+        else:
+            self.add_update("There were no changes, nothing to do.")
+        self._close_button.enabled(True)
+
+    def __run_transaction(self):
         try:
             self.transaction.prepare()  # Just to display something in dry mode
             for idx, e in enumerate(self.transaction):
@@ -397,4 +404,3 @@ class TransactionProgressDialog(Dialog):
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self.transaction, e, e.message))
             self.logger.debug(str(traceback.format_exc()))
-        self._close_button.enabled(True)

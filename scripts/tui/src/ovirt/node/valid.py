@@ -188,7 +188,7 @@ class NoSpaces(RegexValidator):
     """
 
     description = "a string without spaces"
-    pattern = "^\S*$"
+    pattern = "^\S+$"
 
 
 class FQDN(RegexValidator):

@@ -42,13 +42,7 @@ class Plugin(plugins.NodePlugin):
         netconsole = defaults.Netconsole().retrieve()
         syslog = defaults.Syslog().retrieve()
 
-        model = {
-            "logrotate.max_size": "1024",
-            "rsyslog.address": "",
-            "rsyslog.port": "514",
-            "netconsole.address": "",
-            "netconsole.port": "6666",
-        }
+        model = {}
         model["logrotate.max_size"] = logrotate["max_size"] or "1024"
 
         model["rsyslog.address"] = syslog["server"] or ""
@@ -64,9 +58,10 @@ class Plugin(plugins.NodePlugin):
         """
         return {
                 "logrotate.max_size": valid.Number(range=[0, None]),
-                "rsyslog.address": valid.FQDNOrIPAddress(),
+                "rsyslog.address": (valid.Empty() | valid.FQDNOrIPAddress()),
                 "rsyslog.port": valid.Port(),
-                "netconsole.address": valid.FQDNOrIPAddress(),
+                "netconsole.address": (valid.Empty() |
+                                       valid.FQDNOrIPAddress()),
                 "netconsole.port": valid.Port(),
             }
 
@@ -109,13 +104,10 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Saving logging page: %s" % changes.changes)
         self.logger.debug("Logging page model: %s" % effective_model.changes)
 
-        logrotate_keys = ["logrotate.max_size"]
-        rsyslog_keys = ["rsyslog.address", "rsyslog.port"]
-        netconsole_keys = ["netconsole.address", "netconsole.port"]
-
         txs = utils.Transaction("Updating logging related configuration")
 
         # If any logrotate key changed ...
+        logrotate_keys = ["logrotate.max_size"]
         if changes.any_key_in_change(logrotate_keys):
             # Get all logrotate values fomr the effective model
             model = defaults.Logrotate()
@@ -123,11 +115,13 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.get_key_values(logrotate_keys))
             txs += model.transaction()
 
+        rsyslog_keys = ["rsyslog.address", "rsyslog.port"]
         if changes.any_key_in_change(rsyslog_keys):
             model = defaults.Syslog()
             model.update(*effective_model.get_key_values(rsyslog_keys))
             txs += model.transaction()
 
+        netconsole_keys = ["netconsole.address", "netconsole.port"]
         if changes.any_key_in_change(netconsole_keys):
             model = defaults.Netconsole()
             model.update(*effective_model.get_key_values(netconsole_keys))
