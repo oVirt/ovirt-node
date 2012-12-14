@@ -576,20 +576,20 @@ def get_current_nfsv4_domain():
 def set_nfsv4_domain(domain):
     idmap_conf = "/etc/idmapd.conf"
     current_domain = get_current_nfsv4_domain()
-    unmount_config(idmap_conf)
+    _functions.unmount_config(idmap_conf)
     if current_domain.startswith("#"):
         current_domain = "#Domain = %s" % current_domain.replace("# ","")
-        system("sed -i 's/%s/Domain = %s/g' %s" \
+        _functions.system("sed -i 's/%s/Domain = %s/g' %s" \
             % (current_domain, domain, idmap_conf))
     else:
-        system("sed -i 's/%s/%s/g' %s" \
+        _functions.system("sed -i 's/%s/%s/g' %s" \
             % (current_domain, domain, idmap_conf))
-    if ovirt_store_config(idmap_conf):
+    if _functions.ovirt_store_config(idmap_conf):
         logger.info("NFSv4 domain set as: " + domain)
     else:
         logger.warning("Setting nfsv4 domain failed")
-    system_closefds("service rpcidmapd restart")
-    system_closefds("nfsidmap -c &>/dev/null")
+    _functions.system_closefds("service rpcidmapd restart")
+    _functions.system_closefds("nfsidmap -c &>/dev/null")
 
 def convert_to_biosdevname():
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
