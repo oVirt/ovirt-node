@@ -6,3 +6,5 @@ export PYTHONDONTWRITEBYTECODE=x
 #export PYTHONDEBUG=
 #export PYTHONVERBOSE=x
 python -t -m ovirt.node.setup "$@"
+
+reset
