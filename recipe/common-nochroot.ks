@@ -96,24 +96,24 @@ splashimage=/EFI/BOOT/splash.xpm.gz
 timeout 30
 hiddenmenu
 title Install or Upgrade ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0
   initrd /isolinux/initrd0.img
 title Install or Upgrade (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0
   initrd /isolinux/initrd0.img
 title Install or Upgrade with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  console=ttyS0,115200n8
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  console=ttyS0,115200n8
   initrd /isolinux/initrd0.img
 title Reinstall ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
   initrd /isolinux/initrd0.img
 title Reinstall (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
   initrd /isolinux/initrd0.img
 title Reinstall with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall console=ttyS0,115200n8
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall console=ttyS0,115200n8
   initrd /isolinux/initrd0.img
 title Uninstall
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=512M-2G:64M,2G-:128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  uninstall
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  uninstall
   initrd /isolinux/initrd0.img
 EOF
