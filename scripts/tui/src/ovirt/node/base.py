@@ -80,7 +80,7 @@ class Base(object):
         if not self._signal_cbs:
             raise Exception("Signals not initialized %s for %s" % (name, self))
         if name not in self._signal_cbs:
-            raise Exception("Unregistered signal %s for %s" % (name, self))
+            raise Exception("Unregistered signal '%s' for '%s'" % (name, self))
         self._signal_cbs[name].append(cb)
 
     def emit_signal(self, name, userdata=None):

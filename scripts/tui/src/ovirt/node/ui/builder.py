@@ -148,6 +148,11 @@ def build_entry(path, item, tui, plugin):
 
     item.connect_signal("valid", on_item_valid_change_cb)
 
+    def on_item_text_change_cb(w, v):
+            widget.set_text(v)
+
+    item.connect_signal("text", on_item_text_change_cb)
+
     def on_widget_value_change(widget, new_value):
         LOGGER.debug("Entry %s changed, calling callback: '%s'" % (widget,
                                                                    path))

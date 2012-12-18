@@ -24,7 +24,7 @@ Configure Logging
 
 from ovirt.node import plugins, valid, ui, utils
 from ovirt.node.config import defaults
-from ovirt.node.plugins import ChangesHelper
+from ovirt.node.plugins import Changeset
 
 
 class Plugin(plugins.NodePlugin):
@@ -96,35 +96,34 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving logging page")
-        changes = ChangesHelper(self.pending_changes(False))
-        model = self.model()
-        model.update(effective_changes)
-        effective_model = ChangesHelper(model)
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
+        effective_model.update(effective_changes)
 
-        self.logger.debug("Saving logging page: %s" % changes.changes)
-        self.logger.debug("Logging page model: %s" % effective_model.changes)
+        self.logger.debug("Changes: %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
         txs = utils.Transaction("Updating logging related configuration")
 
         # If any logrotate key changed ...
         logrotate_keys = ["logrotate.max_size"]
-        if changes.any_key_in_change(logrotate_keys):
+        if changes.contains_any(logrotate_keys):
             # Get all logrotate values fomr the effective model
             model = defaults.Logrotate()
             # And update the defaults
-            model.update(*effective_model.get_key_values(logrotate_keys))
+            model.update(*effective_model.values_for(logrotate_keys))
             txs += model.transaction()
 
         rsyslog_keys = ["rsyslog.address", "rsyslog.port"]
-        if changes.any_key_in_change(rsyslog_keys):
+        if changes.contains_any(rsyslog_keys):
             model = defaults.Syslog()
-            model.update(*effective_model.get_key_values(rsyslog_keys))
+            model.update(*effective_model.values_for(rsyslog_keys))
             txs += model.transaction()
 
         netconsole_keys = ["netconsole.address", "netconsole.port"]
-        if changes.any_key_in_change(netconsole_keys):
+        if changes.contains_any(netconsole_keys):
             model = defaults.Netconsole()
-            model.update(*effective_model.get_key_values(netconsole_keys))
+            model.update(*effective_model.values_for(netconsole_keys))
             txs += model.transaction()
 
         progress_dialog = ui.TransactionProgressDialog(txs, self)

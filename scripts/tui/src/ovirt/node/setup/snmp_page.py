@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, valid, ui, utils
 from ovirt.node.config import defaults
-from ovirt.node.plugins import ChangesHelper
+from ovirt.node.plugins import Changeset
 
 """
 Configure SNMP
@@ -52,9 +52,12 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
+        same_as_password = plugins.Validator.SameAsIn(self,
+                                                      "snmp.password",
+                                                      "Password")
         return {
-                "passwd.admin.password": valid.Text(),
-                "passwd.admin.password_confirmation": valid.Text(),
+                "snmp.password": valid.Text(),
+                "snmp.password_confirmation": same_as_password,
             }
 
     def ui_content(self):
@@ -75,33 +78,23 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        m = self.model()
-        m.update(self.pending_changes() or {})
-        effective_model = ChangesHelper(m)
-
-        snmp_keys = ["snmp.password",
-                     "snmp.password_confirmation"]
-        if effective_model.any_key_in_change(snmp_keys):
-            passwd, passwdc = effective_model.get_key_values(snmp_keys)
-            #if passwd != passwdc:
-            #    raise exceptions.InvalidData("Passwords do not match.")
+        pass
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving SNMP page")
-        changes = ChangesHelper(self.pending_changes(False))
-        model = self.model()
-        model.update(effective_changes)
-        effective_model = ChangesHelper(model)
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
+        effective_model.update(effective_changes)
 
-        self.logger.debug("Saving SNMP page: %s" % changes.changes)
-        self.logger.debug("SNMP model: %s" % effective_model.changes)
+        self.logger.debug("Changes: %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
-        snmp_keys = ["snmp.password", "snmp.enabled"]
+        snmp_keys = ["snmp.password_confirmation", "snmp.enabled"]
 
         txs = utils.Transaction("Updating SNMP configuration")
 
-        if changes.any_key_in_change(snmp_keys):
-            values = effective_model.get_key_values(snmp_keys)
+        if changes.contains_any(snmp_keys):
+            values = effective_model.values_for(snmp_keys)
             args = [values[0]]
             if values[1] is False:  # If set to disabled, set password to None
                 args[0] = None

@@ -22,8 +22,7 @@
 """
 This contains much stuff related to plugins
 """
-from ovirt.node import base, exceptions
-import ovirt.node.exceptions
+from ovirt.node import base, exceptions, valid
 import pkgutil
 
 
@@ -71,7 +70,7 @@ class NodePlugin(base.Base):
     def __init__(self, application):
         super(NodePlugin, self).__init__()
         self.__changes = {}
-        self.__invalid_changes = {}
+        self.__invalid_changes = Changeset()
         self.application = application
         self.sig_valid = self.register_signal("valid")
 
@@ -122,16 +121,30 @@ class NodePlugin(base.Base):
         Raises:
             InvalidData on any invalid data
         """
+        validators = self.validators()
         for path, value in changes.items():
-            if path in self.validators():
+            if path in validators:
                 msg = None
                 try:
-                    msg = self.validators()[path](value)
-                except ovirt.node.exceptions.InvalidData as e:
+                    msg = validators[path](value)
+                except exceptions.InvalidData as e:
                     msg = e.message
+
                 # True and None are allowed values
-                if msg not in [True, None]:
-                    raise ovirt.node.exceptions.InvalidData(msg)
+                if msg in [True, None]:
+                    self.__invalid_changes.drop([path])
+                else:
+                    self.logger.debug("Failed to validate " +
+                                      "'%s' with '%s'" % (path, value))
+                    self.__invalid_changes.update({path: value})
+                    raise exceptions.InvalidData(msg)
+
+        # Is valid if no invalid_changes
+        is_valid = self.__invalid_changes.is_empty()
+        self.logger.debug("Valid yet? %s (%s)" % (is_valid,
+                                                  self.__invalid_changes))
+        self.sig_valid.emit(is_valid)
+
         return True
 
     def ui_name(self):
@@ -193,7 +206,7 @@ class NodePlugin(base.Base):
             self.on_change(model)
         except NotImplementedError:
             self.logger.debug("Plugin has no model")
-        except ovirt.node.exceptions.InvalidData:
+        except exceptions.InvalidData:
             self.logger.warning("Plugins model does not pass semantic " +
                                 "check: %s" % model)
             is_valid = False
@@ -228,15 +241,11 @@ class NodePlugin(base.Base):
                 self.validate(change)
             self.on_change(change)
         except exceptions.InvalidData as e:
-            self.__invalid_changes.update(change)
             self.sig_valid.emit(False)
             raise e
         self.__changes.update(change)
         self.logger.debug("Sum of all UI changes up to now: %s" % \
                           self.__changes)
-        self.__invalid_changes = {k: v
-                                  for k, v in self.__invalid_changes.items()
-                                  if k not in change}
         self.sig_valid.emit(True)
         return True
 
@@ -299,7 +308,7 @@ class NodePlugin(base.Base):
                                              else self.__changes
         if include_invalid:
             changes.update(self.__invalid_changes)
-        return changes
+        return Changeset(changes)
 
     def is_valid_changes(self):
         """If all changes are valid or not
@@ -307,7 +316,7 @@ class NodePlugin(base.Base):
             If there are no invalid changes - so all changes valid
         """
         self.logger.debug("Invalid changes: %s" % self.__invalid_changes)
-        return len(self.__invalid_changes) == 0
+        return self.__invalid_changes.is_empty()
 
     def __effective_changes(self):
         """Calculates the effective changes, so changes which change the
@@ -333,57 +342,72 @@ class NodePlugin(base.Base):
         return effective_changes
 
     def dry_or(self, func):
+        """Do nothing (when we are running dry) or run func
+        """
         if self.application.args.dry:
             self.logger.info("Running dry, otherwise: %s" % func)
         else:
             self.logger.info("Running %s" % func)
-            func()
+            return func()
 
 
-class ChangesHelper(base.Base):
-    def __init__(self, changes):
-        self.changes = changes
+class Changeset(dict, base.Base):
+    """A wrapper around a dict to provide some convenience functions
+    """
+    def __init__(self, changes=None):
+        super(Changeset, self).__init__()
+        base.Base.__init__(self)
+        if changes:
+            self.update(changes)
 
-    def if_keys_exist_run(self, keys, func):
-        """Run func if all keys are present in the changes.
-        The values of the change entries for each key in keys are passed as
-        arguments to the function func
+    def values_for(self, keys):
+        assert self.contains_all(keys), "Missing keys: %s" % ( \
+                                set(keys).difference(set(self.keys())))
+        return [self[key] for key in keys]
 
-        >>> changes = {
-        ... "foo": 1,
-        ... "bar": 2,
-        ... "baz": 0
-        ... }
-        >>> helper = ChangesHelper(changes)
-        >>> cb = lambda foo, bar: foo + bar
-        >>> helper.if_keys_exist_run(["foo", "bar"], cb)
-        3
-        >>> helper.if_keys_exist_run(["foo", "baz"], cb)
-        1
-        >>> helper.if_keys_exist_run(["win", "dow"], cb)
+    def contains_all(self, keys):
+        return set(keys).issubset(set(self.keys()))
 
-        Args:
-            keys: A list of keys which need to be present in the changes
-            func: The function to be run, values of keys are passed as args
-        """
-        if self.all_keys_in_change(keys):
-            return func(*[self.changes[key] for key in keys])
-
-    def get_key_values(self, keys):
-        assert self.all_keys_in_change(keys), "Missing keys: %s" % ( \
-                                set(keys).difference(set(self.changes.keys())))
-        return [self.changes[key] for key in keys]
-
-    def all_keys_in_change(self, keys):
-        return set(keys).issubset(set(self.changes.keys()))
-
-    def any_key_in_change(self, keys):
-        return any([key in self.changes for key in keys])
+    def contains_any(self, keys):
+        return any([key in self for key in keys])
 
     def __getitem__(self, key):
-        if key in self.changes:
-            return self.changes[key]
+        if key in self:
+            return dict.__getitem__(self, key)
         return None
+
+    def reset(self, changes):
+        self.clear()
+        self.update(changes)
+
+    def drop(self, keys):
+        for key in keys:
+            del self[key]
+
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key, value)
+
+    def __delitem__(self, key):
+        if key in self:
+            dict.__delitem__(self, key)
+
+    def is_empty(self):
+        """If there are any keys set
+
+        >>> c = Changeset()
+        >>> c.is_empty()
+        True
+        >>> c.update({"a": 1})
+        >>> c.is_empty()
+        False
+        >>> c.drop(["a"])
+        >>> c.is_empty()
+        True
+        """
+        return len(self) == 0
+
+    def update(self, changes):
+        dict.update(self, changes)
 
 
 class WidgetsHelper(dict, base.Base):
@@ -430,3 +454,20 @@ class WidgetsHelper(dict, base.Base):
             """Return the UI elements of this group
             """
             return self.widgethelper.subset(self)
+
+
+class Validator:
+    class SameAsIn(valid.Validator):
+        """Validator to validate a value against the value from other paths
+        """
+        def __init__(self, plugin, other_path, other_name):
+            self._plugin = plugin
+            self._paths = [other_path]
+            self.description = "the same value as field '%s'" % other_name
+            super(Validator.SameAsIn, self).__init__()
+
+        def validate(self, value):
+            all_changes = {p: None for p in self._paths}
+            all_changes.update(self._plugin.pending_changes(False, True))
+            return all((v == value for path, v in all_changes.items()
+                        if path in self._paths))

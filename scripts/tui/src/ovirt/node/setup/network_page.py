@@ -18,13 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import plugins, ui, valid, utils
+from ovirt.node.config import defaults
+from ovirt.node.plugins import Changeset
+from ovirt.node.utils import network
 """
 Network page plugin
 """
-
-from ovirt.node import plugins, ui, valid, utils
-from ovirt.node.config import defaults
-from ovirt.node.utils import network
 
 
 class Plugin(plugins.NodePlugin):
@@ -249,7 +249,7 @@ class Plugin(plugins.NodePlugin):
 
     def on_change(self, changes):
         self.logger.info("Checking network stuff")
-        helper = plugins.ChangesHelper(changes)
+        helper = plugins.Changeset(changes)
         bootproto = helper["dialog.nic.ipv4.bootproto"]
         if bootproto:
             if bootproto in ["static"]:
@@ -260,12 +260,13 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         self.logger.info("Saving network stuff")
-        changes = self.pending_changes(False)
-        effective_model = dict(self.model())
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
         effective_model.update(effective_changes)
-        self.logger.info("Effective model %s" % effective_model)
+
+        self.logger.debug("Changes: %s" % changes)
         self.logger.info("Effective changes %s" % effective_changes)
-        self.logger.info("All changes %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
         # Special case: A NIC was selected, display that dialog!
         if "nics" in changes and len(changes) == 1:
@@ -285,13 +286,12 @@ class Plugin(plugins.NodePlugin):
         # This object will contain all transaction elements to be executed
         txs = utils.Transaction("DNS and NTP configuration")
 
-        e_changes_h = plugins.ChangesHelper(effective_changes)
-        e_model_h = plugins.ChangesHelper(effective_model)
+        e_changes_h = plugins.Changeset(effective_changes)
 
         nameservers = []
         dns_keys = ["dns[0]", "dns[1]"]
-        if e_changes_h.any_key_in_change(dns_keys):
-            nameservers += e_model_h.get_key_values(dns_keys)
+        if e_changes_h.contains_any(dns_keys):
+            nameservers += effective_model.values_for(dns_keys)
         if nameservers:
             self.logger.info("Setting new nameservers: %s" % nameservers)
             model = defaults.Nameservers()
@@ -300,8 +300,8 @@ class Plugin(plugins.NodePlugin):
 
         timeservers = []
         ntp_keys = ["ntp[0]", "ntp[1]"]
-        if e_changes_h.any_key_in_change(ntp_keys):
-            timeservers += e_model_h.get_key_values(ntp_keys)
+        if e_changes_h.contains_any(ntp_keys):
+            timeservers += effective_model.values_for(ntp_keys)
         if timeservers:
             self.logger.info("Setting new timeservers: %s" % timeservers)
             model = defaults.Timeservers()
@@ -309,19 +309,18 @@ class Plugin(plugins.NodePlugin):
             txs += model.transaction()
 
         hostname_keys = ["hostname"]
-        if e_changes_h.any_key_in_change(hostname_keys):
-            value = e_model_h.get_key_values(hostname_keys)
+        if e_changes_h.contains_any(hostname_keys):
+            value = effective_model.values_for(hostname_keys)
             self.logger.info("Setting new hostname: %s" % value)
             model = defaults.Hostname()
             model.update(*value)
             txs += model.transaction()
 
         # For the NIC details dialog:
-        if e_changes_h.any_key_in_change(self._nic_details_group):
+        if e_changes_h.contains_any(self._nic_details_group):
             # If any networking related key was changed, reconfigure networking
-            helper = plugins.ChangesHelper(effective_model)
             # Fetch the values for the nic keys, they are used as arguments
-            args = helper.get_key_values(self._nic_details_group)
+            args = effective_model.values_for(self._nic_details_group)
             txs += self._configure_nic(*args)
 
         progress_dialog = ui.TransactionProgressDialog(txs, self)

@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils, plugins, ui, valid, exceptions
 from ovirt.node.config import defaults
-from ovirt.node.plugins import ChangesHelper
+from ovirt.node.plugins import Changeset
 
 """
 Configure Security
@@ -50,12 +50,16 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
+        same_as_password = plugins.Validator.SameAsIn(self,
+                                                      "passwd.admin.password",
+                                                      "Password")
         number_or_empty = valid.Number(range=[0, None]) | \
                           valid.Empty()
+
         return {
                 "strongrng.num_bytes": number_or_empty,
                 "passwd.admin.password": valid.Text(),
-                "passwd.admin.password_confirmation": valid.Text(),
+                "passwd.admin.password_confirmation": same_as_password,
             }
 
     def ui_content(self):
@@ -79,33 +83,16 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        m = self.model()
-        m.update(self.pending_changes(False, True))
-        m.update(changes)
-        effective_model = ChangesHelper(m)
-
-        passwd_keys = ["passwd.admin.password",
-                       "passwd.admin.password_confirmation"]
-        passwd_widget_group = self._widgets.group(passwd_keys)
-        if effective_model.any_key_in_change(passwd_keys):
-            passwd, passwdc = effective_model.get_key_values(passwd_keys)
-            if passwd == passwdc:
-                # Remove all potential error messages
-                map(lambda e: e.valid(True), passwd_widget_group.elements())
-            else:
-                # Throw an error message
-                raise exceptions.InvalidData("Passwords do not match.")
+        pass
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving security page")
-        changes = ChangesHelper(self.pending_changes(False))
-        model = self.model()
-        model.update(effective_changes)
-        effective_model = ChangesHelper(model)
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
+        effective_model.update(effective_changes)
 
-        self.logger.debug("Saving security page: %s" % changes.changes)
-        self.logger.debug("Remote security model: %s" %
-                          effective_model.changes)
+        self.logger.debug("Changes: %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
         ssh_keys = ["ssh.pwauth", "strongrng.num_bytes",
                     "strongrng.disable_aesni"]
@@ -114,13 +101,13 @@ class Plugin(plugins.NodePlugin):
 
         txs = utils.Transaction("Updating security configuration")
 
-        if changes.any_key_in_change(ssh_keys):
+        if changes.contains_any(ssh_keys):
             model = defaults.SSH()
-            model.update(*effective_model.get_key_values(ssh_keys))
+            model.update(*effective_model.values_for(ssh_keys))
             txs += model.transaction()
 
-        if changes.any_key_in_change(passwd_keys):
-            pw, pwc = effective_model.get_key_values(passwd_keys)
+        if changes.contains_any(passwd_keys):
+            pw, pwc = effective_model.values_for(passwd_keys)
             if pw != pwc:
                 raise exceptions.InvalidData("Passwords do not match")
             passwd = utils.security.Passwd()

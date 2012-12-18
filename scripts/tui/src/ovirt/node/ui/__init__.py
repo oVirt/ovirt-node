@@ -48,13 +48,14 @@ class Element(base.Base):
 
 
 class InputElement(Element):
-    """An abstract UI Element pfor user input
+    """An abstract UI Element for user input
     """
 
     def __init__(self, name, is_enabled):
         super(InputElement, self).__init__()
         self.name = name
         self.enabled(is_enabled)
+        self.text("")
 
     @Element.signal_change
     def enabled(self, is_enabled=None):

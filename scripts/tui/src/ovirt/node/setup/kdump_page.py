@@ -24,7 +24,7 @@ Configure KDump
 
 from ovirt.node import utils, plugins, ui, valid
 from ovirt.node.config import defaults
-from ovirt.node.plugins import ChangesHelper
+from ovirt.node.plugins import Changeset
 
 
 class Plugin(plugins.NodePlugin):
@@ -116,21 +116,20 @@ class Plugin(plugins.NodePlugin):
         case it is called by on_change
         """
         self.logger.debug("Saving kdump page")
-        changes = ChangesHelper(self.pending_changes(False))
-        model = self.model()
-        model.update(effective_changes)
-        effective_model = ChangesHelper(model)
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
+        effective_model.update(effective_changes)
 
-        self.logger.debug("Saving kdump page: %s" % changes.changes)
-        self.logger.debug("Kdump page model: %s" % effective_model.changes)
+        self.logger.debug("Changes: %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
         kdump_keys = ["kdump.type", "kdump.ssh_location", "kdump.nfs_location"]
 
         txs = utils.Transaction("Updating kdump related configuration")
 
-        if changes.any_key_in_change(kdump_keys):
+        if changes.contains_any(kdump_keys):
             model = defaults.KDump()
-            ktype, sshloc, nfsloc = effective_model.get_key_values(kdump_keys)
+            ktype, sshloc, nfsloc = effective_model.values_for(kdump_keys)
             if ktype == "nfs":
                 model.update(nfsloc, None, None)
             elif ktype == "ssh":

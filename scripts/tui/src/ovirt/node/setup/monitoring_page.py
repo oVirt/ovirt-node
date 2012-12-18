@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, valid, utils
 from ovirt.node.config import defaults
-from ovirt.node.plugins import ChangesHelper
+from ovirt.node.plugins import Changeset
 
 """
 Configure Monitoring
@@ -74,21 +74,20 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving monitoring page")
-        changes = ChangesHelper(self.pending_changes(False))
-        model = self.model()
-        model.update(effective_changes)
-        effective_model = ChangesHelper(model)
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
+        effective_model.update(effective_changes)
 
-        self.logger.debug("Saving monitoring page: %s" % changes.changes)
-        self.logger.debug("monitoring model: %s" % effective_model.changes)
+        self.logger.debug("Changes: %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
         collectd_keys = ["collectd.address", "collectd.port"]
 
         txs = utils.Transaction("Updating monitoring configuration")
 
-        if changes.any_key_in_change(collectd_keys):
+        if changes.contains_any(collectd_keys):
             model = defaults.Collectd()
-            model.update(*effective_model.get_key_values(collectd_keys))
+            model.update(*effective_model.values_for(collectd_keys))
             txs += model.transaction()
 
         progress_dialog = ui.TransactionProgressDialog(txs, self)

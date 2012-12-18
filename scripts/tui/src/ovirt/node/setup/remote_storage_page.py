@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils, valid, plugins, ui
 from ovirt.node.config import defaults
-from ovirt.node.plugins import ChangesHelper
+from ovirt.node.plugins import Changeset
 from ovirt.node.utils import storage
 
 """
@@ -77,29 +77,27 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving remote storage page")
-        changes = ChangesHelper(self.pending_changes(False))
-        model = self.model()
-        model.update(effective_changes)
-        effective_model = ChangesHelper(model)
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
+        effective_model.update(effective_changes)
 
-        self.logger.debug("Saving remote storage page: %s" % changes.changes)
-        self.logger.debug("Remote storage page model: %s" %
-                          effective_model.changes)
+        self.logger.debug("Changes: %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
         txs = utils.Transaction("Updating remote storage configuration")
 
         iscsi_keys = ["iscsi.initiator_name"]
-        if changes.any_key_in_change(iscsi_keys):
+        if changes.contains_any(iscsi_keys):
             model = defaults.iSCSI()
-            args = effective_model.get_key_values(iscsi_keys)
+            args = effective_model.values_for(iscsi_keys)
             args += [None, None, None]  # No target config
             model.update(*args)
             txs += model.transaction()
 
         nfsv4_keys = ["nfsv4.domain"]
-        if changes.any_key_in_change(nfsv4_keys):
+        if changes.contains_any(nfsv4_keys):
             model = defaults.NFSv4()
-            args = effective_model.get_key_values(nfsv4_keys)
+            args = effective_model.values_for(nfsv4_keys)
             model.update(*args)
             txs += model.transaction()
 

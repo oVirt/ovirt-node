@@ -18,9 +18,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, valid, ui, utils, exceptions
+from ovirt.node import plugins, valid, ui, utils
 from ovirt.node.config.defaults import NodeConfigFileSection
-from ovirt.node.plugins import ChangesHelper
+from ovirt.node.plugins import Changeset
 
 """
 Configure Engine
@@ -88,19 +88,18 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         self.logger.info("Saving engine stuff")
-        changes = plugins.ChangesHelper(self.pending_changes(False))
-        m = dict(self.model())
-        m.update(effective_changes)
-        effective_model = plugins.ChangesHelper(m)
-        self.logger.info("Effective model %s" % effective_model)
-        self.logger.info("Effective changes %s" % effective_changes)
-        self.logger.info("All changes %s" % changes)
+        changes = Changeset(self.pending_changes(False))
+        effective_model = Changeset(self.model())
+        effective_model.update(effective_changes)
+
+        self.logger.debug("Changes: %s" % changes)
+        self.logger.debug("Effective Model: %s" % effective_model)
 
         txs = utils.Transaction("Configuring oVirt Engine")
 
         vdsm_keys = ["vdsm.address", "vdsm.port"]
-        if changes.any_key_in_change(vdsm_keys):
-            values = effective_model.get_key_values(vdsm_keys)
+        if changes.contains_any(vdsm_keys):
+            values = effective_model.values_for(vdsm_keys)
             self.logger.debug("Setting VDSM server and port (%s)" % values)
 
             # Use the VDSM class below to build a transaction
@@ -108,11 +107,11 @@ class Plugin(plugins.NodePlugin):
             model.update(*values)
             txs += model.transaction()
 
-        if changes.any_key_in_change(["vdsm.password_confirmation"]):
+        if changes.contains_any(["vdsm.password_confirmation"]):
             self.logger.debug("Setting engine password")
             txs += [SetEnginePassword()]
 
-        if changes.any_key_in_change(["vdsm.connect_and_validate"]):
+        if changes.contains_any(["vdsm.connect_and_validate"]):
             self.logger.debug("Connecting to engine")
             txs += [ActivateVDSM()]
 
@@ -170,7 +169,7 @@ class ActivateVDSM(utils.Transaction.Element):
         the connection to it
         """
         cfg = dict(self.vdsm.retrieve())
-        server, port = (cfg["server"], cfg["port"])
+        server = cfg["server"]
         retval = utils.process.system("ping -c 1 '%s'" % server)
         self.logger.debug("Pinged server with %s" % retval)
         if retval != 0:
