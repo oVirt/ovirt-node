@@ -27,13 +27,11 @@ import logging
 import subprocess
 import shlex
 
-logger = logging.getLogger(__name__)
-
 
 class Storage:
     def __init__(self):
-        logger = logging.getLogger(_functions.PRODUCT_SHORT)
-        logger.propagate = False
+        #logger = logging.getLogger(PRODUCT_SHORT)
+        #logger.propagate = False
         OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5
         self.BOOT_SIZE = 50
@@ -63,9 +61,9 @@ class Storage:
                 for disk in init:
                     skip = False
                     if disk_count < 1:
-                        self.ROOTDRIVE = disk
+                        self.ROOTDRIVE = _functions.translate_multipath_device(disk)
                         if len(init) == 1:
-                            self.HOSTVGDRIVE = disk
+                            self.HOSTVGDRIVE = _functions.translate_multipath_device(disk)
                         disk_count = disk_count + 1
                     else:
                         for hostvg in self.HOSTVGDRIVE.split(","):
@@ -238,6 +236,7 @@ class Storage:
             # XXX fails with spaces in device names (TBI)
             # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
             # create/reload failed on 0QEMU   QEMU HARDDISK  drive-scsi0-0-0p1
+            _functions.system("kpartx -a '%s'" % drive)
             _functions.system("partprobe")
             # partprobe fails on cdrom:
             # Error: Invalid partition table - recursive partition on /dev/sr0.
@@ -841,6 +840,7 @@ class Storage:
                          str(self.RootBackup_end) + "M\"")
             logger.debug(parted_cmd)
             _functions.system(parted_cmd)
+            _functions.system("sync ; udevadm settle ; partprobe")
             parted_cmd = ("parted \"" + self.ROOTDRIVE +
                          "\" -s \"set 2 boot on\"")
             logger.debug(parted_cmd)

@@ -316,13 +316,23 @@ initrd /initrd0.img
                     _functions.system("service iscsi restart")
                 except:
                     pass
-        if _functions.findfs("RootBackup"):
-            candidate = "RootBackup"
-        elif _functions.findfs("RootUpdate"):
-            candidate = "RootUpdate"
-        elif _functions.findfs("RootNew"):
-            candidate = "RootNew"
-        else:
+
+        candidate = None
+        candidate_names = ["RootBackup", "RootUpdate", "RootNew"]
+        for trial in range(1, 3):
+            time.sleep(1)
+            _functions.system("partprobe")
+            for candidate_name in candidate_names:
+                if _functions.findfs(candidate_name):
+                    candidate = candidate_name
+                    break
+            logger.debug("Trial %s to find candidate (%s)" % (trial,
+                                                              candidate))
+            if candidate:
+                logger.debug("Found candidate: %s" % candidate)
+                break
+
+        if not candidate:
             logger.error("Unable to find root partition")
             label_debug = ''
             for label in os.listdir("/dev/disk/by-label"):
@@ -332,7 +342,6 @@ initrd /initrd0.img
                                       stderr=subprocess.STDOUT).stdout.read()
             logger.debug(label_debug)
             return False
-        logger.debug("candidate: " + candidate)
 
         if _functions.is_iscsi_install():
             _functions.system("mount LABEL=%s /boot" % self.boot_candidate)

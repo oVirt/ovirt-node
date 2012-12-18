@@ -1090,7 +1090,9 @@ def is_valid_port(port_number):
         return False
 
 # Cleans partition tables
-def wipe_partitions(drive):
+def wipe_partitions(_drive):
+    drive = translate_multipath_device(_drive)
+    logger.info("Wiping partitions on: %s->%s" % (_drive, drive))
     logger.info("Removing HostVG")
     if os.path.exists("/dev/mapper/HostVG-Swap"):
         system_closefds("swapoff -a")
@@ -1099,12 +1101,14 @@ def wipe_partitions(drive):
         if "HostVG" in lv:
             system_closefds("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
     logger.info("Wiping old boot sector")
-    system_closefds("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
-    # zero out the GPT secondary header
-    logger.info("Wiping secondary gpt header")
-    disk_kb = subprocess_closefds("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
-    disk_kb_count = disk_kb.stdout.read()
-    system_closefds("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
+#    system_closefds("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("parted -s \""+ drive +"\" mklabel loop &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("wipefs -a \""+ drive +"\" &>>" + OVIRT_TMP_LOGFILE)
+    ## zero out the GPT secondary header
+    #logger.info("Wiping secondary gpt header")
+    #disk_kb = subprocess_closefds("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
+    #disk_kb_count = disk_kb.stdout.read()
+    #system_closefds("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("sync")
 
 def test_ntp_configuration(self):
