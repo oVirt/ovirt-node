@@ -1385,12 +1385,26 @@ def cpu_details():
     except:
         return "(Failed to Establish Libvirt Connection)"
     dom = parseString(libvirt_capabilities)
-    vendorTag = dom.getElementsByTagName('vendor')[0].toxml()
-    modelTag = dom.getElementsByTagName('model')[0].toxml()
-    topologyTag = dom.getElementsByTagName('topology')[0].toxml()
-    cpu_model = modelTag.replace('<model>','').replace('</model>','')
-    cpu_vendor = vendorTag.replace('<vendor>','').replace('</vendor>','')
-    cpu_topology = topologyTag.replace('<topology>','').replace('</topology>','').split()
+    # get cpu section
+    cpu = parseString(dom.getElementsByTagName('cpu')[0].toxml())
+    try:
+        vendorTag = cpu.getElementsByTagName('vendor')[0].toxml()
+        cpu_vendor = vendorTag.replace('<vendor>','').replace('</vendor>','')
+    except:
+        cpu_vendor = "Unknown Vendor"
+    try:
+        modelTag = cpu.getElementsByTagName('model')[0].toxml()
+        cpu_model = modelTag.replace('<model>','').replace('</model>','')
+    except:
+        if cpu_vendor == "Unknown Vendor":
+            cpu_model = ""
+        else:
+            cpu_model = "Unknown Model"
+    try:
+        topologyTag = cpu.getElementsByTagName('topology')[0].toxml()
+        cpu_topology = topologyTag.replace('<topology>','').replace('</topology>','').split()
+    except:
+        cpu_topology = "Unknown"
     status_msg += "CPU Name: %s\n" % cpu_dict["model name"].replace("  "," ")
     status_msg += "CPU Type: %s %s\n" % (cpu_vendor, cpu_model)
     if kvm_enabled() == 1 and virt_cpu_flags_enabled():
@@ -1403,15 +1417,18 @@ def cpu_details():
             status_msg += "NX Flag: Yes\n"
         else:
             status_msg += "NX Flag: No\n"
-    if cpu_vendor == "AMD":
+    elif cpu_vendor == "AMD":
         if "evp" in cpu_dict["flags"]:
             status_msg += "EVP Flag: Yes\n"
         else:
             status_msg += "EVP Flag: No\n"
-    cpu_sockets=cpu_topology[2].split("=")[1].replace('"',"")
-    status_msg += "CPU Sockets: %s\n" % cpu_sockets
-    cpu_cores=cpu_topology[1].split("=")[1].replace('"',"")
-    status_msg += "CPU Cores: %s\n" % cpu_cores
+    if cpu_topology == "Unknown":
+        status_msg += "Unable to determine CPU Topology"
+    else:
+        cpu_sockets=cpu_topology[2].split("=")[1].replace('"',"")
+        status_msg += "CPU Sockets: %s\n" % cpu_sockets
+        cpu_cores=cpu_topology[1].split("=")[1].replace('"',"")
+        status_msg += "CPU Cores: %s\n" % cpu_cores
     return status_msg
 
 def get_ssh_hostkey(variant="rsa"):
