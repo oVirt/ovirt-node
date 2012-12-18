@@ -5,13 +5,13 @@
 edit-node \- edit a LiveCD image with packages and various configuration
 options
 .SH SYNOPSIS
-edit-node [<OPTIONS>] [<ISO>]
+edit-node [OPTIONS] [ISO]
 .SH DESCRIPTION
 edit-node extracts the file system from within a livecd based iso and modifies the
 image with various options including ssh keys, user passwords and package installation
 .SH OPTIONS
 .IP \fB\-\-name=NAME\fR 
-Name of new LiveOS (don't include .iso, it will be added
+Name of new LiveOS (don't include .iso, it will be added automatically)
 .IP \fB\-\-output=OUTPUT\fR
 Specify a directory for the edited iso file
 .IP \fB\-\-passwd=USER,ENCRYPTED_PASSWORD\fR
@@ -33,7 +33,7 @@ Prints current version information from /etc/system-release
 .IP \fB\-\--print-manifests\fR
 Prints a list of manifests files within the iso
 .IP \fB\-\--print-manifest=MANIFEST\fR
-Print specified manifest file to stdout
+Prints the specified manifest file to stdout
 .IP \fB\-\--get-manifests=MANIFEST\fR
 Creates a tar file of manifests files within the iso
 .IP \fB\-\--print-file-manifest\fR
