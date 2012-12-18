@@ -27,10 +27,52 @@ which communicate with each other.
 
 import argparse
 import logging
+import logging.config
 
-logging.basicConfig(level=logging.DEBUG,
-                    filename="/tmp/app.log", filemode="w",
-                    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(name)s %(process)d %(message)s'
+        },
+        'simple': {
+            'format': '%(asctime)s %(levelname)10s %(message)s'
+        },
+    },
+    'handlers': {
+        'file':{
+            'level':'INFO',
+            'class':'logging.FileHandler',
+            'formatter': 'simple',
+            'filename':'/tmp/ovirt.log',
+            'mode': 'w'
+        },
+        'debug':{
+            'level':'DEBUG',
+            'class':'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename':'/tmp/ovirt.debug.log',
+            'mode': 'w'
+        },
+    },
+    'loggers': {
+        'ovirt.node': {
+            'handlers':['debug'],
+            'propagate': True,
+            'level':'DEBUG',
+        },
+        'ovirt.node': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    }
+}
+logging.config.dictConfig(LOGGING)
+#logging.basicConfig(level=logging.DEBUG,
+#                    filename="/tmp/app.log", filemode="w",
+#                    format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
 
 import ovirt.node.ui.tui
@@ -45,6 +87,9 @@ class Application(base.Base):
 
     def __init__(self, plugin_base, ui_backend="urwid"):
         super(Application, self).__init__()
+        self.logger.info(("Starting '%s' application " +
+                          "with '%s' UI") % (plugin_base, ui_backend))
+
         self.__parse_cmdline()
 
         ui_backend_class = {
@@ -69,6 +114,8 @@ class Application(base.Base):
             self.logger.debug("Setting config file: %s (%s)" % (
                                         self.args.defaults,
                                         defaults.OVIRT_NODE_DEFAULTS_FILENAME))
+
+        self.logger.debug("Commandline arguments: %s" % self.args)
 
     def __load_plugins(self):
         self.plugins = []

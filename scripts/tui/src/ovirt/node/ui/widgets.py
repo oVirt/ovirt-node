@@ -145,7 +145,7 @@ class PluginMenu(urwid.WidgetWrap):
                 item = PluginMenuEntry(title, plugin)
                 items.append(item)
             else:
-                LOGGER.warning("No UI page for plugin %s" % plugin)
+                LOGGER.debug("No UI page for plugin %s" % plugin)
 
         self.__walker = urwid.SimpleListWalker(items)
 

@@ -106,7 +106,7 @@ class UrwidTUI(ovirt.node.ui.Window):
 
     def __init__(self, app):
         super(UrwidTUI, self).__init__(app)
-        self.logger.info("Creating urwid tui for '%s'" % app)
+        self.logger.debug("Creating urwid tui for '%s'" % app)
         self.logger.debug("Detected encoding: %s" % urwid.get_encoding_mode())
 
     def show_body(self, body):
