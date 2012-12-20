@@ -17,7 +17,6 @@ vhostmd
 #VDSM
 vdsm-cli
 vdsm-reg
-ltrace
 # keyboard layout
 system-config-keyboard-base
 # plymouth stuff
