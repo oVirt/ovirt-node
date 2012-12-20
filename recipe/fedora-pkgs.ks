@@ -14,9 +14,11 @@ less
 ## @TODO: added by archipel to report in rhev.pkgs
 # host statistics rhbz#588852
 vhostmd
-#VDSM
-vdsm-cli
+
+# oVirt
 vdsm-reg
+ovirt-host-deploy-offline
+
 # keyboard layout
 system-config-keyboard-base
 # plymouth stuff
