@@ -991,6 +991,10 @@ def storage_auto():
     if not _functions.OVIRT_VARS["OVIRT_INIT"] == "":
         #force root install variable for autoinstalls
         _functions.OVIRT_VARS["OVIRT_ROOT_INSTALL"] = "y"
+        if check_existing_hostvg("") or check_existing_hostvg("","AppVG"):
+            logger.error("HostVG/AppVG exists on a separate disk")
+            logger.error("Manual Intervention required")
+            return False
         if storage.perform_partitioning():
             return True
     else:

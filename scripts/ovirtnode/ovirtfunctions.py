@@ -1143,11 +1143,13 @@ def get_dm_device(device):
             dm = "/dev/mapper/" + dm
             return dm
 
-def check_existing_hostvg(install_dev):
+def check_existing_hostvg(install_dev, vg_name=None):
+    if vg_name == None:
+        vg_name = "HostVG"
     if install_dev is "":
-        devices_cmd = "pvs --separator=\":\" -o pv_name,vg_name --noheadings 2>/dev/null| grep HostVG |awk -F \":\" {'print $1'}"
+        devices_cmd = "pvs --separator=\":\" -o pv_name,vg_name --noheadings 2>/dev/null| grep %s |awk -F \":\" {'print $1'}" % vg_name
     else:
-        devices_cmd="pvs --separator=: -o pv_name,vg_name --noheadings 2>/dev/null| grep -v '%s' | grep HostVG | awk -F: {'print $1'}" % install_dev
+        devices_cmd="pvs --separator=: -o pv_name,vg_name --noheadings 2>/dev/null| grep -v '%s' | grep %s | awk -F: {'print $1'}" % (install_dev, vg_name)
     devices_cmd = subprocess_closefds(devices_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     devices = devices_cmd.stdout.read().strip()
     if len(devices) > 0:
@@ -1155,7 +1157,7 @@ def check_existing_hostvg(install_dev):
         for device in devices.split(":"):
             logger.error(device)
         logger.error("The installation cannot proceed until the device is removed")
-        logger.error("from the system of the HostVG volume group is removed")
+        logger.error("from the system of the %s volume group is removed" % vg_name)
         return devices
     else:
         return False
