@@ -421,7 +421,7 @@ def rhn_auto():
         if reg_rc == 2:
             msg = "Invalid Username / Password "
         elif reg_rc == 3:
-            msg = "Unable to retreive satellite certificate"
+            msg = "Unable to retrieve satellite certificate"
         else:
             msg = "Check ovirt.log for details"
             logger.info("RHN Configuration Failed")
@@ -630,7 +630,7 @@ class Plugin(PluginBase):
             if reg_rc == 2:
                 msg = "Invalid Username / Password "
             elif reg_rc == 3:
-                msg = "Unable to retreive satellite certificate"
+                msg = "Unable to retrieve satellite certificate"
             else:
                 msg = "Check ovirt.log for details"
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration",
