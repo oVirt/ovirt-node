@@ -716,6 +716,8 @@ class LiveImageEditor(LiveImageCreator):
             pkg = "uid-mod"
         elif options.gidmod:
             pkg = "gid-mod"
+        elif options.password:
+            pkg = "password-set"
         print "Creating Manifests"
         # Create post-image processing manifests
         cmd = "LC_ALL=C rpm -qa --qf '%%{name}-%%{version}-%%{release}.%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > /manifest-%s-%s-rpm.txt" % (timestamp, pkg)
@@ -1504,8 +1506,11 @@ def main():
                     n = options.install
                 else:
                     n = ""
-                finished_iso = "%s.%s.iso" % \
-                    (edited_iso.strip("edited.iso"), n.replace(" ","-"))
+                if len(n) > 0:
+                    n = n + "."
+                rel_tag=LiveOS.strip(".iso").split(".")[-1]
+                finished_iso = "%s.%s%s.iso" % \
+                    (edited_iso.strip("%s.edited.iso" %rel_tag), n.replace(" ","-"), rel_tag)
                 shutil.move(edited_iso, finished_iso)
 
                 logging.info("%s.iso saved to %s"  % (editor.name, finished_iso))
