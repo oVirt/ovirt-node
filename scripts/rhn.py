@@ -28,7 +28,7 @@ import _snack
 
 RHN_CONFIG_FILE = "/etc/sysconfig/rhn/up2date"
 RHSM_CONFIG_FILE = "/etc/rhsm/rhsm.conf"
-
+RHN_XMLRPC_ADDR = "https://xmlrpc.rhn.redhat.com/XMLRPC"
 
 def run_rhnreg(serverurl="", cacert="", activationkey="", username="",
                password="", profilename="", proxyhost="", proxyuser="",
@@ -530,8 +530,10 @@ class Plugin(PluginBase):
             pass
         self.rhn_actkey = Entry(40, "")
         if rhn_check():
-            if self.rhn_url.value() == "https://xmlrpc.rhn.redhat.com/XMLRPC" \
-                                        or len(self.rhn_url.value()) == 0:
+            if self.rhn_url.value() == RHN_XMLRPC_ADDR or \
+                                       len(self.rhn_url.value()) == 0 and \
+                                       RHN_XMLRPC_ADDR in \
+                                       self.rhn_conf["serverURL"]:
                 self.public_rhn.setValue("*")
                 self.rhn_url.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
                 self.rhn_ca.setFlags(_snack.FLAG_DISABLED, _snack.FLAGS_SET)
