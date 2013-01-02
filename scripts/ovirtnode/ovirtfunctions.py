@@ -793,10 +793,9 @@ def ovirt_store_config_atomic(filename, source=None):
             # handle non-existent files that need to be created
             if source is not None:
                 open(filename, 'a+').close()
-            with open('/config/files', 'r') as f:
-                if not filename in f:
-                    with open('/config/files', 'a+') as f:
-                        f.write("%s\n" % filename)
+            if not filename in open('/config/files','r').read():
+                with open('/config/files', 'a+') as f:
+                    f.write("%s\n" % filename)
                     logger.info("Successfully persisted: " + filename)
         except:
             if tmp_destination is not None and os.path.exists(tmp_destination):
