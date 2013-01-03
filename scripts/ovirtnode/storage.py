@@ -906,7 +906,7 @@ class Storage:
             for drive in self.HOSTVGDRIVE.strip(",").split(","):
                 space = self.get_drive_size(drive)
                 HOSTVGDRIVESPACE = HOSTVGDRIVESPACE + space
-            ROOT_NEED_SIZE = self.ROOT_SIZE * 2
+            ROOT_NEED_SIZE = self.ROOT_SIZE * 2 + self.EFI_SIZE
             HOSTVG_NEED_SIZE = (int(self.SWAP_SIZE) + int(self.CONFIG_SIZE) +
                                 int(self.LOGGING_SIZE) + int(min_data_size))
             drive_space_dict["ROOTDRIVESPACE"] = ROOTDRIVESPACE
