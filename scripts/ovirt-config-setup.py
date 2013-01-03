@@ -2188,24 +2188,28 @@ class NodeConfigScreen():
                                         self.__current_page = (
                                              NETWORK_DETAILS_PAGE)
                                 else:
-                                    warn = None
-                                    self._create_warn_screen()
-                                    title = "Confirm NIC Configuration"
-                                    message = ("Unsaved network changes " +
-                                      "detected, save and continue to " +
-                                      "NIC configuration?")
-                                    warn = ButtonChoiceWindow(self.screen,
-                                           title, message)
-                                    if warn == "ok":
-                                        # apply and continue
-                                        self.process_network_config()
+                                    if pressed == PING_BUTTON:
                                         self.__current_page = (
-                                            NETWORK_DETAILS_PAGE)
-                                        self.preset_network_config = None
+                                             NETWORK_PAGE)
                                     else:
-                                        # Do not apply, return
-                                        self.preset_network_config = (
-                                            current_network_config)
+                                        warn = None
+                                        self._create_warn_screen()
+                                        title = "Confirm NIC Configuration"
+                                        message = ("Unsaved network changes " +
+                                          "detected, save and continue to " +
+                                          "NIC configuration?")
+                                        warn = ButtonChoiceWindow(self.screen,
+                                               title, message)
+                                        if warn == "ok":
+                                            # apply and continue
+                                            self.process_network_config()
+                                            self.__current_page = (
+                                                NETWORK_DETAILS_PAGE)
+                                            self.preset_network_config = None
+                                        else:
+                                            # Do not apply, return
+                                            self.preset_network_config = (
+                                                current_network_config)
                         else:
                             self.__current_page = menu_choice
                         if self.net_apply_config == 1:
