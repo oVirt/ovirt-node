@@ -25,6 +25,7 @@ Configure KDump
 from ovirt.node import utils, plugins, ui, valid
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
+from ovirt.node.utils import console
 
 
 class Plugin(plugins.NodePlugin):
@@ -70,8 +71,8 @@ class Plugin(plugins.NodePlugin):
         # FIXME improve validation for ssh and nfs
         return {
                 "kdump.type": valid.Options(dict(self._types).keys()),
-                "kdump.ssh_location": valid.NoSpaces(),
-                "kdump.nfs_location": valid.NoSpaces(),
+                "kdump.ssh_location": valid.Empty() | valid.NoSpaces(),
+                "kdump.nfs_location": valid.Empty() | valid.NoSpaces(),
             }
 
     def ui_content(self):
@@ -140,5 +141,8 @@ class Plugin(plugins.NodePlugin):
                 model.update(None, None, None)
             txs += model.transaction()
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
-        progress_dialog.run()
+        with self.application.ui.suspended():
+            progress_dialog = console.TransactionProgress(txs, self)
+            progress_dialog.run()
+            console.writeln("\nPlease press any key to continue")
+            console.wait_for_keypress()
