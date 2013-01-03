@@ -18,6 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import base, exceptions
+import augeas as _augeas
+import hashlib
+import system_config_keyboard.keyboard
+import traceback
 
 """
 Utility functions.
@@ -26,11 +31,6 @@ informations based on static config files.
 Use the .config package for stuff related to configuration files.
 And use the model.py module for oVirt Node's defaults file.
 """
-
-from ovirt.node import base, exceptions
-import augeas as _augeas
-import hashlib
-import system_config_keyboard.keyboard
 
 
 class AugeasWrapper(base.Base):
@@ -203,11 +203,18 @@ class Transaction(list, base.Base):
     Step B
     'Stepped B'
 
->>> tx = Transaction("Steps", [StepA(), StepB(), StepC()])
+    >>> tx = Transaction("Steps", [StepA(), StepB(), StepC()])
     >>> tx()
     Traceback (most recent call last):
         ...
     TransactionError: 'Transaction failed: Step C'
+
+    >>> txs = [
+    ...     Transaction("Step A", [StepA()]),
+    ...     Transaction("Step B", [StepB()])
+    ... ]
+    >>> txs
+    [[<StepA 'None'>], [<StepB 'None'>]]
     """
     def __init__(self, title, elements=[]):
         super(Transaction, self).__init__()
@@ -252,6 +259,23 @@ class Transaction(list, base.Base):
                                                "%s" % e.message)
         self.logger.info("Transaction '%s' succeeded" % self)
         return True
+
+    def __str__(self):
+        return "<%s '%s' with %s>" % (self.__class__.__name__,
+                                      self.title, list.__str__(self))
+
+    def step(self):
+        try:
+            self.logger.debug("Preparing transaction %s" % self)
+            self.prepare()
+            for idx, e in enumerate(self):
+                yield (idx, e)
+        except Exception as e:
+            self.logger.warning("'%s' on transaction '%s': %s - %s" %
+                                (type(e), self, e, e.message))
+            self.logger.debug(str(traceback.format_exc()))
+            raise e
+        self.logger.debug("Finished transaction %s successfully" % self)
 
     class Element(base.Base):
         title = None

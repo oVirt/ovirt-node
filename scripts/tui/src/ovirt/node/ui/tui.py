@@ -23,13 +23,11 @@
 The urwid TUI base library
 """
 
-import time
-import urwid
-
-from ovirt.node import base
-from ovirt.node import ui
+from ovirt.node import base, ui
 import ovirt.node.ui.builder
 import ovirt.node.ui.widgets
+import time
+import urwid
 
 
 def inherits(obj, t):
@@ -53,6 +51,8 @@ class UrwidTUI(ovirt.node.ui.Window):
 
     header = u"\n Configuration TUI\n"
     footer = u"Press ctrl+c to quit"
+
+    with_menu = True
 
     element_styles = {
         "text": "black",
@@ -91,9 +91,10 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('plugin.widget.button.disabled', element_styles["disabled"]),
                ('plugin.widget.label', element_styles["text"]),
                ('plugin.widget.label.keyword', element_styles["label"]),
-               ('plugin.widget.progressbar.box', 'light gray'),
+               ('plugin.widget.progressbar.box', element_styles["disabled"]),
                ('plugin.widget.progressbar.uncomplete', None),
-               ('plugin.widget.progressbar.complete', None, 'light gray'),
+               ('plugin.widget.progressbar.complete', "white",
+                element_styles["disabled"]),
                ('plugin.widget.options', element_styles["label"]),
                ('plugin.widget.options.label', element_styles["label"]),
                ('plugin.widget.dialog', None),
@@ -104,19 +105,34 @@ class UrwidTUI(ovirt.node.ui.Window):
                ('plugin.widget.checkbox', element_styles["label"]),
                ]
 
-    def __init__(self, app):
+    def __init__(self, app, with_menu=True):
         super(UrwidTUI, self).__init__(app)
+        self.with_menu = with_menu
         self.logger.debug("Creating urwid tui for '%s'" % app)
         self.logger.debug("Detected encoding: %s" % urwid.get_encoding_mode())
 
-    def show_body(self, body):
+    def switch_to_plugin(self, plugin, check_for_changes=True):
+        self.logger.debug("Switching to plugin " +
+                          "%s, with checks? %s" % (plugin, check_for_changes))
+        if check_for_changes and self._check_outstanding_changes():
+            return
+        start = time.time()
+        self._current_plugin = plugin
+        plugin_page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
+        self.__display_as_page(plugin_page)
+        stop = time.time()
+        diff = stop - start
+        self.logger.debug("Build and displayed plugin_page in %ss" %
+                          diff)
+
+    def _show_body(self, body):
         """
         """
         assert inherits(body, ui.Page)
         widget = ui.builder.build_page(self, self._current_plugin, body)
         self.__display_as_body(widget)
 
-    def show_page(self, page):
+    def _show_page(self, page):
         """Shows the ui.Page as a page.
         This transforms the abstract ui.Page to a urwid specififc version
         and displays it.
@@ -125,7 +141,7 @@ class UrwidTUI(ovirt.node.ui.Window):
         widget = ui.builder.build_page(self, self._current_plugin, page)
         self.__display_as_page(widget)
 
-    def show_dialog(self, dialog):
+    def _show_dialog(self, dialog):
         """Shows the ui.Dialog as a dialog.
         This transforms the abstract ui.Dialog to a urwid specififc version
         and displays it.
@@ -165,25 +181,34 @@ class UrwidTUI(ovirt.node.ui.Window):
         self.__loop = urwid.MainLoop(self.__main_frame,
                               self._convert_palette(),
                               input_filter=self.__filter_hotkeys)
+
+        self.navigate.to_first_plugin()
+
         self.__loop.run()
 
-    def __build_menu(self):
+    def __build_plugin_menu(self):
         self.__menu = ovirt.node.ui.widgets.PluginMenu(self._plugins)
 
         def menu_item_changed(plugin):
-            self._display_plugin(plugin)
+            self.switch_to_plugin(plugin)
         urwid.connect_signal(self.__menu, 'changed', menu_item_changed)
 
     def __create_screen(self):
-        self.__build_menu()
+        columns = []
+
         self.__page_frame = urwid.Frame(urwid.Filler(urwid.Text("")))
-        self.__menu.set_focus(0)
+
+        if self.with_menu:
+            self.__build_plugin_menu()
+            self.__menu.set_focus(0)
+            columns += [("weight", 0.3, self.__menu)]
 
         self.__notice = urwid.Text("Note: ")
         self.__notice_filler = urwid.Filler(self.__notice)
         self.__notice_attrmap = urwid.AttrMap(self.__notice_filler, "notice")
-        menu_frame_columns = urwid.Columns([("weight", 0.3, self.__menu),
-                              self.__page_frame], 4)
+        columns += [self.__page_frame]
+
+        menu_frame_columns = urwid.Columns(columns, 4)
 
         body = urwid.Pile([
 #                           ("fixed", 3, self.__notice_attrmap),
@@ -228,18 +253,6 @@ class UrwidTUI(ovirt.node.ui.Window):
 #        filler = urwid.Filler(page, ("fixed top", 1), height=35)
         filler = urwid.Pile([page])
         self.__page_frame.body = filler
-
-    def _display_plugin(self, plugin):
-        if self._check_outstanding_changes():
-            return
-        start = time.time()
-        self._current_plugin = plugin
-        plugin_page = ovirt.node.ui.builder.page_from_plugin(self, plugin)
-        self.__display_as_page(plugin_page)
-        stop = time.time()
-        diff = stop - start
-        self.logger.debug("Build and displayed plugin_page in %ss" %
-                          diff)
 
     def __display_as_dialog(self, body, title, escape_key="esc"):
         self.logger.debug("Displaying dialog: %s / %s" % (body, title))
@@ -318,7 +331,7 @@ class UrwidTUI(ovirt.node.ui.Window):
             if not hasattr(self, "_error_dialog") or not self._error_dialog:
                 d = ui.Dialog("Error", [("dialog.error", ui.Label(msg))])
                 d.buttons = []
-                self._error_dialog = self.show_dialog(d)
+                self._error_dialog = self._show_dialog(d)
         else:
             if hasattr(self, "_error_dialog") and self._error_dialog:
                 self._error_dialog.close()

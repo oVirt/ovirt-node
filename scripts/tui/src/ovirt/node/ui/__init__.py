@@ -19,7 +19,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
-import traceback
 
 """
 This contains abstract UI Elements
@@ -88,6 +87,116 @@ class ContainerElement(Element):
         if v:
             self.children = v
         return self.children
+
+
+class Window(Element):
+    """Abstract Window definition
+    """
+
+    app = None
+
+    def __init__(self, app):
+        super(Window, self).__init__()
+        self.logger.info("Creating UI for application '%s'" % app)
+        self.app = app
+
+        self._plugins = {}
+        self._hotkeys = {}
+
+        self.footer = None
+
+        self.navigate = Window.Navigation(self)
+
+    def register_plugin(self, title, plugin):
+        """Register a plugin to be shown in the UI
+        """
+        if title in self._plugins:
+            raise RuntimeError("Plugin with same name is " +
+                               "already registered: %s" % title)
+        self._plugins[title] = plugin
+
+    def register_hotkey(self, hotkey, cb):
+        """Register a hotkey
+        """
+        if type(hotkey) is str:
+            hotkey = [hotkey]
+        self.logger.debug("Registering hotkey '%s': %s" % (hotkey, cb))
+        self._hotkeys[str(hotkey)] = cb
+
+    def registered_plugins(self):
+        """Return a list of tuples of all registered plugins
+        """
+        return self._plugins.items()
+
+    def switch_to_plugin(self, plugin, check_for_changes=True):
+        """Show the given plugin
+        """
+        raise NotImplementedError
+
+    class Navigation(base.Base):
+        """A convenience class to navigate through a window
+        """
+
+        window = None
+        __current_plugin = None
+
+        def __init__(self, window):
+            self.window = window
+            super(Window.Navigation, self).__init__()
+
+        def index(self):
+            plugins = self.window.registered_plugins()
+            get_rank = lambda name_plugin: name_plugin[1].rank()
+            self.logger.debug("Available plugins: %s" % plugins)
+            sorted_plugins = [p for n, p in sorted(plugins, key=get_rank)
+                              if p.has_ui()]
+            self.logger.debug("Available plugins with ui: %s" % sorted_plugins)
+            return sorted_plugins
+
+        def to_plugin(self, plugin_candidate):
+            """Goes to the plugin (by instance or type)
+            Args
+                idx: The plugin instance/type to go to
+            """
+            self.logger.debug("Switching to plugin %s" % plugin_candidate)
+            plugin = self.window.app.get_plugin(plugin_candidate)
+            self.__current_plugin = plugin
+            self.window.switch_to_plugin(plugin, check_for_changes=False)
+            self.logger.debug("Switched to plugin %s" % plugin)
+
+        def to_nth(self, idx, is_relative=False):
+            """Goes to the plugin (by idx)
+            Any pending changes are ignored.
+
+            Args
+                idx: The plugin idx to go to
+            """
+            plugins = self.index()
+            self.logger.debug("Switching to page %s (%s)" % (idx, plugins))
+            if is_relative:
+                idx += plugins.index(self.__current_plugin)
+            plugin = plugins[idx]
+            self.to_plugin(plugin)
+
+        def to_next_plugin(self):
+            """Goes to the next plugin, based on the current one
+            """
+            self.to_nth(1, True)
+
+        def to_previous_plugin(self):
+            """Goes to the previous plugin, based on the current one
+            """
+            self.to_nth(-1, True)
+
+        def to_first_plugin(self):
+            """Goes to the first plugin
+            """
+            self.to_nth(0)
+
+        def to_last_plugin(self):
+            """Goes to the last plugin
+            """
+            self.to_nth(-1)
 
 
 class Page(ContainerElement):
@@ -189,6 +298,8 @@ class PasswordEntry(Entry):
 
 
 class Button(InputElement):
+    action = None
+
     def __init__(self, label, enabled=True):
         super(Button, self).__init__(label, enabled)
         self.text(label)
@@ -316,55 +427,6 @@ class Table(InputElement):
         return self._selected
 
 
-class Window(Element):
-    """Abstract Window definition
-    """
-
-    def __init__(self, app):
-        super(Window, self).__init__()
-        self.logger.info("Creating UI for application '%s'" % app)
-        self.app = app
-
-        self._plugins = {}
-        self._hotkeys = {}
-
-        self.footer = None
-
-    def register_plugin(self, title, plugin):
-        """Register a plugin to be shown in the UI
-        """
-        self._plugins[title] = plugin
-
-    def register_hotkey(self, hotkey, cb):
-        """Register a hotkey
-        """
-        if type(hotkey) is str:
-            hotkey = [hotkey]
-        self.logger.debug("Registering hotkey '%s': %s" % (hotkey, cb))
-        self._hotkeys[str(hotkey)] = cb
-
-    def show_dialog(self, dialog):
-        """Show a dialog.
-        The dialog can be closed using dialog.close()
-
-        Args:
-            dialog: The dialog to be shown
-        """
-        raise NotImplementedError
-
-    def show_page(self, page):
-        """Show / switch to a page.
-        Displays the given page (which does not need to be patr of a plugin)
-
-        Args:
-            page: The page to be shown
-        """
-        raise NotImplementedError
-
-    def run(self):
-        raise NotImplementedError
-
-
 class TransactionProgressDialog(Dialog):
     def __init__(self, transaction, plugin, initial_text=""):
         self.transaction = transaction
@@ -383,7 +445,7 @@ class TransactionProgressDialog(Dialog):
         self._progress_label.set_text("\n".join(self.texts))
 
     def run(self):
-        self.plugin.application.ui.show_dialog(self)
+        self.plugin.application.ui._show_dialog(self)
         self._close_button.enabled(False)
         if self.transaction:
             self.logger.debug("Initiating transaction")
@@ -394,16 +456,12 @@ class TransactionProgressDialog(Dialog):
 
     def __run_transaction(self):
         try:
-            self.logger.debug("Preparing transaction %s" % self.transaction)
-            self.transaction.prepare()  # Just to display something in dry mode
-            for idx, e in enumerate(self.transaction):
-                txt = "(%s/%s) %s" % (idx + 1, len(self.transaction), e.title)
+            for idx, tx_element in self.transaction.step():
+                txt = "(%s/%s) %s" % (idx + 1, len(self.transaction),
+                                      tx_element.title)
                 self.add_update(txt)
-                self.plugin.dry_or(lambda: e.commit())
+                self.plugin.dry_or(lambda: tx_element.commit())
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
             self.add_update("\nAn error occurred while applying the changes:")
             self.add_update("%s" % e.message)
-            self.logger.warning("'%s' on transaction '%s': %s - %s" %
-                                (type(e), self.transaction, e, e.message))
-            self.logger.debug(str(traceback.format_exc()))

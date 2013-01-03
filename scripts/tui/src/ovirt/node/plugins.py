@@ -234,6 +234,8 @@ class NodePlugin(base.Base):
         if type(change) is not dict:
             self.logger.warning("Change is not a dict: %s" % change)
 
+        change = Changeset(change)
+
         self.logger.debug("Passing UI change to callback on_change: %s" % \
                           change)
         try:
@@ -372,6 +374,8 @@ class Changeset(dict, base.Base):
         return any([key in self for key in keys])
 
     def __getitem__(self, key):
+        """Diferent to a dict: We return none if a key does not exist
+        """
         if key in self:
             return dict.__getitem__(self, key)
         return None

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# support_page.py - Copyright (C) 2012 Red Hat, Inc.
+# ovirt-config-installer.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -18,47 +18,28 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node.plugins import NodePlugin
-from ovirt.node import ui
 
 """
-A plugin for a support page
+Create an setup application instance an start it.
 """
 
+from ovirt.node import app, installer, plugins
 
-class Plugin(NodePlugin):
+
+if __name__ == '__main__':
+    app = app.Application(installer)
+    app.run()
+
+
+class Plugin(plugins.NodePlugin):
+    transactions = None
+
     def __init__(self, application):
-        # Register F8: Display this plugin when F( is pressed
-        show_plugin = lambda: application.ui.switch_to_plugin(self)
-        application.ui.register_hotkey(["f8"], show_plugin)
         super(Plugin, self).__init__(application)
+        application.ui.with_menu = False
 
     def name(self):
-        return "Support"
-
-    def rank(self):
-        return 999
+        return "installer"
 
     def has_ui(self):
         return False
-
-    def ui_content(self):
-        widgets = [
-            ("features.info", ui.Label("FIXME Support info"))
-        ]
-
-        page = ui.Page(widgets)
-        page.buttons = []
-        return page
-
-    def model(self):
-        return {}
-
-    def validators(self):
-        return {}
-
-    def on_change(self, changes):
-        pass
-
-    def on_merge(self, changes):
-        pass

@@ -34,10 +34,13 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     _widgets = None
 
     def name(self):
-        return "Tools (ping)"
+        return "Networking/Ping"
 
     def rank(self):
         return 999
+
+    def has_ui(self):
+        return False
 
     def model(self):
         """Returns the model of this plugin

@@ -22,6 +22,7 @@ from ovirt.node import plugins, ui, valid, utils
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 from ovirt.node.utils import network
+import ovirt.node.setup.ping
 """
 Network page plugin
 
@@ -120,6 +121,8 @@ class Plugin(plugins.NodePlugin):
             ("nics", ui.Table("Available System NICs",
                         "Device   Status         Model          MAC Address",
                         self._get_nics())),
+
+            ("button.ping", ui.Button("Ping")),
         ]
         # Save it "locally" as a dict, for better accessability
         self._widgets.update(dict(widgets))
@@ -285,6 +288,12 @@ class Plugin(plugins.NodePlugin):
         if "dialog.nic.save" in changes:
             self.logger.debug("Save and close NIC")
             self._nic_dialog.close()
+
+        if "button.ping" in changes:
+            self.logger.debug("Opening ping page")
+            plugin_type = ovirt.node.setup.ping.Plugin
+            self.application.ui.navigate.to_plugin(plugin_type)
+            return
 
         # This object will contain all transaction elements to be executed
         txs = utils.Transaction("DNS and NTP configuration")

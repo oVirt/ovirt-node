@@ -54,3 +54,6 @@ class ProductInformation(base.Base):
         self.PRODUCT_SHORT = augg("PRODUCT_SHORT") or "oVirt"
         self.VERSION = augg("VERSION")
         self.RELEASE = augg("RELEASE")
+
+    def __str__(self):
+        return "%s %s-%s" % (self.PRODUCT_SHORT, self.VERSION, self.RELEASE)

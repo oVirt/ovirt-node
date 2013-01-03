@@ -25,9 +25,13 @@ Basically the application consists of two parts: Plugins and TUI
 which communicate with each other.
 """
 
+from ovirt.node import base, utils, plugins
+from ovirt.node.config import defaults
+from ovirt.node.utils import system
 import argparse
 import logging
 import logging.config
+import ovirt.node.ui.tui
 
 LOGGING = {
     'version': 1,
@@ -58,31 +62,25 @@ LOGGING = {
         },
     },
     'loggers': {
-        'ovirt.node': {
+        'ovirt': {
             'handlers': ['debug'],
-            'propagate': True,
             'level': 'DEBUG',
         },
         'ovirt.node': {
             'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
+            'level': 'DEBUG',
         },
     }
 }
+
 logging.config.dictConfig(LOGGING)
 #logging.basicConfig(level=logging.DEBUG,
 #                    filename="/tmp/app.log", filemode="w",
 #                    format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
 
-import ovirt.node.ui.tui
-from ovirt.node import base, utils, plugins
-from ovirt.node.config import defaults
-
-
 class Application(base.Base):
-    plugins = []
+    __plugins = {}
 
     ui = None
 
@@ -118,19 +116,43 @@ class Application(base.Base):
 
         self.logger.debug("Commandline arguments: %s" % self.args)
 
+    def plugins(self):
+        return self.__plugins
+
     def __load_plugins(self):
-        self.plugins = []
+        self.__plugins = {}
         for m in plugins.load(self.plugin_base):
             if hasattr(m, "Plugin"):
                 self.logger.debug("Found plugin in module: %s" % m)
                 plugin = m.Plugin(self)
-                self.plugins.append(plugin)
+                self.logger.debug("Registering plugin '%s': %s" %
+                                  (plugin.name(), plugin))
+                self.__plugins[plugin.name()] = plugin
             else:
                 self.logger.debug("Found no plugin in module: %s" % m)
 
-        for plugin in self.plugins:
+        for plugin in self.__plugins.values():
             self.logger.debug("Loading plugin %s" % plugin)
             self.ui.register_plugin(plugin.ui_name(), plugin)
+
+    def get_plugin(self, mixed):
+        """Find a plugin by name or type
+        """
+        mtype = type(mixed)
+        self.logger.debug("Looking up plugin: %s (%s)" % (mixed, mtype))
+        plugin = None
+
+        if isinstance(mixed, plugins.NodePlugin):
+            plugin = mixed
+        elif mtype in [str, unicode]:
+            plugin = self.__plugins[mixed]
+        elif mtype is type:
+            plugin = {type(p): p for p in self.__plugins}[mixed]
+        else:
+            raise Exception("Can't look up: %s" % mixed)
+
+        self.logger.debug("Found plugin for type: %s" % plugin)
+        return plugin
 
     def __drop_to_shell(self):
         with self.ui.suspended():
@@ -144,25 +166,23 @@ class Application(base.Base):
 
     def model(self, plugin_name):
         model = None
-        for plugin in self.plugins:
+        for plugin in self.__plugins:
             if plugin.name() == plugin_name:
                 model = plugin.model()
         return model
 
     @property
     def product(self):
-        return utils.system.ProductInformation()
+        return system.ProductInformation()
 
     def run(self):
         self.__load_plugins()
-        if not self.plugins:
+        if not self.__plugins:
             raise Exception("No plugins found in '%s'" % self.plugin_base)
         self.ui.register_hotkey("f2", self.__drop_to_shell)
         self.ui.register_hotkey("window resize", self.__check_terminal_size)
 
-        p = self.product
-        self.ui.header = "\n %s %s-%s\n" % (p.PRODUCT_SHORT, p.VERSION,
-                                          p.RELEASE)
+        self.ui.header = "\n %s\n" % str(self.product)
         self.ui.footer = "Press esc to quit."
         self.ui.run()
 

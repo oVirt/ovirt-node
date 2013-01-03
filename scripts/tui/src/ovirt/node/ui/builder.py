@@ -24,12 +24,11 @@ A visitor to build the urwid TUI from the abstract UI definitions.
 Is based on the visitor pattern
 """
 
+from ovirt.node import ui
+import logging
+import ovirt.node.exceptions
 import urwid
 
-import logging
-
-import ovirt.node.exceptions
-from ovirt.node import ui
 
 LOGGER = logging.getLogger(__name__)
 
@@ -101,15 +100,25 @@ def widget_for_item(tui, plugin, path, item):
         ui.Row: build_row,
     }
 
+    item_type = None
+
     # Check if builder is available for UI Element
-    assert type(item) in item_to_builder, "No widget for item type"
+    if item_type in item_to_builder:
+        item_type = type(item)
+    else:
+        # It could be a derived type, therefor find it's base:
+        for sub_type in type(item).mro():
+            if sub_type in item_to_builder:
+                item_type = sub_type
+
+    assert item_type, "No widget for item type"
 
     # Build widget from UI Element
-    build_func = item_to_builder[type(item)]
+    build_func = item_to_builder[item_type]
     widget = build_func(path, item, tui, plugin)
 
     # Populate with values
-    if type(item) in [ui.Entry,
+    if item_type in [ui.Entry,
                       ui.PasswordEntry,
                       ui.Label,
                       ui.KeywordLabel,
@@ -172,7 +181,7 @@ def build_entry(path, item, tui, plugin):
                 widget.notice = e.message
                 widget.valid(False)
 
-        tui._draw_screen()
+#        tui._draw_screen()
     urwid.connect_signal(widget, 'change', on_widget_value_change)
 
     return widget
@@ -208,23 +217,30 @@ def build_button(path, item, tui, plugin):
         plugin.sig_valid.connect(on_valid_cb)
         on_valid_cb(None, None)
 
+    if not item.action:
+        if itemtype in [ui.Button, ui.SaveButton]:
+            item.action = lambda: plugin._on_ui_save()
+        if itemtype in [ui.CloseButton]:
+            item.action = lambda: tui.close_topmost_dialog()
+        if itemtype in [ui.ResetButton]:
+            item.action = lambda: plugin._on_ui_reset()
+    else:
+        LOGGER.debug("Using custom callback for item " +
+                     "%s: %s" % (item, item.action.callback))
+
     def on_widget_click_cb(widget, data=None):
         LOGGER.debug("Button click: %s" % {"path": path, "widget": widget})
         if itemtype is ui.Button:
             plugin._on_ui_change({path: True})
-        if itemtype in [ui.Button, ui.SaveButton]:
-            r = plugin._on_ui_save()
-        if itemtype in [ui.CloseButton]:
-            r = tui.close_topmost_dialog()
+
+        r = item.action()
+
         if itemtype in [ui.ResetButton]:
-            r = plugin._on_ui_reset()
-            tui._display_plugin(plugin)
+            # Like a reload ...
+            tui.switch_to_plugin(plugin)
+
         parse_plugin_result(tui, plugin, r)
 
-#        else:
-#           Not propagating the signal as a signal to the plugin
-#           item.emit_signal("click", widget)
-#            plugin._on_ui_change({path: True})
     urwid.connect_signal(widget, "click", on_widget_click_cb)
 
     def on_item_enabled_change_cb(w, v):
@@ -317,11 +333,11 @@ def parse_plugin_result(tui, plugin, result):
 
         if type(result) in [ui.Page]:
             LOGGER.debug("Page requested.")
-            tui.show_page(result)
+            tui._show_page(result)
 
         elif type(result) in [ui.Dialog]:
             LOGGER.debug("Dialog requested.")
-            dialog = tui.show_dialog(result)
+            dialog = tui._show_dialog(result)
 
             def on_item_close_changed_cb(i, v):
                 dialog.close()
