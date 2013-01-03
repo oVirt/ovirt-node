@@ -26,10 +26,13 @@ class iSCSI(base.Base):
     """A class to deal with some external iSCSI related functionality
     """
     def initiator_name(self, initiator_name=None):
-        import ovirtnode.iscsi as oiscsi
-        if initiator_name:
-            oiscsi.set_iscsi_initiator(initiator_name)
-        return oiscsi.get_current_iscsi_initiator_name()
+        try:
+            import ovirtnode.iscsi as oiscsi
+            if initiator_name:
+                oiscsi.set_iscsi_initiator(initiator_name)
+            return oiscsi.get_current_iscsi_initiator_name()
+        except ImportError as e:
+            self.logger.warning("Failed on import: %s" % e)
 
 
 class NFSv4(base.Base):
