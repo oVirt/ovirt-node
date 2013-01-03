@@ -34,33 +34,34 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(name)s %(process)d %(message)s'
+            'format': '%(levelname)s %(asctime)s %(name)s ' +
+                      '%(process)d %(message)s'
         },
         'simple': {
             'format': '%(asctime)s %(levelname)10s %(message)s'
         },
     },
     'handlers': {
-        'file':{
-            'level':'INFO',
-            'class':'logging.FileHandler',
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
             'formatter': 'simple',
-            'filename':'/tmp/ovirt.log',
+            'filename': '/tmp/ovirt.log',
             'mode': 'w'
         },
-        'debug':{
-            'level':'DEBUG',
-            'class':'logging.FileHandler',
+        'debug': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
             'formatter': 'verbose',
-            'filename':'/tmp/ovirt.debug.log',
+            'filename': '/tmp/ovirt.debug.log',
             'mode': 'w'
         },
     },
     'loggers': {
         'ovirt.node': {
-            'handlers':['debug'],
+            'handlers': ['debug'],
             'propagate': True,
-            'level':'DEBUG',
+            'level': 'DEBUG',
         },
         'ovirt.node': {
             'handlers': ['file'],
