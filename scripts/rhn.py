@@ -324,8 +324,7 @@ def sam_check():
     samcheck_cmd = subprocess_closefds("subscription-manager identity",
                                        shell=True, stdout=PIPE,
                                        stderr=open('/dev/null', 'w'))
-    samcheck = samcheck_cmd.communicate()[0]
-    if samcheck_cmd.returncode == 0:
+    if "identity is:" in samcheck_cmd.stdout.read():
         return True
     else:
         return False
