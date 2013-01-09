@@ -1,10 +1,13 @@
 ---
-description: 'Collect some logs before duoing anything'
+description: 'Collect some logs before doing anything'
 libs: ['../libs/common']
 searchpath: '../tcs'
 
 
 ---
 filename: 'collect_logs.sh'
+
+---
+filename: 'check_augeas.sh'
 
 ---
