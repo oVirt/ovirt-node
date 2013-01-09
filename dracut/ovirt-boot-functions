@@ -4,14 +4,6 @@ LF=$'\n'
 SEP=','
 TAB=$'\t'
 
-dirname() {
-    if [ -e /usr/bin/dirname ]; then
-        /usr/bin/dirname $@
-    else
-        echo $1 | sed 's/\/'$(basename $1)'$//'
-    fi
-}
-
 # compat function to handle different udev versions
 udev_info() {
     local name=$1
