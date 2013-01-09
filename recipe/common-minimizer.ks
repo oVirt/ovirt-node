@@ -166,6 +166,7 @@ keep /usr/share/augeas/lenses/dist/shellvars.aug
 keep /usr/share/augeas/lenses/dist/spacevars.aug
 keep /usr/share/augeas/lenses/dist/sysctl.aug
 keep /usr/share/augeas/lenses/dist/util.aug
+keep /usr/share/augeas/lenses/dist/simplevars.aug
 # whitelist only relevant lenses
 keep /usr/share/augeas/lenses/dist/buildd.aug
 keep /usr/share/augeas/lenses/dist/cgconfig.aug
