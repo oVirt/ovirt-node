@@ -14,6 +14,8 @@ install() {
     inst yes
     inst head
     inst awk
+    inst dirname
+    inst basename
 
     inst_hook pre-pivot 01 "$moddir/ovirt-cleanup.sh"
     inst_simple "$moddir/ovirt-boot-functions" /sbin/ovirt-boot-functions
