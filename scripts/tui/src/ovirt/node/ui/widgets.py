@@ -81,6 +81,8 @@ class TableWidget(urwid.WidgetWrap):
     _label_attr = "table.label"
     _header_attr = "table.header"
 
+    _position = 0
+
     def __init__(self, label, header, items, height, enabled):
         self.__label = urwid.Text(label)
         self.__label_attrmap = urwid.AttrMap(self.__label, self._label_attr)
@@ -92,17 +94,30 @@ class TableWidget(urwid.WidgetWrap):
 #        self.__list_linebox = urwid.LineBox(self.__list)
 
         def __on_item_change():
-            widget, position = self.__list.get_focus()
+            widget, self._position = self.__list.get_focus()
+            self._update_scrollbar()
             urwid.emit_signal(self, "changed", widget)
         urwid.connect_signal(self.__walker, 'modified', __on_item_change)
 
         self.__box = urwid.BoxAdapter(self.__list, height)
         self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
 
+        self.__position_label = urwid.Text("", align="right")
+        self.__position_label_attrmap = urwid.AttrMap(self.__position_label,
+                                                      self._label_attr)
+
         self.__pile = urwid.Pile([self.__label_attrmap,
-                                  self.__header_attrmap, self.__box])
+                                  self.__header_attrmap,
+                                  self.__box,
+                                  self.__position_label_attrmap])
+
+        self._update_scrollbar()
 
         super(TableWidget, self).__init__(self.__pile)
+
+    def _update_scrollbar(self):
+        n = len(self.__list.body)
+        self.__position_label.set_text("(%s / %s)" % (self._position + 1, n))
 
     def set_focus(self, n):
         self.__list.set_focus(n)
