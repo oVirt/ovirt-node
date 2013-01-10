@@ -1,7 +1,12 @@
 A simple system to build a TUI (based on urwid) by plugins.
 
 $ sudo yum install python python-urwid
-$ PYTHONPATH=src ./bin/ovirt-config-setup-molch
+
+# Don't execute any transaction and assume that defaults is in /tmp/cfg_dummy:
+$ PYTHONPATH=./src bash bin/ovirt-config-setup --defaults /tmp/cfg_dummy --dry
+
+# Real-World execution
+$ PYTHONPATH=./src bash bin/ovirt-config-setup
 
 
 Features
