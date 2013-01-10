@@ -8,7 +8,7 @@ if [[ $TTY =~ "pts" ]]; then
     TTY=`echo $TTY|sed 's/\///g'`
     sudo rm -rf /tmp/ovirt-setup.$TTY
 fi
-sudo /usr/libexec/ovirt-config-setup
+sudo /usr/bin/ovirt-config-setup
 reset
 
 # check for logout return code and drop to login prompt
