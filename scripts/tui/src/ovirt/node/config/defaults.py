@@ -356,6 +356,23 @@ class Network(NodeConfigFileSection):
         tx.append(ReloadNetworkConfiguration())
         return tx
 
+    def configure_no_networking(self, iface=None):
+        """Can be used to disable all networking
+        """
+        iface = iface or self.retrieve()["iface"]
+        name = iface + "-DISABLED"
+        self.update(name, None, None, None, None, None)
+
+    def configure_dhcp(self, iface, vlanid=None):
+        """Can be used to configure NIC iface on the vlan vlanid with DHCP
+        """
+        self.update(iface, "dhcp", None, None, None, vlanid)
+
+    def configure_static(self, iface, ipaddr, netmask, gateway, vlanid):
+        """Can be used to configure a static IP on a NIC
+        """
+        self.update(iface, "static", ipaddr, netmask, gateway, vlanid)
+
 
 class Hostname(NodeConfigFileSection):
     """Configure hostname

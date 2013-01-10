@@ -24,6 +24,9 @@ from ovirt.node.plugins import Changeset
 from ovirt.node.utils import network
 """
 Network page plugin
+
+TODO use inotify+thread or so to monitor resolv.conf/ntp.conf for changes and
+     update UI
 """
 
 
@@ -335,14 +338,13 @@ class Plugin(plugins.NodePlugin):
         iface = self._model_extra["dialog.nic.iface"]
         if bootproto == "none":
             self.logger.debug("Configuring no networking")
-            name = iface + "-DISABLED"
-            model.update(name, None, None, None, None, None)
+            model.configure_no_networking(iface)
         elif bootproto == "dhcp":
             self.logger.debug("Configuring dhcp")
-            model.update(iface, "dhcp", None, None, None, vlanid)
+            model.configure_dhcp(iface, vlanid)
         elif bootproto == "static":
             self.logger.debug("Configuring static ip")
-            model.update(iface, "static", ipaddr, netmask, gateway, vlanid)
+            model.configure_static(iface, ipaddr, netmask, gateway, vlanid)
         else:
             self.logger.debug("No interface configuration found")
         # Return the resulting transaction
