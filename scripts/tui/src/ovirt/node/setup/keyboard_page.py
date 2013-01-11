@@ -29,7 +29,6 @@ from ovirt.node.plugins import Changeset
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
     def name(self):
         return "Keyboard"
@@ -51,17 +50,13 @@ class Plugin(plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         kbd = utils.Keyboard()
-        widgets = [
-            ("layout._header",
-                ui.Header("Keyboard Layout Selection")),
-            ("keyboard.layout", ui.Table("Available Keyboard Layouts",
-                                "", kbd.available_layouts())),
-        ]
+        ws = [ui.Header("header", "Keyboard Layout Selection"),
+              ui.Table("keyboard.layout", "Available Keyboard Layouts", "",
+                       kbd.available_layouts()),
+              ]
 
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
-
-        page = ui.Page(widgets)
+        page = ui.Page("page", ws)
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -85,5 +80,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.values_for(layout_keys))
             txs += model.transaction()
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

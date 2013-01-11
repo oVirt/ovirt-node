@@ -29,7 +29,6 @@ Configure Monitoring
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
     def name(self):
         return "Monitoring"
@@ -46,27 +45,21 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
-        return {
-                "collectd.address": valid.Empty() | valid.FQDNOrIPAddress(),
+        return {"collectd.address": valid.Empty() | valid.FQDNOrIPAddress(),
                 "collectd.port": valid.Port(),
-            }
+                }
 
     def ui_content(self):
-        widgets = [
-            ("header", ui.Header("Monitoring Configuration")),
-
-            ("label", ui.Label("Collectd gathers statistics " +
-                            "about the system and can be used to find " +
-                            "performance bottlenecks and predict future " +
-                            "system load.")),
-
-            ("collectd.address", ui.Entry("Server Address:")),
-            ("collectd.port", ui.Entry("Server Port:")),
-        ]
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
-
-        page = ui.Page(widgets)
+        ws = [ui.Header("header[0]", "Monitoring Configuration"),
+              ui.Label("label", "Collectd gathers statistics " +
+                       "about the system and can be used to find " +
+                       "performance bottlenecks and predict future " +
+                       "system load."),
+              ui.Entry("collectd.address", "Server Address:"),
+              ui.Entry("collectd.port", "Server Port:"),
+              ]
+        page = ui.Page("page", ws)
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -90,5 +83,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.values_for(collectd_keys))
             txs += model.transaction()
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

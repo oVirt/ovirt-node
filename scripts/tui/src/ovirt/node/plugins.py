@@ -22,7 +22,7 @@
 """
 This contains much stuff related to plugins
 """
-from ovirt.node import base, exceptions, valid
+from ovirt.node import base, exceptions, valid, ui
 import pkgutil
 
 
@@ -67,12 +67,16 @@ class NodePlugin(base.Base):
     validate_changes = True
     only_merge_on_valid_changes = True
 
+    on_valid = None
+
     def __init__(self, application):
         super(NodePlugin, self).__init__()
         self.__changes = {}
         self.__invalid_changes = Changeset()
         self.application = application
-        self.sig_valid = self.register_signal("valid")
+        self.widgets = UIElements()
+
+        self.on_valid = self.new_signal()
 
     def name(self):
         """Returns the name of the plugin.
@@ -143,9 +147,13 @@ class NodePlugin(base.Base):
         is_valid = self.__invalid_changes.is_empty()
         self.logger.debug("Valid yet? %s (%s)" % (is_valid,
                                                   self.__invalid_changes))
-        self.sig_valid.emit(is_valid)
+        self.on_valid(is_valid)
 
         return True
+
+    def revalidate(self):
+        self.logger.debug("Revalidating")
+        return self.validate(self.model())
 
     def ui_name(self):
         """Returns the UI friendly name for this plugin.
@@ -189,31 +197,6 @@ class NodePlugin(base.Base):
         """
         raise NotImplementedError()
 
-    def check_semantics(self, model=None):
-        """Simulate a complete model change.
-        This runs all current model values throught the checks to see
-        if the model validates.
-
-        Returns:
-            True if the model validates
-        Raises:
-            An exception on a problem
-        """
-        self.logger.debug("Triggering revalidation of model")
-        is_valid = True
-        try:
-            model = model or self.model()
-            self.on_change(model)
-        except NotImplementedError:
-            self.logger.debug("Plugin has no model")
-        except exceptions.InvalidData:
-            self.logger.warning("Plugins model does not pass semantic " +
-                                "check: %s" % model)
-            is_valid = False
-        finally:
-            self.__changes = {}
-        return is_valid
-
     def on_merge(self, effective_changes):
         """Handles the changes and throws an Exception if something goes wrong
         Needs to be implemented by any subclass
@@ -227,28 +210,86 @@ class NodePlugin(base.Base):
         """
         raise NotImplementedError()
 
+    def pending_changes(self, only_effective_changes=True,
+                        include_invalid=False):
+        """Return all changes which happened since the last on_merge call
+
+        Args:
+            only_effective_changes: Boolean if all or only the effective
+                changes are returned.
+            include_invalid: If the invalid changes should be included
+        Returns:
+            dict of changes
+        """
+        changes = self.__effective_changes() if only_effective_changes \
+            else self.__changes
+        if include_invalid:
+            changes.update(self.__invalid_changes)
+        return Changeset(changes)
+
+    def is_valid_changes(self):
+        """If all changes are valid or not
+        Returns:
+            If there are no invalid changes - so all changes valid
+        """
+        return self.__invalid_changes.is_empty()
+
+    def dry_or(self, func):
+        """Do nothing (when we are running dry) or run func
+        """
+        if self.application.args.dry:
+            self.logger.info("Running dry, otherwise: %s" % func)
+        else:
+            self.logger.info("Running %s" % func)
+            return func()
+
+    def check_semantics(self, model=None):
+        """Simulate a complete model change.
+        This runs all current model values throught the checks to see
+        if the model validates.
+
+        Returns:
+            True if the model validates
+        Raises:
+            An exception on a problem
+        """
+        self.logger.debug("Triggering revalidation of model")
+        is_valid = True
+        try:
+            model = Changeset(model or self.model())
+            self.on_change(model)
+        except NotImplementedError:
+            self.logger.debug("Plugin has no model")
+        except exceptions.InvalidData:
+            self.logger.warning("Plugins model does not pass semantic " +
+                                "check: %s" % model)
+            is_valid = False
+        finally:
+            self.__changes = {}
+        return is_valid
+
     def _on_ui_change(self, change):
         """Called when some widget was changed
         change is expected to be a dict.
         """
         if type(change) is not dict:
-            self.logger.warning("Change is not a dict: %s" % change)
+            self.logger.warning("Change is not a dict: %s" % str(change))
 
         change = Changeset(change)
 
-        self.logger.debug("Passing UI change to callback on_change: %s" % \
+        self.logger.debug("Passing UI change to callback on_change: %s" %
                           change)
         try:
             if self.validate_changes:
                 self.validate(change)
             self.on_change(change)
         except exceptions.InvalidData as e:
-            self.sig_valid.emit(False)
+            self.on_valid(False)
             raise e
         self.__changes.update(change)
-        self.logger.debug("Sum of all UI changes up to now: %s" % \
+        self.logger.debug("Sum of all UI changes up to now: %s" %
                           self.__changes)
-        self.sig_valid.emit(True)
+        self.on_valid(True)
         return True
 
     def _on_ui_save(self):
@@ -285,7 +326,21 @@ class NodePlugin(base.Base):
         else:
             self.logger.info("Changes were not merged.")
 
-        return successfull_merge
+        return self.__handle_merge_result(successfull_merge)
+
+    def __handle_merge_result(self, result):
+        """Checks if a page/dialog was returned and displays it accordingly
+        """
+        self.logger.debug("Parsing plugin merge result: %s" % result)
+        app = self.application
+
+        if ui.Dialog in type(result).mro():
+            app.show(result)
+
+        elif ui.Page in type(result).mro():
+            app.show(result)
+
+        return result
 
     def _on_ui_reset(self):
         """Called when a ResetButton was clicked
@@ -294,31 +349,6 @@ class NodePlugin(base.Base):
         changes = self.pending_changes(False)
         self.logger.debug("Request to discard model changes: %s" % changes)
         self.__changes = {}
-
-    def pending_changes(self, only_effective_changes=True,
-                        include_invalid=False):
-        """Return all changes which happened since the last on_merge call
-
-        Args:
-            only_effective_changes: Boolean if all or only the effective
-                changes are returned.
-            include_invalid: If the invalid changes should be included
-        Returns:
-            dict of changes
-        """
-        changes = self.__effective_changes() if only_effective_changes \
-                                             else self.__changes
-        if include_invalid:
-            changes.update(self.__invalid_changes)
-        return Changeset(changes)
-
-    def is_valid_changes(self):
-        """If all changes are valid or not
-        Returns:
-            If there are no invalid changes - so all changes valid
-        """
-        self.logger.debug("Invalid changes: %s" % self.__invalid_changes)
-        return self.__invalid_changes.is_empty()
 
     def __effective_changes(self):
         """Calculates the effective changes, so changes which change the
@@ -332,7 +362,7 @@ class NodePlugin(base.Base):
             model = self.model()
             for key, value in self.__changes.items():
                 if key in model and value == model[key]:
-                    self.logger.debug(("Skipping pseudo-change of '%s', " + \
+                    self.logger.debug(("Skipping pseudo-change of '%s', " +
                                        "value (%s) did not change") % (key,
                                                                        value))
                 else:
@@ -342,15 +372,6 @@ class NodePlugin(base.Base):
         if not effective_changes:
             self.logger.debug("No effective changes detected.")
         return effective_changes
-
-    def dry_or(self, func):
-        """Do nothing (when we are running dry) or run func
-        """
-        if self.application.args.dry:
-            self.logger.info("Running dry, otherwise: %s" % func)
-        else:
-            self.logger.info("Running %s" % func)
-            return func()
 
 
 class Changeset(dict, base.Base):
@@ -363,8 +384,8 @@ class Changeset(dict, base.Base):
             self.update(changes)
 
     def values_for(self, keys):
-        assert self.contains_all(keys), "Missing keys: %s" % ( \
-                                set(keys).difference(set(self.keys())))
+        assert self.contains_all(keys), "Missing keys: %s" % \
+            set(keys).difference(set(self.keys()))
         return [self[key] for key in keys]
 
     def contains_all(self, keys):
@@ -414,13 +435,15 @@ class Changeset(dict, base.Base):
         dict.update(self, changes)
 
 
-class WidgetsHelper(dict, base.Base):
+class UIElements(base.Base):
     """A helper class to handle widgets
     """
-    def __init__(self, widgets={}):
-        super(WidgetsHelper, self).__init__()
-        base.Base.__init__(self)
-        self.update(widgets)
+    _elements = None
+
+    def __init__(self, widgets=[]):
+        super(UIElements, self).__init__()
+        self._elements = {}
+        self.add(widgets)
 
     def subset(self, paths):
         return [self[p] for p in paths]
@@ -431,15 +454,37 @@ class WidgetsHelper(dict, base.Base):
         Args:
             paths: A list of paths of widgets to be grouped
         Returns:
-            A WidgetsHelper.WidgetGroup
+            A UIElements.Group
         """
-        return WidgetsHelper.WidgetGroup(self, paths)
+        return UIElements.Group(self, paths)
 
-    class WidgetGroup(list, base.Base):
-        def __init__(self, widgethelper, paths):
-            super(WidgetsHelper.WidgetGroup, self).__init__()
+    def add(self, elements):
+        """Add one or many elements to this helper
+        """
+        elements = elements if type(elements) is list else [elements]
+
+        for element in elements:
+            self._elements[element.path] = element
+            if ui.ContainerElement in type(element).mro():
+                self.logger.debug("Is a container adding children")
+                self.add(element.children)
+
+    def __getitem__(self, path):
+        return self._elements[path]
+
+    def __contains__(self, element):
+        key = element if type(element) in [str, unicode] else element.path
+        return key in self._elements
+
+    def __iter__(self):
+        for e in self._elements:
+            yield e
+
+    class Group(list, base.Base):
+        def __init__(self, uielements, paths):
+            super(UIElements.Group, self).__init__()
             base.Base.__init__(self)
-            self.widgethelper = widgethelper
+            self.uielements = uielements
             self.extend(paths)
 
         def enabled(self, is_enable):
@@ -452,12 +497,12 @@ class WidgetsHelper(dict, base.Base):
             """Enable or disable all widgets of this group
             """
             self.logger.debug("Setting text of widget group: %s" % self)
-            map(lambda w: w.set_text(text), self.elements())
+            map(lambda w: w.value(text), self.elements())
 
         def elements(self):
             """Return the UI elements of this group
             """
-            return self.widgethelper.subset(self)
+            return self.uielements.subset(self)
 
 
 class Validator:

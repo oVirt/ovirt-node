@@ -27,7 +27,7 @@ from ovirt.node import plugins, ui, utils
 
 class Plugin(plugins.NodePlugin):
     _model = {}
-    _widgets = None
+    _elements = None
 
     def name(self):
         return "Keyboard"
@@ -43,16 +43,14 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         kbd = utils.Keyboard()
-        widgets = [
-            ("layout._header",
-                ui.Header("Keyboard Layout Selection")),
-            ("keyboard.layout", ui.Table("Available Keyboard Layouts",
-                                "", kbd.available_layouts())),
-        ]
-        self._widgets = dict(widgets)
-        page = ui.Page(widgets)
-        page.buttons = [("button.quit", ui.Button("Quit")),
-                        ("button.next", ui.Button("Continue"))]
+        ws = [ui.Header("header[0]", "Keyboard Layout Selection"),
+              ui.Table("keyboard.layout", "Available Keyboard Layouts",
+                       "", kbd.available_layouts()),
+              ]
+        self.widgets.add(ws)
+        page = ui.Page("keyboard", ws)
+        page.buttons = [ui.Button("button.quit", "Quit"),
+                        ui.Button("button.next", "Continue")]
         return page
 
     def on_change(self, changes):

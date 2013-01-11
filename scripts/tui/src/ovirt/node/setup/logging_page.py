@@ -29,7 +29,6 @@ from ovirt.node.plugins import Changeset
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
     def name(self):
         return "Logging"
@@ -56,39 +55,33 @@ class Plugin(plugins.NodePlugin):
     def validators(self):
         """Validators validate the input on change and give UI feedback
         """
-        return {
-                "logrotate.max_size": valid.Number(range=[0, None]),
+        return {"logrotate.max_size": valid.Number(bounds=[0, None]),
                 "rsyslog.address": (valid.Empty() | valid.FQDNOrIPAddress()),
                 "rsyslog.port": valid.Port(),
                 "netconsole.address": (valid.Empty() |
                                        valid.FQDNOrIPAddress()),
                 "netconsole.port": valid.Port(),
-            }
+                }
 
     def ui_content(self):
-        widgets = [
-            ("header", ui.Header("Logging")),
+        ws = [ui.Header("header[0]", "Logging"),
+              ui.Entry("logrotate.max_size", "Logrotate Max Log " +
+                       "Size (KB):"),
+              ui.Divider("divider[0]"),
+              ui.Label("rsyslog.header", "RSyslog is an enhanced multi-" +
+                       "threaded syslogd"),
+              ui.Entry("rsyslog.address", "Server Address:"),
+              ui.Entry("rsyslog.port", "Server Port:"),
+              ui.Divider("divider[1]"),
+              ui.Label("netconsole.label",
+                       "Netconsole service allows a remote sys" +
+                       "log daemon to record printk() messages"),
+              ui.Entry("netconsole.address", "Server Address:"),
+              ui.Entry("netconsole.port", "Server Port:"),
+              ]
 
-            ("logrotate.max_size", ui.Entry("Logrotate Max Log " +
-                                                 "Size (KB):")),
-
-            ("divider[1]", ui.Divider()),
-            ("rsyslog.header", ui.Label("RSyslog is an enhanced multi-" +
-                                         "threaded syslogd")),
-            ("rsyslog.address", ui.Entry("Server Address:")),
-            ("rsyslog.port", ui.Entry("Server Port:")),
-
-            ("divider[1]", ui.Divider()),
-            ("netconsole.label", ui.Label(
-                                    "Netconsole service allows a remote sys" +
-                                    "log daemon to record printk() messages")),
-            ("netconsole.address", ui.Entry("Server Address:")),
-            ("netconsole.port", ui.Entry("Server Port:")),
-        ]
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
-
-        page = ui.Page(widgets)
+        page = ui.Page("page", ws)
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -126,5 +119,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.values_for(netconsole_keys))
             txs += model.transaction()
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

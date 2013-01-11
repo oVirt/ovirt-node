@@ -36,7 +36,6 @@ class Plugin(plugins.NodePlugin):
     """
 
     _model = None
-    _widgets = None
 
     def name(self):
         return "Status"
@@ -55,7 +54,7 @@ class Plugin(plugins.NodePlugin):
             num_domains = str(con.numOfDomains())
 
         return {
-            "status": virt.virtualization_hardware_status(),
+            "status": virt.hardware_status(),
             "networking": net_status,
             "networking.bridge": "%s %s" % (net_br, net_addrs_str),
             "logs": "Local Only",
@@ -73,47 +72,48 @@ class Plugin(plugins.NodePlugin):
         aligned = lambda l: l.ljust(14)
 
         # Network related widgets, appearing in one row
-        network_widgets = [
-                ("networking",
-                    ui.KeywordLabel(aligned("Networking: "))),
-                ("networking.bridge",
-                    ui.KeywordLabel("Bridge: ")),
-            ]
+        network_widgets = [ui.KeywordLabel("networking",
+                                           aligned("Networking: ")),
+                           ui.KeywordLabel("networking.bridge",
+                                           "Bridge: "),
+                           ]
 
-        action_widgets = [
-            ("action.lock", ui.Button("Lock")),
-            ("action.logoff", ui.Button("Log Off")),
-            ("action.restart", ui.Button("Restart")),
-            ("action.poweroff", ui.Button("Poweroff")),
-        ]
+        action_widgets = [ui.Button("action.lock", "Lock"),
+                          ui.Button("action.logoff", "Log Off"),
+                          ui.Button("action.restart", "Restart"),
+                          ui.Button("action.poweroff", "Poweroff")
+                          ]
 
-        widgets = [
-            ("status",
-                ui.KeywordLabel(aligned("Status: "))),
-            ("status._space", ui.Divider()),
+        widgets = [ui.Header("header[0]", "System Information"),
 
-            ("network._column", ui.Row(network_widgets)),
-            ("network._space", ui.Divider()),
+                   ui.KeywordLabel("status", aligned("Status: ")),
+                   ui.Divider("divider[0]"),
 
-            ("logs",
-                ui.KeywordLabel(aligned("Logs: "))),
-            ("logs._space", ui.Divider()),
+                   ui.Row("row[0]", network_widgets),
+                   ui.Divider("divider[1]"),
 
-            ("libvirt.num_guests",
-                ui.KeywordLabel(aligned("Running VMs: "))),
-            ("libvirt._space", ui.Divider()),
+                   ui.KeywordLabel("logs", aligned("Logs: ")),
+                   ui.Divider("divider[2]"),
 
-            ("support.hint", ui.Label("Press F8 for support menu")),
-            ("support._space", ui.Divider()),
+                   ui.KeywordLabel("libvirt.num_guests",
+                                   aligned("Running VMs: ")),
+                   ui.Divider("divider[3]"),
 
-            ("action.hostkey", ui.Button("View Host Key")),
+                   ui.Label("support.hint", "Press F8 for support menu"),
+                   ui.Divider("divider[4]"),
 
-            ("action._row", ui.Row(action_widgets)),
-        ]
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
+                   ui.Row("row[1]",
+                          [ui.Button("action.hostkey", "View Host Key"),
+                           ui.Button("action.cpu_features",
+                                     "View CPU Features"),
+                           ]),
 
-        page = ui.Page(widgets)
+                   ui.Row("row[2]", action_widgets),
+                   ]
+
+        self.widgets.add(widgets)
+
+        page = ui.Page("page", widgets)
         page.buttons = []
         return page
 
@@ -146,44 +146,50 @@ class Plugin(plugins.NodePlugin):
 
         elif "action.hostkey" in changes:
             self.logger.info("Showing hostkey")
-            return self._build_hostkey_dialog()
+            return HostkeyDialog("dialog.hostkey", "Host Key")
+
+        elif "action.cpu_features" in changes:
+            self.logger.info("Showing CPU features")
+            return CPUFeaturesDialog("dialog.cpu_features", "CPU Features")
 
         elif "_save" in changes:
-            self._widgets["dialog.hostkey"].close()
-
-    def _build_dialog(self, path, txt, widgets):
-        self._widgets.update(dict(widgets))
-        self._widgets[path] = ui.Dialog(txt, widgets)
-        return self._widgets[path]
-
-    def _build_hostkey_dialog(self):
-        ssh = security.Ssh()
-        fp, hk = ssh.get_hostkey()
-        dialog = self._build_dialog("dialog.hostkey", "Host Key", [
-            ("hostkey.fp._label",
-                ui.Label("RSA Host Key Fingerprint:")),
-            ("hostkey.fp",
-                ui.Label(fp)),
-
-            ("hostkey._divider", ui.Divider()),
-
-            ("hostkey._label",
-                ui.Label("RSA Host Key:")),
-            ("hostkey",
-                ui.Label("\n".join(textwrap.wrap(hk, 64)))),
-        ])
-        dialog.buttons = []
-        return dialog
+            self.widgets["dialog.hostkey"].close()
 
     def _build_lock_dialog(self):
-        widgets = [
-            ("label[0]", ui.Header("Enter the admin password to unlock")),
-            ("username", ui.KeywordLabel("Username: ", os.getlogin())),
-            ("password",
-                ui.PasswordEntry("Password:"))
-        ]
-        self._widgets = dict(widgets)
-        page = ui.Dialog("This screen is locked.", widgets)
-        page.buttons = [("action.unlock", ui.Button("Unlock"))]
+        widgets = [ui.Header("lock.label[0]",
+                             "Enter the admin password to unlock"),
+                   ui.KeywordLabel("username", "Username: ", os.getlogin()),
+                   ui.PasswordEntry("password", "Password:")
+                   ]
+
+        self.widgets.add(widgets)
+        page = ui.Dialog("lock.dialog", "This screen is locked.", widgets)
+        page.buttons = [ui.Button("action.unlock", "Unlock")]
         page.escape_key = None
         return page
+
+
+class HostkeyDialog(ui.Dialog):
+    def __init__(self, path, title):
+        super(HostkeyDialog, self).__init__(path, title, [])
+        ssh = security.Ssh()
+        fp, hk = ssh.get_hostkey()
+        self.children = [ui.Label("hostkey.label[0]",
+                                  "RSA Host Key Fingerprint:"),
+                         ui.Label("hostkey.fp", fp),
+
+                         ui.Divider("hostkey.divider[0]"),
+
+                         ui.Label("hostkey.label[1]",
+                                  "RSA Host Key:"),
+                         ui.Label("hostkey", "\n".join(textwrap.wrap(hk, 64))),
+                         ]
+        self.buttons = [ui.CloseButton("dialog.close")]
+
+
+class CPUFeaturesDialog(ui.Dialog):
+    def __init__(self, path, title):
+        super(CPUFeaturesDialog, self).__init__(path, title, [])
+        self.children = [ui.Label("label[0]", "TBD"),
+                         ]
+        self.buttons = [ui.CloseButton("dialog.close")]

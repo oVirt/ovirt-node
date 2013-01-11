@@ -29,7 +29,6 @@ Configure Security
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
     def name(self):
         return "Security"
@@ -53,33 +52,28 @@ class Plugin(plugins.NodePlugin):
         same_as_password = plugins.Validator.SameAsIn(self,
                                                       "passwd.admin.password",
                                                       "Password")
-        number_or_empty = valid.Number(range=[0, None]) | \
-                          valid.Empty()
+        number_or_empty = valid.Number(bounds=[0, None]) | \
+            valid.Empty()
 
-        return {
-                "strongrng.num_bytes": number_or_empty,
+        return {"strongrng.num_bytes": number_or_empty,
                 "passwd.admin.password": valid.Text(),
                 "passwd.admin.password_confirmation": same_as_password,
-            }
+                }
 
     def ui_content(self):
-        widgets = [
-            ("header[0]", ui.Header("Remote Access")),
-            ("ssh.pwauth", ui.Checkbox("Enable SSH password authentication")),
+        ws = [ui.Header("header[0]", "Remote Access"),
+              ui.Checkbox("ssh.pwauth", "Enable SSH password authentication"),
+              ui.Header("header[1]", "Strong Random Number Generator"),
+              ui.Checkbox("strongrng.disable_aesni", "Disable AES-NI"),
+              ui.Entry("strongrng.num_bytes", "Bytes Used:"),
+              ui.Header("header[2]", "Local Access"),
+              ui.PasswordEntry("passwd.admin.password", "Password:"),
+              ui.PasswordEntry("passwd.admin.password_confirmation",
+                               "Confirm Password:"),
+              ]
 
-            ("header[1]", ui.Header("Strong Random Number Generator")),
-            ("strongrng.disable_aesni", ui.Checkbox("Disable AES-NI")),
-            ("strongrng.num_bytes", ui.Entry("Bytes Used:")),
-
-            ("header[2]", ui.Header("Local Access")),
-            ("passwd.admin.password", ui.PasswordEntry("Password:")),
-            ("passwd.admin.password_confirmation", ui.PasswordEntry(
-                "Confirm Password:")),
-        ]
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = plugins.WidgetsHelper(dict(widgets))
-
-        page = ui.Page(widgets)
+        page = ui.Page("page", ws)
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -123,5 +117,5 @@ class Plugin(plugins.NodePlugin):
 
             txs += [SetAdminPasswd()]
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

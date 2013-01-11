@@ -93,11 +93,11 @@ def iface_information(iface, with_slow=True):
 #                "udev informations are incomplete (udevadm re-trigger?)"
 
         uinfo = {"name": d.get_property("INTERFACE"),
-                 "vendor": d.get_property("ID_VENDOR_FROM_DATABASE") \
-                           or "unkown",
+                 "vendor": d.get_property("ID_VENDOR_FROM_DATABASE")
+                 or "unkown",
                  "devtype": d.get_property("DEVTYPE") or "unknown",
                  "devpath": d.get_property("DEVPATH")
-                }
+                 }
 
         if uinfo["name"] == iface:
             info = uinfo
@@ -177,15 +177,14 @@ def relevant_ifaces(filter_bridges=True, filter_vlans=True):
     Returns:
         List of strings, the NIC names
     """
-    valid_name = lambda n: not ( \
-            n == "lo" or \
-            n.startswith("bond") or \
-            n.startswith("sit") or \
-            n.startswith("vnet") or \
-            n.startswith("tun") or \
-            n.startswith("wlan") or \
-            n.startswith("virbr") or \
-            (filter_vlans and ("." in n)))
+    valid_name = lambda n: not (n == "lo" or
+                                n.startswith("bond") or
+                                n.startswith("sit") or
+                                n.startswith("vnet") or
+                                n.startswith("tun") or
+                                n.startswith("wlan") or
+                                n.startswith("virbr") or
+                                (filter_vlans and ("." in n)))
 # FIXME!!!
 #    valid_props = lambda i, p: (filter_bridges and (p["type"] != "bridge"))
 
@@ -219,11 +218,11 @@ def node_nics():
     all_infos = {i: iface_information(i) for i in all_ifaces}
     all_cfgs = {i: ovirt.node.config.network.iface(i) for i in all_ifaces}
 
-    bridges = [nic for nic, info in all_infos.items() \
+    bridges = [nic for nic, info in all_infos.items()
                if info["type"] == "bridge"]
-    vlans = [nic for nic, info in all_infos.items() \
+    vlans = [nic for nic, info in all_infos.items()
              if info["type"] == "vlan"]
-    nics = [nic for nic, info in all_infos.items() \
+    nics = [nic for nic, info in all_infos.items()
             if info["name"] not in bridges + vlans]
 
     LOGGER.debug("Bridges: %s" % bridges)
@@ -239,8 +238,8 @@ def node_nics():
         info.update(all_cfgs[iface])
         node_infos[iface] = info
         if info["bridge"]:
-            LOGGER.debug("Physical NIC '%s' is slave of '%s'" % (iface,
-                                                            info["bridge"]))
+            LOGGER.debug("Physical NIC '%s' is slave of '%s'" %
+                         (iface, info["bridge"]))
             slaves.append(iface)
 
     # Merge informations of VLANs into parent
@@ -251,8 +250,8 @@ def node_nics():
         LOGGER.debug("Updating VLANID of '%s': %s" % (parent, info["vlanid"]))
         node_infos[parent]["vlanid"] = info["vlanid"]
         if info["bridge"]:
-            LOGGER.debug("VLAN NIC '%s' is slave of '%s'" % (iface,
-                                                            info["bridge"]))
+            LOGGER.debug("VLAN NIC '%s' is slave of '%s'" %
+                         (iface, info["bridge"]))
             slaves.append(iface)
 
     for slave in slaves:
@@ -265,8 +264,8 @@ def node_nics():
         if info["is_vlan"]:
             dst = info["vlan_parent"]
         for k in ["bootproto", "ipaddr", "netmask", "gateway"]:
-            LOGGER.debug("Merging cfg %s from bridge %s into device %s" % (k,
-                                                               bridge, slave))
+            LOGGER.debug("Merging cfg %s from bridge %s into device %s" %
+                         (k, bridge, slave))
             node_infos[dst][k] = bridge_cfg[k] if k in bridge_cfg else None
 
     LOGGER.debug("Node NICs: %s" % node_infos)
@@ -284,7 +283,7 @@ def node_bridge():
     all_ifaces = relevant_ifaces(filter_bridges=False, filter_vlans=False)
     all_infos = [iface_information(i) for i in all_ifaces]
 
-    bridges = [info["name"] for info in all_infos \
+    bridges = [info["name"] for info in all_infos
                if info["devtype"] == "bridge"]
 
     if len(bridges) != 1:
@@ -361,18 +360,19 @@ class NIC(base.Base):
             device = _nm_client.get_device_by_iface(self.iface)
             LOGGER.debug("Got '%s' for '%s'" % (device, self.iface))
             if device:
-                for family, cfgfunc, sf in [
-                    ("inet", device.get_ip4_config, socket.AF_INET),
-                    ("inet6", device.get_ip6_config, socket.AF_INET6)]:
+                for family, cfgfunc, sf in [("inet", device.get_ip4_config,
+                                             socket.AF_INET),
+                                            ("inet6", device.get_ip6_config,
+                                             socket.AF_INET6)]:
                     cfg = cfgfunc()
                     if not cfg:
-                        LOGGER.debug("No %s configuration for %s" % (family,
-                                                                 self.iface))
+                        LOGGER.debug("No %s configuration for %s" %
+                                     (family, self.iface))
                         break
                     addrs = cfg.get_addresses()
                     addr = addrs[0].get_address() if len(addrs) > 0 else None
                     addresses[family] = _nm_address_to_str(sf, addr) if addr \
-                                                                     else None
+                        else None
             return addresses
 
         # Fallback
@@ -438,7 +438,7 @@ def networking_status(iface=None):
     if iface:
         nic = NIC(iface)
         addresses = nic.ip_addresses()
-        has_address = any([a != None for a in addresses.values()])
+        has_address = any([a is not None for a in addresses.values()])
 
         if nic.has_link():
             status = "Connected (Link only, no IP)"

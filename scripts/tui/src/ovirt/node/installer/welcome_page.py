@@ -36,7 +36,7 @@ class Plugin(plugins.NodePlugin):
     """The welcome page plugin
     """
     _model = {}
-    _widgets = None
+    _elements = None
 
     def name(self):
         return "Welcome"
@@ -51,13 +51,12 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        widgets = [
-            ("button.install", ui.Button("Install %s" %
-                                      str(self.application.product))),
-        ]
-        self._widgets = dict(widgets)
-        page = ui.Page(widgets)
-        page.buttons = [("button.quit", ui.Button("Quit"))]
+        ws = [ui.Button("button.install", "Install %s" %
+                        str(self.application.product)),
+              ]
+        self.widgets.add(ws)
+        page = ui.Page("welcome", ws)
+        page.buttons = [ui.Button("button.quit", "Quit")]
         return page
 
     def on_change(self, changes):

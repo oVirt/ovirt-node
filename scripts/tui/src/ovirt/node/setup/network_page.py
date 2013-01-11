@@ -34,21 +34,16 @@ TODO use inotify+thread or so to monitor resolv.conf/ntp.conf for changes and
 class Plugin(plugins.NodePlugin):
     """This is the network page
     """
-
-    _widgets = None
     _model_extra = {}
 
     def __init__(self, app):
         super(Plugin, self).__init__(app)
-        self._widgets = plugins.WidgetsHelper()
 
             # Keys/Paths to widgets related to NIC settings
-        self._nic_details_group = self._widgets.group([
-                                                "dialog.nic.ipv4.bootproto",
-                                                "dialog.nic.ipv4.address",
-                                                "dialog.nic.ipv4.netmask",
-                                                "dialog.nic.ipv4.gateway",
-                                                "dialog.nic.vlanid"])
+        self._nic_details_group = self.widgets.group([
+            "dialog.nic.ipv4.bootproto", "dialog.nic.ipv4.address",
+            "dialog.nic.ipv4.netmask", "dialog.nic.ipv4.gateway",
+            "dialog.nic.vlanid"])
 
     def name(self):
         return "Network"
@@ -66,7 +61,7 @@ class Plugin(plugins.NodePlugin):
         }
 
         model["hostname"] = defaults.Hostname().retrieve()["hostname"] or \
-                            network.hostname()
+            network.hostname()
 
         # Pull name-/timeservers from config files (not defaults)
         nameservers = defaults.Nameservers().retrieve()["servers"]
@@ -87,8 +82,7 @@ class Plugin(plugins.NodePlugin):
         ip_or_empty = valid.IPAddress() | valid.Empty()
         fqdn_ip_or_empty = valid.FQDNOrIPAddress() | valid.Empty()
 
-        return {
-                "hostname": fqdn_ip_or_empty,
+        return {"hostname": fqdn_ip_or_empty,
                 "dns[0]": ip_or_empty,
                 "dns[1]": ip_or_empty,
                 "ntp[0]": fqdn_ip_or_empty,
@@ -97,37 +91,32 @@ class Plugin(plugins.NodePlugin):
                 "dialog.nic.ipv4.address": valid.IPv4Address() | valid.Empty(),
                 "dialog.nic.ipv4.netmask": valid.IPv4Address() | valid.Empty(),
                 "dialog.nic.ipv4.gateway": valid.IPv4Address() | valid.Empty(),
-                "dialog.nic.vlanid": (valid.Number(range=[0, 4096]) |
+                "dialog.nic.vlanid": (valid.Number(bounds=[0, 4096]) |
                                       valid.Empty()),
-            }
+                }
 
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        widgets = [
-            ("headers[0]", ui.Header("System Identification")),
-            ("hostname", ui.Entry("Hostname:")),
-            ("hostname._space", ui.Divider()),
+        ws = [ui.Header("header[0]", "System Identification"),
+              ui.Entry("hostname", "Hostname:"),
+              ui.Divider("divider[0]"),
+              ui.Entry("dns[0]", "DNS Server 1:"),
+              ui.Entry("dns[1]", "DNS Server 2:"),
+              ui.Divider("divider[1]"),
+              ui.Entry("ntp[0]", "NTP Server 1:"),
+              ui.Entry("ntp[1]", "NTP Server 2:"),
+              ui.Divider("divider[2]"),
+              ui.Table("nics", "Available System NICs",
+                       "Device   Status         Model          MAC Address",
+                       self._get_nics()),
+              ui.Button("button.ping", "Ping")
+              ]
 
-            ("dns[0]", ui.Entry("DNS Server 1:")),
-            ("dns[1]", ui.Entry("DNS Server 2:")),
-            ("dns._space", ui.Divider()),
-
-            ("ntp[0]", ui.Entry("NTP Server 1:")),
-            ("ntp[1]", ui.Entry("NTP Server 2:")),
-            ("ntp._space", ui.Divider()),
-
-            ("nics", ui.Table("Available System NICs",
-                        "Device   Status         Model          MAC Address",
-                        self._get_nics())),
-
-            ("button.ping", ui.Button("Ping")),
-        ]
+        page = ui.Page("page", ws)
         # Save it "locally" as a dict, for better accessability
-        self._widgets.update(dict(widgets))
-
-        page = ui.Page(widgets)
+        self.widgets.add(page)
         return page
 
     def _get_nics(self):
@@ -135,123 +124,21 @@ class Plugin(plugins.NodePlugin):
         node_nics = []
         first_nic = None
         for name, nic in sorted(utils.network.node_nics().items()):
-            if first_nic == None:
+            if first_nic is None:
                 first_nic = name
             bootproto = "Configured" if nic["bootproto"] else "Unconfigured"
-            description = " ".join([
-                justify(nic["name"], 8),
-                justify(bootproto, 14),
-                justify(nic["vendor"], 14),
-                justify(nic["hwaddr"], 17)
-                ])
+            description = " ".join([justify(nic["name"], 8),
+                                    justify(bootproto, 14),
+                                    justify(nic["vendor"], 14),
+                                    justify(nic["hwaddr"], 17)
+                                    ])
             node_nics.append((name, description))
         return node_nics
 
     def _build_dialog(self, path, txt, widgets):
-        self._widgets.update(dict(widgets))
-        self._widgets[path] = ui.Dialog(txt, widgets)
-        return self._widgets[path]
-
-    def _build_nic_details_dialog(self, iface):
-        # Populate model with nic specific informations
-        self.logger.debug("Building NIC details dialog for %s" % iface)
-
-        self.logger.debug("Getting informations for NIC details page")
-        live = utils.network.node_nics()[iface]
-        cfg = defaults.Network().retrieve()
-
-        self.logger.debug("live: %s" % live)
-        self.logger.debug("cfg: %s" % cfg)
-
-        if cfg["iface"] != iface:
-            # create empty config if we are not editing the bootif
-            cfg = {k: "" for k in cfg.keys()}
-
-        ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
-                                            cfg["gateway"], cfg["vlanid"])
-
-        if cfg["bootproto"] == "dhcp":
-            nic = utils.network.NIC(live["bridge"])
-            routes = utils.network.Routes()
-            ipaddr, netmask, gateway, vlanid = (nic.ipv4_address().items() +
-                                               (routes.default(),) +
-                                               (nic.vlanid(),))
-
-        self._model_extra.update({
-            "dialog.nic.iface": live["name"],
-            "dialog.nic.driver": live["driver"],
-            "dialog.nic.protocol": live["bootproto"] or "N/A",
-            "dialog.nic.vendor": live["vendor"],
-            "dialog.nic.link_status": "Connected" if live["link_detected"]
-                                                  else "Disconnected",
-            "dialog.nic.hwaddress": live["hwaddr"],
-
-            "dialog.nic.ipv4.bootproto": cfg["bootproto"],
-            "dialog.nic.ipv4.address": ipaddr,
-            "dialog.nic.ipv4.netmask": netmask,
-            "dialog.nic.ipv4.gateway": gateway,
-            "dialog.nic.vlanid": vlanid,
-        })
-
-        self.logger.debug("model: %s" % self.model())
-
-        padd = lambda l: l.ljust(14)
-        dialog = self._build_dialog("dialog.nic", "NIC Details: %s" % iface, [
-            ("dialog.nic._row[0]", ui.Row([
-                ("dialog.nic.iface",
-                    ui.KeywordLabel(padd("Interface: "))),
-                ("dialog.nic.driver",
-                    ui.KeywordLabel(padd("Driver: "))),
-                ])),
-
-            ("dialog.nic._row[1]", ui.Row([
-                ("dialog.nic.protocol",
-                    ui.KeywordLabel(padd("Protocol: "))),
-                ("dialog.nic.vendor",
-                    ui.KeywordLabel(padd("Vendor: "))),
-                ])),
-
-            ("dialog.nic._row[2]", ui.Row([
-                ("dialog.nic.link_status",
-                    ui.KeywordLabel(padd("Link Status: "))),
-                ("dialog.nic.hwaddress",
-                    ui.KeywordLabel(padd("MAC Address: "))),
-                ])),
-
-            ("dialog.nic._divider[0]", ui.Divider()),
-
-            ("dialog.nic.ipv4._header", ui.Header("IPv4 Settings")),
-            ("dialog.nic.ipv4.bootproto", ui.Options(
-                "Bootprotocol: ", [
-                    ("none", "Disabled"),
-                    ("dhcp", "DHCP"),
-                    ("static", "Static")
-                ])),
-            ("dialog.nic.ipv4.address",
-                    ui.Entry(padd("IP Address: "))),
-            ("dialog.nic.ipv4.netmask",
-                    ui.Entry(padd("Netmask: "))),
-            ("dialog.nic.ipv4.gateway",
-                    ui.Entry(padd("Gateway: "))),
-
-            ("dialog.nic._divider[1]", ui.Divider()),
-
-            ("dialog.nic.vlanid",
-                    ui.Entry(padd("VLAN ID: "))),
-
-            ("dialog.nic._buttons", ui.Row([
-                ("dialog.nic.save",
-                        ui.Button("Save & Close")),
-                ("dialog.nic.close",
-                        ui.Button("Close")),
-            ]))
-        ])
-
-        dialog.buttons = []
-
-        self._nic_details_group.enabled(False)
-
-        return dialog
+        self.widgets.add(widgets)
+        self.widgets.add(ui.Dialog(path, txt, widgets))
+        return self.widgets[path]
 
     def on_change(self, changes):
         self.logger.info("Checking network stuff")
@@ -262,7 +149,7 @@ class Plugin(plugins.NodePlugin):
                 self._nic_details_group.enabled(True)
             else:
                 self._nic_details_group.enabled(False)
-            self._widgets["dialog.nic.ipv4.bootproto"].enabled(True)
+            self.widgets["dialog.nic.ipv4.bootproto"].enabled(True)
 
     def on_merge(self, effective_changes):
         self.logger.info("Saving network stuff")
@@ -278,7 +165,7 @@ class Plugin(plugins.NodePlugin):
         if "nics" in changes and len(changes) == 1:
             iface = changes["nics"]
             self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
-            self._nic_dialog = self._build_nic_details_dialog(iface)
+            self._nic_dialog = NicDetailsDialog(self, iface)
             return self._nic_dialog
 
         if "dialog.nic.close" in changes:
@@ -292,7 +179,7 @@ class Plugin(plugins.NodePlugin):
         if "button.ping" in changes:
             self.logger.debug("Opening ping page")
             plugin_type = ovirt.node.setup.ping.Plugin
-            self.application.ui.navigate.to_plugin(plugin_type)
+            self.application.switch_to_plugin(plugin_type)
             return
 
         # This object will contain all transaction elements to be executed
@@ -335,11 +222,11 @@ class Plugin(plugins.NodePlugin):
             args = effective_model.values_for(self._nic_details_group)
             txs += self._configure_nic(*args)
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
 
         # Behaves like a page reload
-        return self.ui_content()
+        #return self.ui_content()
 
     def _configure_nic(self, bootproto, ipaddr, netmask, gateway, vlanid):
         vlanid = vlanid or None
@@ -358,3 +245,98 @@ class Plugin(plugins.NodePlugin):
             self.logger.debug("No interface configuration found")
         # Return the resulting transaction
         return model.transaction()
+
+
+class NicDetailsDialog(ui.Dialog):
+    plugin = None
+
+    def __init__(self, plugin, iface):
+        super(NicDetailsDialog, self).__init__("dialog.nic",
+                                               "NIC Details: %s" % iface, [])
+        self.plugin = plugin
+
+        # Populate model with nic specific informations
+        self.logger.debug("Building NIC details dialog for %s" % iface)
+
+        self.logger.debug("Getting informations for NIC details page")
+        live = utils.network.node_nics()[iface]
+        cfg = defaults.Network().retrieve()
+
+        self.logger.debug("live: %s" % live)
+        self.logger.debug("cfg: %s" % cfg)
+
+        if cfg["iface"] != iface:
+            # create empty config if we are not editing the bootif
+            cfg = {k: "" for k in cfg.keys()}
+
+        ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
+                                            cfg["gateway"], cfg["vlanid"])
+
+        if cfg["bootproto"] == "dhcp":
+            nic = utils.network.NIC(live["bridge"])
+            routes = utils.network.Routes()
+            ipaddr, netmask, gateway, vlanid = (nic.ipv4_address().items() +
+                                               (routes.default(),) +
+                                               (nic.vlanid(),))
+
+        self.plugin._model_extra.update({
+            "dialog.nic.iface": live["name"],
+            "dialog.nic.driver": live["driver"],
+            "dialog.nic.protocol": live["bootproto"] or "N/A",
+            "dialog.nic.vendor": live["vendor"],
+            "dialog.nic.link_status": "Connected" if live["link_detected"]
+            else "Disconnected",
+            "dialog.nic.hwaddress": live["hwaddr"],
+
+            "dialog.nic.ipv4.bootproto": cfg["bootproto"],
+            "dialog.nic.ipv4.address": ipaddr,
+            "dialog.nic.ipv4.netmask": netmask,
+            "dialog.nic.ipv4.gateway": gateway,
+            "dialog.nic.vlanid": vlanid,
+        })
+
+        self.logger.debug("model: %s" % self.plugin.model())
+
+        save_n_close = ui.SaveButton("dialog.nic.save", "Save & Close")
+        save_n_close.on_activate.connect(ui.CloseAction())
+
+        padd = lambda l: l.ljust(14)
+        ws = [ui.Row("dialog.nic._row[0]",
+                     [ui.KeywordLabel("dialog.nic.iface", padd("Interface: ")),
+                      ui.KeywordLabel("dialog.nic.driver", padd("Driver: ")),
+                      ]),
+              ui.Row("dialog.nic._row[1]",
+                     [ui.KeywordLabel("dialog.nic.protocol",
+                                      padd("Protocol: ")),
+                      ui.KeywordLabel("dialog.nic.vendor", padd("Vendor: ")),
+                      ]),
+
+              ui.Row("dialog.nic._row[2]",
+                     [ui.KeywordLabel("dialog.nic.link_status",
+                                      padd("Link Status: ")),
+                      ui.KeywordLabel("dialog.nic.hwaddress",
+                                      padd("MAC Address: ")),
+                      ]),
+
+              ui.Divider("dialog.nic._divider[0]"),
+
+              ui.Header("dialog.nic.ipv4._header", "IPv4 Settings"),
+              ui.Options("dialog.nic.ipv4.bootproto",
+                         "Bootprotocol: ", [("none", "Disabled"),
+                                            ("dhcp", "DHCP"),
+                                            ("static", "Static")
+                                            ]),
+              ui.Entry("dialog.nic.ipv4.address", padd("IP Address: ")),
+              ui.Entry("dialog.nic.ipv4.netmask", padd("Netmask: ")),
+              ui.Entry("dialog.nic.ipv4.gateway", padd("Gateway: ")),
+
+              ui.Divider("dialog.nic._divider[1]"),
+
+              ui.Entry("dialog.nic.vlanid", padd("VLAN ID: ")),
+              ]
+        self.plugin.widgets.add(ws)
+        self.children = ws
+        self.buttons = [save_n_close,
+                        ui.CloseButton("dialog.nic.close", "Close"),
+                        ]
+        self.plugin._nic_details_group.enabled(False)

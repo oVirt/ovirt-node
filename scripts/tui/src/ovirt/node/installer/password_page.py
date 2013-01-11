@@ -27,7 +27,7 @@ from ovirt.node import plugins, ui
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
+    _elements = None
 
     def name(self):
         return "Console Password"
@@ -42,20 +42,18 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        widgets = [
-            ("layout._header",
-             ui.Header("Require a password for local console access?")),
-
-            ("divider[0]", ui.Divider()),
-            ("root.password", ui.PasswordEntry("Password:")),
-            ("root.password_confirmation",
-             ui.PasswordEntry("Confirm Password:")),
-        ]
-        self._widgets = dict(widgets)
-        page = ui.Page(widgets)
-        page.buttons = [("button.quit", ui.Button("Quit")),
-                        ("button.back", ui.Button("Back")),
-                        ("button.next", ui.Button("Install"))]
+        ws = [ui.Header("header[0]",
+                        "Require a password for local console access?"),
+              ui.Divider("divider[0]"),
+              ui.PasswordEntry("root.password", "Password:"),
+              ui.PasswordEntry("root.password_confirmation",
+                               "Confirm Password:"),
+              ]
+        self.widgets.add(ws)
+        page = ui.Page("password", ws)
+        page.buttons = [ui.Button("button.quit", "Quit"),
+                        ui.Button("button.back", "Back"),
+                        ui.Button("button.next", "Install")]
         return page
 
     def on_change(self, changes):

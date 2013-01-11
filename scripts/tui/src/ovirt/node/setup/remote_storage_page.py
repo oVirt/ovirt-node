@@ -30,7 +30,6 @@ Configure Remote Storage
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
     def name(self):
         return "Remote Storage"
@@ -43,33 +42,26 @@ class Plugin(plugins.NodePlugin):
         ncfg = defaults.NFSv4().retrieve()
         model = {}
         model["iscsi.initiator_name"] = icfg["name"] or \
-                                        storage.iSCSI().initiator_name()
+            storage.iSCSI().initiator_name()
         model["nfsv4.domain"] = ncfg["domain"]
         return model
 
     def validators(self):
-        return {
-                "iscsi.initiator_name": (valid.Empty() | valid.IQN()),
+        return {"iscsi.initiator_name": (valid.Empty() | valid.IQN()),
                 "nfsv4.domain": (valid.Empty() | valid.FQDN()),
-            }
+                }
 
     def ui_content(self):
-        widgets = [
-            ("header", ui.Header("Remote Storage")),
+        ws = [ui.Header("header", "Remote Storage"),
+              ui.Entry("iscsi.initiator_name", "iSCSI Initiator Name:",
+                       align_vertical=True),
+              ui.Divider("divider[0]"),
+              ui.Entry("nfsv4.domain", "NFSv4 Domain (example.redhat.com):",
+                       align_vertical=True),
+              ]
 
-            ("iscsi.initiator_name", ui.Entry("iSCSI Initiator Name:",
-                                              align_vertical=True)),
-
-            ("divider", ui.Divider()),
-
-            ("nfsv4.domain", ui.Entry("NFSv4 Domain (example.redhat.com):",
-                                      align_vertical=True)),
-        ]
-
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
-
-        page = ui.Page(widgets)
+        page = ui.Page("page", ws)
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -101,5 +93,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*args)
             txs += model.transaction()
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

@@ -30,7 +30,7 @@ Progress page of the installer
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
+    _elements = None
     _worker = None
 
     def __init__(self, application):
@@ -50,17 +50,15 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        widgets = [
-            ("layout._header",
-             ui.Header("%s is beeing installed ..." %
-                       self.application.product.PRODUCT_SHORT)),
-            ("divider[0]", ui.Divider()),
-            ("progressbar", ui.ProgressBar(0)),
-            ("divider[1]", ui.Divider()),
-            ("log", ui.Label("")),
-        ]
-        self._widgets = dict(widgets)
-        page = ui.Page(widgets)
+        ws = [ui.Header("header[0]", "%s is beeing installed ..." %
+                        self.application.product.PRODUCT_SHORT),
+              ui.Divider("divider[0]"),
+              ui.ProgressBar("progressbar", 0),
+              ui.Divider("divider[1]"),
+              ui.Label("log", ""),
+              ]
+        self.widgets.add(ws)
+        page = ui.Page("progress", ws)
         page.buttons = []
         self._worker.start()
         return page
@@ -85,8 +83,8 @@ class InstallerThread(threading.Thread):
         time.sleep(0.3)  # Give the UI some time to build
         transaction = self.__build_transaction()
 
-        progressbar = self.progress_plugin._widgets["progressbar"]
-        log = self.progress_plugin._widgets["log"]
+        progressbar = self.progress_plugin._elements["progressbar"]
+        log = self.progress_plugin._elements["log"]
         log_lines = []
 
         txlen = len(transaction)

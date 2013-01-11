@@ -29,7 +29,7 @@ A plugin for a support page
 class Plugin(NodePlugin):
     def __init__(self, application):
         # Register F8: Display this plugin when F( is pressed
-        show_plugin = lambda: application.ui.switch_to_plugin(self)
+        show_plugin = lambda: application.switch_to_plugin(self)
         application.ui.register_hotkey(["f8"], show_plugin)
         super(Plugin, self).__init__(application)
 
@@ -43,11 +43,9 @@ class Plugin(NodePlugin):
         return False
 
     def ui_content(self):
-        widgets = [
-            ("features.info", ui.Label("FIXME Support info"))
-        ]
+        ws = [ui.Label("features.info", "FIXME Support info")]
 
-        page = ui.Page(widgets)
+        page = ui.Page("page", ws)
         page.buttons = []
         return page
 

@@ -18,16 +18,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import utils
+from ovirt.node.utils import AugeasWrapper as Augeas
+import logging
+import os
 
 """
 Some convenience functions related to networking
 """
 
 
-import logging
 
-from ovirt.node import utils
-from ovirt.node.utils import AugeasWrapper as Augeas
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +47,11 @@ def iface(iface):
     info = {}
 
     aug = Augeas()
-    augbasepath = "/files/etc/sysconfig/network-scripts/ifcfg-%s"
-    augdevicepath = augbasepath % iface
+    filepath = "/files/etc/sysconfig/network-scripts/ifcfg-%s" % iface
+    augdevicepath = "/files%s" % filepath
+
+    if not os.path.exists(filepath):
+        LOGGER.debug("No config file")
 
     # Type
     info["type"] = aug.get(augdevicepath + "/TYPE", True)
@@ -68,10 +72,9 @@ def iface(iface):
     info["is_vlan"] = aug.get(augdevicepath + "/VLAN", True) is not None
     name_says_vlan = "." in iface
     if info["is_vlan"] != name_says_vlan:
-        LOGGER.warning("NIC config says the device is a VLAN, but the name" + \
+        LOGGER.warning("NIC config says the device is a VLAN, but the name" +
                        "doesn't reflect that: %s (%s vs %s)" % (iface,
-                                                            info["is_vlan"],
-                                                            name_says_vlan))
+                       info["is_vlan"], name_says_vlan))
 
     if info["is_vlan"] is True:
         parts = iface.split(".")
@@ -143,6 +146,6 @@ def hostname(new_hostname=None):
         # configured one (only check if we are configuring a new hostname)
         raise RuntimeError(("A new hostname was configured (%s) but the " +
                             "systems hostname (%s) wasn't set accordingly.") %
-                            (cfg_hostname, sys_hostname))
+                           (cfg_hostname, sys_hostname))
 
     return cfg_hostname

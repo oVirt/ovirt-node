@@ -23,15 +23,12 @@
 A ping tool page
 """
 
-import ovirt.node.plugins
-import ovirt.node.valid
-import ovirt.node.ui
-import ovirt.node.utils.process
+from ovirt.node import plugins, valid, ui
+from ovirt.node.utils import process
 
 
-class Plugin(ovirt.node.plugins.NodePlugin):
+class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
     def name(self):
         return "Networking/Ping"
@@ -60,31 +57,29 @@ class Plugin(ovirt.node.plugins.NodePlugin):
     def validators(self):
         """Validators validate the input on change and give UI feedback
         """
-        return {
-                # The address must be fqdn, ipv4 or ipv6 address
-                "ping.address": ovirt.node.valid.FQDNOrIPAddress(),
-                "ping.count": ovirt.node.valid.Number(range=[1, 20]),
-            }
+        # The address must be fqdn, ipv4 or ipv6 address
+        return {"ping.address": valid.FQDNOrIPAddress(),
+                "ping.count": valid.Number(bounds=[1, 20]),
+                }
 
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        widgets = [
-            ("ping.header", ovirt.node.ui.Header("Ping a remote host")),
-            ("ping.address", ovirt.node.ui.Entry("Address:")),
-            ("ping.count", ovirt.node.ui.Entry("Count:")),
-            ("ping.do_ping", ovirt.node.ui.Button("Ping")),
-            ("ping.progress._space", ovirt.node.ui.Divider()),
-            ("ping.progress", ovirt.node.ui.ProgressBar()),
-            ("ping.result._space", ovirt.node.ui.Divider("-")),
-            ("ping.result", ovirt.node.ui.Label("Result:")),
-        ]
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
+        ws = [ui.Header("ping.header", "Ping a remote host"),
+              ui.Entry("ping.address", "Address:"),
+              ui.Entry("ping.count", "Count:"),
+              ui.Divider("divider[1]"),
+              ui.Button("ping.do_ping", "Ping"),
+              ui.Divider("divider[2]"),
+              ui.ProgressBar("ping.progress"),
+              ui.Divider("divider[3]"),
+              ui.Label("ping.result", "Result:"),
+              ]
 
-        page = ovirt.node.ui.Page(widgets)
+        page = ui.Page("page", ws)
         page.buttons = []
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -95,9 +90,6 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             self._model.update(changes)
         if "ping.count" in changes:
             self._model.update(changes)
-
-        if "ping.do_ping" in changes:
-            self.on_merge(changes)
 
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
@@ -111,15 +103,15 @@ class Plugin(ovirt.node.plugins.NodePlugin):
             self.logger.debug("Pinging %s" % addr)
 
             cmd = "ping"
-            if ovirt.node.valid.IPv6Address().validate(addr):
+            if valid.IPv6Address().validate(addr):
                 cmd = "ping6"
 
-            cmd = "%s -c %s %s" % (cmd, count, addr)
+            cmd = "%s -R -c %s %s" % (cmd, count, addr)
             out = ""
             current = 0
-            for line in ovirt.node.utils.process.pipe_async(cmd):
+            for line in process.pipe_async(cmd):
                 out += line
                 if "icmp_req" in line:
                     current += 100.0 / float(count)
-                    self._widgets["ping.progress"].current(current)
-                self._widgets["ping.result"].text("Result:\n\n%s" % out)
+                    self.widgets["ping.progress"].current(current)
+                self.widgets["ping.result"].text("Result:\n\n%s" % out)

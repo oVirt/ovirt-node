@@ -47,7 +47,7 @@ def get_contents(src):
 
 def copy_contents(src, dst):
     assert all([os.path.isfile(f) for f in [src, dst]]), \
-           "Source and destination need to exist"
+        "Source '%s' and destination '%s' need to exist" % (src, dst)
     with open(src, "r") as srcf, open(dst, "wb") as dstf:
         dstf.write(srcf.read())
 

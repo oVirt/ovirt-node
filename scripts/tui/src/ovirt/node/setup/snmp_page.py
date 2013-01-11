@@ -29,7 +29,6 @@ Configure SNMP
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
     def has_ui(self):
         # FIXME is SNMP in a plugin?
@@ -44,37 +43,32 @@ class Plugin(plugins.NodePlugin):
     def model(self):
         cfg = defaults.SNMP().retrieve()
         self.logger.debug(cfg)
-        model = {
-            "snmp.enabled": True if cfg["password"] else False,
-            "snmp.password": "",
-            "snmp.password_confirmation": "",
-        }
+        model = {"snmp.enabled": True if cfg["password"] else False,
+                 "snmp.password": "",
+                 "snmp.password_confirmation": "",
+                 }
         return model
 
     def validators(self):
         same_as_password = plugins.Validator.SameAsIn(self,
                                                       "snmp.password",
                                                       "Password")
-        return {
-                "snmp.password": valid.Text(),
+        return {"snmp.password": valid.Text(),
                 "snmp.password_confirmation": same_as_password,
-            }
+                }
 
     def ui_content(self):
-        widgets = [
-            ("header[0]", ui.Header("SNMP")),
-            ("snmp.enabled", ui.Checkbox("Enable SNMP")),
-            ("divider[0]", ui.Divider()),
+        ws = [ui.Header("header[0]", "SNMP"),
+              ui.Checkbox("snmp.enabled", "Enable SNMP"),
+              ui.Divider("divider[0]"),
+              ui.Header("header[1]", "SNMP Password"),
+              ui.PasswordEntry("snmp.password", "Password:"),
+              ui.PasswordEntry("snmp.password_confirmation",
+                               "Confirm Password:"),
+              ]
 
-            ("header[1]", ui.Header("SNMP Password")),
-            ("snmp.password", ui.PasswordEntry("Password:")),
-            ("snmp.password_confirmation",
-             ui.PasswordEntry("Confirm Password:")),
-        ]
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
-
-        page = ui.Page(widgets)
+        page = ui.Page("page", ws)
+        self.widgets.add(ws)
         return page
 
     def on_change(self, changes):
@@ -102,5 +96,5 @@ class Plugin(plugins.NodePlugin):
             model.update(*args)
             txs += model.transaction()
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

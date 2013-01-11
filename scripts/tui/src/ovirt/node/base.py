@@ -31,8 +31,6 @@ class Base(object):
     With a logger and a simple signaling mechanism - see Gtk+
     """
 
-    _signal_cbs = None
-
     @property
     def logger(self):
         """Logger."""
@@ -42,66 +40,48 @@ class Base(object):
         """Contructor."""
         self._logger = logging.getLogger(self.__module__)
 
-    @staticmethod
-    def signal_change(func):
-        """A decorator for methods which should emit signals
-        """
-        def wrapper(self, userdata=None, *args, **kwargs):
-            signame = func.__name__
-            self.register_signal(signame)
-            self.emit_signal(signame, userdata)
-            return func(self, userdata)
-        return wrapper
+    def new_signal(self):
+        return Base.Signal(self)
 
-    def register_signals(self, names):
-        self.logger.debug("Registering signals: %s" % names)
-        sigs = []
-        for name in names:
-            sigs.append(self.register_signal(name))
-        return sigs
-
-    def register_signal(self, name):
-        """Each signal that get's emitted must be registered using this
-        function.
-
-        This is just to have an overview over the signals.
-        """
-        if self._signal_cbs is None:
-            self._signal_cbs = {}
-        if name not in self._signal_cbs:
-            self._signal_cbs[name] = []
-            self.logger.debug("Registered new signal '%s' for '%s'" % (name,
-                                                                       self))
-        return Base.Signal(self, name)
-
-    def connect_signal(self, name, cb):
-        """Connect an callback to a signal
-        """
-        if not self._signal_cbs:
-            raise Exception("Signals not initialized %s for %s" % (name, self))
-        if name not in self._signal_cbs:
-            raise Exception("Unregistered signal '%s' for '%s'" % (name, self))
-        self._signal_cbs[name].append(cb)
-
-    def emit_signal(self, name, userdata=None):
-        """Emit a signal
-        """
-        if self._signal_cbs is None or name not in self._signal_cbs:
-            return False
-        self.logger.debug("Emitting '%s'" % name)
-        for cb in self._signal_cbs[name]:
-            self.logger.debug("... %s" % cb)
-            cb(self, userdata)
+    def list_signals(self):
+        return [(k, v) for k, v in self.__dict__.items()
+                if isinstance(v, Base.Signal)]
 
     class Signal(object):
         """A convenience class for easier access to signals
         """
-        def __init__(self, base, name):
-            self.name = name
-            self.base = base
+        callbacks = None
+
+        def __init__(self, target):
+            self.target = target
+            self.callbacks = []
+            self.logger = logging.getLogger(self.__module__)
 
         def emit(self, userdata=None):
-            return self.base.emit_signal(self.name, userdata)
+            """Emit a signal
+            """
+            target = self.target
+            for idx, cb in enumerate(self.callbacks):
+                self.logger.debug("(%d/%d) Emitting from %s: %s" %
+                                  (idx + 1, len(self.callbacks), self, cb))
+                cb(target, userdata)
+            return self
 
         def connect(self, cb):
-            return self.base.connect_signal(self.name, cb)
+            self.logger.debug("Connecting %s with %s" % (self, cb))
+            self.callbacks.append(cb)
+            return self
+
+        def clear(self):
+            self.logger.debug("Clearing callbacks on %s" % self)
+            self.callbacks = []
+
+        def target_property(self):
+            return dict(self.target.list_signals())[self][0]
+
+        def __call__(self, userdata=None):
+            self.emit(userdata)
+
+        def __str__(self):
+            return "<%s target='%s' at %s>" % \
+                (self.__class__.__name__, self.target, hex(id(self)))

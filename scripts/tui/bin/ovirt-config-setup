@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export PYTHONPATH=$PYTHONPATH:
-export PYTHONDONTWRITEBYTECODE=x
+#export PYTHONDONTWRITEBYTECODE=x
 #export PYTHONUNBUFFERED=x
 #export PYTHONDEBUG=
 #export PYTHONVERBOSE=x
-python -t -m ovirt.node.setup "$@" && reset
+python -t -m ovirt.node.setup "$@"

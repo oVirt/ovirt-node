@@ -83,7 +83,7 @@ class TableWidget(urwid.WidgetWrap):
 
     _position = 0
 
-    def __init__(self, label, header, items, height, enabled):
+    def __init__(self, label, header, items, selected_item, height, enabled):
         self.__label = urwid.Text(label)
         self.__label_attrmap = urwid.AttrMap(self.__label, self._label_attr)
         self.__header = urwid.Text(header)
@@ -93,11 +93,15 @@ class TableWidget(urwid.WidgetWrap):
         self.__list = urwid.ListBox(self.__walker)
 #        self.__list_linebox = urwid.LineBox(self.__list)
 
+        if selected_item:
+            self.set_focus(items.index(selected_item))
+
         def __on_item_change():
             widget, self._position = self.__list.get_focus()
             self._update_scrollbar()
             urwid.emit_signal(self, "changed", widget)
         urwid.connect_signal(self.__walker, 'modified', __on_item_change)
+
 
         self.__box = urwid.BoxAdapter(self.__list, height)
         self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
@@ -194,16 +198,20 @@ class ModalDialog(urwid.WidgetWrap):
 
         if type(body) in [str, unicode]:
             body = urwid.Text(body)
-
+        self.title = title
         body = urwid.LineBox(body, title)
         overlay = urwid.Overlay(body, previous_widget, 'center',
-                                          ('relative', 100), 'bottom',
-                                          ('relative', 100))
+                                ('relative', 100), 'bottom',
+                                ('relative', 100))
         overlay_attrmap = urwid.AttrMap(overlay, "plugin.widget.dialog")
         super(ModalDialog, self).__init__(overlay_attrmap)
 
     def close(self):
         urwid.emit_signal(self, "close")
+
+    def __repr__(self):
+        return "<%s title='%s' at %s>" % (self.__class__.__name__, self.title,
+                                          hex(id(self)))
 
 
 class Label(urwid.WidgetWrap):
@@ -217,7 +225,7 @@ class Label(urwid.WidgetWrap):
         super(Label, self).__init__(self._label_attrmap)
 
     def text(self, value=None):
-        if value != None:
+        if value is not None:
             self._label.set_text(value)
         return self._label.get_text()
 
@@ -260,7 +268,7 @@ class KeywordLabel(Label):
 class Entry(urwid.WidgetWrap):
     signals = ['change', 'click']
 
-    notice = property(lambda self: self.get_notice(), \
+    notice = property(lambda self: self.get_notice(),
                       lambda self, v: self.set_notice(v))
 
     _selectable = True
@@ -373,13 +381,14 @@ class Button(urwid.WidgetWrap):
         self._button = urwid.Button(label)
 
         def on_click_cb(widget, data=None):
-            urwid.emit_signal(self, 'click', self)
+            if self.selectable():
+                urwid.emit_signal(self, 'click', self)
         urwid.connect_signal(self._button, 'click', on_click_cb)
 
         self._button_attrmap = urwid.AttrMap(self._button, self._button_attr)
 
         self._padding = urwid.Padding(self._button_attrmap,
-                                      width=len(label) + 4)
+                                      width=self.width())
 
         super(Button, self).__init__(self._padding)
 
@@ -390,6 +399,9 @@ class Button(urwid.WidgetWrap):
         else:
             amap = {None: self._button_disabled_attr}
         self._button_attrmap.set_attr_map(amap)
+
+    def width(self):
+        return len(self._button.label) + 4
 
 
 class Divider(urwid.WidgetWrap):
@@ -498,12 +510,12 @@ class RowWidget(urwid.Columns):
 class ProgressBarWidget(urwid.WidgetWrap):
     def __init__(self, current, done):
         self._progressbar = urwid.ProgressBar(
-                               "plugin.widget.progressbar.uncomplete",
-                               "plugin.widget.progressbar.complete",
-                               current, done)
+            "plugin.widget.progressbar.uncomplete",
+            "plugin.widget.progressbar.complete",
+            current, done)
         self._linebox = urwid.LineBox(self._progressbar)
         self._linebox_attrmap = urwid.AttrMap(self._linebox,
-                                        "plugin.widget.progressbar.box")
+                                              "plugin.widget.progressbar.box")
         super(ProgressBarWidget, self).__init__(self._linebox_attrmap)
 
     def set_completion(self, v):

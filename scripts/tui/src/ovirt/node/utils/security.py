@@ -80,7 +80,7 @@ class Ssh(base.Base):
     def strong_rng(self, num_bytes=None):
         import ovirtnode.ovirtfunctions as ofunc
         rng, aes = ofunc.rng_status()
-        if valid.Number(range=[0, None]).validate(num_bytes):
+        if valid.Number(bounds=[0, None]).validate(num_bytes):
             self.__update_profile(num_bytes, aes)
         elif num_bytes is None:
             pass

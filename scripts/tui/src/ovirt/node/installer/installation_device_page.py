@@ -28,7 +28,7 @@ from ovirt.node.installer.boot_device_page import DeviceDetails
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
+    _elements = None
 
     def name(self):
         return "Data Device"
@@ -46,33 +46,29 @@ class Plugin(plugins.NodePlugin):
         page_title = "Please select the disk(s) to use for installation " \
                      "of %s" % self.application.product.PRODUCT_SHORT
 
-        widgets = [
-            ("header", ui.Header(page_title)),
-            ("installation.device", ui.Table("",
-                                     " %6s  %11s  %5s" %
-                                     ("Location", "Device Name", "Size"),
-                                     self._device_list())),
-            ("label.details", DeviceDetails("(No device)"))
-        ]
+        ws = [ui.Header("header[0]", page_title),
+              ui.Table("installation.device", "", " %6s  %11s  %5s" %
+                       ("Location", "Device Name", "Size"),
+                       self._device_list()),
+              DeviceDetails("label.details", "(No device)")
+              ]
 
-        self._widgets = dict(widgets)
-        page = ui.Page(widgets)
-        page.buttons = [("button.quit", ui.Button("Quit")),
-                        ("button.back", ui.Button("Back")),
-                        ("button.next", ui.Button("Continue"))]
+        self.widgets.add(ws)
+        page = ui.Page("device", ws)
+        page.buttons = [ui.Button("button.quit", "Quit"),
+                        ui.Button("button.back", "Back"),
+                        ui.Button("button.next", "Continue")]
         return page
 
     def _device_list(self):
         devices = utils.storage.Devices(fake=True)
         all_devices = devices.get_all().items()
-        return [
-                (name, " %6s  %11s  %5s GB" % (d.bus, d.name, d.size))
-                for name, d in all_devices
-                ]
+        return [(name, " %6s  %11s  %5s GB" % (d.bus, d.name, d.size))
+                for name, d in all_devices]
 
     def on_change(self, changes):
         if "button.next" in changes:
-            self._widgets["label.details"].set_device(changes["button.next"])
+            self._elements["label.details"].set_device(changes["button.next"])
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)

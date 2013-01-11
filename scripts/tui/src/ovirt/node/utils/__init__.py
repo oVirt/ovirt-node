@@ -22,6 +22,7 @@ from ovirt.node import base, exceptions
 import augeas as _augeas
 import hashlib
 import system_config_keyboard.keyboard
+import time
 import traceback
 
 """
@@ -49,8 +50,9 @@ class AugeasWrapper(base.Base):
 
     def get(self, p, strip_quotes=False):
         v = self._aug.get(p)
-        if v and strip_quotes:
-            v = v.strip("'\"")
+        # v can be many types str, bool, ...
+        if type(v) in [str, unicode] and strip_quotes:
+            v = unicode(v).strip("'\"")
         return v
 
     def set(self, p, v, do_save=True):
@@ -111,19 +113,6 @@ class AugeasWrapper(base.Base):
         return values
 
 
-def checksum(filename, algo="md5"):
-    """Calculcate the checksum for a file.
-    """
-    # FIXME switch to some other later on
-    m = hashlib.md5()
-    with open(filename) as f:
-        data = f.read(4096)
-        while data:
-            m.update(data)
-            data = f.read(4096)
-        return m.hexdigest()
-
-
 def parse_bool(txt):
     """Parse common "bool" values (yes, no, true, false, 1)
 
@@ -143,7 +132,7 @@ def parse_bool(txt):
     Returns:
         True if it looks like a bool representing True, False otherwise
     """
-    if txt != None and type(txt) in [str, unicode, int, bool]:
+    if txt is not None and type(txt) in [str, unicode, int, bool]:
         utxt = unicode(txt)
         if len(utxt) > 0 and utxt[0] in ["y", "t", "Y", "T", "1"]:
             return True
@@ -167,6 +156,8 @@ class Keyboard(base.Base):
         self.kbd.write()
         self.kbd.activate()
 
+    def get_current(self):
+        return self.kbd.get()
 
 class Transaction(list, base.Base):
     """A very simple transaction mechanism.
@@ -229,7 +220,7 @@ class Transaction(list, base.Base):
             self.logger.debug("Preparing element '%s'" % element)
             if Transaction.Element not in element.__class__.mro():
                 raise exceptions.PreconditionError(("%s is no Transaction." +
-                                                     "Element") % element)
+                                                    "Element") % element)
             self._prepared_elements.append(element)
             element.prepare()
         return True
@@ -256,7 +247,7 @@ class Transaction(list, base.Base):
             self.logger.warning("Transaction failed: %s" % e.message)
             self.abort()
             raise exceptions.TransactionError("Transaction failed: " +
-                                               "%s" % e.message)
+                                              "%s" % e.message)
         self.logger.info("Transaction '%s' succeeded" % self)
         return True
 
@@ -280,9 +271,6 @@ class Transaction(list, base.Base):
     class Element(base.Base):
         title = None
 
-        def __repr__(self):
-            return "<%s '%s'>" % (self.__class__.__name__, self.title)
-
         def prepare(self):
             """Is expected to be short running and not changing anything
             """
@@ -297,3 +285,29 @@ class Transaction(list, base.Base):
             """Is run in case that one commit of a transaction fails.
             """
             pass
+
+        def __repr__(self):
+            return "<%s '%s'>" % (self.__class__.__name__, self.title)
+
+
+class Timer(base.Base):
+    started = 0
+    ended = 0
+
+    def __enter__(self):
+        """Create backups when starting
+        """
+        self.started = time.time()
+        self.logger.debug("Starting timer at %s" % self.started)
+        return self
+
+    def __exit__(self, a, b, c):
+        """Remove all backups when done
+        """
+        self.stopped = time.time()
+
+    def duration(self):
+        return self.stopped - self.started
+
+    def __str__(self):
+        return "<Timer duration='%s'>" % self.duration()

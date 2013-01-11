@@ -29,7 +29,7 @@ import libvirt
 from ovirt.node import base
 
 
-def virtualization_hardware_is_available():
+def hardware_is_available():
     """Determins if virtualization hardware is available.
 
     Returns:
@@ -40,7 +40,7 @@ def virtualization_hardware_is_available():
     has_module = False
     with open("/proc/modules") as modules:
         for line in modules:
-            has_module = (line.startswith("kvm_intel") or \
+            has_module = (line.startswith("kvm_intel") or
                           line.startswith("kvm_amd"))
             if has_module:
                 break
@@ -51,14 +51,14 @@ def virtualization_hardware_is_available():
     return has_virtualization
 
 
-def virtualization_hardware_is_enabled():
+def hardware_is_enabled():
     """Determins if virtualization hardware is available and enabled.
 
     Returns:
         True if there is hardware virtualization hardware available and enabled
     """
     is_enabled = False
-    if virtualization_hardware_is_available():
+    if hardware_is_available():
         with open("/proc/cpuinfo") as cpuinfo:
             for line in cpuinfo:
                 if line.startswith("flags"):
@@ -67,16 +67,16 @@ def virtualization_hardware_is_enabled():
     return is_enabled
 
 
-def virtualization_hardware_status():
+def hardware_status():
     """Status of virtualization on this machine.
 
     Returns:
         Status of hardware virtualization support on this machine as a human
         read-able string
     """
-    if virtualization_hardware_is_enabled():
+    if hardware_is_enabled():
         return "Virtualization hardware was detected and is enabled"
-    if virtualization_hardware_is_available():
+    if hardware_is_available():
         return "Virtualization hardware was detected but is disabled"
     return "No virtualization hardware was detected on this system"
 

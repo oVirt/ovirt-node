@@ -30,14 +30,11 @@ from ovirt.node.utils import console
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _widgets = None
 
-    _types = [
-                 ("disabled", "Disable"),
-                 ("local", "Local"),
-                 ("ssh", "SSH"),
-                 ("nfs", "NFS")
-             ]
+    _types = [("disabled", "Disable"),
+              ("local", "Local"),
+              ("ssh", "SSH"),
+              ("nfs", "NFS")]
 
     def name(self):
         return "Kdump"
@@ -63,37 +60,34 @@ class Plugin(plugins.NodePlugin):
             "kdump.ssh_location": cfg["ssh"]or "",
             "kdump.nfs_location": cfg["nfs"]or "",
         }
+        self.logger.debug(model)
         return model
 
     def validators(self):
         """Validators validate the input on change and give UI feedback
         """
         # FIXME improve validation for ssh and nfs
-        return {
-                "kdump.type": valid.Options(dict(self._types).keys()),
+        return {"kdump.type": valid.Options(dict(self._types).keys()),
                 "kdump.ssh_location": valid.Empty() | valid.NoSpaces(),
                 "kdump.nfs_location": valid.Empty() | valid.NoSpaces(),
-            }
+                }
 
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        widgets = [
-            ("kdump._header", ui.Header("Configure Kdump")),
-            ("kdump.type", ui.Options("Type", self._types)),
-            ("kdump.ssh_location", ui.Entry("SSH Location " +
-                                            "(example.redhat.com:/var/crash):",
-                                            align_vertical=True)),
-            ("divider[0]", ui.Divider()),
-            ("kdump.nfs_location", ui.Entry("NFS Location " +
-                                            "root@example.redhat.com):",
-                                            align_vertical=True)),
-        ]
-        # Save it "locally" as a dict, for better accessability
-        self._widgets = dict(widgets)
-
-        page = ui.Page(widgets)
+        ws = [ui.Header("kdump._header", "Configure Kdump"),
+              ui.Options("kdump.type", "Type", self._types),
+              ui.Entry("kdump.ssh_location", "SSH Location " +
+                       "(example.redhat.com:/var/crash):",
+                       align_vertical=True),
+              ui.Divider("divider[0]"),
+              ui.Entry("kdump.nfs_location", "NFS Location " +
+                       "root@example.redhat.com):",
+                       align_vertical=True),
+              ]
+        page = ui.Page("page", ws)
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -104,11 +98,11 @@ class Plugin(plugins.NodePlugin):
             net_types = ["kdump.ssh_location", "kdump.nfs_location"]
 
             for w in net_types:
-                self._widgets[w].enabled(False)
+                self.widgets[w].enabled(False)
 
             w = "kdump.%s_location" % changes["kdump.type"]
             if w in net_types:
-                self._widgets[w].enabled(True),
+                self.widgets[w].enabled(True),
                 self.validate({w: ""})
 
     def on_merge(self, effective_changes):

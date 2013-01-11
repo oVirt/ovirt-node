@@ -18,14 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import base, utils
+from ovirt.node.utils import process
+import os.path
+import rpm
 
 """
 A module to access system wide stuff
 e.g. services, reboot ...
 """
 
-from ovirt.node import base, utils
-from ovirt.node.utils import process
 
 
 def reboot():
@@ -36,19 +38,24 @@ def poweroff():
     process.system("poweroff")
 
 
+def is_efi():
+    return os.path.exists("/sys/firmware/efi")
+
+
 class ProductInformation(base.Base):
     _version_filename = "/files/etc/default/version"
     PRODUCT_SHORT = None
     VERSION = None
-    RLEASE = None
+    RELEASE = None
 
     def __init__(self):
+        super(ProductInformation, self).__init__()
         self.load()
 
     def load(self):
         aug = utils.AugeasWrapper()
         augg = lambda k: aug.get("\n%s/%s\n" % (self._version_filename, k),
-                                                strip_quotes=True)
+                                 strip_quotes=True)
 
         # read product / version info
         self.PRODUCT_SHORT = augg("PRODUCT_SHORT") or "oVirt"
@@ -57,3 +64,67 @@ class ProductInformation(base.Base):
 
     def __str__(self):
         return "%s %s-%s" % (self.PRODUCT_SHORT, self.VERSION, self.RELEASE)
+
+
+class InstallationMedia(base.Base):
+    """Informations about the installation media - where the current
+    installation is run from
+    """
+    version = None
+    release = None
+
+    def __init__(self, and_load=True):
+        super(InstallationMedia, self).__init__()
+        if and_load:
+            self.load()
+
+    def load(self):
+        from ovirtnode.ovirtfunctions import get_media_version_number
+        self.version, self.release = get_media_version_number()
+
+    @property
+    def full_version(self):
+        return "%s-%s" % (self.version, self.release)
+
+    def __str__(self):
+        return self.full_version()
+
+    def __cmp__(self, other):
+        """Compare two medias
+        >>> media = InstallationMedia(False)
+        >>> media.version, media.release = "2.5", "0"
+        >>> media.full_version
+        '2.5-0'
+        >>> installed = InstalledMedia(False)
+        >>> installed.version, installed.release = "2.6", "0"
+        >>> installed.full_version
+        '2.6-0'
+        >>> media < installed
+        True
+        >>> media == installed
+        False
+        >>> media > installed
+        False
+        >>> media.version = "2.6"
+        >>> media == installed
+        True
+        >>> media.release = "1"
+        >>> media == installed
+        False
+        >>> media > installed
+        True
+        """
+        assert InstallationMedia in type(other).mro()
+        this_version = ('1', self.version, self.release)
+        other_version = ('1', other.version, other.release)
+        return rpm.labelCompare(this_version,  # @UndefinedVariable
+                                other_version)
+
+
+class InstalledMedia(InstallationMedia):
+    """Informations about the installed media - infos from the image
+    """
+
+    def load(self):
+            from ovirtnode.ovirtfunctions import get_installed_version_number
+            self.version, self.release = get_installed_version_number()

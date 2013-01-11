@@ -55,10 +55,8 @@ class AugeasProvider(base.Base):
         basepath = "/files/%s/" % self.filename.strip("/")
         if new_dict:
             # If values are given, update the file
-            LOGGER.debug("Updating oVirtNode defaults file '%s': %s %s" % (
-                                                                self.filename,
-                                                                new_dict,
-                                                                basepath))
+            LOGGER.debug("Updating oVirtNode defaults file '%s': %s %s" %
+                         (self.filename, new_dict, basepath))
             aug.set_many(new_dict, basepath)
 
             if remove_empty:
@@ -121,9 +119,10 @@ class SimpleProvider(base.Base):
         >>> txt += "A=ah\\n"
         >>> txt += "B=beh\\n"
         >>> txt += "C=\\"ceh\\"\\n"
+        >>> txt += "D=\\"more=less\\"\\n"
         >>> p = SimpleProvider("/tmp/cfg_dummy")
         >>> sorted(p._parse_dict(StringIO.StringIO(txt)).items())
-        [('A', 'ah'), ('B', 'beh'), ('C', 'ceh')]
+        [('A', 'ah'), ('B', 'beh'), ('C', 'ceh'), ('D', 'more=less')]
         """
         cfg = {}
         for line in source:
@@ -183,6 +182,7 @@ class ConfigFile(base.Base):
 
 class NodeConfigFileSection(base.Base):
     none_value = None
+    keys = []
 
     def __init__(self, cfgfile=None):
         super(NodeConfigFileSection, self).__init__()
@@ -245,7 +245,7 @@ class NodeConfigFileSection(base.Base):
     def _map_config_and_update_defaults(self, *args, **kwargs):
         assert len(args) == 0
         assert (set(self.keys) ^ set(kwargs.keys())) == set(), \
-               "Keys: %s, Args: %s" % (self.keys, kwargs)
+            "Keys: %s, Args: %s" % (self.keys, kwargs)
         new_dict = {k.upper(): v for k, v in kwargs.items()}
         self.defaults.update(new_dict, remove_empty=True)
 
@@ -317,7 +317,7 @@ class Network(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, iface, bootproto, ipaddr=None, netmask=None, gateway=None,
-                  vlanid=None):
+               vlanid=None):
         if bootproto not in ["static", "none", "dhcp", None]:
             raise exceptions.InvalidData("Unknown bootprotocol: %s" %
                                          bootproto)
@@ -442,17 +442,16 @@ class Nameservers(NodeConfigFileSection):
         assert type(servers) is list
         servers = filter(lambda i: i.strip() not in ["", None], servers)
         map(valid.IPv4Address(), servers)
-        return {
-                "OVIRT_DNS": ",".join(servers) or None
+        return {"OVIRT_DNS": ",".join(servers) or None
                 }
 
     def retrieve(self):
         """We mangle the original vale a bit for py convenience
         """
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        cfg.update({
-            "servers": cfg["servers"].split(",") if cfg["servers"] else None
-            })
+        cfg.update({"servers": cfg["servers"].split(",") if cfg["servers"]
+                    else None
+                    })
         return cfg
 
     def transaction(self):
@@ -502,13 +501,13 @@ class Nameservers(NodeConfigFileSection):
 
             def commit(self):
                 # Write resolv.conf any way, sometimes without servers
-                comment = ("Please make changes through the TUI. " + \
-                           "Manual edits to this file will be " + \
+                comment = ("Please make changes through the TUI. " +
+                           "Manual edits to this file will be " +
                            "lost on reboot")
                 aug.set("/files/etc/resolv.conf/#comment[1]", comment)
                 # Now set the nameservers
                 config.network.nameservers(servers)
-                utils.fs.persist_config("/etc/resolv.conf")
+                utils.fs.Config().persist("/etc/resolv.conf")
 
         class UpdatePeerDNS(utils.Transaction.Element):
             title = "Update PEERDNS statement in ifcfg-* files"
@@ -551,15 +550,14 @@ class Timeservers(NodeConfigFileSection):
         assert type(servers) is list
         servers = filter(lambda i: i.strip() not in ["", None], servers)
         map(valid.FQDNOrIPAddress(), servers)
-        return {
-                "OVIRT_NTP": ",".join(servers) or None
+        return {"OVIRT_NTP": ",".join(servers) or None
                 }
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        cfg.update({
-            "servers": cfg["servers"].split(",") if cfg["servers"] else None
-            })
+        cfg.update({"servers": cfg["servers"].split(",") if cfg["servers"]
+                    else None
+                    })
         return cfg
 
     def transaction(self):
@@ -650,12 +648,14 @@ class Collectd(NodeConfigFileSection):
             title = "Setting collect server and port"
 
             def commit(self):
-                import ovirt_config_setup.collectd as ocollectd
-                if ocollectd.write_collectd_config(server, port):
+                # pylint: disable-msg=E0611
+                from ovirt_config_setup import collectd  # @UnresolvedImport
+                # pylint: enable-msg=E0611
+                if collectd.write_collectd_config(server, port):
                     self.logger.debug("Collectd was configured successfully")
                 else:
                     raise exceptions.TransactionError("Failed to configure " +
-                                                       "collectd")
+                                                      "collectd")
 
         tx = utils.Transaction("Configuring collectd")
         tx.append(ConfigureCollectd())
@@ -677,7 +677,7 @@ class RHN(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, rhntype, url, ca_cert, username, password, profile,
-                  activationkey, org, proxy, proxyuser, proxypassword):
+               activationkey, org, proxy, proxyuser, proxypassword):
         pass
 
 
@@ -705,15 +705,13 @@ class KDump(NodeConfigFileSection):
         (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(nfs)
         (valid.Empty(or_none=True) | valid.URL())(ssh)
         (valid.Empty(or_none=True) | valid.Boolean())(local)
-        return {
-                "OVIRT_KDUMP_LOCAL": "true" if local else None
+        return {"OVIRT_KDUMP_LOCAL": "true" if local else None
                 }
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        cfg.update({
-                "local": True if cfg["local"] == "true" else None
-                })
+        cfg.update({"local": True if cfg["local"] == "true" else None
+                    })
         return cfg
 
     def transaction(self):
@@ -792,7 +790,7 @@ class KDump(NodeConfigFileSection):
 
             def commit(self):
                 from ovirtnode.ovirtfunctions import unmount_config, \
-                                                     ovirt_store_config
+                    ovirt_store_config
                 from ovirt.node.utils.process import system
 
                 if utils.process.system("service kdump restart") > 0:
@@ -896,11 +894,13 @@ class SNMP(NodeConfigFileSection):
 
             def commit(self):
                 # FIXME snmp plugin needs to be placed somewhere else (in src)
-                import ovirt_config_setup.snmp as osnmp
+                # pylint: disable-msg=E0611
+                from ovirt_config_setup import snmp  # @UnresolvedImport
+                # pylint: enable-msg=E0611
                 if password:
-                    osnmp.enable_snmpd(password)
+                    snmp.enable_snmpd(password)
                 else:
-                    osnmp.disable_snmpd()
+                    snmp.disable_snmpd()
 
         tx = utils.Transaction("Configuring SNMP")
         tx.append(ConfigureSNMP())
@@ -991,15 +991,13 @@ class CIM(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, enabled):
-        return {
-                "OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else None
+        return {"OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else None
                 }
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        cfg.update({
-                "enabled": True if cfg["enabled"] == "1" else None
-                })
+        cfg.update({"enabled": True if cfg["enabled"] == "1" else None
+                    })
         return cfg
 
     def transaction(self):
@@ -1009,9 +1007,11 @@ class CIM(NodeConfigFileSection):
         class ConfigureCIM(utils.Transaction.Element):
             def commit(self):
                 # FIXME snmp plugin needs to be placed somewhere else (in src)
-                import ovirt_config_setup.cim as ocim
+                # pylint: disable-msg=E0611
+                from ovirt_config_setup import cim  # @UnresolvedImport
+                # pylint: enable-msg=E0611
                 if enabled:
-                    if ocim.enable_cim():
+                    if cim.enable_cim():
                         self.logger.debug("Configured CIM successfully")
                     else:
                         raise exceptions.TransactionError("CIM configuration" +
@@ -1079,9 +1079,8 @@ class NFSv4(NodeConfigFileSection):
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, domain):
         (valid.Empty() | valid.FQDN())(domain)
-        return {
-                "OVIRT_NFSV4_DOMAIN": domain or None
-        }
+        return {"OVIRT_NFSV4_DOMAIN": domain or None
+                }
 
     def transaction(self):
         cfg = dict(self.retrieve())
@@ -1121,18 +1120,16 @@ class SSH(NodeConfigFileSection):
         valid.Boolean()(pwauth)
         (valid.Number() | valid.Empty(or_none=True))(num_bytes)
         (valid.Boolean() | valid.Empty(or_none=True))(disable_aesni)
-        return {
-                "OVIRT_SSH_PWAUTH": "yes" if pwauth else None,
+        return {"OVIRT_SSH_PWAUTH": "yes" if pwauth else None,
                 "OVIRT_DISABLE_AES_NI": "true" if disable_aesni else None
                 }
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
-        cfg.update({
-                "pwauth": True if cfg["pwauth"] == "yes" else False,
-                "disable_aesni": True if cfg["disable_aesni"] == "true" \
-                                      else False
-                })
+        cfg.update({"pwauth": True if cfg["pwauth"] == "yes" else False,
+                    "disable_aesni": True if cfg["disable_aesni"] == "true"
+                    else False
+                    })
         return cfg
 
     def transaction(self):
@@ -1168,3 +1165,37 @@ class SSH(NodeConfigFileSection):
         if disable_aesni in [True, False]:
             tx.append(ConfigureAESNI())
         return tx
+
+
+class Storage(NodeConfigFileSection):
+    """Configure storage
+    This is a class to handle the storage parameters used at installation time
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = NFSv4(cfgfile)
+    >>> domain = "foo.example"
+    >>> n.update(domain)
+    >>> n.retrieve().items()
+    [('domain', 'foo.example')]
+    """
+    # FIXME this key is new!
+    keys = ("OVIRT_INIT",
+            "OVIRT_ROOT_INSTALL",
+            "OVIRT_OVERCOMMIT",
+            "OVIRT_VOL_ROOT_SIZE",
+            "OVIRT_VOL_EFI_SIZE",
+            "OVIRT_VOL_SWAP_SIZE",
+            "OVIRT_VOL_LOGGING_SIZE",
+            "OVIRT_VOL_CONFIG_SIZE",
+            "OVIRT_VOL_DATA_SIZE",
+            )
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, init, root_install, overcommit, root_size, efi_size,
+               swap_size, logging_size, config_size, data_size):
+        # FIXME no checking!
+        pass
+
+    def transaction(self):
+        return None

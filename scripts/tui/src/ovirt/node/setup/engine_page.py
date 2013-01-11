@@ -28,8 +28,6 @@ Configure Engine
 
 
 class Plugin(plugins.NodePlugin):
-    _widgets = None
-
     def name(self):
         return "oVirt Engine"
 
@@ -49,38 +47,31 @@ class Plugin(plugins.NodePlugin):
     def validators(self):
         same_as_password = plugins.Validator.SameAsIn(self, "vdsm.password",
                                                       "Password")
-        return {
-                "vdsm.address": valid.FQDNOrIPAddress() | valid.Empty(),
+        return {"vdsm.address": valid.FQDNOrIPAddress() | valid.Empty(),
                 "vdsm.port": valid.Port(),
                 "vdsm.password": valid.Text(),
                 "vdsm.password_confirmation": same_as_password,
-            }
+                }
 
     def ui_content(self):
-        widgets = [
-            ("header", ui.Header("oVirt Engine Configuration")),
-
-            ("vdsm.address", ui.Entry("Management Server:")),
-            ("vdsm.port", ui.Entry("Management Server Port:")),
-
-            ("divider[1]", ui.Divider()),
-
-            ("vdsm.connect_and_validate", ui.Checkbox(
-                    "Connect to oVirt Engine and Validate Certificate")),
-
-            ("divider[0]", ui.Divider()),
-            ("vdsm.password._label", ui.Label(
-                    "Optional password for adding Node through oVirt " +
-                    "Engine UI")),
-
-            ("vdsm.password", ui.PasswordEntry("Password:")),
-            ("vdsm.password_confirmation",
-             ui.PasswordEntry("Confirm Password:")),
-        ]
+        ws = [ui.Header("header[0]", "oVirt Engine Configuration"),
+              ui.Entry("vdsm.address", "Management Server:"),
+              ui.Entry("vdsm.port", "Management Server Port:"),
+              ui.Divider("divider[0]"),
+              ui.Checkbox("vdsm.connect_and_validate",
+                          "Connect to oVirt Engine and Validate Certificate"),
+              ui.Divider("divider[1]"),
+              ui.Label("vdsm.password._label",
+                       "Optional password for adding Node through oVirt " +
+                       "Engine UI"),
+              ui.PasswordEntry("vdsm.password", "Password:"),
+              ui.PasswordEntry("vdsm.password_confirmation",
+                               "Confirm Password:"),
+              ]
         # Save it "locally" as a dict, for better accessability
-        self._widgets = plugins.WidgetsHelper(dict(widgets))
+        self.widgets.add(ws)
 
-        page = ui.Page(widgets)
+        page = ui.Page("page", ws)
         return page
 
     def on_change(self, changes):
@@ -115,7 +106,7 @@ class Plugin(plugins.NodePlugin):
             self.logger.debug("Connecting to engine")
             txs += [ActivateVDSM()]
 
-        progress_dialog = ui.TransactionProgressDialog(txs, self)
+        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
 
         # Acts like a page reload

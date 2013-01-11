@@ -18,16 +18,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+import base
+import exceptions
+import os.path
+import re
+import socket
+import subprocess
+import urlparse
 
 """
 A module with several validators for common user inputs.
 """
-import re
-import socket
-import urlparse
 
-import base
-import exceptions
 
 
 class Validator(base.Base):
@@ -64,33 +66,87 @@ class Validator(base.Base):
 
     def raise_exception(self):
         msg = self.__exception_msg.format(description=self.description)
+        # pylint: disable-msg=E1101
         raise exceptions.InvalidData(msg)
+        # pylint: enable-msg=E1101
 
     def __or__(self, other):
         """This allows to combin validators using |
+        >>> a = RegexValidator()
+        >>> a.pattern = "^a"
+        >>> a.description ="a at the beginning"
+        >>> b = RegexValidator()
+        >>> b.pattern = "b$"
+        >>> b.description ="b at the end"
+        >>> a.validate("ab")
+        True
+        >>> b.validate("ab")
+        True
+        >>> b.validate("abc")
+        False
+        >>> (a | b).validate("abc")
+        True
+        >>> (a | b).validate("cb")
+        True
+        >>> (a | b).validate("c")
+        False
         """
-        validator = Validator()
-        validator.description = " or ".join([self.description,
-                                             other.description])
-        validator.validate = lambda value: (self.validate(value) or \
-                                            other.validate(value))
-        return validator
+        this = self
+
+        class OrValidator(Validator):
+            description = " or ".join([this.description,
+                                       other.description])
+
+            def validate(self, value):
+                return (this.validate(value) or other.validate(value))
+
+        return OrValidator()
 
     def __and__(self, other):
         """This allows to combin validators using &
+        >>> a = RegexValidator()
+        >>> a.pattern = "^a"
+        >>> a.description ="a at the beginning"
+        >>> b = RegexValidator()
+        >>> b.pattern = "b$"
+        >>> b.description ="b at the end"
+        >>> a.validate("ab")
+        True
+        >>> b.validate("ab")
+        True
+        >>> b.validate("abc")
+        False
+        >>> (a & b).validate("abc")
+        False
+        >>> (a & b).validate("cb")
+        False
+        >>> (a & b).validate("c")
+        False
+        >>> (a & b).validate("acb")
+        True
         """
-        validator = Validator()
-        validator.description = " and ".join([self.description,
-                                             other.description])
-        validator.validate = lambda value: (self.validate(value) and \
-                                            other.validate(value))
-        return validator
+        this = self
+
+        class AndValidator(Validator):
+            description = " and ".join([this.description,
+                                        other.description])
+
+            def validate(self, value):
+                return (this.validate(value) and other.validate(value))
+
+        return AndValidator()
 
 
 class RegexValidator(Validator):
     """A validator which uses a regular expression to validate a value.
     """
     # pattern defined by subclass
+    pattern = None
+
+    def __init__(self, pattern=None, description=None):
+        super(RegexValidator, self).__init__()
+        self.pattern = self.pattern or pattern
+        self.description = self.description or description
 
     def validate(self, value):
         if type(self.pattern) in [str, unicode]:
@@ -101,7 +157,7 @@ class RegexValidator(Validator):
             pass
         else:
             self.logger.warning("Unknown type: %s %s" % (value, type(value)))
-        return re.compile(*self.pattern).search(value) != None
+        return re.compile(*self.pattern).search(value) is not None
 
 
 class Text(RegexValidator):
@@ -131,32 +187,42 @@ class Number(RegexValidator):
     True
     >>> Number()("42")
     True
-    >>> Number(range=[0, None]).validate(-10)
+    >>> Number(bounds=[0, None]).validate(-10)
     False
-    >>> Number(range=[0, 10]).validate(11)
+    >>> Number(bounds=[0, 10]).validate(11)
     False
     >>> Number().validate("4 2")
+    False
+    >>> Number(exactly=42).validate("42")
+    True
+    >>> Number(exactly=42).validate("4")
     False
     """
 
     description = "a number"
     pattern = "^[-+]?\d+$"
-    range = [None, None]
+    bounds = None
 
-    def __init__(self, range=None):
+    def __init__(self, bounds=None, exactly=None):
         super(Number, self).__init__()
-        if range:
-            self.range = range
-            self.description = "%s in the range %s" % (self.description, range)
+        if bounds:
+            self.bounds = bounds
+            self.description = "%s in the bounds %s" % (self.description,
+                                                        bounds)
+        elif exactly is not None:
+            self.logger.debug("Using exact number: %s" % exactly)
+            self.pattern = "^%d$" % exactly
+            self.description = "%s" % (exactly)
 
     def validate(self, value):
+        self.logger.debug("Checking number %s %s %s" % (self, self.pattern, value))
         valid = RegexValidator.validate(self, value)
-        if valid:
-            self.logger.debug("Checking range: %s" % self.range)
-            vmin, vmax = self.range
+        if valid and self.bounds:
+            self.logger.debug("Checking bounds: %s" % self.bounds)
+            vmin, vmax = self.bounds
             value = int(value)
-            if (vmin != None and value < vmin) or \
-               (vmax != None and value > vmax):
+            if (vmin is not None and value < vmin) or \
+               (vmax is not None and value > vmax):
                 valid = False
         return valid
 
@@ -175,7 +241,7 @@ class Port(Number):
     description = "a port number"
 
     def __init__(self):
-        super(Port, self).__init__(range=[1, 65535])
+        super(Port, self).__init__(bounds=[1, 65535])
 
 
 class NoSpaces(RegexValidator):
@@ -318,7 +384,7 @@ class Empty(Validator):
         self.or_none = or_none
 
     def validate(self, value):
-        return value == "" or (self.or_none and value == None)
+        return value == "" or (self.or_none and value is None)
 
 
 class URL(Validator):
@@ -331,12 +397,14 @@ class URL(Validator):
     def validate(self, value):
         p = urlparse.urlparse(value)
         is_valid = True
+        # pylint: disable-msg=E1101
         if self.requires_scheme:
             is_valid &= p.scheme != ""
         if self.requires_netloc:
             is_valid &= p.netloc != ""
         if self.requires_path:
             is_valid &= p.path != ""
+        # pylint: enable-msg=E1101
         return is_valid
 
 
@@ -360,3 +428,20 @@ class IQN(RegexValidator):
 
     description = "a valid IQN"
     pattern = "^iqn\.(\d{4}-\d{2})\.([^:]+):"
+
+
+class BlockDevice(Validator):
+    """Matches if the value is a block device
+    """
+    description = "a valid block device"
+
+    def validate(self, value):
+        is_valid = False
+        try:
+            if os.path.exists(value):
+                subprocess.check_call("test -b %s" % value, shell=True,
+                                      close_fds=True)
+                is_valid = True
+        except Exception as e:
+            is_valid = False
+        return is_valid

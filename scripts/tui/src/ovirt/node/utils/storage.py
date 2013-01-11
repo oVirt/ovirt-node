@@ -52,21 +52,36 @@ class Devices(base.Base):
     def __init__(self, fake=False):
         super(Devices, self).__init__()
         if fake:
-            self._devices = {
-            "name": Device("bus", "name", "size", "desc", "serial", "model")
-            }
+            self._fake_devices = {}
+            for n in range(1, 4):
+                args = ["%s%s" % (k, n) for k in "bus", "name", "size",
+                        "desc", "serial", "model"]
+                self._fake_devices[args[1]] = Device(*tuple(args))
         else:
             import ovirtnode.storage
             self._storage = ovirtnode.storage.Storage()
 
+    def live_disk_name(self):
+        """get the device name of the live-media we are booting from
+        """
+        from ovirtnode.ovirtfunctions import get_live_disk
+        name = get_live_disk()
+        if not "/dev/mapper" in name:
+            # FIXME explain ...
+            name = "/dev/%s" % name.rstrip('0123456789')
+        return name
+
     def get_all(self):
-        if self._devices:
-            return self._devices
+        """Get all available storage devices attached to this system
+        """
+        if self._fake_devices:
+            return self._fake_devices
         from ovirtnode.ovirtfunctions import translate_multipath_device
         dev_names, disk_dict = self._storage.get_udev_devices()
         devices = {}
-        for dev in dev_names:
-            dev = translate_multipath_device(dev)
+        for _dev in dev_names:
+            dev = translate_multipath_device(_dev)
+            self.logger.debug("Checking device %s (%s)" % (dev, _dev))
             if dev in devices:
                 self.logger.warning("Device is already in dict: %s" % dev)
                 continue
@@ -74,7 +89,7 @@ class Devices(base.Base):
                 self.logger.warning("Device in names but not in dict: " +
                                     "%s" % dev)
                 continue
-            if dev == self.live_disk:
+            if dev == self.live_disk_name():
                 self.logger.info("Ignoring device " +
                                  "%s it's the live media" % dev)
                 continue
@@ -104,3 +119,9 @@ class Device(base.Base):
         props = ["bus", "name", "size", "desc", "serial", "model"]
         for prop, val in zip(props, vals):
             self.__dict__[prop] = val
+
+
+class Swap(base.Base):
+    def calculcate_default_size(self, overcommit):
+        from ovirtnode.ovirtfunctions import calculate_swap_size
+        return calculate_swap_size(overcommit)
