@@ -321,14 +321,17 @@ def rhn_check():
 
 
 def sam_check():
-    samcheck_cmd = subprocess_closefds("subscription-manager identity",
-                                       shell=True, stdout=PIPE,
-                                       stderr=open('/dev/null', 'w'))
-    if "identity is:" in samcheck_cmd.stdout.read():
-        return True
+    filebased = True
+    registered = False
+    if filebased:
+        # Thefollowing file exists when the sys is registered with a sat server
+        registered = os.path.exists("/etc/rhsm/ca/candlepin-local.pem")
     else:
-        return False
-
+        samcheck_cmd = subprocess_closefds("subscription-manager identity",
+                                           shell=True, stdout=PIPE,
+                                           stderr=open('/dev/null', 'w'))
+        registered = "identity is:" in samcheck_cmd.stdout.read()
+    return registered
 
 def get_rhn_status():
     msg = ""
@@ -590,9 +593,13 @@ class Plugin(PluginBase):
                                "Login/Password must not be empty\n",
                                buttons=['Ok'])
             return False
-        if os.path.exists("/etc/sysconfig/rhn/systemid"):
-            remove_config("/etc/sysconfig/rhn/systemid")
-            os.remove("/etc/sysconfig/rhn/systemid")
+        key_files = ["/etc/sysconfig/rhn/systemid",  # To check RHN
+                     "/etc/rhsm/ca/candlepin-local.pem"  # To check SAM
+                     ]
+        for key_file in key_files:
+            if os.path.exists(key_file):
+                remove_config(key_file)
+                os.remove(key_file)
         if self.sam.value() == 1:
             if os.path.exists(RHN_CONFIG_FILE):
                 remove_config(RHN_CONFIG_FILE)
