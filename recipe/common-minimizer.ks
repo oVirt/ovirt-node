@@ -1,6 +1,5 @@
 droprpm system-config-*
 keeprpm system-config-keyboard-base
-droprpm libsemanage-python
 
 droprpm mkinitrd
 droprpm checkpolicy
@@ -329,7 +328,6 @@ droprpm gamin
 droprpm gnupg2
 droprpm hdparm
 droprpm libicu
-droprpm libsemanage-python
 droprpm linux-atm-libs
 droprpm make
 droprpm mtools
