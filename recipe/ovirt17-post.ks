@@ -99,7 +99,6 @@ require {
     type passwd_t;
     type user_tmp_t;
     type var_log_t;
-    type consoletype_t;
     type net_conf_t;
     type collectd_t;
     type virt_etc_t;
@@ -136,10 +135,11 @@ require {
     class sock_file { getattr write open append };
 }
 allow mount_t shadow_t:file mounton;
-allow setfiles_t initrc_tmp_t:file append;
 allow setfiles_t net_conf_t:file read;
-allow consoletype_t var_log_t:file append;
-allow passwd_t user_tmp_t:file write;
+# Unknown on F18:
+#allow setfiles_t initrc_tmp_t:file append;
+#allow consoletype_t var_log_t:file append;
+#allow passwd_t user_tmp_t:file write;
 # Unknown on F17 brctl_t:
 #allow brctl_t net_conf_t:file read;
 # Suppose because of collectd libvirt plugin
@@ -154,8 +154,16 @@ cat > ovirt.fc << \EOF_OVIRT_FC
 /etc/rc\.d/init\.d/ovirt-firstboot             -- gen_context(system_u:object_r:ovirt_exec_t)
 /etc/rc\.d/init\.d/ovirt-post             -- gen_context(system_u:object_r:ovirt_exec_t)
 EOF_OVIRT_FC
+cat > ovirtmount.te << \EOF_OVIRT_MOUNT_TE
+policy_module(ovirtmount, 1.0)
+gen_require(`
+     type mount_t;
+')
+unconfined_domain(mount_t)
+EOF_OVIRT_MOUNT_TE
 make NAME=targeted -f /usr/share/selinux/devel/Makefile
 semodule -v -i ovirt.pp
+semodule -v -i ovirtmount.pp
 cd /
 rm -rf /tmp/SELinux
 echo "-w /etc/shadow -p wa" >> /etc/audit/audit.rules

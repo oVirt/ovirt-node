@@ -35,7 +35,7 @@ droprpm postfix
 droprpm mysql*
 
 droprpm sysklogd
-
+droprpm selinux-policy-devel
 # pam complains when this is missing
 keeprpm ConsoleKit-libs
 
