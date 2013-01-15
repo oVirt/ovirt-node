@@ -18,16 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import plugins, ui, valid
+from ovirt.node.plugins import Validator
 
 """
 Password page of the installer
 """
-from ovirt.node import plugins, ui
 
 
 class Plugin(plugins.NodePlugin):
-    _model = None
-    _elements = None
+    _model = {}
 
     def name(self):
         return "Console Password"
@@ -39,7 +39,10 @@ class Plugin(plugins.NodePlugin):
         return self._model or {}
 
     def validators(self):
-        return {}
+        return {"root.password_confirmation":
+                Validator.SameAsIn(self, "root.password", "Password") |
+                valid.Empty()
+                }
 
     def ui_content(self):
         ws = [ui.Header("header[0]",
@@ -51,16 +54,19 @@ class Plugin(plugins.NodePlugin):
               ]
         self.widgets.add(ws)
         page = ui.Page("password", ws)
-        page.buttons = [ui.Button("button.quit", "Quit"),
+        page.buttons = [ui.QuitButton("button.quit", "Quit"),
                         ui.Button("button.back", "Back"),
-                        ui.Button("button.next", "Install")]
+                        ui.SaveButton("button.next", "Install")]
         return page
 
     def on_change(self, changes):
-        pass
+        if changes.contains_any(["root.password_confirmation"]):
+            self._model.update(changes)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
-        if changes.contains_any(["root.password_confirmation", "button.next"]):
-            self.transaction = "a"
+        if changes.contains_any(["button.back"]):
+            self.application.ui.navigate.to_previous_plugin()
+        elif changes.contains_any(["root.password_confirmation",
+                                   "button.next"]):
             self.application.ui.navigate.to_next_plugin()

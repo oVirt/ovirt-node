@@ -27,7 +27,6 @@ from ovirt.node import plugins, ui, utils
 
 class Plugin(plugins.NodePlugin):
     _model = {}
-    _elements = None
 
     def name(self):
         return "Keyboard"
@@ -36,21 +35,24 @@ class Plugin(plugins.NodePlugin):
         return 20
 
     def model(self):
-        return self._model or {}
+        return self._model
 
     def validators(self):
         return {}
 
     def ui_content(self):
         kbd = utils.Keyboard()
+        c = kbd.get_current()
+        self.logger.debug("Current layout: %s" % c)
         ws = [ui.Header("header[0]", "Keyboard Layout Selection"),
-              ui.Table("keyboard.layout", "Available Keyboard Layouts",
-                       "", kbd.available_layouts()),
+              ui.Table("keyboard.layout", "", "Available Keyboard Layouts",
+                       kbd.available_layouts(), c),
+              ui.Label("label[0]", "(Hit return to select a layout)")
               ]
         self.widgets.add(ws)
         page = ui.Page("keyboard", ws)
-        page.buttons = [ui.Button("button.quit", "Quit"),
-                        ui.Button("button.next", "Continue")]
+        page.buttons = [ui.QuitButton("button.quit", "Quit"),
+                        ui.SaveButton("button.next", "Continue")]
         return page
 
     def on_change(self, changes):
@@ -60,5 +62,8 @@ class Plugin(plugins.NodePlugin):
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
         if changes.contains_any(["keyboard.layout", "button.next"]):
-            self.transaction = "a"
+            # Apply kbd layout directly so it takes affect on the password page
+            kbd = utils.Keyboard()
+            self.dry_or(lambda: kbd.set_layout(changes["keyboard.layout"]))
+
             self.application.ui.navigate.to_next_plugin()

@@ -19,8 +19,10 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, utils
+from ovirt.node.config import defaults
 import threading
 import time
+import traceback
 
 
 """
@@ -29,8 +31,6 @@ Progress page of the installer
 
 
 class Plugin(plugins.NodePlugin):
-    _model = None
-    _elements = None
     _worker = None
 
     def __init__(self, application):
@@ -44,7 +44,7 @@ class Plugin(plugins.NodePlugin):
         return 60
 
     def model(self):
-        return self._model or {}
+        return {}
 
     def validators(self):
         return {}
@@ -56,6 +56,8 @@ class Plugin(plugins.NodePlugin):
               ui.ProgressBar("progressbar", 0),
               ui.Divider("divider[1]"),
               ui.Label("log", ""),
+              ui.Divider("divider[2]"),
+              ui.Button("action.reboot", "Reboot")
               ]
         self.widgets.add(ws)
         page = ui.Page("progress", ws)
@@ -67,7 +69,8 @@ class Plugin(plugins.NodePlugin):
         pass
 
     def on_merge(self, effective_changes):
-        pass
+        if "action.reboot" in effective_changes:
+            utils.system.reboot()
 
 
 class InstallerThread(threading.Thread):
@@ -83,8 +86,8 @@ class InstallerThread(threading.Thread):
         time.sleep(0.3)  # Give the UI some time to build
         transaction = self.__build_transaction()
 
-        progressbar = self.progress_plugin._elements["progressbar"]
-        log = self.progress_plugin._elements["log"]
+        progressbar = self.progress_plugin.widgets["progressbar"]
+        log = self.progress_plugin.widgets["log"]
         log_lines = []
 
         txlen = len(transaction)
@@ -95,39 +98,79 @@ class InstallerThread(threading.Thread):
                 log_lines.append("(%s/%s) %s" % (idx, txlen, tx_element.title))
                 log.text("\n".join(log_lines))
 
-                self.progress_plugin.dry_or(lambda: tx_element.commit())
+                def do_commit():
+                    tx_element.commit()
+
+                self.progress_plugin.dry_or(do_commit)
 
                 progressbar.current(int(100.0 / txlen * idx))
                 log_lines[-1] = "%s (Done)" % log_lines[-1]
                 log.text("\n".join(log_lines))
         except Exception as e:
-            log.text("EXECPTION: %s" % e)
+            log.text("Exception: %s" % repr(e))
+            self.logger.debug(traceback.format_exc())
+            raise
 
     def __build_transaction(self):
-        self.__update_defaults_from_models()
-
         tx = utils.Transaction("Installation")
 
-        tx.append(self.PartitionAndFormat())
-        tx.append(self.SetPassword("the-password"))
-        tx.append(self.InstallBootloader())
+        cfg = self.__build_config()
+        tx += [self.UpdateDefaultsFromModels(cfg),
+               self.PartitionAndFormat(cfg["installation.devices"]),
+               self.SetPassword(cfg["root.password_confirmation"]),
+               self.InstallBootloader(cfg["boot.device"]),
+               self.SetKeyboardLayout(cfg["keyboard.layout"])]
 
         return tx
 
-    def __update_defaults_from_models(self):
-        config = {}
+    def __build_config(self):
         app = self.progress_plugin.application
+        config = {}
         for pname, plugin in app.plugins().items():
-            self.logger.debug("Config for %s" % (pname))
+            self.logger.debug("Config for page %s" % (pname))
             try:
                 model = plugin.model()
                 config.update(model)
                 self.logger.debug("Merged config: %s" % (model))
             except NotImplementedError:
                 self.logger.debug("Merged no config.")
+        self.logger.debug("Final config: %s" % config)
+        return config
+
+    class UpdateDefaultsFromModels(utils.Transaction.Element):
+        title = "Write configuration file"
+
+        def __init__(self, cfg):
+            super(InstallerThread.UpdateDefaultsFromModels, self).__init__()
+            self.config = cfg
+
+        def prepare(self):
+            # Update/Write the config file
+            model = defaults.Installation()
+            model.update(init=[self.config["boot.device"]] +
+                         self.config["installation.devices"],
+                         install="1",
+                         root_size=self.config["storage.root_size"],
+                         efi_size=self.config["storage.efi_size"],
+                         swap_size=self.config["storage.swap_size"],
+                         logging_size=self.config["storage.logging_size"],
+                         config_size=self.config["storage.config_size"],
+                         data_size=self.config["storage.data_size"])
+
+            kbd = defaults.Keyboard()
+            kbd.update(self.config["keyboard.layout"])
+
+        def commit(self):
+            pass
+            # Everything done during prepare
 
     class PartitionAndFormat(utils.Transaction.Element):
-        title = "Partitioning and Creating File Systems"
+        title_tpl = "Partitioning and Creating File Systems on '%s'"
+
+        def __init__(self, dst):
+            self.dst = dst
+            self.title = self.title_tpl % dst
+            super(InstallerThread.PartitionAndFormat, self).__init__()
 
         def commit(self):
             from ovirtnode import storage
@@ -146,11 +189,17 @@ class InstallerThread(threading.Thread):
         def commit(self):
             from ovirtnode import password
             admin_pw_set = password.set_password(self.root_password, "admin")
+            self.logger.debug("Setting root password: %s" % self.root_password)
             if not admin_pw_set:
                 raise RuntimeError("Failed to set root password")
 
     class InstallBootloader(utils.Transaction.Element):
-        title = "Installing Bootloader Configuration"
+        title_tpl = "Installing Bootloader Configuration to '%s'"
+
+        def __init__(self, dst):
+            self.dst = dst
+            self.title = self.title_tpl % dst
+            super(InstallerThread.InstallBootloader, self).__init__()
 
         def commit(self):
             from ovirtnode.install import Install
@@ -158,3 +207,14 @@ class InstallerThread(threading.Thread):
             boot_setup = install.ovirt_boot_setup()
             if not boot_setup:
                 raise RuntimeError("Failed to set install bootloader")
+
+    class SetKeyboardLayout(utils.Transaction.Element):
+        title_tpl = "Setting keyboard layout to '%s'"
+
+        def __init__(self, kbd_layout):
+            self.kbd_layout = kbd_layout
+            self.title = self.title_tpl % kbd_layout
+            super(InstallerThread.SetKeyboardLayout, self).__init__()
+
+        def commit(self):
+            utils.Keyboard().set_layout(self.kbd_layout)

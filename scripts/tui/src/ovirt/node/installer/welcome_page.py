@@ -18,6 +18,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import plugins, ui, utils
+from ovirt.node.utils import virt, system
+import os
 
 """
 Welcome page of the installer
@@ -29,14 +32,12 @@ transaction_elements (see progress_page.py)
 NOTE: Each page stores the information in the config page
 NOTE II: Or shall we build the transactions per page?
 """
-from ovirt.node import plugins, ui
 
 
 class Plugin(plugins.NodePlugin):
     """The welcome page plugin
     """
     _model = {}
-    _elements = None
 
     def name(self):
         return "Welcome"
@@ -51,12 +52,13 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        ws = [ui.Button("button.install", "Install %s" %
-                        str(self.application.product)),
-              ]
+        ws = [ui.Header("header[0]", "Installation")]
+        ws += [self.___installation_option()]
+        ws += [ui.Divider("divider[0]")]
+        ws += self.__additional_infos()
         self.widgets.add(ws)
         page = ui.Page("welcome", ws)
-        page.buttons = [ui.Button("button.quit", "Quit")]
+        page.buttons = [ui.QuitButton("button.quit", "Quit")]
         return page
 
     def on_change(self, changes):
@@ -64,5 +66,48 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         if "button.install" in effective_changes:
-            self.transaction = "a"
             self.application.ui.navigate.to_next_plugin()
+
+    def ___installation_option(self):
+        if self.application.args.dry:
+            return ui.Button("button.install", "Install Hypervisor (dry)")
+
+        media = utils.system.InstallationMedia()
+        installed = utils.system.InstalledMedia()
+
+        has_hostvg = os.path.exists("/dev/HostVG")
+        has_root = os.path.exists("/dev/disk/by-label/ROOT")
+
+        if has_hostvg and has_root:
+            return ui.Label("Major version upgrades are unsupported, " +
+                            "uninstall existing version first")
+
+        if has_hostvg:
+            try:
+                if media > installed:
+                    return ui.Button("button.upgrade",
+                                     "Upgrade %s to %s" % (media, installed))
+                elif media < installed:
+                    return ui.Button("button.downgrade",
+                                     "Downgrade %s to %s" % (media,
+                                                             installed))
+                return ui.Button("button.reinstall",
+                                 "Reinstall %s" % installed)
+            except:
+                self.logger.error("Unable to get version numbers for " +
+                                  "upgrade, invalid installation or media")
+                return ui.Label("Invalid installation, please reboot from " +
+                                "media and choose Reinstall")
+
+        return ui.Button("button.install", "Install Hypervisor %s" % media)
+
+    def __additional_infos(self):
+        ws = []
+        ws.append(ui.Label("welcome.virt", "Info: %s" %
+                           virt.hardware_status()))
+        if system.is_efi():
+            ws.append(ui.Label("welcome.efi",
+                               "Info: Machine is booted in EFI mode"))
+        if self.application.args.dry:
+            ws.append(ui.Label("dry", "Info: DRY MODE"))
+        return ws
