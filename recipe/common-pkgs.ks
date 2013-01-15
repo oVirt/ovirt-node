@@ -77,12 +77,6 @@ less
 dosfstools
 # kdump
 kexec-tools
-# qlogic firmware
-ql2100-firmware
-ql2200-firmware
-ql23xx-firmware
-ql2400-firmware
-ql2500-firmware
 # more firmwares
 aic94xx-firmware
 bfa-firmware
