@@ -192,6 +192,8 @@ class PluginMenu(urwid.WidgetWrap):
 class ModalDialog(urwid.WidgetWrap):
     signals = ['close']
 
+    title = None
+
     def __init__(self, title, body, escape_key, previous_widget):
         self.escape_key = escape_key
         self.previous_widget = previous_widget

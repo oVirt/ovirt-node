@@ -253,7 +253,7 @@ class NodePlugin(base.Base):
         Raises:
             An exception on a problem
         """
-        self.logger.debug("Triggering revalidation of model")
+        self.logger.debug("Triggering on_change of model")
         is_valid = True
         try:
             model = Changeset(model or self.model())

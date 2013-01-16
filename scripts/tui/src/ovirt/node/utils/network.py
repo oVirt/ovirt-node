@@ -41,7 +41,9 @@ LOGGER = logging.getLogger(__name__)
 #
 _nm_client = None
 try:
-    from gi.repository import NetworkManager, NMClient      # @UnresolvedImport
+    # pylint: disable-msg=E0611
+    from gi.repository import NetworkManager, NMClient  # @UnresolvedImport
+    # pylint: enable-msg=E0611
     import socket
     import struct
     NetworkManager
@@ -132,8 +134,10 @@ def iface_information(iface, with_slow=True):
         info["type"] = "vlan"
 
     if "type" not in info:
-        LOGGER.warning("Type of %s still unknown, using devtype" % iface)
-        info["type"] = info["devtype"]
+        devtype = info["devtype"]
+        LOGGER.warning(("Type of %s still unknown, using devtype " +
+                        "%s") % (iface, devtype))
+        info["type"] = devtype
 
     if with_slow:
         info.update(_slow_iface_information(iface))
@@ -297,6 +301,12 @@ class NIC(base.Base):
         self.iface = iface
         super(NIC, self).__init__()
 
+    def exists(self):
+        """If this NIC currently exists in the system
+        """
+        
+        return self.iface in all_ifaces()
+
     def has_link(self):
         """Determin if L1 is up on a given interface
 
@@ -316,7 +326,7 @@ class NIC(base.Base):
             True if L1 (the-link-is-up) is detected (depends on driver support)
         """
 
-        if self.iface not in all_ifaces():
+        if not self.exists():
             raise UnknownNicError("Unknown network interface: '%s'" %
                                   self.iface)
 
@@ -349,7 +359,7 @@ class NIC(base.Base):
 
         FIXME NM client.get_device_by_iface(iface).get_ip?_config()
         """
-        if self.iface not in all_ifaces():
+        if not self.exists():
             raise UnknownNicError("Unknown network interface: '%s'" %
                                   self.iface)
 
@@ -377,7 +387,8 @@ class NIC(base.Base):
 
         # Fallback
         cmd = "ip -o addr show {iface}".format(iface=self.iface)
-        for line in process.pipe(cmd, without_retval=True).split("\n"):
+        stdout = str(process.pipe(cmd, without_retval=True))
+        for line in stdout.split("\n"):
             token = re.split("\s+", line)
             if re.search("\sinet[6]?\s", line):
                 addr, mask = token[3].split("/")
@@ -407,6 +418,9 @@ class NIC(base.Base):
                              vlanids)
         return vlanids[0] if vlanids else None
 
+    def __str__(self):
+        return "<NIC iface='%s' at %s" % (self.iface, hex(id(self)))
+
 
 class Routes(base.Base):
     def default(self):
@@ -415,7 +429,8 @@ class Routes(base.Base):
         # Fallback
         gw = None
         cmd = "ip route list"
-        for line in process.pipe(cmd, without_retval=True).split("\n"):
+        stdout = str(process.pipe(cmd, without_retval=True))
+        for line in stdout.split("\n"):
             token = re.split("\s+", line)
             if line.startswith("default via"):
                 gw = token[2]
@@ -483,4 +498,5 @@ def hostname(new_hostname=None):
     """
     if new_hostname:
         utils.process.system("hostname %s" % new_hostname)
-    return utils.process.pipe("hostname", without_retval=True)
+    stdout = unicode(utils.process.pipe("hostname", without_retval=True))
+    return stdout.strip()

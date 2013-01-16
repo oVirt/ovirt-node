@@ -178,11 +178,17 @@ class Application(base.Base):
         window = self.ui
         elements = ui_container.elements()
 
+        def cond_close_dialog(userdata):
+            self.logger.debug("Closing dialog: %s" % userdata)
+            if ui.Dialog in type(userdata).mro():
+                window.close_dialog(userdata.title)
+            else:
+                window.close_topmost_dialog()
+
         # All known handlers
         handlers = {ui.SaveAction:
                     lambda d: self.current_plugin()._on_ui_save(),
-                    ui.CloseAction:
-                    lambda d: window.close_topmost_dialog(),
+                    ui.CloseAction: cond_close_dialog,
                     ui.ResetAction:
                     lambda d: self.current_plugin()._on_ui_reset(),
                     ui.ChangeAction:
@@ -236,8 +242,8 @@ class Application(base.Base):
         self.__current_plugin = plugin
         with Timer() as t:
             content = plugin.ui_content()
-            self.populate_with_values(content)
-            self.assign_actions(content)
+            #self.populate_with_values(content)
+            #self.assign_actions(content)
             self.show(content)
         self.logger.debug("Build and displayed plugin_page in %s seconds" % t)
 
@@ -247,8 +253,10 @@ class Application(base.Base):
         and displays it.
         """
         assert ui.Page in type(ui_container).mro()
+        plugin = self.current_plugin()
         self.populate_with_values(ui_container)
         self.assign_actions(ui_container)
+        plugin.check_semantics()
         if ui.Dialog in type(ui_container).mro():
             self.ui._show_on_dialog(ui_container)
         elif ui.Page in type(ui_container).mro():

@@ -47,11 +47,11 @@ def iface(iface):
     info = {}
 
     aug = Augeas()
-    filepath = "/files/etc/sysconfig/network-scripts/ifcfg-%s" % iface
+    filepath = "/etc/sysconfig/network-scripts/ifcfg-%s" % iface
     augdevicepath = "/files%s" % filepath
 
     if not os.path.exists(filepath):
-        LOGGER.debug("No config file")
+        LOGGER.debug("No config file %s" % filepath)
 
     # Type
     info["type"] = aug.get(augdevicepath + "/TYPE", True)

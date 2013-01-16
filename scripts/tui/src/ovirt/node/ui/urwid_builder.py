@@ -472,6 +472,11 @@ class UrwidWindow(ui.Window):
         return dialog
 
     def close_dialog(self, dialog):
+        if type(dialog) in [str, unicode]:
+            # Hack to alow to close a dialog by name
+            for d in self.__widget_stack:
+                if d.title == dialog:
+                    dialog = d 
         self.logger.debug("Widget stack: %s" % self.__widget_stack)
         new_stack = [w for w in self.__widget_stack if w != dialog]
         self.__widget_stack = new_stack
@@ -481,7 +486,6 @@ class UrwidWindow(ui.Window):
         else:
             self.__loop.widget = self.__main_frame
         assert dialog not in new_stack
-        assert type(dialog) is not dict
         self.logger.debug("Dialog %s closed" % dialog)
 
     def __filter_hotkeys(self, keys, raw):

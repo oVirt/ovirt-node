@@ -81,9 +81,26 @@ def hardware_status():
     return "No virtualization hardware was detected on this system"
 
 
+def number_of_domains():
+    # FIXME solve this more general
+    num_domains = None
+    try:
+        with LibvirtConnection() as con:
+            num_domains = str(con.numOfDomains())
+    except libvirt.libvirtError as e:
+        pass
+        # warning("Error while working with libvirt: %s" % e.message)
+    return num_domains
+
+
 class LibvirtConnection(base.Base):
+    con = None
+
     def __init__(self, readonly=True):
         super(LibvirtConnection, self).__init__()
+        self.connect(readonly)
+
+    def connect(self, readonly):
         if readonly:
             self.con = libvirt.openReadOnly(None)
         else:

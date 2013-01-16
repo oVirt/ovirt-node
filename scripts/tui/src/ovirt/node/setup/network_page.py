@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, valid, utils
+from ovirt.node import plugins, ui, valid, utils, config
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 from ovirt.node.utils import network
@@ -64,12 +64,12 @@ class Plugin(plugins.NodePlugin):
             network.hostname()
 
         # Pull name-/timeservers from config files (not defaults)
-        nameservers = defaults.Nameservers().retrieve()["servers"]
+        nameservers = config.network.nameservers()
         if nameservers:
             for idx, nameserver in enumerate(nameservers):
                 model["dns[%d]" % idx] = nameserver
 
-        timeservers = defaults.Timeservers().retrieve()["servers"]
+        timeservers = config.network.timeservers()
         if timeservers:
             for idx, timeserver in enumerate(timeservers):
                 model["ntp[%d]" % idx] = timeserver
@@ -172,10 +172,6 @@ class Plugin(plugins.NodePlugin):
             self._nic_dialog.close()
             return
 
-        if "dialog.nic.save" in changes:
-            self.logger.debug("Save and close NIC")
-            self._nic_dialog.close()
-
         if "button.ping" in changes:
             self.logger.debug("Opening ping page")
             plugin_type = ovirt.node.setup.ping.Plugin
@@ -225,8 +221,12 @@ class Plugin(plugins.NodePlugin):
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
 
+        if "dialog.nic.save" in changes:
+            # Close the remaing details dialog
+            self._nic_dialog.close()
+
         # Behaves like a page reload
-        #return self.ui_content()
+        return self.ui_content()
 
     def _configure_nic(self, bootproto, ipaddr, netmask, gateway, vlanid):
         vlanid = vlanid or None
@@ -272,12 +272,16 @@ class NicDetailsDialog(ui.Dialog):
         ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
                                             cfg["gateway"], cfg["vlanid"])
 
+        bridge_nic = utils.network.NIC(live["bridge"])
         if cfg["bootproto"] == "dhcp":
-            nic = utils.network.NIC(live["bridge"])
-            routes = utils.network.Routes()
-            ipaddr, netmask, gateway, vlanid = (nic.ipv4_address().items() +
-                                               (routes.default(),) +
-                                               (nic.vlanid(),))
+            if bridge_nic.exists():
+                routes = utils.network.Routes()
+                ipaddr, netmask = bridge_nic.ipv4_address().items()
+                gateway = routes.default()
+                vlanid = bridge_nic.vlanid()
+            else:
+                self.logger.warning("Bridge assigned but couldn't gather " +
+                                    "live info: %s" % bridge_nic)
 
         self.plugin._model_extra.update({
             "dialog.nic.iface": live["name"],
@@ -296,9 +300,6 @@ class NicDetailsDialog(ui.Dialog):
         })
 
         self.logger.debug("model: %s" % self.plugin.model())
-
-        save_n_close = ui.SaveButton("dialog.nic.save", "Save & Close")
-        save_n_close.on_activate.connect(ui.CloseAction())
 
         padd = lambda l: l.ljust(14)
         ws = [ui.Row("dialog.nic._row[0]",
@@ -336,7 +337,7 @@ class NicDetailsDialog(ui.Dialog):
               ]
         self.plugin.widgets.add(ws)
         self.children = ws
-        self.buttons = [save_n_close,
+        self.buttons = [ui.SaveButton("dialog.nic.save", "Save"),
                         ui.CloseButton("dialog.nic.close", "Close"),
                         ]
         self.plugin._nic_details_group.enabled(False)

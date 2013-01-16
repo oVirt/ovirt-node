@@ -49,9 +49,7 @@ class Plugin(plugins.NodePlugin):
         if net_addrs:
             net_addrs_str = "\nIPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)
 
-        num_domains = "N/A"
-        with virt.LibvirtConnection() as con:
-            num_domains = str(con.numOfDomains())
+        num_domains = virt.number_of_domains()
 
         return {
             "status": virt.hardware_status(),

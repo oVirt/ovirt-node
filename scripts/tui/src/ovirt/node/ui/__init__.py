@@ -138,6 +138,9 @@ class Action(base.Base):
     def __call__(self, target, userdata=None):
         r = None
         if self.callback:
+            self.logger.debug("Calling action %s %s with %s" % (self,
+                                                                self.callback,
+                                                                userdata))
             r = self.callback(userdata)
             self.logger.debug("Action %s called and returned: %s" % (self, r))
         else:
@@ -161,9 +164,15 @@ class SaveAction(Action):
 
 
 class CloseAction(Action):
-    """Action to close the current page/dialog
+    """Action to close the current/given dialog
+
+    Args:
+        dialog: The dialog to close
     """
-    pass
+    dialog = None
+    def __init__(self, callback=None, dialog=None):
+        super(CloseAction, self).__init__(callback)
+        self.dialog = dialog
 
 
 class ResetAction(Action):
@@ -590,7 +599,7 @@ class Dialog(Page):
         super(Dialog, self).__init__(path, children, title)
         self.on_close = self.new_signal()
         self.close(False)
-        self.on_close.connect(CloseAction())
+        self.on_close.connect(CloseAction(dialog=self))
 
     def close(self, v=True):
         if v:
@@ -610,8 +619,9 @@ class TransactionProgressDialog(Dialog):
         self.buttons = [self._close_button]
         self._progress_label = Label("dialog.progress", initial_text)
         widgets = [self._progress_label]
+        title = "Transaction: %s" % self.transaction.title
         super(TransactionProgressDialog, self).__init__(path,
-                                                        self.transaction.title,
+                                                        title,
                                                         widgets)
 
     def add_update(self, txt):
