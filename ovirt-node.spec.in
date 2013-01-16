@@ -140,6 +140,8 @@ Requires:       sblim-sfcb
 This package provides a cim plugin for use with%{product_family} image.
 
 %post plugin-cim
+groupadd cim
+useradd -g cim -G sfcb -s /sbin/nologin cim
 %if ! %{is_systemd}
 /sbin/chkconfig --add ovirt-cim
 %else
