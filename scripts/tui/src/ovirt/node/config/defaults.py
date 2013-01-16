@@ -756,16 +756,16 @@ class KDump(NodeConfigFileSection):
                     cmd = "service kdump propagate"
                 cmd += "2>&1"
 
-                success, stdout = utils.process.pipe(cmd)
+                try:
+                    utils.process.check_call(cmd)
 
-                if success:
                     ovirt_store_config(["/root/.ssh/kdump_id_rsa.pub",
                                         "/root/.ssh/kdump_id_rsa",
                                         "/root/.ssh/known_hosts",
                                         "/root/.ssh/config"])
-                else:
+                except utils.process.CalledProcessError as e:
                     self.logger.warning("Failed to activate KDump with " +
-                                        "SSH: %s" % stdout)
+                                        "SSH: %s" % e)
 
         class RemoveKdumpConfig(utils.Transaction.Element):
             title = "Removing kdump backup"
@@ -777,7 +777,7 @@ class KDump(NodeConfigFileSection):
                 from ovirtnode.ovirtfunctions import remove_config
 
                 remove_config("/etc/kdump.conf")
-                utils.process.system("service kdump stop")
+                utils.process.call("service kdump stop")
                 open('/etc/kdump.conf', 'w').close()
 
                 self.backups.remove()
@@ -791,12 +791,14 @@ class KDump(NodeConfigFileSection):
             def commit(self):
                 from ovirtnode.ovirtfunctions import unmount_config, \
                     ovirt_store_config
-                from ovirt.node.utils.process import system
 
-                if utils.process.system("service kdump restart") > 0:
+                try:
+                    utils.process.check_call("service kdump restart")
+                except utils.process.CalledProcessError as e:
+                    self.logger.info("Failure while restarting kdump: %s" % e)
                     unmount_config("/etc/kdump.conf")
                     self.backups.restore("/etc/kdump.conf")
-                    system("service kdump restart")
+                    utils.process.call("service kdump restart")
 
                     raise RuntimeError("KDump configuration failed, " +
                                        "location unreachable. Previous " +

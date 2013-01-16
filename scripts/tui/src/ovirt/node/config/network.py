@@ -114,7 +114,7 @@ def nameservers(new_servers=None):
     """Get or set DNS servers
 
     >>> import ovirt.node.utils.process as p
-    >>> _, stdout = p.pipe("egrep '^nameserver' /etc/resolv.conf | wc -l")
+    >>> stdout = p.pipe("egrep '^nameserver' /etc/resolv.conf | wc -l")
     >>> len(nameservers()) == int(stdout)
     True
     """

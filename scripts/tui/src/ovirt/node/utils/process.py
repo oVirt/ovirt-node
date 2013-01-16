@@ -28,66 +28,60 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+COMMON_POPEN_ARGS = {
+    "close_fds": True,
+    "shell": True
+}
+
+CalledProcessError = subprocess.CalledProcessError
+
 
 def popen(*args, **kwargs):
     """subprocess.Popen wrapper to not leak file descriptors
-
-    Args:
-        cmd: Cmdline to be run
-
-    Returns:
-        Popen object
     """
-    kwargs.update({
-        "close_fds": True
-    })
-    LOGGER.debug("forking: %s %s" % (args, kwargs))
+    kwargs.update(COMMON_POPEN_ARGS)
+    LOGGER.debug("Popen with: %s %s" % (args, kwargs))
     return subprocess.Popen(*args, **kwargs)
 
 
-def system(cmd):
-    """Run a non-interactive command, or where the user shall input something
+def call(*args, **kwargs):
+    """subprocess.call wrapper to not leak file descriptors
+    """
+    kwargs.update(COMMON_POPEN_ARGS)
+    LOGGER.debug("Calling with: %s %s" % (args, kwargs))
+    return int(subprocess.call(*args, **kwargs))
+
+
+def check_call(*args, **kwargs):
+    """subprocess.check_call wrapper to not leak file descriptors
+    """
+    kwargs.update(COMMON_POPEN_ARGS)
+    LOGGER.debug("Checking call with: %s %s" % (args, kwargs))
+    return int(subprocess.check_call(*args, **kwargs))
+
+
+def check_output(*args, **kwargs):
+    """subprocess.check_output wrapper to not leak file descriptors
+    """
+    kwargs.update(COMMON_POPEN_ARGS)
+    LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
+    return unicode(subprocess.check_output(*args, **kwargs))
+
+
+def pipe(cmd, stdin=None):
+    """Run a non-interactive command and return it's output
 
     Args:
         cmd: Cmdline to be run
+        stdin: (optional) Data passed to stdin
 
     Returns:
-        retval of the process
+        stdout, stderr of the process (as one blob)
     """
-    return popen(cmd, shell=True).wait()
-
-
-def pipe(cmd, stdin=None, without_retval=False):
-    """Run a command interactively and catch it's output.
-    This functions allows to pass some input to a running command.
-
-    >>> r = pipe("echo -n Hi")
-    >>> type(r[1])
-    <type 'str'>
-
-    >>> r
-    (True, 'Hi')
-
-    Args:
-        cmd: Commandline to be run
-        stdin: Optional string passed as stdin
-        without_retval: Optional if no retval should be passed
-
-    Returns:
-        A tuple (success, stdout)
-    """
-
-    LOGGER.debug("run '%s'" % cmd)
-    system_cmd = popen(cmd, shell=True, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE)
-    stdout, stderr = system_cmd.communicate(stdin)
-    if stdout:
-        LOGGER.debug("out '%s'" % stdout)
-    if stderr:
-        LOGGER.warning("error '%s'" % stderr)
-    if without_retval:
-        return stdout
-    return (system_cmd.returncode == 0, stdout)
+    return unicode(popen(cmd, shell=True,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT).communicate(stdin)[0])
 
 
 def pipe_async(cmd, stdin=None):
@@ -102,7 +96,7 @@ def pipe_async(cmd, stdin=None):
         Lines read from stdout
     """
     # https://github.com/wardi/urwid/blob/master/examples/subproc.py
-    LOGGER.debug("run async '%s'" % cmd)
+    LOGGER.debug("Piping async '%s'" % cmd)
     process = popen(cmd, shell=True, stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE, stdin=stdin)
     if stdin:

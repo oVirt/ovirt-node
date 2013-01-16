@@ -136,7 +136,7 @@ class Plugin(plugins.NodePlugin):
             txs += model.transaction()
 
         with self.application.ui.suspended():
-            utils.process.system("reset")
+            utils.process.call("reset")
             progress_dialog = console.TransactionProgress(txs, self)
             progress_dialog.run()
             console.writeln("\nPlease press any key to continue")

@@ -296,7 +296,7 @@ class NIC(base.Base):
         >>> iface = all_ifaces()[0]
         >>> cmd = "ip link set dev {dev} up ;"
         >>> cmd += "ip link show {dev}".format(dev=iface)
-        >>> has_carrier = "LOWER_UP" in process.pipe(cmd, without_retval=True)
+        >>> has_carrier = "LOWER_UP" in process.pipe(cmd)
         >>> has_carrier == NIC(iface).has_link()
         True
 
@@ -367,8 +367,7 @@ class NIC(base.Base):
 
         # Fallback
         cmd = "ip -o addr show {iface}".format(iface=self.iface)
-        stdout = str(process.pipe(cmd, without_retval=True))
-        for line in stdout.split("\n"):
+        for line in process.pipe(cmd).split("\n"):
             token = re.split("\s+", line)
             if re.search("\sinet[6]?\s", line):
                 addr, mask = token[3].split("/")
@@ -409,8 +408,7 @@ class Routes(base.Base):
         # Fallback
         gw = None
         cmd = "ip route list"
-        stdout = str(process.pipe(cmd, without_retval=True))
-        for line in stdout.split("\n"):
+        for line in process.pipe(cmd).split("\n"):
             token = re.split("\s+", line)
             if line.startswith("default via"):
                 gw = token[2]
@@ -477,6 +475,5 @@ def hostname(new_hostname=None):
         The current hostname
     """
     if new_hostname:
-        utils.process.system("hostname %s" % new_hostname)
-    stdout = unicode(utils.process.pipe("hostname", without_retval=True))
-    return stdout.strip()
+        utils.process.call("hostname %s" % new_hostname)
+    return utils.process.pipe("hostname").strip()

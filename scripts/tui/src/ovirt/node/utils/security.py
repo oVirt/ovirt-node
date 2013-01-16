@@ -43,11 +43,11 @@ class Ssh(base.Base):
         additional_lines = []
         ofunc.unmount_config("/etc/profile")
 
-        process.system("sed -i '/OPENSSL_DISABLE_AES_NI/d' /etc/profile")
+        process.check_call("sed -i '/OPENSSL_DISABLE_AES_NI/d' /etc/profile")
         if disable_aes:
             additional_lines += ["export OPENSSL_DISABLE_AES_NI=1"]
 
-        process.system("sed -i '/SSH_USE_STRONG_RNG/d' /etc/profile")
+        process.check_call("sed -i '/SSH_USE_STRONG_RNG/d' /etc/profile")
         if rng_num_bytes:
             additional_lines += ["export SSH_USE_STRONG_RNG=%s" %
                                  rng_num_bytes]
@@ -91,7 +91,7 @@ class Ssh(base.Base):
 
     def restart(self):
         self.logger.debug("Restarting SSH")
-        process.system("service sshd restart &>/dev/null")
+        process.call("service sshd restart &>/dev/null")
 
     def password_authentication(self, enable=None):
         augpath = "/files/etc/ssh/sshd_config/PasswordAuthentication"
@@ -115,8 +115,7 @@ class Ssh(base.Base):
             hostkey = hkf.read()
 
         hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
-        stdout = process.pipe(hostkey_fp_cmd, without_retval=True)
-        fingerprint = stdout.strip().split(" ")[1]
+        fingerprint = process.pipe(hostkey_fp_cmd).strip().split(" ")[1]
         return (fingerprint, hostkey)
 
 

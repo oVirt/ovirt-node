@@ -31,11 +31,15 @@ e.g. services, reboot ...
 
 
 def reboot():
-    process.system("reboot")
+    """Reboot the system
+    """
+    process.call("reboot")
 
 
 def poweroff():
-    process.system("poweroff")
+    """Poweroff the system
+    """
+    process.call("poweroff")
 
 
 def is_efi():
@@ -150,7 +154,7 @@ class Keyboard(base.Base):
         self.kbd.set(layout)
         self.kbd.write()
         self.kbd.activate()
-        utils.process.system("localectl set-keymap %s" % layout)
+        utils.process.check_call("localectl set-keymap %s" % layout)
 
     def get_current(self):
         return self.kbd.get()
