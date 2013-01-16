@@ -134,12 +134,6 @@ set /files/etc/sysconfig/kdump/MKDUMPRD_ARGS --allow-missing
 save
 EOF_kdump
 
-cat > /etc/snmp/snmpd.conf << \EOF_snmpd
-master agentx
-dontLogTCPWrappersConnects yes
-rwuser root auth .1
-EOF_snmpd
-
 # add admin user for configuration ui
 useradd admin
 usermod -G wheel admin

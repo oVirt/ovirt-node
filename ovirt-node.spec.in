@@ -123,6 +123,12 @@ This package provides an snmp plugin tools for use with%{product_family} image.
 %post plugin-snmp
 systemctl enable snmpd.service
 
+cat > /etc/snmp/snmpd.conf << \EOF_snmpd
+master agentx
+dontLogTCPWrappersConnects yes
+rwuser root auth .1
+EOF_snmpd
+
 
 %package plugin-cim
 Summary:        CIM plugin for %{product_family} image
@@ -132,7 +138,6 @@ Requires:       sblim-sfcb
 
 %description plugin-cim
 This package provides a cim plugin for use with%{product_family} image.
-
 
 %post plugin-cim
 %if ! %{is_systemd}
