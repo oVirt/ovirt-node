@@ -1,8 +1,5 @@
 #!/bin/bash
 
-export PYTHONPATH=$PYTHONPATH:
-export PYTHONDONTWRITEBYTECODE=x
-#export PYTHONUNBUFFERED=x
-#export PYTHONDEBUG=
-#export PYTHONVERBOSE=x
-python -t -m ovirt.node.installer "$@"
+reset
+
+python -m ovirt.node.installer "$@"
