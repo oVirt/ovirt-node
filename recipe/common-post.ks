@@ -241,11 +241,18 @@ EOF_sshd_config
 echo "readonly = true;" > /etc/libvirt-cim.conf
 
 # disable yum repos by default
-augtool << \EOF_yum
-set /files/etc/yum.repos.d/fedora.repo/fedora/enabled 0
-set /files/etc/yum.repos.d/fedora-updates.repo/updates/enabled 0
-save
-EOF_yum
+rm -f /tmp/yum.aug
+for i in $(augtool match /files/etc/yum.repos.d/*/*/enabled 1); do
+    echo "set $i 0" >> /tmp/yum.aug
+done
+if [ -f /tmp/yum.aug ]; then
+    echo "save" >> /tmp/yum.aug
+    augtool < /tmp/yum.aug
+    rm -f /tmp/yum.aug
+fi
+
+# cleanup yum directories
+rm -rf /var/lib/yum/*
 
 #cleanup tmp directory from cim setup
 rm -rf /tmp/cim_schema*
