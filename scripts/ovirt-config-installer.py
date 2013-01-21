@@ -532,7 +532,11 @@ class NodeInstallScreen:
                 self.hostvg_checkbox.setEntryValue("OtherDevice", selected = 0)
             if self.hostvg_checkbox.getEntryValue("OtherDevice")[1] == 1 and dev == "OtherDevice":
                 for d in self.dev_names:
-                    if not d == self.live_disk:
+                    if d != self.live_disk and d in self.disk_dict:
+                        # only disks from disk_dict and if it's not the live
+                        # media
+                        # self.hostvg_checkbox is populated w entries from
+                        # self.disk_dict
                         d = translate_multipath_device(d)
                         self.hostvg_checkbox.setEntryValue(d, selected = 0)
         if "Location" in dev or "NoDevices" in dev or "OtherDevice" in dev:
