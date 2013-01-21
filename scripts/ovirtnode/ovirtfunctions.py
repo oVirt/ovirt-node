@@ -495,13 +495,25 @@ def mount_liveos():
                     system("ln -s \"/dev/mapper/" + dev + "\" /dev/disk/by-label/Root")
                     if system("mount LABEL=Root /liveos"):
                         return True
+                    else:
+                        if os.path.ismount("/dev/.initramfs/live"):
+                            system_closefds("mount -o bind /dev/.initramfs/live /liveos")
+                        elif os.path.ismount("/run/initramfs/live"):
+                            system_closefds("mount -o bind /run/initramfs/live /liveos")
+                        else:
+                            return False
         else:
             return True
 
-def mount_efi():
+def mount_efi(target="/liveos/efi"):
+    if os.path.ismount(target):
+        return True
     efi_part = findfs("Root")
     efi_part = efi_part[:-1] + "1"
-    if system_closefds("mount -t vfat " + efi_part + " /liveos/efi"):
+    if not os.path.exists(target):
+        if not system("mkdir -v -p %s" % target):
+            logger.warning("Unable to create mount target for EFI partition")
+    if system("mount -t vfat %s %s" % (efi_part, target)):
         return True
     else:
         logger.error("Unable to mount EFI partition")

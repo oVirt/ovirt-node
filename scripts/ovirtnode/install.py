@@ -90,7 +90,6 @@ class Install:
                 self.grub_config_file = "%s/grub.conf" % self.grub_dir
             else:
                 self.grub_config_file = "/liveos/efi/EFI/redhat/grub.conf"
-                _functions.mount_efi()
 
     def grub_install(self):
         if _functions.is_iscsi_install():
@@ -261,11 +260,8 @@ initrd /initrd0.img
         grub_config_file = None
         _functions.mount_liveos()
         if os.path.ismount("/liveos"):
-            if _functions.is_efi_boot():
-                _functions.mount_efi()
             if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
                 grub_config_file = self.grub_config_file
-
         elif not _functions.is_firstboot():
             if os.path.ismount("/dev/.initramfs/live"):
                 grub_config_file = "/dev/.initramfs/live/grub/grub.conf"
@@ -274,7 +270,13 @@ initrd /initrd0.img
             if is_upgrade():
                 mount_liveos()
                 grub_config_file = "/liveos/grub/grub.conf"
-
+        _functions.system("umount /liveos")
+        if _functions.is_efi_boot():
+            logger.debug(str(os.listdir("/liveos")))
+            grub_config_file = "/liveos/EFI/redhat/grub.conf"
+            mount_efi(target="/liveos")
+        logger.debug("Grub config file is: %s" % grub_config_file)
+        logger.debug("Grub config file exists: " + str(os.path.exists(grub_config_file)))
         if not grub_config_file is None and os.path.exists(grub_config_file):
             f=open(grub_config_file)
             oldgrub=f.read()
