@@ -18,8 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import ui, utils
 from ovirt.node.plugins import NodePlugin
-from ovirt.node import ui
 
 """
 A plugin for a support page
@@ -43,10 +43,20 @@ class Plugin(NodePlugin):
         return False
 
     def ui_content(self):
-        ws = [ui.Label("features.info", "FIXME Support info")]
+        ws = [ui.Header("header[0]", "Support Info"),
+              ui.Label("support.info", "Select one of the logfiles below. \n" +
+                       "Press 'q' to quit when viewing a logfile."),
+              ui.Divider("divider[0]"),
+              ui.Table("support.logfile", "Logfiles", "Available Logfiles",
+                       self.__debugfiles_to_offer()),
+
+              ui.Header("header[1]", "(Data:)"),
+              ui.Label("support.contents", "")
+              ]
 
         page = ui.Page("page", ws)
         page.buttons = []
+        self.widgets.add(page)
         return page
 
     def model(self):
@@ -59,4 +69,23 @@ class Plugin(NodePlugin):
         pass
 
     def on_merge(self, changes):
-        pass
+        if changes.contains_any(["support.logfile"]):
+            logfile = changes["support.logfile"]
+            cmds = {"node": "cat /var/log/ovirt.log | less",
+                    "ui": "cat /tmp/ovirt.debug.log | less",
+                    "messages": "cat /var/log/messages | less",
+                    "dmesg": "dmesg | less"
+                    }
+
+            cmd = cmds[logfile] if logfile in cmds else None
+
+            if cmd:
+                with self.application.ui.suspended():
+                    utils.process.call("reset")
+                    utils.process.call(cmd)
+
+    def __debugfiles_to_offer(self):
+        return [("node", "Node Log"),
+                ("ui", "Node UI Debug Log"),
+                ("dmesg", "dmesg"),
+                ("messages", "/var/log/messages")]
