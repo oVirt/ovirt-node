@@ -45,36 +45,8 @@ LOGGER = logging.getLogger(__name__)
 OVIRT_NODE_DEFAULTS_FILENAME = "/etc/default/ovirt"
 
 
-class AugeasProvider(base.Base):
-    def __init__(self, filename):
-        super(AugeasProvider, self).__init__()
-        self.filename = filename
-
-    def update(self, new_dict, remove_empty):
-        aug = utils.AugeasWrapper()
-        basepath = "/files/%s/" % self.filename.strip("/")
-        if new_dict:
-            # If values are given, update the file
-            LOGGER.debug("Updating oVirtNode defaults file '%s': %s %s" %
-                         (self.filename, new_dict, basepath))
-            aug.set_many(new_dict, basepath)
-
-            if remove_empty:
-                paths_to_be_removed = [p for p, v in new_dict.items()
-                                       if v is None]
-                aug.remove_many(paths_to_be_removed, basepath)
-
-    def get_dict(self):
-        aug = utils.AugeasWrapper()
-        basepath = "/files/%s/" % self.filename.strip("/")
-
-        # Retrieve all entries of the default file and return their values
-        paths = aug.match(basepath + "*")
-        return aug.get_many(paths, strip_basepath=basepath)
-
-
 class SimpleProvider(base.Base):
-    """Can write our simple configuration file
+    """SimpleProvider writes simple KEY=VALUE (shell-like) configuration file
 
     >>> fn = "/tmp/cfg_dummy.simple"
     >>> open(fn, "w").close()
