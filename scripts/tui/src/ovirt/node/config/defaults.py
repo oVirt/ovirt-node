@@ -126,6 +126,9 @@ class SimpleProvider(base.Base):
 
 
 class ConfigFile(base.Base):
+    """ConfigFile is a specififc interface to some configuration file with a
+    specififc syntax
+    """
     def __init__(self, filename=None, provider_class=None):
         super(ConfigFile, self).__init__()
         filename = filename or OVIRT_NODE_DEFAULTS_FILENAME

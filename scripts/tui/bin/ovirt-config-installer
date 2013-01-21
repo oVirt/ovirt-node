@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# A wrapper to launch the TUI installer
+#
 
 reset
 

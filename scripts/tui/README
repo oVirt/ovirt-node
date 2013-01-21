@@ -9,6 +9,20 @@ $ PYTHONPATH=./src bash bin/ovirt-config-setup --defaults /tmp/cfg_dummy --dry
 $ PYTHONPATH=./src bash bin/ovirt-config-setup
 
 
+Documentation
+-------------
+The doctexts can be easily retrieved using pydoc, or ovirt-node-doc, a friendly
+wrapper to save a couple of characters.
+
+$ ovirt-node-doc
+$ ovirt-node-doc plugins
+
+is equal to
+
+$ pydoc ovirt.node.
+$ pydoc ovirt.node.plugins
+
+
 Features
 --------
 - Clean separation between UI and data

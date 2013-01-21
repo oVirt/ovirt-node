@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# A simple wrapper around pydoc to simply the retrieval of documentation
+#
+
+pydoc ovirt.node.$1

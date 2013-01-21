@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This package is expected to contain modules which handle locale config files.
+This package contains modules which provide interfaces to config files.
 
-All the informations provided by any module in this package must be derived
-from some file.
+Each interface - like a module or class - should be associated with some
+configuration file on the system.
 """
