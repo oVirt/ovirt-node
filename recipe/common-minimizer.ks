@@ -345,7 +345,6 @@ droprpm system-config-firewall-base
 droprpm usermode
 
 #NFS Server
-droprpm rpcbind
 drop /usr/bin/rpcgen
 drop /usr/sbin/rpc.gssd
 drop /usr/sbin/rpc.mountd
