@@ -43,10 +43,21 @@ def poweroff():
 
 
 def is_efi():
+    """If the system is booted in (U)EFI mode
+    """
     return os.path.exists("/sys/firmware/efi")
 
 
+def cpu_details():
+    """Return details for the CPU of this machine, virt related
+    """
+    from ovirtnode.ovirtfunctions import cpu_details
+    return cpu_details()
+
+
 class ProductInformation(base.Base):
+    """Return oVirt Node product informations
+    """
     _version_filename = "/files/etc/default/version"
     PRODUCT_SHORT = None
     VERSION = None

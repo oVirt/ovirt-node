@@ -102,8 +102,8 @@ class Plugin(plugins.NodePlugin):
 
                    ui.Row("row[1]",
                           [ui.Button("action.hostkey", "View Host Key"),
-                           ui.Button("action.cpu_features",
-                                     "View CPU Features"),
+                           ui.Button("action.cpu_details",
+                                     "View CPU Details"),
                            ]),
 
                    ui.Row("row[2]", action_widgets),
@@ -146,9 +146,9 @@ class Plugin(plugins.NodePlugin):
             self.logger.info("Showing hostkey")
             return HostkeyDialog("dialog.hostkey", "Host Key")
 
-        elif "action.cpu_features" in changes:
-            self.logger.info("Showing CPU features")
-            return CPUFeaturesDialog("dialog.cpu_features", "CPU Features")
+        elif "action.cpu_details" in changes:
+            self.logger.info("Showing CPU details")
+            return CPUFeaturesDialog("dialog.cpu_details", "CPU Details")
 
         elif "_save" in changes:
             self.widgets["dialog.hostkey"].close()
@@ -188,6 +188,6 @@ class HostkeyDialog(ui.Dialog):
 class CPUFeaturesDialog(ui.Dialog):
     def __init__(self, path, title):
         super(CPUFeaturesDialog, self).__init__(path, title, [])
-        self.children = [ui.Label("label[0]", "TBD"),
+        self.children = [ui.Label("label[0]", utils.system.cpu_details()),
                          ]
         self.buttons = [ui.CloseButton("dialog.close")]
