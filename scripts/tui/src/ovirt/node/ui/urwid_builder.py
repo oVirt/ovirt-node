@@ -298,6 +298,7 @@ class UrwidWindow(ui.Window):
         "disabled": "dark gray",
         "background": "light gray",
         "invalid": "dark red",
+        "header": 'black, bold',
     }
 
     palette = [(None, 'default', element_styles["background"], 'bold',
@@ -323,7 +324,7 @@ class UrwidWindow(ui.Window):
                ('plugin.widget.entry.frame.disabled',
                 element_styles["disabled"]),
                ('plugin.widget.notice', element_styles["invalid"]),
-               ('plugin.widget.header', 'black, bold'),
+               ('plugin.widget.header', element_styles["header"]),
                ('plugin.widget.divider', element_styles["text"]),
                ('plugin.widget.button', 'dark blue'),
                ('plugin.widget.button.disabled', element_styles["disabled"]),
@@ -337,7 +338,7 @@ class UrwidWindow(ui.Window):
                ('plugin.widget.options.label', element_styles["label"]),
                ('plugin.widget.dialog', None),
                ('plugin.widget.page', None),
-               ('plugin.widget.page.header', element_styles["label"]),
+               ('plugin.widget.page.header', element_styles["header"]),
                ('plugin.widget.page.frame', None),
                ('plugin.widget.checkbox.label', element_styles["label"]),
                ('plugin.widget.checkbox', element_styles["label"]),
