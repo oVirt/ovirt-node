@@ -524,7 +524,8 @@ initrd /initrd0.img
             return False
         _functions.disable_firstboot()
         if _functions.finish_install():
-            _iscsi.iscsi_auto()
+            if _functions.is_firstboot():
+                _iscsi.iscsi_auto()
             logger.info("Installation of %s Completed" % \
                                                       _functions.PRODUCT_SHORT)
             if reboot is not None and reboot == "Y":
