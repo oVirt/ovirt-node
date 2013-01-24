@@ -275,9 +275,10 @@ initrd /initrd0.img
             logger.debug(str(os.listdir("/liveos")))
             grub_config_file = "/liveos/EFI/redhat/grub.conf"
             mount_efi(target="/liveos")
+        grub_config_file_exists = grub_config_file is not None and os.path.exists(grub_config_file)
         logger.debug("Grub config file is: %s" % grub_config_file)
-        logger.debug("Grub config file exists: " + str(os.path.exists(grub_config_file)))
-        if not grub_config_file is None and os.path.exists(grub_config_file):
+        logger.debug("Grub config file exists: %s" % grub_config_file_exists)
+        if grub_config_file_exists:
             f=open(grub_config_file)
             oldgrub=f.read()
             f.close()
