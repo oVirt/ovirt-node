@@ -1,0 +1,19 @@
+---
+description: 'AI with {tbd_profile} and a subsequent update with the same profile on VMs'
+
+
+---
+description: 'First auto installation'
+testsuite: 'ai_basic'
+profile: '{tbd_profile}'
+host: ['default-libvirt', {vm_name: 'updateable-vm-{planid}',
+                           remove_afterwards: False}]
+additional_kargs: 'storage_init BOOTIF=link'
+
+---
+description: 'Second auto installation'
+testsuite: 'ai_basic'
+profile: '{tbd_profile}'
+host: ['updateable-vm-{planid}', {remove_afterwards: True}]
+additional_kargs: 'upgrade'
+---
