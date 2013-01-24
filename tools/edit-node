@@ -62,8 +62,9 @@ class ExistingSparseLoopbackDisk(SparseLoopbackDisk):
         LoopbackDisk.create(self)
 
 class LiveImageEditor(LiveImageCreator):
-    def __init__(self, name):
+    def __init__(self, name, docleanup=True):
         self.name = name
+        self.docleanup = docleanup
         self.tmpdir = "/var/tmp"
         """The directory in which all temporary files will be created."""
 
