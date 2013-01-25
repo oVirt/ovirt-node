@@ -32,7 +32,7 @@ def set_iscsi_initiator(initiator_name):
         _functions.logger.info("Initiator name set as: " + initiator_name)
     else:
         _functions.logger.warning("Setting initiator name failed")
-    _functions.system_closefds("service iscsi restart &> /dev/null")
+    _functions.system_closefds("service iscsid restart &> /dev/null")
 
 
 def get_current_iscsi_initiator_name():
