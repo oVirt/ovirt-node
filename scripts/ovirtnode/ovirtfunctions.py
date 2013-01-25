@@ -1695,6 +1695,22 @@ def get_cmdline_args():
                 args_dict[opt] = opt
     return args_dict
 
+def remove_efi_entry(entry):
+    efi_mgr_cmd = "efibootmgr|grep '%s'" % entry
+    efi_mgr = subprocess_closefds(efi_mgr_cmd, \
+                                      shell=True, \
+                                      stdout=subprocess.PIPE, \
+                                      stderr=subprocess.STDOUT)
+    efi_out = efi_mgr.stdout.read().strip()
+    logger.debug(efi_mgr_cmd)
+    logger.debug(efi_out)
+    for line in efi_out.splitlines():
+        if not "Warning" in line:
+            num = line[4:8]  # grabs 4 digit hex id
+            cmd = "efibootmgr -B -b %s" % num
+            system(cmd)
+    return
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

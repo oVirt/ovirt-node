@@ -80,16 +80,17 @@ class Install:
             self.grub_dir = "/liveos/grub"
             self.grub_prefix = "/grub"
 
-        if (os.path.exists("/sbin/grub2-install") and \
-            not _functions.is_efi_boot()):
+        if os.path.exists("/sbin/grub2-install"):
             self.grub_prefix = self.grub_prefix + "2"
             self.grub_dir = self.grub_dir + "2"
             self.grub_config_file = "%s/grub.cfg" % self.grub_dir
-        else:
-            if not _functions.is_efi_boot():
-                self.grub_config_file = "%s/grub.conf" % self.grub_dir
+            if os.path.exists("/boot/efi/EFI/fedora"):
+                self.efi_dir_name = "fedora"
             else:
-                self.grub_config_file = "/liveos/efi/EFI/redhat/grub.conf"
+                self.efi_dir_name = "redhat"
+            if _functions.is_efi_boot():
+                self.grub_config_file = "/liveos/efi/EFI/%s/grub.cfg" \
+                                         % self.efi_dir_name
 
     def grub_install(self):
         if _functions.is_iscsi_install():
@@ -176,7 +177,6 @@ EOF
         return True
 
     def grub2_install(self):
-
         GRUB2_EFI_CONFIG_TEMPLATE = """
 insmod efi_gop
 insmod efi_uga
@@ -198,55 +198,63 @@ set root (hd0,%(partB)d)
 linux /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
 initrd /initrd0.img
     """
-        # if efi is detected only install grub-efi
-        if not _functions.is_efi_boot():
-            logger.info("efi not detected, installing grub2 configuraton")
-            if _functions.is_iscsi_install():
-                disk = re.sub("p[1,2,3]$", "", \
-                                        _functions.findfs(self.boot_candidate))
-            else:
-                disk = self.disk
-            grub_setup_cmd = ("/sbin/grub2-install " + disk +
-                              " --boot-directory=" + self.initrd_dest +
-                              " --force")
-            logger.info(grub_setup_cmd)
-            grub_setup = _functions.subprocess_closefds(grub_setup_cmd, \
-                                             shell=True,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.STDOUT)
-            grub_results = grub_setup.stdout.read()
-            logger.info(grub_results)
-            if grub_setup.wait() != 0 or "Error" in grub_results:
-                logger.error("GRUB efi setup failed")
-                return False
-            else:
-                logger.debug("Generating Grub2 Templates")
-                grub_conf = open(self.grub_config_file, "w")
-                grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
+        logger.info("efi not detected, installing grub2 configuraton")
+        if _functions.is_iscsi_install():
+            disk = re.sub("p[1,2,3]$", "", \
+                                    _functions.findfs(self.boot_candidate))
+        else:
+            disk = self.disk
+        if _functions.is_efi_boot():
+            boot_dir = self.initrd_dest + "/efi"
+        else:
+            boot_dir = self.initrd_dest
+        grub_setup_cmd = ("/sbin/grub2-install " + disk +
+                          " --boot-directory=" + boot_dir +
+                          " --root-directory=" + boot_dir +
+                          " --efi-directory=" + boot_dir +
+                          " --bootloader-id=" + self.efi_dir_name +
+                          " --force")
+        logger.info(grub_setup_cmd)
+        grub_setup = _functions.subprocess_closefds(grub_setup_cmd, \
+                                         shell=True,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.STDOUT)
+        grub_results = grub_setup.stdout.read()
+        logger.info(grub_results)
+        if grub_setup.wait() != 0 or "Error" in grub_results:
+            logger.error("GRUB efi setup failed")
+            return False
+        else:
+            logger.debug("Generating Grub2 Templates")
+            grub_conf = open(self.grub_config_file, "w")
+            grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
+        if self.oldtitle is not None:
+            partB = 0
+            if self.partN == 0:
+                partB = 1
+            self.grub_dict['oldtitle'] = self.oldtitle
+            self.grub_dict['partB'] = partB
+            grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
+        grub_conf.close()
+        if os.path.exists("/liveos/efi/EFI"):
+            efi_grub_conf = open("/liveos/efi/EFI/%s/grub.cfg" \
+                    % self.efi_dir_name, "w")
+            # inject efi console output modules
+            efi_grub_conf.write(GRUB2_EFI_CONFIG_TEMPLATE)
+            efi_grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
             if self.oldtitle is not None:
                 partB = 0
                 if self.partN == 0:
                     partB = 1
                 self.grub_dict['oldtitle'] = self.oldtitle
                 self.grub_dict['partB'] = partB
-                grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
-            grub_conf.close()
-            if os.path.exists("/liveos/efi"):
-                efi_grub_conf = open("/liveos/grub2-efi/grub.cfg", "w")
-                # inject efi console output modules
-                efi_grub_conf.write(GRUB2_EFI_CONFIG_TEMPLATE)
-                efi_grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
-                if self.oldtitle is not None:
-                    partB = 0
-                    if self.partN == 0:
-                        partB = 1
-                    self.grub_dict['oldtitle'] = self.oldtitle
-                    self.grub_dict['partB'] = partB
-                    efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
+                efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
                 efi_grub_conf.close()
-                _functions.system("umount /liveos/efi")
+            _functions.system("umount /liveos")
+            _functions.remove_efi_entry(self.efi_dir_name)
             logger.info("Grub2 Install Completed")
             return True
+        return True
 
     def ovirt_boot_setup(self, reboot="N"):
         self.generate_paths()
@@ -272,9 +280,9 @@ initrd /initrd0.img
                 grub_config_file = "/liveos/grub/grub.conf"
         _functions.system("umount /liveos")
         if _functions.is_efi_boot():
-            logger.debug(str(os.listdir("/liveos")))
-            grub_config_file = "/liveos/EFI/redhat/grub.conf"
             mount_efi(target="/liveos")
+            logger.debug(str(os.listdir("/liveos")))
+            grub_config_file = "/liveos/EFI/%s/grub.cfg" % self.efi_dir_name
         grub_config_file_exists = grub_config_file is not None and os.path.exists(grub_config_file)
         logger.debug("Grub config file is: %s" % grub_config_file)
         logger.debug("Grub config file exists: %s" % grub_config_file_exists)
@@ -282,9 +290,15 @@ initrd /initrd0.img
             f=open(grub_config_file)
             oldgrub=f.read()
             f.close()
-            m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
+            if _functions.is_efi_boot():
+                m=re.search("^menuentry (.*)$", oldgrub, re.MULTILINE)
+            else:
+                m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
             if m is not None:
                 self.oldtitle=m.group(1)
+                # strip off extra title characters
+                if _functions.is_efi_boot():
+                    self.oldtitle = self.oldtitle.replace('"','').strip(" {")
         _functions.system("umount /liveos/efi")
         _functions.system("umount /liveos")
         if _functions.findfs("BootBackup"):
@@ -354,8 +368,7 @@ initrd /initrd0.img
             logger.info(self.disk)
             # grub2 starts at part 1
             self.partN = int(self.disk[-1:])
-            if (not os.path.exists("/sbin/grub2-install") \
-                or _functions.is_efi_boot()):
+            if not os.path.exists("/sbin/grub2-install"):
                 self.partN = self.partN - 1
         except:
             logger.debug(traceback.format_exc())
@@ -386,28 +399,14 @@ initrd /initrd0.img
                 logger.info("efi detected, installing efi configuration")
                 _functions.system("mkdir /liveos/efi")
                 _functions.mount_efi()
-                _functions.system("mkdir -p /liveos/efi/EFI/redhat")
-                _functions.system("cp /boot/efi/EFI/redhat/grub.efi " +
-                       "/liveos/efi/EFI/redhat/grub.efi")
                 efi_disk = re.sub("p[1,2,3]$", "", self.disk)
                 # generate grub legacy config for efi partition
                 #remove existing efi entries
-                efi_mgr_cmd = "efibootmgr|grep '%s'" % _functions.PRODUCT_SHORT
-                efi_mgr = _functions.subprocess_closefds(efi_mgr_cmd, \
-                                              shell=True, \
-                                              stdout=subprocess.PIPE, \
-                                              stderr=subprocess.STDOUT)
-                efi_out = efi_mgr.stdout.read().strip()
-                logger.debug(efi_mgr_cmd)
-                logger.debug(efi_out)
-                for line in efi_out.splitlines():
-                    if not "Warning" in line:
-                        num = line[4:8]  # grabs 4 digit hex id
-                        cmd = "efibootmgr -B -b %s" % num
-                        _functions.system(cmd)
-                efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\redhat\\grub.efi' " +
-                              "-L '%s' -d %s -v") % (_functions.PRODUCT_SHORT,
-                                                     efi_disk)
+                _functions.remove_efi_entry(self.efi_dir_name)
+                efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\%s\\grubx64.efi' " +
+                              "-L '%s' -d %s -v") % (self.efi_dir_name,  \
+                                               _functions.PRODUCT_SHORT, \
+                                               efi_disk)
                 logger.info(efi_mgr_cmd)
                 _functions.system(efi_mgr_cmd)
         self.kernel_image_copy()
@@ -494,16 +493,11 @@ initrd /initrd0.img
                             self.grub_dict["release"] = value.strip()
 
         if os.path.exists("/sbin/grub2-install"):
-            if not _functions.is_efi_boot():
-                if not self.grub2_install():
-                    logger.error("Grub2 Installation Failed ")
-                    return False
+            if not self.grub2_install():
+                logger.error("Grub2 Installation Failed ")
+                return False
             else:
-                if not self.grub_install():
-                    logger.error("Grub EFI Installation Failed ")
-                    return False
-                else:
-                    logger.info("Grub EFI Installation Completed ")
+                 logger.info("Grub2 EFI Installation Completed ")
         else:
             if not self.grub_install():
                 logger.error("Grub Installation Failed ")
