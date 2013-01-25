@@ -187,6 +187,19 @@ class NodeConfigFileSection(base.Base):
         tx = self.transaction()
         tx()
 
+    def _args_to_keys_mapping(self, keys_to_args=False):
+        """Map the named arguments of th eupdate() method to the CFG keys
+
+        Returns:
+            A dict mapping an argname to it's cfg key (or vice versa)
+        """
+        func = self.update.wrapped_func
+        varnames = func.func_code.co_varnames[1:]
+        assert len(varnames) == len(self.keys)
+        mapping = zip(self.keys, varnames) if keys_to_args else zip(varnames,
+                                                                    self.keys)
+        return dict(mapping)
+
     def retrieve(self):
         """Returns the config keys of the current component
 
@@ -195,16 +208,14 @@ class NodeConfigFileSection(base.Base):
             arg corresponds to the named arguments of the subclass's
             configure() method.
         """
-        func = self.update.wrapped_func
-        varnames = func.func_code.co_varnames[1:]
-        values = ()
+        keys_to_args = self._args_to_keys_mapping(keys_to_args=True)
         cfg = self.defaults.get_dict()
+        model = {}
         for key in self.keys:
             value = cfg[key] if key in cfg else self.none_value
-            values += (value,)
-        assert len(varnames) == len(values)
-        cfg = dict(zip(varnames, values))
-        return cfg
+            model[keys_to_args[key]] = value
+        assert len(keys_to_args) == len(model)
+        return model
 
     def clear(self):
         """Remove the configuration for this item
@@ -242,11 +253,20 @@ class NodeConfigFileSection(base.Base):
         {'OVIRT_A': 1, 'OVIRT_B': 2, 'OVIRT_C': 'c3'}
         """
         def wrapper(self, *args, **kwargs):
-            assert kwargs == {}, "kwargs are not allowed for these functions"
-            if len(self.keys) != len(args):
-                raise Exception("There are not enough arguments given for " +
-                                "%s of %s" % (func, self))
-            new_cfg = dict(zip(self.keys, args))
+            if kwargs:
+                # if kwargs are given it is interpreted as an update
+                # so existing values which are not given in the kwargs are kept
+                arg_to_key = self._args_to_keys_mapping()
+                update_kwargs = self.retrieve()
+                update_kwargs.update({k: v for k, v in kwargs.items()
+                                      if k in update_kwargs.keys()})
+                kwargs = update_kwargs
+                new_cfg = {arg_to_key[k]: v for k, v in update_kwargs.items()}
+            else:
+                if len(self.keys) != len(args):
+                    raise Exception("There are not enough arguments given " +
+                                    "for %s of %s" % (func, self))
+                new_cfg = dict(zip(self.keys, args))
             custom_cfg = func(self, *args, **kwargs) or {}
             assert type(custom_cfg) is dict, "%s must return a dict" % func
             new_cfg.update(custom_cfg)
@@ -1141,19 +1161,17 @@ class SSH(NodeConfigFileSection):
         return tx
 
 
-class Storage(NodeConfigFileSection):
+class Installation(NodeConfigFileSection):
     """Configure storage
     This is a class to handle the storage parameters used at installation time
 
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
-    >>> n = NFSv4(cfgfile)
-    >>> domain = "foo.example"
-    >>> n.update(domain)
-    >>> n.retrieve().items()
-    [('domain', 'foo.example')]
+    >>> n = Installation(cfgfile)
+    >>> kwargs = {"init": ["/dev/sda"], "root_install": "1"}
+    >>> n.update(**kwargs)
+    >>> data = n.retrieve().items()
     """
-    # FIXME this key is new!
     keys = ("OVIRT_INIT",
             "OVIRT_ROOT_INSTALL",
             "OVIRT_OVERCOMMIT",
@@ -1163,11 +1181,12 @@ class Storage(NodeConfigFileSection):
             "OVIRT_VOL_LOGGING_SIZE",
             "OVIRT_VOL_CONFIG_SIZE",
             "OVIRT_VOL_DATA_SIZE",
+            "OVIRT_INSTALL",
             )
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, init, root_install, overcommit, root_size, efi_size,
-               swap_size, logging_size, config_size, data_size):
+               swap_size, logging_size, config_size, data_size, install):
         # FIXME no checking!
         pass
 
