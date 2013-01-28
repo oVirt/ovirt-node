@@ -1872,6 +1872,7 @@ class NodeConfigScreen():
                 self._create_warn_screen()
                 ButtonChoiceWindow(self.screen, "Configuration Check",
                                    self.INVALID_KDUMP_MSG, buttons=["Ok"])
+                self.INVALID_KDUMP_MSG = ""
                 return False
             if os.path.exists("/etc/kdump.conf"):
                 system("cp /etc/kdump.conf /etc/kdump.conf.old")
