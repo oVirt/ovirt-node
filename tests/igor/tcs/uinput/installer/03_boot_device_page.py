@@ -19,7 +19,7 @@ title = "TUI Installer Boot Device Page"
 story = [
     # P. 3: Enter boot device selection
     # Press ENTER wait 4 seconds and expect "booting …"
-    (None,      10, "booting oVirt Node"),
+    (None,      10, "booting (oVirt Node|RHEV Hypervisor)"),
 
     # P. 4: Enter installation device selection
     (["\n"],    0, None),

@@ -18,7 +18,7 @@ title = "TUI Installer Installation Device Page"
 
 story = [
     # P. 4: Enter installation device selection
-    (None,          10, "installation of oVirt Node"),
+    (None,          10, "installation of (oVirt Node|RHEV Hypervisor)"),
 
     # P. 5: Enter password dialog
     (["\t\t\t\n"],  0, None),

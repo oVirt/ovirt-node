@@ -35,10 +35,10 @@ story = [
 
     # P. 3: Enter boot device selection
     # Press ENTER wait 4 seconds and expect "booting …"
-    (["\n"],               10, "booting oVirt Node"),
+    (["\n"],               10, "booting (oVirt Node|RHEV Hypervisor)"),
 
     # P. 4: Enter installation device selection
-    (["\n"],               10, "installation of oVirt Node"),
+    (["\n"],               10, "installation of (oVirt Node|RHEV Hypervisor)"),
 
     # P. 5: Enter sizes dialog
     (["\t\t\t\n"],         10, "enter the sizes for"),
