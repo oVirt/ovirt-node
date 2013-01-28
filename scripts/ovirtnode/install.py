@@ -324,6 +324,10 @@ initrd /initrd0.img
                         except:
                             pass
                     f.close()
+                    if "OVIRT_ISCSI_NAME" in OVIRT_VARS and \
+                       OVIRT_VARS["OVIRT_ISCSI_NAME"]:
+                        iscsi_name = OVIRT_VARS["OVIRT_ISCSI_NAME"]
+                        _iscsi.set_iscsi_initiator(iscsi_name)
                     iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
                                      "sendtargets") % (
                                         OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"],

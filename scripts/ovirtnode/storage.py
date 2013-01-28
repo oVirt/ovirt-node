@@ -742,7 +742,7 @@ class Storage:
 
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
         if _functions.is_iscsi_install():
-            # login to target and setup disk"
+            # login to target and setup disk
             get_targets = ("iscsiadm -m discovery -p %s:%s -t sendtargets" %
                            (_functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
                            _functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
