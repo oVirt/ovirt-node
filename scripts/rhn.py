@@ -582,6 +582,8 @@ class Plugin(PluginBase):
             ButtonChoiceWindow(self.ncs.screen, "Configuration Check",
                                 msg, buttons=['Ok'])
             self.ncs._set_title()
+            self.INVALID_URL_CONFIG_MSG = ""
+            self.INVALID_CA_CONFIG_MSG = ""
             return False
         if self.rhn_satellite.value() == 1 and self.rhn_ca.value() == "":
             ButtonChoiceWindow(self.ncs.screen, "RHN Configuration",
