@@ -640,6 +640,7 @@ class TransactionProgressDialog(Dialog):
 
     def __run_transaction(self):
         try:
+            self.add_update("Checking pre-conditions ...")
             for idx, tx_element in self.transaction.step():
                 txt = "(%s/%s) %s" % (idx + 1, len(self.transaction),
                                       tx_element.title)
