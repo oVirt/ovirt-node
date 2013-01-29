@@ -21,7 +21,7 @@
 from ovirt.node import base, valid, utils
 import process
 import os.path
-import PAM as _PAM
+import PAM as _PAM  # @UnresolvedImport
 
 """
 Some convenience functions related to security

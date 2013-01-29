@@ -40,6 +40,11 @@ class Base(object):
         """Contructor."""
         self._logger = logging.getLogger(self.__module__)
 
+    def _super(self):
+        """Return the parent class of this obj
+        """
+        return super(self.__class__, self)
+
     def new_signal(self):
         return Base.Signal(self)
 
