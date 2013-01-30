@@ -16,3 +16,4 @@ droprpm qemu-system-sh4
 droprpm qemu-system-sparc
 droprpm qemu-system-unicore
 droprpm qemu-system-xtensa
+droprpm qemu-user
