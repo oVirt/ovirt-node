@@ -159,6 +159,12 @@ EOF
         grub_conf.close()
         # splashscreen
         _functions.system("cp /live/EFI/BOOT/splash.xpm.gz /liveos/grub")
+        # usb devices requires default BOOTX64 entries
+        if _functions.is_efi_boot():
+            _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
+            _functions.system("cp /boot/efi/EFI/redhat/grub.efi /liveos/efi/EFI/BOOT/BOOTX64.efi")
+            _functions.system("cp /liveos/efi/EFI/redhat/grub.conf /liveos/efi/EFI/BOOT/BOOTX64.conf")
+            _functions.system("umount /liveos/efi")
         if not _functions.is_efi_boot():
             for f in ["stage1", "stage2", "e2fs_stage1_5"]:
                 _functions.system("cp /usr/share/grub/x86_64-redhat/%s %s" % \
@@ -278,10 +284,10 @@ initrd /initrd0.img
             if is_upgrade():
                 mount_liveos()
                 grub_config_file = "/liveos/grub/grub.conf"
-        _functions.system("umount /liveos")
         if _functions.is_efi_boot():
-            mount_efi(target="/liveos")
             logger.debug(str(os.listdir("/liveos")))
+            _functions.system("umount /liveos")
+            _functions.mount_efi(target="/liveos")
             grub_config_file = "/liveos/EFI/%s/grub.cfg" % self.efi_dir_name
         grub_config_file_exists = grub_config_file is not None and os.path.exists(grub_config_file)
         logger.debug("Grub config file is: %s" % grub_config_file)
