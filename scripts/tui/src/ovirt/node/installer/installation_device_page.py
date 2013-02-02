@@ -40,7 +40,10 @@ class Plugin(plugins.NodePlugin):
         return self._model or {}
 
     def validators(self):
-        return {}
+        has_selection = lambda v: "At least one installation device" \
+            if not self.widgets["installation.device.current"].selection() \
+            else True
+        return {"installation.device.current": has_selection}
 
     def ui_content(self):
         page_title = "Please select the disk(s) to use for installation " \

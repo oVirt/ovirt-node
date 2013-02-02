@@ -78,8 +78,8 @@ class TransactionProgress(base.Base):
                 self.plugin.dry_or(lambda: e.commit())
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
-            self.add_update("\nAn error occurred while applying the changes:")
-            self.add_update("%s" % e.message)
+            self.add_update(("\nAn error occurred while applying the changes:")
+            self.add_update("%s" % e)
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self.transaction, e, e.message))
             self.logger.debug(str(traceback.format_exc()))

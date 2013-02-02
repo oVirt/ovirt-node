@@ -1188,7 +1188,24 @@ class Installation(NodeConfigFileSection):
     def update(self, init, root_install, overcommit, root_size, efi_size,
                swap_size, logging_size, config_size, data_size, install):
         # FIXME no checking!
-        pass
+        return {"OVIRT_INIT": ",".join(init),
+                "OVIRT_ROOT_INSTALL": "y" if root_install else None,
+                "OVIRT_INSTALL": "1" if install else None}
+
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        cfg.update({"init": cfg["init"].split(",") if cfg["init"] else [],
+                    "root_install": cfg["root_install"] == "y",
+                    "install": cfg["install"] == "1"})
+        return cfg
 
     def transaction(self):
         return None
+
+    def install_on(self, init):
+        """Convenience function which can be used to set the parameters which
+        are going to be picked up by the installer backend to install Node on
+        the given storage with the given othere params
+        """
+        self.update(init=init,
+                    install=True)

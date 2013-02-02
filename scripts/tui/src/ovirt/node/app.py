@@ -18,13 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-
-"""
-Representing the whole application (not just the TUI).
-Basically the application consists of two parts: Page-Plugins and the UI
-which communicate with each other.
-"""
-
 from ovirt.node import base, utils, plugins, ui
 from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
@@ -32,6 +25,14 @@ from ovirt.node.utils import system, Timer
 import argparse
 import logging
 import logging.config
+import sys
+
+"""
+Representing the whole application (not just the TUI).
+Basically the application consists of two parts: Page-Plugins and the UI
+which communicate with each other.
+"""
+
 
 LOGGING = {
     'version': 1,
@@ -60,10 +61,15 @@ LOGGING = {
             'filename': '/tmp/ovirt.debug.log',
             'mode': 'w'
         },
+        'stderr': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stderr
+        }
     },
     'loggers': {
         'ovirt': {
-            'handlers': ['debug'],
+            'handlers': ['debug', 'stderr'],
             'level': 'DEBUG',
         },
         'ovirt.node': {
@@ -280,11 +286,21 @@ class Application(base.Base):
 
         self.ui.header = "\n %s\n" % str(self.product)
         self.ui.footer = "Press esc to quit."
-        self.ui.run()
+
+        try:
+            self.ui.run()
+        except Exception as e:
+            self.logger.error("An error appeared in the UI: %s" % repr(e))
 
     def quit(self):
         self.logger.info("Quitting")
         self.ui.quit()
+
+    def notice(self, msg):
+        children = [ui.Label("app.notice.text", msg)]
+        dialog = ui.Dialog("app.notice", "Notice", children)
+        dialog.buttons = [ui.CloseButton("app.notice.close")]
+        #self.ui._notice(dialog)
 
     def _check_outstanding_changes(self):
         has_outstanding_changes = False

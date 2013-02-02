@@ -31,6 +31,9 @@ class ExceptionWithMessage(Exception):
     def __str__(self):
         return repr(self.message)
 
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__.__name__, repr(self.message))
+
 
 class InvalidData(ExceptionWithMessage):
     """E.g. if a string contains characters which are not allowed

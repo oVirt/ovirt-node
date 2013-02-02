@@ -19,8 +19,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, utils, config
-from socket import inet_ntoa
-from struct import pack
 import glob
 import gudev
 import logging
@@ -29,6 +27,8 @@ import ovirt.node.config.network
 import ovirt.node.utils.fs
 import ovirt.node.utils.process as process
 import re
+import socket
+import struct
 
 """
 Some convenience functions related to networking
@@ -44,8 +44,6 @@ try:
     # pylint: disable-msg=E0611
     from gi.repository import NetworkManager, NMClient  # @UnresolvedImport
     # pylint: enable-msg=E0611
-    import socket
-    import struct
     NetworkManager
     _nm_client = NMClient.Client.new()
 except Exception as e:
@@ -473,7 +471,7 @@ def calcDottedNetmask(mask):
     """
     mask = int(str(mask))
     bits = 0xffffffff ^ (1 << 32 - mask) - 1
-    return inet_ntoa(pack('>I', bits))
+    return socket.inet_ntoa(struct.pack('>I', bits))
 
 
 class IPAddress(base.Base):
