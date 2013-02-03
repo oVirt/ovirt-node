@@ -405,6 +405,11 @@ class Routes(base.Base):
     def default(self):
         """Return the default gw of the system
         """
+        if _nm_client:
+            return self._default_nm()
+        return self._default_fallback()
+
+    def _default_fallback(self):
         # Fallback
         gw = None
         cmd = "ip route list"
@@ -414,8 +419,25 @@ class Routes(base.Base):
                 gw = token[2]
         return gw
 
+    def _default_nm(self):
+        active_connections = _nm_client.get_active_connections()
+        default_connection = [c for c in active_connections
+                              if c.get_default()][0]
+        ip4_config = default_connection.get_ip4_config()
+        ip4_gateway = ip4_config.get_addresses()[0].get_gateway()
+        return _nm_address_to_str(socket.AF_INET, ip4_gateway)
+
 
 def _nm_address_to_str(family, ipaddr):
+    """Convert the binary representation of NMs IPaddresse into its textual
+    representation
+
+    Args:
+        family: socket.AF_INET or socket.F_INET6
+        ipaddr: The binary (long) representation of the IP
+    Returns:
+        Textual representation of the binary IP Addr
+    """
     if family == socket.AF_INET:
         packed = struct.pack('L', ipaddr)
     elif family == socket.AF_INET6:
