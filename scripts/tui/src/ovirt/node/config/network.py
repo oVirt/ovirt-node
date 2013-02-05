@@ -198,8 +198,11 @@ def node_bridge():
     """
     bridge = None
     model = defaults.Network()
-    bootif = model.retrieve()["iface"]
-    if bootif:
-        nic = Ifcfg(bootif)
+    iface = model.retrieve()["iface"]
+    vlan = model.retrieve()["vlanid"]
+    if iface:
+        if vlan is not None:
+            iface = "%s.%s" % (iface, vlan)
+        nic = Ifcfg(iface)
         bridge = nic.bridge
     return bridge
