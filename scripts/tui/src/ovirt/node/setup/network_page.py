@@ -147,6 +147,9 @@ class Plugin(plugins.NodePlugin):
         if bootproto:
             if bootproto in ["static"]:
                 self._nic_details_group.enabled(True)
+            elif bootproto in ["dhcp"]:
+                self._nic_details_group.enabled(False)
+                self.widgets["dialog.nic.vlanid"].enabled(True)
             else:
                 self._nic_details_group.enabled(False)
             self.widgets["dialog.nic.ipv4.bootproto"].enabled(True)
