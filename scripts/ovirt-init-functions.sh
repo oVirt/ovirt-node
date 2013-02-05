@@ -169,6 +169,7 @@ start_ovirt_early () {
     {
         # FIXME Hack around rhbz#806349 and which might be because of rhbz#807203
         mount -a
+        swapon -a
         log "Starting ovirt-early"
         _start_ovirt_early
         RETVAL=$?
