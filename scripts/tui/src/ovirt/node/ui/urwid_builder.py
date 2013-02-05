@@ -519,6 +519,7 @@ class UrwidWindow(ui.Window):
 
     def force_redraw(self):
         if self.__loop:
+            self.logger.debug("Redrawing screen")
             self.__loop.draw_screen()
 
     def size(self):

@@ -106,7 +106,7 @@ class Plugin(plugins.NodePlugin):
             if valid.IPv6Address().validate(addr):
                 cmd = "ping6"
 
-            cmd = "%s -R -c %s %s" % (cmd, count, addr)
+            cmd = "%s -c %s %s" % (cmd, count, addr)
             out = ""
             current = 0
             for line in process.pipe_async(cmd):
