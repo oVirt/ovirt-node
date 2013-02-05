@@ -18,7 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import utils
+from ovirt.node import utils, base
+from ovirt.node.config import defaults
 from ovirt.node.utils import AugeasWrapper as Augeas
 import logging
 import os
@@ -149,3 +150,56 @@ def hostname(new_hostname=None):
                            (cfg_hostname, sys_hostname))
 
     return cfg_hostname
+
+
+class Ifcfg(base.Base):
+    """Object to access ifcfg-%ifname
+    """
+    bridge = None
+    type = None
+    bootproto = None
+    ipaddr = None
+    netmask = None
+    gateway = None
+    vlan = None
+    device = None
+    hwaddr = None
+    onboot = None
+
+    def __init__(self, iface):
+        self.iface = iface
+        self.aug = Augeas()
+        self.load_properties()
+
+    def load_properties(self):
+        Augeas.force_reload()
+        for p in ["bridge", "type", "bootproto", "ipaddr", "netmask",
+                  "gateway", "vlan", "device", "onboot", "hwaddr"]:
+            self.__dict__[p] = self.ifcfg_property(p.upper())
+
+    def ifcfg_property(self, name):
+        filepath = "/etc/sysconfig/network-scripts/ifcfg-%s" % self.iface
+        augdevicepath = "/files%s" % filepath
+
+        value = None
+        if os.path.exists(filepath):
+            value = self.aug.get("%s/%s" % (augdevicepath, name), True)
+        else:
+            LOGGER.debug("No config file %s" % filepath)
+
+        return value
+
+
+def node_bridge():
+    """Return the configured bridge
+
+    Returns:
+        Ifname of a configured bridge or None if none is configured
+    """
+    bridge = None
+    model = defaults.Network()
+    bootif = model.retrieve()["iface"]
+    if bootif:
+        nic = Ifcfg(bootif)
+        bridge = nic.bridge
+    return bridge

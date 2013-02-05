@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils
+from ovirt.node import base, utils, config
 from socket import inet_ntoa
 from struct import pack
 import glob
@@ -277,25 +277,6 @@ def node_nics():
     return node_infos
 
 
-def node_bridge():
-    """Returns the main bridge of this node
-
-    Returns:
-        Bridge of this node
-    """
-
-    all_ifaces = relevant_ifaces(filter_bridges=False, filter_vlans=False)
-    all_infos = [iface_information(i) for i in all_ifaces]
-
-    bridges = [info["name"] for info in all_infos
-               if info["devtype"] == "bridge"]
-
-    if len(bridges) != 1:
-        LOGGER.warning("Expected exactly one bridge: %s" % bridges)
-
-    return bridges[0] if len(bridges) else None
-
-
 class NIC(base.Base):
     def __init__(self, iface):
         self.iface = iface
@@ -448,7 +429,7 @@ def _nm_address_to_str(family, ipaddr):
 def networking_status(iface=None):
     status = "Not connected"
 
-    iface = iface or node_bridge()
+    iface = iface or config.network.node_bridge()
     addresses = []
     if iface:
         nic = NIC(iface)
