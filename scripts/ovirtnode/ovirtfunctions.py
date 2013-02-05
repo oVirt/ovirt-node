@@ -1632,7 +1632,7 @@ def is_engine_configured():
 
 def create_minimal_etc_hosts_file():
     filename = "/etc/hosts"
-    if open(filename, "r").read().strip() == "":
+    if not open(filename, "r").read().strip() == "":
         logger.info("Won't update %s, it's not empty." % filename)
         return
     if not is_persisted(filename):
