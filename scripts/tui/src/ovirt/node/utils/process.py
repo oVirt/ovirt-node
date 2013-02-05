@@ -41,6 +41,7 @@ def popen(*args, **kwargs):
     kwargs.update({
         "close_fds": True
     })
+    LOGGER.debug("forking: %s %s" % (args, kwargs))
     return subprocess.Popen(*args, **kwargs)
 
 

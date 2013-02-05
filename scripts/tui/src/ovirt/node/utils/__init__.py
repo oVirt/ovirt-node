@@ -21,7 +21,6 @@
 from ovirt.node import base, exceptions
 import augeas as _augeas
 import hashlib
-import system_config_keyboard.keyboard
 import time
 import traceback
 
@@ -138,26 +137,6 @@ def parse_bool(txt):
             return True
     return False
 
-
-class Keyboard(base.Base):
-    def __init__(self):
-        super(Keyboard, self).__init__()
-        self.kbd = system_config_keyboard.keyboard.Keyboard()
-
-    def available_layouts(self):
-        self.kbd.read()
-        layoutgen = ((details[0], kid)
-                     for kid, details in self.kbd.modelDict.items())
-        layouts = [(kid, name) for name, kid in sorted(layoutgen)]
-        return layouts
-
-    def set_layout(self, layout):
-        self.kbd.set(layout)
-        self.kbd.write()
-        self.kbd.activate()
-
-    def get_current(self):
-        return self.kbd.get()
 
 class Transaction(list, base.Base):
     """A very simple transaction mechanism.

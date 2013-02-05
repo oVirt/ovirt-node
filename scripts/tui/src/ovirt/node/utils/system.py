@@ -22,6 +22,7 @@ from ovirt.node import base, utils
 from ovirt.node.utils import process
 import os.path
 import rpm
+import system_config_keyboard.keyboard
 
 """
 A module to access system wide stuff
@@ -128,3 +129,29 @@ class InstalledMedia(InstallationMedia):
     def load(self):
             from ovirtnode.ovirtfunctions import get_installed_version_number
             self.version, self.release = get_installed_version_number()
+
+
+class Keyboard(base.Base):
+    """Configure the system wide keyboard layout
+    FIXME what is the recommended way to do this on F18+ with localectl
+    localectl also stores the changes, so is kbd still needed?
+    """
+    def __init__(self):
+        super(Keyboard, self).__init__()
+        self.kbd = system_config_keyboard.keyboard.Keyboard()
+
+    def available_layouts(self):
+        self.kbd.read()
+        layoutgen = ((details[0], kid)
+                     for kid, details in self.kbd.modelDict.items())
+        layouts = [(kid, name) for name, kid in sorted(layoutgen)]
+        return layouts
+
+    def set_layout(self, layout):
+        self.kbd.set(layout)
+        self.kbd.write()
+        self.kbd.activate()
+        utils.process.system("localectl set-keymap %s" % layout)
+
+    def get_current(self):
+        return self.kbd.get()

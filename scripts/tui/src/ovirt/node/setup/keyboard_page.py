@@ -49,7 +49,7 @@ class Plugin(plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        kbd = utils.Keyboard()
+        kbd = utils.system.Keyboard()
         ws = [ui.Header("header", "Keyboard Layout Selection"),
               ui.Table("keyboard.layout", "Available Keyboard Layouts", "",
                        kbd.available_layouts()),

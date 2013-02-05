@@ -1052,7 +1052,7 @@ class Keyboard(NodeConfigFileSection):
 
             def commit(self):
                 from ovirtnode.ovirtfunctions import ovirt_store_config
-                kbd = utils.Keyboard()
+                kbd = utils.system.Keyboard()
                 kbd.set_layout(layout)
                 ovirt_store_config(["/etc/sysconfig/keyboard",
                                     "/etc/vconsole.conf"])
