@@ -137,9 +137,12 @@ class ContainerElement(Element):
 class Action(base.Base):
     callback = None
 
+    on_callback_exception = None
+
     def __init__(self, callback=None):
         super(Action, self).__init__()
         self.callback = callback
+        self.on_callback_exception = self.new_signal()
 
     def __call__(self, target, userdata=None):
         r = None
@@ -147,8 +150,16 @@ class Action(base.Base):
             self.logger.debug("Calling action %s %s with %s" % (self,
                                                                 self.callback,
                                                                 userdata))
-            r = self.callback(userdata)
-            self.logger.debug("Action %s called and returned: %s" % (self, r))
+
+            try:
+                r = self.callback(userdata)
+                self.logger.debug("Action %s called and returned: %s" % (self,
+                                                                         r))
+            except Exception as e:
+                if self.on_callback_exception.callbacks:
+                    self.on_callback_exception(e)
+                else:
+                    raise e
         else:
             self.logger.warning("No callback for %s" % self)
         return r

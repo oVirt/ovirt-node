@@ -305,6 +305,31 @@ class KeywordLabel(Label):
         return self._text
 
 
+class NoticeDecoration(urwid.WidgetWrap):
+    _notice_widget = None
+
+    _target = None
+    _pile = None
+
+    notice = property(lambda self: self.__notice_widget.get_text(),
+                      lambda self, v: self.set_notice(v))
+
+    def __init__(self, target):
+        self._target = target
+        self._notice_widget = urwid.Text("")
+        self._pile = urwid.Pile([self._target])
+        super(NoticeDecoration, self).__init__(self._pile)
+        self.set_notice(None)
+
+    def set_notice(self, txt=None):
+        if txt:
+            self._notice_widget.set_text(txt)
+            widgets = [self._target, self._notice_widget]
+        else:
+            widgets = [self._target]
+        self._pile.contents = [(w, ('weight', 1)) for w in widgets]
+
+
 class Entry(urwid.WidgetWrap):
     signals = ['change', 'click']
 
@@ -409,7 +434,7 @@ class PasswordEntry(Entry):
                                             align_vertical=align_vertical)
 
 
-class Button(urwid.WidgetWrap):
+class Button(NoticeDecoration):
     signals = ["click"]
 
     selectable = lambda self: True
