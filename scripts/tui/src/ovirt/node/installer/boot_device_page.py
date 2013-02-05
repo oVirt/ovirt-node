@@ -90,4 +90,4 @@ class DeviceDetails(ui.Label):
                  ("Size", ""),
                  ("Description", ""),
                  ]"""
-        self.set_text("%s" % device)
+        self.text("%s" % device)
