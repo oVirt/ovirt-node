@@ -108,7 +108,7 @@ class SimpleProvider(base.Base):
         lines = []
         # Sort the dict, looks nicer
         for key in sorted(cfg.iterkeys()):
-            lines.append("%s=%s" % (key, cfg[key]))
+            lines.append("%s=\"%s\"" % (key, cfg[key]))
         contents = "\n".join(lines) + "\n"
 
         # The following logic is mainly needed to allow an "offline" testing
