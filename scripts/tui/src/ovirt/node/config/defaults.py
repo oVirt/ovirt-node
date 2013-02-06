@@ -715,9 +715,10 @@ class KDump(NodeConfigFileSection):
 
             def __init__(self):
                 self.backups = utils.fs.BackupedFiles(["/etc/kdump.conf"])
+                super(BackupKdumpConfig, self).__init__()
 
             def commit(self):
-                self.backups.create()
+                self.backups.create(ignore_existing=True)
 
         class RestoreKdumpConfig(utils.Transaction.Element):
             title = "Restoring default kdump config"
@@ -764,6 +765,7 @@ class KDump(NodeConfigFileSection):
 
             def __init__(self, backups):
                 self.backups = backups
+                super(RemoveKdumpConfig, self).__init__()
 
             def commit(self):
                 from ovirtnode.ovirtfunctions import remove_config
@@ -779,6 +781,7 @@ class KDump(NodeConfigFileSection):
 
             def __init__(self, backups):
                 self.backups = backups
+                super(RestartKdumpService, self).__init__()
 
             def commit(self):
                 from ovirtnode.ovirtfunctions import unmount_config, \

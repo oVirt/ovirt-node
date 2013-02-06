@@ -120,12 +120,12 @@ class BackupedFiles(base.Base):
         """
         self.remove()
 
-    def create(self):
+    def create(self, ignore_existing=False):
         """Create a backup of all files
         """
         for fn in self.files:
             backup = "%s%s" % (fn, self.suffix)
-            if os.path.exists(backup):
+            if not ignore_existing and os.path.exists(backup):
                 raise RuntimeError(("Backup '%s' for '%s " +
                                     "already exists") % (backup, fn))
             if os.path.exists(fn):
