@@ -31,7 +31,6 @@ A module with several validators for common user inputs.
 """
 
 
-
 class Validator(base.Base):
     """This class is used to validate user inputs
     Basically an exception is raised if an invalid value was given. The value
@@ -215,7 +214,8 @@ class Number(RegexValidator):
             self.description = "%s" % (exactly)
 
     def validate(self, value):
-        self.logger.debug("Checking number %s %s %s" % (self, self.pattern, value))
+        self.logger.debug("Checking number %s %s %s" % (self, self.pattern,
+                                                        value))
         valid = RegexValidator.validate(self, value)
         if valid and self.bounds:
             self.logger.debug("Checking bounds: %s" % self.bounds)
@@ -442,6 +442,6 @@ class BlockDevice(Validator):
                 subprocess.check_call("test -b %s" % value, shell=True,
                                       close_fds=True)
                 is_valid = True
-        except Exception as e:
+        except:
             is_valid = False
         return is_valid

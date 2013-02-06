@@ -46,7 +46,8 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
-        same_as_password = plugins.Validator.SameAsIn(self, "vdsm_cfg.password",
+        same_as_password = plugins.Validator.SameAsIn(self,
+                                                      "vdsm_cfg.password",
                                                       "Password")
         return {"vdsm_cfg.address": valid.FQDNOrIPAddress() | valid.Empty(),
                 "vdsm_cfg.port": valid.Port(),
@@ -195,9 +196,6 @@ class ActivateVDSM(utils.Transaction.Element):
         sys.path.append('/usr/share/vdsm-reg')
         import deployUtil  # @UnresolvedImport
 
-        sys.path.append('/usr/share/vdsm')
-        from vdsm import constants  # @UnresolvedImport
-
         from ovirt_config_setup.engine import \
             isHostReachable  # @UnresolvedImport
         from ovirt_config_setup.engine import \
@@ -259,7 +257,7 @@ class ActivateVDSM(utils.Transaction.Element):
             if deployUtil.getRhevmCert(self.engineServer,
                                        self.enginePort):
                 _, _, path = deployUtil.certPaths('')
-                fp = deployUtil.generateFingerPrint(path)
+                #fp = deployUtil.generateFingerPrint(path)
                 #
                 # FIXME
                 #

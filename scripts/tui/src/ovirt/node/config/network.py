@@ -29,8 +29,6 @@ Some convenience functions related to networking
 """
 
 
-
-
 LOGGER = logging.getLogger(__name__)
 
 

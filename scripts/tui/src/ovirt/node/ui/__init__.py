@@ -170,6 +170,7 @@ class CloseAction(Action):
         dialog: The dialog to close
     """
     dialog = None
+
     def __init__(self, callback=None, dialog=None):
         super(CloseAction, self).__init__(callback)
         self.dialog = dialog
@@ -648,7 +649,8 @@ class TransactionProgressDialog(Dialog):
                 self.plugin.dry_or(lambda: tx_element.commit())
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
-            self.add_update("\nAn error occurred while applying the changes:")
+            self.add_update(("\nAn error (%s) occurred while applying the " +
+                             "changes:") % e)
             self.add_update("%s" % e.message)
 
 

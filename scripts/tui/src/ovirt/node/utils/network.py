@@ -285,7 +285,6 @@ class NIC(base.Base):
     def exists(self):
         """If this NIC currently exists in the system
         """
-        
         return self.iface in all_ifaces()
 
     def has_link(self):

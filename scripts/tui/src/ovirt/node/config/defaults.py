@@ -798,9 +798,9 @@ class KDump(NodeConfigFileSection):
                     self.backups.restore("/etc/kdump.conf")
                     system("service kdump restart")
 
-#                    raise RuntimeError("KDump configuration failed, " +
-#                                       "location unreachable. Previous " +
-#                                       "configuration was restored.")
+                    raise RuntimeError("KDump configuration failed, " +
+                                       "location unreachable. Previous " +
+                                       "configuration was restored.")
 
                 ovirt_store_config("/etc/kdump.conf")
                 self.backups.remove()

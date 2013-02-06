@@ -102,7 +102,6 @@ class TableWidget(urwid.WidgetWrap):
             urwid.emit_signal(self, "changed", widget)
         urwid.connect_signal(self.__walker, 'modified', __on_item_change)
 
-
         self.__box = urwid.BoxAdapter(self.__list, height)
         self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
 

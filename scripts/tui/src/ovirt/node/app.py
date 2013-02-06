@@ -210,7 +210,8 @@ class Application(base.Base):
                                           (element, cb, action))
                         cb.callback = action
             if type(element) is ui.SaveButton:
-                # http://stackoverflow.com/questions/2731111/python-lambdas-and-variable-bindings
+            # http://stackoverflow.com/questions/2731111/
+            # python-lambdas-and-variable-bindings
                 toggle_disabled = lambda t, v, e=element: e.enabled(v)
                 plugin.on_valid.connect(toggle_disabled)
 

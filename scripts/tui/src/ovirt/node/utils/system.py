@@ -30,7 +30,6 @@ e.g. services, reboot ...
 """
 
 
-
 def reboot():
     process.system("reboot")
 

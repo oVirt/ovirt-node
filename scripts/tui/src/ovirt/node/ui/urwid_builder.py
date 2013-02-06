@@ -476,7 +476,7 @@ class UrwidWindow(ui.Window):
             # Hack to alow to close a dialog by name
             for d in self.__widget_stack:
                 if d.title == dialog:
-                    dialog = d 
+                    dialog = d
         self.logger.debug("Widget stack: %s" % self.__widget_stack)
         new_stack = [w for w in self.__widget_stack if w != dialog]
         self.__widget_stack = new_stack
