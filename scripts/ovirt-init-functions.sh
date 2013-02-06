@@ -883,7 +883,13 @@ EOF
         start_log
     fi
 
-    # link to the kernel image for kdump
+    if [[ -e "/run/initramfs" ]]; then
+        log "bind omunting /run/initramfs to /dev/.initramfs for compatability"
+        mkdir /dev/.initramfs
+        mount --rbind /run/initramfs /dev/.initramfs
+    fi
+
+    log "link to the kernel image for kdump"
     chcon -t boot_t /boot-kdump
     if is_booted_from_local_disk; then
         mount_boot
