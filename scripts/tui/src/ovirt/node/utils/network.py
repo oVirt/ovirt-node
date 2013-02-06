@@ -38,6 +38,7 @@ LOGGER = logging.getLogger(__name__)
 
 #
 # Try to use NM if available
+# FIXME we need to migrte to GUdev at some poit to make it really work
 #
 _nm_client = None
 try:
@@ -46,9 +47,10 @@ try:
     # pylint: enable-msg=E0611
     NetworkManager
     _nm_client = NMClient.Client.new()
+    LOGGER.info("NetworkManager support via GI (fast-path)")
 except Exception as e:
-    LOGGER.warning("NetworkManager support disabled: " +
-                   "NM Client not found (%s)" % e)
+    LOGGER.info("NetworkManager support disabled: " +
+                "NM Client not found (%s)" % e)
 
 
 class UnknownNicError(Exception):
