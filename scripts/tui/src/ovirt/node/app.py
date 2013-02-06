@@ -291,6 +291,10 @@ class Application(base.Base):
             self.ui.run()
         except Exception as e:
             self.logger.error("An error appeared in the UI: %s" % repr(e))
+            utils.console.writeln("Press ENTER to logout ...")
+            utils.console.writeln("or enter 's' to drop to shell")
+            if utils.console.wait_for_keypress() == 's':
+                self.__drop_to_shell()
 
     def quit(self):
         self.logger.info("Quitting")
@@ -348,7 +352,9 @@ class Application(base.Base):
 
     def __drop_to_shell(self):
         with self.ui.suspended():
-            utils.process.call("reset ; bash")
+            utils.process.call("reset")
+            utils.console.writeln("Dropping to rescue shell ...")
+            utils.process.call("bash")
 
     def __check_terminal_size(self):
         cols, rows = self.ui.size()
