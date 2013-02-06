@@ -1,0 +1,68 @@
+
+"Node Central" - How configuration changes are applied
+------------------------------------------------------
+The overall concept of the setup is to take UI data to update the
+/etc/default/ovirt file (through the classes in config/defaults.py) and to
+apply these changes using transactions (which can be retrieved using the
+transaction() methods).
+
+
+Paths
+-----
+
+config: This folder contains modules related to config files
+        E.g. the configured IPv4 Address, NTP server ...
+config/defaults.py: This module can be used to modify /etc/default/ovirt
+config/network.py: This module can be used to modify resolv.conf/ntp.conf ...
+
+utils: This folder contains classes which don't modify config files but provide
+       runtime-informations (e.g. current ip, storage devices)
+
+setup: Page-Plugins for the setup
+
+installer: Page-Plugins for the installer
+
+
+Why wrapping ovirtfunctions?
+----------------------------
+
+There are two main reasons why to wrap the functions from ovirtfunctions:
+Testing and (preparation for) Refactoring.
+
+ovirtfunctions is currently not checkable by pylint, pyflakes, or pep8,
+therefor utils/*.py should be written so cleanly that it is checkable. 
+Inline comments can be used in these clean files to suppress occssional
+problems (like an unresolved import, due to an invalid path or so), e.g. in the
+case of rhn.py file, which is in the wrong path (that means in a different
+(relative) path compared to their later runtime position).
+
+Another side effect of putting wrapping the code in utils/*.py is, that
+code-completion works quite well in eclipse - which shall help to write less
+erroneous code (so to prevent simple typos).
+
+Besides that, the wrapping can - and shall - be used to make parts of the code
+object-oriented, which is just a reorganisation of existing code into logical
+units. Tjis makes sense because our codebase covers a wide range of topics,
+and organizing helps newbies and to write unit tests.
+And last but not least the reorganization should be used to rmove some
+redundant bits.
+
+The advantages of clean code can be seen when you run
+
+  $ make check-local
+
+in the src/ directory.
+Which runs, pylint, pyflakes, pep8 and doctests.
+
+
+Where can I put $XYZ?
+---------------------
+
+utils/ should mainly contain functions or classes about runtime
+    informations.
+
+config/ should contain code which handles config files
+    (resolv.conf /etc/default/ovirt)
+
+(See also the beginning of this document)
+
