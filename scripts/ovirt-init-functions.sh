@@ -1235,6 +1235,10 @@ start_ovirt_post() {
     {
         log "Starting ovirt-post"
 
+        #make sure swap and all other partitions are mounted
+        swapon -a
+        mount -a
+
         # Re-load keyboard settings
         load_keyboard_config 2> /dev/null
 
