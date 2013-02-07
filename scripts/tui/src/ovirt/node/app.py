@@ -317,30 +317,38 @@ class Application(base.Base):
         #self.ui._notice(dialog)
 
     def _check_outstanding_changes(self):
+        """This function checks if any UI Element has changed
+        """
         has_outstanding_changes = False
-        if self.current_plugin():
-            pending_changes = self.current_plugin().pending_changes()
-            if pending_changes:
-                self.logger.warning("Pending changes: %s" % pending_changes)
-                msg = ""
-                elements = self.current_plugin().ui_content().elements()
-                self.logger.debug("Available elements: %s" % elements)
-                for path, value in pending_changes.items():
-                    if path in elements:
-                        # assumption that element is a container
-                        element = elements[path]
-                        field = element.path
-                        self.logger.debug("Changed widget: " +
-                                          "%s %s" % (path, element))
-                        msg += "- %s\n" % (field.strip(":"))
-                if msg:
-                    txt = "The following fields have changed:\n%s" % msg
-                    txt += "\n\nPlease save or reset the page."
-                    self.ui.display_as_dialog(ui.Dialog("pendin",
-                                                        "Pending Changes",
-                                                        [ui.Label(txt)]))
-                    has_outstanding_changes = True
         return has_outstanding_changes
+        # FIXME the rest of this function has to be activated when it
+        # is possible to set the selected menu item in the left-sided
+        # main menu
+        # otehrwise this popup will show, but the next menu item is selected
+        # and we can not reset it to the entry which raised this popup
+        if self.current_plugin() and self.current_plugin().pending_changes():
+            pending_changes = self.current_plugin().pending_changes()
+            elements = self.current_plugin().widgets
+            self.logger.debug("Pending changes: %s" % pending_changes)
+            self.logger.debug("Available elements: %s" % elements)
+            msg = ""
+            for path in [p for p in pending_changes if p in elements]:
+                self.logger.debug("Element '%s' changed" % path)
+                # assumption that element is a container
+                element = elements[path]
+                field = element.label()
+                self.logger.debug("Changed widget: " +
+                                  "%s %s" % (path, element))
+                msg += "- %s\n" % (field.strip(":"))
+            if msg:
+                txt = "The following fields have changed:\n%s" % msg
+                txt += "\n\nPlease save or reset the page."
+                dialog = ui.Dialog("dialog.changes", "Pending Changes",
+                                   [ui.Label("dialog.changes.txt", txt)])
+                dialog.buttons = [ui.CloseButton("dialog.changes.close",
+                                                 "Back")]
+                self.show(dialog)
+                has_outstanding_changes = True
 
     def __load_plugins(self):
         """Load all plugins which are found in the given plugin_base

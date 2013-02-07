@@ -73,14 +73,17 @@ class InputElement(Element):
     """
     on_change = None
 
+    on_label_change = None
     on_enabled_change = None
     on_valid_change = None
 
-    def __init__(self, path, is_enabled):
+    def __init__(self, path, label, is_enabled):
         super(InputElement, self).__init__(path)
+        self.on_label_change = self.new_signal()
         self.on_enabled_change = self.new_signal()
         self.on_change = self.new_signal()
         self.on_valid_change = self.new_signal()
+        self.label(label)
         self.enabled(is_enabled)
         self.text("")
         self.valid(True)
@@ -104,6 +107,14 @@ class InputElement(Element):
             self.on_value_change(text)
             self._text = text
         return self._text
+
+    def label(self, label=None):
+        """Can be used to retrieve or change the label
+        """
+        if label is not None:
+            self.on_label_change(label)
+            self._label = label
+        return self._label
 
     def value(self, txt=None):
         return self.text(txt)
@@ -263,8 +274,7 @@ class Entry(InputElement):
     """
 
     def __init__(self, path, label, enabled=True, align_vertical=False):
-        super(Entry, self).__init__(path, enabled)
-        self.label = label
+        super(Entry, self).__init__(path, label, enabled)
         self.align_vertical = align_vertical
 
 
@@ -291,7 +301,7 @@ class Button(InputElement):
             label: Label of the button
             enabled: If the button is enabled (can be clicked)
         """
-        super(Button, self).__init__(path, enabled)
+        super(Button, self).__init__(path, label, enabled)
         self.text(label)
         self.label(label)
 
@@ -299,15 +309,8 @@ class Button(InputElement):
         self.on_activate.connect(ChangeAction())
         self.on_activate.connect(SaveAction())
 
-    def label(self, label=None):
-        """Can be used to retrieve or change the label
-        """
-        if label is not None:
-            self.on_value_change(label)
-            self._label = label
-        return self._label
-
     def value(self, value=None):
+        self.on_value_change(value)
         self.label(value)
 
 
@@ -368,8 +371,7 @@ class Options(InputElement):
     """
 
     def __init__(self, path, label, options, selected=None):
-        super(Options, self).__init__(path, True)
-        self.label = label
+        super(Options, self).__init__(path, label, True)
         self.options = options
         self.option(selected or options[0][0])
 
@@ -392,8 +394,7 @@ class Checkbox(InputElement):
     """
 
     def __init__(self, path, label, state=False, is_enabled=True):
-        super(Checkbox, self).__init__(path, is_enabled)
-        self.label = label
+        super(Checkbox, self).__init__(path, label, is_enabled)
         self.state(state)
 
     def state(self, s=None):
@@ -453,8 +454,7 @@ class Table(InputElement):
         enabled: Whether the table can be changed or not
         multi: Whether we allow multiple items to be selected
         """
-        super(Table, self).__init__(path, enabled)
-        self.label = label
+        super(Table, self).__init__(path, label, enabled)
         self.header = header
         self.items = items
         self.height = height

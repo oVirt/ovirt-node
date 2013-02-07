@@ -477,6 +477,9 @@ class UIElements(base.Base):
         for e in self._elements:
             yield e
 
+    def __str__(self):
+        return "<UIElements %s>" % self._elements
+
     class Group(list, base.Base):
         def __init__(self, uielements, paths):
             super(UIElements.Group, self).__init__()

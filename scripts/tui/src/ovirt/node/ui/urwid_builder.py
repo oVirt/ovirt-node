@@ -122,7 +122,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         else:
             widget_class = uw.PasswordEntry
 
-        widget = widget_class(ui_entry.label,
+        widget = widget_class(ui_entry.label(),
                               align_vertical=ui_entry.align_vertical)
         widget.enable(ui_entry.enabled())
 
@@ -182,7 +182,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         return uw.Divider(ui_divider.char)
 
     def _build_options(self, ui_options):
-        widget = uw.Options(ui_options.label, ui_options.options,
+        widget = uw.Options(ui_options.label(), ui_options.options,
                             ui_options.option())
 
         def on_widget_change_cb(widget, data):
@@ -201,7 +201,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         return widget
 
     def _build_checkbox(self, ui_checkbox):
-        widget = uw.Checkbox(ui_checkbox.label, ui_checkbox.state())
+        widget = uw.Checkbox(ui_checkbox.label(), ui_checkbox.state())
 
         def on_widget_change_cb(widget, data=None):
             ui_checkbox.state(data)
