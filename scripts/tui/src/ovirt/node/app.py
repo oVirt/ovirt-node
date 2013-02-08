@@ -68,7 +68,7 @@ LOGGING = {
         }
     },
     'loggers': {
-        'ovirt': {
+        '': {
             'handlers': ['debug', 'stderr'],
             'level': 'DEBUG',
         },
@@ -79,11 +79,13 @@ LOGGING = {
     }
 }
 
-logging.config.dictConfig(LOGGING)
-#logging.basicConfig(level=logging.DEBUG,
-#                    filename="/tmp/app.log", filemode="w",
-#                    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+def configure_logging():
+    logging.config.dictConfig(LOGGING)
+    #logging.basicConfig(level=logging.DEBUG,
+    #                    filename="/tmp/app.log", filemode="w",
+    #                    format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
+configure_logging()
 
 class Application(base.Base):
     """The controller part when seeing as an MVC pattern
@@ -290,6 +292,7 @@ class Application(base.Base):
         try:
             self.ui.run()
         except Exception as e:
+            utils.process.call("reset")
             self.logger.error("An error appeared in the UI: %s" % repr(e))
             utils.console.writeln("Press ENTER to logout ...")
             utils.console.writeln("or enter 's' to drop to shell")
