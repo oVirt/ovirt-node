@@ -18,10 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-import sys
-from ovirt.node import plugins, valid, ui, utils
+from ovirt.node import plugins, valid, ui, utils, app
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.plugins import Changeset
+from ovirt.node.utils import console
+import sys
 
 """
 Configure Engine
@@ -36,9 +37,10 @@ class Plugin(plugins.NodePlugin):
         return 100
 
     def model(self):
+        cfg = VDSM().retrieve()
         model = {
-            "vdsm_cfg.address": "",
-            "vdsm_cfg.port": "443",
+            "vdsm_cfg.address": cfg["server"] or "",
+            "vdsm_cfg.port": cfg["port"] or "443",
             "vdsm_cfg.connect_and_validate": True,
             "vdsm_cfg.password": "",
             "vdsm_cfg.password_confirmation": "",
@@ -105,11 +107,15 @@ class Plugin(plugins.NodePlugin):
             txs += [SetEnginePassword()]
 
         if effective_model.contains_any(["vdsm_cfg.connect_and_validate"]):
-            self.logger.debug("Connecting to engine")
-            txs += [ActivateVDSM(changes["vdsm_cfg.connect_and_validate"])]
+            if effective_model["vdsm_cfg.connect_and_validate"]:
+                self.logger.debug("Connecting to engine")
+                txs += [ActivateVDSM(changes["vdsm_cfg.connect_and_validate"])]
 
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
+
+        # VDSM messes with logging, and we just reset it
+        app.configure_logging()
 
         # Acts like a page reload
         return self.ui_content()
@@ -120,7 +126,6 @@ class Plugin(plugins.NodePlugin):
 # Functions and classes to support the UI
 #
 #
-
 class VDSM(NodeConfigFileSection):
     """Class to handle VDSM configuration in /etc/default/ovirt file
 
