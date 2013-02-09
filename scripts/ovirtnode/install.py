@@ -203,7 +203,7 @@ menuentry "BACKUP %(oldtitle)s" {
 set root (hd0,%(partB)d)
 linux /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
 initrd /initrd0.img
-    """
+}    """
         logger.info("efi not detected, installing grub2 configuraton")
         if _functions.is_iscsi_install():
             disk = re.sub("p[1,2,3]$", "", \
@@ -296,14 +296,14 @@ initrd /initrd0.img
             f=open(grub_config_file)
             oldgrub=f.read()
             f.close()
-            if _functions.is_efi_boot():
+            if _functions.is_efi_boot() or "grub.cfg" in grub_config_file:
                 m=re.search("^menuentry (.*)$", oldgrub, re.MULTILINE)
             else:
                 m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
             if m is not None:
                 self.oldtitle=m.group(1)
                 # strip off extra title characters
-                if _functions.is_efi_boot():
+                if _functions.is_efi_boot() or "grub.cfg" in grub_config_file:
                     self.oldtitle = self.oldtitle.replace('"','').strip(" {")
         _functions.system("umount /liveos/efi")
         _functions.system("umount /liveos")
