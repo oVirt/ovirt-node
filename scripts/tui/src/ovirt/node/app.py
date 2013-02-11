@@ -258,8 +258,6 @@ class Application(base.Base):
         self.__current_plugin = plugin
         with Timer() as t:
             content = plugin.ui_content()
-            #self.populate_with_values(content)
-            #self.assign_actions(content)
             self.show(content)
         self.logger.debug("Build and displayed plugin_page in %s seconds" % t)
 

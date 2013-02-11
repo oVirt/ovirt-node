@@ -192,14 +192,16 @@ class Config(base.Base):
     def persist(self, filename):
         """Persist a file and bind mount it
         """
-        from ovirtnode import ovirtfunctions
-        return ovirtfunctions.ovirt_store_config(filename)
+        if filename:
+            from ovirtnode import ovirtfunctions
+            return ovirtfunctions.ovirt_store_config(filename)
 
     def unpersist(self, filename):
         """Remove the persistent version of a file and remove the bind mount
         """
-        from ovirtnode import ovirtfunctions
-        return ovirtfunctions.remove_config(filename)
+        if filename:
+            from ovirtnode import ovirtfunctions
+            return ovirtfunctions.remove_config(filename)
 
     def exists(self, filename):
         """Check if the given file is persisted

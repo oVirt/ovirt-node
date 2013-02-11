@@ -21,14 +21,25 @@
 from ovirt.node import plugins, valid, ui, utils, app
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.plugins import Changeset
+import logging
+import os
 import sys
+import traceback
+import httplib
 
 """
 Configure Engine
 """
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 class Plugin(plugins.NodePlugin):
+    _cert_path = None
+    _server = None
+    _port = None
+
     def name(self):
         return "oVirt Engine"
 
@@ -40,9 +51,10 @@ class Plugin(plugins.NodePlugin):
         model = {
             "vdsm_cfg.address": cfg["server"] or "",
             "vdsm_cfg.port": cfg["port"] or "443",
-            "vdsm_cfg.connect_and_validate": True,
+            "vdsm_cfg.cert": "Verified"
+            if utils.fs.Config().exists(cfg["cert_path"]) else "N/A",
             "vdsm_cfg.password": "",
-            "vdsm_cfg.password_confirmation": "",
+            "vdsm_cfg.password_confirmation": ""
         }
         return model
 
@@ -50,10 +62,19 @@ class Plugin(plugins.NodePlugin):
         same_as_password = plugins.Validator.SameAsIn(self,
                                                       "vdsm_cfg.password",
                                                       "Password")
+
+        def cert_validator(v):
+            cert_path = VDSM().retrieve()["cert_path"]
+            cert_exists = cert_path and os.path.exists(cert_path)
+            return cert_exists or ("The Engine Certificate does not exist. " +
+                                   "Retrieve and verify it before you " +
+                                   "continue.")
+
         return {"vdsm_cfg.address": valid.FQDNOrIPAddress() | valid.Empty(),
                 "vdsm_cfg.port": valid.Port(),
                 "vdsm_cfg.password": valid.Text(),
                 "vdsm_cfg.password_confirmation": same_as_password,
+                "action.register": cert_validator
                 }
 
     def ui_content(self):
@@ -61,8 +82,8 @@ class Plugin(plugins.NodePlugin):
               ui.Entry("vdsm_cfg.address", "Management Server:"),
               ui.Entry("vdsm_cfg.port", "Management Server Port:"),
               ui.Divider("divider[0]"),
-              ui.Checkbox("vdsm_cfg.connect_and_validate",
-                          "Connect to oVirt Engine and Validate Certificate"),
+              ui.SaveButton("action.fetch_cert", "Retrieve Certificate"),
+              ui.KeywordLabel("vdsm_cfg.cert", "Certificate Status: "),
               ui.Divider("divider[1]"),
               ui.Label("vdsm_cfg.password._label",
                        "Optional password for adding Node through oVirt " +
@@ -71,10 +92,11 @@ class Plugin(plugins.NodePlugin):
               ui.PasswordEntry("vdsm_cfg.password_confirmation",
                                "Confirm Password:"),
               ]
-        # Save it "locally" as a dict, for better accessability
-        self.widgets.add(ws)
 
         page = ui.Page("page", ws)
+        page.buttons = [ui.SaveButton("action.register", "Save & Register")]
+
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
@@ -89,35 +111,146 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        txs = utils.Transaction("Configuring oVirt Engine")
+        if changes.contains_any(["action.fetch_cert"]):
+            buttons = [ui.Button("action.cert.accept", "Accept"),
+                       ui.Button("action.cert.reject", "Reject & Remove")]
 
-        vdsm_keys = ["vdsm_cfg.address", "vdsm_cfg.port"]
-        if changes.contains_any(vdsm_keys):
-            values = effective_model.values_for(vdsm_keys)
-            self.logger.debug("Setting VDSM server and port (%s)" % values)
+            try:
+                server = effective_model["vdsm_cfg.address"]
+                port = findPort(server, effective_model["vdsm_cfg.port"])
+                self._cert_path, fingerprint = retrieveCetrificate(server,
+                                                                   port)
+                self._server, self._port = server, port
+            except Exception as e:
+                fingerprint = str(e)
+                buttons = [ui.Button("action.cert.reject", "Close")]
 
-            # Use the VDSM class below to build a transaction
+            self._fp_dialog = ui.Dialog("dialog.engine.fp",
+                                        "@ENGINENAME@ Fingerprint",
+                                        [ui.Label("dialog.label[0]", "TBD"),
+                                         ui.Label("dialog.fp", fingerprint)])
+            self._fp_dialog.buttons = buttons
+            return self._fp_dialog
+
+        elif changes.contains_any(["action.cert.accept"]):
+            self._fp_dialog.close()
             model = VDSM()
-            model.update(*values)
-            txs += model.transaction()
+            model.update(self._server, self._port, self._cert_path)
+            utils.fs.Config().persist(self._cert_path)
+            self._server, self._port, self._cert_path = None, None, None
+
+        elif changes.contains_any(["action.cert.reject"]):
+            model = VDSM()
+            model.update(cert_path=None)
+            utils.fs.Config().unpersist(self._cert_path)
+            os.unlink(self._cert_path)
+            self._fp_dialog.close()
+            self._server, self._port, self._cert_path = None, None, None
+
+        txs = utils.Transaction("Configuring oVirt Engine")
 
         if changes.contains_any(["vdsm_cfg.password_confirmation"]):
             self.logger.debug("Setting engine password")
             txs += [SetEnginePassword()]
 
-        if effective_model.contains_any(["vdsm_cfg.connect_and_validate"]):
-            if effective_model["vdsm_cfg.connect_and_validate"]:
-                self.logger.debug("Connecting to engine")
-                txs += [ActivateVDSM(changes["vdsm_cfg.connect_and_validate"])]
+        if effective_changes.contains_any(["action.register"]):
+            self.logger.debug("Connecting to engine")
+            txs += [ActivateVDSM()]
 
-        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
-        progress_dialog.run()
+        if len(txs) > 0:
+            progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs,
+                                                           self)
+            progress_dialog.run()
 
-        # VDSM messes with logging, and we just reset it
-        app.configure_logging()
+            # VDSM messes with logging, and we just reset it
+            app.configure_logging()
 
         # Acts like a page reload
         return self.ui_content()
+
+
+def findPort(engineServer, enginePort):
+    """Function to find the correct port for a given server
+    """
+    # pylint: disable-msg=E0611,F0401
+    sys.path.append('/usr/share/vdsm-reg')
+    import deployUtil  # @UnresolvedImport
+
+    from ovirt_config_setup.engine import \
+        TIMEOUT_FIND_HOST_SEC  # @UnresolvedImport
+    from ovirt_config_setup.engine import \
+        compatiblePort  # @UnresolvedImport
+    # pylint: enable-msg=E0611,F0401
+
+    compatPort, sslPort = compatiblePort(enginePort)
+
+    LOGGER.debug("Finding port %s:%s with compat %s ssl %s" %
+                 (engineServer, enginePort, compatPort, sslPort))
+
+    deployUtil.nodeCleanup()
+
+    # Build port list to try
+    port_cfgs = [(enginePort, sslPort)]
+    if compatPort:
+        port_cfgs += [(compatPort, sslPort)]
+    else:
+        port_cfgs += [(enginePort, False)]
+
+    LOGGER.debug("Port configuratoins for engine: %s" % port_cfgs)
+
+    for try_port, use_ssl in port_cfgs:
+        LOGGER.debug("Trying to reach engine %s via %s %s" %
+                     (engineServer, try_port, "SSL" if use_ssl else ""))
+
+        is_reachable = False
+
+        try:
+            is_reachable = isHostReachable(host=engineServer,
+                                           port=try_port, ssl=use_ssl,
+                                           timeout=TIMEOUT_FIND_HOST_SEC)
+        except Exception:
+            LOGGER.debug("Failed to reach engine: %s" % traceback.format_exc())
+
+        if is_reachable:
+            LOGGER.debug("Reached engine")
+            enginePort = try_port
+            break
+
+    if not is_reachable:
+        raise RuntimeError("Can't connect to @ENGINENAME@")
+
+    return enginePort
+
+
+def isHostReachable(host, port, ssl, timeout):
+    """Check if a host is reachable on a given port via HTTP/HTTPS
+    """
+    if ssl:
+        Connection = httplib.HTTPSConnection
+    else:
+        Connection = httplib.HTTPConnection
+    Connection(str(host), port=int(port), timeout=timeout).request("HEAD", "/")
+    return True
+
+
+def retrieveCetrificate(engineServer, enginePort):
+    """Function to retrieve and store the certificate from an Engine
+    """
+    fingerprint = None
+
+    # pylint: disable-msg=E0611,F0401
+    sys.path.append('/usr/share/vdsm-reg')
+    import deployUtil  # @UnresolvedImport
+    # pylint: enable-msg=E0611,F0401
+
+    if deployUtil.getRhevmCert(engineServer, enginePort):
+        _, _, path = deployUtil.certPaths('')
+        fingerprint = deployUtil.generateFingerPrint(path)
+    else:
+        msgCert = "Failed downloading @ENGINENAME@ certificate"
+        raise RuntimeError(msgCert)
+
+    return path, fingerprint
 
 
 #
@@ -132,32 +265,18 @@ class VDSM(NodeConfigFileSection):
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
     >>> n = VDSM(cfgfile)
-    >>> n.update("engine.example.com", "1234")
+    >>> n.update("engine.example.com", "1234", "p")
     >>> sorted(n.retrieve().items())
-    [('port', '1234'), ('server', 'engine.example.com')]
+    [('cert_path', 'p'), ('port', '1234'), ('server', 'engine.example.com')]
     """
     keys = ("OVIRT_MANAGEMENT_SERVER",
-            "OVIRT_MANAGEMENT_PORT")
+            "OVIRT_MANAGEMENT_PORT",
+            "OVIRT_MANAGEMENT_CERTIFICATE")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, server, port):
+    def update(self, server, port, cert_path):
         (valid.Empty() | valid.FQDNOrIPAddress())(server)
         (valid.Empty() | valid.Port())(port)
-
-    def transaction(self):
-        cfg = dict(self.retrieve())
-        server, port = (cfg["server"], cfg["port"])
-
-        class ConfigureVDSM(utils.Transaction.Element):
-            title = "Setting VDSM server and port"
-
-            def commit(self):
-                self.logger.info("Setting: %s:%s" % (server, port))
-
-        tx = utils.Transaction("Configuring VDSM")
-        tx.append(ConfigureVDSM())
-
-        return tx
 
 
 class SetRootPassword(utils.Transaction.Element):
@@ -179,72 +298,8 @@ class SetRootPassword(utils.Transaction.Element):
 class ActivateVDSM(utils.Transaction.Element):
     title = "Activating VDSM"
 
-    def __init__(self, verify_engine_cert):
-        super(ActivateVDSM, self).__init__()
-        self.vdsm_cfg = VDSM()
-        self.verify_engine_cert = verify_engine_cert
-
-    def prepare(self):
-        """Ping the management server before we try to activate
-        the connection to it
-        """
-        cfg = dict(self.vdsm_cfg.retrieve())
-        self.engineServer = cfg["server"]
-        self.enginePort = cfg["port"]
-        if self.engineServer:
-            newPort = self.__prepare_server(self.engineServer, self.enginePort)
-            self.enginePort = newPort
-
-    def __prepare_server(self, engineServer, enginePort):
-        # pylint: disable-msg=E0611,F0401
-        sys.path.append('/usr/share/vdsm-reg')
-        import deployUtil  # @UnresolvedImport
-
-        from ovirt_config_setup.engine import \
-            isHostReachable  # @UnresolvedImport
-        from ovirt_config_setup.engine import \
-            TIMEOUT_FIND_HOST_SEC  # @UnresolvedImport
-        from ovirt_config_setup.engine import \
-            compatiblePort  # @UnresolvedImport
-        # pylint: enable-msg=E0611,F0401
-
-        compatPort, sslPort = compatiblePort(self.enginePort)
-
-        deployUtil.nodeCleanup()
-        if not isHostReachable(host=engineServer,
-                               port=enginePort, ssl=sslPort,
-                               timeout=TIMEOUT_FIND_HOST_SEC):
-            if compatPort is None:
-                # Try one more time with SSL=False
-                if not isHostReachable(host=engineServer,
-                                       port=enginePort, ssl=False,
-                                       timeout=TIMEOUT_FIND_HOST_SEC):
-                    msgConn = "Can't connect to @ENGINENAME@ in the " + \
-                              "specific port %s" % enginePort
-                    raise RuntimeError(msgConn)
-            else:
-                msgConn = "Can't connect to @ENGINENAME@ port %s," \
-                    " trying compatible port %s" % \
-                    (enginePort, compatPort)
-
-                #  FIXME self.notice(msgConn)
-
-                if not isHostReachable(host=self.engineServer,
-                                       port=compatPort, ssl=sslPort,
-                                       timeout=TIMEOUT_FIND_HOST_SEC):
-                    msgConn = "Can't connect to @ENGINENAME@ using" \
-                        " compatible port %s" % compatPort
-                    raise RuntimeError(msgConn)
-                else:
-                    # compatible port found
-                    enginePort = compatPort
-
-        return enginePort
-
     def commit(self):
         self.logger.info("Connecting to VDSM server")
-
-        from ovirtnode.ovirtfunctions import ovirt_store_config
 
         # pylint: disable-msg=E0611,F0401
         sys.path.append('/usr/share/vdsm-reg')
@@ -257,25 +312,12 @@ class ActivateVDSM(utils.Transaction.Element):
             write_vdsm_config  # @UnresolvedImport
         # pylint: enable-msg=E0611,F0401
 
-        if self.verify_engine_cert:
-            if deployUtil.getRhevmCert(self.engineServer,
-                                       self.enginePort):
-                _, _, path = deployUtil.certPaths('')
-                #fp = deployUtil.generateFingerPrint(path)
-                #
-                # FIXME
-                #
-                # a) Allow interactive confirmation of key
-                # b) Remind to verify key (with dialog on ui.Page)
-                #
-                ovirt_store_config(path)
-            else:
-                msgCert = "Failed downloading @ENGINENAME@ certificate"
-                raise RuntimeError(msgCert)
+        cfg = VDSM().retrieve()
+
         # Stopping vdsm-reg may fail but its ok - its in the case when the
         # menus are run after installation
         deployUtil._logExec([constants.EXT_SERVICE, 'vdsm-reg', 'stop'])
-        if write_vdsm_config(self.engineServer, self.enginePort):
+        if write_vdsm_config(cfg["server"], cfg["port"]):
             deployUtil._logExec([constants.EXT_SERVICE, 'vdsm-reg',
                                  'start'])
 

@@ -133,6 +133,7 @@ class NodePlugin(base.Base):
                     msg = validators[path](value)
                 except exceptions.InvalidData as e:
                     msg = e.message
+                    self.logger.debug("Failed to validate %s: %s" % (path, e))
 
                 # True and None are allowed values
                 if msg in [True, None]:
@@ -150,10 +151,6 @@ class NodePlugin(base.Base):
         self.on_valid(is_valid)
 
         return True
-
-    def revalidate(self):
-        self.logger.debug("Revalidating")
-        return self.validate(self.model())
 
     def ui_name(self):
         """Returns the UI friendly name for this plugin.

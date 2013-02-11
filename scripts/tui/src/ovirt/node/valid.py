@@ -156,7 +156,8 @@ class RegexValidator(Validator):
             pass
         else:
             self.logger.warning("Unknown type: %s %s" % (value, type(value)))
-        return re.compile(*self.pattern).search(value) is not None
+        return value is not None and \
+            re.compile(*self.pattern).search(value) is not None
 
 
 class Text(RegexValidator):
