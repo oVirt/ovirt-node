@@ -19,10 +19,10 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils, base
-from ovirt.node.config import defaults
 from ovirt.node.utils import AugeasWrapper as Augeas
 import logging
 import os
+import glob
 
 """
 Some convenience functions related to networking
@@ -188,6 +188,17 @@ class Ifcfg(base.Base):
         return value
 
 
+def ifaces():
+    """Returns all configured ifaces
+    """
+    ifaces = []
+    filepath = "/etc/sysconfig/network-scripts/ifcfg-"
+    for fn in glob.glob("%s*" % filepath):
+        iface = fn[len(filepath):]
+        ifaces.append(iface)
+    return ifaces
+
+
 def node_bridge():
     """Return the configured bridge
 
@@ -195,12 +206,23 @@ def node_bridge():
         Ifname of a configured bridge or None if none is configured
     """
     bridge = None
-    model = defaults.Network()
-    iface = model.retrieve()["iface"]
-    vlan = model.retrieve()["vlanid"]
-    if iface:
-        if vlan is not None:
-            iface = "%s.%s" % (iface, vlan)
+    for iface in ifaces():
         nic = Ifcfg(iface)
-        bridge = nic.bridge
+        if nic.type == u"Bridge":
+            bridge = iface
+            break
     return bridge
+
+
+def node_bridge_slave():
+    """Returns the interface which is the slave of the configfured bridge
+    """
+    slave = None
+    bridge = node_bridge()
+    if bridge:
+        for iface in ifaces():
+            nic = Ifcfg(iface)
+            if nic.bridge == bridge:
+                slave = iface
+                break
+    return slave

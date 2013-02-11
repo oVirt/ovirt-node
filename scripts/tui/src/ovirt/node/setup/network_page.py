@@ -268,8 +268,12 @@ class NicDetailsDialog(ui.Dialog):
         self.logger.debug("live: %s" % live)
         self.logger.debug("cfg: %s" % cfg)
 
-        if cfg["iface"] != iface:
-            # create empty config if we are not editing the bootif
+        # The primary interface of this Node:
+        node_bridge_slave = config.network.node_bridge_slave()
+
+        if node_bridge_slave != iface:
+            # The config contains the information for the primary iface,
+            # because this iface is not the primary iface we clear the config
             cfg = {k: "" for k in cfg.keys()}
 
         ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
