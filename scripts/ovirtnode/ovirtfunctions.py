@@ -1711,6 +1711,12 @@ def remove_efi_entry(entry):
             system(cmd)
     return
 
+def grub2_available():
+    if os.path.exists("/sbin/grub2-install"):
+        return True
+    else:
+        return False
+
 class PluginBase(object):
     """Base class for pluggable Hypervisor configuration options.
 

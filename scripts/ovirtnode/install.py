@@ -80,7 +80,7 @@ class Install:
             self.grub_dir = "/liveos/grub"
             self.grub_prefix = "/grub"
 
-        if os.path.exists("/sbin/grub2-install"):
+        if _functions.grub2_available():
             self.grub_prefix = self.grub_prefix + "2"
             self.grub_dir = self.grub_dir + "2"
             self.grub_config_file = "%s/grub.cfg" % self.grub_dir
@@ -204,7 +204,6 @@ set root (hd0,%(partB)d)
 linux /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
 initrd /initrd0.img
 }    """
-        logger.info("efi not detected, installing grub2 configuraton")
         if _functions.is_iscsi_install():
             disk = re.sub("p[1,2,3]$", "", \
                                     _functions.findfs(self.boot_candidate))
@@ -228,7 +227,7 @@ initrd /initrd0.img
         grub_results = grub_setup.stdout.read()
         logger.info(grub_results)
         if grub_setup.wait() != 0 or "Error" in grub_results:
-            logger.error("GRUB efi setup failed")
+            logger.error("grub2-install Failed")
             return False
         else:
             logger.debug("Generating Grub2 Templates")
@@ -296,14 +295,14 @@ initrd /initrd0.img
             f=open(grub_config_file)
             oldgrub=f.read()
             f.close()
-            if _functions.is_efi_boot() or "grub.cfg" in grub_config_file:
+            if _functions.grub2_available():
                 m=re.search("^menuentry (.*)$", oldgrub, re.MULTILINE)
             else:
                 m=re.search("^title (.*)$", oldgrub, re.MULTILINE)
             if m is not None:
                 self.oldtitle=m.group(1)
                 # strip off extra title characters
-                if _functions.is_efi_boot() or "grub.cfg" in grub_config_file:
+                if _functions.grub2_available():
                     self.oldtitle = self.oldtitle.replace('"','').strip(" {")
         _functions.system("umount /liveos/efi")
         _functions.system("umount /liveos")
@@ -378,7 +377,7 @@ initrd /initrd0.img
             logger.info(self.disk)
             # grub2 starts at part 1
             self.partN = int(self.disk[-1:])
-            if not os.path.exists("/sbin/grub2-install"):
+            if not _functions.grub2_available():
                 self.partN = self.partN - 1
         except:
             logger.debug(traceback.format_exc())
@@ -502,7 +501,7 @@ initrd /initrd0.img
                             key, value = line.split("=")
                             self.grub_dict["release"] = value.strip()
 
-        if os.path.exists("/sbin/grub2-install"):
+        if _functions.grub2_available():
             if not self.grub2_install():
                 logger.error("Grub2 Installation Failed ")
                 return False
