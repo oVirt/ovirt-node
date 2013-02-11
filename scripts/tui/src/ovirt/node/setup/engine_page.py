@@ -21,7 +21,6 @@
 from ovirt.node import plugins, valid, ui, utils, app
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.plugins import Changeset
-from ovirt.node.utils import console
 import sys
 
 """

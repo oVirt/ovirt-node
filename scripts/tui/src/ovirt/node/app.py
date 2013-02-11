@@ -79,13 +79,16 @@ LOGGING = {
     }
 }
 
+
 def configure_logging():
     logging.config.dictConfig(LOGGING)
     #logging.basicConfig(level=logging.DEBUG,
     #                    filename="/tmp/app.log", filemode="w",
-    #                    format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    #                    format="%(asctime)s %(levelname)s %(name)s " +
+#                               "%(message)s")
 
 configure_logging()
+
 
 class Application(base.Base):
     """The controller part when seeing as an MVC pattern
