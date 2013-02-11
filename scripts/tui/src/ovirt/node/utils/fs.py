@@ -69,6 +69,13 @@ def atomic_write(filename, contents):
         raise e
 
 
+def truncate(filename):
+    """Truncate the given file to the length 0
+    """
+    with open(filename, "wb"):
+        pass
+
+
 class BackupedFiles(base.Base):
     """This context manager can be used to keep backup of files while messing
     with them.
@@ -175,21 +182,29 @@ def is_bind_mount(filename, fsprefix="ext"):
 
 
 class Config(base.Base):
+    """oVirt Node specififc way to persist files
+    """
     basedir = "/config"
 
     def _config_path(self, fn=""):
         return os.path.join(self.basedir, fn.strip("/"))
 
     def persist(self, filename):
+        """Persist a file and bind mount it
+        """
         from ovirtnode import ovirtfunctions
         return ovirtfunctions.ovirt_store_config(filename)
 
     def unpersist(self, filename):
+        """Remove the persistent version of a file and remove the bind mount
+        """
         from ovirtnode import ovirtfunctions
         return ovirtfunctions.remove_config(filename)
 
     def exists(self, filename):
-        return os.path.exists(self._config_path(filename))
+        """Check if the given file is persisted
+        """
+        return filename and os.path.exists(self._config_path(filename))
 
     def is_enabled(self):
         return is_bind_mount(self.basedir)

@@ -289,6 +289,10 @@ class Transaction(list, base.Base):
         def __repr__(self):
             return "<%s '%s'>" % (self.__class__.__name__, self.title)
 
+        def __call__(self):
+            self.prepare()
+            self.commit()
+
 
 class Timer(base.Base):
     started = 0

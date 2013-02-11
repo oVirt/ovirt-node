@@ -34,6 +34,9 @@ which communicate with each other.
 """
 
 
+log_filename = "/tmp/ovirt.log"
+debug_log_filename = "/tmp/ovirt.debug.log"
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -51,15 +54,13 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'formatter': 'simple',
-            'filename': '/tmp/ovirt.log',
-            'mode': 'w'
+            'filename': log_filename,
         },
         'debug': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'formatter': 'verbose',
-            'filename': '/tmp/ovirt.debug.log',
-            'mode': 'w'
+            'filename': debug_log_filename,
         },
         'stderr': {
             'level': 'ERROR',
@@ -79,15 +80,18 @@ LOGGING = {
     }
 }
 
+utils.fs.truncate(log_filename)
+utils.fs.truncate(debug_log_filename)
+logging.config.dictConfig(LOGGING)
+
 
 def configure_logging():
-    logging.config.dictConfig(LOGGING)
+    logdict = dict(LOGGING)
+    logging.config.dictConfig(logdict)
     #logging.basicConfig(level=logging.DEBUG,
     #                    filename="/tmp/app.log", filemode="w",
     #                    format="%(asctime)s %(levelname)s %(name)s " +
 #                               "%(message)s")
-
-configure_logging()
 
 
 class Application(base.Base):
