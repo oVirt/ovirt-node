@@ -1257,13 +1257,9 @@ def parse_options(args):
     parser = optparse.OptionParser(option_class=MultipleOption, usage = """
        %prog [-n=<name>]
                       [-o <output>]
-                      [-k <kickstart-file>]
-                      [-s <script.sh>]
                       [-w <user,encrypted password>
                       [-l <sshkeyfile>
                       [-t <tmpdir>]
-                      [-r <releasefile>]
-                      [-b <builder>]
                       [--install-kmod <kmod_pkg_name>
                       [--install-plugin <plugin_name>
                       [--install <pkg_name>
