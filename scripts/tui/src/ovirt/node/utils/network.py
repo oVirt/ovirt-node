@@ -499,3 +499,18 @@ def hostname(new_hostname=None):
     if new_hostname:
         utils.process.call("hostname %s" % new_hostname)
     return utils.process.pipe("hostname").strip()
+
+
+# http://git.fedorahosted.org/cgit/smolt.git/diff/?
+# id=aabd536e21f362f7bac18a2dbc1a55cbdb9ae385
+def reset_resolver():
+    '''Attempt to reset the system hostname resolver.
+    returns 0 on success, or -1 if an error occurs.'''
+    import ctypes
+    try:
+        resolv = ctypes.CDLL("libresolv.so.2")
+        r = resolv.__res_init()
+    except (OSError, AttributeError):
+        print "Warning: could not find __res_init in libresolv.so.2"
+        r = -1
+    return r

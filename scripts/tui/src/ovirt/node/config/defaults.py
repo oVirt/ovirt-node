@@ -345,6 +345,7 @@ class Network(NodeConfigFileSection):
 
             def commit(self):
                 utils.AugeasWrapper.force_reload()
+                utils.network.reset_resolver()
 
         tx = utils.Transaction("Applying new network configuration")
         tx.append(ConfigureNIC())
@@ -411,6 +412,8 @@ class Hostname(NodeConfigFileSection):
                 ovirtfunctions.ovirt_store_config("/etc/sysconfig/network")
                 ovirtfunctions.ovirt_store_config("/etc/hosts")
 
+                utils.network.reset_resolver()
+
         tx = utils.Transaction("Configuring hostname")
         tx.append(UpdateHostname(hostname))
         return tx
@@ -461,6 +464,8 @@ class Nameservers(NodeConfigFileSection):
                 net = onet.Network()
                 net.configure_dns()
 
+                utils.network.reset_resolver()
+
         tx = utils.Transaction("Configuring nameservers")
         tx.append(ConfigureNameservers())
         return tx
@@ -503,6 +508,8 @@ class Nameservers(NodeConfigFileSection):
                 # Now set the nameservers
                 config.network.nameservers(servers)
                 utils.fs.Config().persist("/etc/resolv.conf")
+
+                utils.network.reset_resolver()
 
         class UpdatePeerDNS(utils.Transaction.Element):
             title = "Update PEERDNS statement in ifcfg-* files"
