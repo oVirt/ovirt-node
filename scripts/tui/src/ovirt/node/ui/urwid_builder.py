@@ -307,7 +307,7 @@ class UrwidWindow(ui.Window):
                ('header', 'white', 'dark blue'),
                ('table', element_styles["text"]),
                ('table.label', element_styles["label"]),
-               ('table.header', element_styles["label"]),
+               ('table.header', element_styles["label"] + ", standout"),
                ('table.entry', element_styles["text"]),
                ('table.entry:focus', 'white', 'light blue'),
                ('main.menu', 'black'),

@@ -47,11 +47,8 @@ class Plugin(NodePlugin):
               ui.Label("support.info", "Select one of the logfiles below. \n" +
                        "Press 'q' to quit when viewing a logfile."),
               ui.Divider("divider[0]"),
-              ui.Table("support.logfile", "Logfiles", "Available Logfiles",
+              ui.Table("support.logfile", "", "Available Logfiles",
                        self.__debugfiles_to_offer()),
-
-              ui.Header("header[1]", "(Data:)"),
-              ui.Label("support.contents", "")
               ]
 
         page = ui.Page("page", ws)
