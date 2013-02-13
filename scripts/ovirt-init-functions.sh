@@ -878,7 +878,8 @@ EOF
         log "Rescue mode requested, starting emergency shell"
         stop_log
         plymouth --hide-splash
-        bash < /dev/console > /dev/console 2> /dev/console
+        echo "Rescue mode requested, starting emergency shell" > /dev/tty1
+        openvt -f -c 1 -w -s -l -- bash
         plymouth --show-splash
         start_log
     fi
