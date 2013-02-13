@@ -88,6 +88,17 @@ class InstallationMedia(base.Base):
     version = None
     release = None
 
+    @property
+    def full_version(self):
+        """Return the full version
+        >>> m = InstallationMedia(and_load=False)
+        >>> m.version = "1.2"
+        >>> m.release = "3"
+        >>> m.full_version
+        '1.2-3'
+        """
+        return "%s-%s" % (self.version, self.release)
+
     def __init__(self, and_load=True):
         super(InstallationMedia, self).__init__()
         if and_load:
@@ -97,12 +108,8 @@ class InstallationMedia(base.Base):
         from ovirtnode.ovirtfunctions import get_media_version_number
         self.version, self.release = get_media_version_number()
 
-    @property
-    def full_version(self):
-        return "%s-%s" % (self.version, self.release)
-
     def __str__(self):
-        return self.full_version()
+        return self.full_version
 
     def __cmp__(self, other):
         """Compare two medias

@@ -44,9 +44,13 @@ class TableEntryWidget(urwid.AttrMap):
     _text = None
 
     signals = ["activate"]
+    checkboxes = {True: "[x] ",
+                  False: "[ ] "}
 
-    def __init__(self, title):
-        self._text = SelectableText(title)
+    def __init__(self, title, multi=False):
+        self.multi = multi
+        self.title = title
+        self._text = self.__build_child()
 #        self._text = Button(title)
 #        self._text.button_left = ""
 #        self._text.button_right = ""
@@ -55,15 +59,38 @@ class TableEntryWidget(urwid.AttrMap):
 
     def keypress(self, size, key):
         if urwid.Button._command_map[key] == 'activate':
-            self._emit('activate', None)
+            self.__handle_activate()
         return key
 
     def mouse_event(self, size, event, button, x, y, focus):
         if button != 1 or not urwid.util.is_mouse_press(event):
             return False
 
-        self._emit('activate', self)
+        self.__handle_activate()
         return True
+
+    def is_selected(self):
+        if self.multi:
+            return self._text.text.startswith(self.checkboxes[True])
+        return True
+
+    def select(self, is_selected=True):
+        if self.multi:
+            new_text = "%s%s" % (self.checkboxes[is_selected], self.title)
+            self._text.set_text(new_text)
+
+    def __build_child(self):
+        self._text = SelectableText(self.title)
+        if self.multi:
+            self.select(False)
+        return self._text
+
+    def __handle_activate(self):
+        if self.multi:
+            is_checked = self.is_selected()
+            LOGGER.debug("handling activate: %s" % is_checked)
+            self.select(not is_checked)
+        self._emit('activate', self)
 
 
 class TableWidget(urwid.WidgetWrap):
@@ -83,7 +110,7 @@ class TableWidget(urwid.WidgetWrap):
 
     _position = 0
 
-    def __init__(self, label, header, items, selected_item, height, enabled):
+    def __init__(self, label, header, items, multi, height, enabled):
         self.__label = urwid.Text(label)
         self.__label_attrmap = urwid.AttrMap(self.__label, self._label_attr)
         self.__header = urwid.Text(header)
@@ -92,9 +119,7 @@ class TableWidget(urwid.WidgetWrap):
         self.__walker = urwid.SimpleListWalker(self.__items)
         self.__list = urwid.ListBox(self.__walker)
 #        self.__list_linebox = urwid.LineBox(self.__list)
-
-        if selected_item:
-            self.set_focus(items.index(selected_item))
+        self.multi = multi
 
         def __on_item_change():
             widget, self._position = self.__list.get_focus()
@@ -124,6 +149,20 @@ class TableWidget(urwid.WidgetWrap):
 
     def set_focus(self, n):
         self.__list.set_focus(n)
+
+    def focus(self, key):
+        for c in self.__items:
+            if c._key == key:
+                    self.set_focus(self.__items.index(c))
+
+    def selection(self, selection=None):
+        if selection:
+            for c in self.__items:
+                LOGGER.debug("checking: %s" % c)
+                if self.multi and c._key in selection:
+                    c.select(True)
+        selected = [w._key for w in self.__items if w.is_selected()]
+        return selected
 
 
 class PluginMenuEntry(TableEntryWidget):

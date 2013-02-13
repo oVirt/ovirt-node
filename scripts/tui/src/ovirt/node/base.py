@@ -69,7 +69,8 @@ class Base(object):
             for idx, cb in enumerate(self.callbacks):
                 self.logger.debug("(%d/%d) Emitting from %s: %s" %
                                   (idx + 1, len(self.callbacks), self, cb))
-                cb(target, userdata)
+                if cb(target, userdata) is False:
+                    self.logger.debug("Breaking callback sequence")
             return self
 
         def connect(self, cb):

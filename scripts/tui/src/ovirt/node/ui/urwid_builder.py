@@ -71,7 +71,6 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
             self.logger.debug("Element changed, updating label " +
                               "'%s': %s" % (w, v))
             widget.text(v)
-            self.application.ui.force_redraw()
         ui_label.on_value_change.connect(on_item_text_change_cb)
 
         return widget
@@ -156,6 +155,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
                               (widget, ui_entry.path))
 
             try:
+                # FIXME this logic needs to go somewhere else - more generic
                 change = {ui_entry.path: new_value}
                 ui_entry.on_change(change)
                 widget.notice = ""
@@ -227,31 +227,47 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
 
     def _build_table(self, ui_table):
         children = []
-        selected = None
+
         for key, label in ui_table.items:
             c = self._build_tableitem(ui_table, key, label)
             children.append(c)
-            if key == ui_table.select():
-                selected = c
-        widget = uw.TableWidget(ui_table.label, ui_table.header,
-                                children, selected,
+
+        widget = uw.TableWidget(ui_table.label(), ui_table.header,
+                                children, ui_table.multi,
                                 ui_table.height, ui_table.enabled())
 
+        for c in children:
+            c._table = widget
+
+        if ui_table.multi:
+            widget.selection(ui_table.selection())
+        else:
+            widget.focus(ui_table.selection())
+
         def on_change_cb(w, d=None):
+            if ui_table.multi:
+                ui_table.selection(widget.selection())
+            else:
+                ui_table.selection(w._key)
             ui_table.on_change({ui_table.path: w._key})
-            ui_table.select(w._key)
 
         urwid.connect_signal(widget, "changed", on_change_cb)
+
+        def on_item_value_change_cb(p, v):
+            widget.selection(v)
+
+        ui_table.on_value_change.connect(on_item_value_change_cb)
 
         return widget
 
     def _build_tableitem(self, ui_table, key, label):
-        c = uw.TableEntryWidget(label)
+        c = uw.TableEntryWidget(label, multi=ui_table.multi)
         c._key = key
 
         def on_activate_cb(w, data):
+            ui_table.selection(w._table.selection())
             ui_table.on_change({ui_table.path: w._key})
-            ui_table.on_activate()
+            ui_table.on_activate({ui_table.path: w._key})
 
         urwid.connect_signal(c, "activate", on_activate_cb)
         return c

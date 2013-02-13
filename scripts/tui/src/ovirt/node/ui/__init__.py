@@ -30,6 +30,10 @@ class Element(base.Base):
     """An abstract UI Element.
     This basically provides signals to communicate between real UI widget and
     the plugins
+
+    Args:
+        path: The model path this item is mapped to
+        on_value_change: Emitted by the value() method if the value changes
     """
     path = None
     on_value_change = None
@@ -59,11 +63,13 @@ class Element(base.Base):
 
 class InputElement(Element):
     """An abstract UI Element for user input
-    on_change:
-        To be called by the consumer when the associated widget changed
 
-    on_enabled_change:
-        Called by the Element when enabled changes
+    Args:
+        on_change: To be called by the consumer when the associated widget
+                   changed
+
+        on_enabled_change: Called by the Element when enabled changes°
+        on_valid_change: Called by the Element when validity changes°
     """
     on_change = None
 
@@ -89,7 +95,7 @@ class InputElement(Element):
 
     def valid(self, is_valid):
         if is_valid in [True, False]:
-            self.on_value_change(is_valid)
+            self.on_valid_change(is_valid)
             self._valid = is_valid
         return self._valid
 
@@ -421,33 +427,66 @@ class ProgressBar(Element):
 
 class Table(InputElement):
     """Represents a simple Table with one column
-
-    Args:
-        header: A string
-        items: A list of tuples (key, label)
-        height: The height of the Table
     """
     on_activate = None
 
     def __init__(self, path, label, header, items, selected_item=None,
-                 height=5, enabled=True):
+                 height=5, enabled=True, multi=False):
+        """Args:
+        path: The model path to map to
+        label: An optional label
+        header: The header above the cells, can be used to name the rows)
+        items: A list of tuples (key, label) (both str like)
+        height: The height of the Table
+        selected_item: The item (key) which shall be selected initially
+        enabled: Whether the table can be changed or not
+        multi: Whether we allow multiple items to be selected
+        """
         super(Table, self).__init__(path, enabled)
         self.label = label
         self.header = header
         self.items = items
         self.height = height
-        self.select(selected_item or items[0][0])
+        self.multi = multi
         self.on_activate = self.new_signal()
-        self.on_activate.connect(SaveAction())
+        if multi:
+            self.selection(selected_item or [])
+            self.on_activate.connect(ChangeAction())
+        else:
+            self.selection(selected_item or items[0][0])
+            self.on_activate.connect(ChangeAction())
+            self.on_activate.connect(SaveAction())
 
-    def select(self, selected=None):
+    def selection(self, selected=None):
+        """Get/Select the given item (key) or multiple items if multi
+
+        Args:
+            selected: The item key to be selected
+        Returns:
+            The select item key or a list of keys which are selected
+        """
+        if self.multi:
+            return self.__selection_multi(selected)
+        return self.__selection(selected)
+
+    def __selection(self, selected=None):
         if selected in dict(self.items).keys():
             self.on_value_change(selected)
             self._selected = selected
         return self._selected
 
+    def __selection_multi(self, selected=None):
+        if type(selected) in [list, str, unicode]:
+            if type(selected) in [str, unicode]:
+                # for convenience create a list for single strings
+                selected = [selected]
+            self.on_value_change(selected)
+            self._selected = set([k for k in selected
+                                  if k in dict(self.items).keys()])
+        return list(self._selected)
+
     def value(self, value=None):
-        self.select(value)
+        return self.selection(value)
 
 
 class Window(Element):
@@ -611,20 +650,23 @@ class Page(ContainerElement):
 
 class Dialog(Page):
     """An abstract dialog, similar to a page
+
+    Args:
+        on_close: Emitted by the Dialog when it requests a close
     """
 
     escape_key = "esc"
-    on_close = None
+    on_close_change = None
 
     def __init__(self, path, title, children):
         super(Dialog, self).__init__(path, children, title)
-        self.on_close = self.new_signal()
+        self.on_close_change = self.new_signal()
         self.close(False)
-        self.on_close.connect(CloseAction(dialog=self))
+        self.on_close_change.connect(CloseAction(dialog=self))
 
     def close(self, v=True):
         if v:
-            self.on_close(self)
+            self.on_close_change(self)
 
 
 class TransactionProgressDialog(Dialog):
@@ -675,6 +717,9 @@ class TransactionProgressDialog(Dialog):
 
 class AbstractUIBuilder(base.Base):
     """An abstract class
+    Every toolkit that wants to be a backend for the above elements needs to
+    implement this builder. An instance of that specififc builder is then
+    passed to the application which uses the builder to build the UI.
     """
     application = None
 
