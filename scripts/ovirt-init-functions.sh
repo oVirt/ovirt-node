@@ -1168,20 +1168,6 @@ ovirt_start() {
     if is_standalone; then
         return 0
     fi
-    find_srv ipa tcp
-    if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
-        krb5_conf=/etc/krb5.conf
-        # FIXME this is IPA specific
-        wget -q --no-check-certificate \
-            http://$SRV_HOST:$SRV_PORT/ipa/config/krb5.ini -O $krb5_conf.tmp
-        if [ $? -ne 0 ]; then
-            log "Failed to get $krb5_conf"; return 1
-        fi
-        mv $krb5_conf.tmp $krb5_conf
-    else
-        log "skipping Kerberos configuration"
-    fi
-
 
     find_srv collectd udp
     if [ -n "$SRV_HOST" -a -n "$SRV_PORT" ]; then
@@ -1300,10 +1286,8 @@ start_ovirt_post() {
 
         # persist selected configuration files
         ovirt_store_config \
-            /etc/krb5.conf \
             /etc/node.d \
             /etc/sysconfig/node-config \
-            /etc/libvirt/krb5.tab \
             /etc/ssh/ssh_host*_key*
 
         . /usr/libexec/ovirt-functions

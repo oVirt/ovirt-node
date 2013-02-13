@@ -25,7 +25,6 @@ SHELL := /bin/bash
 SUBDIRS =   \
   dracut \
   images \
-  kinit \
   recipe \
   scripts \
   services \

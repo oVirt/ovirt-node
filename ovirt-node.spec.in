@@ -46,7 +46,6 @@ Requires:       cyrus-sasl-gssapi cyrus-sasl >= 2.1.22
 Requires:       iscsi-initiator-utils
 Requires:       ntp
 Requires:       nfs-utils
-Requires:       krb5-workstation
 Requires:       bash
 Requires:       chkconfig
 Requires:       bind-utils

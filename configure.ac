@@ -60,7 +60,6 @@ AM_PATH_PYTHON
 AC_CONFIG_FILES([Makefile
                 dracut/Makefile
                 images/Makefile
-                kinit/Makefile
                 scripts/Makefile
                 tools/Makefile
                 scripts/collectd.conf
