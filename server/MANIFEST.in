@@ -1,4 +1,0 @@
-recursive-include ovirtserver/public *
-include ovirtserver/public/favicon.ico
-recursive-include ovirtserver/i18n *
-recursive-include ovirtserver/templates *
