@@ -168,8 +168,14 @@ start_ovirt_early () {
     [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
     {
         # FIXME Hack around rhbz#806349 and which might be because of rhbz#807203
-        mount -a
-        swapon -a
+        if [[ -e "/bin/systemctl" ]];
+        then
+            systemctl daemon-reload
+        else
+            mount -a
+            swapon -a
+        fi
+
         log "Starting ovirt-early"
         _start_ovirt_early
         RETVAL=$?
