@@ -34,7 +34,6 @@ Requires(post):     systemd-units
 Requires(preun):    systemd-units
 #Requires:       python-augeas
 Requires:       glusterfs-client >= 2.0.1
-Requires:       anyterm
 Requires:       python-IPy
 Requires:       grub2
 Requires:       system-release
