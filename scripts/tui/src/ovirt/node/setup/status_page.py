@@ -123,7 +123,7 @@ class Plugin(plugins.NodePlugin):
         # Handle button presses
         if "action.lock" in changes:
             self.logger.info("Locking screen")
-            self._lock_dialog = self._build_lock_dialog()
+            self._lock_dialog = LockDialog()
             return self._lock_dialog
         elif "action.unlock" in changes and "password" in changes:
             self.logger.info("UnLocking screen")
@@ -153,19 +153,6 @@ class Plugin(plugins.NodePlugin):
 
         elif "_save" in changes:
             self.widgets["dialog.hostkey"].close()
-
-    def _build_lock_dialog(self):
-        widgets = [ui.Header("lock.label[0]",
-                             "Enter the admin password to unlock"),
-                   ui.KeywordLabel("username", "Username: ", os.getlogin()),
-                   ui.PasswordEntry("password", "Password:")
-                   ]
-
-        self.widgets.add(widgets)
-        page = ui.Dialog("lock.dialog", "This screen is locked.", widgets)
-        page.buttons = [ui.Button("action.unlock", "Unlock")]
-        page.escape_key = None
-        return page
 
     def _logging_summary(self):
         """Return a textual summary of the current log configuration
@@ -206,8 +193,25 @@ class HostkeyDialog(ui.Dialog):
 
 
 class CPUFeaturesDialog(ui.Dialog):
+    """The dialog beeing displayed when th euser clicks CPU Details
+    """
     def __init__(self, path, title):
         super(CPUFeaturesDialog, self).__init__(path, title, [])
         self.children = [ui.Label("label[0]", utils.system.cpu_details()),
                          ]
         self.buttons = [ui.CloseButton("dialog.close")]
+
+
+class LockDialog(ui.Dialog):
+    """The dialog beeing displayed when the srceen is locked
+    """
+    def __init__(self, path="lock.dialog", title="This screen is locked."):
+        super(LockDialog, self).__init__(path, title, [])
+        self.children = [ui.Header("lock.label[0]",
+                                   "Enter the admin password to unlock"),
+                         ui.KeywordLabel("username", "Username: ",
+                                         os.getlogin()),
+                         ui.PasswordEntry("password", "Password:")
+                         ]
+        self.buttons = [ui.Button("action.unlock", "Unlock")]
+        self.escape_key = None
