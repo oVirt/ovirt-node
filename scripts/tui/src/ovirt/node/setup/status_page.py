@@ -18,11 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import ui, plugins, utils
+from ovirt.node.config import defaults
+from ovirt.node.utils import security, virt, system
 import os
 import textwrap
 
-from ovirt.node import ui, plugins, utils
-from ovirt.node.utils import security, virt, system
 
 """
 Status page plugin
@@ -55,7 +56,7 @@ class Plugin(plugins.NodePlugin):
             "status": virt.hardware_status(),
             "networking": net_status,
             "networking.bridge": "%s %s" % (net_br, net_addrs_str),
-            "logs": "Local Only",
+            "logs": self._logging_summary(),
             "libvirt.num_guests": num_domains,
         }
 
@@ -165,6 +166,25 @@ class Plugin(plugins.NodePlugin):
         page.buttons = [ui.Button("action.unlock", "Unlock")]
         page.escape_key = None
         return page
+
+    def _logging_summary(self):
+        """Return a textual summary of the current log configuration
+        """
+        netconsole = defaults.Netconsole().retrieve()
+        syslog = defaults.Syslog().retrieve()
+
+        destinations = []
+
+        if syslog["server"]:
+            destinations.append("Rsyslog: %s:%s" % (syslog["server"],
+                                                    syslog["port"] or "514"))
+
+        if netconsole["server"]:
+            destinations.append("Netconsole: %s:%s" %
+                                (netconsole["server"],
+                                 netconsole["port"] or "6666"))
+
+        return ", ".join(destinations) if destinations else "Local Only"
 
 
 class HostkeyDialog(ui.Dialog):
