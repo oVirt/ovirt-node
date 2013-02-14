@@ -125,6 +125,15 @@ EOF
 
 python -m compileall /usr/share/virt-manager
 
+#Add some upstream specific rwtab entries
+cat >> /etc/rwtab.d/ovirt << \EOF_rwtab_ovirt2
+dirs    /root/.virt-manager
+dirs    /admin/.virt-manager
+EOF_rwtab_ovirt2
+
+# create .virt-manager directories for readonly root
+mkdir -p /root/.virt-manager /home/admin/.virt-manager
+
 echo "Configuring SELinux"
 # custom module for node specific rules
 mkdir /tmp/SELinux
