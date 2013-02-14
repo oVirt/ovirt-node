@@ -111,8 +111,6 @@ glusterfs
 glusterfs-devel
 glusterfs-fuse
 glusterfs-rdma
-# mom for SLA
-mom
 
 NetworkManager-glib
 
