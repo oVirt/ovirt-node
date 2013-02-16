@@ -35,8 +35,6 @@ cat > /usr/lib/firewalld/services/ovirt.xml << \EOF
 <service>
   <short>ovirt-node</short>
   <description>This service opens necessary ports for ovirt-node operations</description>
-  <!-- vdsm -->
-  <port protocol="tcp" port="54321"/>
   <!-- libvirt tls -->
   <port protocol="tcp" port="16514"/>
   <!-- guest consoles -->
@@ -140,7 +138,7 @@ cd /
 rm -rf /tmp/SELinux
 echo "-w /etc/shadow -p wa" >> /etc/audit/audit.rules
 
-# Workaround for vdsm needing /etc/ovirt-node-image-release
+# Workaround for packages needing /etc/ovirt-node-image-release
 ln -s /etc/system-release /etc/ovirt-node-image-release
 
 #Add some upstream specific rwtab entries

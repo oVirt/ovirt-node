@@ -15,10 +15,6 @@ less
 # host statistics rhbz#588852
 vhostmd
 
-# oVirt
-vdsm-reg
-ovirt-host-deploy-offline
-
 # keyboard layout
 system-config-keyboard-base
 # plymouth stuff

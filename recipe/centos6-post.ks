@@ -1,13 +1,11 @@
 # add RHEV-H rwtab locations
 mkdir -p /rhev
 cat > /etc/rwtab.d/rhev << EOF_RWTAB_RHEVH
-empty	/rhev
-files	/var/lib/vdsm
 dirs    /var/db
 dirs    /var/lib/rhsm
 EOF_RWTAB_RHEVH
 
-# minimal lsb_release for vdsm-reg (bz#549147)
+# minimal lsb_release for bz#549147
 cat > /usr/bin/lsb_release <<\EOF_LSB
 #!/bin/sh
 if [ "$1" = "-r" ]; then
@@ -91,8 +89,6 @@ cat > /etc/sysconfig/iptables << \EOF
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT -p icmp -j ACCEPT
 -A INPUT -i lo -j ACCEPT
-# vdsm
--A INPUT -p tcp --dport 54321 -j ACCEPT
 # libvirt tls
 -A INPUT -p tcp --dport 16514 -j ACCEPT
 # SSH
@@ -201,22 +197,6 @@ patch -d /sbin -p0 << \EOF_start_udev
  
  	if [ -x "$MAKEDEV" ]; then
 EOF_start_udev
-
-# semanage is not present in the image and virt_use_nfs is on (see rhbz#642209)
-# remove it from vdsmd startup script to avoid error
-sed -i 's#/usr/sbin/semanage#/bin/true#' /etc/rc.d/init.d/vdsmd
-
-# libvirtd upstart job is already configured on rhevh
-sed -i 's/ && start_libvirtd$//' /etc/rc.d/init.d/vdsmd
-
-# chkconfig results (symlinks) cannnot be peristed
-sed -i 's#/sbin/chkconfig \$srv off##' /etc/rc.d/init.d/vdsmd
-
-# reserve vdsm port 54321
-augtool << \EOF_sysctl
-set /files/etc/sysctl.conf/net.ipv4.ip_local_reserved_ports 54321
-save
-EOF_sysctl
 
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
