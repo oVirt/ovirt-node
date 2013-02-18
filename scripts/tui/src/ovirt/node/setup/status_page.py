@@ -123,12 +123,14 @@ class Plugin(plugins.NodePlugin):
         if "action.lock" in changes:
             self.logger.info("Locking screen")
             self._lock_dialog = self._build_lock_dialog()
+            self.application.ui.hotkeys_enabled(False)
             return self._lock_dialog
         elif "action.unlock" in changes and "password" in changes:
             self.logger.info("UnLocking screen")
             pam = security.PAM()
             if pam.authenticate(os.getlogin(), changes["password"]):
                 self._lock_dialog.close()
+                self.application.ui.hotkeys_enabled(True)
 
         elif "action.logoff" in changes:
             self.logger.info("Logging off")

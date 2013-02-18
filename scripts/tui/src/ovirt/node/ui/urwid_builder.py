@@ -500,7 +500,7 @@ class UrwidWindow(ui.Window):
                 self.close_topmost_dialog()
                 return
 
-        if key in self._hotkeys.keys():
+        if self.hotkeys_enabled() and key in self._hotkeys.keys():
             self.logger.debug("Running hotkeys: %s" % key)
             self._hotkeys[key]()
 
