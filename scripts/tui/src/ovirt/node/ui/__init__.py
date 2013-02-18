@@ -456,6 +456,8 @@ class Window(Element):
 
     application = None
 
+    __hotkeys_enabled = True
+
     def __init__(self, path, application):
         super(Window, self).__init__(path=path)
         self.logger.info("Creating UI for application '%s'" % application)
@@ -476,8 +478,26 @@ class Window(Element):
                                "already registered: %s" % title)
         self._plugins[title] = plugin
 
+    def hotkeys_enabled(self, new_value=None):
+        """Disable all attached hotkey callbacks
+
+        Args:
+            new_value: If hotkeys shall be enabled or disabled
+
+        Returns:
+            If the hotkeys are enabled or disabled
+        """
+        if new_value in [True, False]:
+            self.__hotkeys_enabled = new_value
+        return self.__hotkeys_enabled
+
     def register_hotkey(self, hotkey, cb):
         """Register a hotkey
+
+        Args:
+            hotkeys: The key combination (very vague ...) triggering the
+                     callback
+             cb: The callback to be called
         """
         if type(hotkey) is str:
             hotkey = [hotkey]
