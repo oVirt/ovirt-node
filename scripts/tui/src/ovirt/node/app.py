@@ -21,7 +21,7 @@
 from ovirt.node import base, utils, plugins, ui
 from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
-from ovirt.node.utils import system, Timer
+from ovirt.node.utils import system, Timer, console
 import argparse
 import logging
 import logging.config
@@ -299,9 +299,9 @@ class Application(base.Base):
         except Exception as e:
             utils.process.call("reset")
             self.logger.error("An error appeared in the UI: %s" % repr(e))
-            utils.console.writeln("Press ENTER to logout ...")
-            utils.console.writeln("or enter 's' to drop to shell")
-            if utils.console.wait_for_keypress() == 's':
+            console.writeln("Press ENTER to logout ...")
+            console.writeln("or enter 's' to drop to shell")
+            if console.wait_for_keypress() == 's':
                 self.__drop_to_shell()
 
     def quit(self):
