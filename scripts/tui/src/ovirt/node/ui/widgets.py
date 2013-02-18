@@ -22,8 +22,8 @@
 """
 Widgets for oVirt Node's urwid TUI
 """
-import urwid
 import logging
+import urwid
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,43 @@ class SelectableText(urwid.Text):
 
     def keypress(self, size, key):
         return key
+
+
+class NoticeDecoration(urwid.WidgetWrap):
+    """This is adecorator which adds a notice field below it's target
+
+    Args:
+        notice: Get/Set the notice
+    """
+    _notice_widget = None
+
+    _target = None
+    _pile = None
+
+    notice = property(lambda self: self.__notice_widget.get_text(),
+                      lambda self, v: self.set_notice(v))
+
+    def __init__(self, target):
+        self._target = target
+        self._notice_widget = urwid.Text("")
+        self._notice_attrmap = urwid.AttrMap(self._notice_widget,
+                                             "plugin.widget.notice")
+        self._pile = urwid.Pile([self._target])
+        super(NoticeDecoration, self).__init__(self._pile)
+        self.set_notice(None)
+
+    def set_notice(self, txt=None):
+        """Set/remove the current notice
+
+        Args:
+            txt: Either the text to be displayed or None to hide the notice
+        """
+        if txt:
+            self._notice_widget.set_text(txt)
+            widgets = [self._target, self._notice_attrmap]
+        else:
+            widgets = [self._target]
+        self._pile.contents = [(w, ('weight', 1)) for w in widgets]
 
 
 class TableEntryWidget(urwid.AttrMap):
@@ -93,7 +130,7 @@ class TableEntryWidget(urwid.AttrMap):
         self._emit('activate', self)
 
 
-class TableWidget(urwid.WidgetWrap):
+class TableWidget(NoticeDecoration):
     """A table, with a single column
     """
     __walker = None
@@ -305,43 +342,13 @@ class KeywordLabel(Label):
         return self._text
 
 
-class NoticeDecoration(urwid.WidgetWrap):
-    _notice_widget = None
-
-    _target = None
-    _pile = None
-
-    notice = property(lambda self: self.__notice_widget.get_text(),
-                      lambda self, v: self.set_notice(v))
-
-    def __init__(self, target):
-        self._target = target
-        self._notice_widget = urwid.Text("")
-        self._pile = urwid.Pile([self._target])
-        super(NoticeDecoration, self).__init__(self._pile)
-        self.set_notice(None)
-
-    def set_notice(self, txt=None):
-        if txt:
-            self._notice_widget.set_text(txt)
-            widgets = [self._target, self._notice_widget]
-        else:
-            widgets = [self._target]
-        self._pile.contents = [(w, ('weight', 1)) for w in widgets]
-
-
-class Entry(urwid.WidgetWrap):
+class Entry(NoticeDecoration):
     signals = ['change', 'click']
-
-    notice = property(lambda self: self.get_notice(),
-                      lambda self, v: self.set_notice(v))
 
     _selectable = True
 
     def __init__(self, label, mask=None, align_vertical=False):
         with_linebox = False
-        with_notice = False
-
         self._align_vertical = align_vertical
 
         if with_linebox:
@@ -366,14 +373,7 @@ class Entry(urwid.WidgetWrap):
         self._columns = alignment_widget([self._label_attrmap,
                                           input_widget])
 
-        self._notice = urwid.Text("")
-        self._notice_attrmap = urwid.AttrMap(self._notice,
-                                             "plugin.widget.notice")
-
-        children = [self._columns]
-        if with_notice:
-            children.append(self._notice_attrmap)
-        self._pile = urwid.Pile(children)
+        self._pile = urwid.Pile([self._columns])
 
         def on_widget_change_cb(widget, new_value):
             urwid.emit_signal(self, 'change', self, new_value)
@@ -412,20 +412,6 @@ class Entry(urwid.WidgetWrap):
 
     def selectable(self):
         return self._selectable
-
-    def set_notice(self, txt):
-        self._notice_txt = txt
-        num_children = len(list(self._pile.contents))
-        if txt:
-            self._notice.set_text(txt)
-            if num_children < 2:
-                self._pile.contents.append((self._notice_attrmap, ("pack", 0)))
-        else:
-            if num_children > 1:
-                self._pile.contents.pop()
-
-    def get_notice(self):
-        return self._notice_txt
 
 
 class PasswordEntry(Entry):
