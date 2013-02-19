@@ -83,6 +83,7 @@ class InstallerThread(threading.Thread):
         return self.progress_plugin.logger
 
     def run(self):
+        self.progress_plugin.widgets["action.reboot"].enabled(False)
         time.sleep(0.3)  # Give the UI some time to build
         transaction = self.__build_transaction()
 
@@ -110,6 +111,11 @@ class InstallerThread(threading.Thread):
             log.text("Exception: %s" % repr(e))
             self.logger.debug(traceback.format_exc())
             raise
+        finally:
+            self.progress_plugin.widgets["action.reboot"].enabled(True)
+
+        # We enforce a redraw, because this the non-mainloop thread
+        self.progress_plugin.application.ui.force_redraw()
 
     def __build_transaction(self):
         tx = utils.Transaction("Installation")

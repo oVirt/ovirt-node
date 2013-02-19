@@ -719,6 +719,9 @@ class TransactionProgressDialog(Dialog):
             self.add_update("There were no changes, nothing to do.")
         self._close_button.enabled(True)
 
+        # We enforce a redraw, because this the non-mainloop thread
+        self.plugin.application.ui.force_redraw()
+
     def __run_transaction(self):
         try:
             self.add_update("Checking pre-conditions ...")
