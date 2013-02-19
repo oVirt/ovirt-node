@@ -98,10 +98,14 @@ class SimpleProvider(base.Base):
         """
         cfg = {}
         for line in source:
+                line = line.strip()
                 if line.startswith("#"):
                     continue
-                key, value = line.split("=", 1)
-                cfg[key] = value.strip("\"' \n")
+                try:
+                    key, value = line.split("=", 1)
+                    cfg[key] = value.strip("\"' \n")
+                except:
+                    self.logger.info("Failed to parse line: '%s'" % line)
         return cfg
 
     def _write(self, cfg):
