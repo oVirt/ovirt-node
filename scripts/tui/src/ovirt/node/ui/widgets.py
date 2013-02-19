@@ -428,7 +428,7 @@ class Button(NoticeDecoration):
     _button_attr = "plugin.widget.button"
     _button_disabled_attr = "plugin.widget.button.disabled"
 
-    def __init__(self, label):
+    def __init__(self, label, is_enabled=True):
         self._button = urwid.Button(label)
 
         def on_click_cb(widget, data=None):
@@ -440,6 +440,8 @@ class Button(NoticeDecoration):
 
         self._padding = urwid.Padding(self._button_attrmap,
                                       width=self.width())
+
+        self.enable(is_enabled)
 
         super(Button, self).__init__(self._padding)
 

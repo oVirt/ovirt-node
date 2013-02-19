@@ -84,7 +84,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         return self._build_label(ui_header)
 
     def _build_button(self, ui_button):
-        widget = uw.Button(ui_button.text())
+        widget = uw.Button(ui_button.text(), ui_button.enabled())
 
         def on_widget_click_cb(widget, data=None):
             change = {ui_button.path: True}
