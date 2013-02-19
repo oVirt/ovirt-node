@@ -282,7 +282,7 @@ class NodePlugin(base.Base):
             self.on_change(change)
         except exceptions.InvalidData as e:
             self.on_valid(False)
-            raise e
+            raise
         self.__changes.update(change)
         self.logger.debug("Sum of all UI changes up to now: %s" %
                           self.__changes)

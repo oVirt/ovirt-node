@@ -34,9 +34,13 @@ class Element(base.Base):
     Args:
         path: The model path this item is mapped to
         on_value_change: Emitted by the value() method if the value changes
+        on_exception: Signal to be called when an exception is raosed during a
+                      callback
     """
     path = None
     on_value_change = None
+
+    on_exception = None
 
     def __init__(self, path=None):
         """Registers all widget signals.
@@ -45,6 +49,7 @@ class Element(base.Base):
         super(Element, self).__init__()
         self.path = path
         self.on_value_change = self.new_signal()
+        self.on_exception = self.new_signal()
         self.logger.debug("Initializing %s" % self)
 
     def value(self, value=None):
@@ -141,6 +146,11 @@ class ContainerElement(Element):
             elements += element.elements()
         return elements
 
+    def value(self, dummy):
+        """A container doesn't have a single value, therefor None
+        """
+        return NotImplementedError
+
     def __getitem__(self, path):
         return {c.path: c for c in self.children}[path]
 
@@ -148,12 +158,9 @@ class ContainerElement(Element):
 class Action(base.Base):
     callback = None
 
-    on_callback_exception = None
-
     def __init__(self, callback=None):
         super(Action, self).__init__()
         self.callback = callback
-        self.on_callback_exception = self.new_signal()
 
     def __call__(self, target, userdata=None):
         r = None
@@ -162,15 +169,9 @@ class Action(base.Base):
                                                                 self.callback,
                                                                 userdata))
 
-            try:
-                r = self.callback(userdata)
-                self.logger.debug("Action %s called and returned: %s" % (self,
-                                                                         r))
-            except Exception as e:
-                if self.on_callback_exception.callbacks:
-                    self.on_callback_exception(e)
-                else:
-                    raise e
+            r = self.callback(userdata)
+            self.logger.debug("Action %s called and returned: %s" % (self,
+                                                                     r))
         else:
             self.logger.warning("No callback for %s" % self)
         return r
@@ -218,6 +219,12 @@ class ReloadAction(Action):
 
 class QuitAction(Action):
     """Action to quit the application
+    """
+    pass
+
+
+class DisplayExceptionNotice(Action):
+    """Display a given Exception as a Notice
     """
     pass
 
@@ -467,7 +474,7 @@ class Table(InputElement):
             self.selection(selected_item or items[0][0])
             self.on_activate.connect(ChangeAction())
             self.on_activate.connect(SaveAction())
-
+        self.on_exception.connect(DisplayExceptionNotice())
     def selection(self, selected=None):
         """Get/Select the given item (key) or multiple items if multi
 

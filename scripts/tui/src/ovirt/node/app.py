@@ -201,19 +201,38 @@ class Application(base.Base):
             else:
                 window.close_topmost_dialog()
 
+        def call_on_ui_save(d):
+            self.current_plugin()._on_ui_save()
+
+        def call_on_ui_reset(d):
+            self.current_plugin()._on_ui_reset()
+
+        def call_on_ui_change(d):
+            self.current_plugin()._on_ui_change(d)
+
+        def call_on_ui_reload(d):
+            self.switch_to_plugin(self.current_plugin(), False)
+
+        def call_quit(d):
+            self.quit()
+
+        def display_exception_as_notice(e):
+            self.logger.debug(traceback.format_exc())
+            children = [ui.Label("dialog.notice.exception", "%s" % e)]
+            notice = ui.Dialog("dialog.notice", "An exception occurred",
+                               children)
+            notice.buttons = [ui.CloseButton("dialog.notice.action.close",
+                                             "Close")]
+            self.show(notice)
+
         # All known handlers
-        handlers = {ui.SaveAction:
-                    lambda d: self.current_plugin()._on_ui_save(),
+        handlers = {ui.SaveAction: call_on_ui_save,
                     ui.CloseAction: cond_close_dialog,
-                    ui.ResetAction:
-                    lambda d: self.current_plugin()._on_ui_reset(),
-                    ui.ChangeAction:
-                    lambda d: self.current_plugin()._on_ui_change(d),
-                    ui.ReloadAction:
-                    lambda d: self.switch_to_plugin(self.current_plugin(),
-                                                    False),
-                    ui.QuitAction:
-                    lambda d: self.quit()
+                    ui.ResetAction: call_on_ui_reset,
+                    ui.ChangeAction: call_on_ui_change,
+                    ui.ReloadAction: call_on_ui_reload,
+                    ui.QuitAction: call_quit,
+                    ui.DisplayExceptionNotice: display_exception_as_notice
                     }
 
         for element in elements:
@@ -228,8 +247,9 @@ class Application(base.Base):
             if type(element) is ui.SaveButton:
                 # http://stackoverflow.com/questions/2731111/
                 # python-lambdas-and-variable-bindings
-                toggle_disabled = lambda t, v, e=element: e.enabled(v)
-                plugin.on_valid.connect(toggle_disabled)
+                def toggle_savebutton_disabled(t, v, e=element):
+                    e.enabled(v)
+                plugin.on_valid.connect(toggle_savebutton_disabled)
 
     def populate_with_values(self, ui_container):
         """Take values from model and inject them into the appropriate UI

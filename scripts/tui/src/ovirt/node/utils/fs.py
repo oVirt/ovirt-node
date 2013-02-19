@@ -66,7 +66,7 @@ def atomic_write(filename, contents):
         os.rename(*fns)
     except Exception as e:
         backup.remove()
-        raise e
+        raise
 
 
 def truncate(filename):

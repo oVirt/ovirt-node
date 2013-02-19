@@ -49,6 +49,8 @@ class NFSv4(base.Base):
 class Devices(base.Base):
     """A class to retrieve available storage devices
     """
+    _fake_devices = None
+
     def __init__(self, fake=False):
         super(Devices, self).__init__()
         if fake:
@@ -94,18 +96,20 @@ class Devices(base.Base):
                                  "%s it's the live media" % dev)
                 continue
             infos = disk_dict[dev].split(",", 5)
-            device = Device(*infos)
+            device = Device(dev, *infos)
             device.name = os.path.basename(device.name).replace(" ", "")
             device.name = translate_multipath_device(device.name)
             if device.name in devices:
                 self.logger.debug("Device with same name already " +
                                   "exists: %s" % device.name)
-            devices[device.name] = device
+            devices[device.path] = device
+        return devices
 
 
 class Device(base.Base):
     """Wrapps the information about a udev storage device
     """
+    path = None
     bus = None
     name = None
     size = None
@@ -113,10 +117,10 @@ class Device(base.Base):
     serial = None
     model = None
 
-    def __init__(self, bus, name, size, desc, serial, model):
+    def __init__(self, path, bus, name, size, desc, serial, model):
         super(Device, self).__init__()
-        vals = [bus, name, size, desc, serial, model]
-        props = ["bus", "name", "size", "desc", "serial", "model"]
+        vals = [path, bus, name, size, desc, serial, model]
+        props = ["path", "bus", "name", "size", "desc", "serial", "model"]
         for prop, val in zip(props, vals):
             self.__dict__[prop] = val
 

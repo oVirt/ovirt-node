@@ -265,7 +265,7 @@ class Transaction(list, base.Base):
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self, e, e.message))
             self.logger.debug(str(traceback.format_exc()))
-            raise e
+            raise
         self.logger.debug("Finished transaction %s successfully" % self)
 
     class Element(base.Base):
