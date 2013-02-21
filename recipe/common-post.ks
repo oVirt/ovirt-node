@@ -236,10 +236,6 @@ set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
 save
 EOF_sshd_config
 
-#CIM related changes
-# set read-only
-echo "readonly = true;" > /etc/libvirt-cim.conf
-
 # disable yum repos by default
 rm -f /tmp/yum.aug
 for i in $(augtool match /files/etc/yum.repos.d/*/*/enabled 1); do
