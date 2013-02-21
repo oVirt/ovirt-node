@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, utils
+from ovirt.node.config import defaults
 from ovirt.node.utils import process
 import os.path
 import rpm
@@ -53,6 +54,13 @@ def cpu_details():
     """
     from ovirtnode.ovirtfunctions import cpu_details
     return cpu_details()
+
+
+def has_hostvg():
+    """Determin if a HostVG is present on this system (indicates an existing
+    installation)
+    """
+    return os.path.exists("/dev/HostVG")
 
 
 class ProductInformation(base.Base):
@@ -148,8 +156,8 @@ class InstalledMedia(InstallationMedia):
     """
 
     def load(self):
-            from ovirtnode.ovirtfunctions import get_installed_version_number
-            self.version, self.release = get_installed_version_number()
+        from ovirtnode.ovirtfunctions import get_installed_version_number
+        self.version, self.release = get_installed_version_number()
 
 
 class Keyboard(base.Base):
@@ -176,3 +184,25 @@ class Keyboard(base.Base):
 
     def get_current(self):
         return self.kbd.get()
+
+
+class BootInformation(base.Base):
+    """Provide informations about this boot
+    """
+    def __init__(self):
+        self._model = defaults.Installation()
+        super(BootInformation, self).__init__()
+
+    def is_installation(self):
+        #ovirtfunctions.is_install()
+        return self._model.retrieve()["install"] is True
+
+    def is_auto_installation(self):
+        #ovirtfunctions.is_auto_install()
+        cmdline = utils.fs.get_contents("/proc/cmdline")
+        return "BOOTIF" in cmdline and ("storage_init" in cmdline or
+                                        "ovirt_init" in cmdline)
+
+    def is_upgrade(self):
+        #ovirtfunctions.is_upgrade()
+        return self._model.retrieve()["upgrade"] is True

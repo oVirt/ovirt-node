@@ -334,7 +334,7 @@ class Application(base.Base):
         children = [ui.Label("app.notice.text", msg)]
         dialog = ui.Dialog("app.notice", "Notice", children)
         dialog.buttons = [ui.CloseButton("app.notice.close")]
-        #self.ui._notice(dialog)
+        self.show(dialog)
 
     def _check_outstanding_changes(self):
         """This function checks if any UI Element has changed

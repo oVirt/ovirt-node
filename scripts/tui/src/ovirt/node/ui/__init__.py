@@ -710,18 +710,21 @@ class TransactionProgressDialog(Dialog):
         self._progress_label.text("\n".join(self.texts))
 
     def run(self):
-        self.plugin.application.show(self)
-        self._close_button.enabled(False)
-        if self.transaction:
-            self.logger.debug("Initiating transaction")
-            self.__run_transaction()
-        else:
-            self.add_update("There were no changes, nothing to do.")
-        self._close_button.enabled(True)
+        try:
+            self.plugin.application.show(self)
+            self._close_button.enabled(False)
+            if self.transaction:
+                self.logger.debug("Initiating transaction")
+                self.__run_transaction()
+            else:
+                self.add_update("There were no changes, nothing to do.")
+            self._close_button.enabled(True)
 
-        # We enforce a redraw, because this the non-mainloop thread
-        self.plugin.application.ui.force_redraw()
-
+            # We enforce a redraw, because this the non-mainloop thread
+            self.plugin.application.ui.force_redraw()
+        except Exception as e:
+            self.logger.warning("An exception in the Transaction: %s" % e,
+                                exc_info=True)
     def __run_transaction(self):
         try:
             self.add_update("Checking pre-conditions ...")
@@ -732,6 +735,8 @@ class TransactionProgressDialog(Dialog):
                 self.plugin.dry_or(lambda: tx_element.commit())
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
+            self.logger.info("An exception during the transaction: %s" % e,
+                             exc_info=True)
             self.add_update("\nAn error occurred while applying the changes:")
             self.add_update("%s" % e)
 

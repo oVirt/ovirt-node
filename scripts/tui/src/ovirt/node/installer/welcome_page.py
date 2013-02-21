@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, utils
+from ovirt.node import plugins, ui, utils, installer, config
 from ovirt.node.utils import virt, system
 import os
 
@@ -65,8 +65,19 @@ class Plugin(plugins.NodePlugin):
         pass
 
     def on_merge(self, effective_changes):
+
         if "button.install" in effective_changes:
             self.application.ui.navigate.to_next_plugin()
+            self._model["method"] = "install"
+
+        elif "button.upgrade" in effective_changes:
+            self.application.ui.navigate.to_plugin(installer.upgrade_page.Plugin)
+            self._model["method"] = "upgrade"
+
+        elif "button.reinstall" in effective_changes:
+            self.application.ui.navigate.to_plugin(installer.upgrade_page.Plugin)
+            self._model["method"] = "reinstall"
+
 
     def ___installation_option(self):
         if self.application.args.dry:
@@ -75,7 +86,7 @@ class Plugin(plugins.NodePlugin):
         media = utils.system.InstallationMedia()
         installed = utils.system.InstalledMedia()
 
-        has_hostvg = os.path.exists("/dev/HostVG")
+        has_hostvg = utils.system.has_hostvg()
         has_root = os.path.exists("/dev/disk/by-label/ROOT")
 
         if has_hostvg and has_root:

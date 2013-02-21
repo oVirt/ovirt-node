@@ -120,18 +120,12 @@ class Ssh(base.Base):
 
 
 class PAM(base.Base):
-    def _pam_conv(self, auth, query_list):
-        resp = []
-        for i in range(len(query_list)):
-            resp.append((self._password, 0))
-        return resp
-
     def authenticate(self, username, password):
         is_authenticated = False
         auth = _PAM.pam()
         auth.start("passwd")
         auth.set_item(_PAM.PAM_USER, username)
-        self._password = password
+        self._password = str(password)  # FIXME Bug in binding
         auth.set_item(_PAM.PAM_CONV, lambda a, q: self._pam_conv(a, q))
         try:
             auth.authenticate()
@@ -141,3 +135,9 @@ class PAM(base.Base):
         except Exception as e:
             self.logger.debug("Internal error: %s" % e)
         return is_authenticated
+
+    def _pam_conv(self, auth, query_list):
+        resp = []
+        for i in range(len(query_list)):
+            resp.append((self._password, 0))
+        return resp

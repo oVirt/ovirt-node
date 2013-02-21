@@ -1199,15 +1199,18 @@ class Installation(NodeConfigFileSection):
             "OVIRT_VOL_CONFIG_SIZE",
             "OVIRT_VOL_DATA_SIZE",
             "OVIRT_INSTALL",
+            "OVIRT_UPGRADE",
             )
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, init, root_install, overcommit, root_size, efi_size,
-               swap_size, logging_size, config_size, data_size, install):
+               swap_size, logging_size, config_size, data_size, install,
+               upgrade):
         # FIXME no checking!
         return {"OVIRT_INIT": ",".join(init),
                 "OVIRT_ROOT_INSTALL": "y" if root_install else None,
-                "OVIRT_INSTALL": "1" if install else None}
+                "OVIRT_INSTALL": "1" if install else None,
+                "OVIRT_UPGRADE": "1" if install else None}
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
@@ -1219,10 +1222,23 @@ class Installation(NodeConfigFileSection):
     def transaction(self):
         return None
 
-    def install_on(self, init):
+    def install_on(self, init, root_size, efi_size, swap_size, logging_size,
+                   config_size, data_size):
         """Convenience function which can be used to set the parameters which
         are going to be picked up by the installer backend to install Node on
         the given storage with the given othere params
         """
         self.update(init=init,
-                    install=True)
+                    install=True,
+                    root_size=root_size,
+                    efi_size=efi_size,
+                    swap_size=swap_size,
+                    logging_size=logging_size,
+                    config_size=config_size,
+                    data_size=data_size)
+
+    def upgrade(self):
+        """Convenience function setting the params to upgrade
+        """
+        self.update(upgrade=True,
+                    install=None)

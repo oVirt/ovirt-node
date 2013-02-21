@@ -56,7 +56,7 @@ class Devices(base.Base):
         if fake:
             self._fake_devices = {}
             for n in range(1, 4):
-                args = ["%s%s" % (k, n) for k in "bus", "name", "size",
+                args = ["%s%s" % (k, n) for k in "path", "bus", "name", "size",
                         "desc", "serial", "model"]
                 self._fake_devices[args[1]] = Device(*tuple(args))
         else:

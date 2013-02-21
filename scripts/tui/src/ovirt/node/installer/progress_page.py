@@ -50,8 +50,9 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "%s is beeing installed ..." %
-                        self.application.product.PRODUCT_SHORT),
+        method = "Installing"
+        product = self.application.product.PRODUCT_SHORT
+        ws = [ui.Header("header[0]", "%s %s" % (method, product)),
               ui.Divider("divider[0]"),
               ui.ProgressBar("progressbar", 0),
               ui.Divider("divider[1]"),
@@ -83,16 +84,17 @@ class InstallerThread(threading.Thread):
         return self.progress_plugin.logger
 
     def run(self):
-        self.progress_plugin.widgets["action.reboot"].enabled(False)
-        time.sleep(0.3)  # Give the UI some time to build
-        transaction = self.__build_transaction()
-
-        progressbar = self.progress_plugin.widgets["progressbar"]
-        log = self.progress_plugin.widgets["log"]
-        log_lines = []
-
-        txlen = len(transaction)
         try:
+            self.progress_plugin.widgets["action.reboot"].enabled(False)
+            time.sleep(0.3)  # Give the UI some time to build
+            transaction = self.__build_transaction()
+
+            progressbar = self.progress_plugin.widgets["progressbar"]
+            log = self.progress_plugin.widgets["log"]
+            log_lines = []
+
+            txlen = len(transaction)
+
             for idx, tx_element in transaction.step():
                 idx += 1
                 self.logger.debug("Running %s: %s" % (idx, tx_element))
@@ -108,8 +110,9 @@ class InstallerThread(threading.Thread):
                 log_lines[-1] = "%s (Done)" % log_lines[-1]
                 log.text("\n".join(log_lines))
         except Exception as e:
-            log.text("Exception: %s" % repr(e))
-            self.logger.debug(traceback.format_exc())
+            msg = "Exception: %s" % repr(e)
+            self.logger.warning(msg, exc_info=True)
+            log.text(msg)
             raise
         finally:
             self.progress_plugin.widgets["action.reboot"].enabled(True)
@@ -118,14 +121,29 @@ class InstallerThread(threading.Thread):
         self.progress_plugin.application.ui.force_redraw()
 
     def __build_transaction(self):
+        """Determin what kind of transaction to build
+        Builds transactions for:
+        - Installation
+        - Upgrade
+        """
+        cfg = self.__build_config()
+
+        self.logger.debug("Building transaction")
+
         tx = utils.Transaction("Installation")
 
-        cfg = self.__build_config()
-        tx += [self.UpdateDefaultsFromModels(cfg),
-               self.PartitionAndFormat(cfg["installation.devices"]),
-               self.SetPassword(cfg["root.password_confirmation"]),
-               self.InstallBootloader(cfg["boot.device"]),
-               self.SetKeyboardLayout(cfg["keyboard.layout"])]
+        if cfg["method"] in ["install"]:
+            tx += [self.UpdateDefaultsFromModels(cfg),
+                   self.PartitionAndFormat(cfg["installation.devices"]),
+                   self.SetPassword(cfg["root.password_confirmation"]),
+                   self.InstallImageAndBootloader(cfg["boot.device"]),
+                   self.SetKeyboardLayout(cfg["keyboard.layout"])]
+
+        elif cfg["method"] in ["upgrade", "downgrade", "reinstall"]:
+            tx.title = "Update"
+            tx += [self.InstallImageAndBootloader()]
+
+        self.logger.debug("Built transaction: %s" % tx)
 
         return tx
 
@@ -144,7 +162,7 @@ class InstallerThread(threading.Thread):
         return config
 
     class UpdateDefaultsFromModels(utils.Transaction.Element):
-        title = "Write configuration file"
+        title = "Writing configuration file"
 
         def __init__(self, cfg):
             super(InstallerThread.UpdateDefaultsFromModels, self).__init__()
@@ -152,16 +170,18 @@ class InstallerThread(threading.Thread):
 
         def prepare(self):
             # Update/Write the config file
+            cfg = self.config
             model = defaults.Installation()
-            model.update(init=[self.config["boot.device"]] +
-                         self.config["installation.devices"],
+
+            model.update(init=[cfg["boot.device"]] +
+                         cfg["installation.devices"],
                          install="1",
-                         root_size=self.config["storage.root_size"],
-                         efi_size=self.config["storage.efi_size"],
-                         swap_size=self.config["storage.swap_size"],
-                         logging_size=self.config["storage.logging_size"],
-                         config_size=self.config["storage.config_size"],
-                         data_size=self.config["storage.data_size"])
+                         root_size=cfg["storage.root_size"],
+                         efi_size=cfg["storage.efi_size"],
+                         swap_size=cfg["storage.swap_size"],
+                         logging_size=cfg["storage.logging_size"],
+                         config_size=cfg["storage.config_size"],
+                         data_size=cfg["storage.data_size"])
 
             kbd = defaults.Keyboard()
             kbd.update(self.config["keyboard.layout"])
@@ -199,13 +219,15 @@ class InstallerThread(threading.Thread):
             if not admin_pw_set:
                 raise RuntimeError("Failed to set root password")
 
-    class InstallBootloader(utils.Transaction.Element):
-        title_tpl = "Installing Bootloader Configuration to '%s'"
-
-        def __init__(self, dst):
+    class InstallImageAndBootloader(utils.Transaction.Element):
+        def __init__(self, dst=None):
             self.dst = dst
-            self.title = self.title_tpl % dst
-            super(InstallerThread.InstallBootloader, self).__init__()
+            if dst:
+                self.title = "Installing Image and Bootloader " + \
+                    "Configuration to '%s'" % dst
+            else:
+                self.title = "Updating Image and Bootloader"
+            super(InstallerThread.InstallImageAndBootloader, self).__init__()
 
         def commit(self):
             from ovirtnode.install import Install
