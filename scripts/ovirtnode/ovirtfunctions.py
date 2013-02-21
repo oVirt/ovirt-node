@@ -517,7 +517,10 @@ def mount_liveos():
 def mount_efi(target="/liveos/efi"):
     if os.path.ismount(target):
         return True
-    efi_part = findfs("Root")
+    if is_iscsi_install():
+        efi_part = findfs("Boot")
+    else:
+        efi_part = findfs("Root")
     efi_part = efi_part[:-1] + "1"
     if not os.path.exists(target):
         if not system("mkdir -v -p %s" % target):
@@ -1052,10 +1055,11 @@ def finish_install():
         boot_dev = findfs("Boot")
         e2label_bootbackup_cmd = "e2label '%s' BootBackup" % boot_dev
         e2label_boot_cmd = "e2label '%s' Boot" % boot_update_dev
-        logger.debug(e2label_bootbackup_cmd)
-        logger.debug(e2label_boot_cmd)
-        subprocess_closefds(e2label_bootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        subprocess_closefds(e2label_boot_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        system(e2label_bootbackup_cmd)
+        system(e2label_boot_cmd)
+        system("cp /tmp/ovirt.log /boot/ovirt.log")
+        system("umount /boot")
+
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
@@ -1652,10 +1656,6 @@ def manage_firewall_port(port, action="open", proto="tcp"):
 def is_iscsi_install():
     if OVIRT_VARS.has_key("OVIRT_ISCSI_INSTALL") and OVIRT_VARS["OVIRT_ISCSI_INSTALL"].upper() == "Y":
         return True
-    elif findfs("Boot"):
-        return True
-    else:
-        return False
 
 def load_keyboard_config():
     import system_config_keyboard.keyboard as keyboard

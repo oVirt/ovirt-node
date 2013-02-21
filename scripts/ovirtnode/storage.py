@@ -35,7 +35,7 @@ class Storage:
         logger.propagate = False
         OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5
-        self.BOOT_SIZE = 50
+        self.BOOT_SIZE = 256
         self.ROOT_SIZE = 256
         self.CONFIG_SIZE = 5
         self.LOGGING_SIZE = 2048
@@ -562,6 +562,22 @@ class Storage:
         logger.info("Completed HostVG Setup!")
         return True
 
+    def create_efi_partition(self):
+        if _functions.is_iscsi_install():
+            disk = self.BOOTDRIVE
+        else:
+            disk = self.ROOTDRIVE
+        parted_cmd = ("parted \"" + disk +
+                     "\" -s \"mkpart EFI 1M " +
+                     str(self.EFI_SIZE) + "M\"")
+        _functions.system(parted_cmd)
+        partefi = disk + "1"
+        if not os.path.exists(partefi):
+            partefi = disk + "p1"
+            _functions.system("ln -snf \"" + partefi + \
+                              "\" /dev/disk/by-label/EFI")
+            _functions.system("mkfs.vfat \"" + partefi + "\"")
+
     def create_iscsiroot(self):
         logger.info("Partitioning iscsi root drive: " + self.ISCSIDRIVE)
         _functions.wipe_partitions(self.ISCSIDRIVE)
@@ -765,27 +781,29 @@ class Storage:
             parted_cmd = "parted %s -s \"mklabel %s\"" % (self.BOOTDRIVE,
                                                           self.LABEL_TYPE)
             _functions.system(parted_cmd)
-            parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 1M %sM\"" %
-                         (self.BOOTDRIVE, self.BOOT_SIZE))
+            self.create_efi_partition()
+            boot_end_mb = self.EFI_SIZE + self.BOOT_SIZE
+            parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 %sM %sM\"" %
+                         (self.BOOTDRIVE, self.EFI_SIZE, boot_end_mb))
             _functions.system(parted_cmd)
             parted_cmd = ("parted \"%s\" -s \"mkpart primary ext2 %sM %sM\"" %
-                         (self.BOOTDRIVE, self.BOOT_SIZE, self.BOOT_SIZE*2))
+                         (self.BOOTDRIVE , boot_end_mb, boot_end_mb + self.BOOT_SIZE))
             _functions.system(parted_cmd)
             parted_cmd = ("parted \"" + self.BOOTDRIVE + "\" -s \"set 1 " +
                          "boot on\"")
             _functions.system(parted_cmd)
             self.reread_partitions(self.BOOTDRIVE)
-            partboot = self.BOOTDRIVE + "1"
+            partboot = self.BOOTDRIVE + "2"
             if not os.path.exists(partboot):
                 logger.debug("%s does not exist" % partboot)
-                partboot = self.BOOTDRIVE + "p1"
-            partbootbackup = self.BOOTDRIVE + "2"
+                partboot = self.BOOTDRIVE + "p2"
+            partbootbackup = self.BOOTDRIVE + "3"
             if not os.path.exists(partbootbackup):
                 logger.debug("%s does not exist" % partbootbackup)
-                partbootbackup = self.BOOTDRIVE + "p2"
+                partbootbackup = self.BOOTDRIVE + "p3"
+
             # sleep to ensure filesystems are created before continuing
             _functions.system("udevadm settle")
-            time.sleep(10)
             _functions.system("mke2fs \"" + str(partboot) + "\" -L Boot")
             _functions.system("tune2fs -c 0 -i 0 \"" + str(partboot) + "\"")
             _functions.system("ln -snf \"" + partboot + \
@@ -816,12 +834,8 @@ class Storage:
                          self.LABEL_TYPE + "\"")
             _functions.passthrough(parted_cmd, logger.debug)
             logger.debug("Creating Root and RootBackup Partitions")
-            # efi partition should at 0M
             if _functions.is_efi_boot():
-                parted_cmd = ("parted \"" + self.ROOTDRIVE +
-                             "\" -s \"mkpart EFI 1M " +
-                             str(self.EFI_SIZE) + "M\"")
-                _functions.passthrough(parted_cmd, logger.debug)
+                self.create_efi_partition()
             else:
                 # create partition labeled bios_grub
                 parted_cmd = ("parted \"" + self.ROOTDRIVE +
@@ -846,24 +860,14 @@ class Storage:
                          "\" -s \"set 2 boot on\"")
             logger.debug(parted_cmd)
             _functions.system(parted_cmd)
-            # sleep to ensure filesystems are created before continuing
-            time.sleep(5)
             # force reload some cciss devices will fail to mkfs
             _functions.system("multipath -r &>/dev/null")
             self.reread_partitions(self.ROOTDRIVE)
-            partefi = self.ROOTDRIVE + "1"
             partroot = self.ROOTDRIVE + "2"
             partrootbackup = self.ROOTDRIVE + "3"
             if not os.path.exists(partroot):
-                partefi = self.ROOTDRIVE + "p1"
                 partroot = self.ROOTDRIVE + "p2"
                 partrootbackup = self.ROOTDRIVE + "p3"
-            if _functions.is_efi_boot():
-                _functions.system("ln -snf \"" + partefi + \
-                                  "\" /dev/disk/by-label/EFI")
-                _functions.system("mkfs.vfat \"" + partefi + "\"")
-            _functions.system("ln -snf \"" + partroot + \
-                              "\" /dev/disk/by-label/Root")
             _functions.system("mke2fs \"" + partroot + "\" -L Root")
             _functions.system("tune2fs -c 0 -i 0 \"" + partroot + "\"")
             _functions.system("ln -snf \"" + partrootbackup +

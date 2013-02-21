@@ -390,12 +390,6 @@ _start_ovirt_early () {
     # save boot parameters like console= for local disk boot menu
     bootparams=
     cat /etc/system-release >> $OVIRT_LOGFILE
-    # determine iscsi_install status
-    if grep -q iscsi_install /proc/cmdline; then
-        iscsi_install=0
-    else
-        iscsi_install=1
-    fi
 
     for i in $(cat /proc/cmdline); do
         case $i in

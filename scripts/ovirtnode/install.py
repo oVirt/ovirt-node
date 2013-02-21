@@ -210,7 +210,8 @@ initrd /initrd0.img
 }    """
         if _functions.is_iscsi_install():
             disk = re.sub("p[1,2,3]$", "", \
-                                    _functions.findfs(self.boot_candidate))
+                                    _functions.findfs("BootNew"))
+            self.grub_dict["partN"] = int(_functions.findfs("BootNew")[-1:])
         else:
             disk = self.disk
         if _functions.is_efi_boot():
@@ -223,6 +224,7 @@ initrd /initrd0.img
                           " --efi-directory=" + boot_dir +
                           " --bootloader-id=" + self.efi_dir_name +
                           " --force")
+        _functions.system("echo '%s' >> /liveos/efi/cmd" % grub_setup_cmd)
         logger.info(grub_setup_cmd)
         grub_setup = _functions.subprocess_closefds(grub_setup_cmd, \
                                          shell=True,
@@ -235,6 +237,9 @@ initrd /initrd0.img
             return False
         else:
             logger.debug("Generating Grub2 Templates")
+            if _functions.is_efi_boot():
+                if not os.path.exists("/liveos/efi/EFI/%s" % self.efi_dir_name):
+                    os.makedirs("/liveos/efi/EFI/%s" % self.efi_dir_name)
             grub_conf = open(self.grub_config_file, "w")
             grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
@@ -315,12 +320,43 @@ initrd /initrd0.img
                     self.oldtitle = self.oldtitle.replace('"','').strip(" {")
         _functions.system("umount /liveos/efi")
         _functions.system("umount /liveos")
-        if _functions.findfs("BootBackup"):
-            self.boot_candidate = "BootBackup"
-        elif _functions.findfs("Boot"):
-            self.boot_candidate = "Boot"
-            # Grab OVIRT_ISCSI VARIABLES from boot partition for upgrading
-            # file created only if OVIRT_ISCSI_ENABLED=y
+        if _functions.is_iscsi_install():
+            self.boot_candidate = None
+            boot_candidate_names = ["BootBackup", "BootUpdate", "BootNew"]
+            for trial in range(1, 3):
+                time.sleep(1)
+                _functions.system("partprobe")
+                for candidate_name in boot_candidate_names:
+                    if _functions.findfs(candidate_name):
+                        self.boot_candidate = candidate_name
+                        break
+                logger.debug("Trial %s to find candidate (%s)" % \
+                             (trial, self.boot_candidate))
+                if self.boot_candidate:
+                    logger.debug("Found candidate: %s" % self.boot_candidate)
+                    break
+
+            if not self.boot_candidate:
+                logger.error("Unable to find boot partition")
+                label_debug = ''
+                for label in os.listdir("/dev/disk/by-label"):
+                    label_debug += "%s\n" % label
+                label_debug += _functions.subprocess_closefds("blkid", \
+                                          shell=True, stdout=subprocess.PIPE,
+                                          stderr=subprocess.STDOUT).stdout.read()
+                logger.debug(label_debug)
+                return False
+            else:
+                boot_candidate_dev = _functions.findfs(self.boot_candidate)
+            # prepare Root partition update
+            if self.boot_candidate != "BootNew":
+                e2label_cmd = "e2label \"%s\" BootNew" % boot_candidate_dev
+                logger.debug(e2label_cmd)
+                if not _functions.system(e2label_cmd):
+                    logger.error("Failed to label new Boot partition")
+                    return False
+            _functions.system("mount LABEL=%s /boot &>/dev/null" % self.boot_candidate)
+
             if os.path.exists("/boot/ovirt"):
                 try:
                     f = open("/boot/ovirt", 'r')
@@ -371,8 +407,6 @@ initrd /initrd0.img
             logger.debug(label_debug)
             return False
 
-        if _functions.is_iscsi_install():
-            _functions.system("mount LABEL=%s /boot &>/dev/null" % self.boot_candidate)
         try:
             candidate_dev = self.disk = _functions.findfs(candidate)
             logger.info(candidate_dev)
@@ -519,7 +553,14 @@ initrd /initrd0.img
         if _functions.is_iscsi_install():
             # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
             shutil.copy(_functions.OVIRT_DEFAULTS, "/boot")
-            _functions.system("umount /boot")
+            # mark new Root ready to go, reboot() in ovirt-function switches it
+            # to active
+            e2label_cmd = "e2label \"%s\" BootUpdate" % boot_candidate_dev
+
+            if not _functions.system(e2label_cmd):
+                logger.error("Unable to relabel " + boot_candidate_dev +
+                             " to RootUpdate ")
+                return False
         else:
             _functions.system("umount /liveos/efi")
         _functions.system("umount /liveos")
