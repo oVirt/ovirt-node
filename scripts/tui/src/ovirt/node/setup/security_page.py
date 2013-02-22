@@ -49,15 +49,11 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
-        same_as_password = plugins.Validator.SameAsIn(self,
-                                                      "passwd.admin.password",
-                                                      "Password")
         number_or_empty = valid.Number(bounds=[0, None]) | \
             valid.Empty()
 
         return {"strongrng.num_bytes": number_or_empty,
-                "passwd.admin.password": valid.Text(),
-                "passwd.admin.password_confirmation": same_as_password,
+                "passwd.admin.password": valid.Text()
                 }
 
     def ui_content(self):
@@ -77,7 +73,14 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        pass
+        if changes.contains_any(["passwd.admin.password",
+                                 "passwd.admin.password_confirmation"]):
+            if self._model.get("passwd.admin.password", "") != \
+                self._model.get("passwd.admin.password_confirmation", ""):
+                raise exceptions.InvalidData("Passwords must be the same.")
+            else:
+                self.widgets["passwd.admin.password"].valid(True)
+                self.widgets["passwd.admin.password_confirmation"].valid(True)
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving security page")

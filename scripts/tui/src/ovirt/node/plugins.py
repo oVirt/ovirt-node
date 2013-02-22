@@ -503,20 +503,3 @@ class UIElements(base.Base):
             """Return the UI elements of this group
             """
             return self.uielements.subset(self)
-
-
-class Validator:
-    class SameAsIn(valid.Validator):
-        """Validator to validate a value against the value from other paths
-        """
-        def __init__(self, plugin, other_path, other_name):
-            self._plugin = plugin
-            self._paths = [other_path]
-            self.description = "the same value as field '%s'" % other_name
-            super(Validator.SameAsIn, self).__init__()
-
-        def validate(self, value):
-            all_changes = {p: None for p in self._paths}
-            all_changes.update(self._plugin.pending_changes(False, True))
-            return all((v == value for path, v in all_changes.items()
-                        if path in self._paths))

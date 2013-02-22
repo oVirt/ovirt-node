@@ -18,8 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, valid
-from ovirt.node.plugins import Validator
+from ovirt.node import plugins, ui, exceptions
 
 """
 Password page of the installer
@@ -39,10 +38,7 @@ class Plugin(plugins.NodePlugin):
         return self._model or {}
 
     def validators(self):
-        return {"root.password_confirmation":
-                Validator.SameAsIn(self, "root.password", "Password") |
-                valid.Empty()
-                }
+        return {}
 
     def ui_content(self):
         ws = [ui.Header("header[0]",
@@ -60,8 +56,15 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        if changes.contains_any(["root.password_confirmation"]):
+        if changes.contains_any(["root.password",
+                                 "root.password_confirmation"]):
             self._model.update(changes)
+            if self._model.get("root.password", "") != \
+                self._model.get("root.password_confirmation", ""):
+                raise exceptions.InvalidData("Passwords must be the same.")
+            else:
+                self.widgets["root.password"].valid(True)
+                self.widgets["root.password_confirmation"].valid(True)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)

@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, valid, ui, utils
+from ovirt.node import plugins, valid, ui, utils, exceptions
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 
@@ -50,11 +50,7 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
-        same_as_password = plugins.Validator.SameAsIn(self,
-                                                      "snmp.password",
-                                                      "Password")
-        return {"snmp.password": valid.Text(),
-                "snmp.password_confirmation": same_as_password,
+        return {"snmp.password": valid.Text()
                 }
 
     def ui_content(self):
@@ -72,7 +68,14 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        pass
+        if changes.contains_any(["snmp.password",
+                                 "snmp.password_confirmation"]):
+            if self._model.get("snmp.password", "") != \
+                self._model.get("snmp.password_confirmation", ""):
+                raise exceptions.InvalidData("Passwords must be the same.")
+            else:
+                self.widgets["snmp.password"].valid(True)
+                self.widgets["snmp.password_confirmation"].valid(True)
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving SNMP page")
