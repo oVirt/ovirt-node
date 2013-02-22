@@ -144,10 +144,15 @@ class TableWidget(NoticeDecoration):
     _table_attr = "table"
     _label_attr = "table.label"
     _header_attr = "table.header"
+    _text_attr = "plugin.widget.button"
 
     _position = 0
 
     def __init__(self, label, header, items, multi, height, enabled):
+        self.__rows = -1
+        self.__offset = -1
+        self.__list_size = -1
+        self.__scrollbar_visible = False
         self.__label = urwid.Text(label)
         self.__label_attrmap = urwid.AttrMap(self.__label, self._label_attr)
         self.__header = urwid.Text(header)
@@ -157,6 +162,7 @@ class TableWidget(NoticeDecoration):
         self.__list = urwid.ListBox(self.__walker)
 #        self.__list_linebox = urwid.LineBox(self.__list)
         self.multi = multi
+        self.__height = height
 
         def __on_item_change():
             widget, self._position = self.__list.get_focus()
@@ -164,12 +170,18 @@ class TableWidget(NoticeDecoration):
             urwid.emit_signal(self, "changed", widget)
         urwid.connect_signal(self.__walker, 'modified', __on_item_change)
 
-        self.__box = urwid.BoxAdapter(self.__list, height)
-        self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
-
         self.__position_label = urwid.Text("", align="right")
         self.__position_label_attrmap = urwid.AttrMap(self.__position_label,
                                                       self._label_attr)
+
+        self.__text = urwid.Text(u"")
+        self.__scrollbar = urwid.Filler(urwid.Padding(
+                                        urwid.AttrMap(self.__text,
+                                        self._text_attr), 'left', 1))
+        self.__columns = urwid.Columns([self.__list], focus_column=0)
+
+        self.__box = urwid.BoxAdapter(self.__columns, height)
+        self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
 
         self.__pile = urwid.Pile([self.__label_attrmap,
                                   self.__header_attrmap,
@@ -200,6 +212,76 @@ class TableWidget(NoticeDecoration):
                     c.select(True)
         selected = [w._key for w in self.__items if w.is_selected()]
         return selected
+
+    def render(self, size, focus=False):
+
+        rows = self.__height
+        list_size = len(self.__list.body)
+        offset = self.__list.body.focus - self.__list.offset_rows
+
+        if rows < list_size:
+            if (rows, list_size) != (self.__rows, self.__list_size):
+                self.ratio = float(list_size) / rows
+                knob_height = round((rows - 2) / self.ratio)
+                self.knob_height = knob_height if knob_height > 1 else 1
+                if rows - 2 - self.knob_height > 0:
+                    if self.knob_height is 1:
+                    #Calculate ourselves, subtracting 3 (for the arrows
+                    # and the knob itself)
+                        self.below_knob = abs(float(list_size - rows) / (rows -
+                                                             3))
+                    else:
+                        self.below_knob = abs(float(list_size -
+                                        rows) / (rows - 2 -
+                            self.ratio))
+                else:
+                    self.below_knob = float(list_size - rows)
+                self.above_knob = int(offset / self.below_knob)
+                (self._rows, self.__list_size) = (rows, list_size)
+            elif offset != self.__offset:
+                above_knob = int(offset / self.below_knob)
+                (self.above_knob, self._offset) = (above_knob, offset)
+            else:
+                rt = super(TableWidget, self).render(size, focus)
+                self.__columns.set_focus_column(0)
+                return rt
+
+            blocks_above = u'\u2592' * self.above_knob
+            blocks_below = u'\u2592' * (rows - self.above_knob - 2 -
+                                 self.truncate(self.knob_height))
+
+            self.__text.set_text([('edit', u"▲"), blocks_above +
+                                  u"\u2588" * (self.truncate(self.knob_height))
+                                  + blocks_below, ('edit', u"▼")])
+
+            (self.__rows, self._offset, self.__list_size) = (rows, offset,
+                                                           list_size)
+            self._show_scroll_bar()
+        else:
+            self._hide_scroll_bar()
+        rt = super(TableWidget, self).render(size, focus)
+        self.__columns.set_focus_column(0)
+        return rt
+
+    def truncate(self, x):
+        r = round(x)
+        if (x - r) > 0.0:
+            return int(r) + 1
+        return int(r)
+
+    def _hide_scroll_bar(self):
+        if self.__scrollbar_visible is True:
+            del self.__columns.contents[1]
+            self.__scrollbar_visible = False
+            self.__rows = -1
+            self.__offset = -1
+            self.__list_size = -1
+
+    def _show_scroll_bar(self):
+        if self.__scrollbar_visible is False:
+            self.__columns.contents.append([self.__scrollbar, self.__columns.
+                                            options('given', 2)])
+            self.__scrollbar_visible = True
 
 
 class PluginMenuEntry(TableEntryWidget):

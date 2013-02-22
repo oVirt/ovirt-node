@@ -469,7 +469,16 @@ class Table(InputElement):
         """
         super(Table, self).__init__(path, label, enabled)
         self.header = header
-        self.items = items
+        if type(items) in [str, tuple, unicode]:
+            #For convenience, create a list of tuples if it is not already one
+            if type(items) in [str, unicode]:
+                self.items = [(i, item) for i, item in zip(range(len(
+                                                           items.split('\n'))),
+                                                           items.split('\n'))]
+            elif type(items) is tuple:
+                self.items = [items]
+        else:
+            self.items = items
         self.height = height
         self.multi = multi
         self.on_activate = self.new_signal()
@@ -477,7 +486,7 @@ class Table(InputElement):
             self.selection(selected_item or [])
             self.on_activate.connect(ChangeAction())
         else:
-            self.selection(selected_item or items[0][0])
+            self.selection(selected_item or self.items[0][0])
             self.on_activate.connect(ChangeAction())
             self.on_activate.connect(SaveAction())
         self.on_exception.connect(DisplayExceptionNotice())
