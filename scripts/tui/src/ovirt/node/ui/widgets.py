@@ -309,6 +309,14 @@ class Label(urwid.WidgetWrap):
     def set_text(self, txt):
         self.text(txt)
 
+class Notice(Label):
+    """A read only widget for notices
+    """
+    _notice_attr = "plugin.widget.notice"
+
+    def __init__(self, text):
+        super(Notice, self).__init__(text)
+        self._label_attrmap.set_attr_map({None: self._notice_attr})
 
 class Header(Label):
     """A read only widget representing a header

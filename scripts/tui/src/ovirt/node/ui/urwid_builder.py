@@ -63,6 +63,9 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         elif type(ui_label) is ui.Header:
             widget = uw.Header(ui_label.text(),
                                ui_label.template)
+        elif type(ui_label) is ui.Notice:
+            widget = uw.Notice(ui_label.text())
+
         else:
             widget = uw.Label(ui_label.text())
 
@@ -80,6 +83,9 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
 
     def _build_header(self, ui_header):
         return self._build_label(ui_header)
+
+    def _build_notice(self, ui_notice):
+        return self._build_label(ui_notice)
 
     def _build_button(self, ui_button):
         widget = uw.Button(ui_button.text(), ui_button.enabled())

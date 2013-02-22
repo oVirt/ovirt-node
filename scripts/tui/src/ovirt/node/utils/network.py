@@ -76,6 +76,8 @@ def is_nm_managed(iface):
 def all_ifaces():
     return _query_udev_ifaces()
 
+def is_configured():
+    return any(key["bootproto"] is not None for key in node_nics().values())
 
 def iface_information(iface, with_slow=True):
     """Retuns all system NICs (via udev)

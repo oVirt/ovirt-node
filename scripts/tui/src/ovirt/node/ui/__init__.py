@@ -253,6 +253,10 @@ class Label(Element):
     def value(self, txt=None):
         return self.text(txt)
 
+class Notice(Label):
+    def __init__(self,path,text):
+        super(Notice, self).__init__(path, text)
+
 
 class Header(Label):
     template = "\n  %s\n"
@@ -789,6 +793,7 @@ class AbstractUIBuilder(base.Base):
             PasswordEntry: self._build_passwordentry,
 
             Header: self._build_header,
+            Notice: self._build_notice,
 
             Button: self._build_button,
 
@@ -842,6 +847,9 @@ class AbstractUIBuilder(base.Base):
         raise NotImplementedError
 
     def _build_header(self, ui_header):
+        raise NotImplementedError
+
+    def _build_notice(self, ui_notice):
         raise NotImplementedError
 
     def _build_button(self, ui_button):
