@@ -1382,7 +1382,6 @@ def main():
     if os.geteuid () != 0:
         print >> sys.stderr, "You must run edit-node as root"
         return 1
-
     if options.name:
         name = options.name
     elif stat.S_ISBLK(os.stat(LiveOS).st_mode):
@@ -1497,8 +1496,8 @@ def main():
                 edited_iso = os.path.join(output, editor.name + ".iso")
                 if options.install_dup:
                     n = options.install_dup
-                elif options.install_plugin:
-                    n = options.install_plugin
+                elif options.plugin:
+                    n = options.plugin
                 elif options.install:
                     n = options.install
                 else:
