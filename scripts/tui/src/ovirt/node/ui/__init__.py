@@ -687,6 +687,15 @@ class Dialog(Page):
             self.on_close_change(self)
 
 
+class InfoDialog(Dialog):
+    """A dialog with a title and a text
+    """
+    def __init__(self, path, title, text, buttons=None):
+        super(InfoDialog, self).__init__(path, title, [])
+        self.children = [Label("label[0]", text)]
+        self.buttons = buttons or [CloseButton("dialog.close")]
+
+
 class TransactionProgressDialog(Dialog):
     """Display the progress of a transaction in a dialog
     """
