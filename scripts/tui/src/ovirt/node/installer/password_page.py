@@ -59,8 +59,10 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(["root.password",
                                  "root.password_confirmation"]):
             self._model.update(changes)
-            if self._model.get("root.password", "") != \
-                self._model.get("root.password_confirmation", ""):
+            root_pw, root_pw_conf = self._model.get("root.password", ""), \
+                self._model.get("root.password_confirmation", "")
+
+            if root_pw != root_pw_conf:
                 raise exceptions.InvalidData("Passwords must be the same.")
             else:
                 self.widgets["root.password"].valid(True)

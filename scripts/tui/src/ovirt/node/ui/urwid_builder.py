@@ -19,7 +19,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import ui, exceptions, base
-from ovirt.node.exceptions import InvalidData
 from ovirt.node.ui import widgets as uw
 import urwid
 
@@ -27,7 +26,6 @@ import urwid
 A visitor to build the urwid TUI from the abstract UI definitions.
 Is based on the visitor pattern
 """
-
 
 
 class UrwidUIBuilder(ui.AbstractUIBuilder):
@@ -382,7 +380,8 @@ class UrwidWindow(ui.Window):
                ('plugin.widget.label', element_styles["text"]),
                ('plugin.widget.label.keyword', element_styles["label"]),
                ('plugin.widget.progressbar.box', element_styles["disabled"]),
-               ('plugin.widget.progressbar.uncomplete', element_styles["label"]),
+               ('plugin.widget.progressbar.uncomplete',
+                element_styles["label"]),
                ('plugin.widget.progressbar.complete', "white",
                 element_styles["disabled"]),
                ('plugin.widget.options', element_styles["label"]),

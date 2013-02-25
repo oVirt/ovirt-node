@@ -22,7 +22,7 @@
 """
 This contains much stuff related to plugins
 """
-from ovirt.node import base, exceptions, valid, ui
+from ovirt.node import base, exceptions, ui
 import pkgutil
 
 
@@ -280,7 +280,7 @@ class NodePlugin(base.Base):
             if self.validate_changes:
                 self.validate(change)
             self.on_change(change)
-        except exceptions.InvalidData as e:
+        except exceptions.InvalidData:
             self.on_valid(False)
             raise
         self.__changes.update(change)

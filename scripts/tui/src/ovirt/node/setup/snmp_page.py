@@ -70,8 +70,10 @@ class Plugin(plugins.NodePlugin):
     def on_change(self, changes):
         if changes.contains_any(["snmp.password",
                                  "snmp.password_confirmation"]):
-            if self._model.get("snmp.password", "") != \
-                self._model.get("snmp.password_confirmation", ""):
+
+            snmp_pw = self._model.get("snmp.password", "")
+            snmp_pw_conf = self._model.get("snmp.password_confirmation", "")
+            if snmp_pw != snmp_pw_conf:
                 raise exceptions.InvalidData("Passwords must be the same.")
             else:
                 self.widgets["snmp.password"].valid(True)

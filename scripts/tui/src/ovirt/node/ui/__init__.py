@@ -475,6 +475,7 @@ class Table(InputElement):
             self.on_activate.connect(ChangeAction())
             self.on_activate.connect(SaveAction())
         self.on_exception.connect(DisplayExceptionNotice())
+
     def selection(self, selected=None):
         """Get/Select the given item (key) or multiple items if multi
 
@@ -734,6 +735,7 @@ class TransactionProgressDialog(Dialog):
         except Exception as e:
             self.logger.warning("An exception in the Transaction: %s" % e,
                                 exc_info=True)
+
     def __run_transaction(self):
         try:
             self.add_update("Checking pre-conditions ...")

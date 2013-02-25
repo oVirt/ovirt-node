@@ -22,7 +22,6 @@ from ovirt.node import plugins, ui, utils
 from ovirt.node.config import defaults
 import threading
 import time
-import traceback
 
 
 """

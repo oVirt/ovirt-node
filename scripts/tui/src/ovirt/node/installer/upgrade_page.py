@@ -75,8 +75,9 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(["upgrade.password",
                                  "upgrade.password_confirmation"]):
             self._model.update(changes)
-            if self._model.get("upgrade.password", "") != \
-                self._model.get("upgrade.password_confirmation", ""):
+            up_pw, up_pw_conf = self._model.get("upgrade.password", ""), \
+                self._model.get("upgrade.password_confirmation", "")
+            if up_pw != up_pw_conf:
                 self.widgets["password.info"].text("")
                 raise exceptions.InvalidData("Passwords must be the same.")
             else:
@@ -91,12 +92,12 @@ class Plugin(plugins.NodePlugin):
             return
 
         if changes.contains_any(["upgrade.current_password",
-                                   "button.next"]):
+                                 "button.next"]):
             pam = security.PAM()
             if pam.authenticate(os.getlogin(),
                                 changes["upgrade.current_password"]):
-
-                    self.application.ui.navigate.to_plugin(installer.progress_page.Plugin)
+                nav = self.application.ui.navigate
+                nav.to_plugin(installer.progress_page.Plugin)
             else:
                 msg = "Current password is invalid"
             self.widgets["current_password.info"].text(msg)

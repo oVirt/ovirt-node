@@ -194,14 +194,12 @@ class HostkeyDialog(ui.Dialog):
         self.buttons = [ui.CloseButton("dialog.close")]
 
 
-class CPUFeaturesDialog(ui.Dialog):
+class CPUFeaturesDialog(ui.InfoDialog):
     """The dialog beeing displayed when th euser clicks CPU Details
     """
     def __init__(self, path, title):
-        super(CPUFeaturesDialog, self).__init__(path, title, [])
-        self.children = [ui.Label("label[0]", utils.system.cpu_details()),
-                         ]
-        self.buttons = [ui.CloseButton("dialog.close")]
+        msg = utils.system.cpu_details()
+        super(CPUFeaturesDialog, self).__init__(path, title, msg)
 
 
 class LockDialog(ui.Dialog):

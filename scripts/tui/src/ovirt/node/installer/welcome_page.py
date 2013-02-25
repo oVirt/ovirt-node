@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, utils, installer, config
+from ovirt.node import plugins, ui, utils, installer
 from ovirt.node.utils import virt, system
 import os
 
@@ -66,18 +66,18 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
 
+        nav = self.application.ui.navigate
         if "button.install" in effective_changes:
             self.application.ui.navigate.to_next_plugin()
             self._model["method"] = "install"
 
         elif "button.upgrade" in effective_changes:
-            self.application.ui.navigate.to_plugin(installer.upgrade_page.Plugin)
+            nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "upgrade"
 
         elif "button.reinstall" in effective_changes:
-            self.application.ui.navigate.to_plugin(installer.upgrade_page.Plugin)
+            nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "reinstall"
-
 
     def ___installation_option(self):
         if self.application.args.dry:

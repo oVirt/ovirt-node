@@ -64,8 +64,9 @@ def atomic_write(filename, contents):
     LOGGER.debug("Moving '%s' to '%s' atomically" % fns)
     try:
         os.rename(*fns)
-    except Exception as e:
+    except Exception:
         backup.remove()
+        LOGGER.debug("Error on moving file '%s'" % fns, exc_info=True)
         raise
 
 
