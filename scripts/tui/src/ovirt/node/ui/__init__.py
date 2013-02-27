@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
+from ovirt.node.utils import console
 
 """
 This contains abstract UI Elements
@@ -743,13 +744,22 @@ class TransactionProgressDialog(Dialog):
                 txt = "(%s/%s) %s" % (idx + 1, len(self.transaction),
                                       tx_element.title)
                 self.add_update(txt)
-                self.plugin.dry_or(lambda: tx_element.commit())
+                with console.CaptureOutput() as captured:
+                    # Sometimes a tx_element is wrapping some code that
+                    # writes to stdout/stderr which scrambles the screen,
+                    # therefore we are capturing this
+                    self.plugin.dry_or(lambda: tx_element.commit())
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
             self.logger.info("An exception during the transaction: %s" % e,
                              exc_info=True)
             self.add_update("\nAn error occurred while applying the changes:")
             self.add_update("%s" % e)
+
+        if captured.stderr.getvalue():
+            se = captured.stderr.getvalue()
+            if se:
+                self.add_update("Stderr: %s" % se)
 
 
 class AbstractUIBuilder(base.Base):

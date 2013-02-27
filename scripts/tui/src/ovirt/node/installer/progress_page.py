@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, utils
 from ovirt.node.config import defaults
+from ovirt.node.utils import console
 import threading
 import time
 
@@ -103,18 +104,28 @@ class InstallerThread(threading.Thread):
                 def do_commit():
                     tx_element.commit()
 
-                self.progress_plugin.dry_or(do_commit)
+                with console.CaptureOutput() as captured:
+                    # Sometimes a tx_element is wrapping some code that
+                    # writes to stdout/stderr which scrambles the screen,
+                    # therefore we are capturing this
+                    self.progress_plugin.dry_or(do_commit)
 
                 progressbar.current(int(100.0 / txlen * idx))
                 log_lines[-1] = "%s (Done)" % log_lines[-1]
                 log.text("\n".join(log_lines))
+
         except Exception as e:
             msg = "Exception: %s" % repr(e)
-            self.logger.warning(msg, exc_info=True)
+            self.logger.debug(msg, exc_info=True)
             log.text(msg)
-            raise
+
         finally:
             self.progress_plugin.widgets["action.reboot"].enabled(True)
+
+        if captured.stderr.getvalue():
+            se = captured.stderr.getvalue()
+            if se:
+                log.text("Stderr: %s" % se)
 
         # We enforce a redraw, because this the non-mainloop thread
         self.progress_plugin.application.ui.force_redraw()

@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
+import StringIO
 import sys
 import termios
 import traceback
@@ -83,7 +84,11 @@ class TransactionProgress(base.Base):
             for idx, e in enumerate(self.transaction):
                 txt = "(%s/%s) %s" % (idx + 1, len(self.transaction), e.title)
                 self.add_update(txt)
-                self.plugin.dry_or(lambda: e.commit())
+                with CaptureOutput() as captured:
+                    # Sometimes a tx_element is wrapping some code that
+                    # writes to stdout/stderr which scrambles the screen,
+                    # therefore we are capturing this
+                    self.plugin.dry_or(lambda: e.commit())
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
             self.add_update("\nAn error occurred while applying the changes:")
@@ -91,6 +96,11 @@ class TransactionProgress(base.Base):
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self.transaction, e, e.message))
             self.logger.debug(str(traceback.format_exc()))
+
+        if captured.stderr.getvalue():
+            se = captured.stderr.getvalue()
+            if se:
+                self.add_update("Stderr: %s" % se)
 
 
 def getch():
@@ -114,3 +124,51 @@ def getch():
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ch
+
+
+class CaptureOutput(base.Base):
+    """This context manager can be used to capture any output (from e.g. a
+    subprocess or wrongly configured loggers) to different streams
+
+    >>> import sys
+    >>> with CaptureOutput() as captured:
+    ...     sys.stdout.write("Hey!")
+    ...     sys.stderr.write("There!")
+    >>> captured.stdout.getvalue()
+    'Hey!'
+    >>> captured.stderr.getvalue()
+    'There!'
+    """
+
+    def __init__(self, stdout=None, stderr=None):
+        super(CaptureOutput, self).__init__()
+        self.stdout = stdout or StringIO.StringIO()
+        self.stderr = stderr or StringIO.StringIO()
+
+    def __enter__(self):
+        """Create redirections
+        """
+        self.logger.debug("Redirecting %s to %s" % (sys.stdout, self.stdout))
+        self.logger.debug("Redirecting %s to %s" % (sys.stderr, self.stderr))
+        self._stdout = sys.stdout
+        self._stderr = sys.stderr
+        sys.stdout = self.stdout
+        sys.stderr = self.stderr
+        return self
+
+    def __exit__(self, a, b, c):
+        """Remove all redirections
+        """
+        sys.stdout = self._stdout
+        sys.stderr = self._stderr
+        self.logger.debug("Removed redirections")
+        so = self.stdout.getvalue()
+        se = self.stderr.getvalue()
+        if so or se:
+            self.logger.info("Captured:")
+        else:
+            self.logger.info("Captured nothing")
+        if se:
+            self.logger.info("stderr: %s" % se)
+        if so:
+            self.logger.info("stdout: %s" % so)
