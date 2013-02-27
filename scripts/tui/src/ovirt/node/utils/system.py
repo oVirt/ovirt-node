@@ -93,8 +93,8 @@ class InstallationMedia(base.Base):
     """Informations about the installation media - where the current
     installation is run from
     """
-    version = None
-    release = None
+    version = "0"
+    release = "0"
 
     @property
     def full_version(self):
@@ -114,7 +114,9 @@ class InstallationMedia(base.Base):
 
     def load(self):
         from ovirtnode.ovirtfunctions import get_media_version_number
-        self.version, self.release = get_media_version_number()
+        data = get_media_version_number()
+        if data:
+            self.version, self.release = data
 
     def __str__(self):
         return self.full_version
@@ -157,7 +159,9 @@ class InstalledMedia(InstallationMedia):
 
     def load(self):
         from ovirtnode.ovirtfunctions import get_installed_version_number
-        self.version, self.release = get_installed_version_number()
+        data = get_installed_version_number()
+        if data:
+            self.version, self.release = data
 
 
 class Keyboard(base.Base):
