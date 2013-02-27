@@ -35,10 +35,9 @@ class Plugin(plugins.NodePlugin):
         return 20
 
     def model(self):
-        self._model = {}
-        predefined = self.__get_default_sizes()
-        # cfg = config.defaults.Storage() FIXME respect defaults entries
-        self._model.update(predefined)
+        if not self._model:
+            self._model = self.__get_default_sizes()
+            self.logger.debug("Predefined sizes: %s" % self._model)
         return self._model
 
     def validators(self):
@@ -82,12 +81,10 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        # FIXME
-        pass
+        self._model.update(changes)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
-        # FIXME
         if changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
         elif changes.contains_any(["button.next"]):
