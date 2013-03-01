@@ -1,7 +1,10 @@
 #!/bin/sh
 
 . /sbin/ovirt-boot-functions
-if [ "$(basename $0)" = "01ovirt-cleanup.sh" ]; then
+
+if [ -f "/lib/dracut-lib.sh" ]
+then
+    # Only source if available (which is only the case in initramfs)
     . /lib/dracut-lib.sh
 fi
 
@@ -156,5 +159,3 @@ for device in $lvm_storage_init; do
 done
 
 IFS=$oldIFS
-
-return 0
