@@ -1140,7 +1140,7 @@ EOP
         plymouth --hide-splash
 
         export LVM_SUPPRESS_FD_WARNINGS=0
-        /usr/libexec/ovirt-config-installer -x < /dev/console
+        /usr/bin/ovirt-node-installer
 
         plymouth --show-splash
     fi

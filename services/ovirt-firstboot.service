@@ -10,10 +10,16 @@ Type=oneshot
 ExecStartPre=-/bin/plymouth quit
 ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_firstboot
 ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_firstboot
-TimeoutSec=0
 RemainAfterExit=yes
-SysVStartPriority=99
+
+# http://www.freedesktop.org/software/systemd/man/systemd.exec.html
 StandardInput=tty-force
+StandardOutput=tty
+StandardError=syslog+console
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
 
 [Install]
 WantedBy=multi-user.target
