@@ -183,15 +183,14 @@ class InstallerThread(threading.Thread):
             cfg = self.config
             model = defaults.Installation()
 
-            model.update(init=[cfg["boot.device"]] +
-                         cfg["installation.devices"],
-                         install="1",
-                         root_size=cfg["storage.root_size"],
-                         efi_size=cfg["storage.efi_size"],
-                         swap_size=cfg["storage.swap_size"],
-                         logging_size=cfg["storage.logging_size"],
-                         config_size=cfg["storage.config_size"],
-                         data_size=cfg["storage.data_size"])
+            model.install_on(init=[cfg["boot.device"]] +
+                             cfg["installation.devices"],
+                             root_size=cfg["storage.root_size"],
+                             efi_size=cfg["storage.efi_size"],
+                             swap_size=cfg["storage.swap_size"],
+                             logging_size=cfg["storage.logging_size"],
+                             config_size=cfg["storage.config_size"],
+                             data_size=cfg["storage.data_size"])
 
             kbd = defaults.Keyboard()
             kbd.update(self.config["keyboard.layout"])
@@ -210,6 +209,8 @@ class InstallerThread(threading.Thread):
 
         def commit(self):
             from ovirtnode import storage
+            # Reload is needed to re-read defaults file ..
+            reload(storage._functions)
             config_storage = storage.Storage()
             storage_setup = config_storage.perform_partitioning()
             if not storage_setup:

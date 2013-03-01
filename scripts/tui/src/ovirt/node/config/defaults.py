@@ -1190,7 +1190,6 @@ class Installation(NodeConfigFileSection):
     >>> data = n.retrieve().items()
     """
     keys = ("OVIRT_INIT",
-            "OVIRT_ROOT_INSTALL",
             "OVIRT_OVERCOMMIT",
             "OVIRT_VOL_ROOT_SIZE",
             "OVIRT_VOL_EFI_SIZE",
@@ -1200,23 +1199,31 @@ class Installation(NodeConfigFileSection):
             "OVIRT_VOL_DATA_SIZE",
             "OVIRT_INSTALL",
             "OVIRT_UPGRADE",
+            "OVIRT_INSTALL_ROOT",
+            "OVIRT_ROOT_INSTALL",
+            "OVIRT_ISCSI_INSTALL"
             )
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, init, root_install, overcommit, root_size, efi_size,
+    def update(self, init, overcommit, root_size, efi_size,
                swap_size, logging_size, config_size, data_size, install,
-               upgrade):
+               upgrade, install_root, root_install, iscsi_install):
         # FIXME no checking!
         return {"OVIRT_INIT": ",".join(init),
+                "OVIRT_INSTALL_ROOT": "y" if install_root else None,
                 "OVIRT_ROOT_INSTALL": "y" if root_install else None,
                 "OVIRT_INSTALL": "1" if install else None,
-                "OVIRT_UPGRADE": "1" if install else None}
+                "OVIRT_UPGRADE": "1" if upgrade else None,
+                "OVIRT_ISCSI_INSTALL": "1" if iscsi_install else None}
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
         cfg.update({"init": cfg["init"].split(",") if cfg["init"] else [],
+                    "install_root": cfg["install_root"] == "y",
                     "root_install": cfg["root_install"] == "y",
-                    "install": cfg["install"] == "1"})
+                    "install": cfg["install"] == "1",
+                    "iscsi_install": cfg["iscsi_install"] == "1",
+                    "upgrade": cfg["upgrade"] == "1"})
         return cfg
 
     def transaction(self):
@@ -1228,8 +1235,10 @@ class Installation(NodeConfigFileSection):
         are going to be picked up by the installer backend to install Node on
         the given storage with the given othere params
         """
-        self.update(init=init,
-                    install=True,
+        self.update(install=True,
+                    install_root=True,
+                    root_install=True,
+                    init=init,
                     root_size=root_size,
                     efi_size=efi_size,
                     swap_size=swap_size,
