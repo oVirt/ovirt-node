@@ -384,6 +384,7 @@ fi
 %{python_sitelib}/ovirt/__init__.*
 %{python_sitelib}/ovirt/node/*
 %{_bindir}/ovirt-config-setup
+%{_bindir}/ovirt-node-installer
 %{_bindir}/ovirt-node-doc
 
 

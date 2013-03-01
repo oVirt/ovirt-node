@@ -11,6 +11,7 @@ setup(name='ovirt-node-molch',
     license="GPLv2+",
     scripts=[
              "bin/ovirt-config-setup",
+             "bin/ovirt-node-installer",
              "bin/ovirt-node-doc"
              ],
     package_dir = {'': 'src'},
@@ -26,8 +27,5 @@ setup(name='ovirt-node-molch',
 #   data_files=[('extra', ['scm_hash.txt',
 #                          'Makefile'
 #                          ]),
-#               ('libexec', ['libexec/ovirt-config-setup'
-#        '                  ovirt-config-installer']
-#                           ])
 #               ]
 )
