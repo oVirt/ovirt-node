@@ -28,7 +28,7 @@ Configure Security
 
 
 class Plugin(plugins.NodePlugin):
-    _model = None
+    _model = {}
 
     def name(self):
         return "Security"
@@ -51,7 +51,6 @@ class Plugin(plugins.NodePlugin):
     def validators(self):
         number_or_empty = valid.Number(bounds=[0, None]) | \
             valid.Empty()
-
         return {"strongrng.num_bytes": number_or_empty,
                 "passwd.admin.password": valid.Text()
                 }
@@ -75,6 +74,7 @@ class Plugin(plugins.NodePlugin):
     def on_change(self, changes):
         if changes.contains_any(["passwd.admin.password",
                                  "passwd.admin.password_confirmation"]):
+            self._model.update(changes)
             model = self._model
             admin_pw = model.get("passwd.admin.password", "")
             admin_pw_conf = model.get("passwd.admin.password_confirmation", "")
