@@ -201,9 +201,13 @@ class NodeConfigFileSection(base.Base):
             A dict mapping an argname to it's cfg key (or vice versa)
         """
         func = self.update.wrapped_func
-        varnames = func.func_code.co_varnames[1:]
-        assert len(varnames) == len(self.keys)
-        mapping = zip(self.keys, varnames) if keys_to_args else zip(varnames,
+        # co_varnames contains all args within the func, the args are kept
+        # at the beginning of the list, that's why we slice the varnames list
+        # (start after self until the number of args)
+        argnames = func.func_code.co_varnames[1:func.func_code.co_argcount]
+        assert len(argnames) == len(self.keys), "argnames (%s) != keys (%s)" %\
+            (argnames, self.keys)
+        mapping = zip(self.keys, argnames) if keys_to_args else zip(argnames,
                                                                     self.keys)
         return dict(mapping)
 
@@ -442,8 +446,15 @@ class Nameservers(NodeConfigFileSection):
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, servers):
         assert type(servers) is list
-        servers = filter(lambda i: i.strip() not in ["", None], servers)
-        map(valid.IPv4Address(), servers)
+        # Preparation
+        servers = [i.strip() for i in servers]
+        servers = [i for i in servers if i not in ["", None]]
+
+        # Validation
+        validator = lambda v: valid.FQDNOrIPAddress()
+        map(validator, servers)
+
+        # Mangling for the conf file format
         return {"OVIRT_DNS": ",".join(servers) or None
                 }
 
@@ -554,8 +565,15 @@ class Timeservers(NodeConfigFileSection):
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, servers):
         assert type(servers) is list
-        servers = filter(lambda i: i.strip() not in ["", None], servers)
-        map(valid.FQDNOrIPAddress(), servers)
+        # Preparation
+        servers = [i.strip() for i in servers]
+        servers = [i for i in servers if i not in ["", None]]
+
+        # Validation
+        validator = lambda v: valid.FQDNOrIPAddress()
+        map(validator, servers)
+
+        # Mangling to match the conf file
         return {"OVIRT_NTP": ",".join(servers) or None
                 }
 
