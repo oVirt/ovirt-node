@@ -32,7 +32,7 @@ class Plugin(plugins.NodePlugin):
     def __init__(self, app):
         super(Plugin, self).__init__(app)
         self.storage_discovery = StorageDiscovery(app.args.dry)
-        self.storage_discovery.start()
+        self.storage_discovery.run()
 
     def name(self):
         return "Boot Device"
@@ -135,7 +135,11 @@ class StorageDiscovery(threading.Thread):
     def all_devices(self):
         """Return a list of all devices
         """
-        self.join(30)
+        try:
+            self.join(30)
+        except RuntimeError:
+            pass
+            # I suppose the thread was not started
         return self._all_devices
 
     def all_devices_for_ui_table(self, other_device=""):
