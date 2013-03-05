@@ -263,15 +263,21 @@ class FQDN(RegexValidator):
 
     >>> FQDN()("example.com")
     True
+    >>> FQDN().validate("example")
+    True
+    >>> FQDN()("0.example.com")
+    True
     >>> FQDN().validate("example.com.")
+    False
+    >>> FQDN().validate(".com")
     False
     >>> FQDN().validate("")
     False
     """
 
     description = "a valid FQDN"
-    pattern = ("^(([a-z]|[a-z][a-z0-9\-]*[a-z0-9])\.)" +
-               "*([a-z]|[a-z][a-z0-9\-]*[a-z0-9])$", re.I)
+    pattern = ("^(([0-9]\.)?([a-z]|[a-z][a-z0-9\-]*[a-z0-9])\.)*" +
+               "([a-z]|[a-z][a-z0-9\-]*[a-z0-9])$", re.I)
 
 
 class IPv4Address(Validator):
@@ -421,9 +427,7 @@ class IQN(RegexValidator):
 
     >>> IQN()("iqn.1994-05.com.redhat.com:6edea1b458e5")
     True
-    >>> FQDN().validate("example.com.")
-    False
-    >>> FQDN().validate("")
+    >>> IQN().validate("")
     False
     """
 

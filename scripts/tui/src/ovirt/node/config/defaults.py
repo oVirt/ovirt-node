@@ -550,7 +550,7 @@ class Timeservers(NodeConfigFileSection):
 
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
-    >>> servers = ["10.0.0.4", "10.0.0.5"]
+    >>> servers = ["10.0.0.4", "10.0.0.5", "0.example.com"]
     >>> n = Timeservers(cfgfile)
     >>> n.update(servers)
     >>> data = n.retrieve()
