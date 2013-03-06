@@ -209,8 +209,8 @@ class InstallerThread(threading.Thread):
 
         def commit(self):
             from ovirtnode import storage
-            # Reload is needed to re-read defaults file ..
-            reload(storage._functions)
+            # Re-read defaults file to pick up changes
+            storage._functions.parse_defaults()
             config_storage = storage.Storage()
             storage_setup = config_storage.perform_partitioning()
             if not storage_setup:
