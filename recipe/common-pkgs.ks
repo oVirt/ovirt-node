@@ -105,8 +105,6 @@ efibootmgr
 yum
 # Consistent ethernet device naming
 biosdevname
-# yum for plugins
-yum
 fcoe-utils
 #glusterfs client packages
 glusterfs
