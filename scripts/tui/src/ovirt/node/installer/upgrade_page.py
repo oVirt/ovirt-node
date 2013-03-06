@@ -20,7 +20,6 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, installer, exceptions
 from ovirt.node.utils import security
-import os
 
 """
 Password confirmation page for the upgarde part of the installer
@@ -94,8 +93,10 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(["upgrade.current_password",
                                  "button.next"]):
             pam = security.PAM()
-            if pam.authenticate(os.getlogin(),
-                                changes["upgrade.current_password"]):
+            # We can't use os.getlogin() here, b/c upgrade happens during boot
+            # w/o login
+            username = "admin"
+            if pam.authenticate(username, changes["upgrade.current_password"]):
                 nav = self.application.ui.navigate
                 nav.to_plugin(installer.progress_page.Plugin)
             else:
