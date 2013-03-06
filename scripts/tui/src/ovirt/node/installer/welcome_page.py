@@ -84,7 +84,6 @@ class Plugin(plugins.NodePlugin):
             return ui.Button("button.install", "Install Hypervisor (dry)")
 
         media = utils.system.InstallationMedia()
-        installed = utils.system.InstalledMedia()
 
         has_hostvg = utils.system.has_hostvg()
         has_root = os.path.exists("/dev/disk/by-label/ROOT")
@@ -94,6 +93,8 @@ class Plugin(plugins.NodePlugin):
                             "uninstall existing version first")
 
         if has_hostvg:
+            installed = utils.system.InstalledMedia()
+
             try:
                 if media > installed:
                     return ui.Button("button.upgrade",
