@@ -29,7 +29,7 @@ fi
 
 test -f Makefile && make -k distclean || :
 
-OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT}/../ovirt-cache
+OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT-${HOME}}/ovirt-cache
 OVIRT_LOCAL_REPO=file://${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
 export OVIRT_LOCAL_REPO OVIRT_CACHE_DIR
 
