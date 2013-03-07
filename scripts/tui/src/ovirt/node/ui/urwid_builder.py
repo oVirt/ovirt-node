@@ -513,7 +513,8 @@ class UrwidWindow(ui.Window):
         self.logger.debug("Displaying page %s" % page)
 #        filler = urwid.Filler(page, ("fixed top", 1), height=35)
         filler = urwid.Pile([page])
-        self.__page_frame.body = filler
+        padding = urwid.Padding(filler, left=1, right=1)
+        self.__page_frame.body = padding
 
     def __display_as_dialog(self, body, title, escape_key="esc"):
         self.logger.debug("Displaying dialog: %s / %s" % (body, title))
