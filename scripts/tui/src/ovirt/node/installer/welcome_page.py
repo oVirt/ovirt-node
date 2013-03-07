@@ -53,7 +53,7 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         ws = [ui.Header("header[0]", "Installation")]
-        ws += [self.___installation_option()]
+        ws += self.___installation_options()
         ws += [ui.Divider("divider[0]")]
         ws += self.__additional_infos()
         self.widgets.add(ws)
@@ -79,9 +79,10 @@ class Plugin(plugins.NodePlugin):
             nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "reinstall"
 
-    def ___installation_option(self):
+    def ___installation_options(self):
         if self.application.args.dry:
-            return ui.Button("button.install", "Install Hypervisor (dry)")
+            return [ui.Button("button.install", "Install Hypervisor (dry)"),
+                    ui.Button("button.upgrade", "Upgrade Hypervisor (dry)")]
 
         media = utils.system.InstallationMedia()
 
@@ -89,29 +90,29 @@ class Plugin(plugins.NodePlugin):
         has_root = os.path.exists("/dev/disk/by-label/ROOT")
 
         if has_hostvg and has_root:
-            return ui.Label("Major version upgrades are unsupported, " +
-                            "uninstall existing version first")
+            return [ui.Label("Major version upgrades are unsupported, " +
+                             "uninstall existing version first")]
 
         if has_hostvg:
             installed = utils.system.InstalledMedia()
 
             try:
                 if media > installed:
-                    return ui.Button("button.upgrade",
-                                     "Upgrade %s to %s" % (media, installed))
+                    return [ui.Button("button.upgrade",
+                                      "Upgrade %s to %s" % (media, installed))]
                 elif media < installed:
-                    return ui.Button("button.downgrade",
-                                     "Downgrade %s to %s" % (media,
-                                                             installed))
-                return ui.Button("button.reinstall",
-                                 "Reinstall %s" % installed)
+                    return [ui.Button("button.downgrade",
+                                      "Downgrade %s to %s" % (media,
+                                                              installed))]
+                return [ui.Button("button.reinstall",
+                                  "Reinstall %s" % installed)]
             except:
                 self.logger.error("Unable to get version numbers for " +
                                   "upgrade, invalid installation or media")
-                return ui.Label("Invalid installation, please reboot from " +
-                                "media and choose Reinstall")
+                return [ui.Label("Invalid installation, please reboot from " +
+                                 "media and choose Reinstall")]
 
-        return ui.Button("button.install", "Install Hypervisor %s" % media)
+        return [ui.Button("button.install", "Install Hypervisor %s" % media)]
 
     def __additional_infos(self):
         ws = []
