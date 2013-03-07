@@ -39,7 +39,7 @@ class Plugin(plugins.NodePlugin):
         return "Data Device"
 
     def rank(self):
-        return 40
+        return 30
 
     def model(self):
         devices = self.storage_discovery.all_devices_for_ui_table()

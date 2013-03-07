@@ -43,7 +43,7 @@ class Plugin(plugins.NodePlugin):
         return "Welcome"
 
     def rank(self):
-        return 10
+        return 0
 
     def model(self):
         return self._model

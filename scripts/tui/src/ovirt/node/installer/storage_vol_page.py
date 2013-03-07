@@ -32,7 +32,7 @@ class Plugin(plugins.NodePlugin):
         return "Storage Sizes"
 
     def rank(self):
-        return 20
+        return 40
 
     def model(self):
         if not self._model:

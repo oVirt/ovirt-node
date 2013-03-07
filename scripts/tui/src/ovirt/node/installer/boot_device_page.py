@@ -38,7 +38,7 @@ class Plugin(plugins.NodePlugin):
         return "Boot Device"
 
     def rank(self):
-        return 30
+        return 20
 
     def model(self):
         self._model.update({"boot.device": ""})

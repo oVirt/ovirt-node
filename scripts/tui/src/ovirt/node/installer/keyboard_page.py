@@ -32,7 +32,7 @@ class Plugin(plugins.NodePlugin):
         return "Keyboard"
 
     def rank(self):
-        return 20
+        return 10
 
     def model(self):
         return self._model
