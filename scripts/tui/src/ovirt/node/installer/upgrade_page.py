@@ -76,13 +76,18 @@ class Plugin(plugins.NodePlugin):
             self._model.update(changes)
             up_pw, up_pw_conf = self._model.get("upgrade.password", ""), \
                 self._model.get("upgrade.password_confirmation", "")
+
             if up_pw != up_pw_conf:
                 self.widgets["password.info"].text("")
                 raise exceptions.InvalidData("Passwords must be the same.")
             else:
                 self.widgets["upgrade.password"].valid(True)
                 self.widgets["upgrade.password_confirmation"].valid(True)
-                self.widgets["password.info"].text(self.__no_new_password_msg)
+                self.widgets["password.info"].text("")
+
+                if not up_pw and not up_pw_conf:
+                    msg = self.__no_new_password_msg
+                    self.widgets["password.info"].text(msg)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
