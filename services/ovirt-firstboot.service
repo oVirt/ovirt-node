@@ -14,12 +14,9 @@ RemainAfterExit=yes
 
 # http://www.freedesktop.org/software/systemd/man/systemd.exec.html
 StandardInput=tty-force
-StandardOutput=tty
-StandardError=syslog+console
+StandardOutput=inherit
+StandardError=inherit
 TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-TTYVTDisallocate=yes
 
 [Install]
 WantedBy=multi-user.target
