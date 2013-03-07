@@ -101,4 +101,4 @@ class Plugin(plugins.NodePlugin):
                 nav.to_plugin(installer.progress_page.Plugin)
             else:
                 msg = "Current password is invalid"
-            self.widgets["current_password.info"].text(msg)
+                self.widgets["current_password.info"].text(msg)
