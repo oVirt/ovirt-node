@@ -89,6 +89,10 @@ class Plugin(plugins.NodePlugin):
                     msg = self.__no_new_password_msg
                     self.widgets["password.info"].text(msg)
 
+        if changes.contains_any(["upgrade.current_password"]):
+            # Hide any message which was shown
+            self.widgets["current_password.info"].text("")
+
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
         if changes.contains_any(["button.back"]):

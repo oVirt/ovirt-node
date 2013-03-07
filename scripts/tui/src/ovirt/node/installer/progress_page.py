@@ -152,6 +152,9 @@ class InstallerThread(threading.Thread):
         elif cfg["method"] in ["upgrade", "downgrade", "reinstall"]:
             tx.title = "Update"
             tx += [self.InstallImageAndBootloader()]
+            new_password = cfg.get("upgrade.password_confirmation", None)
+            if new_password:
+                tx += [self.SetPassword(new_password)]
 
         self.logger.debug("Built transaction: %s" % tx)
 
