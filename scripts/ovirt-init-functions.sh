@@ -204,7 +204,7 @@ _start_ovirt_early () {
     #   ipv6=dhcp|auto
     #   dns=server[,server]
     #   ntp=server[,server]
-    #   vlan=id
+    #   vlan=id:eth*
     #   ssh_pwauth=[0|1]
     #   syslog=server[:port]
     #   collectd=server[:port]
@@ -646,7 +646,8 @@ _start_ovirt_early () {
             hostname=${i#hostname=}
             ;;
             vlan=*)
-            vlan=${i#vlan=}
+            i=${i#vlan=}
+            eval $(printf $i|awk -F: '{print "vlan="$1; print "nic="$2;}')
             ;;
             ssh_pwauth=1 | ssh_pwauth=true)
             ssh_pwauth=yes
