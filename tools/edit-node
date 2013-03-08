@@ -1194,7 +1194,7 @@ enabled=1
             if "," in key:
                 user, password = key.split(",")
             else:
-                user = "root"
+                user = "admin"
                 password = key
             cmd = "/usr/sbin/usermod -p \"%s\" %s" % (password, user)
             print cmd
