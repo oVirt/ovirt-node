@@ -84,13 +84,16 @@ class Install:
             self.grub_prefix = self.grub_prefix + "2"
             self.grub_dir = self.grub_dir + "2"
             self.grub_config_file = "%s/grub.cfg" % self.grub_dir
-            if os.path.exists("/boot/efi/EFI/fedora"):
-                self.efi_dir_name = "fedora"
-            else:
-                self.efi_dir_name = "redhat"
-            if _functions.is_efi_boot():
-                self.grub_config_file = "/liveos/efi/EFI/%s/grub.cfg" \
-                                         % self.efi_dir_name
+        else:
+            self.grub_config_file = "%s/grub.conf" % self.grub_dir
+
+        if os.path.exists("/boot/efi/EFI/fedora"):
+            self.efi_dir_name = "fedora"
+        else:
+            self.efi_dir_name = "redhat"
+        if _functions.is_efi_boot():
+            self.grub_config_file = "/liveos/efi/EFI/%s/grub.cfg" \
+                                     % self.efi_dir_name
 
     def grub_install(self):
         if _functions.is_iscsi_install():
