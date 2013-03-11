@@ -587,7 +587,7 @@ class UrwidWindow(ui.Window):
         return self.__loop.screen.get_cols_rows()
 
     def _min_size(self):
-            return (80, 23)
+            return (80, 24)
 
     def _check_min_size_cb(self):
         size = self.size()

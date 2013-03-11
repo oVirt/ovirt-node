@@ -109,7 +109,7 @@ class Plugin(plugins.NodePlugin):
               ui.Entry("ntp[1]", "NTP Server 2:"),
               ui.Divider("divider[2]"),
               ui.Table("nics", "Available System NICs",
-                       "Device   Status         Model          MAC Address",
+                       "Device  Status        Model          MAC Address",
                        self._get_nics()),
               ui.Button("button.ping", "Ping")
               ]
@@ -127,8 +127,8 @@ class Plugin(plugins.NodePlugin):
             if first_nic is None:
                 first_nic = name
             bootproto = "Configured" if nic["bootproto"] else "Unconfigured"
-            description = " ".join([justify(nic["name"], 8),
-                                    justify(bootproto, 14),
+            description = " ".join([justify(nic["name"], 7),
+                                    justify(bootproto, 13),
                                     justify(nic["vendor"], 14),
                                     justify(nic["hwaddr"], 17)
                                     ])
