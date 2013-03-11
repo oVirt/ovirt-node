@@ -389,10 +389,17 @@ class Application(base.Base):
             self.ui.register_plugin(plugin.ui_name(), plugin)
 
     def __drop_to_shell(self):
-        with self.ui.suspended():
-            utils.process.call("reset")
-            utils.console.writeln("Dropping to rescue shell ...")
-            utils.process.call("bash")
+        utils.console.writeln("Dropping to rescue shell ...")
+
+        def open_console():
+            utils.process.call("clear ; bash")
+
+        try:
+            with self.ui.suspended():
+                open_console()
+        except:
+            # Error when the UI is not running
+            open_console()
 
     def __check_terminal_size(self):
         cols, rows = self.ui.size()
