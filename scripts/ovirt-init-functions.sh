@@ -1124,6 +1124,15 @@ EOP
         fi
         disable_firstboot
         ovirt_store_firstboot_config || autoinstall_failed
+
+        # rhbz#920208
+        # the sysd-upd-utmp-shutdown.service (see below) is pulling in the var-log.mount unit.
+        # That means it tries to mount /var/log as defined in /etc/fstab (the entry was created
+        # as a part of the installation)
+        # This fails because of some reason (which is hard to debug, couldn't nail it down)
+        # But that doesn't matter because /var/log is already mounted, just unknown to sysd
+        umount /var/log
+
         reboot
         if [ $? -ne 0 ]; then
             autoinstall_failed
