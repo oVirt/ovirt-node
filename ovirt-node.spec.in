@@ -100,6 +100,7 @@ Summary:        Recipes for building and running %{product_family} image
 Group:          Applications/System
 Requires:       livecd-tools >= 1:16.0
 Requires:       appliance-tools-minimizer
+Requires:       libselinux-python
 
 %define tools_root %{_datadir}/ovirt-node-tools
 

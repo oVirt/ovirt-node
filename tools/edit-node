@@ -30,6 +30,7 @@ import logging
 import rpm
 import glob
 import re
+import selinux
 from time import strftime as date
 from subprocess import PIPE, STDOUT
 from imgcreate.debug import *
@@ -1459,22 +1460,39 @@ def main():
             if options.script:
                 print "Running edit script '%s'" % options.script
                 editor._run_script(options.script)
-            if options.install:
-                print "Installing Packages"
-                if not editor._install_pkgs(options):
-                    logging.error("Error Installing Requested Package(s) : %s" % options.install)
-                    return 1
-            elif options.plugin:
-                print "Installing Plugins"
-                if not editor._install_plugins(options):
-                    logging.error("Error Installing Plugin(s) : %s" % options.plugin)
-                    return 1
-            elif options.install_dup:
-                print "Installing DUP"
-                if not editor._install_dup(options):
-                    editor.unmount()
-                    logging.error("Error Installing Drive Update Package : %s" % options.install_dup)
-                    return 1
+            selinux_enforcing = None
+            failed = False
+            try:
+                if selinux.security_getenforce():
+                    print "Setting SELinux Permissive During Yum Install"
+                    selinux_enforcing = True
+                    selinux.security_setenforce(0)
+                if options.install:
+                    print "Installing Packages"
+                    if not editor._install_pkgs(options):
+                        logging.error("Error Installing Requested Package",
+                        ": %s" % options.install)
+                        failed = True
+                elif options.plugin:
+                    print "Installing Plugins"
+                    if not editor._install_plugins(options):
+                        logging.error("Error Installing Plugin(s) : %s" % options.plugin)
+                        failed = True
+                elif options.install_dup:
+                    print "Installing DUP"
+                    if not editor._install_dup(options):
+                        editor.unmount()
+                        logging.error("Error Installing Drive Update Package : %s" % options.install_dup)
+                        failed = True
+                        #raise RuntimeError("Unable to Install Package")
+            except RuntimeError as e:
+                raise RuntimeError(e)
+            finally:
+                if selinux_enforcing:
+                   print "Returning SELinux To Enforcing"
+                   selinux.security_setenforce(1)
+                if failed:
+                    sys.exit(1)
             if not options.password is None:
                 print "Setting Account Passwords"
                 editor._set_password(options)
