@@ -6,3 +6,6 @@
 reset
 
 python -m ovirt.node.setup "$@"
+
+# Get some time to read anything that might appear on the screen
+sleep 1
