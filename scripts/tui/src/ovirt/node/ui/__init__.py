@@ -253,8 +253,9 @@ class Label(Element):
     def value(self, txt=None):
         return self.text(txt)
 
+
 class Notice(Label):
-    def __init__(self,path,text):
+    def __init__(self, path, text):
         super(Notice, self).__init__(path, text)
 
 

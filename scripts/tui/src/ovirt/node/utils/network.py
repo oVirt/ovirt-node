@@ -74,10 +74,22 @@ def is_nm_managed(iface):
 
 
 def all_ifaces():
+    """A list of all network interfaces discovered by udev
+
+    Returns:
+        A list of all returned ifaces (names)
+    """
     return _query_udev_ifaces()
 
+
 def is_configured():
+    """Determin if any NIC has been configured for/by Node
+
+    Returns:
+        True if any nic has been configured
+    """
     return any(key["bootproto"] is not None for key in node_nics().values())
+
 
 def iface_information(iface, with_slow=True):
     """Retuns all system NICs (via udev)

@@ -70,25 +70,29 @@ class Plugin(plugins.NodePlugin):
                        "Size (KB):"),
               ui.Divider("divider[0]")
               ]
+
         if not utils.network.is_configured():
-            ws.extend([ui.Notice("network.notice","Networking is not configured, " +
-                                  "please configure it before rsyslog and/or netconsole"),
+            ws.extend([ui.Notice("network.notice",
+                                 "Networking is not configured, " +
+                                 "please configure it before rsyslog " +
+                                 "and/or netconsole"),
                        ui.Divider("notice.divider")])
+
         ws.extend([ui.Label("rsyslog.header", "RSyslog is an enhanced multi-" +
-                       "threaded syslogd"),
-                  ui.Entry("rsyslog.address", "Server Address:",
-                      enabled=utils.network.is_configured()),
-                  ui.Entry("rsyslog.port", "Server Port:",
-                      enabled=utils.network.is_configured()),
-                  ui.Divider("divider[1]"),
-                  ui.Label("netconsole.label",
-                       "Netconsole service allows a remote sys" +
-                       "log daemon to record printk() messages"),
-                  ui.Entry("netconsole.address", "Server Address:",
-                      enabled=utils.network.is_configured()),
-                  ui.Entry("netconsole.port", "Server Port:",
-                      enabled=utils.network.is_configured())
-                  ])
+                            "threaded syslogd"),
+                   ui.Entry("rsyslog.address", "Server Address:",
+                            enabled=utils.network.is_configured()),
+                   ui.Entry("rsyslog.port", "Server Port:",
+                            enabled=utils.network.is_configured()),
+                   ui.Divider("divider[1]"),
+                   ui.Label("netconsole.label",
+                            "Netconsole service allows a remote sys" +
+                            "log daemon to record printk() messages"),
+                   ui.Entry("netconsole.address", "Server Address:",
+                            enabled=utils.network.is_configured()),
+                   ui.Entry("netconsole.port", "Server Port:",
+                            enabled=utils.network.is_configured())
+                   ])
 
         page = ui.Page("page", ws)
         self.widgets.add(page)
