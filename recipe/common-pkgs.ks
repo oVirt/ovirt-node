@@ -115,3 +115,5 @@ glusterfs-rdma
 mom
 
 NetworkManager-glib
+
+bridge-utils
