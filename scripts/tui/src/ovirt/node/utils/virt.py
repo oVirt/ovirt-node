@@ -31,24 +31,19 @@ from ovirt.node import base
 
 def hardware_is_available():
     """Determins if virtualization hardware is available.
+    This does not mean that virtualization is also enabled.
 
     Returns:
         True if there is hardware virtualization hardware available
     """
-    has_virtualization = False
+    is_available = False
 
-    has_module = False
-    with open("/proc/modules") as modules:
-        for line in modules:
-            has_module = (line.startswith("kvm_intel") or
-                          line.startswith("kvm_amd"))
-            if has_module:
-                break
-
-    if has_module and os.path.exists("/dev/kvm"):
-        has_virtualization = True
-
-    return has_virtualization
+    with open("/proc/cpuinfo") as cpuinfo:
+        for line in cpuinfo:
+            if line.startswith("flags"):
+                if "vmx" in line or "svm" in line:
+                    is_available = True
+    return is_available
 
 
 def hardware_is_enabled():
@@ -58,12 +53,19 @@ def hardware_is_enabled():
         True if there is hardware virtualization hardware available and enabled
     """
     is_enabled = False
+
     if hardware_is_available():
-        with open("/proc/cpuinfo") as cpuinfo:
-            for line in cpuinfo:
-                if line.startswith("flags"):
-                    if "vmx" in line or "svm" in line:
-                        is_enabled = True
+        has_module = False
+        with open("/proc/modules") as modules:
+            for line in modules:
+                has_module = (line.startswith("kvm_intel") or
+                              line.startswith("kvm_amd"))
+                if has_module:
+                    break
+
+        if has_module and os.path.exists("/dev/kvm"):
+            is_enabled = True
+
     return is_enabled
 
 
