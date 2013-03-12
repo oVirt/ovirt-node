@@ -32,8 +32,8 @@ FEDORA_MIRROR     = http://mirrors.fedoraproject.org/mirrorlist
 OVIRT_URL	      = http://ovirt.org/releases/stable/rpm/Fedora
 OVIRT_NIGHTLY_URL = http://ovirt.org/releases/nightly/rpm/Fedora
 OVIRT_BETA_URL    = http://ovirt.org/releases/beta/rpm/Fedora
-CUR_RAWHIDE       = 19
-CUR_DEVEL         = 18
+CUR_RAWHIDE       = 20
+CUR_DEVEL         = 19
 
 CENTOS_MIRROR     = http://mirrorlist.centos.org/
 CENTOS_RELEASE    = 6
