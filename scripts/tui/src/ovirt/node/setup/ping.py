@@ -18,13 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import plugins, valid, ui
+from ovirt.node.utils import process
+import threading
+
 
 """
 A ping tool page
 """
 
-from ovirt.node import plugins, valid, ui
-from ovirt.node.utils import process
 
 
 class Plugin(plugins.NodePlugin):
@@ -70,7 +72,7 @@ class Plugin(plugins.NodePlugin):
               ui.Entry("ping.address", "Address:"),
               ui.Entry("ping.count", "Count:"),
               ui.Divider("divider[1]"),
-              ui.Button("ping.do_ping", "Ping"),
+              ui.SaveButton("ping.do_ping", "Ping"),
               ui.Divider("divider[2]"),
               ui.ProgressBar("ping.progress"),
               ui.Divider("divider[3]"),
@@ -107,11 +109,38 @@ class Plugin(plugins.NodePlugin):
                 cmd = "ping6"
 
             cmd = "%s -c %s %s" % (cmd, count, addr)
-            out = ""
+
+            ping = PingThread(self, cmd, count)
+            ping.start()
+
+
+class PingThread(threading.Thread):
+    def __init__(self, plugin, cmd, count):
+        self.p = plugin
+        self.cmd = cmd
+        self.count = count
+        super(PingThread, self).__init__()
+
+    def run(self):
+        try:
+            self.__run()
+        except Exception as e:
+            self.p.logger.debug("Exception while pinging: %s" % e,
+                                exc_info=True)
+        self.p.widgets["ping.do_ping"].enabled(True)
+
+    def __run(self):
+            self.p.widgets["ping.do_ping"].enabled(False)
+
+            progressbar = self.p.widgets["ping.progress"]
+            stdoutdump = self.p.widgets["ping.result"]
+            ui_thread = self.p.application.ui.thread_connection()
+            out = []
             current = 0
-            for line in process.pipe_async(cmd):
-                out += line
-                if "icmp_req" in line:
-                    current += 100.0 / float(count)
-                    self.widgets["ping.progress"].current(current)
-                self.widgets["ping.result"].text("Result:\n\n%s" % out)
+
+            for line in process.pipe_async(self.cmd):
+                out += [line]
+                if "time=" in line:
+                    current += 100.0 / float(self.count)
+                    ui_thread.call(lambda: progressbar.current(current))
+                ui_thread.call(lambda: stdoutdump.text("\n".join(out[-3:])))
