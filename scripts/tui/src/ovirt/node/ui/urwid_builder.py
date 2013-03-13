@@ -20,6 +20,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import ui, exceptions, base
 from ovirt.node.ui import widgets as uw
+import os
+import sys
 import urwid
 
 """
@@ -456,7 +458,39 @@ class UrwidWindow(ui.Window):
 
         self.navigate.to_first_plugin()
 
+        self.__init_pipe()
+
         self.__loop.run()
+
+    def __init_pipe(self):
+        self._pipe_q = []
+
+        def cb_from_q(data):
+            self.logger.debug("Data reading")
+            try:
+                while self._pipe_q:
+                    cb = self._pipe_q.pop()
+                    self.logger.debug("Data run: %s" % cb)
+                    cb()
+            except Exception:
+                self.logger.debug("No callback")
+
+        self._pipe_fd = self.__loop.watch_pipe(cb_from_q)
+
+    def thread_connection(self):
+        dst = self
+
+        class UrwidUIThreadConnection(ui.Window.UIThreadConnection, base.Base):
+            def call(self, callback):
+                """Run the callback in the context of the UI thread
+                """
+                self.logger.debug("Data: %s to %s - %s" % (callback,
+                                                           dst._pipe_fd,
+                                                           dst._pipe_q))
+                dst._pipe_q.append(callback)
+                os.write(dst._pipe_fd, "Data!")
+
+        return UrwidUIThreadConnection()
 
     def suspended(self):
         """Supspends the screen to do something in the foreground

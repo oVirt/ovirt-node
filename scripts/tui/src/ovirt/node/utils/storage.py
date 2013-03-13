@@ -22,7 +22,6 @@
 from ovirt.node import base
 import os
 
-
 class iSCSI(base.Base):
     """A class to deal with some external iSCSI related functionality
     """

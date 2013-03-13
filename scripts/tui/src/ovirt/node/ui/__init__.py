@@ -595,6 +595,36 @@ class Window(Element):
         """
         raise NotImplementedError
 
+    def run(self):
+        """Starts the UI
+        """
+        raise NotImplementedError
+
+    def thread_connection(self):
+        """Run a callback in the context of the UI thread
+
+        Returns:
+            A new UIThreadConnection instance
+        """
+        raise NotImplementedError
+
+    class UIThreadConnection(base.Base):
+        """A class to interact with the UI thread
+        This is needed if other threads want to interact with the UI
+        """
+
+        def call(self, callback):
+            """Call a callback in the context of the UI thread
+            This needs to be used when updates to the ui are made
+
+            Args:
+                callback: A callable to be called in the ctx of the ui thread
+
+            Returns:
+                Nothing
+            """
+            raise NotImplementedError
+
     class Navigation(base.Base):
         """A convenience class to navigate through a window
         """

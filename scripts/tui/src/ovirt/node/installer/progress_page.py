@@ -22,7 +22,6 @@ from ovirt.node import plugins, ui, utils
 from ovirt.node.config import defaults
 from ovirt.node.utils import console
 import threading
-import time
 
 
 """
@@ -75,6 +74,8 @@ class Plugin(plugins.NodePlugin):
 
 
 class InstallerThread(threading.Thread):
+    ui_thread = None
+
     def __init__(self, progress_plugin):
         super(InstallerThread, self).__init__()
         self.progress_plugin = progress_plugin
@@ -85,21 +86,31 @@ class InstallerThread(threading.Thread):
 
     def run(self):
         try:
-            self.progress_plugin.widgets["action.reboot"].enabled(False)
-            time.sleep(0.3)  # Give the UI some time to build
+            app = self.progress_plugin.application
+            self.ui_thread = app.ui.thread_connection()
+
+            self.__run()
+        except Exception as e:
+            self.logger.error("Error in installer thread: %s" % e)
+
+    def __run(self):
+        reboot_button = self.progress_plugin.widgets["action.reboot"]
+        progressbar = self.progress_plugin.widgets["progressbar"]
+        log = self.progress_plugin.widgets["log"]
+        log_lines = ["Starting ..."]
+
+        try:
+            self.ui_thread.call(lambda: log.text("\n".join(log_lines)))
+            self.ui_thread.call(lambda: reboot_button.enabled(False))
+
             transaction = self.__build_transaction()
-
-            progressbar = self.progress_plugin.widgets["progressbar"]
-            log = self.progress_plugin.widgets["log"]
-            log_lines = []
-
             txlen = len(transaction)
 
             for idx, tx_element in transaction.step():
                 idx += 1
                 self.logger.debug("Running %s: %s" % (idx, tx_element))
                 log_lines.append("(%s/%s) %s" % (idx, txlen, tx_element.title))
-                log.text("\n".join(log_lines))
+                self.ui_thread.call(lambda: log.text("\n".join(log_lines)))
 
                 def do_commit():
                     tx_element.commit()
@@ -110,25 +121,26 @@ class InstallerThread(threading.Thread):
                     # therefore we are capturing this
                     self.progress_plugin.dry_or(do_commit)
 
-                progressbar.current(int(100.0 / txlen * idx))
                 log_lines[-1] = "%s (Done)" % log_lines[-1]
-                log.text("\n".join(log_lines))
+
+                def update_ui():
+                    progressbar.current(int(100.0 / txlen * idx))
+                    log.text("\n".join(log_lines))
+                self.ui_thread.call(update_ui)
 
         except Exception as e:
             msg = "Exception: %s" % repr(e)
             self.logger.debug(msg, exc_info=True)
-            log.text(msg)
+            self.ui_thread.call(lambda: log.text(msg))
 
         finally:
-            self.progress_plugin.widgets["action.reboot"].enabled(True)
+            pass
+            self.ui_thread.call(lambda: reboot_button.enabled(True))
 
         if captured.stderr.getvalue():
             se = captured.stderr.getvalue()
             if se:
-                log.text("Stderr: %s" % se)
-
-        # We enforce a redraw, because this the non-mainloop thread
-        self.progress_plugin.application.ui.force_redraw()
+                self.ui_thread.call(lambda: log.text("Stderr: %s" % se))
 
     def __build_transaction(self):
         """Determin what kind of transaction to build

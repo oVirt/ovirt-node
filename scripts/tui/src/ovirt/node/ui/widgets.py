@@ -433,7 +433,7 @@ class PasswordEntry(Entry):
 class Button(NoticeDecoration):
     signals = ["click"]
 
-    selectable = lambda self: True
+    _selectable = True
 
     _button_attr = "plugin.widget.button"
     _button_disabled_attr = "plugin.widget.button.disabled"
@@ -455,8 +455,11 @@ class Button(NoticeDecoration):
 
         super(Button, self).__init__(self._padding)
 
+    def selectable(self):
+        return self._selectable
+
     def enable(self, is_enabled):
-        self.selectable = lambda: is_enabled
+        self._selectable = is_enabled
         if is_enabled:
             amap = {None: self._button_attr}
         else:
