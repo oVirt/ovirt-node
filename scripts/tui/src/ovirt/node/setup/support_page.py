@@ -71,7 +71,8 @@ class Plugin(NodePlugin):
             cmds = {"node": "cat /var/log/ovirt.log | less",
                     "ui": "cat /tmp/ovirt.debug.log | less",
                     "messages": "cat /var/log/messages | less",
-                    "dmesg": "dmesg | less"
+                    "dmesg": "dmesg | less",
+                    "journal": "journalctl --all --catalog --full"
                     }
 
             cmd = cmds[logfile] if logfile in cmds else None
@@ -85,4 +86,5 @@ class Plugin(NodePlugin):
         return [("node", "Node Log"),
                 ("ui", "Node UI Debug Log"),
                 ("dmesg", "dmesg"),
-                ("messages", "/var/log/messages")]
+                ("messages", "/var/log/messages"),
+                ("journal", "System journal")]
