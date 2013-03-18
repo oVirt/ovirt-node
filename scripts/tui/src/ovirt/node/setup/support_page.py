@@ -71,6 +71,7 @@ class Plugin(NodePlugin):
             cmds = {"node": "cat /var/log/ovirt.log | less",
                     "ui": "cat /tmp/ovirt.debug.log | less",
                     "messages": "cat /var/log/messages | less",
+                    "audit": "cat /var/log/audit/audit.log | less",
                     "dmesg": "dmesg | less",
                     "journal": "journalctl --all --catalog --full"
                     }
@@ -83,8 +84,9 @@ class Plugin(NodePlugin):
                     utils.process.call(cmd)
 
     def __debugfiles_to_offer(self):
-        return [("node", "Node Log"),
-                ("ui", "Node UI Debug Log"),
+        return [("node", "/var/log/ovirt.log"),
+                ("ui", "/tmp/ovirt.debug.log"),
                 ("dmesg", "dmesg"),
                 ("messages", "/var/log/messages"),
-                ("journal", "System journal")]
+                ("journal", "journal (systemd)"),
+                ("audit", "/var/log/audit/audit.log")]
