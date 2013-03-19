@@ -30,7 +30,12 @@ fi
 test -f Makefile && make -k distclean || :
 
 OVIRT_CACHE_DIR=${AUTOBUILD_SOURCE_ROOT-${HOME}}/ovirt-cache
-OVIRT_LOCAL_REPO=file://${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
+if [ -n "$AUTOBUILD_PACKAGE_ROOT" ]; then
+    OVIRT_LOCAL_DIR=${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
+else
+    OVIRT_LOCAL_DIR=${HOME}/rpmbuild/RPMS/noarch
+fi
+OVIRT_LOCAL_REPO=file://${OVIRT_LOCAL_DIR}
 export OVIRT_LOCAL_REPO OVIRT_CACHE_DIR
 
 ./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT --with-image-minimizer
@@ -54,9 +59,9 @@ if [ -f /usr/bin/rpmbuild ]; then
   rpmbuild --nodeps --define "extra_release $EXTRA_RELEASE" -ta --clean *.tar.gz
 fi
 
-mkdir -p ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
+mkdir -p ${OVIRT_LOCAL_DIR}
 # regenerate repo so iso uses new ovirt-node rpms
-createrepo -d ${AUTOBUILD_PACKAGE_ROOT}/rpm/RPMS
+createrepo -d ${OVIRT_LOCAL_DIR}
 
 cd recipe
 make ovirt-node-image.iso 
