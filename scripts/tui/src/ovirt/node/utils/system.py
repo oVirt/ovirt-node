@@ -175,8 +175,8 @@ class Keyboard(base.Base):
 
     def available_layouts(self):
         self.kbd.read()
-        layoutgen = ((details[0], kid)
-                     for kid, details in self.kbd.modelDict.items())
+        layoutgen = ((details[0], kbid)
+                     for kbid, details in self.kbd.modelDict.items())
         layouts = [(kid, name) for name, kid in sorted(layoutgen)]
         return layouts
 

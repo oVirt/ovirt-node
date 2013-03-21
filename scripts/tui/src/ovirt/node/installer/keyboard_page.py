@@ -23,6 +23,7 @@
 Keyboard page of the installer
 """
 from ovirt.node import plugins, ui, utils
+from ovirt.node.utils import system
 
 
 class Plugin(plugins.NodePlugin):
@@ -41,7 +42,7 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        kbd = utils.Keyboard()
+        kbd = system.Keyboard()
         c = kbd.get_current()
         self.logger.debug("Current layout: %s" % c)
         ws = [ui.Header("header[0]", "Keyboard Layout Selection"),
@@ -63,7 +64,7 @@ class Plugin(plugins.NodePlugin):
         changes = self.pending_changes(False)
         if changes.contains_any(["keyboard.layout", "button.next"]):
             # Apply kbd layout directly so it takes affect on the password page
-            kbd = utils.Keyboard()
+            kbd = system.Keyboard()
             self.dry_or(lambda: kbd.set_layout(changes["keyboard.layout"]))
 
             self.application.ui.navigate.to_next_plugin()

@@ -271,4 +271,4 @@ class InstallerThread(threading.Thread):
             super(InstallerThread.SetKeyboardLayout, self).__init__()
 
         def commit(self):
-            utils.Keyboard().set_layout(self.kbd_layout)
+            utils.system.Keyboard().set_layout(self.kbd_layout)

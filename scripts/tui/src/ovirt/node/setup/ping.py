@@ -28,7 +28,6 @@ A ping tool page
 """
 
 
-
 class Plugin(plugins.NodePlugin):
     _model = None
 

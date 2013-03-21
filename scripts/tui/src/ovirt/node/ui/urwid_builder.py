@@ -21,7 +21,6 @@
 from ovirt.node import ui, exceptions, base
 from ovirt.node.ui import widgets as uw
 import os
-import sys
 import urwid
 
 """
