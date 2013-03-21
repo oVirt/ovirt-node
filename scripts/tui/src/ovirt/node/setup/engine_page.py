@@ -63,18 +63,11 @@ class Plugin(plugins.NodePlugin):
                                                       "vdsm_cfg.password",
                                                       "Password")
 
-        def cert_validator(v):
-            cert_path = VDSM().retrieve()["cert_path"]
-            cert_exists = cert_path and os.path.exists(cert_path)
-            return cert_exists or ("The Engine Certificate does not exist. " +
-                                   "Retrieve and verify it before you " +
-                                   "continue.")
 
         return {"vdsm_cfg.address": valid.FQDNOrIPAddress() | valid.Empty(),
                 "vdsm_cfg.port": valid.Port(),
                 "vdsm_cfg.password": valid.Text(),
                 "vdsm_cfg.password_confirmation": same_as_password,
-                "action.register": cert_validator
                 }
 
     def ui_content(self):
@@ -153,7 +146,8 @@ class Plugin(plugins.NodePlugin):
             self.logger.debug("Setting engine password")
             txs += [SetEnginePassword()]
 
-        if effective_changes.contains_any(["action.register"]):
+        if effective_changes.contains_any(["action.register"]) and \
+                changes.contains_any(["vdsm_cfg.address"]):
             self.logger.debug("Connecting to engine")
             txs += [ActivateVDSM()]
 
@@ -298,8 +292,17 @@ class SetRootPassword(utils.Transaction.Element):
 class ActivateVDSM(utils.Transaction.Element):
     title = "Activating VDSM"
 
+    def cert_validator(self):
+        cert_path = VDSM().retrieve()["cert_path"]
+        cert_exists = cert_path and os.path.exists(cert_path)
+
+        return cert_exists
+
     def commit(self):
         self.logger.info("Connecting to VDSM server")
+
+        if not self.cert_validator():
+            return False
 
         # pylint: disable-msg=E0611,F0401
         sys.path.append('/usr/share/vdsm-reg')
