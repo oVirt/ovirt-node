@@ -81,6 +81,8 @@ class Plugin(plugins.NodePlugin):
               ui.Label("vdsm_cfg.password._label",
                        "Optional password for adding Node through oVirt " +
                        "Engine UI"),
+              ui.Label("vdsm_cfg.password._label2",
+                       "Note: Setting password will enable SSH daemon"),
               ui.PasswordEntry("vdsm_cfg.password", "Password:"),
               ui.PasswordEntry("vdsm_cfg.password_confirmation",
                                "Confirm Password:"),
