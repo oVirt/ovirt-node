@@ -639,7 +639,7 @@ class PageWidget(urwid.WidgetWrap):
     def __init__(self, widgets, title=None):
 #        self._listwalker = urwid.SimpleListWalker(widgets)
 #        self._container = urwid.ListBox(self._listwalker)
-        self._container = urwid.Pile(widgets)
+        self._container = TabablePile(widgets)
         self._container_attrmap = urwid.AttrMap(self._container,
                                                 "plugin.widget.page")
         self._header = None
@@ -691,9 +691,24 @@ class EditWithChars(urwid.Edit):
 
 
 class TabablePile(urwid.Pile):
+    """A pile where you can use (shift+)tab to cycle (back-)forward through the
+    children
+    """
     def keypress(self, size, key):
-        #if "tab" in key:
-        #    self.focus_position += 1
-        #elif "shift tab" in key:
-        #    self.focus_position -= 1
-        return (size, key)
+        new_pos = self.focus_position
+        delta = 0
+        LOGGER.debug("tab key: %s" % key)
+        if "tab" in key:
+            delta = 1
+        elif "shift tab" in key:
+            delta = -1
+        if delta:
+            LOGGER.debug("Setting focus to: %s" % new_pos)
+            while new_pos >= 0 and new_pos < len(self.contents):
+                new_pos += delta
+                new_pos = new_pos % len(self.contents)
+                if self.contents[new_pos][0].selectable():
+                    self.focus_position = new_pos
+                    break
+            LOGGER.debug("Focus on: %s" % self.focus)
+        return super(TabablePile, self).keypress(size, key)
