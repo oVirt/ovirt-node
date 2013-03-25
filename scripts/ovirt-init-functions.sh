@@ -389,6 +389,10 @@ _start_ovirt_early () {
 
     # save boot parameters like console= for local disk boot menu
     bootparams=
+
+    # a list of plugin variables that were set
+    plugin_vars=
+
     cat /etc/system-release >> $OVIRT_LOGFILE
 
     for i in $(cat /proc/cmdline); do
@@ -763,6 +767,9 @@ _start_ovirt_early () {
             varname=${i%=*}
             if ! grep -qw $varname /etc/ovirt-commandline.d/* 2>/dev/null; then
                 bootparams="$bootparams $i"
+            else
+
+                plugin_vars="$plugin_vars $varname"
             fi
             ;;
         esac
@@ -811,7 +818,7 @@ EOP
     fi
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
-    for p in $params; do
+    for p in $params $plugin_vars; do
         PARAM=$(uc $p)
         value=$(ptr $p)
         if [ -n "$value" -o $p = 'init' -o $p = 'bootif' -o $p = 'upgrade' -o $p = 'install' ]; then
