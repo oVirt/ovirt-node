@@ -83,6 +83,8 @@ class Storage:
                 logger.info(self.ROOTDRIVE)
                 self.BOOTDRIVE = _functions.translate_multipath_device( \
                                                                 self.ROOTDRIVE)
+        if "OVIRT_OVERCOMMIT" in OVIRT_VARS:
+            self.overcommit = OVIRT_VARS["OVIRT_OVERCOMMIT"]
         if "OVIRT_VOL_SWAP_SIZE" in OVIRT_VARS:
             if int(OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]) < self.MIN_SWAP_SIZE:
                 logger.error("Swap size is smaller than minimum required + "
@@ -94,7 +96,8 @@ class Storage:
             else:
                 self.SWAP_SIZE = _functions.OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]
         else:
-            self.SWAP_SIZE = _functions.calculate_swap_size(self.overcommit)
+            self.SWAP_SIZE = _functions.calculate_swap_size( \
+                                 float(self.overcommit))
         for i in ['OVIRT_VOL_BOOT_SIZE', 'OVIRT_VOL_ROOT_SIZE',
                   'OVIRT_VOL_CONFIG_SIZE', 'OVIRT_VOL_LOGGING_SIZE',
                   'OVIRT_VOL_DATA_SIZE', 'OVIRT_VOL_SWAP2_SIZE',

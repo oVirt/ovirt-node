@@ -217,7 +217,7 @@ class NodeInstallScreen:
 
     def get_def_swap_size(self, overcommit):
         if "OVIRT_OVERCOMMIT" in OVIRT_VARS:
-            return calculate_swap_size(OVIRT_VARS["OVIRT_OVERCOMMIT"])
+            return calculate_swap_size(float(OVIRT_VARS["OVIRT_OVERCOMMIT"]))
         else:
             return calculate_swap_size(overcommit)
 
