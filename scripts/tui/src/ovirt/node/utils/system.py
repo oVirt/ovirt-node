@@ -63,6 +63,36 @@ def has_hostvg():
     return os.path.exists("/dev/HostVG")
 
 
+class SystemRelease(base.Base):
+    """Informations about the OS based on /etc/system-release-cpe
+
+    Use openscap_api.cpe.name_new(str) from openscap-python for an official
+    way.
+    """
+    CPE_FILE = "/etc/system-release-cpe"
+
+    VENDOR = None
+    PRODUCT = None
+    VERSION = None
+
+    def __init__(self):
+        super(SystemRelease, self).__init__()
+        self.load()
+
+    def load(self):
+        """Parse the CPE FILE
+        """
+        with open(self.CPE_FILE, "r") as f:
+            cpe_uri = f.read()
+            self.logger.debug("Read CPE URI: %s" % cpe_uri)
+            cpe_parts = cpe_uri.split(":")
+            self.logger.debug("Parsed CPE parts: %s" % cpe_parts)
+            if cpe_parts[0] != "cpe":
+                raise RuntimeError("Can not parse CPE string in %s" %
+                                   self.CPE_FILE)
+            self.VENDOR, self.PRODUCT, self.VERSION = cpe_parts[2:4]
+
+
 class ProductInformation(base.Base):
     """Return oVirt Node product informations
     """
