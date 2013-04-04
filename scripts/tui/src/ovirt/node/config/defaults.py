@@ -232,7 +232,7 @@ class NodeConfigFileSection(base.Base):
         """Remove the configuration for this item
         """
         cfg = self.defaults.get_dict()
-        to_be_deleted = {k: None for k in self.keys}
+        to_be_deleted = dict((k, None) for k in self.keys)
         cfg.update(to_be_deleted)
         self.defaults.update(cfg, remove_empty=True)
 
@@ -240,7 +240,7 @@ class NodeConfigFileSection(base.Base):
         assert len(args) == 0
         assert (set(self.keys) ^ set(kwargs.keys())) == set(), \
             "Keys: %s, Args: %s" % (self.keys, kwargs)
-        new_dict = {k.upper(): v for k, v in kwargs.items()}
+        new_dict = dict((k.upper(), v) for k, v in kwargs.items())
         self.defaults.update(new_dict, remove_empty=True)
 
     @staticmethod
@@ -269,10 +269,11 @@ class NodeConfigFileSection(base.Base):
                 # so existing values which are not given in the kwargs are kept
                 arg_to_key = self._args_to_keys_mapping()
                 update_kwargs = self.retrieve()
-                update_kwargs.update({k: v for k, v in kwargs.items()
-                                      if k in update_kwargs.keys()})
+                update_kwargs.update(dict((k, v) for k, v in kwargs.items()
+                                          if k in update_kwargs.keys()))
                 kwargs = update_kwargs
-                new_cfg = {arg_to_key[k]: v for k, v in update_kwargs.items()}
+                new_cfg = dict((arg_to_key[k], v) for k, v
+                               in update_kwargs.items())
             else:
                 if len(self.keys) != len(args):
                     raise Exception("There are not enough arguments given " +

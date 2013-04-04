@@ -48,8 +48,9 @@ def get_contents(src):
 def copy_contents(src, dst):
     assert all([os.path.isfile(f) for f in [src, dst]]), \
         "Source '%s' and destination '%s' need to exist" % (src, dst)
-    with open(src, "r") as srcf, open(dst, "wb") as dstf:
-        dstf.write(srcf.read())
+    with open(src, "r") as srcf:
+        with open(dst, "wb") as dstf:
+            dstf.write(srcf.read())
 
 
 def atomic_write(filename, contents):

@@ -233,8 +233,9 @@ def node_nics():
     True
     """
     all_ifaces = relevant_ifaces(filter_bridges=False, filter_vlans=False)
-    all_infos = {i: iface_information(i) for i in all_ifaces}
-    all_cfgs = {i: ovirt.node.config.network.iface(i) for i in all_ifaces}
+    all_infos = dict((i, iface_information(i)) for i in all_ifaces)
+    all_cfgs = dict((i, ovirt.node.config.network.iface(i)) for i
+                    in all_ifaces)
 
     bridges = [nic for nic, info in all_infos.items()
                if info["type"] == "bridge"]
@@ -357,7 +358,7 @@ class NIC(base.Base):
             raise UnknownNicError("Unknown network interface: '%s'" %
                                   self.iface)
 
-        addresses = {f: (None, None) for f in families}
+        addresses = dict((f, (None, None)) for f in families)
 
         if False:
             # FIXME to hackish to convert addr - is_nm_managed(iface):

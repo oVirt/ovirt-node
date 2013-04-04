@@ -274,7 +274,7 @@ class NicDetailsDialog(ui.Dialog):
         if node_bridge_slave != iface:
             # The config contains the information for the primary iface,
             # because this iface is not the primary iface we clear the config
-            cfg = {k: "" for k in cfg.keys()}
+            cfg = dict((k, "") for k in cfg.keys())
 
         ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
                                             cfg["gateway"], cfg["vlanid"])

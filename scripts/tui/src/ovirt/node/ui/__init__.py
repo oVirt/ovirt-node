@@ -153,7 +153,7 @@ class ContainerElement(Element):
         return NotImplementedError
 
     def __getitem__(self, path):
-        return {c.path: c for c in self.children}[path]
+        return dict((c.path, c) for c in self.children)[path]
 
 
 class Action(base.Base):

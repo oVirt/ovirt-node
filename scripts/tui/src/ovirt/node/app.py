@@ -162,7 +162,8 @@ class Application(base.Base):
         elif mtype in [str, unicode]:
             plugin = self.__plugins[mixed]
         elif mtype is type:
-            type_to_instance = {type(p): p for p in self.__plugins.values()}
+            type_to_instance = dict((type(p), p) for p
+                                    in self.__plugins.values())
             if mixed not in type_to_instance:
                 raise RuntimeError("Requested plugin type '%s' is not in %s" %
                                    (mixed, type_to_instance))
