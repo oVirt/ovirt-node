@@ -40,5 +40,12 @@ pyflakes:
 		PYTHONPATH=. pyflakes $$M || exit 1; \
 	done
 
+check-python26-compat:
+	@for M in $(PYTHONSOURCES); \
+	do \
+		echo Checking python26 syntax compatability on "$$M"; \
+		PYTHONPATH=. python26 -m py_compile $$M || exit 1; \
+	done
+
 clean:
 	-rm $(CLEANFILES)
