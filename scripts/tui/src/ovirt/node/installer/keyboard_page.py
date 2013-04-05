@@ -53,6 +53,7 @@ class Plugin(plugins.NodePlugin):
         self.widgets.add(ws)
         page = ui.Page("keyboard", ws)
         page.buttons = [ui.QuitButton("button.quit", "Quit"),
+                        ui.Button("button.back", "Back"),
                         ui.SaveButton("button.next", "Continue")]
         return page
 
@@ -62,7 +63,9 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
-        if changes.contains_any(["keyboard.layout", "button.next"]):
+        if changes.contains_any(["button.back"]):
+            self.application.ui.navigate.to_previous_plugin()
+        elif changes.contains_any(["keyboard.layout", "button.next"]):
             # Apply kbd layout directly so it takes affect on the password page
             kbd = system.Keyboard()
             self.dry_or(lambda: kbd.set_layout(changes["keyboard.layout"]))
