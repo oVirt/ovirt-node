@@ -332,10 +332,15 @@ class Application(base.Base):
         self.ui.quit()
 
     def notice(self, msg):
-        children = [ui.Label("app.notice.text", msg)]
-        dialog = ui.Dialog("app.notice", "Notice", children)
-        dialog.buttons = [ui.CloseButton("app.notice.close")]
-        self.show(dialog)
+        """Displays a notice on the screen
+        """
+        if True:
+            children = [ui.Label("app.notice.text", msg)]
+            dialog = ui.Dialog("app.notice", "Notice", children)
+            dialog.buttons = [ui.CloseButton("app.notice.close")]
+            self.show(dialog)
+        else:
+            self.ui._show_on_notice(msg)
 
     def _check_outstanding_changes(self):
         """This function checks if any UI Element has changed

@@ -412,6 +412,11 @@ class NIC(base.Base):
                              vlanids)
         return vlanids[0] if vlanids else None
 
+    def identify(self):
+        """Flash the lights of this NIC to identify it
+        """
+        utils.process.call("ethtool --identify %s 10" % self.iface)
+
     def __str__(self):
         return "<NIC iface='%s' at %s" % (self.iface, hex(id(self)))
 

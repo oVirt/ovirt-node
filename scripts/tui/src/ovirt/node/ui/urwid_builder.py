@@ -523,14 +523,10 @@ class UrwidWindow(ui.Window):
             self.__menu.set_focus(0)
             columns += [("weight", 0.3, self.__menu)]
 
-        self.__notice = urwid.Text("Note: ")
-        self.__notice_filler = urwid.Filler(self.__notice)
-        self.__notice_attrmap = urwid.AttrMap(self.__notice_filler, "notice")
         columns += [self.__page_frame]
 
         menu_frame_columns = urwid.Columns(columns, 4)
 
-        #("fixed", 3, self.__notice_attrmap),
         body = urwid.Pile([menu_frame_columns])
 
         header = urwid.Text(self.header, wrap='clip')

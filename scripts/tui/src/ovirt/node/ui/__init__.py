@@ -587,6 +587,12 @@ class Window(Element):
         """
         raise NotImplementedError
 
+    def _show_on_notice(self, text):
+        """Shows the text in the notice field
+        Something liek a HUD display
+        """
+        raise NotImplementedError
+
     def close_dialog(self, dialog):
         """Close the ui.Dialog
         """

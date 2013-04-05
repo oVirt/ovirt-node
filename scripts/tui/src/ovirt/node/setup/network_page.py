@@ -181,6 +181,12 @@ class Plugin(plugins.NodePlugin):
             self.application.switch_to_plugin(plugin_type)
             return
 
+        if "dialog.nic.identify" in changes:
+            iface = self._model_extra["dialog.nic.iface"]
+            utils.network.NIC(iface).identify()
+            self.application.notice("Flashing lights now")
+            return
+
         # This object will contain all transaction elements to be executed
         txs = utils.Transaction("DNS and NTP configuration")
 
@@ -341,10 +347,13 @@ class NicDetailsDialog(ui.Dialog):
               ui.Divider("dialog.nic._divider[1]"),
 
               ui.Entry("dialog.nic.vlanid", padd("VLAN ID: ")),
+
+              ui.Divider("dialog.nic._divider[2]"),
+              ui.Button("dialog.nic.identify", "Flash Lights to Identify")
               ]
         self.plugin.widgets.add(ws)
         self.children = ws
         self.buttons = [ui.SaveButton("dialog.nic.save", "Save"),
-                        ui.CloseButton("dialog.nic.close", "Close"),
+                        ui.CloseButton("dialog.nic.close", "Close")
                         ]
         self.plugin._nic_details_group.enabled(False)
