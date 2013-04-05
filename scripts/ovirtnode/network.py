@@ -408,7 +408,8 @@ class Network:
             _functions.system_closefds("service network stop &> /dev/null")
             _functions.system_closefds("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
-            brctl_cmd = "brctl show| awk 'NR>1 && /^br[ep]/ {print $1}'"
+            brctl_cmd = "ip --details --oneline link " \
+                "| awk -F':' 'NR>1 && /^[0-9]: br[ep]/ {print $2}'"
             brctl = _functions.subprocess_closefds(brctl_cmd, shell=True,
                                                    stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT)
@@ -416,7 +417,7 @@ class Network:
             for i in brctl_output.split():
                 if_down_cmd = "ifconfig %s down &> /dev/null" % i
                 _functions.system_closefds(if_down_cmd)
-                del_br_cmd = "brctl delbr %s &> /dev/null" % i
+                del_br_cmd = "ip link delete %s type bridge &> /dev/null" % i
                 _functions.system_closefds(del_br_cmd)
             logger.info("Starting Network service")
             _functions.system_closefds("service network start &> /dev/null")

@@ -1687,7 +1687,8 @@ def is_engine_configured():
     >>> bridge_file is bridge_test
     True
     '''
-    if system_closefds("brctl show | egrep -iq 'ovirtmgmt|rhevm'") is 0:
+    ip_cmd = "ip --details --oneline link | egrep -iq 'ovirtmgmt|rhevm'"
+    if system_closefds(ip_cmd) is 0:
         return True
     else:
         return False
