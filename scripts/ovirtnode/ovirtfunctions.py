@@ -335,6 +335,14 @@ def is_cim_enabled():
             return False
     return False
 
+def is_fips_enabled():
+    fips_path = "/proc/sys/crypto/fips_enabled"
+    if os.path.exists(fips_path):
+    	with open(fips_path) as fips_enabled:
+        if str(fips_enabled) == "1":
+            return True
+    return False
+
 def is_stateless():
     # check if theres a key first
     if OVIRT_VARS.has_key("OVIRT_STATELESS"):
