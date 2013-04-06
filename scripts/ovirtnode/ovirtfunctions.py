@@ -719,7 +719,7 @@ def mount_data2():
         logger.error("The data2 volume can not be mounted")
         return False
 
-def md5sum(filename):
+def cksum(filename):
     m = hashlib.md5()
     with open(filename) as f:
         data = f.read(4096)
@@ -761,9 +761,9 @@ def ovirt_store_config(files):
         elif os.path.isfile(filename):
             # if it's a file then make sure it's not already persisted
             if os.path.isfile("/config/" + filename):
-                md5root=md5sum(filename)
-                md5stored=md5sum("/config" + filename)
-                if md5root == md5stored:
+                cksumroot=cksum(filename)
+                cksumstored=cksum("/config" + filename)
+                if cksumroot == cksumstored:
                     logger.warn("File already persisted: " + filename)
                     persist_it=False
                 else:
@@ -815,11 +815,11 @@ def ovirt_store_config_atomic(filename, source=None):
         # if it's a file then make sure it's not already persisted
         if os.path.isfile(OVIRT_CONFIG + filename):
             if not source is None:
-                md5root = md5sum(source)
+                cksumroot = cksum(source)
             else:
-                md5root = md5sum(filename)
-            md5stored = md5sum(OVIRT_CONFIG + filename)
-            if md5root == md5stored:
+                cksumroot = cksum(filename)
+            cksumstored = cksum(OVIRT_CONFIG + filename)
+            if cksumroot == cksumstored:
                 logger.warn("File already persisted: " + filename)
                 persist_it = False
             else:
