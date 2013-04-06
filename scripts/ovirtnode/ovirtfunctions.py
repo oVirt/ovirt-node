@@ -720,7 +720,11 @@ def mount_data2():
         return False
 
 def cksum(filename):
-    m = hashlib.md5()
+    try:
+        m = hashlib.md5()
+    except:
+	m = hashlib.sha1()
+    
     with open(filename) as f:
         data = f.read(4096)
         while data:
