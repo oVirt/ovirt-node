@@ -98,6 +98,7 @@ empty	/boot-kdump
 empty	/cgroup
 files	/var/lib/yum
 files	/var/cache/yum
+dirs	/var/cache/rpcbind
 EOF_rwtab_ovirt
 
 # fix iSCSI/LVM startup issue
