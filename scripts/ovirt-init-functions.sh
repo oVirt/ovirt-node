@@ -1245,6 +1245,9 @@ start_ovirt_post() {
         # Create a minimalistic /etc/hosts if it's empty, rhbz#829753
         create_minimal_etc_hosts_file
 
+        # Restart jorunald to pick up /var/log/journal
+        service systemd-journald restart
+
         BACKUP=$(mktemp)
         ISSUE=/etc/issue
         ISSUE_NET=/etc/issue.net

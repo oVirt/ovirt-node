@@ -534,6 +534,9 @@ mount_data() {
         fi
         restorecon -rv /var/lib/libvirt/images
 
+        mkdir -p /var/log/journal
+        restorecon -rv /var/log/journal
+
         mkdir -p /data/core
         mkdir -p /var/log/core
         if ! grep -q "/var/log/core ext[234]" /proc/mounts; then

@@ -698,6 +698,8 @@ def mount_data():
         system_closefds("mkdir -p /var/log/core")
         system_closefds("mount /var/log/core")
         system_closefds("restorecon -rv /var/log/core &>/dev/null")
+        system_closefds("mkdir -p /var/log/journal")
+        system_closefds("restorecon -rv /var/log/journal &>/dev/null")
         return
     else:
         # /data is not available
