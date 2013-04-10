@@ -46,7 +46,7 @@ DISTCLEANFILES = $(PACKAGE)-$(VERSION).tar.gz
 # For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
 # annotated rpm version strings.
 _ovirt_dev = \
- $(shell grep -q '^[[:space:]]*Release:[[:space:]]*999' \
+ $(shell grep -q '^[[:space:]]*Release:[[:space:]]*[0-9\.]*999' \
    $(srcdir)/*.spec.in && echo 1 || :)
 
 git_head	= $$(git log -1 --pretty=format:%h)
