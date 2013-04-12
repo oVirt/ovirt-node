@@ -26,7 +26,7 @@ from ovirtnode.install import *
 from ovirtnode.network import *
 from ovirtnode.log import *
 from ovirtnode.kdump import *
-
+from ovirt.node.config import defaults
 
 def config_networking():
    # network configuration
@@ -34,10 +34,9 @@ def config_networking():
     if OVIRT_VARS["OVIRT_BOOTIF"] != "":
         network_auto()
     if "OVIRT_HOSTNAME" in OVIRT_VARS:
-        augtool("set", "/files/etc/sysconfig/network/HOSTNAME", \
-                OVIRT_VARS["OVIRT_HOSTNAME"])
-        system("hostname %s" % OVIRT_VARS["OVIRT_HOSTNAME"])
-        ovirt_store_config("/etc/sysconfig/network")
+        cfg = defaults.Hostname()
+        tx = cfg.transaction()
+        tx()
 
 # setup network before storage for iscsi installs
 if is_iscsi_install():

@@ -418,8 +418,9 @@ class Hostname(NodeConfigFileSection):
 
                 config.network.hostname(self.hostname)
 
-                ovirtfunctions.ovirt_store_config("/etc/sysconfig/network")
                 ovirtfunctions.ovirt_store_config("/etc/hosts")
+                ovirtfunctions.ovirt_store_config("/etc/hostname")
+                ovirtfunctions.ovirt_store_config("/etc/sysconfig/network")
 
                 utils.network.reset_resolver()
 

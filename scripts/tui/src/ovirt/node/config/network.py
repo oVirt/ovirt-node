@@ -131,6 +131,29 @@ def timeservers(new_servers=None):
 
 def hostname(new_hostname=None):
     """Get or set the current hostname in the config files
+    Using the hostnamectl tool
+    """
+    hostnamefile = "/etc/hostname"
+
+    if not os.path.isfile(hostnamefile):
+        return __legacy_hostname(new_hostname)
+
+    if new_hostname:
+        # hostnamectl set's runtime and config file
+        utils.process.check_call("hostnamectl --static set-hostname %s" %
+                                 new_hostname)
+
+    current_hostname = utils.fs.get_contents(hostnamefile)
+    if new_hostname and current_hostname != new_hostname:
+        raise RuntimeError(("Runtime hostname '%s' doesn't match" +
+                            "configured one: %s") % (current_hostname,
+                                                     new_hostname))
+
+    return current_hostname
+
+
+def __legacy_hostname(new_hostname=None):
+    """The legacy way of setting a hostname.
     """
     aug = utils.AugeasWrapper()
     augpath = "/files/etc/sysconfig/network/HOSTNAME"
