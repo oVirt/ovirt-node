@@ -95,8 +95,8 @@ sed 's/\.src\.rpm//' >> ovirt-node-image.mini-manifest
 # Add additional information to mini-manifest
 # Check size of iso and report in mini-manifest
 echo "======================================================" >> ovirt-node-image.mini-manifest
-size=$(ls -l ovirt-node-image.iso | awk '{print $5}')
-human_size=$(ls -lh ovirt-node-image.iso | awk '{print $5}')
+size=$(readlink ovirt-node-image.iso | xargs ls -l | awk '{print $5}')
+human_size=$(readlink ovirt-node-image.iso | xargs -lh | awk '{print $5}')
 echo "    Iso Size:  $size  ($human_size)" >> ovirt-node-image.mini-manifest
 
 html_location=/var/www/html/builder/$(basename $(dirname ${AUTOBUILD_SOURCE_ROOT}))
