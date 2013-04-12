@@ -37,6 +37,8 @@ import libvirt
 import logging
 import grp
 import pwd
+from ovirt.node.config import defaults
+from ovirt.node.utils import system
 
 OVIRT_CONFIG="/config"
 OVIRT_LOGFILE="/var/log/ovirt.log"
@@ -1086,9 +1088,7 @@ def finish_install():
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
-    # store keyboard config
-    ovirt_store_config("/etc/sysconfig/keyboard")
-    ovirt_store_config("/etc/vconsole.conf")
+
     ovirt_store_config("/var/lib/random-seed")
     return True
 
@@ -1672,10 +1672,8 @@ def is_iscsi_install():
         return True
 
 def load_keyboard_config():
-    import system_config_keyboard.keyboard as keyboard
-    kbd = keyboard.Keyboard()
-    kbd.read()
-    kbd.activate()
+    kbd = system.Keyboard()
+    kbd.reactivate()
 
 def is_engine_configured():
     '''

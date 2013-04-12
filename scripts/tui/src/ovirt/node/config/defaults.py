@@ -1085,8 +1085,8 @@ class Keyboard(NodeConfigFileSection):
                 from ovirtnode.ovirtfunctions import ovirt_store_config
                 kbd = utils.system.Keyboard()
                 kbd.set_layout(layout)
-                ovirt_store_config(["/etc/sysconfig/keyboard",
-                                    "/etc/vconsole.conf"])
+                ovirt_store_config("/etc/vconsole.conf")
+                ovirt_store_config("/etc/sysconfig/keyboard")
 
         tx = utils.Transaction("Configuring keyboard layout")
         tx.append(CreateKeyboardConfig())

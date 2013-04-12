@@ -198,23 +198,28 @@ class Keyboard(base.Base):
     """Configure the system wide keyboard layout
     FIXME what is the recommended way to do this on F18+ with localectl
     localectl also stores the changes, so is kbd still needed?
+    localectl doesn't offer the descriptive name of the layouts
     """
     def __init__(self):
         super(Keyboard, self).__init__()
         self.kbd = system_config_keyboard.keyboard.Keyboard()
+        self.kbd.read()
 
     def available_layouts(self):
-        self.kbd.read()
         layoutgen = ((details[0], kbid)
                      for kbid, details in self.kbd.modelDict.items())
         layouts = [(kid, name) for name, kid in sorted(layoutgen)]
         return layouts
 
     def set_layout(self, layout):
+        assert layout
         self.kbd.set(layout)
         self.kbd.write()
         self.kbd.activate()
         utils.process.check_call("localectl set-keymap %s" % layout)
+
+    def reactivate(self):
+        self.kbd.activate()
 
     def get_current(self):
         return self.kbd.get()
