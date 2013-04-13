@@ -24,6 +24,7 @@ import tempfile
 import logging
 import os
 import subprocess
+from pipes import quote
 
 logger = logging.getLogger(__name__)
 
@@ -434,7 +435,7 @@ class Network:
 def get_system_nics():
     # Re-trigger udev for rhbz#866584
     for sysfspath in glob("/sys/class/net/*"):
-        _functions.system_closefds("udevadm test %s > /dev/null 2> /dev/null" % sysfspath)
+        _functions.system_closefds("udevadm test %s > /dev/null 2> /dev/null" % quote(sysfspath))
 
     client = _functions.gudev.Client(['net'])
     configured_nics = 0
