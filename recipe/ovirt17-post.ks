@@ -114,8 +114,14 @@ allow setfiles_t net_conf_t:file read;
 #allow brctl_t net_conf_t:file read;
 # Suppose because of collectd libvirt plugin
 allow collectd_t virt_etc_t:file read;
-# Suppose because etc is on tmpfs
-allow loadkeys_t initrc_tmp_t:file read;
+
+#============= loadkeys_t ==============
+allow loadkeys_t initrc_tmp_t:file { open read };
+
+#============= systemd_localed_t ==============
+allow systemd_localed_t etc_t:file { write rename create setattr };
+allow systemd_localed_t init_t:dbus send_msg;
+allow systemd_localed_t initrc_t:dbus send_msg;
 
 type ovirt_exec_t;
 init_daemon_domain(unconfined_t,ovirt_exec_t)
