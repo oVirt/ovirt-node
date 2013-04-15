@@ -112,6 +112,10 @@ allow setfiles_t net_conf_t:file read;
 #allow passwd_t user_tmp_t:file write;
 # Unknown on F17 brctl_t:
 #allow brctl_t net_conf_t:file read;
+
+#============= collectd_t ==============
+allow collectd_t passwd_file_t:file read;
+allow collectd_t virtd_exec_t:file getattr;
 # Suppose because of collectd libvirt plugin
 allow collectd_t virt_etc_t:file read;
 
