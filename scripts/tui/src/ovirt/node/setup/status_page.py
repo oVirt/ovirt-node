@@ -125,6 +125,7 @@ class Plugin(plugins.NodePlugin):
             self.logger.info("Locking screen")
             self._lock_dialog = LockDialog()
             self.application.ui.hotkeys_enabled(False)
+            self.widgets.add(self._lock_dialog)
             return self._lock_dialog
         elif "action.unlock" in changes and "password" in changes:
             self.logger.info("UnLocking screen")
@@ -132,6 +133,9 @@ class Plugin(plugins.NodePlugin):
             if pam.authenticate(os.getlogin(), changes["password"]):
                 self._lock_dialog.close()
                 self.application.ui.hotkeys_enabled(True)
+            else:
+                self.application.notice("The provided password was incorrect.")
+                self.widgets["password"].text("")
 
         elif "action.logoff" in changes:
             self.logger.info("Logging off")
