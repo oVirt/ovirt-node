@@ -25,16 +25,22 @@ dist_sbin_SCRIPTS = \
   persist \
   unpersist
 
+dist_bin_SCRIPTS = \
+  ovirt-config-setup \
+  ovirt-node-installer \
+  ovirt-node-doc
+
 dist_libexec_SCRIPTS = \
   ovirt-config-password \
   ovirt-config-uninstall \
   ovirt-functions \
   ovirt-rpmquery \
   ovirt-init-functions.sh \
-  ovirt-config-installer.py \
-  ovirt-config-setup.py \
   ovirt-auto-install.py \
-  ovirt-admin-shell
+  ovirt-admin-shell \
+  legacy/ovirt-config-installer.py \
+  legacy/ovirt-config-setup.py \
+  legacy/ovirt-config-storage
 
 # default hook for local_boot_trigger
 dist_localboottrigger_SCRIPTS = \

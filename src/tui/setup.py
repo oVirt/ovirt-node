@@ -10,9 +10,9 @@ setup(name='ovirt-node-molch',
     url='http://www.ovirt.org/',
     license="GPLv2+",
     scripts=[
-             "bin/ovirt-config-setup",
-             "bin/ovirt-node-installer",
-             "bin/ovirt-node-doc"
+#             "bin/ovirt-config-setup",
+#             "bin/ovirt-node-installer",
+#             "bin/ovirt-node-doc"
              ],
     package_dir = {'': 'src'},
     packages=[
