@@ -15,6 +15,8 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
+include Makefile.check
+
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigsetup_PYTHON = \
   ovirt_config_setup/__init__.py \
@@ -114,12 +116,3 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/system.py \
   ovirt/node/utils/virt.py
 
-
-# Requires python-pep8 package (Fedora)
-check-local: check-local-pep8
-
-check-local-pep8:
-	find $(srcdir) -name \*.py | sort | uniq | xargs pep8 --repeat --statistics --count
-
-check-local-doctest:
-	find $(srcdir) -name \*.py | sort | uniq | xargs python -m doctest -v

@@ -46,6 +46,3 @@ check-python26-compat:
 		echo Checking python26 syntax compatability on "$$M"; \
 		PYTHONPATH=. python26 -m py_compile $$M | exit 0; \
 	done
-
-clean:
-	-rm $(CLEANFILES)
