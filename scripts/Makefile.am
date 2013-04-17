@@ -62,17 +62,17 @@ pyovirtconfigsetup_PYTHON = \
 
 if TARGET_FEDORA
 pyovirtconfigsetup_PYTHON += \
-  collectd.py
+  ovirt_config_setup/collectd.py
 endif
 
 if TARGET_CENTOS
 pyovirtconfigsetup_PYTHON += \
-  collectd.py
+  ovirt_config_setup/collectd.py
 endif
 
 if TARGET_RHEL
 pyovirtconfigsetup_PYTHON += \
-  rhn.py
+  ovirt_config_setup/rhn.py
 endif
 
 pyovirtnodedir = $(pythondir)/ovirtnode
