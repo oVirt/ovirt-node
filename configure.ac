@@ -63,6 +63,7 @@ AC_CONFIG_FILES([Makefile
                 scripts/Makefile
                 tools/Makefile
                 scripts/collectd.conf
+                src/Makefile
                 services/Makefile
                 recipe/Makefile
                 logrotate/Makefile

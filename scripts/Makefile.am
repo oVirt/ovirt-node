@@ -52,50 +52,6 @@ install-exec-hook:
 	  $(DESTDIR)$(sysconfdir)/default
 	echo "# File where default configuration is kept" > $(DESTDIR)$(sysconfdir)/default/ovirt
 
-#
-# newt tui
-#
-pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
-pyovirtconfigsetup_PYTHON = \
-  ovirt_config_setup/__init__.py \
-  ovirt_config_setup/plugins.py
-
-if TARGET_FEDORA
-pyovirtconfigsetup_PYTHON += \
-  ovirt_config_setup/collectd.py
-endif
-
-if TARGET_CENTOS
-pyovirtconfigsetup_PYTHON += \
-  ovirt_config_setup/collectd.py
-endif
-
-if TARGET_RHEL
-pyovirtconfigsetup_PYTHON += \
-  ovirt_config_setup/rhn.py
-endif
-
-pyovirtnodedir = $(pythondir)/ovirtnode
-pyovirtnode_PYTHON = \
-  ovirtnode/__init__.py \
-  ovirtnode/install.py \
-  ovirtnode/iscsi.py \
-  ovirtnode/kdump.py \
-  ovirtnode/log.py \
-  ovirtnode/network.py \
-  ovirtnode/ovirtfunctions.py \
-  ovirtnode/password.py \
-  ovirtnode/storage.py
-
 EXTRA_DIST = \
-  augeas.py \
-  tui
+  augeas.py
 
-# Requires python-pep8 package (Fedora)
-check-local: check-local-pep8
-
-check-local-pep8:
-	find $(srcdir) -name \*.py | sort | uniq | xargs pep8 --repeat --statistics --count
-
-check-local-doctest:
-	find $(srcdir) -name \*.py | sort | uniq | xargs python -m doctest -v

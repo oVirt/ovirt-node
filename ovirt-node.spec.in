@@ -190,7 +190,7 @@ make install DESTDIR=%{buildroot}
 
 # Build and install the new TUI
 pushd .
-cd scripts/tui/
+cd src/tui/
 make -f makefile.legacy install python=%{__python} prefix=%{_prefix} root=%{buildroot}
 # Remove some extra data
 rm -rf %{buildroot}/usr/extra

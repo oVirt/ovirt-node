@@ -27,6 +27,7 @@ SUBDIRS =   \
   images \
   recipe \
   scripts \
+  src \
   services \
   logrotate \
   plugins \

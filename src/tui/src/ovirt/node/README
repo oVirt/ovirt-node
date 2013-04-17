@@ -30,7 +30,7 @@ There are two main reasons why to wrap the functions from ovirtfunctions:
 Testing and (preparation for) Refactoring.
 
 ovirtfunctions is currently not checkable by pylint, pyflakes, or pep8,
-therefor utils/*.py should be written so cleanly that it is checkable. 
+therefor utils/*.py should be written so cleanly that it is checkable.
 Inline comments can be used in these clean files to suppress occssional
 problems (like an unresolved import, due to an invalid path or so), e.g. in the
 case of rhn.py file, which is in the wrong path (that means in a different
@@ -65,4 +65,3 @@ config/ should contain code which handles config files
     (resolv.conf /etc/default/ovirt)
 
 (See also the beginning of this document)
-
