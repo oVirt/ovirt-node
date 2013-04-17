@@ -47,8 +47,73 @@ pyovirtnode_PYTHON = \
   ovirtnode/password.py \
   ovirtnode/storage.py
 
-EXTRA_DIST = \
-  tui
+pyovirtdir = $(pythondir)/ovirt
+pyovirt_nodedir = $(pyovirtdir)/node
+pyovirt_node_configdir = $(pyovirt_nodedir)/config
+pyovirt_node_installerdir = $(pyovirt_nodedir)/installer
+pyovirt_node_setupdir = $(pyovirt_nodedir)/setup
+pyovirt_node_uidir = $(pyovirt_nodedir)/ui
+pyovirt_node_utilsdir = $(pyovirt_nodedir)/utils
+
+pyovirt_PYTHON = \
+  ovirt/__init__.py
+
+pyovirt_node_PYTHON = \
+  ovirt/node/__init__.py \
+  ovirt/node/exceptions.py \
+  ovirt/node/plugins.py \
+  ovirt/node/valid.py \
+  ovirt/node/app.py \
+  ovirt/node/base.py
+
+pyovirt_node_config_PYTHON = \
+  ovirt/node/config/defaults.py \
+  ovirt/node/config/__init__.py \
+  ovirt/node/config/network.py
+
+pyovirt_node_installer_PYTHON = \
+  ovirt/node/installer/__init__.py \
+  ovirt/node/installer/__main__.py \
+  ovirt/node/installer/boot_device_page.py \
+  ovirt/node/installer/installation_device_page.py \
+  ovirt/node/installer/keyboard_page.py \
+  ovirt/node/installer/password_page.py \
+  ovirt/node/installer/progress_page.py \
+  ovirt/node/installer/storage_vol_page.py \
+  ovirt/node/installer/upgrade_page.py \
+  ovirt/node/installer/welcome_page.py
+
+pyovirt_node_setup_PYTHON = \
+  ovirt/node/setup/__init__.py \
+  ovirt/node/setup/__main__.py \
+  ovirt/node/setup/kdump_page.py \
+  ovirt/node/setup/keyboard_page.py \
+  ovirt/node/setup/logging_page.py \
+  ovirt/node/setup/monitoring_page.py \
+  ovirt/node/setup/network_page.py \
+  ovirt/node/setup/ping.py \
+  ovirt/node/setup/remote_storage_page.py \
+  ovirt/node/setup/security_page.py \
+  ovirt/node/setup/snmp_page.py \
+  ovirt/node/setup/status_page.py \
+  ovirt/node/setup/support_page.py
+
+pyovirt_node_ui_PYTHON = \
+  ovirt/node/ui/__init__.py \
+  ovirt/node/ui/urwid_builder.py \
+  ovirt/node/ui/widgets.py
+
+pyovirt_node_utils_PYTHON = \
+  ovirt/node/utils/__init__.py \
+  ovirt/node/utils/console.py \
+  ovirt/node/utils/fs.py \
+  ovirt/node/utils/network.py \
+  ovirt/node/utils/process.py \
+  ovirt/node/utils/security.py \
+  ovirt/node/utils/storage.py \
+  ovirt/node/utils/system.py \
+  ovirt/node/utils/virt.py
+
 
 # Requires python-pep8 package (Fedora)
 check-local: check-local-pep8
