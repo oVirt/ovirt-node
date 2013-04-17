@@ -4,43 +4,43 @@ XMLSOURCES=$(shell find . -name \*.xml -or -name \*.xsl)
 CLEANFILES=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~ -o -name MANIFEST)
 
 
-check-local: syntax-checks doctests
+check-local: check-static check-doctests
 	@echo -e "---\n Passed all.\n---"
 
 
-syntax-checks: pep8 pyflakes
-	@echo -e "---\n Passed syntax checks.\n---"
+check-static: check-static-pep8 check-static-pyflakes
+	@echo -e "---\n Passed static checks.\n---"
 
-doctests:
+check-doctests:
 	@for M in $(PYTHONSOURCES); \
 	do \
 		echo Doctest on "$$M"; \
 		PYTHONPATH=. python -m doctest $$M || exit 1; \
 	done
 
-pep8:
+check-static-pep8:
 	@for M in $(PYTHONSOURCES); \
 	do \
 		echo pep8 on "$$M"; \
 		PYTHONPATH=. pep8 -r $$M || exit 1; \
 	done
 
-PYLINT=pylint -f parseable --include-ids=yes --rcfile=.pylintrc
-pylint:
+PYLINT=pylint --output-format=parseable --include-ids=yes --rcfile=.pylintrc
+check-static-pylint:
 	@for M in $(PYTHONSOURCES); \
 	do \
 		echo pylint on "$$M"; \
 		PYTHONPATH=. $(PYLINT) $$M || exit 1; \
 	done
 
-pyflakes:
+check-static-pyflakes:
 	@for M in $(PYTHONSOURCES); \
 	do \
 		echo pyflakes on "$$M"; \
 		PYTHONPATH=. pyflakes $$M || exit 1; \
 	done
 
-check-python26-compat:
+check-static-python26-compat:
 	@for M in $(PYTHONSOURCES); \
 	do \
 		echo Checking python26 syntax compatability on "$$M"; \
