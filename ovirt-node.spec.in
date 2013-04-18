@@ -373,13 +373,8 @@ fi
 %{_initrddir}/ovirt-post
 %endif
 # Files related to the new TUI
-%{python_sitelib}/ovirt/*
+%{python_sitelib}/ovirt/__init__.*
 %{python_sitelib}/ovirt/node/*
-%{python_sitelib}/ovirt/node/config/*
-%{python_sitelib}/ovirt/node/installer/*
-%{python_sitelib}/ovirt/node/setup/*
-%{python_sitelib}/ovirt/node/ui/*
-%{python_sitelib}/ovirt/node/utils/*
 %{_bindir}/ovirt-config-setup
 %{_bindir}/ovirt-node-installer
 %{_bindir}/ovirt-node-doc
