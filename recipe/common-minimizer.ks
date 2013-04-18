@@ -103,6 +103,8 @@ drop /lib/modules/*/kernel/drivers/net/pcmcia
 drop /lib/modules/*/kernel/drivers/net/wireless
 drop /lib/modules/*/kernel/drivers/net/ppp*
 keep /lib/modules/*/kernel/drivers/pci
+keep /lib/modules/*/kernel/drivers/pps
+keep /lib/modules/*/kernel/drivers/ptp
 keep /lib/modules/*/kernel/drivers/scsi
 keep /lib/modules/*/kernel/drivers/staging/ramzswap
 keep /lib/modules/*/kernel/drivers/uio
