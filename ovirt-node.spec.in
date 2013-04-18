@@ -152,6 +152,60 @@ fi
 # set read-only
 echo "readonly = true;" > /etc/libvirt-cim.conf
 
+#
+# SELinux subpackage
+#
+%global selinux_variants targeted
+%global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
+%global modulename ovirt
+
+%package selinux
+Summary:          SELinux policy module supporting %{product_family}
+Group:            System Environment/Base
+BuildRequires:    policycoreutils, checkpolicy, selinux-policy-devel
+BuildRequires:    /usr/share/selinux/devel/policyhelp, hardlink
+%if "%{selinux_policyver}" != ""
+Requires:         selinux-policy >= %{selinux_policyver}
+%endif
+Requires:         %{name} = %{version}-%{release}
+Requires(post):   /usr/sbin/semodule, /sbin/restorecon
+Requires(postun): /usr/sbin/semodule, /sbin/restorecon
+
+%description selinux
+SELinux policy module supporting %{product_family}
+
+%post selinux
+for selinuxvariant in %{selinux_variants}
+do
+  /usr/sbin/semodule -s ${selinuxvariant} -i \
+    %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
+done
+# Is this to greedy?
+/sbin/restorecon -R / || :
+
+# set SELinux booleans
+# rhbz#502779 restrict certain memory protection operations
+#     keep allow_execmem on for grub
+# rhbz#642209 allow virt images on NFS
+/usr/sbin/setsebool -P allow_execstack=0 \
+                       virt_use_nfs=1 \
+                       virt_use_sanlock=1 \
+                       sanlock_use_nfs=1
+
+
+%postun selinux
+if [ $1 -eq 0 ] ; then
+  for selinuxvariant in %{selinux_variants}
+  do
+     /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
+  done
+  # Is this to greedy?
+  /sbin/restorecon -R / &> /dev/null || :
+fi
+
+# FIXME what about semanage?
+
+
 %prep
 %setup -q
 
@@ -163,6 +217,15 @@ aclocal && autoheader && automake --add-missing && autoconf
 %configure --with-image-minimizer @ARCHIPEL_FLAGS@
 make
 
+# Build SELinux policy module
+cd semodule
+for selinuxvariant in %{selinux_variants}
+do
+    %{__make} NAME=${selinuxvariant} \
+        -f %{?policy_devel_root}%{_datadir}/selinux/devel/Makefile
+    mv -v %{modulename}.pp %{modulename}.pp.${selinuxvariant}
+done
+cd -
 
 %install
 %{__rm} -rf %{buildroot}
@@ -187,6 +250,19 @@ make install DESTDIR=%{buildroot}
 # python-augeas is not in RHEL-6
 # specific version of python-augeas is not available in Fedora yet
 %{__install} -p -m0644 scripts/augeas.py %{buildroot}%{python_sitelib}
+
+# Install SELinux policy module
+cd semodule
+%{__install} -d %{buildroot}%{_datadir}/selinux
+for selinuxvariant in %{selinux_variants}
+do
+    %{__install} -d %{buildroot}%{_datadir}/selinux/${selinuxvariant}
+    %{__install} -p -m 644 %{modulename}.pp.${selinuxvariant} \
+               %{buildroot}%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
+done
+cd -
+
+/usr/sbin/hardlink -cv %{buildroot}%{_datadir}/selinux
 
 
 %clean
@@ -301,6 +377,10 @@ fi
 %endif
 
 
+%files selinux
+%defattr(-,root,root,0755)
+%doc semodule/*.fc semodule/*.te
+%{_datadir}/selinux/*/%{modulename}.pp
 
 
 %files

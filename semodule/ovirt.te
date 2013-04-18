@@ -1,0 +1,23 @@
+policy_module(ovirt, 1.0)
+
+gen_require(`
+    type initrc_tmp_t;
+    type mount_t;
+    type setfiles_t;
+    type net_conf_t;
+    type collectd_t;
+    type virt_etc_t;
+    type loadkeys_t;
+    type shadow_t;
+')
+
+allow mount_t shadow_t:file mounton;
+allow setfiles_t net_conf_t:file read;
+allow collectd_t virt_etc_t:file read;
+allow loadkeys_t initrc_tmp_t:file read;
+
+type ovirt_t;
+type ovirt_exec_t;
+init_daemon_domain(ovirt_t, ovirt_exec_t)
+unconfined_domain(ovirt_t)
+unconfined_domain(mount_t)

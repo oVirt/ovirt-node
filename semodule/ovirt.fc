@@ -1,0 +1,4 @@
+/etc/rc\.d/init\.d/ovirt-firstboot    -- gen_context(system_u:object_r:ovirt_exec_t)
+/etc/rc\.d/init\.d/ovirt-post         -- gen_context(system_u:object_r:ovirt_exec_t)
+
+/usr/libexec/ovirt-init-functions.sh  -- gen_context(system_u:object_r:ovirt_exec_t)

@@ -31,3 +31,5 @@ python-urwid
 
 # f18 doesn't pull in rsyslog
 rsyslog
+
+ovirt-node-selinux

@@ -15,17 +15,6 @@ grpconv
 echo "Lock root account"
 passwd -l root
 
-# set SELinux booleans
-# rhbz#502779 restrict certain memory protection operations
-#     keep allow_execmem on for grub
-# rhbz#642209 allow virt images on NFS
-semanage  boolean -m -S targeted -F /dev/stdin  << \EOF_semanage
-allow_execstack=0
-virt_use_nfs=1
-virt_use_sanlock=1
-sanlock_use_nfs=1
-EOF_semanage
-
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 
