@@ -1,0 +1,13 @@
+[Unit]
+Description=Communication with Igor (for test automation)
+Wants=basic.target network.target ovirt-early.service
+After=basic.target network.target
+Before=ovirt-early.service
+DefaultDependencies=no
+
+[Service]
+RemainAfterExit=no
+ExecStart=/usr/bin/ovirt-node-igor-slave run
+
+[Install]
+WantedBy=default.target

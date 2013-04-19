@@ -25,7 +25,8 @@ dist_systemunit_DATA = \
   ovirt.service \
   ovirt-post.service \
   ovirt-firstboot.service \
-  ovirt-cim.service
+  ovirt-cim.service \
+  ovirt-node-igor-slave.service
 else
 dist_initd_SCRIPTS = \
   init.d/ovirt-awake \
@@ -33,7 +34,8 @@ dist_initd_SCRIPTS = \
   init.d/ovirt \
   init.d/ovirt-post \
   init.d/ovirt-firstboot \
-  init.d/ovirt-cim
+  init.d/ovirt-cim \
+  init.d/ovirt-node-igor-slave
 endif
 
 # vim: ts=2

@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Start commuication to Igor (for test automation)
+#
+### BEGIN INIT INFO
+# Provides: ovirt-node-igor
+# Required-Start: network ovirt-early
+# Default-Start: 2 3 4 5
+# Description: Perform test automation with Igor
+### END INIT INFO
+
+# Source functions library
+. /etc/init.d/functions
+
+prog=ovirt-node-igor-slave
+
+case "$1" in
+    start)
+        echo -n "Starting $prog (async): "
+        /usr/bin/$prog run > /tmp/$prog.log 2>&1 &
+#        test $? == 0 && success || failure
+#        echo
+        ;;
+    *)
+        echo "Usage: $prog {start}"
+        exit 2
+esac

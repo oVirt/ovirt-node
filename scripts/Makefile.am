@@ -38,6 +38,7 @@ dist_libexec_SCRIPTS = \
   ovirt-init-functions.sh \
   ovirt-auto-install.py \
   ovirt-admin-shell \
+  ovirt-node-igor-slave \
   legacy/ovirt-config-installer.py \
   legacy/ovirt-config-setup.py \
   legacy/ovirt-config-storage

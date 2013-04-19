@@ -1,0 +1,173 @@
+#!/bin/bash
+
+. /usr/libexec/ovirt-functions
+
+prog=ovirt-node-igor
+
+TRIALS=10
+TRIAL_SLEEP=10
+
+_log()
+{
+    echo $@ >&2
+}
+
+_get_bootif()
+{
+    bootif=
+    i=$(echo "$@" | egrep -o "BOOTIF=[^[:space:]]*")
+    i=${i#BOOTIF=}
+    case "$i" in
+        [ep]*)
+        bootif=$i
+        _log "BOOTIF was set to $bootif"
+        ;;
+        link)
+        for eth in $(cd /sys/class/net; echo [ep]*); do
+            ip link set dev $eth up 2>&1 > /dev/null
+            if ethtool $eth 2>/dev/null | grep -q "Link detected: yes"
+            then
+                bootif=$eth
+                break
+            fi
+        done
+        _log "BOOTIF asked for linked device: $bootif"
+        ;;
+        ??-??-??-??-??-??-??)
+        i=${i#??-}
+        bootif=$(grep -il $(echo $i|sed 's/-/:/g') /sys/class/net/[ep]*/address|rev|cut -d/ -f2|rev)
+        _log "BOOTIF device by mac: $bootif"
+        ;;
+    esac
+
+    [[ -z $bootif ]] && {
+        bootif=$(cd /sys/class/net/ ; ls -d1 [ep]* | head -n1)
+        _log "Not BOOTIF= given, choosing first NIC: $bootif"
+    }
+
+    [[ -z $bootif ]] && {
+        _log "bootif could not be determined"
+    }
+
+    echo $bootif
+}
+
+
+_is_network_available()
+{
+    bootif=$1
+    ip link show $bootif | grep -q ",UP,"
+}
+_start_network()
+{
+    bootif=$1
+    [[ ! -z $bootif ]] && {
+        dhclient $bootif
+        _is_network_available $bootif
+        retval=$?
+        _log "Got ip address for interface $bootif"
+        return $retval
+    }
+    _log "Got no address"
+    return 1
+}
+
+_is_auto_installation()
+{
+    grep BOOTIF /proc/cmdline && grep storage_init /proc/cmdline
+    return $?
+}
+
+run()
+{
+    _log "Starting $prog (`rpm -qf $0`)"
+
+    if _is_auto_installation
+    then
+        _log "oVirt Node is not yet installed, aborting."
+        exit 0
+    else
+        _log "oVirt Node seems to be installed, continuing."
+    fi
+
+    [[ -z $OVIRT_BOOTPARAMS ]] && {
+        _log "Missing OVIRT_BOOTPARAMS, fallback to cmdline"
+        OVIRT_BOOTPARAMS=$(cat /proc/cmdline)
+    }
+
+    TESTJOB=$(echo "$OVIRT_BOOTPARAMS" | egrep -o '[^[:space:]=]+/testjob/[^[:space:]]+')
+
+    if [[ "x$TESTJOB" = "x" ]];
+    then
+        _log "No testsuite found."
+    else
+        _log "Testjob found in kernelargs: $TESTJOB"
+
+        if [[ -f "/usr/bin/nm-online" ]]
+        then
+            _log "NetworkManager is used, waiting for the network to come up ..."
+            nm-online -x
+        fi
+
+        bootif=$(_get_bootif "$OVIRT_BOOTPARAMS")
+        if _is_network_available $bootif
+        then
+            _log "Network connection is available"
+        else
+            _log "No network connection available"
+            _log "Requesting temporary ip address"
+            _start_network $bootif
+        fi
+
+        _log "Settling for $TRIAL_SLEEP seconds to give the dhcp client time"
+        # Needed because sometimes retrieving an IP via DHCP leads to TZ updates
+        # This can then lead to an invalid lease, which the results in the dhcp client
+        # requesting a new IP
+        sleep $TRIAL_SLEEP
+
+        _log "Network link configuration:"
+        ip link show
+        _log "Network addr configuration:"
+        ip addr show
+
+        _log "Network setup is done, fetching testsuite ..."
+
+        TESTJOBURL="http://${TESTJOB#http://}"
+        APIURL=${TESTJOBURL/testjob*/}
+
+        TESTJOBSCRIPT="/tmp/ovirt-autotesting-bootstrap.sh"
+
+        rm -f $TESTJOBSCRIPT
+
+        while [[ ! -e "$TESTJOBSCRIPT" && $TRIALS -gt 0 ]]
+        do
+            _log "Trying to fetch ($TRIALS) testjob from $TESTJOBURL to $TESTJOBSCRIPT"
+            curl --output "$TESTJOBSCRIPT" "$TESTJOBURL"
+            TRIALS=$(($TRIALS - 1))
+            sleep $TRIAL_SLEEP
+        done
+
+        if [[ -e "$TESTJOBSCRIPT" ]]
+        then
+            _log "Running testjob $TESTJOBSCRIPT"
+            export TESTJOB APIURL
+            chmod a+x "$TESTJOBSCRIPT"
+            $TESTJOBSCRIPT $@
+        else
+            _log "Fetching testjob script failed."
+        fi
+    fi
+
+    _log "Completed $prog"
+
+    exit 0
+}
+
+case $1 in
+run) run;;
+*)
+    echo "Usage: $0 run" >&2:
+    ::
+esac
+
+exit 0

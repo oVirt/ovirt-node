@@ -78,6 +78,7 @@ BuildArch:      noarch
 %description
 Provides a series of daemons and support utilities for hypervisor distribution.
 
+
 %package recipe
 Summary:        Recipes for building and running %{product_family} image
 Group:          Applications/System
@@ -93,6 +94,7 @@ documentation for building and running an %{product_family} image.
 This package is not to be installed on the %{product_family},
 however on a development machine to help to build the image.
 
+
 %package tools
 Summary:        Recipes for building and running %{product_family} image
 Group:          Applications/System
@@ -106,6 +108,7 @@ This package provides plugin tools for modifying and working with the
 %{product_family} image.
 This package is not to be installed on the %{product_family},
 however on a development machine to work with the image.
+
 
 %package plugin-snmp
 Summary:        SNMP plugin for %{product_family} image
@@ -151,6 +154,7 @@ fi
 #CIM related changes
 # set read-only
 echo "readonly = true;" > /etc/libvirt-cim.conf
+
 
 #
 # SELinux subpackage
@@ -206,6 +210,42 @@ fi
 # FIXME what about semanage?
 
 
+#
+# Igor service subpackage
+#
+%package plugin-igor-slave
+Summary:        Igor slave plugin for %{product_family}
+Group:          Applications/System
+
+%if %{is_systemd}
+BuildRequires:  systemd-units
+Requires:       systemd
+%else
+BuildRequires:  initscripts
+Requires(post): chkconfig
+%endif
+
+# We need python-uinput for TUI tests
+Requires:       python-uinput
+
+
+%description plugin-igor-slave
+This package provides an igor service for %{product_family}. This service
+is responsible for running testcase offered by an igor server.
+
+
+%post plugin-igor-slave
+%if %{is_systemd}
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+    /bin/systemctl enable ovirt-node-igor-slave.service >/dev/null 2>&1 || :
+fi
+%else
+/sbin/chkconfig --add ovirt-node-igor-slave >/dev/null 2>&1 || :
+%endif
+
+
 %prep
 %setup -q
 
@@ -226,6 +266,7 @@ do
     mv -v %{modulename}.pp %{modulename}.pp.${selinuxvariant}
 done
 cd -
+
 
 %install
 %{__rm} -rf %{buildroot}
@@ -335,6 +376,7 @@ if [ $1 -eq 0 ] ; then
 fi
 %endif
 
+
 %preun plugin-cim
 %if ! %{is_systemd}
 if [ $1 = 0 ] ; then
@@ -349,6 +391,25 @@ if [ $1 -eq 0 ] ; then
 fi
 %endif
 
+
+%preun plugin-igor-slave
+%if ! %{is_systemd}
+if [ $1 = 0 ] ; then
+    /sbin/service ovirt-node-igor-slave stop >/dev/null 2>&1
+    /sbin/chkconfig --del ovirt-node-igor-slave
+fi
+%else
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /bin/systemctl --no-reload disable ovirt-node-igor-slave.service > /dev/null 2>&1 || :
+    /bin/systemctl stop ovirt-node-igor-slave.service > /dev/null
+fi
+%endif
+
+
+#
+# FILES
+#
 %files recipe
 %defattr(0644,root,root,0755)
 %doc README COPYING
@@ -362,10 +423,12 @@ fi
 %{_sbindir}/edit-node
 %{_mandir}/man8/edit-node.8.gz
 
+
 %files plugin-snmp
 %{python_sitelib}/ovirt_config_setup/snmp.py
 %{_sysconfdir}/ovirt-plugins.d/snmp.minimize
 %{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py
+
 
 %files plugin-cim
 %{python_sitelib}/ovirt_config_setup/cim.py
@@ -374,6 +437,15 @@ fi
 %{_unitdir}/ovirt-cim.service
 %else
 %{_initrddir}/ovirt-cim
+%endif
+
+
+%files plugin-igor-slave
+%{_libexecdir}/ovirt-node-igor-slave
+%if %{is_systemd}
+%{_unitdir}/ovirt-node-igor-slave.service
+%else
+%{_initrddir}/ovirt-node-igor-slave
 %endif
 
 
