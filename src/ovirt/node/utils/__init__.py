@@ -222,7 +222,8 @@ class Transaction(list, base.Base):
             self.prepare()
             self.commit()
         except Exception as e:
-            self.logger.warning("Transaction failed: %s" % e.message)
+            self.logger.warning("Transaction failed (%s): %s" % (e, e.message),
+                                exc_info=True)
             self.abort()
             raise exceptions.TransactionError("Transaction failed: " +
                                               "%s" % e.message)
