@@ -409,7 +409,7 @@ class Network:
             _functions.system_closefds("service ntpd stop &> /dev/null")
             # XXX eth assumed in breth
             brctl_cmd = "ip --details --oneline link " \
-                "| awk -F':' 'NR>1 && /^[0-9]: br[ep]/ {print $2}'"
+                "| awk -F':' '/^[0-9]: br[ep]/ {print $2}'"
             brctl = _functions.subprocess_closefds(brctl_cmd, shell=True,
                                                    stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT)
