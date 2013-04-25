@@ -295,7 +295,6 @@ keep /lib/firmware/ctfw_cna.bin
 keep /lib/firmware/ctfw_fc.bin
 keep /lib/firmware/aic94xx-seq.fw
 
-drop /lib/kbd/consolefonts
 drop /etc/pki/tls
 keep /etc/pki/tls/openssl.cnf
 drop /etc/pki/java

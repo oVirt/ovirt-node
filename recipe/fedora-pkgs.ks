@@ -33,3 +33,4 @@ python-urwid
 rsyslog
 
 ovirt-node-selinux
+kbd-misc

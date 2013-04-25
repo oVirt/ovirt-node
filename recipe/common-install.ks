@@ -1,4 +1,4 @@
-lang C
+lang en_US.utf8
 keyboard us
 timezone --utc UTC
 auth --useshadow --enablemd5
