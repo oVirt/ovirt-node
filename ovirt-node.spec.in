@@ -272,6 +272,10 @@ cd -
 %install
 %{__rm} -rf %{buildroot}
 make install DESTDIR=%{buildroot}
+%{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks
+%{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/pre-upgrade
+%{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/post-upgrade
+%{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/rollback
 
 %if %{is_f16}
 # install libvirtd systemd service
@@ -481,6 +485,7 @@ fi
 
 %{_sysconfdir}/sysconfig/modules/vlan.modules
 %{_sysconfdir}/modprobe.d/ovirt-qla4xxx.conf
+%{_libexecdir}/ovirt-node/hooks
 
 
 %doc COPYING
@@ -505,6 +510,7 @@ fi
 %{_libexecdir}/ovirt-config-installer
 %{_libexecdir}/ovirt-config-setup
 %{_libexecdir}/ovirt-admin-shell
+%{_libexecdir}/ovirt-node-upgrade
 %{_libexecdir}/ovirt-init-functions.sh
 %{_libexecdir}/ovirt-config-storage
 %{_sbindir}/persist

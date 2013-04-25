@@ -115,3 +115,4 @@ glusterfs-rdma
 NetworkManager-glib
 
 bridge-utils
+squashfs-tools
