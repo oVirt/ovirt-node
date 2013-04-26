@@ -847,18 +847,18 @@ EOP
     }
 
     if [ -n "$cim_passwd" ]; then
-        log "Setting temporary admin password: $cim_passwd"
+        log "Setting temporary admin password"
         unmount_config /etc/passwd /etc/shadow
         /usr/sbin/usermod -p "$cim_passwd" cim
     fi
     if [ -n "$adminpw" ]; then
-        log "Setting temporary admin password: $adminpw"
+        log "Setting temporary admin password"
         unmount_config /etc/passwd /etc/shadow
         /usr/sbin/usermod -p "$adminpw" admin
         chage -d 0 admin
     fi
     if [ -n "$rootpw" ]; then
-        log "Setting temporary root password: $rootpw"
+        log "Setting temporary root password"
         unmount_config /etc/passwd /etc/shadow
         /usr/sbin/usermod -p "$rootpw" root
         chage -d 0 root
