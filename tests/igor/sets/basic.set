@@ -5,3 +5,6 @@ searchpath: '../tcs'
 
 
 ---
+filename: 'terminal_has_utf8_support.sh'
+
+---
