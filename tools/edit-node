@@ -29,6 +29,7 @@ import optparse
 import logging
 import rpm
 import glob
+import re
 from time import strftime as date
 from subprocess import PIPE, STDOUT
 from imgcreate.debug import *
@@ -1502,14 +1503,15 @@ def main():
                     n = options.install
                 else:
                     n = ""
-                if len(n) > 0:
-                    n = n + "."
-                rel_tag=LiveOS.strip(".iso").split(".")[-1]
-                finished_iso = "%s.%s%s.iso" % \
-                    (edited_iso.strip("%s.edited.iso" %rel_tag), n.replace(" ","-"), rel_tag)
+
+                if n:
+                    finished_iso = build_isoname_for_plugins(edited_iso, [n])
+                else:
+                    finished_iso= edited_iso
+                print "Moving '%s' to '%s'" % (edited_iso, finished_iso)
                 shutil.move(edited_iso, finished_iso)
 
-                logging.info("%s.iso saved to %s"  % (editor.name, finished_iso))
+                logging.info("%s.iso saved to %s"  % (finished_iso, output))
             else:
                 # in manifest mode print do necessary items
                 editor.unmount()
@@ -1523,15 +1525,95 @@ def main():
 
     return 0
 
-if __name__ == "__main__":
-    sys.exit(main())
 
-arch = rpmUtils.arch.getBaseArch()
-if arch in ("i386", "x86_64"):
-    LiveImageCreator = x86LiveImageCreator
-elif arch in ("ppc",):
-    LiveImageCreator = ppcLiveImageCreator
-elif arch in ("ppc64",):
-    LiveImageCreator = ppc64LiveImageCreator
-else:
-    raise CreatorError("Architecture not supported!")
+def filename_to_nvra(pkgfilename):
+    """Parse the filename of an rpm and return nvra and the distro
+
+    Args:
+        pkgfilename: The filename of the rpm
+    Returns:
+        tuple(n, v, r, a, distro)
+
+    >>> fn = "ovirt-node-plugin-igor-2.6.1-2.fc18.noarch.rpm"
+    >>> filename_to_nvra(fn)
+    ('ovirt-node-plugin-igor', '2.6.1', '2', 'noarch', 'fc18')
+    """
+    pkgfilename = re.sub("\.(rpm)$", "", pkgfilename)
+    nvra_ = pkgfilename.split("-")
+    ra_ = nvra_.pop().split(".")
+    a = ra_.pop()
+    distro = ra_.pop()
+    r = ".".join(ra_)
+    v = nvra_.pop()
+    n = "-".join(nvra_)
+    return (n, v, r, a, distro)
+
+
+def isoname_to_nvr(isofilename):
+    """Parse the filename of an iso and return nvr and the distro
+
+    Args:
+        isofilename: The filename of the iso
+    Returns:
+        tuple(n, v, r, _, distro)
+
+    >>> fn = "ovirt-node-iso-2.6.1-20120228.fc18.iso"
+    >>> isoname_to_nvr(fn)
+    ('ovirt-node-iso', '2.6.1', '20120228', 'dummyarch', 'fc18')
+    """
+    newfn = re.sub("\.(iso)$", "", isofilename)
+    newfn += ".dummyarch"
+    return filename_to_nvra(newfn)
+
+
+def build_isoname_for_plugins(edited_iso, plugins):
+    """Build a friendly isoname incorporating a couple of plugins
+
+    Args:
+        basename: The original isoname
+    Returns:
+        An isoname suggestion
+
+    >>> edited_iso = "ovirt-node-iso-2.6.1-20120228.fc18.iso.edited.iso"
+    >>> plugins = ["ovirt-node-plugin-igor", "3rd-plugin-cim"]
+    >>> build_isoname_for_plugins(edited_iso, plugins)
+    'ovirt-node-iso-2.6.1-.ovirt-node-plugin-igor_3rd-plugin-cim.fc18.iso'
+    """
+    def sane_name_for_plugin(plugin):
+        package = os.path.basename(plugin)
+        if package.endswith(".rpm"):
+            nvra = filename_to_nvra(package)
+            package = nvra[0]
+        return package
+    plugins = plugins if type(plugins) is list else [plugins]
+    packages = [sane_name_for_plugin(p) for p in plugins]
+
+    #print "plugins", plugins
+    #print "packages", packages
+
+    # Strip all iso and edited parts from the end
+    editname_prefix = re.sub("((?:\.(?:edited|iso))*)$", "", edited_iso)
+    nvra = isoname_to_nvr(editname_prefix)
+    #print "edited nvra", nvra
+
+    packages = "_".join(packages)
+
+    isoname = "{name}-{version}-{release}.{packages}.{distro}.iso".format(
+        name=nvra[0],
+        version=nvra[1],
+        release=nvra[2],
+        packages=packages,
+        distro=nvra[4])
+    return isoname
+
+if __name__ == "__main__":
+    arch = rpmUtils.arch.getBaseArch()
+    if arch in ("i386", "x86_64"):
+        LiveImageCreator = x86LiveImageCreator
+    elif arch in ("ppc",):
+        LiveImageCreator = ppcLiveImageCreator
+    elif arch in ("ppc64",):
+        LiveImageCreator = ppc64LiveImageCreator
+    else:
+        raise CreatorError("Architecture not supported!")
+    sys.exit(main())
