@@ -27,3 +27,5 @@ scripts/ovirt-functions
 .project
 .pydevproject
 .settings
+tmp
+.checkstyle
