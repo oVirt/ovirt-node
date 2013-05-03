@@ -75,6 +75,10 @@ class Plugin(plugins.NodePlugin):
             nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "upgrade"
 
+        elif "button.downgrade" in effective_changes:
+            nav.to_plugin(installer.upgrade_page.Plugin)
+            self._model["method"] = "downgrade"
+
         elif "button.reinstall" in effective_changes:
             nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "reinstall"
@@ -82,7 +86,8 @@ class Plugin(plugins.NodePlugin):
     def ___installation_options(self):
         if self.application.args.dry:
             return [ui.Button("button.install", "Install Hypervisor (dry)"),
-                    ui.Button("button.upgrade", "Upgrade Hypervisor (dry)")]
+                    ui.Button("button.upgrade", "Upgrade Hypervisor (dry)"),
+                    ui.Button("button.downgrade", "Downgrade Hypervisor (dry)")]
 
         media = utils.system.InstallationMedia()
 
