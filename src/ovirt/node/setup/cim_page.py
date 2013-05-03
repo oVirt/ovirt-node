@@ -19,32 +19,12 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, valid, ui, utils, exceptions
-from ovirt.node.config import snmp as snmp_config
+from ovirt.node.config import cim as cim_config
 from ovirt.node.plugins import Changeset
-from ovirt.node.valid import RegexValidator
 
 """
-Configure SNMP
+Configure CIM
 """
-
-
-class SnmpPassword(RegexValidator):
-    """A string, but without any space character and at least 8 chars
-
-    >>> SnmpPassword().validate("1234567")
-    False
-    >>> SnmpPassword().validate("12345678")
-    True
-    >>> SnmpPassword().validate("123456 8")
-    False
-    >>> SnmpPassword().validate("Ab9873knad")
-    True
-    >>> SnmpPassword().validate("")
-    False
-    """
-
-    description = "a string without spaces and at least 8 chars"
-    pattern = "^\S{8,}$"
 
 
 class Plugin(plugins.NodePlugin):
@@ -58,31 +38,30 @@ class Plugin(plugins.NodePlugin):
         return True
 
     def name(self):
-        return "SNMP"
+        return "CIM"
 
     def rank(self):
-        return 40
+        return 45
 
     def model(self):
-        cfg = snmp_config.SNMP().retrieve()
+        cfg = cim_config.CIM().retrieve()
         self.logger.debug(cfg)
-        model = {"snmp.enabled": True if cfg["password"] else False,
-                 "snmp.password": "",
-                 "snmp.password_confirmation": "",
+        model = {"cim.enabled": True if cfg["enabled"] else False,
+                 "cim.password": "",
+                 "cim.password_confirmation": "",
                  }
         return model
 
     def validators(self):
-        return {"snmp.password": valid.Text()
-                }
+        return {"cim.password": valid.Text()}
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "SNMP"),
-              ui.Checkbox("snmp.enabled", "Enable SNMP"),
+        ws = [ui.Header("header[0]", "CIM"),
+              ui.Checkbox("cim.enabled", "Enable CIM"),
               ui.Divider("divider[0]"),
-              ui.Header("header[1]", "SNMP Password"),
-              ui.PasswordEntry("snmp.password", "Password:"),
-              ui.PasswordEntry("snmp.password_confirmation",
+              ui.Header("header[1]", "CIM Password"),
+              ui.PasswordEntry("cim.password", "Password:"),
+              ui.PasswordEntry("cim.password_confirmation",
                                "Confirm Password:"),
               ]
 
@@ -91,20 +70,20 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        if changes.contains_any(["snmp.password",
-                                 "snmp.password_confirmation"]):
+        if changes.contains_any(["cim.password",
+                                 "cim.password_confirmation"]):
             self._model.update(changes)
-            root_pw, root_pw_conf = self._model.get("snmp.password", ""), \
-                self._model.get("snmp.password_confirmation", "")
+            root_pw, root_pw_conf = self._model.get("cim.password", ""), \
+                self._model.get("cim.password_confirmation", "")
 
             if root_pw != root_pw_conf:
                 raise exceptions.InvalidData("Passwords must be the same.")
             else:
-                self.widgets["snmp.password"].valid(True)
-                self.widgets["snmp.password_confirmation"].valid(True)
+                self.widgets["cim.password"].valid(True)
+                self.widgets["cim.password_confirmation"].valid(True)
 
     def on_merge(self, effective_changes):
-        self.logger.debug("Saving SNMP page")
+        self.logger.debug("Saving CIM page")
         changes = Changeset(self.pending_changes(False))
         effective_model = Changeset(self.model())
         effective_model.update(effective_changes)
@@ -112,18 +91,17 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        snmp_keys = ["snmp.password_confirmation", "snmp.enabled"]
+        snmp_keys = ["cim.password_confirmation", "cim.enabled"]
 
-        txs = utils.Transaction("Updating SNMP configuration")
+        txs = utils.Transaction("Updating CIM configuration")
 
-        if changes.contains_any(snmp_keys):
-            values = effective_model.values_for(snmp_keys)
-            args = [values[0]]
-            if values[1] is False:  # If set to disabled, set password to None
-                args[0] = None
-            model = snmp_config.SNMP()
-            model.update(*args)
-            txs += model.transaction()
+        if changes.contains_all(snmp_keys):
+            is_enabled = effective_model["cim.enabled"]
+            pw = effective_model["cim.password_confirmation"]
+
+            model = cim_config.CIM()
+            model.update(is_enabled)
+            txs += model.transaction(cim_password=pw)
 
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

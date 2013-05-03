@@ -899,45 +899,6 @@ class iSCSI(NodeConfigFileSection):
         return tx
 
 
-class SNMP(NodeConfigFileSection):
-    """Configure SNMP
-
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
-    >>> n = SNMP(cfgfile)
-    >>> n.update("secret")
-    >>> n.retrieve().items()
-    [('password', 'secret')]
-    """
-    keys = ("OVIRT_SNMP_PASSWORD",)
-
-    @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, password):
-        # FIXME add validation
-        pass
-
-    def transaction(self):
-        cfg = dict(self.retrieve())
-        password = cfg["password"]
-
-        class ConfigureSNMP(utils.Transaction.Element):
-            title = "Enabling/Disabling SNMP and setting the password"
-
-            def commit(self):
-                # FIXME snmp plugin needs to be placed somewhere else (in src)
-                # pylint: disable-msg=E0611
-                from ovirt_config_setup import snmp  # @UnresolvedImport
-                # pylint: enable-msg=E0611
-                if password:
-                    snmp.enable_snmpd(password)
-                else:
-                    snmp.disable_snmpd()
-
-        tx = utils.Transaction("Configuring SNMP")
-        tx.append(ConfigureSNMP())
-        return tx
-
-
 class Netconsole(NodeConfigFileSection):
     """Configure netconsole
 
@@ -1005,53 +966,6 @@ class Logrotate(NodeConfigFileSection):
 
         tx = utils.Transaction("Configuring logrotate")
         tx.append(CreateLogrotateConfig())
-        return tx
-
-
-class CIM(NodeConfigFileSection):
-    """Configure CIM
-
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
-    >>> n = CIM(cfgfile)
-    >>> n.update(True)
-    >>> n.retrieve()
-    {'enabled': True}
-    """
-    keys = ("OVIRT_CIM_ENABLED",)
-
-    @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, enabled):
-        return {"OVIRT_CIM_ENABLED": "1" if utils.parse_bool(enabled) else None
-                }
-
-    def retrieve(self):
-        cfg = dict(NodeConfigFileSection.retrieve(self))
-        cfg.update({"enabled": True if cfg["enabled"] == "1" else None
-                    })
-        return cfg
-
-    def transaction(self):
-        cfg = dict(self.retrieve())
-        enabled = cfg["enabled"]
-
-        class ConfigureCIM(utils.Transaction.Element):
-            def commit(self):
-                # FIXME snmp plugin needs to be placed somewhere else (in src)
-                # pylint: disable-msg=E0611
-                from ovirt_config_setup import cim  # @UnresolvedImport
-                # pylint: enable-msg=E0611
-                if enabled:
-                    if cim.enable_cim():
-                        self.logger.debug("Configured CIM successfully")
-                    else:
-                        raise exceptions.TransactionError("CIM configuration" +
-                                                          " failed")
-
-        # FIXME setting password is missing
-
-        tx = utils.Transaction("Configuring CIM")
-        tx.append(ConfigureCIM())
         return tx
 
 

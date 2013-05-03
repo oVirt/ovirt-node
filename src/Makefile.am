@@ -69,9 +69,11 @@ pyovirt_node_PYTHON = \
   ovirt/node/base.py
 
 pyovirt_node_config_PYTHON = \
-  ovirt/node/config/defaults.py \
   ovirt/node/config/__init__.py \
-  ovirt/node/config/network.py
+  ovirt/node/config/defaults.py \
+  ovirt/node/config/network.py \
+  ovirt/node/config/cim.py \
+  ovirt/node/config/snmp.py
 
 pyovirt_node_installer_PYTHON = \
   ovirt/node/installer/__init__.py \
@@ -96,9 +98,10 @@ pyovirt_node_setup_PYTHON = \
   ovirt/node/setup/ping.py \
   ovirt/node/setup/remote_storage_page.py \
   ovirt/node/setup/security_page.py \
-  ovirt/node/setup/snmp_page.py \
   ovirt/node/setup/status_page.py \
-  ovirt/node/setup/support_page.py
+  ovirt/node/setup/support_page.py \
+  ovirt/node/setup/cim_page.py \
+  ovirt/node/setup/snmp_page.py
 
 pyovirt_node_ui_PYTHON = \
   ovirt/node/ui/__init__.py \

@@ -99,7 +99,9 @@ def pipe_async(cmd, stdin=None):
     LOGGER.debug("Piping async '%s'" % cmd)
     process = popen(cmd, shell=True, stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE, stdin=stdin)
+    # pylint: disable-msg=E1101
     if stdin:
         process.stdin.write(stdin)
     while process.poll() != 0:
         yield process.stdout.readline()
+    # pylint: enable-msg=E1101

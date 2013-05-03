@@ -427,12 +427,16 @@ fi
 
 %files plugin-snmp
 %{python_sitelib}/ovirt_config_setup/snmp.py
+%{python_sitelib}/ovirt/node/config/snmp.py
+%{python_sitelib}/ovirt/node/setup/snmp_page.py
 %{_sysconfdir}/ovirt-plugins.d/snmp.minimize
 %{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py
 
 
 %files plugin-cim
 %{python_sitelib}/ovirt_config_setup/cim.py
+%{python_sitelib}/ovirt/node/config/cim.py
+%{python_sitelib}/ovirt/node/setup/cim_page.py
 %{_sysconfdir}/ovirt-plugins.d/cim.minimize
 %if %{is_systemd}
 %{_unitdir}/ovirt-cim.service
@@ -528,6 +532,10 @@ fi
 # Files related to the new TUI
 %{python_sitelib}/ovirt/__init__.*
 %{python_sitelib}/ovirt/node/*
+%exclude %{python_sitelib}/ovirt/node/config/snmp.py*
+%exclude %{python_sitelib}/ovirt/node/config/cim.py*
+%exclude %{python_sitelib}/ovirt/node/setup/snmp_page.py*
+%exclude %{python_sitelib}/ovirt/node/setup/cim_page.py*
 %{_bindir}/ovirt-config-setup
 %{_bindir}/ovirt-node-installer
 %{_bindir}/ovirt-node-doc

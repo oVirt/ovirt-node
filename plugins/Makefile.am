@@ -19,6 +19,7 @@ pluginsdir = $(sysconfdir)/ovirt-plugins.d
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigbootdir = $(sysconfdir)/ovirt-config-boot.d
 
+# FIXME this can be removed
 dist_pyovirtconfigsetup_SCRIPTS = \
   snmp.py \
   cim.py

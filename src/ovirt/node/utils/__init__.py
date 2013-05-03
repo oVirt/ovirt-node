@@ -117,11 +117,11 @@ def parse_bool(txt):
     >>> parse_bool(True)
     True
 
-    >>> txts = ["yes", "YES!", "1", 1]
+    >>> txts = ["yes", "YES!", "1", 1, "y"]
     >>> all((parse_bool(txt) for txt in txts))
     True
 
-    >>> txts = ["no", "NO!", "0", 0, False, None, "foo"]
+    >>> txts = ["no", "NO!", "0", 0, False, None, "foo", "n"]
     >>> all((not parse_bool(txt) for txt in txts))
     True
 
