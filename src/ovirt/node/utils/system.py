@@ -21,9 +21,11 @@
 from ovirt.node import base, utils
 from ovirt.node.config import defaults
 from ovirt.node.utils import process
-import os.path
+import os
 import rpm
 import system_config_keyboard.keyboard
+import time
+import subprocess
 
 """
 A module to access system wide stuff
@@ -35,6 +37,11 @@ def reboot():
     """Reboot the system
     """
     process.call("reboot")
+
+
+def async_reboot(delay=3):
+    reboot_task = Reboot()
+    reboot_task.reboot(delay)
 
 
 def poweroff():
@@ -61,6 +68,21 @@ def has_hostvg():
     installation)
     """
     return os.path.exists("/dev/HostVG")
+
+
+def which(file):
+    ret = None
+    if os.path.abspath(file) and os.path.exists(file):
+        ret = file
+    else:
+        for dir in os.environ["PATH"].split(":"):
+            f = os.path.join(dir, file)
+            if os.path.exists(f) and os.access(f, os.X_OK):
+                ret = f
+                break
+    if ret is None:
+        raise RuntimeError("Cannot find command '%s'" % file)
+    return ret
 
 
 class SystemRelease(base.Base):
@@ -245,3 +267,70 @@ class BootInformation(base.Base):
     def is_upgrade(self):
         #ovirtfunctions.is_upgrade()
         return self._model.retrieve()["upgrade"] is True
+
+
+class Reboot(base.Base):
+    def simpleDaemon(self, main, args=(), kwargs={}):
+        # Default maximum for the number of available file descriptors.
+        MAXFD = 1024
+
+        import resource  # Resource usage information.
+        maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+        if (maxfd == resource.RLIM_INFINITY):
+            maxfd = MAXFD
+
+        pid = os.fork()
+        if pid == 0:
+            try:
+                os.chdir('/')
+                os.setsid()
+                for fd in range(0, maxfd):
+                    try:
+                        os.close(fd)
+                    except OSError:
+                        # ERROR, fd wasn't open to begin with (ignored)
+                        pass
+
+                os.open(os.devnull, os.O_RDWR)  # standard input (0)
+                os.dup2(0, 1)  # standard output (1)
+                os.dup2(0, 2)  # standard error (2)
+
+                if os.fork() != 0:
+                    os._exit(0)
+
+                try:
+                    main(*args, **kwargs)
+                except:
+                    import traceback
+                    traceback.print_exc()
+            finally:
+                os._exit(1)
+
+        pid, status = os.waitpid(pid, 0)
+
+        if not os.WIFEXITED(status) or os.WEXITSTATUS(status) != 0:
+            raise RuntimeError('Daemon not exited properly')
+
+    def delayedReboot(self, reboot, sleepTime):
+        time.sleep(sleepTime)
+        os.execl(reboot, reboot)
+
+    def reboot(self, delay=3):
+        try:
+            import daemon
+            with daemon.DaemonContext():
+                # the following lines are all executed in a background daemon
+                time.sleep(delay)
+                cmd = which("reboot")
+                subprocess.call(cmd, close_fds=True)
+        except:
+            self.logger.info("Scheduling Reboot")
+
+            self.simpleDaemon(
+                self.delayedReboot,
+                (
+                    which("reboot"),
+                    delay,
+                )
+            )
+            self.logger.info("Reboot Scheduled")

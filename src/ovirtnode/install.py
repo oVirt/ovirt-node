@@ -18,6 +18,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 import ovirtnode.ovirtfunctions as _functions
+import ovirt.node.utils.system as _system
 import ovirtnode.iscsi as _iscsi
 import shutil
 import traceback
@@ -584,13 +585,7 @@ initrd /initrd0.img
             logger.info("Installation of %s Completed" % \
                                                       _functions.PRODUCT_SHORT)
             if reboot is not None and reboot == "Y":
-                f = open('/var/spool/cron/root', 'w')
-                f.write('* * * * * sleep 10 && /sbin/reboot\n')
-                f.close()
-                #ensure crond is started
-                _functions.subprocess_closefds("crond", shell=True,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT)
+                _system.async_reboot()
             return True
         else:
             return False

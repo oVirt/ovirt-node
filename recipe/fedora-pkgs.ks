@@ -29,3 +29,6 @@ rsyslog
 
 ovirt-node-selinux
 kbd-misc
+
+#async reboot
+python-daemon
