@@ -93,7 +93,7 @@ main()
     ARGS+="--repo $TMPREPO "
     ARGS+="--install $IGORPLUGIN "
     ARGS+="--nogpgcheck "
-    ARGS+="'$isoname'"
+    ARGS+="$isoname"
 
     log "Launching edit-node $ARGS"
     log "Dry: $dry"

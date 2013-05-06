@@ -7,7 +7,7 @@ DefaultDependencies=no
 
 [Service]
 RemainAfterExit=no
-ExecStart=/usr/bin/ovirt-node-igor-slave run
+ExecStart=/usr/libexec/ovirt-node-igor-slave run
 
 [Install]
 WantedBy=default.target
