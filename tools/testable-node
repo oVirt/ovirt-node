@@ -21,17 +21,18 @@
 isoname=""
 verbose=""
 reponame=""
+dry=false
 
 IGORPLUGIN=ovirt-node-plugin-igor-slave
 
 
-
 show_usage()
 {
-    echo "Usage: $0 [-v] [-r <.repo-file>] -i <isoname>"
+    echo "Usage: $0 [-vd] [-r <.repo-file>] -i <isoname>"
     echo " -i    ISO file to be edited"
     echo " -v    Be verbose"
     echo " -r    Additional .repo file"
+    echo " -d    Dry - don't execute edit-node"
     echo ""
     echo "$0 can be used to add the $IGORPLUGIN to a "
     echo "given ISO so it can be tested within an igor setup."
@@ -45,9 +46,15 @@ die()
     exit 1
 }
 
+log()
+{
+    echo -e "$(date +"%F %T") $@"
+}
+
 _parse_opts()
 {
-    while getopts "h?vi:r:" opt;
+    log "Parsing args: $@"
+    while getopts "h?vdi:r:" opt;
     do
         case "$opt" in
         h|\?)
@@ -60,10 +67,12 @@ _parse_opts()
             ;;
         r)  reponame=$OPTARG
             ;;
+        d)  dry=true
+            ;;
         esac
     done
 
-    [[ -z "$ISONAME" ]] && die "<isoname> is missing"
+    [[ -e "$isoname" ]] || die "<isoname> is missing or does not exist"
 
     shift $((OPTIND-1))
 
@@ -74,20 +83,26 @@ main()
 {
     TMPREPO=igor.repo
 
-    _parse_opts
+    _parse_opts "$@"
 
+    log "Generating temporary repository file: $TMPREPO"
     cmds="s/^\[/\[igor-/ ; /^mirrorlist/d ; s/^#base/base/ ; s/https:/http:/"
-    sed "$cmds" /etc/yum.repos.d/*.repo > $TMPREPO
+    sed "$cmds" /etc/yum.repos.d/*.repo $reponame > $TMPREPO
 
-    [[ ! -z "$reponame" ]] && cat "$reponame" >> $TMPREPO
+    ARGS="$verbose "
+    ARGS+="--repo $TMPREPO "
+    ARGS+="--install $IGORPLUGIN "
+    ARGS+="--nogpgcheck "
+    ARGS+="'$isoname'"
 
-    ./edit-node $verbose \
-      --repo $TMPREPO \
-      --install $IGORPLUGIN \
-      --nogpgcheck \
-      "$isoname"
+    log "Launching edit-node $ARGS"
+    log "Dry: $dry"
+    $dry || ./edit-node $ARGS
 
-    unlink $TMPREPO
+    # Keep temporary repo when in verbose mode
+    [[ "$verbose" ]] || unlink $TMPREPO
+
+    log "Done"
 }
 
-main
+main "$@"
