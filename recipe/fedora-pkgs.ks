@@ -8,8 +8,6 @@ collectd-virt
 #
 anyterm
 glusterfs-client
-# F15 dracut missing dep, bz# ???
-less
 
 ## @TODO: added by archipel to report in rhev.pkgs
 # host statistics rhbz#588852
