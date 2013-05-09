@@ -382,15 +382,18 @@ class Network(NodeConfigFileSection):
 
 class IPv6(NodeConfigFileSection):
     """Sets IPv6 network stuff
-    - OVIRT_IPV6_*
+    - OVIRT_IPV6 (static, auto, dhcp)
+    - OVIRT_IPV6_ADDRESS
+    - OVIRT_IPV6_NETMASK
+    - OVIRT_IPV6_GATEWAY
 
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
     >>> n = IPv6(cfgfile)
-    >>> n.update(True, "11::22", "11::33", "11::44")
+    >>> n.update("auto", "11::22", "11::33", "11::44")
     >>> data = sorted(n.retrieve().items())
     >>> data[0:3]
-    [('enabled', True), ('gateway', '11::44'), ('ipaddr', '11::22')]
+    [('bootproto', 'auto'), ('gateway', '11::44'), ('ipaddr', '11::22')]
     >>> data[3:]
     [('netmask', '11::33')]
     """
@@ -400,17 +403,13 @@ class IPv6(NodeConfigFileSection):
             "OVIRT_IPV6_GATEWAY")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, enabled, ipaddr, netmask, gateway):
-        (valid.Boolean() | valid.Empty(or_none=True))(enabled)
+    def update(self, bootproto, ipaddr, netmask, gateway):
+        if bootproto not in ["auto", "static", "none", "dhcp", None]:
+            raise exceptions.InvalidData("Unknown bootprotocol: %s" %
+                                         bootproto)
         (valid.IPv6Address() | valid.Empty(or_none=True))(ipaddr)
         (valid.IPv6Address() | valid.Empty(or_none=True))(netmask)
         (valid.IPv6Address() | valid.Empty(or_none=True))(gateway)
-        return {"OVIRT_IPV6": "yes" if enabled else None}
-
-    def retrieve(self):
-        cfg = dict(NodeConfigFileSection.retrieve(self))
-        cfg.update({"enabled": cfg["enabled"] == "yes"})
-        return cfg
 
     def transaction(self):
         return self.__legacy_transaction()
@@ -427,7 +426,22 @@ class IPv6(NodeConfigFileSection):
     def disable(self):
         """Can be used to disable IPv6
         """
-        self.update(None, None, None, None, None)
+        self.update(None, None, None, None)
+
+    def configure_dhcp(self):
+        """Can be used to configure NIC iface on the vlan vlanid with DHCP
+        """
+        self.update("dhcp", None, None, None)
+
+    def configure_static(self, address, netmask, gateway):
+        """Can be used to configure a static IPv6 IP on a NIC
+        """
+        self.update("static", address, netmask, gateway)
+
+    def configure_auto(self):
+        """Can be used to autoconfigure IPv6 on a NIC
+        """
+        self.update("auto", None, None, None)
 
 
 class Hostname(NodeConfigFileSection):

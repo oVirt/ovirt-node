@@ -43,6 +43,8 @@ class Plugin(plugins.NodePlugin):
         self._nic_details_group = self.widgets.group([
             "dialog.nic.ipv4.bootproto", "dialog.nic.ipv4.address",
             "dialog.nic.ipv4.netmask", "dialog.nic.ipv4.gateway",
+            "dialog.nic.ipv6.bootproto", "dialog.nic.ipv6.address",
+            "dialog.nic.ipv6.netmask", "dialog.nic.ipv6.gateway",
             "dialog.nic.vlanid"])
 
     def name(self):
@@ -91,6 +93,9 @@ class Plugin(plugins.NodePlugin):
                 "dialog.nic.ipv4.address": valid.IPv4Address() | valid.Empty(),
                 "dialog.nic.ipv4.netmask": valid.IPv4Address() | valid.Empty(),
                 "dialog.nic.ipv4.gateway": valid.IPv4Address() | valid.Empty(),
+                "dialog.nic.ipv6.address": valid.IPv6Address() | valid.Empty(),
+                "dialog.nic.ipv6.netmask": valid.IPv6Address() | valid.Empty(),
+                "dialog.nic.ipv6.gateway": valid.IPv6Address() | valid.Empty(),
                 "dialog.nic.vlanid": (valid.Number(bounds=[0, 4096]) |
                                       valid.Empty()),
                 }
@@ -143,16 +148,45 @@ class Plugin(plugins.NodePlugin):
     def on_change(self, changes):
         self.logger.info("Checking network stuff")
         helper = plugins.Changeset(changes)
-        bootproto = helper["dialog.nic.ipv4.bootproto"]
-        if bootproto:
-            if bootproto in ["static"]:
-                self._nic_details_group.enabled(True)
-            elif bootproto in ["dhcp"]:
-                self._nic_details_group.enabled(False)
-                self.widgets["dialog.nic.vlanid"].enabled(True)
+        nic_ipv4_group = ["dialog.nic.ipv4.bootproto",
+                          "dialog.nic.ipv4.address",
+                          "dialog.nic.ipv4.netmask",
+                          "dialog.nic.ipv4.gateway"]
+
+        nic_ipv6_group = ["dialog.nic.ipv6.bootproto",
+                          "dialog.nic.ipv6.address",
+                          "dialog.nic.ipv6.netmask",
+                          "dialog.nic.ipv6.gateway"]
+
+        ipv4_bootproto = helper["dialog.nic.ipv4.bootproto"]
+        if ipv4_bootproto:
+            if ipv4_bootproto in ["static"]:
+                for w in nic_ipv4_group:
+                    self.widgets[w].enabled(True)
+            elif ipv4_bootproto in ["dhcp"]:
+                for w in nic_ipv4_group:
+                    self.widgets[w].enabled(False)
+                    self.widgets["dialog.nic.vlanid"].enabled(True)
             else:
-                self._nic_details_group.enabled(False)
+                for w in nic_ipv4_group:
+                    self.widgets[w].enabled(False)
+                    self.widgets["dialog.nic.vlanid"].enabled(True)
             self.widgets["dialog.nic.ipv4.bootproto"].enabled(True)
+
+        ipv6_bootproto = helper["dialog.nic.ipv6.bootproto"]
+        if ipv6_bootproto:
+            if ipv6_bootproto in ["static"]:
+                for w in nic_ipv6_group:
+                    self.widgets[w].enabled(True)
+            elif ipv6_bootproto in ["dhcp"]:
+                for w in nic_ipv6_group:
+                    self.widgets[w].enabled(False)
+                    self.widgets["dialog.nic.vlanid"].enabled(True)
+            else:
+                for w in nic_ipv6_group:
+                    self.widgets[w].enabled(False)
+                    self.widgets["dialog.nic.vlanid"].enabled(True)
+            self.widgets["dialog.nic.ipv6.bootproto"].enabled(True)
 
     def on_merge(self, effective_changes):
         self.logger.info("Saving network stuff")
@@ -237,10 +271,15 @@ class Plugin(plugins.NodePlugin):
         # Behaves like a page reload
         return self.ui_content()
 
-    def _configure_nic(self, bootproto, ipaddr, netmask, gateway, vlanid):
+    def _configure_nic(self, bootproto, ipaddr, netmask, gateway,
+                       ipv6_bootproto, ipv6_address, ipv6_netmask,
+                       ipv6_gateway, vlanid):
         vlanid = vlanid or None
-        model = defaults.Network()
         iface = self._model_extra["dialog.nic.iface"]
+
+        model = defaults.Network()
+        ipv6model = defaults.IPv6()
+
         if bootproto == "none":
             self.logger.debug("Configuring no networking")
             model.configure_no_networking(iface)
@@ -251,9 +290,43 @@ class Plugin(plugins.NodePlugin):
             self.logger.debug("Configuring static ip")
             model.configure_static(iface, ipaddr, netmask, gateway, vlanid)
         else:
-            self.logger.debug("No interface configuration found")
+            self.logger.debug("No ipv4 interface configuration found")
+
+        # A hack to also set the BOOTIF when IPv& is used in a second
+        enable_bootif = lambda: model.update(iface=iface)
+
+        if ipv6_bootproto == "none":
+            self.logger.debug("Configuring no ipv6 networking")
+            ipv6model.disable()
+
+        elif ipv6_bootproto == "dhcp":
+            self.logger.debug("Configuring ipv6 dhcp")
+            enable_bootif()
+            ipv6model.configure_dhcp()
+
+        elif ipv6_bootproto == "auto":
+            self.logger.debug("Configuring ipv6 auto")
+            enable_bootif()
+            ipv6model.configure_auto()
+
+        elif ipv6_bootproto == "static":
+            self.logger.debug("Configuring ipv6 static ip")
+            enable_bootif()
+            ipv6model.configure_static(ipv6_address, ipv6_netmask,
+                                       ipv6_gateway)
+        else:
+            self.logger.debug("No ipv6 interface configuration found")
+
         # Return the resulting transaction
-        return model.transaction()
+        txs = model.transaction()
+
+        # FIXME the ipv6 transaction is IDENTICAL to the model.tranasaction()
+        # (just a call to the legacy code to reconfigure networking)
+        # Therefor we don't add it, to not call it twice.
+        # But it should be added to the ocmplete transaction when the backend
+        # code is more fine granular.
+        #txs += ipv6model.transaction()
+        return txs
 
 
 class NicDetailsDialog(ui.Dialog):
@@ -270,20 +343,27 @@ class NicDetailsDialog(ui.Dialog):
         self.logger.debug("Getting informations for NIC details page")
         live = utils.network.node_nics()[iface]
         cfg = defaults.Network().retrieve()
+        ip6cfg = defaults.IPv6().retrieve()
 
         self.logger.debug("live: %s" % live)
         self.logger.debug("cfg: %s" % cfg)
+        self.logger.debug("ipv6cfg: %s" % ip6cfg)
 
         # The primary interface of this Node:
         node_bridge_slave = config.network.node_bridge_slave()
 
-        if node_bridge_slave != iface:
+        if node_bridge_slave and node_bridge_slave != iface:
             # The config contains the information for the primary iface,
             # because this iface is not the primary iface we clear the config
             cfg = dict((k, "") for k in cfg.keys())
 
         ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
                                             cfg["gateway"], cfg["vlanid"])
+
+        ip6addr, ip6netmask, ip6gateway, ip6bootproto = (ip6cfg["ipaddr"],
+                                                         ip6cfg["netmask"],
+                                                         ip6cfg["gateway"],
+                                                         ip6cfg["bootproto"])
 
         bridge_nic = utils.network.NIC(live["bridge"])
         if cfg["bootproto"] == "dhcp":
@@ -296,25 +376,33 @@ class NicDetailsDialog(ui.Dialog):
                 self.logger.warning("Bridge assigned but couldn't gather " +
                                     "live info: %s" % bridge_nic)
 
+        link_status_txt = ("Connected" if live["link_detected"]
+                           else "Disconnected")
+
+        self.logger.debug("xxxxx bootporoto: %s" % cfg)
+
         self.plugin._model_extra.update({
             "dialog.nic.iface": live["name"],
             "dialog.nic.driver": live["driver"],
             "dialog.nic.protocol": live["bootproto"] or "N/A",
-            "dialog.nic.vendor": live["vendor"],
-            "dialog.nic.link_status": "Connected" if live["link_detected"]
-            else "Disconnected",
+            "dialog.nic.vendor": live["vendor"][:24],
+            "dialog.nic.link_status": link_status_txt,
             "dialog.nic.hwaddress": live["hwaddr"],
 
             "dialog.nic.ipv4.bootproto": cfg["bootproto"],
             "dialog.nic.ipv4.address": ipaddr,
             "dialog.nic.ipv4.netmask": netmask,
             "dialog.nic.ipv4.gateway": gateway,
+            "dialog.nic.ipv6.bootproto": ip6bootproto,
+            "dialog.nic.ipv6.address": ip6addr,
+            "dialog.nic.ipv6.netmask": ip6netmask,
+            "dialog.nic.ipv6.gateway": ip6gateway,
             "dialog.nic.vlanid": vlanid,
         })
 
         self.logger.debug("model: %s" % self.plugin.model())
 
-        padd = lambda l: l.ljust(14)
+        padd = lambda l: l.ljust(12)
         ws = [ui.Row("dialog.nic._row[0]",
                      [ui.KeywordLabel("dialog.nic.iface", padd("Interface: ")),
                       ui.KeywordLabel("dialog.nic.driver", padd("Driver: ")),
@@ -334,23 +422,56 @@ class NicDetailsDialog(ui.Dialog):
 
               ui.Divider("dialog.nic._divider[0]"),
 
-              ui.Header("dialog.nic.ipv4._header", "IPv4 Settings"),
+              ui.Label("dialog.nic.ipv4._header", "IPv4 Settings"),
+
               ui.Options("dialog.nic.ipv4.bootproto",
                          "Bootprotocol: ", [("none", "Disabled"),
                                             ("dhcp", "DHCP"),
                                             ("static", "Static")
                                             ]),
-              ui.Entry("dialog.nic.ipv4.address", padd("IP Address: ")),
-              ui.Entry("dialog.nic.ipv4.netmask", padd("Netmask: ")),
-              ui.Entry("dialog.nic.ipv4.gateway", padd("Gateway: ")),
+
+              ui.Row("dialog.nic._row[4]",
+                     [ui.Entry("dialog.nic.ipv4.address",
+                               padd("IP Address: ")),
+                      ui.Entry("dialog.nic.ipv4.netmask",
+                               padd("  Netmask: "))]),
+              ui.Row("dialog.nic._row[5]",
+                     [ui.Entry("dialog.nic.ipv4.gateway",
+                               padd("Gateway: ")),
+                      ui.Label("dummy[0]", "")]),
 
               ui.Divider("dialog.nic._divider[1]"),
 
-              ui.Entry("dialog.nic.vlanid", padd("VLAN ID: ")),
+              ui.Label("dialog.nic.ipv6._header", "IPv6 Settings"),
+
+              ui.Options("dialog.nic.ipv6.bootproto",
+                         "Bootprotocol: ", [("none", "Disabled"),
+                                            ("auto", "Auto"),
+                                            ("dhcp", "DHCP"),
+                                            ("static", "Static")
+                                            ]),
+
+              ui.Row("dialog.nic._row[6]",
+                     [ui.Entry("dialog.nic.ipv6.address",
+                               padd("IP Address: ")),
+                      ui.Entry("dialog.nic.ipv6.netmask",
+                               padd("  Netmask: "))]),
+              ui.Row("dialog.nic._row[7]",
+                     [ui.Entry("dialog.nic.ipv6.gateway",
+                               padd("Gateway: ")),
+                      ui.Label("dummy[1]", "")]),
 
               ui.Divider("dialog.nic._divider[2]"),
+
+              ui.Row("dialog.nic._row[8]",
+                     [ui.Entry("dialog.nic.vlanid",
+                               padd("VLAN ID: ")),
+                      ui.Label("dummy[2]", "")]),
+
+              ui.Divider("dialog.nic._divider[3]"),
               ui.Button("dialog.nic.identify", "Flash Lights to Identify")
               ]
+
         self.plugin.widgets.add(ws)
         self.children = ws
         self.buttons = [ui.SaveButton("dialog.nic.save", "Save"),
