@@ -253,7 +253,6 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
 
         return widget
 
-
     def _build_table(self, ui_table):
         children = []
 
@@ -261,8 +260,8 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
             c = self._build_tableitem(ui_table, key, label)
             children.append(c)
         widget = uw.TableWidget(ui_table.label(), ui_table.header,
-                              children, ui_table.multi,
-                              ui_table.height, ui_table.enabled())
+                                children, ui_table.multi,
+                                ui_table.height, ui_table.enabled())
 
         for c in children:
             c._table = widget

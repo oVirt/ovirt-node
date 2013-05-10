@@ -229,11 +229,11 @@ class TableWidget(NoticeDecoration):
                     #Calculate ourselves, subtracting 3 (for the arrows
                     # and the knob itself)
                         self.below_knob = abs(float(list_size - rows) / (rows -
-                                                             3))
+                                                                         3))
                     else:
                         self.below_knob = abs(float(list_size -
-                                        rows) / (rows - 2 -
-                            self.ratio))
+                                                    rows) / (rows - 2 -
+                                                             self.ratio))
                 else:
                     self.below_knob = float(list_size - rows)
                 self.above_knob = int(offset / self.below_knob)
@@ -248,14 +248,14 @@ class TableWidget(NoticeDecoration):
 
             blocks_above = u'\u2592' * self.above_knob
             blocks_below = u'\u2592' * (rows - self.above_knob - 2 -
-                                 self.truncate(self.knob_height))
+                                        self.truncate(self.knob_height))
 
             self.__text.set_text([('edit', u"▲"), blocks_above +
                                   u"\u2588" * (self.truncate(self.knob_height))
                                   + blocks_below, ('edit', u"▼")])
 
             (self.__rows, self._offset, self.__list_size) = (rows, offset,
-                                                           list_size)
+                                                             list_size)
             self._show_scroll_bar()
         else:
             self._hide_scroll_bar()

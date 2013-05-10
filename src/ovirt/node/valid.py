@@ -318,6 +318,8 @@ class IPv6Address(IPv4Address):
     True
     >>> IPv6Address()("0::0")
     True
+    >>> IPv6Address()("11::22")
+    True
     >>> IPv6Address().validate("0:::0")
     False
     >>> IPv6Address().validate("0::0::0")

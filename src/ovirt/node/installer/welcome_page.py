@@ -85,9 +85,9 @@ class Plugin(plugins.NodePlugin):
 
     def ___installation_options(self):
         if self.application.args.dry:
-            return [ui.Button("button.install", "Install Hypervisor (dry)"),
-                    ui.Button("button.upgrade", "Upgrade Hypervisor (dry)"),
-                    ui.Button("button.downgrade", "Downgrade Hypervisor (dry)")]
+            return [ui.Button("button.install", "Install (dry)"),
+                    ui.Button("button.upgrade", "Upgrade (dry)"),
+                    ui.Button("button.downgrade", "Downgrade (dry)")]
 
         media = utils.system.InstallationMedia()
 

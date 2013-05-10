@@ -22,7 +22,7 @@
 """
 Keyboard page of the installer
 """
-from ovirt.node import plugins, ui, utils
+from ovirt.node import plugins, ui
 from ovirt.node.utils import system
 
 
