@@ -1076,6 +1076,17 @@ def finish_install():
         system("cp /tmp/ovirt.log /boot/ovirt.log")
         system("umount /boot")
 
+    # fix SELinux
+    logging_dev = findfs("LOGGING")
+    logging_mount_cmd = ("grep %s /proc/mounts | grep writable |" +
+                         "awk '{print $2}'") % logging_dev
+    logging_mount = subprocess_closefds(logging_mount_cmd, shell=True,
+                                        stdout=PIPE, stderr=STDOUT)
+    (logging_mount_output, dummy) = logging_mount.communicate()
+    system("chcon -R system_u:object_r:var_log_t:s0 %s" % logging_mount_output)
+    system("chcon -R system_u:object_r:auditd_log_t:s0 %s/audit/" %
+           logging_mount_output.rstrip())
+
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
