@@ -64,6 +64,8 @@ class SimpleProvider(base.Base):
     def __init__(self, filename):
         super(SimpleProvider, self).__init__()
         self.filename = filename
+        if not os.path.exists(self.filename):
+            raise RuntimeError("File does not exist: %s" % self.filename)
         self.logger.debug("Using %s" % self.filename)
 
     def update(self, new_dict, remove_empty):
