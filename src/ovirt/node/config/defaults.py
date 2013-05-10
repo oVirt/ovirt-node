@@ -294,7 +294,6 @@ class Network(NodeConfigFileSection):
     - OVIRT_BOOTIF
     - OVIRT_IP_ADDRESS, OVIRT_IP_NETMASK, OVIRT_IP_GATEWAY
     - OVIRT_VLAN
-    - OVIRT_IPV6
 
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
@@ -379,6 +378,56 @@ class Network(NodeConfigFileSection):
         """Can be used to configure a static IP on a NIC
         """
         self.update(iface, "static", ipaddr, netmask, gateway, vlanid)
+
+
+class IPv6(NodeConfigFileSection):
+    """Sets IPv6 network stuff
+    - OVIRT_IPV6_*
+
+    >>> fn = "/tmp/cfg_dummy"
+    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> n = IPv6(cfgfile)
+    >>> n.update(True, "11::22", "11::33", "11::44")
+    >>> data = sorted(n.retrieve().items())
+    >>> data[0:3]
+    [('enabled', True), ('gateway', '11::44'), ('ipaddr', '11::22')]
+    >>> data[3:]
+    [('netmask', '11::33')]
+    """
+    keys = ("OVIRT_IPV6",
+            "OVIRT_IPV6_ADDRESS",
+            "OVIRT_IPV6_NETMASK",
+            "OVIRT_IPV6_GATEWAY")
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, enabled, ipaddr, netmask, gateway):
+        (valid.Boolean() | valid.Empty(or_none=True))(enabled)
+        (valid.IPv6Address() | valid.Empty(or_none=True))(ipaddr)
+        (valid.IPv6Address() | valid.Empty(or_none=True))(netmask)
+        (valid.IPv6Address() | valid.Empty(or_none=True))(gateway)
+        return {"OVIRT_IPV6": "yes" if enabled else None}
+
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        cfg.update({"enabled": cfg["enabled"] == "yes"})
+        return cfg
+
+    def transaction(self):
+        return self.__legacy_transaction()
+
+    def __legacy_transaction(self):
+        """The transaction is the same as in the Network class - using the
+        legacy stuff.
+        This should be rewritten to allow a more fine grained progress
+        monitoring.
+        """
+        tx = Network().transaction()
+        return tx
+
+    def disable(self):
+        """Can be used to disable IPv6
+        """
+        self.update(None, None, None, None, None)
 
 
 class Hostname(NodeConfigFileSection):
