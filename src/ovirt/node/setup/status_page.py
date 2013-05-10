@@ -80,7 +80,7 @@ class Plugin(plugins.NodePlugin):
         action_widgets = [ui.Button("action.lock", "Lock"),
                           ui.Button("action.logoff", "Log Off"),
                           ui.Button("action.restart", "Restart"),
-                          ui.Button("action.poweroff", "Poweroff")
+                          ui.Button("action.poweroff", "Power Off")
                           ]
 
         widgets = [ui.Header("header[0]", "System Information"),
