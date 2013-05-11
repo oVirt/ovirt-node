@@ -167,15 +167,6 @@ EOP
 start_ovirt_early () {
     [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
     {
-        # FIXME Hack around rhbz#806349 and which might be because of rhbz#807203
-        if [[ -e "/bin/systemctl" ]];
-        then
-            systemctl daemon-reload
-        else
-            mount -a
-            swapon -a
-        fi
-
         log "Starting ovirt-early"
         _start_ovirt_early
         RETVAL=$?
@@ -814,6 +805,17 @@ _start_ovirt_early () {
 from ovirtnode.network import convert_to_biosdevname
 convert_to_biosdevname()
 EOP
+        # Trigger mounting so logfiles are visible
+        if [[ -e "/bin/systemctl" ]];
+        then
+            systemctl daemon-reload
+            mount -a
+            swapon -a
+            service auditd restart
+        else
+            mount -a
+            swapon -a
+        fi
 
     fi
     log "Updating $OVIRT_DEFAULTS"
