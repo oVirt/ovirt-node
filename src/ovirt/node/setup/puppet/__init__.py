@@ -1,4 +1,8 @@
-# Copyright (C) 2012 Red Hat, Inc.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# __init__.py - Copyright (C) 2013 Red Hat, Inc.
+# Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,30 +19,14 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-pluginsdir = $(sysconfdir)/ovirt-plugins.d
-pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
-pyovirtconfigbootdir = $(sysconfdir)/ovirt-config-boot.d
-puppetplugindir = ${prefix}/share/ovirt-node/puppet-plugin/
-rbovirtsetupdir = $(localstatedir)/lib/puppet/facts
+"""
+Puppet Plugin
+"""
+import puppet_page
 
-# FIXME this can be removed
-dist_pyovirtconfigsetup_SCRIPTS = \
-  snmp.py \
-  cim.py
 
-dist_plugins_DATA = \
-  snmp.minimize \
-  cim.minimize \
-  puppet.minimize
-
-dist_pyovirtconfigboot_SCRIPTS = \
-  snmp_autoinstall.py
-
-rbovirtsetup_SCRIPTS = \
-  ovirt.rb
-
-dist_puppetplugin_DATA = \
-  puppet-operatingsystem.rb.patch
-
-EXTRA_DIST = \
-  *.rb
+#
+# Magic function to register all plugins to be used
+#
+def createPlugins(application):
+    puppet_page.Plugin(application)
