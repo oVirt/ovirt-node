@@ -65,29 +65,26 @@ class Plugin(plugins.NodePlugin):
         pass
 
     def on_merge(self, effective_changes):
-
-        nav = self.application.ui.navigate
         if "button.install" in effective_changes:
-            self.application.ui.navigate.to_next_plugin()
             self._model["method"] = "install"
 
         elif "button.upgrade" in effective_changes:
-            nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "upgrade"
 
         elif "button.downgrade" in effective_changes:
-            nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "downgrade"
 
         elif "button.reinstall" in effective_changes:
-            nav.to_plugin(installer.upgrade_page.Plugin)
             self._model["method"] = "reinstall"
+
+        self.application.ui.navigate.to_next_plugin()
 
     def ___installation_options(self):
         if self.application.args.dry:
             return [ui.Button("button.install", "Install (dry)"),
                     ui.Button("button.upgrade", "Upgrade (dry)"),
-                    ui.Button("button.downgrade", "Downgrade (dry)")]
+                    ui.Button("button.downgrade", "Downgrade (dry)"),
+                    ui.Button("button.reinstall", "Reinstall (dry)")]
 
         media = utils.system.InstallationMedia()
 

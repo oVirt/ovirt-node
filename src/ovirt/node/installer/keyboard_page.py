@@ -22,7 +22,7 @@
 """
 Keyboard page of the installer
 """
-from ovirt.node import plugins, ui
+from ovirt.node import plugins, ui, installer
 from ovirt.node.utils import system
 
 
@@ -70,4 +70,11 @@ class Plugin(plugins.NodePlugin):
             kbd = system.Keyboard()
             self.dry_or(lambda: kbd.set_layout(changes["keyboard.layout"]))
 
-            self.application.ui.navigate.to_next_plugin()
+            app = self.application
+            welcome = app.get_plugin(installer.welcome_page.Plugin)
+            method = welcome.model()["method"]
+            nav = self.application.ui.navigate
+            if method in ["upgrade", "downgrade", "reinstall"]:
+                nav.to_plugin(installer.upgrade_page.Plugin)
+            else:
+                nav.to_next_plugin()
