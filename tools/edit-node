@@ -509,7 +509,7 @@ class LiveImageEditor(LiveImageCreator):
         args.append('s/root=[^ ]*/root=live:CDLABEL=' + self.name[:32] + '/')
         if self.ks:
             # bootloader --append "!opt-to-remove opt-to-add"
-            for param in kickstart.get_kernel_args(self.ks,"").split():
+            for param in kickstart.get_kernel_args(self.ks, "").split():
                 if param.startswith('!'):
                     param=param[1:]
                     # remove parameter prefixed with !
@@ -627,8 +627,8 @@ class LiveImageEditor(LiveImageCreator):
                     fdno = os.open(pkg, os.O_RDONLY)
                     hdr = ts.hdrFromFdno(fdno)
                     os.close(fdno)
-                    ts.addInstall(hdr,(hdr,pkg), "u")
-        ts.run(self.simpleCallback().callback,'')
+                    ts.addInstall(hdr, (hdr, pkg), "u")
+        ts.run(self.simpleCallback().callback, '')
 
     def _print_version(self):
         f = open("%s/etc/system-release" % self._instroot)
@@ -770,19 +770,19 @@ class LiveImageEditor(LiveImageCreator):
             plugin_file = "%s/%s" % (plugin_info_dir, pkg)
             pfile = open(plugin_file, "w")
             pfile.write("Name:%s\n" % pkg)
-            pfile.write("Version:%s-%s" % (pkg,vr))
+            pfile.write("Version:%s-%s" % (pkg, vr))
             pfile.write("Install Date:%s" % install_date)
             pfile.close()
 
         # create deltas
-        for i in ["file", "dir","owns", "deps" ]:
+        for i in ["file", "dir", "owns", "deps" ]:
             # if current-XXX-manifest exists run delta based on it
             if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, i)):
-                cmd = "cp %s/iso/isolinux/current-manifest-%s.txt > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                cmd = "cp %s/iso/isolinux/current-manifest-%s.txt > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot , i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                 output, err = f.communicate()
             else:
-                cmd =  "bzcat %s/iso/isolinux/manifest-%s.txt.bz2|sort > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                cmd =  "bzcat %s/iso/isolinux/manifest-%s.txt.bz2|sort > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot , i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                 output, err = f.communicate()
             cmd = "diff -u /manifest-%s.txt /manifest-%s-%s-%s.txt |egrep -v \"^@|^ \"> /delta-%s-manifest-%s-%s.txt" % (i, timestamp, pkg, i, timestamp, i, pkg)
@@ -790,19 +790,19 @@ class LiveImageEditor(LiveImageCreator):
             output, err = f.communicate()
         for i in ["rpm", "srpm", "license"]:
             if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" % (self._ImageCreator__builddir, i)):
-                cmd =  "cat %s/iso/isolinux/current-manifest-%s.txt|sort -u > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                cmd =  "cat %s/iso/isolinux/current-manifest-%s.txt|sort -u > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot, i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                 output, err = f.communicate()
             else:
-                cmd =  "cat %s/iso/isolinux/manifest-%s.txt|sort -u > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot ,i)
+                cmd =  "cat %s/iso/isolinux/manifest-%s.txt|sort -u > %s/manifest-%s.txt" % (self._ImageCreator__builddir, i, self._instroot, i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                 output, err = f.communicate()
             cmd = "diff -u /manifest-%s.txt /manifest-%s-%s-%s.txt |egrep -v \"^@|^ \" > /delta-%s-manifest-%s-%s.txt" % (i, timestamp, pkg, i, timestamp, i, pkg)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn=self._chroot)
             output, err = f.communicate()
         # cleanup copied manifests
-        for i in ["rpm", "srpm", "license", "file", "dir","owns", "deps"]:
-            cmd = "rm -rf %s/manifest-%s.txt" % (self._instroot ,i)
+        for i in ["rpm", "srpm", "license", "file", "dir", "owns", "deps"]:
+            cmd = "rm -rf %s/manifest-%s.txt" % (self._instroot, i)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
             output, err = f.communicate()
         print "Copying Manifests"
@@ -824,7 +824,7 @@ class LiveImageEditor(LiveImageCreator):
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                 output, err = f.communicate()
                 print output
-                print "Failed to copy %s to %s/iso/isolinux" % (file,self._ImageCreator__builddir)
+                print "Failed to copy %s to %s/iso/isolinux" % (file, self._ImageCreator__builddir)
                 return False
         # update symlink
         for f in ["rpm", "srpm", "license", "file", "dir" ]:
@@ -872,7 +872,7 @@ class LiveImageEditor(LiveImageCreator):
         output, err = f.communicate()
         print output
         if not f.returncode > 0:
-            print "\nManifests are located in : %s/%s.tar.bz2" % (cwd,dirname)
+            print "\nManifests are located in : %s/%s.tar.bz2" % (cwd, dirname)
             os.system("umount %s" % isodir)
             os.system("rm -rf %s" % isodir)
         else:
@@ -899,8 +899,8 @@ class LiveImageEditor(LiveImageCreator):
         li.sort()
         print "\n"
         for entry in li:
-            if os.path.islink("%s/isolinux/%s" % (isodir,entry)):
-                link = os.readlink("%s/isolinux/%s" % (isodir,entry))
+            if os.path.islink("%s/isolinux/%s" % (isodir, entry)):
+                link = os.readlink("%s/isolinux/%s" % (isodir, entry))
                 if "manifest" in link:
                     print "%s -> %s" % (entry, link)
             else:
@@ -912,7 +912,7 @@ class LiveImageEditor(LiveImageCreator):
         os.system("rm -rf %s" % isodir)
         return
 
-    def _install_pkgs(self,options):
+    def _install_pkgs(self, options):
         self._setup_dns()
         if not self._setup_yum_repo(options):
             return False
@@ -922,7 +922,7 @@ class LiveImageEditor(LiveImageCreator):
             self._cleanup_editing()
             return True
 
-    def _install_plugins(self,options):
+    def _install_plugins(self, options):
         self._setup_dns()
         if not self._setup_yum_repo(options):
             return False
@@ -990,8 +990,8 @@ class LiveImageEditor(LiveImageCreator):
                     fdno = os.open(pkg, os.O_RDONLY)
                     hdr = ts.hdrFromFdno(fdno)
                     os.close(fdno)
-                    ts.addInstall(hdr,(hdr,pkg), "u")
-        ts.run(self.simpleCallback().callback,'')
+                    ts.addInstall(hdr, (hdr, pkg), "u")
+        ts.run(self.simpleCallback().callback, '')
 
     def _setup_dns(self):
         print "Setting Up DNS For Chroot"
@@ -1013,7 +1013,7 @@ class LiveImageEditor(LiveImageCreator):
                     print output
                     print "Can't Create Repo File"
                     return False
-                cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % (options.repo,self._instroot)
+                cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % (options.repo, self._instroot)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                 output, err = f.communicate()
                 if f.returncode > 0:
@@ -1061,7 +1061,7 @@ enabled=1
                "gpg_check" : gpgcheck
              }
 
-                f = open(self._instroot + "/etc/yum.repos.d/plugin.repo","w")
+                f = open(self._instroot + "/etc/yum.repos.d/plugin.repo", "w")
                 f.write(repo_template % repo_dict)
                 f.close()
                 return True
@@ -1149,8 +1149,8 @@ enabled=1
             return False
         if os.path.isfile(pkgs):
             os.system("mkdir %s/tmp/yumrepo" % self._instroot)
-            os.system("touch %s/tmp/yumrepo/%s" % (self._instroot,os.path.basename(pkgs)))
-            os.system("mount -o bind %s %s/tmp/yumrepo/%s" % (pkgs, self._instroot,os.path.basename(pkgs)))
+            os.system("touch %s/tmp/yumrepo/%s" % (self._instroot, os.path.basename(pkgs)))
+            os.system("mount -o bind %s %s/tmp/yumrepo/%s" % (pkgs, self._instroot, os.path.basename(pkgs)))
             print os.listdir("%s/tmp/yumrepo" % self._instroot)
             yum_cmd = "yum localinstall -y /tmp/yumrepo/%s" % os.path.basename(pkgs)
         else:
@@ -1170,7 +1170,7 @@ enabled=1
             self._cleanup_editing()
             return False
         if "localinstall" in yum_cmd:
-            os.system("umount %s/tmp/yumrepo/%s" % (self._instroot,os.path.basename(pkgs)))
+            os.system("umount %s/tmp/yumrepo/%s" % (self._instroot, os.path.basename(pkgs)))
             os.system("rm -rf %s/tmp/yumrepo" % self._instroot)
         return True
 
@@ -1191,7 +1191,7 @@ enabled=1
         else:
             return False
 
-    def _set_password(self,options):
+    def _set_password(self, options):
         for key in options.password:
             # if no users defined, default is admin
             if "," in key:
@@ -1207,7 +1207,7 @@ enabled=1
             except OSError, e:
                 raise CreatorError("Failed to set password, %s " % e)
 
-    def _setup_ssh_keys(self,options):
+    def _setup_ssh_keys(self, options):
         for key in options.ssh_keys:
             # if no users defined, default is admin
             if "," in key:
@@ -1235,7 +1235,7 @@ enabled=1
         cmd = "rpm -q kernel"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn=self._chroot)
         output, err = f.communicate()
-        kver = output.strip().replace("kernel-","")
+        kver = output.strip().replace("kernel-", "")
         cmd = "new-kernel-pkg --package kernel --mkinitrd --dracut --depmod --update %s" % kver
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, preexec_fn=self._chroot)
         output, err = f.communicate()
