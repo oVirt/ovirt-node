@@ -42,6 +42,7 @@ import imgcreate.kickstart as kickstart
 from imgcreate import read_kickstart
 from optparse import Option
 
+
 class MultipleOption(Option):
     ACTIONS = Option.ACTIONS + ("extend",)
     STORE_ACTIONS = Option.STORE_ACTIONS + ("extend",)
@@ -54,6 +55,7 @@ class MultipleOption(Option):
         else:
             Option.take_action(self, action, dest, opt, value, values, parser)
 
+
 class ExistingSparseLoopbackDisk(SparseLoopbackDisk):
     """don't want to expand the disk"""
     def __init__(self, lofile, size):
@@ -63,7 +65,9 @@ class ExistingSparseLoopbackDisk(SparseLoopbackDisk):
         #self.expand(create = True)
         LoopbackDisk.create(self)
 
+
 class LiveImageEditor(LiveImageCreator):
+
     def __init__(self, name, docleanup=True):
         self.name = name
         self.docleanup = docleanup
@@ -279,7 +283,6 @@ class LiveImageEditor(LiveImageCreator):
 
         self.__instloop.cleanup()
 
-
     def __copy_img_root(self, base_on):
         """helper function to copy root content of the base LiveIMG to
         ISOdir"""
@@ -304,7 +307,6 @@ class LiveImageEditor(LiveImageCreator):
             subprocess.call(['sync'])
         finally:
             imgmnt.cleanup()
-
 
     def mount(self, base_on, cachedir = None):
         """mount existing file system.
@@ -410,7 +412,6 @@ class LiveImageEditor(LiveImageCreator):
 
         self.__instloop.cleanup()
 
-
     def __copy_img_root(self, base_on):
         """helper function to copy root content of the base LiveIMG to
         ISOdir"""
@@ -435,7 +436,6 @@ class LiveImageEditor(LiveImageCreator):
             subprocess.call(['sync'])
         finally:
             imgmnt.cleanup()
-
 
     def _brand (self, _builder):
         """Adjust the image branding to show its variation from original
@@ -485,7 +485,6 @@ class LiveImageEditor(LiveImageCreator):
 
         self._releasefile = ntext
         self.name += '-' + os.uname()[4] + '-' + time.strftime('%Y%m%d.%H%M')
-
 
     def _configure_bootloader(self, isodir):
         """Restore the boot configuration files for an iso image boot."""
@@ -697,6 +696,7 @@ class LiveImageEditor(LiveImageCreator):
         output, err = f.communicate()
         print "\n%s\n" % output
         return True
+
     def _list_plugins(self):
         plugin_info_dir =  "%s/etc/ovirt-plugins.d" % self._instroot
         if os.path.exists(plugin_info_dir):
@@ -998,6 +998,7 @@ class LiveImageEditor(LiveImageCreator):
         # bind mount resolv.conf
         os.system("touch %s/etc/resolv.conf" % self._instroot)
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" % self._instroot)
+
     def _setup_yum_repo(self, options):
         print "Configuring Yum Repo"
         self.dd_dir = tempfile.mkdtemp(dir =  os.path.abspath(self.tmpdir), prefix = "dd-iso")
@@ -1337,7 +1338,6 @@ def parse_options(args):
 
     parser.add_option_group(m_grp)
 
-
     setup_logging(parser)
 
     (options, args) = parser.parse_args()
@@ -1348,6 +1348,7 @@ def parse_options(args):
     print args[0]
 
     return (args[0], options)
+
 
 def get_fsvalue(filesystem, tag):
     dev_null = os.open('/dev/null', os.O_WRONLY)
@@ -1363,6 +1364,7 @@ def get_fsvalue(filesystem, tag):
 
     return fs_type.rstrip()
 
+
 def rebuild_iso_symlinks(isodir):
     # remove duplicate files and rebuild symlinks to reduce iso size
     efi_vmlinuz = "%s/EFI/BOOT/vmlinuz0" % isodir
@@ -1377,6 +1379,7 @@ def rebuild_iso_symlinks(isodir):
         os.system("ln -s ../../isolinux/vmlinuz0 .")
         os.system("ln -s ../../isolinux/initrd0.img .")
         os.chdir(cwd)
+
 
 def main():
     # LiveOS set to <LIVEIMG.src>
