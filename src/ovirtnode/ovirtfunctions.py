@@ -1566,8 +1566,21 @@ def cpu_details():
         else:
             cpu_model = "Unknown Model"
     try:
-        topologyTag = cpu.getElementsByTagName('topology')[0].toxml()
-        cpu_topology = topologyTag.replace('<topology>','').replace('</topology>','').split()
+        host = dom.getElementsByTagName('host')[0]
+        cells = host.getElementsByTagName('cells')[0]
+        total_cpus = cells.getElementsByTagName('cpu').length
+
+        socketIds = []
+        siblingsIds = []
+
+        socketIds = [proc.getAttribute('socket_id')
+                     for proc in cells.getElementsByTagName('cpu')
+                     if proc.getAttribute('socket_id') not in socketIds]
+
+        siblingsIds = [proc.getAttribute('siblings')
+                       for proc in cells.getElementsByTagName('cpu')
+                       if proc.getAttribute('siblings') not in siblingsIds]
+        cpu_topology = "OK"
     except:
         cpu_topology = "Unknown"
     status_msg += "CPU Name: %s\n" % cpu_dict["model name"].replace("  "," ")
@@ -1590,10 +1603,12 @@ def cpu_details():
     if cpu_topology == "Unknown":
         status_msg += "Unable to determine CPU Topology"
     else:
-        cpu_sockets=cpu_topology[2].split("=")[1].replace('"',"")
+        cpu_sockets = len(set(socketIds))
         status_msg += "CPU Sockets: %s\n" % cpu_sockets
-        cpu_cores=cpu_topology[1].split("=")[1].replace('"',"")
+        cpu_cores = len(set(siblingsIds))
         status_msg += "CPU Cores: %s\n" % cpu_cores
+        cpu_threads = total_cpus
+        status_msg += "CPU Threads: %s\n" % cpu_threads
     return status_msg
 
 def get_ssh_hostkey(variant="rsa"):
