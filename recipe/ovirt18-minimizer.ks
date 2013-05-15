@@ -1,5 +1,4 @@
 # Fedora specific image minimization
-keep /usr/share/virt-manager
 
 # qemu minimization
 droprpm qemu-system-alpha
