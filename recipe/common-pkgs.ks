@@ -96,7 +96,6 @@ libguestfs
 python-libguestfs
 libguestfs-tools-c
 python-hivex
-febootstrap-supermin-helper
 # sosreport soft-dep
 rpm-python
 # for efi installs
