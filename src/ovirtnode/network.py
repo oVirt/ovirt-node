@@ -584,7 +584,7 @@ def set_nfsv4_domain(domain):
         _functions.system("sed -i 's/%s/Domain = %s/g' %s" \
             % (current_domain, domain, idmap_conf))
     else:
-        _functions.system("sed -i 's/%s/%s/g' %s" \
+        _functions.system("sed -i '/^Domain/ s/%s/%s/g' %s" \
             % (current_domain, domain, idmap_conf))
     if _functions.ovirt_store_config(idmap_conf):
         logger.info("NFSv4 domain set as: " + domain)
