@@ -1306,13 +1306,13 @@ def parse_options(args):
                       help="Specify the builder of a Remix.")
 
     parser.add_option("-p", "--install-plugin", type="string",
-                      dest="plugin", help="Specify plugins to install")
+                      dest="plugin", help="comma delimited list of plugins to install")
 
     parser.add_option("--install", type="string",
-                      dest="install", help="Specify packages to install")
+                      dest="install", help="comma delimited list of packages to install")
 
     parser.add_option("--install-kmod", type="string",
-                      dest="install_dup", help="Specify driver update packages to install")
+                      dest="install_dup", help="comma delimited list of driver update packages to install")
 
     parser.add_option("--repo", type="string",
                       dest="repo", help="Specify yum repo file or yum repository on the filesystem")

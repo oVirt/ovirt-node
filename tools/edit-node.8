@@ -21,11 +21,14 @@ Set a password for the specified user, can be specified multiple times, if no us
 .IP \fB\-\-sshkey=USER,PUB_KEY_FILE\fR
 Set a public key for the specified user, can be specified multiple times, if no user is specified the default is admin
 .IP \fB\-\-install-plugin=PLUGIN_PACKAGE_NAME\fR
-Installs a the specific plugin package from a yum repo or specified rpm file, valid file locations are whitelisted to plugin specific areas
+Installs a the specific plugin package from a yum repo or specified rpm file, valid file locations are whitelisted to plugin specific areas.
+Multiple packages can be specified by comma delimited list (package1,package2)
 .IP \fB\-\-install-kmod=KMOD_PACKAGE_NAME\fR
-Installs a the specific plugin package from a yum repo or specified rpm file, valid file locations are whitelisted to kmod specific areas
+Installs a the specific plugin package from a yum repo or specified rpm file, valid file locations are whitelisted to kmod specific areas.
+Multiple packages can be specified by comma delimited list (package1,package2)
 .IP \fB\-\-install=PACKAGE_NAME\fR
-Installs a the specific package from a yum repo or specified rpm file, all file locations are valid
+Installs a the specific package from a yum repo or specified rpm file, all file locations are valid.
+Multiple packages can be specified by comma delimited list (package1,package2)
 .IP \fB\-\-repo=REPO\fR
 Yum repository can be a local directory, a yum repository file, or a driver disk iso file. It must be used in conjunction with --install* options
 .IP \fB\-\-nogpgcheck\fR
