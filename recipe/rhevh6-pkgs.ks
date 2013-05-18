@@ -17,3 +17,6 @@ ql2200-firmware
 ql23xx-firmware
 ql2400-firmware
 ql2500-firmware
+#default plugins
+ovirt-node-plugin-snmp
+ovirt-node-plugin-cim
