@@ -24,9 +24,6 @@ plymouth-scripts
 plymouth-plugin-two-step
 plymouth-theme-charge
 
-# urwid - for the alternate tui
-python-urwid
-
 # f18 doesn't pull in rsyslog
 rsyslog
 
