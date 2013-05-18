@@ -20,10 +20,16 @@ if test "$CENTOS"; then
 fi
 
 AM_CONDITIONAL(TARGET_FEDORA, test x"$FEDORA" != x)
-AM_CONDITIONAL(TARGET_RHEL, test x"$RHEL" != x)
+AM_CONDITIONAL(TARGET_RHEL, test x"$RHEL" != x && test x"$CENTOS" == x)
 AM_CONDITIONAL(TARGET_CENTOS, test x"$CENTOS" != x)
 AM_CONDITIONAL(TARGET_SYSTEMD, test 0$RHEL -ge 7 || test 0$FEDORA -ge 16 || test 0$CENTOS -ge 7)
 
+AM_COND_IF([TARGET_SYSTEMD],
+    [SYSTEMD_COMMENT=""], [SYSTEMD_COMMENT="#"])
+AM_COND_IF([TARGET_RHEL],
+    [COLLECTD_COMMENT="#"], [COLLECTD_COMMENT=""])
+AC_SUBST([SYSTEMD_COMMENT])
+AC_SUBST([COLLECTD_COMMENT])
 
 AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
             [enable aggresive reduction of the image size])],
@@ -72,5 +78,6 @@ AC_CONFIG_FILES([Makefile
                 $MAIN_KS
                 recipe/image-minimizer.ks
                 scripts/ovirt-functions
+                semodule/ovirt.te
                 ovirt-node.spec])
 AC_OUTPUT

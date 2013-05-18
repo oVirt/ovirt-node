@@ -20,16 +20,16 @@ gen_require(`
 ')
 
 #============= collectd_t ==============
-allow collectd_t passwd_file_t:file { open read };
-allow collectd_t virtd_exec_t:file getattr;
-allow collectd_t virt_etc_t:file read;
-allow collectd_t virt_var_run_t:sock_file write;
+@COLLECTD_COMMENT@allow collectd_t passwd_file_t:file { open read };
+@COLLECTD_COMMENT@allow collectd_t virtd_exec_t:file getattr;
+@COLLECTD_COMMENT@allow collectd_t virt_etc_t:file read;
+@COLLECTD_COMMENT@allow collectd_t virt_var_run_t:sock_file write;
 
 #============= systemd_localed_t ==============
-allow systemd_localed_t etc_t:file { write rename create setattr };
-allow systemd_localed_t init_t:dbus send_msg;
-allow systemd_localed_t systemd_unit_file_t:service start;
-allow systemd_localed_t ovirt_t:dbus send_msg;
+@SYSTEMD_COMMENT@allow systemd_localed_t etc_t:file { write rename create setattr };
+@SYSTEMD_COMMENT@allow systemd_localed_t init_t:dbus send_msg;
+@SYSTEMD_COMMENT@allow systemd_localed_t systemd_unit_file_t:service start;
+@SYSTEMD_COMMENT@allow systemd_localed_t ovirt_t:dbus send_msg;
 
 #============= misc ==============
 allow mount_t shadow_t:file mounton;
