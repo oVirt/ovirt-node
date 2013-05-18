@@ -78,6 +78,7 @@ AC_CONFIG_FILES([Makefile
                 $MAIN_KS
                 recipe/image-minimizer.ks
                 scripts/ovirt-functions
+                scripts/ovirt-init-functions.sh
                 semodule/ovirt.te
                 ovirt-node.spec])
 AC_OUTPUT
