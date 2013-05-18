@@ -66,9 +66,7 @@ Requires:       grub
 # for applying patches in %post
 Requires(post):       patch
 %endif
-%if 0%{?rhel} && ! 0%{?centos}
 Requires:       system-release
-%endif
 
 
 BuildArch:      noarch
@@ -80,7 +78,7 @@ Provides a series of daemons and support utilities for hypervisor distribution.
 
 
 %package recipe
-Summary:        Recipes for building and running %{product_family} image
+Summary:        Recipes for building and running %{product_family} images
 Group:          Applications/System
 Requires:       pykickstart  >= 1.54
 Requires:       livecd-tools >= 1:16.0
@@ -96,7 +94,7 @@ however on a development machine to help to build the image.
 
 
 %package tools
-Summary:        Recipes for building and running %{product_family} image
+Summary:        Tools for working with plugins on %{product_family} images
 Group:          Applications/System
 Requires:       livecd-tools >= 1:16.0
 Requires:       appliance-tools-minimizer
