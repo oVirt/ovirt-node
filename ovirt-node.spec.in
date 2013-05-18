@@ -121,7 +121,11 @@ Requires:       perl-libs
 This package provides an snmp plugin tools for use with%{product_family} image.
 
 %post plugin-snmp
+%if %{is_systemd}
 systemctl enable snmpd.service
+%else
+chkconfig snmpd on
+%endif
 
 cat > /etc/snmp/snmpd.conf << \EOF_snmpd
 master agentx
