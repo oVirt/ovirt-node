@@ -22,11 +22,11 @@ from ovirt.node import base, utils, plugins, ui
 from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
 from ovirt.node.utils import system, Timer, console
-import argparse
 import logging
 import logging.config
 import sys
 import traceback
+from optparse import OptionParser
 
 """
 Representing the whole application (not just the TUI).
@@ -127,14 +127,17 @@ class Application(base.Base):
         self.plugin_base = plugin_base
 
     def __parse_cmdline(self):
-        parser = argparse.ArgumentParser(description='oVirt Node Utility')
-        parser.add_argument("--defaults",
-                            type=str,
+        parser = OptionParser()
+        parser.add_option("--defaults",
+                            dest="defaults",
                             help="Central oVirt Node configuration file")
-        parser.add_argument("--dry",
+        parser.add_option("--dry",
                             action='store_true',
+                            dest="dry",
+                            default=False,
                             help="Just write defaults, nothing else")
-        self.args = parser.parse_args()
+        (self.args, argcount) = parser.parse_args()
+
         self.logger.debug("Parsed args: %s" % self.args)
         if self.args.defaults:
             # FIXME Should be read by clients
