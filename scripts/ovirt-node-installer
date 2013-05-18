@@ -5,6 +5,6 @@
 
 reset
 
-python -m ovirt.node.installer "$@"
+python -m ovirt.node.installer.__main__ "$@"
 
 sleep 1
