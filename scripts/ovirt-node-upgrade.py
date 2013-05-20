@@ -51,7 +51,7 @@ def which(file):
 def initLogger():
     logger = logging.getLogger(LOG_PREFIX)
     log_file = "/var/log/ovirt-upgrade.log"
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s -'
+    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)-8s - '
                                   '%(module)s - %(message)s')
     conformatter = logging.Formatter('%(name)-12s: %(levelname)-8s'
                                      ' %(message)s')
