@@ -142,13 +142,13 @@ class UpgradeTool(Base):
         ))
 
         for path in hooks_path:
-            if not os.path.exists(hooks_path):
-                self._logger.info("Warning: {hooks_path} does not exist".format
-                                 (hooks_path=hooks_path))
+            if not os.path.exists(path):
+                self._logger.info("Warning: {path} does not exist".format
+                                 (path=path))
             else:
                 self._logger.info("Running {stage} hooks".format(stage=stage))
-                for i in sorted(os.listdir(hooks_path)):
-                    hook = os.path.join(hooks_path, i)
+                for i in sorted(os.listdir(path)):
+                    hook = os.path.join(path, i)
                     self._logger.info("Running: {hook}".format(hook=i))
                     self._system(hook)
                 self._logger.info(

@@ -292,10 +292,13 @@ initrd /initrd0.img
             if _functions.findfs("Boot"):
                 grub_config_file = "/boot/grub/grub.conf"
             elif os.path.ismount("/dev/.initramfs/live"):
-                grub_config_file = "/dev/.initramfs/live/grub/grub.conf"
+                if not _functions.grub2_available():
+                    grub_config_file = "/dev/.initramfs/live/grub/grub.conf"
+                else:
+                    grub_config_file = "/dev/.initramfs/live/grub2/grub.cfg"
             elif os.path.ismount("/run/initramfs/live"):
                 grub_config_file = "/run/initramfs/live/grub/grub.conf"
-            if is_upgrade() and not _functions.is_iscsi_install():
+            if _functions.is_upgrade() and not _functions.is_iscsi_install():
                 mount_liveos()
                 grub_config_file = "/liveos/grub/grub.conf"
         if _functions.is_efi_boot():
