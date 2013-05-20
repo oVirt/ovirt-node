@@ -106,13 +106,15 @@ class UpgradeTool(Base):
         parser = optparse.OptionParser()
 
         parser.add_option("--reboot", type="int", default="0", dest="reboot",
-                          help="Amount of time before reboot after upgrade")
+                          help="Perform reboot after upgrade, argument is"
+                          " amount of delay in seconds")
         parser.add_option("--skip-existing-hooks", action="store_true",
                           dest="skip_existing_hooks", default="False",
                           help="Use only new hooks from provided iso")
 
         parser.add_option("--iso", type="string", dest="iso_file",
-                          metavar="FILE", help="Image to use for upgrade")
+                          metavar="FILE", help="Image to use for upgrade, use"
+                          " - to read from stdin")
         (self._options, args) = parser.parse_args()
 
     def _run_hooks(self, stage):
