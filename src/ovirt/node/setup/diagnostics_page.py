@@ -74,7 +74,7 @@ class Plugin(plugins.NodePlugin):
                              in self.__diagnostics())
             cmd = cmds.get(changes[changed_field], None)
             if cmd:
-                contents = process.check_output(cmd)
+                contents = process.check_output(cmd, stderr=process.STDOUT)
                 return ui.TextViewDialog("output.dialog", "Command Output",
                                          contents)
 
