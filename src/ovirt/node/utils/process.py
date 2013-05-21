@@ -25,6 +25,7 @@ Some convenience functions related to processes
 
 import subprocess
 import logging
+from subprocess import STDOUT, PIPE
 
 LOGGER = logging.getLogger(__name__)
 
@@ -79,9 +80,9 @@ def pipe(cmd, stdin=None):
         stdout, stderr of the process (as one blob)
     """
     return unicode(popen(cmd, shell=True,
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT).communicate(stdin)[0])
+                         stdin=PIPE,
+                         stdout=PIPE,
+                         stderr=STDOUT).communicate(stdin)[0])
 
 
 def pipe_async(cmd, stdin=None):
@@ -97,8 +98,8 @@ def pipe_async(cmd, stdin=None):
     """
     # https://github.com/wardi/urwid/blob/master/examples/subproc.py
     LOGGER.debug("Piping async '%s'" % cmd)
-    process = popen(cmd, shell=True, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE, stdin=stdin)
+    process = popen(cmd, shell=True, stdout=PIPE,
+                    stderr=PIPE, stdin=stdin)
     # pylint: disable-msg=E1101
     if stdin:
         process.stdin.write(stdin)
