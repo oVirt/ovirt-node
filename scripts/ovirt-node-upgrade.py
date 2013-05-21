@@ -301,14 +301,14 @@ class UpgradeTool(Base):
             self._run_hooks("post-upgrade")
             if self._options.reboot > 0:
                 self._reboot(self._options.reboot)
-        except:
-            self._logger.error('Error: Upgrade Failed', show_exc=True)
+            self._logger.info("Upgrade Completed")
+        except Exception as e:
+            self._logger.exception('Error: Upgrade Failed: %s', e)
             self._run_hooks("rollback")
             self._logger.info("Upgrade Failed, Rollback Completed")
             sys.exit(1)
         finally:
             self._cleanup()
-            self._logger.info("Upgrade Completed")
             sys.exit(0)
 
 if __name__ == "__main__":
