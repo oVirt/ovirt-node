@@ -748,6 +748,16 @@ class InfoDialog(Dialog):
         self.buttons = buttons or [CloseButton("dialog.close")]
 
 
+class TextViewDialog(Dialog):
+    """A dialog to display much text, e.g. log files
+    """
+    def __init__(self, path, title, contents, height=10):
+        super(TextViewDialog, self).__init__(path, title, [])
+        self.children = [Table("contents", "", "Contents",
+                               contents, height=height)]
+        self.buttons = [CloseButton("dialog.close")]
+
+
 class TransactionProgressDialog(Dialog):
     """Display the progress of a transaction in a dialog
     """

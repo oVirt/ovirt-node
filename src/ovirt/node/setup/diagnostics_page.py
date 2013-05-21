@@ -19,12 +19,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import plugins, ui
+from ovirt.node.utils import process
 
 """
 Diagnostics page
 """
 
-from ovirt.node import plugins, ui
 
 
 class Plugin(plugins.NodePlugin):
@@ -73,20 +74,11 @@ class Plugin(plugins.NodePlugin):
                              in self.__diagnostics())
             cmd = cmds.get(changes[changed_field], None)
             if cmd:
-                return OutputDialog("output.dialog", "Command Output", cmd)
+                contents = process.check_output(cmd)
+                return ui.TextViewDialog("output.dialog", "Command Output",
+                                         contents)
 
     def __diagnostics(self):
         return [("multipath", "multipath -ll"),
                 ("fdisk", "fdisk -l"),
                 ("parted", "parted -l")]
-
-
-class OutputDialog(ui.Dialog):
-
-    def __init__(self, path, title, cmd):
-        from ovirt.node.utils import process
-        super(OutputDialog, self).__init__(path, title, [])
-        output = process.check_output(cmd)
-        self.children = [ui.Table("output[0]", "", cmd,
-                                      output, height=10)]
-        self.buttons = [ui.CloseButton("dialog.close")]
