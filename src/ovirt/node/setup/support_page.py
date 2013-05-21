@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import ui, utils
 from ovirt.node.plugins import NodePlugin
+from ovirt.node.utils import process
 
 """
 A plugin for a support page
@@ -79,9 +80,9 @@ class Plugin(NodePlugin):
             cmd = cmds[logfile] if logfile in cmds else None
 
             if cmd:
-                with self.application.ui.suspended():
-                    utils.process.call("reset")
-                    utils.process.call(cmd)
+                contents = process.check_output(cmd, stderr=process.STDOUT)
+                return ui.TextViewDialog("output.dialog", "Logfile",
+                                         contents)
 
     def __debugfiles_to_offer(self):
         return [("node", "/var/log/ovirt.log"),
