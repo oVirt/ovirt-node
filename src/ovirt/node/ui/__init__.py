@@ -753,7 +753,7 @@ class InfoDialog(Dialog):
 class TextViewDialog(Dialog):
     """A dialog to display much text, e.g. log files
     """
-    def __init__(self, path, title, contents, height=10):
+    def __init__(self, path, title, contents, height=16):
         super(TextViewDialog, self).__init__(path, title, [])
         self.children = [Table("contents", "", "Contents",
                                contents, height=height)]
