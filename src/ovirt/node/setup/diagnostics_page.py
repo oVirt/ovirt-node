@@ -81,4 +81,5 @@ class Plugin(plugins.NodePlugin):
     def __diagnostics(self):
         return [("multipath", "multipath -ll"),
                 ("fdisk", "fdisk -l"),
-                ("parted", "parted -l")]
+                ("parted", "parted -l"),
+                ("lsblk", "lsblk")]
