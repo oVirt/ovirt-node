@@ -218,7 +218,7 @@ class Application(base.Base):
             self.quit()
 
         def display_exception_as_notice(e):
-            self.logger.debug(traceback.format_exc())
+            self.logger.debug(e, exc_info=True)
             children = [ui.Label("dialog.notice.exception", "%s" % e)]
             notice = ui.Dialog("dialog.notice", "An exception occurred",
                                children)
