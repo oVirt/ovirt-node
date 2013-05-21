@@ -453,6 +453,7 @@ class ProgressBar(Element):
 class Table(InputElement):
     """Represents a simple Table with one column
     """
+    _selected = None
     on_activate = None
 
     def __init__(self, path, label, header, items, selected_item=None,
@@ -486,7 +487,8 @@ class Table(InputElement):
             self.selection(selected_item or [])
             self.on_activate.connect(ChangeAction())
         else:
-            self.selection(selected_item or self.items[0][0])
+            if selected_item or self.items:
+                self.selection(selected_item or self.items[0][0])
             self.on_activate.connect(ChangeAction())
             self.on_activate.connect(SaveAction())
         self.on_exception.connect(DisplayExceptionNotice())
