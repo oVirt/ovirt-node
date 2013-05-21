@@ -152,6 +152,14 @@ class ContainerElement(Element):
         """
         return NotImplementedError
 
+    def enabled(self, is_enabled=True):
+        """Enable/Disable all children
+        """
+        if is_enabled in [True, False]:
+            for child in self.children:
+                child.enabled(is_enabled)
+        return all(child.enabled() for child in self.children)
+
     def __getitem__(self, path):
         return dict((c.path, c) for c in self.children)[path]
 

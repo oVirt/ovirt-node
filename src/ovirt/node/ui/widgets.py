@@ -615,11 +615,16 @@ class Options(urwid.WidgetWrap):
             amap = {None: self._option_attr}
         else:
             amap = {None: self._option_disabled_attr}
-        self._option_attr.set_attr_map(amap)
+        for am in self._buttons:
+            am.set_attr_map(amap)
 
 
 class Checkbox(urwid.WidgetWrap):
     signals = ['change']
+    _selectable = True
+
+    _checkbox_attr = "plugin.widget.checkbox"
+    _checkbox_disabled_attr = "plugin.widget.checkbox.disabled"
 
     def __init__(self, label, state):
         self._label = urwid.Text(label)
@@ -627,7 +632,7 @@ class Checkbox(urwid.WidgetWrap):
                                             "plugin.widget.checkbox.label")
         self._checkbox = urwid.CheckBox("", state)
         self._checkbox_attrmap = urwid.AttrMap(self._checkbox,
-                                               "plugin.widget.checkbox")
+                                               self._checkbox_attr)
         self._divider = urwid.Divider()
         self._container = urwid.Columns([self._label_attrmap,
                                          self._checkbox_attrmap])
@@ -644,6 +649,17 @@ class Checkbox(urwid.WidgetWrap):
             self._checkbox.set_state(s)
         else:
             raise Exception("Invalid value: %s" % s)
+
+    def selectable(self):
+        return self._selectable
+
+    def enable(self, is_enabled):
+        self._selectable = is_enabled
+        if is_enabled:
+            amap = {None: self._checkbox_attr}
+        else:
+            amap = {None: self._checkbox_disabled_attr}
+        self._checkbox_attrmap.set_attr_map(amap)
 
 
 class PageWidget(urwid.WidgetWrap):

@@ -398,7 +398,7 @@ class UrwidWindow(ui.Window):
                ('plugin.widget.page.header', element_styles["header"]),
                ('plugin.widget.page.frame', None),
                ('plugin.widget.checkbox.label', element_styles["label"]),
-               ('plugin.widget.checkbox', element_styles["label"]),
+               ('plugin.widget.checkbox', element_styles["text"]),
                ]
 
     def __init__(self, path, application, with_menu=True):
