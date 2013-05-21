@@ -563,8 +563,10 @@ class Divider(urwid.WidgetWrap):
 class Options(urwid.WidgetWrap):
     signals = ["change"]
 
+    _selectable = True
     _label_attr = "plugin.widget.options.label"
     _option_attr = "plugin.widget.options"
+    _option_disabled_attr = "plugin.widget.options.disabled"
 
     def __init__(self, label, options, selected_option_key):
         self._options = options
@@ -603,6 +605,17 @@ class Options(urwid.WidgetWrap):
 
     def set_text(self, txt):
         self.select(txt)
+
+    def selectable(self):
+        return self._selectable
+
+    def enable(self, is_enabled):
+        self._selectable = is_enabled
+        if is_enabled:
+            amap = {None: self._option_attr}
+        else:
+            amap = {None: self._option_disabled_attr}
+        self._option_attr.set_attr_map(amap)
 
 
 class Checkbox(urwid.WidgetWrap):
