@@ -18,14 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from subprocess import STDOUT, PIPE
+import logging
+import subprocess
+import sys
 
 """
 Some convenience functions related to processes
 """
 
-import subprocess
-import logging
-from subprocess import STDOUT, PIPE
 
 LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +67,8 @@ def check_output(*args, **kwargs):
     """
     kwargs.update(COMMON_POPEN_ARGS)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
-    return unicode(subprocess.check_output(*args, **kwargs))
+    return unicode(subprocess.check_output(*args, **kwargs),
+                   encoding=sys.stdin.encoding)
 
 
 def pipe(cmd, stdin=None):
