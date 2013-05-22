@@ -176,6 +176,7 @@ BuildRequires:    /usr/share/selinux/devel/policyhelp, hardlink
 Requires:         selinux-policy >= %{selinux_policyver}
 %endif
 Requires:         %{name} = %{version}-%{release}
+Requires:         selinux-policy-base
 Requires(post):   /usr/sbin/semodule, /sbin/restorecon
 Requires(postun): /usr/sbin/semodule, /sbin/restorecon
 
