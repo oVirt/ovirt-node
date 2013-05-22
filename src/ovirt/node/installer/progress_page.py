@@ -241,7 +241,7 @@ class InstallerThread(threading.Thread):
         def commit(self):
             from ovirtnode import password
             admin_pw_set = password.set_password(self.root_password, "admin")
-            self.logger.debug("Setting root password: %s" % self.root_password)
+            self.logger.debug("Setting admin password")
             if not admin_pw_set:
                 raise RuntimeError("Failed to set root password")
 
