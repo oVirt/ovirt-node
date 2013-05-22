@@ -1734,19 +1734,28 @@ def build_isoname_for_plugins(edited_iso, plugins):
     #print "plugins", plugins
     #print "packages", packages
 
-    # Strip all iso and edited parts from the end
-    editname_prefix = re.sub("((?:\.(?:edited|iso))*)$", "", edited_iso)
-    nvra = isoname_to_nvr(editname_prefix)
-    #print "edited nvra", nvra
-
     packages = "_".join(packages)
 
-    isoname = "{name}-{version}-{release}.{packages}.{distro}.iso".format(
-        name=nvra[0],
-        version=nvra[1],
-        release=nvra[2],
-        packages=packages,
-        distro=nvra[4])
+    # Strip all iso and edited parts from the end
+    editname_prefix = re.sub("((?:\.(?:edited|iso))*)$", "", edited_iso)
+
+    isoname = None
+    try:
+        nvra = isoname_to_nvr(editname_prefix)
+        #print "edited nvra", nvra
+        isoname = "{name}-{version}-{release}.{packages}.{distro}.iso".format(
+            name=nvra[0],
+            version=nvra[1],
+            release=nvra[2],
+            packages=packages,
+            distro=nvra[4])
+    except Exception as e:
+        logging.exception("ISO Filename '%s' doesn't follow NVRA scheme" %
+                          editname_prefix, e)
+
+        isoname = "{name}.{packages}.iso".format(name=editname_prefix,
+                                                 packages=packages)
+
     return isoname
 
 if __name__ == "__main__":
