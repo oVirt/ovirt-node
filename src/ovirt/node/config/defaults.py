@@ -793,7 +793,7 @@ class KDump(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, nfs, ssh, local):
-        (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(nfs)
+        (valid.Empty(or_none=True) | valid.NFSAddress())(nfs)
         (valid.Empty(or_none=True) | valid.URL())(ssh)
         (valid.Empty(or_none=True) | valid.Boolean())(local)
         return {"OVIRT_KDUMP_LOCAL": "true" if local else None

@@ -259,7 +259,7 @@ class NoSpaces(RegexValidator):
 
 
 class FQDN(RegexValidator):
-    """Matches a FQDN
+    """Matches a FQDN or a simple hostname
 
     >>> FQDN()("example.com")
     True
@@ -451,4 +451,49 @@ class BlockDevice(Validator):
                 is_valid = True
         except:
             is_valid = False
+        return is_valid
+
+
+class NFSAddress(Validator):
+    """Validate an NFS Address
+
+    >>> NFSAddress().validate("1.2.3.4:/var/nfsserver")
+    True
+    >>> NFSAddress().validate("1::4:/var/nfsserver")
+    True
+
+    >>> NFSAddress().validate("")
+    False
+    >>> NFSAddress().validate("1234")
+    False
+    >>> NFSAddress().validate("1.2.3.4")
+    False
+    >>> NFSAddress().validate("1.2.3.4:")
+    False
+    >>> NFSAddress().validate("1.2.3.4/var/nfsserver")
+    False
+    >>> NFSAddress().validate("1.2.3.4:var/nfsserver")
+    False
+    >>> NFSAddress().validate("1::4")
+    False
+    >>> NFSAddress().validate("1:2:3:4")
+    False
+    >>> NFSAddress().validate(":/var/nfsserver")
+    False
+    >>> NFSAddress().validate("/var/nfsserver")
+    False
+    """
+    description = "a valid NFS address"
+
+    def validate(self, value):
+        is_valid = False
+        try:
+            # Addr can be IPv6 or IPv4, therefor a bit more cplx
+            parts = value.split(":")
+            addr, path = ":".join(parts[:-1]), parts[-1]
+            FQDNOrIPAddress()(addr)
+            is_valid = path.startswith("/")
+        except:
+            is_valid = False
+
         return is_valid
