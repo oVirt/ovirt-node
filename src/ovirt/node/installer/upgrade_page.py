@@ -96,7 +96,8 @@ class Plugin(plugins.NodePlugin):
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
         if changes.contains_any(["button.back"]):
-            self.application.ui.navigate.to_first_plugin()
+            nav = self.application.ui.navigate
+            nav.to_plugin(installer.keyboard_page.Plugin)
             return
 
         if changes.contains_any(["upgrade.current_password",
