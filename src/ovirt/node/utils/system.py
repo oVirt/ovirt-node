@@ -113,6 +113,23 @@ def has_systemd():
     return True
 
 
+def copy_dir_if_not_exist(orig, target):
+    """function to copy missing directories from one location to another
+    should only be used when syncing a directory structure from iso
+    to disk like /var/log
+    use case -- upgrade adds some service which logs to /var/log/<service>
+    need to have the directory created, but it's not on iso upgrade
+    """
+    for f in os.listdir(orig):
+        if os.path.isdir("%s/%s" % (orig, f)):
+            if not os.path.exists("%s/%s" % (target, f)):
+                process.call("cp -av %s/%s %s &>/dev/null" % (orig, f,
+                                                              target))
+            else:
+                copy_dir_if_not_exist("%s/%s" % (orig, f), "%s/%s" % (target,
+                                                                      f))
+
+
 class SystemRelease(base.Base):
     """Informations about the OS based on /etc/system-release-cpe
 

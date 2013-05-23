@@ -1204,6 +1204,20 @@ start_ovirt_post() {
         swapon -a
         mount -a
 
+        # Synchronize logs
+        log "Synchronizing log files"
+        logsync_TMPDIR=$(mktemp -d)
+        mkdir -p ${logsync_TMPDIR}/{squash,ext3}
+        mount /dev/.initramfs/live/LiveOS/squashfs.img ${logsync_TMPDIR}/squash
+        mount ${logsync_TMPDIR}/squash/LiveOS/ext3fs.img ${logsync_TMPDIR}/ext3
+        python << EOP
+from ovirt.node.utils.system import copy_dir_if_not_exist
+copy_dir_if_not_exist("${logsync_TMPDIR}/ext3/var/log", "/var/log")
+EOP
+        umount ${logsync_TMPDIR}/ext3
+        umount ${logsync_TMPDIR}/squash
+        rm -rf ${logsync_TMPDIR}
+
         # Re-load keyboard settings
         load_keyboard_config 2> /dev/null
 
