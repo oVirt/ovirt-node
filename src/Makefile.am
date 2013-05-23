@@ -90,12 +90,14 @@ pyovirt_node_installer_PYTHON = \
 pyovirt_node_setup_PYTHON = \
   ovirt/node/setup/__init__.py \
   ovirt/node/setup/__main__.py \
+  ovirt/node/setup/diagnostics_page.py \
   ovirt/node/setup/kdump_page.py \
   ovirt/node/setup/keyboard_page.py \
   ovirt/node/setup/logging_page.py \
   ovirt/node/setup/monitoring_page.py \
   ovirt/node/setup/network_page.py \
   ovirt/node/setup/ping.py \
+  ovirt/node/setup/plugins_page.py \
   ovirt/node/setup/remote_storage_page.py \
   ovirt/node/setup/security_page.py \
   ovirt/node/setup/status_page.py \
