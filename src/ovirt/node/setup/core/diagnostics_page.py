@@ -71,7 +71,7 @@ class Plugin(plugins.NodePlugin):
             changed_field = changes.keys()[0]
             if "diagnostic.tools" in changed_field:
                 cmds = dict((name, cmd) for (name, cmd)
-                             in self.__diagnostics())
+                            in self.__diagnostics())
             cmd = cmds.get(changes[changed_field], None)
             if cmd:
                 contents = process.check_output(cmd, stderr=process.STDOUT)

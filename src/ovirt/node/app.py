@@ -128,13 +128,13 @@ class Application(base.Base):
     def __parse_cmdline(self):
         parser = OptionParser()
         parser.add_option("--defaults",
-                            dest="defaults",
-                            help="Central oVirt Node configuration file")
+                          dest="defaults",
+                          help="Central oVirt Node configuration file")
         parser.add_option("--dry",
-                            action='store_true',
-                            dest="dry",
-                            default=False,
-                            help="Just write defaults, nothing else")
+                          action='store_true',
+                          dest="dry",
+                          default=False,
+                          help="Just write defaults, nothing else")
         (self.args, argcount) = parser.parse_args()
 
         self.logger.debug("Parsed args: %s" % self.args)
