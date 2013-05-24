@@ -1,19 +1,8 @@
 # add RHEV-H rwtab locations
 mkdir -p /rhev
-mkdir -p /var/cache/rhn
 cat > /etc/rwtab.d/rhev << EOF_RWTAB_RHEVH
-files	/var/cache/rhn
 dirs    /var/db
-dirs    /var/lib/rhsm
 EOF_RWTAB_RHEVH
-
-# convenience symlinks
-ln -s /usr/libexec/ovirt-config-rhn /sbin/rhn_register
-
-# in RHEV-H *.py are blacklisted
-cat > /etc/cron.d/rhn-virtualization.cron << \EOF_cron-rhn
-0-59/2 * * * * root python /usr/share/rhn/virtualization/poller.pyc
-EOF_cron-rhn
 
 # minimal lsb_release for bz#549147
 cat > /usr/bin/lsb_release <<\EOF_LSB
@@ -30,48 +19,6 @@ chmod +x /usr/bin/lsb_release
 cat > /etc/system-release-cpe <<\EOF_CPE
 cpe:/o:redhat:enterprise_linux:6:update2:hypervisor
 EOF_CPE
-
-patch -d /usr/share/rhn/up2date_client -p0 << \EOF_up2date_patch2
---- up2dateErrors.py.orig	2012-02-17 14:28:19.798545090 -0500
-+++ up2dateErrors.py	2012-02-17 14:49:07.638959433 -0500
-@@ -13,7 +13,34 @@
- _ = t.ugettext
- import OpenSSL
- import config
--from yum.Errors import RepoError, YumBaseError
-+
-+class RepoError(Exception):
-+    """
-+    Base Yum Error. All other Errors thrown by yum should inherit from
-+    this.
-+    """
-+    def __init__(self, value=None):
-+        Exception.__init__(self)
-+        self.value = value
-+    def __str__(self):
-+        return "%s" %(self.value,)
-+
-+    def __unicode__(self):
-+        return '%s' % to_unicode(self.value)
-+
-+class YumBaseError(Exception):
-+    """
-+    Base Yum Error. All other Errors thrown by yum should inherit from
-+    this.
-+    """
-+    def __init__(self, value=None):
-+        Exception.__init__(self)
-+        self.value = value
-+    def __str__(self):
-+        return "%s" %(self.value,)
-+
-+    def __unicode__(self):
-+        return '%s' % to_unicode(self.value)
- 
- class Error(YumBaseError):
-     """base class for errors"""
-EOF_up2date_patch2
-python -m compileall /usr/share/rhn/up2date_client
 
 echo "Configuring SELinux"
 # custom module for node specific rules

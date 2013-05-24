@@ -32,9 +32,9 @@ Testing and (preparation for) Refactoring.
 ovirtfunctions is currently not checkable by pylint, pyflakes, or pep8,
 therefor utils/*.py should be written so cleanly that it is checkable.
 Inline comments can be used in these clean files to suppress occssional
-problems (like an unresolved import, due to an invalid path or so), e.g. in the
-case of rhn.py file, which is in the wrong path (that means in a different
-(relative) path compared to their later runtime position).
+problems (like an unresolved import, due to an invalid path or so). That
+means in a different (relative) path compared to their later runtime
+position).
 
 Another side effect of putting wrapping the code in utils/*.py is, that
 code-completion works quite well in eclipse - which shall help to write less

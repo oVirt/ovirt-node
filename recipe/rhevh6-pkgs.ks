@@ -1,10 +1,5 @@
 # remove
 -redhat-release-notes
-# RHN agent
-rhn-virtualization-host
-rhn-setup
-virt-who
-subscription-manager
 # rhbz#641494 RFE - add libguestfs
 libguestfs-winsupport
 ltrace

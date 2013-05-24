@@ -261,7 +261,6 @@ keep /boot/efi
 keep /boot/System.map*
 keep /boot/symvers*
 drop /var/lib/builder
-drop /usr/sbin/rhn_register
 drop /usr/sbin/*-channel
 
 drop /usr/share/selinux

@@ -32,11 +32,6 @@ pyovirtconfigsetup_PYTHON += \
   ovirt_config_setup/collectd.py
 endif
 
-if TARGET_RHEL
-pyovirtconfigsetup_PYTHON += \
-  ovirt_config_setup/rhn.py
-endif
-
 pyovirtnodedir = $(pythondir)/ovirtnode
 pyovirtnode_PYTHON = \
   ovirtnode/__init__.py \

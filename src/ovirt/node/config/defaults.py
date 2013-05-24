@@ -753,25 +753,6 @@ class Collectd(NodeConfigFileSection):
         return tx
 
 
-class RHN(NodeConfigFileSection):
-    keys = ("OVIRT_RHN_TYPE",
-            "OVIRT_RHN_URL",
-            "OVIRT_RHN_CA_CERT",
-            "OVIRT_RHN_USERNAME",
-            "OVIRT_RHN_PASSWORD",
-            "OVIRT_RHN_PROFILE",
-            "OVIRT_RHN_ACTIVATIONKEY",
-            "OVIRT_RHN_ORG",
-            "OVIRT_RHN_PROXY",
-            "OVIRT_RHN_PROXYUSER",
-            "OVIRT_RHN_PROXYPASSWORD")
-
-    @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, rhntype, url, ca_cert, username, password, profile,
-               activationkey, org, proxy, proxyuser, proxypassword):
-        pass
-
-
 class KDump(NodeConfigFileSection):
     """Configure kdump
 
