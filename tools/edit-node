@@ -735,6 +735,7 @@ class LiveImageEditor(LiveImageCreator):
         return True
 
     def _create_manifests(self, options):
+        pkg = ""
         timestamp = date("%Y-%m-%d_%H-%M-%S")
         if options.plugin:
             pkg = options.plugin
