@@ -93,13 +93,13 @@ class Plugin(NodePlugin):
         p_name = self._model["plugin"]
         fn = None
         if "button.drpm" in changes:
-            fn = glob.glob("%s/delta-*-manifest-rpm-%s.txt" % \
-                           (p_manifests_dir,p_name))[0]
+            fn = glob.glob("%s/delta-*-manifest-rpm-%s.txt" %
+                           (p_manifests_dir, p_name))[0]
         elif "button.dsrpm" in changes:
-            fn = glob.glob("%s/delta-*-manifest-srpm-%s.txt" % \
+            fn = glob.glob("%s/delta-*-manifest-srpm-%s.txt" %
                            (p_manifests_dir, p_name))[0]
         elif "button.dfile" in changes:
-            fn = glob.glob("%s/delta-*-manifest-file-%s.txt" % \
+            fn = glob.glob("%s/delta-*-manifest-file-%s.txt" %
                            (p_manifests_dir, p_name))[0]
 
         if fn:
@@ -123,6 +123,7 @@ class Plugin(NodePlugin):
                         lines = p.readlines()
                         name = lines[0].strip().split(":")[1]
                         ver = lines[1].strip().split(":")[1]
-                        install_date = lines[2].strip().replace("Install Date:", "")
+                        install_date = lines[2].strip().replace("Install " +
+                                                                "Date:", "")
                     plugin_dict[name] = (ver, install_date)
         return plugin_dict
