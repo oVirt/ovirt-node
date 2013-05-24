@@ -18,12 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import plugins, ui
+from ovirt.node.utils import system
+import welcome_page, upgrade_page
 
 """
 Keyboard page of the installer
 """
-from ovirt.node import plugins, ui, installer
-from ovirt.node.utils import system
 
 
 class Plugin(plugins.NodePlugin):
@@ -71,10 +72,10 @@ class Plugin(plugins.NodePlugin):
             self.dry_or(lambda: kbd.set_layout(changes["keyboard.layout"]))
 
             app = self.application
-            welcome = app.get_plugin(installer.welcome_page.Plugin)
+            welcome = app.get_plugin(welcome_page.Plugin)
             method = welcome.model()["method"]
             nav = self.application.ui.navigate
             if method in ["upgrade", "downgrade", "reinstall"]:
-                nav.to_plugin(installer.upgrade_page.Plugin)
+                nav.to_plugin(upgrade_page.Plugin)
             else:
                 nav.to_next_plugin()

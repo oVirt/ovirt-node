@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, valid, ui, utils, exceptions
-from ovirt.node.config import snmp as snmp_config
+import snmp_model
 from ovirt.node.plugins import Changeset
 from ovirt.node.valid import RegexValidator
 
@@ -64,7 +64,7 @@ class Plugin(plugins.NodePlugin):
         return 40
 
     def model(self):
-        cfg = snmp_config.SNMP().retrieve()
+        cfg = snmp_model.SNMP().retrieve()
         self.logger.debug(cfg)
         model = {"snmp.enabled": True if cfg["password"] else False,
                  "snmp.password": "",
@@ -121,7 +121,7 @@ class Plugin(plugins.NodePlugin):
             args = [values[0]]
             if values[1] is False:  # If set to disabled, set password to None
                 args[0] = None
-            model = snmp_config.SNMP()
+            model = snmp_model.SNMP()
             model.update(*args)
             txs += model.transaction()
 

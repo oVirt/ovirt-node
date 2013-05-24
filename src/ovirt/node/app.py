@@ -25,7 +25,6 @@ from ovirt.node.utils import system, Timer, console
 import logging
 import logging.config
 import sys
-import traceback
 from optparse import OptionParser
 
 """
@@ -380,22 +379,31 @@ class Application(base.Base):
                 has_outstanding_changes = True
 
     def __load_plugins(self):
-        """Load all plugins which are found in the given plugin_base
+        """Load all plugins by looking at the available plugin groups
+        and calling createPlugins on a package, if it exists.
+        the createPlugins function is responsible for creating the plugin
         """
         self.__plugins = {}
-        for m in plugins.load(self.plugin_base):
-            if hasattr(m, "Plugin"):
-                self.logger.debug("Found plugin in module: %s" % m)
-                plugin = m.Plugin(self)
-                self.logger.debug("Registering plugin '%s': %s" %
-                                  (plugin.name(), plugin))
-                self.__plugins[plugin.name()] = plugin
+        for group in plugins.load_plugin_groups(self.plugin_base):
+            if hasattr(group, "createPlugins"):
+                self.logger.debug("Package has plugins: %s" % group)
+                group.createPlugins(self)
             else:
-                self.logger.debug("Found no plugin in module: %s" % m)
+                self.logger.debug("Package has no plugins: %s" % group)
 
-        for plugin in self.__plugins.values():
-            self.logger.debug("Loading plugin %s" % plugin)
-            self.ui.register_plugin(plugin.ui_name(), plugin)
+    def register_plugin(self, plugin):
+        """Register the plugin in the application and it's UI
+        Args:
+            plugin: Plugin to be registered, needs to be derived from
+                    plugins.NodePlugin
+        """
+        self.logger.debug("Registering plugin '%s': %s" %
+                          (plugin.name(), plugin))
+        if plugin.name() in self.__plugins:
+            raise RuntimeError("Plugin with name '%s' is already registered" %
+                                plugin.name())
+        self.__plugins[plugin.name()] = plugin
+        self.ui.register_plugin(plugin.ui_name(), plugin)
 
     def __drop_to_shell(self):
         utils.console.writeln("Dropping to rescue shell ...")

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# ovirt-config-installer.py - Copyright (C) 2012 Red Hat, Inc.
+# __init__.py - Copyright (C) 2013 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -20,12 +20,13 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-Create an setup application instance an start it.
+CIM Plugin
 """
 
-from ovirt.node import app, installer
+from . import cim_page
 
-
-if __name__ == '__main__':
-    app = app.Application(installer)
-    app.run()
+#
+# Magic function to register all plugins to be used
+#
+def createPlugins(application):
+    cim_page.Plugin(application)

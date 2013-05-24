@@ -18,8 +18,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, installer, exceptions
+from ovirt.node import plugins, ui, exceptions
 from ovirt.node.utils import security
+import keyboard_page, progress_page
 
 """
 Password confirmation page for the upgarde part of the installer
@@ -97,7 +98,7 @@ class Plugin(plugins.NodePlugin):
         changes = self.pending_changes(False)
         if changes.contains_any(["button.back"]):
             nav = self.application.ui.navigate
-            nav.to_plugin(installer.keyboard_page.Plugin)
+            nav.to_plugin(keyboard_page.Plugin)
             return
 
         if changes.contains_any(["upgrade.current_password",
@@ -108,7 +109,7 @@ class Plugin(plugins.NodePlugin):
             username = "admin"
             if pam.authenticate(username, changes["upgrade.current_password"]):
                 nav = self.application.ui.navigate
-                nav.to_plugin(installer.progress_page.Plugin)
+                nav.to_plugin(progress_page.Plugin)
             else:
                 msg = "Current password is invalid"
                 self.widgets["current_password.info"].text(msg)

@@ -49,13 +49,25 @@ pyovirtnode_PYTHON = \
   ovirtnode/password.py \
   ovirtnode/storage.py
 
+# Basic dirs
 pyovirtdir = $(pythondir)/ovirt
 pyovirt_nodedir = $(pyovirtdir)/node
 pyovirt_node_configdir = $(pyovirt_nodedir)/config
-pyovirt_node_installerdir = $(pyovirt_nodedir)/installer
-pyovirt_node_setupdir = $(pyovirt_nodedir)/setup
 pyovirt_node_uidir = $(pyovirt_nodedir)/ui
 pyovirt_node_utilsdir = $(pyovirt_nodedir)/utils
+
+# Path to installer app and installer plugins
+pyovirt_node_installerdir = $(pyovirt_nodedir)/installer
+pyovirt_node_installer_coredir = $(pyovirt_node_installerdir)/core
+
+# Path to setup app and setup plugins
+pyovirt_node_setupdir = $(pyovirt_nodedir)/setup
+pyovirt_node_setup_coredir = $(pyovirt_node_setupdir)/core
+
+# Paths to CIM and SNMP setup plugins
+pyovirt_node_setup_cimdir = $(pyovirt_node_setupdir)/cim
+pyovirt_node_setup_snmpdir = $(pyovirt_node_setupdir)/snmp
+
 
 pyovirt_PYTHON = \
   ovirt/__init__.py
@@ -71,39 +83,7 @@ pyovirt_node_PYTHON = \
 pyovirt_node_config_PYTHON = \
   ovirt/node/config/__init__.py \
   ovirt/node/config/defaults.py \
-  ovirt/node/config/network.py \
-  ovirt/node/config/cim.py \
-  ovirt/node/config/snmp.py
-
-pyovirt_node_installer_PYTHON = \
-  ovirt/node/installer/__init__.py \
-  ovirt/node/installer/__main__.py \
-  ovirt/node/installer/boot_device_page.py \
-  ovirt/node/installer/installation_device_page.py \
-  ovirt/node/installer/keyboard_page.py \
-  ovirt/node/installer/password_page.py \
-  ovirt/node/installer/progress_page.py \
-  ovirt/node/installer/storage_vol_page.py \
-  ovirt/node/installer/upgrade_page.py \
-  ovirt/node/installer/welcome_page.py
-
-pyovirt_node_setup_PYTHON = \
-  ovirt/node/setup/__init__.py \
-  ovirt/node/setup/__main__.py \
-  ovirt/node/setup/diagnostics_page.py \
-  ovirt/node/setup/kdump_page.py \
-  ovirt/node/setup/keyboard_page.py \
-  ovirt/node/setup/logging_page.py \
-  ovirt/node/setup/monitoring_page.py \
-  ovirt/node/setup/network_page.py \
-  ovirt/node/setup/ping.py \
-  ovirt/node/setup/plugins_page.py \
-  ovirt/node/setup/remote_storage_page.py \
-  ovirt/node/setup/security_page.py \
-  ovirt/node/setup/status_page.py \
-  ovirt/node/setup/support_page.py \
-  ovirt/node/setup/cim_page.py \
-  ovirt/node/setup/snmp_page.py
+  ovirt/node/config/network.py
 
 pyovirt_node_ui_PYTHON = \
   ovirt/node/ui/__init__.py \
@@ -121,3 +101,54 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/system.py \
   ovirt/node/utils/virt.py
 
+
+# Installer Main
+pyovirt_node_installer_PYTHON = \
+  ovirt/node/installer/__init__.py \
+  ovirt/node/installer/__main__.py
+
+# Installer Core plugins
+pyovirt_node_installer_core_PYTHON = \
+  ovirt/node/installer/core/__init__.py \
+  ovirt/node/installer/core/boot_device_page.py \
+  ovirt/node/installer/core/installation_device_page.py \
+  ovirt/node/installer/core/keyboard_page.py \
+  ovirt/node/installer/core/password_page.py \
+  ovirt/node/installer/core/progress_page.py \
+  ovirt/node/installer/core/storage_vol_page.py \
+  ovirt/node/installer/core/upgrade_page.py \
+  ovirt/node/installer/core/welcome_page.py
+
+
+# Setup Main
+pyovirt_node_setup_PYTHON = \
+  ovirt/node/setup/__init__.py \
+  ovirt/node/setup/__main__.py
+
+# Setup Core Plugins
+pyovirt_node_setup_core_PYTHON = \
+  ovirt/node/setup/core/__init__.py \
+  ovirt/node/setup/core/diagnostics_page.py \
+  ovirt/node/setup/core/kdump_page.py \
+  ovirt/node/setup/core/keyboard_page.py \
+  ovirt/node/setup/core/logging_page.py \
+  ovirt/node/setup/core/monitoring_page.py \
+  ovirt/node/setup/core/network_page.py \
+  ovirt/node/setup/core/ping.py \
+  ovirt/node/setup/core/plugins_page.py \
+  ovirt/node/setup/core/remote_storage_page.py \
+  ovirt/node/setup/core/security_page.py \
+  ovirt/node/setup/core/status_page.py \
+  ovirt/node/setup/core/support_page.py
+
+# Setup CIM Plugin
+pyovirt_node_setup_cim_PYTHON = \
+  ovirt/node/setup/cim/__init__.py \
+  ovirt/node/setup/cim/cim_page.py \
+  ovirt/node/setup/cim/cim_model.py
+
+# Setup SNMP Plugin
+pyovirt_node_setup_snmp_PYTHON = \
+  ovirt/node/setup/snmp/__init__.py \
+  ovirt/node/setup/snmp/snmp_page.py \
+  ovirt/node/setup/snmp/snmp_model.py

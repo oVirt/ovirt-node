@@ -18,33 +18,63 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import base, exceptions, ui
+import imp
+import logging
+import pkgutil
 
 """
 This contains much stuff related to plugins
 """
-from ovirt.node import base, exceptions, ui
-import pkgutil
 
 
-def __walk_plugins(module):
-    """Used to find all plugins
-    """
-    for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
-        yield (importer, modname, ispkg)
+logger = logging.getLogger(__name__)
 
 
-def load(basemodule):
-    """Load all plugins
+def load_plugin_groups(basepackage):
+    """Load all plugin groups (which can the contain plugins)
+
+    Args:
+        basepackage: The package where to look for packages
     """
     modules = []
-    for importer, modname, ispkg in __walk_plugins(basemodule):
-        #print("Found submodule %s (is a package: %s)" % (modname, ispkg))
-        modpath = basemodule.__name__ + "." + modname
-        module = __import__(modpath,
-                            fromlist="dummy")
-        #print("Imported", module)
-        modules += [module]
+    logger.debug("Loading plugin-groups from package: %s" % basepackage)
+    for groupmodule in get_packages_in_package(basepackage):
+        logger.debug("Found plugin-group package: %s" % groupmodule)
+        modules.append(groupmodule)
+    logger.debug("Loading loading plugin-group modules")
     return modules
+
+
+def get_packages_in_package(basepackage):
+    """Find, import and yield all packages below basepackage
+
+    Args:
+        basepackage: Where to look for other packages
+    Yields:
+        Yields all packages found below basepackage
+    """
+    for importer, modname, ispkg in pkgutil.iter_modules(basepackage.__path__):
+        if ispkg:
+            fullmodpath = basepackage.__name__ + "." + modname
+            yield importer.find_module(modname).load_module(fullmodpath)
+
+
+def get_modules_in_package(package, filter_cb=lambda n: True):
+    """Get and load all modules in a package
+
+    Args:
+        package: Where to look for modules
+        filter_cb: (Optional) callback to filter out modules to be loaded
+                   the module name is passed to the cb, True indicates to load
+                   the module.
+    """
+    if type(package) in [str, unicode]:
+        package = pkgutil.get_loader(package).load_module(package)
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
+        if filter_cb(modname):
+            fullmodpath = package.__name__ + "." + modname
+            yield importer.find_module(modname).load_module(fullmodpath)
 
 
 class NodePlugin(base.Base):
@@ -71,12 +101,14 @@ class NodePlugin(base.Base):
 
     def __init__(self, application):
         super(NodePlugin, self).__init__()
+        self.application = application
         self.__changes = {}
         self.__invalid_changes = Changeset()
-        self.application = application
         self.widgets = UIElements()
 
         self.on_valid = self.new_signal()
+
+        self.application.register_plugin(self)
 
     def name(self):
         """Returns the name of the plugin.

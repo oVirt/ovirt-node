@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# ovirt-config-installer.py - Copyright (C) 2012 Red Hat, Inc.
+# core.py - Copyright (C) 2013 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -20,12 +20,18 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 """
-Create an setup application instance an start it.
+Core Installer Plugins
 """
+from ovirt.node import plugins
 
-from ovirt.node import app, installer
 
+#
+# Magic function to register all plugins to be used
+#
+def createPlugins(application):
+    # Disable the left-sided menu
+    application.ui.with_menu = False
 
-if __name__ == '__main__':
-    app = app.Application(installer)
-    app.run()
+    # Lazy load all plugins in this package
+    for plugin in plugins.get_modules_in_package(__package__):
+        plugin.Plugin(application)

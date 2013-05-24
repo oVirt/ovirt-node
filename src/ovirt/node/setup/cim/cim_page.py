@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, valid, ui, utils, exceptions
-from ovirt.node.config import cim as cim_config
+import cim_model
 from ovirt.node.plugins import Changeset
 
 """
@@ -44,7 +44,7 @@ class Plugin(plugins.NodePlugin):
         return 45
 
     def model(self):
-        cfg = cim_config.CIM().retrieve()
+        cfg = cim_model.CIM().retrieve()
         self.logger.debug(cfg)
         model = {"cim.enabled": True if cfg["enabled"] else False,
                  "cim.password": "",
@@ -99,7 +99,7 @@ class Plugin(plugins.NodePlugin):
             is_enabled = effective_model["cim.enabled"]
             pw = effective_model["cim.password_confirmation"]
 
-            model = cim_config.CIM()
+            model = cim_model.CIM()
             model.update(is_enabled)
             txs += model.transaction(cim_password=pw)
 

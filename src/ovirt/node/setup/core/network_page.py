@@ -22,7 +22,8 @@ from ovirt.node import plugins, ui, valid, utils, config
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 from ovirt.node.utils import network
-import ovirt.node.setup.ping
+from ovirt.node.setup.core import ping
+
 """
 Network page plugin
 
@@ -211,8 +212,7 @@ class Plugin(plugins.NodePlugin):
 
         if "button.ping" in changes:
             self.logger.debug("Opening ping page")
-            plugin_type = ovirt.node.setup.ping.Plugin
-            self.application.switch_to_plugin(plugin_type)
+            self.application.switch_to_plugin(ping.Plugin)
             return
 
         if "dialog.nic.identify" in changes:

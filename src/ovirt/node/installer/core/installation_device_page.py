@@ -23,7 +23,7 @@
 Installation device selection page of the installer
 """
 from ovirt.node import plugins, ui
-from ovirt.node.installer.boot_device_page import DeviceDetails, \
+from ovirt.node.installer.core.boot_device_page import DeviceDetails, \
     CustomDeviceDialog, StorageDiscovery
 
 
