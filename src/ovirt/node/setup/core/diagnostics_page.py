@@ -27,7 +27,6 @@ Diagnostics page
 """
 
 
-
 class Plugin(plugins.NodePlugin):
 
     def name(self):
