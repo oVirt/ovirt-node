@@ -24,7 +24,6 @@ from ovirt.node.ui import urwid_builder
 from ovirt.node.utils import system, Timer, console
 import logging
 import logging.config
-import sys
 from optparse import OptionParser
 
 """
@@ -33,65 +32,13 @@ Basically the application consists of two parts: Page-Plugins and the UI
 which communicate with each other.
 """
 
+LOG_CONF = "/etc/ovirt-node/logging.conf"
 
-log_filename = "/tmp/ovirt.log"
-debug_log_filename = "/tmp/ovirt.debug.log"
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(name)s:%(lineno)s ' +
-            '%(message)s'
-        },
-        'simple': {
-            'format': '%(asctime)s %(levelname)10s %(message)s'
-        },
-    },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'formatter': 'simple',
-            'filename': log_filename,
-        },
-        'debug': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'formatter': 'verbose',
-            'filename': debug_log_filename,
-        },
-        'stderr': {
-            'level': 'ERROR',
-            'class': 'logging.StreamHandler',
-            'stream': sys.stderr
-        }
-    },
-    'loggers': {
-        '': {
-            'handlers': ['debug', 'stderr'],
-            'level': 'DEBUG',
-        },
-        'ovirt.node': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-        },
-    }
-}
-
-utils.fs.truncate(log_filename)
-utils.fs.truncate(debug_log_filename)
-logging.config.dictConfig(LOGGING)
+logging.config.fileConfig(LOG_CONF)
 
 
 def configure_logging():
-    logdict = dict(LOGGING)
-    logging.config.dictConfig(logdict)
-    #logging.basicConfig(level=logging.DEBUG,
-    #                    filename="/tmp/app.log", filemode="w",
-    #                    format="%(asctime)s %(levelname)s %(name)s " +
-#                               "%(message)s")
+    logging.config.fileConfig(LOG_CONF)
 
 
 class Application(base.Base):

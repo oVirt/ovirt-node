@@ -64,6 +64,7 @@ fi
 AM_PATH_PYTHON
 
 AC_CONFIG_FILES([Makefile
+                data/Makefile
                 dracut/Makefile
                 images/Makefile
                 scripts/Makefile

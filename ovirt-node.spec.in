@@ -489,7 +489,7 @@ fi
 %if ! %{is_systemd}
 %{_sysconfdir}/init/libvirtd.conf
 %endif
-
+%{_sysconfdir}/ovirt-node/logging.conf
 %{_sysconfdir}/sysconfig/modules/vlan.modules
 %{_sysconfdir}/modprobe.d/ovirt-qla4xxx.conf
 %{_libexecdir}/ovirt-node/hooks

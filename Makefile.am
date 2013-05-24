@@ -23,6 +23,7 @@ PYTHONSOURCES = \
 SHELL := /bin/bash
 
 SUBDIRS =   \
+  data \
   dracut \
   images \
   recipe \
