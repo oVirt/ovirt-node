@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, utils, installer
+from ovirt.node import plugins, ui, utils
 from ovirt.node.utils import virt, system
 import os
 
@@ -101,11 +101,11 @@ class Plugin(plugins.NodePlugin):
             try:
                 if media > installed:
                     return [ui.Button("button.upgrade",
-                                      "Upgrade %s to %s" % (media, installed))]
+                                      "Upgrade %s to %s" % (installed, media))]
                 elif media < installed:
                     return [ui.Button("button.downgrade",
-                                      "Downgrade %s to %s" % (media,
-                                                              installed))]
+                                      "Downgrade %s to %s" % (installed,
+                                                              media))]
                 return [ui.Button("button.reinstall",
                                   "Reinstall %s" % installed)]
             except:
