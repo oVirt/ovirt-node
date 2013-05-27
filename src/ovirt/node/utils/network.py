@@ -18,12 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils, config
+from ovirt.node import base, utils
+from ovirt.node.config.network import NicConfig
 import glob
 import gudev
 import logging
 import os.path
-import ovirt.node.config.network
 import ovirt.node.utils.fs
 import ovirt.node.utils.process as process
 import re
@@ -82,222 +82,122 @@ def all_ifaces():
     return _query_udev_ifaces()
 
 
-def is_configured():
-    """Determin if any NIC has been configured for/by Node
-
-    Returns:
-        True if any nic has been configured
+class UdevNICInfo(base.Base):
+    """Gather NIC infos form udev
     """
-    return any(key["bootproto"] is not None for key in node_nics().values())
+    _client = gudev.Client(['net'])
+    _device = None
+
+    ifname = None
+
+    def __init__(self, iface):
+        super(UdevNICInfo, self).__init__()
+        self.ifname = iface
+        for d in self._client.query_by_subsystem("net"):
+            if d.get_property("INTERFACE") == iface:
+                self._device = d
+
+        if not self._device:
+            raise UnknownNicError("udev has no infos for %s" % iface)
+
+    @property
+    def name(self):
+        return self._device.get_property("INTERFACE")
+
+    @property
+    def vendor(self):
+        return self._device.get_property("ID_VENDOR_FROM_DATABASE")
+
+    @property
+    def devtype(self):
+        return self._device.get_property("DEVTYPE")
+
+    @property
+    def devpath(self):
+        return self._device.get_property("DEVPATH")
 
 
-def iface_information(iface, with_slow=True):
-    """Retuns all system NICs (via udev)
-
-    FIXME move into NIC
-
-    Args:
-        nics: List of NIC names
-    Returns:
-        A dict of (nic-name, nic-infos-dict)
+class SysfsNICInfo(base.Base):
+    """Gather NIC infos fom sysfs
     """
-    info = None
+    ifname = None
 
-    client = gudev.Client(['net'])
-    for d in client.query_by_subsystem("net"):
-#        assert d.has_property("ID_VENDOR_FROM_DATABASE"), \
-#                "udev informations are incomplete (udevadm re-trigger?)"
+    def __init__(self, ifname):
+        super(SysfsNICInfo, self).__init__()
+        self.ifname = ifname
 
-        uinfo = {"name": d.get_property("INTERFACE"),
-                 "vendor": d.get_property("ID_VENDOR_FROM_DATABASE")
-                 or "unkown",
-                 "devtype": d.get_property("DEVTYPE") or "unknown",
-                 "devpath": d.get_property("DEVPATH")
-                 }
+    @property
+    def driver(self):
+        driver_symlink = "/sys/class/net/%s/device/driver" % self.ifname
+        driver = "unknown"
+        if os.path.islink(driver_symlink):
+            try:
+                driver = os.path.basename(os.readlink(driver_symlink))
+            except Exception as e:
+                self.logger.warning(("Exception %s while reading driver " +
+                                     "of '%s' from '%s'") % (e, self.ifname,
+                                                             driver_symlink))
+        return driver
 
-        if uinfo["name"] == iface:
-            info = uinfo
+    @property
+    def hwaddr(self):
+        #hwaddr = "unkown"
+        hwfilename = "/sys/class/net/%s/address" % self.ifname
+        hwaddr = ovirt.node.utils.fs.get_contents(hwfilename).strip()
+        return hwaddr
 
-    assert info, "Unknown nic %s" % iface
+    @property
+    def systype(self):
+        systype = "ethernet"
 
-    LOGGER.debug("Getting live information for '%s'" % iface)
+        if len(glob.glob("/proc/net/vlan/%s" % self.ifname)) > 0:
+            # Check if vlan
+            systype = "vlan"
 
-    # Driver
-    driver_symlink = "/sys/class/net/%s/device/driver" % iface
-    driver = "unknown"
-    if os.path.islink(driver_symlink):
-        try:
-            driver = os.path.basename(os.readlink(driver_symlink))
-        except Exception as e:
-            LOGGER.warning(("Exception %s while reading driver " +
-                            "of '%s' from '%s'") % (e, iface, driver_symlink))
-    info["driver"] = driver
+        elif os.path.exists("/sys/class/net/%s/bridge" % self.ifname):
+            # Check if bridge
+            systype = "bridge"
 
-    # Hwaddr
-    hwaddr = "unkown"
-    hwfilename = "/sys/class/net/%s/address" % iface
-    hwaddr = ovirt.node.utils.fs.get_contents(hwfilename).strip()
-    info["hwaddr"] = hwaddr
-
-    # Check bridge
-    if os.path.exists("/sys/class/net/%s/bridge" % iface):
-        info["type"] = "bridge"
-
-    # Check vlan
-    if len(glob.glob("/proc/net/vlan/%s" % iface)) > 0:
-        info["type"] = "vlan"
-
-    if "type" not in info:
-        devtype = info["devtype"]
-        LOGGER.warning(("Type of %s still unknown, using devtype " +
-                        "%s") % (iface, devtype))
-        info["type"] = devtype
-
-    if with_slow:
-        info.update(_slow_iface_information(iface))
-
-    return info
-
-
-def _slow_iface_information(iface):
-    info = {}
-
-    nic = NIC(iface)
-    # Current IP addresses
-    info["addresses"] = nic.ip_addresses()
-
-    # Current link state
-    info["link_detected"] = nic.has_link()
-
-    return info
-
-
-def relevant_ifaces(filter_bridges=True, filter_vlans=True):
-    """Retuns relevant system NICs (via udev)
-
-    Filters out
-    - loop
-    - bonds
-    - vnets
-    - bridges
-    - sit
-    - vlans
-
-    >>> "lo" in relevant_ifaces()
-    False
-
-    Args:
-        filter_bridges: If bridges shall be filtered out too
-        filter_vlans: If vlans shall be filtered out too
-    Returns:
-        List of strings, the NIC names
-    """
-    valid_name = lambda n: not (n == "lo" or
-                                n.startswith("bond") or
-                                n.startswith("sit") or
-                                n.startswith("vnet") or
-                                n.startswith("tun") or
-                                n.startswith("wlan") or
-                                n.startswith("virbr") or
-                                (filter_vlans and ("." in n)))
-# FIXME!!!
-#    valid_props = lambda i, p: (filter_bridges and (p["type"] != "bridge"))
-
-    relevant_ifaces = [iface for iface in all_ifaces() if valid_name(iface)]
-#    relevant_ifaces = {iface: iface_information(iface) for iface \
-#                       in relevant_ifaces \
-#                       if valid_props(iface, iface_information(iface, False))}
-
-    irrelevant_names = set(all_ifaces()) - set(relevant_ifaces)
-    LOGGER.debug("Irrelevant interfaces: %s" % irrelevant_names)
-    LOGGER.debug("Relevant interfaces: %s" % relevant_ifaces)
-
-    return relevant_ifaces
-
-
-def node_nics():
-    """Returns Node's NIC model.
-    This squashes nic, bridge and vlan informations.
-
-    All valid NICs of the system are returned, live and cfg informations merged
-    into one dict.
-    A NIC is "Configured" if itself or a vlan child is a member of a bridge.
-    If a NIC is configured, merge the info+cfg of the bridge into the slave.
-    If the slave is a vlan NIC set the vlanidof the parent device according to
-    this vlan NICs id.
-
-    >>> node_nics() != None
-    True
-    """
-    all_ifaces = relevant_ifaces(filter_bridges=False, filter_vlans=False)
-    all_infos = dict((i, iface_information(i)) for i in all_ifaces)
-    all_cfgs = dict((i, ovirt.node.config.network.iface(i)) for i
-                    in all_ifaces)
-
-    bridges = [nic for nic, info in all_infos.items()
-               if info["type"] == "bridge"]
-    vlans = [nic for nic, info in all_infos.items()
-             if info["type"] == "vlan"]
-    nics = [nic for nic, info in all_infos.items()
-            if info["name"] not in bridges + vlans]
-
-    LOGGER.debug("Bridges: %s" % bridges)
-    LOGGER.debug("VLANs: %s" % vlans)
-    LOGGER.debug("NICs: %s" % nics)
-
-    node_infos = {}
-    slaves = []
-    # Build dict with all NICs
-    for iface in nics:
-        LOGGER.debug("Adding physical NIC: %s" % iface)
-        info = all_infos[iface]
-        info.update(all_cfgs[iface])
-        node_infos[iface] = info
-        if info["bridge"]:
-            LOGGER.debug("Physical NIC '%s' is slave of '%s'" %
-                         (iface, info["bridge"]))
-            slaves.append(iface)
-
-    # Merge informations of VLANs into parent
-    for iface in vlans:
-        info = all_infos[iface]
-        info.update(all_cfgs[iface])
-        parent = info["vlan_parent"]
-        LOGGER.debug("Updating VLANID of '%s': %s" % (parent, info["vlanid"]))
-        node_infos[parent]["vlanid"] = info["vlanid"]
-        if info["bridge"]:
-            LOGGER.debug("VLAN NIC '%s' is slave of '%s'" %
-                         (iface, info["bridge"]))
-            slaves.append(iface)
-
-    for slave in slaves:
-        info = all_infos[slave]
-        info.update(all_cfgs[slave])
-        bridge = info["bridge"]
-        LOGGER.debug("Found slave for bridge '%s': %s" % (bridge, slave))
-        bridge_cfg = all_cfgs[bridge]
-        dst = slave
-        if info["is_vlan"]:
-            dst = info["vlan_parent"]
-        for k in ["bootproto", "ipaddr", "netmask", "gateway"]:
-            LOGGER.debug("Merging cfg %s from bridge %s into device %s" %
-                         (k, bridge, slave))
-            node_infos[dst][k] = bridge_cfg[k] if k in bridge_cfg else None
-
-    LOGGER.debug("Node NICs: %s" % node_infos)
-
-    return node_infos
+        return systype
 
 
 class NIC(base.Base):
-    def __init__(self, iface):
-        self.iface = iface
+    """Offers an API tp common NIC related functions is also a model for any
+    logical NIC.
+    """
+    ifname = None
+    vendor = None
+    driver = None
+    hwaddr = None
+    typ = None
+    config = None
+
+    def __init__(self, ifname):
         super(NIC, self).__init__()
+        self.ifname = ifname
+
+        self._udevinfo = UdevNICInfo(self.ifname)
+        self.vendor = self._udevinfo.vendor
+
+        self._sysfsinfo = SysfsNICInfo(self.ifname)
+        self.driver = self._sysfsinfo.driver
+        self.hwaddr = self._sysfsinfo.hwaddr
+
+        self.config = NicConfig(ifname)
+        self.typ = self._udevinfo.devtype or self._sysfsinfo.systype
 
     def exists(self):
         """If this NIC currently exists in the system
+
+        >>> NIC("lo").exists()
+        True
         """
-        return self.iface in all_ifaces()
+        return self.ifname in all_ifaces()
+
+    def is_configured(self):
+        """If there is a configuration for this NIC
+        """
+        return self.config.bootproto is not None
 
     def has_link(self):
         """Determin if L1 is up on a given interface
@@ -306,18 +206,18 @@ class NIC(base.Base):
         True
 
         Args:
-            iface: The interface to be checked
+            ifname: The interface to be checked
         Returns:
             True if L1 (the-link-is-up) is detected (depends on driver support)
         """
 
         if not self.exists():
             raise UnknownNicError("Unknown network interface: '%s'" %
-                                  self.iface)
+                                  self.ifname)
 
-        if is_nm_managed(self.iface):
+        if is_nm_managed(self.ifname):
             try:
-                device = _nm_client.get_device_by_iface(self.iface)
+                device = _nm_client.get_device_by_iface(self.ifname)
                 if device:
                     return device.get_carrier()
             except:
@@ -326,11 +226,11 @@ class NIC(base.Base):
         # Fallback
         has_carrier = False
         try:
-            with open("/sys/class/net/%s/carrier" % self.iface) as c:
+            with open("/sys/class/net/%s/carrier" % self.ifname) as c:
                 content = c.read()
                 has_carrier = "1" in content
         except:
-            LOGGER.debug("Carrier down for %s" % self.iface)
+            LOGGER.debug("Carrier down for %s" % self.ifname)
         return has_carrier
 
     def ipv4_address(self):
@@ -340,20 +240,20 @@ class NIC(base.Base):
         return self.ip_addresses(["inet6"])["inet6"]
 
     def ip_addresses(self, families=["inet", "inet6"]):
-        """Get IP addresses for an iface
+        """Get IP addresses for an ifname
 
-        FIXME NM client.get_device_by_iface(iface).get_ip?_config()
+        FIXME NM _client.get_device_by_iface(ifname).get_ip?_config()
         """
         if not self.exists():
             raise UnknownNicError("Unknown network interface: '%s'" %
-                                  self.iface)
+                                  self.ifname)
 
         addresses = dict((f, (None, None)) for f in families)
 
         if False:
-            # FIXME to hackish to convert addr - is_nm_managed(iface):
-            device = _nm_client.get_device_by_iface(self.iface)
-            LOGGER.debug("Got '%s' for '%s'" % (device, self.iface))
+            # FIXME to hackish to convert addr - is_nm_managed(ifname):
+            device = _nm_client.get_device_by_iface(self.ifname)
+            LOGGER.debug("Got '%s' for '%s'" % (device, self.ifname))
             if device:
                 for family, cfgfunc, sf in [("inet", device.get_ip4_config,
                                              socket.AF_INET),
@@ -362,7 +262,7 @@ class NIC(base.Base):
                     cfg = cfgfunc()
                     if not cfg:
                         LOGGER.debug("No %s configuration for %s" %
-                                     (family, self.iface))
+                                     (family, self.ifname))
                         break
                     addrs = cfg.get_addresses()
                     addr = addrs[0].get_address() if len(addrs) > 0 else None
@@ -371,7 +271,7 @@ class NIC(base.Base):
             return addresses
 
         # Fallback
-        cmd = "ip -o addr show {iface}".format(iface=self.iface)
+        cmd = "ip -o addr show {ifname}".format(ifname=self.ifname)
         for line in process.pipe(cmd).split("\n"):
             token = re.split("\s+", line)
             if re.search("\sinet[6]?\s", line):
@@ -383,32 +283,233 @@ class NIC(base.Base):
 
         return addresses
 
-    def vlanid(self):
-        vlanids = []
-        vcfg = "/proc/net/vlan/config"
-        pat = re.compile("([0-9]+)\s*\|\s*%s$" % self.iface)
-        if os.path.exists(vcfg):
-            try:
-                with open(vcfg) as f:
-                    for line in f:
-                        r = pat.search(line)
-                        if r:
-                            vlanids.append(r.groups[0])
-            except IOError as e:
-                self.logger.warning("Could not read vlan config: %s" %
-                                    e.message)
-        if len(vlanids) > 1:
-            self.logger.info("Found more than one (expected) vlan: %s" %
-                             vlanids)
-        return vlanids[0] if vlanids else None
+    def has_vlans(self):
+        """If this nic has associated vlan ids
+        """
+        return len(self.vlanids()) > 0
+
+    def is_vlan(self):
+        """if this nic is a vlan nic
+        """
+        vlans = Vlans()
+        return vlans.is_vlan_device(self.ifname)
+
+    def vlanids(self):
+        """Return all vlans of this nic
+        """
+        vlans = Vlans()
+        return vlans.vlans_for_nic(self.ifname)
 
     def identify(self):
         """Flash the lights of this NIC to identify it
         """
-        utils.process.call("ethtool --identify %s 10" % self.iface)
+        utils.process.call("ethtool --identify %s 10" % self.ifname)
 
     def __str__(self):
-        return "<NIC iface='%s' at %s" % (self.iface, hex(id(self)))
+        return self.build_str(["ifname"])
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class BridgedNIC(NIC):
+    """A class to handle the legacy/default bridge-setup used by Node
+    """
+    bridge_nic = None
+    slave_nic = None
+
+    def __init__(self, snic, bnic):
+        super(BridgedNIC, self).__init__(snic.ifname)
+        self.slave_nic = snic
+        self.bridge_nic = bnic
+        self.config = self.bridge_nic.config
+
+    def exists(self):
+        return self.bridge_nic.exists()
+
+    def is_configured(self):
+        return self.bridge_nic.is_configured()
+
+    def has_link(self):
+        return self.slave_nic.has_link()
+
+    def ipv4_address(self):
+        return self.bridge_nic.ipv4_address()
+
+    def ipv6_address(self):
+        return self.bridge_nic.ipv6_address()
+
+    def ip_addresses(self, families=["inet", "inet6"]):
+        return self.bridge_nic.ip_addresses(families=families)
+
+    def is_vlan(self):
+        return self.slave_nic.is_vlan()
+
+    def has_vlans(self):
+        return self.slave_nic.has_vlans()
+
+    def vlanids(self):
+        return self.slave_nic.vlanids()
+
+    def identify(self):
+        self.slave_nic.identify(self)
+
+    def __str__(self):
+        pairs = {"bridge": self.bridge_nic.ifname,
+                 "slave": self.slave_nic.ifname}
+        return self.build_str(["ifname"], additional_pairs=pairs)
+
+
+class TaggedNIC(NIC):
+    """A class to provide easy access to tagged NICs
+    """
+    vlan_nic = None
+    parent_nic = None
+
+    def __init__(self, vnic):
+        parent_ifname, _ = TaggedNIC._parent_and_vlanid_from_name(vnic.ifname)
+        super(TaggedNIC, self).__init__(parent_ifname)
+        self.vlan_nic = vnic
+        self.parent_nic = NIC(parent_ifname)
+
+    @staticmethod
+    def _parent_and_vlanid_from_name(ifname):
+        """Parse parent and vlanid from a ifname
+
+        >>> TaggedNIC._parent_and_vlanid_from_name("ens1.0")
+        ('ens1', '0')
+
+        Args:
+            ifname
+        Returns:
+            A tuple (parent ifname, vlanid)
+        """
+        parts = ifname.split(".")
+        return (".".join(parts[:-1]), parts[-1:][0])
+
+    def exists(self):
+        return self.vlan_nic.exists()
+
+    def is_configured(self):
+        return self.vlan_nic.is_configured()
+
+    def has_link(self):
+        return self.parent_nic.has_link()
+
+    def ipv4_address(self):
+        return self.vlan_nic.ipv4_address()
+
+    def ipv6_address(self):
+        return self.vlan_nic.ipv6_address()
+
+    def ip_addresses(self, families=["inet", "inet6"]):
+        return self.vlan_nic.ip_addresses(families=families)
+
+    def is_vlan(self):
+        return True
+
+    def has_vlans(self):
+        raise RuntimeError("Nested tagging is not allowed. Is it?")
+
+    def vlanids(self):
+        return self.parent_nic.vlanids()
+
+    def identify(self):
+        self.parent_nic.identify()
+
+    def __str__(self):
+        pairs = {"vlan": self.vlan_nic.ifname,
+                 "parent": self.parent_nic.ifname}
+        return self.build_str(["ifname"], additional_pairs=pairs)
+
+
+class NodeNetwork(base.Base):
+    def all_ifnames(self):
+        return all_ifaces()
+
+    def relevant_ifnames(self, filter_bridges=True, filter_vlans=True):
+        all_ifaces = self.all_ifnames()
+        relevant_ifaces = self._filter_on_ifname(all_ifaces, filter_vlans)
+        irrelevant_names = set(all_ifaces) - set(relevant_ifaces)
+        LOGGER.debug("Irrelevant interfaces: %s" % irrelevant_names)
+        LOGGER.debug("Relevant interfaces: %s" % relevant_ifaces)
+
+        return relevant_ifaces
+
+    def _filter_on_ifname(self, ifnames, filter_vlans=True):
+        """Retuns relevant system NICs (via udev)
+
+        Filters out
+        - loop
+        - bonds
+        - vnets
+        - bridges
+        - sit
+        - vlans
+        - phy (wireless device)
+
+        >>> names = ["bond007", "sit1", "vnet11", "tun0", "wlan1", "virbr0"]
+        >>> names += ["ens1", "eth0", "phy0", "p1p7"]
+        >>> model = NodeNetwork()
+        >>> model._filter_on_ifname(names)
+        ['ens1', 'eth0', 'p1p7']
+
+        Args:
+            filter_bridges: If bridges shall be filtered out too
+            filter_vlans: If vlans shall be filtered out too
+        Returns:
+            List of strings, the NIC names
+        """
+        return [n for n in ifnames if not (n == "lo" or
+                                           n.startswith("bond") or
+                                           n.startswith("sit") or
+                                           n.startswith("vnet") or
+                                           n.startswith("tun") or
+                                           n.startswith("wlan") or
+                                           n.startswith("virbr") or
+                                           n.startswith("phy") or
+                                           (filter_vlans and ("." in n)))]
+
+    def build_nic_model(self, ifname):
+        nic = NIC(ifname)
+
+        if nic.config.bridge and nic.config.vlan:
+            nic = BridgedNIC(TaggedNIC(nic),
+                             NIC(nic.config.bridge))
+
+        elif nic.config.bridge:
+            nic = BridgedNIC(NIC(nic.ifname),
+                             NIC(nic.config.bridge))
+
+        elif nic.config.vlan:
+            nic = TaggedNIC(NIC(nic.ifname))
+
+        return nic
+
+    def nics(self):
+        """
+        >>> model = NodeNetwork()
+        """
+        nics = [NIC(ifname) for ifname
+                in self.relevant_ifnames(filter_vlans=False)]
+
+        bridges = [nic for nic in nics if nic.typ == "bridge"]
+        vlans = [nic for nic in nics if nic.typ == "vlan"]
+        nics = [nic for nic in nics if nic not in bridges + vlans]
+
+        self.logger.debug("Bridges: %s" % bridges)
+        self.logger.debug("VLANs: %s" % vlans)
+        self.logger.debug("NICs: %s" % nics)
+
+        candidates = {}
+
+        for nic in nics + vlans:
+            candidate = self.build_nic_model(nic.ifname)
+            if nic.ifname not in candidates or \
+               type(candidates[nic.ifname]) is NIC:
+                candidates[candidate.ifname] = candidate
+
+        return candidates
 
 
 class Routes(base.Base):
@@ -455,10 +556,9 @@ def _nm_address_to_str(family, ipaddr):
     return socket.inet_ntop(family, packed)
 
 
-def networking_status(iface=None):
+def networking_status(iface):
     status = "Not connected"
 
-    iface = iface or config.network.node_bridge()
     addresses = []
     if iface:
         nic = NIC(iface)
@@ -524,3 +624,52 @@ def reset_resolver():
         print "Warning: could not find __res_init in libresolv.so.2"
         r = -1
     return r
+
+
+class Vlans(base.Base):
+    """A class to offer a convenience api to the vconfig file
+    """
+    cfg = "/proc/net/vlan/config"
+
+    def parse_cfg(self):
+        if not os.path.exists(self.cfg):
+            raise RuntimeError("vlans ain't enabled.")
+
+        vlans = {}
+        try:
+            with open(self.cfg) as f:
+                data_block = False
+                for line in f:
+                    if line.startswith("Name-Type"):
+                        data_block = True
+                        continue
+                    if not data_block:
+                        continue
+                    vdev, _, hdev = [field.strip()
+                                     for field in line.split("|")]
+                    if not hdev in vlans:
+                        vlans[hdev] = []
+                    vlans[hdev].append(vdev)
+        except IOError as e:
+            self.logger.warning("Could not read vlan config: %s" %
+                                e.message)
+
+        return vlans
+
+    def vlans_for_nic(self, ifname):
+        """return the vlans of the nic ifname
+        """
+        return self.parse_cfg().get(ifname, [])
+
+    def nic_for_vlan_device(self, vifname):
+        nic = None
+        for hdev, vifs in self.parse_cfg().items():
+            if vifname in vifs:
+                nic = hdev
+                break
+        return nic
+
+    def is_vlan_device(self, vifname):
+        """Check if ifname is a vlan device
+        """
+        return self.nic_for_vlan_device(vifname) is not None

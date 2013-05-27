@@ -45,7 +45,9 @@ class Plugin(plugins.NodePlugin):
         return 0
 
     def model(self):
-        net_status, net_br, net_addrs = utils.network.networking_status()
+        bootif = defaults.Network().retrieve()["iface"]
+        net_status, net_br, net_addrs = \
+            utils.network.networking_status(bootif)
         net_addrs_str = ""
         if net_addrs:
             net_addrs_str = "\nIPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)

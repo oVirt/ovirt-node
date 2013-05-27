@@ -327,3 +327,105 @@ class Config(base.Base):
 
     def open_file(self, filename, mode="r"):
         return open(self._config_path(filename), mode)
+
+
+class ShellVarFile(base.Base):
+    """ShellVarFile writes simple KEY=VALUE (shell-like) configuration file
+
+    >>> fn = "/tmp/cfg_dummy.simple"
+    >>> open(fn, "w").close()
+    >>> cfg = {
+    ... "IP_ADDR": "127.0.0.1",
+    ... "NETMASK": "255.255.255.0",
+    ... }
+    >>> p = ShellVarFile(fn)
+    >>> p.get_dict()
+    {}
+    >>> p.update(cfg, True)
+    >>> p.get_dict() == cfg
+    True
+    """
+    def __init__(self, filename, create=False):
+        super(ShellVarFile, self).__init__()
+        self.filename = filename
+        if not os.path.exists(self.filename):
+            if create:
+                self._write("")
+            else:
+                raise RuntimeError("File does not exist: %s" % self.filename)
+
+    def get_dict(self):
+        """Returns a dict of (key, value) pairs
+        """
+        with open(self.filename) as source:
+            cfg = self._parse_dict(source)
+        return cfg
+
+    def write(self, cfg, remove_empty=True):
+        for key, value in cfg.items():
+            if remove_empty and value is None:
+                del cfg[key]
+            if value is not None and type(value) not in [str, unicode]:
+                raise TypeError("The type (%s) of %s is not allowed" %
+                                (type(value), key))
+        lines = []
+        # Sort the dict, looks nicer
+        for key in sorted(cfg.iterkeys()):
+            lines.append("%s=\"%s\"" % (key, cfg[key]))
+        contents = "\n".join(lines) + "\n"
+        self._write(contents)
+
+    def update(self, new_dict, remove_empty):
+        """Update the file using new_dict
+        Keys not present in the dict, but present in the file will be kept in
+        the file.
+
+        Args:
+            new_dict: A dictionary containing the keys to be updated
+            remove_empty: Remove keys from file if their value in new_dict
+                          is None.
+                          If False then the keys will be added to the file
+                          without any value. (Aka flags)
+        """
+        cfg = self.get_dict()
+        cfg.update(new_dict)
+        self.write(cfg)
+
+    def _parse_dict(self, source):
+        """Parse a simple shell-var-style lines into a dict:
+
+        >>> import StringIO
+        >>> txt = "# A comment\\n"
+        >>> txt += "A=ah\\n"
+        >>> txt += "B=beh\\n"
+        >>> txt += "C=\\"ceh\\"\\n"
+        >>> txt += "D=\\"more=less\\"\\n"
+        >>> p = ShellVarFile("/tmp/cfg_dummy")
+        >>> sorted(p._parse_dict(StringIO.StringIO(txt)).items())
+        [('A', 'ah'), ('B', 'beh'), ('C', 'ceh'), ('D', 'more=less')]
+        """
+        cfg = {}
+        for line in source:
+                line = line.strip()
+                if line.startswith("#"):
+                    continue
+                try:
+                    key, value = line.split("=", 1)
+                    cfg[key] = value.strip("\"' \n")
+                except:
+                    self.logger.info("Failed to parse line: '%s'" % line)
+        return cfg
+
+    def _write(self, contents):
+        # The following logic is mainly needed to allow an "offline" testing
+        config_fs = Config()
+        if config_fs.is_enabled():
+            with config_fs.open_file(self.filename, "w") as dst:
+                dst.write(contents)
+        else:
+            try:
+                atomic_write(self.filename, contents)
+            except Exception as e:
+                self.logger.warning("Atomic write failed: %s" % e)
+                with open(self.filename, "w") as dst:
+                    dst.write(contents)

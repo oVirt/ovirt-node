@@ -31,9 +31,8 @@ import grp  # @UnresolvedImport
 class CIM(NodeConfigFileSection):
     """Configure CIM
 
-    >>> from ovirt.node.config.defaults import ConfigFile, SimpleProvider
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> from ovirt.node.config.defaults import NodeConfigFile
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = CIM(cfgfile)
     >>> n.update(True)
     >>> n.retrieve()

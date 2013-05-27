@@ -21,8 +21,9 @@
 from ovirt.node import plugins, ui, valid, utils, config
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
-from ovirt.node.utils import network
 from ovirt.node.setup.core import ping
+from ovirt.node.utils import network
+from ovirt.node.utils.network import BridgedNIC
 
 """
 Network page plugin
@@ -126,17 +127,20 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def _get_nics(self):
-        justify = lambda txt, l: txt.ljust(l)[0:l]
+        def justify(txt, l):
+            txt = txt if txt else ""
+            return txt.ljust(l)[0:l]
         node_nics = []
         first_nic = None
-        for name, nic in sorted(utils.network.node_nics().items()):
+        model = utils.network.NodeNetwork()
+        for name, nic in sorted(model.nics().items()):
             if first_nic is None:
                 first_nic = name
-            bootproto = "Configured" if nic["bootproto"] else "Unconfigured"
-            description = " ".join([justify(nic["name"], 7),
-                                    justify(bootproto, 13),
-                                    justify(nic["vendor"], 14),
-                                    justify(nic["hwaddr"], 17)
+            is_cfg = "Configured" if nic.is_configured() else "Unconfigured"
+            description = " ".join([justify(nic.ifname, 7),
+                                    justify(is_cfg, 13),
+                                    justify(nic.vendor, 14),
+                                    justify(nic.hwaddr, 17)
                                     ])
             node_nics.append((name, description))
         return node_nics
@@ -216,8 +220,8 @@ class Plugin(plugins.NodePlugin):
             return
 
         if "dialog.nic.identify" in changes:
-            iface = self._model_extra["dialog.nic.iface"]
-            utils.network.NIC(iface).identify()
+            ifname = self._model_extra["dialog.nic.ifname"]
+            utils.network.NIC(ifname).identify()
             self.application.notice("Flashing lights now")
             return
 
@@ -275,7 +279,7 @@ class Plugin(plugins.NodePlugin):
                        ipv6_bootproto, ipv6_address, ipv6_netmask,
                        ipv6_gateway, vlanid):
         vlanid = vlanid or None
-        iface = self._model_extra["dialog.nic.iface"]
+        iface = self._model_extra["dialog.nic.ifname"]
 
         model = defaults.Network()
         ipv6model = defaults.IPv6()
@@ -332,64 +336,63 @@ class Plugin(plugins.NodePlugin):
 class NicDetailsDialog(ui.Dialog):
     plugin = None
 
-    def __init__(self, plugin, iface):
+    def __init__(self, plugin, ifname):
         super(NicDetailsDialog, self).__init__("dialog.nic",
-                                               "NIC Details: %s" % iface, [])
+                                               "NIC Details: %s" % ifname, [])
         self.plugin = plugin
 
         # Populate model with nic specific informations
-        self.logger.debug("Building NIC details dialog for %s" % iface)
+        self.logger.debug("Building NIC details dialog for %s" % ifname)
 
-        self.logger.debug("Getting informations for NIC details page")
-        live = utils.network.node_nics()[iface]
-        cfg = defaults.Network().retrieve()
-        ip6cfg = defaults.IPv6().retrieve()
+        nic = utils.network.NodeNetwork().nics()[ifname]
 
-        self.logger.debug("live: %s" % live)
-        self.logger.debug("cfg: %s" % cfg)
-        self.logger.debug("ipv6cfg: %s" % ip6cfg)
+        model = defaults.Network().retrieve()
+        ip6model = defaults.IPv6().retrieve()
 
-        # The primary interface of this Node:
-        node_bridge_slave = config.network.node_bridge_slave()
+        self.logger.debug("nic: %s" % nic)
+        self.logger.debug("model: %s" % model)
+        self.logger.debug("ip6model: %s" % ip6model)
 
-        if node_bridge_slave and node_bridge_slave != iface:
-            # The config contains the information for the primary iface,
-            # because this iface is not the primary iface we clear the config
-            cfg = dict((k, "") for k in cfg.keys())
+        is_primary_interface = model["iface"] == ifname
 
-        ipaddr, netmask, gateway, vlanid = (cfg["ipaddr"], cfg["netmask"],
-                                            cfg["gateway"], cfg["vlanid"])
+        if not is_primary_interface:
+            # The config contains the information for the primary ifnamee,
+            # because this ifnamee is not the primaryifnameme we clear the
+            # config
+            model = dict((k, "") for k in model.keys())
 
-        ip6addr, ip6netmask, ip6gateway, ip6bootproto = (ip6cfg["ipaddr"],
-                                                         ip6cfg["netmask"],
-                                                         ip6cfg["gateway"],
-                                                         ip6cfg["bootproto"])
+        ipaddr, netmask, gateway, vlanid = (model["ipaddr"], model["netmask"],
+                                            model["gateway"], model["vlanid"])
 
-        bridge_nic = utils.network.NIC(live["bridge"])
-        if cfg["bootproto"] == "dhcp":
-            if bridge_nic.exists():
-                routes = utils.network.Routes()
-                ipaddr, netmask = bridge_nic.ipv4_address().items()
-                gateway = routes.default()
-                vlanid = bridge_nic.vlanid()
-            else:
-                self.logger.warning("Bridge assigned but couldn't gather " +
-                                    "live info: %s" % bridge_nic)
+        ip6addr, ip6netmask, ip6gateway, ip6bootproto = (ip6model["ipaddr"],
+                                                         ip6model["netmask"],
+                                                         ip6model["gateway"],
+                                                         ip6model["bootproto"])
 
-        link_status_txt = ("Connected" if live["link_detected"]
+        if type(nic) is BridgedNIC:
+            if model["bootproto"] == "dhcp":
+                if nic.bridge_nic.exists():
+                    routes = utils.network.Routes()
+                    gateway = routes.default()
+                    ipaddr, netmask = nic.bridge_nic.ipv4_address().items()
+                    vlanid = ",".join(nic.bridge_nic.vlanids())
+                else:
+                    self.logger.warning("Bridge assigned but couldn't " +
+                                        "gather nic info: %s" % nic.bridge_nic)
+
+        link_status_txt = ("Connected" if nic.has_link()
                            else "Disconnected")
-
-        self.logger.debug("xxxxx bootporoto: %s" % cfg)
+        vendor_txt = nic.vendor[:24] if nic.vendor else ""
 
         self.plugin._model_extra.update({
-            "dialog.nic.iface": live["name"],
-            "dialog.nic.driver": live["driver"],
-            "dialog.nic.protocol": live["bootproto"] or "N/A",
-            "dialog.nic.vendor": live["vendor"][:24],
+            "dialog.nic.ifname": nic.ifname,
+            "dialog.nic.driver": nic.driver,
+            "dialog.nic.protocol": nic.config.bootproto or "N/A",
+            "dialog.nic.vendor": vendor_txt,
             "dialog.nic.link_status": link_status_txt,
-            "dialog.nic.hwaddress": live["hwaddr"],
+            "dialog.nic.hwaddress": nic.hwaddr,
 
-            "dialog.nic.ipv4.bootproto": cfg["bootproto"],
+            "dialog.nic.ipv4.bootproto": model["bootproto"],
             "dialog.nic.ipv4.address": ipaddr,
             "dialog.nic.ipv4.netmask": netmask,
             "dialog.nic.ipv4.gateway": gateway,
@@ -404,7 +407,8 @@ class NicDetailsDialog(ui.Dialog):
 
         padd = lambda l: l.ljust(12)
         ws = [ui.Row("dialog.nic._row[0]",
-                     [ui.KeywordLabel("dialog.nic.iface", padd("Interface: ")),
+                     [ui.KeywordLabel("dialog.nic.ifname",
+                                      padd("Interface: ")),
                       ui.KeywordLabel("dialog.nic.driver", padd("Driver: ")),
                       ]),
               ui.Row("dialog.nic._row[1]",

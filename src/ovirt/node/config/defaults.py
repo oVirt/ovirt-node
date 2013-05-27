@@ -19,7 +19,8 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, exceptions, valid, utils, config
-from ovirt.node.utils import fs, storage
+from ovirt.node.utils import storage
+from ovirt.node.utils.fs import ShellVarFile
 import glob
 import logging
 import os
@@ -45,101 +46,23 @@ LOGGER = logging.getLogger(__name__)
 OVIRT_NODE_DEFAULTS_FILENAME = "/etc/default/ovirt"
 
 
-class SimpleProvider(base.Base):
-    """SimpleProvider writes simple KEY=VALUE (shell-like) configuration file
-
-    >>> fn = "/tmp/cfg_dummy.simple"
-    >>> open(fn, "w").close()
-    >>> cfg = {
-    ... "IP_ADDR": "127.0.0.1",
-    ... "NETMASK": "255.255.255.0",
-    ... }
-    >>> p = SimpleProvider(fn)
-    >>> p.get_dict()
-    {}
-    >>> p.update(cfg, True)
-    >>> p.get_dict() == cfg
-    True
+def exists():
+    """Determin if the defaults file exists
     """
-    def __init__(self, filename):
-        super(SimpleProvider, self).__init__()
-        self.filename = filename
-        if not os.path.exists(self.filename):
-            raise RuntimeError("File does not exist: %s" % self.filename)
-        self.logger.debug("Using %s" % self.filename)
-
-    def update(self, new_dict, remove_empty):
-        cfg = self.get_dict()
-        cfg.update(new_dict)
-
-        for key, value in cfg.items():
-            if remove_empty and value is None:
-                del cfg[key]
-            if value is not None and type(value) not in [str, unicode]:
-                raise TypeError("The type (%s) of %s is not allowed" %
-                                (type(value), key))
-        self._write(cfg)
-
-    def get_dict(self):
-        with open(self.filename) as source:
-            cfg = self._parse_dict(source)
-        return cfg
-
-    def _parse_dict(self, source):
-        """Parse a simple shell-var-style lines into a dict:
-
-        >>> import StringIO
-        >>> txt = "# A comment\\n"
-        >>> txt += "A=ah\\n"
-        >>> txt += "B=beh\\n"
-        >>> txt += "C=\\"ceh\\"\\n"
-        >>> txt += "D=\\"more=less\\"\\n"
-        >>> p = SimpleProvider("/tmp/cfg_dummy")
-        >>> sorted(p._parse_dict(StringIO.StringIO(txt)).items())
-        [('A', 'ah'), ('B', 'beh'), ('C', 'ceh'), ('D', 'more=less')]
-        """
-        cfg = {}
-        for line in source:
-                line = line.strip()
-                if line.startswith("#"):
-                    continue
-                try:
-                    key, value = line.split("=", 1)
-                    cfg[key] = value.strip("\"' \n")
-                except:
-                    self.logger.info("Failed to parse line: '%s'" % line)
-        return cfg
-
-    def _write(self, cfg):
-        lines = []
-        # Sort the dict, looks nicer
-        for key in sorted(cfg.iterkeys()):
-            lines.append("%s=\"%s\"" % (key, cfg[key]))
-        contents = "\n".join(lines) + "\n"
-
-        # The following logic is mainly needed to allow an "offline" testing
-        config_fs = fs.Config()
-        if config_fs.is_enabled():
-            with config_fs.open_file(self.filename, "w") as dst:
-                dst.write(contents)
-        else:
-            try:
-                fs.atomic_write(self.filename, contents)
-            except Exception as e:
-                self.logger.warning("Atomic write failed: %s" % e)
-                with open(self.filename, "w") as dst:
-                    dst.write(contents)
+    return os.path.exists(OVIRT_NODE_DEFAULTS_FILENAME)
 
 
-class ConfigFile(base.Base):
-    """ConfigFile is a specififc interface to some configuration file with a
-    specififc syntax
+class NodeConfigFile(base.Base):
+    """NodeConfigFile is a specififc interface to some configuration file
+    with a specififc syntax
     """
-    def __init__(self, filename=None, provider_class=None):
-        super(ConfigFile, self).__init__()
-        filename = filename or OVIRT_NODE_DEFAULTS_FILENAME
-        provider_class = provider_class or SimpleProvider
-        self.provider = provider_class(filename)
+    def __init__(self, filename=OVIRT_NODE_DEFAULTS_FILENAME):
+        super(NodeConfigFile, self).__init__()
+        if filename == OVIRT_NODE_DEFAULTS_FILENAME \
+           and not os.path.exists(filename):
+            raise RuntimeError("Node config file does not exist: %s" %
+                               filename)
+        self.provider = ShellVarFile(filename, create=True)
 
     def update(self, new_dict, remove_empty=False):
         """Reads /etc/defaults/ovirt and creates a dictionary
@@ -167,7 +90,7 @@ class NodeConfigFileSection(base.Base):
 
     def __init__(self, cfgfile=None):
         super(NodeConfigFileSection, self).__init__()
-        self.defaults = cfgfile or ConfigFile()
+        self.defaults = cfgfile or NodeConfigFile()
 
     def update(self, *args, **kwargs):
         """This function set's the correct entries in the defaults file for
@@ -295,8 +218,7 @@ class Network(NodeConfigFileSection):
     - OVIRT_IP_ADDRESS, OVIRT_IP_NETMASK, OVIRT_IP_GATEWAY
     - OVIRT_VLAN
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = Network(cfgfile)
     >>> n.update("eth0", "static", "10.0.0.1", "255.0.0.0", "10.0.0.255",
     ...          "20")
@@ -365,9 +287,10 @@ class Network(NodeConfigFileSection):
     def configure_no_networking(self, iface=None):
         """Can be used to disable all networking
         """
-        iface = iface or self.retrieve()["iface"]
-        name = iface + "-DISABLED"
-        self.update(name, None, None, None, None, None)
+        #iface = iface or self.retrieve()["iface"]
+        #name = iface + "-DISABLED"
+        # FIXME why should we use ifname-DISABLED here?
+        self.update(None, None, None, None, None, None)
 
     def configure_dhcp(self, iface, vlanid=None):
         """Can be used to configure NIC iface on the vlan vlanid with DHCP
@@ -380,6 +303,29 @@ class Network(NodeConfigFileSection):
         self.update(iface, "static", ipaddr, netmask, gateway, vlanid)
 
 
+class NetworkTopology(NodeConfigFileSection):
+    """Sets the network topology
+    - OVIRT_NETWORK_TOPOLOGY
+
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
+    >>> n = NetworkTopology(cfgfile)
+    >>> n.update("legacy")
+    >>> sorted(n.retrieve().items())
+    [('topology', 'legacy')]
+    """
+    keys = ("OVIRT_NETWORK_TOPOLOGY",)
+    known_topologies = ["legacy",
+                        # Legacy way, a bridge is created for BOOTIF
+
+                        "direct"
+                        # The BOOTIF NIC is configured directly
+                        ]
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, topology="legacy"):
+        assert topology in self.known_topologies
+
+
 class IPv6(NodeConfigFileSection):
     """Sets IPv6 network stuff
     - OVIRT_IPV6 (static, auto, dhcp)
@@ -387,8 +333,7 @@ class IPv6(NodeConfigFileSection):
     - OVIRT_IPV6_NETMASK
     - OVIRT_IPV6_GATEWAY
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = IPv6(cfgfile)
     >>> n.update("auto", "11::22", "11::33", "11::44")
     >>> data = sorted(n.retrieve().items())
@@ -446,8 +391,7 @@ class IPv6(NodeConfigFileSection):
 
 class Hostname(NodeConfigFileSection):
     """Configure hostname
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> hostname = "host.example.com"
     >>> n = Hostname(cfgfile)
     >>> n.update(hostname)
@@ -496,8 +440,7 @@ class Hostname(NodeConfigFileSection):
 
 class Nameservers(NodeConfigFileSection):
     """Configure nameservers
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> servers = ["10.0.0.2", "10.0.0.3"]
     >>> n = Nameservers(cfgfile)
     >>> n.update(servers)
@@ -615,8 +558,7 @@ class Nameservers(NodeConfigFileSection):
 class Timeservers(NodeConfigFileSection):
     """Configure timeservers
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> servers = ["10.0.0.4", "10.0.0.5", "0.example.com"]
     >>> n = Timeservers(cfgfile)
     >>> n.update(servers)
@@ -672,8 +614,7 @@ class Timeservers(NodeConfigFileSection):
 class Syslog(NodeConfigFileSection):
     """Configure rsyslog
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> server = "10.0.0.6"
     >>> port = "514"
     >>> n = Syslog(cfgfile)
@@ -711,8 +652,7 @@ class Syslog(NodeConfigFileSection):
 class Collectd(NodeConfigFileSection):
     """Configure collectd
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> server = "10.0.0.7"
     >>> port = "42"
     >>> n = Collectd(cfgfile)
@@ -756,8 +696,7 @@ class Collectd(NodeConfigFileSection):
 class KDump(NodeConfigFileSection):
     """Configure kdump
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> nfs_url = "host.example.com:/dst/path"
     >>> ssh_url = "root@host.example.com"
     >>> n = KDump(cfgfile)
@@ -905,8 +844,7 @@ class KDump(NodeConfigFileSection):
 class iSCSI(NodeConfigFileSection):
     """Configure iSCSI
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = iSCSI(cfgfile)
     >>> n.update("iqn.1992-01.com.example:node",
     ...          "iqn.1992-01.com.example:target", "10.0.0.8", "42")
@@ -948,8 +886,7 @@ class iSCSI(NodeConfigFileSection):
 class Netconsole(NodeConfigFileSection):
     """Configure netconsole
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = Netconsole(cfgfile)
     >>> server = "10.0.0.9"
     >>> port = "666"
@@ -984,8 +921,7 @@ class Netconsole(NodeConfigFileSection):
 class Logrotate(NodeConfigFileSection):
     """Configure logrotate
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = Logrotate(cfgfile)
     >>> max_size = "42"
     >>> n.update(max_size)
@@ -1018,8 +954,7 @@ class Logrotate(NodeConfigFileSection):
 class Keyboard(NodeConfigFileSection):
     """Configure keyboard
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = Keyboard(cfgfile)
     >>> layout = "de_DE.UTF-8"
     >>> n.update(layout)
@@ -1056,8 +991,7 @@ class Keyboard(NodeConfigFileSection):
 class NFSv4(NodeConfigFileSection):
     """Configure NFSv4
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = NFSv4(cfgfile)
     >>> domain = "foo.example"
     >>> n.update(domain)
@@ -1092,8 +1026,7 @@ class NFSv4(NodeConfigFileSection):
 class SSH(NodeConfigFileSection):
     """Configure SSH
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = SSH(cfgfile)
     >>> pwauth = True
     >>> num_bytes = "24"
@@ -1162,8 +1095,7 @@ class Installation(NodeConfigFileSection):
     """Configure storage
     This is a class to handle the storage parameters used at installation time
 
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = Installation(cfgfile)
     >>> kwargs = {"init": ["/dev/sda"], "root_install": "1"}
     >>> n.update(**kwargs)

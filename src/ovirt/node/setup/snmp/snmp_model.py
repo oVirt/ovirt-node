@@ -70,9 +70,8 @@ def disable_snmpd():
 class SNMP(NodeConfigFileSection):
     """Configure SNMP
 
-    >>> from ovirt.node.config.defaults import ConfigFile, SimpleProvider
-    >>> fn = "/tmp/cfg_dummy"
-    >>> cfgfile = ConfigFile(fn, SimpleProvider)
+    >>> from ovirt.node.config.defaults import NodeConfigFile
+    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> n = SNMP(cfgfile)
     >>> n.update("secret")
     >>> n.retrieve().items()

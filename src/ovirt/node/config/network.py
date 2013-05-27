@@ -20,9 +20,10 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils, base
 from ovirt.node.utils import AugeasWrapper as Augeas
+from ovirt.node.utils.fs import ShellVarFile
+import glob
 import logging
 import os
-import glob
 
 """
 Some convenience functions related to networking
@@ -32,61 +33,102 @@ Some convenience functions related to networking
 LOGGER = logging.getLogger(__name__)
 
 
-def iface(iface):
-    """Retuns the config of an iface
-
-    Args:
-        iface: Interface to retrieve the config for
-    Returns:
-        A dict of (nic-name, nic-infos-dict)
+class NicConfig(base.Base):
+    """A common interface to NIC configuration options
     """
-    LOGGER.debug("Getting configuration for '%s'" % iface)
-    Augeas.force_reload()
+    ifname = None
 
-    info = {}
+    type = None
+    bootproto = None
+    ipaddr = None
+    netmask = None
+    gateway = None
+    bridge = None
+    vlan = None
+    device = None
+    onboot = None
 
-    aug = Augeas()
-    filepath = "/etc/sysconfig/network-scripts/ifcfg-%s" % iface
-    augdevicepath = "/files%s" % filepath
+    ipv6init = None
+    ipv6forwarding = None
+    ipv6_autoconf = None
+    dhcpv6c = None
+    ipv6addr = None
+    ipv6_defaultgw = None
 
-    if not os.path.exists(filepath):
-        LOGGER.debug("No config file %s" % filepath)
+    vlan_parent = None
 
-    # Type
-    info["type"] = aug.get(augdevicepath + "/TYPE", True)
+    _backend = None
+    _keys = ["bridge", "type", "bootproto", "ipaddr", "netmask",
+             "gateway", "vlan", "device", "onboot", "hwaddr",
+             "ipv6init", "ipv6forwarding", "ipv6_autoconf",
+             "dhcpv6c", "ipv6addr", "ipv6_defaultgw"]
 
-    # Bootprotocol
-    info["bootproto"] = aug.get(augdevicepath + "/BOOTPROTO", True)
+    def __init__(self, ifname):
+        super(NicConfig, self).__init__()
+        self.ifname = ifname
+        self._backend = NicConfig.IfcfgBackend(self)
+        self.load()
 
-    # IPV4
-    for p in ["IPADDR", "NETMASK", "GATEWAY"]:
-        info[p.lower()] = aug.get(augdevicepath + "/" + p, True)
+    def exists(self):
+        """Return if a config exists
+        """
+        return self._backend.exists(self.ifname)
 
-    # FIXME IPv6
+    def load(self):
+        data = self._backend.read(self.ifname)
+        # Additional convenience stuff
+        self.vlan = self.vlan.strip() if self.vlan else self.vlan
+        if self.vlan:
+            parts = self.ifname.split(".")
+            self.vlan_id = parts[-1:][0]
+            self.vlan_parent = ".".join(parts[:-1])
 
-    # Parent bridge
-    info["bridge"] = aug.get(augdevicepath + "/BRIDGE", True)
+            self.logger.debug("Found VLAN %s on %s" %
+                              (str(self.vlan_id), self.ifname))
+        return data
 
-    # VLAN
-    info["is_vlan"] = aug.get(augdevicepath + "/VLAN", True) is not None
-    name_says_vlan = "." in iface
-    if info["is_vlan"] != name_says_vlan:
-        LOGGER.warning("NIC config says the device is a VLAN, but the name" +
-                       "doesn't reflect that: %s (%s vs %s)" % (iface,
-                       info["is_vlan"], name_says_vlan))
+    def save(self):
+        return self._backend.write(self.ifname)
 
-    if info["is_vlan"] is True:
-        parts = iface.split(".")
-        vlanid = parts[-1:][0]
-        info["vlanid"] = vlanid
-        info["vlan_parent"] = ".".join(parts[:-1])
+    def __str__(self):
+        return self.build_str("ifname")
 
-        info["type"] = "vlan"
-        LOGGER.debug("Found VLAN %s on %s" % (str(vlanid), iface))
-    else:
-        info["vlanid"] = None
+    class IfcfgBackend(base.Base):
+        filename_tpl = "/etc/sysconfig/network-scripts/ifcfg-%s"
 
-    return info
+        def __init__(self, cfg):
+            super(NicConfig.IfcfgBackend, self).__init__()
+            self.cfg = cfg
+
+        def exists(self, ifname):
+            """Return true if a config for ifname exists
+            """
+            return os.path.isfile(self.filename_tpl % ifname)
+
+        def read(self, ifname):
+            """Read values frmo a ifcfg file and update self.cfg
+            """
+            filename = self.filename_tpl % ifname
+
+            if not os.path.exists(filename):
+                self.logger.info("Config not found for %s" % ifname)
+                return
+
+            data = ShellVarFile(filename).get_dict()
+
+            for k in self.cfg._keys:
+                self.cfg.__dict__[k] = data.get(k.upper(), None)
+
+        def write(self, cfg):
+            """Write a ifcfg file from the cfg
+            """
+            assert type(cfg) is NicConfig
+            filename = self.filename_tpl % cfg.ifname
+            dst = ShellVarFile(filename)
+            data = {}
+            for k in self.cfg._keys:
+                data[k.upper()] = cfg.__dict__.get(k)
+            dst.update(data, True)
 
 
 def _aug_get_or_set(augpath, new_servers=None):
@@ -173,44 +215,6 @@ def __legacy_hostname(new_hostname=None):
     return cfg_hostname
 
 
-class Ifcfg(base.Base):
-    """Object to access ifcfg-%ifname
-    """
-    bridge = None
-    type = None
-    bootproto = None
-    ipaddr = None
-    netmask = None
-    gateway = None
-    vlan = None
-    device = None
-    hwaddr = None
-    onboot = None
-
-    def __init__(self, iface):
-        self.iface = iface
-        self.aug = Augeas()
-        self.load_properties()
-
-    def load_properties(self):
-        Augeas.force_reload()
-        for p in ["bridge", "type", "bootproto", "ipaddr", "netmask",
-                  "gateway", "vlan", "device", "onboot", "hwaddr"]:
-            self.__dict__[p] = self.ifcfg_property(p.upper())
-
-    def ifcfg_property(self, name):
-        filepath = "/etc/sysconfig/network-scripts/ifcfg-%s" % self.iface
-        augdevicepath = "/files%s" % filepath
-
-        value = None
-        if os.path.exists(filepath):
-            value = self.aug.get("%s/%s" % (augdevicepath, name), True)
-        else:
-            LOGGER.debug("No config file %s" % filepath)
-
-        return value
-
-
 def ifaces():
     """Returns all configured ifaces
     """
@@ -220,32 +224,3 @@ def ifaces():
         iface = fn[len(filepath):]
         ifaces.append(iface)
     return ifaces
-
-
-def node_bridge():
-    """Return the configured bridge
-
-    Returns:
-        Ifname of a configured bridge or None if none is configured
-    """
-    bridge = None
-    for iface in ifaces():
-        nic = Ifcfg(iface)
-        if nic.type == u"Bridge":
-            bridge = iface
-            break
-    return bridge
-
-
-def node_bridge_slave():
-    """Returns the interface which is the slave of the configfured bridge
-    """
-    slave = None
-    bridge = node_bridge()
-    if bridge:
-        for iface in ifaces():
-            nic = Ifcfg(iface)
-            if nic.bridge == bridge:
-                slave = iface
-                break
-    return slave
