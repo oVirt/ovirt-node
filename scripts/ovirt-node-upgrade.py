@@ -31,6 +31,7 @@ import time
 import imp
 
 LOG_PREFIX = "ovirt-node-upgrade"
+OVIRT_UPGRADE_LOCK = "/tmp/.ovirt_upgrade.lock"
 
 
 def which(file):
@@ -71,6 +72,48 @@ class Base(object):
             '%s.%s' % (LOG_PREFIX, self.__class__.__name__))
 
 
+class LockFile(Base):
+
+    def __init__(self):
+        super(LockFile, self).__init__()
+        self._locked = False
+        lock_fd, self._lock_file = tempfile.mkstemp(prefix=".ovirtupgrade.")
+        os.close(lock_fd)
+
+    def __enter__(self):
+        self._acquire()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._remove()
+
+    def _acquire(self):
+        self._logger.info("Acquiring Lock")
+        if os.path.exists(OVIRT_UPGRADE_LOCK):
+            with open(self._lock_file, "r") as f:
+                if os.path.exists("/proc/%s" % f.readline()):
+                    raise RuntimeError("You already have an instance of th " +
+                                       " program running")
+            os.remove(OVIRT_UPGRADE_LOCK)
+        try:
+            with open(self._lock_file, "w") as f:
+                f.write("%s" % os.getpid())
+            os.symlink(self._lock_file, OVIRT_UPGRADE_LOCK)
+            self._locked = True
+        except Exception as e:
+            self._logger.exception('Error: Upgrade Failed: %s', e)
+            raise RuntimeError("Unable to write lockfile")
+
+    def _remove(self):
+        try:
+            if self._locked:
+                os.remove(OVIRT_UPGRADE_LOCK)
+            if os.path.exists(self._lock_file):
+                os.remove(self._lock_file)
+        except Exception as e:
+            self._logger.exception('Error: Upgrade Failed: %s', e)
+            raise RuntimeError("Unable to remove lockfile")
+
+
 class UpgradeTool(Base):
     def __init__(self):
         super(UpgradeTool, self).__init__()
@@ -79,8 +122,6 @@ class UpgradeTool(Base):
         self._tmp_python_path = None
         self.iso_tmp = None
         self._tmp_dir = tempfile.mkdtemp(dir="/data")
-        lock_fd, self._lock_file = tempfile.mkstemp(prefix=".ovirtupgrade.")
-        os.close(lock_fd)
         self._chroot_path = os.path.join(self._tmp_dir, "rootfs")
         self._squashfs_dir = os.path.join(self._tmp_dir, "squashfs")
         self._ovirtnode_dir = os.path.join(self._tmp_dir, "ovirtnode")
@@ -206,7 +247,6 @@ class UpgradeTool(Base):
         try:
             for dir in [self._chroot_path, self._squashfs_dir, "/live"]:
                 self._system(which("umount"), dir)
-            os.remove(self._lock_file)
             shutil.rmtree(self._tmp_dir)
             if self.iso_tmp and os.path.exists(self.iso_tmp):
                 os.remove(self.iso_tmp)
@@ -275,41 +315,45 @@ class UpgradeTool(Base):
         self._logger.debug(self._options)
         if os.geteuid() != 0:
             raise RuntimeError("You must run as root")
-        if not self._options.iso_file:
-            raise RuntimeError("iso file not defined")
-        elif self._options.iso_file == "-":
-            iso_fd, self._options.iso_file = tempfile.mkstemp(
-                dir="/data",
-                prefix="tmpiso_",
-            )
-            self.iso_tmp = self._options.iso_file
-            os.close(iso_fd)
-            self._logger.debug("Using temporary ISO file: {iso}\n".format
-                              (iso=self._options.iso_file))
-            with open(self._options.iso_file, 'wb') as f:
-                while True:
-                    data = sys.stdin.read(4096)
-                    if not data:
-                        break
-                    f.write(data)
-        elif not os.path.exists(self._options.iso_file):
-            raise RuntimeError("%s does not exist" % self._options.iso_file)
-        try:
-            self._extract_rootfs(self._options.iso_file)
-            self._run_hooks("pre-upgrade")
-            self._run_upgrade()
-            self._run_hooks("post-upgrade")
-            if self._options.reboot > 0:
-                self._reboot(self._options.reboot)
-            self._logger.info("Upgrade Completed")
-        except Exception as e:
-            self._logger.exception('Error: Upgrade Failed: %s', e)
-            self._run_hooks("rollback")
-            self._logger.info("Upgrade Failed, Rollback Completed")
-            sys.exit(1)
-        finally:
-            self._cleanup()
-            sys.exit(0)
+
+        with LockFile():
+            if not self._options.iso_file:
+                raise RuntimeError("iso file not defined")
+            elif self._options.iso_file == "-":
+                iso_fd, self._options.iso_file = tempfile.mkstemp(
+                    dir="/data",
+                    prefix="tmpiso_",
+                )
+                self.iso_tmp = self._options.iso_file
+                os.close(iso_fd)
+                self._logger.debug("Using temporary ISO file: {iso}\n".format
+                                  (iso=self._options.iso_file))
+                with open(self._options.iso_file, 'wb') as f:
+                    while True:
+                        data = sys.stdin.read(4096)
+                        if not data:
+                            break
+                        f.write(data)
+            elif not os.path.exists(self._options.iso_file):
+                raise RuntimeError("%s does not exist" %
+                                   self._options.iso_file)
+            try:
+                self._extract_rootfs(self._options.iso_file)
+                self._run_hooks("pre-upgrade")
+                self._run_upgrade()
+                self._run_hooks("post-upgrade")
+                if self._options.reboot > 0:
+                    self._reboot(self._options.reboot)
+                self._logger.info("Upgrade Completed")
+            except Exception as e:
+                self._logger.exception('Error: Upgrade Failed: %s', e)
+                self._run_hooks("rollback")
+                self._logger.info("Upgrade Failed, Rollback Completed")
+                ret = 1
+            finally:
+                self._cleanup()
+                ret = 0
+            sys.exit(ret)
 
 if __name__ == "__main__":
     initLogger()
