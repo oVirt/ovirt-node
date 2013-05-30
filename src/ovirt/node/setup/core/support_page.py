@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import ui, utils
+from ovirt.node import ui
 from ovirt.node.plugins import NodePlugin
 from ovirt.node.utils import process
 

@@ -24,6 +24,7 @@ Core Setup Plugins
 """
 from ovirt.node import plugins
 
+
 #
 # Magic function to register all plugins to be used
 #

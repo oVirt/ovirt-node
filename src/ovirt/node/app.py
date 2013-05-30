@@ -401,7 +401,7 @@ class Application(base.Base):
                           (plugin.name(), plugin))
         if plugin.name() in self.__plugins:
             raise RuntimeError("Plugin with name '%s' is already registered" %
-                                plugin.name())
+                               plugin.name())
         self.__plugins[plugin.name()] = plugin
         self.ui.register_plugin(plugin.ui_name(), plugin)
 

@@ -22,8 +22,8 @@
 """
 SNMP Plugin
 """
+import snmp_page
 
-from . import snmp_page
 
 #
 # Magic function to register all plugins to be used

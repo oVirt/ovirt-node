@@ -20,7 +20,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, exceptions
 from ovirt.node.utils import security
-import keyboard_page, progress_page
+import keyboard_page
+import progress_page
 
 """
 Password confirmation page for the upgarde part of the installer

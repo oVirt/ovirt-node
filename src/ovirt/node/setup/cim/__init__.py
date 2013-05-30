@@ -22,8 +22,8 @@
 """
 CIM Plugin
 """
+import cim_page
 
-from . import cim_page
 
 #
 # Magic function to register all plugins to be used

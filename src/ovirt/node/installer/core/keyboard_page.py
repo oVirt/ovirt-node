@@ -20,7 +20,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui
 from ovirt.node.utils import system
-import welcome_page, upgrade_page
+import welcome_page
+import upgrade_page
 
 """
 Keyboard page of the installer
