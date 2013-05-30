@@ -24,7 +24,6 @@ python-setuptools
 PyPAM
 db4
 vconfig
-python-virtinst
 # debugging
 hdparm
 sos
