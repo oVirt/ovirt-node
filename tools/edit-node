@@ -1718,15 +1718,22 @@ def build_isoname_for_plugins(edited_iso, plugins):
         An isoname suggestion
 
     >>> edited_iso = "ovirt-node-iso-2.6.1-20120228.fc18.iso.edited.iso"
-    >>> plugins = ["ovirt-node-plugin-igor", "3rd-plugin-cim"]
+    >>> plugins = ["ovirt-node-plugin-igor-slave", "3rd-plugin-cim"]
     >>> build_isoname_for_plugins(edited_iso, plugins)
-    'ovirt-node-iso-2.6.1-.ovirt-node-plugin-igor_3rd-plugin-cim.fc18.iso'
+    'ovirt-node-iso-2.6.1-20120228.igor-slave_3rd-plugin-cim.fc18.iso'
     """
     def sane_name_for_plugin(plugin):
         package = os.path.basename(plugin)
+
+        # Just include the package name if it's an rpm, not the whole filename
         if package.endswith(".rpm"):
             nvra = filename_to_nvra(package)
             package = nvra[0]
+
+        # Remove the common prefix to shorten the final filename
+        common_prefix = "ovirt-node-plugin-"
+        package = package.replace(common_prefix, "")
+
         return package
     plugins = plugins if type(plugins) is list else [plugins]
     packages = [sane_name_for_plugin(p) for p in plugins]
