@@ -1,48 +1,39 @@
 
-PYTHONSOURCES=$(shell find . -name \*.py -not -path */hacks.py)
-XMLSOURCES=$(shell find . -name \*.xml -or -name \*.xsl)
-CLEANFILES=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~ -o -name MANIFEST)
+PYTHONSOURCES:=$(shell find . -name \*.py -not -path */hacks.py)
+XMLSOURCES:=$(shell find . -name \*.xml -or -name \*.xsl)
+CLEANFILES:=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~ -o -name MANIFEST)
 
 
-check-local: check-static check-doctests
-	@echo -e "---\n Passed all.\n---"
+check-local: check-static-doctests check-static-pep8 check-static-pyflakes check-static-pylint
+	@echo -e "---\n Passed $@\n---"
 
+check-static-xmllint: $(XMLSOURCES:%=%.xmllint)
+	@echo Passed $@
 
-check-static: check-static-pep8 check-static-pyflakes
-	@echo -e "---\n Passed static checks.\n---"
+%.xmllint:
+	xmllint --noout "$*"
 
-check-doctests:
-	@for M in $(PYTHONSOURCES); \
-	do \
-		echo Doctest on "$$M"; \
-		PYTHONPATH=. python -m doctest $$M || exit 1; \
-	done
+check-static-doctests: $(PYTHONSOURCES:%=%.doctest)
+	@echo Passed $@
 
-check-static-pep8:
-	@for M in $(PYTHONSOURCES); \
-	do \
-		echo pep8 on "$$M"; \
-		PYTHONPATH=. pep8 -r $$M || exit 1; \
-	done
+%.doctest:
+	PYTHONPATH=. python -m doctest "$*"
 
-PYLINT=pylint --output-format=parseable --include-ids=yes --rcfile=.pylintrc
-check-static-pylint:
-	@for M in $(PYTHONSOURCES); \
-	do \
-		echo pylint on "$$M"; \
-		PYTHONPATH=. $(PYLINT) $$M || exit 1; \
-	done
+check-static-pep8: $(PYTHONSOURCES:%=%.pep8)
+	@echo Passed $@
 
-check-static-pyflakes:
-	@for M in $(PYTHONSOURCES); \
-	do \
-		echo pyflakes on "$$M"; \
-		PYTHONPATH=. pyflakes $$M || exit 1; \
-	done
+%.pep8:
+	PYTHONPATH=. pep8 -r "$*"
 
-check-static-python26-compat:
-	@for M in $(PYTHONSOURCES); \
-	do \
-		echo Checking python26 syntax compatability on "$$M"; \
-		PYTHONPATH=. python26 -m py_compile $$M | exit 0; \
-	done
+PYLINT=pylint -f parseable --include-ids=yes --rcfile=.pylintrc
+check-static-pylint: $(PYTHONSOURCES:%=%.pylint)
+	@echo Passed $@
+
+%.pylint:
+	PYTHONPATH=. $(PYLINT) "$*"
+
+check-static-pyflakes: $(PYTHONSOURCES:%=%.pyflakes)
+	@echo Passed $@
+
+%.pyflakes:
+	PYTHONPATH=. pyflakes "$*"
