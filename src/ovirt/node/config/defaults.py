@@ -758,13 +758,13 @@ class KDump(NodeConfigFileSection):
 
     >>> fn = "/tmp/cfg_dummy"
     >>> cfgfile = ConfigFile(fn, SimpleProvider)
-    >>> nfs_url = "host.example.com"
+    >>> nfs_url = "host.example.com:/dst/path"
     >>> ssh_url = "root@host.example.com"
     >>> n = KDump(cfgfile)
     >>> n.update(nfs_url, ssh_url, True)
     >>> d = sorted(n.retrieve().items())
     >>> d[:2]
-    [('local', True), ('nfs', 'host.example.com')]
+    [('local', True), ('nfs', 'host.example.com:/dst/path')]
     >>> d[2:]
     [('ssh', 'root@host.example.com')]
     """
