@@ -121,12 +121,15 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, changes):
         # Handle button presses
+        number_of_vm = "There are %s Virtual Machines running." \
+            % (virt.number_of_domains())
         if "action.lock" in changes:
             self.logger.info("Locking screen")
             self._lock_dialog = LockDialog()
             self.application.ui.hotkeys_enabled(False)
             self.widgets.add(self._lock_dialog)
             return self._lock_dialog
+
         elif "action.unlock" in changes and "password" in changes:
             self.logger.info("UnLocking screen")
             pam = security.PAM()
@@ -143,10 +146,26 @@ class Plugin(plugins.NodePlugin):
 
         elif "action.restart" in changes:
             self.logger.info("Restarting")
+            return ui.ConfirmationDialog("confirm.reboot",
+                                         "Confirm System Restart",
+                                         number_of_vm +
+                                         "\nThis will restart the system,"
+                                         "proceed?")
+
+        elif "confirm.reboot.yes" in changes:
+            self.logger.info("Confirm Restarting")
             self.dry_or(lambda: system.reboot())
 
         elif "action.poweroff" in changes:
             self.logger.info("Shutting down")
+            return ui.ConfirmationDialog("confirm.shutdown",
+                                         "Confirm System Poweroff",
+                                         number_of_vm +
+                                         "\nThis will shut down the system,"
+                                         "proceed?")
+
+        elif "confirm.shutdown.yes" in changes:
+            self.logger.info("Confirm Shutting down")
             self.dry_or(lambda: system.poweroff())
 
         elif "action.hostkey" in changes:

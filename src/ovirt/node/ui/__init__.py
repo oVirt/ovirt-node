@@ -768,6 +768,21 @@ class TextViewDialog(Dialog):
         self.buttons = [CloseButton("dialog.close")]
 
 
+class ConfirmationDialog(InfoDialog):
+    """A generic dialog showing a text and offering buttons
+    By default a OK and Close button will be shown.
+    """
+    def __init__(self, path, title, text, buttons=None):
+        super(ConfirmationDialog, self).__init__(path, title, text)
+        self.children = [Divider("divider[0]"),
+                         Label("label[0]", text)
+                         ]
+        if not buttons:
+            # Default: OK and Close
+            self.buttons = [Button(path + ".yes", "OK"),
+                            CloseButton(path + ".close")]
+
+
 class TransactionProgressDialog(Dialog):
     """Display the progress of a transaction in a dialog
     """
