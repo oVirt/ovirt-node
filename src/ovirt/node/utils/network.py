@@ -186,9 +186,6 @@ def relevant_ifaces(filter_bridges=True, filter_vlans=True):
     >>> "lo" in relevant_ifaces()
     False
 
-    >>> "eth0" in relevant_ifaces() or "em1" in relevant_ifaces()
-    True
-
     Args:
         filter_bridges: If bridges shall be filtered out too
         filter_vlans: If vlans shall be filtered out too
