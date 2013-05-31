@@ -430,6 +430,7 @@ fi
 
 %files tools
 %{_sbindir}/edit-node
+%{_sbindir}/testable-node
 %{_mandir}/man8/edit-node.8.gz
 
 

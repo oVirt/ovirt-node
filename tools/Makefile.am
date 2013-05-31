@@ -16,7 +16,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 dist_sbin_SCRIPTS = \
-  edit-node
+  edit-node \
+  testable-node
 
 EXTRA_DIST = \
   edit-node.8
