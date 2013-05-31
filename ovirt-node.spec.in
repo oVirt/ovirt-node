@@ -606,7 +606,6 @@ fi
 %{mgmt_scripts_dir}
 %{_sysconfdir}/ovirt-config-boot.d
 %exclude %{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py*
-%config(noreplace) %{_sysconfdir}/sysconfig/node-config
 
 %if %{is_f16}
 %{_unitdir}/libvirtd.service

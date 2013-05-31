@@ -47,9 +47,7 @@ OVIRT_TMP_LOGFILE="/tmp/ovirt.log"
 # label of the oVirt partition
 OVIRT_LABEL="OVIRT"
 # configuration values are loaded in the following order:
-# 1. /etc/sysconfig/node-config sets the default values
 # 2. /etc/default/ovirt is loaded to override defaults with karg values
-NODE_SYSCONFIG="/etc/sysconfig/node-config"
 OVIRT_DEFAULTS="/etc/default/ovirt"
 aug = augeas.Augeas()
 #   workaround for bind-mounted files
@@ -70,22 +68,6 @@ OVIRT_VARS = {}
 
 def parse_defaults():
     global OVIRT_VARS
-    if os.path.exists(NODE_SYSCONFIG):
-        try:
-            f = open(NODE_SYSCONFIG, 'r')
-            for line in f:
-                try:
-                    line = line.strip()
-                    key, value = line.split("\"", 1)
-                    key = key.strip("=")
-                    key = key.strip()
-                    value = value.strip("\"")
-                    OVIRT_VARS[key] = value
-                except:
-                    pass
-            f.close()
-        except:
-            pass
 
     f = open(OVIRT_DEFAULTS, 'r')
     for line in f:

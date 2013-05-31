@@ -26,10 +26,8 @@
 
 . @DRACUTDIR@/91ovirtnode/ovirt-boot-functions
 
-NODE_CONFIG=/etc/sysconfig/node-config
 
 VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/ovirt-early
-VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/ovirt-post
 VAR_SUBSYS_OVIRT_CIM=/var/lock/subsys/ovirt-cim
 VAR_SUBSYS_OVIRT_KDUMP=/var/lock/subsys/ovirt-kdump
@@ -186,7 +184,6 @@ EOP
 }
 
 start_ovirt_early () {
-    [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
     {
         log "Starting ovirt-early"
         _start_ovirt_early
@@ -980,9 +977,7 @@ ovirt_startup () {
 start_ovirt_awake () {
     local RC=0
 
-    [ -f "$VAR_SUBSYS_NODECONFIG" ] && exit 0
     {
-        touch $VAR_SUBSYS_NODECONFIG
         log "Starting ovirt-awake."
         case "$OVIRT_RUNTIME_MODE" in
             "none")
@@ -1002,8 +997,6 @@ start_ovirt_awake () {
                 fi
                 ;;
         esac
-
-        rm -f $VAR_SUBSYS_NODECONFIG
 
         log "Completed ovirt-awake: RETVAL=$RC"
     } >> $OVIRT_LOGFILE 2>&1
@@ -1269,7 +1262,6 @@ start_ovirt_post() {
         # persist selected configuration files
         ovirt_store_config \
             /etc/node.d \
-            /etc/sysconfig/node-config \
             /etc/ssh/ssh_host*_key*
 
         . /usr/libexec/ovirt-functions

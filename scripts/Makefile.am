@@ -15,11 +15,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-nodeconfdir = $(sysconfdir)/sysconfig
 localboottriggerdir=$(sysconfdir)/ovirt-config-boot.d
-
-dist_nodeconf_DATA = \
-  node-config
 
 dist_sbin_SCRIPTS = \
   persist \

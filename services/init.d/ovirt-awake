@@ -28,8 +28,6 @@
 ### END INIT INFO
 
 # Source functions library
-# config: /etc/sysconfig/node-config
-
 . /usr/libexec/ovirt-init-functions.sh
 
 prog=ovirt-awake
