@@ -39,18 +39,13 @@ dist_libexec_SCRIPTS = \
   ovirt-init-functions.sh \
   ovirt-auto-install.py \
   ovirt-admin-shell \
-  ovirt-node-igor-slave \
-  legacy/ovirt-config-installer.py \
-  legacy/ovirt-config-setup.py \
-  legacy/ovirt-config-storage
+  ovirt-node-igor-slave
 
 # default hook for local_boot_trigger
 dist_localboottrigger_SCRIPTS = \
   local_boot_trigger.sh
 
 install-exec-hook:
-	mv $(DESTDIR)$(libexecdir)/ovirt-config-installer.py $(DESTDIR)$(libexecdir)/ovirt-config-installer
-	mv $(DESTDIR)$(libexecdir)/ovirt-config-setup.py $(DESTDIR)$(libexecdir)/ovirt-config-setup
 	mv $(DESTDIR)$(libexecdir)/ovirt-auto-install.py $(DESTDIR)$(libexecdir)/ovirt-auto-install
 	mv $(DESTDIR)$(sbindir)/ovirt-node-upgrade.py $(DESTDIR)$(sbindir)/ovirt-node-upgrade
 

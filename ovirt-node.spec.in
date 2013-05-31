@@ -513,11 +513,8 @@ fi
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-functions
 %{_libexecdir}/ovirt-rpmquery
-%{_libexecdir}/ovirt-config-installer
-%{_libexecdir}/ovirt-config-setup
 %{_libexecdir}/ovirt-admin-shell
 %{_libexecdir}/ovirt-init-functions.sh
-%{_libexecdir}/ovirt-config-storage
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{_sbindir}/ovirt-node-upgrade
