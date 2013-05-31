@@ -19,13 +19,63 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, valid, utils
-import process
-import os.path
 import PAM as _PAM  # @UnresolvedImport
+import cracklib
+import os.path
+import process
 
 """
 Some convenience functions related to security
 """
+
+
+def password_check(password, confirmation, min_length=1):
+    '''
+    Do some password checks
+    Returns:
+        A message about a possibly weak password
+
+    >>> password_check("", "") is None
+    True
+
+    >>> msg = password_check("foo", "foo")
+    >>> "You have provided a weak password" in msg
+    True
+
+    >>> password_check("foo", "foo", 5)
+    Traceback (most recent call last):
+    ValueError: Password must be at least 5 characters
+
+    >>> password_check("foo", "bar")
+    Traceback (most recent call last):
+    ValueError: Passwords Do Not Match
+
+    >>> password_check("foo", "")
+    Traceback (most recent call last):
+    ValueError: Please Confirm Password
+    '''
+    message = None
+
+    if len(password) is 0 and min_length is not 0:
+        pass
+    elif len(password) < min_length:
+        raise ValueError("Password must be at least %d characters" %
+                         min_length)
+    elif password != "" and confirmation == "":
+        raise ValueError("Please Confirm Password")
+    elif password != confirmation:
+        raise ValueError("Passwords Do Not Match")
+    else:
+        try:
+            cracklib.FascistCheck(password)
+        except ValueError:
+            message = "You have provided a weak password!\n"
+            message += "Strong passwords contain a mix of uppercase,\n"
+            message += "lowercase, numeric and punctuation characters.\n"
+            message += "They are six or more characters long and\n"
+            message += "do not contain dictionary words"
+
+    return message
 
 
 class Passwd(base.Base):

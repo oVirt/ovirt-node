@@ -1437,48 +1437,27 @@ def system(command):
         return False
 
 def password_check(password_1, password_2, min_length=1):
-    '''
-    Do some password checks
-
-    >>> r, msg = password_check("", "")
-    >>> (r,  len(msg))
-    (1, 5)
-    >>> r, msg = password_check("foo", "bar")
-    >>> (r,  "Not Match" in msg)
-    (1, True)
-    '''
-    num_o_lines_to_expand = 7
-    accepted = False
+    from ovirt.node.utils import security
+    accepted = 0
     message = ""
+    num_o_lines_to_expand = 7
 
     if is_capslock_on():
         message = "Hint: Caps lock is on.\n"
 
-    if len(password_1) is 0 and min_length is not 0:
-        message += ""  # Intentional dummy
-    elif len(password_1) < min_length:
-        message += "Password must be at least %d characters" % min_length
-    elif password_1 != "" and password_2 == "":
-        message += "Please Confirm Password"
-    elif password_1 != password_2:
-        message += "Passwords Do Not Match"
-    else:
-        try:
-            cracklib.FascistCheck(password_1)
-            accepted = True
-        except ValueError, e:
-            message += "You have provided a weak password!\n"
-            message += "Strong passwords contain a mix of uppercase,\n"
-            message += "lowercase, numeric and punctuation characters.\n"
-            message += "They are six or more characters long and\n"
-            message += "do not contain dictionary words"
-            accepted = True
+    try:
+        msg = security.password_check(password_1, password_2, min_length)
+        if msg:
+            message += msg
+        accepted = 1
+    except ValueError as e:
+        message = e.message
 
     num_lines = message.count("\n") + 1
 
     # Modify message to span num_o_lines_to_expand lines
     message += (num_o_lines_to_expand - num_lines) * "\n"
-    accepted = 0 if accepted else 1
+
     return (accepted, message)
 
 def get_logrotate_size():
