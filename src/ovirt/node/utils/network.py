@@ -308,13 +308,6 @@ class NIC(base.Base):
         >>> NIC("lo").has_link()
         True
 
-        >>> iface = all_ifaces()[0]
-        >>> cmd = "ip link set dev {dev} up ;"
-        >>> cmd += "ip link show {dev}".format(dev=iface)
-        >>> has_carrier = "LOWER_UP" in process.pipe(cmd)
-        >>> has_carrier == NIC(iface).has_link()
-        True
-
         Args:
             iface: The interface to be checked
         Returns:
