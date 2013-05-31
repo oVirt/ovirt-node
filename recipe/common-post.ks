@@ -195,8 +195,8 @@ echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 #mount kernel debugfs
 echo "debugfs /sys/kernel/debug debugfs auto 0 0" >> /etc/fstab
 
-#symlink ovirt-config-setup into $PATH
-ln -s /usr/bin/ovirt-config-setup /usr/sbin/setup
+#symlink ovirt-node-setup into $PATH
+ln -s /usr/bin/ovirt-node-setup /usr/sbin/setup
 
 
 #set NETWORKING off by default

@@ -27,7 +27,7 @@ dist_sbin_SCRIPTS = \
   ovirt-node-upgrade.py
 
 dist_bin_SCRIPTS = \
-  ovirt-config-setup \
+  ovirt-node-setup \
   ovirt-node-installer \
   ovirt-node-doc
 

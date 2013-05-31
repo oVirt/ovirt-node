@@ -550,7 +550,7 @@ fi
 %{python_sitelib}/ovirt/node/installer/core/*.py*
 %exclude %{python_sitelib}/ovirt/node/setup/snmp/*.py*
 %exclude %{python_sitelib}/ovirt/node/setup/cim/*.py*
-%{_bindir}/ovirt-config-setup
+%{_bindir}/ovirt-node-setup
 %{_bindir}/ovirt-node-installer
 %{_bindir}/ovirt-node-doc
 
