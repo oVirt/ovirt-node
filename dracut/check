@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. $moddir/module-setup.sh
+
+check

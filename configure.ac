@@ -4,7 +4,6 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability tar-pax])
 AC_SUBST([FEDORA],[[`rpm --eval '%{fedora}'|sed 's/[^0-9]//g'`]])
 AC_SUBST([RHEL], [[`rpm --eval '%{rhel}'|sed 's/[^0-9]//g'`]])
 AC_SUBST([CENTOS], [[`rpm --eval '%{centos}'|sed 's/[^0-9]//g'`]])
-AC_SUBST([DRACUTDIR], [[`test -e /usr/share/dracut && echo "/usr/share/dracut/modules.d" || echo "/usr/lib/dracut/modules.d"`]])
 AC_SUBST([DISTRO])
 AC_SUBST([PACKAGE_NAME])
 AC_SUBST([PRODUCT_NAME])
@@ -23,6 +22,7 @@ AM_CONDITIONAL(TARGET_FEDORA, test x"$FEDORA" != x)
 AM_CONDITIONAL(TARGET_RHEL, test x"$RHEL" != x && test x"$CENTOS" == x)
 AM_CONDITIONAL(TARGET_CENTOS, test x"$CENTOS" != x)
 AM_CONDITIONAL(TARGET_SYSTEMD, test 0$RHEL -ge 7 || test 0$FEDORA -ge 16 || test 0$CENTOS -ge 7)
+AM_CONDITIONAL(TARGET_NEW_DRACUT, test 0$RHEL -ge 7 || test 0$FEDORA -ge 15 || test 0$CENTOS -ge 7)
 
 AM_COND_IF([TARGET_SYSTEMD],
     [SYSTEMD_COMMENT=""], [SYSTEMD_COMMENT="#"])
@@ -30,6 +30,10 @@ AM_COND_IF([TARGET_RHEL],
     [COLLECTD_COMMENT="#"], [COLLECTD_COMMENT=""])
 AC_SUBST([SYSTEMD_COMMENT])
 AC_SUBST([COLLECTD_COMMENT])
+
+AM_COND_IF([TARGET_NEW_DRACUT],
+     [DRACUTDIR="/usr/lib/dracut/modules.d"], [DRACUTDIR="/usr/share/dracut/modules.d"])
+AC_SUBST([DRACUTDIR])
 
 AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
             [enable aggresive reduction of the image size])],

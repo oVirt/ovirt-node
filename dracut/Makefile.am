@@ -23,6 +23,12 @@ dist_dracut_SCRIPTS = \
   ovirt-cleanup.sh \
   ovirt-boot-functions
 
+if ! TARGET_NEW_DRACUT
+dist_dracut_SCRIPTS += \
+  $(top_builddir)/dracut/check \
+  $(top_builddir)/dracut/install
+endif
+
 dist_dracutconf_DATA = \
   ovirt-dracut.conf
 
