@@ -225,9 +225,6 @@ def node_nics():
     If a NIC is configured, merge the info+cfg of the bridge into the slave.
     If the slave is a vlan NIC set the vlanidof the parent device according to
     this vlan NICs id.
-
-    >>> node_nics() != None
-    True
     """
     all_ifaces = relevant_ifaces(filter_bridges=False, filter_vlans=False)
     all_infos = dict((i, iface_information(i)) for i in all_ifaces)
