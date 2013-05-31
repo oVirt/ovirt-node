@@ -35,7 +35,6 @@ dist_libexec_SCRIPTS = \
   ovirt-config-password \
   ovirt-config-uninstall \
   ovirt-functions \
-  ovirt-rpmquery \
   ovirt-init-functions.sh \
   ovirt-auto-install.py \
   ovirt-admin-shell \

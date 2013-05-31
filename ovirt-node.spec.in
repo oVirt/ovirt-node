@@ -512,7 +512,6 @@ fi
 %{_libexecdir}/ovirt-config-password
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-functions
-%{_libexecdir}/ovirt-rpmquery
 %{_libexecdir}/ovirt-admin-shell
 %{_libexecdir}/ovirt-init-functions.sh
 %{_sbindir}/persist

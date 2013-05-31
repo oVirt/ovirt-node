@@ -30,11 +30,6 @@ echo -n "."
 } | sort -u -k1,1 | sed "s#\t\t\t#\n#" > /manifest-owns.txt
 
 
-# this one is kept in root for ovirt-rpmquery
-rpm -qa --qf '%{NAME}\t%{VERSION}\t%{RELEASE}\t%{BUILDTIME}\n' | \
-    sort > /rpm-qa.txt
-echo -n "."
-
 du -akx --exclude=/var/cache/yum / > /manifest-file.txt
 du -x --exclude=/var/cache/yum / > /manifest-dir.txt
 echo -n "."
