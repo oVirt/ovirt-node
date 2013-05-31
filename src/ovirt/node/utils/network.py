@@ -48,10 +48,10 @@ try:
     # pylint: enable-msg=E0611
     NetworkManager
     _nm_client = NMClient.Client.new()
-    LOGGER.info("NetworkManager support via GI (fast-path)")
+    LOGGER.debug("NetworkManager support via GI (fast-path)")
 except Exception as e:
-    LOGGER.info("NetworkManager support disabled: " +
-                "NM Client not found (%s)" % e)
+    LOGGER.debug("NetworkManager support disabled: " +
+                 "NM Client not found (%s)" % e)
 
 
 class UnknownNicError(Exception):

@@ -675,6 +675,7 @@ fi
 %{python_sitelib}/ovirt/node/*.py*
 %{python_sitelib}/ovirt/node/ui/*.py*
 %{python_sitelib}/ovirt/node/utils/*.py*
+%{python_sitelib}/ovirt/node/tools/*.py*
 %{python_sitelib}/ovirt/node/config/*.py*
 %{python_sitelib}/ovirt/node/setup/*.py*
 %{python_sitelib}/ovirt/node/setup/core/*.py*

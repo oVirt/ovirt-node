@@ -54,6 +54,7 @@ pyovirt_nodedir = $(pyovirtdir)/node
 pyovirt_node_configdir = $(pyovirt_nodedir)/config
 pyovirt_node_uidir = $(pyovirt_nodedir)/ui
 pyovirt_node_utilsdir = $(pyovirt_nodedir)/utils
+pyovirt_node_toolsdir = $(pyovirt_nodedir)/tools
 
 # Path to installer app and installer plugins
 pyovirt_node_installerdir = $(pyovirt_nodedir)/installer
@@ -101,6 +102,9 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/system.py \
   ovirt/node/utils/virt.py
 
+pyovirt_node_tools_PYTHON = \
+  ovirt/node/tools/__init__.py \
+  ovirt/node/tools/password.py
 
 # Installer Main
 pyovirt_node_installer_PYTHON = \
@@ -141,17 +145,20 @@ pyovirt_node_setup_core_PYTHON = \
   ovirt/node/setup/core/status_page.py \
   ovirt/node/setup/core/support_page.py
 
+
 # Setup CIM Plugin
 pyovirt_node_setup_cim_PYTHON = \
   ovirt/node/setup/cim/__init__.py \
   ovirt/node/setup/cim/cim_page.py \
   ovirt/node/setup/cim/cim_model.py
 
+
 # Setup SNMP Plugin
 pyovirt_node_setup_snmp_PYTHON = \
   ovirt/node/setup/snmp/__init__.py \
   ovirt/node/setup/snmp/snmp_page.py \
   ovirt/node/setup/snmp/snmp_model.py
+
 
 # Setup Puppet Plugin
 pyovirt_node_setup_puppet_PYTHON = \
