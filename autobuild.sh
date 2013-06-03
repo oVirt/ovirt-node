@@ -38,6 +38,7 @@ fi
 OVIRT_LOCAL_REPO=file://${OVIRT_LOCAL_DIR}
 export OVIRT_LOCAL_REPO OVIRT_CACHE_DIR
 
+rm -f ${OVIRT_LOCAL_DIR}/ovirt-node-*
 ./autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT --with-image-minimizer
 make
 make install
