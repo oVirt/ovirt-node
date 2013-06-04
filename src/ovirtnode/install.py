@@ -97,7 +97,7 @@ class Install:
 
     def grub_install(self):
         if _functions.is_iscsi_install():
-            self.disk = re.sub("p[1,2,3]$", "", findfs(self.boot_candidate))
+            self.disk = re.sub("p[1,2,3]$", "", _functions.findfs(self.boot_candidate))
         device_map = "(hd0) %s" % self.disk
         logger.debug(device_map)
         device_map_conf = open(self.grub_dir + "/device.map", "w")
