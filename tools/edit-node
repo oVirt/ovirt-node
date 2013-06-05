@@ -1480,7 +1480,10 @@ def parse_options(args):
     if len(args) != 1:
         parser.print_usage()
         sys.exit(1)
-
+    if not len(sys.argv) > 2:
+        print >> sys.stderr, "A manifest or editing option must be " \
+                             "specified, use --help for more information"
+        sys.exit(1)
     print args[0]
 
     return (args[0], options)
