@@ -23,6 +23,7 @@
 Some convenience functions realted to the filesystem
 """
 
+from ovirt.node.utils import is_fileobj
 import logging
 import shutil
 import os
@@ -317,13 +318,20 @@ class Config(base.Base):
             from ovirtnode import ovirtfunctions
             return ovirtfunctions.remove_config(filename)
 
+    def delete(self, filename):
+        """Remove the persiste version and the file
+        """
+        if filename:
+            from ovirtnode import ovirtfunctions
+            return ovirtfunctions.ovirt_safe_delete_config(filename)
+
     def exists(self, filename):
         """Check if the given file is persisted
         """
         return filename and os.path.exists(self._config_path(filename))
 
     def is_enabled(self):
-        return is_bind_mount(self.basedir)
+        return os.path.exists("/proc") and is_bind_mount(self.basedir)
 
     def open_file(self, filename, mode="r"):
         return open(self._config_path(filename), mode)
@@ -332,36 +340,73 @@ class Config(base.Base):
 class ShellVarFile(base.Base):
     """ShellVarFile writes simple KEY=VALUE (shell-like) configuration file
 
-    >>> fn = "/tmp/cfg_dummy.simple"
-    >>> open(fn, "w").close()
+    >>> import StringIO
+    >>> fileobj = StringIO.StringIO()
     >>> cfg = {
     ... "IP_ADDR": "127.0.0.1",
     ... "NETMASK": "255.255.255.0",
     ... }
-    >>> p = ShellVarFile(fn)
+    >>> p = ShellVarFile(fileobj)
     >>> p.get_dict()
     {}
     >>> p.update(cfg, True)
     >>> p.get_dict() == cfg
     True
     """
+    filename = None
+    _fileobj = None
+    create = False
+
     def __init__(self, filename, create=False):
         super(ShellVarFile, self).__init__()
         self.filename = filename
-        if not os.path.exists(self.filename):
-            if create:
-                self._write("")
-            else:
-                raise RuntimeError("File does not exist: %s" % self.filename)
+        self.create = create
+        if is_fileobj(filename) or self._fileobj:
+            self._fileobj = filename
+        else:
+            if not create and not os.path.exists(self.filename):
+                    raise RuntimeError("File does not exist: %s" %
+                                       self.filename)
+
+    def _is_fileobj(self):
+        return is_fileobj(self.filename)
+
+    def _read_contents(self):
+        data = None
+        if self._fileobj:
+            self._fileobj.seek(0)
+            data = self._fileobj.read()
+        else:
+            with open(self.filename) as src:
+                data = src.read()
+        return data
+
+    def raw_read(self):
+        return self._read_contents()
+
+    def _write_contents(self, data):
+        if self._fileobj:
+            self._fileobj.seek(0)
+            self._fileobj.write(data)
+            self._fileobj.flush()
+        else:
+            with open(self.filename, "w") as dst:
+                dst.write(data)
+
+    def exists(self):
+        """Return true if this file exists
+        """
+        return is_fileobj(self.filename) or os.path.isfile(self.filename)
 
     def get_dict(self):
         """Returns a dict of (key, value) pairs
         """
-        with open(self.filename) as source:
-            cfg = self._parse_dict(source)
-        return cfg
+        data = self._read_contents()
+        return self._parse_dict(data)
 
     def write(self, cfg, remove_empty=True):
+        """Write a dictinory as a key-val file
+        """
         for key, value in cfg.items():
             if remove_empty and value is None:
                 del cfg[key]
@@ -387,11 +432,13 @@ class ShellVarFile(base.Base):
                           If False then the keys will be added to the file
                           without any value. (Aka flags)
         """
+        self.logger.debug("Updating defaults: %s" % new_dict)
+        self.logger.debug("Removing empty entries? %s" % remove_empty)
         cfg = self.get_dict()
         cfg.update(new_dict)
-        self.write(cfg)
+        self.write(cfg, remove_empty)
 
-    def _parse_dict(self, source):
+    def _parse_dict(self, txt):
         """Parse a simple shell-var-style lines into a dict:
 
         >>> import StringIO
@@ -400,14 +447,14 @@ class ShellVarFile(base.Base):
         >>> txt += "B=beh\\n"
         >>> txt += "C=\\"ceh\\"\\n"
         >>> txt += "D=\\"more=less\\"\\n"
-        >>> p = ShellVarFile("/tmp/cfg_dummy")
-        >>> sorted(p._parse_dict(StringIO.StringIO(txt)).items())
+        >>> p = ShellVarFile(StringIO.StringIO(), True)
+        >>> sorted(p._parse_dict(txt).items())
         [('A', 'ah'), ('B', 'beh'), ('C', 'ceh'), ('D', 'more=less')]
         """
         cfg = {}
-        for line in source:
+        for line in txt.split("\n"):
                 line = line.strip()
-                if line.startswith("#"):
+                if line == "" or line.startswith("#"):
                     continue
                 try:
                     key, value = line.split("=", 1)
@@ -417,15 +464,19 @@ class ShellVarFile(base.Base):
         return cfg
 
     def _write(self, contents):
-        # The following logic is mainly needed to allow an "offline" testing
-        config_fs = Config()
-        if config_fs.is_enabled():
-            with config_fs.open_file(self.filename, "w") as dst:
-                dst.write(contents)
+        if self._is_fileobj():
+            self._write_contents(contents)
         else:
-            try:
-                atomic_write(self.filename, contents)
-            except Exception as e:
-                self.logger.warning("Atomic write failed: %s" % e)
-                with open(self.filename, "w") as dst:
+            # The following logic is mainly needed to allow an
+            # "offline" testing
+            config_fs = Config()
+            if config_fs.is_enabled():
+                with config_fs.open_file(self.filename, "w") as dst:
                     dst.write(contents)
+            else:
+                try:
+                    atomic_write(self.filename, contents)
+                except Exception as e:
+                    self.logger.warning("Atomic write failed: %s" % e)
+                    with open(self.filename, "w") as dst:
+                        dst.write(contents)

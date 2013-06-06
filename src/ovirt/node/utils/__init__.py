@@ -303,3 +303,10 @@ class Timer(base.Base):
 
     def __str__(self):
         return "<Timer duration='%s'>" % self.duration()
+
+
+def is_fileobj(filec):
+    """Determin if file is a file-like obj
+    """
+    return hasattr(filec, "read") \
+        and hasattr(filec, "write")

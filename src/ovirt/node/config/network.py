@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils, base
-from ovirt.node.utils import AugeasWrapper as Augeas
+from ovirt.node.utils import AugeasWrapper as Augeas, fs, is_fileobj
 from ovirt.node.utils.fs import ShellVarFile
 import glob
 import logging
@@ -47,6 +47,8 @@ class NicConfig(base.Base):
     vlan = None
     device = None
     onboot = None
+    delay = None
+    hwaddr = None
 
     ipv6init = None
     ipv6forwarding = None
@@ -55,27 +57,31 @@ class NicConfig(base.Base):
     ipv6addr = None
     ipv6_defaultgw = None
 
+    peerntp = None
+    peerdns = None
+
     vlan_parent = None
 
     _backend = None
     _keys = ["bridge", "type", "bootproto", "ipaddr", "netmask",
              "gateway", "vlan", "device", "onboot", "hwaddr",
              "ipv6init", "ipv6forwarding", "ipv6_autoconf",
-             "dhcpv6c", "ipv6addr", "ipv6_defaultgw"]
+             "dhcpv6c", "ipv6addr", "ipv6_defaultgw", "delay",
+             "peerntp", "peerdns"]
 
     def __init__(self, ifname):
         super(NicConfig, self).__init__()
         self.ifname = ifname
-        self._backend = NicConfig.IfcfgBackend(self)
+        self._backend = NicConfig.IfcfgBackend(self, ifname)
         self.load()
 
     def exists(self):
         """Return if a config exists
         """
-        return self._backend.exists(self.ifname)
+        return self._backend.exists()
 
     def load(self):
-        data = self._backend.read(self.ifname)
+        data = self._backend.read()
         # Additional convenience stuff
         self.vlan = self.vlan.strip() if self.vlan else self.vlan
         if self.vlan:
@@ -88,47 +94,63 @@ class NicConfig(base.Base):
         return data
 
     def save(self):
-        return self._backend.write(self.ifname)
+        return self._backend.write()
+
+    def delete(self):
+        return self._backend.delete()
 
     def __str__(self):
         return self.build_str("ifname")
 
-    class IfcfgBackend(base.Base):
+    class IfcfgBackend(ShellVarFile):
         filename_tpl = "/etc/sysconfig/network-scripts/ifcfg-%s"
+        filename = None
 
-        def __init__(self, cfg):
-            super(NicConfig.IfcfgBackend, self).__init__()
+        def __init__(self, cfg, ifname):
             self.cfg = cfg
+            filename = ifname
+            if not is_fileobj(ifname):
+                filename = self.filename_tpl % ifname
+            super(NicConfig.IfcfgBackend, self).__init__(filename, True)
 
-        def exists(self, ifname):
-            """Return true if a config for ifname exists
+        def read(self):
+            """Read values from a ifcfg file and update self.cfg
             """
-            return os.path.isfile(self.filename_tpl % ifname)
-
-        def read(self, ifname):
-            """Read values frmo a ifcfg file and update self.cfg
-            """
-            filename = self.filename_tpl % ifname
-
-            if not os.path.exists(filename):
-                self.logger.info("Config not found for %s" % ifname)
+            if not self.exists():
+                self.logger.info("Config not found: %s" % self.filename)
                 return
 
-            data = ShellVarFile(filename).get_dict()
+            data = self.get_dict()
 
             for k in self.cfg._keys:
                 self.cfg.__dict__[k] = data.get(k.upper(), None)
 
-        def write(self, cfg):
+        def write(self):
             """Write a ifcfg file from the cfg
             """
-            assert type(cfg) is NicConfig
-            filename = self.filename_tpl % cfg.ifname
-            dst = ShellVarFile(filename)
+
             data = {}
             for k in self.cfg._keys:
-                data[k.upper()] = cfg.__dict__.get(k)
-            dst.update(data, True)
+                data[k.upper()] = self.cfg.__dict__.get(k)
+
+            ShellVarFile.write(self, data, True)
+
+            if not self._is_fileobj() and self.exists():
+                pcfg = fs.Config()
+                if pcfg.is_enabled():
+                    pcfg.persist(self.filename)
+
+            return data
+
+        def delete(self, ifname):
+            if not self._is_fileobj() and self.exists():
+                pcfg = fs.Config()
+                if pcfg.is_enabled():
+                    pcfg.unpersist(self.filename)
+
+                os.remove(self.filename)
+            elif is_fileobj(self.filename):
+                self.filename.truncate(0)
 
 
 def _aug_get_or_set(augpath, new_servers=None):

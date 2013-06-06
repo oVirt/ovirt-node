@@ -32,8 +32,7 @@ class CIM(NodeConfigFileSection):
     """Configure CIM
 
     >>> from ovirt.node.config.defaults import NodeConfigFile
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = CIM(cfgfile)
+    >>> n = CIM("/tmp/cfg_dummy")
     >>> n.update(True)
     >>> n.retrieve()
     {'enabled': True}

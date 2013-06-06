@@ -53,6 +53,7 @@ class Base(object):
                 if isinstance(v, Base.Signal)]
 
     def build_str(self, attributes=[], additional_pairs={}, name=None):
+        assert type(attributes) is list
         name = name or self.__class__.__name__
         attrs = dict((k, self.__dict__[k]) for k in attributes)
         attrs.update(additional_pairs)

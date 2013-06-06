@@ -86,35 +86,41 @@ class UdevNICInfo(base.Base):
     """Gather NIC infos form udev
     """
     _client = gudev.Client(['net'])
-    _device = None
+    _cached_device = None
 
     ifname = None
 
     def __init__(self, iface):
         super(UdevNICInfo, self).__init__()
         self.ifname = iface
-        for d in self._client.query_by_subsystem("net"):
-            if d.get_property("INTERFACE") == iface:
-                self._device = d
 
-        if not self._device:
-            raise UnknownNicError("udev has no infos for %s" % iface)
+    @property
+    def _udev_device(self):
+        if not self._cached_device:
+            for d in self._client.query_by_subsystem("net"):
+                if d.get_property("INTERFACE") == self.ifname:
+                    self._cached_device = d
+
+        if not self._cached_device:
+            raise UnknownNicError("udev has no infos for %s" %
+                                  self.ifname)
+        return self._cached_device
 
     @property
     def name(self):
-        return self._device.get_property("INTERFACE")
+        return self._udev_device.get_property("INTERFACE")
 
     @property
     def vendor(self):
-        return self._device.get_property("ID_VENDOR_FROM_DATABASE")
+        return self._udev_device.get_property("ID_VENDOR_FROM_DATABASE")
 
     @property
     def devtype(self):
-        return self._device.get_property("DEVTYPE")
+        return self._udev_device.get_property("DEVTYPE")
 
     @property
     def devpath(self):
-        return self._device.get_property("DEVPATH")
+        return self._udev_device.get_property("DEVPATH")
 
 
 class SysfsNICInfo(base.Base):
@@ -673,3 +679,11 @@ class Vlans(base.Base):
         """Check if ifname is a vlan device
         """
         return self.nic_for_vlan_device(vifname) is not None
+
+    def all_vlan_devices(self):
+        """Return all vlan devices
+        """
+        all_devices = []
+        for vifs in self.parse_cfg().values():
+            all_devices += vifs
+        return all_devices

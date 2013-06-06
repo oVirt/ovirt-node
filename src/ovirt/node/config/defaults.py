@@ -19,8 +19,10 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, exceptions, valid, utils, config
-from ovirt.node.utils import storage
+from ovirt.node.config.network import NicConfig
+from ovirt.node.utils import storage, process, fs, AugeasWrapper
 from ovirt.node.utils.fs import ShellVarFile
+from ovirt.node.utils.network import NIC
 import glob
 import logging
 import os
@@ -52,45 +54,27 @@ def exists():
     return os.path.exists(OVIRT_NODE_DEFAULTS_FILENAME)
 
 
-class NodeConfigFile(base.Base):
+class NodeConfigFile(ShellVarFile):
     """NodeConfigFile is a specififc interface to some configuration file
     with a specififc syntax
     """
-    def __init__(self, filename=OVIRT_NODE_DEFAULTS_FILENAME):
-        super(NodeConfigFile, self).__init__()
+    def __init__(self, filename=None):
+        filename = filename or OVIRT_NODE_DEFAULTS_FILENAME
         if filename == OVIRT_NODE_DEFAULTS_FILENAME \
            and not os.path.exists(filename):
             raise RuntimeError("Node config file does not exist: %s" %
                                filename)
-        self.provider = ShellVarFile(filename, create=True)
-
-    def update(self, new_dict, remove_empty=False):
-        """Reads /etc/defaults/ovirt and creates a dictionary
-        The dict will contain all OVIRT_* entries of the defaults file.
-
-        Args:
-            new_dict: New values to be used for setting the defaults
-            filename: The filename to read the defaults from
-            remove_empty: Remove a key from defaults file, if the new value
-                          is None
-        Returns:
-            A dict
-        """
-        self.logger.debug("Updating defaults: %s" % new_dict)
-        self.logger.debug("Removing empty entries? %s" % remove_empty)
-        self.provider.update(new_dict, remove_empty)
-
-    def get_dict(self):
-        return self.provider.get_dict()
+        super(NodeConfigFile, self).__init__(filename, create=True)
 
 
 class NodeConfigFileSection(base.Base):
     none_value = None
     keys = []
+    raw_file = None
 
-    def __init__(self, cfgfile=None):
+    def __init__(self, filename=None):
         super(NodeConfigFileSection, self).__init__()
-        self.defaults = cfgfile or NodeConfigFile()
+        self.raw_file = NodeConfigFile(filename)
 
     def update(self, *args, **kwargs):
         """This function set's the correct entries in the defaults file for
@@ -145,7 +129,7 @@ class NodeConfigFileSection(base.Base):
             configure() method.
         """
         keys_to_args = self._args_to_keys_mapping(keys_to_args=True)
-        cfg = self.defaults.get_dict()
+        cfg = self.raw_file.get_dict()
         model = {}
         for key in self.keys:
             value = cfg[key] if key in cfg else self.none_value
@@ -156,17 +140,17 @@ class NodeConfigFileSection(base.Base):
     def clear(self):
         """Remove the configuration for this item
         """
-        cfg = self.defaults.get_dict()
+        cfg = self.raw_file.get_dict()
         to_be_deleted = dict((k, None) for k in self.keys)
         cfg.update(to_be_deleted)
-        self.defaults.update(cfg, remove_empty=True)
+        self.raw_file.update(cfg, remove_empty=True)
 
     def _map_config_and_update_defaults(self, *args, **kwargs):
         assert len(args) == 0
         assert (set(self.keys) ^ set(kwargs.keys())) == set(), \
             "Keys: %s, Args: %s" % (self.keys, kwargs)
         new_dict = dict((k.upper(), v) for k, v in kwargs.items())
-        self.defaults.update(new_dict, remove_empty=True)
+        self.raw_file.update(new_dict, remove_empty=True)
 
     @staticmethod
     def map_and_update_defaults_decorator(func):
@@ -218,8 +202,7 @@ class Network(NodeConfigFileSection):
     - OVIRT_IP_ADDRESS, OVIRT_IP_NETMASK, OVIRT_IP_GATEWAY
     - OVIRT_VLAN
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = Network(cfgfile)
+    >>> n = Network("/tmp/cfg_dummy")
     >>> n.update("eth0", "static", "10.0.0.1", "255.0.0.0", "10.0.0.255",
     ...          "20")
     >>> data = sorted(n.retrieve().items())
@@ -254,11 +237,10 @@ class Network(NodeConfigFileSection):
 
     def transaction(self):
         """Return all transactions to re-configure networking
-
-        FIXME this should be rewritten o allow more fine grained progress
-        informations
         """
+        return self.__transaction()
 
+    def __legacy_transaction(self):
         class ConfigureNIC(utils.Transaction.Element):
             title = "Configuring NIC"
 
@@ -284,6 +266,143 @@ class Network(NodeConfigFileSection):
         tx.append(ReloadNetworkConfiguration())
         return tx
 
+    def __transaction(self):
+        services = ["network", "ntpd", "ntpdate", "rpcbind", "nfslock",
+                    "rpcidmapd", "rpcgssd"]
+
+        def do_services(cmd, services):
+            for name in services:
+                process.call(["service", name, "stop"])
+
+        class StopNetworkServices(utils.Transaction.Element):
+            title = "Stop network services"
+
+            def commit(self):
+                do_services("stop", reversed(services))
+
+        class RemoveConfiguration(utils.Transaction.Element):
+            title = "Remove existing configuration"
+
+            def commit(self):
+                self._remove_devices()
+                self._remove_ifcfg_configs()
+
+            def _remove_devices(self):
+                vlans = utils.network.Vlans()
+                vifs = vlans.all_vlan_devices()
+                self.logger.debug("Attempting to delete all vlans: %s" % vifs)
+                for vifname in vifs:
+                    process.call(["vconfig", "rem", vifname])
+                    if NicConfig(vifname).exists:
+                        NicConfig(vifname).delete()
+
+            def _remove_ifcfg_configs(self):
+                pat = NicConfig.IfcfgBackend.filename_tpl % "*"
+                remaining_ifcfgs = glob.glob(pat)
+                self.logger.debug("Attemtping to remove remaining ifcfgs: %s" %
+                                  remaining_ifcfgs)
+                pcfg = fs.Config()
+                for fn in remaining_ifcfgs:
+                    pcfg.delete(fn)
+
+        class WriteConfiguration(utils.Transaction.Element):
+            title = "Write new configuration"
+
+            def commit(self):
+                topology = NetworkTopology().retrieve()["topology"]
+                if topology == "direct":
+                    self.__write_direct_config()
+                else:
+                    self.__write_bridged_config()
+
+            def __assign_common(self, cfg):
+                m = Network().retrieve()
+                m_dns = Nameservers().retrieve()
+                m_ntp = Timeservers().retrieve()
+                m_ipv6 = IPv6().retrieve()
+
+                cfg.bootproto = m["bootproto"]
+                cfg.ipaddr = m["ipaddr"] or None
+                cfg.gateway = m["gateway"] or None
+                cfg.netmask = m["netmask"] or None
+                cfg.onboot = "yes"
+
+                if not m_dns["servers"]:
+                    cfg.peerdns = "yes"
+
+                if not m_ntp["servers"]:
+                    cfg.peerntp = "yes"
+
+                if m_ipv6["bootproto"]:
+                    cfg.ipv6init = "yes"
+                    cfg.ipv6forwarding = "no"
+                    cfg.ipv6_autoconf = "no"
+                else:
+                    cfg.ipv6init = "no"
+                    cfg.ipv6forwarding = "no"
+                    cfg.ipv6_autoconf = "no"
+
+                if m_ipv6["bootproto"] == "auto":
+                    cfg.ipv6_autoconf = "yes"
+                elif m_ipv6["bootproto"] == "dhcp":
+                    cfg.dhcpv6c = "yes"
+                elif m_ipv6["bootproto"] == "static":
+                    cfg.ipv6addr = "%s/%s" % (m_ipv6["ipaddr"],
+                                              m_ipv6["netmask"])
+                    cfg.ipv6_defaultgw = m_ipv6["gateway"]
+
+            def __write_bridged_config(self):
+                m = Network().retrieve()
+
+                # Bridge
+                bridge_ifname = "br%s" % m["iface"]
+                bridge_cfg = NicConfig(bridge_ifname)
+                self.__assign_common(bridge_cfg)
+                bridge_cfg.device = bridge_ifname
+                bridge_cfg.delay = "0"
+                bridge_cfg.type = "Bridge"
+
+                # Now the slave
+                slave_ifname_vlan = "%s.%s" % (m["iface"],
+                                               m["vlanid"])
+                slave_ifname = slave_ifname_vlan if m["vlanid"] else m["iface"]
+                slave_cfg = NicConfig(slave_ifname)
+                slave_cfg.device = slave_ifname
+                slave_cfg.bridge = bridge_ifname
+                slave_cfg.hwaddr = NIC(m["iface"]).hwaddr
+                slave_cfg.vlan = "yes" if m["vlanid"] else None
+                slave_cfg.onboot = "yes"
+
+                bridge_cfg.save()
+                slave_cfg.save()
+
+            def __write_direct_config(self):
+                m = Network().retrieve()
+
+                nic_ifname_vlan = "%s.%s" % (m["iface"],
+                                             m["vlanid"])
+                nic_ifname = nic_ifname_vlan if m["vlanid"] \
+                    else m["iface"]
+                nic_cfg = NicConfig(nic_ifname)
+                self.__assign_common(nic_cfg)
+                nic_cfg.device = nic_ifname
+                nic_cfg.hwaddr = NIC(m["iface"]).hwaddr
+
+                nic_cfg.save()
+
+        class StartNetworkServices(utils.Transaction.Element):
+            title = "Start network services"
+
+            def commit(self):
+                do_services("start", services)
+                utils.AugeasWrapper.force_reload()
+                utils.network.reset_resolver()
+
+        tx = utils.Transaction("Applying new network configuration")
+        # FIXME more
+        tx.append(WriteConfiguration())
+        return tx
+
     def configure_no_networking(self, iface=None):
         """Can be used to disable all networking
         """
@@ -307,8 +426,7 @@ class NetworkTopology(NodeConfigFileSection):
     """Sets the network topology
     - OVIRT_NETWORK_TOPOLOGY
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = NetworkTopology(cfgfile)
+    >>> n = NetworkTopology("/tmp/cfg_dummy")
     >>> n.update("legacy")
     >>> sorted(n.retrieve().items())
     [('topology', 'legacy')]
@@ -333,8 +451,7 @@ class IPv6(NodeConfigFileSection):
     - OVIRT_IPV6_NETMASK
     - OVIRT_IPV6_GATEWAY
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = IPv6(cfgfile)
+    >>> n = IPv6("/tmp/cfg_dummy")
     >>> n.update("auto", "11::22", "11::33", "11::44")
     >>> data = sorted(n.retrieve().items())
     >>> data[0:3]
@@ -391,9 +508,9 @@ class IPv6(NodeConfigFileSection):
 
 class Hostname(NodeConfigFileSection):
     """Configure hostname
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
+
     >>> hostname = "host.example.com"
-    >>> n = Hostname(cfgfile)
+    >>> n = Hostname("/tmp/cfg_dummy")
     >>> n.update(hostname)
     >>> n.retrieve()
     {'hostname': 'host.example.com'}
@@ -440,9 +557,9 @@ class Hostname(NodeConfigFileSection):
 
 class Nameservers(NodeConfigFileSection):
     """Configure nameservers
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
+
     >>> servers = ["10.0.0.2", "10.0.0.3"]
-    >>> n = Nameservers(cfgfile)
+    >>> n = Nameservers("/tmp/cfg_dummy")
     >>> n.update(servers)
     >>> data = n.retrieve()
     >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
@@ -478,24 +595,6 @@ class Nameservers(NodeConfigFileSection):
         return cfg
 
     def transaction(self):
-        return self.__legacy_transaction()
-
-    def __legacy_transaction(self):
-        class ConfigureNameservers(utils.Transaction.Element):
-            title = "Setting namservers"
-
-            def commit(self):
-                import ovirtnode.network as onet
-                net = onet.Network()
-                net.configure_dns()
-
-                utils.network.reset_resolver()
-
-        tx = utils.Transaction("Configuring nameservers")
-        tx.append(ConfigureNameservers())
-        return tx
-
-    def __new_transaction(self):
         """Derives the nameserver config from OVIRT_DNS
 
         1. Parse nameservers from defaults
@@ -507,19 +606,18 @@ class Nameservers(NodeConfigFileSection):
             servers: List of servers (str)
         """
         aug = utils.AugeasWrapper()
-        ovirt_config = self.defaults.get_dict()
+        m = Nameservers().retrieve()
 
         tx = utils.Transaction("Configuring DNS")
 
-        if "OVIRT_DNS" not in ovirt_config:
+        if not m["servers"]:
             self.logger.debug("No DNS server entry in default config")
             return tx
 
-        servers = ovirt_config["OVIRT_DNS"]
+        servers = m["servers"]
         if servers is None or servers == "":
             self.logger.debug("No DNS servers configured " +
                               "in default config")
-        servers = servers.split(",")
 
         class UpdateResolvConf(utils.Transaction.Element):
             title = "Updating resolv.conf"
@@ -550,6 +648,8 @@ class Nameservers(NodeConfigFileSection):
                     else:
                         aug.remove(path)
 
+        # FIXME what about restarting NICs to pickup peerdns?
+
         tx += [UpdateResolvConf(), UpdatePeerDNS()]
 
         return tx
@@ -558,9 +658,8 @@ class Nameservers(NodeConfigFileSection):
 class Timeservers(NodeConfigFileSection):
     """Configure timeservers
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> servers = ["10.0.0.4", "10.0.0.5", "0.example.com"]
-    >>> n = Timeservers(cfgfile)
+    >>> n = Timeservers("/tmp/cfg_dummy")
     >>> n.update(servers)
     >>> data = n.retrieve()
     >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
@@ -594,30 +693,47 @@ class Timeservers(NodeConfigFileSection):
         return cfg
 
     def transaction(self):
-        return self.__legacy_transaction()
+        m = Timeservers().retrieve()
 
-    def __legacy_transaction(self):
-        class ConfigureTimeservers(utils.Transaction.Element):
-            title = "Setting timeservers"
+        servers = m["servers"]
+
+        class WriteConfiguration(utils.Transaction.Element):
+            title = "Writing timeserver configuration"
 
             def commit(self):
-                import ovirtnode.network as onet
-                net = onet.Network()
-                net.configure_ntp()
-                net.save_ntp_configuration()
+                aug = AugeasWrapper()
+
+                p = "/files/etc/ntp.conf"
+                aug.remove(p, False)
+                aug.set(p + "/driftfile", "/var/lib/ntp/drift", False)
+                aug.set(p + "/includefile", "/etc/ntp/crypto/pw", False)
+                aug.set(p + "/keys", "/etc/ntp/keys", False)
+                aug.save()
+
+                config.network.timeservers(servers)
+
+                utils.fs.Config().persist("/etc/ntp.conf")
+
+        class ApplyConfiguration(utils.Transaction.Element):
+            title = "Restarting time services"
+
+            def commit(self):
+                process.call(["service", "ntpd", "stop"])
+                process.check_call(["service", "ntpdate", "start"])
+                process.check_call(["service", "ntpd", "start"])
 
         tx = utils.Transaction("Configuring timeservers")
-        tx.append(ConfigureTimeservers())
+        tx.append(WriteConfiguration())
+        tx.append(ApplyConfiguration())
         return tx
 
 
 class Syslog(NodeConfigFileSection):
     """Configure rsyslog
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> server = "10.0.0.6"
     >>> port = "514"
-    >>> n = Syslog(cfgfile)
+    >>> n = Syslog("/tmp/cfg_dummy")
     >>> n.update(server, port)
     >>> sorted(n.retrieve().items())
     [('port', '514'), ('server', '10.0.0.6')]
@@ -652,10 +768,9 @@ class Syslog(NodeConfigFileSection):
 class Collectd(NodeConfigFileSection):
     """Configure collectd
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> server = "10.0.0.7"
     >>> port = "42"
-    >>> n = Collectd(cfgfile)
+    >>> n = Collectd("/tmp/cfg_dummy")
     >>> n.update(server, port)
     >>> sorted(n.retrieve().items())
     [('port', '42'), ('server', '10.0.0.7')]
@@ -696,10 +811,9 @@ class Collectd(NodeConfigFileSection):
 class KDump(NodeConfigFileSection):
     """Configure kdump
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
     >>> nfs_url = "host.example.com:/dst/path"
     >>> ssh_url = "root@host.example.com"
-    >>> n = KDump(cfgfile)
+    >>> n = KDump("/tmp/cfg_dummy")
     >>> n.update(nfs_url, ssh_url, True)
     >>> d = sorted(n.retrieve().items())
     >>> d[:2]
@@ -844,8 +958,7 @@ class KDump(NodeConfigFileSection):
 class iSCSI(NodeConfigFileSection):
     """Configure iSCSI
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = iSCSI(cfgfile)
+    >>> n = iSCSI("/tmp/cfg_dummy")
     >>> n.update("iqn.1992-01.com.example:node",
     ...          "iqn.1992-01.com.example:target", "10.0.0.8", "42")
     >>> data = sorted(n.retrieve().items())
@@ -886,8 +999,7 @@ class iSCSI(NodeConfigFileSection):
 class Netconsole(NodeConfigFileSection):
     """Configure netconsole
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = Netconsole(cfgfile)
+    >>> n = Netconsole("/tmp/cfg_dummy")
     >>> server = "10.0.0.9"
     >>> port = "666"
     >>> n.update(server, port)
@@ -921,8 +1033,7 @@ class Netconsole(NodeConfigFileSection):
 class Logrotate(NodeConfigFileSection):
     """Configure logrotate
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = Logrotate(cfgfile)
+    >>> n = Logrotate("/tmp/cfg_dummy")
     >>> max_size = "42"
     >>> n.update(max_size)
     >>> n.retrieve().items()
@@ -954,8 +1065,7 @@ class Logrotate(NodeConfigFileSection):
 class Keyboard(NodeConfigFileSection):
     """Configure keyboard
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = Keyboard(cfgfile)
+    >>> n = Keyboard("/tmp/cfg_dummy")
     >>> layout = "de_DE.UTF-8"
     >>> n.update(layout)
     >>> n.retrieve()
@@ -991,8 +1101,7 @@ class Keyboard(NodeConfigFileSection):
 class NFSv4(NodeConfigFileSection):
     """Configure NFSv4
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = NFSv4(cfgfile)
+    >>> n = NFSv4("/tmp/cfg_dummy")
     >>> domain = "foo.example"
     >>> n.update(domain)
     >>> n.retrieve().items()
@@ -1026,8 +1135,7 @@ class NFSv4(NodeConfigFileSection):
 class SSH(NodeConfigFileSection):
     """Configure SSH
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = SSH(cfgfile)
+    >>> n = SSH("/tmp/cfg_dummy")
     >>> pwauth = True
     >>> num_bytes = "24"
     >>> disable_aesni = True
@@ -1095,8 +1203,7 @@ class Installation(NodeConfigFileSection):
     """Configure storage
     This is a class to handle the storage parameters used at installation time
 
-    >>> cfgfile = NodeConfigFile("/tmp/cfg_dummy")
-    >>> n = Installation(cfgfile)
+    >>> n = Installation("/tmp/cfg_dummy")
     >>> kwargs = {"init": ["/dev/sda"], "root_install": "1"}
     >>> n.update(**kwargs)
     >>> data = n.retrieve().items()
