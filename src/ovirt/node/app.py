@@ -18,13 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from StringIO import StringIO
+from optparse import OptionParser
 from ovirt.node import base, utils, plugins, ui
 from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
 from ovirt.node.utils import system, Timer, console
 import logging
 import logging.config
-from optparse import OptionParser
+import os.path
 
 """
 Representing the whole application (not just the TUI).
@@ -32,13 +34,35 @@ Basically the application consists of two parts: Page-Plugins and the UI
 which communicate with each other.
 """
 
-LOG_CONF = "/etc/ovirt-node/logging.conf"
-
-logging.config.fileConfig(LOG_CONF)
+RUNTIME_LOG_CONF_FILENAME = "/etc/ovirt-node/logging.conf"
 
 
 def configure_logging():
-    logging.config.fileConfig(LOG_CONF)
+    mixedfile = RUNTIME_LOG_CONF_FILENAME
+    if not os.path.exists(mixedfile):
+        mixedfile = StringIO("""
+[loggers]
+keys=root
+[handlers]
+keys=debug
+[formatters]
+keys=verbose
+[logger_root]
+level=DEBUG
+handlers=debug
+[handler_debug]
+class=FileHandler
+level=DEBUG
+formatter=verbose
+args=('/tmp/ovirt-node.debug.log', 'w')
+[formatter_verbose]
+format=%(levelname)10s %(asctime)s %(pathname)s:%(funcName)s:%(lineno)s \
+%(message)s
+        """)
+    logging.config.fileConfig(mixedfile)
+
+
+configure_logging()
 
 
 class Application(base.Base):
