@@ -72,6 +72,7 @@ class LiveImageEditor(LiveImageCreator):
         self.name = name
         self.docleanup = docleanup
         self.tmpdir = "/var/tmp"
+        self.dd_dir = None
         """The directory in which all temporary files will be created."""
 
         self.compress_type = None
@@ -1238,6 +1239,9 @@ enabled=1
             # cleanup local repo if exists
             if os.system("umount %s/tmp/yumrepo" % self._instroot):
                 os.system("rm -rf %s/tmp/yumrepo" % self._instroot)
+        if os.path.exists(self.dd_dir):
+            os.system("umount %s" % self.dd_dir)
+            shutil.rmtree(self.dd_dir)
         return
 
     def _run_yum_install(self, pkgs):
