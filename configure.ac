@@ -80,6 +80,7 @@ AC_CONFIG_FILES([Makefile
                 logrotate/Makefile
                 modules/Makefile
                 plugins/Makefile
+                tests/Makefile
                 $MAIN_KS
                 recipe/image-minimizer.ks
                 scripts/ovirt-functions

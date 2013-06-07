@@ -17,9 +17,6 @@
 
 OVIRT_CACHE_DIR	?= $(HOME)/ovirt-cache
 
-PYTHONSOURCES = \
-  $(shell find scripts -name \*.py)
-
 SHELL := /bin/bash
 
 SUBDIRS =   \
@@ -33,7 +30,8 @@ SUBDIRS =   \
   logrotate \
   plugins \
   modules \
-  tools
+  tools \
+  tests
 
 EXTRA_DIST = \
   libvirtd.service \
@@ -75,10 +73,14 @@ iso: publish
 .PHONY: rpms publish srpms
 
 
-check-local: static-checks
+check-local: static-checks unittests
 	@echo Passed $@
 
 static-checks:
-	$(MAKE) -C src check-local
+	$(MAKE) -C src/ check-local
+
+unittests:
+	$(MAKE) -C tests/ check-local
+
 
 # vim: ts=2
