@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# snmp_page.py - Copyright (C) 2012 Red Hat, Inc.
+# cim_page.py - Copyright (C) 2012 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -91,17 +91,16 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        snmp_keys = ["cim.password_confirmation", "cim.enabled"]
+        cim_keys = ["cim.password_confirmation", "cim.enabled"]
 
         txs = utils.Transaction("Updating CIM configuration")
 
-        if changes.contains_all(snmp_keys):
+        if changes.contains_any(cim_keys):
             is_enabled = effective_model["cim.enabled"]
             pw = effective_model["cim.password_confirmation"]
 
             model = cim_model.CIM()
             model.update(is_enabled)
             txs += model.transaction(cim_password=pw)
-
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()

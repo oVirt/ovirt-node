@@ -59,6 +59,8 @@ class CIM(NodeConfigFileSection):
         tx = utils.Transaction("Configuring CIM")
 
         class ConfigureCIM(utils.Transaction.Element):
+            title = "Enabling CIM" if enabled else "Disabling CIM"
+
             def commit(self):
                 action = "restart" if enabled else "stop"
                 try:
@@ -69,6 +71,8 @@ class CIM(NodeConfigFileSection):
                     raise TransactionError("CIM configuration failed")
 
         class SetCIMPassword(utils.Transaction.Element):
+            title = "Setting CIM password"
+
             def commit(self):
                 create_cim_user()
 
