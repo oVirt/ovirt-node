@@ -77,6 +77,7 @@ class UpgradeTool(Base):
         self._options = None
         self._python_lib = None
         self._tmp_python_path = None
+        self.iso_tmp = None
         self._tmp_dir = tempfile.mkdtemp(dir="/data")
         lock_fd, self._lock_file = tempfile.mkstemp(prefix=".ovirtupgrade.")
         os.close(lock_fd)
@@ -207,6 +208,8 @@ class UpgradeTool(Base):
                 self._system(which("umount"), dir)
             os.remove(self._lock_file)
             shutil.rmtree(self._tmp_dir)
+            if os.path.exists(self.iso_tmp):
+                os.remove(self.iso_tmp)
         except:
             self._logger.warning("Cleanup Failed")
             self._logger.debug('exception', exc_info=True)
@@ -279,6 +282,7 @@ class UpgradeTool(Base):
                 dir="/data",
                 prefix="tmpiso_",
             )
+            self.iso_tmp = self._options.iso_file
             os.close(iso_fd)
             self._logger.debug("Using temporary ISO file: {iso}\n".format
                               (iso=self._options.iso_file))
