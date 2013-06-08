@@ -72,6 +72,15 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
+        if changes.contains_any(["strongrng.disable_aesni"]):
+            self._model.update(changes)
+            model = self._model
+            disable_aesni = model.get("strongrng.disable_aesni", "")
+            if disable_aesni:
+                self.widgets["strongrng.num_bytes"].enabled(False)
+            else:
+                self.widgets["strongrng.num_bytes"].enabled(True)
+
         if changes.contains_any(["passwd.admin.password",
                                  "passwd.admin.password_confirmation"]):
             self._model.update(changes)
