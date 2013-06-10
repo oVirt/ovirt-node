@@ -1,11 +1,15 @@
 
-PYTHONSOURCES:=$(shell find . -wholename ./ovirt/\*.py)
-XMLSOURCES:=$(shell find . -name \*.xml -or -name \*.xsl)
-CLEANFILES:=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~ -o -name MANIFEST)
+#PYTHONSOURCES=
+#XMLSOURCES=
+#CLEANFILES=
 
+PYTHONPATH=$(top_srcdir)/src
 
-check-local: check-static-doctests check-static-pep8 check-static-pyflakes
+check-local: check-static
 	@echo -e "---\n Passed $@\n---"
+
+check-static: check-static-doctests check-static-pep8 check-static-pyflakes
+	@echo Passed $@
 
 check-static-xmllint: $(XMLSOURCES:%=%.xmllint)
 	@echo Passed $@
@@ -17,13 +21,13 @@ check-static-doctests: $(PYTHONSOURCES:%=%.doctest)
 	@echo Passed $@
 
 %.doctest:
-	PYTHONPATH=. python -m doctest "$*"
+	PYTHONPATH=$(PYTHONPATH) python -m doctest "$*"
 
 check-static-pep8: $(PYTHONSOURCES:%=%.pep8)
 	@echo Passed $@
 
 %.pep8:
-	PYTHONPATH=. pep8 -r "$*"
+	PYTHONPATH=$(PYTHONPATH) pep8 -r "$*"
 
 # FIXME Pylint is very strict, needs to be configured
 # Maybe take a peek at a diff. proj. to find a sane configuration
@@ -32,10 +36,10 @@ check-static-pylint: $(PYTHONSOURCES:%=%.pylint)
 	@echo Passed $@
 
 %.pylint:
-	PYTHONPATH=. $(PYLINT) "$*"
+	PYTHONPATH=$(PYTHONPATH) $(PYLINT) "$*"
 
 check-static-pyflakes: $(PYTHONSOURCES:%=%.pyflakes)
 	@echo Passed $@
 
 %.pyflakes:
-	PYTHONPATH=. pyflakes "$*"
+	PYTHONPATH=$(PYTHONPATH) pyflakes "$*"

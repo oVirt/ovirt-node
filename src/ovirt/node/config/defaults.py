@@ -319,7 +319,6 @@ class Network(NodeConfigFileSection):
             def __assign_common(self, cfg):
                 m = Network().retrieve()
                 m_dns = Nameservers().retrieve()
-                m_ntp = Timeservers().retrieve()
                 m_ipv6 = IPv6().retrieve()
 
                 cfg.bootproto = m["bootproto"]
@@ -327,19 +326,13 @@ class Network(NodeConfigFileSection):
                 cfg.gateway = m["gateway"] or None
                 cfg.netmask = m["netmask"] or None
                 cfg.onboot = "yes"
+                cfg.peerntp = "yes"
 
-                if not m_dns["servers"]:
-                    cfg.peerdns = "yes"
-
-                if not m_ntp["servers"]:
-                    cfg.peerntp = "yes"
+                if m_dns["servers"]:
+                    cfg.peerdns = "no"
 
                 if m_ipv6["bootproto"]:
                     cfg.ipv6init = "yes"
-                    cfg.ipv6forwarding = "no"
-                    cfg.ipv6_autoconf = "no"
-                else:
-                    cfg.ipv6init = "no"
                     cfg.ipv6forwarding = "no"
                     cfg.ipv6_autoconf = "no"
 

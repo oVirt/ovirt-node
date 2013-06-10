@@ -17,6 +17,10 @@
 
 include Makefile.check
 
+PYTHONSOURCES:=$(shell find . -wholename ./ovirt/\*.py)
+XMLSOURCES:=$(shell find . -name \*.xml -or -name \*.xsl)
+CLEANFILES:=$(shell find . -name \*.pyc -o -name \*.pyo -o -name \*~ -o -name MANIFEST)
+
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigsetup_PYTHON = \
   ovirt_config_setup/__init__.py \

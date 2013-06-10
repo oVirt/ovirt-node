@@ -15,13 +15,16 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-PYTHONUNITTESTS:=$(shell find unit_tests/ -name \*.py)
+include $(top_srcdir)/src/Makefile.check
+
+PYTHONUNITTESTS:=$(shell find nose/ -name \*.py)
+PYTHONSOURCES:=$(PYTHONUNITTESTS)
 
 check-local: unittests
-	@echo Passed $@
+	@echo -e "---\n Passed $@\n---"
 
 unittests: $(PYTHONUNITTESTS:%=%.nose)
 	@echo Passed $@
 
-%.nose:
-	PYTHONPATH=$(top_srcdir)/src nosetests -v "$*"
+%.nose: check-static
+	PYTHONPATH=$(PYTHONPATH) nosetests -v "$*"

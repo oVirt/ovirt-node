@@ -306,31 +306,31 @@ class Config(base.Base):
     def persist(self, filename):
         """Persist a file and bind mount it
         """
-        if filename:
+        if filename and self.is_enabled():
             from ovirtnode import ovirtfunctions
             return ovirtfunctions.ovirt_store_config(filename)
 
     def unpersist(self, filename):
         """Remove the persistent version of a file and remove the bind mount
         """
-        if filename:
+        if filename and self.is_enabled():
             from ovirtnode import ovirtfunctions
             return ovirtfunctions.remove_config(filename)
 
     def delete(self, filename):
         """Remove the persiste version and the file
         """
-        if filename:
+        if filename and self.is_enabled():
             from ovirtnode import ovirtfunctions
             return ovirtfunctions.ovirt_safe_delete_config(filename)
 
     def exists(self, filename):
         """Check if the given file is persisted
         """
-        return filename and os.path.exists(self._config_path(filename))
+        return filename and File(self._config_path(filename)).exists()
 
     def is_enabled(self):
-        return os.path.exists("/proc") and is_bind_mount(self.basedir)
+        return File("/proc").exists() and is_bind_mount(self.basedir)
 
     def open_file(self, filename, mode="r"):
         return open(self._config_path(filename), mode)
