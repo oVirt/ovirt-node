@@ -1493,8 +1493,8 @@ def rebuild_iso_symlinks(isodir):
         # build relative symlinks instead of absolute
         cwd = os.getcwd()
         os.chdir("%s/EFI/BOOT" % isodir)
-        os.system("ln -s ../../isolinux/vmlinuz0 .")
-        os.system("ln -s ../../isolinux/initrd0.img .")
+        os.system("ln  ../../isolinux/vmlinuz0 .")
+        os.system("ln  ../../isolinux/initrd0.img .")
         os.chdir(cwd)
 
 
