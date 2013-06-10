@@ -50,7 +50,7 @@ class Plugin(plugins.NodePlugin):
         """
         ws = [ui.Header("diagnostic._header", "Diagnostic Utilities"),
               ui.Label("diagnostic.info", "Select one of the tools below. \n" +
-                       "Press 'q' to quit when viewing output"),
+                       "Press '<ESC>' to quit when viewing output"),
               ui.Divider("diagnostic.divider"),
               ui.Table("diagnostic.tools", "", "Available diagnostics",
                        self.__diagnostics(), height=min(

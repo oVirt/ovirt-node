@@ -46,7 +46,7 @@ class Plugin(NodePlugin):
     def ui_content(self):
         ws = [ui.Header("header[0]", "Support Info"),
               ui.Label("support.info", "Select one of the logfiles below. \n" +
-                       "Press 'q' to quit when viewing a logfile."),
+                       "Press '<ESC>' to quit when viewing a logfile."),
               ui.Divider("divider[0]"),
               ui.Table("support.logfile", "", "Available Logfiles",
                        self.__debugfiles_to_offer()),
