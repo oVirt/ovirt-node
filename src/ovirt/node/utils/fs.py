@@ -26,6 +26,7 @@ Some convenience functions realted to the filesystem
 import logging
 import shutil
 import os
+import StringIO
 
 from ovirt.node import base
 
@@ -76,6 +77,117 @@ def truncate(filename):
     """
     with open(filename, "wb"):
         pass
+
+
+class File(base.Base):
+    """Convenience API to access files.
+    Used to make code testable
+    """
+    filename = None
+
+    def __init__(self, filename):
+        self.filename = filename
+
+    def read(self):
+        """Read the contents of a file
+        """
+        return get_contents(self.filename)
+
+    def write(self, contents, mode="wb"):
+        """Write the contents of a file
+        """
+        try:
+            atomic_write(self.filename, contents)
+        except:
+            with open(self.filename, mode) as dst:
+                dst.write(contents)
+
+    def touch(self):
+        """Touch a file
+        """
+        return truncate(self.filename)
+
+    def exists(self):
+        """Determin if a file exists
+        """
+        return os.path.isfile(self.filename)
+
+    def delete(self):
+        """Delete a file
+        """
+        return os.unlink(self.filename)
+
+    def __iter__(self):
+        with open(self.filename, "r") as src:
+            for line in src:
+                yield line
+
+
+class FakeFs(base.Base):
+    filemap = {}
+
+    @staticmethod
+    def erase():
+        """Erase all files
+        """
+        FakeFs.filemap = {}
+
+    class File(File):
+        """A fake file - residing in a dictiniory for testing
+
+        >>> FakeFs.filemap
+        {}
+        >>> f = FakeFs.File("/etc/foo")
+        >>> f.write("Hello World!")
+        >>> f.read()
+        'Hello World!'
+        >>> FakeFs.filemap.keys()
+        ['/etc/foo']
+        >>> f.write("Hey Mars!\\nWhat's up?")
+        >>> f.read()
+        "Hey Mars!\\nWhat's up?"
+        >>> for line in f:
+        ...     print("line: %s" % line)
+        line: Hey Mars!
+        <BLANKLINE>
+        line: What's up?
+        >>> f.delete()
+        >>> FakeFs.filemap
+        {}
+
+        >>> FakeFs.File("foo").write("bar")
+        >>> FakeFs.filemap
+        {'foo': 'bar'}
+        >>> FakeFs.erase()
+        >>> FakeFs.filemap
+        {}
+        """
+
+        def _cond_create(self):
+            if not self.exists():
+                FakeFs.filemap[self.filename] = ""
+
+        def read(self):
+            self._cond_create()
+            return FakeFs.filemap[self.filename]
+
+        def write(self, contents, mode=None):
+            self._cond_create()
+            FakeFs.filemap[self.filename] = contents
+
+        def touch(self):
+            self._cond_create()
+
+        def exists(self):
+            return self.filename in FakeFs.filemap
+
+        def delete(self):
+            if self.exists():
+                del FakeFs.filemap[self.filename]
+
+        def __iter__(self):
+            for line in StringIO.StringIO(self.read()):
+                yield line
 
 
 class BackupedFiles(base.Base):
