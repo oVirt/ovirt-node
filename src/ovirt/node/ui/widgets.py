@@ -585,8 +585,7 @@ class Options(urwid.WidgetWrap):
             widget_attr = urwid.AttrMap(widget, self._option_attr)
             self._buttons.append(widget_attr)
         self._columns = urwid.Columns([self._label_attrmap] + self._buttons)
-        self._pile = urwid.Pile([urwid.Divider(), self._columns,
-                                 urwid.Divider()])
+        self._pile = urwid.Pile([self._columns])
         super(Options, self).__init__(self._pile)
 
     def _on_state_change(self, widget, new_state):

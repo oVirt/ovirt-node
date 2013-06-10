@@ -46,7 +46,8 @@ class Plugin(plugins.NodePlugin):
             "dialog.nic.ipv4.netmask", "dialog.nic.ipv4.gateway",
             "dialog.nic.ipv6.bootproto", "dialog.nic.ipv6.address",
             "dialog.nic.ipv6.netmask", "dialog.nic.ipv6.gateway",
-            "dialog.nic.vlanid"])
+            "dialog.nic.vlanid",
+            "dialog.nic.layout_bridged"])
 
     def name(self):
         return "Network"
@@ -206,6 +207,7 @@ class Plugin(plugins.NodePlugin):
         if "nics" in changes and len(changes) == 1:
             iface = changes["nics"]
             self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
+            self._model_extra["dialog.nic.ifname"] = iface
             self._nic_dialog = NicDetailsDialog(self, iface)
             return self._nic_dialog
 
@@ -276,7 +278,7 @@ class Plugin(plugins.NodePlugin):
 
     def _configure_nic(self, bootproto, ipaddr, netmask, gateway,
                        ipv6_bootproto, ipv6_address, ipv6_netmask,
-                       ipv6_gateway, vlanid):
+                       ipv6_gateway, vlanid, layout_bridged):
         vlanid = vlanid or None
         iface = self._model_extra["dialog.nic.ifname"]
 
@@ -319,6 +321,10 @@ class Plugin(plugins.NodePlugin):
                                        ipv6_gateway)
         else:
             self.logger.debug("No ipv6 interface configuration found")
+
+        mt = defaults.NetworkTopology()
+        if layout_bridged:
+            mt.configure_bridged()
 
         # Return the resulting transaction
         txs = model.transaction()
@@ -380,9 +386,7 @@ class NicDetailsDialog(ui.Dialog):
         vendor_txt = nic.vendor[:24] if nic.vendor else ""
 
         self.plugin._model_extra.update({
-            "dialog.nic.ifname": nic.ifname,
             "dialog.nic.driver": nic.driver,
-            "dialog.nic.protocol": nic.config.bootproto or "N/A",
             "dialog.nic.vendor": vendor_txt,
             "dialog.nic.link_status": link_status_txt,
             "dialog.nic.hwaddress": nic.hwaddr,
@@ -402,13 +406,7 @@ class NicDetailsDialog(ui.Dialog):
 
         padd = lambda l: l.ljust(12)
         ws = [ui.Row("dialog.nic._row[0]",
-                     [ui.KeywordLabel("dialog.nic.ifname",
-                                      padd("Interface: ")),
-                      ui.KeywordLabel("dialog.nic.driver", padd("Driver: ")),
-                      ]),
-              ui.Row("dialog.nic._row[1]",
-                     [ui.KeywordLabel("dialog.nic.protocol",
-                                      padd("Protocol: ")),
+                     [ui.KeywordLabel("dialog.nic.driver", padd("Driver: ")),
                       ui.KeywordLabel("dialog.nic.vendor", padd("Vendor: ")),
                       ]),
 
@@ -468,7 +466,12 @@ class NicDetailsDialog(ui.Dialog):
                       ui.Label("dummy[2]", "")]),
 
               ui.Divider("dialog.nic._divider[3]"),
-              ui.Button("dialog.nic.identify", "Flash Lights to Identify")
+
+              ui.Checkbox("dialog.nic.layout_bridged",
+                          "Use Bridge: "),
+
+              ui.Divider("dialog.nic._divider[4]"),
+              ui.Button("dialog.nic.identify", "Flash Lights to Identify"),
               ]
 
         self.plugin.widgets.add(ws)

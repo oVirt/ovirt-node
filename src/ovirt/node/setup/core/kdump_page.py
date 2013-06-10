@@ -78,10 +78,11 @@ class Plugin(plugins.NodePlugin):
         """
         ws = [ui.Header("kdump._header", "Configure Kdump"),
               ui.Options("kdump.type", "Type", self._types),
+              ui.Divider("divider[0]"),
               ui.Entry("kdump.nfs_location", "NFS Location " +
                        "(example.com:/var/crash):",
                        align_vertical=True),
-              ui.Divider("divider[0]"),
+              ui.Divider("divider[1]"),
               ui.Entry("kdump.ssh_location", "SSH Location " +
                        "(root@example.com):",
                        align_vertical=True),
