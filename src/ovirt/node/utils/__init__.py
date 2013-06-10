@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, exceptions
 import augeas as _augeas
+import lockfile
 import time
 import traceback
 
@@ -185,6 +186,10 @@ class Transaction(list, base.Base):
     >>> txs
     [[<StepA 'None'>], [<StepB 'None'>]]
     """
+    title = None
+    _lockfilename = "/tmp/transaction-in-progress"
+    _prepared_elements = None
+
     def __init__(self, title, elements=[]):
         super(Transaction, self).__init__()
         base.Base.__init__(self)
@@ -216,30 +221,34 @@ class Transaction(list, base.Base):
         self._prepared_elements = []
         return True
 
-    def __call__(self):
+    def run(self):
         self.logger.debug("Running transaction '%s'" % self)
         try:
-            self.prepare()
-            self.commit()
+            with lockfile.FileLock(self._lockfilename):
+                self.prepare()
+                self.commit()
         except Exception as e:
-            self.logger.warning("Transaction failed (%s): %s" % (e, e.message),
-                                exc_info=True)
+            self.logger.exception("Transaction failed (%s): %s" % (e,
+                                                                   e.message))
             self.abort()
             raise exceptions.TransactionError("Transaction failed: " +
                                               "%s" % e.message)
         self.logger.info("Transaction '%s' succeeded" % self)
         return True
 
+    def __call__(self):
+        return self.run()
+
     def __str__(self):
-        return "<%s '%s' with %s>" % (self.__class__.__name__,
-                                      self.title, list.__str__(self))
+        return self.build_str(["title"], {"elements": list.__str__(self)})
 
     def step(self):
         try:
-            self.logger.debug("Preparing transaction %s" % self)
-            self.prepare()
-            for idx, e in enumerate(self):
-                yield (idx, e)
+            with lockfile.FileLock(self._lockfilename):
+                self.logger.debug("Preparing transaction %s" % self)
+                self.prepare()
+                for idx, e in enumerate(self):
+                    yield (idx, e)
         except Exception as e:
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self, e, e.message))

@@ -25,6 +25,7 @@ BuildRequires:  automake autoconf
 %if %{is_systemd}
 BuildRequires:  systemd-units
 %endif
+BuildRequires:  python-lockfile
 
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
@@ -57,6 +58,7 @@ Requires:       libuser-python >= 0.56.9
 Requires:       dbus-python
 Requires:       python-gudev
 Requires:       python-urwid
+Requires:       python-lockfile
 Requires:       PyPAM
 Requires:       ethtool
 Requires:       cracklib-python

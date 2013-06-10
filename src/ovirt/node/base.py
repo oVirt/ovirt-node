@@ -52,6 +52,14 @@ class Base(object):
         return [(k, v) for k, v in self.__dict__.items()
                 if isinstance(v, Base.Signal)]
 
+    def build_str(self, attributes=[], additional_pairs={}, name=None):
+        name = name or self.__class__.__name__
+        attrs = dict((k, self.__dict__[k]) for k in attributes)
+        attrs.update(additional_pairs)
+        attrs = " ".join(["%s='%s'" % i for i in sorted(attrs.items())])
+        addr = hex(id(self))
+        return ("<%s>" % " ".join(v for v in [name, attrs, "at", addr] if v))
+
     class Signal(object):
         """A convenience class for easier access to signals
         """
