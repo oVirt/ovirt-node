@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, valid, utils
+from ovirt.node.utils.fs import File
 import PAM as _PAM  # @UnresolvedImport
 import cracklib
 import os.path
@@ -104,9 +105,8 @@ class Ssh(base.Base):
 
         if additional_lines:
             self.logger.debug("Updating /etc/profile")
-            with open("/etc/profile", "a") as f:
-                lines = "\n" + "\n".join(additional_lines)
-                f.write(lines)
+            lines = "\n" + "\n".join(additional_lines)
+            File("/etc/profile").write(lines, "a")
             ofunc.ovirt_store_config("/etc/profile")
 
             self.restart()
@@ -161,8 +161,7 @@ class Ssh(base.Base):
         if not os.path.exists(fn_hostkey):
             raise Exception("SSH hostkey does not yet exist.")
 
-        with open(fn_hostkey) as hkf:
-            hostkey = hkf.read()
+        hostkey = File(fn_hostkey).read()
 
         hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
         fingerprint = process.pipe(hostkey_fp_cmd).strip().split(" ")[1]

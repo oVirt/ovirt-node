@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, utils
 from ovirt.node.config.network import NicConfig
+from ovirt.node.utils.fs import File
 import glob
 import gudev
 import logging
@@ -232,9 +233,8 @@ class NIC(base.Base):
         # Fallback
         has_carrier = False
         try:
-            with open("/sys/class/net/%s/carrier" % self.ifname) as c:
-                content = c.read()
-                has_carrier = "1" in content
+            content = File("/sys/class/net/%s/carrier" % self.ifname).read()
+            has_carrier = "1" in content
         except:
             LOGGER.debug("Carrier down for %s" % self.ifname)
         return has_carrier
@@ -635,27 +635,27 @@ def reset_resolver():
 class Vlans(base.Base):
     """A class to offer a convenience api to the vconfig file
     """
-    cfg = "/proc/net/vlan/config"
+    cfgfilename = "/proc/net/vlan/config"
 
     def parse_cfg(self):
-        if not os.path.exists(self.cfg):
+        if not os.path.exists(self.cfgfilename):
             raise RuntimeError("vlans ain't enabled.")
 
         vlans = {}
         try:
-            with open(self.cfg) as f:
-                data_block = False
-                for line in f:
-                    if line.startswith("Name-Type"):
-                        data_block = True
-                        continue
-                    if not data_block:
-                        continue
-                    vdev, _, hdev = [field.strip()
-                                     for field in line.split("|")]
-                    if not hdev in vlans:
-                        vlans[hdev] = []
-                    vlans[hdev].append(vdev)
+            data = File(self.cfgfilename)
+            data_block = False
+            for line in data:
+                if line.startswith("Name-Type"):
+                    data_block = True
+                    continue
+                if not data_block:
+                    continue
+                vdev, _, hdev = [field.strip()
+                                 for field in line.split("|")]
+                if not hdev in vlans:
+                    vlans[hdev] = []
+                vlans[hdev].append(vdev)
         except IOError as e:
             self.logger.warning("Could not read vlan config: %s" %
                                 e.message)

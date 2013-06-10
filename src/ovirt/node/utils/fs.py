@@ -23,7 +23,6 @@
 Some convenience functions realted to the filesystem
 """
 
-from ovirt.node.utils import is_fileobj
 import logging
 import shutil
 import os
@@ -288,11 +287,11 @@ def is_bind_mount(filename, fsprefix="ext"):
         True if the file is a bind mount target
     """
     bind_mount_found = False
-    with open("/proc/mounts") as mounts:
-        pattern = "%s %s" % (filename, fsprefix)
-        for mount in mounts:
-            if pattern in mount:
-                bind_mount_found = True
+    mounts = File("/proc/mounts")
+    pattern = "%s %s" % (filename, fsprefix)
+    for mount in mounts:
+        if pattern in mount:
+            bind_mount_found = True
     return bind_mount_found
 
 
@@ -340,13 +339,11 @@ class Config(base.Base):
 class ShellVarFile(base.Base):
     """ShellVarFile writes simple KEY=VALUE (shell-like) configuration file
 
-    >>> import StringIO
-    >>> fileobj = StringIO.StringIO()
     >>> cfg = {
     ... "IP_ADDR": "127.0.0.1",
     ... "NETMASK": "255.255.255.0",
     ... }
-    >>> p = ShellVarFile(fileobj)
+    >>> p = ShellVarFile(FakeFs.File("dst-file"))
     >>> p.get_dict()
     {}
     >>> p.update(cfg, True)
@@ -361,42 +358,27 @@ class ShellVarFile(base.Base):
         super(ShellVarFile, self).__init__()
         self.filename = filename
         self.create = create
-        if is_fileobj(filename) or self._fileobj:
+        if File in type(filename).mro():
             self._fileobj = filename
         else:
-            if not create and not os.path.exists(self.filename):
+            self._fileobj = File(self.filename)
+            if not create and not self._fileobj.exists():
                     raise RuntimeError("File does not exist: %s" %
                                        self.filename)
 
-    def _is_fileobj(self):
-        return is_fileobj(self.filename)
-
     def _read_contents(self):
-        data = None
-        if self._fileobj:
-            self._fileobj.seek(0)
-            data = self._fileobj.read()
-        else:
-            with open(self.filename) as src:
-                data = src.read()
-        return data
+        return self._fileobj.read()
 
     def raw_read(self):
         return self._read_contents()
 
     def _write_contents(self, data):
-        if self._fileobj:
-            self._fileobj.seek(0)
-            self._fileobj.write(data)
-            self._fileobj.flush()
-        else:
-            with open(self.filename, "w") as dst:
-                dst.write(data)
+        self._fileobj.write(data)
 
     def exists(self):
         """Return true if this file exists
         """
-        return is_fileobj(self.filename) or os.path.isfile(self.filename)
+        return self._fileobj.exists()
 
     def get_dict(self):
         """Returns a dict of (key, value) pairs
@@ -418,7 +400,7 @@ class ShellVarFile(base.Base):
         for key in sorted(cfg.iterkeys()):
             lines.append("%s=\"%s\"" % (key, cfg[key]))
         contents = "\n".join(lines) + "\n"
-        self._write(contents)
+        self._write_contents(contents)
 
     def update(self, new_dict, remove_empty):
         """Update the file using new_dict
@@ -462,21 +444,3 @@ class ShellVarFile(base.Base):
                 except:
                     self.logger.info("Failed to parse line: '%s'" % line)
         return cfg
-
-    def _write(self, contents):
-        if self._is_fileobj():
-            self._write_contents(contents)
-        else:
-            # The following logic is mainly needed to allow an
-            # "offline" testing
-            config_fs = Config()
-            if config_fs.is_enabled():
-                with config_fs.open_file(self.filename, "w") as dst:
-                    dst.write(contents)
-            else:
-                try:
-                    atomic_write(self.filename, contents)
-                except Exception as e:
-                    self.logger.warning("Atomic write failed: %s" % e)
-                    with open(self.filename, "w") as dst:
-                        dst.write(contents)

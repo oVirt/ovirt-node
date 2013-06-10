@@ -135,22 +135,18 @@ class NicConfig(base.Base):
 
             ShellVarFile.write(self, data, True)
 
-            if not self._is_fileobj() and self.exists():
-                pcfg = fs.Config()
-                if pcfg.is_enabled():
-                    pcfg.persist(self.filename)
+            pcfg = fs.Config()
+            if pcfg.is_enabled():
+                pcfg.persist(self.filename)
 
             return data
 
-        def delete(self, ifname):
-            if not self._is_fileobj() and self.exists():
-                pcfg = fs.Config()
-                if pcfg.is_enabled():
-                    pcfg.unpersist(self.filename)
+        def delete(self):
+            pcfg = fs.Config()
+            if pcfg.is_enabled():
+                pcfg.unpersist(self.filename)
 
-                os.remove(self.filename)
-            elif is_fileobj(self.filename):
-                self.filename.truncate(0)
+            self._fileobj.delete()
 
 
 def _aug_get_or_set(augpath, new_servers=None):
