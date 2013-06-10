@@ -71,7 +71,8 @@ class SNMP(NodeConfigFileSection):
     """Configure SNMP
 
     >>> from ovirt.node.config.defaults import NodeConfigFile
-    >>> n = SNMP("/tmp/cfg_dummy")
+    >>> from ovirt.node.utils import fs
+    >>> n = SNMP(fs.FakeFs.File("dst"))
     >>> n.update("secret")
     >>> n.retrieve().items()
     [('password', 'secret')]
