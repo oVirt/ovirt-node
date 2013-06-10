@@ -114,3 +114,4 @@ NetworkManager-glib
 
 bridge-utils
 squashfs-tools
+mcelog
