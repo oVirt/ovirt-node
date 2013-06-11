@@ -280,6 +280,40 @@ class FQDN(RegexValidator):
     pattern = ("^(([0-9]\.)?([a-z]|[a-z][a-z0-9\-]*[a-z0-9])\.)*" +
                "([a-z]|[a-z][a-z0-9\-]*[a-z0-9])$", re.I)
 
+    def validate(self, value):
+        is_valid = super(FQDN, self).validate(value)
+
+        #Don't bother checking if it's not a valid FQDN. Doctest madness.
+        if is_valid:
+            FQDNLength()(value)
+        return is_valid
+
+
+class FQDNLength(Validator):
+    """Matches a FQDN and ensures that fields are 63 characters or less
+    per level and 255 characters or less total
+
+    >>> FQDNLength().validate(r'1234567890123456789012345678901234567890123456\
+78901234567890123.com')
+    True
+    >>> FQDNLength().validate('1234567890123456789012345678901234567890123456\
+789012345678901234.com')
+    False
+    """
+
+    description = "a field less than 255 characters"
+
+    def validate(self, value):
+        if len(value) > 255:
+            return False
+        if value[-1:] == ".":
+            value = value[:-1]
+        valid = re.compile("(?!-)[a-z\d\-]{1,63}(?<!-)$", re.IGNORECASE)
+        is_valid = all(valid.match(x) for x in value.split("."))
+        self.description = "members of 63 characters or less" if not is_valid \
+            else self.description
+        return is_valid
+
 
 class IPv4Address(Validator):
     """Matches IPv4 addresses
