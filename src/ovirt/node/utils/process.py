@@ -38,10 +38,16 @@ COMMON_POPEN_ARGS = {
 CalledProcessError = subprocess.CalledProcessError
 
 
+def __update_kwargs(kwargs):
+    new_kwargs = dict(COMMON_POPEN_ARGS)
+    new_kwargs.update(kwargs)
+    return new_kwargs
+
+
 def popen(*args, **kwargs):
     """subprocess.Popen wrapper to not leak file descriptors
     """
-    kwargs.update(COMMON_POPEN_ARGS)
+    kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Popen with: %s %s" % (args, kwargs))
     return subprocess.Popen(*args, **kwargs)
 
@@ -49,7 +55,7 @@ def popen(*args, **kwargs):
 def call(*args, **kwargs):
     """subprocess.call wrapper to not leak file descriptors
     """
-    kwargs.update(COMMON_POPEN_ARGS)
+    kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Calling with: %s %s" % (args, kwargs))
     return int(subprocess.call(*args, **kwargs))
 
@@ -57,7 +63,7 @@ def call(*args, **kwargs):
 def check_call(*args, **kwargs):
     """subprocess.check_call wrapper to not leak file descriptors
     """
-    kwargs.update(COMMON_POPEN_ARGS)
+    kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking call with: %s %s" % (args, kwargs))
     return int(subprocess.check_call(*args, **kwargs))
 
@@ -65,7 +71,7 @@ def check_call(*args, **kwargs):
 def check_output(*args, **kwargs):
     """subprocess.check_output wrapper to not leak file descriptors
     """
-    kwargs.update(COMMON_POPEN_ARGS)
+    kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
     return unicode(subprocess.check_output(*args, **kwargs),
                    encoding=sys.stdin.encoding)
