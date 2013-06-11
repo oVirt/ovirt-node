@@ -38,6 +38,26 @@ BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 EARLY_DIR=/etc/ovirt-early.d
 
+# Drop to a shell
+emergency_shell() {
+    plymouth --hide-splash
+    echo "$@" > /dev/tty1
+    openvt -f -c 1 -w -s -l -- bash
+    plymouth --show-splash
+}
+
+# Check if a karg is present
+hasarg() {
+    for i in $(cat /proc/cmdline); do
+        case $i in
+                $1)
+                return 0
+                ;;
+        esac
+    done
+    return 1
+}
+
 #
 # ovirt-early
 #
@@ -729,7 +749,8 @@ _start_ovirt_early () {
         done
         IFS=$oldIFS
         log "Uninstall complete, rebooting"
-        /sbin/reboot
+        hasarg "node.break=pre-reboot" && emergency_shell "Reached pre-reboot"
+        reboot
     fi
 
 
@@ -825,10 +846,7 @@ EOF
     if [ "$rescue" = 1 ]; then
         log "Rescue mode requested, starting emergency shell"
         stop_log
-        plymouth --hide-splash
-        echo "Rescue mode requested, starting emergency shell" > /dev/tty1
-        openvt -f -c 1 -w -s -l -- bash
-        plymouth --show-splash
+        emergency_shell "Rescue mode requested, starting emergency shell"
         start_log
     fi
 
@@ -1080,7 +1098,9 @@ EOP
         # But that doesn't matter because /var/log is already mounted, just unknown to sysd
         umount /var/log
 
+        getarg "node.break=pre-reboot" && emergency_shell "Reached pre-reboot"
         reboot
+
         if [ $? -ne 0 ]; then
             autoinstall_failed
         fi
