@@ -112,7 +112,7 @@ lvm_storage_init=${lvm_storage_init#,}
 
 fatal() {
     [ -x /bin/plymouth ] && /bin/plymouth --hide-splash
-    echo "<1>dracut: FATAL: $@" > /dev/kmsg
+    echo "\n<1>dracut: FATAL: $@" > /dev/kmsg
     echo "dracut: FATAL: $@" >&2
 }
 
@@ -125,6 +125,8 @@ for device in $lvm_storage_init; do
     if [ -f "/etc/lvm/lvm.conf" ]; then
         sed -i "s/locking_type =.*/locking_type = 0/" /etc/lvm/lvm.conf
     fi
+    sdevs=$(lvm vgs -o pv_name,tags | grep storage_domain | while read line; do echo $line | awk '{print $1}'; done)
+
     IFS=$oldIFS
     for i in $(lvm pvs --noheadings -o pv_name,vg_name --separator=, $device 2>/dev/null); do
         pv="${i%%,*}"
@@ -140,6 +142,12 @@ for device in $lvm_storage_init; do
                      fi
                 done
                 IFS=$oldIFS
+                for dev in $sdevs; do
+                    if [ $dev = $ipv ]; then
+                        fatal "Warning: '$ipv' is a member of a storage domain and may not be removed"
+                    exit 1
+                    fi
+                done
                 if [ $imach -eq 0 ]; then
                     fatal "LV '$ipv' is a member of VG '$vg' and must be included in \$storage_init"
                     fatal "Not all member PVs of '$vg' are given in the storage_init parameter, exiting"
