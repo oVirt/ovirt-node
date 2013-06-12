@@ -18,6 +18,7 @@ ovirt-node.spec
 recipe/*.iso
 recipe/archipel-node-image.ks
 recipe/image-minimizer.ks
+recipe/common-install.ks
 recipe/version.ks
 scripts/collectd.conf
 *.iso

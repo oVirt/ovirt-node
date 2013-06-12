@@ -23,6 +23,7 @@ AM_CONDITIONAL(TARGET_RHEL, test x"$RHEL" != x && test x"$CENTOS" == x)
 AM_CONDITIONAL(TARGET_CENTOS, test x"$CENTOS" != x)
 AM_CONDITIONAL(TARGET_SYSTEMD, test 0$RHEL -ge 7 || test 0$FEDORA -ge 16 || test 0$CENTOS -ge 7)
 AM_CONDITIONAL(TARGET_NEW_DRACUT, test 0$RHEL -ge 7 || test 0$FEDORA -ge 15 || test 0$CENTOS -ge 7)
+AM_CONDITIONAL(TARGET_RDLIVECHECK, test 0$RHEL -ge 7 || test 0$FEDORA -ge 15 || test 0$CENTOS -ge 7)
 
 AM_COND_IF([TARGET_SYSTEMD],
     [SYSTEMD_COMMENT=""], [SYSTEMD_COMMENT="#"])
@@ -34,6 +35,10 @@ AC_SUBST([COLLECTD_COMMENT])
 AM_COND_IF([TARGET_NEW_DRACUT],
      [DRACUTDIR="/usr/lib/dracut/modules.d"], [DRACUTDIR="/usr/share/dracut/modules.d"])
 AC_SUBST([DRACUTDIR])
+
+AM_COND_IF([TARGET_RDLIVECHECK],
+    [BOOTLOADER_ARGS="rd.live.check rd.lvm=0"], [BOOTLOADER_ARGS="check RD_NO_LVM"])
+AC_SUBST([BOOTLOADER_ARGS])
 
 AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
             [enable aggresive reduction of the image size])],
@@ -82,6 +87,7 @@ AC_CONFIG_FILES([Makefile
                 plugins/Makefile
                 tests/Makefile
                 $MAIN_KS
+                recipe/common-install.ks
                 recipe/image-minimizer.ks
                 scripts/ovirt-functions
                 scripts/ovirt-init-functions.sh
