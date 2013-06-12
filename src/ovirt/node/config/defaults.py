@@ -246,7 +246,7 @@ class Network(NodeConfigFileSection):
         def do_services(cmd, services):
             with console.CaptureOutput():
                 for name in services:
-                    system.service(name, cmd, check=False)
+                    system.service(name, cmd, False)
 
         class StopNetworkServices(utils.Transaction.Element):
             title = "Stop network services"
@@ -737,9 +737,9 @@ class Timeservers(NodeConfigFileSection):
             title = "Restarting time services"
 
             def commit(self):
-                system.service("ntpd", "stop", check=False)
-                system.service("ntpdate", "start", check=False)
-                system.service("ntpd", "start", check=False)
+                system.service("ntpd", "stop", False)
+                system.service("ntpdate", "start", False)
+                system.service("ntpd", "start", False)
 
         tx = utils.Transaction("Configuring timeservers")
         tx.append(WriteConfiguration())
@@ -927,7 +927,7 @@ class KDump(NodeConfigFileSection):
                 from ovirtnode.ovirtfunctions import remove_config
 
                 remove_config("/etc/kdump.conf")
-                utils.process.call("service kdump stop")
+                system.service("kdump", "stop")
                 fs.File('/etc/kdump.conf').touch()
 
                 self.backups.remove()
@@ -944,12 +944,12 @@ class KDump(NodeConfigFileSection):
                     ovirt_store_config
 
                 try:
-                    utils.process.check_call("service kdump restart")
+                    system.service("kdump", "restart")
                 except utils.process.CalledProcessError as e:
                     self.logger.info("Failure while restarting kdump: %s" % e)
                     unmount_config("/etc/kdump.conf")
                     self.backups.restore("/etc/kdump.conf")
-                    utils.process.call("service kdump restart")
+                    system.service("kdump", "restart")
 
                     raise RuntimeError("KDump configuration failed, " +
                                        "location unreachable. Previous " +
@@ -1156,7 +1156,7 @@ class NFSv4(NodeConfigFileSection):
                 nfsv4.domain(domain)
 
                 fs.Config().persist(nfsv4.configfilename)
-                process.check_call("service rpcidmapd restart")
+                system.service("rpcidmapd", "restart")
                 process.check_call("nfsidmap -c")
 
         tx = utils.Transaction("Configuring NFSv4")
