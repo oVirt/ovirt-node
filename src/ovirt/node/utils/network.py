@@ -523,6 +523,21 @@ class NodeNetwork(base.Base):
 
         return candidates
 
+    def configured_nic(self):
+        """Return the (probably) primary NIC of this system
+        We identify it by looking if a config exists
+        """
+        candidate = None
+        candidates = NodeNetwork().nics()
+        for nic in candidates.values():
+            if nic.is_configured():
+                candidate = nic
+                break
+        return candidate
+
+    def is_configured(self):
+        return self.configured_nic() is not None
+
 
 class Routes(base.Base):
     def default(self):
@@ -568,12 +583,16 @@ def _nm_address_to_str(family, ipaddr):
     return socket.inet_ntop(family, packed)
 
 
-def networking_status(iface):
+def networking_status(ifname=None):
     status = "Not connected"
 
+    nn = NodeNetwork()
+    nic = nn.build_nic_model(ifname) if ifname else nn.configured_nic()
+
     addresses = []
-    if iface:
-        nic = NIC(iface)
+    if nic:
+        ifname = nic.ifname
+
         addresses = nic.ip_addresses()
         has_address = any([a is not None for a in addresses.values()])
 
@@ -582,7 +601,7 @@ def networking_status(iface):
         if has_address:
             status = "Connected"
 
-    summary = (status, iface, addresses)
+    summary = (status, ifname, addresses)
     LOGGER.debug(summary)
     return summary
 

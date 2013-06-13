@@ -71,7 +71,9 @@ class Plugin(plugins.NodePlugin):
               ui.Divider("divider[0]")
               ]
 
-        if not utils.network.is_configured():
+        net_is_configured = utils.network.NodeNetwork().is_configured()
+
+        if not net_is_configured:
             ws.extend([ui.Notice("network.notice",
                                  "Networking is not configured, " +
                                  "please configure it before rsyslog " +
@@ -81,17 +83,17 @@ class Plugin(plugins.NodePlugin):
         ws.extend([ui.Label("rsyslog.header", "RSyslog is an enhanced multi-" +
                             "threaded syslogd"),
                    ui.Entry("rsyslog.address", "Server Address:",
-                            enabled=utils.network.is_configured()),
+                            enabled=net_is_configured),
                    ui.Entry("rsyslog.port", "Server Port:",
-                            enabled=utils.network.is_configured()),
+                            enabled=net_is_configured),
                    ui.Divider("divider[1]"),
                    ui.Label("netconsole.label",
                             "Netconsole service allows a remote sys" +
                             "log daemon to record printk() messages"),
                    ui.Entry("netconsole.address", "Server Address:",
-                            enabled=utils.network.is_configured()),
+                            enabled=net_is_configured),
                    ui.Entry("netconsole.port", "Server Port:",
-                            enabled=utils.network.is_configured())
+                            enabled=net_is_configured)
                    ])
 
         page = ui.Page("page", ws)
