@@ -23,7 +23,6 @@ from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 from ovirt.node.setup.core import ping
 from ovirt.node.utils import network
-from ovirt.node.utils.network import BridgedNIC
 
 """
 Network page plugin
@@ -369,16 +368,12 @@ class NicDetailsDialog(ui.Dialog):
                                                          ip6model["gateway"],
                                                          ip6model["bootproto"])
 
-        if type(nic) is BridgedNIC:
-            if model["bootproto"] == "dhcp":
-                if nic.bridge_nic.exists():
-                    routes = utils.network.Routes()
-                    gateway = routes.default()
-                    ipaddr, netmask = nic.bridge_nic.ipv4_address().items()
-                    vlanid = ",".join(nic.bridge_nic.vlanids())
-                else:
-                    self.logger.warning("Bridge assigned but couldn't " +
-                                        "gather nic info: %s" % nic.bridge_nic)
+        if model["bootproto"] == "dhcp":
+            if nic.exists():
+                routes = utils.network.Routes()
+                gateway = routes.default()
+                ipaddr, netmask = nic.ipv4_address().items()
+                vlanid = ",".join(nic.vlanids())
 
         link_status_txt = ("Connected" if nic.has_link()
                            else "Disconnected")

@@ -112,6 +112,14 @@ def convert_to_biosdevname():
     return True
 
 
+class SetDefaultBootproto(Transaction.Element):
+    title = "Setting DHCP"
+
+    def commit(self):
+        from ovirt.node.config import defaults
+        defaults.Network().update(bootproto="dhcp")
+
+
 def build_network_auto_transaction():
     from ovirt.node.config.defaults import Network, Nameservers, \
         Timeservers, Hostname
@@ -124,11 +132,10 @@ def build_network_auto_transaction():
     mnet = Network()
     netmodel = mnet.retrieve()
     logger.debug("Got netmodel: %s" % netmodel)
+
     if netmodel["iface"]:
-        # Only running net configuration if bootif is given
-        # use dhcp if bootif is given
         if not netmodel["ipaddr"]:
-            mnet.update(bootproto="dhcp")
+            txs.append(SetDefaultBootproto())
 
         txs += mnet.transaction()
 

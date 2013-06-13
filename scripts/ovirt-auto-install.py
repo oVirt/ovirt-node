@@ -106,9 +106,17 @@ class InstallBootloader(Transaction.Element):
     title = "Installing Bootloader"
 
     def commit(self):
+        # FIXME
+        # This is a hack because the legacy code messes with
+        # the config file, so we backup and replay it later
+        cfgfile = defaults.NodeConfigFile()
+        cfg = cfgfile.get_dict()
+
         install = Install()
         if not install.ovirt_boot_setup():
             raise RuntimeError("Bootloader Installation Failed")
+
+        cfgfile.write(cfg)
 
 
 if __name__ == "__main__":
