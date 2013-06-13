@@ -28,16 +28,25 @@ import logging
 # http://ivory.idyll.org/articles/nose-intro.html
 
 
-def test_fake():
-    """Ensure that FakeFs is working
-    """
-    with patch("ovirt.node.utils.fs.File", FakeFs.File):
-        f = fs.File("new-file")
-        f.touch()
-        assert "new-file" in FakeFs.filemap
+class TestFakeFs():
+    def setUp(self):
+        FakeFs.erase()
 
-        f.delete()
-        assert FakeFs.filemap == {}
+    def tearDown(self):
+        FakeFs.erase()
+
+    def test_basic(self):
+        """Ensure that FakeFs is working
+        """
+        FakeFs.erase()
+        with patch("ovirt.node.utils.fs.File", FakeFs.File):
+            f = fs.File("new-file")
+            f.touch()
+            assert "new-file" in FakeFs.filemap
+
+            f.delete()
+            print FakeFs.filemap
+            assert FakeFs.filemap == {}
 
 
 @patch("ovirt.node.utils.fs.File", FakeFs.File)
@@ -87,8 +96,7 @@ class TestBridgedNIC():
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes')])
         assert_ifcfg_has_items("brens1",
-                               [('BOOTPROTO', 'static'),
-                                ('DELAY', '0'),
+                               [('DELAY', '0'),
                                 ('DEVICE', 'brens1'),
                                 ('GATEWAY', '192.168.122.1'),
                                 ('IPADDR', '192.168.122.42'),
@@ -96,6 +104,64 @@ class TestBridgedNIC():
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
+
+
+@patch("ovirt.node.utils.fs.File", FakeFs.File)
+@patch.object(UdevNICInfo, "vendor")
+@patch.object(UdevNICInfo, "devtype")
+@patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
+class TestDirectNIC():
+    """Test the bridgeless configuration
+    """
+    def setUp(self):
+        FakeFs.erase()
+        FakeFs.File("/etc/default/ovirt").touch()
+
+    def tearDown(self):
+        FakeFs.erase()
+
+    def test_dhcp(self, *args, **kwargs):
+        """Test bridgeless with DHCP configuration file creation
+        """
+        mt = defaults.NetworkTopology()
+        mt.configure_direct()
+
+        m = defaults.Network()
+
+        m.configure_dhcp("eth0")
+
+        run_tx_by_name(m.transaction(), "WriteConfiguration")
+
+        assert_ifcfg_has_items("eth0",
+                               [('BOOTPROTO', 'dhcp'), ('DEVICE', 'eth0'),
+                               ('HWADDR', 'th:em:ac:ad:dr'), ('ONBOOT', 'yes'),
+                               ('PEERNTP', 'yes')])
+
+        assert "breth0" not in FakeFs.filemap
+
+    def test_static(self, *args, **kwargs):
+        """Test bridgeless with static IP configuration file creation
+        """
+        mt = defaults.NetworkTopology()
+        mt.configure_direct()
+
+        m = defaults.Network()
+
+        m.configure_static("ens1", "192.168.122.42", "255.255.255.0",
+                           "192.168.122.1", None)
+
+        run_tx_by_name(m.transaction(), "WriteConfiguration")
+
+        assert_ifcfg_has_items("ens1",
+                               [('DEVICE', 'ens1'),
+                                ('GATEWAY', '192.168.122.1'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('IPADDR', '192.168.122.42'),
+                                ('NETMASK', '255.255.255.0'),
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes')])
+
+        assert "brens1" not in FakeFs.filemap
 
 
 def run_tx_by_name(txs, name):

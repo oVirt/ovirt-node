@@ -205,11 +205,11 @@ class Network(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = Network(fs.FakeFs.File("dst"))
-    >>> n.update("eth0", "static", "10.0.0.1", "255.0.0.0", "10.0.0.255",
+    >>> n.update("eth0", None, "10.0.0.1", "255.0.0.0", "10.0.0.255",
     ...          "20")
     >>> data = sorted(n.retrieve().items())
     >>> data[:3]
-    [('bootproto', 'static'), ('gateway', '10.0.0.255'), ('iface', 'eth0')]
+    [('bootproto', None), ('gateway', '10.0.0.255'), ('iface', 'eth0')]
     >>> data[3:]
     [('ipaddr', '10.0.0.1'), ('netmask', '255.0.0.0'), ('vlanid', '20')]
 
@@ -230,12 +230,30 @@ class Network(NodeConfigFileSection):
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, iface, bootproto, ipaddr=None, netmask=None, gateway=None,
                vlanid=None):
-        if bootproto not in ["static", "none", "dhcp", None]:
+        if bootproto not in ["dhcp", None]:
             raise exceptions.InvalidData("Unknown bootprotocol: %s" %
                                          bootproto)
         (valid.IPv4Address() | valid.Empty(or_none=True))(ipaddr)
         (valid.IPv4Address() | valid.Empty(or_none=True))(netmask)
         (valid.IPv4Address() | valid.Empty(or_none=True))(gateway)
+
+    def configure_no_networking(self, iface=None):
+        """Can be used to disable all networking
+        """
+        #iface = iface or self.retrieve()["iface"]
+        #name = iface + "-DISABLED"
+        # FIXME why should we use ifname-DISABLED here?
+        self.update(None, None, None, None, None, None)
+
+    def configure_dhcp(self, iface, vlanid=None):
+        """Can be used to configure NIC iface on the vlan vlanid with DHCP
+        """
+        self.update(iface, "dhcp", None, None, None, vlanid)
+
+    def configure_static(self, iface, ipaddr, netmask, gateway, vlanid):
+        """Can be used to configure a static IP on a NIC
+        """
+        self.update(iface, None, ipaddr, netmask, gateway, vlanid)
 
     def transaction(self):
         """Return all transactions to re-configure networking
@@ -401,24 +419,6 @@ class Network(NodeConfigFileSection):
         tx.append(StartNetworkServices())
         return tx
 
-    def configure_no_networking(self, iface=None):
-        """Can be used to disable all networking
-        """
-        #iface = iface or self.retrieve()["iface"]
-        #name = iface + "-DISABLED"
-        # FIXME why should we use ifname-DISABLED here?
-        self.update(None, None, None, None, None, None)
-
-    def configure_dhcp(self, iface, vlanid=None):
-        """Can be used to configure NIC iface on the vlan vlanid with DHCP
-        """
-        self.update(iface, "dhcp", None, None, None, vlanid)
-
-    def configure_static(self, iface, ipaddr, netmask, gateway, vlanid):
-        """Can be used to configure a static IP on a NIC
-        """
-        self.update(iface, "static", ipaddr, netmask, gateway, vlanid)
-
 
 class NetworkTopology(NodeConfigFileSection):
     """Sets the network topology
@@ -441,6 +441,12 @@ class NetworkTopology(NodeConfigFileSection):
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, topology="legacy"):
         assert topology in self.known_topologies
+
+    def configure_bridged(self):
+        return self.update("legacy")
+
+    def configure_direct(self):
+        return self.update("direct")
 
 
 class IPv6(NodeConfigFileSection):
