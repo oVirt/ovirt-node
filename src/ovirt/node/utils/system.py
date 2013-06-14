@@ -67,7 +67,7 @@ def cpu_details():
 
 
 def has_hostvg():
-    """Determin if a HostVG is present on this system (indicates an existing
+    """Determine if a HostVG is present on this system (indicates an existing
     installation)
     """
     return os.path.exists("/dev/HostVG")
@@ -101,6 +101,16 @@ def service(name, cmd, do_raise=True):
         if do_raise:
             raise
     return r
+
+
+def has_systemd():
+    """Determine if the system has systemd available.
+    """
+    try:
+        __import__("systemd")
+    except:
+        return False
+    return True
 
 
 class SystemRelease(base.Base):
@@ -253,10 +263,12 @@ class Keyboard(base.Base):
 
     def set_layout(self, layout):
         assert layout
-        self.kbd.set(layout)
-        self.kbd.write()
-        self.kbd.activate()
-        utils.process.check_call("localectl set-keymap %s" % layout)
+        if has_systemd():
+            utils.process.call("localectl set-keymap %s" % layout)
+        else:
+            self.kbd.set(layout)
+            self.kbd.write()
+            self.kbd.activate()
 
     def reactivate(self):
         self.kbd.activate()
