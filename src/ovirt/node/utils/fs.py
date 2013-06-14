@@ -132,6 +132,14 @@ class FakeFs(base.Base):
         """
         FakeFs.filemap = {}
 
+    @staticmethod
+    def listdir(path):
+        files = []
+        for fn in FakeFs.filemap.keys():
+            if os.path.dirname(fn) == path:
+                files.append(os.path.basename(fn))
+        return files
+
     class File(File):
         """A fake file - residing in a dictiniory for testing
 

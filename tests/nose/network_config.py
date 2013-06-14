@@ -36,8 +36,6 @@ class TestFakeFs():
         FakeFs.erase()
 
     def test_basic(self):
-        """Ensure that FakeFs is working
-        """
         FakeFs.erase()
         with patch("ovirt.node.utils.fs.File", FakeFs.File):
             f = fs.File("new-file")
@@ -64,8 +62,6 @@ class TestBridgedNIC():
         FakeFs.erase()
 
     def test_dhcp(self, *args, **kwargs):
-        """Test BridgedNIC with DHCP configuration file creation
-        """
         m = defaults.Network()
         mt = defaults.NetworkLayout()
 
@@ -84,8 +80,6 @@ class TestBridgedNIC():
                                 ('PEERNTP', 'yes'), ('TYPE', 'Bridge')])
 
     def test_static(self, *args, **kwargs):
-        """Test BridgedNIC with static IP configuration file creation
-        """
         m = defaults.Network()
         mt = defaults.NetworkLayout()
 
@@ -128,10 +122,9 @@ class TestDirectNIC():
         """Test bridgeless with DHCP configuration file creation
         """
         mt = defaults.NetworkLayout()
-        mt.configure_direct()
-
         m = defaults.Network()
 
+        mt.configure_direct()
         m.configure_dhcp("eth0")
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
@@ -147,10 +140,9 @@ class TestDirectNIC():
         """Test bridgeless with static IP configuration file creation
         """
         mt = defaults.NetworkLayout()
-        mt.configure_direct()
-
         m = defaults.Network()
 
+        mt.configure_direct()
         m.configure_static("ens1", "192.168.122.42", "255.255.255.0",
                            "192.168.122.1", None)
 
@@ -166,6 +158,121 @@ class TestDirectNIC():
                                 ('PEERNTP', 'yes')])
 
         assert "brens1" not in FakeFs.filemap
+
+
+@patch("ovirt.node.utils.fs.File", FakeFs.File)
+@patch.object(UdevNICInfo, "vendor")
+@patch.object(UdevNICInfo, "devtype")
+@patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
+class TestBond():
+    """Test bonding configuration
+    """
+    def setUp(self):
+        FakeFs.erase()
+        FakeFs.File("/etc/default/ovirt").touch()
+
+    def tearDown(self):
+        FakeFs.erase()
+
+    def test_direct_dhcp(self, *args, **kwargs):
+        mb = defaults.NicBonding()
+        mt = defaults.NetworkLayout()
+        m = defaults.Network()
+
+        mb.configure_8023ad("bond0", ["ens1", "ens2", "ens3"])
+        m.configure_dhcp("bond0")
+        mt.configure_direct()
+
+        run_tx_by_name(m.transaction(), "WriteConfiguration")
+
+        assert_ifcfg_has_items("bond0",
+                               [('BONDING_OPTS', 'mode=4'),
+                                ('BOOTPROTO', 'dhcp'),
+                                ('DEVICE', 'bond0'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('ONBOOT', 'yes'), ('PEERNTP', 'yes')])
+
+        assert_ifcfg_has_items("ens1",
+                               [('DEVICE', 'ens1'), ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
+
+        assert_ifcfg_has_items("ens2",
+                               [('DEVICE', 'ens2'), ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
+
+        assert_ifcfg_has_items("ens3",
+                               [('DEVICE', 'ens3'), ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
+
+        assert len(FakeFs.filemap) == (1 + 1 + 3)
+
+    def test_bridged_dhcp(self, *args, **kwargs):
+        mb = defaults.NicBonding()
+        mt = defaults.NetworkLayout()
+        m = defaults.Network()
+
+        mb.configure_8023ad("bond0", ["ens1", "ens2", "ens3"])
+        m.configure_dhcp("bond0")
+        mt.configure_bridged()
+
+        run_tx_by_name(m.transaction(), "WriteConfiguration")
+
+        assert_ifcfg_has_items("bond0",
+                               [('BONDING_OPTS', 'mode=4'),
+                                ('BRIDGE', 'brbond0'),
+                                ('DEVICE', 'bond0'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('ONBOOT', 'yes')])
+
+        assert_ifcfg_has_items("ens1",
+                               [('DEVICE', 'ens1'), ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
+
+        assert_ifcfg_has_items("ens2",
+                               [('DEVICE', 'ens2'), ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
+
+        assert_ifcfg_has_items("ens3",
+                               [('DEVICE', 'ens3'), ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
+
+        assert_ifcfg_has_items("brbond0",
+                               [('BOOTPROTO', 'dhcp'),
+                                ('DELAY', '0'),
+                                ('DEVICE', 'brbond0'),
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes'),
+                                ('TYPE', 'Bridge')])
+
+        assert len(FakeFs.filemap) == (1 + 1 + 3 + 1)
+
+    def test_bond_slave_as_primary(self, *args, **kwargs):
+        mb = defaults.NicBonding()
+        m = defaults.Network()
+
+        # ens1 is used as a slave, but then also as a primary device
+        # this doesn't work
+        mb.configure_8023ad("bond0", ["ens1", "ens2", "ens3"])
+        m.configure_dhcp("ens1")
+
+        try:
+            run_tx_by_name(m.transaction(), "WriteConfiguration")
+        except RuntimeError as e:
+            assert e.message == ("Bond slave can not be used as " +
+                                 "primary device")
+
+    def test_unused_bond(self, *args, **kwargs):
+        mb = defaults.NicBonding()
+        m = defaults.Network()
+
+        # bond0 is created, but ens42 is used
+        mb.configure_8023ad("bond0", ["ens1", "ens2", "ens3"])
+        m.configure_dhcp("ens42")
+
+        try:
+            run_tx_by_name(m.transaction(), "WriteConfiguration")
+        except RuntimeError as e:
+            assert e.message == "Bond configured but not used"
 
 
 def run_tx_by_name(txs, name):

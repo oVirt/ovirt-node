@@ -60,19 +60,25 @@ class NicConfig(base.Base):
     peerntp = None
     peerdns = None
 
+    master = None
+    slave = None
+    bonding_opts = None
+
     vlan_parent = None
 
     _backend = None
+
     _keys = ["bridge", "type", "bootproto", "ipaddr", "netmask",
              "gateway", "vlan", "device", "onboot", "hwaddr",
              "ipv6init", "ipv6forwarding", "ipv6_autoconf",
              "dhcpv6c", "ipv6addr", "ipv6_defaultgw", "delay",
-             "peerntp", "peerdns"]
+             "peerntp", "peerdns",
+             "master", "slave", "bonding_opts"]
 
     def __init__(self, ifname):
         super(NicConfig, self).__init__()
         self.ifname = ifname
-        self._backend = NicConfig.IfcfgBackend(self, ifname)
+        self._backend = self._backend_type(self, ifname)
         self.load()
 
     def exists(self):
@@ -101,6 +107,10 @@ class NicConfig(base.Base):
 
     def __str__(self):
         return self.build_str("ifname")
+
+    @staticmethod
+    def list():
+        return NicConfig._backend_type.list()
 
     class IfcfgBackend(ShellVarFile):
         filename_tpl = "/etc/sysconfig/network-scripts/ifcfg-%s"
@@ -147,6 +157,17 @@ class NicConfig(base.Base):
                 pcfg.unpersist(self.filename)
 
             self._fileobj.delete()
+
+        @staticmethod
+        def list():
+            """List all available configuration
+            """
+            configs = []
+            prefix = NicConfig.IfcfgBackend.filename_tpl % ""
+            for fn in os.listdir(os.path.dirname(prefix)):
+                configs.append(fn.replace("ifcfg-", ""))
+            return configs
+    _backend_type = IfcfgBackend
 
 
 def _aug_get_or_set(augpath, new_servers=None):

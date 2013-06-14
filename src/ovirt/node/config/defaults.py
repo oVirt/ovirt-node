@@ -20,10 +20,11 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, exceptions, valid, utils, config
 from ovirt.node.config.network import NicConfig
+from ovirt.node.exceptions import InvalidData
 from ovirt.node.utils import storage, process, fs, AugeasWrapper, console, \
     system
 from ovirt.node.utils.fs import ShellVarFile, File
-from ovirt.node.utils.network import NIC, Bridges
+from ovirt.node.utils.network import NIC, Bridges, Bonds
 import glob
 import logging
 import os
@@ -280,6 +281,8 @@ class Network(NodeConfigFileSection):
                 self._remove_ifcfg_configs()
 
             def _remove_devices(self):
+                process.call(["killall", "dhclient"])
+
                 vlans = utils.network.Vlans()
                 vifs = vlans.all_vlan_devices()
                 self.logger.debug("Attempting to delete all vlans: %s" % vifs)
@@ -294,6 +297,9 @@ class Network(NodeConfigFileSection):
                     bridges.delete(bifname)
                     if NicConfig(bifname).exists():
                         NicConfig(bifname).delete()
+
+                bonds = Bonds()
+                bonds.delete_all()
 
             def _remove_ifcfg_configs(self):
                 pat = NicConfig.IfcfgBackend.filename_tpl % "*"
@@ -310,15 +316,23 @@ class Network(NodeConfigFileSection):
             def commit(self):
                 m = Network().retrieve()
                 aug = AugeasWrapper()
-                topology = NetworkLayout().retrieve()["topology"]
-                if topology == "bridged":
-                    self.__write_bridged_config()
-                else:
-                    self.__write_direct_config()
 
-                has_network = "yes" if m["iface"] else "no"
+                bond = NicBonding().retrieve()
+                if bond["slaves"]:
+                    NicBonding().transaction().commit()
+
+                has_network = m["iface"] is not None
+                if has_network:
+                    topology = NetworkLayout().retrieve()["layout"]
+                    if topology == "bridged":
+                        self.__write_bridged_config()
+                    else:
+                        self.__write_direct_config()
+                else:
+                    topology = NetworkLayout().configure_direct()
+
                 aug.set("/files/etc/sysconfig/network/NETWORKING",
-                        has_network)
+                        "yes" if has_network else "no")
                 fs.Config().persist("/etc/sysconfig/network")
                 fs.Config().persist("/etc/hosts")
 
@@ -326,6 +340,7 @@ class Network(NodeConfigFileSection):
                 m = Network().retrieve()
                 m_dns = Nameservers().retrieve()
                 m_ipv6 = IPv6().retrieve()
+                m_bond = NicBonding().retrieve()
 
                 cfg.bootproto = m["bootproto"]
                 cfg.ipaddr = m["ipaddr"] or None
@@ -351,6 +366,10 @@ class Network(NodeConfigFileSection):
                                               m_ipv6["netmask"])
                     cfg.ipv6_defaultgw = m_ipv6["gateway"]
 
+                if m_bond["name"]:
+                    cfg.hwaddr = None
+                    cfg.bonding_opts = m_bond["options"]
+
             def __write_bridged_config(self):
                 m = Network().retrieve()
 
@@ -367,6 +386,7 @@ class Network(NodeConfigFileSection):
                                                m["vlanid"])
                 slave_ifname = slave_ifname_vlan if m["vlanid"] else m["iface"]
                 slave_cfg = NicConfig(slave_ifname)
+                slave_cfg.device = m["iface"]
                 slave_cfg.device = slave_ifname
                 slave_cfg.bridge = bridge_ifname
                 slave_cfg.hwaddr = NIC(m["iface"]).hwaddr
@@ -385,8 +405,8 @@ class Network(NodeConfigFileSection):
                 nic_ifname = nic_ifname_vlan if m["vlanid"] \
                     else m["iface"]
                 nic_cfg = NicConfig(nic_ifname)
-                self.__assign_common(nic_cfg)
                 nic_cfg.device = nic_ifname
+                self.__assign_common(nic_cfg)
                 nic_cfg.hwaddr = NIC(m["iface"]).hwaddr
 
                 nic_cfg.save()
@@ -420,6 +440,110 @@ class Network(NodeConfigFileSection):
         return tx
 
 
+class NicBonding(NodeConfigFileSection):
+    """Create a bonding device
+    - OVIRT_BOND
+
+    >>> from ovirt.node.utils import fs
+    >>> n = NicBonding(fs.FakeFs.File("dst"))
+    >>> n.update("bond0", ["ens1", "ens2", "ens3"], "mode=4")
+    >>> data = sorted(n.retrieve().items())
+    >>> data[:2]
+    [('name', 'bond0'), ('options', 'mode=4')]
+    >>> data [2:]
+    [('slaves', ['ens1', 'ens2', 'ens3'])]
+    """
+    keys = ("OVIRT_BOND_NAME",
+            "OVIRT_BOND_SLAVES",
+            "OVIRT_BOND_OPTIONS")
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, name, slaves, options):
+        if name is not None and not name.startswith("bond"):
+            raise InvalidData("Bond ifname must start with 'bond'")
+        if slaves is not None and type(slaves) is not list:
+            raise InvalidData("Slaves must be a list")
+        options = options or ""
+        return {"OVIRT_BOND_SLAVES": ",".join(slaves) if slaves else None,
+                "OVIRT_BOND_OPTIONS": options if name else None}
+
+    def retrieve(self):
+        cfg = super(NicBonding, self).retrieve()
+        cfg.update({"slaves": (cfg["slaves"].split(",") if cfg["slaves"]
+                               else [])})
+        return cfg
+
+    def configure_no_bond(self):
+        """Remove all bonding
+        """
+        return self.update(None, None, None)
+
+    def configure_8023ad(self, name, slaves):
+        return self.update(name, slaves, "mode=4")
+
+    def transaction(self):
+        bond = NicBonding().retrieve()
+
+        class RemoveConfigs(utils.Transaction.Element):
+            title = "Clean potential bond configurations"
+
+            def commit(self):
+                net = Network()
+                mnet = net.retrieve()
+                if mnet["iface"] and mnet["iface"].startswith("bond"):
+                    net.configure_no_networking()
+
+                for ifname in NicConfig.list():
+                    cfg = NicConfig(ifname)
+                    if cfg.master:
+                        self.logger.debug("Removing master from %s" % ifname)
+                        cfg.master = None
+                        cfg.slave = None
+                        cfg.save()
+                    elif ifname.startswith("bond"):
+                        self.logger.debug("Removing master %s" % ifname)
+                        cfg.delete()
+
+                Bonds().delete_all()
+
+        class WriteSlaveConfigs(utils.Transaction.Element):
+            title = "Writing bond slaves configuration"
+
+            def commit(self):
+                m = Network().retrieve()
+                if m["iface"] in bond["slaves"]:
+                    raise RuntimeError("Bond slave can not be used as " +
+                                       "primary device")
+
+                for slave in bond["slaves"]:
+                    slave_cfg = NicConfig(slave)
+                    slave_cfg.device = slave
+                    slave_cfg.slave = "yes"
+                    slave_cfg.master = bond["name"]
+                    slave_cfg.onboot = "yes"
+                    slave_cfg.save()
+
+        class WriteMasterConfig(utils.Transaction.Element):
+            title = "Writing bond master configuration"
+
+            def commit(self):
+                if bond["options"]:
+                    cfg = NicConfig(bond["name"])
+                    cfg.device = bond["name"]
+                    cfg.onboot = "yes"
+                    cfg.bonding_opts = bond["options"]
+
+                    cfg.save()
+
+        tx = utils.Transaction("Writing bond configuration")
+        if bond["slaves"]:
+            tx.append(WriteMasterConfig())
+            tx.append(WriteSlaveConfigs())
+        else:
+            tx.append(RemoveConfigs())
+        return tx
+
+
 class NetworkLayout(NodeConfigFileSection):
     """Sets the network topology
     - OVIRT_NETWORK_TOPOLOGY
@@ -428,19 +552,19 @@ class NetworkLayout(NodeConfigFileSection):
     >>> n = NetworkLayout(fs.FakeFs.File("dst"))
     >>> n.update("bridged")
     >>> sorted(n.retrieve().items())
-    [('topology', 'bridged')]
+    [('layout', 'bridged')]
     """
     keys = ("OVIRT_NETWORK_LAYOUT",)
-    known_topologies = ["bridged",
-                        # bridged way, a bridge is created for BOOTIF
+    known_layouts = ["bridged",
+                     # bridged way, a bridge is created for BOOTIF
 
-                        "direct"
-                        # The BOOTIF NIC is configured directly
-                        ]
+                     "direct"
+                     # The BOOTIF NIC is configured directly
+                     ]
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, topology):
-        assert topology in self.known_topologies
+    def update(self, layout):
+        assert layout in self.known_layouts
 
     def configure_bridged(self):
         return self.update("bridged")

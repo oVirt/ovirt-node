@@ -103,25 +103,32 @@ class UdevNICInfo(base.Base):
                     self._cached_device = d
 
         if not self._cached_device:
-            raise UnknownNicError("udev has no infos for %s" %
-                                  self.ifname)
+            self.logger.debug("udev has no infos for %s" % self.ifname)
+
         return self._cached_device
+
+    def __get_property(self, name):
+        return self._cached_device.get_property(name) if self.exists() \
+            else None
+
+    def exists(self):
+        return self._cached_device is not None
 
     @property
     def name(self):
-        return self._udev_device.get_property("INTERFACE")
+        return self.__get_property("INTERFACE")
 
     @property
     def vendor(self):
-        return self._udev_device.get_property("ID_VENDOR_FROM_DATABASE")
+        return self.__get_property("ID_VENDOR_FROM_DATABASE")
 
     @property
     def devtype(self):
-        return self._udev_device.get_property("DEVTYPE")
+        return self.__get_property("DEVTYPE")
 
     @property
     def devpath(self):
-        return self._udev_device.get_property("DEVPATH")
+        return self.__get_property("DEVPATH")
 
 
 class SysfsNICInfo(base.Base):
@@ -132,6 +139,9 @@ class SysfsNICInfo(base.Base):
     def __init__(self, ifname):
         super(SysfsNICInfo, self).__init__()
         self.ifname = ifname
+
+    def exists(self):
+        return os.path.exists("/sys/class/net/%s" % self.ifname)
 
     @property
     def driver(self):
@@ -148,9 +158,10 @@ class SysfsNICInfo(base.Base):
 
     @property
     def hwaddr(self):
-        #hwaddr = "unkown"
-        hwfilename = "/sys/class/net/%s/address" % self.ifname
-        hwaddr = ovirt.node.utils.fs.get_contents(hwfilename).strip()
+        hwaddr = None
+        if self.exists():
+            hwfilename = "/sys/class/net/%s/address" % self.ifname
+            hwaddr = ovirt.node.utils.fs.get_contents(hwfilename).strip()
         return hwaddr
 
     @property
@@ -260,7 +271,7 @@ class NIC(base.Base):
             raise UnknownNicError("Unknown network interface: '%s'" %
                                   self.ifname)
 
-        addresses = dict((f, (None, None)) for f in families)
+        addresses = dict((f, IPAddress(None, None)) for f in families)
 
         if False:
             # FIXME to hackish to convert addr - is_nm_managed(ifname):
@@ -330,10 +341,10 @@ class BridgedNIC(NIC):
     bridge_nic = None
     slave_nic = None
 
-    def __init__(self, snic, bnic):
+    def __init__(self, snic):
         super(BridgedNIC, self).__init__(snic.ifname)
         self.slave_nic = snic
-        self.bridge_nic = bnic
+        self.bridge_nic = NIC(snic.config.bridge)
         self.config = self.bridge_nic.config
 
     def exists(self):
@@ -379,6 +390,10 @@ class TaggedNIC(NIC):
     parent_nic = None
 
     def __init__(self, vnic):
+        """A unified API for tagged NICs
+        Args:
+            vnic: A NIC instance pointing to the tagged part of a device
+        """
         parent_ifname, _ = TaggedNIC._parent_and_vlanid_from_name(vnic.ifname)
         super(TaggedNIC, self).__init__(parent_ifname)
         self.vlan_nic = vnic
@@ -435,6 +450,56 @@ class TaggedNIC(NIC):
         return self.build_str(["ifname"], additional_pairs=pairs)
 
 
+class BondedNIC(NIC):
+    """A class to provide easy access to bonded NICs
+    """
+    master_nic = None
+    slave_nic = None
+
+    def __init__(self, snic):
+        """Handle snic like beeing a slave of a bond device
+        """
+        master_ifname = snic.config.master
+        super(BondedNIC, self).__init__(master_ifname)
+        self.slave_nic = snic
+        self.master_nic = NIC(master_ifname)
+
+    def exists(self):
+        return self.master_nic.exists()
+
+    def is_configured(self):
+        return self.master_nic.is_configured()
+
+    def has_link(self):
+        return self.master_nic.has_link()
+
+    def ipv4_address(self):
+        return self.master_nic.ipv4_address()
+
+    def ipv6_address(self):
+        return self.master_nic.ipv6_address()
+
+    def ip_addresses(self, families=["inet", "inet6"]):
+        return self.master_nic.ip_addresses(families=families)
+
+    def is_vlan(self):
+        return self.master_nic.is_vlan()
+
+    def has_vlans(self):
+        return self.master_nic.has_vlans()
+
+    def vlanids(self):
+        return self.master_nic.vlanids()
+
+    def identify(self):
+        self.slave_nic.identify()
+
+    def __str__(self):
+        pairs = {"slave": self.slave_nic.ifname,
+                 "master": self.master_nic.ifname}
+        return self.build_str(["ifname"], additional_pairs=pairs)
+
+
 class NodeNetwork(base.Base):
     def all_ifnames(self):
         return all_ifaces()
@@ -486,15 +551,16 @@ class NodeNetwork(base.Base):
         nic = NIC(ifname)
 
         if nic.config.bridge and nic.config.vlan:
-            nic = BridgedNIC(TaggedNIC(nic),
-                             NIC(nic.config.bridge))
+            nic = BridgedNIC(TaggedNIC(nic))
 
         elif nic.config.bridge:
-            nic = BridgedNIC(NIC(nic.ifname),
-                             NIC(nic.config.bridge))
+            nic = BridgedNIC(nic)
 
         elif nic.config.vlan:
-            nic = TaggedNIC(NIC(nic.ifname))
+            nic = TaggedNIC(nic)
+
+        elif nic.config.master:
+            nic = BondedNIC(nic)
 
         return nic
 
@@ -584,22 +650,28 @@ def _nm_address_to_str(family, ipaddr):
 
 
 def networking_status(ifname=None):
-    status = "Not connected"
-
-    nn = NodeNetwork()
-    nic = nn.build_nic_model(ifname) if ifname else nn.configured_nic()
-
+    status = "Unknown"
     addresses = []
-    if nic:
-        ifname = nic.ifname
 
-        addresses = nic.ip_addresses()
-        has_address = any([a is not None for a in addresses.values()])
+    try:
+        nn = NodeNetwork()
+        nic = nn.build_nic_model(ifname) if ifname else nn.configured_nic()
 
-        if nic.has_link():
-            status = "Connected (Link only, no IP)"
-        if has_address:
-            status = "Connected"
+        if nic and nic.exists():
+            status = "Not connected"
+
+            if nic:
+                ifname = nic.ifname
+
+                addresses = nic.ip_addresses()
+                has_address = any([a is not None for a in addresses.values()])
+
+                if nic.has_link():
+                    status = "Connected (Link only, no IP)"
+                if has_address:
+                    status = "Connected"
+    except UnknownNicError:
+        LOGGER.exception("Assume broken nic configuration")
 
     summary = (status, ifname, addresses)
     LOGGER.debug(summary)
@@ -734,3 +806,30 @@ class Bridges(base.Base):
             raise RuntimeError("Can no delete '%s', is no bridge" % ifname)
         process.call("ifconfig %s down" % ifname)
         process.call("ip link delete %s type bridge" % ifname)
+
+
+class Bonds(base.Base):
+    """Convenience API to access some bonding related stuff
+    """
+    basepath = "/proc/net/bonding"
+
+    def is_enabled(self):
+        """If bonding is enabled
+        """
+        return os.path.exists(self.basepath)
+
+    def ifnames(self):
+        """Return the ifnames of all bond devices
+        """
+        return [os.path.basename(b)
+                for b in os.listdir(self.basepath)]
+
+    def is_bond(self, ifname):
+        """Determins if ifname is a bond device
+        """
+        return ifname in self.ifnames()
+
+    def delete_all(self):
+        """Deletes all bond devices
+        """
+        process.call(["rmmod", "bonding"], shell=False)
