@@ -335,6 +335,7 @@ _start_ovirt_early () {
     #   ntp=server[,server]
     #   vlan=id
     #   network_layout=bridged|direct
+    #   bond=<bondname>[:<bondslaves>:[:<options>]]
     # static network configuration
     ip_address=
     ip_gateway=
@@ -346,6 +347,9 @@ _start_ovirt_early () {
     dns=
     ntp=
     network_layout=
+    bond_name=
+    bond_slaves=
+    bond_options=
 
     #   ssh_pwauth=[0|1]
     ssh_pwauth=
@@ -628,6 +632,9 @@ _start_ovirt_early () {
             network_layout=*)
             network_layout=${i#network_layout=}
             ;;
+            bond=*)
+            eval $(printf $i|awk -F: '{print "bond_name="$1; print "bond_slaves="$2; print "bond_options="$3;}')
+            ;;
             hostname=*)
             hostname=${i#hostname=}
             ;;
@@ -755,7 +762,7 @@ _start_ovirt_early () {
 
 
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout"
+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
