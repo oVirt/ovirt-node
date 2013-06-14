@@ -322,7 +322,7 @@ class Plugin(plugins.NodePlugin):
         else:
             self.logger.debug("No ipv6 interface configuration found")
 
-        mt = defaults.NetworkTopology()
+        mt = defaults.NetworkLayout()
         if layout_bridged:
             mt.configure_bridged()
 

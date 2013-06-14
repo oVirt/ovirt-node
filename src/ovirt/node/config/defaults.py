@@ -310,11 +310,11 @@ class Network(NodeConfigFileSection):
             def commit(self):
                 m = Network().retrieve()
                 aug = AugeasWrapper()
-                topology = NetworkTopology().retrieve()["topology"]
-                if topology == "direct":
-                    self.__write_direct_config()
-                else:
+                topology = NetworkLayout().retrieve()["topology"]
+                if topology == "bridged":
                     self.__write_bridged_config()
+                else:
+                    self.__write_direct_config()
 
                 has_network = "yes" if m["iface"] else "no"
                 aug.set("/files/etc/sysconfig/network/NETWORKING",
@@ -420,30 +420,30 @@ class Network(NodeConfigFileSection):
         return tx
 
 
-class NetworkTopology(NodeConfigFileSection):
+class NetworkLayout(NodeConfigFileSection):
     """Sets the network topology
     - OVIRT_NETWORK_TOPOLOGY
 
     >>> from ovirt.node.utils import fs
-    >>> n = NetworkTopology(fs.FakeFs.File("dst"))
-    >>> n.update("legacy")
+    >>> n = NetworkLayout(fs.FakeFs.File("dst"))
+    >>> n.update("bridged")
     >>> sorted(n.retrieve().items())
-    [('topology', 'legacy')]
+    [('topology', 'bridged')]
     """
-    keys = ("OVIRT_NETWORK_TOPOLOGY",)
-    known_topologies = ["legacy",
-                        # Legacy way, a bridge is created for BOOTIF
+    keys = ("OVIRT_NETWORK_LAYOUT",)
+    known_topologies = ["bridged",
+                        # bridged way, a bridge is created for BOOTIF
 
                         "direct"
                         # The BOOTIF NIC is configured directly
                         ]
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, topology="legacy"):
+    def update(self, topology):
         assert topology in self.known_topologies
 
     def configure_bridged(self):
-        return self.update("legacy")
+        return self.update("bridged")
 
     def configure_direct(self):
         return self.update("direct")

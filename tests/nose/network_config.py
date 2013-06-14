@@ -67,7 +67,9 @@ class TestBridgedNIC():
         """Test BridgedNIC with DHCP configuration file creation
         """
         m = defaults.Network()
+        mt = defaults.NetworkLayout()
 
+        mt.configure_bridged()
         m.configure_dhcp("eth0")
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
@@ -85,7 +87,9 @@ class TestBridgedNIC():
         """Test BridgedNIC with static IP configuration file creation
         """
         m = defaults.Network()
+        mt = defaults.NetworkLayout()
 
+        mt.configure_bridged()
         m.configure_static("ens1", "192.168.122.42", "255.255.255.0",
                            "192.168.122.1", None)
 
@@ -123,7 +127,7 @@ class TestDirectNIC():
     def test_dhcp(self, *args, **kwargs):
         """Test bridgeless with DHCP configuration file creation
         """
-        mt = defaults.NetworkTopology()
+        mt = defaults.NetworkLayout()
         mt.configure_direct()
 
         m = defaults.Network()
@@ -142,7 +146,7 @@ class TestDirectNIC():
     def test_static(self, *args, **kwargs):
         """Test bridgeless with static IP configuration file creation
         """
-        mt = defaults.NetworkTopology()
+        mt = defaults.NetworkLayout()
         mt.configure_direct()
 
         m = defaults.Network()

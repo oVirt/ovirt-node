@@ -334,7 +334,7 @@ _start_ovirt_early () {
     #   dns=server[,server]
     #   ntp=server[,server]
     #   vlan=id
-    #   network_topology=bridged|direct
+    #   network_layout=bridged|direct
     # static network configuration
     ip_address=
     ip_gateway=
@@ -345,7 +345,7 @@ _start_ovirt_early () {
     ipv6=
     dns=
     ntp=
-    network_topology=
+    network_layout=
 
     #   ssh_pwauth=[0|1]
     ssh_pwauth=
@@ -625,8 +625,8 @@ _start_ovirt_early () {
             ntp=*)
             ntp=${i#ntp=}
             ;;
-            network_topology=*)
-            network_topology=${i#network_topology=}
+            network_layout=*)
+            network_layout=${i#network_layout=}
             ;;
             hostname=*)
             hostname=${i#hostname=}
@@ -755,7 +755,7 @@ _start_ovirt_early () {
 
 
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_topology"
+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
