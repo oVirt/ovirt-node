@@ -184,7 +184,7 @@ class DeviceDetails(ui.Label):
 
         width = max([len(o[0]) for o in lines])
         txt = "Disk Details\n"
-        txt += "\n".join(["%s: %s" % (("{:%d}" % width).format(a), b)
+        txt += "\n".join(["%s: %s" % (("{0:%d}" % width).format(a), b)
                           for a, b in lines])
         self.text(txt)
 
