@@ -449,7 +449,7 @@ class Entry(NoticeDecoration):
         self._label = urwid.Text(label)
         self._label_attrmap = urwid.AttrMap(self._label,
                                             "plugin.widget.entry.label")
-        self._edit = EditWithChars(mask=mask)
+        self._edit = EditWithChars(mask=mask, wrap="clip")
         self._edit_attrmap = urwid.AttrMap(self._edit, "plugin.widget.entry")
         self._linebox = urwid.LineBox(self._edit_attrmap)
         self._linebox_attrmap = urwid.AttrMap(self._linebox,
