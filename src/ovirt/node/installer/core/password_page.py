@@ -44,8 +44,8 @@ class Plugin(plugins.NodePlugin):
         ws = [ui.Header("header[0]",
                         "Require a password for local console access?"),
               ui.Divider("divider[0]"),
-              ui.PasswordEntry("root.password", "Password:"),
-              ui.PasswordEntry("root.password_confirmation",
+              ui.PasswordEntry("admin.password", "Password:"),
+              ui.PasswordEntry("admin.password_confirmation",
                                "Confirm Password:"),
               ]
         self.widgets.add(ws)
@@ -56,22 +56,22 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        if changes.contains_any(["root.password",
-                                 "root.password_confirmation"]):
+        if changes.contains_any(["admin.password",
+                                 "admin.password_confirmation"]):
             self._model.update(changes)
-            root_pw, root_pw_conf = self._model.get("root.password", ""), \
-                self._model.get("root.password_confirmation", "")
+            admin_pw, admin_pw_conf = self._model.get("admin.password", ""), \
+                self._model.get("admin.password_confirmation", "")
 
-            if root_pw != root_pw_conf:
+            if admin_pw != admin_pw_conf:
                 raise exceptions.InvalidData("Passwords must be the same.")
             else:
-                self.widgets["root.password"].valid(True)
-                self.widgets["root.password_confirmation"].valid(True)
+                self.widgets["admin.password"].valid(True)
+                self.widgets["admin.password_confirmation"].valid(True)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
         if changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
-        elif changes.contains_any(["root.password_confirmation",
+        elif changes.contains_any(["admin.password_confirmation",
                                    "button.next"]):
             self.application.ui.navigate.to_next_plugin()

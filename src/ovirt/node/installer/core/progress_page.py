@@ -157,7 +157,7 @@ class InstallerThread(threading.Thread):
         if cfg["method"] in ["install"]:
             tx += [self.UpdateDefaultsFromModels(cfg),
                    self.PartitionAndFormat(cfg["installation.devices"]),
-                   self.SetPassword(cfg["root.password_confirmation"]),
+                   self.SetPassword(cfg["admin.password_confirmation"]),
                    self.InstallImageAndBootloader(cfg["boot.device"]),
                    self.SetKeyboardLayout(cfg["keyboard.layout"])]
 
@@ -234,16 +234,16 @@ class InstallerThread(threading.Thread):
     class SetPassword(utils.Transaction.Element):
         title = "Setting Admin Password"
 
-        def __init__(self, root_password):
+        def __init__(self, admin_password):
             super(InstallerThread.SetPassword, self).__init__()
-            self.root_password = root_password
+            self.admin_password = admin_password
 
         def commit(self):
             from ovirtnode import password
-            admin_pw_set = password.set_password(self.root_password, "admin")
+            admin_pw_set = password.set_password(self.admin_password, "admin")
             self.logger.debug("Setting admin password")
             if not admin_pw_set:
-                raise RuntimeError("Failed to set root password")
+                raise RuntimeError("Failed to set admin password")
 
     class InstallImageAndBootloader(utils.Transaction.Element):
         def __init__(self, dst=None):
