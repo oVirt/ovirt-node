@@ -232,7 +232,7 @@ class InstallerThread(threading.Thread):
                 raise RuntimeError("Failed to partition/format")
 
     class SetPassword(utils.Transaction.Element):
-        title = "Setting Root Password"
+        title = "Setting Admin Password"
 
         def __init__(self, root_password):
             super(InstallerThread.SetPassword, self).__init__()
