@@ -8,6 +8,7 @@
 %define is_centos_systemd %(test 0%{?centos} -ne 0 && test %{?centos} -ge 7 && echo 1 || echo 0)
 %define is_systemd %( test %{is_rhel_systemd} -eq 1 || test %{is_centos_systemd} = 1 || test %{is_fedora_systemd} = 1 && echo 1 || echo 0)
 %define dracutdir %(test -e /usr/share/dracut && echo "/usr/share/dracut/modules.d" || echo "/usr/lib/dracut/modules.d")
+%define is_el6 %(test 0%{centos} -eq 06 || test 0%{rhel} -eq 06 && echo 1 || echo 0)
 
 
 Summary:        The %{product_family} daemons/scripts
@@ -347,12 +348,19 @@ patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-3d88d27810acc7782618d67a03f
 patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
 %endif
 #use all hard-coded defaults for multipath
-# except for getuid_callout where we need replace-whitespace
+# except for getuid_callout where we need to replace-whitespace on EL6
+%if %{is_el6}
 cat > /etc/multipath.conf << \EOF_multipath_conf
 defaults {
     getuid_callout "/lib/udev/scsi_id --replace-whitespace --whitelisted --device=/dev/%n"
 }
 EOF_multipath_conf
+%else
+cat > /etc/multipath.conf << \EOF_multipath_conf2
+#Use Defaults
+EOF_multipath_conf2
+%endif
+
 #release info for dracut to pick it up into initramfs
 # remove symlink to keep original redhat-release
 rm -f /etc/system-release
