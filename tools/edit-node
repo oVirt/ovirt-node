@@ -1585,10 +1585,13 @@ def main():
             selinux_enforcing = None
             failed = False
             try:
-                if selinux.security_getenforce():
-                    print "Setting SELinux Permissive During Yum Install"
-                    selinux_enforcing = True
-                    selinux.security_setenforce(0)
+                try:
+                    if selinux.security_getenforce():
+                        print "Setting SELinux Permissive During Yum Install"
+                        selinux_enforcing = True
+                        selinux.security_setenforce(0)
+                except OSError:
+                    print "Warning: the state of SELinux is disabled"
                 if options.install:
                     print "Installing Packages"
                     if not editor._install_pkgs(options):
