@@ -24,6 +24,7 @@ from ovirt.node.utils import fs
 from ovirt.node.utils.fs import ShellVarFile, FakeFs
 from ovirt.node.utils.network import UdevNICInfo, SysfsNICInfo
 import logging
+import pprint
 
 # http://ivory.idyll.org/articles/nose-intro.html
 
@@ -70,11 +71,11 @@ class TestBridgedNIC():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
-        assert_ifcfg_has_items("eth0",
+        assert ifcfg_has_items("eth0",
                                [('BRIDGE', 'breth0'), ('DEVICE', 'eth0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes')])
-        assert_ifcfg_has_items("breth0",
+        assert ifcfg_has_items("breth0",
                                [('BOOTPROTO', 'dhcp'), ('DELAY', '0'),
                                 ('DEVICE', 'breth0'), ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'), ('TYPE', 'Bridge')])
@@ -89,11 +90,11 @@ class TestBridgedNIC():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
-        assert_ifcfg_has_items("ens1",
+        assert ifcfg_has_items("ens1",
                                [('BRIDGE', 'brens1'), ('DEVICE', 'ens1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes')])
-        assert_ifcfg_has_items("brens1",
+        assert ifcfg_has_items("brens1",
                                [('DELAY', '0'),
                                 ('DEVICE', 'brens1'),
                                 ('GATEWAY', '192.168.122.1'),
@@ -129,7 +130,7 @@ class TestDirectNIC():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
-        assert_ifcfg_has_items("eth0",
+        assert ifcfg_has_items("eth0",
                                [('BOOTPROTO', 'dhcp'), ('DEVICE', 'eth0'),
                                ('HWADDR', 'th:em:ac:ad:dr'), ('ONBOOT', 'yes'),
                                ('PEERNTP', 'yes')])
@@ -148,7 +149,7 @@ class TestDirectNIC():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
-        assert_ifcfg_has_items("ens1",
+        assert ifcfg_has_items("ens1",
                                [('DEVICE', 'ens1'),
                                 ('GATEWAY', '192.168.122.1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
@@ -161,6 +162,8 @@ class TestDirectNIC():
 
 
 @patch("ovirt.node.utils.fs.File", FakeFs.File)
+@patch("os.listdir", FakeFs.listdir)
+@patch("ovirt.node.utils.process.call")
 @patch.object(UdevNICInfo, "vendor")
 @patch.object(UdevNICInfo, "devtype")
 @patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
@@ -185,22 +188,22 @@ class TestBond():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
-        assert_ifcfg_has_items("bond0",
+        assert ifcfg_has_items("bond0",
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'bond0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes'), ('PEERNTP', 'yes')])
 
-        assert_ifcfg_has_items("ens1",
+        assert ifcfg_has_items("ens1",
                                [('DEVICE', 'ens1'), ('MASTER', 'bond0'),
                                 ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
-        assert_ifcfg_has_items("ens2",
+        assert ifcfg_has_items("ens2",
                                [('DEVICE', 'ens2'), ('MASTER', 'bond0'),
                                 ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
-        assert_ifcfg_has_items("ens3",
+        assert ifcfg_has_items("ens3",
                                [('DEVICE', 'ens3'), ('MASTER', 'bond0'),
                                 ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
@@ -217,27 +220,28 @@ class TestBond():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
-        assert_ifcfg_has_items("bond0",
+        assert ifcfg_has_items("bond0",
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BRIDGE', 'brbond0'),
                                 ('DEVICE', 'bond0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes')])
 
-        assert_ifcfg_has_items("ens1",
+        assert ifcfg_has_items("ens1",
                                [('DEVICE', 'ens1'), ('MASTER', 'bond0'),
                                 ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
-        assert_ifcfg_has_items("ens2",
+        assert ifcfg_has_items("ens2",
                                [('DEVICE', 'ens2'), ('MASTER', 'bond0'),
                                 ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
-        assert_ifcfg_has_items("ens3",
+        assert ifcfg_has_items("ens3",
                                [('DEVICE', 'ens3'), ('MASTER', 'bond0'),
                                 ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
-        assert_ifcfg_has_items("brbond0",
-                               [('BOOTPROTO', 'dhcp'),
+        assert ifcfg_has_items("brbond0",
+                               [('BONDING_OPTS', 'mode=4'),
+                                ('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'brbond0'),
                                 ('ONBOOT', 'yes'),
@@ -255,11 +259,14 @@ class TestBond():
         mb.configure_8023ad("bond0", ["ens1", "ens2", "ens3"])
         m.configure_dhcp("ens1")
 
+        had_exception = False
         try:
             run_tx_by_name(m.transaction(), "WriteConfiguration")
         except RuntimeError as e:
+            had_exception = True
             assert e.message == ("Bond slave can not be used as " +
                                  "primary device")
+        assert had_exception
 
     def test_unused_bond(self, *args, **kwargs):
         mb = defaults.NicBonding()
@@ -274,6 +281,25 @@ class TestBond():
         except RuntimeError as e:
             assert e.message == "Bond configured but not used"
 
+    def test_no_bond_and_clean(self, *args, **kwargs):
+        mb = defaults.NicBonding()
+
+        self.test_unused_bond()
+
+        # bond0 is created, but ens42 is used
+        mb.configure_no_bond()
+        mb.transaction().run()
+
+        pprint.pprint(FakeFs.filemap)
+
+        assert ifcfgfilename("bond0") not in FakeFs.filemap
+        assert ifcfg_has_items("ens1", [('DEVICE', 'ens1'),
+                                        ('ONBOOT', 'yes')])
+        assert ifcfg_has_items("ens2", [('DEVICE', 'ens2'),
+                                        ('ONBOOT', 'yes')])
+        assert ifcfg_has_items("ens3", [('DEVICE', 'ens3'),
+                                        ('ONBOOT', 'yes')])
+
 
 def run_tx_by_name(txs, name):
     tx = None
@@ -285,10 +311,14 @@ def run_tx_by_name(txs, name):
     tx()
 
 
-def assert_ifcfg_has_items(ifname, expected_items):
-    ifcfg = ShellVarFile("/etc/sysconfig/network-scripts/ifcfg-" + ifname)
+def ifcfgfilename(ifname):
+    return "/etc/sysconfig/network-scripts/ifcfg-" + ifname
+
+
+def ifcfg_has_items(ifname, expected_items):
+    ifcfg = ShellVarFile(ifcfgfilename(ifname))
     ifcfg_items = sorted(ifcfg.get_dict().items())
     logging.info("ifcfg : %s" % ifname)
     logging.info("expect: %s" % expected_items)
     logging.info("got   : %s" % ifcfg_items)
-    assert ifcfg_items == expected_items
+    return ifcfg_items == expected_items
