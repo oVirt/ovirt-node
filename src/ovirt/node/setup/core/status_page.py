@@ -75,8 +75,7 @@ class Plugin(plugins.NodePlugin):
         # Network related widgets, appearing in one row
         network_widgets = [ui.KeywordLabel("networking",
                                            aligned("Networking: ")),
-                           ui.KeywordLabel("networking.bridge",
-                                           "Bridge: "),
+                           ui.Label("networking.bridge", ""),
                            ]
 
         action_widgets = [ui.Button("action.lock", "Lock"),

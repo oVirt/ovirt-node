@@ -32,10 +32,45 @@ TODO use inotify+thread or so to monitor resolv.conf/ntp.conf for changes and
 """
 
 
+class NicTable(ui.Table):
+    def __init__(self, path, height=3, multi=False):
+        header = "Device  Status       Model         MAC Address"
+        if multi:
+            header = "    " + header
+
+        super(NicTable, self).__init__(path,
+                                       "Available System NICs",
+                                       header,
+                                       self._get_nics(),
+                                       height=height, multi=multi),
+
+    def _get_nics(self):
+        def justify(txt, l):
+            txt = txt if txt else ""
+            return txt.ljust(l)[0:l]
+        node_nics = []
+        first_nic = None
+        model = utils.network.NodeNetwork()
+        for name, nic in sorted(model.nics().items()):
+            if first_nic is None:
+                first_nic = name
+            is_cfg = "Configured" if nic.is_configured() else "Unconfigured"
+            description = " ".join([justify(nic.ifname, 7),
+                                    justify(is_cfg, 12),
+                                    justify(nic.vendor, 13),
+                                    justify(nic.hwaddr, 17)
+                                    ])
+            node_nics.append((name, description))
+        return node_nics
+
+
 class Plugin(plugins.NodePlugin):
     """This is the network page
     """
-    _model_extra = {}
+    _model_extra = {"bond.slaves.selected": []}
+
+    _nic_details_group = None
+    _bond_group = None
 
     def __init__(self, app):
         super(Plugin, self).__init__(app)
@@ -48,6 +83,11 @@ class Plugin(plugins.NodePlugin):
             "dialog.nic.ipv6.netmask", "dialog.nic.ipv6.gateway",
             "dialog.nic.vlanid",
             "dialog.nic.layout_bridged"])
+
+        self._bond_group = self.widgets.group([
+            "bond.name",
+            "bond.slaves",
+            "bond.options"])
 
     def name(self):
         return "Network"
@@ -62,6 +102,9 @@ class Plugin(plugins.NodePlugin):
             "dns[1]": "",
             "ntp[0]": "",
             "ntp[1]": "",
+            "bond.name": "",
+            "bond.slaves.selected": "",
+            "bond.options": "mode=balance-rr miimode=100"
         }
 
         model["hostname"] = defaults.Hostname().retrieve()["hostname"] or \
@@ -86,6 +129,9 @@ class Plugin(plugins.NodePlugin):
         ip_or_empty = valid.IPAddress() | valid.Empty()
         fqdn_ip_or_empty = valid.FQDNOrIPAddress() | valid.Empty()
 
+        valid_bond_name = valid.RegexValidator("^bond[0-9]+|007$",
+                                               "a valid bond name (bond[0-9])")
+
         return {"hostname": fqdn_ip_or_empty,
                 "dns[0]": ip_or_empty,
                 "dns[1]": ip_or_empty,
@@ -100,12 +146,20 @@ class Plugin(plugins.NodePlugin):
                 "dialog.nic.ipv6.gateway": valid.IPv6Address() | valid.Empty(),
                 "dialog.nic.vlanid": (valid.Number(bounds=[0, 4096]) |
                                       valid.Empty()),
+
+                "bond.name": valid_bond_name,
+                "bond.options": valid.Text(min_length=1)
                 }
 
     def ui_content(self):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
+        bond_status = ", ".join(defaults.NicBonding().retrieve()["slaves"]
+                                or [])
+        bond_lbl = "Remove bond (%s)" % bond_status \
+            if bond_status else "Create Bond"
+
         ws = [ui.Header("header[0]", "System Identification"),
               ui.Entry("hostname", "Hostname:"),
               ui.Divider("divider[0]"),
@@ -115,35 +169,18 @@ class Plugin(plugins.NodePlugin):
               ui.Entry("ntp[0]", "NTP Server 1:"),
               ui.Entry("ntp[1]", "NTP Server 2:"),
               ui.Divider("divider[2]"),
-              ui.Table("nics", "Available System NICs",
-                       "Device  Status        Model          MAC Address",
-                       self._get_nics()),
-              ui.Button("button.ping", "Ping")
+              NicTable("nics", height=3),
+
+              ui.Row("row[0]",
+                     [ui.Button("button.ping", "Ping"),
+                      ui.Button("button.toggle_bond", bond_lbl)
+                      ])
               ]
 
         page = ui.Page("page", ws)
         # Save it "locally" as a dict, for better accessability
         self.widgets.add(page)
         return page
-
-    def _get_nics(self):
-        def justify(txt, l):
-            txt = txt if txt else ""
-            return txt.ljust(l)[0:l]
-        node_nics = []
-        first_nic = None
-        model = utils.network.NodeNetwork()
-        for name, nic in sorted(model.nics().items()):
-            if first_nic is None:
-                first_nic = name
-            is_cfg = "Configured" if nic.is_configured() else "Unconfigured"
-            description = " ".join([justify(nic.ifname, 7),
-                                    justify(is_cfg, 13),
-                                    justify(nic.vendor, 14),
-                                    justify(nic.hwaddr, 17)
-                                    ])
-            node_nics.append((name, description))
-        return node_nics
 
     def _build_dialog(self, path, txt, widgets):
         self.widgets.add(widgets)
@@ -193,6 +230,12 @@ class Plugin(plugins.NodePlugin):
                     self.widgets["dialog.nic.vlanid"].enabled(True)
             self.widgets["dialog.nic.ipv6.bootproto"].enabled(True)
 
+        if "bond.slaves" in changes:
+            self._model_extra["bond.slaves.selected"] = \
+                self.widgets["bond.slaves"].selection()
+        elif "bond.name" in changes and changes["bond.name"] == "007":
+            self.widgets["bond.options"].text("Bartender: Shaken or stirred?")
+
     def on_merge(self, effective_changes):
         self.logger.info("Saving network stuff")
         changes = Changeset(self.pending_changes(False))
@@ -202,6 +245,9 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.info("Effective changes %s" % effective_changes)
         self.logger.debug("Effective Model: %s" % effective_model)
+
+        # This object will contain all transaction elements to be executed
+        txs = utils.Transaction("Network Interface Configuration")
 
         # Special case: A NIC was selected, display that dialog!
         if "nics" in changes and len(changes) == 1:
@@ -215,6 +261,22 @@ class Plugin(plugins.NodePlugin):
             self._nic_dialog.close()
             return
 
+        if "button.toggle_bond" in changes:
+            m_bond = defaults.NicBonding()
+            mnet = defaults.Network()
+            if m_bond.retrieve()["slaves"]:
+                if mnet.retrieve()["iface"] == m_bond.retrieve()["name"]:
+                    # Remove network config if primary devce was this
+                    # bond
+                    mnet.configure_no_networking()
+                m_bond.configure_no_bond()
+                txs += m_bond.transaction()
+                txs += mnet.transaction()
+            else:
+                self._bond_dialog = CreateBondDialog("dialog.bond")
+                self.widgets.add(self._bond_dialog)
+                return self._bond_dialog
+
         if "button.ping" in changes:
             self.logger.debug("Opening ping page")
             self.application.switch_to_plugin(ping.Plugin)
@@ -225,9 +287,6 @@ class Plugin(plugins.NodePlugin):
             utils.network.NIC(ifname).identify()
             self.application.notice("Flashing lights now")
             return
-
-        # This object will contain all transaction elements to be executed
-        txs = utils.Transaction("DNS and NTP configuration")
 
         e_changes_h = plugins.Changeset(effective_changes)
 
@@ -265,6 +324,18 @@ class Plugin(plugins.NodePlugin):
             # Fetch the values for the nic keys, they are used as arguments
             args = effective_model.values_for(self._nic_details_group)
             txs += self._configure_nic(*args)
+
+        if effective_changes.contains_any(self._bond_group):
+            mb = defaults.NicBonding()
+            mnet = defaults.Network()
+            args = effective_model.values_for(["bond.name",
+                                               "bond.slaves.selected",
+                                               "bond.options"])
+            self.logger.debug("args: %s" % args)
+            mb.update(*args)
+            txs += mb.transaction()
+            txs += mnet.transaction()
+            self._bond_dialog.close()
 
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
@@ -353,6 +424,7 @@ class NicDetailsDialog(ui.Dialog):
 
         model = defaults.Network().retrieve()
         ip6model = defaults.IPv6().retrieve()
+        m_layout = defaults.NetworkLayout().retrieve()
 
         self.logger.debug("nic: %s" % nic)
         self.logger.debug("model: %s" % model)
@@ -400,6 +472,7 @@ class NicDetailsDialog(ui.Dialog):
             "dialog.nic.ipv6.netmask": ip6netmask,
             "dialog.nic.ipv6.gateway": ip6gateway,
             "dialog.nic.vlanid": vlanid,
+            "dialog.nic.layout_bridged": m_layout["layout"] == "bridged",
         })
 
         self.logger.debug("model: %s" % self.plugin.model())
@@ -480,3 +553,13 @@ class NicDetailsDialog(ui.Dialog):
                         ui.CloseButton("dialog.nic.close", "Close")
                         ]
         self.plugin._nic_details_group.enabled(False)
+
+
+class CreateBondDialog(ui.Dialog):
+    def __init__(self, path):
+        widgets = [ui.Entry("bond.name", "Name:"),
+                   ui.Divider("bond.divider[0]"),
+                   ui.Entry("bond.options", "Options:"),
+                   ui.Divider("bond.divider[1]"),
+                   NicTable("bond.slaves", multi=True)]
+        super(CreateBondDialog, self).__init__(path, "Create Bond", widgets)
