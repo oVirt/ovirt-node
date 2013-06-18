@@ -56,6 +56,7 @@ class Network:
         from ovirt.node.config.defaults import Network
         return Network().commit()
 
+
 def convert_to_biosdevname():
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
         # check for appropriate bios version
@@ -111,22 +112,23 @@ def convert_to_biosdevname():
     return True
 
 
-def network_auto():
-    try:
-        from ovirt.node.config.defaults import Network, Nameservers, \
-            Timeservers
-        from ovirt.node.utils.console import TransactionProgress
+def build_network_auto_transaction():
+    from ovirt.node.config.defaults import Network, Nameservers, \
+        Timeservers, Hostname
 
-        txs = Transaction("Automatic Installation")
+    txs = Transaction("Automatic Installation")
 
-        mnet = Network()
-        netmodel = mnet.retrieve()
+    mhostname = Hostname()
+    txs += mhostname.transaction()
 
-        logger.debug("Got netmodel: %s" % netmodel)
-
+    mnet = Network()
+    netmodel = mnet.retrieve()
+    logger.debug("Got netmodel: %s" % netmodel)
+    if netmodel["iface"]:
+        # Only running net configuration if bootif is given
         # use dhcp if bootif is given
-        if netmodel["iface"] and not netmodel["ipaddr"]:
-            netmodel.update(bootproto="dhcp")
+        if not netmodel["ipaddr"]:
+            mnet.update(bootproto="dhcp")
 
         txs += mnet.transaction()
 
@@ -136,7 +138,4 @@ def network_auto():
         mntp = Timeservers()
         txs += mntp.transaction()
 
-        TransactionProgress(txs, is_dry=False).run()
-    except:
-        logger.warn("Network Configuration Failed....")
-        return False
+    return txs

@@ -21,6 +21,7 @@
 from ovirt.node import base, utils
 from ovirt.node.utils import process
 import os
+import logging
 import rpm
 import system_config_keyboard.keyboard
 import time
@@ -30,6 +31,9 @@ import subprocess
 A module to access system wide stuff
 e.g. services, reboot ...
 """
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def reboot():
@@ -87,14 +91,15 @@ def which(file):
 def service(name, cmd, check=True):
     """Convenience wrapper to handle service interactions
     """
-    kwargs = {"shell": False}
-    if check:
-        _call = process.check_output
-    else:
-        _call = process.call
-        kwargs.update({"stderr": process.STDOUT})
-
-    r = _call(["service", name, cmd], **kwargs)
+    try:
+        kwargs = {"shell": False,
+                  "stderr": process.PIPE}
+        r = process.check_output(["service", name, cmd], **kwargs)
+    except process.CalledProcessError as e:
+        r = e.returncode
+        LOGGER.exception("Service: %s" % e.output)
+        if do_raise:
+            raise
     return r
 
 

@@ -18,7 +18,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-import os
 import sys
 from ovirtnode.ovirtfunctions import *
 from ovirtnode.storage import *
@@ -26,72 +25,123 @@ from ovirtnode.install import *
 from ovirtnode.network import *
 from ovirtnode.log import *
 from ovirtnode.kdump import *
-from ovirt.node.config import defaults
+from ovirt.node.utils.console import TransactionProgress
 
-def config_networking():
-   # network configuration
-    print "Configuring Network"
-    if OVIRT_VARS["OVIRT_BOOTIF"] != "":
-        network_auto()
-    if "OVIRT_HOSTNAME" in OVIRT_VARS:
-        cfg = defaults.Hostname()
-        tx = cfg.transaction()
-        tx()
 
-# setup network before storage for iscsi installs
-if is_iscsi_install():
-    config_networking()
+class ConfigureNetworking(Transaction.Element):
+    title = "Configuring network"
 
-if not is_stateless():
-    print "Performing automatic disk partitioning"
+    def commit(self):
+        build_network_auto_transaction().run()
 
-    if storage_auto():
-        print "Completed automatic disk partitioning"
-        # store /etc/shadow if adminpw/rootpw are set,
-        # handled already in ovirt-early
-        file = open("/proc/cmdline")
-        args = file.read()
-        if "adminpw" in args or "rootpw" in args:
-            print "Storing /etc/shadow"
-            ovirt_store_config("/etc/passwd")
-            ovirt_store_config("/etc/shadow")
-        file.close()
-    else:
-        if not is_iscsi_install():
-            config_networking()
-        print "Automatic installation failed. Please review /var/log/ovirt.log"
-        sys.exit(1)
 
-if not is_iscsi_install():
-    config_networking()
-#set ssh_passwd_auth
-if "OVIRT_SSH_PWAUTH" in OVIRT_VARS:
-    if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "yes":
-        augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", \
-                "yes")
-    elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "no":
-        augtool("set", "/files/etc/ssh/sshd_config/PasswordAuthentication", \
-                "no")
-    ovirt_store_config("/etc/ssh/sshd_config")
-    system_closefds("service sshd restart &> /dev/null")
+class AutomaticDiskPartitioning(Transaction.Element):
+    title = "Performing automatic disk partitioning"
 
-# iscsi handled in install.py
-print "Configuring Logging"
-logging_auto()
-try:
-    from ovirt_config_setup.collectd import *
-    print "Configuring Collectd"
-    collectd_auto()
-except:
-    pass
-install = Install()
-print "Configuring KDump"
-kdump_auto()
-if not is_stateless():
-    print "Installing Bootloader"
-    if install.ovirt_boot_setup():
-        print "Bootloader Installation Completed"
-    else:
-        print "Bootloader Installation Failed"
-        sys.exit(1)
+    def commit(self):
+        if storage_auto():
+            # store /etc/shadow if adminpw/rootpw are set,
+            # handled already in ovirt-early
+            file = open("/proc/cmdline")
+            args = file.read()
+            if "adminpw" in args or "rootpw" in args:
+                print "Storing /etc/shadow"
+                ovirt_store_config("/etc/passwd")
+                ovirt_store_config("/etc/shadow")
+            file.close()
+        else:
+            raise RuntimeError("Automatic installation failed. " +
+                               "Please review /var/log/ovirt.log")
+
+
+class EnableSshPasswordAuthentication(Transaction.Element):
+    title = "Enabling SSH password authentication"
+
+    def commit(self):
+        if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "yes":
+            augtool("set",
+                    "/files/etc/ssh/sshd_config/PasswordAuthentication",
+                    "yes")
+        elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "no":
+            augtool("set",
+                    "/files/etc/ssh/sshd_config/PasswordAuthentication",
+                    "no")
+        ovirt_store_config("/etc/ssh/sshd_config")
+        system_closefds("service sshd restart &> /dev/null")
+
+
+class ConfigureLogging(Transaction.Element):
+    title = "Configuring Logging"
+
+    def commit(self):
+        logging_auto()
+
+
+class ConfigureCollectd(Transaction.Element):
+    title = "Configuring Collectd"
+
+    def commit(self):
+        try:
+            from ovirt_config_setup.collectd import collectd_auto
+            collectd_auto()
+        except:
+            pass
+
+
+class PerformInstallation(Transaction.Element):
+    title = "Transferring image"
+
+    def commit(self):
+        Install()
+
+
+class ConfigureKdump(Transaction.Element):
+    title = "Configuring KDump"
+
+    def commit(self):
+        kdump_auto()
+
+
+class InstallBootloader(Transaction.Element):
+    title = "Installing Bootloader"
+
+    def commit(self):
+        install = Install()
+        if not install.ovirt_boot_setup():
+            raise RuntimeError("Bootloader Installation Failed")
+
+
+if __name__ == "__main__":
+    tx = Transaction("Automatic Installation")
+
+    # setup network before storage for iscsi installs
+    if is_iscsi_install():
+        tx.append(ConfigureNetworking())
+
+    if not is_stateless():
+        tx.append(AutomaticDiskPartitioning())
+
+    if not is_iscsi_install():
+        tx.append(ConfigureNetworking())
+
+    #set ssh_passwd_auth
+    if "OVIRT_SSH_PWAUTH" in OVIRT_VARS:
+        tx.append(EnableSshPasswordAuthentication())
+
+    tx.append(ConfigureLogging())
+
+    tx.append(ConfigureCollectd())
+
+    tx.append(PerformInstallation())  # FIXME needed??
+
+    tx.append(ConfigureKdump())
+
+    if not is_stateless():
+        tx.append(InstallBootloader())
+
+    TransactionProgress(tx, is_dry=False).run()
     print "Installation and Configuration Completed"
+
+    # python will exit with 1 if an exception occurs
+
+    sys.exit(0)
