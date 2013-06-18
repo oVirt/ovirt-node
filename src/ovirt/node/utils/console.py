@@ -19,10 +19,10 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
+from ovirt.node.utils import Transaction
 import StringIO
 import sys
 import termios
-import traceback
 import tty
 
 
@@ -49,9 +49,14 @@ def wait_for_keypress():
 class TransactionProgress(base.Base):
     """Display the progress of a transaction on a console
     """
-    def __init__(self, transaction, plugin, initial_text=""):
+    transaction = None
+    texts = None
+    is_dry = False
+
+    def __init__(self, transaction, is_dry, initial_text=""):
+        assert type(transaction) is Transaction
         self.transaction = transaction
-        self.plugin = plugin
+        self.is_dry = is_dry
         self.texts = [initial_text, ""]
         super(TransactionProgress, self).__init__()
 
@@ -88,14 +93,18 @@ class TransactionProgress(base.Base):
                     # Sometimes a tx_element is wrapping some code that
                     # writes to stdout/stderr which scrambles the screen,
                     # therefore we are capturing this
-                    self.plugin.dry_or(lambda: e.commit())
+                    if self.is_dry:
+                        self.logger.debug("In dry mode: %s" % e)
+                    else:
+                        e.commit()
             self.add_update("\nAll changes were applied successfully.")
         except Exception as e:
             self.add_update("\nAn error occurred while applying the changes:")
             self.add_update("%s" % e)
-            self.logger.warning("'%s' on transaction '%s': %s - %s" %
-                                (type(e), self.transaction, e, e.message))
-            self.logger.debug(str(traceback.format_exc()))
+            self.logger.exception("'%s' on transaction '%s': %s - %s" %
+                                  (type(e), self.transaction,
+                                   e, e.message))
+            raise
 
         if captured.stderr.getvalue():
             se = captured.stderr.getvalue()

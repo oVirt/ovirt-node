@@ -20,9 +20,10 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, exceptions, valid, utils, config
 from ovirt.node.config.network import NicConfig
-from ovirt.node.utils import storage, process, fs, AugeasWrapper
-from ovirt.node.utils.fs import ShellVarFile
-from ovirt.node.utils.network import NIC
+from ovirt.node.utils import storage, process, fs, AugeasWrapper, console, \
+    system
+from ovirt.node.utils.fs import ShellVarFile, File
+from ovirt.node.utils.network import NIC, Bridges
 import glob
 import logging
 import os
@@ -101,7 +102,7 @@ class NodeConfigFileSection(base.Base):
         tx()
         """
         tx = self.transaction()
-        tx()
+        return tx()
 
     def _args_to_keys_mapping(self, keys_to_args=False):
         """Map the named arguments of th eupdate() method to the CFG keys
@@ -239,47 +240,19 @@ class Network(NodeConfigFileSection):
     def transaction(self):
         """Return all transactions to re-configure networking
         """
-        return self.__transaction()
-
-    def __legacy_transaction(self):
-        class ConfigureNIC(utils.Transaction.Element):
-            title = "Configuring NIC"
-
-            def prepare(self):
-                self.logger.debug("Psuedo preparing ovirtnode.Network")
-
-            def commit(self):
-                from ovirtnode.network import Network as oNetwork
-                net = oNetwork()
-                net.configure_interface()
-                net.save_network_configuration()
-                #utils.AugeasWrapper.force_reload()
-
-        class ReloadNetworkConfiguration(utils.Transaction.Element):
-            title = "Reloading network configuration"
-
-            def commit(self):
-                utils.AugeasWrapper.force_reload()
-                utils.network.reset_resolver()
-
-        tx = utils.Transaction("Applying new network configuration")
-        tx.append(ConfigureNIC())
-        tx.append(ReloadNetworkConfiguration())
-        return tx
-
-    def __transaction(self):
         services = ["network", "ntpd", "ntpdate", "rpcbind", "nfslock",
                     "rpcidmapd", "rpcgssd"]
 
         def do_services(cmd, services):
-            for name in services:
-                process.call(["service", name, "stop"])
+            with console.CaptureOutput():
+                for name in services:
+                    system.service(name, cmd, check=False)
 
         class StopNetworkServices(utils.Transaction.Element):
             title = "Stop network services"
 
             def commit(self):
-                do_services("stop", reversed(services))
+                do_services("stop", services)
 
         class RemoveConfiguration(utils.Transaction.Element):
             title = "Remove existing configuration"
@@ -293,9 +266,16 @@ class Network(NodeConfigFileSection):
                 vifs = vlans.all_vlan_devices()
                 self.logger.debug("Attempting to delete all vlans: %s" % vifs)
                 for vifname in vifs:
-                    process.call(["vconfig", "rem", vifname])
-                    if NicConfig(vifname).exists:
+                    vlans.delete(vifname)
+                    if NicConfig(vifname).exists():
                         NicConfig(vifname).delete()
+
+                # FIXME we are removing ALL bridges
+                bridges = Bridges()
+                for bifname in bridges.ifnames():
+                    bridges.delete(bifname)
+                    if NicConfig(bifname).exists():
+                        NicConfig(bifname).delete()
 
             def _remove_ifcfg_configs(self):
                 pat = NicConfig.IfcfgBackend.filename_tpl % "*"
@@ -310,11 +290,19 @@ class Network(NodeConfigFileSection):
             title = "Write new configuration"
 
             def commit(self):
+                m = Network().retrieve()
+                aug = AugeasWrapper()
                 topology = NetworkTopology().retrieve()["topology"]
                 if topology == "direct":
                     self.__write_direct_config()
                 else:
                     self.__write_bridged_config()
+
+                has_network = "yes" if m["iface"] else "no"
+                aug.set("/files/etc/sysconfig/network/NETWORKING",
+                        has_network)
+                fs.Config().persist("/etc/sysconfig/network")
+                fs.Config().persist("/etc/hosts")
 
             def __assign_common(self, cfg):
                 m = Network().retrieve()
@@ -367,6 +355,7 @@ class Network(NodeConfigFileSection):
                 slave_cfg.vlan = "yes" if m["vlanid"] else None
                 slave_cfg.onboot = "yes"
 
+                # save()includes persisting
                 bridge_cfg.save()
                 slave_cfg.save()
 
@@ -384,6 +373,18 @@ class Network(NodeConfigFileSection):
 
                 nic_cfg.save()
 
+        class PersistMacNicMapping(utils.Transaction.Element):
+            title = "Persist MAC-NIC Mappings"
+
+            def commit(self):
+                # Copy the initial net rules to a file that get's not
+                # overwritten at each boot, rhbz#773495
+                rulesfile = "/etc/udev/rules.d/70-persistent-net.rules"
+                newrulesfile = "/etc/udev/rules.d/71-persistent-node-net.rules"
+                if File(rulesfile).exists():
+                    process.check_call("cp %s %s" % (rulesfile, newrulesfile))
+                    fs.Config().persist(newrulesfile)
+
         class StartNetworkServices(utils.Transaction.Element):
             title = "Start network services"
 
@@ -393,8 +394,11 @@ class Network(NodeConfigFileSection):
                 utils.network.reset_resolver()
 
         tx = utils.Transaction("Applying new network configuration")
-        # FIXME more
+        tx.append(StopNetworkServices())
+        tx.append(RemoveConfiguration())
         tx.append(WriteConfiguration())
+        tx.append(PersistMacNicMapping())
+        tx.append(StartNetworkServices())
         return tx
 
     def configure_no_networking(self, iface=None):
@@ -530,21 +534,36 @@ class Hostname(NodeConfigFileSection):
                 self.hostname = hostname
 
             def commit(self):
-                from ovirtnode import network as onet, ovirtfunctions
-                network = onet.Network()
+                aug = AugeasWrapper()
 
+                localhost_entry = None
+                for entry in aug.match("/files/etc/hosts/*"):
+                    if aug.get(entry + "/ipaddr") == "127.0.0.1":
+                        localhost_entry = entry
+                        break
+
+                if not localhost_entry:
+                    raise RuntimeError("Couldn't find entry for localhost")
+
+                # Remove all aliases
+                for alias_entry in aug.match(localhost_entry + "/alias"):
+                    aug.remove(alias_entry, False)
+
+                # ... and create a new one
+                aliases = ["localhost", "localhost.localdomain"]
                 if self.hostname:
-                    network.remove_non_localhost()
-                    network.add_localhost_alias(self.hostname)
-                else:
-                    network.remove_non_localhost()
-                    self.hostname = "localhost.localdomain"
+                    aliases.append(self.hostname)
+
+                for _idx, alias in enumerate(aliases):
+                    idx = _idx + 1
+                    p = "%s/alias[%s]" % (localhost_entry, idx)
+                    aug.set(p, alias, False)
 
                 config.network.hostname(self.hostname)
 
-                ovirtfunctions.ovirt_store_config("/etc/hosts")
-                ovirtfunctions.ovirt_store_config("/etc/hostname")
-                ovirtfunctions.ovirt_store_config("/etc/sysconfig/network")
+                fs.Config().persist("/etc/hosts")
+                fs.Config().persist("/etc/hostname")
+                fs.Config().persist("/etc/sysconfig/network")
 
                 utils.network.reset_resolver()
 
@@ -718,9 +737,9 @@ class Timeservers(NodeConfigFileSection):
             title = "Restarting time services"
 
             def commit(self):
-                process.call(["service", "ntpd", "stop"])
-                process.check_call(["service", "ntpdate", "start"])
-                process.check_call(["service", "ntpd", "start"])
+                system.service("ntpd", "stop", check=False)
+                system.service("ntpdate", "start", check=False)
+                system.service("ntpd", "start", check=False)
 
         tx = utils.Transaction("Configuring timeservers")
         tx.append(WriteConfiguration())
@@ -1135,6 +1154,10 @@ class NFSv4(NodeConfigFileSection):
             def commit(self):
                 nfsv4 = storage.NFSv4()
                 nfsv4.domain(domain)
+
+                fs.Config().persist(nfsv4.configfilename)
+                process.check_call("service rpcidmapd restart")
+                process.check_call("nfsidmap -c")
 
         tx = utils.Transaction("Configuring NFSv4")
         tx.append(ConfigureNfsv4())

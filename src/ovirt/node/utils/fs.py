@@ -110,7 +110,7 @@ class File(base.Base):
     def exists(self):
         """Determin if a file exists
         """
-        return os.path.isfile(self.filename)
+        return os.path.exists(self.filename)
 
     def delete(self):
         """Delete a file
@@ -226,7 +226,7 @@ class BackupedFiles(base.Base):
         super(BackupedFiles, self).__init__()
         assert type(files) is list, "A list of files is required"
         if any([not os.path.isfile(f) for f in files]):
-            self.logger.warning("Not all files exist: %s" % files)
+            self.logger.debug("Not all files exist: %s" % files)
         self.files = files
         self.suffix = suffix
 
@@ -253,8 +253,8 @@ class BackupedFiles(base.Base):
                 shutil.copy(fn, backup)
                 self.backups[fn] = backup
             else:
-                self.logger.warning("Can not backup non-existent " +
-                                    "file: %s" % fn)
+                self.logger.debug("Can not backup non-existent " +
+                                  "file: %s" % fn)
 
     def remove(self):
         """Remove all backups

@@ -137,7 +137,8 @@ class Plugin(plugins.NodePlugin):
 
         with self.application.ui.suspended():
             utils.process.call("reset")
-            progress_dialog = console.TransactionProgress(txs, self)
+            is_dry = self.application.args.dry
+            progress_dialog = console.TransactionProgress(txs, is_dry)
             progress_dialog.run()
             console.writeln("\nPlease press any key to continue")
             console.wait_for_keypress()

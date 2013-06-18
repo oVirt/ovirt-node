@@ -19,7 +19,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, utils
-from ovirt.node.config import defaults
 from ovirt.node.utils import process
 import os
 import rpm
@@ -83,6 +82,20 @@ def which(file):
     if ret is None:
         raise RuntimeError("Cannot find command '%s'" % file)
     return ret
+
+
+def service(name, cmd, check=True):
+    """Convenience wrapper to handle service interactions
+    """
+    kwargs = {"shell": False}
+    if check:
+        _call = process.check_output
+    else:
+        _call = process.call
+        kwargs.update({"stderr": process.STDOUT})
+
+    r = _call(["service", name, cmd], **kwargs)
+    return r
 
 
 class SystemRelease(base.Base):

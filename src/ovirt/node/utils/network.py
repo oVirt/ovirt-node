@@ -157,15 +157,21 @@ class SysfsNICInfo(base.Base):
     def systype(self):
         systype = "ethernet"
 
-        if len(glob.glob("/proc/net/vlan/%s" % self.ifname)) > 0:
+        if self.is_vlan():
             # Check if vlan
             systype = "vlan"
 
-        elif os.path.exists("/sys/class/net/%s/bridge" % self.ifname):
+        elif self.is_bridge():
             # Check if bridge
             systype = "bridge"
 
         return systype
+
+    def is_vlan(self):
+        return len(glob.glob("/proc/net/vlan/%s" % self.ifname)) > 0
+
+    def is_bridge(self):
+        return os.path.exists("/sys/class/net/%s/bridge" % self.ifname)
 
 
 class NIC(base.Base):
@@ -677,6 +683,7 @@ class Vlans(base.Base):
 
     def is_vlan_device(self, vifname):
         """Check if ifname is a vlan device
+        The vlan device is actually the virtual nic, not the master
         """
         return self.nic_for_vlan_device(vifname) is not None
 
@@ -687,3 +694,24 @@ class Vlans(base.Base):
         for vifs in self.parse_cfg().values():
             all_devices += vifs
         return all_devices
+
+    def delete(self, ifname):
+        if not self.is_vlan_device(ifname):
+            raise RuntimeError("Can no delete '%s', is no vlan device" %
+                               ifname)
+        process.call(["vconfig", "rem", ifname])
+
+
+class Bridges(base.Base):
+    def ifnames(self):
+        return [os.path.basename(os.path.dirname(g)) for g
+                in glob.glob("/sys/class/net/*/bridge")]
+
+    def is_bridge(self, ifname):
+        return SysfsNICInfo(ifname).is_bridge()
+
+    def delete(self, ifname):
+        if not self.is_bridge(ifname):
+            raise RuntimeError("Can no delete '%s', is no bridge" % ifname)
+        process.call("ifconfig %s down" % ifname)
+        process.call("ip link delete %s type bridge" % ifname)

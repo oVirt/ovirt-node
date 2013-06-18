@@ -20,6 +20,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 from ovirt.node import base
+from ovirt.node.utils import process
+from ovirt.node.utils.fs import File
 import os
 
 
@@ -39,11 +41,33 @@ class iSCSI(base.Base):
 class NFSv4(base.Base):
     """A class to deal some external NFSv4 related functionality
     """
+    configfilename = "/etc/idmapd.conf"
+
     def domain(self, domain=None):
-        import ovirtnode.network as onet
         if domain:
-            onet.set_nfsv4_domain(domain)
-        return onet.get_current_nfsv4_domain()
+            self.__set_domain(domain)
+        return self.__get_domain()
+
+    def __set_domain(self, domain):
+        current_domain = self.__get_domain()
+        if current_domain.startswith("#"):
+            current_domain = ("#Domain = %s" %
+                              current_domain.replace("# ", ""))
+            process.check_call("sed -i 's/%s/Domain = %s/g' %s" %
+                               (current_domain, domain,
+                                self.configfilename))
+        else:
+            process.check_call("sed -i '/^Domain/ s/%s/%s/g' %s" %
+                               (current_domain, domain,
+                                self.configfilename))
+
+    def __get_domain(self):
+        domain = None
+        nfs_config = File(self.configfilename)
+        for line in nfs_config:
+            if "Domain =" in line:
+                domain = line.replace("Domain =", "").strip()
+        return domain
 
 
 class Devices(base.Base):
