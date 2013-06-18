@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# ovirt-kdump Start ovirt-kdump services
+#
+### BEGIN INIT INFO
+# Provides: ovirt-kdump
+# Required-Start: ovirt
+# Default-Start: 2 3 4 5
+# Description: Performs managed node configuration functions.
+### END INIT INFO
+
+# Source functions library
+. /usr/libexec/ovirt-init-functions.sh
+
+prog=ovirt-kdump
+
+case "$1" in
+    start)
+        echo -n "Starting ovirt-kdump: "
+        start_ovirt_kdump
+        test $? == 0 && success || failure
+        echo
+        ;;
+    status)
+        status -l $prog
+        ;;
+    reload)
+        reload_ovirt
+        ;;
+    stop)
+        echo -n "Stopping ovirt-kdump: "
+        stop_ovirt_kdump
+        success
+        echo
+        ;;
+    *)
+        echo "Usage: ovirt-kdump {start}"
+        exit 2
+esac

@@ -1,0 +1,13 @@
+[Unit]
+Description=oVirt Node kdump service
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_kdump
+ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_kdump
+
+[Install]
+WantedBy=multi-user.target
+

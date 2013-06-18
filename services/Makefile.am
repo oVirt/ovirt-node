@@ -26,11 +26,13 @@ dist_systemunit_DATA = \
   ovirt-post.service \
   ovirt-firstboot.service \
   ovirt-cim.service \
+  ovirt-kdump.service \
   ovirt-node-igor-slave.service
 else
 dist_initd_SCRIPTS = \
   init.d/ovirt-awake \
   init.d/ovirt-early \
+  init.d/ovirt-kdump \
   init.d/ovirt \
   init.d/ovirt-post \
   init.d/ovirt-firstboot \

@@ -27,6 +27,7 @@ EOF_anyterm
 rm -rf /etc/systemd/system/default.target
 ln -sf /lib/systemd/system/multi-user.target /etc/systemd/system/default.target
 systemctl enable ovirt-firstboot.service >/dev/null 2>&1
+systemctl enable ovirt-kdump.service >/dev/null 2>&1
 
 echo "Configuring IPTables"
 # here, we need to punch the appropriate holes in the firewall

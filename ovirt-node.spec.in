@@ -438,6 +438,7 @@ cd -
 /sbin/chkconfig --add ovirt-firstboot
 /sbin/chkconfig --add ovirt
 /sbin/chkconfig --add ovirt-post
+/sbin/chkconfig --add ovirt-kdump
 %else
 if [ $1 -eq 1 ] ; then
     # Initial installation
@@ -660,12 +661,14 @@ fi
 %{_unitdir}/ovirt-firstboot.service
 %{_unitdir}/ovirt-post.service
 %{_unitdir}/ovirt-early.service
+%{_unitdir}/ovirt-kdump.service
 %else
 %{_initrddir}/ovirt-awake
 %{_initrddir}/ovirt-early
 %{_initrddir}/ovirt-firstboot
 %{_initrddir}/ovirt
 %{_initrddir}/ovirt-post
+%{_initrddir}/ovirt-kdump
 %endif
 # Files related to the new TUI
 %{python_sitelib}/ovirt/__init__.py*

@@ -32,6 +32,7 @@ VAR_SUBSYS_OVIRT_EARLY=/var/lock/subsys/ovirt-early
 VAR_SUBSYS_NODECONFIG=/var/lock/subsys/node-config
 VAR_SUBSYS_OVIRT_POST=/var/lock/subsys/ovirt-post
 VAR_SUBSYS_OVIRT_CIM=/var/lock/subsys/ovirt-cim
+VAR_SUBSYS_OVIRT_KDUMP=/var/lock/subsys/ovirt-kdump
 VAR_SUBSYS_OVIRT=/var/lock/subsys/ovirt
 
 BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
@@ -1360,7 +1361,37 @@ status_ovirt_cim () {
     return $?
 }
 
+start_ovirt_kdump () {
+    [ -f "$VAR_SUBSYS_OVIRT_cim" ] && exit 0
+    {
+        log "Starting ovirt-kdump service"
 
+        touch $VAR_SUBSYS_OVIRT_KDUMP
+
+        if is_persisted /etc/kdump.conf; then
+            service kdump start
+        fi
+
+        rm -f $VAR_SUBSYS_OVIRT_KDUMP
+
+        log "Completed ovirt-kdump"
+    } >> $OVIRT_LOGFILE 2>&1
+}
+
+stop_ovirt_kdump () {
+    {
+        log "Stopping ovirt-kdump"
+        if service kdump status >/dev/null; then
+            service kdump stop
+        fi
+        log "Stopped ovirt-kdump"
+    } >> $OVIRT_LOGFILE 2>&1
+}
+
+status_ovirt_kdump () {
+    service kdump status > /dev/null 2>&1
+    return $?
+}
 
 #
 # If called with a param from .service file:
