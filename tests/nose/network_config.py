@@ -29,6 +29,19 @@ import pprint
 # http://ivory.idyll.org/articles/nose-intro.html
 
 
+def patch_common(cls):
+    @patch("ovirt.node.utils.fs.File", FakeFs.File)
+    @patch("os.listdir", FakeFs.listdir)
+    @patch("ovirt.node.utils.process.call")
+    @patch.object(UdevNICInfo, "vendor")
+    @patch.object(UdevNICInfo, "devtype")
+    @patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
+    class TestWrapperClass(cls):
+        pass
+    TestWrapperClass.__name__ = cls.__name__
+    return TestWrapperClass
+
+
 class TestFakeFs():
     def setUp(self):
         FakeFs.erase()
@@ -48,10 +61,7 @@ class TestFakeFs():
             assert FakeFs.filemap == {}
 
 
-@patch("ovirt.node.utils.fs.File", FakeFs.File)
-@patch.object(UdevNICInfo, "vendor")
-@patch.object(UdevNICInfo, "devtype")
-@patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
+@patch_common
 class TestBridgedNIC():
     """Test the bridged/legacy configuration
     """
@@ -105,10 +115,7 @@ class TestBridgedNIC():
                                 ('TYPE', 'Bridge')])
 
 
-@patch("ovirt.node.utils.fs.File", FakeFs.File)
-@patch.object(UdevNICInfo, "vendor")
-@patch.object(UdevNICInfo, "devtype")
-@patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
+@patch_common
 class TestDirectNIC():
     """Test the bridgeless configuration
     """
@@ -161,12 +168,7 @@ class TestDirectNIC():
         assert "brens1" not in FakeFs.filemap
 
 
-@patch("ovirt.node.utils.fs.File", FakeFs.File)
-@patch("os.listdir", FakeFs.listdir)
-@patch("ovirt.node.utils.process.call")
-@patch.object(UdevNICInfo, "vendor")
-@patch.object(UdevNICInfo, "devtype")
-@patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
+@patch_common
 class TestBond():
     """Test bonding configuration
     """
@@ -302,6 +304,8 @@ class TestBond():
 
 
 def run_tx_by_name(txs, name):
+    """Run a Transaction.Element by it's classname
+    """
     tx = None
     for _tx in txs:
         if _tx.__class__.__name__ == name:
@@ -312,10 +316,14 @@ def run_tx_by_name(txs, name):
 
 
 def ifcfgfilename(ifname):
+    """Return the path to an ifcfg file usign the ifname
+    """
     return "/etc/sysconfig/network-scripts/ifcfg-" + ifname
 
 
 def ifcfg_has_items(ifname, expected_items):
+    """Check if the items in an ifcfg file are equal the expected_items
+    """
     ifcfg = ShellVarFile(ifcfgfilename(ifname))
     ifcfg_items = sorted(ifcfg.get_dict().items())
     logging.info("ifcfg : %s" % ifname)
