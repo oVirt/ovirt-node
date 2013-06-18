@@ -88,7 +88,7 @@ def which(file):
     return ret
 
 
-def service(name, cmd, check=True):
+def service(name, cmd, do_raise=True):
     """Convenience wrapper to handle service interactions
     """
     try:
@@ -263,28 +263,6 @@ class Keyboard(base.Base):
 
     def get_current(self):
         return self.kbd.get()
-
-
-class BootInformation(base.Base):
-    """Provide informations about this boot
-    """
-    def __init__(self):
-        self._model = defaults.Installation()
-        super(BootInformation, self).__init__()
-
-    def is_installation(self):
-        #ovirtfunctions.is_install()
-        return self._model.retrieve()["install"] is True
-
-    def is_auto_installation(self):
-        #ovirtfunctions.is_auto_install()
-        cmdline = utils.fs.get_contents("/proc/cmdline")
-        return "BOOTIF" in cmdline and ("storage_init" in cmdline or
-                                        "ovirt_init" in cmdline)
-
-    def is_upgrade(self):
-        #ovirtfunctions.is_upgrade()
-        return self._model.retrieve()["upgrade"] is True
 
 
 class Reboot(base.Base):
