@@ -21,7 +21,7 @@
 from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.exceptions import TransactionError
-from ovirt.node.utils import process
+from ovirt.node.utils import process, system
 import pwd
 # pylint: disable-msg=E0611
 import grp  # @UnresolvedImport
@@ -63,8 +63,7 @@ class CIM(NodeConfigFileSection):
             def commit(self):
                 action = "restart" if enabled else "stop"
                 try:
-                    process.check_call("service ovirt-cim %s 2>/dev/null" %
-                                       action)
+                    system.service("ovirt-cim", action)
                     self.logger.debug("Configured CIM successfully")
                 except RuntimeError:
                     raise TransactionError("CIM configuration failed")

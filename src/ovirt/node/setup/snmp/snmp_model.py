@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
-from ovirt.node.utils import process
+from ovirt.node.utils import process, system
 import os.path
 
 
@@ -30,7 +30,7 @@ snmp_conf = "/etc/snmp/snmpd.conf"
 def enable_snmpd(password):
     from ovirtnode.ovirtfunctions import ovirt_store_config
 
-    process.call("service snmpd stop")
+    system.service("snmpd", "stop")
 
     # get old password #
     if os.path.exists("/tmp/snmpd.conf"):
@@ -45,7 +45,7 @@ def enable_snmpd(password):
     # create user account
     f.write("createUser root SHA %s AES\n" % password)
     f.close()
-    process.check_call("service snmpd start")
+    system.service("snmpd", "start")
     # change existing password
     if len(oldpwd) > 0:
         pwd_change_cmd = (("snmpusm -v 3 -u root -n \"\" -l authNoPriv -a " +
@@ -60,7 +60,7 @@ def enable_snmpd(password):
 def disable_snmpd():
     from ovirtnode.ovirtfunctions import remove_config
 
-    process.check_call("service snmpd stop")
+    system.service("snmpd", "stop")
     # copy to /tmp for enable/disable toggles w/o reboot
     process.check_call("cp /etc/snmp/snmpd.conf /tmp")
     process.check_call("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
