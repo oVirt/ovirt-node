@@ -20,6 +20,8 @@ include $(top_srcdir)/src/Makefile.check
 PYTHONUNITTESTS:=$(shell find nose/ -name \*.py)
 PYTHONSOURCES:=$(PYTHONUNITTESTS)
 
+.PHONY: %.junit.xml
+
 check-local: unittests
 	@echo -e "---\n Passed $@\n---"
 
@@ -28,3 +30,7 @@ unittests: $(PYTHONUNITTESTS:%=%.nose)
 
 %.nose: check-static
 	PYTHONPATH=$(PYTHONPATH) nosetests -v "$*"
+
+# unittests target with junit xml resultfile
+%.junit.xml:
+	$(MAKE) NOSE_WITH_XUNIT=True NOSE_XUNIT_FILE=$@ unittests
