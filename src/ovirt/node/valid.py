@@ -173,6 +173,7 @@ class Text(RegexValidator):
     pattern = ".*"
 
     def __init__(self, min_length=0):
+        super(Text, self).__init__()
         if min_length > 0:
             self.pattern = ".{%d}" % min_length
             self.description += " (min. %d chars)" % min_length
