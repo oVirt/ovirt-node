@@ -377,8 +377,8 @@ class Label(urwid.WidgetWrap):
     """A read only widget representing a label
     """
 
-    def __init__(self, text):
-        self._label = urwid.Text(text)
+    def __init__(self, label):
+        self._label = urwid.Text(label)
         self._label_attrmap = urwid.AttrMap(self._label,
                                             "plugin.widget.label")
         super(Label, self).__init__(self._label_attrmap)
@@ -397,8 +397,8 @@ class Notice(Label):
     """
     _notice_attr = "plugin.widget.notice"
 
-    def __init__(self, text):
-        super(Notice, self).__init__(text)
+    def __init__(self, label):
+        super(Notice, self).__init__(label)
         self._label_attrmap.set_attr_map({None: self._notice_attr})
 
 
@@ -407,8 +407,8 @@ class Header(Label):
     """
     _header_attr = "plugin.widget.header"
 
-    def __init__(self, text, template="\n  %s\n"):
-        super(Header, self).__init__(template % text)
+    def __init__(self, label, template="\n  %s\n"):
+        super(Header, self).__init__(template % label)
         self._label_attrmap.set_attr_map({None: self._header_attr})
 
 
@@ -418,10 +418,10 @@ class KeywordLabel(Label):
     _keyword_attr = "plugin.widget.label.keyword"
     _text_attr = "plugin.widget.label"
 
-    def __init__(self, keyword, text=""):
-        super(KeywordLabel, self).__init__(text)
+    def __init__(self, keyword, label=""):
+        super(KeywordLabel, self).__init__(label)
         self._keyword = keyword
-        self.text(text)
+        self.text(label)
 #        self._label_attrmap.set_attr_map({None: ""})
 
     def text(self, text=None):
@@ -661,7 +661,7 @@ class Checkbox(urwid.WidgetWrap):
         self._checkbox_attrmap.set_attr_map(amap)
 
 
-class PageWidget(urwid.WidgetWrap):
+class PageWidget(NoticeDecoration):
     save_button = None
 
     def __init__(self, widgets, title=None):

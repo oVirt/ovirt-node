@@ -290,7 +290,7 @@ class Entry(InputElement):
     TODO multiline
 
     Args:
-        on_valid_change: Is emitted by this clas when the value of valid
+        on_valid_change: Is emitted by this class when the value of valid
                          changes e.g. when a plugin is changing it.
     """
 
@@ -301,6 +301,62 @@ class Entry(InputElement):
 
 class PasswordEntry(Entry):
     pass
+
+
+class ConfirmedEntry(ContainerElement):
+    """A container for elements which must be identical"""
+
+    on_change = None
+
+    _primary = None
+    _secondary = None
+
+    _changes = None
+
+    def __init__(self, path, label, is_password=False):
+        children = []
+        self.on_change = self.new_signal()
+        entry_class = PasswordEntry if is_password else Entry
+
+        self._primary = entry_class("%s[0]" % path,
+                                    label)
+        self._secondary = entry_class("%s[1]" % path,
+                                      "Confirm %s" % label)
+
+        self._changes = {}
+
+        for child in [self._primary, self._secondary]:
+            self._changes[child.path] = ""
+            # Remove all callbacks - so nothing is passed to the UI
+            child.on_change.clear()
+            child.on_change.connect(self.__do_validation)
+            children.append(child)
+
+        self.on_change.connect(ChangeAction())
+
+        super(ConfirmedEntry, self).__init__(path, children)
+
+    def __do_validation(self, target, change):
+        """Is called when primary or secondary changes
+        """
+        self._changes.update(change)
+        if self.valid():
+            self.valid(True)
+        else:
+            self.valid(False)
+        self.on_change({self.path: self.value()})
+
+    def value(self, new_value=None):
+        if new_value is not None:
+            pass
+        return self._changes[self.path + "[0]"] if self.valid() else ""
+
+    def valid(self, is_valid=None):
+        if is_valid in [True, False]:
+            self._primary.valid(is_valid)
+            self._secondary.valid(is_valid)
+        is_valid = len(set(self._changes.values())) == 1
+        return is_valid
 
 
 class Button(InputElement):
@@ -865,6 +921,8 @@ class AbstractUIBuilder(base.Base):
         assert Element in type(ui_element).mro()
 
         builder_for_element = {
+            ContainerElement: self._build_container,
+
             Window: self._build_window,
             Page: self._build_page,
             Dialog: self._build_dialog,
@@ -904,7 +962,8 @@ class AbstractUIBuilder(base.Base):
                     builder_func = builder_for_element[sub_type]
 
         if not builder_func:
-            raise Exception("No builder for UI element '%s'" % ui_element)
+            raise Exception("No builder for UI element '%s' (%s)" %
+                            (ui_element, type(ui_element).mro()))
 
         # Build widget from UI Element
         widget = builder_func(ui_element)
@@ -913,6 +972,9 @@ class AbstractUIBuilder(base.Base):
         widget._ui_builder = self
 
         return widget
+
+    def _build_container(self, ui_container):
+        raise NotImplementedError
 
     def _build_window(self, ui_window):
         raise NotImplementedError

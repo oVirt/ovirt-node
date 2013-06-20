@@ -36,15 +36,26 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
 
         for element in ui_container.children:
             widget = self.build(element)
-            widgets.append(("flow", widget))
+            #if type(ui_container) is ui.ConfirmedEntry:
+            #    # Special handling of the special widget, but why?
+            #    widgets.append(widget)
+            #else:
+            widgets.append(("pack", widget))
 
         # Add buttons
-        if ui_container.buttons:
+        if hasattr(ui_container, "buttons") and ui_container.buttons:
             widgets.append(self._build_button_bar(ui_container.buttons))
 
-        widgets.append(urwid.Filler(urwid.Text("")))
+        if not any(type(t) is not tuple or t[0] == "weight" for t in widgets):
+            # Add a weighted dummy if no weigthed dummy is in the Pile,
+            # to fullfill urwid's assumptions
+            # FIXME this whole function can be cleaned up!
+            widgets.append(urwid.SolidFill())
 
-        page = uw.PageWidget(widgets, ui_container.title)
+        if ui.Page in type(ui_container).mro():
+            page = uw.PageWidget(widgets, ui_container.title)
+        else:
+            page = uw.TabablePile(widgets)
 
         return page
 
@@ -398,7 +409,7 @@ class UrwidWindow(ui.Window):
                ('plugin.widget.page.header', element_styles["header"]),
                ('plugin.widget.page.frame', None),
                ('plugin.widget.checkbox.label', element_styles["label"]),
-               ('plugin.widget.checkbox', element_styles["text"]),
+               ('plugin.widget.checkbox', element_styles["text"])
                ]
 
     def __init__(self, path, application, with_menu=True):

@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import utils, plugins, ui, valid, exceptions
+from ovirt.node import utils, plugins, ui, valid
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 
@@ -44,7 +44,6 @@ class Plugin(plugins.NodePlugin):
             "strongrng.disable_aesni": cfg["disable_aesni"] or False,
             "strongrng.num_bytes": cfg["num_bytes"] or "",
             "passwd.admin.password": "",
-            "passwd.admin.password_confirmation": "",
         }
         return model
 
@@ -52,7 +51,8 @@ class Plugin(plugins.NodePlugin):
         number_or_empty = valid.Number(bounds=[0, None]) | \
             valid.Empty()
         return {"strongrng.num_bytes": number_or_empty,
-                "passwd.admin.password": valid.Text()
+                "passwd.admin.password":
+                valid.Empty() | valid.Text(min_length=3)
                 }
 
     def ui_content(self):
@@ -62,9 +62,7 @@ class Plugin(plugins.NodePlugin):
               ui.Checkbox("strongrng.disable_aesni", "Disable AES-NI"),
               ui.Entry("strongrng.num_bytes", "Bytes Used:"),
               ui.Header("header[2]", "Local Access"),
-              ui.PasswordEntry("passwd.admin.password", "Password:"),
-              ui.PasswordEntry("passwd.admin.password_confirmation",
-                               "Confirm Password:"),
+              ui.ConfirmedEntry("passwd.admin.password", "Password:", True)
               ]
 
         page = ui.Page("page", ws)
@@ -81,18 +79,9 @@ class Plugin(plugins.NodePlugin):
             else:
                 self.widgets["strongrng.num_bytes"].enabled(True)
 
-        if changes.contains_any(["passwd.admin.password",
-                                 "passwd.admin.password_confirmation"]):
+        if changes.contains_any(["passwd.admin.password"]):
             self._model.update(changes)
             model = self._model
-            admin_pw = model.get("passwd.admin.password", "")
-            admin_pw_conf = model.get("passwd.admin.password_confirmation", "")
-
-            if admin_pw != admin_pw_conf:
-                raise exceptions.InvalidData("Passwords must be the same.")
-            else:
-                self.widgets["passwd.admin.password"].valid(True)
-                self.widgets["passwd.admin.password_confirmation"].valid(True)
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving security page")
@@ -105,8 +94,6 @@ class Plugin(plugins.NodePlugin):
 
         ssh_keys = ["ssh.pwauth", "strongrng.num_bytes",
                     "strongrng.disable_aesni"]
-        passwd_keys = ["passwd.admin.password",
-                       "passwd.admin.password_confirmation"]
 
         txs = utils.Transaction("Updating security configuration")
 
@@ -115,10 +102,8 @@ class Plugin(plugins.NodePlugin):
             model.update(*effective_model.values_for(ssh_keys))
             txs += model.transaction()
 
-        if changes.contains_any(passwd_keys):
-            pw, pwc = effective_model.values_for(passwd_keys)
-            if pw != pwc:
-                raise exceptions.InvalidData("Passwords do not match")
+        if changes.contains_any(["passwd.admin.password"]):
+            pw = effective_model["passwd.admin.password"]
             passwd = utils.security.Passwd()
 
             # Create a custom transaction element, because the password
