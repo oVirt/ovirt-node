@@ -18,4 +18,5 @@
 nodeconfdir = $(sysconfdir)/ovirt-node/
 
 dist_nodeconf_DATA = \
-  logging.conf
+  logging.conf \
+  logging.debug.conf

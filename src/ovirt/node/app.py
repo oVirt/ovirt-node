@@ -35,10 +35,13 @@ which communicate with each other.
 """
 
 RUNTIME_LOG_CONF_FILENAME = "/etc/ovirt-node/logging.conf"
+RUNTIME_DEBUG_LOG_CONF_FILENAME = "/etc/ovirt-node/logging.debug.conf"
 
 
-def configure_logging():
+def configure_logging(is_debug=False):
     mixedfile = RUNTIME_LOG_CONF_FILENAME
+    if is_debug:
+        mixedfile = RUNTIME_DEBUG_LOG_CONF_FILENAME
     if not os.path.exists(mixedfile):
         mixedfile = StringIO("""
 [loggers]
@@ -106,6 +109,11 @@ class Application(base.Base):
                           dest="dry",
                           default=False,
                           help="Just write defaults, nothing else")
+        parser.add_option("--debug",
+                          action='store_true',
+                          dest="debug",
+                          default=False,
+                          help="Run in debug mode (suitable for pdb)")
         (self.args, argcount) = parser.parse_args()
 
         self.logger.debug("Parsed args: %s" % self.args)
@@ -115,6 +123,8 @@ class Application(base.Base):
             self.logger.debug("Setting config file: %s (%s)" %
                               (self.args.defaults,
                               defaults.OVIRT_NODE_DEFAULTS_FILENAME))
+
+        configure_logging(self.args.debug)
 
         self.logger.debug("Commandline arguments: %s" % self.args)
 
@@ -292,6 +302,8 @@ class Application(base.Base):
         try:
             self.ui.run()
         except Exception as e:
+            if self.args.debug:
+                raise
             utils.process.call("reset")
             self.logger.error("An error appeared in the UI: %s" % repr(e))
             self.logger.debug("Exception:", exc_info=True)

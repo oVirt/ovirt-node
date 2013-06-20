@@ -590,7 +590,8 @@ class UrwidWindow(ui.Window):
             self.logger.debug("Running hotkeys: %s" % key)
             self._hotkeys[key]()
 
-        self.logger.debug("Keypress: %s" % key)
+        if self.application.args.debug:
+            self.logger.debug("Keypress: %s" % key)
 
         return keys
 
