@@ -49,8 +49,6 @@ class Network:
         self.nic = ""
         self.bridge = ""
         self.vlan_id = ""
-        self.localhost_entry = self.get_localhost_entry()
-        self.alias_count = self.get_num_localhost_aliases()
 
     def configure_dns(self):
         from ovirt.node.config.defaults import Network
