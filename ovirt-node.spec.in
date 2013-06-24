@@ -65,6 +65,7 @@ Requires:       ethtool
 Requires:       cracklib-python
 Requires:       dracut
 Requires:       /bin/hostname
+Requires:       tuned
 %if ! %{is_systemd}
 Requires:       grub
 # for applying patches in %post

@@ -84,7 +84,8 @@ pyovirt_node_PYTHON = \
 pyovirt_node_config_PYTHON = \
   ovirt/node/config/__init__.py \
   ovirt/node/config/defaults.py \
-  ovirt/node/config/network.py
+  ovirt/node/config/network.py \
+  ovirt/node/config/tuned.py
 
 pyovirt_node_ui_PYTHON = \
   ovirt/node/ui/__init__.py \
@@ -100,6 +101,7 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/security.py \
   ovirt/node/utils/storage.py \
   ovirt/node/utils/system.py \
+  ovirt/node/utils/tuned.py \
   ovirt/node/utils/virt.py
 
 pyovirt_node_tools_PYTHON = \
@@ -138,6 +140,7 @@ pyovirt_node_setup_core_PYTHON = \
   ovirt/node/setup/core/logging_page.py \
   ovirt/node/setup/core/monitoring_page.py \
   ovirt/node/setup/core/network_page.py \
+  ovirt/node/setup/core/performance_page.py \
   ovirt/node/setup/core/ping.py \
   ovirt/node/setup/core/plugins_page.py \
   ovirt/node/setup/core/remote_storage_page.py \
