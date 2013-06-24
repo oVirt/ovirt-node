@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from subprocess import STDOUT, PIPE
+import ovirt.node.utils
 import logging
 import subprocess
 import sys
@@ -73,6 +74,8 @@ def check_output(*args, **kwargs):
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
+    if ovirt.node.utils.system.is_python_2_6:
+        return pipe(*args)
     return unicode(subprocess.check_output(*args, **kwargs),
                    encoding=sys.stdin.encoding)
 

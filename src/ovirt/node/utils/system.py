@@ -26,6 +26,7 @@ import rpm
 import system_config_keyboard.keyboard
 import time
 import subprocess
+import sys
 
 """
 A module to access system wide stuff
@@ -57,6 +58,12 @@ def is_efi():
     """If the system is booted in (U)EFI mode
     """
     return os.path.exists("/sys/firmware/efi")
+
+
+def is_python_2_6():
+    """If the system is running on Python 2.6
+    """
+    return sys.version_info[:2] == (2, 6)
 
 
 def cpu_details():
