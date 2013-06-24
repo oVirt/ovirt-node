@@ -49,8 +49,7 @@ class Plugin(plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         ws = [ui.Header("diagnostic._header", "Diagnostic Utilities"),
-              ui.Label("diagnostic.info", "Select one of the tools below. \n" +
-                       "Press '<ESC>' to quit when viewing output"),
+              ui.Label("diagnostic.info", "Select one of the tools below."),
               ui.Divider("diagnostic.divider"),
               ui.Table("diagnostic.tools", "", "Available diagnostics",
                        self.__diagnostics(), height=min(
