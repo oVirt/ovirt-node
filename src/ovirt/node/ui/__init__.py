@@ -740,6 +740,9 @@ class Dialog(Page):
 
     def __init__(self, path, title, children):
         super(Dialog, self).__init__(path, children, title)
+        self.buttons = [SaveButton("%s.save" % path),
+                        CloseButton("%s.close" % path)
+                        ]
         self.on_close_change = self.new_signal()
         self.close(False)
         self.on_close_change.connect(CloseAction(dialog=self))
@@ -789,17 +792,16 @@ class TransactionProgressDialog(Dialog):
 
     def __init__(self, path, transaction, plugin, initial_text=""):
         self.transaction = transaction
+        title = "Transaction: %s" % self.transaction.title
+        self._progress_label = Label("dialog.progress", initial_text)
+        super(TransactionProgressDialog, self).__init__(path,
+                                                        title,
+                                                        [self._progress_label])
         self.texts = [initial_text, ""]
         self.plugin = plugin
 
         self._close_button = CloseButton("button.close")
         self.buttons = [self._close_button]
-        self._progress_label = Label("dialog.progress", initial_text)
-        widgets = [self._progress_label]
-        title = "Transaction: %s" % self.transaction.title
-        super(TransactionProgressDialog, self).__init__(path,
-                                                        title,
-                                                        widgets)
 
     def add_update(self, txt):
         self.texts.append(txt)
