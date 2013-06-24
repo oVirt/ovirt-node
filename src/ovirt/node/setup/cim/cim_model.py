@@ -31,7 +31,6 @@ import grp  # @UnresolvedImport
 class CIM(NodeConfigFileSection):
     """Configure CIM
 
-    >>> from ovirt.node.config.defaults import NodeConfigFile
     >>> from ovirt.node.utils import fs
     >>> n = CIM(fs.FakeFs.File("dst"))
     >>> n.update(True)
