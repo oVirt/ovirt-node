@@ -208,7 +208,7 @@ class UpgradeTool(Base):
                 self._system(which("umount"), dir)
             os.remove(self._lock_file)
             shutil.rmtree(self._tmp_dir)
-            if os.path.exists(self.iso_tmp):
+            if self.iso_tmp and os.path.exists(self.iso_tmp):
                 os.remove(self.iso_tmp)
         except:
             self._logger.warning("Cleanup Failed")
