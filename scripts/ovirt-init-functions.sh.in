@@ -730,7 +730,8 @@ _start_ovirt_early () {
             if ! grep -qw $varname /etc/ovirt-commandline.d/* 2>/dev/null; then
                 bootparams="$bootparams $i"
             else
-
+                i=${i#$varname=}
+                eval $varname=$i
                 plugin_vars="$plugin_vars $varname"
             fi
             ;;
