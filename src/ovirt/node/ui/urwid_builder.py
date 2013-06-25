@@ -36,11 +36,13 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
 
         for element in ui_container.children:
             widget = self.build(element)
-            #if type(ui_container) is ui.ConfirmedEntry:
-            #    # Special handling of the special widget, but why?
-            #    widgets.append(widget)
-            #else:
-            widgets.append(("pack", widget))
+            if type(ui_container) is ui.ConfirmedEntry:
+                # Special handling of the special widget, but why?
+                # Why? Because nested Pile's need to be taken care of.
+                # FIXME Generalize this (to cover other widgets too)
+                widgets.append(widget)
+            else:
+                widgets.append(("pack", widget))
 
         # Add buttons
         if hasattr(ui_container, "buttons") and ui_container.buttons:
