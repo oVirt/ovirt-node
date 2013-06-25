@@ -75,6 +75,8 @@ def check_output(*args, **kwargs):
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
     if ovirt.node.utils.system.is_python_2_6():
+        if isinstance(args[0], list):
+            args = (" ".join(args[0]),)
         return pipe(*args)
     return unicode(subprocess.check_output(*args, **kwargs),
                    encoding=sys.stdin.encoding)
