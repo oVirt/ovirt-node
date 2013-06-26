@@ -9,6 +9,7 @@ searchpath: '../sets/'
 sets:
   - 'after_auto_install.set'
   - 'basic.set'
+  - 'extended.set'
   - 'reboot.set'
   - 'services.set'
   - 'python.set'
