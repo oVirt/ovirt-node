@@ -171,7 +171,7 @@ EOF
         if _functions.is_efi_boot():
             _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
             _functions.system("cp /boot/efi/EFI/redhat/grub.efi /liveos/efi/EFI/BOOT/BOOTX64.efi")
-            _functions.system("cp /liveos/efi/EFI/redhat/grub.conf /liveos/efi/EFI/BOOT/BOOTX64.conf")
+            _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" % self.grub_config_file)
             _functions.system("umount /liveos/efi")
         if not _functions.is_efi_boot():
             for f in ["stage1", "stage2", "e2fs_stage1_5"]:
@@ -446,12 +446,17 @@ initrd /initrd0.img
             shutil.rmtree(self.grub_dir)
         if not os.path.exists(self.grub_dir):
             os.makedirs(self.grub_dir)
-
             if _functions.is_efi_boot():
                 logger.info("efi detected, installing efi configuration")
                 _functions.system("mkdir /liveos/efi")
                 _functions.mount_efi()
-                efi_disk = re.sub("p[1,2,3]$", "", self.disk)
+                _functions.system("mkdir -p /liveos/efi/EFI/redhat")
+                _functions.system("cp /boot/efi/EFI/redhat/grub.efi " +
+                      "/liveos/efi/EFI/redhat/grub.efi")
+                if not "/dev/mapper/" in self.disk:
+                   efi_disk = self.disk[:-1]
+                else:
+                   efi_disk = re.sub("p[1,2,3]$", "", self.disk)
                 # generate grub legacy config for efi partition
                 #remove existing efi entries
                 _functions.remove_efi_entry(self.efi_dir_name)
