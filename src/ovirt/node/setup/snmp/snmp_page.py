@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, valid, ui, utils, exceptions
+from ovirt.node import plugins, valid, ui, utils
 import snmp_model
 from ovirt.node.plugins import Changeset
 from ovirt.node.valid import RegexValidator
@@ -68,8 +68,8 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug(cfg)
         model = {"snmp.enabled": True if cfg["password"] else False,
                  "snmp.password": "",
-                 "snmp.password_confirmation": "",
                  }
+        model.update(self._model)
         return model
 
     def validators(self):
@@ -81,9 +81,7 @@ class Plugin(plugins.NodePlugin):
               ui.Checkbox("snmp.enabled", "Enable SNMP"),
               ui.Divider("divider[0]"),
               ui.Header("header[1]", "SNMP Password"),
-              ui.PasswordEntry("snmp.password", "Password:"),
-              ui.PasswordEntry("snmp.password_confirmation",
-                               "Confirm Password:"),
+              ui.ConfirmedEntry("snmp.password", "Password:", True)
               ]
 
         page = ui.Page("page", ws)
@@ -91,17 +89,8 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        if changes.contains_any(["snmp.password",
-                                 "snmp.password_confirmation"]):
+        if changes.contains_any(["snmp.password"]):
             self._model.update(changes)
-            root_pw, root_pw_conf = self._model.get("snmp.password", ""), \
-                self._model.get("snmp.password_confirmation", "")
-
-            if root_pw != root_pw_conf:
-                raise exceptions.InvalidData("Passwords must be the same.")
-            else:
-                self.widgets["snmp.password"].valid(True)
-                self.widgets["snmp.password_confirmation"].valid(True)
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving SNMP page")
