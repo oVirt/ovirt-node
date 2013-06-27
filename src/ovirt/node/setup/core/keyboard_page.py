@@ -56,6 +56,7 @@ class Plugin(plugins.NodePlugin):
               ]
 
         page = ui.Page("page", ws)
+        page.buttons = [ui.SaveButton("page.save")]
         self.widgets.add(page)
         return page
 

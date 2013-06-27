@@ -59,6 +59,7 @@ class Plugin(plugins.NodePlugin):
                        profiles),
               ]
         page = ui.Page("page", ws)
+        page.buttons = [ui.SaveButton("page.save")]
         self.widgets.add(page)
         return page
 
