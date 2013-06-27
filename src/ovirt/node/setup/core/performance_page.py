@@ -84,3 +84,5 @@ class Plugin(plugins.NodePlugin):
 
             # Run transaction in nice UI:
             ui.TransactionProgressDialog("dialog.txs", txs, self).run()
+
+        return self.ui_content()
