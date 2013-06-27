@@ -166,6 +166,16 @@ class SystemRelease(base.Base):
                                    self.CPE_FILE)
             self.VENDOR, self.PRODUCT, self.VERSION = cpe_parts[2:5]
 
+    def is_fedora(self):
+        """Determin if this system is a fedora system
+        """
+        return self.VENDOR.lower() == "fedoraproject"
+
+    def is_el(self):
+        """Determin if this system is an "enterprise linux" (RHEL, CentOS)
+        """
+        return self.VENDOR.lower() == "redhat"
+
 
 class ProductInformation(base.Base):
     """Return oVirt Node product informations
