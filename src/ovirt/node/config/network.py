@@ -127,7 +127,8 @@ class NicConfig(base.Base):
             """Read values from a ifcfg file and update self.cfg
             """
             if not self.exists():
-                self.logger.info("Config not found: %s" % self.filename)
+                self.logger.debug("Config does not exist: %s" %
+                                  self.filename)
                 return
 
             data = self.get_dict()
