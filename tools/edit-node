@@ -192,7 +192,8 @@ class LiveImageEditor(LiveImageCreator):
         We also need to get some info about the image before we can mount it.
 
         base_on --  the <LIVEIMG.src> a LiveOS.iso file or an attached LiveOS
-                    device, such as, /dev/live for a currently running image.
+                    device, such as, /dev/live or /run/initramfs/livedev for
+                    a currently running image.
 
         cachedir -- a directory in which to store a Yum cache;
                     Not used in edit-liveos.
@@ -327,7 +328,8 @@ class LiveImageEditor(LiveImageCreator):
         We also need to get some info about the image before we can mount it.
 
         base_on --  the <LIVEIMG.src> a LiveOS.iso file or an attached LiveOS
-                    device, such as, /dev/live for a currently running image.
+                    device, such as, /dev/live or /run/initramfs/livedev for
+                    a currently running image.
 
         cachedir -- a directory in which to store a Yum cache;
                     Not used in edit-liveos.

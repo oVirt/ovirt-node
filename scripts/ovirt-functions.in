@@ -337,7 +337,7 @@ mount_live() {
     if grep -q " /live " /etc/mtab; then
         return 0
     fi
-    local live_dev=/dev/live
+    local live_dev=/dev/$(get_live_disk)
     if [ ! -e $live_dev ]; then
         if losetup /dev/loop0|grep -q '\.iso'; then
             # PXE boot

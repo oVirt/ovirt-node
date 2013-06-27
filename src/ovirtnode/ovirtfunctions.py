@@ -38,7 +38,7 @@ import logging
 import grp
 import pwd
 from ovirt.node.config import defaults
-from ovirt.node.utils import system
+from ovirt.node.utils import process,system
 
 OVIRT_CONFIG="/config"
 OVIRT_LOGFILE="/var/log/ovirt.log"
@@ -62,6 +62,10 @@ else:
     PRODUCT_SHORT = PRODUCT_SHORT.strip("'\"")
 PRODUCT_VERSION = aug.get("/files/etc/default/version/VERSION")
 PRODUCT_RELEASE = aug.get("/files/etc/default/version/RELEASE")
+
+DEV_LIVE = "/dev/{live}".format(live=process.check_output(
+                                "/usr/libexec/ovirt-functions get_live_disk")
+                                .strip())
 
 OVIRT_VARS = {}
 # Parse all OVIRT_* variables
@@ -438,13 +442,13 @@ def mount_live():
     if os.path.ismount("/live"):
         if os.path.exists("/live/isolinux") or os.path.exists("/live/syslinux"):
             return True
-    if not os.path.exists("/dev/live"):
+    if not os.path.exists(DEV_LIVE):
         if system("losetup /dev/loop0|grep -q '\.iso'"):
             # PXE boot
             live_dev="/dev/loop0"
         else:
             try:
-                # /dev/live if not exist alternative
+                # DEV_LIVE if not exist alternative
                 client = gudev.Client(['block'])
                 cmdline = open("/proc/cmdline")
                 cdlabel = re.search('CDLABEL\=([a-zA-Z0-9_\.-]+)', cmdline.read())
@@ -463,7 +467,7 @@ def mount_live():
     elif os.path.exists("/data/updates/ovirt-node-image.iso"):
         live_dev = "-o loop /data/updates/ovirt-node-image.iso"
     else:
-        live_dev="/dev/live"
+        live_dev = DEV_LIVE
 
     system_closefds("mkdir -p /live")
     system_closefds("mount -r " + live_dev + " /live &>/dev/null")
@@ -1000,10 +1004,10 @@ def udev_info(name, query):
 
 def get_live_disk():
     live_disk=""
-    if os.path.exists("/dev/live"):
-        live_disk = os.path.dirname(udev_info("/dev/live","path"))
+    if os.path.exists(DEV_LIVE):
+        live_disk = os.path.dirname(udev_info(DEV_LIVE,"path"))
         if "block" in live_disk:
-            live_disk = os.path.basename(udev_info("/dev/live","path")).strip()
+            live_disk = os.path.basename(udev_info(DEV_LIVE,"path")).strip()
             # if dm-XX, not enough detail to map correctly
             if "dm-" in live_disk:
                 live_disk = findfs("LIVE")[:-2]
