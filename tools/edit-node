@@ -756,24 +756,22 @@ class LiveImageEditor(LiveImageCreator):
             pkg = "password-set"
         print "Creating Manifests"
         # Create post-image processing manifests
-        cmd = "LC_ALL=C rpm -qa --qf '%%{name}-%%{version}-%%{release}.'" \
-              "'%%{arch} (%%{SIGPGP:pgpsig})\n' | sort -u > " \
-              "/manifest-%s-rpm.txt" % pkg
+        cmd = "LC_ALL=C rpm -qa --qf '%{name}-%{version}-%{release}." \
+              "%{arch} (%{SIGPGP:pgpsig})\n' | sort -u > " \
+              "/manifest-rpm.txt"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
                              preexec_fn=self._chroot)
         output, err = f.communicate()
 
-        cmd = "LC_ALL=C rpm -qa --qf '%%{sourcerpm}\n' | sort -u > " \
+        cmd = "LC_ALL=C rpm -qa --qf '%{sourcerpm}\n' | sort -u > " \
               "/manifest-srpm.txt"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
                              preexec_fn=self._chroot)
         output, err = f.communicate()
 
         # collect all included licenses rhbz#601927
-        cmd = "LC_ALL=C rpm -qa --qf '%%{license}\n' | sort -u > " \
+        cmd = "LC_ALL=C rpm -qa --qf '%{license}\n' | sort -u > " \
               "/manifest-license.txt"
-        cmd = "LC_ALL=C rpm -qa --qf '%%{license}\n' | sort -u > " \
-            "/manifest-%s-%s-license.txt" % (timestamp, pkg)
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
                              preexec_fn=self._chroot)
         output, err = f.communicate()
@@ -784,6 +782,17 @@ class LiveImageEditor(LiveImageCreator):
         output, err = f.communicate()
 
         cmd = "du -x --exclude=/var/cache/yum / > /manifest-dir.txt"
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
+                             preexec_fn=self._chroot)
+        output, err = f.communicate()
+
+        cmd = "find / -xdev |sed \"s#\$#\\t\\t\\tNot owned by any package#\"" \
+              "| sort -u -k1,1 | sed \"s#\\t\\t\\t#\\n#\" > /manifest-owns.txt"
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
+                             preexec_fn=self._chroot)
+        output, err = f.communicate()
+
+        cmd = "rpm -qa | xargs -n1 rpm -e --test 2> /manifest-deps.txt"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
                              preexec_fn=self._chroot)
         output, err = f.communicate()
@@ -842,12 +851,13 @@ class LiveImageEditor(LiveImageCreator):
                 output, err = f.communicate()
             else:
                 cmd = "bzcat %s/iso/isolinux/manifest-%s.txt.bz2|sort > " \
-                    "%s/manifest-%s.txt" % \
+                    "%s/manifest-tmp-%s.txt" % \
                     (self._ImageCreator__builddir, i, self._instroot, i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
                                      stderr=STDOUT)
                 output, err = f.communicate()
-            cmd = "diff -u /manifest-%s.txt /manifest-%s.txt | egrep" \
+
+            cmd = "diff -u /manifest-tmp-%s.txt /manifest-%s.txt | egrep" \
                 " -v \"^@|^ \"> /delta-manifest-%s.txt" % \
                 (i, i, i)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
@@ -857,19 +867,19 @@ class LiveImageEditor(LiveImageCreator):
             if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" %
                              (self._ImageCreator__builddir, i)):
                 cmd = "cat %s/iso/isolinux/current-manifest-%s.txt|sort -u " \
-                    "> %s/manifest-%s.txt" % \
+                    "> %s/manifest-tmp-%s.txt" % \
                     (self._ImageCreator__builddir, i, self._instroot, i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
                                      stderr=STDOUT)
                 output, err = f.communicate()
             else:
                 cmd = "cat %s/iso/isolinux/manifest-%s.txt|sort -u >" \
-                      " %s/manifest-%s.txt" % \
+                      " %s/manifest-tmp-%s.txt" % \
                       (self._ImageCreator__builddir, i, self._instroot, i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
                                      stderr=STDOUT)
                 output, err = f.communicate()
-            cmd = "diff -u /manifest-%s.txt /manifest-%s.txt |egrep " \
+            cmd = "diff -u /manifest-tmp-%s.txt /manifest-%s.txt |egrep " \
                 "-v \"^@|^ \" > /delta-manifest-%s.txt" % \
                 (i, i, i)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
