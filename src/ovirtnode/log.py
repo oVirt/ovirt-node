@@ -114,16 +114,6 @@ def ovirt_netconsole(server, port):
     return True
 
 
-def set_logrotate_size(size):
-    try:
-        _functions.augtool("set", \
-                           "/files/etc/logrotate.d/ovirt-node/rule/size", size)
-        _functions.ovirt_store_config("/etc/logrotate.d/ovirt-node")
-        return True
-    except:
-        return False
-
-
 def get_rsyslog_config():
     rsyslog_config = open(RSYSLOG_FILE)
     for line in rsyslog_config:

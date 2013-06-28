@@ -1210,8 +1210,11 @@ class Logrotate(NodeConfigFileSection):
             title = "Setting logrotate maximum logfile size"
 
             def commit(self):
-                import ovirtnode.log as olog
-                olog.set_logrotate_size(max_size)
+                from ovirtnode.ovirtfunctions import ovirt_store_config
+                aug = utils.AugeasWrapper()
+                aug.set("/files/etc/logrotate.d/ovirt-node/rule/size",
+                        max_size)
+                ovirt_store_config("/etc/logrotate.d/ovirt-node")
 
         tx = utils.Transaction("Configuring logrotate")
         tx.append(CreateLogrotateConfig())
