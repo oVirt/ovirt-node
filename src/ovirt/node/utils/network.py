@@ -108,11 +108,11 @@ class UdevNICInfo(base.Base):
         return self._cached_device
 
     def __get_property(self, name):
-        return self._cached_device.get_property(name) if self.exists() \
+        return self._udev_device.get_property(name) if self.exists() \
             else None
 
     def exists(self):
-        return self._cached_device is not None
+        return self._udev_device is not None
 
     @property
     def name(self):
