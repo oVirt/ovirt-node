@@ -19,7 +19,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from subprocess import STDOUT, PIPE
-import ovirt.node.utils
 import logging
 import subprocess
 import sys
@@ -74,12 +73,14 @@ def check_output(*args, **kwargs):
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
-    if ovirt.node.utils.system.is_python_2_6():
+    try:
+        return unicode(subprocess.check_output(*args, **kwargs),
+                       encoding=sys.stdin.encoding)
+    except AttributeError:
+        # We're probably on Python 2.7, which doesn't have check_output
         if isinstance(args[0], list):
             args = (" ".join(args[0]),)
         return pipe(*args)
-    return unicode(subprocess.check_output(*args, **kwargs),
-                   encoding=sys.stdin.encoding)
 
 
 def pipe(cmd, stdin=None):
