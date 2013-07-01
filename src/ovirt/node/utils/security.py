@@ -144,6 +144,13 @@ class Ssh(base.Base):
         process.call("service sshd restart &>/dev/null")
 
     def password_authentication(self, enable=None):
+        """Get or set the ssh password authentication
+
+        Args:
+            enable: (optional) If given the auth is set
+        Returns:
+            True if password authentication is enabled, False otherwise
+        """
         augpath = "/files/etc/ssh/sshd_config/PasswordAuthentication"
         aug = utils.AugeasWrapper()
         if enable in [True, False]:
@@ -154,7 +161,11 @@ class Ssh(base.Base):
             aug.set(augpath, value)
             ofunc.ovirt_store_config("/etc/ssh/sshd_config")
             self.restart()
-        return aug.get(augpath)
+        state = str(aug.get(augpath)).lower()
+        if state not in ["yes", "no"]:
+            raise RuntimeError("Failed to set SSH password authentication" +
+                               "(%s)" % state)
+        return state == "yes"
 
     def get_hostkey(self, variant="rsa"):
         fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant
