@@ -30,10 +30,12 @@ import sys
 class PasswordTool(cmd.Cmd):
     intro = "\n\n Password Configuration\n\n Enter ? for help.\n"
     prompt = "> "
+    is_debug = False
 
-    def __init__(self):
+    def __init__(self, debug=False):
         cmd.Cmd.__init__(self)
         self.logger = logging.getLogger(__name__)
+        self.is_debug = debug
 
     def do_set_root_password(self, line):
         """Set root password
@@ -92,7 +94,8 @@ class PasswordTool(cmd.Cmd):
             security.Passwd().set_password(username, pw)
             self.logger.info("Password updated successfully.")
         except ValueError as e:
-            self.logger.exception("Exception:")
+            if self.is_debug:
+                self.logger.exception("Exception:")
             self.logger.error("Password update failed: %s" % e.message)
 
 
@@ -108,7 +111,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=lvl, format='[%(levelname)s] %(message)s')
 
     # Setup CLI
-    cli = PasswordTool()
+    cli = PasswordTool(namespace.verbose)
 
     #if namespace.command:
     #    for command in namespace.command:
