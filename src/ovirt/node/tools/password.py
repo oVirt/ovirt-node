@@ -52,7 +52,15 @@ class PasswordTool(cmd.Cmd):
         prompt = "Enable SSH password authentication ([Y]es/[N]o)?"
         do_enable = self.__ask_yes_or_no(prompt)
         self.logger.debug("Setting SSH password authentication")
-        security.Ssh().password_authentication(do_enable)
+        state = security.Ssh().password_authentication(do_enable)
+        if state == "yes":
+            self.logger.info("SSH password authentication "
+                             "is currently enabled.")
+        elif state == "no":
+            self.logger.info("SSH password authentication is "
+                             "currently disabled.")
+        else:
+            self.logger.error("Setting SSH password authentication failed")
 
     def do_quit(self, line):
         """Quit
