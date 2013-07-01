@@ -90,7 +90,7 @@ Requires:       pykickstart  >= 1.54
 Requires:       livecd-tools >= 13.4.4
 %else
 Requires:       livecd-tools >= 1:16.0
-%fi
+%endif
 Obsoletes:      ovirt-node-tools <= 2.3.0-999
 
 %define recipe_root %{_datadir}/ovirt-node-recipe
@@ -109,7 +109,7 @@ Group:          Applications/System
 Requires:       livecd-tools >= 13.4.4
 %else
 Requires:       livecd-tools >= 1:16.0
-%fi
+%endif
 Requires:       appliance-tools-minimizer
 Requires:       libselinux-python
 
