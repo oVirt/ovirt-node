@@ -349,7 +349,7 @@ class ConfirmedEntry(ContainerElement):
     def value(self, new_value=None):
         if new_value is not None:
             pass
-        return self._changes[self.path + "[0]"] if self.valid() else ""
+        return self._changes[self.path + "[0]"] if self.valid() else None
 
     def valid(self, is_valid=None):
         if is_valid in [True, False]:
