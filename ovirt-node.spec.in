@@ -86,7 +86,11 @@ Provides a series of daemons and support utilities for hypervisor distribution.
 Summary:        Recipes for building and running %{product_family} images
 Group:          Applications/System
 Requires:       pykickstart  >= 1.54
+%if 0%{?centos}
+Requires:       livecd-tools >= 13.4.4
+%else
 Requires:       livecd-tools >= 1:16.0
+%fi
 Obsoletes:      ovirt-node-tools <= 2.3.0-999
 
 %define recipe_root %{_datadir}/ovirt-node-recipe
@@ -101,7 +105,11 @@ however on a development machine to help to build the image.
 %package tools
 Summary:        Tools for working with plugins on %{product_family} images
 Group:          Applications/System
+%if 0%{?centos}
+Requires:       livecd-tools >= 13.4.4
+%else
 Requires:       livecd-tools >= 1:16.0
+%fi
 Requires:       appliance-tools-minimizer
 Requires:       libselinux-python
 
