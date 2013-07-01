@@ -96,17 +96,16 @@ class Plugin(NodePlugin):
 
     def on_merge(self, changes):
         p_manifests_dir = "/etc/ovirt-plugins-manifests.d"
-        p_name = self._model["plugin"]
         fn = None
         if "button.drpm" in changes:
-            fn = glob.glob("%s/delta-*-manifest-rpm-%s.txt" %
-                           (p_manifests_dir, p_name))[0]
+            fn = glob.glob("%s/delta-manifest-rpm.txt" %
+                           (p_manifests_dir))[0]
         elif "button.dsrpm" in changes:
-            fn = glob.glob("%s/delta-*-manifest-srpm-%s.txt" %
-                           (p_manifests_dir, p_name))[0]
+            fn = glob.glob("%s/delta-manifest-srpm.txt" %
+                           (p_manifests_dir))[0]
         elif "button.dfile" in changes:
-            fn = glob.glob("%s/delta-*-manifest-file-%s.txt" %
-                           (p_manifests_dir, p_name))[0]
+            fn = glob.glob("%s/delta-manifest-file.txt" %
+                           (p_manifests_dir))[0]
 
         if fn:
             self.logger.debug("Reading manifest from: %s" % fn)
