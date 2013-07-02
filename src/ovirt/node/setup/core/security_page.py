@@ -120,4 +120,4 @@ class Plugin(plugins.NodePlugin):
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
 
-        return ui.content()
+        return self.ui_content()
