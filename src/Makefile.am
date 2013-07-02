@@ -138,7 +138,6 @@ pyovirt_node_setup_core_PYTHON = \
   ovirt/node/setup/core/kdump_page.py \
   ovirt/node/setup/core/keyboard_page.py \
   ovirt/node/setup/core/logging_page.py \
-  ovirt/node/setup/core/monitoring_page.py \
   ovirt/node/setup/core/network_page.py \
   ovirt/node/setup/core/performance_page.py \
   ovirt/node/setup/core/ping.py \
@@ -147,6 +146,16 @@ pyovirt_node_setup_core_PYTHON = \
   ovirt/node/setup/core/security_page.py \
   ovirt/node/setup/core/status_page.py \
   ovirt/node/setup/core/support_page.py
+
+if TARGET_FEDORA
+pyovirt_node_setup_core_PYTHON += \
+  ovirt/node/setup/core/monitoring_page.py \
+endif
+
+if TARGET_CENTOS
+pyovirt_node_setup_core_PYTHON += \
+  ovirt/node/setup/core/monitoring_page.py \
+endif
 
 
 # Setup CIM Plugin
