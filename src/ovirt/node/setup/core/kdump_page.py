@@ -32,9 +32,13 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     _types = [("disabled", "Disable"),
-              ("local", "Local"),
-              ("ssh", "SSH"),
-              ("nfs", "NFS")]
+              ("local", "Local")]
+
+    net_is_configured = utils.network.NodeNetwork().is_configured()
+
+    if net_is_configured:
+        _types.extend([("ssh", "SSH"),
+                       ("nfs", "NFS")])
 
     def name(self):
         return "Kdump"
@@ -76,17 +80,26 @@ class Plugin(plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        ws = [ui.Header("kdump._header", "Configure Kdump"),
-              ui.Options("kdump.type", "Type", self._types),
-              ui.Divider("divider[0]"),
-              ui.Entry("kdump.nfs_location", "NFS Location " +
-                       "(example.com:/var/crash):",
-                       align_vertical=True),
-              ui.Divider("divider[1]"),
-              ui.Entry("kdump.ssh_location", "SSH Location " +
-                       "(root@example.com):",
-                       align_vertical=True),
-              ]
+        ws = [ui.Header("kdump._header", "Configure Kdump")]
+
+        if not self.net_is_configured:
+            ws.extend([ui.Notice("network.notice",
+                                 "Networking is not configured, " +
+                                 "please configure it before NFS " +
+                                 "or SSH-based kdump"),
+                       ui.Divider("notice.divider")])
+
+        else:
+            ws.extend([ui.Options("kdump.type", "Type", self._types),
+                       ui.Divider("divider[0]"),
+                       ui.Entry("kdump.nfs_location", "NFS Location " +
+                                "(example.com:/var/crash):",
+                                align_vertical=True),
+                       ui.Divider("divider[1]"),
+                       ui.Entry("kdump.ssh_location", "SSH Location " +
+                                "(root@example.com):",
+                                align_vertical=True),
+                       ])
         page = ui.Page("page", ws)
         self.widgets.add(page)
         return page
