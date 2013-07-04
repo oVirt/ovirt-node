@@ -22,7 +22,8 @@ from mock import patch
 from ovirt.node.config import defaults
 from ovirt.node.utils import fs
 from ovirt.node.utils.fs import ShellVarFile, FakeFs
-from ovirt.node.utils.network import UdevNICInfo, SysfsNICInfo
+from ovirt.node.utils.network import UdevNICInfo, SysfsNICInfo, NodeNetwork, \
+    BondedNIC, BridgedNIC, NIC, TaggedNIC
 import logging
 import pprint
 
@@ -62,6 +63,29 @@ class TestFakeFs():
 
 
 @patch_common
+class TestCleanNetwork():
+    """Test that a clean network environment is detected correctly
+    """
+    def setUp(self):
+        FakeFs.erase()
+        FakeFs.File("/etc/default/ovirt").touch()
+
+    def tearDown(self):
+        FakeFs.erase()
+
+    def test_clean(self, *args, **kwargs):
+        ifnames = ["ens1", "ens2", "brens3", "bond007", "ens4.42"]
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ifnames
+        nics = nn.nics()
+
+        print nics
+
+        assert sorted(nics.keys()) == ["bond007", "ens1", "ens2"]
+        assert all(type(n) is NIC for n in nics.values())
+
+
+@patch_common
 class TestBridgedNIC():
     """Test the bridged/legacy configuration
     """
@@ -82,13 +106,28 @@ class TestBridgedNIC():
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
         assert ifcfg_has_items("eth0",
-                               [('BRIDGE', 'breth0'), ('DEVICE', 'eth0'),
+                               [('BRIDGE', 'breth0'),
+                                ('DEVICE', 'eth0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes')])
         assert ifcfg_has_items("breth0",
-                               [('BOOTPROTO', 'dhcp'), ('DELAY', '0'),
-                                ('DEVICE', 'breth0'), ('ONBOOT', 'yes'),
-                                ('PEERNTP', 'yes'), ('TYPE', 'Bridge')])
+                               [('BOOTPROTO', 'dhcp'),
+                                ('DELAY', '0'),
+                                ('DEVICE', 'breth0'),
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes'),
+                                ('TYPE', 'Bridge')])
+
+    def test_dhcp_discovery(self, *args, **kwargs):
+        self.test_dhcp()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["eth0",
+                                  "breth0"]
+        nics = nn.nics()
+
+        assert nics.keys() == ["eth0"]
+        assert type(nics["eth0"]) is BridgedNIC
 
     def test_static(self, *args, **kwargs):
         m = defaults.Network()
@@ -101,7 +140,8 @@ class TestBridgedNIC():
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
         assert ifcfg_has_items("ens1",
-                               [('BRIDGE', 'brens1'), ('DEVICE', 'ens1'),
+                               [('BRIDGE', 'brens1'),
+                                ('DEVICE', 'ens1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes')])
         assert ifcfg_has_items("brens1",
@@ -113,6 +153,17 @@ class TestBridgedNIC():
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
+
+    def test_static_discovery(self, *args, **kwargs):
+        self.test_static()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["ens1",
+                                  "brens1"]
+        nics = nn.nics()
+
+        assert nics.keys() == ["ens1"]
+        assert type(nics["ens1"]) is BridgedNIC
 
 
 @patch_common
@@ -127,8 +178,6 @@ class TestDirectNIC():
         FakeFs.erase()
 
     def test_dhcp(self, *args, **kwargs):
-        """Test bridgeless with DHCP configuration file creation
-        """
         mt = defaults.NetworkLayout()
         m = defaults.Network()
 
@@ -146,9 +195,50 @@ class TestDirectNIC():
 
         assert "breth0" not in FakeFs.filemap
 
+    def test_dhcp_discovery(self, *args, **kwargs):
+        self.test_dhcp()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["eth0"]
+        nics = nn.nics()
+
+        assert nics.keys() == ["eth0"]
+        assert type(nics["eth0"]) is NIC
+
+    def test_tagged_dhcp(self, *args, **kwargs):
+        mt = defaults.NetworkLayout()
+        m = defaults.Network()
+
+        mt.configure_direct()
+        m.configure_dhcp("eth0", "42")
+
+        run_tx_by_name(m.transaction(), "WriteConfiguration")
+
+        assert ifcfg_has_items("eth0",
+                               [('DEVICE', 'eth0'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('ONBOOT', 'yes')])
+
+        assert ifcfg_has_items("eth0.42",
+                               [('BOOTPROTO', 'dhcp'),
+                                ('DEVICE', 'eth0.42'),
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes'),
+                                ('VLAN', 'yes')])
+
+        assert "breth0" not in FakeFs.filemap
+
+    def test_tagged_dhcp_discovery(self, *args, **kwargs):
+        self.test_tagged_dhcp()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["eth0", "eth0.42"]
+        nics = nn.nics()
+
+        assert nics.keys() == ["eth0"]
+        assert type(nics["eth0"]) is TaggedNIC
+
     def test_static(self, *args, **kwargs):
-        """Test bridgeless with static IP configuration file creation
-        """
         mt = defaults.NetworkLayout()
         m = defaults.Network()
 
@@ -168,6 +258,16 @@ class TestDirectNIC():
                                 ('PEERNTP', 'yes')])
 
         assert "brens1" not in FakeFs.filemap
+
+    def test_static_discovery(self, *args, **kwargs):
+        self.test_static()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["ens1"]
+        nics = nn.nics()
+
+        assert nics.keys() == ["ens1"]
+        assert type(nics["ens1"]) is NIC
 
 
 @patch_common
@@ -192,26 +292,45 @@ class TestBond():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
+        assert ifcfg_has_items("ens1",
+                               [('DEVICE', 'ens1'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
+        assert ifcfg_has_items("ens2",
+                               [('DEVICE', 'ens2'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
+        assert ifcfg_has_items("ens3",
+                               [('DEVICE', 'ens3'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
         assert ifcfg_has_items("bond0",
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'bond0'),
-                                ('HWADDR', 'th:em:ac:ad:dr'),
-                                ('ONBOOT', 'yes'), ('PEERNTP', 'yes')])
-
-        assert ifcfg_has_items("ens1",
-                               [('DEVICE', 'ens1'), ('MASTER', 'bond0'),
-                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
-
-        assert ifcfg_has_items("ens2",
-                               [('DEVICE', 'ens2'), ('MASTER', 'bond0'),
-                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
-
-        assert ifcfg_has_items("ens3",
-                               [('DEVICE', 'ens3'), ('MASTER', 'bond0'),
-                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes')])
 
         assert len(FakeFs.filemap) == (1 + 1 + 3)
+
+    def test_direct_dhcp_discovery(self, *args, **kwargs):
+        self.test_direct_dhcp()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["bond0", "ens1", "ens2", "ens3"]
+        nics = nn.nics()
+
+        assert nics.keys() == ["bond0"]
+        assert type(nics["bond0"]) is BondedNIC
 
     def test_bridged_dhcp(self, *args, **kwargs):
         mb = defaults.NicBonding()
@@ -224,24 +343,32 @@ class TestBond():
 
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
+        assert ifcfg_has_items("ens1",
+                               [('DEVICE', 'ens1'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
+        assert ifcfg_has_items("ens2",
+                               [('DEVICE', 'ens2'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
+        assert ifcfg_has_items("ens3",
+                               [('DEVICE', 'ens3'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
         assert ifcfg_has_items("bond0",
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BRIDGE', 'brbond0'),
                                 ('DEVICE', 'bond0'),
-                                ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('ONBOOT', 'yes')])
-
-        assert ifcfg_has_items("ens1",
-                               [('DEVICE', 'ens1'), ('MASTER', 'bond0'),
-                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
-
-        assert ifcfg_has_items("ens2",
-                               [('DEVICE', 'ens2'), ('MASTER', 'bond0'),
-                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
-
-        assert ifcfg_has_items("ens3",
-                               [('DEVICE', 'ens3'), ('MASTER', 'bond0'),
-                                ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
         assert ifcfg_has_items("brbond0",
                                [('BOOTPROTO', 'dhcp'),
@@ -252,6 +379,83 @@ class TestBond():
                                 ('TYPE', 'Bridge')])
 
         assert len(FakeFs.filemap) == (1 + 1 + 3 + 1)
+
+    def test_bridged_dhcp_discovery(self, *args, **kwargs):
+        self.test_bridged_dhcp()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["ens1", "ens2", "ens3",
+                                  "bond0"]
+        nics = nn.nics()
+
+        assert nics.keys() == ["bond0"]
+        assert type(nics["bond0"]) is BridgedNIC
+
+    def test_tagged_bridged_dhcp(self, *args, **kwargs):
+        mb = defaults.NicBonding()
+        mt = defaults.NetworkLayout()
+        m = defaults.Network()
+
+        mb.configure_8023ad("bond0", ["ens1", "ens2", "ens3"])
+        m.configure_dhcp("bond0", "42")
+        mt.configure_bridged()
+
+        run_tx_by_name(m.transaction(), "WriteConfiguration")
+
+        assert ifcfg_has_items("ens1",
+                               [('DEVICE', 'ens1'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
+        assert ifcfg_has_items("ens2",
+                               [('DEVICE', 'ens2'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
+        assert ifcfg_has_items("ens3",
+                               [('DEVICE', 'ens3'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('MASTER', 'bond0'),
+                                ('ONBOOT', 'yes'),
+                                ('SLAVE', 'yes')])
+
+        assert ifcfg_has_items("bond0",
+                               [('BONDING_OPTS', 'mode=4'),
+                                ('DEVICE', 'bond0'),
+                                ('ONBOOT', 'yes')])
+
+        assert ifcfg_has_items("bond0.42",
+                               [('BRIDGE', 'brbond0'),
+                                ('DEVICE', 'bond0.42'),
+                                ('ONBOOT', 'yes'),
+                                ('VLAN', 'yes')])
+
+        assert ifcfg_has_items("brbond0",
+                               [('BOOTPROTO', 'dhcp'),
+                                ('DELAY', '0'),
+                                ('DEVICE', 'brbond0'),
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes'),
+                                ('TYPE', 'Bridge')])
+
+        assert len(FakeFs.filemap) == (1 + 1 + 1 + 3 + 1)
+
+    def test_tagged_bridged_dhcp_discovery(self, *args, **kwargs):
+        self.test_tagged_bridged_dhcp()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["ens1", "ens2", "ens3",
+                                  "bond0"]
+        nics = nn.nics()
+
+        bridge_nic = nics["bond0"]
+        assert nics.keys() == ["bond0"]
+        assert type(bridge_nic) is BridgedNIC
+        assert bridge_nic.slave_nic.vlan_nic.ifname == "bond0.42"
 
     def test_bond_slave_as_primary(self, *args, **kwargs):
         mb = defaults.NicBonding()
@@ -297,11 +501,24 @@ class TestBond():
 
         assert ifcfgfilename("bond0") not in FakeFs.filemap
         assert ifcfg_has_items("ens1", [('DEVICE', 'ens1'),
+                                        ('HWADDR', 'th:em:ac:ad:dr'),
                                         ('ONBOOT', 'yes')])
         assert ifcfg_has_items("ens2", [('DEVICE', 'ens2'),
+                                        ('HWADDR', 'th:em:ac:ad:dr'),
                                         ('ONBOOT', 'yes')])
         assert ifcfg_has_items("ens3", [('DEVICE', 'ens3'),
+                                        ('HWADDR', 'th:em:ac:ad:dr'),
                                         ('ONBOOT', 'yes')])
+
+    def test_no_bond_and_clean_discovery(self, *args, **kwargs):
+        self.test_no_bond_and_clean()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["ens1", "ens2", "ens3"]
+        nics = nn.nics()
+
+        assert sorted(nics.keys()) == ["ens1", "ens2", "ens3"]
+        assert all(type(n) is NIC for n in nics.values())
 
 
 def run_tx_by_name(txs, name):

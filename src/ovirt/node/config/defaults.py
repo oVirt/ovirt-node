@@ -323,20 +323,62 @@ class Network(NodeConfigFileSection):
 
                 has_network = m["iface"] is not None
                 if has_network:
-                    topology = NetworkLayout().retrieve()["layout"]
-                    if topology == "bridged":
-                        self.__write_bridged_config()
-                    else:
-                        self.__write_direct_config()
-                else:
-                    topology = NetworkLayout().configure_direct()
+                    self.__write_config()
 
                 aug.set("/files/etc/sysconfig/network/NETWORKING",
                         "yes" if has_network else "no")
                 fs.Config().persist("/etc/sysconfig/network")
                 fs.Config().persist("/etc/hosts")
 
-            def __assign_common(self, cfg):
+            def __write_config(self):
+                m = Network().retrieve()
+
+                topology = NetworkLayout().retrieve()["layout"]
+                with_bridge = (topology == "bridged")
+
+                mbond = NicBonding().retrieve()
+
+                bridge_ifname = "br%s" % m["iface"]
+                vlan_ifname = "%s.%s" % (m["iface"], m["vlanid"])
+
+                nic_cfg = NicConfig(m["iface"])
+                nic_cfg.device = m["iface"]
+                nic_cfg.onboot = "yes"
+
+                # Only assign a hwaddr if it's not a bond
+                if mbond["name"] != m["iface"]:
+                    nic_cfg.hwaddr = NIC(m["iface"]).hwaddr
+
+                if m["vlanid"]:
+                    # Add a tagged interface
+                    vlan_cfg = NicConfig(vlan_ifname)
+                    vlan_cfg.device = vlan_ifname
+                    vlan_cfg.vlan = "yes"
+                    vlan_cfg.onboot = "yes"
+                    if with_bridge:
+                        vlan_cfg.bridge = bridge_ifname
+                    else:
+                        self.__assign_ip_config(vlan_cfg)
+                    vlan_cfg.save()
+                else:
+                    if with_bridge:
+                        nic_cfg.bridge = bridge_ifname
+                    else:
+                        # No vlan and no bridge: So assign IP to NIC
+                        self.__assign_ip_config(nic_cfg)
+
+                if with_bridge:
+                    # Add a bridge
+                    bridge_cfg = NicConfig(bridge_ifname)
+                    self.__assign_ip_config(bridge_cfg)
+                    bridge_cfg.device = bridge_ifname
+                    bridge_cfg.delay = "0"
+                    bridge_cfg.type = "Bridge"
+                    bridge_cfg.save()
+
+                nic_cfg.save()
+
+            def __assign_ip_config(self, cfg):
                 m = Network().retrieve()
                 m_dns = Nameservers().retrieve()
                 m_ipv6 = IPv6().retrieve()
@@ -364,47 +406,6 @@ class Network(NodeConfigFileSection):
                     cfg.ipv6addr = "%s/%s" % (m_ipv6["ipaddr"],
                                               m_ipv6["netmask"])
                     cfg.ipv6_defaultgw = m_ipv6["gateway"]
-
-            def __write_bridged_config(self):
-                m = Network().retrieve()
-
-                # Bridge
-                bridge_ifname = "br%s" % m["iface"]
-                bridge_cfg = NicConfig(bridge_ifname)
-                self.__assign_common(bridge_cfg)
-                bridge_cfg.device = bridge_ifname
-                bridge_cfg.delay = "0"
-                bridge_cfg.type = "Bridge"
-
-                # Now the slave
-                slave_ifname_vlan = "%s.%s" % (m["iface"],
-                                               m["vlanid"])
-                slave_ifname = slave_ifname_vlan if m["vlanid"] else m["iface"]
-                slave_cfg = NicConfig(slave_ifname)
-                slave_cfg.device = m["iface"]
-                slave_cfg.device = slave_ifname
-                slave_cfg.bridge = bridge_ifname
-                slave_cfg.hwaddr = NIC(m["iface"]).hwaddr
-                slave_cfg.vlan = "yes" if m["vlanid"] else None
-                slave_cfg.onboot = "yes"
-
-                # save()includes persisting
-                bridge_cfg.save()
-                slave_cfg.save()
-
-            def __write_direct_config(self):
-                m = Network().retrieve()
-
-                nic_ifname_vlan = "%s.%s" % (m["iface"],
-                                             m["vlanid"])
-                nic_ifname = nic_ifname_vlan if m["vlanid"] \
-                    else m["iface"]
-                nic_cfg = NicConfig(nic_ifname)
-                nic_cfg.device = nic_ifname
-                self.__assign_common(nic_cfg)
-                nic_cfg.hwaddr = NIC(m["iface"]).hwaddr
-
-                nic_cfg.save()
 
         class PersistMacNicMapping(utils.Transaction.Element):
             title = "Persist MAC-NIC Mappings"
@@ -512,6 +513,7 @@ class NicBonding(NodeConfigFileSection):
 
                 for slave in bond["slaves"]:
                     slave_cfg = NicConfig(slave)
+                    slave_cfg.hwaddr = NIC(slave).hwaddr
                     slave_cfg.device = slave
                     slave_cfg.slave = "yes"
                     slave_cfg.master = bond["name"]

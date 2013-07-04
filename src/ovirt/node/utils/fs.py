@@ -86,6 +86,7 @@ class File(base.Base):
     filename = None
 
     def __init__(self, filename):
+        base.Base.__init__(self)
         self.filename = filename
 
     def read(self):
@@ -180,6 +181,8 @@ class FakeFs(base.Base):
             return FakeFs.filemap[self.filename]
 
         def write(self, contents, mode=None):
+            self.logger.debug("Saving: %s" % self.filename)
+            self.logger.debug("Writing:\n%s" % contents)
             self._cond_create()
             FakeFs.filemap[self.filename] = contents
 

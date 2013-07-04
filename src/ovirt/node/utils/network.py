@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils
+from ovirt.node import base, utils, config
 from ovirt.node.config.network import NicConfig
 from ovirt.node.utils.fs import File
 import glob
@@ -378,8 +378,8 @@ class BridgedNIC(NIC):
         self.slave_nic.identify(self)
 
     def __str__(self):
-        pairs = {"bridge": self.bridge_nic.ifname,
-                 "slave": self.slave_nic.ifname}
+        pairs = {"bridge": self.bridge_nic,
+                 "slave": self.slave_nic}
         return self.build_str(["ifname"], additional_pairs=pairs)
 
 
@@ -387,17 +387,16 @@ class TaggedNIC(NIC):
     """A class to provide easy access to tagged NICs
     """
     vlan_nic = None
-    parent_nic = None
 
-    def __init__(self, vnic):
+    def __init__(self, parent_nic, vlanid):
         """A unified API for tagged NICs
         Args:
             vnic: A NIC instance pointing to the tagged part of a device
         """
-        parent_ifname, _ = TaggedNIC._parent_and_vlanid_from_name(vnic.ifname)
-        super(TaggedNIC, self).__init__(parent_ifname)
-        self.vlan_nic = vnic
-        self.parent_nic = NIC(parent_ifname)
+        slave_ifname = "%s.%s" % (parent_nic.ifname, vlanid)
+        super(TaggedNIC, self).__init__(parent_nic.ifname)
+        self.vlan_nic = NIC(slave_ifname)
+        self.config = self.vlan_nic.config
 
     @staticmethod
     def _parent_and_vlanid_from_name(ifname):
@@ -420,9 +419,6 @@ class TaggedNIC(NIC):
     def is_configured(self):
         return self.vlan_nic.is_configured()
 
-    def has_link(self):
-        return self.parent_nic.has_link()
-
     def ipv4_address(self):
         return self.vlan_nic.ipv4_address()
 
@@ -438,82 +434,47 @@ class TaggedNIC(NIC):
     def has_vlans(self):
         raise RuntimeError("Nested tagging is not allowed. Is it?")
 
-    def vlanids(self):
-        return self.parent_nic.vlanids()
-
-    def identify(self):
-        self.parent_nic.identify()
-
     def __str__(self):
         pairs = {"vlan": self.vlan_nic.ifname,
-                 "parent": self.parent_nic.ifname}
+                 "parent": self.ifname}
         return self.build_str(["ifname"], additional_pairs=pairs)
 
 
 class BondedNIC(NIC):
     """A class to provide easy access to bonded NICs
     """
-    master_nic = None
-    slave_nic = None
+    slave_nics = None
 
-    def __init__(self, snic):
+    def __init__(self, master_nic, slave_nics=[]):
         """Handle snic like beeing a slave of a bond device
         """
-        master_ifname = snic.config.master
-        super(BondedNIC, self).__init__(master_ifname)
-        self.slave_nic = snic
-        self.master_nic = NIC(master_ifname)
-
-    def exists(self):
-        return self.master_nic.exists()
-
-    def is_configured(self):
-        return self.master_nic.is_configured()
-
-    def has_link(self):
-        return self.master_nic.has_link()
-
-    def ipv4_address(self):
-        return self.master_nic.ipv4_address()
-
-    def ipv6_address(self):
-        return self.master_nic.ipv6_address()
-
-    def ip_addresses(self, families=["inet", "inet6"]):
-        return self.master_nic.ip_addresses(families=families)
-
-    def is_vlan(self):
-        return self.master_nic.is_vlan()
-
-    def has_vlans(self):
-        return self.master_nic.has_vlans()
-
-    def vlanids(self):
-        return self.master_nic.vlanids()
+        super(BondedNIC, self).__init__(master_nic.ifname)
+        self.slave_nics = [NIC(n) for n in slave_nics]
 
     def identify(self):
-        self.slave_nic.identify()
+        (slave.identify() for slave in self.slave_nics)
 
     def __str__(self):
-        pairs = {"slave": self.slave_nic.ifname,
-                 "master": self.master_nic.ifname}
-        return self.build_str(["ifname"], additional_pairs=pairs)
+        return self.build_str(["ifname", "slave_nics"])
 
 
 class NodeNetwork(base.Base):
     def all_ifnames(self):
         return all_ifaces()
 
-    def relevant_ifnames(self, filter_bridges=True, filter_vlans=True):
+    def relevant_ifnames(self, filter_bridges=True, filter_vlans=True,
+                         filter_bonds=True):
         all_ifaces = self.all_ifnames()
-        relevant_ifaces = self._filter_on_ifname(all_ifaces, filter_vlans)
+        relevant_ifaces = self._filter_on_ifname(all_ifaces, filter_vlans,
+                                                 filter_bonds, filter_bridges)
         irrelevant_names = set(all_ifaces) - set(relevant_ifaces)
         LOGGER.debug("Irrelevant interfaces: %s" % irrelevant_names)
         LOGGER.debug("Relevant interfaces: %s" % relevant_ifaces)
 
         return relevant_ifaces
 
-    def _filter_on_ifname(self, ifnames, filter_vlans=True):
+    def _filter_on_ifname(self, ifnames, filter_vlans=True,
+                          filter_bonds=True, filter_bridges=True):
         """Retuns relevant system NICs (via udev)
 
         Filters out
@@ -526,10 +487,19 @@ class NodeNetwork(base.Base):
         - phy (wireless device)
 
         >>> names = ["bond007", "sit1", "vnet11", "tun0", "wlan1", "virbr0"]
-        >>> names += ["ens1", "eth0", "phy0", "p1p7"]
+        >>> names += ["ens1", "eth0", "phy0", "p1p7", "breth0", "ens1.42"]
         >>> model = NodeNetwork()
         >>> model._filter_on_ifname(names)
         ['ens1', 'eth0', 'p1p7']
+
+        >>> model._filter_on_ifname(names, filter_bonds=False)
+        ['bond007', 'ens1', 'eth0', 'p1p7']
+
+        >>> model._filter_on_ifname(names, filter_bridges=False)
+        ['ens1', 'eth0', 'p1p7', 'breth0']
+
+        >>> model._filter_on_ifname(names, filter_vlans=False)
+        ['ens1', 'eth0', 'p1p7', 'ens1.42']
 
         Args:
             filter_bridges: If bridges shall be filtered out too
@@ -538,29 +508,49 @@ class NodeNetwork(base.Base):
             List of strings, the NIC names
         """
         return [n for n in ifnames if not (n == "lo" or
-                                           n.startswith("bond") or
+                                           (filter_bonds and
+                                            n.startswith("bond")) or
+                                           (filter_bridges and
+                                            n.startswith("br")) or
+                                           (filter_vlans and
+                                            ("." in n)) or
                                            n.startswith("sit") or
                                            n.startswith("vnet") or
                                            n.startswith("tun") or
                                            n.startswith("wlan") or
                                            n.startswith("virbr") or
-                                           n.startswith("phy") or
-                                           (filter_vlans and ("." in n)))]
+                                           n.startswith("phy"))]
 
     def build_nic_model(self, ifname):
+        mnet = config.defaults.Network().retrieve()
+        mlayout = config.defaults.NetworkLayout().retrieve()
+        mbond = config.defaults.NicBonding().retrieve()
+
+        bootif, vlanid = mnet["iface"], mnet["vlanid"]
+        bond_name, bond_slaves = mbond["name"], mbond["slaves"]
+        layout = mlayout["layout"]
+
         nic = NIC(ifname)
+        self.logger.debug("Building model for: %s" % nic)
 
-        if nic.config.bridge and nic.config.vlan:
-            nic = BridgedNIC(TaggedNIC(nic))
-
-        elif nic.config.bridge:
-            nic = BridgedNIC(nic)
-
-        elif nic.config.vlan:
-            nic = TaggedNIC(nic)
-
-        elif nic.config.master:
+        if ifname == bond_name:
+            self.logger.debug(" Is bond master")
             nic = BondedNIC(nic)
+
+        if ifname == bootif:
+            self.logger.debug(" Is bootif")
+            if vlanid:
+                self.logger.debug(" Has tag")
+                nic = TaggedNIC(nic, vlanid)
+
+            if layout == "bridged":
+                self.logger.debug(" Is bridged")
+                nic = BridgedNIC(nic)
+
+        if ifname in bond_slaves:
+            nic = None
+
+        self.logger.debug("Concluded Model: %s" % nic)
 
         return nic
 
@@ -569,7 +559,9 @@ class NodeNetwork(base.Base):
         >>> model = NodeNetwork()
         """
         nics = [NIC(ifname) for ifname
-                in self.relevant_ifnames(filter_vlans=False)]
+                in self.relevant_ifnames(filter_vlans=True,
+                                         filter_bonds=False,
+                                         filter_bridges=True)]
 
         bridges = [nic for nic in nics if nic.typ == "bridge"]
         vlans = [nic for nic in nics if nic.typ == "vlan"]
@@ -583,9 +575,10 @@ class NodeNetwork(base.Base):
 
         for nic in nics + vlans:
             candidate = self.build_nic_model(nic.ifname)
-            if nic.ifname not in candidates or \
-               type(candidates[nic.ifname]) is NIC:
+            if candidate:
                 candidates[candidate.ifname] = candidate
+
+        self.logger.debug("Candidates: %s" % candidates)
 
         return candidates
 
