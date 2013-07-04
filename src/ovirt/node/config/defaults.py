@@ -340,7 +340,6 @@ class Network(NodeConfigFileSection):
                 m = Network().retrieve()
                 m_dns = Nameservers().retrieve()
                 m_ipv6 = IPv6().retrieve()
-                m_bond = NicBonding().retrieve()
 
                 cfg.bootproto = m["bootproto"]
                 cfg.ipaddr = m["ipaddr"] or None
@@ -365,10 +364,6 @@ class Network(NodeConfigFileSection):
                     cfg.ipv6addr = "%s/%s" % (m_ipv6["ipaddr"],
                                               m_ipv6["netmask"])
                     cfg.ipv6_defaultgw = m_ipv6["gateway"]
-
-                if m_bond["name"]:
-                    cfg.hwaddr = None
-                    cfg.bonding_opts = m_bond["options"]
 
             def __write_bridged_config(self):
                 m = Network().retrieve()

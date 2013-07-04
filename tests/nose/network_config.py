@@ -138,9 +138,11 @@ class TestDirectNIC():
         run_tx_by_name(m.transaction(), "WriteConfiguration")
 
         assert ifcfg_has_items("eth0",
-                               [('BOOTPROTO', 'dhcp'), ('DEVICE', 'eth0'),
-                               ('HWADDR', 'th:em:ac:ad:dr'), ('ONBOOT', 'yes'),
-                               ('PEERNTP', 'yes')])
+                               [('BOOTPROTO', 'dhcp'),
+                                ('DEVICE', 'eth0'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes')])
 
         assert "breth0" not in FakeFs.filemap
 
@@ -242,8 +244,7 @@ class TestBond():
                                 ('ONBOOT', 'yes'), ('SLAVE', 'yes')])
 
         assert ifcfg_has_items("brbond0",
-                               [('BONDING_OPTS', 'mode=4'),
-                                ('BOOTPROTO', 'dhcp'),
+                               [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'brbond0'),
                                 ('ONBOOT', 'yes'),
