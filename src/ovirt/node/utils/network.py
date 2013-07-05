@@ -221,7 +221,7 @@ class NIC(base.Base):
     def is_configured(self):
         """If there is a configuration for this NIC
         """
-        return self.config.bootproto is not None
+        return self.config.bootproto or self.config.ipaddr
 
     def has_link(self):
         """Determin if L1 is up on a given interface
