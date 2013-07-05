@@ -38,8 +38,10 @@ class Plugin(plugins.NodePlugin):
 
     def model(self):
         cfg = defaults.Keyboard().retrieve()
+        kbd = utils.system.Keyboard()
         model = {}
         model["keyboard.layout"] = cfg["layout"] or ""
+        model["keyboard.layout_name"] = kbd.get_current_name() or "None"
         return model
 
     def validators(self):
@@ -51,6 +53,11 @@ class Plugin(plugins.NodePlugin):
         """
         kbd = utils.system.Keyboard()
         ws = [ui.Header("header", "Keyboard Layout Selection"),
+              ui.Label("label", "Choose the Keyboard Layout you would " +
+                       "like to apply to this system."),
+              ui.Divider("divider[0]"),
+              ui.KeywordLabel("keyboard.layout_name", "Current Active " +
+                              "Keyboard Layout:  "),
               ui.Table("keyboard.layout", "", "Available Keyboard Layouts",
                        kbd.available_layouts(), kbd.get_current()),
               ]
@@ -83,3 +90,5 @@ class Plugin(plugins.NodePlugin):
 
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
+
+        return self.ui_content()

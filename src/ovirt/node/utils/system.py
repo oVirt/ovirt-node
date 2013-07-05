@@ -310,6 +310,14 @@ class Keyboard(base.Base):
     def get_current(self):
         return self.kbd.get()
 
+    def get_current_name(self):
+        layout_name = None
+        for kid, name in self.available_layouts():
+            if kid == self.get_current():
+                layout_name = name
+                break
+        return layout_name
+
 
 class Reboot(base.Base):
     def simpleDaemon(self, main, args=(), kwargs={}):
