@@ -21,6 +21,7 @@
 from ovirt.node import ui, plugins, utils
 from ovirt.node.config import defaults
 from ovirt.node.utils import security, virt, system
+from ovirt.node.utils.network import IPAddress
 import os
 import textwrap
 
@@ -70,7 +71,7 @@ class Plugin(plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         # Function to expand all "keywords" to the same length
-        aligned = lambda l: l.ljust(14)
+        aligned = lambda l: l.ljust(13)
 
         # Network related widgets, appearing in one row
         network_widgets = [ui.KeywordLabel("networking",
@@ -189,12 +190,13 @@ class Plugin(plugins.NodePlugin):
         destinations = []
 
         if syslog["server"]:
-            destinations.append("Rsyslog: %s:%s" % (syslog["server"],
-                                                    syslog["port"] or "514"))
+            destinations.append("Rsyslog: %s:%s" %
+                                (IPAddress(syslog["server"]),
+                                 syslog["port"] or "514"))
 
         if netconsole["server"]:
             destinations.append("Netconsole: %s:%s" %
-                                (netconsole["server"],
+                                (IPAddress(netconsole["server"]),
                                  netconsole["port"] or "6666"))
 
         return ", ".join(destinations) if destinations else "Local Only"

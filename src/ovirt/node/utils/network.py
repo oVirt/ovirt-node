@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils, config
+from ovirt.node import base, utils, config, valid
 from ovirt.node.config.network import NicConfig
 from ovirt.node.utils.fs import File
 import glob
@@ -683,12 +683,15 @@ def calcDottedNetmask(mask):
 
 
 class IPAddress(base.Base):
-    def __init__(self, address, netmask):
+    def __init__(self, address, netmask=None):
         self.address = address
         self.netmask = netmask
 
     def __str__(self):
-        return str(self.address)
+        txt = str(self.address)
+        if valid.IPv6Address().validate(txt):
+            txt = "[%s]" % txt
+        return txt
 
     def items(self):
         return (self.address, self.netmask)
