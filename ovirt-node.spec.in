@@ -150,89 +150,6 @@ patch -p0 << EOF
      logdir = /var/log/puppet
 EOF
 
-cd /usr/libexec
-patch -p0 << EOF
---- ovirt-init-functions.sh 2013-03-21 15:30:13.078014954 -0700
-+++ ovirt-init-functions-new.sh 2013-03-21 16:33:52.893135359 -0700
-@@ -223,6 +223,9 @@
-     #   rhn_proxyuser=PROXY-USERNAME
-     #   rhn_proxypassword=PROXY-PASSWORD
-     #   snmp_password=<authpassphrase>
-+    #   puppet_enabled=<y|n>
-+    #   puppet_server=server
-+    #   puppet_certname=<certname>
-
-     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
-     # network boot interface is assumed to be on management network where
-@@ -329,6 +332,14 @@
-     cim_passwd=
-     cim_enabled=
-
-+    # Puppet related options
-+    # puppet_enabled=y|n
-+    # puppet_server=server
-+    # puppet_certname=<certname>
-+    puppet_enabled=
-+    puppet_server=
-+    puppet_certame=
-+
-     #   pxelinux format: ip=<client-ip>:<boot-server-ip>:<gw-ip>:<netmask>
-     #   anaconda format: ip=<client-ip> netmask=<netmask> gateway=<gw-ip>
-     #   or               ip=dhcp|off
-@@ -613,6 +624,19 @@
-             snmp_password=${i#snmp_password=}
-             ;;
-
-+            puppet_enabled=n | puppet_enabled=0)
-+            puppet_enabled=0
-+            ;;
-+            puppet_enabled* | puppet_enabled=y | puppet_enabled=1)
-+            puppet_enabled=1
-+            ;;
-+            puppet_server=*)
-+            puppet_server=${i#puppet_server=}
-+            ;;
-+            puppet_certname=*)
-+            puppet_certname=${i#puppet_certname=}
-+            ;;
-+
-             mem_overcommit* | ovirt_overcommit*)
-             i=${i#mem_overcommit=}
-             i=${i#ovirt_overcommit=}
-@@ -797,7 +821,7 @@
-
-
-     # save boot parameters as defaults for ovirt-config-*
--    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_org rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install"
-+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot rhn_type rhn_url rhn_ca_cert rhn_username rhn_password rhn_profile rhn_activationkey rhn_org rhn_proxy rhn_proxyuser rhn_proxypassword runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install puppet_enabled puppet_server puppet_certname"
-     # mount /config unless firstboot is forced
-     if [ "$firstboot" != "1" ]; then
-         mount_config
-@@ -855,6 +879,13 @@
-         /usr/sbin/usermod -p "$rootpw" root
-         chage -d 0 root
-     fi
-+    if [ "$puppet_enabled" = 1]; then
-+        if [ `hostname` != "localhost" ] | [ -n $puppet_certname ]; then
-+            python -c "from ovirt.node.setup.puppet_page import *; ActivatePuppet()"
-+        else
-+            log "Puppet disabled. Hostname not set and puppet_certname not specified"
-+        fi
-+    fi
-     # check if root or admin password is expired, this might be upon reboot
-     # in case of automated installed with rootpw or adminpw parameter!
-     if LC_ALL=C chage -l root | grep  -q "password must be changed" \
-@@ -1373,8 +1404,6 @@
-     return $?
- }
-
--
--
- #
- # If called with a param from .service file:
- #
-EOF
-
 
 %package plugin-snmp
 Summary:        SNMP plugin for %{product_family} image
@@ -570,7 +487,9 @@ fi
 %{python_sitelib}/ovirt/node/setup/puppet/puppet_page.py*
 %{_localstatedir}/lib/puppet/facts/ovirt.rb
 %{_sysconfdir}/ovirt-plugins.d/puppet.minimize
+%{_sysconfdir}/ovirt-commandline.d/puppet-args
 %{app_root}/puppet-plugin/puppet-operatingsystem.rb.patch
+%{_sysconfdir}/ovirt-config-boot.d/puppet_autoinstall.py
 
 %files plugin-snmp
 %{python_sitelib}/ovirt_config_setup/snmp.py
@@ -619,6 +538,7 @@ fi
 %{mgmt_scripts_dir}
 %{_sysconfdir}/ovirt-config-boot.d
 %exclude %{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py*
+%exclude %{_sysconfdir}/ovirt-config-boot.d/puppet_autoinstall.py*
 
 %if %{is_f16}
 %{_unitdir}/libvirtd.service

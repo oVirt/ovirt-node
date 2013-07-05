@@ -16,6 +16,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 pluginsdir = $(sysconfdir)/ovirt-plugins.d
+pluginsargsdir = $(sysconfdir)/ovirt-commandline.d
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigbootdir = $(sysconfdir)/ovirt-config-boot.d
 puppetplugindir = ${prefix}/share/ovirt-node/puppet-plugin/
@@ -31,8 +32,12 @@ dist_plugins_DATA = \
   cim.minimize \
   puppet.minimize
 
+dist_pluginsargs_DATA = \
+  puppet-args
+
 dist_pyovirtconfigboot_SCRIPTS = \
-  snmp_autoinstall.py
+  snmp_autoinstall.py \
+  puppet_autoinstall.py
 
 rbovirtsetup_SCRIPTS = \
   ovirt.rb

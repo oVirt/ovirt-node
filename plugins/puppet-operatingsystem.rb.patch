@@ -1,26 +1,27 @@
-    --- operatingsystem.rb  2013-03-19 16:12:46.610079038 -0700 124
-+++ operatingsystemnew.rb   2013-03-21 11:51:59.199657472 -0700 125
-@@ -10,6 +10,9 @@   126
- #  127
- # Caveats: 128
- #  129
-+#  130
-+\$LOAD_PATH.unshift('/var/lib/puppet/facts')   131
-+require 'ovirt.rb' 132
-133
- Facter.add(:operatingsystem) do    134
-   confine :kernel => :sunos    135
-@@ -25,7 +28,12 @@  136
- Facter.add(:operatingsystem) do    137
-   confine :kernel => :linux    138
-   setcode do   139
--    if Facter.value(:lsbdistid) == "Ubuntu"    140
-+    if FileTest.exists?("/etc/default/version")    141
-+        txt = File.read("/etc/default/version")    142
-+        if txt =~ /^PRODUCT='(.*?)\s/  143
-+            $1 144
-+        end    145
-+    elsif Facter.value(:lsbdistid) == "Ubuntu" 146
-        "Ubuntu"    147
-     elsif FileTest.exists?("/etc/debian_version")  148
+--- operatingsystem.rb	2013-07-05 13:05:07.943959513 -0700
++++ operatingsystem.rb	2013-07-05 13:18:54.106022794 -0700
+@@ -10,6 +10,8 @@
+ #
+ # Caveats:
+ #
++$LOAD_PATH.unshift('/var/lib/puppet/facts')
++require ovirt.rb
+
+ Facter.add(:operatingsystem) do
+   confine :kernel => :sunos
+@@ -25,8 +27,13 @@
+ Facter.add(:operatingsystem) do
+   confine :kernel => :linux
+   setcode do
+-    if Facter.value(:lsbdistid) == "Ubuntu"
+-       "Ubuntu"
++    if FileTest.exists?("/etc/default/version")
++      txt = File.read("/etc/default/version")
++      if txt =~ /^PRODUCT='(.*?)\s/ 
++          $1
++      end
++    elsif Facter.value(:lsbdistid) == "Ubuntu"
++      "Ubuntu"
+     elsif FileTest.exists?("/etc/debian_version")
        "Debian"
+     elsif FileTest.exists?("/etc/gentoo-release")
