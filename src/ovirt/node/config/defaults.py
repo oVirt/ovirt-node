@@ -899,7 +899,7 @@ class Syslog(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, server, port):
-        valid.FQDNOrIPAddress()(server)
+        (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(server)
         valid.Port()(port)
 
     def transaction(self):
@@ -1171,7 +1171,7 @@ class Netconsole(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, server, port):
-        valid.FQDNOrIPAddress()(server)
+        (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(server)
         valid.Port()(port)
 
     def transaction(self):

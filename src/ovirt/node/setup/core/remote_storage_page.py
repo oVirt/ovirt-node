@@ -47,7 +47,7 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
-        return {"iscsi.initiator_name": (valid.Empty() | valid.IQN()),
+        return {"iscsi.initiator_name": valid.IQN(),
                 "nfsv4.domain": (valid.Empty() | valid.FQDN()),
                 }
 
