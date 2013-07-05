@@ -208,11 +208,9 @@ class Plugin(plugins.NodePlugin):
             elif ipv4_bootproto in ["dhcp"]:
                 for w in nic_ipv4_group:
                     self.widgets[w].enabled(False)
-                    self.widgets["dialog.nic.vlanid"].enabled(True)
             else:
                 for w in nic_ipv4_group:
                     self.widgets[w].enabled(False)
-                    self.widgets["dialog.nic.vlanid"].enabled(True)
             self.widgets["dialog.nic.ipv4.bootproto"].enabled(True)
 
         ipv6_bootproto = helper["dialog.nic.ipv6.bootproto"]
@@ -223,11 +221,9 @@ class Plugin(plugins.NodePlugin):
             elif ipv6_bootproto in ["dhcp"]:
                 for w in nic_ipv6_group:
                     self.widgets[w].enabled(False)
-                    self.widgets["dialog.nic.vlanid"].enabled(True)
             else:
                 for w in nic_ipv6_group:
                     self.widgets[w].enabled(False)
-                    self.widgets["dialog.nic.vlanid"].enabled(True)
             self.widgets["dialog.nic.ipv6.bootproto"].enabled(True)
 
         if "bond.slaves" in changes:
@@ -553,6 +549,8 @@ class NicDetailsDialog(ui.Dialog):
                         ui.CloseButton("dialog.nic.close", "Close")
                         ]
         self.plugin._nic_details_group.enabled(False)
+        self.plugin.widgets["dialog.nic.vlanid"].enabled(True)
+        self.plugin.widgets["dialog.nic.layout_bridged"].enabled(True)
 
 
 class CreateBondDialog(ui.Dialog):
