@@ -442,12 +442,16 @@ class NicDetailsDialog(ui.Dialog):
                                                          ip6model["gateway"],
                                                          ip6model["bootproto"])
 
+        bootproto = model["bootproto"]
         if model["bootproto"] == "dhcp":
             if nic.exists():
                 routes = utils.network.Routes()
                 gateway = routes.default()
                 ipaddr, netmask = nic.ipv4_address().items()
                 vlanid = ",".join(nic.vlanids())
+        else:
+            if ipaddr:
+                bootproto = "static"
 
         link_status_txt = ("Connected" if nic.has_link()
                            else "Disconnected")
@@ -459,7 +463,7 @@ class NicDetailsDialog(ui.Dialog):
             "dialog.nic.link_status": link_status_txt,
             "dialog.nic.hwaddress": nic.hwaddr,
 
-            "dialog.nic.ipv4.bootproto": model["bootproto"],
+            "dialog.nic.ipv4.bootproto": bootproto,
             "dialog.nic.ipv4.address": ipaddr,
             "dialog.nic.ipv4.netmask": netmask,
             "dialog.nic.ipv4.gateway": gateway,
