@@ -155,9 +155,10 @@ class Plugin(plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        bond_status = ", ".join(defaults.NicBonding().retrieve()["slaves"]
+        mbond = defaults.NicBonding().retrieve()
+        bond_status = ", ".join(mbond["slaves"]
                                 or [])
-        bond_lbl = "Remove bond (%s)" % bond_status \
+        bond_lbl = "Remove %s (%s)" % (mbond["name"], bond_status) \
             if bond_status else "Create Bond"
 
         ws = [ui.Header("header[0]", "System Identification"),
