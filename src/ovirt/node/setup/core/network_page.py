@@ -284,11 +284,9 @@ class Plugin(plugins.NodePlugin):
             self.application.notice("Flashing lights now")
             return
 
-        e_changes_h = plugins.Changeset(effective_changes)
-
         nameservers = []
         dns_keys = ["dns[0]", "dns[1]"]
-        if e_changes_h.contains_any(dns_keys):
+        if effective_changes.contains_any(dns_keys):
             nameservers += effective_model.values_for(dns_keys)
         if nameservers:
             self.logger.info("Setting new nameservers: %s" % nameservers)
@@ -298,7 +296,7 @@ class Plugin(plugins.NodePlugin):
 
         timeservers = []
         ntp_keys = ["ntp[0]", "ntp[1]"]
-        if e_changes_h.contains_any(ntp_keys):
+        if effective_changes.contains_any(ntp_keys):
             timeservers += effective_model.values_for(ntp_keys)
         if timeservers:
             self.logger.info("Setting new timeservers: %s" % timeservers)
@@ -307,7 +305,7 @@ class Plugin(plugins.NodePlugin):
             txs += model.transaction()
 
         hostname_keys = ["hostname"]
-        if e_changes_h.contains_any(hostname_keys):
+        if effective_changes.contains_any(hostname_keys):
             value = effective_model.values_for(hostname_keys)
             self.logger.info("Setting new hostname: %s" % value)
             model = defaults.Hostname()
@@ -315,7 +313,7 @@ class Plugin(plugins.NodePlugin):
             txs += model.transaction()
 
         # For the NIC details dialog:
-        if e_changes_h.contains_any(self._nic_details_group):
+        if effective_changes.contains_any(self._nic_details_group):
             # If any networking related key was changed, reconfigure networking
             # Fetch the values for the nic keys, they are used as arguments
             args = effective_model.values_for(self._nic_details_group)
@@ -364,7 +362,7 @@ class Plugin(plugins.NodePlugin):
         else:
             self.logger.debug("No ipv4 interface configuration found")
 
-        # A hack to also set the BOOTIF when IPv& is used in a second
+        # A hack to also set the BOOTIF when IPv6 is used in a second
         enable_bootif = lambda: model.update(iface=iface)
 
         if ipv6_bootproto == "none":
@@ -392,6 +390,8 @@ class Plugin(plugins.NodePlugin):
         mt = defaults.NetworkLayout()
         if layout_bridged:
             mt.configure_bridged()
+        else:
+            mt.configure_default()
 
         # Return the resulting transaction
         txs = model.transaction()

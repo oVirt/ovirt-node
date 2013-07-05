@@ -552,22 +552,30 @@ class NetworkLayout(NodeConfigFileSection):
     [('layout', 'bridged')]
     """
     keys = ("OVIRT_NETWORK_LAYOUT",)
-    known_layouts = ["bridged",
-                     # bridged way, a bridge is created for BOOTIF
 
-                     "direct"
-                     # The BOOTIF NIC is configured directly
-                     ]
+    # The BOOTIF NIC is configured directly
+    LAYOUT_DIRECT = "direct"
+
+    # bridged way, a bridge is created for BOOTIF
+    LAYOUT_BRIDGED = "bridged"
+
+    known_layouts = [LAYOUT_DIRECT,
+                     LAYOUT_BRIDGED]
+
+    default_layout = LAYOUT_DIRECT
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, layout):
-        assert layout in self.known_layouts
+    def update(self, layout=None):
+        assert layout in self.known_layouts + [None]
 
     def configure_bridged(self):
         return self.update("bridged")
 
     def configure_direct(self):
         return self.update("direct")
+
+    def configure_default(self):
+        return self.update(None)
 
 
 class IPv6(NodeConfigFileSection):
