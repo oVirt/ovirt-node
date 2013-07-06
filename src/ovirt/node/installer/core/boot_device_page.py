@@ -106,7 +106,10 @@ class Plugin(plugins.NodePlugin):
         elif changes.contains_any(["boot.device"]):
             device = changes["boot.device"]
             if device == "other":
-                self._dialog = CustomDeviceDialog("custom", "x", "y")
+                description = "Please select the disk to use " \
+                              "for booting %s" % \
+                              self.application.product.PRODUCT_SHORT
+                self._dialog = CustomDeviceDialog("custom", "x", description)
                 return self._dialog
             else:
                 self.application.ui.navigate.to_next_plugin()
@@ -199,7 +202,7 @@ class CustomDeviceDialog(ui.Dialog):
     """
     def __init__(self, path, title, description):
         title = "Custom Block Device"
-        description = "Please select the disk to use for booting PRODUCT_NAME"
+
         device_entry = ui.Entry("boot.device.custom", "Device path:")
         children = [ui.Label("label[0]", description),
                     ui.Divider("divider[0]"),
