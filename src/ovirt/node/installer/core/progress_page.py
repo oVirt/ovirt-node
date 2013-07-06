@@ -94,6 +94,7 @@ class InstallerThread(threading.Thread):
             self.logger.error("Error in installer thread: %s" % e)
 
     def __run(self):
+        app = self.progress_plugin.application
         reboot_button = self.progress_plugin.widgets["action.reboot"]
         progressbar = self.progress_plugin.widgets["progressbar"]
         log = self.progress_plugin.widgets["log"]
@@ -102,6 +103,7 @@ class InstallerThread(threading.Thread):
         try:
             self.ui_thread.call(lambda: log.text("\n".join(log_lines)))
             self.ui_thread.call(lambda: reboot_button.enabled(False))
+            self.ui_thread.call(lambda: app.ui.hotkeys_enabled(False))
 
             transaction = self.__build_transaction()
             txlen = len(transaction)
@@ -136,6 +138,7 @@ class InstallerThread(threading.Thread):
         finally:
             pass
             self.ui_thread.call(lambda: reboot_button.enabled(True))
+            self.ui_thread.call(lambda: app.ui.hotkeys_enabled(True))
 
         if captured.stderr.getvalue():
             se = captured.stderr.getvalue()
