@@ -50,7 +50,7 @@ class Plugin(plugins.NodePlugin):
         ws = [ui.Header("header[0]", "Keyboard Layout Selection"),
               ui.Table("keyboard.layout", "", "Available Keyboard Layouts",
                        kbd.available_layouts(), c),
-              ui.Label("label[0]", "(Hit return to select a layout)")
+              ui.Label("label[0]", "(Hit Enter to select a layout)")
               ]
         self.widgets.add(ws)
         page = ui.Page("keyboard", ws)
