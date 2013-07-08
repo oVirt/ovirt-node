@@ -416,6 +416,7 @@ class UrwidWindow(ui.Window):
 
     def __init__(self, path, application, with_menu=True):
         super(UrwidWindow, self).__init__(path, application)
+        urwid.set_encoding("utf8")
         self._builder = UrwidUIBuilder(self.application)
         self.with_menu = with_menu
         self.logger.debug("Creating urwid tui for '%s'" % application)
