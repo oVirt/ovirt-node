@@ -93,10 +93,11 @@ def pipe(cmd, stdin=None):
     Returns:
         stdout, stderr of the process (as one blob)
     """
-    return unicode(popen(cmd, shell=True,
+    return unicode(popen(cmd,
                          stdin=PIPE,
                          stdout=PIPE,
-                         stderr=STDOUT).communicate(stdin)[0])
+                         stderr=STDOUT
+                         ).communicate(stdin)[0])
 
 
 def pipe_async(cmd, stdin=None):
@@ -117,6 +118,6 @@ def pipe_async(cmd, stdin=None):
     # pylint: disable-msg=E1101
     if stdin:
         process.stdin.write(stdin)
-    while process.poll() != 0:
+    while process.poll() is None:
         yield process.stdout.readline()
     # pylint: enable-msg=E1101

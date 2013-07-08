@@ -73,8 +73,6 @@ class Plugin(plugins.NodePlugin):
               ui.Divider("divider[1]"),
               ui.SaveButton("ping.do_ping", "Ping"),
               ui.Divider("divider[2]"),
-              ui.ProgressBar("ping.progress"),
-              ui.Divider("divider[3]"),
               ui.Label("ping.result", "Result:"),
               ]
 
@@ -122,24 +120,14 @@ class PingThread(threading.Thread):
 
     def run(self):
         try:
-            self.__run()
-        except Exception as e:
-            self.p.logger.debug("Exception while pinging: %s" % e,
-                                exc_info=True)
-        self.p.widgets["ping.do_ping"].enabled(True)
-
-    def __run(self):
-            self.p.widgets["ping.do_ping"].enabled(False)
-
-            progressbar = self.p.widgets["ping.progress"]
-            stdoutdump = self.p.widgets["ping.result"]
             ui_thread = self.p.application.ui.thread_connection()
-            out = []
-            current = 0
+            stdoutdump = self.p.widgets["ping.result"]
 
-            for line in process.pipe_async(self.cmd):
-                out += [line]
-                if "time=" in line:
-                    current += 100.0 / float(self.count)
-                    ui_thread.call(lambda: progressbar.current(current))
-                ui_thread.call(lambda: stdoutdump.text("\n".join(out[-3:])))
+            self.p.widgets["ping.do_ping"].enabled(False)
+            ui_thread.call(lambda: stdoutdump.text("Pinging ..."))
+            out = process.pipe(self.cmd)
+            ui_thread.call(lambda: stdoutdump.text(out))
+        except:
+            self.p.logger.exception("Exception while pinging")
+        finally:
+            self.p.widgets["ping.do_ping"].enabled(True)
