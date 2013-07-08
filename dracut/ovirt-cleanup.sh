@@ -94,6 +94,13 @@ for device in $parsed_storage_init; do
     if [ -z "$device" ]; then
         continue
     fi
+    # check if valid mpath device
+    if multipath -c $device; then
+        pdev=$(multipath -ll $device|head -n 1|awk {'print $1'})
+        if [ -e /dev/mapper/"$pdev" ]; then
+            device="/dev/mapper/$pdev"
+        fi
+    fi
     info "Looking for device and partitions on '$device'"
     IFS=$oldIFS
     for slave in $(ls $device*); do
@@ -115,6 +122,23 @@ fatal() {
     echo "\n<1>dracut: FATAL: $@" > /dev/kmsg
     echo "dracut: FATAL: $@" >&2
 }
+
+for device in $lvm_storage_init; do
+    vgname=$(lvm pvs -o vg_name "$device" --noheadings|sed 's/\s//g')
+    if lvm vgs --noheadings -o pv_name,tags "$vgname"|grep -q storage_domain; then
+        if [[ $device =~ "/dev/mapper" ]]; then
+            for dev in $storage_init; do
+                basedev=$(basename $dev)
+                mpathbasedev=$(multipath -ll $device |grep $basedev|awk {'print $3'})
+                if [[ -n $mpathbasedev ]]; then
+                   echo "dracut: FATAL: Warning: '$device' contains /dev/$mpathbasedev"
+                fi
+            done
+        fi
+        fatal "Warning: '$device' is a member of a storage domain and may not be removed"
+        exit 1
+    fi
+done
 
 for device in $lvm_storage_init; do
     if [ -z "$device" ]; then
