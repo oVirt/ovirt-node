@@ -325,6 +325,8 @@ class Network(NodeConfigFileSection):
                 if has_network:
                     self.__write_config()
 
+                self.__write_lo()
+
                 aug.set("/files/etc/sysconfig/network/NETWORKING",
                         "yes" if has_network else "no")
                 fs.Config().persist("/etc/sysconfig/network")
@@ -377,6 +379,14 @@ class Network(NodeConfigFileSection):
                     bridge_cfg.save()
 
                 nic_cfg.save()
+
+            def __write_lo(self):
+                cfg = NicConfig("lo")
+                cfg.device = "lo"
+                cfg.ipaddr = "127.0.0.1"
+                cfg.netmask = "255.0.0.0"
+                cfg.onboot = "yes"
+                cfg.save()
 
             def __assign_ip_config(self, cfg):
                 m = Network().retrieve()

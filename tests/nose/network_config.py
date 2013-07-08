@@ -320,8 +320,6 @@ class TestBond():
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes')])
 
-        assert len(FakeFs.filemap) == (1 + 1 + 3)
-
     def test_direct_dhcp_discovery(self, *args, **kwargs):
         self.test_direct_dhcp()
 
@@ -377,8 +375,6 @@ class TestBond():
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
-
-        assert len(FakeFs.filemap) == (1 + 1 + 3 + 1)
 
     def test_bridged_dhcp_discovery(self, *args, **kwargs):
         self.test_bridged_dhcp()
@@ -441,8 +437,6 @@ class TestBond():
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
-
-        assert len(FakeFs.filemap) == (1 + 1 + 1 + 3 + 1)
 
     def test_tagged_bridged_dhcp_discovery(self, *args, **kwargs):
         self.test_tagged_bridged_dhcp()
