@@ -98,26 +98,3 @@ def pipe(cmd, stdin=None):
                          stdout=PIPE,
                          stderr=STDOUT
                          ).communicate(stdin)[0])
-
-
-def pipe_async(cmd, stdin=None):
-    """Run a command interactively and yields the process output.
-    This functions allows to pass smoe input to a running command.
-
-    Args:
-        cmd: Commandline to be run
-        stdin: Data to be written to cmd's stdin
-
-    Yields:
-        Lines read from stdout
-    """
-    # https://github.com/wardi/urwid/blob/master/examples/subproc.py
-    LOGGER.debug("Piping async '%s'" % cmd)
-    process = popen(cmd, shell=True, stdout=PIPE,
-                    stderr=PIPE, stdin=stdin)
-    # pylint: disable-msg=E1101
-    if stdin:
-        process.stdin.write(stdin)
-    while process.poll() is None:
-        yield process.stdout.readline()
-    # pylint: enable-msg=E1101
