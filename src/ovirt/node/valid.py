@@ -268,8 +268,16 @@ class FQDN(RegexValidator):
     True
     >>> FQDN()("0.example.com")
     True
+    >>> FQDN()("123.com")
+    True
+    >>> FQDN()("123.example.com")
+    True
+    >>> FQDN()("0test.example.com")
+    True
+    >>> FQDN()("123")
+    True
     >>> FQDN().validate("example.com.")
-    False
+    True
     >>> FQDN().validate(".com")
     False
     >>> FQDN().validate("")
@@ -277,8 +285,8 @@ class FQDN(RegexValidator):
     """
 
     description = "a valid FQDN"
-    pattern = ("^(([0-9]\.)?([a-z]|[a-z][a-z0-9\-]*[a-z0-9])\.)*" +
-               "([a-z]|[a-z][a-z0-9\-]*[a-z0-9])$", re.I)
+    pattern = ("^(?!(\d+\.){3}\d+)(([a-z0-9\-]*[a-z0-9])\.)*" +
+               "(([a-z0-9\-]*[a-z0-9])\.?)$", re.I)
 
     def validate(self, value):
         is_valid = super(FQDN, self).validate(value)
