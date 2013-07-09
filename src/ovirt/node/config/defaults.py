@@ -1373,8 +1373,7 @@ class SSH(NodeConfigFileSection):
         tx = utils.Transaction("Configuring SSH")
         if pwauth in [True, False]:
             tx.append(ConfigurePasswordAuthentication())
-        if num_bytes:
-            tx.append(ConfigureStrongRNG())
+        tx.append(ConfigureStrongRNG())
         if disable_aesni in [True, False]:
             tx.append(ConfigureAESNI())
         return tx

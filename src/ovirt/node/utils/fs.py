@@ -54,12 +54,12 @@ def copy_contents(src, dst):
             dstf.write(srcf.read())
 
 
-def atomic_write(filename, contents):
+def atomic_write(filename, contents, mode="wb"):
     backup = BackupedFiles([filename], ".temp")
     backup.create()
     backup_filename = backup.of(filename)
 
-    with open(backup_filename, "wb") as dst:
+    with open(backup_filename, mode) as dst:
         dst.write(contents)
 
     fns = (backup_filename, filename)
@@ -98,7 +98,7 @@ class File(base.Base):
         """Write the contents of a file
         """
         try:
-            atomic_write(self.filename, contents)
+            atomic_write(self.filename, contents, mode)
         except:
             with open(self.filename, mode) as dst:
                 dst.write(contents)
