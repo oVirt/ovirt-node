@@ -149,12 +149,12 @@ pyovirt_node_setup_core_PYTHON = \
 
 if TARGET_FEDORA
 pyovirt_node_setup_core_PYTHON += \
-  ovirt/node/setup/core/monitoring_page.py \
+  ovirt/node/setup/core/monitoring_page.py
 endif
 
 if TARGET_CENTOS
 pyovirt_node_setup_core_PYTHON += \
-  ovirt/node/setup/core/monitoring_page.py \
+  ovirt/node/setup/core/monitoring_page.py
 endif
 
 
