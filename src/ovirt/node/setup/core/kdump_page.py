@@ -18,27 +18,24 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-"""
-Configure KDump
-"""
-
 from ovirt.node import utils, plugins, ui, valid
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 from ovirt.node.utils import console
+from ovirt.node.utils.network import NodeNetwork
+"""
+Configure KDump
+"""
 
 
 class Plugin(plugins.NodePlugin):
     _model = None
 
-    _types = [("disabled", "Disable"),
-              ("local", "Local")]
-
-    net_is_configured = utils.network.NodeNetwork().is_configured()
-
-    if net_is_configured:
-        _types.extend([("ssh", "SSH"),
-                       ("nfs", "NFS")])
+    _types_local = [("disabled", "Disable"),
+                    ("local", "Local")]
+    _types_remote = [("ssh", "SSH"),
+                     ("nfs", "NFS")]
+    _types = []
 
     def name(self):
         return "Kdump"
@@ -80,9 +77,18 @@ class Plugin(plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
+        # _types needs to be rebuild on every page view, as the network
+        # state can change between page views
+        # NodeNetwork relies on runtime information which is N/A in dev mode
+        if self.application.args.dry:
+            net_is_configured = True
+        else:
+            net_is_configured = NodeNetwork().is_configured()
+
         ws = [ui.Header("kdump._header", "Configure Kdump")]
 
-        if not self.net_is_configured:
+        if not net_is_configured:
+            self._types = self._types_local
             ws.extend([ui.Notice("network.notice",
                                  "Networking is not configured, " +
                                  "please configure it before NFS " +
@@ -90,6 +96,7 @@ class Plugin(plugins.NodePlugin):
                        ui.Divider("notice.divider")])
 
         else:
+            self._types = self._types_local + self._types_remote
             ws.extend([ui.Options("kdump.type", "Type", self._types),
                        ui.Divider("divider[0]"),
                        ui.Entry("kdump.nfs_location", "NFS Location " +
