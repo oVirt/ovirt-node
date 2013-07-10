@@ -157,7 +157,7 @@ class Plugin(plugins.NodePlugin):
             txs += model.transaction()
 
         with self.application.ui.suspended():
-            utils.process.call("reset")
+            console.reset()
             is_dry = self.application.args.dry
             progress_dialog = console.TransactionProgress(txs, is_dry)
             progress_dialog.run()

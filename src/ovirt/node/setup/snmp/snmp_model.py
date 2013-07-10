@@ -38,9 +38,9 @@ def enable_snmpd(password):
     else:
         conf = snmp_conf
     cmd = "cat %s|grep createUser|awk '{print $4}'" % conf
-    oldpwd, stderr = process.pipe(cmd)
+    oldpwd, stderr = process.pipe(cmd, shell=True)
     oldpwd = oldpwd.stdout.read().strip()
-    process.call("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
+    process.call("sed -c -ie '/^createUser root/d' %s" % snmp_conf, shell=True)
     f = open(snmp_conf, "a")
     # create user account
     f.write("createUser root SHA %s AES\n" % password)
@@ -51,9 +51,9 @@ def enable_snmpd(password):
         pwd_change_cmd = (("snmpusm -v 3 -u root -n \"\" -l authNoPriv -a " +
                            "SHA -A %s localhost passwd %s %s -x AES") %
                           (oldpwd, oldpwd, password))
-        process.check_call(pwd_change_cmd)
+        process.check_call(pwd_change_cmd, shell=True)
         # Only reached when no excepion occurs
-        process.call("rm -rf /tmp/snmpd.conf")
+        process.call(["rm", "-rf", "/tmp/snmpd.conf"])
     ovirt_store_config(snmp_conf)
 
 
@@ -62,8 +62,9 @@ def disable_snmpd():
 
     system.service("snmpd", "stop")
     # copy to /tmp for enable/disable toggles w/o reboot
-    process.check_call("cp /etc/snmp/snmpd.conf /tmp")
-    process.check_call("sed -c -ie '/^createUser root/d' %s" % snmp_conf)
+    process.check_call(["cp", "/etc/snmp/snmpd.conf", "/tmp"])
+    process.check_call("sed -c -ie '/^createUser root/d' %s" % snmp_conf,
+                       shell=True)
     remove_config(snmp_conf)
 
 

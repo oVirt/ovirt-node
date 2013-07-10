@@ -40,7 +40,7 @@ LOGGER = logging.getLogger(__name__)
 def reboot():
     """Reboot the system
     """
-    process.call("reboot")
+    process.call(["reboot"])
 
 
 def async_reboot(delay=3):
@@ -51,7 +51,7 @@ def async_reboot(delay=3):
 def poweroff():
     """Poweroff the system
     """
-    process.call("poweroff")
+    process.call(["poweroff"])
 
 
 def is_efi():
@@ -131,7 +131,8 @@ def copy_dir_if_not_exist(orig, target):
         if os.path.isdir("%s/%s" % (orig, f)):
             if not os.path.exists("%s/%s" % (target, f)):
                 process.call("cp -av %s/%s %s &>/dev/null" % (orig, f,
-                                                              target))
+                                                              target),
+                             shell=True)
             else:
                 copy_dir_if_not_exist("%s/%s" % (orig, f), "%s/%s" % (target,
                                                                       f))
@@ -298,7 +299,7 @@ class Keyboard(base.Base):
     def set_layout(self, layout):
         assert layout
         if has_systemd():
-            utils.process.call("localectl set-keymap %s" % layout)
+            utils.process.call(["localectl", "set-keymap", layout])
         else:
             self.kbd.set(layout)
             self.kbd.write()
@@ -372,7 +373,7 @@ class Reboot(base.Base):
                 # the following lines are all executed in a background daemon
                 time.sleep(delay)
                 cmd = which("reboot")
-                subprocess.call(cmd, close_fds=True)
+                subprocess.call(cmd, shell=True)
         except:
             self.logger.info("Scheduling Reboot")
 

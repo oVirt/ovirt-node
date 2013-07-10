@@ -79,7 +79,8 @@ class Plugin(NodePlugin):
             cmd = cmds[logfile] if logfile in cmds else None
 
             if cmd:
-                contents = process.check_output(cmd, stderr=process.STDOUT)
+                contents = process.check_output(cmd, shell=True,
+                                                stderr=process.STDOUT)
                 return ui.TextViewDialog("output.dialog", "Logfile",
                                          contents)
 

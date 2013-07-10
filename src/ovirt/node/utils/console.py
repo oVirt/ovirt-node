@@ -19,11 +19,15 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
-from ovirt.node.utils import Transaction
+from ovirt.node.utils import Transaction, process
 import StringIO
 import sys
 import termios
 import tty
+
+
+def reset():
+    process.call(["reset"])
 
 
 def writeln(txts):

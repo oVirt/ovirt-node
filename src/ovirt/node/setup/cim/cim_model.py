@@ -98,12 +98,13 @@ def create_cim_user(username="cim",
         userinfo = pwd.getpwnam(username)
         if not userinfo.pw_gid == grp.getgrnam(main_group).gr_gid:
             process.check_call("usermod -g %s %s" %
-                               (main_group, username))
+                               (main_group, username), shell=True)
         if not userinfo.pw_shell == shell:
             process.check_call("usermod -s %s %s" %
-                               (shell, username))
+                               (shell, username), shell=True)
         for group in group_list:
             if username not in grp.getgrnam(group).gr_mem:
                 process.check_call("usermod -G %s %s" %
-                                   (",".join(group_list), username))
+                                   (",".join(group_list), username),
+                                   shell=True)
                 break

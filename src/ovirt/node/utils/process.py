@@ -31,8 +31,7 @@ Some convenience functions related to processes
 LOGGER = logging.getLogger(__name__)
 
 COMMON_POPEN_ARGS = {
-    "close_fds": True,
-    "shell": True
+    "close_fds": True
 }
 
 CalledProcessError = subprocess.CalledProcessError
@@ -80,10 +79,10 @@ def check_output(*args, **kwargs):
         # We're probably on Python 2.7, which doesn't have check_output
         if isinstance(args[0], list):
             args = (" ".join(args[0]),)
-        return pipe(*args)
+        return pipe(*args, **kwargs)
 
 
-def pipe(cmd, stdin=None):
+def pipe(cmd, stdin=None, **kwargs):
     """Run a non-interactive command and return it's output
 
     Args:
@@ -93,8 +92,7 @@ def pipe(cmd, stdin=None):
     Returns:
         stdout, stderr of the process (as one blob)
     """
-    return unicode(popen(cmd,
-                         stdin=PIPE,
-                         stdout=PIPE,
-                         stderr=STDOUT
-                         ).communicate(stdin)[0])
+    kwargs.update({"stdin": PIPE,
+                   "stdout": PIPE,
+                   "stderr": STDOUT})
+    return unicode(popen(cmd, **kwargs).communicate(stdin)[0])

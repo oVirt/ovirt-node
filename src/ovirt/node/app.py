@@ -122,7 +122,7 @@ class Application(base.Base):
             defaults.OVIRT_NODE_DEFAULTS_FILENAME = self.args.defaults
             self.logger.debug("Setting config file: %s (%s)" %
                               (self.args.defaults,
-                              defaults.OVIRT_NODE_DEFAULTS_FILENAME))
+                               defaults.OVIRT_NODE_DEFAULTS_FILENAME))
 
         configure_logging(self.args.debug)
 
@@ -304,7 +304,7 @@ class Application(base.Base):
         except Exception as e:
             if self.args.debug:
                 raise
-            utils.process.call("reset")
+            console.reset()
             self.logger.error("An error appeared in the UI: %s" % repr(e))
             self.logger.debug("Exception:", exc_info=True)
             console.writeln("Press ENTER to logout ...")
@@ -392,7 +392,7 @@ class Application(base.Base):
         utils.console.writeln("Dropping to rescue shell ...")
 
         def open_console():
-            utils.process.call("clear ; bash")
+            utils.process.call("clear ; bash", shell=True)
 
         try:
             with self.ui.suspended():

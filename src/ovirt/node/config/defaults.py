@@ -426,7 +426,7 @@ class Network(NodeConfigFileSection):
                 rulesfile = "/etc/udev/rules.d/70-persistent-net.rules"
                 newrulesfile = "/etc/udev/rules.d/71-persistent-node-net.rules"
                 if File(rulesfile).exists():
-                    process.check_call("cp %s %s" % (rulesfile, newrulesfile))
+                    process.check_call(["cp", rulesfile, newrulesfile])
                     fs.Config().persist(newrulesfile)
 
         class StartNetworkServices(utils.Transaction.Element):
@@ -1305,7 +1305,7 @@ class NFSv4(NodeConfigFileSection):
 
                 fs.Config().persist(nfsv4.configfilename)
                 system.service("rpcidmapd", "restart")
-                process.check_call("nfsidmap -c")
+                process.check_call(["nfsidmap", "-c"])
 
         tx = utils.Transaction("Configuring NFSv4")
         tx.append(ConfigureNfsv4())

@@ -83,7 +83,7 @@ def parse_defaults():
     return OVIRT_VARS
 
 def get_dev_live():
-    return "/dev/{live}".format(live=process.check_output("/usr/libexec/ovirt-functions get_live_disk").strip())
+    return "/dev/{live}".format(live=process.check_output("/usr/libexec/ovirt-functions get_live_disk", shell=True).strip())
 
 
 # fallback when default is empty

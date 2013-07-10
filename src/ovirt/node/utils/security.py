@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, valid, utils
+from ovirt.node.utils import system
 from ovirt.node.utils.fs import File
 import PAM as _PAM  # @UnresolvedImport
 import cracklib
@@ -94,11 +95,13 @@ class Ssh(base.Base):
         additional_lines = []
         ofunc.unmount_config("/etc/profile")
 
-        process.check_call("sed -i '/OPENSSL_DISABLE_AES_NI/d' /etc/profile")
+        process.check_call("sed -i '/OPENSSL_DISABLE_AES_NI/d' /etc/profile",
+                           shell=True)
         if disable_aes:
             additional_lines += ["export OPENSSL_DISABLE_AES_NI=1"]
 
-        process.check_call("sed -i '/SSH_USE_STRONG_RNG/d' /etc/profile")
+        process.check_call("sed -i '/SSH_USE_STRONG_RNG/d' /etc/profile",
+                           shell=True)
         if rng_num_bytes:
             additional_lines += ["export SSH_USE_STRONG_RNG=%s" %
                                  rng_num_bytes]
@@ -142,7 +145,7 @@ class Ssh(base.Base):
 
     def restart(self):
         self.logger.debug("Restarting SSH")
-        process.call("service sshd restart &>/dev/null")
+        system.service("sshd", "restart")
 
     def password_authentication(self, enable=None):
         """Get or set the ssh password authentication
@@ -176,7 +179,8 @@ class Ssh(base.Base):
         hostkey = File(fn_hostkey).read()
 
         hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
-        fingerprint = process.pipe(hostkey_fp_cmd).strip().split(" ")[1]
+        out = process.pipe(hostkey_fp_cmd, shell=True)
+        fingerprint = out.strip().split(" ")[1]
         return (fingerprint, hostkey)
 
 

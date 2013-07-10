@@ -125,7 +125,7 @@ class PingThread(threading.Thread):
 
             self.p.widgets["ping.do_ping"].enabled(False)
             ui_thread.call(lambda: stdoutdump.text("Pinging ..."))
-            out = process.pipe(self.cmd)
+            out = process.pipe(self.cmd, shell=True)
             ui_thread.call(lambda: stdoutdump.text(out))
         except:
             self.p.logger.exception("Exception while pinging")

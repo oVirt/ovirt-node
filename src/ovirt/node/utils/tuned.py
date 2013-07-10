@@ -34,7 +34,8 @@ def get_available_profiles():
         A list of profiles
     """
     prof_list = [u'None']
-    for i in process.check_output("/usr/sbin/tuned-adm list").split("\n"):
+    lines = process.check_output(["/usr/sbin/tuned-adm", "list"]).split("\n")
+    for i in lines:
         if "- " in i:
             prof_list.append(i.replace("- ", ""))
     return prof_list
@@ -47,7 +48,7 @@ def get_active_profile():
         A string with the active tuned profile
     """
     try:
-        profile = process.check_output("/usr/sbin/tuned-adm active")
+        profile = process.check_output(["/usr/sbin/tuned-adm", "active"])
     except:
         return "None"
     return re.match(r'.*?: (.*)', profile).group(1)
@@ -61,15 +62,15 @@ def set_active_profile(profile):
     """
     try:
         if (profile == "None" or profile == "off"):
-            ret = process.check_call("/usr/sbin/tuned-adm off")
+            ret = process.check_call(["/usr/sbin/tuned-adm", "off"])
             if not ret == 0:
                 raise Exception("DISABLE")
                 raise Exception("Failed to disable tuned")
         elif profile not in get_available_profiles():
             raise Exception("%s is not a known profile" % profile)
         else:
-            ret = process.check_call("/usr/sbin/tuned-adm profile %s"
-                                     % profile)
+            ret = process.check_call(["/usr/sbin/tuned-adm", "profile",
+                                      profile])
             if not ret == 0:
                 raise Exception("Failed to set profile to %s" % profile)
     except Exception as e:

@@ -196,7 +196,8 @@ def nameservers(new_servers=None):
     """Get or set DNS servers
 
     >>> import ovirt.node.utils.process as p
-    >>> stdout = p.pipe("egrep '^nameserver' /etc/resolv.conf | wc -l")
+    >>> stdout = p.pipe("egrep '^nameserver' /etc/resolv.conf | wc -l",
+    ...                 shell=True)
     >>> len(nameservers()) == int(stdout)
     True
     """
@@ -222,8 +223,8 @@ def hostname(new_hostname=None):
 
     if new_hostname:
         # hostnamectl set's runtime and config file
-        utils.process.check_call("hostnamectl --static set-hostname %s" %
-                                 new_hostname)
+        utils.process.check_call(["hostnamectl", "--static", "set-hostname",
+                                  new_hostname])
 
     current_hostname = utils.fs.get_contents(hostnamefile)
     if new_hostname and current_hostname != new_hostname:

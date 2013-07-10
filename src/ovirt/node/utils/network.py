@@ -295,7 +295,7 @@ class NIC(base.Base):
 
         # Fallback
         cmd = "ip -o addr show {ifname}".format(ifname=self.ifname)
-        for line in process.pipe(cmd).split("\n"):
+        for line in process.pipe(cmd, shell=True).split("\n"):
             token = re.split("\s+", line)
             if re.search("\sinet[6]?\s", line):
                 addr, mask = token[3].split("/")
@@ -326,7 +326,7 @@ class NIC(base.Base):
     def identify(self):
         """Flash the lights of this NIC to identify it
         """
-        utils.process.call("ethtool --identify %s 10" % self.ifname)
+        utils.process.call(["ethtool", "--identify", self.ifname, "10"])
 
     def __str__(self):
         return self.build_str(["ifname"])
@@ -609,7 +609,7 @@ class Routes(base.Base):
     def _default_fallback(self):
         # Fallback
         gw = None
-        cmd = "ip route list"
+        cmd = ["ip", "route", "list"]
         for line in process.pipe(cmd).split("\n"):
             token = re.split("\s+", line)
             if line.startswith("default via"):
@@ -706,8 +706,8 @@ def hostname(new_hostname=None):
         The current hostname
     """
     if new_hostname:
-        utils.process.call("hostname %s" % new_hostname)
-    return utils.process.pipe("hostname").strip()
+        utils.process.call(["hostname", new_hostname])
+    return utils.process.pipe(["hostname"]).strip()
 
 
 # http://git.fedorahosted.org/cgit/smolt.git/diff/?
@@ -800,8 +800,8 @@ class Bridges(base.Base):
     def delete(self, ifname):
         if not self.is_bridge(ifname):
             raise RuntimeError("Can no delete '%s', is no bridge" % ifname)
-        process.call("ifconfig %s down" % ifname)
-        process.call("ip link delete %s type bridge" % ifname)
+        process.call(["ip", "link", "set", "dev", ifname, "down"])
+        process.call(["ip", "link", "delete", ifname, "type", "bridge"])
 
 
 class Bonds(base.Base):
@@ -828,4 +828,4 @@ class Bonds(base.Base):
     def delete_all(self):
         """Deletes all bond devices
         """
-        process.call(["rmmod", "bonding"], shell=False)
+        process.call(["rmmod", "bonding"])

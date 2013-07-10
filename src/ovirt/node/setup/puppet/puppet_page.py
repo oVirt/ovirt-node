@@ -151,5 +151,5 @@ class ActivatePuppet(utils.Transaction.Element):
                 conf.write(line)
 
         system.service("puppet", "stop")
-        utils.process.check_call("puppet agent --test")
+        utils.process.check_call("puppet agent --test", shell=True)
         system.service("puppet", "start")
