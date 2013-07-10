@@ -190,6 +190,7 @@ keep /usr/share/augeas/lenses/dist/multipath.aug
 keep /usr/share/augeas/lenses/dist/ntp.aug
 keep /usr/share/augeas/lenses/dist/pam.aug
 keep /usr/share/augeas/lenses/dist/passwd.aug
+keep /usr/share/augeas/lenses/dist/quote.aug
 keep /usr/share/augeas/lenses/dist/resolv.aug
 keep /usr/share/augeas/lenses/dist/securetty.aug
 keep /usr/share/augeas/lenses/dist/services.aug
