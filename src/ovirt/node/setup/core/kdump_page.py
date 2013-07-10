@@ -94,11 +94,12 @@ class Plugin(plugins.NodePlugin):
                                  "please configure it before NFS " +
                                  "or SSH-based kdump"),
                        ui.Divider("notice.divider")])
+            ws.extend([ui.Options("kdump.type", "Type", self._types)])
 
         else:
             self._types = self._types_local + self._types_remote
-            ws.extend([ui.Options("kdump.type", "Type", self._types),
-                       ui.Divider("divider[0]"),
+            ws.extend([ui.Options("kdump.type", "Type", self._types)])
+            ws.extend([ui.Divider("divider[0]"),
                        ui.Entry("kdump.nfs_location", "NFS Location " +
                                 "(example.com:/var/crash):",
                                 align_vertical=True),
@@ -119,10 +120,11 @@ class Plugin(plugins.NodePlugin):
             net_types = ["kdump.ssh_location", "kdump.nfs_location"]
 
             for w in net_types:
-                self.widgets[w].enabled(False)
+                if w in self.widgets:
+                    self.widgets[w].enabled(False)
 
             w = "kdump.%s_location" % changes["kdump.type"]
-            if w in net_types:
+            if w in net_types and w in self.widgets:
                 self.widgets[w].enabled(True),
                 self.validate({w: ""})
 
