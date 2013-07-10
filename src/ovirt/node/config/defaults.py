@@ -1044,11 +1044,11 @@ class KDump(NodeConfigFileSection):
 
                 okdump.write_kdump_config(ssh)
 
-                if os.path.exists("/usr/bin/kdumpctl"):
-                    cmd = "kdumpctl propagate"
+                kdumpctl_cmd = system.which("kdumpctl")
+                if kdumpctl_cmd:
+                    cmd = [kdumpctl_cmd, "propagate"]
                 else:
-                    cmd = "service kdump propagate"
-                cmd += "2>&1"
+                    cmd = ["service", "kdump", "propagate"]
 
                 try:
                     utils.process.check_call(cmd)
@@ -1094,7 +1094,7 @@ class KDump(NodeConfigFileSection):
                     self.logger.info("Failure while restarting kdump: %s" % e)
                     unmount_config("/etc/kdump.conf")
                     self.backups.restore("/etc/kdump.conf")
-                    system.service("kdump", "restart")
+                    system.service("kdump", "restart", do_raise=False)
 
                     raise RuntimeError("KDump configuration failed, " +
                                        "location unreachable. Previous " +
