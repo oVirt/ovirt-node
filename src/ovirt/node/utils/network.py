@@ -828,4 +828,4 @@ class Bonds(base.Base):
     def delete_all(self):
         """Deletes all bond devices
         """
-        process.call(["rmmod", "bonding"])
+        process.call("rmmod bonding 2> /dev/null", shell=True)
