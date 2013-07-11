@@ -26,6 +26,8 @@ from ovirtnode.network import *
 from ovirtnode.log import *
 from ovirtnode.kdump import *
 from ovirt.node.utils.console import TransactionProgress
+import logging
+import sys
 
 
 class ConfigureNetworking(Transaction.Element):
@@ -120,6 +122,9 @@ class InstallBootloader(Transaction.Element):
 
 
 if __name__ == "__main__":
+    if "--debug" in sys.argv:
+        logging.basicConfig(level=logging.DEBUG)
+
     tx = Transaction("Automatic Installation")
 
     # setup network before storage for iscsi installs
