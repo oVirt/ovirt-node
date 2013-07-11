@@ -57,6 +57,15 @@ hasarg() {
     return 1
 }
 
+# Drop to a shell if the break point in question was given on the cmdline
+breakpoint() {
+    BREAKPOINT=$1
+    if hasarg "node.break=${BREAKPOINT}";
+    then
+        emergency_shell "Reached ${BREAKPOINT}"
+    fi
+}
+
 #
 # ovirt-early
 #
@@ -763,7 +772,7 @@ _start_ovirt_early () {
         done
         IFS=$oldIFS
         log "Uninstall complete, rebooting"
-        hasarg "node.break=pre-reboot" && emergency_shell "Reached pre-reboot"
+        breakpoint "pre-reboot"
         reboot
     fi
 
@@ -1063,8 +1072,10 @@ start_ovirt_firstboot ()
     is_auto_install
     auto_install=$?
     if [ "$auto_install" = "0" -o "$stateless" = "0" ]; then
+        breakpoint "pre-auto-install"
         /usr/libexec/ovirt-auto-install
         rc=$?
+        breakpoint "post-auto-install"
         # Handle Log file
         if [ -f $OVIRT_TMP_LOGFILE ]; then
             cat $OVIRT_TMP_LOGFILE >> $OVIRT_LOGFILE
@@ -1108,7 +1119,7 @@ EOP
         # But that doesn't matter because /var/log is already mounted, just unknown to sysd
         umount /var/log
 
-        getarg "node.break=pre-reboot" && emergency_shell "Reached pre-reboot"
+        breakpoint "pre-reboot"
         reboot
 
         if [ $? -ne 0 ]; then
