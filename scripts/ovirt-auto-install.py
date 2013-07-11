@@ -18,7 +18,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-import sys
 from ovirtnode.ovirtfunctions import *
 from ovirtnode.storage import *
 from ovirtnode.install import *
@@ -156,5 +155,3 @@ if __name__ == "__main__":
     print "Installation and Configuration Completed"
 
     # python will exit with 1 if an exception occurs
-
-    sys.exit(0)
