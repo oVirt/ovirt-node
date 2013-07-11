@@ -451,8 +451,13 @@ def mount_live():
                 # dev_live if not exist alternative
                 client = gudev.Client(['block'])
                 cmdline = open("/proc/cmdline")
-                cdlabel = re.search('CDLABEL\=([a-zA-Z0-9_\.-]+)', cmdline.read())
-                cdlabel = cdlabel.group(0).split("=")[1]
+                cmdline_data = cmdline.read()
+                cdlabel = re.search('CDLABEL\=([a-zA-Z0-9_\.-]+)',cmdline_data)
+                if cdlabel is None:
+                    cdlabel = re.search('live\:([a-zA-Z0-9_\.-\/]+)',cmdline_data)
+                    live_dev = cdlabel.group(0).split(":")[1]
+                else:
+                    cdlabel = cdlabel.group(0).split("=")[1]
                 cmdline.close()
                 for device in client.query_by_subsystem("block"):
                     if device.has_property("ID_CDROM"):
