@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from mock import patch
 from ovirt.node.config import defaults
-from ovirt.node.utils import fs
+from ovirt.node.utils import fs, AugeasWrapper
 from ovirt.node.utils.fs import ShellVarFile, FakeFs
 from ovirt.node.utils.network import UdevNICInfo, SysfsNICInfo, NodeNetwork, \
     BondedNIC, BridgedNIC, NIC, TaggedNIC
@@ -37,6 +37,7 @@ def patch_common(cls):
     @patch.object(UdevNICInfo, "vendor")
     @patch.object(UdevNICInfo, "devtype")
     @patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
+    @patch.object(AugeasWrapper, "_aug")
     class TestWrapperClass(cls):
         pass
     TestWrapperClass.__name__ = cls.__name__
