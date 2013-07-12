@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, exceptions
+from ovirt.node.utils.security import password_check
 
 """
 Password page of the installer
@@ -47,6 +48,8 @@ class Plugin(plugins.NodePlugin):
               ui.PasswordEntry("admin.password", "Password:"),
               ui.PasswordEntry("admin.password_confirmation",
                                "Confirm Password:"),
+              ui.Divider("divider[1]"),
+              ui.Label("password.info", "")
               ]
         self.widgets.add(ws)
         page = ui.Page("password", ws)
@@ -62,11 +65,18 @@ class Plugin(plugins.NodePlugin):
             admin_pw, admin_pw_conf = self._model.get("admin.password", ""), \
                 self._model.get("admin.password_confirmation", "")
 
-            if admin_pw != admin_pw_conf:
-                raise exceptions.InvalidData("Passwords must be the same.")
-            else:
+            try:
+                min_pw_length = 1
+                msg = password_check(admin_pw, admin_pw_conf, min_pw_length)
                 self.widgets["admin.password"].valid(True)
                 self.widgets["admin.password_confirmation"].valid(True)
+                if msg:
+                    self.widgets["password.info"].text(msg)
+                else:
+                    self.widgets["password.info"].text("")
+            except ValueError as e:
+                self.widgets["password.info"].text("")
+                raise exceptions.InvalidData(e.message)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)

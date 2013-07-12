@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, exceptions
 from ovirt.node.utils import security
+from ovirt.node.utils.security import password_check
 import keyboard_page
 import progress_page
 
@@ -79,17 +80,21 @@ class Plugin(plugins.NodePlugin):
             up_pw, up_pw_conf = self._model.get("upgrade.password", ""), \
                 self._model.get("upgrade.password_confirmation", "")
 
-            if up_pw != up_pw_conf:
-                self.widgets["password.info"].text("")
-                raise exceptions.InvalidData("Passwords must be the same.")
-            else:
+            try:
+                min_pw_length = 1
+                msg = password_check(up_pw, up_pw_conf, min_pw_length)
                 self.widgets["upgrade.password"].valid(True)
                 self.widgets["upgrade.password_confirmation"].valid(True)
-                self.widgets["password.info"].text("")
-
-                if not up_pw and not up_pw_conf:
-                    msg = self.__no_new_password_msg
+                if msg:
                     self.widgets["password.info"].text(msg)
+                else:
+                    self.widgets["password.info"].text("")
+                    if not up_pw and not up_pw_conf:
+                        msg = self.__no_new_password_msg
+                        self.widgets["password.info"].text(msg)
+            except ValueError as e:
+                self.widgets["password.info"].text("")
+                raise exceptions.InvalidData(e.message)
 
         if changes.contains_any(["upgrade.current_password"]):
             # Hide any message which was shown
