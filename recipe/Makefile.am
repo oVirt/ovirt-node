@@ -47,6 +47,7 @@ OVIRT_NODE_RECIPE_DATA =         \
         *-minimizer.ks   \
         common-nochroot.ks \
         common-manifest.ks \
+        common-efi.ks \
         $(PACKAGE).ks
 
 EXTRA_DIST =                    \
@@ -54,6 +55,7 @@ EXTRA_DIST =                    \
         *-pkgs.ks        \
         *-post.ks        \
         *-minimizer.ks   \
+        common-efi.ks \
         common-nochroot.ks \
         common-manifest.ks \
         image-minimizer.ks.in   \

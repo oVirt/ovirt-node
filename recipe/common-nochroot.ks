@@ -89,31 +89,4 @@ cp $INSTALL_ROOT/etc/issue $INSTALL_ROOT/etc/issue.net
 
 NAME=$(grep CDLABEL $LIVE_ROOT/isolinux/isolinux.cfg |head -n1|sed -r 's/^.*CDLABEL\=([a-zA-Z0-9_\.-]+) .*$/\1/g')
 
-#setup efi boot menu
-cat > $LIVE_ROOT/EFI/BOOT/BOOTX64.conf <<EOF
-default=0
-splashimage=/EFI/BOOT/splash.xpm.gz
-timeout 30
-hiddenmenu
-title Install or Upgrade ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0
-  initrd /isolinux/initrd0.img
-title Install or Upgrade (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0 nomodeset
-  initrd /isolinux/initrd0.img
-title Install or Upgrade with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  console=ttyS0,115200n8
-  initrd /isolinux/initrd0.img
-title Reinstall ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
-  initrd /isolinux/initrd0.img
-title Reinstall (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall nomodesset
-  initrd /isolinux/initrd0.img
-title Reinstall with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall console=ttyS0,115200n8
-  initrd /isolinux/initrd0.img
-title Uninstall
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  uninstall
-  initrd /isolinux/initrd0.img
-EOF
+%include common-efi.ks
