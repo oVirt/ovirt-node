@@ -199,7 +199,8 @@ class Plugin(plugins.NodePlugin):
                                 (IPAddress(netconsole["server"]),
                                  netconsole["port"] or "6666"))
 
-        return ", ".join(destinations) if destinations else "Local Only"
+        indented = "\n" + " ".ljust(13)
+        return indented.join(destinations) if destinations else "Local Only"
 
 
 class HostkeyDialog(ui.Dialog):
