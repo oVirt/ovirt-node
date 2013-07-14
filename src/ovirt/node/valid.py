@@ -540,3 +540,33 @@ class NFSAddress(Validator):
             is_valid = False
 
         return is_valid
+
+
+class SSHAddress(Validator):
+    """Matches a ssh server
+
+    >>> SSHAddress()("root@example.com")
+    True
+    >>> SSHAddress()("root@192.168.1.1")
+    True
+    >>> SSHAddress().validate(".com")
+    False
+    >>> SSHAddress().validate("")
+    False
+    """
+
+    description = "a valid SSH Address"
+
+    def validate(self, value):
+        is_valid = False
+        try:
+            parts = value.split("@")
+            if len(parts) != 2:
+                raise ValueError()
+            user, host = parts
+            is_valid = Text().validate(user) and \
+                FQDNOrIPAddress().validate(host)
+        except ValueError:
+            is_valid = False
+
+        return is_valid

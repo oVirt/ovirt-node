@@ -69,7 +69,7 @@ class Plugin(plugins.NodePlugin):
         """
         # FIXME improve validation for ssh and nfs
         return {"kdump.type": valid.Options(dict(self._types).keys()),
-                "kdump.ssh_location": valid.Empty() | valid.URL(),
+                "kdump.ssh_location": valid.Empty() | valid.SSHAddress(),
                 "kdump.nfs_location": valid.Empty() | valid.NFSAddress(),
                 }
 
