@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, valid, ui, utils
+from ovirt.node import plugins, ui, utils
 import snmp_model
 from ovirt.node.plugins import Changeset
 from ovirt.node.valid import RegexValidator
@@ -73,7 +73,7 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
-        return {"snmp.password": valid.Text()
+        return {"snmp.password": SnmpPassword()
                 }
 
     def ui_content(self):
