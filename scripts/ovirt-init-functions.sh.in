@@ -66,6 +66,11 @@ breakpoint() {
     fi
 }
 
+debugmode() {
+    hasarg "node.log_level=debug"
+}
+
+
 #
 # ovirt-early
 #
@@ -1073,7 +1078,8 @@ start_ovirt_firstboot ()
     auto_install=$?
     if [ "$auto_install" = "0" -o "$stateless" = "0" ]; then
         breakpoint "pre-auto-install"
-        /usr/libexec/ovirt-auto-install
+        debugmode && AIARGS="--debug"
+        /usr/libexec/ovirt-auto-install $AIARGS
         rc=$?
         breakpoint "post-auto-install"
         # Handle Log file
