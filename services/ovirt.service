@@ -1,6 +1,6 @@
 [Unit]
 Description=oVirt Node managed/standalone configuration service
-After=ovirt-awake.service
+After=ovirt-awake.service ovirt-firstboot.service
 Wants=ovirt-awake.service
 
 [Service]

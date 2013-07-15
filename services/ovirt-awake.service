@@ -1,6 +1,6 @@
 [Unit]
 Description=oVirt Node management server alert service
-After=ovirt-early.service
+After=ovirt-early.service ovirt-firstboot.service
 Wants=ovirt-early.service
 
 [Service]

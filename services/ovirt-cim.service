@@ -1,6 +1,6 @@
 [Unit]
 Description=oVirt Node CIM configuration service
-After=ovirt-post.service
+After=ovirt-post.service ovirt-firstboot.service
 Wants=ovirt-post.service
 
 [Service]
