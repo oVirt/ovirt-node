@@ -101,7 +101,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        snmp_keys = ["snmp.password_confirmation", "snmp.enabled"]
+        snmp_keys = ["snmp.password", "snmp.enabled"]
 
         txs = utils.Transaction("Updating SNMP configuration")
 
