@@ -61,7 +61,7 @@ class Plugin(plugins.NodePlugin):
               ui.Header("header[1]", "Strong Random Number Generator"),
               ui.Checkbox("strongrng.disable_aesni", "Disable AES-NI"),
               ui.Entry("strongrng.num_bytes", "Bytes Used:"),
-              ui.Header("header[2]", "Local Access"),
+              ui.Header("header[2]", "Password for the admin user"),
               ui.ConfirmedEntry("passwd.admin.password", "Password:", True)
               ]
 

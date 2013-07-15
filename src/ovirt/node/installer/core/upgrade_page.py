@@ -49,12 +49,12 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         ws = [ui.Header("header[0]",
-                        "Require a password for local console access?"),
+                        "Require a password for the admin user?"),
               ui.Label("label[0]", "Please enter the current admin " +
                        "password. You may also change the admin password " +
                        "if required. If the new password fields are left" +
                        "blank the password will remain the same."),
-              ui.Label("label[1]", "Password for local console access"),
+              ui.Label("label[1]", "Password for the admin user"),
               ui.Divider("divider[0]"),
               ui.PasswordEntry("upgrade.current_password",
                                "Current Password:"),
