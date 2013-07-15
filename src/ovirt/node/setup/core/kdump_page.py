@@ -21,6 +21,7 @@
 from ovirt.node import utils, plugins, ui, valid
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
+from ovirt.node.ui import InfoDialog
 from ovirt.node.utils import console
 from ovirt.node.utils.network import NodeNetwork
 """
@@ -158,10 +159,14 @@ class Plugin(plugins.NodePlugin):
                 model.update(None, None, None)
             txs += model.transaction()
 
-        with self.application.ui.suspended():
-            console.reset()
-            is_dry = self.application.args.dry
-            progress_dialog = console.TransactionProgress(txs, is_dry)
-            progress_dialog.run()
-            console.writeln("\nPlease press any key to continue")
-            console.wait_for_keypress()
+        try:
+            with self.application.ui.suspended():
+                console.reset()
+                is_dry = self.application.args.dry
+                progress_dialog = console.TransactionProgress(txs, is_dry)
+                progress_dialog.run()
+                console.writeln("\nPlease press any key to continue")
+                console.wait_for_keypress()
+        except Exception as e:
+            self.logger.exception("Exception while configuring kdump")
+            return InfoDialog("dialog.info", "An error occurred", e.message)

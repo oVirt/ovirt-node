@@ -813,8 +813,8 @@ class InfoDialog(Dialog):
     """
     def __init__(self, path, title, text, buttons=None):
         super(InfoDialog, self).__init__(path, title, [])
-        self.children = [Label("label[0]", text)]
-        self.buttons = buttons or [CloseButton("dialog.close")]
+        self.children = [Label(path + ".label", text)]
+        self.buttons = buttons or [CloseButton(path + ".close")]
 
 
 class TextViewDialog(Dialog):

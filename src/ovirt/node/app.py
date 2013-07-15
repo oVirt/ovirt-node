@@ -202,11 +202,8 @@ class Application(base.Base):
 
         def display_exception_as_notice(e):
             self.logger.debug(e, exc_info=True)
-            children = [ui.Label("dialog.notice.exception", "%s" % e)]
-            notice = ui.Dialog("dialog.notice", "An exception occurred",
-                               children)
-            notice.buttons = [ui.CloseButton("dialog.notice.action.close",
-                                             "Close")]
+            notice = ui.InfoDialog("dialog.notice", "An exception occurred",
+                                   "%s" % e)
             self.show(notice)
 
         # All known handlers
