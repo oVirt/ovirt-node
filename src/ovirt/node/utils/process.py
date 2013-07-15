@@ -77,8 +77,9 @@ def check_output(*args, **kwargs):
                        encoding=sys.stdin.encoding)
     except AttributeError:
         # We're probably on Python 2.7, which doesn't have check_output
-        if isinstance(args[0], list):
-            args = (" ".join(args[0]),)
+        # http://docs.python.org/2.6/library/subprocess.html#module-subprocess
+        # Working around by using pipe, which doesn't check, but returns the
+        # output
         return pipe(*args, **kwargs)
 
 
