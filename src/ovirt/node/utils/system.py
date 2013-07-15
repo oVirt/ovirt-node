@@ -20,13 +20,14 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, utils
 from ovirt.node.utils import process
-import os
+from ovirt.node.utils.fs import File
 import logging
+import os
 import rpm
-import system_config_keyboard.keyboard
-import time
 import subprocess
 import sys
+import system_config_keyboard.keyboard
+import time
 
 """
 A module to access system wide stuff
@@ -80,18 +81,26 @@ def has_hostvg():
     return os.path.exists("/dev/HostVG")
 
 
-def which(file):
+def which(cmd):
+    """Simulates the behavior of which
+
+    Args:
+        cmd: The cmd to be found in PATH
+
+    Returns:
+        The cmd with the absolute path if it was found in any path given in
+        $PATH. Otherwise None (if not found in any path in $PATHS).
+    """
     ret = None
-    if os.path.abspath(file) and os.path.exists(file):
-        ret = file
+    if os.path.abspath(cmd):
+        if File(cmd).exists():
+            ret = cmd
     else:
-        for dir in os.environ["PATH"].split(":"):
-            f = os.path.join(dir, file)
-            if os.path.exists(f) and os.access(f, os.X_OK):
-                ret = f
+        for dirname in os.environ["PATH"].split(":"):
+            fn = os.path.join(dirname, cmd)
+            if File(fn).exists() and File(fn).access(os.X_OK):
+                ret = fn
                 break
-    if ret is None:
-        raise RuntimeError("Cannot find command '%s'" % file)
     return ret
 
 

@@ -118,6 +118,11 @@ class File(base.Base):
         """
         return os.unlink(self.filename)
 
+    def access(self, mode):
+        """Check if the file can be accessed
+        """
+        return os.access(self.filename, mode)
+
     def __iter__(self):
         with open(self.filename, "r") as src:
             for line in src:
@@ -195,6 +200,9 @@ class FakeFs(base.Base):
         def delete(self):
             if self.exists():
                 del FakeFs.filemap[self.filename]
+
+        def access(self, mode):
+            return self.filename in FakeFs.filemap
 
         def __iter__(self):
             for line in StringIO.StringIO(self.read()):
