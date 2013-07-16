@@ -78,6 +78,7 @@ EOF
 cp $LIVE_ROOT/isolinux/version $INSTALL_ROOT/etc/default/
 
 # overwrite user visible banners with the image versioning info
+rm -f $INSTALL_ROOT/etc/$PACKAGE-release
 cat > $INSTALL_ROOT/etc/$PACKAGE-release <<EOF
 $PRODUCT release $VERSION ($RELEASE)
 EOF
