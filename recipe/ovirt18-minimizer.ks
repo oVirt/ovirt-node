@@ -30,7 +30,6 @@ droprpm hfsplus-tools
 droprpm lcms2
 droprpm libXfont
 droprpm libXt
-droprpm libfdt
 droprpm libfontenc
 droprpm xorg-x11-font-utils
 droprpm man-db
