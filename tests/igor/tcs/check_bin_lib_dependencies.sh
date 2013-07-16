@@ -19,7 +19,7 @@ echo ""
 for BINARY in $BINARIES;
 do
   igor_highlight "Checking $BINARY"
-  
+
   if ldd $BINARY | grep -q "not found";
   then
     igor_debug "Missing dependencies found:"
