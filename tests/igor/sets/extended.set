@@ -11,3 +11,6 @@ filename: 'check_common_mounts.sh'
 filename: 'verify_network_setup.sh'
 
 ---
+filename: 'check_bin_lib_dependencies.sh'
+
+---
