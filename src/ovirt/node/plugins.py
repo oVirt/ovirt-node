@@ -317,7 +317,7 @@ class NodePlugin(base.Base):
         self.__changes.update(change)
         self.logger.debug("Sum of all UI changes up to now: %s" %
                           self.__changes)
-        self.on_valid(True)
+        self.on_valid(self.is_valid_changes())
         return True
 
     def _on_ui_save(self):
