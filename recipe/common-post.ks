@@ -228,8 +228,5 @@ fi
 # cleanup yum directories
 rm -rf /var/lib/yum/*
 
-#cleanup tmp directory from cim setup
-rm -rf /tmp/cim_schema*
-
 # enable strong random number generation
 sed -i '/SSH_USE_STRONG_RNG/d' /etc/sysconfig/sshd

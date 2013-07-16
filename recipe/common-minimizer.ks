@@ -314,11 +314,6 @@ drop /etc/kdump-adv-conf
 
 # drop net-snmp
 droprpm net-snmp
-#cim
-droprpm tog-pegasus
-droprpm tog-pegasus-libs
-droprpm mailcap
-droprpm openslp
 
 #remove rpms added by dmraid
 droprpm ConsoleKit

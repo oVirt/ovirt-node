@@ -190,15 +190,20 @@ groupadd cim
 useradd -g cim -G sfcb -s /sbin/nologin cim
 %if ! %{is_systemd}
 /sbin/chkconfig --add ovirt-cim
+/sbin/chkconfig ovirt-cim on
 %else
 if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+    /bin/systemctl enable ovirt-cim >/dev/null 2>&1 || :
 fi
 %endif
 #CIM related changes
 # set read-only
 echo "readonly = true;" > /etc/libvirt-cim.conf
+
+#cleanup tmp directory from cim setup
+rm -rf /tmp/cim_schema*
 
 
 #
