@@ -73,34 +73,42 @@ class SNMP(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = SNMP(fs.FakeFs.File("dst"))
-    >>> n.update("secret")
-    >>> n.retrieve().items()
-    [('password', 'secret')]
+    >>> n.update(True)
+    >>> n.retrieve()
+    {'enabled': True}
     """
-    keys = ("OVIRT_SNMP_PASSWORD",)
+    keys = ("OVIRT_SNMP_ENABLED",)
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, password):
-        # FIXME add validation
-        pass
+    def update(self, enabled):
+        return {"OVIRT_SNMP_ENABLED":
+                "1" if utils.parse_bool(enabled) else None}
 
-    def transaction(self):
-        cfg = dict(self.retrieve())
-        password = cfg["password"]
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        cfg.update({"enabled":
+                    True if cfg["enabled"] == "1" else None})
+        return cfg
+
+    def transaction(self, snmp_password):
+        cfg = self.retrieve()
+        enabled = cfg["enabled"]
+
+        tx = utils.Transaction("Configuring SNMP")
 
         class ConfigureSNMP(utils.Transaction.Element):
-            title = "Enabling/Disabling SNMP and setting the password"
+            state = ("Enabling" if enabled else "Disabling")
+            title = "%s SNMP and setting the password" % state
 
             def commit(self):
                 # FIXME snmp plugin needs to be placed somewhere else (in src)
                 # pylint: disable-msg=E0611
                 from ovirt_config_setup import snmp  # @UnresolvedImport
                 # pylint: enable-msg=E0611
-                if password:
-                    snmp.enable_snmpd(password)
+                if enabled and snmp_password:
+                    snmp.enable_snmpd(snmp_password)
                 else:
                     snmp.disable_snmpd()
 
-        tx = utils.Transaction("Configuring SNMP")
         tx.append(ConfigureSNMP())
         return tx

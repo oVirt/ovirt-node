@@ -66,10 +66,9 @@ class Plugin(plugins.NodePlugin):
     def model(self):
         cfg = snmp_model.SNMP().retrieve()
         self.logger.debug(cfg)
-        model = {"snmp.enabled": True if cfg["password"] else False,
+        model = {"snmp.enabled": cfg["enabled"] or False,
                  "snmp.password": "",
                  }
-        model.update(self._model)
         return model
 
     def validators(self):
@@ -106,13 +105,13 @@ class Plugin(plugins.NodePlugin):
         txs = utils.Transaction("Updating SNMP configuration")
 
         if changes.contains_any(snmp_keys):
-            values = effective_model.values_for(snmp_keys)
-            args = [values[0]]
-            if values[1] is False:  # If set to disabled, set password to None
-                args[0] = None
+            is_enabled = effective_model["snmp.enabled"]
+            pw = effective_model["snmp.password"]
+
             model = snmp_model.SNMP()
-            model.update(*args)
-            txs += model.transaction()
+            model.update(is_enabled)
+            txs += model.transaction(snmp_password=pw)
 
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
+        return self.ui_content()
