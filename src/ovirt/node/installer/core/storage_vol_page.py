@@ -66,7 +66,7 @@ class Plugin(plugins.NodePlugin):
               ui.Divider("divider[1]"),
               ui.Entry("storage.root_size", "Root & RootBackup:",
                        enabled=False),
-              ui.Label("label[1]", "(2 partitions at 256MB each)"),
+              ui.Label("label[1]", "(2 partitions at 512MB each)"),
               ui.Divider("divider[2]"),
               ui.Entry("storage.swap_size", "Swap:"),
               ui.Entry("storage.config_size", "Config:"),

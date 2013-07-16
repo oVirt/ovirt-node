@@ -35,8 +35,8 @@ class Storage:
         logger.propagate = False
         OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5
-        self.BOOT_SIZE = 256
-        self.ROOT_SIZE = 256
+        self.BOOT_SIZE = 512
+        self.ROOT_SIZE = 512
         self.CONFIG_SIZE = 5
         self.LOGGING_SIZE = 2048
         self.EFI_SIZE = 256
