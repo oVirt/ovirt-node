@@ -592,11 +592,13 @@ class Storage:
         _functions.system(parted_cmd)
         logger.debug("Creating Root and RootBackup Partitions")
         parted_cmd = ("parted \"" + self.ISCSIDRIVE +
-                     "\" -s \"mkpart primary ext2 1M 256M\"")
+                      "\" -s \"mkpart primary 1M " +
+                      str(self.ROOT_SIZE) + "M\"")
         logger.debug(parted_cmd)
         _functions.system(parted_cmd)
         parted_cmd = ("parted \"" + self.ISCSIDRIVE +
-                     "\" -s \"mkpart primary ext2 256M 512M\"")
+                     "\" -s \"mkpart primary ext2 " + str(self.ROOT_SIZE) +
+                     "M " + str(self.ROOT_SIZE * 2) + "M\"")
         logger.debug(parted_cmd)
         _functions.system(parted_cmd)
         # sleep to ensure filesystems are created before continuing
