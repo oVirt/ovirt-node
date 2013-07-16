@@ -115,3 +115,6 @@ NetworkManager-glib
 bridge-utils
 squashfs-tools
 mcelog
+
+# for qemu
+libicu

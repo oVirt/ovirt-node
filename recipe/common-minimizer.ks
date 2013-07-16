@@ -16,7 +16,6 @@ droprpm mtools
 droprpm syslinux
 droprpm wireless-tools
 droprpm radeontool
-droprpm libicu
 droprpm gnupg2
 droprpm fedora-release-notes
 droprpm fedora-logos
@@ -229,10 +228,8 @@ keep /usr/lib/locale/locale-archive
 keep /usr/lib/locale/usr/share/locale/en_US
 # pango
 drop /usr/lib*/pango
-drop /usr/lib*/libpango*
 drop /usr/lib*/libthai*
 drop /usr/share/libthai
-drop /etc/pango
 drop /usr/bin/pango*
 # hal
 drop /usr/bin/hal-disable-polling
@@ -270,6 +267,8 @@ keep /usr/lib*/libboost_program_options.so*
 keep /usr/lib*/libboost_filesystem.so*
 keep /usr/lib*/libboost_thread-mt.so*
 keep /usr/lib*/libboost_system.so*
+keep /usr/lib*/libboost_system-mt.so*
+keep /usr/lib*/libboost_chrono-mt.so*
 drop /usr/kerberos
 keep /usr/kerberos/bin/kinit
 keep /usr/kerberos/bin/klist
@@ -328,7 +327,6 @@ droprpm dmraid-events
 droprpm gamin
 droprpm gnupg2
 droprpm hdparm
-droprpm libicu
 droprpm linux-atm-libs
 droprpm make
 droprpm mtools
