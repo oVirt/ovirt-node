@@ -96,9 +96,8 @@ class Plugin(plugins.NodePlugin):
                              "uninstall existing version first")]
 
         if has_hostvg:
-            installed = utils.system.InstalledMedia()
-
             try:
+                installed = utils.system.InstalledMedia()
                 if media > installed:
                     return [ui.Button("button.upgrade",
                                       "Upgrade %s to %s" % (installed, media))]
