@@ -1112,6 +1112,9 @@ class LiveImageEditor(LiveImageCreator):
         else:
             if os.path.isfile(options.repo) and not \
                     options.repo.lower().endswith(".iso"):
+                cmd = "mkdir -p %s/etc/yum.repos.d" % self._instroot
+                f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
+                                     stderr=STDOUT)
                 cmd = "touch /etc/yum.repos.d/plugin.repo"
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
                                      stderr=STDOUT,
