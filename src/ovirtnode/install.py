@@ -202,6 +202,7 @@ set timeout=5
 #hiddenmenu
 menuentry "%(product)s %(version)s-%(release)s" {
 set root=(hd0,%(partN)d)
+search --no-floppy --label Root --set root
 linux /vmlinuz0 %(root_param)s %(bootparams)s
 initrd /initrd0.img
 }"""
@@ -209,6 +210,7 @@ initrd /initrd0.img
         GRUB2_BACKUP_TEMPLATE = """
 menuentry "BACKUP %(oldtitle)s" {
 set root (hd0,%(partB)d)
+search --no-floppy --label RootBackup --set root
 linux /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
 initrd /initrd0.img
 }    """
