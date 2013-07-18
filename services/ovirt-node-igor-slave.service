@@ -1,6 +1,6 @@
 [Unit]
 Description=Communication with Igor (for test automation)
-After=basic.target network.target
+After=basic.target network-online.target
 Before=ovirt-early.service
 DefaultDependencies=no
 
