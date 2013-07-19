@@ -53,7 +53,6 @@ Requires:       python-augeas
 Requires:       glusterfs-client >= 2.0.1
 Requires:       python-IPy
 Requires:       system-release
-Requires:       libvirt >= 0.9.2, libvirt-python
 Requires:       augeas >= 0.3.5
 Requires:       bridge-utils
 Requires:       udev >= 147-2.34
@@ -99,6 +98,22 @@ Requires(post):       patch
 Requires:       system-release
 
 Requires:       %{name}-selinux = %{version}-%{release}
+
+#libvirt dependencies
+Requires: libvirt-python
+%if 0%{?rhel} >= 7 || 0%{?fedora} >= 18
+Requires: libvirt-daemon >= 1.0.2-1
+Requires: libvirt-daemon-config-nwfilter
+Requires: libvirt-daemon-driver-network
+Requires: libvirt-daemon-driver-nwfilter
+Requires: libvirt-daemon-driver-qemu
+%else
+%if 0%{?rhel}
+Requires: libvirt >= 0.10.2-18.el6_4.4
+%else
+Requires: libvirt >= 1.0.2-1
+%endif
+%endif
 
 
 BuildArch:      noarch
