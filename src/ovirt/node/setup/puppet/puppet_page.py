@@ -57,7 +57,7 @@ class Plugin(plugins.NodePlugin):
         ws = [ui.Header("header[0]", "Puppet Configuration"),
               ui.Checkbox("puppet.enabled", "Enable Puppet"),
               ui.Entry("puppet.server", "Puppet Server:"),
-              ui.Entry("puppet.certname", "Puppet Certificate Name"),
+              ui.Entry("puppet.certname", "Puppet Certificate Name:"),
               ui.Divider("divider[0]"),
               ]
 
