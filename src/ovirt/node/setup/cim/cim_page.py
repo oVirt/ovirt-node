@@ -49,7 +49,6 @@ class Plugin(plugins.NodePlugin):
         model = {"cim.enabled": True if cfg["enabled"] else False,
                  "cim.password": "",
                  }
-        model.update(self._model)
         return model
 
     def validators(self):
