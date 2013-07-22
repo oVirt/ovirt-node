@@ -92,3 +92,4 @@ class Plugin(plugins.NodePlugin):
             txs += model.transaction(cim_password=pw)
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
         progress_dialog.run()
+        return self.ui_content()
