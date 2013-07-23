@@ -49,9 +49,9 @@ def get_active_profile():
     """
     try:
         profile = process.check_output(["/usr/sbin/tuned-adm", "active"])
+        return re.match(r'.*?: (.*)', profile).group(1)
     except:
         return "None"
-    return re.match(r'.*?: (.*)', profile).group(1)
 
 
 def set_active_profile(profile):
