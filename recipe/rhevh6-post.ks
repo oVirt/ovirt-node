@@ -1,3 +1,5 @@
+%include version.ks
+
 # add RHEV-H rwtab locations
 mkdir -p /rhev
 cat > /etc/rwtab.d/rhev << EOF_RWTAB_RHEVH
@@ -16,8 +18,10 @@ EOF_LSB
 chmod +x /usr/bin/lsb_release
 
 # CPE name rhbz#593463
-cat > /etc/system-release-cpe <<\EOF_CPE
-cpe:/o:redhat:enterprise_linux:6:update2:hypervisor
+MAJORVER=${VERSION%%.*}
+MINORVER=${VERSION##*.}
+cat > /etc/system-release-cpe <<EOF_CPE
+cpe:/o:redhat:enterprise_linux:${MAJORVER}:update${MINORVER}:hypervisor${TYPE}
 EOF_CPE
 
 echo "Configuring SELinux"
