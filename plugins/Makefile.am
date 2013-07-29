@@ -23,7 +23,7 @@ puppetplugindir = ${prefix}/share/ovirt-node/puppet-plugin/
 rbovirtsetupdir = $(localstatedir)/lib/puppet/facts
 
 # FIXME this can be removed
-dist_pyovirtconfigsetup_SCRIPTS = \
+dist_pyovirtconfigsetup_PYTHON = \
   snmp.py \
   cim.py
 
@@ -35,7 +35,7 @@ dist_plugins_DATA = \
 dist_pluginsargs_DATA = \
   puppet-args
 
-dist_pyovirtconfigboot_SCRIPTS = \
+dist_pyovirtconfigboot_PYTHON = \
   snmp_autoinstall.py \
   puppet_autoinstall.py
 

@@ -495,15 +495,15 @@ fi
 %{_sysconfdir}/ovirt-plugins.d/puppet.minimize
 %{_sysconfdir}/ovirt-commandline.d/puppet-args
 %{app_root}/puppet-plugin/puppet-operatingsystem.rb.patch
-%{_sysconfdir}/ovirt-config-boot.d/puppet_autoinstall.py
+%{_sysconfdir}/ovirt-config-boot.d/puppet_autoinstall.py*
 
 %files plugin-snmp
-%{python_sitelib}/ovirt_config_setup/snmp.py
-%{python_sitelib}/ovirt/node/setup/snmp/__init__.py
-%{python_sitelib}/ovirt/node/setup/snmp/snmp_model.py
-%{python_sitelib}/ovirt/node/setup/snmp/snmp_page.py
+%{python_sitelib}/ovirt_config_setup/snmp.py*
+%{python_sitelib}/ovirt/node/setup/snmp/__init__.py*
+%{python_sitelib}/ovirt/node/setup/snmp/snmp_model.py*
+%{python_sitelib}/ovirt/node/setup/snmp/snmp_page.py*
 %{_sysconfdir}/ovirt-plugins.d/snmp.minimize
-%{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py
+%{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py*
 
 
 %files plugin-cim
