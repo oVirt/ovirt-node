@@ -61,18 +61,19 @@ class Storage:
                 init = _functions.OVIRT_VARS["OVIRT_INIT"].strip(",").split(",")
                 for disk in init:
                     skip = False
+                    translated_disk = _functions.translate_multipath_device(disk)
                     if disk_count < 1:
-                        self.ROOTDRIVE = _functions.translate_multipath_device(disk)
+                        self.ROOTDRIVE = translated_disk
                         if len(init) == 1:
-                            self.HOSTVGDRIVE = _functions.translate_multipath_device(disk)
+                            self.HOSTVGDRIVE = translated_disk
                         disk_count = disk_count + 1
                     else:
                         for hostvg in self.HOSTVGDRIVE.split(","):
-                            if hostvg == disk:
+                            if hostvg == translated_disk:
                                 skip = True
                                 break
                         if not skip:
-                            self.HOSTVGDRIVE += "%s," % disk
+                            self.HOSTVGDRIVE += "%s," % translated_disk
             else:
                 self.ROOTDRIVE = _functions.translate_multipath_device(
                                     _functions.OVIRT_VARS["OVIRT_INIT"])
