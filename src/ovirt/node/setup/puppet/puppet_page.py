@@ -51,6 +51,7 @@ class Plugin(plugins.NodePlugin):
 
     def validators(self):
         return {"puppet.server": valid.FQDNOrIPAddress() | valid.Empty(),
+                "puppet.certname": valid.FQDN() | valid.Empty()
                 }
 
     def ui_content(self):
