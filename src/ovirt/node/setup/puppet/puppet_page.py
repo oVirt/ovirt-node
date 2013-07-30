@@ -141,7 +141,7 @@ class ActivatePuppet(utils.Transaction.Element):
         cfg = Puppet().retrieve()
 
         lines = File("/etc/puppet/puppet.conf").read()
-        conf = File("/etc/puppet/puppet.conf", "w")
+        conf = File("/etc/puppet/puppet.conf")
         for line in lines:
             try:
                 item = re.match(r'^\s+(\w+) =', line).group(1)
