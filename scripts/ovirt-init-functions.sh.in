@@ -1144,8 +1144,6 @@ EOP
     fi
     disable_firstboot
 
-    ovirt_store_firstboot_config >> $OVIRT_LOGFILE 2>&1
-
     rm -f $VAR_SUBSYS_OVIRT_FIRSTBOOT
 }
 

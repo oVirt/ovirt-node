@@ -63,6 +63,20 @@ else:
 PRODUCT_VERSION = aug.get("/files/etc/default/version/VERSION")
 PRODUCT_RELEASE = aug.get("/files/etc/default/version/RELEASE")
 
+OVIRT_CONFIG_FILES = [ "/etc/rsyslog.conf",
+                       "/etc/libvirt/libvirtd.conf",
+                       "/etc/libvirt/passwd.db",
+                       "/etc/passwd",
+                       "/etc/shadow",
+                       "/etc/default/ovirt",
+                       "/etc/sysconfig/network",
+                       "/etc/collectd.conf",
+                       "/etc/libvirt/qemu/networks",
+                       "/etc/ssh/sshd_config",
+                       "/etc/pki",
+                       "/etc/logrotate.d/ovirt-node",
+                       "/var/lib/random-seed" ]
+
 OVIRT_VARS = {}
 # Parse all OVIRT_* variables
 
@@ -1091,8 +1105,8 @@ def finish_install():
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
-
-    ovirt_store_config("/var/lib/random-seed")
+    for f in OVIRT_CONFIG_FILES:
+        ovirt_store_config(f)
     return True
 
 def is_valid_ipv4(ip_address):
