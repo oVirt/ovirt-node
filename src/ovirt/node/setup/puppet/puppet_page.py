@@ -156,13 +156,15 @@ class ActivatePuppet(utils.Transaction.Element):
                 if item in cfg and cfg[item] is not '':
                     if re.match(r'^#.*', line):
                         line = re.sub(r'^#', '', line)
-                    conf.write(re.sub(r'(^.*?' + item + ' =).*', r'\1 "' +
-                                      cfg[item] + '"', line))
+                    conf_builder += re.sub(r'(^.*?' + item + ' =).*',
+                                           r'\1 "' + cfg[item] + '"',
+                                           line)
+                else:
+                    conf_builder += line
             except:
                 conf_builder += line
 
         conf.write(conf_builder, "w")
-        fs.Config().persist("/etc/puppet/puppet.conf")
 
         fs.Config().persist("/etc/puppet/puppet.conf")
 
