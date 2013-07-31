@@ -20,8 +20,11 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import ui
 from ovirt.node.plugins import NodePlugin
+from ovirt.node.utils import process
 import glob
 import os
+import re
+from subprocess import CalledProcessError
 
 """
 A plugin for a plugins page
@@ -125,10 +128,31 @@ class Plugin(NodePlugin):
             for f in os.listdir(plugin_dir):
                 if not f.endswith(".minimize"):
                     with open(plugin_dir + f) as p:
-                        lines = p.readlines()
-                        name = lines[0].strip().split(":")[1]
-                        ver = lines[1].strip().split(":")[1]
-                        install_date = lines[2].strip().replace("Install " +
-                                                                "Date:", "")
+                        if re.compile(r'Name:.*?\nVer.*:.*?\nInstall Date:.*',
+                                      re.M | re.S).match(open(plugin_dir + f
+                                                              ).read()):
+                            #Hopefully a plugin metadata file
+                            lines = p.readlines()
+                            name = lines[0].strip().split(":")[1]
+                            ver = lines[1].strip().split(":")[1]
+                            install_date = lines[2].strip().replace(
+                                "Install Date:", "")
+                        else:
+                            try:
+                                cmd = '/bin/rpm -qf %s/%s --qf %%{name}' % \
+                                    (plugin_dir, f)
+                                package = process.check_output(cmd.split(' ')
+                                                               ).strip()
+                                cmd = "rpm -q %s --qf 'NAME: %s DATE: \
+                                       %%{version}-%%{release}.%%{arch} INST: \
+                                       %%{INSTALLTIME:date}\\n'" %\
+                                    (package, package)
+                                name, ver, install_date = re.match(
+                                    r'NAME: (.*?) DATE: (.*?) INST: (.*)',
+                                    process.check_output(cmd, shell=True
+                                                         ).strip()).groups()
+                            except CalledProcessError:
+                                continue
+
                     plugin_dict[name] = (ver, install_date)
         return plugin_dict
