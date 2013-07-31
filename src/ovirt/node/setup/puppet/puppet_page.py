@@ -21,7 +21,7 @@
 from ovirt.node import plugins, valid, ui, utils
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.plugins import Changeset
-from ovirt.node.utils import system
+from ovirt.node.utils import system, fs
 from ovirt.node.utils.fs import File
 import re
 import socket
@@ -153,6 +153,8 @@ class ActivatePuppet(utils.Transaction.Element):
                                       cfg[item] + '"', line))
             except:
                 conf.write(line)
+
+        fs.Config().persist("/etc/puppet/puppet.conf")
 
         system.service("puppet", "stop")
         utils.process.check_call("puppet agent --waitforcert 60 --test",
