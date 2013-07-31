@@ -141,16 +141,21 @@ class ActivatePuppet(utils.Transaction.Element):
 
         cfg = Puppet().retrieve()
 
-        lines = File("/etc/puppet/puppet.conf").read()
         conf = File("/etc/puppet/puppet.conf")
-        for line in lines:
+        conf_builder = ""
+        for line in conf:
             try:
                 item = re.match(r'^\s+(\w+) =', line).group(1)
                 if item in cfg:
-                    conf.write(re.sub(r'(^.*?' + item + ' =).*', r'\1 "' +
-                                      cfg[item] + '"', line))
+                    conf_builder += re.sub(r'(^.*?' + item + ' =).*',
+                                           r'\1 "' + cfg[item] + '"',
+                                           line)
+                else:
+                    conf_builder += line
             except:
-                conf.write(line)
+                conf_builder += line
+
+        conf.write(conf_builder, "w")
 
         system.service("puppet", "stop")
         utils.process.check_call("puppet agent --test", shell=True)
