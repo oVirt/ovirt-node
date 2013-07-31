@@ -164,6 +164,8 @@ class ActivatePuppet(utils.Transaction.Element):
         conf.write(conf_builder, "w")
         fs.Config().persist("/etc/puppet/puppet.conf")
 
+        fs.Config().persist("/etc/puppet/puppet.conf")
+
         system.service("puppet", "stop")
         utils.process.check_call("puppet agent --waitforcert 60 --test",
                                  shell=True)
