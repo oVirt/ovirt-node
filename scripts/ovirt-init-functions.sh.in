@@ -671,6 +671,7 @@ _start_ovirt_early () {
             network_layout=${i#network_layout=}
             ;;
             bond=*)
+            i=${i#bond=}
             eval $(printf $i|awk -F: '{print "bond_name="$1; print "bond_slaves="$2; print "bond_options="$3;}')
             ;;
             hostname=*)
