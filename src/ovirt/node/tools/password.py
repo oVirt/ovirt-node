@@ -77,7 +77,7 @@ class PasswordTool(cmd.Cmd):
         print("System Administrator (%s):\n" % username)
         print("Changing password for user '%s'." % username)
         pw = getpass.getpass("New password: ")
-        pwc = getpass.getpass("Reytpe new Password: ")
+        pwc = getpass.getpass("Retype new Password: ")
 
         try:
             all_args = (pw, pwc, min_pw_length, username)
