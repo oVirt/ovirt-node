@@ -175,6 +175,8 @@ def _aug_get_or_set(augpath, new_servers=None):
     """Get or set some servers
     """
     aug = Augeas()
+    aug.save()
+    aug.force_reload()
 
     servers = []
     for path in aug.match(augpath):
