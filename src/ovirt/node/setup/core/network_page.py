@@ -139,9 +139,7 @@ class Plugin(plugins.NodePlugin):
                 "ntp[1]": fqdn_ip_or_empty,
 
                 "dialog.nic.ipv4.address": valid.IPv4Address() | valid.Empty(),
-                "dialog.nic.ipv4.netmask": (valid.IPv4Address() |
-                                            valid.Number(bounds=[0, 32]) |
-                                            valid.Empty()),
+                "dialog.nic.ipv4.netmask": valid.IPv4Address() | valid.Empty(),
                 "dialog.nic.ipv4.gateway": valid.IPv4Address() | valid.Empty(),
                 "dialog.nic.ipv6.address": valid.IPv6Address() | valid.Empty(),
                 "dialog.nic.ipv6.netmask": (valid.Number(bounds=[0, 128]) |
