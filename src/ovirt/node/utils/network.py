@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, utils, config, valid
 from ovirt.node.config.network import NicConfig
+from ovirt.node.utils import fs
 from ovirt.node.utils.fs import File
 import glob
 import gudev
@@ -807,18 +808,17 @@ class Bridges(base.Base):
 class Bonds(base.Base):
     """Convenience API to access some bonding related stuff
     """
-    basepath = "/proc/net/bonding"
+    bonding_masters_filename = "/sys/class/net/bonding_masters"
 
     def is_enabled(self):
         """If bonding is enabled
         """
-        return os.path.exists(self.basepath)
+        return fs.File(self.bonding_masters_filename).exists()
 
     def ifnames(self):
         """Return the ifnames of all bond devices
         """
-        return [os.path.basename(b)
-                for b in os.listdir(self.basepath)]
+        return fs.File(self.bonding_masters_filename).read().split()
 
     def is_bond(self, ifname):
         """Determins if ifname is a bond device
@@ -828,4 +828,15 @@ class Bonds(base.Base):
     def delete_all(self):
         """Deletes all bond devices
         """
-        process.call("rmmod bonding 2> /dev/null", shell=True)
+        for master in self.ifnames():
+            self.delete(master)
+
+    def delete(self, mifname):
+        """Delete one bond master
+        """
+        if not self.is_bond(mifname):
+            raise RuntimeError("Can no delete '%s', it is no bond master" %
+                               mifname)
+        #process.call(["ip", "link", "set", "dev", mifname, "down"])
+        #process.call(["ip", "link", "delete", mifname, "type", "bond"])
+        fs.File(self.bonding_masters_filename).write("-%s" % mifname)
