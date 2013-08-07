@@ -254,6 +254,19 @@ class Plugin(plugins.NodePlugin):
             self.logger.debug("Opening NIC Details dialog for '%s'" % iface)
             self._model_extra["dialog.nic.ifname"] = iface
             self._nic_dialog = NicDetailsDialog(self, iface)
+
+            if network.NodeNetwork().is_configured():
+                txt = "Network Configuration detected an already configured "
+                txt += "NIC. The configuration for that NIC is "
+                txt += "going to be removed if changes are made. Proceed?"
+                self._confirm_dialog = ui.ConfirmationDialog("dialog.confirm",
+                                                             "Confirm Network "
+                                                             "Settings", txt,
+                                                             )
+                return self._confirm_dialog
+
+        if "dialog.confirm.yes" in changes:
+            self._confirm_dialog.close()
             return self._nic_dialog
 
         if "dialog.nic.close" in changes:
