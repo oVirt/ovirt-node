@@ -92,7 +92,7 @@ def which(cmd):
         $PATH. Otherwise None (if not found in any path in $PATHS).
     """
     ret = None
-    if os.path.abspath(cmd):
+    if os.path.isabs(cmd):
         if File(cmd).exists():
             ret = cmd
     else:
