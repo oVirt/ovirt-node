@@ -597,12 +597,12 @@ class IPv6(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = IPv6(fs.FakeFs.File("dst"))
-    >>> n.update("auto", "11::22", "11::33", "11::44")
+    >>> n.update("auto", "11::22", "42", "11::44")
     >>> data = sorted(n.retrieve().items())
     >>> data[0:3]
     [('bootproto', 'auto'), ('gateway', '11::44'), ('ipaddr', '11::22')]
     >>> data[3:]
-    [('netmask', '11::33')]
+    [('netmask', '42')]
     """
     keys = ("OVIRT_IPV6",
             "OVIRT_IPV6_ADDRESS",
@@ -615,7 +615,7 @@ class IPv6(NodeConfigFileSection):
             raise exceptions.InvalidData("Unknown bootprotocol: %s" %
                                          bootproto)
         (valid.IPv6Address() | valid.Empty(or_none=True))(ipaddr)
-        (valid.IPv6Address() | valid.Empty(or_none=True))(netmask)
+        (valid.Number(bounds=[0, 128]) | valid.Empty(or_none=True))(netmask)
         (valid.IPv6Address() | valid.Empty(or_none=True))(gateway)
 
     def transaction(self):

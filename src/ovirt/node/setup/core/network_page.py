@@ -144,8 +144,7 @@ class Plugin(plugins.NodePlugin):
                                             valid.Empty()),
                 "dialog.nic.ipv4.gateway": valid.IPv4Address() | valid.Empty(),
                 "dialog.nic.ipv6.address": valid.IPv6Address() | valid.Empty(),
-                "dialog.nic.ipv6.netmask": (valid.IPv6Address() |
-                                            valid.Number(bounds=[0, 128]) |
+                "dialog.nic.ipv6.netmask": (valid.Number(bounds=[0, 128]) |
                                             valid.Empty()),
                 "dialog.nic.ipv6.gateway": valid.IPv6Address() | valid.Empty(),
                 "dialog.nic.vlanid": (valid.Number(bounds=[0, 4096]) |
@@ -530,7 +529,7 @@ class NicDetailsDialog(ui.Dialog):
                      [ui.Entry("dialog.nic.ipv6.address",
                                padd("IP Address: ")),
                       ui.Entry("dialog.nic.ipv6.netmask",
-                               padd("  Netmask: "))]),
+                               padd("  Prefix Length: "))]),
               ui.Row("dialog.nic._row[7]",
                      [ui.Entry("dialog.nic.ipv6.gateway",
                                padd("Gateway: ")),
