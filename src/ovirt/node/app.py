@@ -375,9 +375,20 @@ class Application(base.Base):
         def open_console():
             utils.process.call("clear ; bash", shell=True)
 
-        try:
+        def return_ok(dialog, changes):
             with self.ui.suspended():
                 open_console()
+
+        try:
+            txt = "Making changes in the rescue shell is unsupported. Do not "
+            txt += "use this without guidance from support representatives"
+            dialog = ui.ConfirmationDialog("dialog.shell", "Rescue Shell", txt
+                                           )
+
+            dialog.buttons[0].on_activate.connect(return_ok)
+            dialog.buttons[0].on_activate.connect(ui.CloseAction())
+            self.show(dialog)
+
         except:
             # Error when the UI is not running
             open_console()
