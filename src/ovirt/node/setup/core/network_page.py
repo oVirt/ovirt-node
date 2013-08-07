@@ -264,8 +264,6 @@ class Plugin(plugins.NodePlugin):
                                                              "Settings", txt,
                                                              )
                 return self._confirm_dialog
-            else:
-                return self._nic_dialog
 
         if "dialog.confirm.yes" in changes:
             self._confirm_dialog.close()
