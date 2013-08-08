@@ -5,3 +5,4 @@ selinux-policy-devel
 shim
 # qlogic firmware
 linux-firmware
+iptables
