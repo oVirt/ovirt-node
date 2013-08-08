@@ -317,18 +317,22 @@ class Network(NodeConfigFileSection):
                 m = Network().retrieve()
                 aug = AugeasWrapper()
 
+                needs_networking = False
+
                 bond = NicBonding().retrieve()
                 if bond["slaves"]:
                     NicBonding().transaction().commit()
+                    needs_networking = True
 
-                has_network = m["iface"] is not None
-                if has_network:
+                if m["iface"]:
                     self.__write_config()
+                    needs_networking = True
 
                 self.__write_lo()
 
                 aug.set("/files/etc/sysconfig/network/NETWORKING",
-                        "yes" if has_network else "no")
+                        "yes" if needs_networking else "no")
+
                 fs.Config().persist("/etc/sysconfig/network")
                 fs.Config().persist("/etc/hosts")
 
