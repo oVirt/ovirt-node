@@ -110,7 +110,8 @@ class Plugin(plugins.NodePlugin):
             except:
                 self.logger.error("Unable to get version numbers for " +
                                   "upgrade, invalid installation or media")
-                return [ui.Label("Invalid installation, please reboot from " +
+                return [ui.Label("lbl.failinstall",
+                                 "Invalid installation, please reboot from " +
                                  "media and choose Reinstall")]
 
         return [ui.Button("button.install", "Install Hypervisor %s" % media)]
