@@ -917,6 +917,10 @@ EOF
         fi
     done
 
+    python <<EOP
+from ovirt.node.utils import firewall
+firewall.process_plugins()
+EOP
     return 0
 }
 
