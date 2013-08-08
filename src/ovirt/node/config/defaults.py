@@ -538,6 +538,7 @@ class NicBonding(NodeConfigFileSection):
                     cfg = NicConfig(bond["name"])
                     cfg.device = bond["name"]
                     cfg.onboot = "yes"
+                    cfg.type = "Bond"
                     cfg.bonding_opts = bond["options"]
 
                     cfg.save()

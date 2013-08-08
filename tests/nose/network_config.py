@@ -319,7 +319,8 @@ class TestBond():
                                 ('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'bond0'),
                                 ('ONBOOT', 'yes'),
-                                ('PEERNTP', 'yes')])
+                                ('PEERNTP', 'yes'),
+                                ('TYPE', 'Bond')])
 
     def test_direct_dhcp_discovery(self, *args, **kwargs):
         self.test_direct_dhcp()
@@ -367,7 +368,8 @@ class TestBond():
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BRIDGE', 'brbond0'),
                                 ('DEVICE', 'bond0'),
-                                ('ONBOOT', 'yes')])
+                                ('ONBOOT', 'yes'),
+                                ('TYPE', 'Bond')])
 
         assert ifcfg_has_items("brbond0",
                                [('BOOTPROTO', 'dhcp'),
@@ -423,7 +425,8 @@ class TestBond():
         assert ifcfg_has_items("bond0",
                                [('BONDING_OPTS', 'mode=4'),
                                 ('DEVICE', 'bond0'),
-                                ('ONBOOT', 'yes')])
+                                ('ONBOOT', 'yes'),
+                                ('TYPE', 'Bond')])
 
         assert ifcfg_has_items("bond0.42",
                                [('BRIDGE', 'brbond0'),
