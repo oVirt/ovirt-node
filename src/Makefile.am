@@ -95,6 +95,7 @@ pyovirt_node_ui_PYTHON = \
 pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/__init__.py \
   ovirt/node/utils/console.py \
+  ovirt/node/utils/firewall.py \
   ovirt/node/utils/fs.py \
   ovirt/node/utils/network.py \
   ovirt/node/utils/process.py \
