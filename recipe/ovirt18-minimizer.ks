@@ -34,3 +34,4 @@ droprpm libfontenc
 droprpm xorg-x11-font-utils
 droprpm man-db
 droprpm zerofree
+droprpm firewalld
