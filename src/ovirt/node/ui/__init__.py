@@ -837,14 +837,16 @@ class ConfirmationDialog(InfoDialog):
     By default a OK and Close button will be shown.
     """
     def __init__(self, path, title, text, buttons=None):
-        super(ConfirmationDialog, self).__init__(path, title, text)
         self.children = [Divider("divider[0]"),
                          Label("label[0]", text)
                          ]
         if not buttons:
             # Default: OK and Close
             self.buttons = [Button(path + ".yes", "OK"),
-                            CloseButton(path + ".close")]
+                            CloseButton(path + ".close", "Cancel")]
+            buttons = self.buttons
+        super(ConfirmationDialog, self).__init__(path, title, text,
+                                                 buttons)
 
 
 class TransactionProgressDialog(Dialog):
