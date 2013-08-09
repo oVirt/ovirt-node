@@ -903,6 +903,12 @@ class Timeservers(NodeConfigFileSection):
         tx.append(ApplyConfiguration())
         return tx
 
+    @staticmethod
+    def filter_valid_servers(servers):
+        # Call .validate() directly so we don't throw an exception and
+        # can just filter with booleans
+        return [x for x in servers if valid.FQDNOrIPAddress().validate(x)]
+
 
 class Syslog(NodeConfigFileSection):
     """Configure rsyslog
