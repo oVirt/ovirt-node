@@ -233,6 +233,10 @@ _start_ovirt_early () {
     #   collectd=server[:port]
     #   hostname=fqdn
     #   tuned=profile
+    #   keyboard=layout
+    #   aesni=[y|n]
+    #   strongrng=<bytes>
+    #   nfsv4_domain=domain
     #   TBD logrotate maxsize
 
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
@@ -392,6 +396,23 @@ _start_ovirt_early () {
     #tuned=profile
     # the tuned profile to run by default
     tuned_profile=
+
+    # aesni=[y|n]
+    # disable AES-NI
+    disable_aes_ni=
+
+    # strongrng=<bytes>
+    # use strong rng
+    use_strong_rng=
+
+    # nfsv4_domain=domain
+    # domain to use for nfsv4
+    nfsv4_domain=
+
+    # keyboard=layout
+    # default keyboard layout
+    keyboard_layout=
+
 
     cat /etc/system-release >> $OVIRT_LOGFILE
 
@@ -711,6 +732,21 @@ _start_ovirt_early () {
             tuned*)
             tuned_profile=${i#tuned=}
             ;;
+            aesni=1 | aesni=y | aesni=yes)
+            disable_aes_ni="True"
+            ;;
+            aesni=0 | aesni=n | aesni=no)
+            disable_aes_ni="False"
+            ;;
+            nfsv4_domain*)
+            nfsv4_domain=${i#nfsv4_domain=}
+            ;;
+            use_strong_rng*)
+            use_strong_rng=${i#use_strong_rng=}
+            ;;
+            keyboard*)
+            keyboard_layout=${i#keyboard=}
+            ;;
             swap_encrypt=* | ovirt_swap_encrypt=* )
             i=${i#ovirt_swap_encrypt=}
             i=${i#swap_encrypt=}
@@ -783,7 +819,7 @@ _start_ovirt_early () {
 
 
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile"
+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
