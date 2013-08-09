@@ -234,10 +234,10 @@ _start_ovirt_early () {
     #   hostname=fqdn
     #   tuned=profile
     #   keyboard=layout
-    #   disable_aes_ni=[y|n]
-    #   use_strong_rng=<bytes>
+    #   aesni=[y|n]
+    #   strongrng=<bytes>
     #   nfsv4_domain=domain
-    #   logrotate_max_size=number
+    #   TBD logrotate maxsize
 
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     # network boot interface is assumed to be on management network where
@@ -397,11 +397,11 @@ _start_ovirt_early () {
     # the tuned profile to run by default
     tuned_profile=
 
-    # disable_aes_ni=[y|n]
+    # aesni=[y|n]
     # disable AES-NI
     disable_aes_ni=
 
-    # use_strong_rng=<bytes>
+    # strongrng=<bytes>
     # use strong rng
     use_strong_rng=
 
@@ -412,9 +412,6 @@ _start_ovirt_early () {
     # keyboard=layout
     # default keyboard layout
     keyboard_layout=
-
-    #logrotate_max_size=number
-    logrotate_max_size=
 
     cat /etc/system-release >> $OVIRT_LOGFILE
 
@@ -748,11 +745,11 @@ _start_ovirt_early () {
             tuned*)
             tuned_profile=${i#tuned=}
             ;;
-            disable_aes_ni=1 | disable_aes_ni=y | disable_aes_ni=yes)
-            disable_aes_ni="true"
+            aesni=1 | aesni=y | aesni=yes)
+            disable_aes_ni="True"
             ;;
-            disable_aes_ni=0 | disable_aes_ni=n | disable_aes_ni=no)
-            disable_aes_ni="false"
+            aesni=0 | aesni=n | aesni=no)
+            disable_aes_ni="False"
             ;;
             nfsv4_domain*)
             nfsv4_domain=${i#nfsv4_domain=}
@@ -762,9 +759,6 @@ _start_ovirt_early () {
             ;;
             keyboard*)
             keyboard_layout=${i#keyboard=}
-            ;;
-            logrotate_max_size=*)
-            logrotate_max_size=${i#logrotate_max_size=}
             ;;
             swap_encrypt=* | ovirt_swap_encrypt=* )
             i=${i#ovirt_swap_encrypt=}
@@ -846,7 +840,7 @@ EOP
 
 
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout logrotate_max_size"
+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
