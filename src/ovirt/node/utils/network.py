@@ -802,7 +802,7 @@ class Bridges(base.Base):
         if not self.is_bridge(ifname):
             raise RuntimeError("Can no delete '%s', is no bridge" % ifname)
         process.call(["ip", "link", "set", "dev", ifname, "down"])
-        process.call(["ip", "link", "delete", ifname, "type", "bridge"])
+        process.call(["brctl", "delbr", ifname])
 
 
 class Bonds(base.Base):
