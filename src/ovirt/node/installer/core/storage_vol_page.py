@@ -24,7 +24,6 @@ Storage Volume page of the installer
 
 from ovirt.node import plugins, ui, valid
 from ovirt.node.exceptions import InvalidData
-from ovirt.node.utils import process
 
 
 class Plugin(plugins.NodePlugin):
@@ -90,7 +89,6 @@ class Plugin(plugins.NodePlugin):
         if not self._fill:
             ws.extend([ui.Label("label[2]", "(-1 fills all free space)")])
 
-        self.logger.debug(dir(self._model))
         self.widgets.add(ws)
         page = ui.Page("storage", ws)
         page.buttons = [ui.QuitButton("button.quit", _("Quit")),
