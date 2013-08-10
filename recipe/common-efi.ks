@@ -19,7 +19,7 @@ title Reinstall ${PRODUCT_SHORT}-$VERSION-$RELEASE
   kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall
   initrd /isolinux/initrd0.img
 title Reinstall (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE
-  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall nomodesset
+  kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall nomodeset
   initrd /isolinux/initrd0.img
 title Reinstall with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE
   kernel /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall console=ttyS0,115200n8
@@ -65,7 +65,7 @@ menuentry 'Reinstall ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class 
         initrdefi /isolinux/initrd0.img
 }
 menuentry 'Reinstall (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
-        linuxefi /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall nomodesset
+        linuxefi /isolinux/vmlinuz0 root=live:CDLABEL=$NAME rootfstype=auto ro liveimg check rootflags=ro crashkernel=128M elevator=deadline install rhgb quiet rd_NO_LVM rd.luks=0 rd.md=0 rd.dm=0  reinstall nomodeset
         initrdefi /isolinux/initrd0.img
 }
 menuentry 'Reinstall with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
