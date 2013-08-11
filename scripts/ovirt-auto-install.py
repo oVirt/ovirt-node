@@ -159,7 +159,27 @@ class ConfigureKdump(Transaction.Element):
     title = "Configuring KDump"
 
     def commit(self):
-        kdump_auto()
+        try:
+            model = defaults.KDump()
+
+            if "OVIRT_KDUMP_SSH" in OVIRT_VARS and \
+                    "OVIRT_KDUMP_SSH_KEY" in OVIRT_VARS:
+                model.configure_ssh(OVIRT_VARS["OVIRT_KDUMP_SSH"],
+                                    OVIRT_VARS["OVIRT_KDUMP_SSH_KEY"])
+            elif "OVIRT_KDUMP_NFS" in OVIRT_VARS:
+                model.configure_nfs(OVIRT_VARS["OVIRT_KDUMP_NFS"])
+            elif "OVIRT_KDUMP_LOCAL" in OVIRT_VARS:
+                model.configure_local()
+
+            tx = model.transaction()
+            tx()
+
+        except:
+            kdump_args = ["OVIRT_KDUMP_SSH", "OVIRT_KDUMP_SSH_KEY",
+                          "OVIRT_KDUMP_NFS", "OVIRT_KDUMP_LOCAL"]
+            logger.warning("Unknown kdump configuration: %s" % \
+                            " ".join([x for x in kdump_args if \
+                                      x in OVIRT_VARS]))
 
 
 class InstallBootloader(Transaction.Element):
