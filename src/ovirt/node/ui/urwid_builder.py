@@ -459,6 +459,10 @@ class UrwidWindow(ui.Window):
         self.logger.info("Quitting, exitting mainloop")
         raise urwid.ExitMainLoop()
 
+    def reset(self):
+        self.__main_frame = self.__create_screen()
+        self.__loop.widget = self.__main_frame
+
     def run(self):
         """Run the UI
         """
