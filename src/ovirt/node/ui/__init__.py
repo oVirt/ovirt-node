@@ -676,6 +676,11 @@ class Window(Element):
         """
         raise NotImplementedError
 
+    def reset(self):
+        """Reset the UI
+        """
+        raise NotImplementedError
+
     def run(self):
         """Starts the UI
         """

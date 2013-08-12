@@ -262,6 +262,7 @@ class Application(base.Base):
             content = plugin.ui_content()
             self.show(content)
         self.logger.debug("Build and displayed plugin_page in %s seconds" % t)
+        self.logger.debug("Current page is '%s'" % plugin.ui_name())
 
     def show(self, ui_container):
         """Shows the ui.Page as a page.
@@ -291,6 +292,7 @@ class Application(base.Base):
         if not self.__plugins:
             raise Exception("No plugins found in '%s'" % self.plugin_base)
         self.ui.register_hotkey("f2", self.__drop_to_shell)
+        self.ui.register_hotkey("f12", self.__reload_page)
         self.ui.register_hotkey("window resize", self.__check_terminal_size)
 
         self.ui.header = "\n %s\n" % str(self.product)
@@ -397,6 +399,9 @@ class Application(base.Base):
         except:
             # Error when the UI is not running
             open_console()
+
+    def __reload_page(self):
+        self.ui.reset()
 
     def __check_terminal_size(self):
         cols, rows = self.ui.size()
