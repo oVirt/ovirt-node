@@ -18,10 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import ui, plugins, utils
+from ovirt.node import exceptions, ui, plugins, utils
 from ovirt.node.config import defaults
 from ovirt.node.utils import security, virt, system
 from ovirt.node.utils.network import IPAddress
+from ovirt.node.utils.system import Bootloader
 import os
 import textwrap
 
@@ -37,7 +38,8 @@ class Plugin(plugins.NodePlugin):
     There are no validators, as there is no input.
     """
 
-    _model = None
+    _model = {}
+    _extra_model = {}
 
     def name(self):
         return _("Status")
@@ -63,7 +65,7 @@ class Plugin(plugins.NodePlugin):
 
         num_domains = virt.number_of_domains()
 
-        return {
+        model = {
             "status": virt.hardware_status(),
             "managed_by": mng.retrieve()["managed_by"],
             "networking": net_status,
@@ -72,6 +74,9 @@ class Plugin(plugins.NodePlugin):
             "logs": self._logging_summary(),
             "libvirt.num_guests": num_domains,
         }
+
+        model.update(self._extra_model)
+        return model
 
     def validators(self):
         return {}
@@ -109,20 +114,20 @@ class Plugin(plugins.NodePlugin):
                     ui.Divider("divider[1]"),
 
                     ui.KeywordLabel("logs", aligned(_("Logs: "))),
-                    ui.Divider("divider[2]"),
 
                     ui.KeywordLabel("libvirt.num_guests",
                                     aligned(_("Running VMs: "))),
-                    ui.Divider("divider[3]"),
 
+                    ui.Divider("divider[2]"),
                     ui.Label("support.hint", _("Press F8 for support menu")),
-                    ui.Divider("divider[4]"),
 
                     ui.Row("row[1]",
                            [ui.Button("action.hostkey", _("View Host Key")),
                             ui.Button("action.cpu_details",
-                                      _("View CPU Details")),
+                                      _("View CPU Details"))
                             ]),
+
+                    ui.Button("action.console", "Set Console Path"),
 
                     ui.Row("row[2]", action_widgets),
                     ]
@@ -134,7 +139,11 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
-        pass
+        if "console.path" in changes:
+            if "console.path" is not "" and not os.path.exists(
+                    "/dev/%s" % changes["console.path"].split(',')[0]):
+                raise exceptions.InvalidData("Console path must be a valid"
+                                             "device or empty")
 
     def on_merge(self, changes):
         # Handle button presses
@@ -195,6 +204,18 @@ class Plugin(plugins.NodePlugin):
             self.logger.info("Showing CPU details")
             return CPUFeaturesDialog("dialog.cpu_details", _("CPU Details"))
 
+        elif "action.console" in changes:
+            self.logger.info("Showing Console details")
+            self._consoledialog = ConsoleDialog(self, "dialog.console",
+                                                "Console Details")
+            return self._consoledialog
+
+        elif "dialog.console.save" in changes:
+            self.logger.info("Saving Console Details")
+            if "console.path" in changes:
+                self._consoledialog._console(changes["console.path"])
+            self._consoledialog.close()
+
         elif "_save" in changes:
             self.widgets["dialog.hostkey"].close()
 
@@ -244,6 +265,27 @@ class CPUFeaturesDialog(ui.InfoDialog):
     def __init__(self, path, title):
         msg = utils.system.cpu_details()
         super(CPUFeaturesDialog, self).__init__(path, title, msg)
+
+
+class ConsoleDialog(ui.Dialog):
+    """The dialog displayed to enter console paths for the bootloader"""
+    def __init__(self, plugin, path, title):
+        self.plugin = plugin
+        super(ConsoleDialog, self).__init__(path, title, [])
+        self.plugin._extra_model.update({"console.path": self._console()})
+        self.plugin.model()
+        self.children = [ui.Label("Enter the path to a valid console device"),
+                         ui.Label("Example: /dev/ttyS0,115200n8"),
+                         ui.Entry("console.path", "Console path:")]
+
+    def _console(self, console_path=None):
+        def real_console():
+            b = Bootloader().Arguments()
+            if not console_path:
+                return b["console"] if "console" in b else ""
+            else:
+                b["console"] = str(console_path)
+        return self.plugin.dry_or(real_console) or ""
 
 
 class LockDialog(ui.Dialog):

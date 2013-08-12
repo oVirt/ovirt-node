@@ -15,7 +15,7 @@ RemainAfterExit=yes
 StandardInput=tty-force
 StandardOutput=inherit
 StandardError=inherit
-TTYPath=/dev/tty1
+TTYPath=/dev/console
 
 [Install]
 WantedBy=multi-user.target

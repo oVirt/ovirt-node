@@ -739,6 +739,9 @@ EOP
             crashkernel=*)
             bootparams="$bootparams $i"
             ;;
+            console=*)
+            bootparams="$bootparams $i"
+            ;;
             kdump_nfs=*)
             kdump_nfs=${i#kdump_nfs=}
             ;;
