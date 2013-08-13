@@ -322,7 +322,7 @@ class ConfirmedEntry(ContainerElement):
     """
 
     on_change = None
-    on_valid_change = None
+    on_password_security_change = None
 
     _primary = None
     _secondary = None
@@ -331,12 +331,14 @@ class ConfirmedEntry(ContainerElement):
 
     is_password = False
     min_length = 0
-    _additional_notice = None
 
     def __init__(self, path, label, is_password=False, min_length=0):
         self.on_change = self.new_signal()
-        self.on_valid_change = self.new_signal()
+        self.on_password_security_change = self.new_signal()
         self._changes = {}
+
+        children = []
+        entry_class = PasswordEntry if is_password else Entry
 
         children = []
 
@@ -345,8 +347,6 @@ class ConfirmedEntry(ContainerElement):
                                     label)
         self._secondary = entry_class("%s[1]" % path,
                                       "Confirm %s" % label)
-        self._notice = Notice("%s.notice" % path, "")
-        children += [self._primary, self._secondary, self._notice]
 
         for child in [self._primary, self._secondary]:
             self._changes[child.path] = ""
@@ -360,6 +360,30 @@ class ConfirmedEntry(ContainerElement):
             self.min_length = min_length
 
         self.on_change.connect(ChangeAction())
+
+        if is_password:
+            # If it's a password then also do checks!
+            # This work by adding a function which does the pw check
+            # and calls a specific signal (on_password_security_change)
+            self.is_password = is_password
+            self.min_length = min_length
+
+            self._notice = Notice("%s.notice" % path, "")
+            children.append(self._notice)
+
+            def do_security_check(target, changes):
+                pw, pwc = target.values()
+                msg = ""
+                is_secure = False
+                try:
+                    msg = security.password_check(pw, pwc,
+                                                  min_length=self.min_length)
+                    is_secure = True
+                except ValueError as e:
+                    msg = e.message
+                self._notice.text(msg or "")
+                self.on_password_security_change(is_secure)
+            self.on_change.connect(do_security_check)
 
         super(ConfirmedEntry, self).__init__(path, children)
 
@@ -382,9 +406,8 @@ class ConfirmedEntry(ContainerElement):
         self._changes.update(change)
         self.on_change({self.path: self.value()})
 
-    def _values(self):
-        return (self._changes[self._primary.path],
-                self._changes[self._secondary.path])
+    def values(self):
+        return [v for _, v in sorted(self._changes.items())]
 
     def value(self, new_value=None):
         if new_value is not None:

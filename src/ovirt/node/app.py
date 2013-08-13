@@ -203,6 +203,11 @@ class Application(base.Base):
                     e.enabled(v)
                 plugin.on_valid.connect(toggle_savebutton_disabled)
 
+            elif type(element) is ui.ConfirmedEntry and element.is_password:
+                def set_validity(target, is_secure):
+                    plugin.on_valid(True if is_secure else False)
+                element.on_password_security_change.connect(set_validity)
+
     def populate_with_values(self, ui_container):
         """Take values from model and inject them into the appropriate UI
         elements.
