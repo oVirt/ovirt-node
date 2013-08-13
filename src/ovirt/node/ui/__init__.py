@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
-from ovirt.node.utils import console
+from ovirt.node.utils import console, security
 
 """
 This contains abstract UI Elements
@@ -307,23 +307,28 @@ class ConfirmedEntry(ContainerElement):
     """A container for elements which must be identical"""
 
     on_change = None
+    on_password_security_change = None
 
     _primary = None
     _secondary = None
 
     _changes = None
 
-    def __init__(self, path, label, is_password=False):
-        children = []
+    is_password = False
+    min_length = 0
+
+    def __init__(self, path, label, is_password=False, min_length=0):
         self.on_change = self.new_signal()
+        self.on_password_security_change = self.new_signal()
+        self._changes = {}
+
+        children = []
         entry_class = PasswordEntry if is_password else Entry
 
         self._primary = entry_class("%s[0]" % path,
                                     label)
         self._secondary = entry_class("%s[1]" % path,
                                       "Confirm %s" % label)
-
-        self._changes = {}
 
         for child in [self._primary, self._secondary]:
             self._changes[child.path] = ""
@@ -333,6 +338,30 @@ class ConfirmedEntry(ContainerElement):
             children.append(child)
 
         self.on_change.connect(ChangeAction())
+
+        if is_password:
+            # If it's a password then also do checks!
+            # This work by adding a function which does the pw check
+            # and calls a specific signal (on_password_security_change)
+            self.is_password = is_password
+            self.min_length = min_length
+
+            self._notice = Notice("%s.notice" % path, "")
+            children.append(self._notice)
+
+            def do_security_check(target, changes):
+                pw, pwc = target.values()
+                msg = ""
+                is_secure = False
+                try:
+                    msg = security.password_check(pw, pwc,
+                                                  min_length=self.min_length)
+                    is_secure = True
+                except ValueError as e:
+                    msg = e.message
+                self._notice.text(msg or "")
+                self.on_password_security_change(is_secure)
+            self.on_change.connect(do_security_check)
 
         super(ConfirmedEntry, self).__init__(path, children)
 
@@ -345,6 +374,9 @@ class ConfirmedEntry(ContainerElement):
         else:
             self.valid(False)
         self.on_change({self.path: self.value()})
+
+    def values(self):
+        return [v for _, v in sorted(self._changes.items())]
 
     def value(self, new_value=None):
         if new_value is not None:

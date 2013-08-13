@@ -37,8 +37,12 @@ def password_check(password, confirmation, min_length=1):
     Returns:
         A message about a possibly weak password
 
-    >>> password_check("", "") is None
+    >>> password_check("", "", min_length=0) is None
     True
+
+    >>> password_check("", "")
+    Traceback (most recent call last):
+    ValueError: Password must be at least 1 characters
 
     >>> msg = password_check("foo", "foo")
     >>> "You have provided a weak password" in msg
@@ -58,7 +62,7 @@ def password_check(password, confirmation, min_length=1):
     '''
     message = None
 
-    if len(password) is 0 and min_length is not 0:
+    if len(password) is 0 and min_length is 0:
         pass
     elif len(password) < min_length:
         raise ValueError("Password must be at least %d characters" %
@@ -70,12 +74,13 @@ def password_check(password, confirmation, min_length=1):
     else:
         try:
             cracklib.FascistCheck(password)
-        except ValueError:
+        except ValueError as e:
             message = "You have provided a weak password!\n"
             message += "Strong passwords contain a mix of uppercase,\n"
             message += "lowercase, numeric and punctuation characters.\n"
             message += "They are six or more characters long and\n"
-            message += "do not contain dictionary words"
+            message += "do not contain dictionary words. \n"
+            message += "Reason: %s" % e
 
     return message
 
