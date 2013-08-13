@@ -50,7 +50,7 @@ class Base(object):
 
     def list_signals(self):
         return [(k, v) for k, v in self.__dict__.items()
-                if isinstance(v, Base.Signal)]
+                if Base.Signal in v.__class__.mro()]
 
     def build_str(self, attributes=[], additional_pairs={}, name=None):
         assert type(attributes) is list
@@ -93,11 +93,12 @@ class Base(object):
             self.callbacks = []
 
         def target_property(self):
-            return dict(self.target.list_signals())[self][0]
+            return dict((v, k) for k, v in self.target.list_signals())[self]
 
         def __call__(self, userdata=None):
             self.emit(userdata)
 
         def __str__(self):
-            return "<%s target='%s' at %s>" % \
-                (self.__class__.__name__, self.target, hex(id(self)))
+            return "<%s %s target='%s' at %s>" % \
+                (self.__class__.__name__, self.target_property(),
+                 self.target, hex(id(self)))
