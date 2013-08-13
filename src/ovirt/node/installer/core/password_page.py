@@ -18,8 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, exceptions
-from ovirt.node.utils.security import password_check
+from ovirt.node import plugins, ui
 
 """
 Password page of the installer
@@ -45,43 +44,26 @@ class Plugin(plugins.NodePlugin):
         ws = [ui.Header("header[0]",
                         "Require a password for the admin user?"),
               ui.Divider("divider[0]"),
-              ui.PasswordEntry("admin.password", "Password:"),
-              ui.PasswordEntry("admin.password_confirmation",
-                               "Confirm Password:"),
-              ui.Divider("divider[1]"),
-              ui.Label("password.info", "")
+              ui.ConfirmedEntry("admin.password", "Password:",
+                                is_password=True, min_length=3)
               ]
-        self.widgets.add(ws)
+
         page = ui.Page("password", ws)
         page.buttons = [ui.QuitButton("button.quit", "Quit"),
                         ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Install")]
+                        ui.SaveButton("button.next", "Install", enabled=False)]
+
+        self.widgets.add(page)
+
         return page
 
     def on_change(self, changes):
-        if changes.contains_any(["admin.password",
-                                 "admin.password_confirmation"]):
-            self._model.update(changes)
-            admin_pw, admin_pw_conf = self._model.get("admin.password", ""), \
-                self._model.get("admin.password_confirmation", "")
-
-            try:
-                min_pw_length = 1
-                msg = password_check(admin_pw, admin_pw_conf, min_pw_length)
-                self.widgets["admin.password"].valid(True)
-                self.widgets["admin.password_confirmation"].valid(True)
-                if msg:
-                    self.widgets["password.info"].text(msg)
-                else:
-                    self.widgets["password.info"].text("")
-            except ValueError as e:
-                self.widgets["password.info"].text("")
-                raise exceptions.InvalidData(e.message)
+        pass
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
         if changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
-        elif changes.contains_any(["admin.password_confirmation",
+        elif changes.contains_any(["admin.password",
                                    "button.next"]):
             self.application.ui.navigate.to_next_plugin()
