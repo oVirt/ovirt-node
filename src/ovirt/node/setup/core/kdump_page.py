@@ -59,8 +59,9 @@ class Plugin(plugins.NodePlugin):
         model = {
             # The target address
             "kdump.type": ktype,
-            "kdump.ssh_location": cfg["ssh"]or "",
-            "kdump.nfs_location": cfg["nfs"]or "",
+            "kdump.ssh_location": cfg["ssh"] or "",
+            "kdump.ssh_key": cfg["ssh_key"] or "",
+            "kdump.nfs_location": cfg["nfs"] or "",
         }
         self.logger.debug(model)
         return model
@@ -71,6 +72,7 @@ class Plugin(plugins.NodePlugin):
         # FIXME improve validation for ssh and nfs
         return {"kdump.type": valid.Options(dict(self._types).keys()),
                 "kdump.ssh_location": valid.Empty() | valid.SSHAddress(),
+                "kdump.ssh_key": valid.Empty() | valid.URL(),
                 "kdump.nfs_location": valid.Empty() | valid.NFSAddress(),
                 }
 
@@ -108,6 +110,8 @@ class Plugin(plugins.NodePlugin):
                        ui.Entry("kdump.ssh_location", "SSH Location " +
                                 "(root@example.com):",
                                 align_vertical=True),
+                       ui.Entry("kdump.ssh_key", "SSH Key URI (optional):",
+                                align_vertical=True)
                        ])
         page = ui.Page("page", ws)
         self.widgets.add(page)
@@ -142,21 +146,26 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        kdump_keys = ["kdump.type", "kdump.ssh_location", "kdump.nfs_location"]
+        kdump_keys = ["kdump.type", "kdump.ssh_location", "kdump.ssh_key",
+                      "kdump.nfs_location"]
 
         txs = utils.Transaction("Updating kdump related configuration")
 
         if changes.contains_any(kdump_keys):
             model = defaults.KDump()
-            ktype, sshloc, nfsloc = effective_model.values_for(kdump_keys)
+            ktype, sshloc, sshkey, nfsloc = effective_model.values_for(
+                kdump_keys)
             if ktype == "nfs":
-                model.update(nfsloc, None, None)
+                model.update(nfsloc, None, None, None)
             elif ktype == "ssh":
-                model.update(None, sshloc, None)
+                if "kdump.ssh_key" in changes:
+                    model.update(None, sshloc, sshkey, None)
+                else:
+                    model.update(None, sshloc, None, None)
             elif ktype == "local":
-                model.update(None, None, True)
+                model.update(None, None, None, True)
             else:
-                model.update(None, None, None)
+                model.update(None, None, None, None)
             txs += model.transaction()
 
         try:

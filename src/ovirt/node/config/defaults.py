@@ -988,21 +988,25 @@ class KDump(NodeConfigFileSection):
     >>> n = KDump(fs.FakeFs.File("dst"))
     >>> nfs_url = "host.example.com:/dst/path"
     >>> ssh_url = "root@host.example.com"
-    >>> n.update(nfs_url, ssh_url, True)
+    >>> ssh_key = "http://example.com/id_rsa"
+    >>> n.update(nfs_url, ssh_url, ssh_key, True)
     >>> d = sorted(n.retrieve().items())
     >>> d[:2]
     [('local', True), ('nfs', 'host.example.com:/dst/path')]
     >>> d[2:]
-    [('ssh', 'root@host.example.com')]
+    [('ssh', 'root@host.example.com'), \
+('ssh_key', 'http://example.com/id_rsa')]
     """
     keys = ("OVIRT_KDUMP_NFS",
             "OVIRT_KDUMP_SSH",
+            "OVIRT_KDUMP_SSH_KEY",
             "OVIRT_KDUMP_LOCAL")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, nfs, ssh, local):
+    def update(self, nfs, ssh, ssh_key, local):
         (valid.Empty(or_none=True) | valid.NFSAddress())(nfs)
         (valid.Empty(or_none=True) | valid.SSHAddress())(ssh)
+        (valid.Empty(or_none=True) | valid.URL())(ssh_key)
         (valid.Empty(or_none=True) | valid.Boolean())(local)
         return {"OVIRT_KDUMP_LOCAL": "true" if local else None
                 }
@@ -1015,7 +1019,8 @@ class KDump(NodeConfigFileSection):
 
     def transaction(self):
         cfg = dict(self.retrieve())
-        nfs, ssh, restore = (cfg["nfs"], cfg["ssh"], cfg["local"])
+        nfs, ssh, ssh_key, restore = (cfg["nfs"], cfg["ssh"], cfg["ssh_key"],
+                                      cfg["local"])
 
         class BackupKdumpConfig(utils.Transaction.Element):
             title = "Backing up config files"
@@ -1040,6 +1045,42 @@ class KDump(NodeConfigFileSection):
             def commit(self):
                 import ovirtnode.kdump as okdump
                 okdump.write_kdump_config(nfs)
+
+        class PopulateSshKeys(utils.Transaction.Element):
+            title = "Fetching and testing SSH keys"
+
+            def commit(self):
+                import pycurl
+                import cStringIO
+                from shutil import copy2
+
+                buf = cStringIO.StringIO()
+
+                curl = pycurl.Curl()
+                curl.setopt(curl.URL, ssh_key)
+                curl.setopt(curl.WRITEFUNCTION, buf.write)
+                curl.setopt(curl.FAILONERROR, True)
+                try:
+                    curl.perform()
+                except pycurl.error, error:
+                    errno, err_str = error
+                    self.logger.warning("Failed to fetch SSH key: %s" %
+                                        err_str)
+
+                os.mkdir("/tmp/kdump-ssh")
+                os.chmod("/tmp/kdump-ssh", 0600)
+                with open("/tmp/kdump/ssh/id", "w") as f:
+                    f.write(buf.getvalue())
+                os.chmod("/tmp/kdump-ssh/id", 0600)
+
+                try:
+                    utils.process.check_call("ssh -o BatchMode=yes "
+                                             "-i /tmp/kdump-ssh/id %s "
+                                             "true" % ssh_key)
+                    copy2("/tmp/kdump-ssh/id", "/root/.ssh/kdump_id_rsa")
+                except utils.process.CalledProcessError as e:
+                    self.logger.warning("Failed to authenticate using SSH "
+                                        "key: %s" % e)
 
         class CreateSshKdumpConfig(utils.Transaction.Element):
             title = "Creating kdump SSH config"
@@ -1118,6 +1159,8 @@ class KDump(NodeConfigFileSection):
         if nfs:
             tx.append(CreateNfsKdumpConfig())
         elif ssh:
+            if ssh_key:
+                tx.append(PopulateSshKeys())
             tx.append(CreateSshKdumpConfig())
         elif restore in [True, False]:
             tx.append(RestoreKdumpConfig())
