@@ -359,6 +359,8 @@ def is_stateless():
 
 def disable_firstboot():
     if os.path.ismount("/config"):
+        aug.save()
+        aug.load()
         aug.set("/files/etc/default/ovirt/OVIRT_FIRSTBOOT", "0")
         aug.set("/files/etc/default/ovirt/OVIRT_INSTALL", "0")
         aug.set("/files/etc/default/ovirt/OVIRT_INIT", '""')
