@@ -91,6 +91,7 @@ class Plugin(plugins.NodePlugin):
             if device == "other":
                 self.widgets["label.details"].text("")
             else:
+                changes["boot.device.current"] = device
                 self._model.update(changes)
                 self.widgets["label.details"].set_device(device)
 
