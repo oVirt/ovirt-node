@@ -161,7 +161,7 @@ class InstallerThread(threading.Thread):
             tx += [self.UpdateDefaultsFromModels(cfg),
                    self.PartitionAndFormat(cfg["installation.devices"]),
                    self.SetPassword(cfg["admin.password_confirmation"]),
-                   self.InstallImageAndBootloader(cfg["boot.device"]),
+                   self.InstallImageAndBootloader(cfg["boot.device.current"]),
                    self.SetKeyboardLayout(cfg["keyboard.layout"])]
 
         elif cfg["method"] in ["upgrade", "downgrade", "reinstall"]:
@@ -201,7 +201,7 @@ class InstallerThread(threading.Thread):
             cfg = self.config
             model = defaults.Installation()
 
-            model.install_on(init=[cfg["boot.device"]] +
+            model.install_on(init=[cfg["boot.device.current"]] +
                              cfg["installation.devices"],
                              root_size=cfg["storage.root_size"],
                              efi_size=cfg["storage.efi_size"],
