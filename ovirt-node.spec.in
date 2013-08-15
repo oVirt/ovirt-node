@@ -606,6 +606,7 @@ fi
 
 %endif
 
+%dir %{dracutdir}/91ovirtnode
 %{dracutdir}/91ovirtnode/module-setup.sh
 %{dracutdir}/91ovirtnode/ovirt-boot-functions
 %{dracutdir}/91ovirtnode/ovirt-cleanup.sh
