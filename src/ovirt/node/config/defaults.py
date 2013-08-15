@@ -299,7 +299,8 @@ class Network(NodeConfigFileSection):
                         NicConfig(bifname).delete()
 
                 bonds = Bonds()
-                bonds.delete_all()
+                if bonds.is_enabled():
+                    bonds.delete_all()
 
             def _remove_ifcfg_configs(self):
                 pat = NicConfig.IfcfgBackend.filename_tpl % "*"
