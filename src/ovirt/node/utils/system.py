@@ -67,6 +67,13 @@ def is_python_2_6():
     return sys.version_info[:2] == (2, 6)
 
 
+def is_rescue_mode():
+    """If the system is running in rescue mode
+    """
+    return any(arg in open("/proc/cmdline").read().split() for arg
+               in ["rescue", "S", "single", "1"])
+
+
 def cpu_details():
     """Return details for the CPU of this machine, virt related
     """

@@ -273,6 +273,12 @@ class Application(base.Base):
         self.ui.footer = "Press esc to quit."
 
         try:
+            if system.is_rescue_mode():
+                self.logger.error("The TUI cannot be used in rescue mode. "
+                                  "Please reboot without rescue to "
+                                  "configure/install.")
+                import sys
+                sys.exit(0)
             self.ui.run()
         except Exception as e:
             if self.args.debug:
