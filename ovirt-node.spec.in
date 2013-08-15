@@ -569,6 +569,7 @@ fi
 %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
 %endif
 
+%dir %{dracutdir}/91ovirtnode
 %{dracutdir}/91ovirtnode/module-setup.sh
 %{dracutdir}/91ovirtnode/ovirt-boot-functions
 %{dracutdir}/91ovirtnode/ovirt-cleanup.sh
