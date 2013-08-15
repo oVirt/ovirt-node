@@ -48,8 +48,13 @@ function mod_yum() {
   fi
 }
 
+function mod_less() {
+    cat $1 | less
+}
+
 alias ping='ping -c 3'
 alias yum="mod_yum"
+alias less="mod_less"
 export MALLOC_CHECK_=1
 export LVM_SUPPRESS_FD_WARNINGS=0
 EOF_bashrc
