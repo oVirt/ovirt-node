@@ -52,7 +52,7 @@ class Plugin(plugins.NodePlugin):
             valid.Empty()
         return {"strongrng.num_bytes": number_or_empty,
                 "passwd.admin.password":
-                valid.Empty() | valid.Text(min_length=3)
+                valid.Empty() | valid.Text(min_length=5)
                 }
 
     def ui_content(self):
@@ -62,7 +62,8 @@ class Plugin(plugins.NodePlugin):
               ui.Checkbox("strongrng.disable_aesni", "Disable AES-NI"),
               ui.Entry("strongrng.num_bytes", "Bytes Used:"),
               ui.Header("header[2]", "Password for the admin user"),
-              ui.ConfirmedEntry("passwd.admin.password", "Password:", True)
+              ui.ConfirmedEntry("passwd.admin.password", "Password:",
+                                is_password=True)
               ]
 
         page = ui.Page("page", ws)

@@ -18,12 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+import logging
 
 """
 Base for all classes
 """
-
-import logging
 
 
 class Base(object):
@@ -50,7 +49,7 @@ class Base(object):
 
     def list_signals(self):
         return [(k, v) for k, v in self.__dict__.items()
-                if Base.Signal in v.__class__.mro()]
+                if issubclass(type(v), Base.Signal)]
 
     def build_str(self, attributes=[], additional_pairs={}, name=None):
         assert type(attributes) is list
@@ -81,6 +80,7 @@ class Base(object):
                                   (idx + 1, len(self.callbacks), self, cb))
                 if cb(self.target, userdata) is False:
                     self.logger.debug("Breaking callback sequence")
+                    break
             return self
 
         def connect(self, cb):

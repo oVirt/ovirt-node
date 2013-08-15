@@ -191,7 +191,7 @@ class Application(base.Base):
 
         def cond_close_dialog(userdata):
             self.logger.debug("Closing dialog: %s" % userdata)
-            if ui.Dialog in type(userdata).mro():
+            if issubclass(type(userdata), ui.Dialog):
                 window.close_dialog(userdata.title)
             else:
                 window.close_topmost_dialog()
@@ -203,19 +203,13 @@ class Application(base.Base):
             self.current_plugin()._on_ui_reset()
 
         def call_on_ui_change(d):
-            self.current_plugin()._on_ui_change(d)
+            return self.current_plugin()._on_ui_change(d)
 
         def call_on_ui_reload(d):
             self.switch_to_plugin(self.current_plugin(), False)
 
         def call_quit(d):
             self.quit()
-
-        def display_exception_as_notice(e):
-            self.logger.debug(e, exc_info=True)
-            notice = ui.InfoDialog("dialog.notice", "An exception occurred",
-                                   "%s" % e)
-            self.show(notice)
 
         # All known handlers
         handlers = {ui.SaveAction: call_on_ui_save,
@@ -224,7 +218,6 @@ class Application(base.Base):
                     ui.ChangeAction: call_on_ui_change,
                     ui.ReloadAction: call_on_ui_reload,
                     ui.QuitAction: call_quit,
-                    ui.DisplayExceptionNotice: display_exception_as_notice
                     }
 
         for element in elements:
@@ -236,17 +229,13 @@ class Application(base.Base):
                         self.logger.debug("Setting %s.%s to %s" %
                                           (element, cb, action))
                         cb.callback = action
+
             if type(element) is ui.SaveButton:
                 # http://stackoverflow.com/questions/2731111/
                 # python-lambdas-and-variable-bindings
                 def toggle_savebutton_disabled(t, v, e=element):
                     e.enabled(v)
                 plugin.on_valid.connect(toggle_savebutton_disabled)
-
-            elif type(element) is ui.ConfirmedEntry and element.is_password:
-                def set_validity(target, is_secure):
-                    plugin.on_valid(True if is_secure else False)
-                element.on_password_security_change.connect(set_validity)
 
     def populate_with_values(self, ui_container):
         """Take values from model and inject them into the appropriate UI
@@ -297,6 +286,14 @@ class Application(base.Base):
         else:
             raise Exception("Unknown container: %s" % ui_container)
         return ui_container
+
+    def show_exception(self, e):
+        """Show an exception
+        """
+        self.logger.debug(e, exc_info=True)
+        notice = ui.InfoDialog("dialog.notice", "An exception occurred",
+                               "%s" % e)
+        self.show(notice)
 
     @property
     def product(self):

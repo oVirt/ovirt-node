@@ -19,6 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, exceptions, ui
+from ovirt.node.exceptions import InvalidData
 import logging
 import pkgutil
 
@@ -93,7 +94,6 @@ class NodePlugin(base.Base):
     Errors are propagated back by using Errors/Exceptions.
     """
 
-    validate_changes = True
     only_merge_on_valid_changes = True
 
     on_valid = None
@@ -101,7 +101,7 @@ class NodePlugin(base.Base):
     def __init__(self, application):
         super(NodePlugin, self).__init__()
         self.application = application
-        self.__changes = {}
+        self.__changes = Changeset()
         self.__invalid_changes = Changeset()
         self.widgets = UIElements()
 
@@ -144,44 +144,6 @@ class NodePlugin(base.Base):
             A dict of validators
         """
         raise NotImplementedError()
-
-    def validate(self, changes):
-        """Test changes against the validators
-
-        Args:
-            changes: A dict of (path, value) to be checked
-
-        Returns:
-            True on a valid value or if there is no validator for a path
-        Raises:
-            InvalidData on any invalid data
-        """
-        validators = self.validators()
-        for path, value in changes.items():
-            if path in validators:
-                msg = None
-                try:
-                    msg = validators[path](value)
-                except exceptions.InvalidData as e:
-                    msg = e.message
-                    self.logger.debug("Failed to validate %s: %s" % (path, e))
-
-                # True and None are allowed values
-                if msg in [True, None]:
-                    self.__invalid_changes.drop([path])
-                else:
-                    self.logger.debug("Failed to validate " +
-                                      "'%s' with '%s'" % (path, value))
-                    self.__invalid_changes.update({path: value})
-                    raise exceptions.InvalidData(msg)
-
-        # Is valid if no invalid_changes
-        is_valid = self.__invalid_changes.is_empty()
-        self.logger.debug("Valid yet? %s (%s)" % (is_valid,
-                                                  self.__invalid_changes))
-        self.on_valid(is_valid)
-
-        return True
 
     def ui_name(self):
         """Returns the UI friendly name for this plugin.
@@ -255,10 +217,11 @@ class NodePlugin(base.Base):
             changes.update(self.__invalid_changes)
         return Changeset(changes)
 
-    def is_valid_changes(self):
+    def is_only_valid_changes(self):
         """If all changes are valid or not
+
         Returns:
-            If there are no invalid changes - so all changes valid
+            If all changes happened so far are valid
         """
         return self.__invalid_changes.is_empty()
 
@@ -293,8 +256,67 @@ class NodePlugin(base.Base):
                                 "check: %s" % model)
             is_valid = False
         finally:
-            self.__changes = {}
+            self.__changes = Changeset()
         return is_valid
+
+    def __validate(self, changes):
+        """Test changes against the validators
+
+        Args:
+            changes: A dict of (path, value) to be checked
+
+        Returns:
+            True on a valid value or if there is no validator for a path
+        Raises:
+            InvalidData on any invalid data
+        """
+        validators = self.validators()
+        widgets = self.widgets
+
+        for change in changes.items():
+            path, value = change
+
+            problems = []
+
+            # We assume that the change is invalid, as long as it
+            # isn't validated
+            self.__invalid_changes.update({path: value})
+
+            self.logger.debug("Validation of path %s" % str(change))
+
+            try:
+                if path in validators:
+                    problems.append(validators[path](value))
+            except exceptions.InvalidData as e:
+                msg = e.message or str(e)
+                self.logger.debug("Validation failed on validator with: %s"
+                                  % msg)
+                problems.append(msg)
+
+            try:
+                if path in widgets:
+                    problems.append(widgets[path]._validates())
+            except exceptions.InvalidData as e:
+                msg = e.message or str(e)
+                self.logger.debug("Validation failed on widget with: %s"
+                                  % msg)
+                problems.append(msg)
+
+            problems = [p for p in problems if p not in [True, None]]
+
+            if problems:
+                txt = "\n".join(problems)
+                self.logger.debug("Validation failed with: %s" % problems)
+                raise exceptions.InvalidData(txt)
+
+            # If we reach this line, then it's valid data
+            self.__invalid_changes.drop([path])
+
+        validates = self.__invalid_changes.is_empty()
+        self.logger.debug("Validates? %s (%s)" % (validates,
+                                                  self.__invalid_changes))
+
+        return validates
 
     def _on_ui_change(self, change):
         """Called when some widget was changed
@@ -307,18 +329,51 @@ class NodePlugin(base.Base):
 
         self.logger.debug("Passing UI change to callback on_change: %s" %
                           change)
+
+        msg = None
+        self.__changes.drop(change.keys())
+
         try:
-            if self.validate_changes:
-                self.validate(change)
+            # Run validators
+            self.__validate(change)
+
+            # Run custom validation
             self.on_change(change)
-        except exceptions.InvalidData:
+
+            self.__changes.update(change)
+
+        except exceptions.InvalidData as e:
+            msg = e.message
+
+        except Exception as e:
             self.on_valid(False)
-            raise
-        self.__changes.update(change)
-        self.logger.debug("Sum of all UI changes up to now: %s" %
+            self.application.show_exception(e)
+
+        all_changes_are_valid = self.is_only_valid_changes()
+
+        for path in change.keys():
+            if path in self.widgets:
+                self.logger.debug("Updating %s widgets validity: %s (%s)"
+                                  % (path, all_changes_are_valid, msg))
+                self.widgets[path].valid(all_changes_are_valid)
+                try:
+                    self.widgets[path].notice(msg)
+                except NotImplementedError:
+                    self.logger.debug("Widget doesn't support notices.")
+                    notice = ("The following requirements need to " +
+                              "be met: \n%s" % msg)
+                    self.application.show_exception(InvalidData(notice))
+            else:
+                self.logger.warning("No widget for path %s" % path)
+
+        self.logger.debug("All valid changes: %s" %
                           self.__changes)
-        self.on_valid(self.is_valid_changes())
-        return True
+        self.logger.debug("All invalid changes: %s" %
+                          self.__invalid_changes)
+
+        self.on_valid(all_changes_are_valid)
+
+        return all_changes_are_valid
 
     def _on_ui_save(self):
         """Called when data should be saved
@@ -331,7 +386,7 @@ class NodePlugin(base.Base):
                           effective_changes)
 
         try:
-            is_valid = self.validate(effective_changes)
+            is_valid = self._on_ui_change(effective_changes)
         except exceptions.InvalidData as e:
             self.logger.info("Changes to be merged are invalid: %s" %
                              e.message)
@@ -350,7 +405,7 @@ class NodePlugin(base.Base):
 
         if successfull_merge:
             self.logger.info("Changes were merged successfully")
-            self.__changes = {}
+            self.__changes = Changeset()
         else:
             self.logger.info("Changes were not merged.")
 
