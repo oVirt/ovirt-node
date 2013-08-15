@@ -18,12 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+import logging
 
 """
 Base for all classes
 """
-
-import logging
 
 
 class Base(object):
@@ -50,7 +49,7 @@ class Base(object):
 
     def list_signals(self):
         return [(k, v) for k, v in self.__dict__.items()
-                if isinstance(v, Base.Signal)]
+                if issubclass(type(v), Base.Signal)]
 
     def build_str(self, attributes=[], additional_pairs={}, name=None):
         assert type(attributes) is list
@@ -74,17 +73,17 @@ class Base(object):
         def emit(self, userdata=None):
             """Emit a signal
             """
-            self.logger.debug("Running %s callbacks: %s" % (self,
-                                                            self.callbacks))
+            #self.logger.debug("%s: %s" % (self, self.callbacks))
             for idx, cb in enumerate(self.callbacks):
-                self.logger.debug("(%d/%d) %s emits %s" %
-                                  (idx + 1, len(self.callbacks), self, cb))
+                self.logger.debug("%s (%d/%d) %s" %
+                                  (self, idx + 1, len(self.callbacks), cb))
                 if cb(self.target, userdata) is False:
                     self.logger.debug("Breaking callback sequence")
+                    break
             return self
 
         def connect(self, cb):
-            self.logger.debug("Connecting %s with %s" % (self, cb))
+            #self.logger.debug("Connecting %s with %s" % (self, cb))
             self.callbacks.append(cb)
             return self
 
@@ -93,11 +92,12 @@ class Base(object):
             self.callbacks = []
 
         def target_property(self):
-            return dict(self.target.list_signals())[self][0]
+            return dict((v, k) for k, v in self.target.list_signals())[self]
 
         def __call__(self, userdata=None):
             self.emit(userdata)
 
         def __str__(self):
-            return "<%s target='%s' at %s>" % \
-                (self.__class__.__name__, self.target, hex(id(self)))
+            return "<%s %s target='%s' at %s>" % \
+                (self.__class__.__name__, self.target_property(),
+                 self.target, hex(id(self)))

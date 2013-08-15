@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
 from ovirt.node.utils import console, security
+from ovirt.node.exceptions import InvalidData
 
 """
 This contains abstract UI Elements
@@ -50,7 +51,7 @@ class Element(base.Base):
         super(Element, self).__init__()
         self.path = path
         self.on_value_change = self.new_signal()
-        self.on_exception = self.new_signal()
+        self.on_notice_change = self.new_signal()
         self.logger.debug("Initializing %s" % self)
 
     def value(self, value=None):
@@ -61,6 +62,11 @@ class Element(base.Base):
 
     def elements(self):
         return [self]
+
+    def notice(self, txt):
+        """Protoype command to show a notice associated with this element
+        """
+        self.on_notice_change(txt)
 
     def __repr__(self):
         return "<%s path='%s' at %s>" % (self.__class__.__name__, self.path,
@@ -97,18 +103,32 @@ class InputElement(Element):
         self.on_change.connect(ChangeAction())
 
     def enabled(self, is_enabled=None):
+        """Enable or disable the widget wrt user input
+        """
         if is_enabled in [True, False]:
             self.on_enabled_change(is_enabled)
             self._enabled = is_enabled
         return self._enabled
 
-    def valid(self, is_valid):
+    def valid(self, is_valid=None):
+        """Get or set the validity of this element.
+        If a reason is given show it as a notice.
+        """
         if is_valid in [True, False]:
             self.on_valid_change(is_valid)
             self._valid = is_valid
         return self._valid
 
+    def _validates(self):
+        """Validate the value of this widget against the validator
+        This funcion is mainly needed to implement widget specific
+        validation methods
+        """
+        pass
+
     def text(self, text=None):
+        """Get or set the textual value
+        """
         if text is not None:
             self.on_value_change(text)
             self._text = text
@@ -232,12 +252,6 @@ class QuitAction(Action):
     pass
 
 
-class DisplayExceptionNotice(Action):
-    """Display a given Exception as a Notice
-    """
-    pass
-
-
 class Row(ContainerElement):
     """Align elements horizontally in one row
     """
@@ -304,10 +318,11 @@ class PasswordEntry(Entry):
 
 
 class ConfirmedEntry(ContainerElement):
-    """A container for elements which must be identical"""
+    """A container for elements which must be identical
+    """
 
     on_change = None
-    on_password_security_change = None
+    on_valid_change = None
 
     _primary = None
     _secondary = None
@@ -316,79 +331,77 @@ class ConfirmedEntry(ContainerElement):
 
     is_password = False
     min_length = 0
+    _additional_notice = None
 
     def __init__(self, path, label, is_password=False, min_length=0):
         self.on_change = self.new_signal()
-        self.on_password_security_change = self.new_signal()
+        self.on_valid_change = self.new_signal()
         self._changes = {}
 
         children = []
-        entry_class = PasswordEntry if is_password else Entry
 
+        entry_class = PasswordEntry if is_password else Entry
         self._primary = entry_class("%s[0]" % path,
                                     label)
         self._secondary = entry_class("%s[1]" % path,
                                       "Confirm %s" % label)
+        self._notice = Notice("%s.notice" % path, "")
+        children += [self._primary, self._secondary, self._notice]
 
         for child in [self._primary, self._secondary]:
             self._changes[child.path] = ""
-            # Remove all callbacks - so nothing is passed to the UI
+            # Remove all callbacks - so we don't triggre on_change and friends
+            # We redirect it to call the validation methods of this widget
             child.on_change.clear()
-            child.on_change.connect(self.__do_validation)
-            children.append(child)
-
-        self.on_change.connect(ChangeAction())
+            child.on_change.connect(self.__on_change)
 
         if is_password:
-            # If it's a password then also do checks!
-            # This work by adding a function which does the pw check
-            # and calls a specific signal (on_password_security_change)
             self.is_password = is_password
             self.min_length = min_length
 
-            self._notice = Notice("%s.notice" % path, "")
-            children.append(self._notice)
-
-            def do_security_check(target, changes):
-                pw, pwc = target.values()
-                msg = ""
-                is_secure = False
-                try:
-                    msg = security.password_check(pw, pwc,
-                                                  min_length=self.min_length)
-                    is_secure = True
-                except ValueError as e:
-                    msg = e.message
-                self._notice.text(msg or "")
-                self.on_password_security_change(is_secure)
-            self.on_change.connect(do_security_check)
+        self.on_change.connect(ChangeAction())
 
         super(ConfirmedEntry, self).__init__(path, children)
 
-    def __do_validation(self, target, change):
-        """Is called when primary or secondary changes
-        """
+    def _validates(self):
+        if self.is_password:
+            self.logger.debug("Doing security check")
+            msg = ""
+            pw, pwc = self._values()
+            try:
+                msg = security.password_check(pw, pwc,
+                                              min_length=self.min_length)
+            except ValueError as e:
+                msg = e.message
+                if msg:
+                    raise InvalidData(msg)
+            self._additional_notice = msg
+
+    def __on_change(self, target, change):
+        self._additional_notice = ""
         self._changes.update(change)
-        if self.valid():
-            self.valid(True)
-        else:
-            self.valid(False)
         self.on_change({self.path: self.value()})
 
-    def values(self):
-        return [v for _, v in sorted(self._changes.items())]
+    def _values(self):
+        return (self._changes[self._primary.path],
+                self._changes[self._secondary.path])
 
     def value(self, new_value=None):
         if new_value is not None:
             pass
-        return self._changes[self.path + "[0]"] if self.valid() else None
+        return self._values()[0]
 
     def valid(self, is_valid=None):
         if is_valid in [True, False]:
             self._primary.valid(is_valid)
             self._secondary.valid(is_valid)
-        is_valid = len(set(self._changes.values())) == 1
-        return is_valid
+            self.on_valid_change(is_valid)
+        return self._primary.valid()
+
+    def notice(self, txt=""):
+        self.logger.debug("nooooooootice %s" % self._additional_notice)
+        msg = "\n".join(t for t in [txt, self._additional_notice] if t)
+        self._notice.text(msg)
 
 
 class Button(InputElement):
@@ -587,7 +600,6 @@ class Table(InputElement):
                 self.selection(selected_item or self.items[0][0])
             self.on_activate.connect(ChangeAction())
             self.on_activate.connect(SaveAction())
-        self.on_exception.connect(DisplayExceptionNotice())
 
     def selection(self, selected=None):
         """Get/Select the given item (key) or multiple items if multi
@@ -599,9 +611,9 @@ class Table(InputElement):
         """
         if self.multi:
             return self.__selection_multi(selected)
-        return self.__selection(selected)
+        return self.__selection_single(selected)
 
-    def __selection(self, selected=None):
+    def __selection_single(self, selected=None):
         if selected in dict(self.items).keys():
             self.on_value_change(selected)
             self._selected = selected

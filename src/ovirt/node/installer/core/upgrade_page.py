@@ -18,9 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, exceptions
+from ovirt.node import plugins, ui
 from ovirt.node.utils import security
-from ovirt.node.utils.security import password_check
 import keyboard_page
 import progress_page
 
@@ -59,43 +58,20 @@ class Plugin(plugins.NodePlugin):
               ui.PasswordEntry("upgrade.current_password",
                                "Current Password:"),
               ui.Divider("divider[1]"),
-              ui.PasswordEntry("upgrade.password", "Password:"),
-              ui.PasswordEntry("upgrade.password_confirmation",
-                               "Confirm Password:"),
+              ui.ConfirmedEntry("upgrade.password", "Password:",
+                                is_password=True),
               ui.Divider("divider[2]"),
               ui.Label("current_password.info", ""),
               ui.Label("password.info", self.__no_new_password_msg)
               ]
-        self.widgets.add(ws)
         page = ui.Page("password", ws)
         page.buttons = [ui.QuitButton("button.quit", "Quit"),
                         ui.Button("button.back", "Back"),
                         ui.SaveButton("button.next", "Update")]
+        self.widgets.add(page)
         return page
 
     def on_change(self, changes):
-        if changes.contains_any(["upgrade.password",
-                                 "upgrade.password_confirmation"]):
-            self._model.update(changes)
-            up_pw, up_pw_conf = self._model.get("upgrade.password", ""), \
-                self._model.get("upgrade.password_confirmation", "")
-
-            try:
-                min_pw_length = 1
-                msg = password_check(up_pw, up_pw_conf, min_pw_length)
-                self.widgets["upgrade.password"].valid(True)
-                self.widgets["upgrade.password_confirmation"].valid(True)
-                if msg:
-                    self.widgets["password.info"].text(msg)
-                else:
-                    self.widgets["password.info"].text("")
-                    if not up_pw and not up_pw_conf:
-                        msg = self.__no_new_password_msg
-                        self.widgets["password.info"].text(msg)
-            except ValueError as e:
-                self.widgets["password.info"].text("")
-                raise exceptions.InvalidData(e.message)
-
         if changes.contains_any(["upgrade.current_password"]):
             # Hide any message which was shown
             self.widgets["current_password.info"].text("")

@@ -80,7 +80,8 @@ class Plugin(plugins.NodePlugin):
               ui.Checkbox("snmp.enabled", "Enable SNMP"),
               ui.Divider("divider[0]"),
               ui.Header("header[1]", "SNMP Password"),
-              ui.ConfirmedEntry("snmp.password", "Password:", True)
+              ui.ConfirmedEntry("snmp.password", "Password:",
+                                is_password=True)
               ]
 
         page = ui.Page("page", ws)

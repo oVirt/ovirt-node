@@ -97,27 +97,30 @@ class Plugin(plugins.NodePlugin):
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
         self.logger.debug("Pending changes: %s" % changes)
+
+        if "button.other_device" in changes:
+            description = ("Please select the disk to use " +
+                           "for booting %s" %
+                           self.application.product.PRODUCT_SHORT)
+            self._dialog = CustomDeviceDialog("boot.device.custom",
+                                              "Specify a boot device",
+                                              description)
+            self.widgets.add(self._dialog)
+            return self._dialog
+
+        if changes.contains_any(["boot.device.custom",
+                                 "dialog.device.custom.save"]):
+            self._dialog.close()
+            return self.ui_content()
+
+        if changes.contains_any(["boot.device"]):
+            self.application.ui.navigate.to_next_plugin()
+
         if changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
 
         elif changes.contains_any(["button.next"]):
             self.application.ui.navigate.to_next_plugin()
-
-        elif changes.contains_any(["boot.device"]):
-            device = changes["boot.device"]
-            if device == "other":
-                description = "Please select the disk to use " \
-                              "for booting %s" % \
-                              self.application.product.PRODUCT_SHORT
-                self._dialog = CustomDeviceDialog("custom", "x", description)
-                return self._dialog
-            else:
-                self.application.ui.navigate.to_next_plugin()
-
-        elif changes.contains_any(["boot.device.custom",
-                                   "dialog.device.custom.save"]):
-            self._dialog.close()
-            return self.ui_content()
 
 
 class StorageDiscovery(threading.Thread):

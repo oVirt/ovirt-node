@@ -22,7 +22,7 @@
 """
 Installation device selection page of the installer
 """
-from ovirt.node import plugins, ui
+from ovirt.node import plugins, ui, valid
 from ovirt.node.installer.core.boot_device_page import DeviceDetails, \
     CustomDeviceDialog, StorageDiscovery
 
@@ -51,10 +51,20 @@ class Plugin(plugins.NodePlugin):
         return self._model
 
     def validators(self):
-        has_selection = lambda v: "At least one installation device" \
-            if not self.widgets["installation.device.current"].selection() \
-            else True
-        return {"installation.device.current": has_selection}
+        def has_selection(v):
+            if self.widgets["installation.device.current"].selection():
+                return True
+            else:
+                return "Please select at least one installation device."
+
+        def multiple_block_devices(v):
+            if all(valid.BlockDevice().validate(b) for b in v.split(",")):
+                return True
+            else:
+                return "Please enter only valid block devices."
+
+        return {"installation.device.current": has_selection,
+                "installation.device.custom": multiple_block_devices}
 
     def ui_content(self):
         page_title = "Please select the disk(s) to use for installation " \
@@ -83,34 +93,60 @@ class Plugin(plugins.NodePlugin):
                         ui.SaveButton("button.next", "Continue")]
 
         self.widgets.add(page)
+
+        # We are directly connecting to the table's on_change event
+        # The tables on_change event is fired (in the multi-case)
+        # when the highlighted entry is changed.
+        table = self.widgets["installation.device.current"]
+        table.on_change.connect(self.__update_details)
+
         return page
+
+    def __update_details(self, target, change):
+        details = self.widgets["installation.device.details"]
+        highlighted_device = change[target.path]
+
+        if highlighted_device is "other":
+            details.text("")
+        else:
+            details.set_device(highlighted_device)
 
     def on_change(self, changes):
         self.logger.debug("Installation device changes: %s" % changes)
         if changes.contains_any(["installation.device.current"]):
-            highlighted_device = changes["installation.device.current"]
-            details = self.widgets["installation.device.details"]
-            if highlighted_device == "other":
-                details.text("")
-                self._dialog = CustomDeviceDialog("custom", "x", "y")
-                return self._dialog
-            elif highlighted_device:
+            changed_device = changes["installation.device.current"]
+            if changed_device:
                 selected_devices = \
                     self.widgets["installation.device.current"].selection()
                 self.logger.debug("selected devices: %s" % selected_devices)
                 changes["installation.devices"] = selected_devices
                 self._model.update(changes)
-                details.set_device(highlighted_device)
+
+        if changes.contains_any(["installation.device.custom"]):
+            self._model.update(changes)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
         self.logger.debug("All inst changes: %s" % changes)
-        if changes.contains_any(["button.back"]):
-            self.application.ui.navigate.to_previous_plugin()
-        elif changes.contains_any(["button.next"]):
-            self.application.ui.navigate.to_next_plugin()
 
+        if "button.other_device" in changes:
+            details = self.widgets["installation.device.details"]
+            details.text("")
+            description = (("Please enter one or more disks to use " +
+                            "for installing %s. Multiple devices can be " +
+                            "separated by comma.") %
+                           self.application.product.PRODUCT_SHORT)
+            self._dialog = CustomDeviceDialog("installation.device.custom",
+                                              "Installation devices.",
+                                              description)
+            self.widgets.add(self._dialog)
+            return self._dialog
         elif changes.contains_any(["installation.device.custom",
                                    "dialog.device.custom.save"]):
             self._dialog.close()
             return self.ui_content()
+
+        if changes.contains_any(["button.back"]):
+            self.application.ui.navigate.to_previous_plugin()
+        elif changes.contains_any(["button.next"]):
+            self.application.ui.navigate.to_next_plugin()

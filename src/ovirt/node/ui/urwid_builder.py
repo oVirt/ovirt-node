@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import ui, exceptions, base
+from ovirt.node import ui, base
 from ovirt.node.ui import widgets as uw
 import os
 import urwid
@@ -107,13 +107,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         def on_widget_click_cb(widget, data=None):
             change = {ui_button.path: True}
             self.logger.debug("Button click: %s" % change)
-            try:
-                ui_button.on_activate(change)
-            except Exception as e:
-                if ui_button.on_exception.callbacks:
-                    ui_button.on_exception(e)
-                else:
-                    raise
+            ui_button.on_activate(change)
 
         urwid.connect_signal(widget, "click", on_widget_click_cb)
 
@@ -170,6 +164,11 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
 
         ui_entry.on_valid_change.connect(on_item_valid_change_cb)
 
+        def on_item_notice_change_cb(w, n):
+            widget.notice = n or ""
+
+        ui_entry.on_notice_change.connect(on_item_notice_change_cb)
+
         def on_item_text_change_cb(w, v):
             self.logger.debug("Setting entry tooo: %s" % v)
             widget.set_text(v)
@@ -179,27 +178,8 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         def on_widget_value_change(widget, new_value):
             self.logger.debug("Entry %s changed, calling callback: '%s'" %
                               (widget, ui_entry.path))
+            ui_entry.on_change({ui_entry.path: new_value})
 
-            try:
-                # FIXME this logic needs to go somewhere else - more generic
-                change = {ui_entry.path: new_value}
-                ui_entry.on_change(change)
-                widget.notice = ""
-                widget.valid(True)
-
-            except exceptions.InvalidData as e:
-                self.logger.error("Invalid data when updating: %s" % e)
-                if widget._selectable:
-                    widget.notice = e.message
-                    widget.valid(False)
-
-            except Exception as e:
-                if ui_entry.on_exception.callbacks:
-                    ui_entry.on_exception(e)
-                else:
-                    raise
-
-            #tui.force_redraw()
         urwid.connect_signal(widget, 'change', on_widget_value_change)
 
         return widget
@@ -217,13 +197,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         def on_widget_change_cb(widget, data):
             ui_options.option(data)
             self.logger.debug("Options changed, calling callback: %s" % data)
-            try:
-                ui_options.on_change({ui_options.path: data})
-            except Exception as e:
-                if ui_options.on_exception.callbacks:
-                    ui_options.on_exception(e)
-                else:
-                    raise
+            ui_options.on_change({ui_options.path: data})
 
         urwid.connect_signal(widget, "change", on_widget_change_cb)
 
@@ -241,15 +215,10 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         def on_widget_change_cb(widget, data=None):
             ui_checkbox.state(data)
             self.logger.debug("Checkbox changed, calling callback: %s" % data)
-            try:
-                ui_checkbox.on_change({ui_checkbox.path: data})
-            except Exception as e:
-                if ui_checkbox.on_exception.callbacks:
-                    ui_checkbox.on_exception(e)
-                else:
-                    raise
+            ui_checkbox.on_change({ui_checkbox.path: data})
 
         urwid.connect_signal(widget, "change", on_widget_change_cb)
+
         return widget
 
     def _build_progressbar(self, ui_progressbar):
@@ -290,13 +259,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
             else:
                 ui_table.selection(w._key)
 
-            try:
-                ui_table.on_change({ui_table.path: w._key})
-            except Exception as e:
-                if ui_table.on_exception.callbacks:
-                    ui_table.on_exception(e)
-                else:
-                    raise
+            ui_table.on_change({ui_table.path: w._key})
 
         urwid.connect_signal(widget, "changed", on_change_cb)
 
@@ -312,15 +275,10 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         c._key = key
 
         def on_activate_cb(w, data):
-            try:
-                ui_table.selection(w._table.selection())
-                ui_table.on_change({ui_table.path: w._key})
-                ui_table.on_activate({ui_table.path: w._key})
-            except Exception as e:
-                if ui_table.on_exception.callbacks:
-                    ui_table.on_exception(e)
-                else:
-                    raise
+            ui_table.selection(w._table.selection())
+            ui_table.on_change({ui_table.path: w._key})
+            ui_table.on_activate({ui_table.path: w._key})
+
         urwid.connect_signal(c, "activate", on_activate_cb)
         return c
 

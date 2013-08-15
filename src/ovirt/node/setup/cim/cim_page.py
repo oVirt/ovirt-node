@@ -59,7 +59,8 @@ class Plugin(plugins.NodePlugin):
               ui.Checkbox("cim.enabled", "Enable CIM"),
               ui.Divider("divider[0]"),
               ui.Header("header[1]", "CIM Password"),
-              ui.ConfirmedEntry("cim.password", "Password:", True)
+              ui.ConfirmedEntry("cim.password", "Password:",
+                                is_password=True)
               ]
 
         page = ui.Page("page", ws)
@@ -79,7 +80,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        cim_keys = ["cim.password_confirmation", "cim.enabled"]
+        cim_keys = ["cim.password", "cim.enabled"]
 
         txs = utils.Transaction("Updating CIM configuration")
 

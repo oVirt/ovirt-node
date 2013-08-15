@@ -164,14 +164,14 @@ class InstallerThread(threading.Thread):
         if cfg["method"] in ["install"]:
             tx += [self.UpdateDefaultsFromModels(cfg),
                    self.PartitionAndFormat(cfg["installation.devices"]),
-                   self.SetPassword(cfg["admin.password_confirmation"]),
+                   self.SetPassword(cfg["admin.password"]),
                    self.InstallImageAndBootloader(cfg["boot.device"]),
                    self.SetKeyboardLayout(cfg["keyboard.layout"])]
 
         elif cfg["method"] in ["upgrade", "downgrade", "reinstall"]:
             tx.title = "Update"
             tx += [self.InstallImageAndBootloader()]
-            new_password = cfg.get("upgrade.password_confirmation", None)
+            new_password = cfg.get("upgrade.password", None)
             if new_password:
                 tx += [self.SetPassword(new_password)]
 
