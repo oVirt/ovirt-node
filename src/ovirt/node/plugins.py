@@ -290,16 +290,8 @@ class NodePlugin(base.Base):
             # Run validators
             self.__validate(change)
 
-            try:
-                # Run custom validation
-                self.on_change(change)
-
-            except exceptions.InvalidData:
-                # If caught here, it's from custom validation, and we
-                # don't know for sure what failed, so flag everything
-                self.__invalid_changes.update(dict((k, v) for (k, v) in
-                                              change.iteritems()))
-                raise
+            # Run custom validation
+            self.on_change(change)
 
             self.__changes.update(change)
 

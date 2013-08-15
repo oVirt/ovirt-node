@@ -65,9 +65,9 @@ class Plugin(plugins.NodePlugin):
               ui.Label("password.info", self.__no_new_password_msg)
               ]
         page = ui.Page("password", ws)
-        page.buttons = [ui.QuitButton("button.quit", _("Quit")),
-                        ui.Button("button.back", _("Back")),
-                        ui.SaveButton("button.next", _("Update"))]
+        page.buttons = [ui.QuitButton("button.quit", "Quit"),
+                        ui.Button("button.back", "Back"),
+                        ui.SaveButton("button.next", "Update")]
         self.widgets.add(page)
         return page
 

@@ -25,6 +25,7 @@ Create an setup application instance an start it.
 
 from ovirt.node import app, setup, log
 
+
 if __name__ == '__main__':
     args, _ = app.parse_cmdline()
     log.configure_logging(args.debug)

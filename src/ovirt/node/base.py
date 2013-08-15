@@ -79,8 +79,7 @@ class Base(object):
                 self.logger.debug("%s (%d/%d) %s" %
                                   (self, idx + 1, len(self.callbacks), cb))
                 if cb(self.target, userdata) is False:
-                    self.logger.debug("Breaking callback sequence: %s" %
-                                      self.callbacks)
+                    self.logger.debug("Breaking callback sequence")
                     break
             return self
 
