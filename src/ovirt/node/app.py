@@ -283,6 +283,7 @@ class Application(base.Base):
                 self.logger.error("The TUI cannot be used in rescue mode. "
                                   "Please reboot without rescue to "
                                   "configure/install.")
+                import sys
                 sys.exit(0)
             self.ui.run()
         except Exception as e:
