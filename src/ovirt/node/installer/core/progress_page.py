@@ -165,7 +165,7 @@ class InstallerThread(threading.Thread):
             tx += [self.UpdateDefaultsFromModels(cfg),
                    self.PartitionAndFormat(cfg["installation.devices"]),
                    self.SetPassword(cfg["admin.password"]),
-                   self.InstallImageAndBootloader(cfg["boot.device"]),
+                   self.InstallImageAndBootloader(cfg["boot.device.current"]),
                    self.SetKeyboardLayout(cfg["keyboard.layout"])]
 
         elif cfg["method"] in ["upgrade", "downgrade", "reinstall"]:
