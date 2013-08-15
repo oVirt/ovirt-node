@@ -40,7 +40,7 @@ class Plugin(NodePlugin):
         return _("Plugins")
 
     def rank(self):
-        return 300
+        return -1
 
     def ui_content(self):
         all_plugins = self.__list_of_plugins()
@@ -128,32 +128,72 @@ class Plugin(NodePlugin):
         if os.path.exists(plugin_dir):
             for f in os.listdir(plugin_dir):
                 if not f.endswith(".minimize"):
-                    with open(plugin_dir + f) as p:
-                        if re.compile(r'Name:.*?\nVer.*:.*?\nInstall Date:.*',
-                                      re.M | re.S).match(open(plugin_dir + f
-                                                              ).read()):
-                            #Hopefully a plugin metadata file
-                            lines = p.readlines()
-                            name = lines[0].strip().split(":")[1]
-                            ver = lines[1].strip().split(":")[1]
-                            install_date = lines[2].strip().replace(
-                                "Install Date:", "")
-                        else:
-                            try:
-                                cmd = '/bin/rpm -qf %s/%s --qf %%{name}' % \
-                                    (plugin_dir, f)
-                                package = process.check_output(cmd.split(' ')
-                                                               ).strip()
-                                cmd = "rpm -q %s --qf 'NAME: %s DATE: \
-                                       %%{version}-%%{release}.%%{arch} INST: \
-                                       %%{INSTALLTIME:date}\\n'" %\
-                                    (package, package)
-                                name, ver, install_date = re.match(
-                                    r'NAME: (.*?) DATE: (.*?) INST: (.*)',
-                                    process.check_output(cmd, shell=True
-                                                         ).strip()).groups()
-                            except CalledProcessError:
-                                continue
+                    self.__parse_file(plugin_dir, f, plugin_dict)
 
-                    plugin_dict[name] = (ver, install_date)
         return plugin_dict
+
+    def __parse_file(self, plugin_dir, f, plugin_dict):
+        self.logger.debug("SET %s" % f)
+        if not self.__parse_pluginfile(plugin_dir, f, plugin_dict):
+            if not self.__parse_regex(plugin_dir, f, plugin_dict):
+                self.__parse_rpmlist(plugin_dir, f, plugin_dict)
+
+        return plugin_dict
+
+    def __parse_pluginfile(self, plugin_dir, f, plugin_dict):
+        if re.compile(r'Name:.*?\nVer.*:.*?\nInstall Date:.*',
+                      re.M | re.S).match(open(plugin_dir + f
+                                              ).read()):
+            #Hopefully a plugin metadata file
+            with open(plugin_dir + f) as p:
+                lines = p.readlines()
+            name = lines[0].strip().split(":")[1]
+            ver = lines[1].strip().split(":")[1]
+            install_date = lines[2].strip().replace(
+                "Install Date:", "")
+            plugin_dict[name] = (ver.strip(), install_date)
+            return True
+        else:
+            self.logger.debug("SET NO")
+            return False
+
+    def __parse_regex(self, plugin_dir, f, plugin_dict):
+        try:
+            cmd = '/bin/rpm -qf %s/%s --qf %%{name}' % \
+                (plugin_dir, f)
+            package = process.check_output(cmd.split(' ')
+                                           ).strip()
+            cmd = "rpm -q %s --qf 'NAME: %s DATE: \
+                   %%{version}-%%{release}.%%{arch} INST: \
+                   %%{INSTALLTIME:date}\\n'" %\
+                (package, package)
+            name, ver, install_date = re.match(
+                r'NAME: (.*?) DATE: (.*?) INST: (.*)',
+                process.check_output(cmd, shell=True
+                                     ).strip()).groups()
+            plugin_dict[name] = (ver.strip(), install_date)
+            return True
+
+        except CalledProcessError:
+            self.logger.debug("SET NO")
+            return False
+
+    def __parse_rpmlist(self, plugin_dir, f, plugin_dict):
+        try:
+            cmd = 'rpm -q --qf %%{name} %s' % f
+            package = process.check_output(cmd.split(' ')
+                                           ).strip()
+            cmd = "rpm -q %s --qf 'NAME: %s DATE: \
+                   %%{version}-%%{release}.%%{arch} INST: \
+                   %%{INSTALLTIME:date}\\n'" %\
+                (package, package)
+            name, ver, install_date = re.match(
+                r'NAME: (.*?) DATE: (.*?) INST: (.*)',
+                process.check_output(cmd, shell=True
+                                     ).strip()).groups()
+            plugin_dict[name] = (ver.strip(), install_date)
+            return True
+
+        except CalledProcessError:
+            self.logger.debug("SET NO")
+            return False
