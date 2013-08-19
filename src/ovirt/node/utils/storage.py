@@ -50,7 +50,6 @@ class NFSv4(base.Base):
 
     def __set_domain(self, domain):
         current_domain = self.__get_domain()
-        print(current_domain)
         cmd = None
         if current_domain.startswith("#"):
             current_domain = ("#Domain = %s" %
@@ -58,13 +57,8 @@ class NFSv4(base.Base):
             cmd = ['sed', '-i', '-c', 's/%s/Domain = %s/g' %
                    (current_domain, domain), self.configfilename]
         else:
-            if domain is "":
-                cmd = ['sed', '-i', '-c', '/^Domain/ s/.*/#Domain = empty/g' %
-                       (current_domain, domain), self.configfilename]
-            else:
-                cmd = ['sed', '-i', '-c', '/^Domain/ s/%s/%s/g' %
-                       (current_domain, domain), self.configfilename]
-        print(cmd)
+            cmd = ['sed', '-i', '-c', '/^Domain/ s/%s/%s/g' %
+                   (current_domain, domain), self.configfilename]
         process.check_call(cmd)
 
     def __get_domain(self):
