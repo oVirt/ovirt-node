@@ -222,7 +222,10 @@ class NIC(base.Base):
     def is_configured(self):
         """If there is a configuration for this NIC
         """
-        return self.config.bootproto or self.config.ipaddr
+        ipv4_configured = self.config.bootproto or self.config.ipaddr
+        ipv6_configured = (self.config.dhcpv6c or self.config.ipv6_autoconf or
+                           self.config.ipv6addr)
+        return ipv4_configured or ipv6_configured
 
     def has_link(self):
         """Determin if L1 is up on a given interface
