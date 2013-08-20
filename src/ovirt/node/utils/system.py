@@ -23,6 +23,7 @@ from ovirt.node.utils import process
 from ovirt.node.utils.fs import File
 import logging
 import os
+import re
 import rpm
 import subprocess
 import sys
@@ -401,3 +402,115 @@ class Reboot(base.Base):
                 )
             )
             self.logger.info("Reboot Scheduled")
+
+
+class EFI(base.Base):
+    """A simple wrapper around efibootmgr to modify the EFI boot entries
+    """
+    class BootEntry(base.Base):
+        bootnum = None
+        label = None
+        value = None
+
+        def to_tuple(self):
+            return self.bootnum, self.label, self.value
+
+        def __cmp__(self, other):
+            return self.to_tuple() == other.to_tuple()
+
+        def __repr__(self):
+            return str(self)
+
+        def __str__(self):
+            """String representation of a boot entry
+
+            >>> e = EFI.BootEntry()
+            >>> e.bootnum, e.label, e.value = (42, "Foo", "Bar")
+            >>> str(e) # doctest: +ELLIPSIS
+            "<BootEntry bootnum='42' label='Foo' value='Bar' at ...>"
+            """
+            return self.build_str(["bootnum", "label", "value"])
+
+    def _efibootmgr(self, cmdargs):
+        """Run efibootmgr with cmdargs
+
+        >>> e = EFI()
+        >>> e._call = lambda c: c
+        >>> e._efibootmgr([("verbose", None),
+        ...                ("label", "Foo")])
+        ['efibootmgr', '--verbose', '--label', 'Foo']
+        """
+        cmd = ["efibootmgr"]
+
+        for k, v in cmdargs:
+            cmd.append("--%s" % k)
+            if v is not None:
+                cmd.append(str(v))
+
+        self.logger.debug("About to run: %s" % cmd)
+        return self._call(cmd)
+
+    def _call(self, cmd):
+        return process.check_output(cmd)
+
+    def add_entry(self, label, loader_filename, disk):
+        """Add a new EFI boot entry
+
+        Args:
+            label: Label to be shown in the EFI boot menu
+            loader_filename: Filename of the bootloader (e.g. grub2) to use
+            disk: Disk where the bootloader resides on
+        """
+        self.logger.debug(("Adding EFI boot entry: " +
+                           "label=%s, loader=%s, disk=%s") %
+                          (label, loader_filename, disk))
+        cmdargs = [("verbose", None),
+                   ("create", None),
+                   ("label", label),
+                   ("loader", loader_filename),
+                   ("disk", disk)]
+        self._efibootmgr(cmdargs)
+
+        return True
+
+    def list_entries(self):
+        pat = re.compile("^Boot([0-9a-zA-Z]{4})[\* ] ([^\t]+)\t(.*)$")
+        entries = []
+
+        lines = self._efibootmgr([("verbose", None)])
+
+        self.logger.debug("Parsing EFI boot entries from: %s" % lines)
+
+        # Parse the lines
+        for line in lines.split("\n"):
+            match = pat.search(line)
+            if match:
+                entry = EFI.BootEntry()
+                entry.bootnum, entry.label, entry.value = match.groups()
+                entries.append(entry)
+
+        return entries
+
+    def remove_entry(self, entry):
+        """Remove an EFI boot entry
+
+        Args:
+            entry: An EFI.BootEntry object, can be retrieved with
+                   efi.list_entries()
+        """
+        entry_exists = False
+
+        for other_entry in self.list_entries():
+            if other_entry == entry:
+                entry_exists = True
+
+        if not entry_exists:
+            raise RuntimeError("Tried to remove non-existent " +
+                               "EFI boot entry: %s" % entry)
+
+        self.logger.debug("Removing EFI boot entry: %s" % entry)
+        self._efibootmgr([("verbose", None),
+                          ("bootnum", entry.bootnum),
+                          ("delete-bootnum", None)])
+
+        return True
