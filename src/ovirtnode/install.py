@@ -271,7 +271,7 @@ initrd /initrd0.img
                 efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
                 efi_grub_conf.close()
             _functions.system("umount /liveos")
-            _functions.remove_efi_entry(self.efi_dir_name)
+            _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
             logger.info("Grub2 Install Completed")
             return True
         return True
@@ -456,18 +456,16 @@ initrd /initrd0.img
                 _functions.system("cp /boot/efi/EFI/redhat/grub.efi " +
                       "/liveos/efi/EFI/redhat/grub.efi")
                 if not "/dev/mapper/" in self.disk:
-                   efi_disk = self.disk[:-1]
+                    efi_disk = self.disk[:-1]
                 else:
-                   efi_disk = re.sub("p[1,2,3]$", "", self.disk)
+                    efi_disk = re.sub("p[1,2,3]$", "", self.disk)
                 # generate grub legacy config for efi partition
                 #remove existing efi entries
-                _functions.remove_efi_entry(self.efi_dir_name)
-                efi_mgr_cmd = ("efibootmgr -c -l '\\EFI\\%s\\grubx64.efi' " +
-                              "-L '%s' -d %s -v") % (self.efi_dir_name,  \
-                                               _functions.PRODUCT_SHORT, \
-                                               efi_disk)
-                logger.info(efi_mgr_cmd)
-                _functions.system(efi_mgr_cmd)
+                _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
+                _functions.add_efi_entry(_functions.PRODUCT_SHORT,
+                                         ("\\EFI\\%s\\grub.efi" %
+                                          self.efi_dir_name),
+                                         efi_disk)
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation

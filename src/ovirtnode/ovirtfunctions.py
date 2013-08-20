@@ -1769,21 +1769,28 @@ def get_cmdline_args():
                 args_dict[opt] = opt
     return args_dict
 
-def remove_efi_entry(entry):
-    efi_mgr_cmd = "efibootmgr|grep '%s'" % entry
-    efi_mgr = subprocess_closefds(efi_mgr_cmd, \
-                                      shell=True, \
-                                      stdout=subprocess.PIPE, \
-                                      stderr=subprocess.STDOUT)
-    efi_out = efi_mgr.stdout.read().strip()
-    logger.debug(efi_mgr_cmd)
-    logger.debug(efi_out)
-    for line in efi_out.splitlines():
-        if not "Warning" in line:
-            num = line[4:8]  # grabs 4 digit hex id
-            cmd = "efibootmgr -B -b %s" % num
-            system(cmd)
+def remove_efi_entry(dir_name):
+    from ovirt.node.utils.system import EFI
+    efi = EFI()
+    removed_entries = []
+    for entry in efi.list_entries():
+        # The following condition is just a good guess
+        # Normally an entry.value contains sth like:
+        # HD(...)File(...)
+        # Where <p> in File(<p>) is the path to the bootloader.
+        # So basically we are looking if the dir_name appears in the <p> part
+        if dir_name in entry.label:
+            efi.remove_entry(entry)
+            removed_entries.append(entry)
+    if len(removed_entries) > 1:
+        logger.warning("Removed more that one EFI boot entry!")
+    logger.info("Removed EFI boot entry: %s" % removed_entries)
     return
+
+def add_efi_entry(label, loader_filename, disk):
+    from ovirt.node.utils.system import EFI
+    efi = EFI()
+    return efi.add_entry(label, loader_filename, disk)
 
 def grub2_available():
     if os.path.exists("/sbin/grub2-install"):
