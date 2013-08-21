@@ -59,7 +59,7 @@ level=DEBUG
 formatter=verbose
 args=('/tmp/ovirt-node.debug.log', 'w')
 [formatter_verbose]
-format=%(levelname)10s %(asctime)s %(pathname)s:%(funcName)s:%(lineno)s \
+format=%(levelname)10s %(asctime)s %(pathname)s:%(lineno)s:%(funcName)s: \
 %(message)s
         """)
     logging.config.fileConfig(mixedfile)
