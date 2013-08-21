@@ -183,10 +183,14 @@ class TableWidget(NoticeDecoration):
         self.__box = urwid.BoxAdapter(self.__columns, height)
         self.__box_attrmap = urwid.AttrMap(self.__box, self._table_attr)
 
-        self.__pile = urwid.Pile([self.__label_attrmap,
-                                  self.__header_attrmap,
-                                  self.__box,
-                                  self.__position_label_attrmap])
+        pile_children = []
+        if label:
+            pile_children.append(self.__label_attrmap)
+        pile_children += [self.__header_attrmap,
+                          self.__box,
+                          self.__position_label_attrmap]
+
+        self.__pile = urwid.Pile(pile_children)
 
         self._update_scrollbar()
 
