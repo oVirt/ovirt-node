@@ -70,7 +70,7 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, effective_changes):
         if "action.reboot" in effective_changes:
-            utils.system.reboot()
+            self.dry_or(lambda: utils.system.reboot())
 
 
 class InstallerThread(threading.Thread):
