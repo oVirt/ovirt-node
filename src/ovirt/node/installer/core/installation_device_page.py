@@ -71,7 +71,7 @@ class Plugin(plugins.NodePlugin):
                      "of %s" % self.application.product.PRODUCT_SHORT
 
         other_device = self._model.get("installation.device.custom", "")
-        devices = self.storage_discovery.all_devices_for_ui_table(other_device)
+        devices = self.storage_discovery.all_devices_for_ui_table()
 
         ws = [ui.Header("header[0]", page_title)]
 
@@ -79,7 +79,10 @@ class Plugin(plugins.NodePlugin):
             ws += [ui.Table("installation.device.current", "",
                             " %6s  %11s  %5s" %
                             ("Location", "Device Name", "Size"), devices,
-                            multi=True),
+                            height=3, multi=True),
+                   ui.Button("button.other_device", "Other Device: %s" %
+                             other_device),
+                   ui.Divider("divider[0]"),
                    DeviceDetails("installation.device.details", self,
                                  "(No device)")
                    ]

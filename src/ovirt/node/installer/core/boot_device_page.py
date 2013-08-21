@@ -60,13 +60,16 @@ class Plugin(plugins.NodePlugin):
                      self.application.product.PRODUCT_SHORT
 
         other_device = self._model.get("boot.device.custom", "")
-        devices = self.storage_discovery.all_devices_for_ui_table(other_device)
+        devices = self.storage_discovery.all_devices_for_ui_table()
 
         ws = [ui.Header("header[0]", page_title)]
 
         if devices:
             ws += [ui.Table("boot.device", "", " %6s  %11s  %5s" %
                             ("Location", "Device Name", "Size"), devices),
+                   ui.Divider("divider[0]"),
+                   ui.Button("button.other_device", "Other device: %s" %
+                             other_device),
                    DeviceDetails("label.details", self, "(No device)")
                    ]
         else:
@@ -148,12 +151,10 @@ class StorageDiscovery(threading.Thread):
             # I suppose the thread was not started
         return self._all_devices
 
-    def all_devices_for_ui_table(self, other_device=""):
+    def all_devices_for_ui_table(self):
         """Returns a ui.Table ready list of strings with all useable storage
         devices
 
-        Args:
-            other_devices: String-like to be used for the "Other"-Entry
         Returns:
             A list of strings to be used with ui.Table
         """
@@ -161,8 +162,6 @@ class StorageDiscovery(threading.Thread):
         devices = sorted([(name, " %6s  %11s  %5s GB" % (d.bus, d.name,
                                                          d.size))
                           for name, d in all_devices], key=lambda t: t[0])
-
-        devices += [("other", "Other Device: %s" % other_device)]
 
         return devices
 
@@ -203,13 +202,14 @@ class DeviceDetails(ui.Label):
 class CustomDeviceDialog(ui.Dialog):
     """The dialog to input a custom root/boot device
     """
-    def __init__(self, path, title, description):
+    def __init__(self, path_prefix, title, description):
         title = "Custom Block Device"
 
-        device_entry = ui.Entry("boot.device.custom", "Device path:")
+        device_entry = ui.Entry(path_prefix, "Device path:")
         children = [ui.Label("label[0]", description),
                     ui.Divider("divider[0]"),
                     device_entry]
-        super(CustomDeviceDialog, self).__init__(path, title, children)
+        super(CustomDeviceDialog, self).__init__("%s.dialog" % path_prefix,
+                                                 title, children)
         self.buttons = [ui.SaveButton("dialog.device.custom.save"),
                         ui.CloseButton("dialog.device.custom.close", "Cancel")]
