@@ -595,6 +595,7 @@ class Table(InputElement):
         if multi:
             self.selection(selected_item or [])
             self.on_activate.connect(ChangeAction())
+            self.on_change.clear()
         else:
             if selected_item or self.items:
                 self.selection(selected_item or self.items[0][0])
