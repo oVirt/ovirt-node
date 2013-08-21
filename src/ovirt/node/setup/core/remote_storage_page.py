@@ -42,7 +42,7 @@ class Plugin(plugins.NodePlugin):
         ncfg = defaults.NFSv4().retrieve()
         model = {}
         model["iscsi.initiator_name"] = icfg["name"] or \
-            storage.iSCSI().initiator_name()
+            self.dry_or(lambda: storage.iSCSI().initiator_name())
         model["nfsv4.domain"] = ncfg["domain"]
         return model
 
