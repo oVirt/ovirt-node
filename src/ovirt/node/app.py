@@ -73,7 +73,8 @@ args=('/tmp/ovirt-node.debug.log', 'w')
 format=%(levelname)10s %(asctime)s %(pathname)s:%(lineno)s:%(funcName)s: \
 %(message)s
         """)
-    logging.config.fileConfig(mixedfile)
+    logging.debug("Setting log config to: %s" % mixedfile)
+    logging.config.fileConfig(mixedfile, disable_existing_loggers=False)
 
 
 configure_logging()
@@ -111,6 +112,7 @@ class Application(base.Base):
         self.plugin_base = plugin_base
 
     def __parse_cmdline(self):
+        self.logger.debug("Parsing cmdline args")
         parser = OptionParser()
         parser.add_option("--defaults",
                           dest="defaults",

@@ -264,6 +264,7 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         urwid.connect_signal(widget, "changed", on_change_cb)
 
         def on_item_value_change_cb(p, v):
+            # Update the selection in the ui.Element
             widget.selection(v)
 
         ui_table.on_value_change.connect(on_item_value_change_cb)
@@ -540,6 +541,7 @@ class UrwidWindow(ui.Window):
             for d in self.__widget_stack:
                 if d.title == dialog:
                     dialog = d
+        self.logger.debug("Closing dialog: %s" % dialog)
         self.logger.debug("Widget stack: %s" % self.__widget_stack)
         new_stack = [w for w in self.__widget_stack if w != dialog]
         self.__widget_stack = new_stack

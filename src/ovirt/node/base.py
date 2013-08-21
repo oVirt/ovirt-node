@@ -73,18 +73,18 @@ class Base(object):
         def emit(self, userdata=None):
             """Emit a signal
             """
-            self.logger.debug("Running %s callbacks: %s" % (self,
-                                                            self.callbacks))
+            #self.logger.debug("%s: %s" % (self, self.callbacks))
             for idx, cb in enumerate(self.callbacks):
-                self.logger.debug("(%d/%d) %s emits %s" %
-                                  (idx + 1, len(self.callbacks), self, cb))
+                self.logger.debug("%s (%d/%d) %s" %
+                                  (self, idx + 1, len(self.callbacks), cb))
                 if cb(self.target, userdata) is False:
-                    self.logger.debug("Breaking callback sequence")
+                    self.logger.debug("Breaking callback sequence: %s" %
+                                      self.callbacks)
                     break
             return self
 
         def connect(self, cb):
-            self.logger.debug("Connecting %s with %s" % (self, cb))
+            #self.logger.debug("Connecting %s with %s" % (self, cb))
             self.callbacks.append(cb)
             return self
 
