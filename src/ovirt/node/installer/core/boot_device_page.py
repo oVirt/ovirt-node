@@ -66,12 +66,20 @@ class Plugin(plugins.NodePlugin):
 
         if devices:
             ws += [ui.Table("boot.device", "", " %6s  %11s  %5s" %
+<<<<<<< HEAD
                             (_("Location"), _("Device Name"), _("Size")),
                             devices),
                    ui.Divider("divider[0]"),
                    ui.Button("button.other_device", "Other device: %s" %
                              other_device),
                    DeviceDetails("label.details", self, _("(No device)"))
+=======
+                            ("Location", "Device Name", "Size"), devices),
+                   ui.Divider("divider[0]"),
+                   ui.Button("button.other_device", "Other device: %s" %
+                             other_device),
+                   DeviceDetails("label.details", self, "(No device)")
+>>>>>>> 0ee45de... installer: Use button for custom devices
                    ]
         else:
             ws += [ui.Label("boot.no_device",
