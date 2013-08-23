@@ -40,7 +40,7 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     def name(self):
-        return "Status"
+        return _("Status")
 
     def rank(self):
         return 0
@@ -75,38 +75,38 @@ class Plugin(plugins.NodePlugin):
 
         # Network related widgets, appearing in one row
         network_widgets = [ui.KeywordLabel("networking",
-                                           aligned("Networking: ")),
+                                           aligned(_("Networking: "))),
                            ui.Label("networking.bridge", ""),
                            ]
 
-        action_widgets = [ui.Button("action.lock", "Lock"),
-                          ui.Button("action.logoff", "Log Off"),
-                          ui.Button("action.restart", "Restart"),
-                          ui.Button("action.poweroff", "Power Off")
+        action_widgets = [ui.Button("action.lock", _("Lock")),
+                          ui.Button("action.logoff", _("Log Off")),
+                          ui.Button("action.restart", _("Restart")),
+                          ui.Button("action.poweroff", _("Power Off"))
                           ]
 
-        widgets = [ui.Header("header[0]", "System Information"),
+        widgets = [ui.Header("header[0]", _("System Information")),
 
-                   ui.KeywordLabel("status", aligned("Status: ")),
+                   ui.KeywordLabel("status", aligned(_("Status: "))),
                    ui.Divider("divider[0]"),
 
                    ui.Row("row[0]", network_widgets),
                    ui.Divider("divider[1]"),
 
-                   ui.KeywordLabel("logs", aligned("Logs: ")),
+                   ui.KeywordLabel("logs", aligned(_("Logs: "))),
                    ui.Divider("divider[2]"),
 
                    ui.KeywordLabel("libvirt.num_guests",
-                                   aligned("Running VMs: ")),
+                                   aligned(_("Running VMs: "))),
                    ui.Divider("divider[3]"),
 
-                   ui.Label("support.hint", "Press F8 for support menu"),
+                   ui.Label("support.hint", _("Press F8 for support menu")),
                    ui.Divider("divider[4]"),
 
                    ui.Row("row[1]",
-                          [ui.Button("action.hostkey", "View Host Key"),
+                          [ui.Button("action.hostkey", _("View Host Key")),
                            ui.Button("action.cpu_details",
-                                     "View CPU Details"),
+                                     _("View CPU Details")),
                            ]),
 
                    ui.Row("row[2]", action_widgets),
@@ -123,11 +123,11 @@ class Plugin(plugins.NodePlugin):
 
     def on_merge(self, changes):
         # Handle button presses
-        number_of_vm = "There are %s Virtual Machines running." \
+        number_of_vm = _("There are %s Virtual Machines running.") \
             % (virt.number_of_domains())
         if "action.lock" in changes:
             self.logger.info("Locking screen")
-            self._lock_dialog = LockDialog()
+            self._lock_dialog = LockDialog(title=_("This screen is locked."))
             self.application.ui.hotkeys_enabled(False)
             self.widgets.add(self._lock_dialog)
             return self._lock_dialog
@@ -139,7 +139,8 @@ class Plugin(plugins.NodePlugin):
                 self._lock_dialog.close()
                 self.application.ui.hotkeys_enabled(True)
             else:
-                self.application.notice("The provided password was incorrect.")
+                self.application.notice(
+                    _("The provided password was incorrect."))
                 self.widgets["password"].text("")
 
         elif "action.logoff" in changes:
@@ -149,10 +150,10 @@ class Plugin(plugins.NodePlugin):
         elif "action.restart" in changes:
             self.logger.info("Restarting")
             return ui.ConfirmationDialog("confirm.reboot",
-                                         "Confirm System Restart",
+                                         _("Confirm System Restart"),
                                          number_of_vm +
-                                         "\nThis will restart the system,"
-                                         "proceed?")
+                                         _("\nThis will restart the system,") +
+                                         _("proceed?"))
 
         elif "confirm.reboot.yes" in changes:
             self.logger.info("Confirm Restarting")
@@ -160,11 +161,12 @@ class Plugin(plugins.NodePlugin):
 
         elif "action.poweroff" in changes:
             self.logger.info("Shutting down")
-            return ui.ConfirmationDialog("confirm.shutdown",
-                                         "Confirm System Poweroff",
-                                         number_of_vm +
-                                         "\nThis will shut down the system,"
-                                         "proceed?")
+            return ui.ConfirmationDialog(
+                "confirm.shutdown",
+                _("Confirm System Poweroff"),
+                number_of_vm +
+                _("\nThis will shut down the system,") +
+                _("proceed?"))
 
         elif "confirm.shutdown.yes" in changes:
             self.logger.info("Confirm Shutting down")
@@ -172,11 +174,11 @@ class Plugin(plugins.NodePlugin):
 
         elif "action.hostkey" in changes:
             self.logger.info("Showing hostkey")
-            return HostkeyDialog("dialog.hostkey", "Host Key")
+            return HostkeyDialog("dialog.hostkey", _("Host Key"))
 
         elif "action.cpu_details" in changes:
             self.logger.info("Showing CPU details")
-            return CPUFeaturesDialog("dialog.cpu_details", "CPU Details")
+            return CPUFeaturesDialog("dialog.cpu_details", _("CPU Details"))
 
         elif "_save" in changes:
             self.widgets["dialog.hostkey"].close()
@@ -209,13 +211,13 @@ class HostkeyDialog(ui.Dialog):
         ssh = security.Ssh()
         fp, hk = ssh.get_hostkey()
         self.children = [ui.Label("hostkey.label[0]",
-                                  "RSA Host Key Fingerprint:"),
+                                  _("RSA Host Key Fingerprint:")),
                          ui.Label("hostkey.fp", fp),
 
                          ui.Divider("hostkey.divider[0]"),
 
                          ui.Label("hostkey.label[1]",
-                                  "RSA Host Key:"),
+                                  _("RSA Host Key:")),
                          ui.Label("hostkey", "\n".join(textwrap.wrap(hk, 64))),
                          ]
         self.buttons = [ui.CloseButton("dialog.close")]
@@ -235,10 +237,10 @@ class LockDialog(ui.Dialog):
     def __init__(self, path="lock.dialog", title="This screen is locked."):
         super(LockDialog, self).__init__(path, title, [])
         self.children = [ui.Header("lock.label[0]",
-                                   "Enter the admin password to unlock"),
-                         ui.KeywordLabel("username", "Username: ",
+                                   _("Enter the admin password to unlock")),
+                         ui.KeywordLabel("username", _("Username: "),
                                          os.getlogin()),
-                         ui.PasswordEntry("password", "Password:")
+                         ui.PasswordEntry("password", _("Password:"))
                          ]
-        self.buttons = [ui.Button("action.unlock", "Unlock")]
+        self.buttons = [ui.Button("action.unlock", _("Unlock"))]
         self.escape_key = None

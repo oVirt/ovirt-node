@@ -36,7 +36,7 @@ class Plugin(plugins.NodePlugin):
         self.storage_discovery.start()
 
     def name(self):
-        return "Data Device"
+        return _("Data Device")
 
     def rank(self):
         return 30
@@ -67,8 +67,9 @@ class Plugin(plugins.NodePlugin):
                 "installation.device.custom": multiple_block_devices}
 
     def ui_content(self):
-        page_title = "Please select the disk(s) to use for installation " \
-                     "of %s" % self.application.product.PRODUCT_SHORT
+        page_title = \
+            _("Please select the disk(s) to use for installation of %s") \
+            % self.application.product.PRODUCT_SHORT
 
         other_device = self._model.get("installation.device.custom", "")
         devices = self.storage_discovery.all_devices_for_ui_table()
@@ -78,22 +79,22 @@ class Plugin(plugins.NodePlugin):
         if devices:
             ws += [ui.Table("installation.device.current", "",
                             " %6s  %11s  %5s" %
-                            ("Location", "Device Name", "Size"), devices,
-                            height=3, multi=True),
+                            (_("Location"), _("Device Name"), _("Size")),
+                            devices, height=3, multi=True),
                    ui.Button("button.other_device", "Other Device: %s" %
                              other_device),
                    ui.Divider("divider[0]"),
                    DeviceDetails("installation.device.details", self,
-                                 "(No device)")
+                                 _("(No device)"))
                    ]
         else:
             ws += [ui.Label("installation.no_device",
-                            "No Valid Install Devices Detected")]
+                            _("No Valid Install Devices Detected"))]
 
         page = ui.Page("installation", ws)
-        page.buttons = [ui.QuitButton("button.quit", "Quit"),
-                        ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Continue")]
+        page.buttons = [ui.QuitButton("button.quit", _("Quit")),
+                        ui.Button("button.back", _("Back")),
+                        ui.SaveButton("button.next", _("Continue"))]
 
         self.widgets.add(page)
 

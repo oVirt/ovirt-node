@@ -3,7 +3,8 @@
 #XMLSOURCES=
 #CLEANFILES=
 
-PYTHONPATH=$(top_srcdir)/src
+export PYTHONPATH=$(top_srcdir)/src
+export PYFLAKES_BUILTINS=_
 
 check-local: check-static
 	@echo -e "---\n Passed $@\n---"
@@ -21,13 +22,13 @@ check-static-doctests: $(PYTHONSOURCES:%=%.doctest)
 	@echo Passed $@
 
 %.doctest:
-	PYTHONPATH=$(PYTHONPATH) python -m doctest "$*"
+	python -m doctest "$*"
 
 check-static-pep8: $(PYTHONSOURCES:%=%.pep8)
 	@echo Passed $@
 
 %.pep8:
-	PYTHONPATH=$(PYTHONPATH) pep8 -r "$*"
+	pep8 -r "$*"
 
 # FIXME Pylint is very strict, needs to be configured
 # Maybe take a peek at a diff. proj. to find a sane configuration
@@ -36,10 +37,10 @@ check-static-pylint: $(PYTHONSOURCES:%=%.pylint)
 	@echo Passed $@
 
 %.pylint:
-	PYTHONPATH=$(PYTHONPATH) $(PYLINT) "$*"
+	$(PYLINT) "$*"
 
 check-static-pyflakes: $(PYTHONSOURCES:%=%.pyflakes)
 	@echo Passed $@
 
 %.pyflakes:
-	PYTHONPATH=$(PYTHONPATH) pyflakes "$*"
+	pyflakes "$*"

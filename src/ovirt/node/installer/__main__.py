@@ -25,7 +25,6 @@ Create an setup application instance an start it.
 
 from ovirt.node import app, installer
 
-
 if __name__ == '__main__':
     app = app.Application(installer)
     app.run()

@@ -29,7 +29,7 @@ class Plugin(plugins.NodePlugin):
     _model = {}
 
     def name(self):
-        return "Console Password"
+        return _("Console Password")
 
     def rank(self):
         return 50
@@ -42,16 +42,17 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         ws = [ui.Header("header[0]",
-                        "Require a password for the admin user?"),
+                        _("Require a password for the admin user?")),
               ui.Divider("divider[0]"),
-              ui.ConfirmedEntry("admin.password", "Password:",
+              ui.ConfirmedEntry("admin.password", _("Password:"),
                                 is_password=True, min_length=3)
               ]
 
         page = ui.Page("password", ws)
-        page.buttons = [ui.QuitButton("button.quit", "Quit"),
-                        ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Install", enabled=False)]
+        page.buttons = [ui.QuitButton("button.quit", _("Quit")),
+                        ui.Button("button.back", _("Back")),
+                        ui.SaveButton("button.next", _("Install"),
+                                      enabled=False)]
 
         self.widgets.add(page)
 

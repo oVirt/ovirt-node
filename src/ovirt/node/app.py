@@ -101,6 +101,12 @@ class Application(base.Base):
             plugin_base: The package where to find page-plugins
             ui_builder: An implementation of the UIBuilder class to be used
         """
+        import gettext
+
+        reload(sys)
+        sys.setdefaultencoding('utf-8')
+        gettext.install('ovirt_node', '/usr/share/locale', unicode=True)
+
         super(Application, self).__init__()
         self.logger.info(("Starting '%s' application " +
                           "with '%s' UI") % (plugin_base, ui_builder))

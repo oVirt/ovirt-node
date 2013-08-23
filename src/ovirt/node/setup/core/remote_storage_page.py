@@ -32,7 +32,7 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     def name(self):
-        return "Remote Storage"
+        return _("Remote Storage")
 
     def rank(self):
         return 70
@@ -52,11 +52,11 @@ class Plugin(plugins.NodePlugin):
                 }
 
     def ui_content(self):
-        ws = [ui.Header("header", "Remote Storage"),
-              ui.Entry("iscsi.initiator_name", "iSCSI Initiator Name:",
+        ws = [ui.Header("header", _("Remote Storage")),
+              ui.Entry("iscsi.initiator_name", _("iSCSI Initiator Name:"),
                        align_vertical=True),
               ui.Divider("divider[0]"),
-              ui.Entry("nfsv4.domain", "NFSv4 Domain (example.redhat.com):",
+              ui.Entry("nfsv4.domain", _("NFSv4 Domain (example.redhat.com):"),
                        align_vertical=True),
               ]
 
@@ -76,7 +76,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        txs = utils.Transaction("Updating remote storage configuration")
+        txs = utils.Transaction(_("Updating remote storage configuration"))
 
         iscsi_keys = ["iscsi.initiator_name"]
         if changes.contains_any(iscsi_keys):

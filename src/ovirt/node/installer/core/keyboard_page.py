@@ -32,7 +32,7 @@ class Plugin(plugins.NodePlugin):
     _model = {}
 
     def name(self):
-        return "Keyboard"
+        return _("Keyboard")
 
     def rank(self):
         return 10
@@ -47,16 +47,16 @@ class Plugin(plugins.NodePlugin):
         kbd = system.Keyboard()
         c = kbd.get_current()
         self.logger.debug("Current layout: %s" % c)
-        ws = [ui.Header("header[0]", "Keyboard Layout Selection"),
-              ui.Table("keyboard.layout", "", "Available Keyboard Layouts",
+        ws = [ui.Header("header[0]", _("Keyboard Layout Selection")),
+              ui.Table("keyboard.layout", "", _("Available Keyboard Layouts"),
                        kbd.available_layouts(), c),
-              ui.Label("label[0]", "(Hit Enter to select a layout)")
+              ui.Label("label[0]", _("(Hit Enter to select a layout)"))
               ]
         self.widgets.add(ws)
         page = ui.Page("keyboard", ws)
-        page.buttons = [ui.QuitButton("button.quit", "Quit"),
-                        ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Continue")]
+        page.buttons = [ui.QuitButton("button.quit", _("Quit")),
+                        ui.Button("button.back", _("Back")),
+                        ui.SaveButton("button.next", _("Continue"))]
         return page
 
     def on_change(self, changes):

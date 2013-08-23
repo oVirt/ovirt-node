@@ -30,7 +30,7 @@ Diagnostics page
 class Plugin(plugins.NodePlugin):
 
     def name(self):
-        return "Diagnostics"
+        return _("Diagnostics")
 
     def rank(self):
         return 95
@@ -48,10 +48,10 @@ class Plugin(plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        ws = [ui.Header("diagnostic._header", "Diagnostic Utilities"),
-              ui.Label("diagnostic.info", "Select one of the tools below."),
+        ws = [ui.Header("diagnostic._header", _("Diagnostic Utilities")),
+              ui.Label("diagnostic.info", _("Select one of the tools below.")),
               ui.Divider("diagnostic.divider"),
-              ui.Table("diagnostic.tools", "", "Available diagnostics",
+              ui.Table("diagnostic.tools", "", _("Available diagnostics"),
                        self.__diagnostics(), height=min(
                            len(self.__diagnostics()), 4)),
               ]
@@ -76,7 +76,7 @@ class Plugin(plugins.NodePlugin):
                 contents = process.check_output(cmd,
                                                 stderr=process.STDOUT,
                                                 shell=True)
-                return ui.TextViewDialog("output.dialog", "Command Output",
+                return ui.TextViewDialog("output.dialog", _("Command Output"),
                                          contents)
 
     def __diagnostics(self):

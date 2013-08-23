@@ -37,7 +37,7 @@ class Plugin(plugins.NodePlugin):
         self._worker = InstallerThread(self)
 
     def name(self):
-        return "Installation Progress"
+        return _("Installation Progress")
 
     def rank(self):
         return 60
@@ -49,7 +49,7 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        method = "Installing"
+        method = _("Installing")
         product = self.application.product.PRODUCT_SHORT
         ws = [ui.Header("header[0]", "%s %s" % (method, product)),
               ui.Divider("divider[0]"),
@@ -57,7 +57,7 @@ class Plugin(plugins.NodePlugin):
               ui.Divider("divider[1]"),
               ui.Label("log", ""),
               ui.Divider("divider[2]"),
-              ui.Button("action.reboot", "Reboot")
+              ui.Button("action.reboot", _("Reboot"))
               ]
         self.widgets.add(ws)
         page = ui.Page("progress", ws)
@@ -252,10 +252,10 @@ class InstallerThread(threading.Thread):
         def __init__(self, dst=None):
             self.dst = dst
             if dst:
-                self.title = "Installing Image and Bootloader " + \
-                    "Configuration to '%s'" % dst
+                self.title = _("Installing Image and Bootloader ") + \
+                    _("Configuration to '%s'") % dst
             else:
-                self.title = "Updating Image and Bootloader"
+                self.title = _("Updating Image and Bootloader")
             super(InstallerThread.InstallImageAndBootloader, self).__init__()
 
         def commit(self):

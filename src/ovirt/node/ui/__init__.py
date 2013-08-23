@@ -826,8 +826,10 @@ class Page(ContainerElement):
 
     def __init__(self, path, children, title=None):
         super(Page, self).__init__(path, children, title)
-        self.buttons = self.buttons or [SaveButton("%s.save" % path),
-                                        ResetButton("%s.reset" % path)
+        self.buttons = self.buttons or [SaveButton("%s.save" % path,
+                                                   _("Save")),
+                                        ResetButton("%s.reset" % path,
+                                                    _("Reset"))
                                         ]
 
     def elements(self):
@@ -846,8 +848,8 @@ class Dialog(Page):
 
     def __init__(self, path, title, children):
         super(Dialog, self).__init__(path, children, title)
-        self.buttons = [SaveButton("%s.save" % path),
-                        CloseButton("%s.close" % path)
+        self.buttons = [SaveButton("%s.save" % path, _("Save")),
+                        CloseButton("%s.close" % path, _("Reset"))
                         ]
         self.on_close_change = self.new_signal()
         self.close(False)
@@ -864,7 +866,7 @@ class InfoDialog(Dialog):
     def __init__(self, path, title, text, buttons=None):
         super(InfoDialog, self).__init__(path, title, [])
         self.children = [Label(path + ".label", text)]
-        self.buttons = buttons or [CloseButton(path + ".close")]
+        self.buttons = buttons or [CloseButton(path + ".close", _("Close"))]
 
 
 class TextViewDialog(Dialog):
@@ -872,9 +874,9 @@ class TextViewDialog(Dialog):
     """
     def __init__(self, path, title, contents, height=16):
         super(TextViewDialog, self).__init__(path, title, [])
-        self.children = [Table("contents", "", "Contents",
+        self.children = [Table("contents", "", _("Contents"),
                                contents, height=height)]
-        self.buttons = [CloseButton("dialog.close")]
+        self.buttons = [CloseButton("dialog.close", _("Close"))]
 
 
 class ConfirmationDialog(InfoDialog):
@@ -887,8 +889,8 @@ class ConfirmationDialog(InfoDialog):
                          ]
         if not buttons:
             # Default: OK and Close
-            self.buttons = [Button(path + ".yes", "OK"),
-                            CloseButton(path + ".close", "Cancel")]
+            self.buttons = [Button(path + ".yes", _("OK")),
+                            CloseButton(path + ".close", _("Cancel"))]
             buttons = self.buttons
         super(ConfirmationDialog, self).__init__(path, title, text,
                                                  buttons)
@@ -900,7 +902,7 @@ class TransactionProgressDialog(Dialog):
 
     def __init__(self, path, transaction, plugin, initial_text=""):
         self.transaction = transaction
-        title = "Transaction: %s" % self.transaction.title
+        title = _("Transaction: %s") % self.transaction.title
         self._progress_label = Label("dialog.progress", initial_text)
         super(TransactionProgressDialog, self).__init__(path,
                                                         title,
@@ -908,7 +910,7 @@ class TransactionProgressDialog(Dialog):
         self.texts = [initial_text, ""]
         self.plugin = plugin
 
-        self._close_button = CloseButton("button.close")
+        self._close_button = CloseButton("button.close", _("Close"))
         self.buttons = [self._close_button]
 
     def add_update(self, txt):

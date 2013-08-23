@@ -31,7 +31,7 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     def name(self):
-        return "Performance"
+        return _("Performance")
 
     def rank(self):
         return 100
@@ -50,16 +50,16 @@ class Plugin(plugins.NodePlugin):
         profiles = [(profile, profile) for profile in
                     tuned.get_available_profiles()]
 
-        ws = [ui.Header("header", "tuned Configuration"),
-              ui.Label("label", "Choose the tuned profile you would " +
-                       "like to apply to this system."),
+        ws = [ui.Header("header", _("tuned Configuration")),
+              ui.Label("label", _("Choose the tuned profile you would ") +
+                       _("like to apply to this system.")),
               ui.Divider("divider[0]"),
-              ui.KeywordLabel("tuned.profile", "Current Active Profile:  "),
-              ui.Table("tuned.profile", "", "Available tuned Profiles",
+              ui.KeywordLabel("tuned.profile", _("Current Active Profile:  ")),
+              ui.Table("tuned.profile", "", _("Available tuned Profiles"),
                        profiles),
               ]
         page = ui.Page("page", ws)
-        page.buttons = [ui.SaveButton("page.save")]
+        page.buttons = [ui.SaveButton("page.save", _("Save"))]
         self.widgets.add(page)
         return page
 

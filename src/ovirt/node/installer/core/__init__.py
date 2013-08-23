@@ -22,7 +22,7 @@
 """
 Core Installer Plugins
 """
-from ovirt.node import plugins, loader
+from ovirt.node import loader
 
 
 #

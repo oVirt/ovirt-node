@@ -40,7 +40,7 @@ class Plugin(plugins.NodePlugin):
     _model = {}
 
     def name(self):
-        return "Welcome"
+        return _("Welcome")
 
     def rank(self):
         return 0
@@ -52,13 +52,13 @@ class Plugin(plugins.NodePlugin):
         return {}
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "Installation")]
+        ws = [ui.Header("header[0]", _("Installation"))]
         ws += self.___installation_options()
         ws += [ui.Divider("divider[0]")]
         ws += self.__additional_infos()
         self.widgets.add(ws)
         page = ui.Page("welcome", ws)
-        page.buttons = [ui.QuitButton("button.quit", "Quit")]
+        page.buttons = [ui.QuitButton("button.quit", _("Quit"))]
         return page
 
     def on_change(self, changes):
@@ -81,10 +81,10 @@ class Plugin(plugins.NodePlugin):
 
     def ___installation_options(self):
         if self.application.args.dry:
-            return [ui.Button("button.install", "Install (dry)"),
-                    ui.Button("button.upgrade", "Upgrade (dry)"),
-                    ui.Button("button.downgrade", "Downgrade (dry)"),
-                    ui.Button("button.reinstall", "Reinstall (dry)")]
+            return [ui.Button("button.install", _("Install (dry)")),
+                    ui.Button("button.upgrade", _("Upgrade (dry)")),
+                    ui.Button("button.downgrade", _("Downgrade (dry)")),
+                    ui.Button("button.reinstall", _("Reinstall (dry)"))]
 
         media = utils.system.InstallationMedia()
 
@@ -92,37 +92,40 @@ class Plugin(plugins.NodePlugin):
         has_root = os.path.exists("/dev/disk/by-label/ROOT")
 
         if has_hostvg and has_root:
-            return [ui.Label("Major version upgrades are unsupported, " +
-                             "uninstall existing version first")]
+            return [ui.Label(_("Major version upgrades are unsupported, ") +
+                             _("uninstall existing version first"))]
 
         if has_hostvg:
             try:
                 installed = utils.system.InstalledMedia()
                 if media > installed:
                     return [ui.Button("button.upgrade",
-                                      "Upgrade %s to %s" % (installed, media))]
+                                      _("Upgrade %s to %s") %
+                                      (installed, media))]
                 elif media < installed:
                     return [ui.Button("button.downgrade",
-                                      "Downgrade %s to %s" % (installed,
-                                                              media))]
+                                      _("Downgrade %s to %s") %
+                                      (installed, media))]
                 return [ui.Button("button.reinstall",
-                                  "Reinstall %s" % installed)]
+                                  _("Reinstall %s") % installed)]
             except:
                 self.logger.error("Unable to get version numbers for " +
                                   "upgrade, invalid installation or media")
-                return [ui.Label("lbl.failinstall",
-                                 "Invalid installation, please reboot from " +
-                                 "media and choose Reinstall")]
+                return [ui.Label(
+                    "lbl.failinstall",
+                    _("Invalid installation, please reboot from ") +
+                    _("media and choose Reinstall"))]
 
-        return [ui.Button("button.install", "Install Hypervisor %s" % media)]
+        return [ui.Button("button.install",
+                          _("Install Hypervisor %s") % media)]
 
     def __additional_infos(self):
         ws = []
-        ws.append(ui.Label("welcome.virt", "Info: %s" %
+        ws.append(ui.Label("welcome.virt", _("Info: %s") %
                            virt.hardware_status()))
         if system.is_efi():
             ws.append(ui.Label("welcome.efi",
-                               "Info: Machine is booted in EFI mode"))
+                               _("Info: Machine is booted in EFI mode")))
         if self.application.args.dry:
-            ws.append(ui.Label("dry", "Info: DRY MODE"))
+            ws.append(ui.Label("dry", _("Info: DRY MODE")))
         return ws

@@ -1,0 +1,906 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2013-08-19 16:04+CST\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: ENCODING\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: installer/core/boot_device_page.py:38
+msgid "Boot Device"
+msgstr "Boot Device"
+
+#: installer/core/boot_device_page.py:59
+msgid "Please select the disk to use for booting %s"
+msgstr "Please select the disk to use for booting %s"
+
+#: installer/core/boot_device_page.py:69
+#: installer/core/installation_device_page.py:70
+msgid "Device Name"
+msgstr "Device Name"
+
+#: installer/core/boot_device_page.py:69
+#: installer/core/installation_device_page.py:70
+msgid "Location"
+msgstr "Location"
+
+#: installer/core/boot_device_page.py:69
+#: installer/core/installation_device_page.py:70
+msgid "Size"
+msgstr "Size"
+
+#: installer/core/boot_device_page.py:70
+#: installer/core/installation_device_page.py:73
+msgid "(No device)"
+msgstr "(No device)"
+
+#: installer/core/boot_device_page.py:74
+msgid "No Valid Boot Devices Detected"
+msgstr "No Valid Boot Devices Detected"
+
+#: installer/core/boot_device_page.py:77
+#: installer/core/installation_device_page.py:80
+#: installer/core/keyboard_page.py:57 installer/core/password_page.py:56
+#: installer/core/storage_vol_page.py:78 installer/core/upgrade_page.py:71
+#: installer/core/welcome_page.py:61
+msgid "Quit"
+msgstr "Quit"
+
+#: installer/core/boot_device_page.py:78
+#: installer/core/installation_device_page.py:81
+#: installer/core/keyboard_page.py:58 installer/core/password_page.py:57
+#: installer/core/storage_vol_page.py:79 installer/core/upgrade_page.py:72
+msgid "Back"
+msgstr "Back"
+
+#: installer/core/boot_device_page.py:79
+#: installer/core/installation_device_page.py:82
+#: installer/core/keyboard_page.py:59
+msgid "Continue"
+msgstr "Continue"
+
+#: installer/core/boot_device_page.py:180
+msgid "Device"
+msgstr "Device"
+
+#: installer/core/boot_device_page.py:181
+msgid "Model"
+msgstr "Model"
+
+#: installer/core/boot_device_page.py:182
+msgid "Bus Type"
+msgstr "Bus Type"
+
+#: installer/core/boot_device_page.py:183
+msgid "Serial"
+msgstr "Serial"
+
+#: installer/core/boot_device_page.py:184
+msgid "Size (GB)"
+msgstr "Size (GB)"
+
+#: installer/core/boot_device_page.py:185
+msgid "Description"
+msgstr "Description"
+
+#: installer/core/boot_device_page.py:189
+msgid "Disk Details\n"
+msgstr "Disk Details\n"
+
+#: installer/core/boot_device_page.py:204
+msgid "Custom Block Device"
+msgstr "Custom Block Device"
+
+#: installer/core/boot_device_page.py:206
+msgid "Device path:"
+msgstr "Device path:"
+
+#: installer/core/boot_device_page.py:211 setup/core/network_page.py:556
+#: ui/__init__.py:779 ui/__init__.py:799
+msgid "Save"
+msgstr "Save"
+
+#: installer/core/boot_device_page.py:212
+msgid "Cancel"
+msgstr "Cancel"
+
+#: installer/core/installation_device_page.py:39
+msgid "Data Device"
+msgstr "Data Device"
+
+#: installer/core/installation_device_page.py:60
+msgid "Please select the disk(s) to use for installation of %s"
+msgstr "Please select the disk(s) to use for installation of %s"
+
+#: installer/core/installation_device_page.py:77
+msgid "No Valid Install Devices Detected"
+msgstr "No Valid Install Devices Detected"
+
+#: installer/core/keyboard_page.py:35 setup/core/keyboard_page.py:34
+msgid "Keyboard"
+msgstr "Keyboard"
+
+#: installer/core/keyboard_page.py:50 setup/core/keyboard_page.py:55
+msgid "Keyboard Layout Selection"
+msgstr "Keyboard Layout Selection"
+
+#: installer/core/keyboard_page.py:51 setup/core/keyboard_page.py:61
+msgid "Available Keyboard Layouts"
+msgstr "Available Keyboard Layouts"
+
+#: installer/core/keyboard_page.py:53
+msgid "(Hit Enter to select a layout)"
+msgstr "(Hit Enter to select a layout)"
+
+#: installer/core/password_page.py:33
+msgid "Console Password"
+msgstr "Console Password"
+
+#: installer/core/password_page.py:46 installer/core/upgrade_page.py:52
+msgid "Require a password for the admin user?"
+msgstr "Require a password for the admin user?"
+
+#: installer/core/password_page.py:48 installer/core/upgrade_page.py:62
+#: setup/core/security_page.py:65 setup/core/status_page.py:241
+msgid "Password:"
+msgstr "Password:"
+
+#: installer/core/password_page.py:50 installer/core/upgrade_page.py:64
+msgid "Confirm Password:"
+msgstr "Confirm Password:"
+
+#: installer/core/password_page.py:58
+msgid "Install"
+msgstr "Install"
+
+#: installer/core/progress_page.py:40
+msgid "Installation Progress"
+msgstr "Installation Progress"
+
+#: installer/core/progress_page.py:52
+msgid "Installing"
+msgstr "Installing"
+
+#: installer/core/progress_page.py:60
+msgid "Reboot"
+msgstr "Reboot"
+
+#: installer/core/progress_page.py:193
+msgid "Writing configuration file"
+msgstr "Writing configuration file"
+
+#: installer/core/progress_page.py:221
+msgid "Partitioning and Creating File Systems on '%s'"
+msgstr "Partitioning and Creating File Systems on '%s'"
+
+#: installer/core/progress_page.py:238
+msgid "Setting Admin Password"
+msgstr "Setting Admin Password"
+
+#: installer/core/progress_page.py:255
+msgid "Installing Image and Bootloader "
+msgstr "Installing Image and Bootloader "
+
+#: installer/core/progress_page.py:256
+msgid "Configuration to '%s'"
+msgstr "Configuration to '%s'"
+
+#: installer/core/progress_page.py:258
+msgid "Updating Image and Bootloader"
+msgstr "Updating Image and Bootloader"
+
+#: installer/core/progress_page.py:269
+msgid "Setting keyboard layout to '%s'"
+msgstr "Setting keyboard layout to '%s'"
+
+#: installer/core/storage_vol_page.py:32
+msgid "Storage Sizes"
+msgstr "Storage Sizes"
+
+#: installer/core/storage_vol_page.py:61
+msgid "Storage Volumes"
+msgstr "Storage Volumes"
+
+#: installer/core/storage_vol_page.py:62
+msgid "Please enter the sizes for the "
+msgstr "Please enter the sizes for the "
+
+#: installer/core/storage_vol_page.py:63
+msgid "following partitions in MB"
+msgstr "following partitions in MB"
+
+#: installer/core/storage_vol_page.py:65
+msgid "UEFI/Bios:"
+msgstr "UEFI/Bios:"
+
+#: installer/core/storage_vol_page.py:67
+msgid "Root & RootBackup:"
+msgstr "Root & RootBackup:"
+
+#: installer/core/storage_vol_page.py:69
+msgid "(2 partitions at 512MB each)"
+msgstr "(2 partitions at 512MB each)"
+
+#: installer/core/storage_vol_page.py:71
+msgid "Swap:"
+msgstr "Swap:"
+
+#: installer/core/storage_vol_page.py:72
+msgid "Config:"
+msgstr "Config:"
+
+#: installer/core/storage_vol_page.py:73
+msgid "Logging:"
+msgstr "Logging:"
+
+#: installer/core/storage_vol_page.py:74
+msgid "Data:"
+msgstr "Data:"
+
+#: installer/core/storage_vol_page.py:80
+msgid "Next"
+msgstr "Next"
+
+#: installer/core/upgrade_page.py:39
+msgid "Upgrade Password"
+msgstr "Upgrade Password"
+
+#: installer/core/upgrade_page.py:53
+msgid "Please enter the current admin "
+msgstr "Please enter the current admin "
+
+#: installer/core/upgrade_page.py:54
+msgid "password. You may also change the admin password "
+msgstr "password. You may also change the admin password "
+
+#: installer/core/upgrade_page.py:55
+msgid "if required. If the new password fields are left"
+msgstr "if required. If the new password fields are left"
+
+#: installer/core/upgrade_page.py:56
+msgid "blank the password will remain the same."
+msgstr "blank the password will remain the same."
+
+#: installer/core/upgrade_page.py:57 setup/core/security_page.py:64
+msgid "Password for the admin user"
+msgstr "Password for the admin user"
+
+#: installer/core/upgrade_page.py:60
+msgid "Current Password:"
+msgstr "Current Password:"
+
+#: installer/core/upgrade_page.py:73
+msgid "Update"
+msgstr "Update"
+
+#: installer/core/welcome_page.py:43
+msgid "Welcome"
+msgstr "Welcome"
+
+#: installer/core/welcome_page.py:55
+msgid "Installation"
+msgstr "Installation"
+
+#: installer/core/welcome_page.py:84
+msgid "Install (dry)"
+msgstr "Install (dry)"
+
+#: installer/core/welcome_page.py:85
+msgid "Upgrade (dry)"
+msgstr "Upgrade (dry)"
+
+#: installer/core/welcome_page.py:86
+msgid "Downgrade (dry)"
+msgstr "Downgrade (dry)"
+
+#: installer/core/welcome_page.py:87
+msgid "Reinstall (dry)"
+msgstr "Reinstall (dry)"
+
+#: installer/core/welcome_page.py:95
+msgid "Major version upgrades are unsupported, "
+msgstr "Major version upgrades are unsupported, "
+
+#: installer/core/welcome_page.py:96
+msgid "uninstall existing version first"
+msgstr "uninstall existing version first"
+
+#: installer/core/welcome_page.py:103
+msgid "Upgrade %s to %s"
+msgstr "Upgrade %s to %s"
+
+#: installer/core/welcome_page.py:106
+msgid "Downgrade %s to %s"
+msgstr "Downgrade %s to %s"
+
+#: installer/core/welcome_page.py:109
+msgid "Reinstall %s"
+msgstr "Reinstall %s"
+
+#: installer/core/welcome_page.py:114
+msgid "Invalid installation, please reboot from "
+msgstr "Invalid installation, please reboot from "
+
+#: installer/core/welcome_page.py:115
+msgid "media and choose Reinstall"
+msgstr "media and choose Reinstall"
+
+#: installer/core/welcome_page.py:117
+msgid "Install Hypervisor %s"
+msgstr "Install Hypervisor %s"
+
+#: installer/core/welcome_page.py:121
+msgid "Info: %s"
+msgstr "Info: %s"
+
+#: installer/core/welcome_page.py:125
+msgid "Info: Machine is booted in EFI mode"
+msgstr "Info: Machine is booted in EFI mode"
+
+#: installer/core/welcome_page.py:127
+msgid "Info: DRY MODE"
+msgstr "Info: DRY MODE"
+
+#: setup/core/diagnostics_page.py:33
+msgid "Diagnostics"
+msgstr "Diagnostics"
+
+#: setup/core/diagnostics_page.py:51
+msgid "Diagnostic Utilities"
+msgstr "Diagnostic Utilities"
+
+#: setup/core/diagnostics_page.py:52
+msgid "Select one of the tools below."
+msgstr "Select one of the tools below."
+
+#: setup/core/diagnostics_page.py:54
+msgid "Available diagnostics"
+msgstr "Available diagnostics"
+
+#: setup/core/diagnostics_page.py:79
+msgid "Command Output"
+msgstr "Command Output"
+
+#: setup/core/kdump_page.py:42
+msgid "Kdump"
+msgstr "Kdump"
+
+#: setup/core/kdump_page.py:89
+msgid "Configure Kdump"
+msgstr "Configure Kdump"
+
+#: setup/core/kdump_page.py:93
+msgid "network.notice"
+msgstr "network.notice"
+
+#: setup/core/kdump_page.py:94 setup/core/logging_page.py:78
+msgid "Networking is not configured, "
+msgstr "Networking is not configured, "
+
+#: setup/core/kdump_page.py:95
+msgid "please configure it before NFS "
+msgstr "please configure it before NFS "
+
+#: setup/core/kdump_page.py:96
+msgid "or SSH-based kdump"
+msgstr "or SSH-based kdump"
+
+#: setup/core/kdump_page.py:98 setup/core/kdump_page.py:102
+msgid "Type"
+msgstr "Type"
+
+#: setup/core/kdump_page.py:104
+msgid "NFS Location "
+msgstr "NFS Location "
+
+#: setup/core/kdump_page.py:105
+msgid "(example.com:/var/crash):"
+msgstr "(example.com:/var/crash):"
+
+#: setup/core/kdump_page.py:108
+msgid "SSH Location "
+msgstr "SSH Location "
+
+#: setup/core/kdump_page.py:109
+msgid "(root@example.com):"
+msgstr "(root@example.com):"
+
+#: setup/core/kdump_page.py:147
+msgid "Updating kdump related configuration"
+msgstr "Updating kdump related configuration"
+
+#: setup/core/kdump_page.py:172
+msgid "An error occurred"
+msgstr "An error occurred"
+
+#: setup/core/keyboard_page.py:56
+msgid "Choose the Keyboard Layout you would "
+msgstr "Choose the Keyboard Layout you would "
+
+#: setup/core/keyboard_page.py:57 setup/core/performance_page.py:55
+msgid "like to apply to this system."
+msgstr "like to apply to this system."
+
+#: setup/core/keyboard_page.py:59
+msgid "Current Active "
+msgstr "Current Active "
+
+#: setup/core/keyboard_page.py:60
+msgid "Keyboard Layout:  "
+msgstr "Keyboard Layout:  "
+
+#: setup/core/keyboard_page.py:84
+msgid "Updating keyboard related configuration"
+msgstr "Updating keyboard related configuration"
+
+#: setup/core/logging_page.py:34 setup/core/logging_page.py:68
+msgid "Logging"
+msgstr "Logging"
+
+#: setup/core/logging_page.py:69
+msgid "Logrotate Max Log "
+msgstr "Logrotate Max Log "
+
+#: setup/core/logging_page.py:70
+msgid "Size (KB):"
+msgstr "Size (KB):"
+
+#: setup/core/logging_page.py:79
+msgid "please configure it before rsyslog "
+msgstr "please configure it before rsyslog "
+
+#: setup/core/logging_page.py:80
+msgid "and/or netconsole"
+msgstr "and/or netconsole"
+
+#: setup/core/logging_page.py:83
+msgid "RSyslog is an enhanced multi-"
+msgstr "RSyslog is an enhanced multi-"
+
+#: setup/core/logging_page.py:84
+msgid "threaded syslogd"
+msgstr "threaded syslogd"
+
+#: setup/core/logging_page.py:85 setup/core/logging_page.py:93
+#: setup/core/monitoring_page.py:58
+msgid "Server Address:"
+msgstr "Server Address:"
+
+#: setup/core/logging_page.py:87 setup/core/logging_page.py:95
+#: setup/core/monitoring_page.py:59
+msgid "Server Port:"
+msgstr "Server Port:"
+
+#: setup/core/logging_page.py:91
+msgid "Netconsole service allows a remote sys"
+msgstr "Netconsole service allows a remote sys"
+
+#: setup/core/logging_page.py:92
+msgid "log daemon to record printk() messages"
+msgstr "log daemon to record printk() messages"
+
+#: setup/core/logging_page.py:115
+msgid "Updating logging related configuration"
+msgstr "Updating logging related configuration"
+
+#: setup/core/monitoring_page.py:34
+msgid "Monitoring"
+msgstr "Monitoring"
+
+#: setup/core/monitoring_page.py:53
+msgid "Monitoring Configuration"
+msgstr "Monitoring Configuration"
+
+#: setup/core/monitoring_page.py:54
+msgid "Collectd gathers statistics "
+msgstr "Collectd gathers statistics "
+
+#: setup/core/monitoring_page.py:55
+msgid "about the system and can be used to find "
+msgstr "about the system and can be used to find "
+
+#: setup/core/monitoring_page.py:56
+msgid "performance bottlenecks and predict future "
+msgstr "performance bottlenecks and predict future "
+
+#: setup/core/monitoring_page.py:57
+msgid "system load."
+msgstr "system load."
+
+#: setup/core/monitoring_page.py:79
+msgid "Updating monitoring configuration"
+msgstr "Updating monitoring configuration"
+
+#: setup/core/network_page.py:93
+msgid "Network"
+msgstr "Network"
+
+#: setup/core/network_page.py:164
+msgid "Remove %s (%s)"
+msgstr "Remove %s (%s)"
+
+#: setup/core/network_page.py:165 setup/core/network_page.py:571
+msgid "Create Bond"
+msgstr "Create Bond"
+
+#: setup/core/network_page.py:167
+msgid "System Identification"
+msgstr "System Identification"
+
+#: setup/core/network_page.py:168
+msgid "Hostname:"
+msgstr "Hostname:"
+
+#: setup/core/network_page.py:170
+msgid "DNS Server 1:"
+msgstr "DNS Server 1:"
+
+#: setup/core/network_page.py:171
+msgid "DNS Server 2:"
+msgstr "DNS Server 2:"
+
+#: setup/core/network_page.py:173
+msgid "NTP Server 1:"
+msgstr "NTP Server 1:"
+
+#: setup/core/network_page.py:174
+msgid "NTP Server 2:"
+msgstr "NTP Server 2:"
+
+#: setup/core/network_page.py:179 setup/core/ping.py:74
+msgid "Ping"
+msgstr "Ping"
+
+#: setup/core/network_page.py:250
+msgid "Network Interface Configuration"
+msgstr "Network Interface Configuration"
+
+#: setup/core/network_page.py:486
+msgid "Driver: "
+msgstr "Driver: "
+
+#: setup/core/network_page.py:487
+msgid "Vendor: "
+msgstr "Vendor: "
+
+#: setup/core/network_page.py:499
+msgid "IPv4 Settings"
+msgstr "IPv4 Settings"
+
+#: setup/core/network_page.py:502 setup/core/network_page.py:522
+msgid "Disabled"
+msgstr "Disabled"
+
+#: setup/core/network_page.py:503 setup/core/network_page.py:524
+msgid "DHCP"
+msgstr "DHCP"
+
+#: setup/core/network_page.py:504 setup/core/network_page.py:525
+msgid "Static"
+msgstr "Static"
+
+#: setup/core/network_page.py:509 setup/core/network_page.py:530
+msgid "IP Address: "
+msgstr "IP Address: "
+
+#: setup/core/network_page.py:511
+msgid "  Netmask: "
+msgstr "  Netmask: "
+
+#: setup/core/network_page.py:514 setup/core/network_page.py:535
+msgid "Gateway: "
+msgstr "Gateway: "
+
+#: setup/core/network_page.py:519
+msgid "IPv6 Settings"
+msgstr "IPv6 Settings"
+
+#: setup/core/network_page.py:523
+msgid "Auto"
+msgstr "Auto"
+
+#: setup/core/network_page.py:532
+msgid "  Prefix Length: "
+msgstr "  Prefix Length: "
+
+#: setup/core/network_page.py:542
+msgid "VLAN ID: "
+msgstr "VLAN ID: "
+
+#: setup/core/network_page.py:548
+msgid "Use Bridge: "
+msgstr "Use Bridge: "
+
+#: setup/core/network_page.py:551
+msgid "Flash Lights to Identify"
+msgstr "Flash Lights to Identify"
+
+#: setup/core/network_page.py:557 ui/__init__.py:817 ui/__init__.py:827
+#: ui/__init__.py:842 ui/__init__.py:859
+msgid "Close"
+msgstr "Close"
+
+#: setup/core/network_page.py:566 setup/core/plugins_page.py:56
+msgid "Name:"
+msgstr "Name:"
+
+#: setup/core/network_page.py:568
+msgid "Options:"
+msgstr "Options:"
+
+#: setup/core/performance_page.py:34
+msgid "Performance"
+msgstr "Performance"
+
+#: setup/core/performance_page.py:53
+msgid "tuned Configuration"
+msgstr "tuned Configuration"
+
+#: setup/core/performance_page.py:54
+msgid "Choose the tuned profile you would "
+msgstr "Choose the tuned profile you would "
+
+#: setup/core/performance_page.py:57
+msgid "Current Active Profile:  "
+msgstr "Current Active Profile:  "
+
+#: setup/core/performance_page.py:58
+msgid "Available tuned Profiles"
+msgstr "Available tuned Profiles"
+
+#: setup/core/ping.py:35
+msgid "Networking/Ping"
+msgstr "Networking/Ping"
+
+#: setup/core/ping.py:70
+msgid "Ping a remote host"
+msgstr "Ping a remote host"
+
+#: setup/core/ping.py:71
+msgid "Address:"
+msgstr "Address:"
+
+#: setup/core/ping.py:72
+msgid "Count:"
+msgstr "Count:"
+
+#: setup/core/ping.py:76
+msgid "Result:"
+msgstr "Result:"
+
+#: setup/core/plugins_page.py:40 setup/core/plugins_page.py:74
+msgid "Plugins"
+msgstr "Plugins"
+
+#: setup/core/plugins_page.py:49
+msgid "Installed Plugins"
+msgstr "Installed Plugins"
+
+#: setup/core/plugins_page.py:51
+msgid "Installed plugins:"
+msgstr "Installed plugins:"
+
+#: setup/core/plugins_page.py:59
+msgid "Version:"
+msgstr "Version:"
+
+#: setup/core/plugins_page.py:62
+msgid "Date installed:"
+msgstr "Date installed:"
+
+#: setup/core/plugins_page.py:67
+msgid "RPM Diff"
+msgstr "RPM Diff"
+
+#: setup/core/plugins_page.py:69
+msgid "SRPM Diff"
+msgstr "SRPM Diff"
+
+#: setup/core/plugins_page.py:71
+msgid "File Diff"
+msgstr "File Diff"
+
+#: setup/core/plugins_page.py:76
+msgid "There are no plugins currently installed"
+msgstr "There are no plugins currently installed"
+
+#: setup/core/remote_storage_page.py:35 setup/core/remote_storage_page.py:55
+msgid "Remote Storage"
+msgstr "Remote Storage"
+
+#: setup/core/remote_storage_page.py:56
+msgid "iSCSI Initiator Name:"
+msgstr "iSCSI Initiator Name:"
+
+#: setup/core/remote_storage_page.py:59
+msgid "NFSv4 Domain (example.redhat.com):"
+msgstr "NFSv4 Domain (example.redhat.com):"
+
+#: setup/core/remote_storage_page.py:79
+msgid "Updating remote storage configuration"
+msgstr "Updating remote storage configuration"
+
+#: setup/core/security_page.py:34
+msgid "Security"
+msgstr "Security"
+
+#: setup/core/security_page.py:59
+msgid "Remote Access"
+msgstr "Remote Access"
+
+#: setup/core/security_page.py:60
+msgid "Enable SSH password authentication"
+msgstr "Enable SSH password authentication"
+
+#: setup/core/security_page.py:61
+msgid "Strong Random Number Generator"
+msgstr "Strong Random Number Generator"
+
+#: setup/core/security_page.py:62
+msgid "Disable AES-NI"
+msgstr "Disable AES-NI"
+
+#: setup/core/security_page.py:63
+msgid "Bytes Used:"
+msgstr "Bytes Used:"
+
+#: setup/core/security_page.py:98
+msgid "Updating security configuration"
+msgstr "Updating security configuration"
+
+#: setup/core/security_page.py:112
+msgid "Setting admin password"
+msgstr "Setting admin password"
+
+#: setup/core/status_page.py:43
+msgid "Status"
+msgstr "Status"
+
+#: setup/core/status_page.py:78
+msgid "Networking: "
+msgstr "Networking: "
+
+#: setup/core/status_page.py:82
+msgid "Lock"
+msgstr "Lock"
+
+#: setup/core/status_page.py:83
+msgid "Log Off"
+msgstr "Log Off"
+
+#: setup/core/status_page.py:84
+msgid "Restart"
+msgstr "Restart"
+
+#: setup/core/status_page.py:85
+msgid "Power Off"
+msgstr "Power Off"
+
+#: setup/core/status_page.py:88
+msgid "System Information"
+msgstr "System Information"
+
+#: setup/core/status_page.py:90
+msgid "Status: "
+msgstr "Status: "
+
+#: setup/core/status_page.py:96
+msgid "Logs: "
+msgstr "Logs: "
+
+#: setup/core/status_page.py:100
+msgid "Running VMs: "
+msgstr "Running VMs: "
+
+#: setup/core/status_page.py:103
+msgid "Press F8 for support menu"
+msgstr "Press F8 for support menu"
+
+#: setup/core/status_page.py:107
+msgid "View Host Key"
+msgstr "View Host Key"
+
+#: setup/core/status_page.py:109
+msgid "View CPU Details"
+msgstr "View CPU Details"
+
+#: setup/core/status_page.py:142
+msgid "The provided password was incorrect."
+msgstr "The provided password was incorrect."
+
+#: setup/core/status_page.py:152
+msgid "Confirm System Restart"
+msgstr "Confirm System Restart"
+
+#: setup/core/status_page.py:154
+msgid "This will restart the system,"
+msgstr "This will restart the system,"
+
+#: setup/core/status_page.py:155 setup/core/status_page.py:167
+msgid "proceed?"
+msgstr "proceed?"
+
+#: setup/core/status_page.py:164
+msgid "Confirm System Poweroff"
+msgstr "Confirm System Poweroff"
+
+#: setup/core/status_page.py:166
+msgid "This will shut down the system,"
+msgstr "This will shut down the system,"
+
+#: setup/core/status_page.py:175
+msgid "Host Key"
+msgstr "Host Key"
+
+#: setup/core/status_page.py:179
+msgid "CPU Details"
+msgstr "CPU Details"
+
+#: setup/core/status_page.py:212
+msgid "RSA Host Key Fingerprint:"
+msgstr "RSA Host Key Fingerprint:"
+
+#: setup/core/status_page.py:218
+msgid "RSA Host Key:"
+msgstr "RSA Host Key:"
+
+#: setup/core/status_page.py:238
+msgid "Enter the admin password to unlock"
+msgstr "Enter the admin password to unlock"
+
+#: setup/core/status_page.py:239
+msgid "Username: "
+msgstr "Username: "
+
+#: setup/core/status_page.py:243
+msgid "Unlock"
+msgstr "Unlock"
+
+#: setup/core/support_page.py:38
+msgid "Support"
+msgstr "Support"
+
+#: setup/core/support_page.py:47
+msgid "Support Info"
+msgstr "Support Info"
+
+#: setup/core/support_page.py:48
+msgid "Select one of the logfiles below."
+msgstr "Select one of the logfiles below."
+
+#: setup/core/support_page.py:50
+msgid "Available Logfiles"
+msgstr "Available Logfiles"
+
+#: setup/core/support_page.py:84
+msgid "Logfile"
+msgstr "Logfile"
+
+#: ui/__init__.py:780 ui/__init__.py:800
+msgid "Reset"
+msgstr "Reset"
+
+#: ui/__init__.py:825
+msgid "Contents"
+msgstr "Contents"
+
+#: ui/__init__.py:841
+msgid "OK"
+msgstr "OK"
+
+#: ui/__init__.py:851
+msgid "Transaction: %s"
+msgstr "Transaction: %s"
+
+#: setup/core/status_page.py:130
+msgid "This screen is locked."
+msgstr ""

@@ -35,7 +35,7 @@ class Plugin(plugins.NodePlugin):
         self.storage_discovery.run()
 
     def name(self):
-        return "Boot Device"
+        return _("Boot Device")
 
     def rank(self):
         return 20
@@ -56,8 +56,8 @@ class Plugin(plugins.NodePlugin):
                 }
 
     def ui_content(self):
-        page_title = "Please select the disk to use for booting %s" % \
-                     self.application.product.PRODUCT_SHORT
+        page_title = _("Please select the disk to use for booting %s") % \
+            self.application.product.PRODUCT_SHORT
 
         other_device = self._model.get("boot.device.custom", "")
         devices = self.storage_discovery.all_devices_for_ui_table()
@@ -66,20 +66,21 @@ class Plugin(plugins.NodePlugin):
 
         if devices:
             ws += [ui.Table("boot.device", "", " %6s  %11s  %5s" %
-                            ("Location", "Device Name", "Size"), devices),
+                            (_("Location"), _("Device Name"), _("Size")),
+                            devices),
                    ui.Divider("divider[0]"),
                    ui.Button("button.other_device", "Other device: %s" %
                              other_device),
-                   DeviceDetails("label.details", self, "(No device)")
+                   DeviceDetails("label.details", self, _("(No device)"))
                    ]
         else:
             ws += [ui.Label("boot.no_device",
-                            "No Valid Boot Devices Detected")]
+                            _("No Valid Boot Devices Detected"))]
 
         page = ui.Page("boot", ws)
-        page.buttons = [ui.QuitButton("button.quit", "Quit"),
-                        ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Continue")]
+        page.buttons = [ui.QuitButton("button.quit", _("Quit")),
+                        ui.Button("button.back", _("Back")),
+                        ui.SaveButton("button.next", _("Continue"))]
 
         self.widgets.add(page)
         return page
@@ -180,16 +181,16 @@ class DeviceDetails(ui.Label):
         all_devices = self._plugin.storage_discovery.all_devices()
         device = all_devices[device_name]
 
-        lines = [("Device", device.name),
-                 ("Model", device.model),
-                 ("Bus Type", device.bus),
-                 ("Serial", device.serial),
-                 ("Size (GB)", device.size),
-                 ("Description", device.desc),
+        lines = [(_("Device"), device.name),
+                 (_("Model"), device.model),
+                 (_("Bus Type"), device.bus),
+                 (_("Serial"), device.serial),
+                 (_("Size (GB)"), device.size),
+                 (_("Description"), device.desc),
                  ]
 
         width = max([len(o[0]) for o in lines])
-        txt = "Disk Details\n"
+        txt = _("Disk Details\n")
         txt += "\n".join(["%s: %s" % (("{0:%d}" % width).format(a), b)
                           for a, b in lines])
         self.text(txt)
@@ -204,13 +205,14 @@ class CustomDeviceDialog(ui.Dialog):
     """The dialog to input a custom root/boot device
     """
     def __init__(self, path_prefix, title, description):
-        title = "Custom Block Device"
+        title = _("Custom Block Device")
 
-        device_entry = ui.Entry(path_prefix, "Device path:")
+        device_entry = ui.Entry(path_prefix, _("Device path:"))
         children = [ui.Label("label[0]", description),
                     ui.Divider("divider[0]"),
                     device_entry]
         super(CustomDeviceDialog, self).__init__("%s.dialog" % path_prefix,
                                                  title, children)
-        self.buttons = [ui.SaveButton("dialog.device.custom.save"),
-                        ui.CloseButton("dialog.device.custom.close", "Cancel")]
+        self.buttons = [ui.SaveButton("dialog.device.custom.save", _("Save")),
+                        ui.CloseButton("dialog.device.custom.close",
+                                       _("Cancel"))]

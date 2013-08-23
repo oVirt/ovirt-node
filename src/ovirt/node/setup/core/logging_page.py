@@ -31,7 +31,7 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     def name(self):
-        return "Logging"
+        return _("Logging")
 
     def rank(self):
         return 50
@@ -65,9 +65,9 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
 
-        ws = [ui.Header("header[0]", "Logging"),
-              ui.Entry("logrotate.max_size", "Logrotate Max Log " +
-                       "Size (KB):"),
+        ws = [ui.Header("header[0]", _("Logging")),
+              ui.Entry("logrotate.max_size", _("Logrotate Max Log ") +
+                       _("Size (KB):")),
               ui.Divider("divider[0]")
               ]
 
@@ -75,24 +75,25 @@ class Plugin(plugins.NodePlugin):
 
         if not net_is_configured:
             ws.extend([ui.Notice("network.notice",
-                                 "Networking is not configured, " +
-                                 "please configure it before rsyslog " +
-                                 "and/or netconsole"),
+                                 _("Networking is not configured, ") +
+                                 _("please configure it before rsyslog ") +
+                                 _("and/or netconsole")),
                        ui.Divider("notice.divider")])
 
-        ws.extend([ui.Label("rsyslog.header", "RSyslog is an enhanced multi-" +
-                            "threaded syslogd"),
-                   ui.Entry("rsyslog.address", "Server Address:",
+        ws.extend([ui.Label("rsyslog.header",
+                            _("RSyslog is an enhanced multi-") +
+                            _("threaded syslogd")),
+                   ui.Entry("rsyslog.address", _("Server Address:"),
                             enabled=net_is_configured),
-                   ui.Entry("rsyslog.port", "Server Port:",
+                   ui.Entry("rsyslog.port", _("Server Port:"),
                             enabled=net_is_configured),
                    ui.Divider("divider[1]"),
                    ui.Label("netconsole.label",
-                            "Netconsole service allows a remote sys" +
-                            "log daemon to record printk() messages"),
-                   ui.Entry("netconsole.address", "Server Address:",
+                            _("Netconsole service allows a remote sys") +
+                            _("log daemon to record printk() messages")),
+                   ui.Entry("netconsole.address", _("Server Address:"),
                             enabled=net_is_configured),
-                   ui.Entry("netconsole.port", "Server Port:",
+                   ui.Entry("netconsole.port", _("Server Port:"),
                             enabled=net_is_configured)
                    ])
 
@@ -112,7 +113,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        txs = utils.Transaction("Updating logging related configuration")
+        txs = utils.Transaction(_("Updating logging related configuration"))
 
         # If any logrotate key changed ...
         logrotate_keys = ["logrotate.max_size"]

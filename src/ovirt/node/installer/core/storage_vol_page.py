@@ -32,7 +32,7 @@ class Plugin(plugins.NodePlugin):
     _fill = True
 
     def name(self):
-        return "Storage Sizes"
+        return _("Storage Sizes")
 
     def rank(self):
         return 40
@@ -63,7 +63,7 @@ class Plugin(plugins.NodePlugin):
                 }
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "Storage Volumes"),
+        ws = [ui.Header("header[0]", _("Storage Volumes")),
               ui.KeywordLabel("storage.drive_size", "Drive size: ")]
 
         if not self._fill:
@@ -74,15 +74,16 @@ class Plugin(plugins.NodePlugin):
                             "following partitions in MB"),
                    ui.Checkbox("storage.fill_data", "Fill disk with Data " +
                                "partition", True),
-                   ui.Entry("storage.efi_size", "UEFI/Bios:", enabled=False),
-                   ui.Entry("storage.root_size", "Root & RootBackup:",
+                   ui.Entry("storage.efi_size", _("UEFI/Bios:"),
                             enabled=False),
-                   ui.Label("label[1]", "(2 partitions at 512MB each)"),
+                   ui.Entry("storage.root_size", _("Root & RootBackup:"),
+                            enabled=False),
+                   ui.Label("label[1]", _("(2 partitions at 512MB each)")),
                    ui.Divider("divider[2]"),
-                   ui.Entry("storage.swap_size", "Swap:"),
-                   ui.Entry("storage.config_size", "Config:"),
-                   ui.Entry("storage.logging_size", "Logging:"),
-                   ui.Entry("storage.data_size", "Data:",
+                   ui.Entry("storage.swap_size", _("Swap:")),
+                   ui.Entry("storage.config_size", _("Config:")),
+                   ui.Entry("storage.logging_size", _("Logging:")),
+                   ui.Entry("storage.data_size", _("Data:"),
                             enabled=not self._fill),
                    ])
 
@@ -92,9 +93,9 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug(dir(self._model))
         self.widgets.add(ws)
         page = ui.Page("storage", ws)
-        page.buttons = [ui.QuitButton("button.quit", "Quit"),
-                        ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Continue")]
+        page.buttons = [ui.QuitButton("button.quit", _("Quit")),
+                        ui.Button("button.back", _("Back")),
+                        ui.SaveButton("button.next", _("Continue"))]
         return page
 
     def on_change(self, changes):

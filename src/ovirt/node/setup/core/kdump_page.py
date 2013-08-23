@@ -39,7 +39,7 @@ class Plugin(plugins.NodePlugin):
     _types = []
 
     def name(self):
-        return "Kdump"
+        return _("Kdump")
 
     def rank(self):
         return 60
@@ -88,27 +88,27 @@ class Plugin(plugins.NodePlugin):
         else:
             net_is_configured = NodeNetwork().is_configured()
 
-        ws = [ui.Header("kdump._header", "Configure Kdump")]
+        ws = [ui.Header("kdump._header", _("Configure Kdump"))]
 
         if not net_is_configured:
             self._types = self._types_local
-            ws.extend([ui.Notice("network.notice",
-                                 "Networking is not configured, " +
-                                 "please configure it before NFS " +
-                                 "or SSH-based kdump"),
+            ws.extend([ui.Notice(_("network.notice"),
+                                 _("Networking is not configured, ") +
+                                 _("please configure it before NFS ") +
+                                 _("or SSH-based kdump")),
                        ui.Divider("notice.divider")])
-            ws.extend([ui.Options("kdump.type", "Type", self._types)])
+            ws.extend([ui.Options("kdump.type", _("Type"), self._types)])
 
         else:
             self._types = self._types_local + self._types_remote
-            ws.extend([ui.Options("kdump.type", "Type", self._types)])
+            ws.extend([ui.Options("kdump.type", _("Type"), self._types)])
             ws.extend([ui.Divider("divider[0]"),
-                       ui.Entry("kdump.nfs_location", "NFS Location " +
-                                "(example.com:/var/crash):",
+                       ui.Entry("kdump.nfs_location", _("NFS Location ") +
+                                _("(example.com:/var/crash):"),
                                 align_vertical=True),
                        ui.Divider("divider[1]"),
-                       ui.Entry("kdump.ssh_location", "SSH Location " +
-                                "(root@example.com):",
+                       ui.Entry("kdump.ssh_location", _("SSH Location ") +
+                                _("(root@example.com):"),
                                 align_vertical=True),
                        ui.Entry("kdump.ssh_key", "SSH Key URI (optional):",
                                 align_vertical=True)
@@ -149,7 +149,7 @@ class Plugin(plugins.NodePlugin):
         kdump_keys = ["kdump.type", "kdump.ssh_location", "kdump.ssh_key",
                       "kdump.nfs_location"]
 
-        txs = utils.Transaction("Updating kdump related configuration")
+        txs = utils.Transaction(_("Updating kdump related configuration"))
 
         if changes.contains_any(kdump_keys):
             model = defaults.KDump()
@@ -178,4 +178,4 @@ class Plugin(plugins.NodePlugin):
                 console.wait_for_keypress()
         except Exception as e:
             self.logger.exception("Exception while configuring kdump")
-            return InfoDialog("dialog.info", "An error occurred", e.message)
+            return InfoDialog("dialog.info", _("An error occurred"), e.message)

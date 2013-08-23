@@ -90,7 +90,7 @@ class Plugin(plugins.NodePlugin):
             "bond.options"])
 
     def name(self):
-        return "Network"
+        return _("Network")
 
     def rank(self):
         return 10
@@ -159,22 +159,22 @@ class Plugin(plugins.NodePlugin):
         mbond = defaults.NicBonding().retrieve()
         bond_status = ", ".join(mbond["slaves"]
                                 or [])
-        bond_lbl = "Remove %s (%s)" % (mbond["name"], bond_status) \
-            if bond_status else "Create Bond"
+        bond_lbl = _("Remove %s (%s)") % (mbond["name"], bond_status) \
+            if bond_status else _("Create Bond")
 
-        ws = [ui.Header("header[0]", "System Identification"),
-              ui.Entry("hostname", "Hostname:"),
+        ws = [ui.Header("header[0]", _("System Identification")),
+              ui.Entry("hostname", _("Hostname:")),
               ui.Divider("divider[0]"),
-              ui.Entry("dns[0]", "DNS Server 1:"),
-              ui.Entry("dns[1]", "DNS Server 2:"),
+              ui.Entry("dns[0]", _("DNS Server 1:")),
+              ui.Entry("dns[1]", _("DNS Server 2:")),
               ui.Divider("divider[1]"),
-              ui.Entry("ntp[0]", "NTP Server 1:"),
-              ui.Entry("ntp[1]", "NTP Server 2:"),
+              ui.Entry("ntp[0]", _("NTP Server 1:")),
+              ui.Entry("ntp[1]", _("NTP Server 2:")),
               ui.Divider("divider[2]"),
               NicTable("nics", height=3),
 
               ui.Row("row[0]",
-                     [ui.Button("button.ping", "Ping"),
+                     [ui.Button("button.ping", _("Ping")),
                       ui.Button("button.toggle_bond", bond_lbl)
                       ])
               ]
@@ -245,7 +245,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Effective Model: %s" % effective_model)
 
         # This object will contain all transaction elements to be executed
-        txs = utils.Transaction("Network Interface Configuration")
+        txs = utils.Transaction(_("Network Interface Configuration"))
 
         # Special case: A NIC was selected, display that dialog!
         if "nics" in changes and len(changes) == 1:
@@ -497,8 +497,10 @@ class NicDetailsDialog(ui.Dialog):
 
         padd = lambda l: l.ljust(12)
         ws = [ui.Row("dialog.nic._row[0]",
-                     [ui.KeywordLabel("dialog.nic.driver", padd("Driver: ")),
-                      ui.KeywordLabel("dialog.nic.vendor", padd("Vendor: ")),
+                     [ui.KeywordLabel("dialog.nic.driver",
+                                      padd(_("Driver: "))),
+                      ui.KeywordLabel("dialog.nic.vendor",
+                                      padd(_("Vendor: "))),
                       ]),
 
               ui.Row("dialog.nic._row[2]",
@@ -510,65 +512,65 @@ class NicDetailsDialog(ui.Dialog):
 
               ui.Divider("dialog.nic._divider[0]"),
 
-              ui.Label("dialog.nic.ipv4._header", "IPv4 Settings"),
+              ui.Label("dialog.nic.ipv4._header", _("IPv4 Settings")),
 
               ui.Options("dialog.nic.ipv4.bootproto",
-                         "Bootprotocol: ", [("none", "Disabled"),
-                                            ("dhcp", "DHCP"),
-                                            ("static", "Static")
+                         "Bootprotocol: ", [("none", _("Disabled")),
+                                            ("dhcp", _("DHCP")),
+                                            ("static", _("Static"))
                                             ]),
 
               ui.Row("dialog.nic._row[4]",
                      [ui.Entry("dialog.nic.ipv4.address",
-                               padd("IP Address: ")),
+                               padd(_("IP Address: "))),
                       ui.Entry("dialog.nic.ipv4.netmask",
-                               padd("  Netmask: "))]),
+                               padd(_("  Netmask: ")))]),
               ui.Row("dialog.nic._row[5]",
                      [ui.Entry("dialog.nic.ipv4.gateway",
-                               padd("Gateway: ")),
+                               padd(_("Gateway: "))),
                       ui.Label("dummy[0]", "")]),
 
               ui.Divider("dialog.nic._divider[1]"),
 
-              ui.Label("dialog.nic.ipv6._header", "IPv6 Settings"),
+              ui.Label("dialog.nic.ipv6._header", _("IPv6 Settings")),
 
               ui.Options("dialog.nic.ipv6.bootproto",
-                         "Bootprotocol: ", [("none", "Disabled"),
-                                            ("auto", "Auto"),
-                                            ("dhcp", "DHCP"),
-                                            ("static", "Static")
+                         "Bootprotocol: ", [("none", _("Disabled")),
+                                            ("auto", _("Auto")),
+                                            ("dhcp", _("DHCP")),
+                                            ("static", _("Static"))
                                             ]),
 
               ui.Row("dialog.nic._row[6]",
                      [ui.Entry("dialog.nic.ipv6.address",
-                               padd("IP Address: ")),
+                               padd(_("IP Address: "))),
                       ui.Entry("dialog.nic.ipv6.netmask",
-                               padd("  Prefix Length: "))]),
+                               padd(_("  Prefix Length: ")))]),
               ui.Row("dialog.nic._row[7]",
                      [ui.Entry("dialog.nic.ipv6.gateway",
-                               padd("Gateway: ")),
+                               padd(_("Gateway: "))),
                       ui.Label("dummy[1]", "")]),
 
               ui.Divider("dialog.nic._divider[2]"),
 
               ui.Row("dialog.nic._row[8]",
                      [ui.Entry("dialog.nic.vlanid",
-                               padd("VLAN ID: ")),
+                               padd(_("VLAN ID: "))),
                       ui.Label("dummy[2]", "")]),
 
               ui.Divider("dialog.nic._divider[3]"),
 
               ui.Checkbox("dialog.nic.layout_bridged",
-                          "Use Bridge: "),
+                          _("Use Bridge: ")),
 
               ui.Divider("dialog.nic._divider[4]"),
-              ui.Button("dialog.nic.identify", "Flash Lights to Identify"),
+              ui.Button("dialog.nic.identify", _("Flash Lights to Identify")),
               ]
 
         self.plugin.widgets.add(ws)
         self.children = ws
-        self.buttons = [ui.SaveButton("dialog.nic.save", "Save"),
-                        ui.CloseButton("dialog.nic.close", "Close")
+        self.buttons = [ui.SaveButton("dialog.nic.save", _("Save")),
+                        ui.CloseButton("dialog.nic.close", _("Close"))
                         ]
         self.plugin._nic_details_group.enabled(False)
         self.plugin.widgets["dialog.nic.vlanid"].enabled(True)
@@ -577,9 +579,9 @@ class NicDetailsDialog(ui.Dialog):
 
 class CreateBondDialog(ui.Dialog):
     def __init__(self, path):
-        widgets = [ui.Entry("bond.name", "Name:"),
+        widgets = [ui.Entry("bond.name", _("Name:")),
                    ui.Divider("bond.divider[0]"),
-                   ui.Entry("bond.options", "Options:"),
+                   ui.Entry("bond.options", _("Options:")),
                    ui.Divider("bond.divider[1]"),
                    NicTable("bond.slaves", multi=True)]
-        super(CreateBondDialog, self).__init__(path, "Create Bond", widgets)
+        super(CreateBondDialog, self).__init__(path, _("Create Bond"), widgets)

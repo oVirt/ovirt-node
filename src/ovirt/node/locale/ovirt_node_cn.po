@@ -1,0 +1,910 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2013-08-19 16:04+CST\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: ENCODING\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: installer/core/boot_device_page.py:38
+msgid "Boot Device"
+msgstr "启动设备"
+
+#: installer/core/boot_device_page.py:59
+msgid "Please select the disk to use for booting %s"
+msgstr "请选择用于引导 %s 的磁盘"
+
+#: installer/core/boot_device_page.py:69
+#: installer/core/installation_device_page.py:70
+msgid "Device Name"
+msgstr "设备名称"
+
+#: installer/core/boot_device_page.py:69
+#: installer/core/installation_device_page.py:70
+msgid "Location"
+msgstr "位置"
+
+#: installer/core/boot_device_page.py:69
+#: installer/core/installation_device_page.py:70
+msgid "Size"
+msgstr "容量"
+
+#: installer/core/boot_device_page.py:70
+#: installer/core/installation_device_page.py:73
+msgid "(No device)"
+msgstr "(No device)"
+
+#: installer/core/boot_device_page.py:74
+msgid "No Valid Boot Devices Detected"
+msgstr "未发现可用的引导设备"
+
+#: installer/core/boot_device_page.py:77
+#: installer/core/installation_device_page.py:80
+#: installer/core/keyboard_page.py:57 installer/core/password_page.py:56
+#: installer/core/storage_vol_page.py:78 installer/core/upgrade_page.py:71
+#: installer/core/welcome_page.py:61
+msgid "Quit"
+msgstr "退出  "
+
+#: installer/core/boot_device_page.py:78
+#: installer/core/installation_device_page.py:81
+#: installer/core/keyboard_page.py:58 installer/core/password_page.py:57
+#: installer/core/storage_vol_page.py:79 installer/core/upgrade_page.py:72
+msgid "Back"
+msgstr "返回  "
+
+#: installer/core/boot_device_page.py:79
+#: installer/core/installation_device_page.py:82
+#: installer/core/keyboard_page.py:59
+msgid "Continue"
+msgstr "继续  "
+
+#: installer/core/boot_device_page.py:180
+msgid "Device"
+msgstr "设备"
+
+#: installer/core/boot_device_page.py:181
+msgid "Model"
+msgstr "型号"
+
+#: installer/core/boot_device_page.py:182
+msgid "Bus Type"
+msgstr "总线类型"
+
+#: installer/core/boot_device_page.py:183
+msgid "Serial"
+msgstr "串行"
+
+#: installer/core/boot_device_page.py:184
+msgid "Size (GB)"
+msgstr "容量(GB)"
+
+#: installer/core/boot_device_page.py:185
+msgid "Description"
+msgstr "描述"
+
+#: installer/core/boot_device_page.py:189
+msgid "Disk Details\n"
+msgstr "磁盘详细\n"
+
+#: installer/core/boot_device_page.py:204
+msgid "Custom Block Device"
+msgstr "可用块设备"
+
+#: installer/core/boot_device_page.py:206
+msgid "Device path:"
+msgstr "设备路径："
+
+#: installer/core/boot_device_page.py:211 setup/core/network_page.py:556
+#: ui/__init__.py:779 ui/__init__.py:799
+msgid "Save"
+msgstr "保存  "
+
+#: installer/core/boot_device_page.py:212
+msgid "Cancel"
+msgstr "取消  "
+
+#: installer/core/installation_device_page.py:39
+msgid "Data Device"
+msgstr "数据设备"
+
+#: installer/core/installation_device_page.py:60
+msgid "Please select the disk(s) to use for installation of %s"
+msgstr "请选择磁盘用来安装%s"
+
+#: installer/core/installation_device_page.py:77
+msgid "No Valid Install Devices Detected"
+msgstr "未发现可用的安装设备"
+
+#: installer/core/keyboard_page.py:35 setup/core/keyboard_page.py:34
+msgid "Keyboard"
+msgstr "键盘"
+
+#: installer/core/keyboard_page.py:50 setup/core/keyboard_page.py:55
+msgid "Keyboard Layout Selection"
+msgstr "键盘类型选择"
+
+#: installer/core/keyboard_page.py:51 setup/core/keyboard_page.py:61
+msgid "Available Keyboard Layouts"
+msgstr "可用键盘类型"
+
+#: installer/core/keyboard_page.py:53
+msgid "(Hit Enter to select a layout)"
+msgstr "（点击Enter选择键盘类型）"
+
+#: installer/core/password_page.py:33
+msgid "Console Password"
+msgstr "控制台密码"
+
+#: installer/core/password_page.py:46 installer/core/upgrade_page.py:52
+msgid "Require a password for the admin user?"
+msgstr "是否设置admin用户密码？"
+
+#: installer/core/password_page.py:48 installer/core/upgrade_page.py:62
+#: setup/core/security_page.py:65 setup/core/status_page.py:241
+msgid "Password:"
+msgstr "密码："
+
+#: installer/core/password_page.py:50 installer/core/upgrade_page.py:64
+msgid "Confirm Password:"
+msgstr "确认密码："
+
+#: installer/core/password_page.py:58
+msgid "Install"
+msgstr "安装  "
+
+#: installer/core/progress_page.py:40
+msgid "Installation Progress"
+msgstr "安装过程"
+
+#: installer/core/progress_page.py:52
+msgid "Installing"
+msgstr "正在安装    "
+
+#: installer/core/progress_page.py:60
+msgid "Reboot"
+msgstr "重启  "
+
+#: installer/core/progress_page.py:193
+msgid "Writing configuration file"
+msgstr "写配置文件"
+
+#: installer/core/progress_page.py:221
+msgid "Partitioning and Creating File Systems on '%s'"
+msgstr "在'%s'上分区并创建文件系统"
+
+#: installer/core/progress_page.py:238
+msgid "Setting Admin Password"
+msgstr "设置Admin密码"
+
+#: installer/core/progress_page.py:255
+msgid "Installing Image and Bootloader "
+msgstr "安装Image和Bootloader"
+
+#: installer/core/progress_page.py:256
+msgid "Configuration to '%s'"
+msgstr "配置'%s'"
+
+#: installer/core/progress_page.py:258
+msgid "Updating Image and Bootloader"
+msgstr "更新Image和Bootloader"
+
+#: installer/core/progress_page.py:269
+msgid "Setting keyboard layout to '%s'"
+msgstr "设置键盘布局为'%s'"
+
+#: installer/core/storage_vol_page.py:32
+msgid "Storage Sizes"
+msgstr "存储容量"
+
+#: installer/core/storage_vol_page.py:61
+msgid "Storage Volumes"
+msgstr "存储容量"
+
+#: installer/core/storage_vol_page.py:62
+msgid "Please enter the sizes for the "
+msgstr "请输入分区容量（MB）"
+
+#: installer/core/storage_vol_page.py:63
+msgid "following partitions in MB"
+msgstr " "
+
+#: installer/core/storage_vol_page.py:65
+msgid "UEFI/Bios:"
+msgstr "UEFI/Bios:"
+
+#: installer/core/storage_vol_page.py:67
+msgid "Root & RootBackup:"
+msgstr "Root & RootBackup:"
+
+#: installer/core/storage_vol_page.py:69
+msgid "(2 partitions at 512MB each)"
+msgstr "(两个分区各512MB)"
+
+#: installer/core/storage_vol_page.py:71
+msgid "Swap:"
+msgstr "Swap:"
+
+#: installer/core/storage_vol_page.py:72
+msgid "Config:"
+msgstr "Config:"
+
+#: installer/core/storage_vol_page.py:73
+msgid "Logging:"
+msgstr "Logging:"
+
+#: installer/core/storage_vol_page.py:74
+msgid "Data:"
+msgstr "Data:"
+
+#: installer/core/storage_vol_page.py:80
+msgid "Next"
+msgstr "下一步   "
+
+#: installer/core/upgrade_page.py:39
+msgid "Upgrade Password"
+msgstr "更新密码"
+
+#: installer/core/upgrade_page.py:53
+msgid "Please enter the current admin "
+msgstr "请输入当前admin的密码。如果需要你也可以修改admin的密码。如果不输入的话，将使用原密码。"
+
+#: installer/core/upgrade_page.py:54
+msgid "password. You may also change the admin password "
+msgstr " "
+
+#: installer/core/upgrade_page.py:55
+msgid "if required. If the new password fields are left"
+msgstr " "
+
+#: installer/core/upgrade_page.py:56
+msgid "blank the password will remain the same."
+msgstr " "
+
+#: installer/core/upgrade_page.py:57 setup/core/security_page.py:64
+msgid "Password for the admin user"
+msgstr "admin用户的密码"
+
+#: installer/core/upgrade_page.py:60
+msgid "Current Password:"
+msgstr "当前密码："
+
+#: installer/core/upgrade_page.py:73
+msgid "Update"
+msgstr "更新  "
+
+#: installer/core/welcome_page.py:43
+msgid "Welcome"
+msgstr "欢迎"
+
+#: installer/core/welcome_page.py:55
+msgid "Installation"
+msgstr "安装  "
+
+#: installer/core/welcome_page.py:84
+msgid "Install (dry)"
+msgstr "安装（dry）    "
+
+#: installer/core/welcome_page.py:85
+msgid "Upgrade (dry)"
+msgstr "更新（dry）    "
+
+#: installer/core/welcome_page.py:86
+msgid "Downgrade (dry)"
+msgstr "降级（dry）    "
+
+#: installer/core/welcome_page.py:87
+msgid "Reinstall (dry)"
+msgstr "重装（dry）    "
+
+#: installer/core/welcome_page.py:95
+msgid "Major version upgrades are unsupported, "
+msgstr "主版本不支持升级，请先删除现有系统"
+
+#: installer/core/welcome_page.py:96
+msgid "uninstall existing version first"
+msgstr " "
+
+#: installer/core/welcome_page.py:103
+msgid "Upgrade %s to %s"
+msgstr "更新 %s 到 %s"
+
+#: installer/core/welcome_page.py:106
+msgid "Downgrade %s to %s"
+msgstr "降级 %s 到 %s"
+
+#: installer/core/welcome_page.py:109
+msgid "Reinstall %s"
+msgstr "重装 %s"
+
+#: installer/core/welcome_page.py:114
+msgid "Invalid installation, please reboot from "
+msgstr "无效的安装，请重启并重新安装"
+
+#: installer/core/welcome_page.py:115
+msgid "media and choose Reinstall"
+msgstr " "
+
+#: installer/core/welcome_page.py:117
+msgid "Install Hypervisor %s"
+msgstr "安装Hypervisor %s"
+
+#: installer/core/welcome_page.py:121
+msgid "Info: %s"
+msgstr "信息: %s"
+
+#: installer/core/welcome_page.py:125
+msgid "Info: Machine is booted in EFI mode"
+msgstr "信息: 服务器使用EFI模式引导"
+
+#: installer/core/welcome_page.py:127
+msgid "Info: DRY MODE"
+msgstr "信息: DRY MODE"
+
+#: setup/core/diagnostics_page.py:33
+msgid "Diagnostics"
+msgstr "诊断"
+
+#: setup/core/diagnostics_page.py:51
+msgid "Diagnostic Utilities"
+msgstr "诊断工具"
+
+#: setup/core/diagnostics_page.py:52
+msgid "Select one of the tools below."
+msgstr "请选择如下工具之一"
+
+#: setup/core/diagnostics_page.py:54
+msgid "Available diagnostics"
+msgstr "可用诊断"
+
+#: setup/core/diagnostics_page.py:79
+msgid "Command Output"
+msgstr "命令输出"
+
+#: setup/core/kdump_page.py:42
+msgid "Kdump"
+msgstr "Kdump"
+
+#: setup/core/kdump_page.py:89
+msgid "Configure Kdump"
+msgstr "配置Kdump"
+
+#: setup/core/kdump_page.py:93
+msgid "network.notice"
+msgstr "network.notice"
+
+#: setup/core/kdump_page.py:94 setup/core/logging_page.py:78
+msgid "Networking is not configured, "
+msgstr "网络未配置，"
+
+#: setup/core/kdump_page.py:95
+msgid "please configure it before NFS "
+msgstr "请在配置NFS和基于SSH的Kdump前配置网络"
+
+#: setup/core/kdump_page.py:96
+msgid "or SSH-based kdump"
+msgstr " "
+
+#: setup/core/kdump_page.py:98 setup/core/kdump_page.py:102
+msgid "Type"
+msgstr "类型"
+
+#: setup/core/kdump_page.py:104
+msgid "NFS Location "
+msgstr "NFS位置"
+
+#: setup/core/kdump_page.py:105
+msgid "(example.com:/var/crash):"
+msgstr "(example.com:/var/crash):"
+
+#: setup/core/kdump_page.py:108
+msgid "SSH Location "
+msgstr "SSH 位置"
+
+#: setup/core/kdump_page.py:109
+msgid "(root@example.com):"
+msgstr "(root@example.com):"
+
+#: setup/core/kdump_page.py:147
+msgid "Updating kdump related configuration"
+msgstr "更新kdump相关配置"
+
+#: setup/core/kdump_page.py:172
+msgid "An error occurred"
+msgstr "发生一个错误"
+
+#: setup/core/keyboard_page.py:56
+msgid "Choose the Keyboard Layout you would "
+msgstr "请选择系统的键盘布局"
+
+#: setup/core/keyboard_page.py:57 setup/core/performance_page.py:55
+msgid "like to apply to this system."
+msgstr " "
+
+#: setup/core/keyboard_page.py:59
+msgid "Current Active "
+msgstr "当前设置键盘布局："
+
+#: setup/core/keyboard_page.py:60
+msgid "Keyboard Layout:  "
+msgstr " "
+
+#: setup/core/keyboard_page.py:84
+msgid "Updating keyboard related configuration"
+msgstr "更新键盘相关配置"
+
+#: setup/core/logging_page.py:34 setup/core/logging_page.py:68
+msgid "Logging"
+msgstr "日志"
+
+#: setup/core/logging_page.py:69
+msgid "Logrotate Max Log "
+msgstr "循环日志最大"
+
+#: setup/core/logging_page.py:70
+msgid "Size (KB):"
+msgstr "容量（KB）"
+
+#: setup/core/logging_page.py:79
+msgid "please configure it before rsyslog "
+msgstr "请在配置rsyslog、netconsole前配置"
+
+#: setup/core/logging_page.py:80
+msgid "and/or netconsole"
+msgstr " "
+
+#: setup/core/logging_page.py:83
+msgid "RSyslog is an enhanced multi-"
+msgstr "RSyslog是加强的多线程syslogd"
+
+#: setup/core/logging_page.py:84
+msgid "threaded syslogd"
+msgstr " "
+
+#: setup/core/logging_page.py:85 setup/core/logging_page.py:93
+#: setup/core/monitoring_page.py:58
+msgid "Server Address:"
+msgstr "服务器地址："
+
+#: setup/core/logging_page.py:87 setup/core/logging_page.py:95
+#: setup/core/monitoring_page.py:59
+msgid "Server Port:"
+msgstr "服务器端口："
+
+#: setup/core/logging_page.py:91
+msgid "Netconsole service allows a remote sys"
+msgstr "Netconsole服务提供了记录printk()信息的远端syslog服务"
+
+#: setup/core/logging_page.py:92
+msgid "log daemon to record printk() messages"
+msgstr " "
+
+#: setup/core/logging_page.py:115
+msgid "Updating logging related configuration"
+msgstr "更新日志相关配置"
+
+#: setup/core/monitoring_page.py:34
+msgid "Monitoring"
+msgstr "监视"
+
+#: setup/core/monitoring_page.py:53
+msgid "Monitoring Configuration"
+msgstr "监视相关配置"
+
+#: setup/core/monitoring_page.py:54
+msgid "Collectd gathers statistics "
+msgstr "Collectd用于收集系统信息从而发现性能瓶颈并预测未来系统负荷"
+
+#: setup/core/monitoring_page.py:55
+msgid "about the system and can be used to find "
+msgstr " "
+
+#: setup/core/monitoring_page.py:56
+msgid "performance bottlenecks and predict future "
+msgstr " "
+
+#: setup/core/monitoring_page.py:57
+msgid "system load."
+msgstr " "
+
+#: setup/core/monitoring_page.py:79
+msgid "Updating monitoring configuration"
+msgstr "更新监控配置"
+
+#: setup/core/network_page.py:93
+msgid "Network"
+msgstr "网络"
+
+#: setup/core/network_page.py:164
+msgid "Remove %s (%s)"
+msgstr "删除%s (%s)"
+
+#: setup/core/network_page.py:165 setup/core/network_page.py:571
+msgid "Create Bond"
+msgstr "创建Bond  "
+
+#: setup/core/network_page.py:167
+msgid "System Identification"
+msgstr "系统识别"
+
+#: setup/core/network_page.py:168
+msgid "Hostname:"
+msgstr "主机名："
+
+#: setup/core/network_page.py:170
+msgid "DNS Server 1:"
+msgstr "DNS服务1："
+
+#: setup/core/network_page.py:171
+msgid "DNS Server 2:"
+msgstr "DNS服务2："
+
+#: setup/core/network_page.py:173
+msgid "NTP Server 1:"
+msgstr "NTP服务1："
+
+#: setup/core/network_page.py:174
+msgid "NTP Server 2:"
+msgstr "NTP服务2："
+
+#: setup/core/network_page.py:179 setup/core/ping.py:74
+msgid "Ping"
+msgstr "Ping"
+
+#: setup/core/network_page.py:250
+msgid "Network Interface Configuration"
+msgstr "网络接口配置"
+
+#: setup/core/network_page.py:486
+msgid "Driver: "
+msgstr "驱动："
+
+#: setup/core/network_page.py:487
+msgid "Vendor: "
+msgstr "厂商："
+
+#: setup/core/network_page.py:499
+msgid "IPv4 Settings"
+msgstr "IPv4 设置"
+
+#: setup/core/network_page.py:502 setup/core/network_page.py:522
+msgid "Disabled"
+msgstr "停用"
+
+#: setup/core/network_page.py:503 setup/core/network_page.py:524
+msgid "DHCP"
+msgstr "DHCP"
+
+#: setup/core/network_page.py:504 setup/core/network_page.py:525
+msgid "Static"
+msgstr "静态"
+
+#: setup/core/network_page.py:509 setup/core/network_page.py:530
+msgid "IP Address: "
+msgstr "IP地址："
+
+#: setup/core/network_page.py:511
+msgid "  Netmask: "
+msgstr "  子网掩码："
+
+#: setup/core/network_page.py:514 setup/core/network_page.py:535
+msgid "Gateway: "
+msgstr "网关："
+
+#: setup/core/network_page.py:519
+msgid "IPv6 Settings"
+msgstr "IPv6 设置"
+
+#: setup/core/network_page.py:523
+msgid "Auto"
+msgstr "自动"
+
+#: setup/core/network_page.py:532
+msgid "  Prefix Length: "
+msgstr "  前缀长度："
+
+#: setup/core/network_page.py:542
+msgid "VLAN ID: "
+msgstr "VLAN ID"
+
+#: setup/core/network_page.py:548
+msgid "Use Bridge: "
+msgstr "使用桥："
+
+#: setup/core/network_page.py:551
+msgid "Flash Lights to Identify"
+msgstr "闪灯确认    "
+
+#: setup/core/network_page.py:557 ui/__init__.py:817 ui/__init__.py:827
+#: ui/__init__.py:842 ui/__init__.py:859
+msgid "Close"
+msgstr "关闭  "
+
+#: setup/core/network_page.py:566 setup/core/plugins_page.py:56
+msgid "Name:"
+msgstr "名称："
+
+#: setup/core/network_page.py:568
+msgid "Options:"
+msgstr "选项："
+
+#: setup/core/performance_page.py:34
+msgid "Performance"
+msgstr "性能"
+
+#: setup/core/performance_page.py:53
+msgid "tuned Configuration"
+msgstr "调优配置"
+
+#: setup/core/performance_page.py:54
+msgid "Choose the tuned profile you would "
+msgstr "选择要使用的调优文件"
+
+#: setup/core/performance_page.py:57
+msgid "Current Active Profile:  "
+msgstr "当前使用的文件："
+
+#: setup/core/performance_page.py:58
+msgid "Available tuned Profiles"
+msgstr "可用调优文件"
+
+#: setup/core/ping.py:35
+msgid "Networking/Ping"
+msgstr "网络/Ping"
+
+#: setup/core/ping.py:70
+msgid "Ping a remote host"
+msgstr "Ping远端主机"
+
+#: setup/core/ping.py:71
+msgid "Address:"
+msgstr "地址："
+
+#: setup/core/ping.py:72
+msgid "Count:"
+msgstr "计数："
+
+#: setup/core/ping.py:76
+msgid "Result:"
+msgstr "结果："
+
+#: setup/core/plugins_page.py:40 setup/core/plugins_page.py:74
+msgid "Plugins"
+msgstr "插件"
+
+#: setup/core/plugins_page.py:49
+msgid "Installed Plugins"
+msgstr "安装插件"
+
+#: setup/core/plugins_page.py:51
+msgid "Installed plugins:"
+msgstr "安装插件："
+
+#: setup/core/plugins_page.py:59
+msgid "Version:"
+msgstr "版本："
+
+#: setup/core/plugins_page.py:62
+msgid "Date installed:"
+msgstr "安装日期:"
+
+#: setup/core/plugins_page.py:67
+msgid "RPM Diff"
+msgstr "RPM Diff"
+
+#: setup/core/plugins_page.py:69
+msgid "SRPM Diff"
+msgstr "SRPM Diff"
+
+#: setup/core/plugins_page.py:71
+msgid "File Diff"
+msgstr "File Diff"
+
+#: setup/core/plugins_page.py:76
+msgid "There are no plugins currently installed"
+msgstr "未安装任何插件"
+
+#: setup/core/remote_storage_page.py:35 setup/core/remote_storage_page.py:55
+msgid "Remote Storage"
+msgstr "远端存储"
+
+#: setup/core/remote_storage_page.py:56
+msgid "iSCSI Initiator Name:"
+msgstr "iSCSI启动器名称："
+
+#: setup/core/remote_storage_page.py:59
+msgid "NFSv4 Domain (example.redhat.com):"
+msgstr "NFSv4 Domain (example.redhat.com):"
+
+#: setup/core/remote_storage_page.py:79
+msgid "Updating remote storage configuration"
+msgstr "更新远端存储配置"
+
+#: setup/core/security_page.py:34
+msgid "Security"
+msgstr "安全"
+
+#: setup/core/security_page.py:59
+msgid "Remote Access"
+msgstr "远端接入"
+
+#: setup/core/security_page.py:60
+msgid "Enable SSH password authentication"
+msgstr "启用SSH密码认证"
+
+#: setup/core/security_page.py:61
+msgid "Strong Random Number Generator"
+msgstr "强随机数生成器"
+
+#: setup/core/security_page.py:62
+msgid "Disable AES-NI"
+msgstr "停用AES-NI"
+
+#: setup/core/security_page.py:63
+msgid "Bytes Used:"
+msgstr "使用字节数："
+
+#: setup/core/security_page.py:98
+msgid "Updating security configuration"
+msgstr "更新安全配置"
+
+#: setup/core/security_page.py:112
+msgid "Setting admin password"
+msgstr "设置admin密码"
+
+#: setup/core/status_page.py:43
+msgid "Status"
+msgstr "状态"
+
+#: setup/core/status_page.py:78
+msgid "Networking: "
+msgstr "网络："
+
+#: setup/core/status_page.py:82
+msgid "Lock"
+msgstr "锁定  "
+
+#: setup/core/status_page.py:83
+msgid "Log Off"
+msgstr "登出  "
+
+#: setup/core/status_page.py:84
+msgid "Restart"
+msgstr "重启  "
+
+#: setup/core/status_page.py:85
+msgid "Power Off"
+msgstr "关闭  "
+
+#: setup/core/status_page.py:88
+msgid "System Information"
+msgstr "系统信息"
+
+#: setup/core/status_page.py:90
+msgid "Status: "
+msgstr "状态："
+
+#: setup/core/status_page.py:96
+msgid "Logs: "
+msgstr "日志："
+
+#: setup/core/status_page.py:100
+msgid "Running VMs: "
+msgstr "运行的虚拟机："
+
+#: setup/core/status_page.py:103
+msgid "Press F8 for support menu"
+msgstr "按F8寻求帮助"
+
+#: setup/core/status_page.py:107
+msgid "View Host Key"
+msgstr "查看Host Key  "
+
+#: setup/core/status_page.py:109
+msgid "View CPU Details"
+msgstr "查看CPU详细    "
+
+#: setup/core/status_page.py:142
+msgid "The provided password was incorrect."
+msgstr "所提供的密码不正确"
+
+#: setup/core/status_page.py:152
+msgid "Confirm System Restart"
+msgstr "确认系统重启"
+
+#: setup/core/status_page.py:154
+msgid "\nThis will restart the system,"
+msgstr "\n该操作将重启系统，"
+
+#: setup/core/status_page.py:155 setup/core/status_page.py:167
+msgid "proceed?"
+msgstr "是否确定？"
+
+#: setup/core/status_page.py:126
+msgid "There are %s Virtual Machines running."
+msgstr "%s个虚拟机正在运行。"
+
+#: setup/core/status_page.py:164
+msgid "Confirm System Poweroff"
+msgstr "确认关闭系统"
+
+#: setup/core/status_page.py:166
+msgid "\nThis will shut down the system,"
+msgstr "\n该操作将关闭系统，"
+
+#: setup/core/status_page.py:175
+msgid "Host Key"
+msgstr "Host Key"
+
+#: setup/core/status_page.py:179
+msgid "CPU Details"
+msgstr "CPU详细"
+
+#: setup/core/status_page.py:212
+msgid "RSA Host Key Fingerprint:"
+msgstr "RSA Host Key指纹："
+
+#: setup/core/status_page.py:218
+msgid "RSA Host Key:"
+msgstr "RSA Host Key:"
+
+#: setup/core/status_page.py:238
+msgid "Enter the admin password to unlock"
+msgstr "输入admin密码解锁"
+
+#: setup/core/status_page.py:239
+msgid "Username: "
+msgstr "用户名："
+
+#: setup/core/status_page.py:243
+msgid "Unlock"
+msgstr "解锁  "
+
+#: setup/core/support_page.py:38
+msgid "Support"
+msgstr "支持"
+
+#: setup/core/support_page.py:47
+msgid "Support Info"
+msgstr "支持信息"
+
+#: setup/core/support_page.py:48
+msgid "Select one of the logfiles below."
+msgstr "选择下列日志文件之一。"
+
+#: setup/core/support_page.py:50
+msgid "Available Logfiles"
+msgstr "可用日志文件"
+
+#: setup/core/support_page.py:84
+msgid "Logfile"
+msgstr "日志文件"
+
+#: ui/__init__.py:780 ui/__init__.py:800
+msgid "Reset"
+msgstr "重置  "
+
+#: ui/__init__.py:825
+msgid "Contents"
+msgstr "内容"
+
+#: ui/__init__.py:841
+msgid "OK"
+msgstr "确定  "
+
+#: ui/__init__.py:851
+msgid "Transaction: %s"
+msgstr "事务：%s"
+
+#: setup/core/status_page.py:130
+msgid "This screen is locked."
+msgstr "该屏幕已经被锁定"

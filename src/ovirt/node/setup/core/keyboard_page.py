@@ -31,7 +31,7 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     def name(self):
-        return "Keyboard"
+        return _("Keyboard")
 
     def rank(self):
         return 30
@@ -52,18 +52,18 @@ class Plugin(plugins.NodePlugin):
         This is an ordered list of (path, widget) tuples.
         """
         kbd = utils.system.Keyboard()
-        ws = [ui.Header("header", "Keyboard Layout Selection"),
-              ui.Label("label", "Choose the Keyboard Layout you would " +
-                       "like to apply to this system."),
+        ws = [ui.Header("header", _("Keyboard Layout Selection")),
+              ui.Label("label", _("Choose the Keyboard Layout you would ") +
+                       _("like to apply to this system.")),
               ui.Divider("divider[0]"),
-              ui.KeywordLabel("keyboard.layout_name", "Current Active " +
-                              "Keyboard Layout:  "),
-              ui.Table("keyboard.layout", "", "Available Keyboard Layouts",
+              ui.KeywordLabel("keyboard.layout_name", _("Current Active ") +
+                              _("Keyboard Layout:  ")),
+              ui.Table("keyboard.layout", "", _("Available Keyboard Layouts"),
                        kbd.available_layouts(), kbd.get_current()),
               ]
 
         page = ui.Page("page", ws)
-        page.buttons = [ui.SaveButton("page.save")]
+        page.buttons = [ui.SaveButton("page.save", _("Save"))]
         self.widgets.add(page)
         return page
 
@@ -81,7 +81,7 @@ class Plugin(plugins.NodePlugin):
 
         layout_keys = ["keyboard.layout"]
 
-        txs = utils.Transaction("Updating keyboard related configuration")
+        txs = utils.Transaction(_("Updating keyboard related configuration"))
 
         if changes.contains_any(layout_keys):
             model = defaults.Keyboard()

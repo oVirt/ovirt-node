@@ -31,7 +31,7 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     def name(self):
-        return "Monitoring"
+        return _("Monitoring")
 
     def rank(self):
         return 90
@@ -50,13 +50,13 @@ class Plugin(plugins.NodePlugin):
                 }
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "Monitoring Configuration"),
-              ui.Label("label", "Collectd gathers statistics " +
-                       "about the system and can be used to find " +
-                       "performance bottlenecks and predict future " +
-                       "system load."),
-              ui.Entry("collectd.address", "Server Address:"),
-              ui.Entry("collectd.port", "Server Port:"),
+        ws = [ui.Header("header[0]", _("Monitoring Configuration")),
+              ui.Label("label", _("Collectd gathers statistics ") +
+                       _("about the system and can be used to find ") +
+                       _("performance bottlenecks and predict future ") +
+                       _("system load.")),
+              ui.Entry("collectd.address", _("Server Address:")),
+              ui.Entry("collectd.port", _("Server Port:")),
               ]
         page = ui.Page("page", ws)
         self.widgets.add(page)
@@ -76,7 +76,7 @@ class Plugin(plugins.NodePlugin):
 
         collectd_keys = ["collectd.address", "collectd.port"]
 
-        txs = utils.Transaction("Updating monitoring configuration")
+        txs = utils.Transaction(_("Updating monitoring configuration"))
 
         if changes.contains_any(collectd_keys):
             model = defaults.Collectd()

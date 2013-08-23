@@ -37,7 +37,7 @@ class Plugin(NodePlugin):
         self._model = {}
 
     def name(self):
-        return "Plugins"
+        return _("Plugins")
 
     def rank(self):
         return 300
@@ -46,34 +46,35 @@ class Plugin(NodePlugin):
         all_plugins = self.__list_of_plugins()
         if all_plugins:
             selected_plugin = all_plugins[0][0]
-            ws = [ui.Header("header[0]", "Installed Plugins"),
+            ws = [ui.Header("header[0]", _("Installed Plugins")),
 
-                  ui.Table("plugins.installed", "", "Installed plugins:",
+                  ui.Table("plugins.installed", "", _("Installed plugins:"),
                            all_plugins, selected_plugin),
 
                   ui.Divider("divider[0]"),
 
-                  ui.Row("row[0]", [ui.Label("label[0]", "Name:"),
+                  ui.Row("row[0]", [ui.Label("label[0]", _("Name:")),
                                     ui.Label("plugin.name", "")]),
 
-                  ui.Row("row[1]", [ui.Label("label[0]", "Version:"),
+                  ui.Row("row[1]", [ui.Label("label[0]", _("Version:")),
                                     ui.Label("plugin.version", "")]),
 
-                  ui.Row("row[2]", [ui.Label("label[0]", "Date installed:"),
+                  ui.Row("row[2]", [ui.Label("label[0]", _("Date installed:")),
                                     ui.Label("plugin.createdat", "")]),
 
                   ui.Divider("divider[1]"),
 
-                  ui.Row("row[3]", [ui.SaveButton("button.drpm", "RPM Diff"),
+                  ui.Row("row[3]", [ui.SaveButton("button.drpm",
+                                                  _("RPM Diff")),
                                     ui.SaveButton("button.dsrpm",
-                                                  "SRPM Diff"),
+                                                  _("SRPM Diff")),
                                     ui.SaveButton("button.dfile",
-                                                  "File Diff")])
+                                                  _("File Diff"))])
                   ]
         else:
-            ws = [ui.Header("header[0]", "Plugins"),
-                  ui.Label("label[0]", "There are no plugins currently " +
-                           "installed")]
+            ws = [ui.Header("header[0]", _("Plugins")),
+                  ui.Label("label[0]",
+                           _("There are no plugins currently installed"))]
 
         page = ui.Page("page", ws)
         page.buttons = []

@@ -31,7 +31,7 @@ class Plugin(plugins.NodePlugin):
     _model = {}
 
     def name(self):
-        return "Security"
+        return _("Security")
 
     def rank(self):
         return 20
@@ -56,13 +56,14 @@ class Plugin(plugins.NodePlugin):
                 }
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "Remote Access"),
-              ui.Checkbox("ssh.pwauth", "Enable SSH password authentication"),
-              ui.Header("header[1]", "Strong Random Number Generator"),
-              ui.Checkbox("strongrng.disable_aesni", "Disable AES-NI"),
-              ui.Entry("strongrng.num_bytes", "Bytes Used:"),
-              ui.Header("header[2]", "Password for the admin user"),
-              ui.ConfirmedEntry("passwd.admin.password", "Password:",
+        ws = [ui.Header("header[0]", _("Remote Access")),
+              ui.Checkbox("ssh.pwauth",
+                          _("Enable SSH password authentication")),
+              ui.Header("header[1]", _("Strong Random Number Generator")),
+              ui.Checkbox("strongrng.disable_aesni", _("Disable AES-NI")),
+              ui.Entry("strongrng.num_bytes", _("Bytes Used:")),
+              ui.Header("header[2]", _("Password for the admin user")),
+              ui.ConfirmedEntry("passwd.admin.password", _("Password:"),
                                 is_password=True)
               ]
 
@@ -96,7 +97,7 @@ class Plugin(plugins.NodePlugin):
         ssh_keys = ["ssh.pwauth", "strongrng.num_bytes",
                     "strongrng.disable_aesni"]
 
-        txs = utils.Transaction("Updating security configuration")
+        txs = utils.Transaction(_("Updating security configuration"))
 
         if changes.contains_any(ssh_keys):
             model = defaults.SSH()
@@ -110,7 +111,7 @@ class Plugin(plugins.NodePlugin):
             # Create a custom transaction element, because the password
             # is not handled/saved in the defaults file
             class SetAdminPasswd(utils.Transaction.Element):
-                title = "Setting admin password"
+                title = _("Setting admin password")
 
                 def commit(self):
                     self.logger.debug("Setting admin password.")

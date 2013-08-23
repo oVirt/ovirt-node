@@ -35,7 +35,7 @@ class Plugin(plugins.NodePlugin):
         "current admin password will be used."
 
     def name(self):
-        return "Upgrade Password"
+        return _("Upgrade Password")
 
     def rank(self):
         return 150
@@ -48,26 +48,26 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         ws = [ui.Header("header[0]",
-                        "Require a password for the admin user?"),
-              ui.Label("label[0]", "Please enter the current admin " +
-                       "password. You may also change the admin password " +
-                       "if required. If the new password fields are left" +
-                       "blank the password will remain the same."),
-              ui.Label("label[1]", "Password for the admin user"),
+                        _("Require a password for the admin user?")),
+              ui.Label("label[0]", _("Please enter the current admin ") +
+                       _("password. You may also change the admin password ") +
+                       _("if required. If the new password fields are left") +
+                       _("blank the password will remain the same.")),
+              ui.Label("label[1]", _("Password for the admin user")),
               ui.Divider("divider[0]"),
               ui.PasswordEntry("upgrade.current_password",
-                               "Current Password:"),
+                               _("Current Password:")),
               ui.Divider("divider[1]"),
-              ui.ConfirmedEntry("upgrade.password", "Password:",
+              ui.ConfirmedEntry("upgrade.password", _("Password:"),
                                 is_password=True),
               ui.Divider("divider[2]"),
               ui.Label("current_password.info", ""),
               ui.Label("password.info", self.__no_new_password_msg)
               ]
         page = ui.Page("password", ws)
-        page.buttons = [ui.QuitButton("button.quit", "Quit"),
-                        ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Update")]
+        page.buttons = [ui.QuitButton("button.quit", _("Quit")),
+                        ui.Button("button.back", _("Back")),
+                        ui.SaveButton("button.next", _("Update"))]
         self.widgets.add(page)
         return page
 

@@ -32,7 +32,7 @@ class Plugin(plugins.NodePlugin):
     _model = None
 
     def name(self):
-        return "Networking/Ping"
+        return _("Networking/Ping")
 
     def rank(self):
         return 999
@@ -67,13 +67,13 @@ class Plugin(plugins.NodePlugin):
         """Describes the UI this plugin requires
         This is an ordered list of (path, widget) tuples.
         """
-        ws = [ui.Header("ping.header", "Ping a remote host"),
-              ui.Entry("ping.address", "Address:"),
-              ui.Entry("ping.count", "Count:"),
+        ws = [ui.Header("ping.header", _("Ping a remote host")),
+              ui.Entry("ping.address", _("Address:")),
+              ui.Entry("ping.count", _("Count:")),
               ui.Divider("divider[1]"),
-              ui.SaveButton("ping.do_ping", "Ping"),
+              ui.SaveButton("ping.do_ping", _("Ping")),
               ui.Divider("divider[2]"),
-              ui.Label("ping.result", "Result:"),
+              ui.Label("ping.result", _("Result:")),
               ]
 
         page = ui.Page("page", ws)

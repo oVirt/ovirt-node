@@ -35,7 +35,7 @@ class Plugin(NodePlugin):
         super(Plugin, self).__init__(application)
 
     def name(self):
-        return "Support"
+        return _("Support")
 
     def rank(self):
         return 999
@@ -44,10 +44,10 @@ class Plugin(NodePlugin):
         return False
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "Support Info"),
-              ui.Label("support.info", "Select one of the logfiles below."),
+        ws = [ui.Header("header[0]", _("Support Info")),
+              ui.Label("support.info", _("Select one of the logfiles below.")),
               ui.Divider("divider[0]"),
-              ui.Table("support.logfile", "", "Available Logfiles",
+              ui.Table("support.logfile", "", _("Available Logfiles"),
                        self.__debugfiles_to_offer()),
               ]
 
@@ -81,7 +81,7 @@ class Plugin(NodePlugin):
             if cmd:
                 contents = process.check_output(cmd, shell=True,
                                                 stderr=process.STDOUT)
-                return ui.TextViewDialog("output.dialog", "Logfile",
+                return ui.TextViewDialog("output.dialog", _("Logfile"),
                                          contents)
 
     def __debugfiles_to_offer(self):
