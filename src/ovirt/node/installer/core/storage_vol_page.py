@@ -150,7 +150,7 @@ class Plugin(plugins.NodePlugin):
                     }
         from ovirtnode.storage import Storage
         stor = Storage()
-        self._drive_size = stor.get_drive_size(self.__get_install_drive())
+        self._drive_size = self.__get_drives_size(self.__get_install_drive())
         sizes = {"storage.efi_size": "%s" % stor.EFI_SIZE,
                  "storage.root_size": "%s" % stor.ROOT_SIZE,
                  "storage.swap_size": "%s" % stor.SWAP_SIZE,
@@ -162,10 +162,20 @@ class Plugin(plugins.NodePlugin):
                  }
         return sizes
 
+    def __get_drives_size(self, drives):
+        self.logger.debug("Getting Drives Size For: %s" % drives)
+        from ovirtnode.storage import Storage
+        stor = Storage()
+        drives_size = 0
+        for drive in drives:
+            drives_size += int(stor.get_drive_size(drive))
+        self.logger.debug(drives_size)
+        return drives_size
+
     def __get_install_drive(self):
         app = self.application
         return app.plugins()["Data Device"].model()[
-            "installation.device.current"]
+            "installation.devices"]
 
     def __calculate_free_space(self):
 
