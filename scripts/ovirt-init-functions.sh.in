@@ -805,6 +805,11 @@ _start_ovirt_early () {
     # Handle uninstall arg
     # need to wipe mbr if passed
     if [ "$uninstall" = "yes" ]; then
+        python <<EOP
+import ovirtnode.ovirtfunctions as _functions
+if _functions.is_efi_boot():
+    _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
+EOP
         oldIFS=$IFS
         log "Found uninstall arg, wiping mbr from init disks"
         IFS=$SEP
