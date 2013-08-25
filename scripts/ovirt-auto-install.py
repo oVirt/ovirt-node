@@ -25,6 +25,9 @@ from ovirtnode.network import *
 from ovirtnode.log import *
 from ovirtnode.kdump import *
 from ovirt.node.utils.console import TransactionProgress
+from ovirt.node.utils import system
+from ovirt.node.utils import security, storage
+from ovirt.node.config import defaults
 import logging
 import sys
 
@@ -69,6 +72,62 @@ class EnableSshPasswordAuthentication(Transaction.Element):
                     "no")
         ovirt_store_config("/etc/ssh/sshd_config")
         system_closefds("service sshd restart &> /dev/null")
+
+
+class SetKeyboardLayout(Transaction.Element):
+    title = "Setting Keyboard Layout"
+
+    def commit(self):
+        try:
+            model = defaults.Keyboard()
+            model.update(layout=OVIRT_VARS["OVIRT_KEYBOARD_LAYOUT"])
+            tx = model.transaction()
+            tx()
+        except:
+            logger.warning("Unknown keyboard layout: %s" % \
+                           OVIRT_VARS["OVIRT_KEYBOARD_LAYOUT"])
+
+
+class ConfigureStrongRNG(Transaction.Element):
+    title = "Configuring SSH strong RNG"
+
+    def commit(self):
+        try:
+            model = defaults.SSH()
+            model.update(num_bytes=OVIRT_VARS["OVIRT_USE_STRONG_RNG"])
+            tx = model.transaction()
+            tx()
+        except:
+            logger.warning("Unknown ssh strong RNG: %s" % \
+                           OVIRT_VARS["OVIRT_USE_STRONG_RNG"])
+
+
+class ConfigureAESNI(Transaction.Element):
+    title = "Configuring SSH AES NI"
+
+    def commit(self):
+        try:
+            model = defaults.SSH()
+            model.update(disable_aesni=True)
+            tx = model.transaction()
+            tx()
+        except:
+            logger.warning("Unknown ssh AES NI: %s" % \
+                           OVIRT_VARS["OVIRT_DISABLE_AES_NI"])
+
+
+class ConfigureNfsv4(Transaction.Element):
+    title = "Setting NFSv4 domain"
+
+    def commit(self):
+        try:
+            model = defaults.NFSv4()
+            model.update(domain=OVIRT_VARS["OVIRT_NFSV4_DOMAIN"])
+            tx = model.transaction()
+            tx()
+        except:
+            logger.warning("Unknown NFSv4 domain: %s" % \
+                           OVIRT_VARS["OVIRT_NFSV4_DOMAIN"])
 
 
 class ConfigureLogging(Transaction.Element):
@@ -139,6 +198,26 @@ if __name__ == "__main__":
     #set ssh_passwd_auth
     if "OVIRT_SSH_PWAUTH" in OVIRT_VARS:
         tx.append(EnableSshPasswordAuthentication())
+
+    #set keyboard_layout
+    if "OVIRT_KEYBOARD_LAYOUT" in OVIRT_VARS and \
+       not OVIRT_VARS["OVIRT_KEYBOARD_LAYOUT"] is "":
+        tx.append(SetKeyboardLayout())
+
+    #set ssh strong RHG
+    if "OVIRT_USE_STRONG_RNG" in OVIRT_VARS and \
+       not OVIRT_VARS["OVIRT_USE_STRONG_RNG"] is "":
+        tx.append(ConfigureStrongRNG())
+
+    #set ssh AES NI
+    if "OVIRT_DISABLE_AES_NI" in OVIRT_VARS and \
+       OVIRT_VARS["OVIRT_DISABLE_AES_NI"] == "true":
+        tx.append(ConfigureAESNI())
+
+    #set NFSv4 domain
+    if "OVIRT_NFSV4_DOMAIN" in OVIRT_VARS and \
+       not OVIRT_VARS["OVIRT_NFSV4_DOMAIN"] is "":
+        tx.append(ConfigureNfsv4())
 
     tx.append(ConfigureLogging())
 

@@ -234,8 +234,8 @@ _start_ovirt_early () {
     #   hostname=fqdn
     #   tuned=profile
     #   keyboard=layout
-    #   aesni=[y|n]
-    #   strongrng=<bytes>
+    #   disable_aes_ni=[y|n]
+    #   use_strong_rng=<bytes>
     #   nfsv4_domain=domain
     #   TBD logrotate maxsize
 
@@ -397,11 +397,11 @@ _start_ovirt_early () {
     # the tuned profile to run by default
     tuned_profile=
 
-    # aesni=[y|n]
+    # disable_aes_ni=[y|n]
     # disable AES-NI
     disable_aes_ni=
 
-    # strongrng=<bytes>
+    # use_strong_rng=<bytes>
     # use strong rng
     use_strong_rng=
 
@@ -733,11 +733,11 @@ _start_ovirt_early () {
             tuned*)
             tuned_profile=${i#tuned=}
             ;;
-            aesni=1 | aesni=y | aesni=yes)
-            disable_aes_ni="True"
+            disable_aes_ni=1 | disable_aes_ni=y | disable_aes_ni=yes)
+            disable_aes_ni="true"
             ;;
-            aesni=0 | aesni=n | aesni=no)
-            disable_aes_ni="False"
+            disable_aes_ni=0 | disable_aes_ni=n | disable_aes_ni=no)
+            disable_aes_ni="false"
             ;;
             nfsv4_domain*)
             nfsv4_domain=${i#nfsv4_domain=}
