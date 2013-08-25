@@ -269,6 +269,7 @@ fi
 Summary:        Igor slave plugin for %{product_family}
 Group:          Applications/System
 
+Requires:       igor-common
 %if %{is_systemd}
 BuildRequires:  systemd-units
 Requires:       systemd
