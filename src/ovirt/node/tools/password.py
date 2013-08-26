@@ -28,30 +28,89 @@ import sys
 
 
 class PasswordTool(cmd.Cmd):
-    intro = "\n\n Password Configuration\n\n Enter ? for help.\n"
+    intro = "\n\n Password Configuration\n\n"
     prompt = "> "
     is_debug = False
 
     def __init__(self, debug=False):
         cmd.Cmd.__init__(self)
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger()
         self.is_debug = debug
 
-    def do_set_root_password(self, line):
-        """Set root password
+    def preloop(self):
+        print(self.intro)
+        print("Possible commands:")
+        self.do_help("")
+        print("")
+        self.do_get_ssh_password_authentication("")
+        print("")
+        self.intro = None
+
+    def emptyline(self):
+        pass
+
+    def do_help(self, line=None):
+        """Show this help. [`help --all` to show all available functions]
         """
+        show_all = line.strip() == "--all"
+        funcs = []
+        for name in sorted(self.get_names()):
+            if name.startswith("do_"):
+                doc = getattr(self, name).__doc__
+                doc = doc or ""
+                doc = doc.strip()
+                funcs.append((name[3:], doc))
+
+        max_name_len = max(len(n) for n, d in funcs if d)
+
+        def print_doc(name, doc):
+            print("%s  %s" % (name.ljust(max_name_len), doc))
+
+        if line in (n for n, _ in funcs):
+            print_doc(line, dict(funcs)[line])
+        else:
+            for name, doc in ((n, d) for n, d in funcs if d):
+                print_doc(name, doc)
+
+            if show_all:
+                print("\nCommands without help")
+                for name, doc in ((n, d) for n, d in funcs if not d):
+                    print_doc(name, "")
+
+    def do_root(self, line):
+        """Set the password of the user 'root'
+        """
+        return self.do_set_root_password(line)
+
+    def do_admin(self, line):
+        """Set the password of the user 'admin'
+        """
+        return self.do_set_admin_password(line)
+
+    def do_ssh(self, line):
+        """Enable or disable the SSH password authentication
+        """
+        self.do_get_ssh_password_authentication(line)
+        prompt = "Do you want to change this?"
+        if self.__ask_yes_or_no(prompt):
+            self.do_set_ssh_password_authentication(line)
+
+    def do_set_root_password(self, line):
         self.__ask_and_set_user_pasword("root")
 
     def do_set_admin_password(self, line):
-        """Set admin user password
-        """
         self.__ask_and_set_user_pasword("admin")
 
+    def do_get_ssh_password_authentication(self, line):
+        is_enabled = security.Ssh().password_authentication()
+        status = "enabled" if is_enabled else "disabled"
+        self.logger.info("SSH password authentication is currently %s" %
+                         status)
+
     def do_set_ssh_password_authentication(self, line):
-        """Toggle SSH password authentication
-        """
         print("\n SSH password authentication\n")
-        prompt = "Enable SSH password authentication ([Y]es/[N]o)?"
+        self.do_get_ssh_password_authentication(line)
+        prompt = "Enable SSH password authentication?"
         do_enable = self.__ask_yes_or_no(prompt)
         self.logger.debug("Setting SSH password authentication")
         is_enabled = security.Ssh().password_authentication(do_enable)
@@ -59,14 +118,19 @@ class PasswordTool(cmd.Cmd):
         self.logger.info("SSH password authentication is "
                          "currently %s." % state)
 
+    def do_q(self, line):
+        """Quit this tool
+        """
+        return self.do_quit(line)
+
     def do_quit(self, line):
-        """Quit
+        """Quit this tool
         """
         return True
 
     def __ask_yes_or_no(self, prompt):
         self.logger.debug("Asking for yes and no")
-        sys.stdout.write(prompt)
+        sys.stdout.write(prompt + " ([Y]es/[N]o)")
         response = sys.stdin.readline()
         return response and response.lower()[0] == "y"
 
