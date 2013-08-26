@@ -171,7 +171,7 @@ class Ssh(base.Base):
             ofunc.ovirt_store_config("/etc/ssh/sshd_config")
             self.restart()
         state = str(aug.get(augpath)).lower()
-        if state not in ["yes", "no"]:
+        if state not in ["yes", "no", "none"]:
             raise RuntimeError("Failed to set SSH password authentication" +
                                "(%s)" % state)
         return state == "yes"
