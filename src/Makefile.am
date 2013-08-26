@@ -108,6 +108,7 @@ pyovirt_node_ui_PYTHON = \
 pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/__init__.py \
   ovirt/node/utils/console.py \
+  ovirt/node/utils/expose.py \
   ovirt/node/utils/firewall.py \
   ovirt/node/utils/fs.py \
   ovirt/node/utils/network.py \
@@ -121,7 +122,11 @@ pyovirt_node_utils_PYTHON = \
 
 pyovirt_node_tools_PYTHON = \
   ovirt/node/tools/__init__.py \
-  ovirt/node/tools/password.py
+  ovirt/node/tools/password.py \
+  ovirt/node/tools/features.py
+
+dist_pyovirt_node_tools_DATA = \
+  ovirt/node/tools/featured.xsl
 
 # Installer Main
 pyovirt_node_installer_PYTHON = \

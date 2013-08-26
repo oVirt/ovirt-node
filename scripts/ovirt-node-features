@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# A tool to dump the supported features
+#
+
+python -m ovirt.node.tools.features "$@"

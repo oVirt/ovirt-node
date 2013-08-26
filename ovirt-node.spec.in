@@ -667,6 +667,7 @@ fi
 %{_datadir}/locale/en_US/LC_MESSAGES/*.mo
 %{python_sitelib}/ovirt/node/utils/*.py*
 %{python_sitelib}/ovirt/node/tools/*.py*
+%{python_sitelib}/ovirt/node/tools/*.xsl
 %{python_sitelib}/ovirt/node/config/*.py*
 %{python_sitelib}/ovirt/node/setup/*.py*
 %{python_sitelib}/ovirt/node/setup/core/*.py*
@@ -677,6 +678,7 @@ fi
 %{_bindir}/ovirt-node-setup
 %{_bindir}/ovirt-node-installer
 %{_bindir}/ovirt-node-doc
+%{_bindir}/ovirt-node-features
 
 
 
