@@ -112,6 +112,7 @@ files	/var/cache/yum
 files	/usr/share/snmp/mibs
 files   /var/lib/lldpad
 dirs	/var/cache/rpcbind
+files	/usr/share/snmp/mibs
 EOF_rwtab_ovirt
 
 # fix iSCSI/LVM startup issue
