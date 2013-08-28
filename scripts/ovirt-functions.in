@@ -31,7 +31,7 @@ OVIRT_CONFIG_FILES="\
  /etc/default/ovirt                             \
  /etc/sysconfig/network                         \
  /etc/collectd.conf                             \
- /etc/libvirt/qemu/networks                     \
+ /etc/libvirt/qemu/                             \
  /etc/ssh/sshd_config                           \
  /etc/pki                                       \
  /etc/logrotate.d/ovirt-node
