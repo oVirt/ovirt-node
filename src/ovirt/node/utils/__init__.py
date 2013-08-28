@@ -118,12 +118,14 @@ def parse_bool(txt):
     >>> parse_bool(True)
     True
 
-    >>> txts = ["yes", "YES!", "1", 1, "y"]
-    >>> all((parse_bool(txt) for txt in txts))
+    >>> txts = ["yes", "YES", "1", 1, "y"]
+    >>> rs = [parse_bool(txt) for txt in txts]
+    >>> all(rs)
     True
 
-    >>> txts = ["no", "NO!", "0", 0, False, None, "foo", "n"]
-    >>> all((not parse_bool(txt) for txt in txts))
+    >>> txts = ["no", "NO!", "0", 0, False, None, "foo", "n", "YES!"]
+    >>> rs = [not parse_bool(txt) for txt in txts]
+    >>> all(rs)
     True
 
     Args:
@@ -133,7 +135,7 @@ def parse_bool(txt):
     """
     if txt is not None and type(txt) in [str, unicode, int, bool]:
         utxt = unicode(txt)
-        if len(utxt) > 0 and utxt[0] in ["y", "t", "Y", "T", "1"]:
+        if utxt.lower() in ["1", "y", "yes", "true"]:
             return True
     return False
 
