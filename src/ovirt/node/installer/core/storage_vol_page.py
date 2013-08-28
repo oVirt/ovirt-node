@@ -94,7 +94,7 @@ class Plugin(plugins.NodePlugin):
         page = ui.Page("storage", ws)
         page.buttons = [ui.QuitButton("button.quit", "Quit"),
                         ui.Button("button.back", "Back"),
-                        ui.SaveButton("button.next", "Next")]
+                        ui.SaveButton("button.next", "Continue")]
         return page
 
     def on_change(self, changes):
