@@ -175,9 +175,10 @@ class TableWidget(NoticeDecoration):
                                                       self._label_attr)
 
         self.__text = urwid.Text(u"")
-        self.__scrollbar = urwid.Filler(urwid.Padding(
-                                        urwid.AttrMap(self.__text,
-                                        self._text_attr), 'left', 1))
+        self.__scrollbar = \
+            urwid.Filler(urwid.Padding(urwid.AttrMap(self.__text,
+                                                     self._text_attr),
+                                       'left', 1))
         self.__columns = urwid.Columns([self.__list], focus_column=0)
 
         self.__box = urwid.BoxAdapter(self.__columns, height)
