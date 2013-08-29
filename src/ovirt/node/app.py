@@ -47,18 +47,28 @@ def configure_logging(is_debug=False):
         mixedfile = StringIO("""
 [loggers]
 keys=root
+
 [handlers]
-keys=debug
+keys=debug,error
+
 [formatters]
 keys=verbose
+
 [logger_root]
-level=DEBUG
-handlers=debug
+level=NOTSET
+handlers=debug,error
+
+[handler_error]
+class=StreamHandler
+level=ERROR
+args=()
+
 [handler_debug]
 class=FileHandler
 level=DEBUG
 formatter=verbose
 args=('/tmp/ovirt-node.debug.log', 'w')
+
 [formatter_verbose]
 format=%(levelname)10s %(asctime)s %(pathname)s:%(lineno)s:%(funcName)s: \
 %(message)s
@@ -307,11 +317,11 @@ class Application(base.Base):
                 sys.exit(0)
             self.ui.run()
         except Exception as e:
-            if self.args.debug:
-                raise
             console.reset()
             self.logger.error("An error appeared in the UI: %s" % repr(e))
             self.logger.debug("Exception:", exc_info=True)
+            if self.args.debug:
+                raise
             console.writeln("Press ENTER to logout ...")
             console.writeln("or enter 's' to drop to shell")
             if console.wait_for_keypress() == 's':
