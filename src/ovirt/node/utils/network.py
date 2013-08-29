@@ -818,7 +818,10 @@ class Bonds(base.Base):
     def ifnames(self):
         """Return the ifnames of all bond devices
         """
-        return fs.File(self.bonding_masters_filename).read().split()
+        ifnames = []
+        if self.is_enabled():
+            ifnames = fs.File(self.bonding_masters_filename).read().split()
+        return ifnames
 
     def is_bond(self, ifname):
         """Determins if ifname is a bond device
