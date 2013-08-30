@@ -190,7 +190,30 @@ def netconsole_auto():
         return True
 
 
+def logrotate_auto():
+    logroate_max_size = _functions.OVIRT_VARS["OVIRT_LOGROTATE_MAX_SIZE"]
+    if not logroate_max_size is "":
+        logger.info("Found! Using logroate_max_size " + logroate_max_size)
+        from ovirt.node.config import defaults
+        try:
+            model = defaults.Logrotate()
+            model.update(max_size=logroate_max_size)
+            tx = model.transaction()
+            tx()
+        except:
+            pass
+        return True
+    else:
+        logger.warn("Invalid logrotate max size: %s" % logroate_max_size)
+        return False
+
+
 def logging_auto():
+    try:
+        logrotate_auto()
+        logger.info("Logrotate size Configuration Completed")
+    except:
+        logger.warn("Logrotate size Configuration Failed")
     try:
         syslog_auto()
         logger.info("Syslog Configuration Completed")
