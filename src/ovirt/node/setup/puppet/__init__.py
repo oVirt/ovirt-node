@@ -18,11 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node.utils.expose import Feature, Owner
+import puppet_page
 
 """
 Puppet Plugin
 """
-import puppet_page
 
 
 #
@@ -30,3 +31,9 @@ import puppet_page
 #
 def createPlugins(application):
     puppet_page.Plugin(application)
+
+
+def createPluginFeatures(application):
+    application.register(Feature(owner=Owner(name=__package__),
+                                 name="puppet",
+                                 description="Offers provisioning via puppet"))

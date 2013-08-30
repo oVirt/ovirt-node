@@ -18,11 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node import loader
+from ovirt.node.utils.expose import Owner, Feature
 
 """
 Core Setup Plugins
 """
-from ovirt.node import loader
 
 
 #
@@ -37,3 +38,9 @@ def createPlugins(application):
     # Lazy load all plugins in this package
     for plugin in all_modules():
         plugin.Plugin(application)
+
+
+def createPluginFeatures(application):
+    application.register(Feature(owner=Owner(name=__package__),
+                                 name="ui",
+                                 description="Has a UI"))

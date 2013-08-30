@@ -18,11 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
+from ovirt.node.utils.expose import Feature, Owner
+import cim_page
 
 """
 CIM Plugin
 """
-import cim_page
 
 
 #
@@ -30,3 +31,9 @@ import cim_page
 #
 def createPlugins(application):
     cim_page.Plugin(application)
+
+
+def createPluginFeatures(application):
+    application.register(Feature(owner=Owner(name=__package__),
+                                 name="cim",
+                                 description="Offers informations via CIM"))
