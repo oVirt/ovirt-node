@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-# pylint: disable-msgs=E1101,E1102
+# pylint: disable-msg=E1101,E1102
 
 from ovirt.node import base
 import logging
