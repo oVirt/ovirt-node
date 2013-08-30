@@ -174,15 +174,20 @@ class SystemRelease(base.Base):
     def load(self):
         """Parse the CPE FILE
         """
+        cpe_uri = self.cpe()
+        self.logger.debug("Read CPE URI: %s" % cpe_uri)
+        cpe_parts = cpe_uri.split(":")
+        self.logger.debug("Parsed CPE parts: %s" % cpe_parts)
+        if cpe_parts[0] != "cpe":
+            raise RuntimeError("Can not parse CPE string in %s" %
+                               self.CPE_FILE)
+        self.VENDOR, self.PRODUCT, self.VERSION = cpe_parts[2:5]
+
+    def cpe(self):
+        """Return the CPE URI
+        """
         with open(self.CPE_FILE, "r") as f:
-            cpe_uri = f.read().strip()
-            self.logger.debug("Read CPE URI: %s" % cpe_uri)
-            cpe_parts = cpe_uri.split(":")
-            self.logger.debug("Parsed CPE parts: %s" % cpe_parts)
-            if cpe_parts[0] != "cpe":
-                raise RuntimeError("Can not parse CPE string in %s" %
-                                   self.CPE_FILE)
-            self.VENDOR, self.PRODUCT, self.VERSION = cpe_parts[2:5]
+            return f.read().strip()
 
     def is_fedora(self):
         """Determin if this system is a fedora system
