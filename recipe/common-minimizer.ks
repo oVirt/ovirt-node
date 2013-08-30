@@ -10,7 +10,6 @@ droprpm pm-utils
 droprpm usermode
 droprpm vbetool
 droprpm ConsoleKit
-droprpm hdparm
 droprpm linux-atm-libs
 droprpm mtools
 droprpm syslinux
@@ -323,7 +322,6 @@ droprpm checkpolicy
 droprpm dmraid-events
 droprpm gamin
 droprpm gnupg2
-droprpm hdparm
 droprpm linux-atm-libs
 droprpm make
 droprpm mtools
