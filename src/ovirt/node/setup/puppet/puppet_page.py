@@ -108,7 +108,6 @@ class Plugin(plugins.NodePlugin):
 class Puppet(NodeConfigFileSection):
     """Class to handle Puppet configuration in /etc/default/ovirt file
 
-    >>> from ovirt.node.utils import fs
     >>> n = Puppet(fs.FakeFs.File("dst"))
     >>> n.update(True, "puppet.example.com",
     ...          "http://localhost/path/to/cert")
