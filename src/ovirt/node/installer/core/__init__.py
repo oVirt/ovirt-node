@@ -22,7 +22,7 @@
 """
 Core Installer Plugins
 """
-from ovirt.node import plugins
+from ovirt.node import plugins, loader
 
 
 #
@@ -33,5 +33,5 @@ def createPlugins(application):
     application.ui.with_menu = False
 
     # Lazy load all plugins in this package
-    for plugin in plugins.get_modules_in_package(__package__):
+    for plugin in loader.get_modules_in_package(__package__):
         plugin.Plugin(application)

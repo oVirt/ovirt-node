@@ -22,13 +22,18 @@
 """
 Core Setup Plugins
 """
-from ovirt.node import plugins
+from ovirt.node import loader
 
 
 #
 # Magic function to register all plugins to be used
 #
+def all_modules():
+    for plugin in loader.get_modules_in_package(__package__):
+        yield plugin
+
+
 def createPlugins(application):
     # Lazy load all plugins in this package
-    for plugin in plugins.get_modules_in_package(__package__):
+    for plugin in all_modules():
         plugin.Plugin(application)

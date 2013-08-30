@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from StringIO import StringIO
 from optparse import OptionParser
-from ovirt.node import base, utils, plugins, ui
+from ovirt.node import base, utils, plugins, ui, loader
 from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
 from ovirt.node.utils import system, Timer, console
@@ -386,10 +386,12 @@ class Application(base.Base):
         the createPlugins function is responsible for creating the plugin
         """
         self.__plugins = {}
-        for group in plugins.load_plugin_groups(self.plugin_base):
-            if hasattr(group, "createPlugins"):
+        groups = loader.plugin_groups_iterator(self.plugin_base,
+                                               "createPlugins")
+        for group, createPlugins in groups:
+            if createPlugins:
                 self.logger.debug("Package has plugins: %s" % group)
-                group.createPlugins(self)
+                createPlugins(self)
             else:
                 self.logger.debug("Package has no plugins: %s" % group)
 
