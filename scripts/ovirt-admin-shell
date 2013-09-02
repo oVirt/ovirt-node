@@ -8,8 +8,16 @@ if [[ $TTY =~ "pts" ]]; then
     TTY=`echo $TTY|sed 's/\///g'`
     sudo rm -rf /tmp/ovirt-setup.$TTY
 fi
-sudo /usr/bin/ovirt-node-setup
-reset
+
+if [[ "x$2" == "xfeatures" ]]
+then
+    # To let sudo work correctly (it needs a tty) the user needs to use ssh -t
+    sudo true || { echo "ERROR: Use 'ssh -t <hostname> features' to login" ; exit 1 ; }
+    sudo /usr/bin/ovirt-node-features dumpxml
+else
+    sudo /usr/bin/ovirt-node-setup
+    reset
+fi
 
 # check for logout return code and drop to login prompt
 ret=$?
