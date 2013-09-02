@@ -38,7 +38,8 @@ import logging
 import grp
 import pwd
 from ovirt.node.config import defaults
-from ovirt.node.utils import process,system
+from ovirt.node.utils import process
+import ovirt.node.utils.system as osystem
 
 OVIRT_CONFIG="/config"
 OVIRT_LOGFILE="/var/log/ovirt.log"
@@ -1699,7 +1700,7 @@ def is_iscsi_install():
         return True
 
 def load_keyboard_config():
-    kbd = system.Keyboard()
+    kbd = osystem.Keyboard()
     kbd.reactivate()
 
 def is_engine_configured():

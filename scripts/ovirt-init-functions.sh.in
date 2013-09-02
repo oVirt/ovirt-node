@@ -1268,7 +1268,7 @@ EOP
         rm -rf ${logsync_TMPDIR}
 
         # Re-load keyboard settings
-        load_keyboard_config 2> /dev/null
+        load_keyboard_config
 
         # Rewrite resolv.conf, rhbz#742365
         configure_dns
