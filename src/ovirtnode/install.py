@@ -139,7 +139,8 @@ EOF
             efi = _functions.subprocess_closefds(efi_cmd, shell=True,
                                                  stdout=subprocess.PIPE,
                                                  stderr=subprocess.STDOUT)
-            efi_out = efi.stdout.read().strip()
+            efi_out, efi_err = efi.communicate()
+            efi_out = efi_out.strip()
             matches = re.search(_functions.PRODUCT_SHORT + r'\s+(HD\(.+?\))', \
                                                                        efi_out)
             if matches and matches.groups():
@@ -185,7 +186,7 @@ EOF
                                              shell=True,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.STDOUT)
-            grub_results = grub_setup.stdout.read()
+            grub_results, grub_err = grub_setup.communicate()
             logger.debug(grub_results)
             if grub_setup.wait() != 0 or "Error" in grub_results:
                 logger.error("GRUB setup failed")
@@ -238,7 +239,7 @@ initrd /initrd0.img
                                          shell=True,
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.STDOUT)
-        grub_results = grub_setup.stdout.read()
+        grub_results, grub_err = grub_setup.communicate()
         logger.info(grub_results)
         if grub_setup.wait() != 0 or "Error" in grub_results:
             logger.error("grub2-install Failed")
@@ -502,7 +503,8 @@ initrd /initrd0.img
                                             shell=True,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT)
-            self.disk = grub_disk.stdout.read().strip()
+            grub_disk_output, grub_disk_err = grub_disk.communicate()
+            self.disk = grub_disk_output.strip()
             if "cciss" in self.disk:
                 self.disk = self.disk.replace("!", "/")
             # flush to sync DM and blockdev, workaround from rhbz#623846#c14

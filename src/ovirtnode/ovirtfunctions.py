@@ -198,7 +198,7 @@ def calculate_swap_size(overcommit=0.5):
     mem_size_mb = subprocess_closefds(mem_size_cmd, shell=True,
                                       stdout=subprocess.PIPE,
                                       stderr=subprocess.STDOUT)
-    MEM_SIZE_MB = mem_size_mb.stdout.read()
+    MEM_SIZE_MB, err = mem_size_mb.communicate()
     MEM_SIZE_MB = int(MEM_SIZE_MB) / 1024
     # we multiply the overcommit coefficient by 10 then divide the
     # product by 10 to avoid decimals in the result
@@ -367,16 +367,18 @@ def disable_firstboot():
 def wipe_volume_group(vg):
     vg_name_cmd = "vgs -o vg_name,vg_uuid --noheadings 2>/dev/null | grep -w \"" + vg + "\" | awk '{print $1}'"
     vg_name = subprocess_closefds(vg_name_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    vg = vg_name.stdout.read().strip()
+    vg, err = vg_name.communicate()
+    vg = vg.strip()
     files_cmd = "grep '%s' /proc/mounts|awk '{print $2}'|sort -r" % vg
     files = subprocess_closefds(files_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    files_output = files.stdout.read()
+    files_output, err = files.communicate()
     logger.debug("Mounts:\n" + files_output)
     for file in files_output.split():
         system_closefds("umount %s &>/dev/null" % file)
     swap_cmd = "grep '%s' /proc/swaps|awk '{print $1}'" % vg
     swap = subprocess_closefds(swap_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    swap_output = swap.stdout.read().strip()
+    swap_output, err = swap.communicate()
+    swap_output = swap_output.strip()
     for d in swap_output.split():
         system_closefds("swapoff %s &>/dev/null" % d)
     # Deactivate VG
@@ -399,20 +401,20 @@ def wipe_volume_group(vg):
 # find_srv ovirt tcp
 def find_srv(srv, proto):
     domain = subprocess_closefds("dnsdomainname 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
-    domain_output = domain.stdout.read()
+    domain_output, err = domain.communicate()
     if domain_output == "localdomain":
         domain=""
     # FIXME dig +search does not seem to work with -t srv
     # dnsreply=$(dig +short +search -t srv _$1._$2)
     # This is workaround:
     search = subprocess_closefds("grep search /etc/resolv.conf", shell=True, stdout=PIPE, stderr=STDOUT)
-    search_output = search.stdout.read()
+    search_output, err = search.communicate()
     search = search_output.replace("search ","")
     domain_search = domain_output + search_output
     for d in domain_search.split():
         dig_cmd = "dig +short -t srv _%s._%s.%s" % (srv, proto,search)
         dig = subprocess_closefds(dig_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        dig_output = dig.stdout.read()
+        dig_output, err = dig.communicate()
         dig.poll()
         dig_rc = dig.returncode
         if dig_rc == 0:
@@ -564,7 +566,7 @@ def mount_config():
         # bind mount all persisted configs to rootfs
         filelist_cmd = "find /config -type f"
         filelist = subprocess_closefds(filelist_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        filelist = filelist.stdout.read()
+        filelist, err = filelist.communicate()
         for f in filelist.split():
             logger.debug("Bind Mounting: " + f)
             if os.path.isfile(f) and f != "/config/files":
@@ -629,7 +631,7 @@ def unmount_logging_services():
     logging_services= []
     prgs_cmd = "cd /etc/init.d|lsof -Fc +D /var/log|grep ^c|sort -u"
     prgs = subprocess_closefds(prgs_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    prgs_output = prgs.stdout.read()
+    prgs_output, err = prgs.communicate()
     for prg in prgs_output.split():
         svc = prg = prg[1:]
         if not svc == "python":
@@ -996,7 +998,9 @@ def ovirt_safe_delete_config(files):
         system('sed --copy -i "\|%s$|d" /config/files' % filename)
 
         if os.path.isdir(filename):
-            for child in subprocess_closefds("ls -d '%s'" % filename, shell=True, stdout=PIPE, stderr=STDOUT).stdout.read():
+            ls_cmd = subprocess_closefds("ls -d '%s'" % filename, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = ls_cmd.communicate()
+            for child in output:
                 ovirt_safe_delete_config(child)
             system("rm -rf /config'%s'" % filename)
             system("rm -rf '%s'" % filename)
@@ -1069,8 +1073,10 @@ def finish_install():
     e2label_root_cmd = "e2label '%s' Root" % root_update_dev
     logger.debug(e2label_rootbackup_cmd)
     logger.debug(e2label_root_cmd)
-    subprocess_closefds(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    subprocess_closefds(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    cmd = subprocess_closefds(e2label_rootbackup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    cmd.communicate()
+    cmd = subprocess_closefds(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    cmd.communicate()
 
     if is_iscsi_install():
         boot_update_dev = findfs("BootUpdate")
@@ -1222,13 +1228,14 @@ def get_netmask(ifname):
 def get_gateway(ifname):
     cmd = "ip route list dev "+ ifname + " | awk ' /^default/ {print $3}'"
     result = subprocess_closefds(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    result = result.stdout.read().strip()
-    return result
+    output, err = result.communicate()
+    return output.strip()
 
 def get_ipv6_address(interface):
     inet6_lookup_cmd = "ip addr show dev %s | awk '$1==\"inet6\" && $4==\"global\" { print $2 }'" % interface
     inet6_lookup = subprocess_closefds(inet6_lookup_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    ipv6_addr = inet6_lookup.stdout.read().strip()
+    ipv6_addr, err = inet6_lookup.communicate()
+    ipv6_addr = ipv6_addr.strip()
     try:
         ip, netmask = ipv6_addr.split("/")
         return (ip,netmask)
@@ -1239,8 +1246,8 @@ def get_ipv6_address(interface):
 def get_ipv6_gateway(ifname):
     cmd = "ip route list dev "+ ifname + " | awk ' /^default/ {print $3}'"
     result = subprocess_closefds(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    result = result.stdout.read().strip()
-    return result
+    output, err = result.communicate()
+    return output.strip()
 
 def has_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -1294,20 +1301,24 @@ def test_ntp_configuration(self):
 def get_dm_device(device):
     dev_major_cmd="stat -c '%t' " + "\"/dev/" + device + "\""
     dev_minor_cmd="stat -c '%T' " + "\"/dev/" + device + "\""
-    major_lookup = subprocess_closefds(dev_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    minor_lookup = subprocess_closefds(dev_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    major_lookup = major_lookup.stdout.read().strip()
-    minor_lookup = minor_lookup.stdout.read().strip()
+    major_lookup_cmd = subprocess_closefds(dev_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    minor_lookup_cmd = subprocess_closefds(dev_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    major_lookup, err = major_lookup_cmd.communicate()
+    major_lookup = major_lookup.strip()
+    minor_lookup, err = minor_lookup_cmd.communicate()
+    minor_lookup = minor_lookup.strip()
     dm_cmd = "ls /dev/mapper"
     dm_cmd = subprocess_closefds(dm_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     devices = dm_cmd.stdout.read().strip()
     for dm in devices.split("\n"):
         dm_major_cmd="stat -c '%t' " + "\"/dev/mapper/" + dm + "\""
         dm_minor_cmd="stat -c '%T' " + "\"/dev/mapper/" + dm + "\""
-        dm_major_lookup = subprocess_closefds(dm_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        dm_minor_lookup = subprocess_closefds(dm_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        dm_major_lookup = dm_major_lookup.stdout.read().strip()
-        dm_minor_lookup = dm_minor_lookup.stdout.read().strip()
+        dm_major_lookup_cmd = subprocess_closefds(dm_major_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dm_minor_lookup_cmd = subprocess_closefds(dm_minor_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        dm_major_lookup, err = dm_major_lookup_cmd.communicate()
+        dm_major_lookup = dm_major_lookup.strip()
+        dm_minor_lookup, err = dm_minor_lookup_cmd.communicate()
+        dm_minor_lookup = dm_minor_lookup.strip()
         if dm_major_lookup == major_lookup and minor_lookup == dm_minor_lookup:
             dm = "/dev/mapper/" + dm
             return dm
@@ -1320,7 +1331,8 @@ def check_existing_hostvg(install_dev, vg_name=None):
     else:
         devices_cmd="pvs --separator=: -o pv_name,vg_name --noheadings 2>/dev/null| grep -v '%s' | grep %s | awk -F: {'print $1'}" % (install_dev, vg_name)
     devices_cmd = subprocess_closefds(devices_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    devices = devices_cmd.stdout.read().strip()
+    devices, err = devices_cmd.communicate()
+    devices = devices.strip()
     if len(devices) > 0:
         logger.error("There appears to already be an installation on another device:")
         for device in devices.split(":"):
@@ -1341,7 +1353,8 @@ def translate_multipath_device(dev):
     if "/dev/cciss" in dev:
         cciss_dev_cmd = "cciss_id " + dev
         cciss_dev = subprocess_closefds(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        dev = "/dev/mapper/" + cciss_dev.stdout.read().strip()
+        output, err = cciss_dev.communicate()
+        dev = "/dev/mapper/" + output.strip()
     dm_dev_cmd = "multipath -ll '%s' | egrep dm-[0-9]+" % dev
     dm_dev = subprocess_closefds(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     (dm_dev_output, dummy) = dm_dev.communicate()
@@ -1428,7 +1441,8 @@ def findfs(label):
     system("udevadm settle")
     blkid_cmd = "/sbin/blkid -c /dev/null -l -o device -t LABEL=\"" + label + "\""
     blkid = subprocess_closefds(blkid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    blkid_output = blkid.stdout.read().strip()
+    blkid_output, err = blkid.communicate()
+    blkid_output = blkid_output.strip()
     return blkid_output
 
 def system(command):
@@ -1479,7 +1493,8 @@ def get_logrotate_size():
 def get_cpu_flags():
     cpuflags_cmd = "cat /proc/cpuinfo |grep ^flags|tail -n 1"
     cpuflags_lookup = subprocess_closefds(cpuflags_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    return cpuflags_lookup.stdout.read().strip()
+    output, err = cpuflags_lookup.communicate()
+    return output.strip()
 
 def kvm_enabled():
     try:
@@ -1601,7 +1616,8 @@ def get_ssh_hostkey(variant="rsa"):
     hostkey = open(fn_hostkey).read()
     hostkey_fp_cmd = "ssh-keygen -l -f '%s'" % fn_hostkey
     hostkey_fp_lookup = subprocess_closefds(hostkey_fp_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    fingerprint = hostkey_fp_lookup.stdout.read().strip().split(" ")[1]
+    output, err = hostkey_fp_lookup.communicate()
+    fingerprint = output.strip().split(" ")[1]
     return (fingerprint, hostkey)
 
 def get_mac_address(dev):
@@ -1722,8 +1738,8 @@ def create_minimal_etc_hosts_file():
 def nic_link_detected(iface):
     link_status_cmd = "ip link set dev {dev} up ; ethtool {dev} |grep \"Link detected\"".format(dev=iface)
     link_status = subprocess_closefds(link_status_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-    link_status = link_status.stdout.read()
-    return ("yes" in link_status)
+    link_status_output, err = link_status.communicate()
+    return ("yes" in link_status_output)
 
 def is_capslock_on():
     """Returns True if Caps Lock is on.
@@ -1734,8 +1750,11 @@ def is_capslock_on():
         # CapsLock, so return nothing
         return None
     cmd = "LC_ALL=C setleds < /dev/%s | awk '/Current flags:/{print $6;}'" % tty
-    return "on" == subprocess_closefds(cmd, shell=True, stdout=PIPE, \
-                                       stderr=STDOUT).stdout.read().strip()
+    cmd_rtn == subprocess_closefds(cmd, shell=True, stdout=PIPE, \
+                                       stderr=STDOUT)
+    output, err = cmd_rtn.communicate()
+    return "on" == output.strip()
+
 def rng_status():
     bit_value = 0
     disable_aes_ni = 0
