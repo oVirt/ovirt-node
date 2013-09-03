@@ -173,10 +173,11 @@ class Storage:
     def get_drive_size(self, drive):
         logger.debug("Getting Drive Size For: %s" % drive)
         size_cmd = "sfdisk -s " + drive + " 2>/dev/null"
-        size = _functions.subprocess_closefds(size_cmd, shell=True,
+        size_popen = _functions.subprocess_closefds(size_cmd, shell=True,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT)
-        size = size.stdout.read().strip()
+        size, size_err = size_popen.communicate()
+        size = size.strip()
         size = int(int(size) / 1024)
         logger.debug(size)
         return size
@@ -267,7 +268,8 @@ class Storage:
         device_sys = _functions.subprocess_closefds(device_sys_cmd, shell=True,
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.STDOUT)
-        device_sys_output = device_sys.stdout.read().strip()
+        device_sys_output, device_sys_err = device_sys.communicate()
+        device_sys_output = device_sys_output.strip()
         if not device_sys_output is "":
             device = os.path.basename(os.path.dirname(device_sys_output))
             return device
@@ -281,7 +283,7 @@ class Storage:
         deps = _functions.subprocess_closefds(deps_cmd, shell=True,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT)
-        deps_output = deps.stdout.read()
+        deps_output, deps_err = deps.communicate()
         for dep in deps_output.split():
             device = self.get_sd_name(dep)
             if device is not None:
@@ -307,7 +309,7 @@ class Storage:
                                             shell=True,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT)
-            byid_list_output = byid_list.stdout.read()
+            byid_list_output, byid_list_err = byid_list.communicate()
         for d in byid_list_output.split():
             d = os.readlink(d)
             d_basename = os.path.basename(d)
@@ -328,7 +330,7 @@ class Storage:
                                              shell=True,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.STDOUT)
-        multipath_list_output = multipath_list.stdout.read()
+        multipath_list_output, multipath_list_err = multipath_list.communicate()
 
         for d in multipath_list_output.split():
             devices.append("/dev/mapper/%s" % d)
@@ -340,7 +342,7 @@ class Storage:
             dm_dev = _functions.subprocess_closefds(dm_dev_cmd, shell=True,
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.STDOUT)
-            dm_dev_output = dm_dev.stdout.read()
+            dm_dev_output, dm_dev_err = dm_dev.communicate()
             devs_to_remove = ("%s %s %s" % (devs_to_remove, sd_devs,
                                           dm_dev_output))
         # Remove /dev/sd* devices that are part of a multipath device
@@ -368,9 +370,9 @@ class Storage:
             dev_serial = device.get_property("ID_SERIAL")
             dev_desc = device.get_property("ID_SCSI_COMPAT")
             dev_size_cmd = "sfdisk -s %s 2>/dev/null" % dev_name
-            dev_size = _functions.subprocess_closefds(dev_size_cmd, shell=True,
+            dev_size_popen = _functions.subprocess_closefds(dev_size_cmd, shell=True,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            dev_size = dev_size.stdout.read()
+            dev_size, dev_size_err = dev_size_popen.communicate()
             size_failed = 0
             if not device.get_property("ID_CDROM"):
                 try:
