@@ -274,7 +274,7 @@ initrd /initrd0.img
                 efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
                 efi_grub_conf.close()
             _functions.system("umount /liveos")
-            _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
+            _functions.remove_efi_entry(self.efi_dir_name)
             logger.info("Grub2 Install Completed")
             return True
         return True
