@@ -271,7 +271,7 @@ initrd /initrd0.img
                 efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
                 efi_grub_conf.close()
             _functions.system("umount /liveos")
-            _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
+            _functions.remove_efi_entry(self.efi_dir_name)
             logger.info("Grub2 Install Completed")
             return True
         return True
@@ -462,10 +462,16 @@ initrd /initrd0.img
                 # generate grub legacy config for efi partition
                 #remove existing efi entries
                 _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
-                _functions.add_efi_entry(_functions.PRODUCT_SHORT,
-                                         ("\\EFI\\%s\\grub.efi" %
-                                          self.efi_dir_name),
-                                         efi_disk)
+                if self.efi_dir_name == "fedora":
+                    _functions.add_efi_entry(_functions.PRODUCT_SHORT,
+                                             ("\\EFI\\%s\\grubx64.efi" %
+                                              self.efi_dir_name),
+                                             efi_disk)
+                else:
+                    _functions.add_efi_entry(_functions.PRODUCT_SHORT,
+                                             ("\\EFI\\%s\\grub.efi" %
+                                              self.efi_dir_name),
+                                             efi_disk)
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation
