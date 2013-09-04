@@ -22,10 +22,10 @@
 """
 Widgets for oVirt Node's urwid TUI
 """
-import logging
+from ovirt.node import log
 import urwid
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = log.getLogger(__name__)
 
 
 class SelectableText(urwid.Text):

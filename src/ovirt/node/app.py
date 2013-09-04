@@ -18,15 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from StringIO import StringIO
 from optparse import OptionParser
 from ovirt.node import base, utils, plugins, ui, loader
 from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
 from ovirt.node.utils import system, Timer, console
-import logging
-import logging.config
-import os.path
 import sys
 
 """
@@ -39,45 +35,25 @@ RUNTIME_LOG_CONF_FILENAME = "/etc/ovirt-node/logging.conf"
 RUNTIME_DEBUG_LOG_CONF_FILENAME = "/etc/ovirt-node/logging.debug.conf"
 
 
-def configure_logging(is_debug=False):
-    mixedfile = RUNTIME_LOG_CONF_FILENAME
-    if is_debug:
-        mixedfile = RUNTIME_DEBUG_LOG_CONF_FILENAME
-    if not os.path.exists(mixedfile):
-        mixedfile = StringIO("""
-[loggers]
-keys=root
+def parse_cmdline():
+    """Parses the relevant cmdline arguments
+    """
+    parser = OptionParser()
+    parser.add_option("--defaults",
+                      dest="defaults",
+                      help="Central oVirt Node configuration file")
+    parser.add_option("--dry",
+                      action='store_true',
+                      dest="dry",
+                      default=False,
+                      help="Just write defaults, nothing else")
+    parser.add_option("--debug",
+                      action='store_true',
+                      dest="debug",
+                      default=False,
+                      help="Run in debug mode (suitable for pdb)")
 
-[handlers]
-keys=debug,error
-
-[formatters]
-keys=verbose
-
-[logger_root]
-level=NOTSET
-handlers=debug,error
-
-[handler_error]
-class=StreamHandler
-level=ERROR
-args=()
-
-[handler_debug]
-class=FileHandler
-level=DEBUG
-formatter=verbose
-args=('/tmp/ovirt-node.debug.log', 'w')
-
-[formatter_verbose]
-format=%(levelname)10s %(asctime)s %(pathname)s:%(lineno)s:%(funcName)s: \
-%(message)s
-        """)
-    logging.debug("Setting log config to: %s" % mixedfile)
-    logging.config.fileConfig(mixedfile, disable_existing_loggers=False)
-
-
-configure_logging()
+    return parser.parse_args()
 
 
 class Application(base.Base):
@@ -94,7 +70,8 @@ class Application(base.Base):
     ui_builder = None
     ui = None
 
-    def __init__(self, plugin_base, ui_builder=urwid_builder.UrwidUIBuilder):
+    def __init__(self, plugin_base, args,
+                 ui_builder=urwid_builder.UrwidUIBuilder):
         """Constructs a new application
 
         Args:
@@ -111,6 +88,7 @@ class Application(base.Base):
         self.logger.info(("Starting '%s' application " +
                           "with '%s' UI") % (plugin_base, ui_builder))
 
+        self.args = args
         self.__parse_cmdline()
 
         self.ui_builder = ui_builder(self)
@@ -118,32 +96,12 @@ class Application(base.Base):
         self.plugin_base = plugin_base
 
     def __parse_cmdline(self):
-        self.logger.debug("Parsing cmdline args")
-        parser = OptionParser()
-        parser.add_option("--defaults",
-                          dest="defaults",
-                          help="Central oVirt Node configuration file")
-        parser.add_option("--dry",
-                          action='store_true',
-                          dest="dry",
-                          default=False,
-                          help="Just write defaults, nothing else")
-        parser.add_option("--debug",
-                          action='store_true',
-                          dest="debug",
-                          default=False,
-                          help="Run in debug mode (suitable for pdb)")
-        (self.args, argcount) = parser.parse_args()
-
-        self.logger.debug("Parsed args: %s" % self.args)
         if self.args.defaults:
             # FIXME Should be read by clients
             defaults.OVIRT_NODE_DEFAULTS_FILENAME = self.args.defaults
             self.logger.debug("Setting config file: %s (%s)" %
                               (self.args.defaults,
                                defaults.OVIRT_NODE_DEFAULTS_FILENAME))
-
-        configure_logging(self.args.debug)
 
         self.logger.debug("Commandline arguments: %s" % self.args)
 

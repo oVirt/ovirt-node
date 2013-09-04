@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from subprocess import STDOUT, PIPE
-import logging
+from ovirt.node import log
 import subprocess
 import sys
 
@@ -28,7 +28,7 @@ Some convenience functions related to processes
 """
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = log.getLogger(__name__)
 
 COMMON_POPEN_ARGS = {
     "close_fds": True
