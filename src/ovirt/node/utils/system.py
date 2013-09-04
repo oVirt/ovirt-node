@@ -18,10 +18,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils
+from ovirt.node import base, utils, log
 from ovirt.node.utils import process
 from ovirt.node.utils.fs import File
-import logging
 import os
 import re
 import rpm
@@ -36,7 +35,7 @@ e.g. services, reboot ...
 """
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = log.getLogger(__name__)
 
 
 def reboot():

@@ -20,8 +20,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 # pylint: disable-msg=E1101,E1102
-from ovirt.node import base
-import logging
+
+from ovirt.node import base, log
 import os
 import select  # @UnresolvedImport
 import struct
@@ -433,12 +433,14 @@ class InputEvent(object):
 
 
 class InputParser(object):
+    logger = None
     fmt = "llHHI"
     fmtsize = struct.calcsize(fmt)
 
     def __init__(self, files):
         assert type(files) is list
         self.fds = [os.open(dev, os.O_RDONLY) for dev in files]
+        self.logger = log.getLogger(__name__)
 
     def __readevent(self, rs):
         packages = []
@@ -450,7 +452,7 @@ class InputParser(object):
                 if typ:
                     yield timeval, suseconds, typ, value, code
         except OSError as e:
-            logging.exception("Couldn't parse event: %s" % e)
+            self.logger.exception("Couldn't parse event: %s" % e)
 
     def parse(self):
         while 1:
@@ -465,10 +467,11 @@ class InputParserThread(threading.Thread):
     inputdevices = []
     event_filter = None
     on_event = None
-    logger = logging.getLogger(__package__)
+    logger = None
 
     def __init__(self, inputdevices, event_filter=None):
         super(InputParserThread, self).__init__()
+        self.logger = log.getLogger(__name__)
         self.daemon = True
         self.logger.info("Creating input watcher thread")
         self.inputdevices = inputdevices

@@ -18,13 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils, config, valid
+from ovirt.node import base, utils, config, valid, log
 from ovirt.node.config.network import NicConfig
 from ovirt.node.utils import fs
 from ovirt.node.utils.fs import File
 import glob
 import gudev
-import logging
 import os.path
 import ovirt.node.utils.fs
 import ovirt.node.utils.process as process
@@ -36,7 +35,7 @@ import struct
 Some convenience functions related to networking
 """
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = log.getLogger(__name__)
 
 #
 # Try to use NM if available

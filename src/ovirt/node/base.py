@@ -18,11 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-import logging
 
 """
 Base for all classes
 """
+
+import log
 
 
 class Base(object):
@@ -37,7 +38,7 @@ class Base(object):
 
     def __init__(self):
         """Contructor."""
-        self._logger = logging.getLogger(self.__module__)
+        self._logger = log.getLogger(self.__module__)
 
     def _super(self):
         """Return the parent class of this obj
@@ -68,7 +69,7 @@ class Base(object):
         def __init__(self, target):
             self.target = target
             self.callbacks = []
-            self.logger = logging.getLogger(self.__module__)
+            self.logger = log.getLogger(self.__module__)
 
         def emit(self, userdata=None):
             """Emit a signal

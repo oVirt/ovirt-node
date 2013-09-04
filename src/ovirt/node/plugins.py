@@ -18,16 +18,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, exceptions, ui
+from ovirt.node import base, exceptions, ui, log
 from ovirt.node.exceptions import InvalidData
-import logging
 
 """
 This contains much stuff related to plugins
 """
 
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger(__name__)
 
 
 class NodePlugin(base.Base):

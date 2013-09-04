@@ -23,14 +23,14 @@
 Some convenience functions realted to the filesystem
 """
 
-import logging
+from ovirt.node import log
 import shutil
 import os
 import StringIO
 
 from ovirt.node import base
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = log.getLogger(__name__)
 
 
 def get_contents(src):

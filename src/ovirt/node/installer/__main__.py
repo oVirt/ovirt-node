@@ -23,9 +23,11 @@
 Create an setup application instance an start it.
 """
 
-from ovirt.node import app, installer
+from ovirt.node import app, installer, log
 
 
 if __name__ == '__main__':
-    app = app.Application(installer)
-    app.run()
+    args, _ = app.parse_cmdline()
+    log.configure_logging(args.debug)
+    instance = app.Application(installer, args)
+    instance.run()
