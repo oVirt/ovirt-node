@@ -6,3 +6,4 @@ shim
 # qlogic firmware
 linux-firmware
 iptables
+net-tools
