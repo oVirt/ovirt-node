@@ -74,7 +74,7 @@ def check_output(*args, **kwargs):
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
     try:
         return unicode(subprocess.check_output(*args, **kwargs),
-                       encoding=sys.stdin.encoding)
+                       encoding=sys.stdin.encoding or "utf-8")
     except AttributeError:
         # We're probably on Python 2.7, which doesn't have check_output
         # http://docs.python.org/2.6/library/subprocess.html#module-subprocess
