@@ -468,13 +468,19 @@ class NicBonding(NodeConfigFileSection):
             "OVIRT_BOND_SLAVES",
             "OVIRT_BOND_OPTIONS")
 
+    # Set some sane defaults if not options are diven
+    # https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/
+    # tree/Documentation/networking/bonding.txt#n153
+    default_options = "miimon=100"
+
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, name, slaves, options):
         if name is not None and not name.startswith("bond"):
             raise InvalidData("Bond ifname must start with 'bond'")
         if slaves is not None and type(slaves) is not list:
             raise InvalidData("Slaves must be a list")
-        options = options or ""
+
+        options = options or self.default_options
         return {"OVIRT_BOND_SLAVES": ",".join(slaves) if slaves else None,
                 "OVIRT_BOND_OPTIONS": options if name else None}
 

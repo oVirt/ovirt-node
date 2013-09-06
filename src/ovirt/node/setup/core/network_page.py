@@ -104,7 +104,7 @@ class Plugin(plugins.NodePlugin):
             "ntp[1]": "",
             "bond.name": "",
             "bond.slaves.selected": "",
-            "bond.options": "mode=balance-rr miimon=100"
+            "bond.options": defaults.NicBonding.default_options
         }
 
         model["hostname"] = defaults.Hostname().retrieve()["hostname"] or \
