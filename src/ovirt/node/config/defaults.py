@@ -1074,14 +1074,14 @@ class KDump(NodeConfigFileSection):
 
                 os.mkdir("/tmp/kdump-ssh")
                 os.chmod("/tmp/kdump-ssh", 0600)
-                with open("/tmp/kdump/ssh/id", "w") as f:
+                with open("/tmp/kdump-ssh/id", "w") as f:
                     f.write(buf.getvalue())
                 os.chmod("/tmp/kdump-ssh/id", 0600)
 
                 try:
-                    utils.process.check_call("ssh -o BatchMode=yes "
-                                             "-i /tmp/kdump-ssh/id %s "
-                                             "true" % ssh_key)
+                    cmd = ['ssh', '-o', 'BatchMode=yes', '-i',
+                           '/tmp/kdump-ssh/id', ssh, 'true']
+                    utils.process.check_call(cmd)
                     copy2("/tmp/kdump-ssh/id", "/root/.ssh/kdump_id_rsa")
                 except utils.process.CalledProcessError as e:
                     self.logger.warning("Failed to authenticate using SSH "
