@@ -1357,11 +1357,19 @@ enabled=1
         print("Creating initramfs")
         # ensure dmsquash-live dracut module is included
         d_conf = "%s/etc/dracut.conf" % self._instroot
-        dracut_conf = open(d_conf, "a")
-        dracut_conf.write('add_dracutmodules+="dmsquash-live"\n')
-        # ensure that isofs is included - needed to boot from a LiveCD
-        dracut_conf.write('add_drivers+="isofs"\n')
-        dracut_conf.close()
+        with open(d_conf) as f:
+            current = f.readlines()
+        add_modules = True
+        for line in current:
+            if line.startswith("add_dracutmodules") \
+                and "dmsquash-live" in line:
+                add_modules = False
+        if add_modules:
+            dracut_conf = open(d_conf, "a")
+            dracut_conf.write('add_dracutmodules+="dmsquash-live"\n')
+            # ensure that isofs is included - needed to boot from a LiveCD
+            dracut_conf.write('add_drivers+="isofs"\n')
+            dracut_conf.close()
         cmd = "rpm -q kernel"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
                              preexec_fn=self._chroot)
