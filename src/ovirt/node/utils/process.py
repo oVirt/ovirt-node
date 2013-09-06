@@ -120,9 +120,8 @@ def check_output(*args, **kwargs):
     __check_for_problems(args, kwargs)
     stdout = None
     try:
-        stdout = subprocess.check_output(*args, **kwargs)
-        stdout = unicode(stdout,
-                         encoding=sys.stdin.encoding or "utf-8")
+        return unicode(subprocess.check_output(*args, **kwargs),
+                       encoding=sys.stdin.encoding or "utf-8")
     except AttributeError:
         # We're probably on Python 2.6, which doesn't have check_output
         # http://docs.python.org/2.6/library/subprocess.html#module-subprocess
