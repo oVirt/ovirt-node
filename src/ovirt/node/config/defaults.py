@@ -500,6 +500,8 @@ class NicBonding(NodeConfigFileSection):
 
     def transaction(self):
         bond = NicBonding().retrieve()
+        if not bond["options"]:
+            bond["options"] = self.default_options
 
         class RemoveConfigs(utils.Transaction.Element):
             title = "Clean potential bond configurations"
