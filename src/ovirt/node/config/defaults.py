@@ -469,7 +469,7 @@ class NicBonding(NodeConfigFileSection):
     # Set some sane defaults if not options are diven
     # https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/
     # tree/Documentation/networking/bonding.txt#n153
-    default_options = "miimon=100"
+    default_options = "mode=balance-rr miimon=100"
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, name, slaves, options):
@@ -498,6 +498,8 @@ class NicBonding(NodeConfigFileSection):
 
     def transaction(self):
         bond = NicBonding().retrieve()
+        if not bond["options"]:
+            bond["options"] = self.default_options
 
         class RemoveConfigs(utils.Transaction.Element):
             title = "Clean potential bond configurations"
