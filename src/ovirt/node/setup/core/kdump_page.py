@@ -112,7 +112,7 @@ class Plugin(plugins.NodePlugin):
                        ui.Entry("kdump.ssh_location", _("SSH Location ") +
                                 _("(root@example.com):"),
                                 align_vertical=True),
-                       ui.Entry("kdump.ssh_key", "SSH Key URI (optional):",
+                       ui.Entry("kdump.ssh_key", "SSH Key URL (optional):",
                                 align_vertical=True)
                        ])
         page = ui.Page("page", ws)
@@ -124,7 +124,8 @@ class Plugin(plugins.NodePlugin):
         """
         self.logger.debug("New (valid) address: %s" % changes)
         if "kdump.type" in changes:
-            net_types = ["kdump.ssh_location", "kdump.nfs_location"]
+            net_types = ["kdump.ssh_location", "kdump.nfs_location",
+                         "kdump.ssh_key"]
 
             for w in net_types:
                 if w in self.widgets:
@@ -132,7 +133,9 @@ class Plugin(plugins.NodePlugin):
 
             w = "kdump.%s_location" % changes["kdump.type"]
             if w in net_types and w in self.widgets:
-                self.widgets[w].enabled(True),
+                self.widgets[w].enabled(True)
+                if w == "kdump.ssh_location":
+                    self.widgets["kdump.ssh_key"].enabled(True)
 
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
