@@ -778,14 +778,11 @@ class Nameservers(NodeConfigFileSection):
 
         tx = utils.Transaction("Configuring DNS")
 
-        if not m["servers"]:
+        servers = []
+        if m["servers"]:
+            servers = m["servers"]
+        else:
             self.logger.debug("No DNS server entry in default config")
-            return tx
-
-        servers = m["servers"]
-        if servers is None or servers == "":
-            self.logger.debug("No DNS servers configured " +
-                              "in default config")
 
         class UpdateResolvConf(utils.Transaction.Element):
             title = "Updating resolv.conf"

@@ -180,15 +180,19 @@ def _aug_get_or_set(augpath, new_servers=None):
     for path in aug.match(augpath):
         servers.append(aug.get(path))
 
-    if new_servers:
+    LOGGER.debug("Current servers: %s" % servers)
+
+    if new_servers is not None:
         itempath = lambda idx: "%s[%d]" % (augpath, idx + 1)
+        LOGGER.debug("Removing old servers: %s" % servers)
+        for idx, server in enumerate(servers):
+            LOGGER.debug("Removing server %s: %s" % (itempath(idx),
+                                                     server))
+            aug.remove(itempath(idx))
+        LOGGER.debug("Setting new servers: %s" % new_servers)
         for idx, server in enumerate(new_servers):
-            LOGGER.debug("Setting server: %s" % server)
+            LOGGER.debug("Setting server %s: %s" % (itempath(idx), server))
             aug.set(itempath(idx), server)
-        if len(servers) > len(new_servers):
-            LOGGER.debug("Less servers than before, removing old ones")
-            for idx in range(len(servers) + 1, len(new_servers)):
-                aug.remove(itempath(idx))
     return servers
 
 
