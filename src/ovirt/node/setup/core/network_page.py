@@ -297,8 +297,9 @@ class Plugin(plugins.NodePlugin):
 
         if "dialog.nic.identify" in changes:
             ifname = self._model_extra["dialog.nic.ifname"]
-            utils.network.NIC(ifname).identify()
-            self.application.notice("Flashing lights now")
+            nic = utils.network.NodeNetwork().build_nic_model(ifname)
+            nic.identify()
+            self.application.notice("Flashing lights of '%s'" % nic.ifname)
             return
 
         nameservers = []
