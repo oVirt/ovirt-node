@@ -455,7 +455,8 @@ class BondedNIC(NIC):
         self.slave_nics = [NIC(n) for n in slave_nics]
 
     def identify(self):
-        (slave.identify() for slave in self.slave_nics)
+        for slave in self.slave_nics:
+            slave.identify()
 
     def __str__(self):
         return self.build_str(["ifname", "slave_nics"])
@@ -538,7 +539,7 @@ class NodeNetwork(base.Base):
 
         if ifname == bond_name:
             self.logger.debug(" Is bond master")
-            nic = BondedNIC(nic)
+            nic = BondedNIC(nic, bond_slaves)
 
         if ifname == bootif:
             self.logger.debug(" Is bootif")
