@@ -19,9 +19,12 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-import os
-from ovirt.node.utils import process
 from glob import glob
+import os
+from ovirt.node.utils import process, fs
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 PLUGIN_DIR = "/etc/ovirt-plugins.d/"
 PLUGIN_XML_OUT = "/etc/firewalld/services/node-plugin.xml"
@@ -47,9 +50,37 @@ def is_firewalld():
 
 
 def setup_iptables(port, proto):
+    rules = "/etc/sysconfig/iptables"
+
+    def is_open():
+        pat = "%s dpt:%s" % (proto, port)
+        output = process.check_output(["iptables", "-L", "INPUT", "-n"])
+        for rule in output.split("\n"):
+            if rule.strip().endswith(pat):
+                return True
+        return False
+
+    def open_port():
         cmd = ["iptables", "-I", "INPUT", "1", "-p", proto,
                "--dport", port, "-j", "ACCEPT"]
-        process.check_call(cmd, shell=True)
+        process.check_call(cmd)
+
+    def load_rules():
+        process.check_call("iptables-restore -c < %s" % rules,
+                           shell=True)
+
+    def save_rules():
+        process.check_call("iptables-save -c > %s" % rules,
+                           shell=True)
+
+        fs.Config().persist(rules)
+
+    if not is_open():
+        # We need to load the rules before, to prevent overwriting them
+        # when they weren't loaded.
+        load_rules()
+        open_port()
+        save_rules()
 
 
 def setup_firewalld(port, proto):
@@ -70,10 +101,12 @@ def setup_firewalld(port, proto):
 
 
 def process_plugins():
+    LOGGER.debug("Handling plugin firewall rules")
     for plugin in glob(PLUGIN_DIR + "*.firewall"):
         plugin_files.append(plugin)
 
     for f in plugin_files:
+        LOGGER.debug("Parsing firewall rules: %s" % f)
         with open(f) as i:
             conf = i.readlines()
         for line in conf:
@@ -82,6 +115,7 @@ def process_plugins():
                 fw_conf.append((port, proto))
 
     for i in fw_conf:
+        LOGGER.debug("Opening firewall ports: %s" % str(i))
         port, proto = i
         if is_firewalld():
             setup_firewalld(port, proto)
