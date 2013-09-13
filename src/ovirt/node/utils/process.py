@@ -43,11 +43,19 @@ def __update_kwargs(kwargs):
     return new_kwargs
 
 
+def __check_for_problems(args, kwargs):
+    if ("shell" in kwargs) and (args and type(args[0]) is list):
+        raise RuntimeError("Combining  shell=True and a command list does " +
+                           "not work. With shell=True the first argument" +
+                           "must be a string. A list otherwise.")
+
+
 def popen(*args, **kwargs):
     """subprocess.Popen wrapper to not leak file descriptors
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Popen with: %s %s" % (args, kwargs))
+    # Intentionally no check for common problems
     return subprocess.Popen(*args, **kwargs)
 
 
@@ -56,6 +64,7 @@ def call(*args, **kwargs):
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Calling with: %s %s" % (args, kwargs))
+    __check_for_problems(args, kwargs)
     return int(subprocess.call(*args, **kwargs))
 
 
@@ -64,6 +73,7 @@ def check_call(*args, **kwargs):
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking call with: %s %s" % (args, kwargs))
+    __check_for_problems(args, kwargs)
     return int(subprocess.check_call(*args, **kwargs))
 
 
@@ -72,6 +82,7 @@ def check_output(*args, **kwargs):
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
+    __check_for_problems(args, kwargs)
     try:
         return unicode(subprocess.check_output(*args, **kwargs),
                        encoding=sys.stdin.encoding or "utf-8")
@@ -96,4 +107,5 @@ def pipe(cmd, stdin=None, **kwargs):
     kwargs.update({"stdin": PIPE,
                    "stdout": PIPE,
                    "stderr": STDOUT})
+    __check_for_problems(cmd, kwargs)
     return unicode(popen(cmd, **kwargs).communicate(stdin)[0])
