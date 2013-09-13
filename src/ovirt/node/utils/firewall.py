@@ -49,7 +49,7 @@ def is_firewalld():
 def setup_iptables(port, proto):
         cmd = ["iptables", "-I", "INPUT", "1", "-p", proto,
                "--dport", port, "-j", "ACCEPT"]
-        process.check_call(cmd, shell=True)
+        process.check_call(cmd)
 
 
 def setup_firewalld(port, proto):
