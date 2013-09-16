@@ -32,7 +32,7 @@ import imp
 
 LOG_PREFIX = "ovirt-node-upgrade"
 OVIRT_UPGRADE_LOCK = "/tmp/.ovirt_upgrade.lock"
-
+OVIRT_UPGRADED = "/tmp/ovirt_upgraded"
 
 def which(file):
     ret = None
@@ -250,6 +250,7 @@ class UpgradeTool(Base):
             shutil.rmtree(self._tmp_dir)
             if self.iso_tmp and os.path.exists(self.iso_tmp):
                 os.remove(self.iso_tmp)
+            open(OVIRT_UPGRADED, 'w').close()
         except:
             self._logger.warning("Cleanup Failed")
             self._logger.debug('exception', exc_info=True)
@@ -315,6 +316,8 @@ class UpgradeTool(Base):
         self._logger.debug(self._options)
         if os.geteuid() != 0:
             raise RuntimeError("You must run as root")
+        if os.path.exists(OVIRT_UPGRADED):
+            raise RuntimeError("Previous upgrade completed, you must reboot")
 
         with LockFile():
             if not self._options.iso_file:
