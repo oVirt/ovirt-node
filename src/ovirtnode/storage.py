@@ -433,7 +433,8 @@ class Storage:
                     self.ROOTDRIVE = self.BOOTDRIVE
                 elif self.ISCSIDRIVE == drv:
                     parted_cmd = ("parted \"" + drv + "\" -s \"mkpart " +
-                                  "primary ext2 512M -1\"")
+                                  "primary ext2 " + str(self.ROOT_SIZE * 2) +
+                                  " -1\"")
                     logger.debug(parted_cmd)
                     _functions.system(parted_cmd)
                     hostvgpart = "3"
