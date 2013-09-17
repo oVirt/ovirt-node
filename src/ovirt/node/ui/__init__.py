@@ -399,7 +399,6 @@ class ConfirmedEntry(ContainerElement):
         return self._primary.valid()
 
     def notice(self, txt=""):
-        self.logger.debug("nooooooootice %s" % self._additional_notice)
         msg = "\n".join(t for t in [txt, self._additional_notice] if t)
         self._notice.text(msg)
 
