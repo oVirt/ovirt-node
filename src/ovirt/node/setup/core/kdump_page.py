@@ -168,6 +168,17 @@ class Plugin(plugins.NodePlugin):
                 progress_dialog.run()
                 console.writeln("\nPlease press any key to continue")
                 console.wait_for_keypress()
+        except KeyboardInterrupt:
+            with self.application.ui.suspended():
+                model.update(None, None, None)
+                txs = model.transaction()
+                txs()
+                console.reset()
+                console.writeln("\nDisabled kdump and Removed related " +
+                                "configuration")
+                console.writeln("\nPlease press any key to continue")
+                console.wait_for_keypress()
         except Exception as e:
             self.logger.exception("Exception while configuring kdump")
             return InfoDialog("dialog.info", "An error occurred", e.message)
+        return self.ui_content()
