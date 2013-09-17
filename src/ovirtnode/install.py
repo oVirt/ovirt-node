@@ -407,7 +407,7 @@ initrd /initrd0.img
                     candidate = candidate_name
                     break
             logger.debug("Trial %s to find candidate (%s)" % (trial,
-                                                              candidate))
+                                                              candidate_name))
             if candidate:
                 logger.debug("Found candidate: %s" % candidate)
                 break
