@@ -205,6 +205,5 @@ class Plugin(plugins.NodePlugin):
             else:
                 model.update(None, None, None, None)
             self.logger.exception("Exception while configuring kdump")
-            self.application.show(self.ui_content())
-            return InfoDialog("dialog.info", _("An error occurred"), e.message)
+            return InfoDialog("dialog.info", "An error occurred", e.message)
         return self.ui_content()
