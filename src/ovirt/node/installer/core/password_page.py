@@ -67,4 +67,5 @@ class Plugin(plugins.NodePlugin):
             self.application.ui.navigate.to_previous_plugin()
         elif changes.contains_any(["admin.password",
                                    "button.next"]):
+            self._model.update(effective_changes)
             self.application.ui.navigate.to_next_plugin()

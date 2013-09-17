@@ -275,8 +275,9 @@ class NodePlugin(base.Base):
         """Called when some widget was changed
         change is expected to be a dict.
         """
-        if type(change) is not dict:
-            self.logger.warning("Change is not a dict: %s" % str(change))
+        if type(change) not in [dict, Changeset]:
+            self.logger.warning("Change is not a dict: %s (%s)" %
+                                (repr(change), type(change)))
 
         change = Changeset(change)
 
