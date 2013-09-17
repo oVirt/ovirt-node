@@ -100,6 +100,8 @@ class InstallerThread(threading.Thread):
         log = self.progress_plugin.widgets["log"]
         log_lines = ["Starting ..."]
 
+        captured_stderr = []
+
         try:
             self.ui_thread.call(lambda: log.text("\n".join(log_lines)))
             self.ui_thread.call(lambda: reboot_button.enabled(False))
@@ -123,6 +125,9 @@ class InstallerThread(threading.Thread):
                     # therefore we are capturing this
                     self.progress_plugin.dry_or(do_commit)
 
+                    if captured.stderr.getvalue():
+                        captured_stderr.append(captured.stderr.getvalue())
+
                 log_lines[-1] = "%s (Done)" % log_lines[-1]
 
                 def update_ui():
@@ -140,10 +145,9 @@ class InstallerThread(threading.Thread):
             self.ui_thread.call(lambda: reboot_button.enabled(True))
             self.ui_thread.call(lambda: app.ui.hotkeys_enabled(True))
 
-        if captured.stderr.getvalue():
-            se = captured.stderr.getvalue()
-            if se:
-                self.ui_thread.call(lambda: log.text("Stderr: %s" % se))
+        if captured_stderr:
+            self.ui_thread.call(lambda: log.text("Stderr: %s" %
+                                                 str(captured_stderr)))
 
     def __build_transaction(self):
         """Determin what kind of transaction to build
