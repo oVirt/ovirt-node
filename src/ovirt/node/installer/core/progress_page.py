@@ -91,7 +91,7 @@ class InstallerThread(threading.Thread):
 
             self.__run()
         except Exception as e:
-            self.logger.error("Error in installer thread: %s" % e)
+            self.logger.exception("Installer thread failed: %s" % e)
 
     def __run(self):
         app = self.progress_plugin.application
@@ -131,8 +131,8 @@ class InstallerThread(threading.Thread):
                 self.ui_thread.call(update_ui)
 
         except Exception as e:
+            self.logger.exception("Installer transaction failed")
             msg = "Exception: %s" % repr(e)
-            self.logger.debug(msg, exc_info=True)
             self.ui_thread.call(lambda: log.text(msg))
 
         finally:
