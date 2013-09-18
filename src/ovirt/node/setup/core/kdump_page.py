@@ -127,7 +127,6 @@ class Plugin(plugins.NodePlugin):
             w = "kdump.%s_location" % changes["kdump.type"]
             if w in net_types and w in self.widgets:
                 self.widgets[w].enabled(True),
-                self.validate({w: ""})
 
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
