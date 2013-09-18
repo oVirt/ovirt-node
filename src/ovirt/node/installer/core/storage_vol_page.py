@@ -18,12 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-
 """
 Storage Volume page of the installer
 """
+
 from ovirt.node import plugins, ui, valid
 from ovirt.node.exceptions import InvalidData
+from ovirt.node.utils import process
 
 
 class Plugin(plugins.NodePlugin):
@@ -139,6 +140,11 @@ class Plugin(plugins.NodePlugin):
 
     def __get_default_sizes(self):
         if self.application.args.dry:
+            udiskscmd = "udisksctl info -b /dev/[sv]da* | grep Size"
+            stdout = process.check_output(udiskscmd,
+                                          shell=True)
+            self._drive_size = (int(stdout.strip().split(":")[1].strip())
+                                / 1024 / 1024)
             return {"storage.efi_size": "256",
                     "storage.root_size": "50",
                     "storage.swap_size": "0",
