@@ -133,9 +133,7 @@ class Plugin(plugins.NodePlugin):
 
             w = "kdump.%s_location" % changes["kdump.type"]
             if w in net_types and w in self.widgets:
-                self.widgets[w].enabled(True)
-                if w == "kdump.ssh_location":
-                    self.widgets["kdump.ssh_key"].enabled(True)
+                self.widgets[w].enabled(True),
 
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
