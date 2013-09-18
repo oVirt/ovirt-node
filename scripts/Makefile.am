@@ -16,6 +16,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 localboottriggerdir=$(sysconfdir)/ovirt-config-boot.d
+augeasdir = $(pythondir)
 
 dist_sbin_SCRIPTS = \
   persist \
@@ -40,6 +41,9 @@ dist_libexec_SCRIPTS = \
 dist_localboottrigger_SCRIPTS = \
   local_boot_trigger.sh
 
+augeas_PYTHON = \
+  augeas.py
+
 install-exec-hook:
 	mv $(DESTDIR)$(libexecdir)/ovirt-auto-install.py $(DESTDIR)$(libexecdir)/ovirt-auto-install
 	mv $(DESTDIR)$(sbindir)/ovirt-node-upgrade.py $(DESTDIR)$(sbindir)/ovirt-node-upgrade
@@ -51,7 +55,3 @@ install-exec-hook:
 	  $(DESTDIR)$(sysconfdir)/ovirt-commandline.d \
 	  $(DESTDIR)$(sysconfdir)/default
 	echo "# File where default configuration is kept" > $(DESTDIR)$(sysconfdir)/default/ovirt
-
-EXTRA_DIST = \
-  augeas.py
-
