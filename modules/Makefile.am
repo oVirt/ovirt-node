@@ -24,6 +24,7 @@ dist_modules_SCRIPTS = \
 
 # qla4xxx iscsi hba workaround: rhbz#742433#c32
 dist_modprobe_DATA = \
-  ovirt-qla4xxx.conf
+  ovirt-qla4xxx.conf \
+  bonding.conf
 
 # vim: ts=2

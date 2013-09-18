@@ -569,6 +569,7 @@ fi
 %{_sysconfdir}/ovirt-node/logging.debug.conf
 %{_sysconfdir}/sysconfig/modules/vlan.modules
 %{_sysconfdir}/modprobe.d/ovirt-qla4xxx.conf
+%{_sysconfdir}/modprobe.d/bonding.conf
 %{_libexecdir}/ovirt-node/hooks
 
 
