@@ -1376,11 +1376,9 @@ class SSH(NodeConfigFileSection):
                 ssh.disable_aesni(disable_aesni)
 
         tx = utils.Transaction("Configuring SSH")
-        if pwauth in [True, False]:
-            tx.append(ConfigurePasswordAuthentication())
+        tx.append(ConfigurePasswordAuthentication())
         tx.append(ConfigureStrongRNG())
-        if disable_aesni in [True, False]:
-            tx.append(ConfigureAESNI())
+        tx.append(ConfigureAESNI())
         return tx
 
 
