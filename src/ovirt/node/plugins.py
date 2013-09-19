@@ -441,9 +441,7 @@ class Changeset(dict, base.Base):
     def __getitem__(self, key):
         """Diferent to a dict: We return none if a key does not exist
         """
-        if key in self:
-            return dict.__getitem__(self, key)
-        return None
+        return dict.get(self, key, None)
 
     def reset(self, changes):
         self.clear()
