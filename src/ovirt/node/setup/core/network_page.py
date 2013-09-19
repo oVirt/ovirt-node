@@ -432,21 +432,23 @@ class NicDetailsDialog(ui.Dialog):
 
         is_primary_interface = model["iface"] == ifname
 
-        if not is_primary_interface:
-            # The config contains the information for the primary ifnamee,
-            # because this ifnamee is not the primaryifnameme we clear the
-            # config
-            model = dict((k, "") for k in model.keys())
+        link_status_txt = ("Connected" if nic.has_link()
+                           else "Disconnected")
+        vendor_txt = nic.vendor[:24] if nic.vendor else ""
 
-        ipaddr, netmask, gateway, vlanid = (model["ipaddr"], model["netmask"],
-                                            model["gateway"], model["vlanid"])
-
-        ip6addr, ip6netmask, ip6gateway, ip6bootproto = (ip6model["ipaddr"],
-                                                         ip6model["netmask"],
-                                                         ip6model["gateway"],
-                                                         ip6model["bootproto"])
+        self.plugin._model_extra.update({
+            "dialog.nic.driver": nic.driver,
+            "dialog.nic.vendor": vendor_txt,
+            "dialog.nic.link_status": link_status_txt,
+            "dialog.nic.hwaddress": nic.hwaddr,
+        })
 
         bootproto = model["bootproto"]
+        ipaddr = model["ipaddr"]
+        netmask = model["netmask"]
+        gateway = model["gateway"]
+        vlanid = model["vlanid"]
+
         if model["bootproto"] == "dhcp":
             if nic.exists():
                 routes = utils.network.Routes()
@@ -457,27 +459,24 @@ class NicDetailsDialog(ui.Dialog):
             if ipaddr:
                 bootproto = "static"
 
-        link_status_txt = ("Connected" if nic.has_link()
-                           else "Disconnected")
-        vendor_txt = nic.vendor[:24] if nic.vendor else ""
-
-        self.plugin._model_extra.update({
-            "dialog.nic.driver": nic.driver,
-            "dialog.nic.vendor": vendor_txt,
-            "dialog.nic.link_status": link_status_txt,
-            "dialog.nic.hwaddress": nic.hwaddr,
-
+        nicfields = {
             "dialog.nic.ipv4.bootproto": bootproto,
             "dialog.nic.ipv4.address": ipaddr,
             "dialog.nic.ipv4.netmask": netmask,
             "dialog.nic.ipv4.gateway": gateway,
-            "dialog.nic.ipv6.bootproto": ip6bootproto,
-            "dialog.nic.ipv6.address": ip6addr,
-            "dialog.nic.ipv6.netmask": ip6netmask,
-            "dialog.nic.ipv6.gateway": ip6gateway,
+            "dialog.nic.ipv6.bootproto": ip6model["bootproto"],
+            "dialog.nic.ipv6.address": ip6model["ipaddr"],
+            "dialog.nic.ipv6.netmask": ip6model["netmask"],
+            "dialog.nic.ipv6.gateway": ip6model["gateway"],
             "dialog.nic.vlanid": vlanid,
             "dialog.nic.layout_bridged": m_layout["layout"] == "bridged",
-        })
+        }
+        self.plugin._model_extra.update(nicfields)
+
+        if not is_primary_interface:
+            # Unset all NIC fields. Because their values are only relevant
+            # for the primary interface
+            self.plugin._model_extra.update(dict.fromkeys(nicfields.keys()))
 
         self.logger.debug("model: %s" % self.plugin.model())
 
