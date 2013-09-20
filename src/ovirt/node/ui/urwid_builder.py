@@ -373,6 +373,7 @@ class UrwidWindow(ui.Window):
                 None, None),
                ('screen', None),
                ('header', 'white', 'dark blue'),
+               ('footer', element_styles["text"]),
                ('table', element_styles["text"]),
                ('table.label', element_styles["label"]),
                ('table.header', element_styles["label"] + ", standout"),
@@ -550,6 +551,7 @@ class UrwidWindow(ui.Window):
         header = urwid.Text(self.header, wrap='clip')
         header = urwid.AttrMap(header, 'header')
         footer = urwid.Text(self.footer, wrap='clip')
+        footer = urwid.AttrMap(footer, 'footer')
         screen = urwid.Frame(body, header, footer)
         return urwid.AttrMap(screen, "screen")
 
@@ -625,7 +627,6 @@ class UrwidWindow(ui.Window):
 
     def force_redraw(self):
         if self.__loop:
-            self.logger.debug("Redrawing screen")
             self.__loop.draw_screen()
 
     def size(self):
