@@ -44,7 +44,8 @@ def __update_kwargs(kwargs):
 
 
 def __check_for_problems(args, kwargs):
-    if ("shell" in kwargs) and (args and type(args[0]) is list):
+    if ("shell" in kwargs and kwargs["shell"] is True) and \
+            (args and type(args[0]) is list):
         raise RuntimeError("Combining  shell=True and a command list does " +
                            "not work. With shell=True the first argument" +
                            "must be a string. A list otherwise.")
