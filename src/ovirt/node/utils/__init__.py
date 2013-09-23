@@ -140,7 +140,7 @@ def parse_bool(txt):
     return False
 
 
-class Transaction(list, base.Base):
+class Transaction(base.Base):
     """A very simple transaction mechanism.
 
     >>> class StepA(Transaction.Element):
@@ -156,6 +156,11 @@ class Transaction(list, base.Base):
     >>> class StepC(Transaction.Element):
     ...     def commit(self):
     ...         raise Exception("Step C")
+
+    >>> class StepD(Transaction.Element):
+    ...     def commit(self):
+    ...         print "Step D"
+    ...         return "Stepped D"
 
     >>> tx = Transaction("Steps", [StepA(), StepB()])
     >>> tx()
@@ -181,37 +186,61 @@ class Transaction(list, base.Base):
         ...
     TransactionError: 'Transaction failed: Step C'
 
+
+    Now a transaction is build which contains an inner/sub transaction.
+    From the transaction point of view all items should be executed, including
+    the inner transaction elements.
+    But it is important to have the wrapping, to hide fine grained transaction
+    items from users when using the TransactionRunner
+
+    >>> sub = Transaction("Sub", [StepD(), StepD()])
+    >>> tx = Transaction("Outer", [StepA(), StepB(), sub])
+    >>> tx  #doctest: +ELLIPSIS
+    <Transaction elements='[<StepA 'None'>, <StepB 'None'>, <Transaction \
+elements='[<StepD 'None'>, <StepD 'None'>]' title='Sub' at 0x...>]' \
+title='Outer' at 0x...>
+
+    >>> tx()
+    Step A
+    Step B
+    Step D
+    Step D
+    True
+
     >>> txs = [
     ...     Transaction("Step A", [StepA()]),
     ...     Transaction("Step B", [StepB()])
     ... ]
-    >>> txs
-    [[<StepA 'None'>], [<StepB 'None'>]]
+    >>> txs  #doctest: +ELLIPSIS
+    [<Transaction elements='[<StepA 'None'>]' title='Step A' at 0x...>, \
+<Transaction elements='[<StepB 'None'>]' title='Step B' at 0x...>]
     """
     title = None
     _lockfilename = "/tmp/transaction-in-progress"
     _prepared_elements = None
 
+    elements = None
+
     def __init__(self, title, elements=[]):
         super(Transaction, self).__init__()
-        base.Base.__init__(self)
         self.title = title
         self._prepared_elements = []
-        self.extend(elements)
+        self.elements = elements
 
     def prepare(self):
         self._prepared_elements = []
-        for element in self:
+        for element in self.elements:
             self.logger.debug("Preparing element '%s'" % element)
-            if Transaction.Element not in element.__class__.mro():
-                raise exceptions.PreconditionError(("%s is no Transaction." +
+            if not issubclass(element.__class__, Transaction.Element) and \
+                    not issubclass(element.__class__, Transaction):
+                raise exceptions.PreconditionError(("%s is no Transaction."
                                                     "Element") % element)
             self._prepared_elements.append(element)
             element.prepare()
         return True
 
     def commit(self):
-        for element in self:
+        for element in self.elements:
             self.logger.debug("Committing element '%s'" % element)
             element.commit()
         return True
@@ -230,8 +259,8 @@ class Transaction(list, base.Base):
                 self.prepare()
                 self.commit()
         except Exception as e:
-            self.logger.exception("Transaction failed (%s): %s" % (e,
-                                                                   e.message))
+            self.logger.debug("Transaction failed (%s): %s" %
+                              (e, e.message), exc_info=True)
             self.abort()
             raise exceptions.TransactionError("Transaction failed: " +
                                               "%s" % e.message)
@@ -241,15 +270,31 @@ class Transaction(list, base.Base):
     def __call__(self):
         return self.run()
 
-    def __str__(self):
-        return self.build_str(["title"], {"elements": list.__str__(self)})
+    def __repr__(self):
+        return self.build_str(["title"],
+                              {"elements": self.elements})
+
+    def __len__(self):
+        return len(self.elements)
+
+    def __getitem__(self, key):
+        return self.elements[key]
+
+    def __setitem__(self, key, value):
+        self.elements[key] = value
+
+    def __delitem__(self, key):
+        del self.elements[key]
+
+    def __iter__(self):
+        return self.elements.__iter__()
 
     def step(self):
         try:
             with lockfile.FileLock(self._lockfilename):
                 self.logger.debug("Preparing transaction %s" % self)
                 self.prepare()
-                for idx, e in enumerate(self):
+                for idx, e in enumerate(self.elements):
                     yield (idx, e)
         except lockfile.NotLocked:
             self.logger.warning("The lockfile wasn't locked at the end")
