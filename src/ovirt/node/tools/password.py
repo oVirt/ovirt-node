@@ -18,13 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node.utils import security
-from ovirt.node.utils.security import password_check
 import cmd
 import getpass
 import logging
 import optparse
 import sys
+
+logging.basicConfig(format='[%(levelname)s] %(message)s')
+
+from ovirt.node.utils import security
+from ovirt.node.utils.security import password_check
 
 
 class PasswordTool(cmd.Cmd):
@@ -103,14 +106,9 @@ if __name__ == "__main__":
 
     # Configure logging
     lvl = logging.DEBUG if namespace.verbose else logging.INFO
-    logging.basicConfig(level=lvl, format='[%(levelname)s] %(message)s')
+    logging.getLogger().setLevel(lvl)
 
     # Setup CLI
     cli = PasswordTool(namespace.verbose)
 
-    #if namespace.command:
-    #    for command in namespace.command:
-    #        if command.strip():
-    #            cli.onecmd(command)
-    #else:
     cli.cmdloop()
