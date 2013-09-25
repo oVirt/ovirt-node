@@ -81,7 +81,8 @@ pyovirt_node_PYTHON = \
   ovirt/node/valid.py \
   ovirt/node/app.py \
   ovirt/node/base.py \
-  ovirt/node/loader.py
+  ovirt/node/loader.py \
+  ovirt/node/log.py
 
 pyovirt_node_config_PYTHON = \
   ovirt/node/config/__init__.py \
