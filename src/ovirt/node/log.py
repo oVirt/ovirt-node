@@ -73,7 +73,8 @@ format=%(levelname)10s %(asctime)s %(pathname)s:%(lineno)s:%(funcName)s: \
 
 def getLogger(name=None):
     if not getLogger._logger:
-        configure_logging()
+        if not logging.getLogger().handlers:
+            configure_logging()
         getLogger._logger = logging.getLogger()
     fullname = ".".join([getLogger._logger.name, name]) if name else name
     return logging.getLogger(fullname)
