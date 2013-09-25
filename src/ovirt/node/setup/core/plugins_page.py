@@ -40,7 +40,7 @@ class Plugin(NodePlugin):
         return _("Plugins")
 
     def rank(self):
-        return -1
+        return 300
 
     def ui_content(self):
         all_plugins = self.__list_of_plugins()
