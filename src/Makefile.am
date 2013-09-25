@@ -82,6 +82,7 @@ pyovirt_node_PYTHON = \
   ovirt/node/valid.py \
   ovirt/node/app.py \
   ovirt/node/base.py \
+  ovirt/node/log.py \
   ovirt/node/loader.py
 
 dist_ovirt_node_locale_cn_DATA = \
