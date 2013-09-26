@@ -70,6 +70,7 @@ pyovirt_node_setup_coredir = $(pyovirt_node_setupdir)/core
 pyovirt_node_setup_cimdir = $(pyovirt_node_setupdir)/cim
 pyovirt_node_setup_snmpdir = $(pyovirt_node_setupdir)/snmp
 pyovirt_node_setup_puppetdir = $(pyovirt_node_setupdir)/puppet
+pyovirt_node_setup_ipmidir = $(pyovirt_node_setupdir)/ipmi
 
 
 pyovirt_PYTHON = \
@@ -188,3 +189,9 @@ pyovirt_node_setup_snmp_PYTHON = \
 pyovirt_node_setup_puppet_PYTHON = \
   ovirt/node/setup/puppet/__init__.py \
   ovirt/node/setup/puppet/puppet_page.py
+
+
+# Setup ipmi Plugin
+pyovirt_node_setup_ipmi_PYTHON = \
+  ovirt/node/setup/ipmi/__init__.py \
+  ovirt/node/setup/ipmi/ipmi_page.py
