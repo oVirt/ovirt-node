@@ -126,6 +126,14 @@ This package provides plugin tools for modifying and working with the
 This package is not to be installed on the %{product_family},
 however on a development machine to work with the image.
 
+%package plugin-ipmi
+Summary:        Ipmi plugin for %{product_family} image
+Group:          Applications/System
+Requires:       ipmitool
+
+%description plugin-ipmi
+This package provides a ipmi plugin for use with %{product_family} image.
+
 %package plugin-puppet
 Summary:        Puppet plugin for %{product_family} image
 Group:          Applications/System
@@ -488,6 +496,10 @@ fi
 %{_sbindir}/edit-node
 %{_sbindir}/testable-node
 %{_mandir}/man8/edit-node.8.gz
+
+%files plugin-ipmi
+%{python_sitelib}/ovirt/node/setup/ipmi/__init__.py*
+%{python_sitelib}/ovirt/node/setup/ipmi/ipmi_page.py*
 
 %files plugin-puppet
 %{python_sitelib}/ovirt/node/setup/puppet/__init__.py*
