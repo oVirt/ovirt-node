@@ -47,18 +47,17 @@ class Plugin(plugins.NodePlugin):
         return self._model
 
     def validators(self):
-        is_zero = valid.Number(exactly=0)
         min_swap, min_logging = self.__get_min_sizes()
         return {"storage.efi_size":
                 valid.Number(bounds=[0, None]),
                 "storage.root_size":
                 valid.Number(bounds=[0, None]),
                 "storage.swap_size":
-                valid.Number(bounds=[min_swap, None]) | is_zero,
+                valid.Number(bounds=[min_swap, None]),
                 "storage.config_size":
                 valid.Number(bounds=[5, None]),
                 "storage.logging_size":
-                valid.Number(bounds=[min_logging, None]) | is_zero,
+                valid.Number(bounds=[min_logging, None]),
                 "storage.data_size":
                 valid.Number(bounds=[-1, None]),
                 }
