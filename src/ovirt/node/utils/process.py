@@ -118,14 +118,18 @@ def check_output(*args, **kwargs):
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
     __check_for_problems(args, kwargs)
+    stdout = None
     try:
-        return unicode(subprocess.check_output(*args, **kwargs),
-                       encoding=sys.stdin.encoding or "utf-8")
+        stdout = subprocess.check_output(*args, **kwargs)
+        stdout = unicode(stdout,
+                         encoding=sys.stdin.encoding or "utf-8")
     except AttributeError:
         # We're probably on Python 2.6, which doesn't have check_output
         # http://docs.python.org/2.6/library/subprocess.html#module-subprocess
         # Working around by using pipe with it's check feature
-        return pipe(*args, check=True, **kwargs)
+        stdout = pipe(*args, check=True, **kwargs)
+
+    return stdout
 
 
 def pipe(cmd, stdin=None, check=False, **kwargs):
@@ -169,6 +173,7 @@ def pipe(cmd, stdin=None, check=False, **kwargs):
     if type(cmd) in [str, unicode]:
         kwargs["shell"] = True
     __check_for_problems(cmd, kwargs)
+
     proc = popen(cmd, **kwargs)
     stdout, stderr = proc.communicate(stdin)
 
@@ -181,4 +186,7 @@ def pipe(cmd, stdin=None, check=False, **kwargs):
         err.output = stderr
         raise err
 
-    return unicode(stdout)
+    stdout = unicode(stdout,
+                     encoding=sys.stdin.encoding or "utf-8")
+
+    return stdout
