@@ -44,9 +44,25 @@ def __update_kwargs(kwargs):
 
 
 def __check_for_problems(args, kwargs):
+    """This checks for one well known problem.
+
+    If a string is used as the cmd, then shell=True needs to be passed
+    >>> __check_for_problems(["true"], {"shell": True})
+
+    When the cmd is a list, then shell must be False (which it is by default)
+    >>> __check_for_problems([["true"]], {"shell": False})
+    >>> __check_for_problems([["true"]], {})
+
+    If a list is used as the cmd, then shell is not allowed.
+    >>> __check_for_problems([["true"]],
+    ... {"shell": True}) #doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    RuntimeError:
+    """
     if ("shell" in kwargs and kwargs["shell"] is True) and \
             (args and type(args[0]) is list):
-        raise RuntimeError("Combining  shell=True and a command list does " +
+        raise RuntimeError("Combining shell=True and a command list does " +
                            "not work. With shell=True the first argument" +
                            "must be a string. A list otherwise.")
 
@@ -62,6 +78,15 @@ def popen(*args, **kwargs):
 
 def call(*args, **kwargs):
     """subprocess.call wrapper to not leak file descriptors
+
+    >>> call(["true"])
+    0
+    >>> call(["false"])
+    1
+    >>> call(["echo", "42"], stdout=PIPE)
+    0
+    >>> call("echo 42", shell=True, stdout=PIPE)
+    0
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Calling with: %s %s" % (args, kwargs))
@@ -80,6 +105,15 @@ def check_call(*args, **kwargs):
 
 def check_output(*args, **kwargs):
     """subprocess.check_output wrapper to not leak file descriptors
+
+    >>> check_output(["echo", "-n", "42"])
+    u'42'
+    >>> check_output("echo -n 42", shell=True)
+    u'42'
+    >>> check_output("false", shell=True)
+    Traceback (most recent call last):
+    ...
+    CalledProcessError: Command 'false' returned non-zero exit status 1
     """
     kwargs = __update_kwargs(kwargs)
     LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
@@ -88,25 +122,63 @@ def check_output(*args, **kwargs):
         return unicode(subprocess.check_output(*args, **kwargs),
                        encoding=sys.stdin.encoding or "utf-8")
     except AttributeError:
-        # We're probably on Python 2.7, which doesn't have check_output
+        # We're probably on Python 2.6, which doesn't have check_output
         # http://docs.python.org/2.6/library/subprocess.html#module-subprocess
-        # Working around by using pipe, which doesn't check, but returns the
-        # output
-        return pipe(*args, **kwargs)
+        # Working around by using pipe with it's check feature
+        return pipe(*args, check=True, **kwargs)
 
 
-def pipe(cmd, stdin=None, **kwargs):
+def pipe(cmd, stdin=None, check=False, **kwargs):
     """Run a non-interactive command and return it's output
 
     Args:
         cmd: Cmdline to be run
         stdin: (optional) Data passed to stdin
+        check: Raise an CalledProcessException if the cmd fails
 
     Returns:
         stdout, stderr of the process (as one blob)
+
+    >>> pipe("echo 1")
+    u'1\\n'
+    >>> pipe("false ; echo -n 42")
+    u'42'
+    >>> pipe("true")
+    u''
+    >>> pipe("false")
+    u''
+
+    When asked, pipe() can also throw Exceptions
+    >>> pipe("false", check=True)
+    Traceback (most recent call last):
+    ...
+    CalledProcessError: Command 'false' returned non-zero exit status 1
+
+    This is how pipe is used in check_output as a fallback, so let's check
+    it here too:
+    >>> args = ["false"]
+    >>> kwargs = {}
+    >>> pipe(*args, check=True, **kwargs)
+    Traceback (most recent call last):
+    ...
+    CalledProcessError: Command 'false' returned non-zero exit status 1
     """
     kwargs.update({"stdin": PIPE,
                    "stdout": PIPE,
                    "stderr": STDOUT})
+    if type(cmd) in [str, unicode]:
+        kwargs["shell"] = True
     __check_for_problems(cmd, kwargs)
-    return unicode(popen(cmd, **kwargs).communicate(stdin)[0])
+    proc = popen(cmd, **kwargs)
+    stdout, stderr = proc.communicate(stdin)
+
+    #
+    # We need to handle the checking ourselfs, mainly for el6 comapatability
+    # as a fallback for check_output
+    #
+    if check and proc.returncode != 0:
+        err = CalledProcessError(proc.returncode, cmd)
+        err.output = stderr
+        raise err
+
+    return unicode(stdout)
