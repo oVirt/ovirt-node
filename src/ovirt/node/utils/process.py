@@ -44,9 +44,25 @@ def __update_kwargs(kwargs):
 
 
 def __check_for_problems(args, kwargs):
+    """This checks for one well known problem.
+
+    If a string is used as the cmd, then shell=True needs to be passed
+    >>> __check_for_problems(["true"], {"shell": True})
+
+    When the cmd is a list, then shell must be False (which it is by default)
+    >>> __check_for_problems([["true"]], {"shell": False})
+    >>> __check_for_problems([["true"]], {})
+
+    If a list is used as the cmd, then shell is not allowed.
+    >>> __check_for_problems([["true"]],
+    ... {"shell": True}) #doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    RuntimeError:
+    """
     if ("shell" in kwargs and kwargs["shell"] is True) and \
             (args and type(args[0]) is list):
-        raise RuntimeError("Combining  shell=True and a command list does " +
+        raise RuntimeError("Combining shell=True and a command list does " +
                            "not work. With shell=True the first argument" +
                            "must be a string. A list otherwise.")
 
@@ -109,7 +125,7 @@ def check_output(*args, **kwargs):
         # We're probably on Python 2.6, which doesn't have check_output
         # http://docs.python.org/2.6/library/subprocess.html#module-subprocess
         # Working around by using pipe with it's check feature
-        stdout = pipe(*args, check=True, **kwargs)
+        return pipe(*args, check=True, **kwargs)
 
     return stdout
 
@@ -152,5 +168,19 @@ def pipe(cmd, stdin=None, check=False, **kwargs):
     kwargs.update({"stdin": PIPE,
                    "stdout": PIPE,
                    "stderr": STDOUT})
+    if type(cmd) in [str, unicode]:
+        kwargs["shell"] = True
     __check_for_problems(cmd, kwargs)
-    return unicode(popen(cmd, **kwargs).communicate(stdin)[0])
+    proc = popen(cmd, **kwargs)
+    stdout, stderr = proc.communicate(stdin)
+
+    #
+    # We need to handle the checking ourselfs, mainly for el6 comapatability
+    # as a fallback for check_output
+    #
+    if check and proc.returncode != 0:
+        err = CalledProcessError(proc.returncode, cmd)
+        err.output = stderr
+        raise err
+
+    return unicode(stdout)
