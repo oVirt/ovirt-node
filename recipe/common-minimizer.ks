@@ -290,12 +290,9 @@ keep /lib/firmware/ql*
 keep /lib/firmware/sun
 keep /lib/firmware/tehuti
 keep /lib/firmware/tigon
-keep /lib/firmware/cbfw_fc.bin
-keep /lib/firmware/ctfw_cna.bin
-keep /lib/firmware/ctfw_fc.bin
-keep /lib/firmware/cbfw.bin
-keep /lib/firmware/ct2fw.bin
-keep /lib/firmware/ctfw.bin
+keep /lib/firmware/cbfw*
+keep /lib/firmware/ctfw*
+keep /lib/firmware/ct2fw*
 keep /lib/firmware/aic94xx-seq.fw
 
 drop /etc/pki/tls
