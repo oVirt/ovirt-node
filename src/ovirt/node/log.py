@@ -73,15 +73,8 @@ format=%(levelname)10s %(asctime)s %(pathname)s:%(lineno)s:%(funcName)s: \
 
 def getLogger(name=None):
     if not getLogger._logger:
-<<<<<<< HEAD
-        if not logging.getLogger().handlers:
-            configure_logging()
+        configure_logging()
         getLogger._logger = logging.getLogger()
     fullname = ".".join([getLogger._logger.name, name]) if name else name
     return logging.getLogger(fullname)
-=======
-        configure_logging()
-        getLogger._logger = logging.getLogger()
-    return getLogger._logger.getChild(name)
->>>>>>> 1e3d314... log: Add a log module
 getLogger._logger = None
