@@ -104,6 +104,7 @@ empty	/cgroup
 files	/var/lib/yum
 files	/var/cache/yum
 files	/usr/share/snmp/mibs
+files   /var/lib/lldpad
 EOF_rwtab_ovirt
 
 # fix iSCSI/LVM startup issue
