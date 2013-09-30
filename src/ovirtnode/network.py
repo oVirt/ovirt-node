@@ -51,8 +51,8 @@ class Network:
         self.vlan_id = ""
 
     def configure_dns(self):
-        from ovirt.node.config.defaults import Network
-        return Network().commit()
+        from ovirt.node.config.defaults import Nameservers
+        return Nameservers().commit()
 
 
 def convert_to_biosdevname():
