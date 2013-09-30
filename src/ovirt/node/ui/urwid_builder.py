@@ -321,7 +321,7 @@ class UrwidWindow(ui.Window):
     element_styles = {
         "text": "black",
         "label": "dark gray",
-        "disabled": "dark gray",
+        "disabled": "dark red",
         "background": "light gray",
         "invalid": "dark red",
         "header": 'black, bold',
