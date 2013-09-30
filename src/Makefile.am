@@ -115,7 +115,8 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/storage.py \
   ovirt/node/utils/system.py \
   ovirt/node/utils/tuned.py \
-  ovirt/node/utils/virt.py
+  ovirt/node/utils/virt.py \
+  ovirt/node/utils/input.py
 
 pyovirt_node_tools_PYTHON = \
   ovirt/node/tools/__init__.py \
