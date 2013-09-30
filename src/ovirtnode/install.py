@@ -41,22 +41,23 @@ class Install:
         self.partN = -1
         self.s = Storage()
         self.efi_hd = ""
+        self.live_path = None
 
     def kernel_image_copy(self):
-        if (not _functions.system("cp -p /live/" + self.syslinux + \
-                                 "/vmlinuz0 " + self.initrd_dest)):
+        if (not _functions.system("cp -p %s/vmlinuz0 %s" % \
+                                 (self.live_path, self.initrd_dest))):
             logger.error("kernel image copy failed.")
             return False
-        if (not _functions.system("cp -p /live/" + self.syslinux + \
-                                 "/initrd0.img " + self.initrd_dest)):
+        if (not _functions.system("cp -p %s/initrd0.img %s" % \
+                                 (self.live_path, self.initrd_dest))):
             logger.error("initrd image copy failed.")
             return False
-        if (not _functions.system("cp -p /live/" + self.syslinux + \
-                                 "/version /liveos")):
+        if (not _functions.system("cp -p %s/version /liveos" \
+                                  % self.live_path)):
             logger.error("version details copy failed.")
             return False
-        if (not _functions.system("cp -p /live/LiveOS/squashfs.img " + \
-                                  "/liveos/LiveOS")):
+        if (not _functions.system("cp %s/LiveOS/squashfs.img /liveos/LiveOS" \
+                                  % os.path.split(self.live_path)[0])):
             logger.error("squashfs image copy failed.")
             return False
         return True
@@ -64,11 +65,16 @@ class Install:
     def generate_paths(self):
         _functions.mount_live()
         # install oVirt Node image for local boot
-        if os.path.exists("/live/syslinux"):
-            self.syslinux = "syslinux"
-        elif os.path.exists("/live/isolinux"):
-            self.syslinux = "isolinux"
-        else:
+        syslinux_paths = ["/live/syslinux", "/dev/.initramfs/live/syslinux"]
+
+        if os.path.exists("/live/isolinux"):
+            self.live_path = "/live/isolinux"
+
+        for d in syslinux_paths:
+            if os.path.exists(d):
+                self.live_path = d
+                break
+        if not self.live_path:
             logger.info("Failed to determine grub pathnames")
             return False
 
@@ -149,7 +155,8 @@ EOF
                                                                        efi_out)
             if matches and matches.groups():
                 GRUB_EFIONLY_CONFIG = """%(efi_hd)s"""
-                GRUB_CONFIG_TEMPLATE = GRUB_EFIONLY_CONFIG + GRUB_CONFIG_TEMPLATE
+                GRUB_CONFIG_TEMPLATE = GRUB_EFIONLY_CONFIG + \
+                                       GRUB_CONFIG_TEMPLATE
                 self.grub_dict['efi_hd'] = "device (hd0) " + matches.group(1)
         if os.path.exists("/live/EFI/BOOT/splash.xpm.gz"):
             splashscreen = "splashimage=(hd0,%s)/grub/splash.xpm.gz" \
@@ -180,8 +187,10 @@ EOF
         # usb devices requires default BOOTX64 entries
         if _functions.is_efi_boot():
             _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
-            _functions.system("cp /boot/efi/EFI/redhat/grub.efi /liveos/efi/EFI/BOOT/BOOTX64.efi")
-            _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" % self.grub_config_file)
+            _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
+                              /liveos/efi/EFI/BOOT/BOOTX64.efi")
+            _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" \
+                              % self.grub_config_file)
             _functions.system("umount /liveos/efi")
         if not _functions.is_efi_boot():
             for f in ["stage1", "stage2", "e2fs_stage1_5"]:
@@ -254,7 +263,8 @@ initrd /initrd0.img
         else:
             logger.debug("Generating Grub2 Templates")
             if _functions.is_efi_boot():
-                if not os.path.exists("/liveos/efi/EFI/%s" % self.efi_dir_name):
+                if not os.path.exists("/liveos/efi/EFI/%s" \
+                                      % self.efi_dir_name):
                     os.makedirs("/liveos/efi/EFI/%s" % self.efi_dir_name)
             grub_conf = open(self.grub_config_file, "w")
             grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
@@ -298,7 +308,8 @@ initrd /initrd0.img
         grub_config_file = None
         _functions.mount_liveos()
         if os.path.ismount("/liveos"):
-            if os.path.exists("/liveos/vmlinuz0") and os.path.exists("/liveos/initrd0.img"):
+            if os.path.exists("/liveos/vmlinuz0") \
+                              and os.path.exists("/liveos/initrd0.img"):
                 grub_config_file = self.grub_config_file
         elif not _functions.is_firstboot():
             # find existing iscsi install
@@ -312,7 +323,7 @@ initrd /initrd0.img
             elif os.path.ismount("/run/initramfs/live"):
                 grub_config_file = "/run/initramfs/live/grub/grub.conf"
             if _functions.is_upgrade() and not _functions.is_iscsi_install():
-                mount_liveos()
+                _functions.mount_liveos()
                 grub_config_file = "/liveos/grub/grub.conf"
         if _functions.is_efi_boot():
             logger.debug(str(os.listdir("/liveos")))
@@ -321,7 +332,8 @@ initrd /initrd0.img
             grub_config_file = "/liveos/EFI/%s/grub.cfg" % self.efi_dir_name
         if _functions.is_iscsi_install():
             grub_config_file = "/boot/grub/grub.conf"
-        grub_config_file_exists = grub_config_file is not None and os.path.exists(grub_config_file)
+        grub_config_file_exists = grub_config_file is not None \
+            and os.path.exists(grub_config_file)
         logger.debug("Grub config file is: %s" % grub_config_file)
         logger.debug("Grub config file exists: %s" % grub_config_file_exists)
         if not grub_config_file is None and os.path.exists(grub_config_file):
@@ -374,7 +386,8 @@ initrd /initrd0.img
                 if not _functions.system(e2label_cmd):
                     logger.error("Failed to label new Boot partition")
                     return False
-            _functions.system("mount LABEL=%s /boot &>/dev/null" % self.boot_candidate)
+            _functions.system("mount LABEL=%s /boot &>/dev/null" \
+                              % self.boot_candidate)
 
             if os.path.exists("/boot/ovirt"):
                 try:
@@ -557,7 +570,7 @@ initrd /initrd0.img
     }
         if not _functions.is_firstboot():
             if os.path.ismount("/live"):
-                with open("/live/%s/version" % self.syslinux) as version:
+                with open("%s/version" % self.live_path) as version:
                     for line in version.readlines():
                         if "VERSION" in line:
                             key, value = line.split("=")
