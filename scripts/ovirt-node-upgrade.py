@@ -36,7 +36,7 @@ OVIRT_UPGRADED = "/tmp/ovirt_upgraded"
 
 def which(file):
     ret = None
-    if os.path.abspath(file) and os.path.exists(file):
+    if os.path.isabs(file) and os.path.exists(file):
         ret = file
     else:
         for dir in os.environ["PATH"].split(":"):
