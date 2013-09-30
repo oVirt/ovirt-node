@@ -183,9 +183,6 @@ EOF
         # usb devices requires default BOOTX64 entries
         if _functions.is_efi_boot():
             _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
-            if _functions.is_iscsi_install():
-                _functions.system("cp /tmp/grub.efi \
-                                   /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
                               /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" \
@@ -393,8 +390,32 @@ initrd /initrd0.img
                 if not _functions.system(e2label_cmd):
                     logger.error("Failed to label new Boot partition")
                     return False
-            _functions.system("mount %s /boot &>/dev/null" \
-                              % boot_candidate_dev)
+            _functions.system("mount LABEL=%s /boot &>/dev/null" \
+                              % self.boot_candidate)
+
+            if os.path.exists("/boot/ovirt"):
+                try:
+                    f = open("/boot/ovirt", 'r')
+                    for line in f:
+                        try:
+                            line = line.strip()
+                            key, value = line.split("\"", 1)
+                            key = key.strip("=")
+                            key = key.strip()
+                            value = value.strip("\"")
+                            OVIRT_VARS[key] = value
+                        except:
+                            pass
+                    f.close()
+                    iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
+                                     "sendtargets") % (
+                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"],
+                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
+                    _functions.system(iscsiadm_cmd)
+                    logger.info("Restarting iscsi service")
+                    _functions.system("service iscsi restart")
+                except:
+                    pass
 
         candidate = None
         candidate_names = ["RootBackup", "RootUpdate", "RootNew"]
