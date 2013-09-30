@@ -28,6 +28,7 @@ import logging
 import sys
 sys.path.append("/usr/share/rhn/up2date_client")
 
+
 RHN_CONFIG_FILE = "/etc/sysconfig/rhn/up2date"
 RHSM_CONFIG_FILE = "/etc/rhsm/rhsm.conf"
 RHN_XMLRPC_ADDR = "https://xmlrpc.rhn.redhat.com/XMLRPC"
