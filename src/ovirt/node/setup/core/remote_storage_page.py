@@ -40,9 +40,11 @@ class Plugin(plugins.NodePlugin):
     def model(self):
         icfg = defaults.iSCSI().retrieve()
         ncfg = defaults.NFSv4().retrieve()
+        boot = defaults.SCSIDhAlua().retrieve()
         model = {}
         model["iscsi.initiator_name"] = icfg["name"] or \
             self.dry_or(lambda: storage.iSCSI().initiator_name())
+        model["scsi.dh_alua"] = boot["enabled"] or False
         model["nfsv4.domain"] = ncfg["domain"]
         return model
 
@@ -53,6 +55,7 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         ws = [ui.Header("header", _("Remote Storage")),
+              ui.Checkbox("scsi.dh_alua", _("Enable SCSI DH_ALUA")),
               ui.Entry("iscsi.initiator_name", _("iSCSI Initiator Name:"),
                        align_vertical=True),
               ui.Divider("divider[0]"),
@@ -101,6 +104,13 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(nfsv4_keys):
             model = defaults.NFSv4()
             args = effective_model.values_for(nfsv4_keys)
+            model.update(*args)
+            txs += model.transaction()
+
+        scsi_keys = ["scsi.dh_alua"]
+        if changes.contains_any(scsi_keys):
+            model = defaults.SCSIDhAlua()
+            args = effective_model.values_for(scsi_keys)
             model.update(*args)
             txs += model.transaction()
 

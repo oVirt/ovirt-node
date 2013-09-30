@@ -25,6 +25,7 @@ from ovirt.node.utils import storage, process, fs, AugeasWrapper, console, \
     system, firewall
 from ovirt.node.utils.fs import ShellVarFile, File
 from ovirt.node.utils.network import NIC, Bridges, Bonds
+from ovirt.node.utils.system import Bootloader
 import glob
 import os
 
@@ -1243,6 +1244,46 @@ class iSCSI(NodeConfigFileSection):
         return tx
 
 
+class SCSIDhAlua(NodeConfigFileSection):
+    """Configure scsi_dh_alua
+
+    >>> from ovirt.node.utils import fs
+    >>> n = SCSIDhAlua(fs.FakeFs.File("dst"))
+    >>> enabled = True
+    >>> _ = n.update(enabled)
+    >>> n.retrieve().items()
+    [('enabled', True)]
+    """
+    keys = ("OVIRT_SCSI_DH_ALUA",)
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, enabled):
+        (valid.Boolean() | valid.Empty(or_none=True))(enabled)
+        return {"OVIRT_SCSI_DH_ALUA": "true" if enabled else None}
+
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        cfg.update({"enabled": True if cfg["enabled"] == "true" else False})
+        return cfg
+
+    def transaction(self):
+        cfg = dict(self.retrieve())
+        enabled = cfg["enabled"]
+
+        class CreateSCSIConfig(utils.Transaction.Element):
+            title = "Setting scsi_dh_alua"
+
+            def commit(self):
+                if enabled:
+                    Bootloader().Arguments()["rdloaddriver"] = "scsi_dh_alua"
+                else:
+                    del Bootloader().Arguments()["rdloaddriver"]
+
+        tx = utils.Transaction("Configuring scsi_dh_alua")
+        tx.append(CreateSCSIConfig())
+        return tx
+
+
 class Netconsole(NodeConfigFileSection):
     """Configure netconsole
 
@@ -1288,7 +1329,7 @@ class Logrotate(NodeConfigFileSection):
     >>> n.retrieve().items()
     [('interval', 'daily'), ('max_size', '42')]
     >>> interval = "weekly"
-    >>> n.update(max_size, interval)
+    >>> _ = n.update(max_size, interval)
     >>> n.retrieve().items()
     [('interval', 'weekly'), ('max_size', '42')]
     """
