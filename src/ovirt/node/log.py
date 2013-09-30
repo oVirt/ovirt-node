@@ -75,5 +75,6 @@ def getLogger(name=None):
     if not getLogger._logger:
         configure_logging()
         getLogger._logger = logging.getLogger()
-    return getLogger._logger.getChild(name)
+    fullname = ".".join([getLogger._logger.name, name]) if name else name
+    return logging.getLogger(fullname)
 getLogger._logger = None
