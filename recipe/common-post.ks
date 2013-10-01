@@ -98,7 +98,6 @@ files	/var/lib/libvirt
 files   /var/lib/multipath
 files   /var/cache/multipathd
 empty	/mnt
-empty	/live
 files	/boot
 empty	/boot-kdump
 empty	/cgroup
