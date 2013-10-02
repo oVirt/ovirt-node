@@ -376,7 +376,7 @@ cd -
 
 
 %post
-/sbin/chkconfig --level 35 netconsole on
+/sbin/chkconfig --level 35 netconsole off
 %if ! %{is_systemd}
 /sbin/chkconfig --add ovirt-awake
 /sbin/chkconfig --add ovirt-early
