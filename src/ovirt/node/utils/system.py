@@ -21,6 +21,7 @@
 from ovirt.node import base, utils, log
 from ovirt.node.utils import process
 from ovirt.node.utils.fs import File
+import glob
 import os
 import re
 import rpm
@@ -120,7 +121,7 @@ def service(name, cmd, do_raise=True):
         r = process.check_output(["service", name, cmd], **kwargs)
     except process.CalledProcessError as e:
         r = e.returncode
-        LOGGER.debug("Service cmd failed: %s %s" % (name,cmd), exc_info=True)
+        LOGGER.debug("Service cmd failed: %s %s" % (name, cmd), exc_info=True)
         LOGGER.debug("Service output: %s" % e.output)
         if do_raise:
             raise
@@ -514,3 +515,191 @@ class EFI(base.Base):
                           ("delete-bootnum", None)])
 
         return True
+
+
+class Filesystem(base.Base):
+    """A class for finding and handling filesystems"""
+    @staticmethod
+    def by_label(label):
+        """Determines whether a filesystem with a given label is present on
+        this system
+        """
+        process.call(["partprobe"] + [x for x in glob.glob("/dev/mapper/*")
+                                      if not re.match(r'.*\/control$', x)])
+        process.call(["udevadm", "settle"])
+        try:
+            process.check_call(["/sbin/blkid", "-c", "/dev/null", "-l", "-o",
+                                "device", "-t", 'LABEL="%s"' % label])
+
+            return True
+
+        except process.CalledProcessError as e:
+            LOGGER.exception("Failed to resolve disks: %s" % e.cmd)
+            return False
+
+
+class Mount(base.Base):
+    """A class to find the base mount point for a path and handle mounting
+    that filesystem for access
+    """
+
+    def __init__(self, path):
+        if os.path.ismount(path):
+            self.path = path
+        else:
+            raise RuntimeError("Must be called with a mount point")
+
+    def remount(self, rw=False):
+        # EL6 won't let you remount if it's not in mtab or fstab
+        # So we'll parse /proc/mounts ourselves to find it
+        device = self._find_device()
+        try:
+            if rw:
+                utils.process.check_call(["mount", "-o", "rw,remount",
+                                          device, self.path])
+            else:
+                utils.process.check_call(["mount", "-o", "ro,remount",
+                                          device, self.path])
+        except:
+            self.logger.exception("Can't remount %s on %s!" % (device,
+                                                               self.path))
+
+    def _find_device(self):
+        try:
+            return process.check_output(["findmnt", "-o", "SOURCE", "-n",
+                                         self.path]).strip()
+        except:
+            raise RuntimeError("Couldn't find mount device for %s" % self.path)
+
+    def __repr__(self):
+        return "Mount(%s)" % self.path
+
+    def __str__(self):
+        return self.path
+
+    @staticmethod
+    def find_by_path(path):
+        while not os.path.ismount(path):
+            path = os.path.dirname(path)
+        return Mount(path)
+
+
+class Bootloader(base.Base):
+    """Figures out where grub.conf can be found and which bootloader is used"""
+
+    @staticmethod
+    def is_grub2():
+        # If grub2 exists on the image, assume we're using it
+        return os.path.exists("/sbin/grub2-install")
+
+    @staticmethod
+    def find_grub_cfg():
+        cfg_path = None
+
+        if Filesystem.by_label("Boot"):
+            cfg_path = "/boot/grub/grub.conf"
+        elif os.path.ismount("/dev/.initramfs/live"):
+            if not Bootloader.is_grub2():
+                cfg_path = "/dev/.initramfs/live/grub/grub.conf"
+            else:
+                cfg_path = "/dev/.initramfs/live/grub2/grub.cfg"
+        elif os.path.ismount("/run/initramfs/.live"):
+            cfg_path = "/liveos/grub/grub.conf"
+
+        else:
+            raise RuntimeError("Failed to find the path for grub.[cfg|conf]")
+        return File(cfg_path)
+
+    class Arguments(base.Base):
+
+        def __init__(self):
+            self.__handle = Bootloader.find_grub_cfg()
+            self.__mount = Mount.find_by_path(self.__handle.filename)
+            self.items = self.__get_arguments()
+
+        def __str__(self):
+            return str(self.items)
+
+        def __get_lines(self):
+            lines = [line for line in self.__handle]
+            return lines
+
+        def __get_arguments(self):
+            kernel = [line for line in self.__get_lines() if
+                      re.match(r'[^#].*?vmlinuz', line)][0]
+            kernel = re.sub(r'^\s*?(kernel|linux)\s+?\/vmlinuz.*?\s+', '',
+                            kernel)
+            params = {}
+            for param in kernel.split():
+                match = re.match(r'(.*?)=(.*)', param)
+                if match:
+                    params[match.groups()[0]] = match.groups()[1]
+                else:
+                    params[param] = True
+            self.items = params
+            return params
+
+        def __getitem__(self, key):
+            if re.match(r'^(.*?)=', key):
+                argument = re.match(r'^(.*?)=', key).groups()[0]
+                #flags = re.match(r'^.*?=(.*)', key).groups()[0]
+                if argument in self.items:
+                    return self.items[argument]
+            elif key in self.items:
+                return self.items[key]
+            else:
+                raise KeyError
+
+        def __setitem__(self, key, value):
+            if value is True:
+                self.update_args(key)
+            else:
+                self.update_args("%s=%s" % (key, value))
+
+        def keys(self):
+            return self.items.keys()
+
+        def values(self):
+            return self.items.values()
+
+        def has_key(self, key):
+            return key in self.items
+
+        def __len__(self):
+            return len(self.items)
+
+        def __delitem__(self, key):
+            self.update_args(self, key, True)
+
+        def update(self, changes):
+            for k, v in changes:
+                self.__setitem__(k, v)
+
+        def __contains__(self, key):
+            return key in self.items
+
+        def update_args(self, arg, remove=False):
+            replacement = arg
+            # Check if it's parameterized
+            if '=' in arg:
+                arg = re.match(r'^(.*?)=.*', arg).groups()[0]
+            self.__mount.remount(rw=True)
+            lines = self.__get_lines()
+            grub_cfg = ""
+            for line in lines:
+                if re.match(r'.*?\s%s' % arg, line):
+                    if remove:
+                        line = re.sub(r' %s(=.*?\s?)?' % arg, '', line)
+                    else:
+                        if arg != replacement:
+                            line = re.sub(r'%s(=.*?\s?)?' % arg, ' %s ' %
+                                          replacement, line)
+                elif re.match(r'^.*?vmlinuz', line):
+                    # Not in the kernel line. Add it.
+                    line = line.strip() + " %s\n" % replacement
+                grub_cfg += line
+            File(self.__handle.filename).write(grub_cfg, "w")
+            self.__mount.remount(rw=False)
+
+        def remove_args(self, arg):
+            self.update_args(arg, remove=True)
