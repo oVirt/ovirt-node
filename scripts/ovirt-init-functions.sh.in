@@ -1340,7 +1340,8 @@ EOP
         service network restart 2>/dev/null
 
         # Restarting netconsole, now that the network is up, rhbz#869984
-        [[ -f "/config/etc/sysconfig/netconsole" ]] && {
+        [[ -f "/config/etc/sysconfig/netconsole" &&
+           `egrep -E "SYSLOGADDR=.+" /config/etc/sysconfig/netconsole` ]] && {
             service netconsole restart
         }
 
