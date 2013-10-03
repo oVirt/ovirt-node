@@ -169,7 +169,10 @@ EOF
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
         grub_conf.close()
         # splashscreen
-        _functions.system("cp /live/EFI/BOOT/splash.xpm.gz /liveos/grub")
+        if _functions.is_iscsi_install():
+            _functions.system("cp /live/EFI/BOOT/splash.xpm.gz /boot/grub")
+        else:
+            _functions.system("cp /live/EFI/BOOT/splash.xpm.gz /liveos/grub")
         # usb devices requires default BOOTX64 entries
         if _functions.is_efi_boot():
             _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
