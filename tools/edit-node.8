@@ -33,6 +33,12 @@ Multiple packages can be specified by comma delimited list (package1,package2)
 Yum repository can be a local directory, a yum repository file, or a driver disk iso file. It must be used in conjunction with --install* options
 .IP \fB\-\-nogpgcheck\fR
 Skip GPG Key verification during yum install (only works with Driver Update isos and local yum repo directory)
+.IP \fB\-\-uidmod\fR
+Change a user uid number and update files on filesystem
+.IP \fB\-\-gidmod\fR
+Change a group id number and update files on filesystem
+.IP \fB\-\-list\-plugins\fR
+List Installed Plugins
 .IP \fB\-\-print-version\fR
 Prints current version information from /etc/system-release
 .IP \fB\-\-print-manifests\fR
