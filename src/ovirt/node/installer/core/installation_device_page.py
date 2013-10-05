@@ -22,7 +22,7 @@
 """
 Installation device selection page of the installer
 """
-from ovirt.node import plugins, ui, valid
+from ovirt.node import exceptions, plugins, ui, valid
 from ovirt.node.installer.core.boot_device_page import DeviceDetails, \
     CustomDeviceDialog, StorageDiscovery
 
@@ -124,9 +124,14 @@ class Plugin(plugins.NodePlugin):
                 self.logger.debug("selected devices: %s" % selected_devices)
                 changes["installation.devices"] = selected_devices
                 self._model.update(changes)
-
         if changes.contains_any(["installation.device.custom"]):
-            self._model.update(changes)
+            if self.storage_discovery.devices.live_disk_name() == \
+                    self.storage_discovery.devices.translate_device_name(
+                        changes["installation.device.custom"]).path:
+                raise exceptions.InvalidData("Can't be the same as " +
+                                             "the live device")
+            else:
+                self._model.update(changes)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)

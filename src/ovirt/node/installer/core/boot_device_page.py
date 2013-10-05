@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import plugins, ui, utils, valid
+from ovirt.node import exceptions, plugins, ui, utils, valid
 import threading
 
 """
@@ -96,7 +96,13 @@ class Plugin(plugins.NodePlugin):
                 self.widgets["label.details"].set_device(device)
 
         if changes.contains_any(["boot.device.custom"]):
-            self._model.update(changes)
+            if self.storage_discovery.devices.live_disk_name() == \
+                    self.storage_discovery.devices.translate_device_name(
+                        changes["boot.device.custom"]).path:
+                raise exceptions.InvalidData("Can't be the same as "
+                                             "the live device")
+            else:
+                self._model.update(changes)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
@@ -131,8 +137,8 @@ class StorageDiscovery(threading.Thread):
     """Probing for available devices is pulled out into a thread
     because it can tae several seconds
     """
-    _all_devices = None
     do_fake = False
+    devices = None
 
     def __init__(self, do_fake):
         super(StorageDiscovery, self).__init__()
@@ -140,7 +146,7 @@ class StorageDiscovery(threading.Thread):
 
     def run(self):
         devices = utils.storage.Devices(fake=self.do_fake)
-        self._all_devices = devices.get_all()
+        self.devices = devices
 
     def all_devices(self):
         """Return a list of all devices
@@ -150,7 +156,7 @@ class StorageDiscovery(threading.Thread):
         except RuntimeError:
             pass
             # I suppose the thread was not started
-        return self._all_devices
+        return self.devices.get_all()
 
     def all_devices_for_ui_table(self):
         """Returns a ui.Table ready list of strings with all useable storage
