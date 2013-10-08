@@ -1682,6 +1682,19 @@ def main():
                                       "Package : %s" % options.install_dup)
                         failed = True
                         #raise RuntimeError("Unable to Install Package")
+                if not options.password is None:
+                    print "Setting Account Passwords"
+                    editor._set_password(options)
+                if not options.ssh_keys is None:
+                    editor._setup_ssh_keys(options)
+                if not options.uidmod is None:
+                    editor._change_uid(options)
+                if not options.gidmod is None:
+                    editor._change_gid(options)
+                if options.shell:
+                    print "Launching shell. Exit to continue."
+                    print "----------------------------------"
+                    editor.launch_shell()
             except RuntimeError as e:
                 raise RuntimeError(e)
             finally:
@@ -1690,19 +1703,6 @@ def main():
                     selinux.security_setenforce(1)
                 if failed:
                     sys.exit(1)
-            if not options.password is None:
-                print "Setting Account Passwords"
-                editor._set_password(options)
-            if not options.ssh_keys is None:
-                editor._setup_ssh_keys(options)
-            if not options.uidmod is None:
-                editor._change_uid(options)
-            if not options.gidmod is None:
-                editor._change_gid(options)
-            if options.shell:
-                print "Launching shell. Exit to continue."
-                print "----------------------------------"
-                editor.launch_shell()
             if rebuild == 1:
                 editor._update_version(options)
                 editor._minimize()
