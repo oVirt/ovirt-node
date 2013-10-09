@@ -734,7 +734,8 @@ class LiveImageEditor(LiveImageCreator):
         if os.path.exists(plugin_info_dir):
             print "\nInstalled Plugins:\n"
             for p in os.listdir(plugin_info_dir):
-                print "%s\n" % p
+                if not len(os.path.splitext(p)[1]):
+                    print "%s\n" % p
         return True
 
     def _create_manifests(self, options):
