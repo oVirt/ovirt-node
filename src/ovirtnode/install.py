@@ -127,6 +127,7 @@ title %(product)s %(version)s-%(release)s
     root (hd0,%(partN)d)
     kernel /vmlinuz0 %(root_param)s %(bootparams)s
     initrd /initrd0.img
+    savedefault
     """
         GRUB_BACKUP_TEMPLATE = """
 title BACKUP %(oldtitle)s
