@@ -507,6 +507,9 @@ initrd /initrd0.img
                 OVIRT_VARS["OVIRT_BOOTIF"],
                 OVIRT_VARS["OVIRT_BOOTIF"],
                 OVIRT_VARS["OVIRT_BOOTIF"])
+            if "OVIRT_ISCSI_NAME" in OVIRT_VARS:
+                self.bootparams+= "rd.iscsi.initiator=%s " % \
+                    OVIRT_VARS["OVIRT_ISCSI_NAME"]
         else:
             self.root_param = "root=live:LABEL=Root"
             self.bootparams = "ro rootfstype=auto rootflags=ro "
