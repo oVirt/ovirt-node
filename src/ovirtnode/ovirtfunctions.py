@@ -75,6 +75,7 @@ OVIRT_CONFIG_FILES = [ "/etc/rsyslog.conf",
                        "/etc/libvirt/qemu/",
                        "/etc/ssh/sshd_config",
                        "/etc/pki",
+                       "/etc/iscsi/initiatorname.iscsi",
                        "/etc/logrotate.d/ovirt-node",
                        "/var/lib/random-seed" ]
 

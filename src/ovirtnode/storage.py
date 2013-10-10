@@ -26,6 +26,7 @@ import gudev
 import logging
 import subprocess
 import shlex
+from ovirtnode.iscsi import set_iscsi_initiator
 
 logger = logging.getLogger(__name__)
 
@@ -767,6 +768,9 @@ class Storage:
 
         self.boot_size_si = self.BOOT_SIZE * (1024 * 1024) / (1000 * 1000)
         if _functions.is_iscsi_install():
+            if "OVIRT_ISCSI_NAME" in _functions.OVIRT_VARS:
+                iscsi_name = _functions.OVIRT_VARS["OVIRT_ISCSI_NAME"]
+                set_iscsi_initiator(iscsi_name)
             # login to target and setup disk
             get_targets = ("iscsiadm -m discovery -p %s:%s -t sendtargets" %
                            (_functions.OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
