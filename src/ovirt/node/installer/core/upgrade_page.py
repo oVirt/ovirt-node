@@ -85,6 +85,7 @@ class Plugin(plugins.NodePlugin):
 
         if changes.contains_any(["upgrade.current_password",
                                  "button.next"]):
+            self._model.update(effective_changes)
             pam = security.PAM()
             # We can't use os.getlogin() here, b/c upgrade happens during boot
             # w/o login
