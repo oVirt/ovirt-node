@@ -171,6 +171,7 @@ class InstallerThread(threading.Thread):
         elif cfg["method"] in ["upgrade", "downgrade", "reinstall"]:
             tx.title = "Update"
             tx += [self.InstallImageAndBootloader()]
+            tx += [self.SetKeyboardLayout(cfg["keyboard.layout"])]
             new_password = cfg.get("upgrade.password", None)
             if new_password:
                 tx += [self.SetPassword(new_password)]
