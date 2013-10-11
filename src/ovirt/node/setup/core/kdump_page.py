@@ -73,7 +73,6 @@ class Plugin(plugins.NodePlugin):
         return {"kdump.type": valid.Options(dict(self._types).keys()),
                 "kdump.ssh_location": (valid.Empty() |
                                        valid.SSHAddress(allow_ipv6=False)),
-                "kdump.ssh_key": valid.Empty() | valid.URL(),
                 "kdump.nfs_location": (valid.Empty() |
                                        valid.NFSAddress(allow_ipv6=False)),
                 }
