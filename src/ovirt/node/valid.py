@@ -386,8 +386,9 @@ class IPAddress(Validator):
     False
     """
 
-    def __init__(self):
-        self._validator = IPv4Address() | IPv6Address()
+    def __init__(self, allow_ipv6=True):
+        self._validator = IPv4Address() | IPv6Address() if allow_ipv6 else \
+            IPv4Address()
         self.description = self._validator.description
 
     def validate(self, value):
@@ -407,8 +408,8 @@ class FQDNOrIPAddress(Validator):
     False
     """
 
-    def __init__(self):
-        self._validator = FQDN() | IPAddress()
+    def __init__(self, allow_ipv6=True):
+        self._validator = FQDN() | IPAddress(allow_ipv6)
         self.description = self._validator.description
 
     def validate(self, value):
@@ -517,6 +518,8 @@ class NFSAddress(Validator):
     False
     >>> NFSAddress().validate("1.2.3.4:var/nfsserver")
     False
+    >>> NFSAddress(allow_ipv6=False).validate("1::4:/var/nfsserver")
+    False
     >>> NFSAddress().validate("1::4")
     False
     >>> NFSAddress().validate("1:2:3:4")
@@ -528,13 +531,16 @@ class NFSAddress(Validator):
     """
     description = "a valid NFS address"
 
+    def __init__(self, allow_ipv6=True):
+        self._allow_ipv6 = allow_ipv6
+
     def validate(self, value):
         is_valid = False
         try:
             # Addr can be IPv6 or IPv4, therefor a bit more cplx
             parts = value.split(":")
             addr, path = ":".join(parts[:-1]), parts[-1]
-            FQDNOrIPAddress()(addr)
+            FQDNOrIPAddress(self._allow_ipv6)(addr)
             is_valid = path.startswith("/")
         except:
             is_valid = False
@@ -549,6 +555,10 @@ class SSHAddress(Validator):
     True
     >>> SSHAddress()("root@192.168.1.1")
     True
+    >>> SSHAddress().validate("root@1::4")
+    True
+    >>> SSHAddress(allow_ipv6=False).validate("root@1::4")
+    False
     >>> SSHAddress().validate(".com")
     False
     >>> SSHAddress().validate("")
@@ -556,6 +566,9 @@ class SSHAddress(Validator):
     """
 
     description = "a valid SSH Address"
+
+    def __init__(self, allow_ipv6=True):
+        self._allow_ipv6 = allow_ipv6
 
     def validate(self, value):
         is_valid = False
@@ -565,7 +578,7 @@ class SSHAddress(Validator):
                 raise ValueError()
             user, host = parts
             is_valid = Text().validate(user) and \
-                FQDNOrIPAddress().validate(host)
+                FQDNOrIPAddress(self._allow_ipv6).validate(host)
         except ValueError:
             is_valid = False
 

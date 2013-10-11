@@ -59,7 +59,8 @@ class Plugin(plugins.NodePlugin):
                 "rsyslog.address": (valid.Empty() | valid.FQDNOrIPAddress()),
                 "rsyslog.port": valid.Port(),
                 "netconsole.address": (valid.Empty() |
-                                       valid.FQDNOrIPAddress()),
+                                       valid.FQDNOrIPAddress(
+                                           allow_ipv6=False)),
                 "netconsole.port": valid.Port(),
                 }
 
