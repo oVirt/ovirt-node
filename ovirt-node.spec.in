@@ -150,7 +150,6 @@ patch -d /usr/lib/ruby/site_ruby/1.8/facter -p0 < \
 patch -d /usr/share/ruby/vendor_ruby/facter -p0 < \
 %endif
    %{app_root}/puppet-plugin/puppet-operatingsystem.rb.patch
-
 cd /etc/puppet
 patch -p0 << EOF
 --- puppet.conf 2013-03-21 14:55:43.969130799 -0700
