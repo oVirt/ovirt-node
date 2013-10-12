@@ -23,19 +23,20 @@ Facter.add(:operatingsystem) do
         if FileTest.exists?("/etc/system-release")
             txt = File.read("/etc/system-release")
             if txt =~ /^(.*?)\srelease.*/
-                $1
+                $1.gsub(//, '')
             end
         elsif FileTest.exists?("/etc/default/version")
             txt = File.read("/etc/default/version")
-            if txt =~ /^PRODUCT='(.*?)\s/
-                $1
+            if txt =~ /^PRODUCT='(.*?)'/
+                $1.gsub(//, '')
             end
         end
     end
 end
 
 Facter.add(:operatingsystemrelease) do
-    confine :operatingsystem => %w{oVirt}
+    confine :operatingsystem => %w{oVirt oVirtNodeHypervisor
+                                   RedHatEnterpriseVirtualizationHypervisor}
     setcode do
         if FileText.exists?("/etc/system-release")
             txt = File.text("/etc/system-release")
