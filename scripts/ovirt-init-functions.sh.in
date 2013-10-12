@@ -1365,6 +1365,11 @@ EOP
             service netconsole restart
         }
 
+        # Starting ipmi service
+        [[ -f "/etc/sysconfig/ipmi" ]] && {
+            service ipmi start
+        }
+
         # activate the tuned profile specified in OVIRT_TUNED
         echo "OVIRT TUNED PROFILE:  $OVIRT_TUNED_PROFILE"
         test -z "$OVIRT_TUNED_PROFILE" && OVIRT_TUNED_PROFILE="virtual-host"
