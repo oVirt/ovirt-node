@@ -143,9 +143,12 @@ Requires:       puppet
 This package provides a puppet plugin for use with %{product_family} image.
 
 %post plugin-puppet
+%if %{is_el6}
+patch -d /usr/lib/ruby/site_ruby/1.8/facter -p0 < \
+%else
 patch -d /usr/share/ruby/vendor_ruby/facter -p0 < \
+%endif
    %{app_root}/puppet-plugin/puppet-operatingsystem.rb.patch
-
 cd /etc/puppet
 patch -p0 << EOF
 --- puppet.conf 2013-03-21 14:55:43.969130799 -0700
