@@ -5,7 +5,7 @@
  # Caveats:
  #
 +$LOAD_PATH.unshift('/var/lib/puppet/facts')
-+require ovirt.rb
++require 'ovirt.rb'
 
  Facter.add(:operatingsystem) do
    confine :kernel => :sunos
@@ -17,7 +17,7 @@
 -       "Ubuntu"
 +    if FileTest.exists?("/etc/default/version")
 +      txt = File.read("/etc/default/version")
-+      if txt =~ /^PRODUCT='(.*?)\s/ 
++      if txt =~ /^PRODUCT='(.*?)\s/
 +          $1
 +      end
 +    elsif Facter.value(:lsbdistid) == "Ubuntu"
