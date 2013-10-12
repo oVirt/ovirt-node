@@ -23,12 +23,12 @@ Facter.add(:operatingsystem) do
         if FileTest.exists?("/etc/system-release")
             txt = File.read("/etc/system-release")
             if txt =~ /^(.*?)\srelease.*/
-                $1.gsub(/ /, '')
+                $1.gsub(//, '')
             end
         elsif FileTest.exists?("/etc/default/version")
             txt = File.read("/etc/default/version")
             if txt =~ /^PRODUCT='(.*?)'/
-                $1.gsub(/ /, '')
+                $1.gsub(//, '')
             end
         end
     end
