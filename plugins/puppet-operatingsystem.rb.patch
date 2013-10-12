@@ -17,8 +17,8 @@
 -       "Ubuntu"
 +    if FileTest.exists?("/etc/default/version")
 +      txt = File.read("/etc/default/version")
-+      if txt =~ /^PRODUCT='(.*?)'/
-+          $1.gsub(/\s/, '')
++      if txt =~ /^PRODUCT='(.*?)\s/
++          $1
 +      end
 +    elsif Facter.value(:lsbdistid) == "Ubuntu"
 +      "Ubuntu"
