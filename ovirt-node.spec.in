@@ -156,12 +156,16 @@ patch -p0 << EOF
 +++ puppet.conf.new 2013-03-21 14:56:02.690178578 -0700
 @@ -1,4 +1,6 @@
  [main]
-+    server = ""
-+    certname = ""
++#    server = ""
++#    certname = ""
      # The Puppet log directory.
      # The default value is '$vardir/log'.
      logdir = /var/log/puppet
 EOF
+
+%if %{is_el6}
+echo 'files /var/lib/puppet' >> /etc/rwtab
+%endif
 
 
 %package plugin-snmp

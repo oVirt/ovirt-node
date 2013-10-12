@@ -144,8 +144,10 @@ class ActivatePuppet(utils.Transaction.Element):
         conf_builder = ""
         for line in conf:
             try:
-                item = re.match(r'^\s+(\w+) =', line).group(1)
-                if item in cfg:
+                item = re.match(r'^#?\s+(\w+) =', line).group(1)
+                if item in cfg and cfg[item] is not '':
+                    if re.match(r'^#.*', line):
+                        line = re.sub(r'^#', '', line)
                     conf_builder += re.sub(r'(^.*?' + item + ' =).*',
                                            r'\1 "' + cfg[item] + '"',
                                            line)
@@ -158,5 +160,6 @@ class ActivatePuppet(utils.Transaction.Element):
         fs.Config().persist("/etc/puppet/puppet.conf")
 
         system.service("puppet", "stop")
-        utils.process.check_call("puppet agent --test", shell=True)
+        utils.process.check_call("puppet agent --waitforcert 60 --test",
+                                 shell=True)
         system.service("puppet", "start")
