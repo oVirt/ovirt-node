@@ -51,7 +51,7 @@ class Plugin(plugins.NodePlugin):
                         "Require a password for the admin user?"),
               ui.Label("label[0]", "Please enter the current admin " +
                        "password. You may also change the admin password " +
-                       "if required. If the new password fields are left" +
+                       "if required. If the new password fields are left " +
                        "blank the password will remain the same."),
               ui.Label("label[1]", "Password for the admin user"),
               ui.Divider("divider[0]"),
