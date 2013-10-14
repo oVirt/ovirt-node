@@ -107,7 +107,6 @@ class Install:
     def grub_install(self):
         if _functions.is_iscsi_install():
             self.disk = _functions.findfs("BootNew")
-            self.grub_dict["partN"] = int(self.disk[-1:]) - 1
             if not "/dev/mapper/" in self.disk:
                 self.disk = self.disk[:-1]
             else:
