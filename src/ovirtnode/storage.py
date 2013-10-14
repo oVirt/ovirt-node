@@ -113,12 +113,12 @@ class Storage:
                     print (("\n%s is smaller than minimum required size of: " +
                           "%s") % (i, self.__dict__[i_short]))
                     return False
-                logging.info(("Setting value for %s to %s " %
+                logger.info(("Setting value for %s to %s " %
                            (self.__dict__[i_short], _functions.OVIRT_VARS[i])))
                 i_short = i_short.replace("MIN_", "")
                 self.__dict__[i_short] = int(OVIRT_VARS[i])
             else:
-                logging.info("Using default value for: %s" % i_short)
+                logger.info("Using default value for: %s" % i_short)
         self.RootBackup_end = self.ROOT_SIZE * 2 + self.EFI_SIZE
         self.Root_end = self.EFI_SIZE + self.ROOT_SIZE
 
