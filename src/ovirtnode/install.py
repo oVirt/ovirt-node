@@ -107,6 +107,7 @@ class Install:
     def grub_install(self):
         if _functions.is_iscsi_install():
             self.disk = _functions.findfs("BootNew")
+            self.grub_dict["partN"] = int(self.disk[-1:]) - 1
             if not "/dev/mapper/" in self.disk:
                 self.disk = self.disk[:-1]
             else:
@@ -393,8 +394,8 @@ initrd /initrd0.img
                 if not _functions.system(e2label_cmd):
                     logger.error("Failed to label new Boot partition")
                     return False
-            _functions.system("mount LABEL=%s /boot &>/dev/null" \
-                              % self.boot_candidate)
+            _functions.system("mount %s /boot &>/dev/null" \
+                              % boot_candidate_dev)
 
         candidate = None
         candidate_names = ["RootBackup", "RootUpdate", "RootNew"]
