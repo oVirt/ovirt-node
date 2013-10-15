@@ -954,8 +954,13 @@ EOF
         if [ -f /dev/.initramfs/live/backup-vmlinuz ]; then
             # try backup image
             cp -p /dev/.initramfs/live/backup-vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
-        else
+        elif [ -f /dev/.initramfs/live/vmlinuz0 ]; then
             cp -p /dev/.initramfs/live/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+        #  check for iscsi install
+        elif [ -f /boot/backup-vmlinuz0 ]; then
+            cp -p /boot/backup-vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
+        elif [ -f /boot/vmlinuz0 ]; then
+            cp -p /boot/vmlinuz0 /boot-kdump/vmlinuz-$(uname -r)
         fi
     else
         # try source image
