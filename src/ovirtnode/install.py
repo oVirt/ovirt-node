@@ -107,6 +107,7 @@ class Install:
     def grub_install(self):
         if _functions.is_iscsi_install():
             self.disk = _functions.findfs("BootNew")
+            self.grub_dict["partN"] = int(self.disk[-1:]) - 1
             if not "/dev/mapper/" in self.disk:
                 self.disk = self.disk[:-1]
             else:
@@ -171,10 +172,6 @@ EOF
             partB = 1
             if self.partN == 1:
                 partB = 2
-            if _functions.is_iscsi_install():
-                partB = 0
-                if self.partN == 0:
-                    partB = 1
             self.grub_dict['oldtitle'] = self.oldtitle
             self.grub_dict['partB'] = partB
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
@@ -361,11 +358,12 @@ initrd /initrd0.img
                 time.sleep(1)
                 _functions.system("partprobe")
                 for candidate_name in boot_candidate_names:
+                    logger.debug(os.listdir("/dev/disk/by-label"))
                     if _functions.findfs(candidate_name):
                         self.boot_candidate = candidate_name
                         break
                 logger.debug("Trial %s to find candidate (%s)" % \
-                             (trial, self.boot_candidate))
+                             (trial, candidate_name))
                 if self.boot_candidate:
                     logger.debug("Found candidate: %s" % self.boot_candidate)
                     break
@@ -389,8 +387,8 @@ initrd /initrd0.img
                 if not _functions.system(e2label_cmd):
                     logger.error("Failed to label new Boot partition")
                     return False
-            _functions.system("mount LABEL=%s /boot &>/dev/null" \
-                              % self.boot_candidate)
+            _functions.system("mount %s /boot &>/dev/null" \
+                              % boot_candidate_dev)
 
             if os.path.exists("/boot/ovirt"):
                 try:
@@ -607,7 +605,7 @@ initrd /initrd0.img
         if _functions.is_iscsi_install():
             # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
             shutil.copy(_functions.OVIRT_DEFAULTS, "/boot")
-            # mark new Root ready to go, reboot() in ovirt-function switches it
+            # mark new Boot ready to go, reboot() in ovirt-function switches it
             # to active
             e2label_cmd = "e2label \"%s\" BootUpdate" % boot_candidate_dev
 
