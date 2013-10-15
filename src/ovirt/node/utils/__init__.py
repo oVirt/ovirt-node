@@ -251,6 +251,8 @@ class Transaction(list, base.Base):
                 self.prepare()
                 for idx, e in enumerate(self):
                     yield (idx, e)
+        except lockfile.NotLocked:
+            self.logger.warning("The lockfile wasn't locked at the end")
         except Exception as e:
             self.logger.warning("'%s' on transaction '%s': %s - %s" %
                                 (type(e), self, e, e.message))
