@@ -1541,6 +1541,7 @@ def main():
                     print "Launching shell. Exit to continue."
                     print "----------------------------------"
                     editor.launch_shell()
+
             except RuntimeError as e:
                 raise RuntimeError(e)
             finally:
