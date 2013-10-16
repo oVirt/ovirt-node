@@ -500,13 +500,19 @@ initrd /initrd0.img
         # reorder tty0 to allow both serial and phys console after installation
         if _functions.is_iscsi_install():
             self.root_param = "root=live:LABEL=Root"
-            self.bootparams = "netroot=iscsi:%s::%s::%s ip=br%s:dhcp bridge=br%s:%s " % (
+            if "OVIRT_NETWORK_LAYOUT" in OVIRT_VARS and \
+                OVIRT_VARS["OVIRT_NETWORK_LAYOUT"] == "bridged":
+                network_conf = "ip=br%s:dhcp bridge=br%s:%s" % \
+                                (OVIRT_VARS["OVIRT_BOOTIF"],
+                                 OVIRT_VARS["OVIRT_BOOTIF"],
+                                 OVIRT_VARS["OVIRT_BOOTIF"])
+            else:
+                network_conf = "ip=%s:dhcp" % OVIRT_VARS["OVIRT_BOOTIF"]
+            self.bootparams = "netroot=iscsi:%s::%s::%s %s " % (
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"],
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
-                OVIRT_VARS["OVIRT_BOOTIF"],
-                OVIRT_VARS["OVIRT_BOOTIF"],
-                OVIRT_VARS["OVIRT_BOOTIF"])
+                network_conf)
             if "OVIRT_ISCSI_NAME" in OVIRT_VARS:
                 self.bootparams+= "rd.iscsi.initiator=%s " % \
                     OVIRT_VARS["OVIRT_ISCSI_NAME"]
