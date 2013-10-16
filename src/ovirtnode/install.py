@@ -522,9 +522,7 @@ initrd /initrd0.img
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_HOST"],
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"],
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
-                OVIRT_VARS["OVIRT_BOOTIF"],
-                OVIRT_VARS["OVIRT_BOOTIF"],
-                OVIRT_VARS["OVIRT_BOOTIF"])
+                network_conf)
             if "OVIRT_ISCSI_NAME" in OVIRT_VARS:
                 self.bootparams+= "rd.iscsi.initiator=%s " % \
                     OVIRT_VARS["OVIRT_ISCSI_NAME"]
