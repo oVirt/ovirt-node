@@ -396,30 +396,6 @@ initrd /initrd0.img
             _functions.system("mount LABEL=%s /boot &>/dev/null" \
                               % self.boot_candidate)
 
-            if os.path.exists("/boot/ovirt"):
-                try:
-                    f = open("/boot/ovirt", 'r')
-                    for line in f:
-                        try:
-                            line = line.strip()
-                            key, value = line.split("\"", 1)
-                            key = key.strip("=")
-                            key = key.strip()
-                            value = value.strip("\"")
-                            OVIRT_VARS[key] = value
-                        except:
-                            pass
-                    f.close()
-                    iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
-                                     "sendtargets") % (
-                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"],
-                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
-                    _functions.system(iscsiadm_cmd)
-                    logger.info("Restarting iscsi service")
-                    _functions.system("service iscsi restart")
-                except:
-                    pass
-
         candidate = None
         candidate_names = ["RootBackup", "RootUpdate", "RootNew"]
         for trial in range(1, 3):
