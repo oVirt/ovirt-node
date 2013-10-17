@@ -19,20 +19,16 @@
 
 from glob import glob
 from ovirt.node.utils import Transaction
-from ovirtnode.ovirtfunctions import OVIRT_VARS
 from pipes import quote
 import logging
 import os
-import ovirtnode.ovirtfunctions as _functions
 import subprocess
 import tempfile
-
 logger = logging.getLogger(__name__)
 
 
 class Network:
     def __init__(self):
-        OVIRT_VARS = _functions.parse_defaults()
         self.WORKDIR = tempfile.mkdtemp()
         self.IFSCRIPTS_PATH = "/etc/sysconfig/network-scripts/ifcfg-"
         self.IFCONFIG_FILE_ROOT = "/files%s" % self.IFSCRIPTS_PATH
@@ -56,6 +52,12 @@ class Network:
 
 
 def convert_to_biosdevname():
+    try:
+        import ovirtnode.ovirtfunctions as _functions
+    except:
+        pass
+
+        OVIRT_VARS = _functions.parse_defaults()
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
         # check for appropriate bios version
         cmd="dmidecode|grep SMBIOS|awk {'print $2'}"

@@ -40,6 +40,8 @@ import pwd
 from ovirt.node.config import defaults
 from ovirt.node.utils import process
 import ovirt.node.utils.system as osystem
+from ovirt.node.utils.console import TransactionProgress, Transaction
+from ovirtnode.network import *
 
 OVIRT_CONFIG="/config"
 OVIRT_LOGFILE="/var/log/ovirt.log"
@@ -592,10 +594,23 @@ def mount_boot():
     system_closefds("mkdir -p /boot")
     system_closefds("mount LABEL=Boot /boot &>/dev/null")
 
+class ConfigureNetworking(Transaction.Element):
+    title = "Configuring network"
+
+    def commit(self):
+        build_network_auto_transaction().run()
+
+def enable_iscsi_networking():
+    tx = Transaction("Enable Networking")
+    tx.append(ConfigureNetworking())
+    TransactionProgress(tx, is_dry=False).run()
+
+
 def connect_iscsi_root():
     mount_boot()
     if os.path.exists("/boot/ovirt"):
         try:
+            logger.debug(os.listdir("/boot"))
             f = open("/boot/ovirt", 'r')
             for line in f:
                 try:
@@ -604,11 +619,21 @@ def connect_iscsi_root():
                     key = key.strip("=")
                     key = key.strip()
                     value = value.strip("\"")
+                    logger.info("%s   :   %s" % (key,value))
                     if not "FIRSTBOOT" in key and not "INSTALL" in key:
                         OVIRT_VARS[key] = value
+                    if "BOOTIF" in key:
+                        augtool("set",
+                                "/files/etc/default/ovirt/OVIRT_BOOTIF",
+                                "\"%s\"" % value)
+                    if "BOOTPROTO" in key:
+                        augtool("set",
+                                "/files/etc/default/ovirt/OVIRT_BOOTPROTO",
+                                "\"%s\"" % value)
                 except:
                     pass
             f.close()
+            enable_iscsi_networking()
             if is_firstboot() or is_upgrade() or is_install() \
                 or not is_booted_from_local_disk():
                 iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
@@ -623,8 +648,15 @@ def connect_iscsi_root():
                 system(login_cmd)
                 logger.info("Restarting iscsi service")
                 system("service iscsi restart")
+                system("pvscan")
+                system("vgscan")
+                system("vgchange -ay")
         except:
             logger.info("Unable to connect to iscsi root")
+
+        if not findfs("Root"):
+            return False
+        return True
 
 # stop any service which keeps /var/log busy
 # keep the list of services
