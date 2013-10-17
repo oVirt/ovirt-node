@@ -307,6 +307,9 @@ initrd /initrd0.img
                 return True
         self.oldtitle=None
         grub_config_file = None
+        if _functions.findfs("Boot") and _functions.is_upgrade():
+            if not _functions.connect_iscsi_root():
+                return False
         _functions.mount_liveos()
         if os.path.ismount("/liveos"):
             if os.path.exists("/liveos/vmlinuz0") \
@@ -355,7 +358,7 @@ initrd /initrd0.img
                     self.oldtitle = self.oldtitle.replace('"','').strip(" {")
         _functions.system("umount /liveos/efi")
         _functions.system("umount /liveos")
-        if _functions.is_iscsi_install():
+        if _functions.is_iscsi_install() or _functions.findfs("Boot"):
             self.boot_candidate = None
             boot_candidate_names = ["BootBackup", "BootUpdate", "BootNew"]
             for trial in range(1, 3):
@@ -393,30 +396,6 @@ initrd /initrd0.img
                     return False
             _functions.system("mount %s /boot &>/dev/null" \
                               % boot_candidate_dev)
-
-            if os.path.exists("/boot/ovirt"):
-                try:
-                    f = open("/boot/ovirt", 'r')
-                    for line in f:
-                        try:
-                            line = line.strip()
-                            key, value = line.split("\"", 1)
-                            key = key.strip("=")
-                            key = key.strip()
-                            value = value.strip("\"")
-                            OVIRT_VARS[key] = value
-                        except:
-                            pass
-                    f.close()
-                    iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
-                                     "sendtargets") % (
-                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_IP"],
-                                        OVIRT_VARS["OVIRT_ISCSI_TARGET_PORT"]))
-                    _functions.system(iscsiadm_cmd)
-                    logger.info("Restarting iscsi service")
-                    _functions.system("service iscsi restart")
-                except:
-                    pass
 
         candidate = None
         candidate_names = ["RootBackup", "RootUpdate", "RootNew"]
