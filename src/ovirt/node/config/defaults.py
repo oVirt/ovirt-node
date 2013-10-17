@@ -80,7 +80,7 @@ class NodeConfigFileSection(base.Base):
     def update(self, *args, **kwargs):
         """This function set's the correct entries in the defaults file for
         that specififc subclass.
-        Is expected to call _map_config_and_update_defaults()
+        Is expected to be decorated by _map_config_and_update_defaults()
         """
         raise NotImplementedError
 
@@ -94,14 +94,13 @@ class NodeConfigFileSection(base.Base):
         raise NotImplementedError
 
     def commit(self, *args, **kwargs):
-        """This method updates the to this subclass specific configuration
-        files according to the config keys set with configure.
+        """Shotcut to run the transaction associtated with the class
 
         A shortcut for:
-        tx = obj.ransaction()
+        tx = obj.transaction(pw="foo")
         tx()
         """
-        tx = self.transaction()
+        tx = self.transaction(*args, **kwargs)
         return tx()
 
     def _args_to_keys_mapping(self, keys_to_args=False):
@@ -153,6 +152,9 @@ class NodeConfigFileSection(base.Base):
             "Keys: %s, Args: %s" % (self.keys, kwargs)
         new_dict = dict((k.upper(), v) for k, v in kwargs.items())
         self.raw_file.update(new_dict, remove_empty=True)
+
+        # Returning self allows chaining for decorated functions
+        return self
 
     @staticmethod
     def map_and_update_defaults_decorator(func):
