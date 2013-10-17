@@ -117,6 +117,7 @@ keep /lib/modules/*/kernel/drivers/usb/storage
 keep /lib/modules/*/kernel/drivers/vhost
 keep /lib/modules/*/kernel/drivers/virtio
 keep /lib/modules/*/kernel/drivers/watchdog
+keep /lib/modules/*/kernel/drivers/i2c
 
 # acpi       *cpufreq   hid         leds      mtd      ?regulator  uwb
 #*ata         crypto   ?hwmon      *md       *net*      rtc       *vhost
