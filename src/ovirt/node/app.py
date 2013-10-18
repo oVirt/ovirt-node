@@ -233,7 +233,8 @@ class Application(base.Base):
             content = plugin.ui_content()
             self.show(content)
         self.logger.debug("Build and displayed plugin_page in %s seconds" % t)
-        self.logger.debug("Current page is '%s'" % plugin.ui_name())
+        self.logger.debug("Switched to plugin '%s'" % plugin)
+        self.logger.info("Current page is '%s'" % plugin.ui_name())
 
     def show(self, ui_container):
         """Shows the ui.Page as a page.
