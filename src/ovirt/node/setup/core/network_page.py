@@ -129,8 +129,9 @@ class Plugin(plugins.NodePlugin):
         ip_or_empty = valid.IPAddress() | valid.Empty()
         fqdn_ip_or_empty = valid.FQDNOrIPAddress() | valid.Empty()
 
-        valid_bond_name = valid.RegexValidator("^bond[0-9]+|007$",
-                                               "a valid bond name (bond[0-9])")
+        valid_bond_name = valid.RegexValidator("^(bond[0-9]{1,2}|007)$",
+                                               "a valid bond name (bond[0-99])")
+                                               # No regex, but for users ^
 
         return {"hostname": fqdn_ip_or_empty,
                 "dns[0]": ip_or_empty,
