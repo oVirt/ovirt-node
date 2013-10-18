@@ -204,7 +204,20 @@ Requires:       sblim-sfcb
 This package provides a cim plugin for use with%{product_family} image.
 
 %post plugin-cim
-groupadd cim
+# Hack for rhbz#1018063
+# The only time this is a problem is if we're upgrading from a pre-
+# plugin version to a newer node. Manually specify the GID so we don't
+# end up with a different one on the new image
+if [[ ! `egrep '^cim' /etc/group` ]]; then
+    # Create a group
+    if [[ ! `egrep '^.*?:.*?:501:'` /etc/group` ]]; then
+        # gid 501 isn't taken
+        groupadd -g 501 cim
+    else
+        # Take whatever GID we get -- probably no conflicts
+        groupadd cim
+    fi
+fi
 useradd -g cim -G sfcb -s /sbin/nologin cim
 %if ! %{is_systemd}
 /sbin/chkconfig --add ovirt-cim
