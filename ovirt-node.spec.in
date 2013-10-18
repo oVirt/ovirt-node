@@ -537,10 +537,10 @@ fi
 
 
 %files plugin-cim
-%{python_sitelib}/ovirt_config_setup/cim.py
-%{python_sitelib}/ovirt/node/setup/cim/__init__.py
-%{python_sitelib}/ovirt/node/setup/cim/cim_model.py
-%{python_sitelib}/ovirt/node/setup/cim/cim_page.py
+%{python_sitelib}/ovirt_config_setup/cim.py*
+%{python_sitelib}/ovirt/node/setup/cim/__init__.py*
+%{python_sitelib}/ovirt/node/setup/cim/cim_model.py*
+%{python_sitelib}/ovirt/node/setup/cim/cim_page.py*
 %{_sysconfdir}/ovirt-plugins.d/cim.minimize
 %if %{is_systemd}
 %{_unitdir}/ovirt-cim.service
