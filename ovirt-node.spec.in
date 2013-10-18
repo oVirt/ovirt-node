@@ -210,7 +210,7 @@ This package provides a cim plugin for use with%{product_family} image.
 # end up with a different one on the new image
 if [[ ! `egrep '^cim' /etc/group` ]]; then
     # Create a group
-    if [[ ! `egrep '^.*?:.*?:501:' /etc/group` ]]; then
+    if [[ ! `egrep '^.*?:.*?:501:'` /etc/group` ]]; then
         # gid 501 isn't taken
         groupadd -g 501 cim
     else
