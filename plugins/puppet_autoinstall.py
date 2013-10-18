@@ -34,7 +34,8 @@ effective_model = Changeset({
 })
 if changes:
     effective_model.update(changes)
-    Puppet().update(*effective_model.values_for(keys))
+    real_keys = [re.sub(r'_', r'.', key) for key in keys]
+    Puppet().update(*effective_model.values_for(real_keys))
 if "puppet_enabled" in args and (re.compile(r'y', re.I).match(args[
         "puppet_enabled"]) or args["puppet_enabled"] == "1"):
         ActivatePuppet()
