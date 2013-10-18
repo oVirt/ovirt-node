@@ -352,7 +352,7 @@ _start_ovirt_early () {
     #   ntp=server[,server]
     #   vlan=id
     #   network_layout=bridged|direct
-    #   bond=<bondname>[:<bondslaves>:[:<options>]]
+    #   bond_setup=<bondname>[:<bondslaves>:[:<options>]]
     # static network configuration
     ip_address=
     ip_gateway=
@@ -685,8 +685,8 @@ _start_ovirt_early () {
             network_layout=*)
             network_layout=${i#network_layout=}
             ;;
-            bond=*)
-            i=${i#bond=}
+            bond_setup=*)
+            i=${i#bond_setup=}
             eval $(printf $i|awk -F: '{print "bond_name="$1; print "bond_slaves="$2; print "bond_options="$3;}')
             ;;
             hostname=*)
