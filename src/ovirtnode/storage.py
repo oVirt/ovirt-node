@@ -806,12 +806,11 @@ class Storage:
             _functions.system(parted_cmd)
             self.reread_partitions(self.BOOTDRIVE)
             partboot = self.BOOTDRIVE + "2"
+            partbootbackup = self.BOOTDRIVE + "3"
+
             if not os.path.exists(partboot):
                 logger.debug("%s does not exist" % partboot)
                 partboot = self.BOOTDRIVE + "p2"
-            partbootbackup = self.BOOTDRIVE + "3"
-            if not os.path.exists(partbootbackup):
-                logger.debug("%s does not exist" % partbootbackup)
                 partbootbackup = self.BOOTDRIVE + "p3"
 
             # sleep to ensure filesystems are created before continuing
