@@ -62,6 +62,8 @@ echo "say This is the $PRODUCT $VERSION ($RELEASE)" > $LIVE_ROOT/isolinux/isolin
 echo "menu title ${PRODUCT_SHORT} $VERSION ($RELEASE)" >> $LIVE_ROOT/isolinux/isolinux.cfg
 cat $menu >> $LIVE_ROOT/isolinux/isolinux.cfg
 rm $menu
+# remove extra boot args add by updated livecd-tools
+sed -i -e 's/xdriver=vesa nomodeset//g' $LIVE_ROOT/isolinux/isolinux.cfg
 cp $INSTALL_ROOT/usr/share/ovirt-node/syslinux-vesa-splash.jpg $LIVE_ROOT/isolinux/splash.jpg
 
 # store image version info in the ISO and rootfs
