@@ -240,6 +240,7 @@ _start_ovirt_early () {
     #   use_strong_rng=<bytes>
     #   nfsv4_domain=domain
     #   logrotate_max_size=number
+    #   reboot_delay=number
 
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     # network boot interface is assumed to be on management network where
