@@ -24,7 +24,7 @@ from ovirt.node.utils import process, system
 import os.path
 
 
-snmp_conf = "/etc/snmp/snmpd.conf"
+snmp_conf = "/var/lib/net-snmp/snmpd.conf"
 
 
 def enable_snmpd(password):
@@ -45,7 +45,7 @@ def enable_snmpd(password):
     # create user account
     f.write("createUser root SHA %s AES\n" % password)
     f.close()
-    system.service("snmpd", "start")
+
     # change existing password
     if len(oldpwd) > 0:
         pwd_change_cmd = (("snmpusm -v 3 -u root -n \"\" -l authNoPriv -a " +
@@ -55,6 +55,14 @@ def enable_snmpd(password):
         # Only reached when no excepion occurs
         process.call(["rm", "-rf", "/tmp/snmpd.conf"])
     ovirt_store_config(snmp_conf)
+
+    if not any([x for x in open('/etc/snmp/snmpd.conf').readlines()
+                if 'rwuser root' in x]):
+        with open('/etc/snmp/snmpd.conf', 'a') as f:
+            f.write("rwuser root")
+    ovirt_store_config('/etc/snmp/snmpd.conf')
+
+    system.service("snmpd", "start")
 
 
 def disable_snmpd():
