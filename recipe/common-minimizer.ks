@@ -29,6 +29,7 @@ droprpm febootstrap
 # cronie pulls in exim (sendmail) which pulls in all kinds of perl deps
 droprpm exim
 droprpm perl*
+keeprpm perl-libs
 droprpm postfix
 droprpm mysql*
 
@@ -310,9 +311,6 @@ drop /sbin/ebtables-restore
 
 # remove bogus kdump script (rpmdiff complains)
 drop /etc/kdump-adv-conf
-
-# drop net-snmp
-droprpm net-snmp
 
 #remove rpms added by dmraid
 droprpm ConsoleKit
