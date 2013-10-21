@@ -833,6 +833,8 @@ class Storage:
             if self.create_iscsiroot():
                 logger.info("iSCSI Root Partitions Created")
                 if self.create_hostvg():
+                    if len(self.APPVGDRIVE) > 0:
+                        self.create_appvg()
                     logger.info("Completed!")
                     return True
 
