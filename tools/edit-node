@@ -1271,17 +1271,28 @@ enabled=1
             print "\nERROR: Yum Is Not Installed Within The ISO\n"
             self._cleanup_editing()
             return False
-        if os.path.isfile(pkgs):
-            os.system("mkdir %s/tmp/yumrepo" % self._instroot)
-            os.system("touch %s/tmp/yumrepo/%s" % (self._instroot,
-                      os.path.basename(pkgs)))
-            os.system("mount -o bind %s %s/tmp/yumrepo/%s" %
-                      (pkgs, self._instroot, os.path.basename(pkgs)))
-            print os.listdir("%s/tmp/yumrepo" % self._instroot)
-            yum_cmd = "yum localinstall -y /tmp/yumrepo/%s" % \
-                os.path.basename(pkgs)
+        pkgs = pkgs.split(",")
+        localinstall = []
+        remoteinstall = []
+        for pkg in pkgs:
+            if os.path.isfile(pkg):
+                os.system("mkdir %s/tmp/yumrepo" % self._instroot)
+                os.system("touch %s/tmp/yumrepo/%s" % (self._instroot,
+                          os.path.basename(pkg)))
+                os.system("mount -o bind %s %s/tmp/yumrepo/%s" %
+                          (pkg, self._instroot, os.path.basename(pkg)))
+                print os.listdir("%s/tmp/yumrepo" % self._instroot)
+                localinstall.append("/tmp/yumrepo/%s" % os.path.basename(pkg))
+            else:
+                remoteinstall.append(pkg)
+
+        if len(localinstall) > 0:
+            yum_cmd = "yum localinstall -y %s" % " ".join(localinstall)
         else:
-            yum_cmd = "yum install -y %s " % pkgs
+            yum_cmd = "yum install -y %s" % " ".join(remoteinstall)
+
+        if len(remoteinstall) > 0 and len(localinstall) > 0:
+            self._run_yum_install(",".join(remoteinstall))
         # make sure rpm keys are imported
         rpm_cmd = "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY*"
         rpm = subprocess.Popen(rpm_cmd, shell=True, stdout=PIPE,
@@ -1297,8 +1308,9 @@ enabled=1
             self._cleanup_editing()
             return False
         if "localinstall" in yum_cmd:
-            os.system("umount %s/tmp/yumrepo/%s" % (self._instroot,
-                      os.path.basename(pkgs)))
+            for pkg in pkgs:
+                os.system("umount %s/tmp/yumrepo/%s" % (self._instroot,
+                          os.path.basename(pkg)))
             os.system("rm -rf %s/tmp/yumrepo" % self._instroot)
         return True
 
