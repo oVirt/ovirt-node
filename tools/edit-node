@@ -1114,8 +1114,8 @@ class LiveImageEditor(LiveImageCreator):
         if not options.repo:
             return True
         else:
-            if os.path.isfile(options.repo) and not \
-                    options.repo.lower().endswith(".iso"):
+            if os.path.isfile(options.repo) and \
+                    options.repo.lower().endswith(".repo"):
                 cmd = "mkdir -p %s/etc/yum.repos.d" % self._instroot
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
                                      stderr=STDOUT)
@@ -1279,6 +1279,12 @@ enabled=1
         remoteinstall = []
         for pkg in pkgs:
             if os.path.isfile(pkg):
+                filetype = subprocess.Popen("/usr/bin/file %s" % pkg,
+                                            shell=True, stdout=subprocess.PIPE
+                ).communicate()[0]
+                if not re.match(r'^.*?:\sRPM.*', filetype):
+                    print "ERROR: Can't install %s. Not in RPM format" % pkg
+                    break
                 os.system("mkdir %s/tmp/yumrepo" % self._instroot)
                 os.system("touch %s/tmp/yumrepo/%s" % (self._instroot,
                           os.path.basename(pkg)))
