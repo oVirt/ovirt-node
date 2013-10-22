@@ -329,7 +329,10 @@ initrd /initrd0.img
             logger.debug(str(os.listdir("/liveos")))
             _functions.system("umount /liveos")
             _functions.mount_efi(target="/liveos")
-            grub_config_file = "/liveos/EFI/%s/grub.cfg" % self.efi_dir_name
+            if self.efi_dir_name == "fedora":
+                grub_config_file = "/liveos/EFI/fedora/grub.cfg"
+            else:
+                grub_config_file = "/liveos/EFI/redhat/grub.conf"
         if _functions.is_iscsi_install():
             grub_config_file = "/boot/grub/grub.conf"
         grub_config_file_exists = grub_config_file is not None \
