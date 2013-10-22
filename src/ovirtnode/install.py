@@ -184,6 +184,9 @@ EOF
         # usb devices requires default BOOTX64 entries
         if _functions.is_efi_boot():
             _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
+            if _functions.is_iscsi_install():
+                _functions.system("cp /tmp/grub.efi \
+                                   /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
                               /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" \
@@ -296,7 +299,8 @@ initrd /initrd0.img
     def ovirt_boot_setup(self, reboot="N"):
         self.generate_paths()
         logger.info("Installing the image.")
-
+        # copy grub.efi to safe location
+        shutil.copy("/boot/efi/EFI/redhat/grub.efi", "/tmp")
         if "OVIRT_ROOT_INSTALL" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
                 logger.info("Root Installation Not Required, Finished.")
@@ -477,8 +481,14 @@ initrd /initrd0.img
                 _functions.system("mkdir /liveos/efi")
                 _functions.mount_efi()
                 _functions.system("mkdir -p /liveos/efi/EFI/redhat")
-                _functions.system("cp /boot/efi/EFI/redhat/grub.efi " +
-                      "/liveos/efi/EFI/redhat/grub.efi")
+                if _functions.is_iscsi_install():
+                    shutil.copy("/tmp/grub.efi",
+                                "/liveos/efi/EFI/redhat/grub.efi")
+                else:
+                    shutil.copy("/boot/efi/EFI/redhat/grub.efi",
+                          "/liveos/efi/EFI/redhat/grub.efi")
+                if _functions.is_iscsi_install():
+                    self.disk = _functions.findfs("BootNew")
                 if not "/dev/mapper/" in self.disk:
                     efi_disk = self.disk[:-1]
                 else:
