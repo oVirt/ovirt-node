@@ -385,8 +385,9 @@ class Application(base.Base):
             dialog = ui.ConfirmationDialog("dialog.shell", "Rescue Shell", txt
                                            )
 
-            dialog.buttons[0].on_activate.connect(return_ok)
+            dialog.buttons[0].on_activate.clear()
             dialog.buttons[0].on_activate.connect(ui.CloseAction())
+            dialog.buttons[0].on_activate.connect(return_ok)
             self.show(dialog)
 
         except:
