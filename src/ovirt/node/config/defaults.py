@@ -1358,7 +1358,7 @@ class NFSv4(NodeConfigFileSection):
 
                 fs.Config().persist(nfsv4.configfilename)
                 system.service("rpcidmapd", "restart")
-                process.check_call(["nfsidmap", "-c"])
+                process.call(["nfsidmap", "-c"])
 
         tx = utils.Transaction("Configuring NFSv4")
         tx.append(ConfigureNfsv4())
