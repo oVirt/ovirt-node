@@ -578,12 +578,13 @@ class Storage:
                      "\" -s \"mkpart EFI 1M " +
                      str(self.EFI_SIZE) + "M\"")
         _functions.system(parted_cmd)
+        time.sleep(1)
         partefi = disk + "1"
         if not os.path.exists(partefi):
             partefi = disk + "p1"
-            _functions.system("ln -snf \"" + partefi + \
-                              "\" /dev/disk/by-label/EFI")
-            _functions.system("mkfs.vfat \"" + partefi + "\"")
+        _functions.system("ln -snf \"" + partefi + \
+                          "\" /dev/disk/by-label/EFI")
+        _functions.system("mkfs.vfat \"" + partefi + "\"")
 
     def create_iscsiroot(self):
         logger.info("Partitioning iscsi root drive: " + self.ISCSIDRIVE)
