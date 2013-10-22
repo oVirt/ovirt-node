@@ -183,6 +183,9 @@ EOF
         # usb devices requires default BOOTX64 entries
         if _functions.is_efi_boot():
             _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
+            if _functions.is_iscsi_install():
+                _functions.system("cp /tmp/grub.efi \
+                                   /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
                               /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" \
