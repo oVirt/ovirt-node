@@ -202,8 +202,14 @@ class InstallerThread(threading.Thread):
             self.config = cfg
 
         def prepare(self):
-            # Update/Write the config file
             cfg = self.config
+
+            # Data size get's a special handling because it grabs the
+            # remaining space
+            data_size = cfg.get("storage.data_size", "-1")
+            data_size = data_size if int(data_size) > 0 else "-1"
+            self.logger.debug("Using a data_size of %s" % data_size)
+
             model = defaults.Installation()
 
             model.install_on(init=[cfg["boot.device.current"]] +
@@ -213,7 +219,7 @@ class InstallerThread(threading.Thread):
                              swap_size=cfg["storage.swap_size"],
                              logging_size=cfg["storage.logging_size"],
                              config_size=cfg["storage.config_size"],
-                             data_size=cfg["storage.data_size"])
+                             data_size=data_size)
 
             kbd = defaults.Keyboard()
             kbd.update(self.config["keyboard.layout"])
