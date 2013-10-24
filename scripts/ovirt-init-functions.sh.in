@@ -430,6 +430,8 @@ _start_ovirt_early () {
                 bootif=$i
                 ;;
                 link)
+                bootif=
+                for trial in $(seq 1 5); do
                 for eth in $(cd /sys/class/net; echo [ep]*); do
                     ip link set dev $eth up
                     if ethtool $eth 2>/dev/null|grep -q "Link detected: yes"
@@ -437,6 +439,17 @@ _start_ovirt_early () {
                         bootif=$eth
                         break
                     fi
+                done
+                if [ "x$bootif" == "x" ]; then
+                    log "INFO: Failed to detect link on any device in the $trial pass."
+                    sleep 1
+                    if [ $trial -eq 5  ]; then
+                        log "WARNING: Failed to detect link on device. Auto-install fails."
+                    fi
+                else
+                    log "INFO: Detected a link on device $bootif."
+                    break
+                fi
                 done
                 ;;
                 ??-??-??-??-??-??-??)
