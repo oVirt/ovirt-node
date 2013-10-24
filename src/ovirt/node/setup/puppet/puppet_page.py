@@ -127,7 +127,7 @@ class Puppet(NodeConfigFileSection):
         valid.Boolean()(enabled)
         (valid.Empty() | valid.FQDNOrIPAddress())(server)
         (valid.Empty() | valid.URL())(certname)
-        return {"OVIRT_PUPPET_ENABLED": "yes" if enabled else False}
+        return {"OVIRT_PUPPET_ENABLED": "yes" if enabled else None}
 
 
 class ActivatePuppet(utils.Transaction.Element):
