@@ -137,8 +137,16 @@ class ActivatePuppet(utils.Transaction.Element):
 
     def commit(self):
 
-        self.logger.info("Connecting to Puppet server")
+        cfg = Puppet().retrieve()
+        enabled = cfg["enabled"]
+        if enabled:
+            self.logger.info("Connecting to Puppet server")
+            self.enable_puppet()
+        else:
+            self.logger.info("Disconnecting to Puppet server")
+            self.disable_puppet()
 
+    def enable_puppet(self):
         cfg = Puppet().retrieve()
 
         conf = File("/etc/puppet/puppet.conf")
@@ -165,3 +173,20 @@ class ActivatePuppet(utils.Transaction.Element):
         utils.process.check_call("puppet agent --waitforcert 60 --test",
                                  shell=True)
         system.service("puppet", "start")
+
+    def disable_puppet(self):
+        item_args = ["server", "certname"]
+
+        conf = File("/etc/puppet/puppet.conf")
+        conf_builder = ""
+        for line in conf:
+            for item in item_args:
+                line = re.sub(r'(^.*?' + item + ' =).*',
+                              r'#\1 "''"',
+                              line) if item in line else line
+            conf_builder += line
+
+        conf.write(conf_builder, "w")
+        fs.Config().persist("/etc/puppet/puppet.conf")
+
+        system.service("puppet", "stop")
