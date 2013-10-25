@@ -91,6 +91,7 @@ files	/var/cache/libvirt
 files	/var/empty/sshd/etc/localtime
 files	/var/lib/libvirt
 files   /var/lib/multipath
+files   /var/lib/glusterd
 files   /var/cache/multipathd
 empty	/mnt
 files	/boot
