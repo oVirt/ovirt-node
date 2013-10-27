@@ -62,7 +62,8 @@ class PasswordTool(cmd.Cmd):
                 doc = getattr(self, name).__doc__
                 doc = doc or ""
                 doc = doc.strip()
-                funcs.append((name[3:], doc))
+                if not (name[3:], doc) in funcs:
+                    funcs.append((name[3:], doc))
 
         max_name_len = max(len(n) for n, d in funcs if d)
 
