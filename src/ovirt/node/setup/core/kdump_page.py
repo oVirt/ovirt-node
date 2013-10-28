@@ -142,6 +142,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Saving kdump page")
         changes = Changeset(self.pending_changes(False))
         effective_model = Changeset(self.model())
+        saved_model = self.model()
         effective_model.update(effective_changes)
 
         self.logger.debug("Changes: %s" % changes)
@@ -188,6 +189,22 @@ class Plugin(plugins.NodePlugin):
                 console.writeln("\nPlease press any key to continue")
                 console.wait_for_keypress()
         except Exception as e:
+            # Restore the configuration
+            if saved_model["kdump.type"] == "nfs":
+                model.update(saved_model["kdump.nfs_location"], None, None, 
+                             None)
+            elif saved_model["kdump.type"] == "kdump.ssh_location":
+                if self.model()["kdump.ssh_key"] is not "":
+                    model.update(None, saved_model['kdump.ssh_location'], 
+                                 saved_model['kdump.ssh_key'], None)
+                else:
+                    model.update(None, saved_model['kdump.ssh_location'], 
+                                 None, None)
+            elif saved_model["kdump.type"] == "local":
+                model.update(None, None, None, True)
+            else:
+                model.update(None, None, None, None)
             self.logger.exception("Exception while configuring kdump")
+            self.application.show(self.ui_content())
             return InfoDialog("dialog.info", _("An error occurred"), e.message)
         return self.ui_content()
