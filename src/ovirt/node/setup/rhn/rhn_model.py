@@ -336,14 +336,20 @@ class RHN(NodeConfigFileSection):
                 logged_args = str(logged_args)
                 self.logger.info(logged_args)
 
-                smreg_output = process.pipe(args)
-                self.logger.debug(smreg_output)
+                smreg_output = process.check_output(args)
                 if "been registered" not in smreg_output:
                     if "Invalid credentials" in smreg_output:
                         raise RuntimeError("Invalid Username / Password")
                     elif "already been taken" in smreg_output:
                         raise RuntimeError("Hostname is already " +
                                            "registered")
+
+                    if activationkey:
+                        cmd = ["subscription-manager", "auto-attach"]
+                        try:
+                            subprocess.check_call(cmd)
+                        except:
+                            raise RuntimeError("Error Setting Auto Attach")
                     else:
                         raise RuntimeError("Registration Failed")
                 else:
