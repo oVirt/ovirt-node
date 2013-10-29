@@ -34,7 +34,8 @@ dist_plugins_DATA = \
   puppet.minimize
 
 dist_pluginsargs_DATA = \
-  puppet-args
+  puppet-args \
+  cim-args
 
 dist_pyovirtconfigbootarg_DATA = \
   rhn_autoinstall_args
@@ -42,7 +43,8 @@ dist_pyovirtconfigbootarg_DATA = \
 dist_pyovirtconfigboot_PYTHON = \
   snmp_autoinstall.py \
   puppet_autoinstall.py \
-  rhn_autoinstall.py
+  rhn_autoinstall.py \
+  cim_autoinstall.py
 
 rbovirtsetup_SCRIPTS = \
   ovirt.rb

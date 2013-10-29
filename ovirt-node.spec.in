@@ -654,6 +654,8 @@ fi
 %{python_sitelib}/ovirt/node/setup/cim/cim_model.py*
 %{python_sitelib}/ovirt/node/setup/cim/cim_page.py*
 %{_sysconfdir}/ovirt-plugins.d/cim.minimize
+%{_sysconfdir}/ovirt-commandline.d/cim-args
+%{_sysconfdir}/ovirt-config-boot.d/cim_autoinstall.py*
 %if %{is_systemd}
 %{_unitdir}/ovirt-cim.service
 %else
