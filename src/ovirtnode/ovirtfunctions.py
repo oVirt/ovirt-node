@@ -1142,12 +1142,12 @@ def finish_install():
     #   -O /dev/null
     hookdir="/etc/ovirt-config-boot.d"
     for hook in os.listdir(hookdir):
-        if not is_auto_install():
-            hookscript = os.path.join(hookdir,hook)
-            if hook.endswith(".py"):
-                system_closefds("python " + hookscript)
-            else:
-                system_closefds(hookscript + " &> /dev/null")
+#        if not is_auto_install():
+        hookscript = os.path.join(hookdir,hook)
+        if hook.endswith(".py"):
+            system_closefds("python " + hookscript)
+        else:
+            system_closefds(hookscript + " &> /dev/null")
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
