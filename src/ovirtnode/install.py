@@ -524,7 +524,7 @@ initrd /initrd0.img
                 OVIRT_VARS["OVIRT_ISCSI_TARGET_NAME"],
                 network_conf)
             if "OVIRT_ISCSI_NAME" in OVIRT_VARS:
-                self.bootparams+= "rd.iscsi.initiator=%s " % \
+                self.bootparams+= "iscsi_initiator=%s " % \
                     OVIRT_VARS["OVIRT_ISCSI_NAME"]
         else:
             self.root_param = "root=live:LABEL=Root"
