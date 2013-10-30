@@ -120,7 +120,8 @@ def service(name, cmd, do_raise=True):
         r = process.check_output(["service", name, cmd], **kwargs)
     except process.CalledProcessError as e:
         r = e.returncode
-        LOGGER.exception("Service: %s" % e.output)
+        LOGGER.debug("Service cmd failed: %s %s" % (name,cmd), exc_info=True)
+        LOGGER.debug("Service output: %s" % e.output)
         if do_raise:
             raise
     return r
