@@ -103,7 +103,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Pending changes: %s" % changes)
 
         if "button.other_device" in changes:
-            description = ("Please select the disk to use " +
+            description = ("Please enter the disk to use " +
                            "for booting %s" %
                            self.application.product.PRODUCT_SHORT)
             self._dialog = CustomDeviceDialog("boot.device.custom",
