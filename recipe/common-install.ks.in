@@ -31,6 +31,7 @@ device 3w-sas
 device 3w-xxxx
 device a100u2w
 device aacraid
+device xhci-hcd
 device aic79xx
 device aic94xx
 device arcmsr
