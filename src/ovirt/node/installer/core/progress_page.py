@@ -207,7 +207,7 @@ class InstallerThread(threading.Thread):
             # Data size get's a special handling because it grabs the
             # remaining space
             data_size = cfg.get("storage.data_size", "-1")
-            data_size = data_size if int(data_size) > 0 else "-1"
+            data_size = data_size if int(data_size) >= 0 else "-1"
             self.logger.debug("Using a data_size of %s" % data_size)
 
             model = defaults.Installation()
