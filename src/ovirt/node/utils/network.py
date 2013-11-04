@@ -120,7 +120,26 @@ class UdevNICInfo(base.Base):
 
     @property
     def vendor(self):
-        return self.__get_property("ID_VENDOR_FROM_DATABASE")
+        vendor = self.__get_property("ID_VENDOR_FROM_DATABASE")
+        if not vendor:
+            # fallback method for older udev versions
+            try:
+                pci_addr = self.__get_property("DEVPATH")
+                pci_addr = pci_addr.split("/")[3].split(":")[1:]
+                cmd = "lspci -n|grep %s:%s|awk {'print $3'}" % \
+                          (pci_addr[0], pci_addr[1])
+                pci_id = process.check_output(cmd,
+                                              stderr=process.STDOUT,
+                                              shell=True)
+                vendor, dev = pci_id.split(":")
+                cmd = "lspci -d 0x%s:0x%s" % (vendor, dev)
+                vendor_out = process.check_output(cmd,
+                                                  stderr=process.STDOUT,
+                                                  shell=True)
+                vendor = vendor_out.split(":")[2]
+            except:
+                self.logger.debug("Failed to determine vendor name", exc_info=True)
+        return vendor
 
     @property
     def devtype(self):
