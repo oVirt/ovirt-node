@@ -805,7 +805,7 @@ class LiveImageEditor(LiveImageCreator):
         if options.install or options.plugin or options.install_dup:
             plugin_info_dir = "%s/etc/ovirt-plugins.d" % self._instroot
             os.system("mkdir -p %s" % plugin_info_dir)
-            pkgfilename = re.sub("\.(rpm)$", "", pkg)
+            pkgfilename = re.sub("\.(rpm)$", "", os.path.basename(pkg))
             # get version-release
             cmd = "rpm -q %s --qf '%%{version}-%%{release}.%%{arch}\n'" \
                   % pkgfilename
