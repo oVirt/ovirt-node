@@ -108,11 +108,17 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(snmp_keys):
             is_enabled = effective_model["snmp.enabled"]
             pw = effective_model["snmp.password"]
-
-            model = snmp_model.SNMP()
-            model.update(is_enabled)
-            txs += model.transaction(snmp_password=pw)
-
-        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
-        progress_dialog.run()
+            if is_enabled and len(pw) == 0:
+                txt = "Unable to configure SNMP without a password!"
+                self._confirm_dialog = ui.InfoDialog("dialog.confirm",
+                                                     "SNMP Error",
+                                                     txt)
+                return self._confirm_dialog
+            else:
+                model = snmp_model.SNMP()
+                model.update(is_enabled)
+                txs += model.transaction(snmp_password=pw)
+                progress_dialog = ui.TransactionProgressDialog("dialog.txs",
+                                                               txs, self)
+                progress_dialog.run()
         return self.ui_content()
