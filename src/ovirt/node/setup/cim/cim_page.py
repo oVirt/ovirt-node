@@ -87,10 +87,17 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(cim_keys):
             is_enabled = effective_model["cim.enabled"]
             pw = effective_model["cim.password"]
-
-            model = cim_model.CIM()
-            model.update(is_enabled)
-            txs += model.transaction(cim_password=pw)
-        progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
-        progress_dialog.run()
+            if is_enabled and len(pw) == 0:
+                txt = "Unable to configure CIM without a password!"
+                self._confirm_dialog = ui.InfoDialog("dialog.confirm",
+                                                     "CIM Error",
+                                                     txt)
+                return self._confirm_dialog
+            else:
+                model = cim_model.CIM()
+                model.update(is_enabled)
+                txs += model.transaction(cim_password=pw)
+                progress_dialog = ui.TransactionProgressDialog("dialog.txs",
+                                                               txs, self)
+                progress_dialog.run()
         return self.ui_content()
