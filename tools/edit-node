@@ -1544,7 +1544,9 @@ def main():
                     n = ""
 
                 if n:
-                    finished_iso = build_isoname_for_plugins(edited_iso, [n])
+                    plugins = n.split(",")
+                    finished_iso = build_isoname_for_plugins(edited_iso,
+                                                             plugins)
                 else:
                     finished_iso = edited_iso
                 if not options.name:
