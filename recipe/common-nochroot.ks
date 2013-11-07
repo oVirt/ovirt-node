@@ -80,7 +80,10 @@ EOF
 cp $LIVE_ROOT/isolinux/version $INSTALL_ROOT/etc/default/
 
 # overwrite user visible banners with the image versioning info
-rm -f $INSTALL_ROOT/etc/$PACKAGE-release
+# system-release in rootfs get's updated, but now it's out of sync with initrd
+# The only bit which is missing in the initrd system-release file is VERSION
+# /(which is not shown in ply anyway)
+# The initrd can not be regeneated in a non-chroot env (here)
 cat > $INSTALL_ROOT/etc/$PACKAGE-release <<EOF
 $PRODUCT release $VERSION ($RELEASE)
 EOF
