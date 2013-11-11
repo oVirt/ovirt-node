@@ -266,11 +266,25 @@ class NIC(base.Base):
 
         # Fallback
         has_carrier = False
-        try:
-            content = File("/sys/class/net/%s/carrier" % self.ifname).read()
-            has_carrier = "1" in content
-        except:
-            LOGGER.debug("Carrier down for %s" % self.ifname)
+        i = 5
+        while i > 0:
+            try:
+                cmd = "ip link set dev {ifname} up".format(ifname=self.ifname)
+                process.check_call(cmd, shell=True)
+            except process.CalledProcessError:
+                LOGGER.debug("Failed to set dev %s link up" % self.ifname)
+            try:
+                content = File("/sys/class/net/%s/carrier" % self.ifname).\
+                    read()
+                has_carrier = "1" in content
+            except:
+                LOGGER.debug("Carrier down for %s" % self.ifname)
+            if not has_carrier:
+                import time
+                time.sleep(1)
+                i -= 1
+            else:
+                break
         return has_carrier
 
     def ipv4_address(self):
