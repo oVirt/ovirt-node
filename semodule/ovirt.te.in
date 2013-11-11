@@ -403,15 +403,6 @@ optional_policy(`
 
 
 
-
-# Remove this block once the bug is solved
-# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1025401
-#============= iscsid_t ==============
-allow iscsid_t iscsi_var_lib_t:dir { write remove_name create add_name rmdir };
-allow iscsid_t iscsi_var_lib_t:file { write create unlink };
-allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
-
-
 type ovirt_t;
 type ovirt_exec_t;
 init_daemon_domain(ovirt_t, ovirt_exec_t)
