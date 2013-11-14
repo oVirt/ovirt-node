@@ -712,6 +712,9 @@ class EditWithChars(urwid.Edit):
         self._shift_view_to_cursor = bool(focus)
 
         txt = self.get_edit_text()
+        if len(txt) > maxcol:
+            chop = len(txt) - maxcol
+            txt = txt[chop:]
         txt = u"".join([self._mask] * len(txt)) if self._mask else txt
         txt = txt.ljust(maxcol, self.char)[:maxcol]
         canv = urwid.Text(txt).render((maxcol,))
