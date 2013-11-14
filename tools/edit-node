@@ -73,6 +73,7 @@ class LiveImageEditor(LiveImageCreator):
         self.docleanup = docleanup
         self.tmpdir = "/var/tmp"
         self.dd_dir = None
+        self.item = None
         """The directory in which all temporary files will be created."""
 
         self.compress_type = None
@@ -596,6 +597,9 @@ class LiveImageEditor(LiveImageCreator):
         print "\n%s\n" % output
         return True
 
+    def _print_err(self, *args):
+        sys.stderr.write('WARNING: ' + ' '.join(map(str,args)) + '\n')
+
     def _list_plugins(self):
         plugin_info_dir = "%s/etc/ovirt-plugins.d" % self._instroot
         if os.path.exists(plugin_info_dir):
@@ -948,6 +952,39 @@ class LiveImageEditor(LiveImageCreator):
                     print output
                     print "Can't Create Repo File"
                     return False
+                try:
+                    conf_builder = ""
+                    rpms_path = "/tmp/rpms"
+                    with open(options.repo, "r") as f:
+                        for line in f.readlines():
+                            if "file://" in line:
+                                self.item = re.match(r'.*file://(.*)', \
+                                                     line).group(1)
+                                conf_builder += re.sub(r'(.*file://).*',
+                                                       r'\1' + rpms_path,
+                                                       line)
+                            else:
+                                conf_builder += line
+                except:
+                    self.item = ""
+                    logging.warning("Failed to get the path from repo file")
+                if os.path.exists(self.item):
+                    options.repo = tempfile.mkstemp(".repo")
+                    with open(options.repo, "w") as f:
+                        f.write(conf_builder)
+                    os.system("mkdir %s/tmp/rpms" % self._instroot)
+                    cmd = "mount -o bind %s %s/tmp/rpms" \
+                        % (self.item, self._instroot)
+                    f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
+                                         stderr=STDOUT)
+                    output, err = f.communicate()
+                    if f.returncode > 0:
+                        self._print_err(cmd)
+                        self._print_err(output)
+                        self._print_err("Can't Bind Mount rpm directory")
+                        return False
+                else:
+                    self._print_err("rpm directory %s does not exist" % self.item)
                 cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % \
                       (options.repo, self._instroot)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
@@ -1083,7 +1120,13 @@ enabled=1
         if os.path.exists(self._instroot + "/tmp/yumrepo"):
             # cleanup local repo if exists
             if os.system("umount %s/tmp/yumrepo" % self._instroot):
-                os.system("rm -rf %s/tmp/yumrepo" % self._instroot)
+                os.system("rmdir %s/tmp/yumrepo" % self._instroot)
+        if os.path.exists(self._instroot + "/tmp/rpms"):
+            # cleanup local rpms if exists
+            if os.system("umount %s/tmp/rpms" % self._instroot):
+                os.system("rmdir %s/tmp/rpms" % self._instroot)
+        if self.item and os.path.exists(options.repo):
+            os.system("rm -f %s" % options.repo)
         if os.path.exists(self.dd_dir):
             os.system("umount %s" % self.dd_dir)
             shutil.rmtree(self.dd_dir)
