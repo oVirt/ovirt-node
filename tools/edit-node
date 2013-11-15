@@ -1546,10 +1546,10 @@ def main():
                     finished_iso = build_isoname_for_plugins(edited_iso, [n])
                 else:
                     finished_iso = edited_iso
-                print "Moving '%s' to '%s'" % (edited_iso, finished_iso)
-                shutil.move(edited_iso, finished_iso)
-
-                logging.info("%s.iso saved to %s" % (finished_iso, output))
+                if not options.name:
+                    print "Moving '%s' to '%s'" % (edited_iso, finished_iso)
+                    shutil.move(edited_iso, finished_iso)
+                    logging.info("%s.iso saved to %s" % (finished_iso, output))
             else:
                 # in manifest mode print do necessary items
                 editor.unmount()
