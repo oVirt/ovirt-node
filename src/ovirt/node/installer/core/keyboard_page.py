@@ -45,7 +45,7 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         kbd = system.Keyboard()
-        c = kbd.get_current()
+        c = kbd.get_current() or ""
         self.logger.debug("Current layout: %s" % c)
         ws = [ui.Header("header[0]", "Keyboard Layout Selection"),
               ui.Table("keyboard.layout", "", "Available Keyboard Layouts",
