@@ -1,24 +1,33 @@
 policy_module(ovirt, 1.0)
 
 gen_require(`
+@COLLECTD_COMMENT@    type collectd_t;
+    type etc_t;
+    type init_t;
+    type initrc_t;
     type initrc_tmp_t;
+    type loadkeys_t;
+    type local_login_t;
+    type logrotate_t;
     type mount_t;
-    type setfiles_t;
     type net_conf_t;
-    type collectd_t;
+    type passwd_file_t;
+    type policykit_t;
+    type setfiles_t;
+    type shadow_t;
+    type sshd_t;
+    type sshd_net_t;
+    type svirt_t;
+@SYSTEMD_COMMENT@    type systemd_localed_t;
+@SYSTEMD_COMMENT@    type systemd_unit_file_t;
+    type tuned_t;
+    type unconfined_t;
+    type var_log_t;
+    type virt_cache_t;
     type virt_etc_t;
     type virt_var_run_t;
     type virtd_exec_t;
-    type loadkeys_t;
-    type etc_t;
-    type init_t;
-    type shadow_t;
-    type passwd_file_t;
-    type systemd_localed_t;
-    type systemd_unit_file_t;
-    type policykit_t;
-    type local_login_t;
-    type var_log_t;
+    type virtd_t;
 ')
 
 #============= collectd_t ==============
@@ -26,6 +35,7 @@ gen_require(`
 @COLLECTD_COMMENT@allow collectd_t virtd_exec_t:file getattr;
 @COLLECTD_COMMENT@allow collectd_t virt_etc_t:file read;
 @COLLECTD_COMMENT@allow collectd_t virt_var_run_t:sock_file write;
+@COLLECTD_COMMENT@allow collectd_t virtd_t:unix_stream_socket connectto;
 
 #============= systemd_localed_t ==============
 @SYSTEMD_COMMENT@allow systemd_localed_t etc_t:file { write rename create setattr };
@@ -39,6 +49,23 @@ allow setfiles_t net_conf_t:file read;
 allow loadkeys_t initrc_tmp_t:file read;
 allow policykit_t ovirt_t:dbus send_msg;
 allow local_login_t var_log_t:file { write create };
+
+#============= initrc_t ==============
+allow initrc_t sshd_net_t:process dyntransition;
+allow initrc_t unconfined_t:process dyntransition;
+
+#============= local_login_t ==============
+allow local_login_t var_log_t:file open;
+
+#============= logrotate_t ==============
+allow logrotate_t virt_cache_t:dir read;
+
+#============= svirt_t ==============
+allow svirt_t initrc_t:unix_stream_socket connectto;
+
+#============= tuned_t ==============
+allow tuned_t ovirt_t:dbus send_msg;
+
 
 type ovirt_t;
 type ovirt_exec_t;
