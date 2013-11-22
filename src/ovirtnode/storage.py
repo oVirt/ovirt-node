@@ -72,7 +72,7 @@ class Storage:
                                 skip = True
                                 break
                         if not skip:
-                            self.HOSTVGDRIVE += "%s," % disk
+                            self.HOSTVGDRIVE += ("%s," % disk) if disk else ""
             else:
                 self.ROOTDRIVE = _functions.translate_multipath_device(
                                     _functions.OVIRT_VARS["OVIRT_INIT"])
