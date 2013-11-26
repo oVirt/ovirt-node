@@ -367,8 +367,8 @@ make install DESTDIR=%{buildroot}
 
 # dracut patches for rhel6
 %if ! %{is_systemd}
-%{__install} -p -m0644 dracut/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch %{buildroot}%{app_root}
-%{__install} -p -m0644 dracut/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch %{buildroot}%{app_root}
+%{__install} -p -m0644 dracut/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch %{buildroot}%{app_root}
+
 %endif
 
 # python-augeas is not in RHEL-6
@@ -415,9 +415,9 @@ fi
 %if ! %{is_systemd}
 # apply dracut fixes not in rhel6
 # rhbz#683330
-# dracut.git commits rediffed for dracut-004-53.el6
-patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch
-patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
+# dracut.git commits rediffed for dracut-004-336.el6
+patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch
+
 %endif
 #use all hard-coded defaults for multipath
 # except for getuid_callout where we need to replace-whitespace on EL6
@@ -597,8 +597,8 @@ fi
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
 %if ! %{is_systemd}
-%{app_root}/dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch
-%{app_root}/dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
+%{app_root}/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch
+
 %endif
 
 %{dracutdir}/91ovirtnode/module-setup.sh
