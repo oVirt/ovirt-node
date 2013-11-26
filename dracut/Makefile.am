@@ -33,7 +33,6 @@ dist_dracutconf_DATA = \
   ovirt-dracut.conf
 
 EXTRA_DIST = \
-  dracut-3d88d27810acc7782618d67a03ff5c0e41494ca4.patch \
-  dracut-93724aa28fc20c8b7f0167201d1759b7118ba890.patch
+	dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch
 
 # vim: ts=2
