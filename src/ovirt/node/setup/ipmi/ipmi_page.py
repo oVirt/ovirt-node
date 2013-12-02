@@ -83,7 +83,9 @@ class Ipmi(base.Base):
 
     def check_status(self):
         try:
-            process.check_call(["ipmitool", "-I", "open", "chassis", "status"])
+            process.check_output(["ipmitool", "-I", "open",
+                                  "chassis", "status"])
             return True
-        except CalledProcessError:
+        except CalledProcessError as e:
+            self.logger.warning("IPMI status call failed with: %s" % e.output)
             return False
