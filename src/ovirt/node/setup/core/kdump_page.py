@@ -62,6 +62,7 @@ class Plugin(plugins.NodePlugin):
             "kdump.ssh_location": cfg["ssh"]or "",
             "kdump.nfs_location": cfg["nfs"]or "",
         }
+        self._model = model
         self.logger.debug(model)
         return model
 
@@ -125,10 +126,12 @@ class Plugin(plugins.NodePlugin):
             for w in net_types:
                 if w in self.widgets:
                     self.widgets[w].enabled(False)
+                    self.widgets[w].value("")
 
             w = "kdump.%s_location" % changes["kdump.type"]
             if w in net_types and w in self.widgets:
-                self.widgets[w].enabled(True),
+                self.widgets[w].enabled(True)
+                self.widgets[w].value(self._model[w])
 
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
