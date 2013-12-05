@@ -161,16 +161,13 @@ class Plugin(plugins.NodePlugin):
             ktype, sshloc, sshkey, nfsloc = effective_model.values_for(
                 kdump_keys)
             if ktype == "nfs":
-                model.update(nfsloc, None, None, None)
+                model.configure_nfs(nfsloc)
             elif ktype == "ssh":
-                if "kdump.ssh_key" in changes:
-                    model.update(None, sshloc, sshkey, None)
-                else:
-                    model.update(None, sshloc, None, None)
+                model.configure_ssh(sshloc)
             elif ktype == "local":
-                model.update(None, None, None, True)
+                model.configure_local()
             else:
-                model.update(None, None, None, None)
+                model.disable_kdump()
             txs += model.transaction()
 
         try:
@@ -183,7 +180,7 @@ class Plugin(plugins.NodePlugin):
                 console.wait_for_keypress()
         except KeyboardInterrupt:
             with self.application.ui.suspended():
-                model.update(None, None, None)
+                model.disable_kdump()
                 txs = model.transaction()
                 txs()
                 console.reset()
@@ -194,19 +191,13 @@ class Plugin(plugins.NodePlugin):
         except Exception as e:
             # Restore the configuration
             if saved_model["kdump.type"] == "nfs":
-                model.update(saved_model["kdump.nfs_location"], None, None,
-                             None)
+                model.configure_nfs(saved_model["kdump.nfs_location"])
             elif saved_model["kdump.type"] == "kdump.ssh_location":
-                if self.model()["kdump.ssh_key"] is not "":
-                    model.update(None, saved_model['kdump.ssh_location'],
-                                 saved_model['kdump.ssh_key'], None)
-                else:
-                    model.update(None, saved_model['kdump.ssh_location'],
-                                 None, None)
+                model.configure_ssh(saved_model['kdump.ssh_location'])
             elif saved_model["kdump.type"] == "local":
-                model.update(None, None, None, True)
+                model.configure_local()
             else:
-                model.update(None, None, None, None)
+                model.disable_kdump()
             self.logger.exception("Exception while configuring kdump")
             self.application.show(self.ui_content())
             return InfoDialog("dialog.info", "An error occurred", e.message)
