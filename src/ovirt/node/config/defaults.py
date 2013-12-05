@@ -1010,6 +1010,18 @@ class KDump(NodeConfigFileSection):
         return {"OVIRT_KDUMP_LOCAL": "true" if local else None
                 }
 
+    def configure_nfs(self, nfs_location):
+        self.update(nfs_location, None, None)
+
+    def configure_ssh(self, ssh_location):
+        self.update(None, ssh_location, None)
+
+    def configure_local(self):
+        self.update(None, None, True)
+
+    def disable_kdump(self):
+        self.update(None, None, None)
+
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
         cfg.update({"local": True if cfg["local"] == "true" else None
