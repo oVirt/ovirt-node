@@ -510,7 +510,10 @@ initrd /initrd0.img
             self.root_param = "root=live:LABEL=Root"
             self.bootparams = "ro rootfstype=auto rootflags=ro "
         self.bootparams += OVIRT_VARS["OVIRT_BOOTPARAMS"].replace(
-                                                            "console=tty0", "")
+                                                            "console=tty0", ""
+                                                            ).replace(
+                                                            "rd_NO_MULTIPATH",
+                                                            "")
         if " " in self.disk or os.path.exists("/dev/cciss"):
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
