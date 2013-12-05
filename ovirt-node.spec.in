@@ -573,9 +573,8 @@ fi
 %config(noreplace) %{_sysconfdir}/cron.d/ovirt-logrotate
 
 %{mgmt_scripts_dir}
-%{_sysconfdir}/ovirt-config-boot.d
-%exclude %{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py*
-%exclude %{_sysconfdir}/ovirt-config-boot.d/puppet_autoinstall.py*
+%dir %{_sysconfdir}/ovirt-config-boot.d
+%{_sysconfdir}/ovirt-config-boot.d/local_boot_trigger.sh
 
 %if %{is_f16}
 %{_unitdir}/libvirtd.service
@@ -624,7 +623,7 @@ fi
 %{python_sitelib}/ovirtnode
 %{python_sitelib}/augeas*
 %{_sysconfdir}/ovirt-early.d
-%{_sysconfdir}/ovirt-commandline.d
+%dir %{_sysconfdir}/ovirt-commandline.d
 %if %{is_systemd}
 %{_unitdir}/ovirt.service
 %{_unitdir}/ovirt-awake.service
