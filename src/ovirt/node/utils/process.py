@@ -28,13 +28,49 @@ Some convenience functions related to processes
 """
 
 
-LOGGER = log.getLogger(__name__)
-
 COMMON_POPEN_ARGS = {
     "close_fds": True
 }
 
 CalledProcessError = subprocess.CalledProcessError
+
+
+def log_call(msg, args=[], kwargs={}, masks=[], logfunc=None):
+    logfunc = logfunc or log.getLogger(__name__).debug
+    masks = masks or log_call.masks
+
+    # Replace masked items
+    if masks:
+        args = ["<masked>" if arg in masks else arg
+                for arg in args]
+        kwargs = dict((key, "<masked>" if v in masks else v)
+                      for key, v in kwargs.items())
+
+    cmd = "%s %s" % (args, kwargs)
+    return logfunc("%s: %s" % (msg, cmd))
+log_call.masks = []
+
+
+def masked(masks):
+    """A context manager to hide certain args before logging
+
+    >>> import sys
+    >>> with masked(["Lemmings"]):
+    ...     log_call("Beware", ["Domminated", "By",
+    ...                         "Lemmings"], {"Save": "Lemmings"},
+    ...              logfunc=lambda x: x)
+    "Beware: ['Domminated', 'By', '<masked>'] {'Save': '<masked>'}"
+    """
+    assert type(masks) is list
+
+    class MaskedLog:
+        def __enter__(self):
+            self.old_masks = log_call.masks
+            log_call.masks = masks
+        def __exit__(self, exc_type, exc_value, traceback):
+            log_call.masks = self.old_masks
+
+    return MaskedLog()
 
 
 def __update_kwargs(kwargs):
@@ -71,7 +107,7 @@ def popen(*args, **kwargs):
     """subprocess.Popen wrapper to not leak file descriptors
     """
     kwargs = __update_kwargs(kwargs)
-    LOGGER.debug("Popen with: %s %s" % (args, kwargs))
+    log_call("Popen with", args, kwargs)
     # Intentionally no check for common problems
     return subprocess.Popen(*args, **kwargs)
 
@@ -89,7 +125,7 @@ def call(*args, **kwargs):
     0
     """
     kwargs = __update_kwargs(kwargs)
-    LOGGER.debug("Calling with: %s %s" % (args, kwargs))
+    log_call("Calling with", args, kwargs)
     __check_for_problems(args, kwargs)
     return int(subprocess.call(*args, **kwargs))
 
@@ -98,7 +134,7 @@ def check_call(*args, **kwargs):
     """subprocess.check_call wrapper to not leak file descriptors
     """
     kwargs = __update_kwargs(kwargs)
-    LOGGER.debug("Checking call with: %s %s" % (args, kwargs))
+    log_call("Checking call with", args, kwargs)
     __check_for_problems(args, kwargs)
     return int(subprocess.check_call(*args, **kwargs))
 
@@ -116,7 +152,7 @@ def check_output(*args, **kwargs):
     CalledProcessError: Command 'false' returned non-zero exit status 1
     """
     kwargs = __update_kwargs(kwargs)
-    LOGGER.debug("Checking output with: %s %s" % (args, kwargs))
+    log_call("Checking output with", args, kwargs)
     __check_for_problems(args, kwargs)
     stdout = None
     try:
