@@ -304,7 +304,9 @@ initrd /initrd0.img
         self.generate_paths()
         logger.info("Installing the image.")
         # copy grub.efi to safe location
-        shutil.copy("/boot/efi/EFI/redhat/grub.efi", "/tmp")
+        if _functions.is_efi_boot():
+            shutil.copy("/boot/efi/EFI/%s/grub.efi" % self.efi_dir_name,
+                        "/tmp")
         if "OVIRT_ROOT_INSTALL" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
                 logger.info("Root Installation Not Required, Finished.")
