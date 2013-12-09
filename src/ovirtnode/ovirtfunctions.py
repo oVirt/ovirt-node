@@ -852,6 +852,59 @@ def ovirt_store_config(files):
             rc = rc and True
     return rc
 
+def ovirt_store_config_retnum(filename):
+    if is_stateless():
+        return True
+    if not os.path.ismount("/config"):
+        logger.error("/config is not mounted")
+        raise SystemExit(2)
+    filename = os.path.abspath(filename)
+
+    if os.path.isdir(filename):
+        # ensure that, if this is a directory
+        # that it's not already persisted
+        if os.path.isdir("/config/" + filename):
+            logger.warn("Directory already persisted: " + filename)
+            logger.warn("You need to unpersist its child directories " +
+                        "and/or files and try again.")
+            raise SystemExit(3)
+    elif os.path.isfile(filename):
+        # if it's a file then make sure it's not already persisted
+        if os.path.isfile("/config/" + filename):
+            cksumroot=cksum(filename)
+            cksumstored=cksum("/config" + filename)
+            if cksumroot == cksumstored:
+                logger.warn("File already persisted: " + filename)
+                raise SystemExit(4)
+            else:
+                # persistent copy needs refresh
+                if system("umount -n " + filename + " 2> /dev/null"):
+                    system("rm -f /config"+ filename)
+    else:
+        # skip if file does not exist
+        logger.warn("Skipping, file '" + filename + "' does not exist")
+        raise SystemExit(5)
+
+    # skip if already bind-mounted
+    if not check_bind_mount(filename):
+        dirname = os.path.dirname(filename)
+        system("mkdir -p /config/" + dirname)
+        if system("cp -a " + filename + " /config"+filename):
+            if not system("mount -n --bind /config"+filename+ " " + \
+                          filename):
+                logger.error("Failed to persist: " + filename)
+                raise SystemExit(1)
+            else:
+                logger.info("File: " + filename + " persisted")
+    # register in /config/files used by rc.sysinit
+    ret = system_closefds("grep -q \"^$" + filename +"$\" " + \
+                          " /config/files 2> /dev/null")
+    if ret > 0:
+        system_closefds("echo "+filename+" >> /config/files")
+        logger.info("Successfully persisted: " + filename)
+
+    return True
+
 def ovirt_store_config_atomic(filename, source=None):
     rc = True
     persist_it = True

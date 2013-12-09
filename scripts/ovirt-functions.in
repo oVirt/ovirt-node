@@ -647,73 +647,19 @@ EOF
 #   ovirt_store_config /etc/config /etc/config2 ...
 #   copy to /config and bind-mount back
 ovirt_store_config() {
-    rc=0
-    if is_stateless; then
-        # no need to do anything
-        return 0;
-    fi
-    if grep -q " /config ext[234]" /proc/mounts; then
-        for p in "$@"; do
-            local filename=$(readlink -f $p)
-            local persist_it=true
-            if [[ "$filename" =~ ^/[^/]*$ ]]; then
-                # persisting top-level folder makes trouble rhbz#611617
-                printf "Cannot persist system folder: ${filename}\n"
-                persist_it=false
-            elif [ -d $filename ]; then
-                if [ -d /config$filename ]; then
-                    printf "Directory already persisted: ${filename}\n"
-                    printf "You need to unpersist its child directories and/or files and try again.\n"
-                    persist_it=false
-                fi
-            elif [ -f $filename ]; then
-                if [ -f /config$filename ]; then
-                    local md5root=$(md5 $filename)
-                    local md5stored=$(md5 /config$filename)
-                    if [ "$md5root" = "$md5stored" ]; then
-                        printf "File already persisted: ${filename}\n"
-                        persist_it=false
-                    else
-                        # persistent copy needs refresh
-                        umount -n $filename 2> /dev/null || :
-                        rm -f /config$filename
-                    fi
-                fi
-            else
-                printf "Cannot persist: ${filename}\n"
-                persist_it=false
-            fi
+    for p in "$@"; do
+        python <<EOP
+import sys
+from ovirtnode.ovirtfunctions import ovirt_store_config_retnum
 
-            if $persist_it; then
-                # skip if file does not exist
-                if [ ! -e "${filename}" ]; then
-                    printf " Skipping, file '${filename}' does not exist\n"
-                    continue
-                fi
-                # skip if already bind-mounted
-                if ! grep -q " $filename ext[234]" /proc/mounts ; then
-                    mkdir -p /config$(dirname $filename)
-                    cp -a $filename /config$filename \
-                        && mount -n --bind /config$filename $filename
-                    if [ $? -ne 0 ]; then
-                        printf " Failed to persist\n"
-                        rc=1
-                    else
-                        printf " File persisted\n"
-                    fi
-                fi
-                # register in /config/files used by rc.sysinit
-                if ! grep -q "^${filename}$" /config/files 2> /dev/null ; then
-                    printf "${filename}\n" >> /config/files
-                fi
-                printf "\nSuccessfully persisted ${filename}\n"
-            fi
-        done
-        echo
-    else
-        printf "WARNING: persistent config storage not available\n"
-        rc=2
-    fi
+ovirt_store_config_retnum("$p")
+sys.exit(0)
+EOP
+        rc=$?
+        if [ $rc -eq 1 ] || [ $rc -eq 2 ]; then
+            return $rc
+        fi
+    done
     return $rc
 }
 

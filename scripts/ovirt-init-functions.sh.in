@@ -1211,7 +1211,11 @@ EOP
             autoinstall_failed
         fi
         disable_firstboot
-        ovirt_store_firstboot_config || autoinstall_failed
+        ovirt_store_firstboot_config
+        retval=$?
+        if [ $retval -eq 1 ] || [ $retval -eq 2 ]; then
+            autoinstall_failed
+        fi
 
         # rhbz#920208
         # the sysd-upd-utmp-shutdown.service (see below) is pulling in the var-log.mount unit.
