@@ -1,8 +1,7 @@
 collectd-virt
-libguestfs-winsupport
 qemu-kvm
 # rhbz#641494 RFE - add libguestfs
-libguestfs-winsupport
+libguestfs
 ltrace
 # keyboard layout
 system-config-keyboard-base
