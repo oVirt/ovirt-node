@@ -41,7 +41,8 @@ class Plugin(plugins.NodePlugin):
         return 20
 
     def model(self):
-        self._model.update({"boot.device": ""})
+        self._model.update({"boot.device": "",
+                            "label.details": ""})
         devices = self.storage_discovery.all_devices_for_ui_table()
         self.logger.debug("Using devices: %s" % devices)
         if devices:
