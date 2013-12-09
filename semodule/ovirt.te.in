@@ -2,10 +2,15 @@ policy_module(ovirt, 1.0)
 
 gen_require(`
 @COLLECTD_COMMENT@    type collectd_t;
+@SYSTEMD_COMMENT@    type systemd_localed_t;
+@SYSTEMD_COMMENT@    type systemd_unit_file_t;
+    type collectd_t;
     type etc_t;
-    type init_t;
     type initrc_t;
     type initrc_tmp_t;
+    type init_t;
+    type iscsid_t;
+    type iscsi_var_lib_t;
     type loadkeys_t;
     type local_login_t;
     type logrotate_t;
@@ -15,19 +20,20 @@ gen_require(`
     type policykit_t;
     type setfiles_t;
     type shadow_t;
-    type sshd_t;
     type sshd_net_t;
+    type sshd_t;
     type svirt_t;
-@SYSTEMD_COMMENT@    type systemd_localed_t;
-@SYSTEMD_COMMENT@    type systemd_unit_file_t;
+    type sysstat_t;
+    type systemd_localed_t;
+    type systemd_unit_file_t;
     type tuned_t;
     type unconfined_t;
     type var_log_t;
     type virt_cache_t;
-    type virt_etc_t;
-    type virt_var_run_t;
     type virtd_exec_t;
     type virtd_t;
+    type virt_etc_t;
+    type virt_var_run_t;
 ')
 
 #============= collectd_t ==============
@@ -48,14 +54,15 @@ allow mount_t shadow_t:file mounton;
 allow setfiles_t net_conf_t:file read;
 allow loadkeys_t initrc_tmp_t:file read;
 allow policykit_t ovirt_t:dbus send_msg;
-allow local_login_t var_log_t:file { write create };
+allow sshd_net_t initrc_t:process sigchld;
+allow sysstat_t var_log_t:file open;
 
 #============= initrc_t ==============
 allow initrc_t sshd_net_t:process dyntransition;
 allow initrc_t unconfined_t:process dyntransition;
 
 #============= local_login_t ==============
-allow local_login_t var_log_t:file open;
+allow local_login_t var_log_t:file { open write create read lock };
 
 #============= logrotate_t ==============
 allow logrotate_t virt_cache_t:dir read;
@@ -65,6 +72,13 @@ allow svirt_t initrc_t:unix_stream_socket connectto;
 
 #============= tuned_t ==============
 allow tuned_t ovirt_t:dbus send_msg;
+
+# Remove this block once the bug is solved
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1025401
+#============= iscsid_t ==============
+allow iscsid_t iscsi_var_lib_t:dir { write remove_name create add_name rmdir };
+allow iscsid_t iscsi_var_lib_t:file { write create unlink };
+allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
 
 
 type ovirt_t;
