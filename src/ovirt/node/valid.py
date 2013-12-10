@@ -487,12 +487,21 @@ class IQN(RegexValidator):
 
     >>> IQN()("iqn.1994-05.com.redhat.com:6edea1b458e5")
     True
+    >>> IQN().validate("iqn.2013-10.com~.redhat:123456")
+    False
+    >>> IQN().validate("iqn.2013-10.com!.redhat:123456")
+    False
+    >>> IQN().validate("iqn.2013-10.com#.redhat:123456")
+    False
+    >>> IQN().validate(r'iqn.2013-10.com$%^&*()+_<>?/;"!@.redhat:123456')
+    False
     >>> IQN().validate("")
     False
     """
 
     description = "a valid IQN"
-    pattern = "^iqn\.(\d{4}-\d{2})\.([^:]+):"
+    pattern = "^(?:iqn\.\d{4}-\d{2}(?:\.[A-Za-z](?:[A-Za-z0-9\-]*" + \
+              "[A-Za-z0-9])?)+(?::.*)?$|eui\.[0-9A-Fa-f]{16})"
 
 
 class BlockDevice(Validator):
