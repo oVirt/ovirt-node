@@ -807,6 +807,9 @@ _start_ovirt_early () {
         esac
     done
 
+    # Disable USB power-saving
+    echo -1 > /sys/module/usbcore/parameters/autosuspend
+
     for hook in $ovirt_early; do
         pre="$EARLY_DIR/pre-$hook"
         if [ -e "$pre" ]; then
