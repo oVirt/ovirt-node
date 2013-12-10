@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import ui
 from ovirt.node.plugins import NodePlugin
-from ovirt.node.utils import process
+from ovirt.node.utils import process, system
 
 """
 A plugin for a support page
@@ -85,9 +85,14 @@ class Plugin(NodePlugin):
                                          contents)
 
     def __debugfiles_to_offer(self):
-        return [("node", "/var/log/ovirt.log"),
-                ("ui", "/tmp/ovirt.debug.log"),
-                ("dmesg", "dmesg"),
-                ("messages", "/var/log/messages"),
-                ("journal", "journal (systemd)"),
-                ("audit", "/var/log/audit/audit.log")]
+        items = [("node", "/var/log/ovirt.log"),
+                 ("ui", "/var/log/ovirt-node.log"),
+                 ("dmesg", "dmesg"),
+                 ("audit", "/var/log/audit/audit.log")]
+
+        if system.has_systemd():
+            items.append(("journal", "journal (systemd)"))
+        else:
+            items.append(("messages", "/var/log/messages"))
+
+        return items
