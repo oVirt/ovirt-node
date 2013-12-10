@@ -41,7 +41,7 @@ class Validator(base.Base):
     Further below you will find an regex validator which uses regular
     expressions to validate the input.
     """
-    __exception_msg = "The field must contain {description}."
+    __exception_msg = u"The field must contain {description}."
     description = None
 
     def validate(self, value):
@@ -218,6 +218,10 @@ class Number(RegexValidator):
         super(Number, self).__init__()
         if bounds:
             self.bounds = bounds
+            vmin, vmax = self.bounds
+            vmin = u'-∞' if vmin is None else vmin
+            vmax = u'∞' if vmax is None else vmax
+            bounds = "[%s, %s]" % (vmin, vmax)
             self.description = "%s in the bounds %s" % (self.description,
                                                         bounds)
         elif exactly is not None:
