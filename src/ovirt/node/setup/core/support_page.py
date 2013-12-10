@@ -69,7 +69,7 @@ class Plugin(NodePlugin):
         if changes.contains_any(["support.logfile"]):
             logfile = changes["support.logfile"]
             cmds = {"node": "cat /var/log/ovirt.log | less",
-                    "ui": "cat /tmp/ovirt.debug.log | less",
+                    "ui": "cat /var/log/ovirt-node.log | less",
                     "messages": "cat /var/log/messages | less",
                     "audit": "cat /var/log/audit/audit.log | less",
                     "dmesg": "dmesg | less",
