@@ -188,6 +188,14 @@ class Number(RegexValidator):
     True
     >>> Number()("42")
     True
+    >>> Number()("0")
+    True
+    >>> Number()("1")
+    True
+    >>> Number()(0)
+    True
+    >>> Number()("10")
+    True
     >>> Number(bounds=[0, None]).validate(-10)
     False
     >>> Number(bounds=[0, 10]).validate(11)
@@ -198,10 +206,12 @@ class Number(RegexValidator):
     True
     >>> Number(exactly=42).validate("4")
     False
+    >>> Number().validate("042")
+    False
     """
 
     description = "a number"
-    pattern = "^[-+]?\d+$"
+    pattern = "^[-+]?(0|[1-9]\d*)$"
     bounds = None
 
     def __init__(self, bounds=None, exactly=None):
