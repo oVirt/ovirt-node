@@ -1279,6 +1279,15 @@ EOP
         # Restart jorunald to pick up /var/log/journal
         service systemd-journald restart
 
+        # Add symlink for libguestfs
+        if [ -f /dev/.initramfs/live/vmlinuz0 ];
+        then
+            ln -s /dev/.initramfs/live/vmlinuz0 /boot/vmlinuz-$(uname -r);
+        elif [ -f /dev/.initramfs/live/isolinux/vmlinuz0 ];
+        then
+            ln -s /dev/.initramfs/live/isolinux/vmlinuz0 /boot/vmlinuz-$(uname -r);
+        fi
+
         BACKUP=$(mktemp)
         ISSUE=/etc/issue
         ISSUE_NET=/etc/issue.net
