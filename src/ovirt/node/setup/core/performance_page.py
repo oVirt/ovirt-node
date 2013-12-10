@@ -50,7 +50,7 @@ class Plugin(plugins.NodePlugin):
         profiles = [(profile, profile) for profile in
                     tuned.get_available_profiles()]
 
-        ws = [ui.Header("header", _("tuned Configuration")),
+        ws = [ui.Header("header", _("Tuned Configuration")),
               ui.Label("label", _("Choose the tuned profile you would ") +
                        _("like to apply to this system.")),
               ui.Divider("divider[0]"),
