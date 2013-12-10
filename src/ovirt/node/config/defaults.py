@@ -796,7 +796,8 @@ class Nameservers(NodeConfigFileSection):
 
             def commit(self):
                 # Write resolv.conf any way, sometimes without servers
-                comment = ("Please make changes through the TUI. " +
+                comment = ("Please make changes through the TUI " +
+                           "or management server. " +
                            "Manual edits to this file will be " +
                            "lost on reboot")
                 aug.set("/files/etc/resolv.conf/#comment[1]", comment)
