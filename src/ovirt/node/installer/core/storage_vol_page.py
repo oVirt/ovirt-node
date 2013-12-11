@@ -120,6 +120,11 @@ class Plugin(plugins.NodePlugin):
                     raise InvalidData("Data partition must be at least 0 MB")
                 else:
                     raise InvalidData("Free space must not be negative")
+            else:
+                for w in self.widgets:
+                    if hasattr(self.widgets[w], "notice"):
+                        self.widgets[w].notice("")
+                self._on_ui_change(self._NodePlugin__invalid_changes)
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
