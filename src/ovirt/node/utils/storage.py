@@ -80,6 +80,7 @@ class Devices(base.Base):
     """A class to retrieve available storage devices
     """
     _fake_devices = None
+    _cached_live_disk_name = None
 
     def __init__(self, fake=False):
         super(Devices, self).__init__()
@@ -95,12 +96,18 @@ class Devices(base.Base):
 
     def live_disk_name(self):
         """get the device name of the live-media we are booting from
+        BEWARE: Because querying this is so expensive we cache this result
+                Assumption: Live disk name does not change
         """
+        if self._cached_live_disk_name:
+            return self._cached_live_disk_name
+
         from ovirtnode.ovirtfunctions import get_live_disk
         name = get_live_disk()
         if not "/dev/mapper" in name:
             # FIXME explain ...
             name = "/dev/%s" % name.rstrip('0123456789')
+        self._cached_live_disk_name = name
         return name
 
     def get_all(self):
