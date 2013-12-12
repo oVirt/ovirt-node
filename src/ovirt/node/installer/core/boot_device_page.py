@@ -146,16 +146,17 @@ class StorageDiscovery(threading.Thread):
     """Probing for available devices is pulled out into a thread
     because it can tae several seconds
     """
-    do_fake = False
+    _all_devices = None
     devices = None
+    do_fake = False
 
     def __init__(self, do_fake):
         super(StorageDiscovery, self).__init__()
         self.do_fake = do_fake
 
     def run(self):
-        devices = utils.storage.Devices(fake=self.do_fake)
-        self.devices = devices
+        self.devices = utils.storage.Devices(fake=self.do_fake)
+        self._all_devices = self.devices.get_all()
 
     def all_devices(self):
         """Return a list of all devices
@@ -165,7 +166,7 @@ class StorageDiscovery(threading.Thread):
         except RuntimeError:
             pass
             # I suppose the thread was not started
-        return self.devices.get_all()
+        return self._all_devices
 
     def all_devices_for_ui_table(self):
         """Returns a ui.Table ready list of strings with all useable storage
