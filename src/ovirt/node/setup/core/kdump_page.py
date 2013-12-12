@@ -130,6 +130,25 @@ class Plugin(plugins.NodePlugin):
 
             w = "kdump.%s_location" % changes["kdump.type"]
             if w in net_types and w in self.widgets:
+
+                # Decide which validator to use dynamically
+                self.validators = lambda: self.__validators(
+                    changes["kdump.type"])
+
+                resubmit = [self._NodePlugin__invalid_changes,
+                            self._NodePlugin__changes]
+
+                d = {}
+                for change in resubmit:
+                    d.update(dict((k, v) for (k, v) in change.iteritems()))
+                for k, v in d.iteritems():
+                    self._on_ui_change({k: v})
+
+                # If nothing's been entered yet, pass an empty string to so we
+                # can validate or flag the field and set the right notice
+                if not w in self._NodePlugin__invalid_changes and not w in \
+                        self._NodePlugin__changes:
+                    self._on_ui_change({w: ""})
                 self.widgets[w].enabled(True)
                 self.widgets[w].value(self._model[w])
 
@@ -196,3 +215,16 @@ class Plugin(plugins.NodePlugin):
             self.application.show(self.ui_content())
             return InfoDialog("dialog.info", "An error occurred", e.message)
         return self.ui_content()
+
+    def __validators(self, type):
+        return {"kdump.type": valid.Options(dict(self._types).keys()),
+                "kdump.ssh_location":  (valid.SSHAddress(allow_ipv6=False)) if
+                type == "ssh" else
+                                       (valid.Empty() |
+                                        valid.SSHAddress(allow_ipv6=False)),
+                "kdump.ssh_key": valid.Empty() | valid.URL(),
+                "kdump.nfs_location": (valid.NFSAddress(allow_ipv6=False)) if
+                type == "nfs" else
+                                      (valid.Empty() |
+                                       valid.NFSAddress(allow_ipv6=False)),
+                }
