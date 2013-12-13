@@ -1515,3 +1515,58 @@ class Installation(NodeConfigFileSection):
         """
         self.update(upgrade=True,
                     install=None)
+
+
+class Management(NodeConfigFileSection):
+    """Exchange informations with management part
+
+    Plugins can use this class as follows:
+
+    from ovirt.node.config.defaults import Management
+    mgmt.update("oVirt Engine at <url>",
+                ["ovirtmgmt"],
+                [])
+
+
+    Keys
+    ----
+    MANAGED_BY=<descriptive-text>
+        This key is used to (a) signal the Node is being managed and
+        (b) signaling who is managing this node.
+        The value can be a descriptive text inclduning e.g. an URL to point
+        to the management instance.
+
+    MANAGED_IFNAMES=<ifname>[,<ifname>,...]
+        This key is used to specify a number (comma separated list) if
+        ifnames which are managed and for which the TUI shall display some
+        information (IP, ...).
+        This can also be used by the TUI to decide to not offer NIC
+        configuration to the user.
+        This is needed to tell the TUI the _important_ NICs on this host.
+        E.g. it's probably worth to provide the ifname of the management
+        interface here, e.g ovirtmgmt.
+
+    MANAGED_LOCKED_PAGES=<pagename>[,<pagename>,...]
+        (Future) A list of pages which shall be locked e.g. because the
+        management instance is configuring the aspect (e.g. networking or
+        logging).
+    """
+    keys = ("MANAGED_BY",
+            "MANAGED_IFNAMES",
+            "MANAGED_LOCKED_PAGES"
+            )
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, managed_by, managed_ifnames, managed_locked_pages):
+        assert type(managed_ifnames) is list
+        return {"MANAGED_IFNAMES": (",".join(managed_ifnames)
+                                    if managed_ifnames else None)}
+
+    def retrieve(self):
+        cfg = dict(NodeConfigFileSection.retrieve(self))
+        cfg["managed_ifnames"] = (cfg["managed_ifnames"].split(",")
+                                  if cfg["managed_ifnames"] else None)
+        return cfg
+
+    def transaction(self):
+        return None
