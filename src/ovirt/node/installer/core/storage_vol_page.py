@@ -131,6 +131,8 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
         elif changes.contains_any(["button.next"]):
+            self._model.update(effective_changes)
+            self.logger.debug("Nowdefined sizes: %s" % self._model)
             self.application.ui.navigate.to_next_plugin()
 
     def __get_min_sizes(self):
@@ -162,7 +164,7 @@ class Plugin(plugins.NodePlugin):
                  "storage.swap_size": "%s" % stor.SWAP_SIZE,
                  "storage.config_size": "%s" % stor.CONFIG_SIZE,
                  "storage.logging_size": "%s" % stor.LOGGING_SIZE,
-                 "storage.data_size": "%s" % stor.DATA_SIZE,
+                 "storage.data_size": "%s" % "0",
                  "storage.free_space": "0 MB",
                  "storage.drive_size": "%s MB" % self._drive_size
                  }
