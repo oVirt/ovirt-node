@@ -23,11 +23,28 @@
 Create an setup application instance an start it.
 """
 
-from ovirt.node import app, installer, log
+from ovirt.node import app, installer, log, ui, utils
+
+
+def quit(instance):
+    def ui_quit(dialog, changes):
+        utils.system.reboot()
+        instance.ui.quit()
+    txt = "Are you sure you want to quit? The system will be rebooted."
+    dialog = ui.ConfirmationDialog("dialog.exit", "Exit", txt,
+                                   [ui.Button("dialog.exit.yes", "Reboot"),
+                                    ui.CloseButton("dialog.exit.close",
+                                                   "Cancel")]
+                                   )
+
+    dialog.buttons[0].on_activate.clear()
+    dialog.buttons[0].on_activate.connect(ui.CloseAction())
+    dialog.buttons[0].on_activate.connect(ui_quit)
+    instance.show(dialog)
 
 
 if __name__ == '__main__':
     args, _ = app.parse_cmdline()
     log.configure_logging(args.debug)
-    instance = app.Application(installer, args)
+    instance = app.Application(installer, args, quit=quit)
     instance.run()
