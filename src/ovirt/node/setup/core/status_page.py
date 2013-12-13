@@ -50,8 +50,16 @@ class Plugin(plugins.NodePlugin):
         vlanid = defaults.Network().retrieve()["vlanid"]
         if vlanid:
             bootif = "%s.%s" % (bootif, vlanid)
+
+        mng = defaults.Management()
+        managementifs = mng.retrieve()["managed_ifnames"]
+
+        primaryif = managementifs[0] if managementifs else bootif
+
+        self.logger.debug("NIC for status: %s" % primaryif)
+
         net_status, net_br, net_addrs = \
-            utils.network.networking_status(bootif)
+            utils.network.networking_status(primaryif)
         net_addrs_str = ""
         if net_addrs:
             net_addrs_str = "IPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)
@@ -60,6 +68,7 @@ class Plugin(plugins.NodePlugin):
 
         return {
             "status": virt.hardware_status(),
+            "managed_by": mng.retrieve()["managed_by"],
             "networking": net_status,
             "networking.ip": net_addrs_str,
             "networking.bridge": net_br,
@@ -89,33 +98,37 @@ class Plugin(plugins.NodePlugin):
                           ui.Button("action.poweroff", "Power Off")
                           ]
 
-        widgets = [ui.Header("header[0]", "System Information"),
+        widgets = [ui.Header("header[0]", "System Information")]
 
-                   ui.KeywordLabel("status", aligned("Status: ")),
-                   ui.Divider("divider[0]"),
+        if self.model()["managed_by"]:
+            widgets += [ui.KeywordLabel("managed_by",
+                                        aligned("Managed by: "))]
 
-                   ui.Row("row[0]", network_widgets),
-                   ui.Label("networking.ip", ""),
-                   ui.Divider("divider[1]"),
+        widgets += [ui.KeywordLabel("status", aligned("Status: ")),
+                    ui.Divider("divider[0]"),
 
-                   ui.KeywordLabel("logs", aligned("Logs: ")),
-                   ui.Divider("divider[2]"),
+                    ui.Row("row[0]", network_widgets),
+                    ui.Label("networking.ip", ""),
+                    ui.Divider("divider[1]"),
 
-                   ui.KeywordLabel("libvirt.num_guests",
-                                   aligned("Running VMs: ")),
-                   ui.Divider("divider[3]"),
+                    ui.KeywordLabel("logs", aligned("Logs: ")),
+                    ui.Divider("divider[2]"),
 
-                   ui.Label("support.hint", "Press F8 for support menu"),
-                   ui.Divider("divider[4]"),
+                    ui.KeywordLabel("libvirt.num_guests",
+                                    aligned("Running VMs: ")),
+                    ui.Divider("divider[3]"),
 
-                   ui.Row("row[1]",
-                          [ui.Button("action.hostkey", "View Host Key"),
-                           ui.Button("action.cpu_details",
-                                     "View CPU Details"),
-                           ]),
+                    ui.Label("support.hint", "Press F8 for support menu"),
+                    ui.Divider("divider[4]"),
 
-                   ui.Row("row[2]", action_widgets),
-                   ]
+                    ui.Row("row[1]",
+                           [ui.Button("action.hostkey", "View Host Key"),
+                            ui.Button("action.cpu_details",
+                                      "View CPU Details"),
+                            ]),
+
+                    ui.Row("row[2]", action_widgets),
+                    ]
 
         self.widgets.add(widgets)
 
