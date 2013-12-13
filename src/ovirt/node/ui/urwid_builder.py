@@ -579,7 +579,8 @@ class UrwidWindow(ui.Window):
 
     def _quit_if_no_dialogs(self):
         if self.topmost_dialog() is None:
-            self.quit()
+            self.application.quit() if self.application.quit is not \
+                self.application.app_quit else self.quit()
         else:
             self.logger.debug("There are still open dialogs")
 

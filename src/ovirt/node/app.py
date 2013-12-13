@@ -70,7 +70,7 @@ class Application(base.Base):
     ui_builder = None
     ui = None
 
-    def __init__(self, plugin_base, args,
+    def __init__(self, plugin_base, args, quit=None,
                  ui_builder=urwid_builder.UrwidUIBuilder):
         """Constructs a new application
 
@@ -88,6 +88,7 @@ class Application(base.Base):
         self.ui_builder = ui_builder(self)
         self.ui = self.ui_builder.build(ui.Window("screen", self))
         self.plugin_base = plugin_base
+        self.quit = lambda: quit(self) if quit else self.app_quit
 
     def __parse_cmdline(self):
         if self.args.defaults:
@@ -291,7 +292,7 @@ class Application(base.Base):
             if console.wait_for_keypress() == 's':
                 self.__drop_to_shell()
 
-    def quit(self):
+    def app_quit(self):
         self.logger.info("Quitting")
         self.ui.quit()
 
