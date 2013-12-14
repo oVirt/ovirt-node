@@ -160,8 +160,12 @@ EOF
                                        GRUB_CONFIG_TEMPLATE
                 self.grub_dict['efi_hd'] = "device (hd0) " + matches.group(1)
         if os.path.exists("/live/EFI/BOOT/splash.xpm.gz"):
-            splashscreen = "splashimage=(hd0,%s)/grub/splash.xpm.gz" \
-                % self.partN
+            if _functions.is_iscsi_install():
+                splashscreen = "splashimage=(hd0,%s)/grub/splash.xpm.gz" \
+                    % self.grub_dict["partN"]
+            else:
+                splashscreen = "splashimage=(hd0,%s)/grub/splash.xpm.gz" \
+                    % self.partN
         else:
             splashscreen = ""
         self.grub_dict["splashscreen"] = splashscreen
