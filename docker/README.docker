@@ -1,0 +1,28 @@
+
+What it does
+------------
+A docker container is used to build oVirt Node.
+
+Why this makes sense
+--------------------
+oVirt Node for $DIST needs to be build on a host with $DIST. Otherwise you
+will rnu into weird problems related to e.g. SELinux.
+
+How to start
+------------
+
+This has been tested on Fedora 19 and 20.
+
+Install docker
+
+    $ sudo yum install -y docker-io
+
+Start docker (and check that it's running)
+
+    $ sudo service docker start
+    $ sudo service docker status
+
+Build oVirt Node in docker
+--------------------------
+
+    $ sudo docker build - < Dockerfile-f20

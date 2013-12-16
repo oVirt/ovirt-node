@@ -3,6 +3,7 @@
 %global mgmt_scripts_dir %{_sysconfdir}/node.d
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %define is_f16 %(test "0%{?fedora}" == "016" && echo 1 || echo 0)
+%define is_f20 %(test "0%{?fedora}" == "020" && echo 1 || echo 0)
 %define is_min_f19 %(test "0%{?fedora}" -ge "019" && echo 1 || echo 0)
 %define is_fedora_systemd %(test 0%{?fedora} -ne 0 && test %{?fedora} -ge 16 && echo 1 || echo 0)
 %define is_rhel_systemd %(test 0%{?rhel} -ne 0 && test %{?rhel} -ge 7 && echo 1 || echo 0)
@@ -66,7 +67,11 @@ Requires:       PyPAM
 Requires:       ethtool
 Requires:       cracklib-python
 Requires:       dracut
+%if %{is_el6}
 Requires:       /bin/hostname
+%else
+Requires:       hostname
+%endif
 Requires:       tuned
 %if %{is_min_f19}
 Requires:       NetworkManager
