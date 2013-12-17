@@ -38,4 +38,4 @@ if changes:
     Puppet().update(*effective_model.values_for(real_keys))
 if "puppet_enabled" in args and (re.compile(r'y', re.I).match(args[
         "puppet_enabled"]) or args["puppet_enabled"] == "1"):
-        ActivatePuppet()
+        ActivatePuppet().enable_puppet()
