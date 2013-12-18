@@ -269,6 +269,7 @@ do
 done
 # Is this to greedy?
 /sbin/restorecon -R / || :
+/usr/sbin/fixfiles -R -a restore
 
 # set SELinux booleans
 # rhbz#502779 restrict certain memory protection operations
