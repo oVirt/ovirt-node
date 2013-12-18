@@ -4,6 +4,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 export PATH
 
 # cleanup rpmdb to allow non-matching host and chroot RPM versions
+echo "Removing yumdb data"
 rm -f /var/lib/rpm/__db*
 
 echo "Creating shadow files"
@@ -15,6 +16,10 @@ grpconv
 echo "Lock root account"
 passwd -l root
 
+echo "Relabeling files"
+/usr/sbin/fixfiles -R -a restore
+
+echo "Configuring libvirt"
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 
