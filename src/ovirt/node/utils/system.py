@@ -18,22 +18,25 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils, log
-from ovirt.node.utils import process
-from ovirt.node.utils.fs import File
-import glob
-import os
-import re
-import rpm
-import subprocess
-import sys
-import system_config_keyboard.keyboard
-import time
-
 """
 A module to access system wide stuff
 e.g. services, reboot ...
 """
+
+import glob
+import os
+import re
+import shlex
+import subprocess
+import sys
+import time
+
+import rpm
+import system_config_keyboard.keyboard
+
+from ovirt.node import base, utils, log
+from ovirt.node.utils import process
+from ovirt.node.utils.fs import File
 
 
 LOGGER = log.getLogger(__name__)
@@ -87,6 +90,39 @@ def has_hostvg():
     installation)
     """
     return os.path.exists("/dev/HostVG")
+
+
+def kernel_cmdline_arguments():
+    """Return the arguments of the currently booted kernel
+    """
+    return _parse_cmdline_args(File("/proc/cmdline").read())
+
+
+def _parse_cmdline_args(cmdline):
+    """Parse the cmdline like we do it in the initfunctions
+
+    >>> sorted_args = lambda txt: sorted(_parse_cmdline_args(txt).items())
+    >>> sorted_args("a=1 b=2 c")
+    [('a', '1'), ('b', '2'), ('c', 'c')]
+    >>> sorted_args("a=1=2")
+    [('a', '1=2')]
+    >>> sorted_args("rd.lvm.lv=foo/bar")
+    [('rd.lvm.lv', 'foo/bar')]
+    >>> sorted_args("title='foo bar'")
+    [('title', 'foo bar')]
+    >>> sorted_args("a")
+    [('a', 'a')]
+    """
+    args_list = shlex.split(cmdline)
+    args = {}
+
+    for arg in args_list:
+        key = value = arg
+        if "=" in arg:
+            key, value = arg.split("=", 1)
+        args[key] = value
+
+    return args
 
 
 def which(cmd):
