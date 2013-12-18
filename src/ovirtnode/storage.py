@@ -94,7 +94,7 @@ class Storage:
                              "size of: %s" % self.MIN_SWAP_SIZE)
                 print ("\n\nSwap size is smaller than minimum required " +
                       "size of: %s" % self.MIN_SWAP_SIZE)
-                return False
+                #return False
                 sys.exit(1)
             else:
                 self.SWAP_SIZE = _functions.OVIRT_VARS["OVIRT_VOL_SWAP_SIZE"]
@@ -114,7 +114,7 @@ class Storage:
                                  "of: %s") % (i, self.__dict__[i_short]))
                     print (("\n%s is smaller than minimum required size of: " +
                           "%s") % (i, self.__dict__[i_short]))
-                    return False
+                    #return False
                 logger.info(("Setting value for %s to %s " %
                            (self.__dict__[i_short], _functions.OVIRT_VARS[i])))
                 i_short = i_short.replace("MIN_", "")
@@ -133,7 +133,7 @@ class Storage:
             if self.SWAP2_SIZE != 0 or self.DATA2_SIZE != 0:
                 logger.error("Missing device parameter for AppVG: " +
                              "unable to partition any disk")
-                return False
+                #return False
 
     def cross_check_host_app(self):
         logger.debug("Doing cross-check (if a device is a member of appvg " +
