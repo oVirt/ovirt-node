@@ -60,8 +60,7 @@ class Plugin(plugins.NodePlugin):
               ui.Divider("divider[1]"),
               ui.ConfirmedEntry("upgrade.password", "Password:",
                                 is_password=True),
-              ui.Divider("divider[2]"),
-              ui.Label("current_password.info", ""),
+              ui.Notice("current_password.info", ""),
               ui.Label("password.info", self.__no_new_password_msg)
               ]
         page = ui.Page("password", ws)
