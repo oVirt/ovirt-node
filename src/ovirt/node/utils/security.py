@@ -75,11 +75,11 @@ def password_check(password, confirmation, min_length=1):
         try:
             cracklib.FascistCheck(password)
         except ValueError as e:
-            message = "You have provided a weak password!\n"
-            message += "Strong passwords contain a mix of uppercase,\n"
-            message += "lowercase, numeric and punctuation characters.\n"
-            message += "They are six or more characters long and\n"
-            message += "do not contain dictionary words. \n"
+            message = "You have provided a weak password! "
+            message += "Strong passwords contain a mix of uppercase, "
+            message += "lowercase, numeric and punctuation characters. "
+            message += "They are six or more characters long and "
+            message += "do not contain dictionary words. "
             message += "Reason: %s" % e
 
     return message
