@@ -1371,6 +1371,13 @@ EOP
         fi
         cp -f $ISSUE $ISSUE_NET
 
+        #prevent reboot loop via cron on upgrades with persisted root cron jobs
+        if [ -e /var/spool/cron/root ]; then
+            unmount_config /var/spool/cron/root
+            sed -i '/\/sbin\/reboot/d' /var/spool/cron/root
+            persist /var/spool/cron/root
+        fi
+
         # Hack to fix rhbz#844997
         mount --make-rshared /
 
