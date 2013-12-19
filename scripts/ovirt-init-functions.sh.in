@@ -352,7 +352,7 @@ _start_ovirt_early () {
     #   ntp=server[,server]
     #   vlan=id
     #   network_layout=bridged|direct
-    #   bond_setup=<bondname>[:<bondslaves>:[:<options>]]
+    #   bond_setup=<bondname>:<bondslaves>:[:<options>]
     # static network configuration
     ip_address=
     ip_gateway=
