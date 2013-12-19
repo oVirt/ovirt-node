@@ -87,6 +87,7 @@ pyovirt_node_PYTHON = \
 pyovirt_node_config_PYTHON = \
   ovirt/node/config/__init__.py \
   ovirt/node/config/defaults.py \
+  ovirt/node/config/migrate.py \
   ovirt/node/config/network.py \
   ovirt/node/config/tuned.py
 

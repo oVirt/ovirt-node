@@ -172,6 +172,7 @@ class InstallerThread(threading.Thread):
             tx.title = "Update"
             tx += [self.InstallImageAndBootloader()]
             tx += [self.SetKeyboardLayout(cfg["keyboard.layout"])]
+            tx += [self.MigrateConfigs()]
             new_password = cfg.get("upgrade.password", None)
             if new_password:
                 tx += [self.SetPassword(new_password)]
@@ -289,3 +290,13 @@ class InstallerThread(threading.Thread):
             model.update(layout=self.kbd_layout)
             tx = model.transaction()
             tx()
+
+    class MigrateConfigs(utils.Transaction.Element):
+        title = "Migrating configuration data"
+
+        def __init__(self):
+            super(InstallerThread.MigrateConfigs, self).__init__()
+
+        def commit(self):
+            from ovirt.node.config import migrate
+            migrate.MigrateConfigs().translate_all()
