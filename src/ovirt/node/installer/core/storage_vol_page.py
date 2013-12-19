@@ -176,8 +176,8 @@ class Plugin(plugins.NodePlugin):
 
     def __get_install_drive(self):
         app = self.application
-        return app.plugins()["Data Device"].model()[
-            "installation.devices"]
+        return app.plugins()["Data Device"].model().get(
+            "installation.devices", [])
 
     def __calculate_free_space(self):
 
