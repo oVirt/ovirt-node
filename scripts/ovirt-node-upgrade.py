@@ -242,6 +242,10 @@ class UpgradeTool(Base):
         if not upgrade.ovirt_boot_setup():
             raise RuntimeError("Bootloader Installation Failed")
 
+        sys.path.append(self._python_lib + "/site-packages/")
+        from ovirt.node.config import migrate
+        migrate.MigrateConfigs().translate_all()
+
     def _cleanup(self):
         self._logger.info("Cleaning up temporary directory")
         try:
