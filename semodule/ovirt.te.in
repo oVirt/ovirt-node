@@ -80,6 +80,7 @@ allow policykit_t ovirt_t:dbus send_msg;
 allow setfiles_t net_conf_t:file read;
 
 #============= sshd_t ==============
+allow sshd_t var_log_t:file { read open };
 allow sshd_net_t initrc_t:process sigchld;
 
 #============= svirt_t ==============
