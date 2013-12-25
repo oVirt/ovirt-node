@@ -26,7 +26,7 @@ from ovirtnode.log import *
 from ovirtnode.kdump import *
 from ovirt.node.utils.console import TransactionProgress
 from ovirt.node.utils import system
-from ovirt.node.utils import security, storage
+from ovirt.node.utils import security, storage, hooks
 from ovirt.node.config import defaults
 from ovirt.node.utils.system import which
 import logging
@@ -198,8 +198,14 @@ class InstallBootloader(Transaction.Element):
         install = Install()
         if not install.ovirt_boot_setup():
             raise RuntimeError("Bootloader Installation Failed")
-
         cfgfile.write(cfg)
+
+
+class RunHooks(Transaction.Element):
+    title = "Running Hooks"
+
+    def commit(self):
+        hooks.Hooks.post_auto_install()
 
 
 if __name__ == "__main__":
@@ -252,6 +258,8 @@ if __name__ == "__main__":
 
     if not is_stateless():
         tx.append(InstallBootloader())
+
+    tx.append(RunHooks())
 
     TransactionProgress(tx, is_dry=False).run()
     print "Installation and Configuration Completed"

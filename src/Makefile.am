@@ -112,6 +112,7 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/expose.py \
   ovirt/node/utils/firewall.py \
   ovirt/node/utils/fs.py \
+  ovirt/node/utils/hooks.py \
   ovirt/node/utils/network.py \
   ovirt/node/utils/process.py \
   ovirt/node/utils/security.py \

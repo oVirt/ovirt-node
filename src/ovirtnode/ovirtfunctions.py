@@ -38,7 +38,7 @@ import logging
 import grp
 import pwd
 from ovirt.node.config import defaults
-from ovirt.node.utils import process
+from ovirt.node.utils import process, hooks
 import ovirt.node.utils.system as osystem
 from ovirt.node.utils.console import TransactionProgress, Transaction
 from ovirtnode.network import *
@@ -1194,14 +1194,8 @@ def finish_install():
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
     # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
     #   -O /dev/null
-    hookdir="/etc/ovirt-config-boot.d"
-    for hook in os.listdir(hookdir):
-        if is_auto_install():
-            hookscript = os.path.join(hookdir, hook)
-            if hook.endswith(".py"):
-                system_closefds("python " + hookscript)
-            else:
-                system_closefds(hookscript + " &> /dev/null")
+    if is_auto_install():
+        hooks.Hooks.post_auto_install()
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)

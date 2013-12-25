@@ -37,7 +37,6 @@ def enable_snmpd(password):
         conf = snmp_conf
     cmd = "cat %s|grep createUser| grep -v '^#' | awk '{print $4}'" % conf
     oldpwd = process.pipe(cmd, shell=True).strip()
-
     process.call("sed -c -ie '/^createUser root/d' %s" % snmp_conf, shell=True)
     f = open(snmp_conf, "a")
     # create user account
