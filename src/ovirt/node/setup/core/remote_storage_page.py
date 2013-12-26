@@ -56,9 +56,20 @@ class Plugin(plugins.NodePlugin):
               ui.Entry("iscsi.initiator_name", _("iSCSI Initiator Name:"),
                        align_vertical=True),
               ui.Divider("divider[0]"),
-              ui.Entry("nfsv4.domain", _("NFSv4 Domain (example.redhat.com):"),
-                       align_vertical=True),
               ]
+
+        net_is_configured = utils.network.NodeNetwork().is_configured()
+
+        if not net_is_configured:
+            ws.extend([ui.Notice("network.notice",
+                                 "Networking is not configured, " +
+                                 "please configure it before NFSv4 " +
+                                 "Domain"),
+                       ui.Divider("notice.divider")])
+        ws.extend([ui.Entry("nfsv4.domain",
+                            _("NFSv4 Domain (example.redhat.com):"),
+                            enabled=net_is_configured,
+                            align_vertical=True)])
 
         page = ui.Page("page", ws)
         self.widgets.add(page)
