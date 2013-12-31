@@ -71,6 +71,14 @@ class Plugin(plugins.NodePlugin):
         return page
 
     def on_change(self, changes):
+        if changes.contains_any(["upgrade.password"]):
+            self._model.update(changes)
+            up_pw = self._model.get("upgrade.password", "")
+            if up_pw:
+                self.widgets["password.info"].text("")
+            else:
+                self.widgets["password.info"].text(self.__no_new_password_msg)
+
         if changes.contains_any(["upgrade.current_password"]):
             # Hide any message which was shown
             self.widgets["current_password.info"].text("")
