@@ -57,7 +57,7 @@ def convert_to_biosdevname():
     except:
         pass
 
-        OVIRT_VARS = _functions.parse_defaults()
+    OVIRT_VARS = _functions.parse_defaults()
     if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
         # check for appropriate bios version
         cmd="dmidecode|grep SMBIOS|awk {'print $2'}"
@@ -87,6 +87,8 @@ def convert_to_biosdevname():
             logger.debug("Processing %s" % file)
             # get mac for matching
             existing_mac = _functions.augtool_get("/files/" + file + "/HWADDR")
+            if not existing_mac is None:
+                existing_mac = existing_mac.strip('\"')
             # check dictionary for mac
             if not existing_mac is None and existing_mac.upper() in nics:
                 old_nic_script = os.path.basename(file)
