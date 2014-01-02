@@ -64,9 +64,11 @@ class Plugin(plugins.NodePlugin):
 
         ws = [ui.Header("header[0]", page_title)]
 
+        tbl_head = self.storage_discovery.tbl_tpl.format(bus="Location",
+                                                         name="Device Name",
+                                                         size="Size (GB)")
         if devices:
-            ws += [ui.Table("boot.device", "", " %6s  %11s  %5s" %
-                            ("Location", "Device Name", "Size"), devices),
+            ws += [ui.Table("boot.device", "", tbl_head, devices),
                    ui.Divider("divider[0]"),
                    ui.Button("button.other_device", "Other device: %s" %
                              other_device),
@@ -141,6 +143,8 @@ class StorageDiscovery(threading.Thread):
     devices = None
     do_fake = False
 
+    tbl_tpl = " {bus!s:8.8}  {name!s:48.48} {size!s:9.9}"
+
     def __init__(self, do_fake):
         super(StorageDiscovery, self).__init__()
         self.do_fake = do_fake
@@ -167,8 +171,8 @@ class StorageDiscovery(threading.Thread):
             A list of strings to be used with ui.Table
         """
         all_devices = self.all_devices().items()
-        devices = sorted([(name, " %6s  %11s  %5s GB" % (d.bus, d.name,
-                                                         d.size))
+        devices = sorted([(name, self.tbl_tpl.format(bus=d.bus, name=d.name,
+                                                     size=d.size))
                           for name, d in all_devices], key=lambda t: t[0])
 
         return devices

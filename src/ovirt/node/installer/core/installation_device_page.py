@@ -75,11 +75,12 @@ class Plugin(plugins.NodePlugin):
 
         ws = [ui.Header("header[0]", page_title)]
 
+        tbl_head = self.storage_discovery.tbl_tpl.format(bus="Location",
+                                                         name="Device Name",
+                                                         size="Size (GB)")
         if devices:
-            ws += [ui.Table("installation.device.current", "",
-                            " %6s  %11s  %5s" %
-                            ("Location", "Device Name", "Size"), devices,
-                            height=3, multi=True),
+            ws += [ui.Table("installation.device.current", "", tbl_head,
+                            devices, height=3, multi=True),
                    ui.Button("button.other_device", "Other Device: %s" %
                              other_device),
                    ui.Divider("divider[0]"),
