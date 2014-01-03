@@ -78,7 +78,7 @@ class Install:
             logger.info("Failed to determine grub pathnames")
             return False
 
-        if _functions.is_iscsi_install():
+        if _functions.is_iscsi_install() or _functions.findfs("Boot"):
             self.initrd_dest = "/boot"
             self.grub_dir = "/boot/grub"
             self.grub_prefix = "/grub"
@@ -105,7 +105,7 @@ class Install:
                 self.grub_config_file = "/liveos/efi/EFI/redhat/grub.conf"
 
     def grub_install(self):
-        if _functions.is_iscsi_install():
+        if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
             self.disk = _functions.findfs("BootNew")
             self.grub_dict["partN"] = int(self.disk[-1:]) - 1
             if not "/dev/mapper/" in self.disk:
@@ -160,7 +160,7 @@ EOF
                                        GRUB_CONFIG_TEMPLATE
                 self.grub_dict['efi_hd'] = "device (hd0) " + matches.group(1)
         if os.path.exists("/live/EFI/BOOT/splash.xpm.gz"):
-            if _functions.is_iscsi_install():
+            if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
                 splashscreen = "splashimage=(hd0,%s)/grub/splash.xpm.gz" \
                     % self.grub_dict["partN"]
             else:
@@ -176,19 +176,21 @@ EOF
             partB = 1
             if self.partN == 1:
                 partB = 2
+            if _functions.is_iscsi_install() or _functions.findfs("Boot"):
+                partB = partB + 1
             self.grub_dict['oldtitle'] = self.oldtitle
             self.grub_dict['partB'] = partB
             grub_conf.write(GRUB_BACKUP_TEMPLATE % self.grub_dict)
         grub_conf.close()
         # splashscreen
-        if _functions.is_iscsi_install():
+        if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
             _functions.system("cp /live/EFI/BOOT/splash.xpm.gz /boot/grub")
         else:
             _functions.system("cp /live/EFI/BOOT/splash.xpm.gz /liveos/grub")
         # usb devices requires default BOOTX64 entries
         if _functions.is_efi_boot():
             _functions.system("mkdir -p /liveos/efi/EFI/BOOT")
-            if _functions.is_iscsi_install():
+            if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
                 _functions.system("cp /tmp/grub.efi \
                                    /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
@@ -314,6 +316,7 @@ initrd /initrd0.img
         self.oldtitle=None
         grub_config_file = None
         if _functions.findfs("Boot") and _functions.is_upgrade():
+            grub_config_file = "/boot/grub/grub.conf"
             if not _functions.connect_iscsi_root():
                 return False
         _functions.mount_liveos()
@@ -343,7 +346,7 @@ initrd /initrd0.img
                 grub_config_file = "/liveos/EFI/fedora/grub.cfg"
             else:
                 grub_config_file = "/liveos/EFI/redhat/grub.conf"
-        if _functions.is_iscsi_install():
+        if _functions.is_iscsi_install() or _functions.findfs("Boot"):
             grub_config_file = "/boot/grub/grub.conf"
         grub_config_file_exists = grub_config_file is not None \
             and os.path.exists(grub_config_file)
@@ -400,6 +403,7 @@ initrd /initrd0.img
                 if not _functions.system(e2label_cmd):
                     logger.error("Failed to label new Boot partition")
                     return False
+            _functions.system("umount /boot")
             _functions.system("mount %s /boot &>/dev/null" \
                               % boot_candidate_dev)
 
@@ -466,13 +470,13 @@ initrd /initrd0.img
                 _functions.system("mkdir /liveos/efi")
                 _functions.mount_efi()
                 _functions.system("mkdir -p /liveos/efi/EFI/redhat")
-                if _functions.is_iscsi_install():
+                if _functions.is_iscsi_install() or _functions.is_efi_boot():
                     shutil.copy("/tmp/grub.efi",
                                 "/liveos/efi/EFI/redhat/grub.efi")
                 else:
                     shutil.copy("/boot/efi/EFI/redhat/grub.efi",
                           "/liveos/efi/EFI/redhat/grub.efi")
-                if _functions.is_iscsi_install():
+                if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
                     self.disk = _functions.findfs("BootNew")
                 if not "/dev/mapper/" in self.disk:
                     efi_disk = self.disk[:-1]
@@ -494,7 +498,7 @@ initrd /initrd0.img
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation
-        if _functions.is_iscsi_install():
+        if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
             self.root_param = "root=live:LABEL=Root"
             if "OVIRT_NETWORK_LAYOUT" in OVIRT_VARS and \
                 OVIRT_VARS["OVIRT_NETWORK_LAYOUT"] == "bridged":
@@ -603,7 +607,7 @@ initrd /initrd0.img
             else:
                 logger.info("Grub Installation Completed")
 
-        if _functions.is_iscsi_install():
+        if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
             # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
             shutil.copy(_functions.OVIRT_DEFAULTS, "/boot")
             # mark new Boot ready to go, reboot() in ovirt-function switches it
