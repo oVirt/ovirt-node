@@ -234,3 +234,20 @@ patch -d /sbin -p0 << \EOF_mkdumprd
                  handlenetdev $j
 
 EOF_mkdumprd
+
+patch -d /etc/init.d -p0 << \EOF_functions
+--- functions.orig	2014-01-03 21:22:50.061036793 -0500
++++ functions	2014-01-03 21:22:06.169959322 -0500
+@@ -91,9 +91,9 @@
+ 	remaining=$(LC_ALL=C awk "/^#/ {next} $1" "$2" | sort -r)
+ 	while [ -n "$remaining" -a "$retry" -gt 0 ]; do
+ 		if [ "$retry" -eq 3 ]; then
+-			action "$3" fstab-decode umount $remaining
++			action "$3" fstab-decode umount -n $remaining
+ 		else
+-			action "$4" fstab-decode umount $5 $remaining
++			action "$4" fstab-decode umount -n $5 $remaining
+ 		fi
+ 		count=4
+ 		remaining=$(LC_ALL=C awk "/^#/ {next} $1" "$2" | sort -r)
+EOF_functions

@@ -267,6 +267,11 @@ class UpgradeTool(Base):
             if self.iso_tmp and os.path.exists(self.iso_tmp):
                 os.remove(self.iso_tmp)
             open(OVIRT_UPGRADED, 'w').close()
+            # check is iscsi install
+            if os.path.exists("/boot/ovirt"):
+                # prevent network from shutting down and
+                # killing rootfs for live upgrades
+                os.remove("/var/lock/subsys/network")
         except:
             self._logger.warning("Cleanup Failed")
             self._logger.debug('exception', exc_info=True)

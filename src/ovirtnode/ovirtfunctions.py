@@ -538,7 +538,7 @@ def mount_liveos():
 def mount_efi(target="/liveos/efi"):
     if os.path.ismount(target):
         return True
-    if is_iscsi_install():
+    if is_iscsi_install() or findfs("Boot"):
         efi_part = findfs("Boot")
     else:
         efi_part = findfs("Root")
@@ -633,7 +633,8 @@ def connect_iscsi_root():
                 except:
                     pass
             f.close()
-            enable_iscsi_networking()
+            if not is_booted_from_local_disk():
+                enable_iscsi_networking()
             if is_firstboot() or is_upgrade() or is_install() \
                 or not is_booted_from_local_disk():
                 iscsiadm_cmd = (("iscsiadm -p %s:%s -m discovery -t " +
@@ -1112,7 +1113,7 @@ def finish_install():
     cmd = subprocess_closefds(e2label_root_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     cmd.communicate()
 
-    if is_iscsi_install():
+    if is_iscsi_install() or findfs("BootUpdate"):
         boot_update_dev = findfs("BootUpdate")
         boot_dev = findfs("Boot")
         e2label_bootbackup_cmd = "e2label '%s' BootBackup" % boot_dev
