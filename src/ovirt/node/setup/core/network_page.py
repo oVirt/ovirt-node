@@ -382,7 +382,7 @@ class Plugin(plugins.NodePlugin):
             self.logger.debug("No ipv4 interface configuration found")
 
         # A hack to also set the BOOTIF when IPv6 is used in a second
-        enable_bootif = lambda: model.update(iface=iface)
+        enable_bootif = lambda: model.update(iface=iface, vlanid=vlanid)
 
         if ipv6_bootproto == "none":
             self.logger.debug("Configuring no ipv6 networking")
