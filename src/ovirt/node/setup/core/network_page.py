@@ -406,6 +406,9 @@ class Plugin(plugins.NodePlugin):
         else:
             self.logger.debug("No ipv6 interface configuration found")
 
+        if bootproto == "none" and ipv6_bootproto == "none":
+            model.update(bootif=None, vlanid=None)
+
         mt = defaults.NetworkLayout()
         if layout_bridged:
             mt.configure_bridged()

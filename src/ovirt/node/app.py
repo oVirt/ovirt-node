@@ -290,9 +290,7 @@ class Application(base.Base):
         except Exception as e:
             console.reset()
             self.logger.error("An error appeared in the UI: %s" % repr(e))
-            self.logger.debug("Exception:", exc_info=True)
-            if self.args.debug:
-                raise
+            self.logger.info("Exception:", exc_info=True)
             console.writeln("Press ENTER to logout ...")
             console.writeln("or enter 's' to drop to shell")
             if console.wait_for_keypress() == 's':
