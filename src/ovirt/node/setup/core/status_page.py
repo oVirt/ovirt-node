@@ -47,18 +47,22 @@ class Plugin(plugins.NodePlugin):
 
     def model(self):
         bootif = defaults.Network().retrieve()["iface"]
+        vlanid = defaults.Network().retrieve()["vlanid"]
+        if vlanid:
+            bootif = "%s.%s" % (bootif, vlanid)
         net_status, net_br, net_addrs = \
             utils.network.networking_status(bootif)
         net_addrs_str = ""
         if net_addrs:
-            net_addrs_str = "\nIPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)
+            net_addrs_str = "IPv4: {inet}\nIPv6: {inet6}".format(**net_addrs)
 
         num_domains = virt.number_of_domains()
 
         return {
             "status": virt.hardware_status(),
             "networking": net_status,
-            "networking.bridge": "%s %s" % (net_br, net_addrs_str),
+            "networking.ip": net_addrs_str,
+            "networking.bridge": net_br,
             "logs": self._logging_summary(),
             "libvirt.num_guests": num_domains,
         }
@@ -91,6 +95,7 @@ class Plugin(plugins.NodePlugin):
                    ui.Divider("divider[0]"),
 
                    ui.Row("row[0]", network_widgets),
+                   ui.Label("networking.ip", ""),
                    ui.Divider("divider[1]"),
 
                    ui.KeywordLabel("logs", aligned("Logs: ")),

@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, utils, config, valid, log
+from ovirt.node import config, base, utils, config, valid, log
 from ovirt.node.config.network import NicConfig
 from ovirt.node.utils import fs
 from ovirt.node.utils.fs import File
@@ -318,13 +318,16 @@ class NIC(base.Base):
         # Fallback
         cmd = "ip -o addr show {ifname}".format(ifname=self.ifname)
         for line in process.pipe(cmd, shell=True).split("\n"):
-            token = re.split("\s+", line)
-            if re.search("\sinet[6]?\s", line):
-                addr, mask = token[3].split("/")
-                family = token[2]
+            matches = re.search("\s(inet[6]?)\s(.+)/([^\s]+).*scope ([^\s]+).*",
+                                line)
+            if matches and matches.groups():
+                family, addr, mask, scope = matches.groups()
+                if family not in families:
+                    continue
                 if family == "inet":
                     mask = calcDottedNetmask(mask)
-                addresses[family] = IPAddress(addr, mask)
+                if scope == "global" or addresses[family].address == None:
+                    addresses[family] = IPAddress(addr, mask, scope)
 
         return addresses
 
@@ -667,7 +670,7 @@ def _nm_address_to_str(family, ipaddr):
 
 def networking_status(ifname=None):
     status = "Unknown"
-    addresses = []
+    addresses = {}
 
     try:
         nn = NodeNetwork()
@@ -678,9 +681,8 @@ def networking_status(ifname=None):
 
             if nic:
                 ifname = nic.ifname
-
                 addresses = nic.ip_addresses()
-                has_address = any([a is not None for a in addresses.values()])
+                has_address = any(a is not None for a in addresses.values())
 
                 if nic.has_link():
                     status = "Connected (Link only, no IP)"
@@ -706,9 +708,10 @@ def calcDottedNetmask(mask):
 
 
 class IPAddress(base.Base):
-    def __init__(self, address, netmask=None):
+    def __init__(self, address, netmask=None, scope=None):
         self.address = address
         self.netmask = netmask
+        self.scope = scope
 
     def __str__(self):
         txt = str(self.address)
@@ -767,11 +770,11 @@ class Vlans(base.Base):
                     continue
                 if not data_block:
                     continue
-                vdev, _, hdev = [field.strip()
+                vdev, vid, hdev = [field.strip()
                                  for field in line.split("|")]
                 if not hdev in vlans:
                     vlans[hdev] = []
-                vlans[hdev].append(vdev)
+                vlans[hdev].append((vdev, vid))
         except IOError as e:
             self.logger.warning("Could not read vlan config: %s" %
                                 e.message)
@@ -781,12 +784,13 @@ class Vlans(base.Base):
     def vlans_for_nic(self, ifname):
         """return the vlans of the nic ifname
         """
-        return self.parse_cfg().get(ifname, [])
+        return [vid
+                for _, vid in self.parse_cfg().get(ifname, [])]
 
     def nic_for_vlan_device(self, vifname):
         nic = None
-        for hdev, vifs in self.parse_cfg().items():
-            if vifname in vifs:
+        for hdev, vdevid in self.parse_cfg().items():
+            if vifname in (vdev for vdev, _ in vdevid):
                 nic = hdev
                 break
         return nic
@@ -801,8 +805,8 @@ class Vlans(base.Base):
         """Return all vlan devices
         """
         all_devices = []
-        for vifs in self.parse_cfg().values():
-            all_devices += vifs
+        for vdevid in self.parse_cfg().values():
+            all_devices += [vdev for vdev, _ in vdevid]
         return all_devices
 
     def delete(self, ifname):
