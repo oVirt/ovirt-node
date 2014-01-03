@@ -85,6 +85,7 @@ class TableEntryWidget(urwid.AttrMap):
                   False: "[ ] "}
 
     def __init__(self, title, multi=False):
+        assert len(self.checkboxes[True]) == len(self.checkboxes[False])
         self.multi = multi
         self.title = title
         self._text = self.__build_child()
@@ -155,6 +156,8 @@ class TableWidget(NoticeDecoration):
         self.__scrollbar_visible = False
         self.__label = urwid.Text(label)
         self.__label_attrmap = urwid.AttrMap(self.__label, self._label_attr)
+        if multi:
+            header = (" " * len(TableEntryWidget.checkboxes[True])) + header
         self.__header = urwid.Text(header)
         self.__header_attrmap = urwid.AttrMap(self.__header, self._header_attr)
         self.__items = items
