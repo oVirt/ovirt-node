@@ -233,10 +233,22 @@ class UpgradeTool(Base):
             filename,
             description,
         )
+        f, filename, description = imp.find_module(
+            'ovirtfunctions',
+            [self._ovirtnode_dir],
+        )
+        ovirtfunctions = imp.load_module(
+            'ovirtfunctions',
+            f,
+            filename,
+            description,
+        )
         # log module detail for debugging
         self._logger.debug(install)
-        from install import Install
-        upgrade = Install()
+        import install
+        import ovirtfunctions as _functions_new
+        install._functions = _functions_new
+        upgrade = install.Install()
         self._logger.propagate = True
         self._logger.info("Installing Bootloader")
         if not upgrade.ovirt_boot_setup():
