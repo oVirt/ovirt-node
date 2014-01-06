@@ -30,6 +30,7 @@ import ovirt.node.utils.process as process
 import re
 import socket
 import struct
+import shlex
 
 """
 Some convenience functions related to networking
@@ -125,18 +126,11 @@ class UdevNICInfo(base.Base):
             # fallback method for older udev versions
             try:
                 pci_addr = self.__get_property("DEVPATH")
-                pci_addr = pci_addr.split("/")[3].split(":")[1:]
-                cmd = "lspci -n|grep %s:%s|awk {'print $3'}" % \
-                          (pci_addr[0], pci_addr[1])
-                pci_id = process.check_output(cmd,
-                                              stderr=process.STDOUT,
-                                              shell=True)
-                vendor, dev = pci_id.split(":")
-                cmd = "lspci -d 0x%s:0x%s" % (vendor, dev)
-                vendor_out = process.check_output(cmd,
-                                                  stderr=process.STDOUT,
-                                                  shell=True)
-                vendor = vendor_out.split(":")[2]
+                pci_addr = pci_addr.split("/")[-3]
+                cmd = ["lspci", "-m", "-s", pci_addr]
+                lspci_out = process.pipe(cmd, check=True)
+                # shelx needs str not unicode
+                vendor = shlex.split(str(lspci_out))[2]
             except:
                 self.logger.debug("Failed to determine vendor name", exc_info=True)
         return vendor
