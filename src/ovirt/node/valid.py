@@ -455,11 +455,31 @@ class Empty(Validator):
 
 
 class URL(Validator):
+    """Allows any FQDN, IPv4 or IPv6 address
+
+    >>> URL().validate("")
+    False
+    >>> URL().validate("https://1.2.3.4/abc")
+    True
+    >>> URL(True, True, False).validate("https://1.2.3.4/")
+    True
+    >>> URL(True, True, False).validate("https://1.2.3.4")
+    True
+    >>> URL(True, False, False).validate("https:///")
+    True
+    """
+
+
     description = "a valid URL"
 
-    requires_scheme = False
-    requires_netloc = False
-    requires_path = True
+    requires_scheme = True
+    requires_netloc = True
+    requires_path = False
+
+    def __init__(self, scheme=True, netloc=True, path=False):
+       self.requires_scheme = scheme
+       self.requires_netloc = netloc
+       self.requires_path = path
 
     def validate(self, value):
         p = urlparse.urlparse(value)
