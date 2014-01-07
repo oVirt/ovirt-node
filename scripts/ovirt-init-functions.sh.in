@@ -429,6 +429,9 @@ _start_ovirt_early () {
                 [ep]*)
                 bootif=$i
                 ;;
+                bond*)
+                bootif=$i
+                ;;
                 link)
                 bootif=
                 for trial in $(seq 1 5); do
