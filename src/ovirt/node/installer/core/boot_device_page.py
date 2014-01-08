@@ -123,7 +123,9 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(["boot.device.custom",
                                  "dialog.device.custom.save"]):
             self._dialog.close()
-            return self.ui_content()
+            cdev = self._model["boot.device.custom"]
+            self._model["boot.device.current"] = cdev
+            self.application.ui.navigate.to_next_plugin()
 
         if changes.contains_any(["boot.device"]):
             self.application.ui.navigate.to_next_plugin()
@@ -132,6 +134,9 @@ class Plugin(plugins.NodePlugin):
             self.application.ui.navigate.to_previous_plugin()
 
         elif changes.contains_any(["button.next"]):
+            if "boot.device.custom" in self._model:
+                cdev = self._model["boot.device.custom"]
+                self._model["boot.device.current"] = cdev
             self.application.ui.navigate.to_next_plugin()
 
 
