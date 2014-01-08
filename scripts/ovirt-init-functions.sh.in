@@ -1157,11 +1157,11 @@ start_ovirt_firstboot ()
     is_auto_install
     auto_install=$?
     if [ "$auto_install" = "0" -o "$stateless" = "0" ]; then
-        breakpoint "pre-auto-install"
+        breakpoint "pre-installer"
         debugmode && AIARGS="--debug"
         /usr/libexec/ovirt-auto-install $AIARGS
         rc=$?
-        breakpoint "post-auto-install"
+        breakpoint "post-installer"
         # Handle Log file
         if [ -f $OVIRT_TMP_LOGFILE ]; then
             cat $OVIRT_TMP_LOGFILE >> $OVIRT_LOGFILE
@@ -1218,7 +1218,10 @@ EOP
         plymouth --hide-splash
 
         export LVM_SUPPRESS_FD_WARNINGS=0
+
+        breakpoint "pre-installer"
         /usr/bin/ovirt-node-installer
+        breakpoint "post-installer"
 
         plymouth --show-splash
     fi
