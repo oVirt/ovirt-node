@@ -52,7 +52,8 @@ class Plugin(plugins.NodePlugin):
 
     def validators(self):
         def has_selection(v):
-            if self.widgets["installation.device.current"].selection():
+            if (self.widgets["installation.device.current"].selection() or
+                "installation.device.custom" in self._model):
                 return True
             else:
                 return "Please select at least one installation device."
@@ -151,6 +152,7 @@ class Plugin(plugins.NodePlugin):
                                               description)
             self.widgets.add(self._dialog)
             return self._dialog
+
         elif changes.contains_any(["installation.device.custom",
                                    "dialog.device.custom.save"]):
             self._dialog.close()
@@ -159,4 +161,7 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
         elif changes.contains_any(["button.next"]):
+            if "installation.device.custom" in self._model:
+                cdev = self._model["installation.device.custom"]
+                self._model["installation.devices"].append(cdev)
             self.application.ui.navigate.to_next_plugin()
