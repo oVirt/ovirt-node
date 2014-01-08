@@ -142,6 +142,10 @@ class Devices(base.Base):
             devices[device.path] = device
         return devices
 
+    def translate_device_name(self, dev):
+        from ovirtnode.ovirtfunctions import translate_multipath_device
+        return translate_multipath_device(dev)
+
 
 class Device(base.Base):
     """Wrapps the information about a udev storage device

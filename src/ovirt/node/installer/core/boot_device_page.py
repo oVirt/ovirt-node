@@ -100,7 +100,7 @@ class Plugin(plugins.NodePlugin):
         if changes.contains_any(["boot.device.custom"]):
             if self.storage_discovery.devices.live_disk_name() == \
                     self.storage_discovery.devices.translate_device_name(
-                        changes["boot.device.custom"]).path:
+                        changes["boot.device.custom"]):
                 raise exceptions.InvalidData("Can't be the same as "
                                              "the live device")
             else:
