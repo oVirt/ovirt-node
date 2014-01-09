@@ -246,12 +246,49 @@ class MigrateConfigs(base.Base):
     def migrate_network_layout(self):
         bridges = [x for x in network.Bridges().ifnames() if
                    x.startswith("br")]
-        bridged_nics = [x for x in network.NodeNetwork().relevant_ifnames() if
+        bridged_nics = [x for x in network.all_ifaces() if
                         network.NIC(x).config.bridge in bridges]
-        if bridged_nics and bridged_nics:
+
+        config = defaults.Network().retrieve()
+
+        def cfgset(k, v, prefix="OVIRT_"):
+            if v:
+                self.aug.set("/files/etc/default/ovirt/%s%s" % (prefix, k),
+                             str(v))
+
+        found_mgmt = False
+        for brn in ["rhevm", "ovirtmgmt"]:
+            if brn in bridges:
+                cfgset("MANAGED_BY", "RHEV-M", "")
+                cfgset("MANAGED_IFNAMES", brn, "")
+                found_mgmt = True
+
+        if not found_mgmt and bridges and bridged_nics:
             self.aug.set("/files/etc/default/ovirt/OVIRT_NETWORK_LAYOUT",
                          "bridged")
-            config = defaults.Network().retrieve()
-            if config["iface"] not in bridged_nics:
-                self.aug.set("/files/etc/default/ovirt/OVIRT_BOOTIF",
-                             bridged_nics[0])
+
+            ifname = bridged_nics[0]
+            br = bridges[0]
+
+            probably_vlan = any(n.startswith(ifname) for n in bridged_nics)
+
+            self.aug.set("/files/etc/default/ovirt/OVIRT_BOOTIF",
+                         ifname)
+
+            def ifcfg(i, k):
+                return self.aug.get("/files/etc/sysconfig/network-" +
+                                    "scripts/ifcfg-%s/%s" % (i, k))
+
+            proto = ifcfg(br, "BOOTPROTO")
+            cfgset("BOOTPROTO", proto)
+
+            addr = ifcfg(br, "IPADDR")
+            if addr:
+                cfgset("IP_ADDRESS", addr)
+                cfgset("IP_GATEWAY", ifcfg(br, "GATEWAY"))
+                cfgset("IP_NETMASK", ifcfg(br, "NETMASK"))
+
+            if probably_vlan:
+                cs = [n for n in bridged_nics if n.startswith(ifname)]
+                if cs:
+                    cfgset("VLAN", cs[0].replace(ifname+".", ""))
