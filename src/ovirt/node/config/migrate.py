@@ -270,7 +270,7 @@ class MigrateConfigs(base.Base):
             ifname = bridged_nics[0]
             br = bridges[0]
 
-            probably_vlan = any(n.startswith(ifname) for n in bridged_nics)
+            probably_vlan = any(n.startswith(ifname+".") for n in bridged_nics)
 
             self.aug.set("/files/etc/default/ovirt/OVIRT_BOOTIF",
                          ifname)
@@ -289,6 +289,6 @@ class MigrateConfigs(base.Base):
                 cfgset("IP_NETMASK", ifcfg(br, "NETMASK"))
 
             if probably_vlan:
-                cs = [n for n in bridged_nics if n.startswith(ifname)]
+                cs = [n for n in bridged_nics if n.startswith(ifname+".")]
                 if cs:
                     cfgset("VLAN", cs[0].replace(ifname+".", ""))
