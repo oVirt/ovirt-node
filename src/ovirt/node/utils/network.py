@@ -615,7 +615,10 @@ class NodeNetwork(base.Base):
         return candidate
 
     def is_configured(self):
-        return self.configured_nic() is not None
+        """The NodeNetwork is either configered when we or a mgmt instance configured it
+        """
+        mgmtInterface = config.defaults.Management().retrieve()["managed_ifnames"]
+        return any([self.configured_nic(), mgmtInterface])
 
 
 class Routes(base.Base):
