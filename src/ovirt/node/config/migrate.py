@@ -260,11 +260,12 @@ class MigrateConfigs(base.Base):
 
         found_mgmt = False
         for brn in ["rhevm", "ovirtmgmt"]:
-            if brn in bridges:
+            if brn in network.Bridges().ifnames():
                 self.logger.debug("Found managed nic: %s" % brn)
                 cfgset("MANAGED_BY", "RHEV-M", "")
                 cfgset("MANAGED_IFNAMES", brn, "")
                 found_mgmt = True
+                break
 
         self.logger.debug("Found management: %s" % found_mgmt)
 
@@ -276,8 +277,15 @@ class MigrateConfigs(base.Base):
 
             ifname = bridged_nics[0]
             br = bridges[0]
+            vlanid = None
 
             self.logger.debug("Bridge and NIC: %s %s" % (br, ifname))
+
+            probably_vlan = "." in ifname
+            if probably_vlan:
+                ifname, vlanid = ifname.split(".", 1)
+                self.logger.debug("Found VLAN setup, base NIC: %s %s" %
+                                  (ifname, vlanid))
 
             self.aug.set("/files/etc/default/ovirt/OVIRT_BOOTIF",
                          ifname)
@@ -297,10 +305,5 @@ class MigrateConfigs(base.Base):
                 cfgset("IP_GATEWAY", ifcfg(br, "GATEWAY"))
                 cfgset("IP_NETMASK", ifcfg(br, "NETMASK"))
 
-            vlan_prefix = ifname + "."
-            probably_vlan = any(n.startswith(vlan_prefix) for n in bridged_nics)
-            if probably_vlan:
-                cs = [n for n in bridged_nics if n.startswith(vlan_prefix)]
-                self.logger.debug("VLAN candidates: %s" % cs)
-                if cs:
-                    cfgset("VLAN", cs[0].replace(vlan_prefix, ""))
+            if vlanid:
+                cfgset("VLAN", vlanid)
