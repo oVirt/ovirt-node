@@ -44,14 +44,14 @@ class Plugin(plugins.NodePlugin):
         cfg = Puppet().retrieve()
         model = {
             "puppet.enabled": True if cfg["enabled"] else False,
-            "puppet.server": cfg["server"] or "puppet",
-            "puppet.certname": cfg["certname"] or socket.gethostname()
+            "puppet.server": cfg["server"] or "",
+            "puppet.certname": cfg["certname"] or ""
         }
         return model
 
     def validators(self):
         return {"puppet.server": valid.FQDNOrIPAddress() | valid.Empty(),
-                "puppet.certname": valid.FQDN() | valid.Empty()
+                "puppet.certname": valid.Text() | valid.Empty()
                 }
 
     def ui_content(self):
@@ -127,7 +127,7 @@ class Puppet(NodeConfigFileSection):
     def update(self, enabled, server, certname):
         valid.Boolean()(enabled)
         (valid.Empty() | valid.FQDNOrIPAddress())(server)
-        (valid.Empty() | valid.URL())(certname)
+        (valid.Empty() | valid.Text())(certname)
         return {"OVIRT_PUPPET_ENABLED": "yes" if enabled else None}
 
 
