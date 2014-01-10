@@ -163,6 +163,10 @@ patch -p0 << EOF
      logdir = /var/log/puppet
 EOF
 
+%if %{is_el6}
+echo 'files /var/lib/puppet' >> /etc/rwtab
+%endif
+
 
 %package plugin-snmp
 Summary:        SNMP plugin for %{product_family} image
