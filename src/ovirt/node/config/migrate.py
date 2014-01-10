@@ -79,15 +79,15 @@ class MigrateConfigs(base.Base):
             rng_bytes, aes_enabled = ovirtfunctions.rng_status()
 
             rng_bytes = None if rng_bytes == 0 else rng_bytes
-            aes_enabled = False if aes_enabled is 0 else True
+            aes_disabled = False if aes_enabled == "1" else True
             ssh_is_enabled = parse_bool(pw_auth_enabled)
 
             if rng_bytes:
                 self.aug.set("/files/etc/default/ovirt/OVIRT_USE_STRONG_RNG",
                              str(rng_bytes))
-            if aes_enabled:
+            if aes_disabled:
                 self.aug.set("/files/etc/default/ovirt/OVIRT_DISABLE_AES_NI",
-                             str(aes_enabled))
+                             "true")
             if ssh_is_enabled:
                 self.aug.set("/files/etc/default/ovirt/OVIRT_SSH_PWAUTH",
                              "yes")
@@ -145,8 +145,6 @@ class MigrateConfigs(base.Base):
     def translate_rhn(self):
         if self.__is_persisted("/etc/sysconfig/rhn/up2date") or \
                 self.__is_persisted("/etc/rhsm/rhsm.conf"):
-            rhn_conf = rhn.get_rhn_config()
-            status, rhn_type = rhn.get_rhn_status()
 
             rhn_type = None
             rhn_url = None
@@ -157,6 +155,9 @@ class MigrateConfigs(base.Base):
             rhn_org = None
             rhn_proxyurl = None
             rhn_proxyuser = None
+
+            rhn_conf = rhn.get_rhn_config()
+            status, rhn_type = rhn.get_rhn_status()
 
             RHN_XMLRPC_ADDR = "https://xmlrpc.rhn.redhat.com/XMLRPC"
             SAM_REG_ADDR = "subscription.rhn.redhat.com"
@@ -174,7 +175,6 @@ class MigrateConfigs(base.Base):
             if "proxyUser" in rhn_conf and "proxyPassword" in rhn_conf:
                 if len(rhn_conf["proxyUser"]) > 0:
                     rhn_proxyuser = rhn_conf["proxyUser"]
-                    rhn_proxypass = rhn_conf["proxyPassword"]
             elif "proxy_user" in rhn_conf and "proxy_password" in rhn_conf:
                 rhn_proxyuser = rhn_conf["proxy_user"]
 
@@ -182,7 +182,7 @@ class MigrateConfigs(base.Base):
                 try:
                     proxy_hostname, proxy_port = rhn_conf[
                         "httpProxy"].split(':')
-                    rhn_proxyurl = "%s:%s" (proxy_hostname, proxy_port)
+                    rhn_proxyurl = "%s:%s" % (proxy_hostname, proxy_port)
                 except ValueError:
                     self.logger.debug("Bad proxy entry in old install %s" %
                                       rhn_conf["httpProxy"])
@@ -193,7 +193,7 @@ class MigrateConfigs(base.Base):
                                                   rhn_conf["proxy_port"])
 
             self.aug.set("/files/etc/default/ovirt/OVIRT_RHN_TYPE",
-                         rhn_type.lower())
+                         rhn_type.lower() if rhn_type else "")
             self.aug.set("/files/etc/default/ovirt/OVIRT_RHN_URL",
                          rhn_url or "")
             self.aug.set("/files/etc/default/ovirt/OVIRT_RHN_CA_CERT",
@@ -249,35 +249,44 @@ class MigrateConfigs(base.Base):
         bridged_nics = [x for x in network.all_ifaces() if
                         network.NIC(x).config.bridge in bridges]
 
-        config = defaults.Network().retrieve()
+        self.logger.debug("Found bridges: %s" % bridges)
+        self.logger.debug("Found bridged NICs: %s" % bridged_nics)
 
         def cfgset(k, v, prefix="OVIRT_"):
             if v:
+                self.logger.debug("  Setting %s = %s" % (k, v))
                 self.aug.set("/files/etc/default/ovirt/%s%s" % (prefix, k),
                              str(v))
 
         found_mgmt = False
         for brn in ["rhevm", "ovirtmgmt"]:
             if brn in bridges:
+                self.logger.debug("Found managed nic: %s" % brn)
                 cfgset("MANAGED_BY", "RHEV-M", "")
                 cfgset("MANAGED_IFNAMES", brn, "")
                 found_mgmt = True
 
+        self.logger.debug("Found management: %s" % found_mgmt)
+
         if not found_mgmt and bridges and bridged_nics:
+            self.logger.debug("Assuming default bridged network")
+
             self.aug.set("/files/etc/default/ovirt/OVIRT_NETWORK_LAYOUT",
                          "bridged")
 
             ifname = bridged_nics[0]
             br = bridges[0]
 
-            probably_vlan = any(n.startswith(ifname+".") for n in bridged_nics)
+            self.logger.debug("Bridge and NIC: %s %s" % (br, ifname))
 
             self.aug.set("/files/etc/default/ovirt/OVIRT_BOOTIF",
                          ifname)
 
             def ifcfg(i, k):
-                return self.aug.get("/files/etc/sysconfig/network-" +
-                                    "scripts/ifcfg-%s/%s" % (i, k))
+                v = self.aug.get("/files/etc/sysconfig/network-" +
+                                 "scripts/ifcfg-%s/%s" % (i, k))
+                self.logger.debug("  Getting %s.%s = %s" % (i, k, v))
+                return v
 
             proto = ifcfg(br, "BOOTPROTO")
             cfgset("BOOTPROTO", proto)
@@ -288,7 +297,10 @@ class MigrateConfigs(base.Base):
                 cfgset("IP_GATEWAY", ifcfg(br, "GATEWAY"))
                 cfgset("IP_NETMASK", ifcfg(br, "NETMASK"))
 
+            vlan_prefix = ifname + "."
+            probably_vlan = any(n.startswith(vlan_prefix) for n in bridged_nics)
             if probably_vlan:
-                cs = [n for n in bridged_nics if n.startswith(ifname+".")]
+                cs = [n for n in bridged_nics if n.startswith(vlan_prefix)]
+                self.logger.debug("VLAN candidates: %s" % cs)
                 if cs:
-                    cfgset("VLAN", cs[0].replace(ifname+".", ""))
+                    cfgset("VLAN", cs[0].replace(vlan_prefix, ""))

@@ -125,14 +125,15 @@ class UdevNICInfo(base.Base):
         if not vendor:
             # fallback method for older udev versions
             try:
-                pci_addr = self.__get_property("DEVPATH")
-                pci_addr = pci_addr.split("/")[-3]
+                dpath = self.__get_property("DEVPATH")
+                pci_addr = dpath.split("/")[-3]
                 cmd = ["lspci", "-m", "-s", pci_addr]
                 lspci_out = process.pipe(cmd, check=True)
                 # shelx needs str not unicode
                 vendor = shlex.split(str(lspci_out))[2]
             except:
-                self.logger.debug("Failed to determine vendor name", exc_info=True)
+                self.logger.debug("Failed to fetch vendor name for %s" % dpath,
+                                  exc_info=True)
         return vendor
 
     @property

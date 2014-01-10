@@ -180,6 +180,8 @@ configure_management_interface() {
 from ovirtnode.install import Install
 install = Install()
 install.ovirt_boot_setup()
+from ovirt.node.config import migrate
+migrate.MigrateConfigs().translate_all()
 EOP
                 fi
             fi
@@ -1189,6 +1191,8 @@ start_ovirt_firstboot ()
 from ovirtnode.install import Install
 install = Install()
 install.ovirt_boot_setup()
+from ovirt.node.config import migrate
+migrate.MigrateConfigs().translate_all()
 EOP
         fi
         if [ $? -ne 0 ]; then
