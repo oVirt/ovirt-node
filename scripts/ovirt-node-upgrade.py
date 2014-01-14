@@ -219,6 +219,7 @@ class UpgradeTool(Base):
         if not self._python_lib:
             raise RuntimeError("Unable to determine python path")
         self._python_lib = self._python_lib[0]
+        sys.path.append(self._python_lib + "/site-packages/")
         self._tmp_python_path = "%s/site-packages/ovirtnode" \
             % self._python_lib
         shutil.copytree(self._tmp_python_path, self._ovirtnode_dir)
