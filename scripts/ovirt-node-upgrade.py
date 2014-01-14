@@ -130,7 +130,7 @@ class UpgradeTool(Base):
             "LiveOS",
             "ext3fs.img",
         )
-        self._hooks_path = "/usr/libexec/ovirt-node/hooks/"
+        self._hooks_path = "usr/libexec/ovirt-node/hooks/"
         self._logger.info("Temporary Directory is: %s", self._tmp_dir)
 
     def _system(self, *command):
