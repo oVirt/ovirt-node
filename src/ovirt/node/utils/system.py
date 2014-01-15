@@ -115,6 +115,13 @@ def is_rescue_mode():
                in ["rescue", "S", "single", "1"])
 
 
+def node_version():
+    """Return the version of the ovirt-node package
+    This is the package version at runtime
+    """
+    return RpmPackage("ovirt-node").nvr().version
+
+
 def _parse_lscpu(data):
     """Parse the lines of the lscpu output
 
