@@ -24,6 +24,7 @@ from ovirt.node.plugins import Changeset
 from ovirt.node.ui import InfoDialog
 from ovirt.node.utils import console
 from ovirt.node.utils.network import NodeNetwork
+import signal
 """
 Configure KDump
 """
@@ -179,7 +180,11 @@ class Plugin(plugins.NodePlugin):
                 console.writeln("\nPlease press any key to continue")
                 console.wait_for_keypress()
         except KeyboardInterrupt:
+            def _handler(signum, frame):
+                console.writeln("\nWait for configuration to be reset\n")
             with self.application.ui.suspended():
+                _original_sigint = signal.getsignal(signal.SIGINT)
+                signal.signal(signal.SIGINT, _handler)
                 model.disable_kdump()
                 txs = model.transaction()
                 txs()
@@ -188,6 +193,7 @@ class Plugin(plugins.NodePlugin):
                                 "configuration")
                 console.writeln("\nPlease press any key to continue")
                 console.wait_for_keypress()
+                signal.signal(signal.SIGINT, _original_sigint)
         except Exception as e:
             # Restore the configuration
             if saved_model["kdump.type"] == "nfs":
