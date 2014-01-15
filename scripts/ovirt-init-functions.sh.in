@@ -183,7 +183,7 @@ from ovirtnode.install import Install
 install = Install()
 install.ovirt_boot_setup()
 from ovirt.node.config import migrate
-migrate.MigrateConfigs().translate_all()
+migrate.ConfigMigrationRunner().run_if_necessary()
 EOP
                 fi
             fi
@@ -1225,8 +1225,6 @@ start_ovirt_firstboot ()
 from ovirtnode.install import Install
 install = Install()
 install.ovirt_boot_setup()
-from ovirt.node.config import migrate
-migrate.MigrateConfigs().translate_all()
 EOP
         fi
         if [ $? -ne 0 ]; then
@@ -1366,6 +1364,9 @@ EOP
         umount ${logsync_TMPDIR}/ext3
         umount ${logsync_TMPDIR}/squash
         rm -rf ${logsync_TMPDIR}
+
+        # Migrate config files if needed
+        migrate_node_config
 
         # Re-load keyboard settings
         load_keyboard_config

@@ -201,6 +201,17 @@ class NodeConfigFileSection(base.Base):
         return wrapper
 
 
+class ConfigVersion(NodeConfigFileSection):
+    """Keep the ovirt-node version in the config for which this config is
+    intended
+    """
+    keys = ("OVIRT_CONFIG_VERSION", )
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, ver):
+        pass
+
+
 class Network(NodeConfigFileSection):
     """Sets network stuff
     - OVIRT_BOOTIF

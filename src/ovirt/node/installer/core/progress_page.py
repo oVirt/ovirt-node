@@ -175,7 +175,6 @@ class InstallerThread(threading.Thread):
             tx.title = "Update"
             tx += [self.InstallImageAndBootloader()]
             tx += [self.SetKeyboardLayout(cfg["keyboard.layout"])]
-            tx += [self.MigrateConfigs()]
             new_password = cfg.get("upgrade.password", None)
             if new_password:
                 tx += [self.SetPassword(new_password)]

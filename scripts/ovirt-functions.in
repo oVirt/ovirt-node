@@ -1166,6 +1166,16 @@ create_minimal_etc_hosts_file()
     _pyovirtfunctions "create_minimal_etc_hosts_file()"
 }
 
+migrate_node_config ()
+{
+    python <<EOP
+from ovirt.node.config import migrate
+m = migrate.ConfigMigrationRunner()
+m.run_if_necessary()
+EOP
+}
+
+
 load_keyboard_config ()
 {
     python <<EOP
