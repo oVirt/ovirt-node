@@ -39,7 +39,6 @@ class ConfigMigrationRunner(base.Base):
         """Determins if a migration and which migration is necessary
         """
         from ovirt.node.config import defaults
-
         migration_func = None
 
         cfgver = defaults.ConfigVersion().retrieve()["ver"]
@@ -62,7 +61,6 @@ class ConfigMigrationRunner(base.Base):
 
     def _run(self, migration_func):
         from ovirt.node.config import defaults
-
         try:
             self.logger.info("Starting config migration")
 

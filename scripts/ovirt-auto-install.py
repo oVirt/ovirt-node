@@ -35,6 +35,13 @@ import os
 import time
 
 
+class PrepareInstallation(Transaction.Element):
+    title = "Prepare installation"
+
+    def commit(self):
+        defaults.ConfigVersion().set_to_current()
+
+
 class ConfigureNetworking(Transaction.Element):
     title = "Configuring network"
 
@@ -213,6 +220,8 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     tx = Transaction("Automatic Installation")
+
+    tx.append(PrepareInstallation())
 
     # setup network before storage for iscsi installs
     if is_iscsi_install():

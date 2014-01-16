@@ -228,6 +228,9 @@ class InstallerThread(threading.Thread):
             kbd = defaults.Keyboard()
             kbd.update(self.config["keyboard.layout"])
 
+            vercfg = defaults.ConfigVersion()
+            vercfg.set_to_current()
+
         def commit(self):
             pass
             # Everything done during prepare

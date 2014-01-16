@@ -211,6 +211,11 @@ class ConfigVersion(NodeConfigFileSection):
     def update(self, ver):
         pass
 
+    def set_to_current(self):
+        curver = system.node_version()
+        self.logger.debug("Setting config version to: %s" % curver)
+        self.update(curver)
+
 
 class Network(NodeConfigFileSection):
     """Sets network stuff
