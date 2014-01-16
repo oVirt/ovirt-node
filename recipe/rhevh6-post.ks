@@ -194,3 +194,26 @@ patch -d /etc/init.d -p0 << \EOF_functions
  		count=4
  		remaining=$(LC_ALL=C awk "/^#/ {next} $1" "$2" | sort -r)
 EOF_functions
+
+patch -d /sbin -p0 << \EOF_mkdumprd
+--- mkdumprd.orig	2014-01-16 08:57:48.002090191 -0500
++++ mkdumprd	2014-01-16 08:58:29.419306913 -0500
+@@ -3634,7 +3634,7 @@
+                         #test nfs mount and directory creation
+                         rlocation=`echo $DUMP_TARGET | sed 's/.*:/'"$remoteip"':/'`
+                         tmnt=`mktemp -dq`
+-                        kdump_chk "mount -t $USING_METHOD -o nolock -o tcp $rlocation $tmnt" \
++                        kdump_chk "mount -n -t $USING_METHOD -o nolock -o tcp $rlocation $tmnt" \
+                                    "Bad NFS mount $DUMP_TARGET"
+                         kdump_chk "mkdir -p $tmnt/$SAVE_PATH" "Read only NFS mount $DUMP_TARGET"
+                         kdump_chk "touch $tmnt/$SAVE_PATH/testfile" "Read only NFS mount $DUMP_TARGET"
+@@ -3645,7 +3645,7 @@
+                         available_size=$(df -P $tdir | tail -1 | tr -s ' ' ':' | cut -d: -f5)
+ 
+                         rm -rf $tdir
+-                        umount -f $tmnt
++                        umount -n -f $tmnt
+                         if [ $? != 0 ]; then
+                             rmdir $tmnt
+                             echo "Cannot unmount the temporary directory"
+EOF_mkdumprd
