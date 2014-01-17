@@ -185,6 +185,8 @@ def pipe(cmd, stdin=None, check=False, **kwargs):
     u'1\\n'
     >>> pipe("false ; echo -n 42")
     u'42'
+    >>> pipe("false ; echo -n 4 ; echo -n 2 >&2")
+    u'42'
     >>> pipe("true")
     u''
     >>> pipe("false")
