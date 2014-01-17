@@ -138,11 +138,12 @@ class NodeConfigFileSection(base.Base):
         assert len(keys_to_args) == len(model)
         return model
 
-    def clear(self):
+    def clear(self, keys=None):
         """Remove the configuration for this item
         """
+        keys = keys or self.keys
         cfg = self.raw_file.get_dict()
-        to_be_deleted = dict((k, None) for k in self.keys)
+        to_be_deleted = dict((k, None) for k in keys)
         cfg.update(to_be_deleted)
         self.raw_file.update(cfg, remove_empty=True)
 
