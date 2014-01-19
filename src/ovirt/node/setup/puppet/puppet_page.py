@@ -172,6 +172,7 @@ class ActivatePuppet(utils.Transaction.Element):
         utils.process.check_call("puppet agent --waitforcert 60 --test",
                                  shell=True)
         system.service("puppet", "start")
+        fs.Config().persist("/var/lib/puppet")
 
     def disable_puppet(self):
         item_args = ["server", "certname"]
