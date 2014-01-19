@@ -19,6 +19,7 @@ gen_require(`
     type net_conf_t;
     type passwd_file_t;
     type policykit_t;
+    type sanlock_t;
     type setfiles_t;
     type shadow_t;
     type sshd_net_t;
@@ -30,6 +31,7 @@ gen_require(`
     type systemd_unit_file_t;
     type tuned_t;
     type unconfined_t;
+    type unlabeled_t;
     type var_log_t;
     type var_lib_t;
     type virt_cache_t;
@@ -65,6 +67,7 @@ allow loadkeys_t initrc_tmp_t:file read;
 
 #============= local_login_t ==============
 allow local_login_t var_log_t:file { open write create read lock };
+allow local_login_t var_log_t:dir write;
 
 #============= logrotate_t ==============
 allow logrotate_t virt_cache_t:dir read;
@@ -72,6 +75,7 @@ allow logrotate_t var_lib_t:file write;
 
 #============= mount_t ==============
 allow mount_t shadow_t:file mounton;
+allow mount_t unlabeled_t:filesystem remount;
 
 #============= policykit_t ==============
 allow policykit_t ovirt_t:dbus send_msg;
@@ -85,6 +89,7 @@ allow sshd_net_t initrc_t:process sigchld;
 
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
+allow svirt_t sanlock_t:unix_stream_socket connectto;
 
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
