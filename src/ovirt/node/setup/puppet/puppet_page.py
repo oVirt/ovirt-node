@@ -190,3 +190,4 @@ class ActivatePuppet(utils.Transaction.Element):
         fs.Config().persist("/etc/puppet/puppet.conf")
 
         system.service("puppet", "stop")
+        Puppet().clear()
