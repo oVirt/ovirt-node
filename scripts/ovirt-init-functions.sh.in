@@ -1351,6 +1351,9 @@ start_ovirt_post() {
         swapon -a
         mount -a
 
+        # force update rhn profile on boot for upgrades
+        rhn_check
+
         # Synchronize logs
         log "Synchronizing log files"
         logsync_TMPDIR=$(mktemp -d)
