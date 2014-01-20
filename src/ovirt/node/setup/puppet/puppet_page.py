@@ -167,12 +167,19 @@ class ActivatePuppet(utils.Transaction.Element):
         conf.write(conf_builder, "w")
 
         fs.Config().persist("/etc/puppet/puppet.conf")
-
-        system.service("puppet", "stop")
-        utils.process.check_call("puppet agent --waitforcert 60 --test",
-                                 shell=True)
-        system.service("puppet", "start")
-        fs.Config().persist("/var/lib/puppet")
+        try:
+            system.service("puppet", "stop")
+            utils.process.check_call("puppet agent --waitforcert 60 --test",
+                                     shell=True)
+            system.service("puppet", "start")
+            fs.Config().persist("/var/lib/puppet")
+        except:
+            self.logger.debug("Couldn't start puppet agent", exc_info=True)
+            raise RuntimeError("Synchronization with the puppet master timed "
+                               "out.\nCheck whether a certificate is waiting "
+                               "for signing on the master or a certificate "
+                               "for this hostname already exists and needs to"
+                               " be revoked.")
 
     def disable_puppet(self):
         item_args = ["server", "certname"]
