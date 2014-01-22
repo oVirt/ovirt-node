@@ -1,11 +1,18 @@
 policy_module(ovirt, 1.0)
 
+# Existence of types can be checked at runtime using:
+# seinfo -t<type>
 gen_require(`
 @COLLECTD_COMMENT@    type collectd_t;
+@COLLECTD_COMMENT@    type passwd_file_t;
+@COLLECTD_COMMENT@    type virtd_exec_t;
+@COLLECTD_COMMENT@    type virtd_t;
+@COLLECTD_COMMENT@    type virt_etc_t;
+@COLLECTD_COMMENT@    type virt_var_run_t;
+@SYSTEMD_COMMENT@    type etc_t;
+@SYSTEMD_COMMENT@    type sshd_net_t;
 @SYSTEMD_COMMENT@    type systemd_localed_t;
 @SYSTEMD_COMMENT@    type systemd_unit_file_t;
-    type collectd_t;
-    type etc_t;
     type getty_t;
     type initrc_t;
     type initrc_tmp_t;
@@ -17,28 +24,20 @@ gen_require(`
     type logrotate_t;
     type mount_t;
     type net_conf_t;
-    type passwd_file_t;
     type policykit_t;
     type sanlock_t;
     type setfiles_t;
     type shadow_t;
-    type sshd_net_t;
     type sshd_t;
     type svirt_t;
     type syslogd_t;
     type sysstat_t;
-    type systemd_localed_t;
-    type systemd_unit_file_t;
     type tuned_t;
     type unconfined_t;
     type unlabeled_t;
     type var_log_t;
     type var_lib_t;
     type virt_cache_t;
-    type virtd_exec_t;
-    type virtd_t;
-    type virt_etc_t;
-    type virt_var_run_t;
 ')
 
 #============= collectd_t ==============
@@ -59,7 +58,7 @@ gen_require(`
 allow getty_t var_log_t:file open;
 
 #============= initrc_t ==============
-allow initrc_t sshd_net_t:process dyntransition;
+@SYSTEMD_COMMENT@allow initrc_t sshd_net_t:process dyntransition;
 allow initrc_t unconfined_t:process dyntransition;
 
 #============= loadkeys_t ==============
@@ -85,8 +84,8 @@ allow setfiles_t initrc_tmp_t:file append;
 allow setfiles_t net_conf_t:file read;
 
 #============= sshd_t ==============
+@SYSTEMD_COMMENT@allow sshd_net_t initrc_t:process sigchld;
 allow sshd_t var_log_t:file { read open };
-allow sshd_net_t initrc_t:process sigchld;
 
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
