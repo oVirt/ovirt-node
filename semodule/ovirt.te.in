@@ -3,16 +3,16 @@ policy_module(ovirt, 1.0)
 # Existence of types can be checked at runtime using:
 # seinfo -t<type>
 gen_require(`
-@COLLECTD_COMMENT@    type collectd_t;
-@COLLECTD_COMMENT@    type passwd_file_t;
-@COLLECTD_COMMENT@    type virtd_exec_t;
-@COLLECTD_COMMENT@    type virtd_t;
-@COLLECTD_COMMENT@    type virt_etc_t;
-@COLLECTD_COMMENT@    type virt_var_run_t;
-@SYSTEMD_COMMENT@    type etc_t;
-@SYSTEMD_COMMENT@    type sshd_net_t;
-@SYSTEMD_COMMENT@    type systemd_localed_t;
-@SYSTEMD_COMMENT@    type systemd_unit_file_t;
+@SEMODULE_NOT_EL6@    type collectd_t;
+@SEMODULE_NOT_EL6@    type passwd_file_t;
+@SEMODULE_NOT_EL6@    type virtd_exec_t;
+@SEMODULE_NOT_EL6@    type virtd_t;
+@SEMODULE_NOT_EL6@    type virt_etc_t;
+@SEMODULE_NOT_EL6@    type virt_var_run_t;
+@SEMODULE_WITH_SYSTEMD@    type etc_t;
+@SEMODULE_WITH_SYSTEMD@    type sshd_net_t;
+@SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
+@SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
     type getty_t;
     type initrc_t;
     type initrc_tmp_t;
@@ -41,24 +41,24 @@ gen_require(`
 ')
 
 #============= collectd_t ==============
-@COLLECTD_COMMENT@allow collectd_t initrc_t:unix_stream_socket connectto;
-@COLLECTD_COMMENT@allow collectd_t passwd_file_t:file { open read };
-@COLLECTD_COMMENT@allow collectd_t virtd_exec_t:file getattr;
-@COLLECTD_COMMENT@allow collectd_t virt_etc_t:file read;
-@COLLECTD_COMMENT@allow collectd_t virt_var_run_t:sock_file write;
-@COLLECTD_COMMENT@allow collectd_t virtd_t:unix_stream_socket connectto;
+@SEMODULE_NOT_EL6@allow collectd_t initrc_t:unix_stream_socket connectto;
+@SEMODULE_NOT_EL6@allow collectd_t passwd_file_t:file { open read };
+@SEMODULE_NOT_EL6@allow collectd_t virtd_exec_t:file getattr;
+@SEMODULE_NOT_EL6@allow collectd_t virt_etc_t:file read;
+@SEMODULE_NOT_EL6@allow collectd_t virt_var_run_t:sock_file write;
+@SEMODULE_NOT_EL6@allow collectd_t virtd_t:unix_stream_socket connectto;
 
 #============= systemd_localed_t ==============
-@SYSTEMD_COMMENT@allow systemd_localed_t etc_t:file { write rename create setattr };
-@SYSTEMD_COMMENT@allow systemd_localed_t init_t:dbus send_msg;
-@SYSTEMD_COMMENT@allow systemd_localed_t systemd_unit_file_t:service start;
-@SYSTEMD_COMMENT@allow systemd_localed_t ovirt_t:dbus send_msg;
+@SEMODULE_WITH_SYSTEMD@allow systemd_localed_t etc_t:file { write rename create setattr };
+@SEMODULE_WITH_SYSTEMD@allow systemd_localed_t init_t:dbus send_msg;
+@SEMODULE_WITH_SYSTEMD@allow systemd_localed_t systemd_unit_file_t:service start;
+@SEMODULE_WITH_SYSTEMD@allow systemd_localed_t ovirt_t:dbus send_msg;
 
 #============= getty_t ==============
 allow getty_t var_log_t:file open;
 
 #============= initrc_t ==============
-@SYSTEMD_COMMENT@allow initrc_t sshd_net_t:process dyntransition;
+@SEMODULE_WITH_SYSTEMD@allow initrc_t sshd_net_t:process dyntransition;
 allow initrc_t unconfined_t:process dyntransition;
 
 #============= loadkeys_t ==============
@@ -84,7 +84,7 @@ allow setfiles_t initrc_tmp_t:file append;
 allow setfiles_t net_conf_t:file read;
 
 #============= sshd_t ==============
-@SYSTEMD_COMMENT@allow sshd_net_t initrc_t:process sigchld;
+@SEMODULE_WITH_SYSTEMD@allow sshd_net_t initrc_t:process sigchld;
 allow sshd_t var_log_t:file { read open };
 
 #============= svirt_t ==============
