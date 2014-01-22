@@ -904,7 +904,7 @@ EOP
     }
 
     if [ -n "$cim_passwd" ]; then
-        log "Setting temporary admin password"
+        log "Setting temporary cim password"
         unmount_config /etc/passwd /etc/shadow
         /usr/sbin/usermod -p "$cim_passwd" cim
     fi
