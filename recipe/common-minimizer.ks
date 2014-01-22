@@ -1,9 +1,12 @@
 droprpm system-config-*
 keeprpm system-config-keyboard-base
 
-droprpm mkinitrd
-droprpm checkpolicy
-droprpm make
+# Needed for selinux-policy generation
+#droprpm mkinitrd
+#droprpm checkpolicy
+#droprpm make
+drop /usr/share/selinux
+droprpm selinux-policy-devel
 
 droprpm gamin
 droprpm pm-utils
@@ -34,7 +37,6 @@ droprpm postfix
 droprpm mysql*
 
 droprpm sysklogd
-droprpm selinux-policy-devel
 # pam complains when this is missing
 keeprpm ConsoleKit-libs
 
@@ -262,8 +264,6 @@ keep /boot/System.map*
 keep /boot/symvers*
 drop /var/lib/builder
 drop /usr/sbin/*-channel
-
-drop /usr/share/selinux
 
 drop /usr/lib*/libboost*
 keep /usr/lib*/libboost_program_options.so*
