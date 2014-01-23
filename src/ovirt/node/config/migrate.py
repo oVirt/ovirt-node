@@ -22,7 +22,6 @@ from ovirt.node import base
 from ovirt.node.config import defaults
 from ovirt.node.utils import AugeasWrapper, network, parse_bool
 from ovirt.node.utils.fs import Config
-from ovirt.node.setup.rhn import rhn_page as rhn
 from ovirtnode import iscsi, log, ovirtfunctions
 import os
 
@@ -143,6 +142,13 @@ class MigrateConfigs(base.Base):
                              nfsv4_domain or "")
 
     def translate_rhn(self):
+        try:
+            self._translate_rhn()
+        except:
+            self.logger.debug("RHN plugin not available")
+
+    def _translate_rhn(self):
+        from ovirt.node.setup.rhn import rhn_page as rhn
         if self.__is_persisted("/etc/sysconfig/rhn/up2date") or \
                 self.__is_persisted("/etc/rhsm/rhsm.conf"):
 
