@@ -24,9 +24,11 @@ Some convenience functions realted to the filesystem
 """
 
 from ovirt.node import log
+from ovirt.node.utils import process
 import shutil
 import os
 import StringIO
+import re
 
 from ovirt.node import base
 
@@ -123,6 +125,34 @@ class File(base.Base):
         """
         return os.access(self.filename, mode)
 
+    def sed(self, expr, inplace=True):
+        """Run a sed expression on the file
+        """
+        cmd = ["sed", "-c"]
+        if inplace:
+            cmd.append("-i")
+        cmd += ["-e", expr, self.filename]
+        return process.pipe(cmd)
+
+    def sub(self, pat, repl, count=0, inplace=True):
+        """Run a regexp subs. on the file contents
+        Args:
+            inplace: If the contents shall be directly replaced
+        Returns:
+            The new value
+        """
+        flags |= re.MULTILINE
+        newval = re.sub(pat, repl, self.read(), count)
+        if inplace:
+            self.write(newval)
+        return newval
+
+    def findall(self, pat, flags=0):
+        """Find all regexps in the contents
+        """
+        flags |= re.MULTILINE
+        return re.findall(pat, self.read(), flags)
+
     def __iter__(self):
         with open(self.filename, "r") as src:
             for line in src:
@@ -172,6 +202,10 @@ class FakeFs(base.Base):
         >>> FakeFs.File("foo").write("bar")
         >>> FakeFs.filemap
         {'foo': 'bar'}
+
+        >>> FakeFs.File("foo").sub("b(ar)", r"ro\\1")
+        'roar'
+
         >>> FakeFs.erase()
         >>> FakeFs.filemap
         {}
@@ -203,6 +237,13 @@ class FakeFs(base.Base):
 
         def access(self, mode):
             return self.filename in FakeFs.filemap
+
+        def sed(self, expr, inplace=True):
+            newval = process.pipe(["sed", "-e", expr],
+                                  stdin=self.read())
+            if inplace:
+                self.write(newval)
+            return newval
 
         def __iter__(self):
             for line in StringIO.StringIO(self.read()):
