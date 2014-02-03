@@ -77,7 +77,8 @@ class Plugin(plugins.NodePlugin):
                             enabled=False),
                    ui.Entry("storage.root_size", _("Root & RootBackup:"),
                             enabled=False),
-                   ui.Label("label[1]", _("(2 partitions at 512MB each)")),
+                   ui.Label("label[1]", _("(2 partitions at %sMB each)") %
+                            self.model().get("storage.efi_size")),
                    ui.Divider("divider[2]"),
                    ui.Entry("storage.swap_size", _("Swap:")),
                    ui.Entry("storage.config_size", _("Config:")),
