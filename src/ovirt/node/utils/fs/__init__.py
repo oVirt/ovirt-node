@@ -27,8 +27,8 @@ from __future__ import print_function
 import shutil
 import errno
 import os
-import re
 import StringIO
+import re
 
 from . import mount
 from .. import process, parse_varfile
@@ -271,6 +271,13 @@ class FakeFs(base.Base):
 
         def access(self, mode):
             return self.filename in FakeFs.filemap
+
+        def sed(self, expr, inplace=True):
+            newval = process.pipe(["sed", "-e", expr],
+                                  stdin=self.read())
+            if inplace:
+                self.write(newval)
+            return newval
 
         def __iter__(self):
             for line in StringIO.StringIO(self.read()):
