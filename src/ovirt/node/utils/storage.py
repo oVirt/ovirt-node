@@ -40,40 +40,44 @@ class iSCSI(base.Base):
 
 class NFSv4(base.Base):
     """A class to deal some external NFSv4 related functionality
+
+    >>> n = NFSv4()
+    >>> n.domain("")
+    >>> n.domain()
+    >>> n.domain("abc")
+    'abc'
+    >>> n.domain()
+    'abc'
+    >>> n.domain("bar")
+    'bar'
     """
     configfilename = "/etc/idmapd.conf"
 
     def domain(self, domain=None):
+        """Get or set the domain
+        Domain is None: Just retrieve the name
+        Domain is "": Comment out the Domain directive
+        (else): Set Domain to domain
+        """
         if domain is not None:
             self.__set_domain(domain)
         return self.__get_domain()
 
     def __set_domain(self, domain):
         current_domain = self.__get_domain()
-        print(current_domain)
-        cmd = None
-        if current_domain.startswith("#"):
-            current_domain = ("#Domain = %s" %
-                              current_domain.replace("# ", ""))
-            cmd = ['sed', '-i', '-c', 's/%s/Domain = %s/g' %
-                   (current_domain, domain), self.configfilename]
+        cfg = File(self.configfilename)
+
+        if domain:
+            # Uncomment Domain line and set new domain
+            cfg.sub(r"^[#]?Domain =.*", "Domain = %s" % domain)
         else:
-            if domain is "":
-                cmd = ['sed', '-i', '-c', '/^Domain/ s/.*/#Domain = empty/g' %
-                       (current_domain, domain), self.configfilename]
-            else:
-                cmd = ['sed', '-i', '-c', '/^Domain/ s/%s/%s/g' %
-                       (current_domain, domain), self.configfilename]
-        print(cmd)
-        process.check_call(cmd)
+            # Comment out Domain line
+            cfg.sub(r"^[#]?(Domain =.*)", r"#\1")
 
     def __get_domain(self):
-        domain = None
         nfs_config = File(self.configfilename)
-        for line in nfs_config:
-            if "Domain =" in line:
-                domain = line.replace("Domain =", "").strip()
-        return domain
+        matches = nfs_config.findall("^Domain = (.*)")
+        return matches[0] if matches else None
 
 
 class Devices(base.Base):

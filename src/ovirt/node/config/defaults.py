@@ -1368,7 +1368,9 @@ class NFSv4(NodeConfigFileSection):
 
             def commit(self):
                 nfsv4 = storage.NFSv4()
-                nfsv4.domain(domain)
+
+                # Need to pass "" to disable Domain line
+                nfsv4.domain(domain or "")
 
                 fs.Config().persist(nfsv4.configfilename)
                 system.service("rpcidmapd", "restart")
