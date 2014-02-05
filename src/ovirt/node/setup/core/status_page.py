@@ -170,7 +170,7 @@ class Plugin(plugins.NodePlugin):
                                          "Confirm System Restart",
                                          number_of_vm +
                                          "\nThis will restart the system,"
-                                         "proceed?")
+                                         " proceed?")
 
         elif "confirm.reboot.yes" in changes:
             self.logger.info("Confirm Restarting")
