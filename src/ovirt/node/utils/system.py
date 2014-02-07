@@ -645,27 +645,30 @@ class Filesystem(base.Base):
 
         pipe() is used to capture the output of the calls
         """
-        process.pipe(["partprobe"] + [x for x in glob.glob("/dev/mapper/*")
-                                      if not re.match(r'.*\/control$', x)],
-                     stderr=process.STDOUT, check=False)
-        process.pipe(["udevadm", "settle"],
-                     stderr=process.STDOUT, check=False)
+        # Don't litter the screen with output, so get a handle to /dev/null
+        with open(os.devnull, 'wb') as DEVNULL:
+            process.call(["partprobe"] + [x for x in glob.glob("/dev/mapper/*")
+                                          if not re.match(r'.*\/control$', x)],
+                         stdout=DEVNULL, stderr=DEVNULL)
+            process.call(["udevadm", "settle"], stdout=DEVNULL, stderr=DEVNULL)
 
     @staticmethod
     def by_label(label):
         """Determines whether a filesystem with a given label is present on
         this system
         """
+        fs = None
         try:
             Filesystem._flush()
-            device = process.check_output(["blkid", "-c", "/dev/null",
-                                           "-L", label])
+            with open(os.devnull, 'wb') as DEVNULL:
+                device = process.check_output(["blkid", "-c", "/dev/null",
+                                               "-L", label], stderr=DEVNULL)
 
-            return Filesystem(label, device)
+            fs = Filesystem(label, device)
 
         except process.CalledProcessError as e:
-            self.logger.exception("Failed to resolve disks: %s" % e.cmd)
-            return None
+            LOGGER.debug("Failed to resolve disks: %s" % e.cmd, exc_info=True)
+        return fs
 
     def _tokens(self):
         tokens = process.check_output(["blkid", "-o", "export", self.device])
