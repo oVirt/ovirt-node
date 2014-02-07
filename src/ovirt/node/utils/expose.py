@@ -212,7 +212,8 @@ class XmlBuilder(base.Base):
         element.text = text
         doc = obj.documentation
         doc = doc or (obj.__doc__
-                      if (obj.__doc__ not in [Property.__doc__, Feature.__doc__,
+                      if (obj.__doc__ not in [Property.__doc__,
+                                              Feature.__doc__,
                                               Method.__doc__,
                                               Method.Result.__doc__]) else "")
         if doc:

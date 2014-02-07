@@ -35,7 +35,7 @@ import rpm
 import system_config_keyboard.keyboard
 
 from ovirt.node import base, utils, log
-from ovirt.node.utils import process
+from ovirt.node.utils import process, parse_varfile
 from ovirt.node.utils.fs import File
 
 
@@ -560,23 +560,51 @@ class EFI(base.Base):
 
 class Filesystem(base.Base):
     """A class for finding and handling filesystems"""
+    device = None
+
+    def __init__(self, device):
+        self.device = device
+
+    @staticmethod
+    def _flush():
+        """Let all pending operations finish and flush anything to any disks
+        E.g. iscsi etc
+
+        pipe() is used to capture the output of the calls
+        """
+        process.pipe(["partprobe"] + [x for x in glob.glob("/dev/mapper/*")
+                                      if not re.match(r'.*\/control$', x)],
+                     stderr=process.STDOUT, check=False)
+        process.pipe(["udevadm", "settle"],
+                     stderr=process.STDOUT, check=False)
+
     @staticmethod
     def by_label(label):
         """Determines whether a filesystem with a given label is present on
         this system
         """
-        process.call(["partprobe"] + [x for x in glob.glob("/dev/mapper/*")
-                                      if not re.match(r'.*\/control$', x)])
-        process.call(["udevadm", "settle"])
         try:
-            process.check_call(["/sbin/blkid", "-c", "/dev/null", "-l", "-o",
-                                "device", "-t", 'LABEL="%s"' % label])
+            Filesystem._flush()
+            device = process.check_output(["blkid", "-c", "/dev/null",
+                                           "-L", label])
 
-            return True
+            return Filesystem(label, device)
 
         except process.CalledProcessError as e:
-            LOGGER.exception("Failed to resolve disks: %s" % e.cmd)
-            return False
+            self.logger.exception("Failed to resolve disks: %s" % e.cmd)
+            return None
+
+    def _tokens(self):
+        tokens = process.check_output(["blkid", "-o", "export", self.device])
+        return parse_varfile(tokens)
+
+    def label(self):
+        return self._tokens().get("LABEL", None)
+
+    def mountpoints(self):
+        targets = process.check_output(["findmnt", "-o", "target", "-n",
+                                        self.device]).split("\n")
+        return [Mount(t.strip()) for t in targets]
 
 
 class Mount(base.Base):

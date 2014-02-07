@@ -382,3 +382,29 @@ def is_fileobj(filec):
     """
     return hasattr(filec, "read") \
         and hasattr(filec, "write")
+
+
+def parse_varfile(txt):
+    """Parse a simple shell-var-style lines into a dict:
+
+    >>> txt = "# A comment\\n"
+    >>> txt += "A=ah\\n"
+    >>> txt += "B=beh\\n"
+    >>> txt += "C=\\"ceh\\"\\n"
+    >>> txt += "D=\\"more=less\\"\\n"
+    >>> sorted(parse_varfile(txt).items())
+    [('A', 'ah'), ('B', 'beh'), ('C', 'ceh'), ('D', 'more=less')]
+    """
+    cfg = {}
+    for line in txt.split("\n"):
+        line = line.strip()
+        if line == "" or line.startswith("#"):
+            continue
+        try:
+            key, value = line.split("=", 1)
+            cfg[key] = value.strip("\"' \n")
+        except:
+            pass
+            # BAAAAD
+            #raise RuntimeError("Failed to parse line: %s" % line)
+    return cfg
