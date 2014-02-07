@@ -24,7 +24,7 @@ Some convenience functions realted to the filesystem
 """
 
 from ovirt.node import log
-from ovirt.node.utils import process
+from ovirt.node.utils import process, parse_varfile
 import shutil
 import os
 import StringIO
@@ -141,7 +141,7 @@ class File(base.Base):
         Returns:
             The new value
         """
-        flags |= re.MULTILINE
+        # flags |= re.MULTILINE  # py2.7+
         newval = re.sub(pat, repl, self.read(), count)
         if inplace:
             self.write(newval)
@@ -203,8 +203,14 @@ class FakeFs(base.Base):
         >>> FakeFs.filemap
         {'foo': 'bar'}
 
-        >>> FakeFs.File("foo").sub("b(ar)", r"ro\\1")
+        >>> b = FakeFs.File("foo")
+        >>> b.sub("b(ar)", r"ro\\1")
         'roar'
+
+        >>> b.findall("oa")
+        ['oa']
+        >>> b.findall("Boa")
+        []
 
         >>> FakeFs.erase()
         >>> FakeFs.filemap
@@ -493,14 +499,4 @@ class ShellVarFile(base.Base):
         >>> sorted(p._parse_dict(txt).items())
         [('A', 'ah'), ('B', 'beh'), ('C', 'ceh'), ('D', 'more=less')]
         """
-        cfg = {}
-        for line in txt.split("\n"):
-                line = line.strip()
-                if line == "" or line.startswith("#"):
-                    continue
-                try:
-                    key, value = line.split("=", 1)
-                    cfg[key] = value.strip("\"' \n")
-                except:
-                    self.logger.info("Failed to parse line: '%s'" % line)
-        return cfg
+        return parse_varfile(txt)

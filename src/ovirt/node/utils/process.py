@@ -34,6 +34,8 @@ COMMON_POPEN_ARGS = {
 
 CalledProcessError = subprocess.CalledProcessError
 
+STDOUT = subprocess.STDOUT
+
 
 def log_call(msg, args=[], kwargs={}, masks=[], logfunc=None):
     logfunc = logfunc or log.getLogger(__name__).debug
@@ -206,8 +208,8 @@ def pipe(cmd, stdin=None, check=False, **kwargs):
     CalledProcessError: Command 'false' returned non-zero exit status 1
     """
     kwargs.update({"stdin": PIPE,
-                   "stdout": PIPE,
-                   "stderr": STDOUT})
+                   "stderr": STDOUT,
+                   "stdout": PIPE})
     if type(cmd) in [str, unicode]:
         kwargs["shell"] = True
     __check_for_problems(cmd, kwargs)
