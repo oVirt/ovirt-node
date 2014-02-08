@@ -45,7 +45,12 @@ class Plugin(plugins.NodePlugin):
         devices = self.storage_discovery.all_devices_for_ui_table()
         self.logger.debug("Available devices: %s" % devices)
         if devices:
+            selected_boot_dev = \
+                self.application.plugins()["Boot Device"]\
+                .model()["boot.device.current"]
             first_dev = devices[0][0]
+            if selected_boot_dev in devices:
+                first_dev = selected_boot_device
             self._model["installation.device.details"] = first_dev
             self._model["installation.device.current"] = first_dev
         return self._model
