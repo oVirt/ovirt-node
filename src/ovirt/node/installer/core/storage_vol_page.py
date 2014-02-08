@@ -144,6 +144,7 @@ class Plugin(plugins.NodePlugin):
 
     def __get_default_sizes(self):
         if self.application.args.dry:
+            self._drive_size = 42 * 1024
             return {"storage.efi_size": "256",
                     "storage.root_size": "50",
                     "storage.swap_size": "0",
