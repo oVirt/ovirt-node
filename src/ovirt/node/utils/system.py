@@ -192,6 +192,79 @@ def copy_dir_if_not_exist(orig, target):
                                                                       f))
 
 
+class NVR(object):
+    """Simple clas to parse and compare NVRs
+
+    >>> nvr = NVR.parse("ovirt-node-1.2.3-4.el6")
+    >>> nvr.name
+    'ovirt-node'
+    >>> nvr.version
+    '1.2.3'
+    >>> nvr.release
+    '4.el6'
+
+    >>> nvr_new = NVR.parse("ovirt-node-1.2.3-5.el6")
+    >>> nvr < nvr_new
+    True
+
+    >>> nvr_new = NVR.parse("ovirt-node-2.2.3-4.el6")
+    >>> nvr < nvr_new
+    True
+    """
+    name = None
+    version = None
+    release = None
+
+    @staticmethod
+    def parse(nvr):
+        if not nvr.strip():
+            raise RuntimeError("No package NVR to parse: %s" % nvr)
+        o = NVR()
+        try:
+            nvrtuple = re.match("^(^.*)-([^-]*)-([^-]*)$", nvr).groups()
+        except:
+            raise RuntimeError("Failed to parse NVR: %s" % nvr)
+        if not nvrtuple:
+            raise RuntimeError("Failed to parse nvr: %s" % nvr)
+        o.name, o.version, o.release = nvrtuple
+        return o
+
+    def __cmp__(self, other):
+        if not self.name == other.name:
+            raise RuntimeError("NVRs for different names: %s %s"
+                               % (self.name, other.name))
+        this_version = (None, self.version, self.release)
+        other_version = (None, other.version, other.release)
+        return rpm.labelCompare(this_version,  # @UndefinedVariable
+                                other_version)
+
+    def __str__(self):
+        return "%s-%s-%s" % (self.name, self.version, self.release)
+
+
+class RpmPackage(base.Base):
+    """Provide access to some rpm meta informations
+    """
+
+    name = None
+
+    def __init__(self, name):
+        super(RpmPackage, self).__init__()
+        self.name = name
+
+    def _raw_nvr(self):
+        cmd = ["rpm", "-q", self.name]
+        nvr = process.pipe(cmd).strip().split("\n")
+        self.logger.debug("Found build: %s" % nvr)
+        if len(nvr) != 1:
+            raise RuntimeError("Failed to retrieve nvr for %s: %s" %
+                               (self.name, nvr))
+        return nvr[0]
+
+    def nvr(self):
+        return NVR.parse(self._raw_nvr())
+
+
 class SystemRelease(base.Base):
     """Informations about the OS based on /etc/system-release-cpe
 
