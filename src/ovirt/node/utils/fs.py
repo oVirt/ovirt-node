@@ -135,23 +135,27 @@ class File(base.Base):
         return process.pipe(cmd)
 
     def sub(self, pat, repl, count=0, inplace=True):
-        """Run a regexp subs. on the file contents
+        """Run a regexp subs. on each lien of the file
+
         Args:
             inplace: If the contents shall be directly replaced
         Returns:
             The new value
         """
-        # flags |= re.MULTILINE  # py2.7+
-        newval = re.sub(pat, repl, self.read(), count)
+        newval = ""
+        for line in self:
+            newval += re.sub(pat, repl, line, count)
         if inplace:
             self.write(newval)
         return newval
 
     def findall(self, pat, flags=0):
-        """Find all regexps in the contents
+        """Find all regexps in all lines of the file
         """
-        flags |= re.MULTILINE
-        return re.findall(pat, self.read(), flags)
+        matches = []
+        for line in self:
+            matches += re.findall(pat, line, flags)
+        return matches
 
     def __iter__(self):
         with open(self.filename, "r") as src:
