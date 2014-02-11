@@ -41,7 +41,11 @@ class iSCSI(base.Base):
 class NFSv4(base.Base):
     """A class to deal some external NFSv4 related functionality
 
+    >>> import shutil
+    >>> tmpcfg = "/tmp/idmapd.conf"
+    >>> shutil.copy(NFSv4.configfilename, tmpcfg)
     >>> n = NFSv4()
+    >>> n.configfilename = tmpcfg
     >>> n.domain("")
     >>> n.domain()
     >>> n.domain("abc")
