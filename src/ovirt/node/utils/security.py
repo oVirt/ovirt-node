@@ -58,17 +58,23 @@ def password_check(password, confirmation, min_length=1):
 
     >>> password_check("foo", "")
     Traceback (most recent call last):
-    ValueError: Please Confirm Password
+    ValueError: Please Check Password Confirmation
+
+    >>> password_check("", "foo", 0)
+    Traceback (most recent call last):
+    ValueError: Please Check Password
     '''
     message = None
 
-    if len(password) is 0 and min_length is 0:
+    if len(password) is 0 and len(confirmation) is 0 and min_length is 0:
         pass
     elif len(password) < min_length:
         raise ValueError("Password must be at least %d characters" %
                          min_length)
     elif password != "" and confirmation == "":
-        raise ValueError("Please Confirm Password")
+        raise ValueError("Please Check Password Confirmation")
+    elif password == "" and confirmation != "":
+        raise ValueError("Please Check Password")
     elif password != confirmation:
         raise ValueError("Passwords Do Not Match")
     else:
