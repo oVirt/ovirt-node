@@ -47,7 +47,7 @@ class Plugin(plugins.NodePlugin):
         if devices:
             selected_boot_dev = \
                 self.application.plugins()["Boot Device"]\
-                .model()["boot.device.current"]
+                .model().get("boot.device.current", "")
             self.logger.debug("Selected boot device: %s" %
                               selected_boot_dev)
             first_dev = devices[0][0]
