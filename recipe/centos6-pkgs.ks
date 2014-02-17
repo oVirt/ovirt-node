@@ -6,3 +6,6 @@ libguestfs-winsupport
 ltrace
 # keyboard layout
 system-config-keyboard-base
+vconfig
+aic94xx-firmware
+bfa-firmware

@@ -11,7 +11,7 @@ rootfiles
 dhclient
 openssh-clients
 openssh-server
-kvm
+qemu-kvm
 libmlx4
 ovirt-node
 selinux-policy-targeted
@@ -23,7 +23,6 @@ python-libs
 python-setuptools
 PyPAM
 db4
-vconfig
 # debugging
 hdparm
 sos
@@ -76,9 +75,6 @@ less
 dosfstools
 # kdump
 kexec-tools
-# more firmwares
-aic94xx-firmware
-bfa-firmware
 
 # dracut dmsquash-live module requires eject
 eject
