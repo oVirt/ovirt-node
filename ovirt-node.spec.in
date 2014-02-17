@@ -619,14 +619,7 @@ fi
 
 %endif
 
-%dir %{dracutdir}/91ovirtnode
-%{dracutdir}/91ovirtnode/module-setup.sh
-%{dracutdir}/91ovirtnode/ovirt-boot-functions
-%{dracutdir}/91ovirtnode/ovirt-cleanup.sh
-%if 0%{?rhel}
-%{dracutdir}/91ovirtnode/check
-%{dracutdir}/91ovirtnode/install
-%endif
+%{dracutdir}/91ovirtnode
 %{_sysconfdir}/dracut.conf.d/ovirt-dracut.conf
 %{_libexecdir}/ovirt-auto-install
 %{_libexecdir}/ovirt-config-password
