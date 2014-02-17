@@ -164,7 +164,10 @@ class Plugin(plugins.NodePlugin):
             if ktype == "nfs":
                 model.configure_nfs(nfsloc)
             elif ktype == "ssh":
-                model.configure_ssh(sshloc)
+                if "kdump.ssh_key" in changes:
+                    model.configure_ssh(sshloc, sshkey)
+                else:
+                    model.configure_ssh(sshloc)
             elif ktype == "local":
                 model.configure_local()
             else:
@@ -199,7 +202,11 @@ class Plugin(plugins.NodePlugin):
             if saved_model["kdump.type"] == "nfs":
                 model.configure_nfs(saved_model["kdump.nfs_location"])
             elif saved_model["kdump.type"] == "kdump.ssh_location":
-                model.configure_ssh(saved_model['kdump.ssh_location'])
+                if self.model()["kdump.ssh_key"]:
+                    model.configure_ssh(saved_model['kdump.ssh_location'],
+                                        saved_model['kdump.ssh_key'])
+                else:
+                    model.configure_ssh(saved_model['kdump.ssh_location'])
             elif saved_model["kdump.type"] == "local":
                 model.configure_local()
             else:

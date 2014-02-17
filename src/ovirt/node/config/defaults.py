@@ -1024,16 +1024,16 @@ class KDump(NodeConfigFileSection):
                 }
 
     def configure_nfs(self, nfs_location):
-        self.update(nfs_location, None, None)
+        self.update(nfs_location, None, None, None)
 
-    def configure_ssh(self, ssh_location):
-        self.update(None, ssh_location, None)
+    def configure_ssh(self, ssh_location, ssh_key=None):
+        self.update(None, ssh_location, ssh_key, None)
 
     def configure_local(self):
-        self.update(None, None, True)
+        self.update(None, None, None, True)
 
     def disable_kdump(self):
-        self.update(None, None, None)
+        self.update(None, None, None, None)
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
