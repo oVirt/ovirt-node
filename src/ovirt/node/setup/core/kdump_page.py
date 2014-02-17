@@ -133,10 +133,12 @@ class Plugin(plugins.NodePlugin):
                     self.widgets[w].enabled(False)
                     self.widgets[w].value("")
 
-            w = "kdump.%s_location" % changes["kdump.type"]
-            if w in net_types and w in self.widgets:
-                self.widgets[w].enabled(True)
-                self.widgets[w].value(self._model[w])
+            w_pfx = "kdump.%s_" % changes["kdump.type"]
+            for n in net_types:
+                if not n.startswith(w_pfx) or n not in self.widgets:
+                    continue
+                self.widgets[n].enabled(True)
+                self.widgets[n].value(self._model[n])
 
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
