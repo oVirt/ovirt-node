@@ -677,7 +677,7 @@ fi
 - new installation and configuration text UI for standalone mode
 - drop gptsync, make it noarch
 
-* Tue Apr 04 2010 Darryl L. Pierce <dpierce@redhat.com> - 1.9.2-1
+* Tue Apr 06 2010 Darryl L. Pierce <dpierce@redhat.com> - 1.9.2-1
 - Updated autoconf environment.
 - Allow persistence of empty configuration files.
 
@@ -700,7 +700,7 @@ fi
 * Wed Oct 07 2009 David Huff <dhuff@redhat.com> - 1.0.3-4
 - Added ovirt-node-tools subpackage
 
-* Thu Jun 23 2009 David Huff <dhuff@redhat.com> - 1.0.3
+* Tue Jun 23 2009 David Huff <dhuff@redhat.com> - 1.0.3
 - Clean up spec for inclusion in Fedora
 - Removed subpackages, stateful, stateless, logos, and selinux
 
