@@ -440,6 +440,9 @@ cat > /etc/multipath.conf << \EOF_multipath_conf2
 EOF_multipath_conf2
 %endif
 
+#Disable X11Forwarding for sshd
+sed -i -e 's/X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config
+
 #release info for dracut to pick it up into initramfs
 # remove symlink to keep original redhat-release
 rm -f /etc/system-release
