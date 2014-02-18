@@ -54,8 +54,6 @@ gen_require(`
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t systemd_unit_file_t:service start;
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t ovirt_t:dbus send_msg;
 
-#============= getty_t ==============
-allow getty_t var_log_t:file open;
 
 #============= hald_t ==============
 optional_policy(`
@@ -65,56 +63,290 @@ optional_policy(`
     allow hald_t ovirt_t:dbus send_msg;
 ')
 
+
 #============= initrc_t ==============
 @SEMODULE_WITH_SYSTEMD@allow initrc_t sshd_net_t:process dyntransition;
 allow initrc_t unconfined_t:process dyntransition;
 
+
 #============= loadkeys_t ==============
 allow loadkeys_t initrc_tmp_t:file read;
 
+
 #============= local_login_t ==============
+require {
+    type local_login_t;
+}
 allow local_login_t var_log_t:file { open write create read lock };
 allow local_login_t var_log_t:dir { write add_name };
+allow local_login_t chkpwd_t:process { siginh rlimitinh noatsecure };
+allow local_login_t unconfined_t:process { siginh noatsecure };
+
 
 #============= logrotate_t ==============
 allow logrotate_t virt_cache_t:dir read;
 allow logrotate_t var_lib_t:file write;
 
+
 #============= mount_t ==============
 allow mount_t shadow_t:file mounton;
 allow mount_t unlabeled_t:filesystem remount;
 
+
 #============= policykit_t ==============
 allow policykit_t ovirt_t:dbus send_msg;
 
+
 #============= setfiles_t ==============
+require {
+    type dhcpc_t;
+}
 allow setfiles_t initrc_tmp_t:file append;
 allow setfiles_t net_conf_t:file read;
+allow setfiles_t dhcpc_t:udp_socket { read write };
+
 
 #============= sshd_t ==============
 @SEMODULE_WITH_SYSTEMD@allow sshd_net_t initrc_t:process sigchld;
 allow sshd_t var_log_t:file { read open };
 
+
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
 allow svirt_t sanlock_t:unix_stream_socket connectto;
 
+
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
 
+
 #============= sysstat_t ==============
+require {
+    type sysstat_t;
+    type admin_home_t;
+}
+allow sysstat_t tmpfs_t:dir search;
+allow sysstat_t admin_home_t:dir { search getattr };
 allow sysstat_t var_lib_t:file { read append };
-allow sysstat_t var_log_t:file open;
+allow sysstat_t var_log_t:file { open read };
+
 
 #============= tuned_t ==============
 allow tuned_t ovirt_t:dbus send_msg;
 
+
+#============= iscsid_t ==============
 # Remove this block once the bug is solved
 # Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1025401
-#============= iscsid_t ==============
 allow iscsid_t iscsi_var_lib_t:dir { write remove_name create add_name rmdir };
 allow iscsid_t iscsi_var_lib_t:file { write create unlink };
 allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
+
+
+#============= dhcpc_t ==============
+optional_policy(`
+    require {
+        type dhcpc_t;
+        type tmpfs_t;
+        type user_tmpfs_t;
+    }
+    allow dhcpc_t tmpfs_t:dir { write add_name read };
+    allow dhcpc_t tmpfs_t:file { write create open getattr };
+    allow dhcpc_t user_tmpfs_t:file { read getattr open };
+')
+
+optional_policy(`
+    require {
+        type dhcpc_t;
+        type ifconfig_t;
+        type netutils_t;
+        type setfiles_t;
+    }
+    allow dhcpc_t ifconfig_t:process { siginh rlimitinh noatsecure };
+    allow dhcpc_t netutils_t:process { siginh rlimitinh noatsecure };
+    allow dhcpc_t setfiles_t:process { siginh rlimitinh noatsecure };
+')
+
+
+#============= hostname_t ==============
+require {
+    type hostname_t;
+}
+allow hostname_t tmpfs_t:dir search;
+
+
+#============= systemd_sysctl_t ==============
+optional_policy(`
+    require {
+        type systemd_sysctl_t;
+        type tmpfs_t;
+    }
+    allow systemd_sysctl_t tmpfs_t:dir { getattr search };
+')
+
+
+#============= systemd_passwd_agent_t ==============
+require {
+    type systemd_passwd_agent_t;
+}
+allow systemd_passwd_agent_t tmpfs_t:dir search;
+
+
+#============= systemd_localed_t ==============
+optional_policy(`
+    require {
+        type systemd_localed_t;
+        type tmpfs_t;
+        type security_t;
+    }
+    allow systemd_localed_t tmpfs_t:dir { write remove_name add_name search };
+    allow systemd_localed_t security_t:file { open read };
+')
+
+#============= irqbalance_t ==============
+optional_policy(`
+    require {
+        type irqbalance_t;
+        type tmpfs_t;
+    }
+    allow irqbalance_t tmpfs_t:dir search;
+')
+
+#============= ksmtuned_t ==============
+optional_policy(`
+    require {
+        type ksmtuned_t;
+        type tmpfs_t;
+    }
+    allow ksmtuned_t tmpfs_t:dir search;
+')
+
+#============= mcelog_t ==============
+optional_policy(`
+    require {
+        type mcelog_t;
+        type tmpfs_t;
+    }
+    allow mcelog_t tmpfs_t:dir search;
+')
+
+#============= ntpd_t ==============
+optional_policy(`
+    require {
+        type ntpd_t;
+        type init_tmp_t;
+    }
+    allow ntpd_t init_tmp_t:dir { write add_name remove_name };
+    allow ntpd_t init_tmp_t:file { create open unlink write };
+')
+
+
+
+
+
+
+#============= dmesg_t ==============
+require {
+type dmesg_t;
+type tmpfs_t;
+}
+allow dmesg_t tmpfs_t:dir search;
+
+
+#============= iptables_t ==============
+require {
+    type iptables_t;
+    type insmod_t;
+    type tmpfs_t;
+}
+allow iptables_t tmpfs_t:dir search;
+allow iptables_t insmod_t:process { siginh rlimitinh noatsecure };
+
+
+#============= rpcbind_t ==============
+require {
+    type rpcbind_t;
+}
+allow rpcbind_t self:udp_socket listen;
+
+optional_policy(`
+    require {
+        type rpcbind_t;
+        type tmpfs_t;
+    }
+    allow rpcbind_t tmpfs_t:dir search;
+')
+
+#============= rpcd_t ==============
+require {
+    type rpcd_t;
+}
+allow rpcd_t self:udp_socket listen;
+
+#============= ssh_keygen_t ==============
+require {
+    type ssh_keygen_t;
+}
+allow ssh_keygen_t tmpfs_t:dir search;
+
+
+#============= chkpwd_t ==============
+require {
+type chkpwd_t;
+type tty_device_t;
+}
+allow chkpwd_t tty_device_t:chr_file { read write };
+allow chkpwd_t tmpfs_t:dir search;
+
+
+#============= getty_t ==============
+require {
+type getty_t;
+}
+allow getty_t local_login_t:process { siginh rlimitinh noatsecure };
+allow getty_t var_log_t:file { open write };
+allow getty_t tmpfs_t:dir search;
+
+#============= ifconfig_t ==============
+require {
+    type ifconfig_t;
+}
+allow ifconfig_t dhcpc_t:udp_socket { read write };
+allow ifconfig_t tmpfs_t:dir search;
+
+
+#============= netutils_t ==============
+require {
+    type netutils_t;
+}
+allow netutils_t dhcpc_t:udp_socket { read write };
+allow netutils_t tmpfs_t:dir search;
+
+
+#============= sshd_keygen_t ==============
+optional_policy(`
+    require {
+        type sshd_keygen_t;
+        type tmpfs_t;
+    }
+    allow sshd_keygen_t tmpfs_t:dir { search };
+')
+require {
+    type sshd_keygen_t;
+    type ssh_keygen_t;
+}
+allow sshd_keygen_t setfiles_t:process { siginh rlimitinh noatsecure };
+allow sshd_keygen_t ssh_keygen_t:process { siginh rlimitinh noatsecure };
+
+
+#============= mandb_t ==============
+require {
+    type mandb_t;
+}
+allow mandb_t admin_home_t:dir search;
+
+
+
 
 
 type ovirt_t;
