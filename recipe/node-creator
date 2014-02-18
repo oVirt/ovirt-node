@@ -83,7 +83,7 @@ case "$SELINUX_ENFORCING" in
                but disabled on the build machine"
        fi ;;
 esac
-sudo livecd-creator -c "$NODE_KS" -f "$LABEL" \
+livecd-creator -c "$NODE_KS" -f "$LABEL" \
     --tmpdir="$NODE_TMP" \
     --cache="$OVIRT_CACHE_DIR/yum-$ARCH"
 if [ "$SELINUX_ENFORCING" = Enforcing ]; then

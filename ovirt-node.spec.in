@@ -242,22 +242,27 @@ rm -rf /tmp/cim_schema*
 #
 # SELinux subpackage
 #
+%global selinux_modulename ovirt
 %global selinux_variants targeted
+%if %{is_el6}
 %global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
-%global modulename ovirt
+%else
+%global selinux_policyver %_selinux_policy_version
+%endif
 
 %package selinux
 Summary:          SELinux policy module supporting %{product_family}
 Group:            System Environment/Base
-BuildRequires:    policycoreutils, checkpolicy, selinux-policy-devel
+BuildRequires:    policycoreutils, checkpolicy
+BuildRequires:    selinux-policy-devel >= %{selinux_policyver}
 BuildRequires:    /usr/share/selinux/devel/policyhelp, hardlink
 %if "%{selinux_policyver}" != ""
 Requires:         selinux-policy >= %{selinux_policyver}
 %endif
 Requires:         %{name} = %{version}-%{release}
 Requires:         selinux-policy-base
-Requires(post):   /usr/sbin/semodule, /sbin/restorecon
-Requires(postun): /usr/sbin/semodule, /sbin/restorecon
+Requires(post):   /usr/sbin/semodule, /usr/sbin/restorecon
+Requires(postun): /usr/sbin/semodule, /usr/sbin/restorecon
 
 %description selinux
 SELinux policy module supporting %{product_family}
@@ -266,7 +271,7 @@ SELinux policy module supporting %{product_family}
 for selinuxvariant in %{selinux_variants}
 do
   /usr/sbin/semodule -s ${selinuxvariant} -i \
-    %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
+    %{_datadir}/selinux/${selinuxvariant}/%{selinux_modulename}.pp &> /dev/null || :
 done
 # Is this to greedy?
 /sbin/restorecon -R / || :
@@ -286,7 +291,7 @@ done
 if [ $1 -eq 0 ] ; then
   for selinuxvariant in %{selinux_variants}
   do
-     /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
+     /usr/sbin/semodule -s ${selinuxvariant} -r %{selinux_modulename} &> /dev/null || :
   done
   # Is this to greedy?
   /sbin/restorecon -R / &> /dev/null || :
@@ -349,7 +354,7 @@ for selinuxvariant in %{selinux_variants}
 do
     %{__make} NAME=${selinuxvariant} \
         -f %{?policy_devel_root}%{_datadir}/selinux/devel/Makefile
-    mv -v %{modulename}.pp %{modulename}.pp.${selinuxvariant}
+    mv -v %{selinux_modulename}.pp %{selinux_modulename}.pp.${selinuxvariant}
 done
 cd -
 
@@ -388,8 +393,8 @@ cd semodule
 for selinuxvariant in %{selinux_variants}
 do
     %{__install} -d %{buildroot}%{_datadir}/selinux/${selinuxvariant}
-    %{__install} -p -m 644 %{modulename}.pp.${selinuxvariant} \
-               %{buildroot}%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
+    %{__install} -p -m 644 %{selinux_modulename}.pp.${selinuxvariant} \
+               %{buildroot}%{_datadir}/selinux/${selinuxvariant}/%{selinux_modulename}.pp
 done
 cd -
 
@@ -576,7 +581,7 @@ fi
 %files selinux
 %defattr(-,root,root,0755)
 %doc semodule/*.fc semodule/*.te
-%{_datadir}/selinux/*/%{modulename}.pp
+%{_datadir}/selinux/*/%{selinux_modulename}.pp
 
 
 %files
