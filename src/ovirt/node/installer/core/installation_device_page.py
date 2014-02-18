@@ -164,7 +164,9 @@ class Plugin(plugins.NodePlugin):
         elif changes.contains_any(["installation.device.custom",
                                    "dialog.device.custom.save"]):
             self._dialog.close()
-            return self.ui_content()
+            cdev = self._model["installation.device.custom"]
+            self._model["installation.devices"].append(cdev)
+            self.application.ui.navigate.to_next_plugin()
 
         if changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
