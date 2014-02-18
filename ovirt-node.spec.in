@@ -413,6 +413,10 @@ cd -
 if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+    /bin/systemctl --no-reload enable ovirt-firstboot.service > /dev/null 2>&1 || :
+    /bin/systemctl --no-reload enable ovirt.service > /dev/null 2>&1 || :
+    /bin/systemctl --no-reload enable ovirt-post.service > /dev/null 2>&1 || :
+    /bin/systemctl --no-reload enable ovirt-early.service > /dev/null 2>&1 || :
 fi
 %endif
 # workaround for imgcreate/live.py __copy_efi_files
