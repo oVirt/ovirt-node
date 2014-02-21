@@ -421,6 +421,7 @@ class TaggedNIC(NIC):
     """A class to provide easy access to tagged NICs
     """
     vlan_nic = None
+    parent_nic = None
 
     def __init__(self, parent_nic, vlanid):
         """A unified API for tagged NICs
@@ -429,6 +430,7 @@ class TaggedNIC(NIC):
         """
         slave_ifname = "%s.%s" % (parent_nic.ifname, vlanid)
         super(TaggedNIC, self).__init__(parent_nic.ifname)
+        self.parent_nic = parent_nic
         self.vlan_nic = NIC(slave_ifname)
         self.config = self.vlan_nic.config
 
@@ -467,6 +469,9 @@ class TaggedNIC(NIC):
 
     def has_vlans(self):
         raise RuntimeError("Nested tagging is not allowed. Is it?")
+
+    def identify(self):
+        self.parent_nic.identify()
 
     def __str__(self):
         pairs = {"vlan": self.vlan_nic.ifname,
