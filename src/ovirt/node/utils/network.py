@@ -409,7 +409,7 @@ class BridgedNIC(NIC):
         return self.slave_nic.vlanids()
 
     def identify(self):
-        self.slave_nic.identify(self)
+        self.slave_nic.identify()
 
     def __str__(self):
         pairs = {"bridge": self.bridge_nic,
