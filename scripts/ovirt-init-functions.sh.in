@@ -857,6 +857,8 @@ EOP
         reboot
     fi
 
+    # Keep a pointer open to the early boot logs
+    mkdir /tmp/early-logs && ( mount --bind /var/log /tmp/early-logs && mount --make-rprivate /tmp/early-logs ; )
 
     # save boot parameters as defaults for ovirt-config-*
     params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs iscsi_name snmp_password install netconsole_server netconsole_port stateless cim_enabled wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout logrotate_max_size"
