@@ -24,8 +24,10 @@ Some convenience functions realted to the filesystem
 """
 
 from ovirt.node import log
+from ovirt.node.utils import process
 import shutil
 import os
+import re
 import StringIO
 
 from ovirt.node import base

@@ -19,7 +19,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
-from ovirt.node.config import defaults
 from ovirt.node.utils import AugeasWrapper, network, parse_bool
 from ovirt.node.utils.fs import Config
 from ovirtnode import iscsi, log, ovirtfunctions

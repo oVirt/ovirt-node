@@ -469,7 +469,6 @@ class URL(Validator):
     True
     """
 
-
     description = "a valid URL"
 
     requires_scheme = True
@@ -477,9 +476,9 @@ class URL(Validator):
     requires_path = False
 
     def __init__(self, scheme=True, netloc=True, path=False):
-       self.requires_scheme = scheme
-       self.requires_netloc = netloc
-       self.requires_path = path
+        self.requires_scheme = scheme
+        self.requires_netloc = netloc
+        self.requires_path = path
 
     def validate(self, value):
         p = urlparse.urlparse(value)

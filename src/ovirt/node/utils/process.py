@@ -54,7 +54,6 @@ log_call.masks = []
 def masked(masks):
     """A context manager to hide certain args before logging
 
-    >>> import sys
     >>> with masked(["Lemmings"]):
     ...     log_call("Beware", ["Domminated", "By",
     ...                         "Lemmings"], {"Save": "Lemmings"},
@@ -67,6 +66,7 @@ def masked(masks):
         def __enter__(self):
             self.old_masks = log_call.masks
             log_call.masks = masks
+
         def __exit__(self, exc_type, exc_value, traceback):
             log_call.masks = self.old_masks
 

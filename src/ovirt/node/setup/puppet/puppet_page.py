@@ -24,7 +24,6 @@ from ovirt.node.plugins import Changeset
 from ovirt.node.utils import system, fs
 from ovirt.node.utils.fs import File
 import re
-import socket
 
 """
 Configure Puppet

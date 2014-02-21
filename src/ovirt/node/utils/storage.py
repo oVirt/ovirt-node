@@ -20,7 +20,6 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 from ovirt.node import base
-from ovirt.node.utils import process
 from ovirt.node.utils.fs import File
 import os
 
@@ -68,7 +67,6 @@ class NFSv4(base.Base):
         return self.__get_domain()
 
     def __set_domain(self, domain):
-        current_domain = self.__get_domain()
         cfg = File(self.configfilename)
 
         if domain:

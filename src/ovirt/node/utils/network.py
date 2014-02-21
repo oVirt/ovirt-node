@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import config, base, utils, config, valid, log
+from ovirt.node import base, utils, config, valid, log
 from ovirt.node.config.network import NicConfig
 from ovirt.node.utils import fs
 from ovirt.node.utils.fs import File
@@ -327,15 +327,15 @@ class NIC(base.Base):
         # Fallback
         cmd = "ip -o addr show {ifname}".format(ifname=self.ifname)
         for line in process.pipe(cmd, shell=True).split("\n"):
-            matches = re.search("\s(inet[6]?)\s(.+)/([^\s]+).*scope ([^\s]+).*",
-                                line)
+            matches = re.search("\s(inet[6]?)\s(.+)/([^\s]+)"
+                                ".*scope ([^\s]+).*", line)
             if matches and matches.groups():
                 family, addr, mask, scope = matches.groups()
                 if family not in families:
                     continue
                 if family == "inet":
                     mask = calcDottedNetmask(mask)
-                if scope == "global" or addresses[family].address == None:
+                if scope == "global" or addresses[family].address is None:
                     addresses[family] = IPAddress(addr, mask, scope)
 
         return addresses
@@ -630,9 +630,11 @@ class NodeNetwork(base.Base):
         return candidate
 
     def is_configured(self):
-        """The NodeNetwork is either configered when we or a mgmt instance configured it
+        """The NodeNetwork is either configered when we or a mgmt instance
+        configured it
         """
-        mgmtInterface = config.defaults.Management().retrieve()["managed_ifnames"]
+        mgmtInterface = config.defaults.Management().retrieve()[
+            "managed_ifnames"]
         return any([self.configured_nic(), mgmtInterface])
 
 
@@ -783,7 +785,7 @@ class Vlans(base.Base):
                 if not data_block:
                     continue
                 vdev, vid, hdev = [field.strip()
-                                 for field in line.split("|")]
+                                   for field in line.split("|")]
                 if not hdev in vlans:
                     vlans[hdev] = []
                 vlans[hdev].append((vdev, vid))
