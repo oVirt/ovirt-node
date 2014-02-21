@@ -51,69 +51,6 @@ class Network:
         return Nameservers().commit()
 
 
-def convert_to_biosdevname():
-    try:
-        import ovirtnode.ovirtfunctions as _functions
-    except:
-        pass
-
-    OVIRT_VARS = _functions.parse_defaults()
-    if not "BIOSDEVNAMES_CONVERSION" in OVIRT_VARS:
-        # check for appropriate bios version
-        cmd="dmidecode|grep SMBIOS|awk {'print $2'}"
-        proc = _functions.passthrough(cmd, log_func=logger.debug)
-        ver = proc.stdout.split()[0]
-        if not float(ver) >= 2.6:
-            logger.debug("Skipping biosdevname conversion, SMBIOS too old")
-            _functions.augtool("set", "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
-            return
-        nics = {}
-        cmd = "biosdevname -d"
-        biosdevname, err = subprocess.Popen(cmd, shell=True,
-                                          stdout=subprocess.PIPE).communicate()
-        biosdevname_output = biosdevname.splitlines()
-
-        for line in biosdevname_output:
-            if line is not None:
-                if "BIOS device:" in line:
-                    nic = line.split()[2]
-                if "Permanent" in line:
-                    mac = line.split()[2]
-                    nics[mac.upper()] = nic
-        logger.debug(nics)
-        scripts_path = "/etc/sysconfig/network-scripts"
-        logger.debug(glob(scripts_path + "/ifcfg-*"))
-        for file in glob(scripts_path + "/ifcfg-*"):
-            logger.debug("Processing %s" % file)
-            # get mac for matching
-            existing_mac = _functions.augtool_get("/files/" + file + "/HWADDR")
-            if not existing_mac is None:
-                existing_mac = existing_mac.strip('\"')
-            # check dictionary for mac
-            if not existing_mac is None and existing_mac.upper() in nics:
-                old_nic_script = os.path.basename(file)
-                new_nic_name = nics[existing_mac.upper()]
-                logger.debug("Found %s in %s" % (existing_mac, file))
-                # change device name within script file
-                logger.debug("Setting to new device name: %s" % new_nic_name)
-                _functions.augtool("set", \
-                                   "/files" + file + "/DEVICE", new_nic_name)
-                new_nic_file = "%s/ifcfg-%s" % (scripts_path, new_nic_name)
-                cmd = "cp %s %s" % (file, new_nic_file)
-                _functions.remove_config(file)
-                if _functions.system(cmd):
-                    logging.debug("Conversion on %s to %s succeed" % (file,
-                                  new_nic_file))
-                    _functions.ovirt_store_config(new_nic_file)
-                else:
-                    return False
-        _functions.system("service network restart")
-        _functions.augtool("set", \
-                       "/files/etc/default/ovirt/BIOSDEVNAMES_CONVERSION", "y")
-        _functions.ovirt_store_config("/etc/default/ovirt")
-    return True
-
-
 class SetDefaultBootproto(Transaction.Element):
     title = "Setting DHCP"
 

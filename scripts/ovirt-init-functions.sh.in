@@ -855,11 +855,7 @@ EOP
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
-        # convert ethX to biosdevnames before mounting config files
-        python <<EOP
-from ovirtnode.network import convert_to_biosdevname
-convert_to_biosdevname()
-EOP
+
         # Trigger mounting so logfiles are visible
         if [[ -e "/bin/systemctl" ]];
         then
