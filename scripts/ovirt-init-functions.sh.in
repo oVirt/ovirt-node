@@ -506,7 +506,7 @@ _start_ovirt_early () {
                     IFS="$oldIFS"
                 fi
             fi
-            if [ -z "$init" -a $iscsi_install == 1 ]; then
+            if [ -z "$init" -a "$iscsi_install" == 1 ]; then
                 log "Selected disk $i is not valid."
             fi
             ;;
@@ -893,6 +893,10 @@ EOP
                 >> $tmpaug
         fi
     done
+    # block accidental bootif changes on upgrades
+    if [ "$upgrade" != "1" ]; then
+        sed -i '/OVIRT_BOOTIF/d' $tmpaug
+    fi
     augtool $tmpaug
     . $OVIRT_DEFAULTS
     if [ "$firstboot" != "1" -a -f /etc/ovirt-crypttab ]; then
