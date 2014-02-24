@@ -785,6 +785,7 @@ fi
 %{_bindir}/ovirt-node-installer
 %{_bindir}/ovirt-node-doc
 %{_bindir}/ovirt-node-features
+%{_bindir}/ovirt-node-config
 
 
 

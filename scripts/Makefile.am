@@ -27,7 +27,8 @@ dist_bin_SCRIPTS = \
   ovirt-node-setup \
   ovirt-node-installer \
   ovirt-node-doc \
-  ovirt-node-features
+  ovirt-node-features \
+  ovirt-node-config
 
 dist_libexec_SCRIPTS = \
   ovirt-config-password \

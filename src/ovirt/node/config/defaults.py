@@ -734,6 +734,13 @@ class Hostname(NodeConfigFileSection):
         tx.append(UpdateHostname(hostname))
         return tx
 
+    def configure_hostname(self, hostname):
+        """Configure the hostname of this system
+        Args:
+            hostname: Hostname to be set
+        """
+        return self.update(hostname)
+
 
 class Nameservers(NodeConfigFileSection):
     """Configure nameservers
