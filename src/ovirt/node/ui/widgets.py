@@ -456,7 +456,8 @@ class Entry(NoticeDecoration):
         self._label = urwid.Text(label)
         self._label_attrmap = urwid.AttrMap(self._label,
                                             "plugin.widget.entry.label")
-        self._edit = EditWithChars(mask=mask, wrap="clip")
+        self._edit = urwid.Edit(mask=mask, wrap="clip",
+                                layout=UnderscoreRight())
         self._edit_attrmap = urwid.AttrMap(self._edit, "plugin.widget.entry")
         self._linebox = urwid.LineBox(self._edit_attrmap)
         self._linebox_attrmap = urwid.AttrMap(self._linebox,
@@ -705,27 +706,29 @@ class ProgressBarWidget(urwid.WidgetWrap):
         self._progressbar.set_completion(v)
 
 
-class EditWithChars(urwid.Edit):
-    """Is an Edit, but displaying self.char where not char is.
-    """
-    char = u"_"
-
-    def render(self, size, focus=False):
-        (maxcol,) = size
-        self._shift_view_to_cursor = bool(focus)
-
-        txt = self.get_edit_text()
-        if len(txt) > maxcol:
-            chop = len(txt) - maxcol
-            txt = txt[chop:]
-        txt = u"".join([self._mask] * len(txt)) if self._mask else txt
-        txt = txt.ljust(maxcol, self.char)[:maxcol]
-        canv = urwid.Text(txt).render((maxcol,))
-        if focus:
-            canv = urwid.CompositeCanvas(canv)
-            canv.cursor = self.get_cursor_coords((maxcol,))
-
-        return canv
+class UnderscoreRight(urwid.StandardTextLayout):
+    def layout(self, text, width, align, wrap):
+        s = urwid.StandardTextLayout.layout(self, text, width, align, wrap)
+        out = []
+        last_offset = 0
+        for row in s:
+            used = 0
+            for seg in row:
+                used += seg[0]
+                if len(seg) == 3:
+                    last_offset = seg[2]
+            if used == width:
+                out.append(row)
+                continue
+            fill = width - used
+            if fill == width:
+                #Fake out empty entries
+                row = [(1, 0, 1), (0, 1)]
+                last_offset = 1
+            if fill < 0:
+                fill = 1
+            out.append(row + [(fill, last_offset, '_'*fill)])
+        return out
 
 
 class TabablePile(urwid.Pile):
