@@ -46,15 +46,12 @@ class Plugin(plugins.NodePlugin):
         return 0
 
     def model(self):
-        bootif = defaults.Network().retrieve()["iface"]
-        vlanid = defaults.Network().retrieve()["vlanid"]
-        if vlanid:
-            bootif = "%s.%s" % (bootif, vlanid)
-
         mng = defaults.Management()
         managementifs = mng.retrieve()["managed_ifnames"]
 
-        primaryif = managementifs[0] if managementifs else bootif
+        # If prmiaryif == None, then the corretc NIC will be automatically be
+        # determined
+        primaryif = managementifs[0] if managementifs else None
 
         self.logger.debug("NIC for status: %s" % primaryif)
 
