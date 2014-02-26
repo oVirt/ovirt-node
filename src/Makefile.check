@@ -42,5 +42,6 @@ check-static-pylint: $(PYTHONSOURCES:%=%.pylint)
 check-static-pyflakes: $(PYTHONSOURCES:%=%.pyflakes)
 	@echo Passed $@
 
+PYFLAKES_BUILTINS = "_"
 %.pyflakes:
 	pyflakes "$*"
