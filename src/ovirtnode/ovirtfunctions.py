@@ -1725,7 +1725,7 @@ def is_efi_boot():
 
 def manage_firewall_port(port, action="open", proto="tcp"):
     if action == "open":
-        opt = "-A"
+        opt = "-I"
         logger.info("Opening port " + port)
     elif action == "close":
         opt = "-D"
