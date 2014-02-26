@@ -30,6 +30,9 @@ rm -f /etc/rc.d/init.d/libvirtd
 # since we run it every 10 minutes instead.
 rm -f /etc/cron.daily/logrotate
 
+# Logrotate more judiciously so the size of syslog stays under control
+sed -i '/^.*sharedscripts/a \    rotate 5\n    size 15M\n    compress' /etc/logrotate.d/syslog
+
 # root's bash profile
 cat >> /root/.bashrc << \EOF_bashrc
 # aliases used for the temporary
