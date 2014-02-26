@@ -221,11 +221,11 @@ title='Outer' at 0x...>
 
     elements = None
 
-    def __init__(self, title, elements=[]):
+    def __init__(self, title, elements=None):
         super(Transaction, self).__init__()
         self.title = title
         self._prepared_elements = []
-        self.elements = elements
+        self.elements = elements or []
 
     def prepare(self):
         self._prepared_elements = []
@@ -288,6 +288,12 @@ title='Outer' at 0x...>
 
     def __iter__(self):
         return self.elements.__iter__()
+
+    def append(self, value):
+        self.elements.append(value)
+
+    def extend(self, iterable):
+        self.elements.extend(iterable)
 
     def step(self):
         try:
