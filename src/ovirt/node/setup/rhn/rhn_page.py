@@ -139,7 +139,7 @@ class Plugin(plugins.NodePlugin):
 
         rhn_conf = get_rhn_config()
         status, rhn_type = get_rhn_status()
-        model["rhn.type"] = rhn_type.lower()
+        model["rhn.type"] = cfg["rhntype"]
         model["rhn.profilename"] = cfg["profile"]
         if RHN_XMLRPC_ADDR not in rhn_conf["serverURL"] and not sam_check():
             model["rhn.url"] = rhn_conf["serverURL"] if rhn_conf["serverURL"]\
@@ -183,6 +183,7 @@ class Plugin(plugins.NodePlugin):
                 }
 
     def ui_content(self):
+        cfg = rhn_model.RHN().retrieve()
         if self.application.args.dry:
             net_is_configured = True
         else:
@@ -203,8 +204,13 @@ class Plugin(plugins.NodePlugin):
                            "to use Red Hat Enterprise Linux with virtual " +
                            "guests subscriptions for your guests.")
             else:
+                rhntype = cfg["rhntype"]
+                if "satellite" in rhntype:
+                    rhntype = rhntype.title()
+                else:
+                    rhntype = rhntype.upper()
                 rhn_msg = "RHN Registration\n\nRegistration Status: %s" \
-                          % rhn_type
+                          % rhntype
 
             ws = [ui.Header("header[0]", rhn_msg),
                   ui.Entry("rhn.user", "Login:"),

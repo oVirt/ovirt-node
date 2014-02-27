@@ -22,7 +22,6 @@ from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.utils import process
 from ovirt.node.utils.fs import Config
-from ovirtnode.ovirtfunctions import unmount_config
 from urlparse import urlparse
 import sys
 import os.path
@@ -194,12 +193,19 @@ class RHN(NodeConfigFileSection):
                     sys.path.append("/usr/share/rhn")
                     from virtualization import support
                     support.refresh(True)
+                    # find old SAM/Sat 6 registrations
+                    if Config().exists("/etc/rhsm/rhsm.conf"):
+                        process.call(["subscription-manager",
+                                      "remove", "--all"])
+                        process.call(["subscription-manager", "clean"])
+                        Config().unpersist("/etc/rhsm/rhsm.conf")
                 except:
                     self.logger.exception("Failed to call: %s" % logged_args)
                     raise RuntimeError("Error registering to RHN account")
 
         class ConfigureSAM(utils.Transaction.Element):
-            title = "Configuring SAM"
+            # sam path is used for sat6 as well, making generic
+            title = "Registering to Server..."
 
             def commit(self):
                 cfg = RHN().retrieve()
@@ -270,9 +276,15 @@ class RHN(NodeConfigFileSection):
                 smconf.append(host)
                 smconf.append('--server.port')
                 smconf.append(port)
-                smconf.append('--server.prefix')
-                smconf.append(prefix)
-
+                if not cacert.endswith(".pem"):
+                    smconf.append('--server.prefix')
+                    smconf.append(prefix)
+                else:
+                    smconf.append('--rhsm.baseurl')
+                    if prefix:
+                        smconf.append("%s/%s" % (host, prefix))
+                    else:
+                        smconf.append(host + '/pulp/repos')
                 if cacert:
                     smconf.append('--rhsm.repo_ca_cert')
                     smconf.append('/etc/rhsm/ca/candlepin-local.pem')
@@ -319,8 +331,9 @@ class RHN(NodeConfigFileSection):
 
                 rhsm_configs = (["/var/lib/rhsm/cache/installed_products.json",
                                  "/var/lib/rhsm/facts/facts.json"])
-                unmount_config(rhsm_configs)
-                unmount_config(glob.glob("/etc/pki/consumer/*pem"))
+                [Config().unpersist(f) for f in rhsm_configs]
+                [Config().unpersist(f) for f in
+                 glob.glob("/etc/pki/consumer/*pem")]
 
                 def unlink_if_exists(f):
                     if os.path.exists(f):
@@ -362,9 +375,10 @@ class RHN(NodeConfigFileSection):
         cfg = self.retrieve()
         self.logger.debug(cfg)
         rhntype = cfg["rhntype"]
+        cacert = cfg["ca_cert"]
         tx = utils.Transaction("Performing RHN Registration")
 
-        if rhntype == "sam":
+        if rhntype == "sam" or cacert.endswith(".pem"):
             tx.append(ConfigureSAM())
         else:
             tx.append(ConfigureRHNClassic())
