@@ -228,5 +228,7 @@ class CustomDeviceDialog(ui.Dialog):
                     device_entry]
         super(CustomDeviceDialog, self).__init__("%s.dialog" % path_prefix,
                                                  title, children)
-        self.buttons = [ui.SaveButton("dialog.device.custom.save"),
-                        ui.CloseButton("dialog.device.custom.close", "Cancel")]
+        self.buttons = [ui.SaveButton("dialog.device.custom.save", "Save",
+                                      enabled=False),
+                        ui.CloseButton("dialog.device.custom.close",
+                                       "Cancel")]
