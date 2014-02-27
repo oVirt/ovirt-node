@@ -981,8 +981,10 @@ class Collectd(NodeConfigFileSection):
             def commit(self):
                 # pylint: disable-msg=E0611
                 from ovirt_config_setup import collectd  # @UnresolvedImport
+                from ovirtnode.ovirtfunctions import ovirt_store_config
                 # pylint: enable-msg=E0611
                 if collectd.write_collectd_config(server, port):
+                    ovirt_store_config("/etc/collectd.conf")
                     self.logger.debug("Collectd was configured successfully")
                 else:
                     raise exceptions.TransactionError("Failed to configure " +

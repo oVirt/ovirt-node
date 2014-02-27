@@ -30,7 +30,6 @@ OVIRT_CONFIG_FILES="\
  /etc/ssh/ssh_host*_key*                        \
  /etc/default/ovirt                             \
  /etc/sysconfig/network                         \
- /etc/collectd.conf                             \
  /etc/libvirt/qemu/                             \
  /etc/ssh/sshd_config                           \
  /etc/pki                                       \
