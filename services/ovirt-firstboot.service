@@ -6,7 +6,7 @@ Before=getty@tty1.service
 [Service]
 Environment=RUNLEVEL=3
 Type=oneshot
-ExecStartPre=-/bin/plymouth quit
+ExecStartPre=-/usr/bin/plymouth quit
 ExecStart=/usr/libexec/ovirt-init-functions.sh start_ovirt_firstboot
 ExecStop=/usr/libexec/ovirt-init-functions.sh stop_ovirt_firstboot
 RemainAfterExit=yes
