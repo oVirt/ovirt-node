@@ -63,6 +63,7 @@ Requires:       dbus-python
 Requires:       python-gudev
 Requires:       python-urwid
 Requires:       python-lockfile
+Requires:       python-lxml
 Requires:       PyPAM
 Requires:       ethtool
 Requires:       cracklib-python
