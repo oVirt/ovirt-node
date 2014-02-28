@@ -207,6 +207,19 @@ title='Outer' at 0x...>
     Step D
     True
 
+    >>> tx = Transaction("First", [StepA()])
+    >>> tx += Transaction("Second", [StepB()])
+    >>> tx  #doctest: +ELLIPSIS
+    <Transaction elements='[<StepA 'None'>, <StepB 'None'>]' \
+title='First' at 0x...>
+
+    >>> tx = Transaction("First", [StepA()])
+    >>> tx += [StepB()]
+    >>> tx  #doctest: +ELLIPSIS
+    <Transaction elements='[<StepA 'None'>, <StepB 'None'>]' \
+title='First' at 0x...>
+
+
     >>> txs = [
     ...     Transaction("Step A", [StepA()]),
     ...     Transaction("Step B", [StepB()])
@@ -288,6 +301,10 @@ title='Outer' at 0x...>
 
     def __iter__(self):
         return self.elements.__iter__()
+
+    def __iadd__(self, iterable):
+        self.extend(iterable)
+        return self
 
     def append(self, value):
         self.elements.append(value)
