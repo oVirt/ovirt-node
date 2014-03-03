@@ -726,6 +726,8 @@ class UnderscoreRight(urwid.StandardTextLayout):
                 #Fake out empty entries
                 row = [(1, 0, 1), (0, 1)]
                 last_offset = 1
+            if fill < 0:
+                fill = 1
             out.append(row + [(fill, last_offset, '_'*fill)])
         return out
 
