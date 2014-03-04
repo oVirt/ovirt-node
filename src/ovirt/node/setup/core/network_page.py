@@ -32,6 +32,13 @@ TODO use inotify+thread or so to monitor resolv.conf/ntp.conf for changes and
 """
 
 
+def has_managed_ifnames():
+    """Determin if any NIC is managed
+    """
+    mgmt = defaults.Management()
+    return mgmt.has_managed_ifnames()
+
+
 class NicTable(ui.Table):
     def __init__(self, path, height=3, multi=False):
         header = "Device  Status       Model         MAC Address"
@@ -54,7 +61,11 @@ class NicTable(ui.Table):
         for name, nic in sorted(model.nics().items()):
             if first_nic is None:
                 first_nic = name
-            is_cfg = "Configured" if nic.is_configured() else "Unconfigured"
+            if has_managed_ifnames():
+                is_cfg = "Managed"
+            else:
+                is_cfg = ("Configured" if nic.is_configured() else
+                          "Unconfigured")
             description = " ".join([justify(nic.ifname, 7),
                                     justify(is_cfg, 12),
                                     justify(nic.vendor, 13),
@@ -184,6 +195,18 @@ class Plugin(plugins.NodePlugin):
         page = ui.Page("page", ws)
         # Save it "locally" as a dict, for better accessability
         self.widgets.add(page)
+
+        #
+        # NIC Deatils Dialog and Bond creation is disabled
+        # when Node is managed
+        #
+        if has_managed_ifnames():
+            self._nic_details_group.enabled(False)
+            self.widgets["button.toggle_bond"].enabled(False)
+            nictbl = self.widgets["nics"]
+            nictbl.on_activate.clear()
+            nictbl.label(nictbl.label() + " (read-only/managed)")
+
         return page
 
     def _build_dialog(self, path, txt, widgets):

@@ -1583,3 +1583,9 @@ class Management(NodeConfigFileSection):
 
     def transaction(self):
         return None
+
+    def is_managed(self):
+        return True if self.retrieve()["managed_by"] else False
+
+    def has_managed_ifnames(self):
+        return True if self.retrieve()["managed_ifnames"] else False
