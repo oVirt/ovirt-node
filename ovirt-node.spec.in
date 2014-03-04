@@ -267,8 +267,8 @@ Requires:         selinux-policy >= %{selinux_policyver}
 %endif
 Requires:         %{name} = %{version}-%{release}
 Requires:         selinux-policy-base
-Requires(post):   /usr/sbin/semodule, /usr/sbin/restorecon
-Requires(postun): /usr/sbin/semodule, /usr/sbin/restorecon
+Requires(post):   policycoreutils
+Requires(postun): policycoreutils
 
 %description selinux
 SELinux policy module supporting %{product_family}
@@ -281,7 +281,6 @@ do
 done
 # Is this to greedy?
 /sbin/restorecon -R / || :
-/usr/sbin/fixfiles -R -a restore
 
 # set SELinux booleans
 # rhbz#502779 restrict certain memory protection operations
