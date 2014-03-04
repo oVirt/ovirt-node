@@ -488,7 +488,7 @@ class UIElements(base.Base):
         self.add(widgets)
 
     def subset(self, paths):
-        return [self[p] for p in paths]
+        return [self[p] for p in paths if p in self]
 
     def group(self, paths):
         """Group the specified (by-path) widgets
