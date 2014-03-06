@@ -879,6 +879,16 @@ class LiveImageEditor(LiveImageCreator):
         os.system("rm -rf %s" % isodir)
         return
 
+    def _update_pkgs(self, options):
+        self._setup_dns()
+        if not self._setup_yum_repo(options):
+            return False
+        if not self._run_yum_update(options.update.split(",")):
+            return False
+        else:
+            self._cleanup_editing()
+            return True
+
     def _install_pkgs(self, options):
         self._setup_dns()
         if not self._setup_yum_repo(options):
@@ -1300,6 +1310,10 @@ def parse_options(args):
                                                "driver update packages " +
                                                "to install")
 
+    parser.add_option("--update", type="string",
+                      dest="update", help="comma delimited list of packages" +
+                                           " to update (needs --repo)")
+
     parser.add_option("--repo", type="string",
                       dest="repo",
                       help="Specify yum repo file or yum repository on the"
@@ -1501,6 +1515,9 @@ def main():
                                       "Package : %s" % options.install_dup)
                         failed = True
                         #raise RuntimeError("Unable to Install Package")
+                if options.update:
+                    print("Updating packages: %s" % options.update)
+                    editor._update_pkgs(options)
                 if not options.password is None:
                     print "Setting Account Passwords"
                     editor._set_password(options)
