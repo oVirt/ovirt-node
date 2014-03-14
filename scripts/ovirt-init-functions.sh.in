@@ -881,7 +881,7 @@ EOP
         fi
     done
     # block accidental bootif changes on upgrades
-    if [ "$upgrade" != "1" ]; then
+    if [ "$upgrade" == "1" ]; then
         sed -i '/OVIRT_BOOTIF/d' $tmpaug
     fi
     augtool $tmpaug
