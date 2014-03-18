@@ -68,6 +68,9 @@ cat > /etc/sysconfig/iptables << \EOF
 -A INPUT -p tcp --dport 16514 -j ACCEPT
 # SSH
 -A INPUT -p tcp --dport 22 -j ACCEPT
+# gluster
+-A INPUT -p tcp --dport 24007 -j ACCEPT
+-A INPUT -p tcp --dport 24009:24109 -j ACCEPT
 # guest consoles
 -A INPUT -p tcp -m multiport --dports 5634:6166 -j ACCEPT
 # migration
