@@ -71,6 +71,7 @@ patch
 e2fsprogs
 sysfsutils
 less
+iotop
 # Autotest support rhbz#631795
 dosfstools
 # kdump
