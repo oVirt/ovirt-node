@@ -1212,7 +1212,13 @@ enabled=1
             dracut_conf.write('add_dracutmodules+="dmsquash-live"\n')
             # ensure that isofs is included - needed to boot from a LiveCD
             dracut_conf.write('add_drivers+="isofs"\n')
+            dracut_conf.write('hostonly="no"\n')
             dracut_conf.close()
+        cmd = 'sed -ie \'s/^hostonly="yes"/hostonly="no"/\' ' + \
+              '/usr/lib/dracut/dracut.conf.d/01-dist.conf'
+        f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
+                             preexec_fn=self._chroot)
+        output, err = f.communicate()
         cmd = "rpm -q kernel"
         f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
                              preexec_fn=self._chroot)

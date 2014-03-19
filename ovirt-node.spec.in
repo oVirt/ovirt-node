@@ -74,6 +74,7 @@ Requires:       PyPAM
 Requires:       ethtool
 Requires:       cracklib-python
 Requires:       dracut
+Requires:       openssh-server
 %if %{is_el6}
 Requires:       /bin/hostname
 %else

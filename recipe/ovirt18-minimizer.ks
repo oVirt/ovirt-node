@@ -1,4 +1,7 @@
 # Fedora specific image minimization
+drop /usr/sbin/wpa*
+drop /usr/sbin/eapol_test
+droprpm gsettings-desktop-schemas
 
 # qemu minimization
 droprpm qemu-system-alpha
@@ -24,7 +27,7 @@ droprpm cups-libs
 droprpm ghostscript
 droprpm ghostscript-fonts
 droprpm fuse
-droprpm fuse-libs
+droprpm zfs-fuse
 droprpm gfs2-utils
 droprpm hfsplus-tools
 droprpm lcms2

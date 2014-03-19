@@ -269,6 +269,7 @@ drop /usr/lib*/libboost*
 keep /usr/lib*/libboost_program_options.so*
 keep /usr/lib*/libboost_filesystem.so*
 keep /usr/lib*/libboost_thread-mt.so*
+keep /usr/lib*/libboost_thread.so*
 keep /usr/lib*/libboost_system.so*
 keep /usr/lib*/libboost_system-mt.so*
 keep /usr/lib*/libboost_chrono-mt.so*

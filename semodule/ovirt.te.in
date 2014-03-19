@@ -4,6 +4,7 @@ policy_module(ovirt, 1.0)
 # seinfo -t<type>
 gen_require(`
 @SEMODULE_NOT_EL6@    type collectd_t;
+@SEMODULE_NOT_EL6@    type NetworkManager_t;
 @SEMODULE_NOT_EL6@    type passwd_file_t;
 @SEMODULE_NOT_EL6@    type virtd_exec_t;
 @SEMODULE_NOT_EL6@    type virtd_t;
@@ -51,6 +52,7 @@ gen_require(`
 #============= systemd_localed_t ==============
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t etc_t:file { write rename create setattr };
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t init_t:dbus send_msg;
+@SEMODULE_WITH_SYSTEMD@allow systemd_localed_t initrc_t:dbus send_msg;
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t systemd_unit_file_t:service start;
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t ovirt_t:dbus send_msg;
 
@@ -70,7 +72,13 @@ allow initrc_t unconfined_t:process dyntransition;
 
 
 #============= loadkeys_t ==============
-allow loadkeys_t initrc_tmp_t:file read;
+require {
+    type console_device_t;
+    type tmp_t;
+}
+allow loadkeys_t initrc_tmp_t:file { open read };
+allow loadkeys_t tmp_t:file { open read };
+allow loadkeys_t console_device_t:chr_file open;
 
 
 #============= local_login_t ==============
@@ -133,6 +141,8 @@ allow sysstat_t var_log_t:file { open read };
 
 #============= tuned_t ==============
 allow tuned_t ovirt_t:dbus send_msg;
+allow tuned_t init_t:dbus send_msg;
+allow tuned_t initrc_t:dbus send_msg;
 
 
 #============= iscsid_t ==============
@@ -321,6 +331,15 @@ require {
 }
 allow netutils_t dhcpc_t:udp_socket { read write };
 allow netutils_t tmpfs_t:dir search;
+
+
+#============= NetworkManager_t ==============
+optional_policy(`
+    require {
+        type NetworkManager_t;
+    }
+    allow NetworkManager_t tmpfs_t:dir { read };
+')
 
 
 #============= sshd_keygen_t ==============

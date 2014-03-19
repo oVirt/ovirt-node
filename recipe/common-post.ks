@@ -176,6 +176,39 @@ EOF_nfs
 # sosreport fixups for node image:
 # use .pyc for plugins enumeration, .py is blacklisted
 # include *-release
+if [[ $(rpm -E "%{?fedora}") = 20 ]];then
+patch --fuzz 3 -d /usr/lib/python2.7/site-packages/sos -p0 <<  \EOF_sos_patch
+--- utilities.py.orig    2013-08-04 08:36:51.000000000 -0700
++++ utilities.py   2014-03-18 15:25:02.675059445 -0700
+@@ -296,13 +296,13 @@
+         plugins = [self._plugin_name(plugin)
+                 for plugin in list_
+                 if "__init__" not in plugin
+-                and plugin.endswith(".py")]
++                and plugin.endswith(".pyc")]
+         plugins.sort()
+         return plugins
+
+     def _find_plugins_in_dir(self, path):
+         if os.path.exists(path):
+-            py_files = list(find("*.py", path))
++            py_files = list(find("*.pyc", path))
+             pnames = self._get_plugins_from_list(py_files)
+             if pnames:
+                 return pnames
+--- plugins/general.py.orig  2014-03-18 15:07:20.570811354 -0700
++++ plugins/general.py  2014-03-18 15:28:49.371866760 -0700
+@@ -51,8 +51,7 @@
+         super(RedHatGeneral, self).setup()
+
+         self.add_copy_specs([
+-            "/etc/redhat-release",
+-            "/etc/fedora-release",
++            "/etc/*-release",
+         ])
+EOF_sos_patch
+
+else
 patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
 --- sosreport.py.orig	2011-04-07 11:51:40.000000000 +0000
 +++ sosreport.py	2011-07-06 13:26:44.000000000 +0000
@@ -203,6 +236,8 @@ patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
          self.addCopySpec("/etc/sos.conf")
          self.addCopySpec("/etc/sysconfig")
 EOF_sos_patch
+fi
+
 python -m compileall /usr/lib/python2.*/site-packages/sos
 
 # XXX someting is wrong with readonly-root and dracut
