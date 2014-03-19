@@ -138,38 +138,18 @@ class Plugin(plugins.NodePlugin):
                  "rhn.proxypassword": "",
                  }
 
-        rhn_conf = get_rhn_config()
         status, rhn_type = get_rhn_status()
         model["rhn.username"] = cfg["username"]
         model["rhn.type"] = cfg["rhntype"]
         model["rhn.profilename"] = cfg["profile"]
-        if RHN_XMLRPC_ADDR not in rhn_conf["serverURL"] and not sam_check():
-            model["rhn.url"] = rhn_conf["serverURL"] if rhn_conf["serverURL"]\
-                != "https://enter.your.server.url.here/XMLRPC" else ""
-            model["rhn.ca"] = rhn_conf["sslCACert"] if rhn_conf["sslCACert"] \
-                != "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT" else ""
-        elif sam_check():
-            if SAM_REG_ADDR not in rhn_conf["hostname"]:
-                model["rhn.url"] = "https://%s" % rhn_conf["hostname"]
-                if os.path.exists(CANDLEPIN_CERT_FILE):
-                    model["rhn.ca"] = CANDLEPIN_CERT_FILE
-        if "proxyUser" in rhn_conf and "proxyPassword" in rhn_conf:
-            if len(rhn_conf["proxyUser"]) > 0:
-                model["rhn.proxyuser"] = rhn_conf["proxyUser"]
-                model["rhn.proxypassword"] = rhn_conf["proxyPassword"]
-        elif "proxy_user" in rhn_conf and "proxy_password" in rhn_conf:
-            model["rhn.proxyuser"] = rhn_conf["proxy_user"]
-            model["rhn.proxypassword"] = rhn_conf["proxy_password"]
+        model["rhn.url"] = cfg["url"]
+        model["rhn.ca"] = cfg["ca_cert"]
+        model["rhn.proxyuser"] = cfg["proxyuser"]
         try:
-            p_server, p_port = rhn_conf["httpProxy"].rsplit(":", 1)
+            p_server, p_port = cfg["proxy"].rsplit(":", 1)
             model["rhn.proxyhost"] = p_server
             model["rhn.proxyport"] = p_port
         except:
-            try:
-                model["rhn.proxyhost"] = rhn_conf["proxy_hostname"]
-                model["rhn.proxyport"] = rhn_conf["proxy_port"]
-            except:
-                pass
             pass
         return model
 
@@ -304,6 +284,7 @@ class Plugin(plugins.NodePlugin):
                 return self._error_dialog
             else:
                 model = rhn_model.RHN()
+                model.clear()
                 # join proxy host/port
                 self.logger.debug(proxyhost)
                 self.logger.debug(proxyport)
