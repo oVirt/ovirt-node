@@ -664,7 +664,7 @@ class Filesystem(base.Base):
                 device = process.check_output(["blkid", "-c", "/dev/null",
                                                "-L", label], stderr=DEVNULL)
 
-            fs = Filesystem(label, device)
+            fs = Filesystem(device)
 
         except process.CalledProcessError as e:
             LOGGER.debug("Failed to resolve disks: %s" % e.cmd, exc_info=True)
