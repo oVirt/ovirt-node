@@ -29,6 +29,9 @@ from ovirt.node.plugins import Changeset
 
 class Plugin(plugins.NodePlugin):
     _model = None
+    _intervals = [("daily", "Daily"),
+                  ("weekly", "Weekly"),
+                  ("monthly", "Monthly")]
 
     def name(self):
         return _("Logging")
@@ -43,6 +46,7 @@ class Plugin(plugins.NodePlugin):
 
         model = {}
         model["logrotate.max_size"] = logrotate["max_size"] or "1024"
+        model["logrotate.interval"] = logrotate["interval"] or "daily"
 
         model["rsyslog.address"] = syslog["server"] or ""
         model["rsyslog.port"] = syslog["port"] or "514"
@@ -56,6 +60,8 @@ class Plugin(plugins.NodePlugin):
         """Validators validate the input on change and give UI feedback
         """
         return {"logrotate.max_size": valid.Number(bounds=[0, None]),
+                "logrotate.interval": valid.Options(dict(
+                    self._intervals).keys()),
                 "rsyslog.address": (valid.Empty() | valid.FQDNOrIPAddress()),
                 "rsyslog.port": valid.Port(),
                 "netconsole.address": (valid.Empty() |
@@ -67,8 +73,14 @@ class Plugin(plugins.NodePlugin):
     def ui_content(self):
 
         ws = [ui.Header("header[0]", _("Logging")),
+              ui.Label("logrotate.header",
+                       _("The logs will be rotated at the ") +
+                       _("specified size not more often than the ") +
+                       _("set inerval")),
               ui.Entry("logrotate.max_size", _("Logrotate Max Log ") +
                        _("Size (KB):")),
+              ui.Options("logrotate.interval", _("Interval"),
+                         self._intervals),
               ui.Divider("divider[0]")
               ]
 
@@ -117,7 +129,7 @@ class Plugin(plugins.NodePlugin):
         txs = utils.Transaction(_("Updating logging related configuration"))
 
         # If any logrotate key changed ...
-        logrotate_keys = ["logrotate.max_size"]
+        logrotate_keys = ["logrotate.max_size", "logrotate.interval"]
         if changes.contains_any(logrotate_keys):
             # Get all logrotate values fomr the effective model
             model = defaults.Logrotate()

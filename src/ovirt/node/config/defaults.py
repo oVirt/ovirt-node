@@ -1284,20 +1284,33 @@ class Logrotate(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = Logrotate(fs.FakeFs.File("dst"))
     >>> max_size = "42"
-    >>> _ = n.update(max_size)
+    >>> _ = n.update(max_size, None)
     >>> n.retrieve().items()
-    [('max_size', '42')]
+    [('interval', 'daily'), ('max_size', '42')]
+    >>> interval = "weekly"
+    >>> n.update(max_size, interval)
+    >>> n.retrieve().items()
+    [('interval', 'weekly'), ('max_size', '42')]
     """
+
     # FIXME this key is new!
-    keys = ("OVIRT_LOGROTATE_MAX_SIZE",)
+    keys = ("OVIRT_LOGROTATE_MAX_SIZE", "OVIRT_LOGROTATE_INTERVAL")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, max_size):
+    def update(self, max_size, interval):
         valid.Number([0, None])(max_size)
+        if not interval in ["daily", "weekly", "monthly", None]:
+            raise InvalidData("Update interval must be a valid logrotate "
+                              "schedule period or None")
+
+        return {"OVIRT_LOGROTATE_MAX_SIZE": max_size,
+                "OVIRT_LOGROTATE_INTERVAL": "daily" if interval is None
+                else interval}
 
     def transaction(self):
         cfg = dict(self.retrieve())
-        max_size = cfg["max_size"]
+        max_size = cfg["max_size"] or 1024
+        interval = cfg["interval"] or "daily"
 
         class CreateLogrotateConfig(utils.Transaction.Element):
             title = "Setting logrotate maximum logfile size"
@@ -1305,12 +1318,24 @@ class Logrotate(NodeConfigFileSection):
             def commit(self):
                 from ovirtnode.ovirtfunctions import ovirt_store_config
                 aug = utils.AugeasWrapper()
-                aug.set("/files/etc/logrotate.d/ovirt-node/rule/size",
+                aug.set("/files/etc/logrotate.d/ovirt-node/rule/minsize",
                         max_size)
                 ovirt_store_config("/etc/logrotate.d/ovirt-node")
 
+        class SetLogrotateInterval(utils.Transaction.Element):
+            title = "Setting logrotate interval"
+
+            def commit(self):
+                from ovirtnode.ovirtfunctions import ovirt_store_config
+                aug = utils.AugeasWrapper()
+                aug.set("/files/etc/logrotate.d/ovirt-node/rule/schedule",
+                        interval)
+                ovirt_store_config("/etc/logrotate.d/ovirt-node")
+
         tx = utils.Transaction("Configuring logrotate")
+
         tx.append(CreateLogrotateConfig())
+        tx.append(SetLogrotateInterval())
         return tx
 
 
