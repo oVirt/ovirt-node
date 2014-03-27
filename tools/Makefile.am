@@ -17,7 +17,8 @@
 
 dist_sbin_SCRIPTS = \
   edit-node \
-  testable-node
+  testable-node \
+  image-minimizer
 
 EXTRA_DIST = \
   edit-node.8

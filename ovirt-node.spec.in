@@ -14,6 +14,9 @@
 # Igor can only be shipped on Fedora (because of python-uinput)
 %define with_igor 0%{?is_min_f19}
 
+# The minimizer is only bundled on el6, because it is available on Fedora
+%define with_minimizer 0%{?is_el6}
+
 
 Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
@@ -120,7 +123,7 @@ Requires:       livecd-tools >= 13.4.4
 %else
 Requires:       livecd-tools >= 1:16.0
 %endif
-Requires:       appliance-tools-minimizer
+Requires:       ovirt-node-minimizer
 Requires:       libselinux-python
 
 %define tools_root %{_datadir}/ovirt-node-tools
@@ -354,6 +357,24 @@ fi
 %endif
 
 
+#
+# minimizer subpackage
+#
+%if 0%{?with_minimizer}
+%package minimizer
+Summary:        The image-minimizer tool
+Group:          Applications/System
+Obsoletes:      appliance-tools-minimizer
+
+
+%description minimizer
+This package ships the image-minimizer tool.
+This tool is used to remove unneeded rpms and files from a filesystem tree.
+
+# </minimizer subpackage>
+%endif
+
+
 %prep
 %setup -q
 
@@ -423,6 +444,11 @@ rm -vf %{buildroot}/etc/rc.d/init.d/ovirt-node-igor-slave \
        %{buildroot}/usr/libexec/ovirt-node-igor-slave
 %endif
 
+# Remove minimizer if unneeded
+%if ! 0%{?with_minimizer}
+rm -vf %{buildroot}/%{_sbindir}/image-minimizer
+%endif
+
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -472,6 +498,11 @@ EOF_multipath_conf2
 # remove symlink to keep original redhat-release
 rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
+
+# Remove minimizer if not needed
+%if ! 0%{?with_minimizer}
+rm -v %{buildroot}/%{_sbindir}/image-minimizer
+%endif
 
 # Remove igor stuff if not needed
 %if ! 0%{?with_igor}
@@ -591,6 +622,12 @@ fi
 %defattr(-,root,root,0755)
 %doc semodule/*.fc semodule/*.te
 %{_datadir}/selinux/*/%{modulename}.pp
+
+
+%if 0%{?with_minimizer}
+%files minimizer
+%{_sbindir}/image-minimizer
+%endif
 
 
 %files

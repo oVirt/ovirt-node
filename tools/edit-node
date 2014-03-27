@@ -1047,8 +1047,9 @@ enabled=1
 
     def _minimize(self):
         print "Running Minimizer"
-        minimizer = "/usr/bin/image-minimizer"
-        if os.path.exists(minimizer):
+        minimizer = "image-minimizer"
+        if (os.path.exists("/usr/bin/" + minimizer) or
+            os.path.exists("/usr/sbin/" + minimizer)):
             print glob.glob("%s/etc/ovirt-plugins.d/*.minimize"
                             % self._instroot)
             for f in glob.glob("%s/etc/ovirt-plugins.d/*.minimize"
