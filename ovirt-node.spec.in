@@ -11,6 +11,9 @@
 %define dracutdir %(test -e /usr/share/dracut && echo "/usr/share/dracut/modules.d" || echo "/usr/lib/dracut/modules.d")
 %define is_el6 %(test 0%{?centos} -eq 06 || test 0%{?rhel} -eq 06 && echo 1 || echo 0)
 
+# Igor can only be shipped on Fedora (because of python-uinput)
+%define with_igor 0%{?is_min_f19}
+
 
 Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
@@ -298,11 +301,13 @@ fi
 #
 # Igor service subpackage
 #
+%if 0%{?with_igor}
 %package plugin-igor-slave
 Summary:        Igor slave plugin for %{product_family}
 Group:          Applications/System
 
-%if %{is_systemd}
+Requires:       igor-common
+%if 0%{?is_systemd}
 BuildRequires:  systemd-units
 Requires:       systemd
 %else
@@ -320,7 +325,7 @@ is responsible for running testcase offered by an igor server.
 
 
 %post plugin-igor-slave
-%if %{is_systemd}
+%if 0%{?is_systemd}
 if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
@@ -328,6 +333,24 @@ if [ $1 -eq 1 ] ; then
 fi
 %else
 /sbin/chkconfig --add ovirt-node-igor-slave >/dev/null 2>&1 || :
+%endif
+
+
+%preun plugin-igor-slave
+%if ! %{is_systemd}
+if [ $1 = 0 ] ; then
+    /sbin/service ovirt-node-igor-slave stop >/dev/null 2>&1
+    /sbin/chkconfig --del ovirt-node-igor-slave
+fi
+%else
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /bin/systemctl --no-reload disable ovirt-node-igor-slave.service > /dev/null 2>&1 || :
+    /bin/systemctl stop ovirt-node-igor-slave.service > /dev/null
+fi
+%endif
+
+# </Igor service subpackage>
 %endif
 
 
@@ -394,6 +417,12 @@ cd -
 
 /usr/sbin/hardlink -cv %{buildroot}%{_datadir}/selinux
 
+# Remove igor stuff if not needed
+%if ! 0%{?with_igor}
+rm -vf %{buildroot}/etc/rc.d/init.d/ovirt-node-igor-slave \
+       %{buildroot}/usr/libexec/ovirt-node-igor-slave
+%endif
+
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -444,6 +473,13 @@ EOF_multipath_conf2
 rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
 
+# Remove igor stuff if not needed
+%if ! 0%{?with_igor}
+rm -v %{buildroot}/etc/rc.d/init.d/ovirt-node-igor-slave \
+      %{buildroot}/usr/libexec/ovirt-node-igor-slave
+%endif
+
+
 
 %preun
 /sbin/chkconfig --level 35 netconsole off
@@ -485,21 +521,6 @@ if [ $1 -eq 0 ] ; then
     # Package removal, not upgrade
     /bin/systemctl --no-reload disable ovirt-cim.service > /dev/null 2>&1 || :
     /bin/systemctl stop ovirt-cim.service > /dev/null
-fi
-%endif
-
-
-%preun plugin-igor-slave
-%if ! %{is_systemd}
-if [ $1 = 0 ] ; then
-    /sbin/service ovirt-node-igor-slave stop >/dev/null 2>&1
-    /sbin/chkconfig --del ovirt-node-igor-slave
-fi
-%else
-if [ $1 -eq 0 ] ; then
-    # Package removal, not upgrade
-    /bin/systemctl --no-reload disable ovirt-node-igor-slave.service > /dev/null 2>&1 || :
-    /bin/systemctl stop ovirt-node-igor-slave.service > /dev/null
 fi
 %endif
 
@@ -555,13 +576,14 @@ fi
 %{_initrddir}/ovirt-cim
 %endif
 
-
+%if 0%{?with_igor}
 %files plugin-igor-slave
 %{_libexecdir}/ovirt-node-igor-slave
 %if %{is_systemd}
 %{_unitdir}/ovirt-node-igor-slave.service
 %else
 %{_initrddir}/ovirt-node-igor-slave
+%endif
 %endif
 
 
