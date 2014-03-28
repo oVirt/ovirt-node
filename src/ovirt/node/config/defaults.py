@@ -208,7 +208,7 @@ class Network(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = Network(fs.FakeFs.File("dst"))
-    >>> n.update("eth0", None, "10.0.0.1", "255.0.0.0", "10.0.0.255",
+    >>> _ = n.update("eth0", None, "10.0.0.1", "255.0.0.0", "10.0.0.255",
     ...          "20")
     >>> data = sorted(n.retrieve().items())
     >>> data[:3]
@@ -459,7 +459,7 @@ class NicBonding(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = NicBonding(fs.FakeFs.File("dst"))
-    >>> n.update("bond0", ["ens1", "ens2", "ens3"], "mode=4")
+    >>> _ = n.update("bond0", ["ens1", "ens2", "ens3"], "mode=4")
     >>> data = sorted(n.retrieve().items())
     >>> data[:2]
     [('name', 'bond0'), ('options', 'mode=4')]
@@ -573,7 +573,7 @@ class NetworkLayout(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = NetworkLayout(fs.FakeFs.File("dst"))
-    >>> n.update("bridged")
+    >>> _ = n.update("bridged")
     >>> sorted(n.retrieve().items())
     [('layout', 'bridged')]
     """
@@ -613,7 +613,7 @@ class IPv6(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = IPv6(fs.FakeFs.File("dst"))
-    >>> n.update("auto", "11::22", "42", "11::44")
+    >>> _ = n.update("auto", "11::22", "42", "11::44")
     >>> data = sorted(n.retrieve().items())
     >>> data[0:3]
     [('bootproto', 'auto'), ('gateway', '11::44'), ('ipaddr', '11::22')]
@@ -674,7 +674,7 @@ class Hostname(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = Hostname(fs.FakeFs.File("dst"))
     >>> hostname = "host.example.com"
-    >>> n.update(hostname)
+    >>> _ = n.update(hostname)
     >>> n.retrieve()
     {'hostname': 'host.example.com'}
     """
@@ -739,11 +739,11 @@ class Nameservers(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = Nameservers(fs.FakeFs.File("dst"))
     >>> servers = ["10.0.0.2", "10.0.0.3"]
-    >>> n.update(servers)
+    >>> _ = n.update(servers)
     >>> data = n.retrieve()
     >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
     True
-    >>> n.update([])
+    >>> _ = n.update([])
     >>> n.retrieve()
     {'servers': None}
     """
@@ -838,11 +838,11 @@ class Timeservers(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = Timeservers(fs.FakeFs.File("dst"))
     >>> servers = ["10.0.0.4", "10.0.0.5", "0.example.com"]
-    >>> n.update(servers)
+    >>> _ = n.update(servers)
     >>> data = n.retrieve()
     >>> all([servers[idx] == s for idx, s in enumerate(data["servers"])])
     True
-    >>> n.update([])
+    >>> _ = n.update([])
     >>> n.retrieve()
     {'servers': None}
     """
@@ -920,7 +920,7 @@ class Syslog(NodeConfigFileSection):
     >>> n = Syslog(fs.FakeFs.File("dst"))
     >>> server = "10.0.0.6"
     >>> port = "514"
-    >>> n.update(server, port)
+    >>> _ = n.update(server, port)
     >>> sorted(n.retrieve().items())
     [('port', '514'), ('server', '10.0.0.6')]
     """
@@ -958,7 +958,7 @@ class Collectd(NodeConfigFileSection):
     >>> n = Collectd(fs.FakeFs.File("dst"))
     >>> server = "10.0.0.7"
     >>> port = "42"
-    >>> n.update(server, port)
+    >>> _ = n.update(server, port)
     >>> sorted(n.retrieve().items())
     [('port', '42'), ('server', '10.0.0.7')]
     """
@@ -1005,7 +1005,7 @@ class KDump(NodeConfigFileSection):
     >>> nfs_url = "host.example.com:/dst/path"
     >>> ssh_url = "root@host.example.com"
     >>> ssh_key = "http://example.com/id_rsa"
-    >>> n.update(nfs_url, ssh_url, ssh_key, True)
+    >>> _ = n.update(nfs_url, ssh_url, ssh_key, True)
     >>> d = sorted(n.retrieve().items())
     >>> d[:2]
     [('local', True), ('nfs', 'host.example.com:/dst/path')]
@@ -1205,7 +1205,7 @@ class iSCSI(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = iSCSI(fs.FakeFs.File("dst"))
-    >>> n.update("iqn.1992-01.com.example:node",
+    >>> _ = n.update("iqn.1992-01.com.example:node",
     ...          "iqn.1992-01.com.example:target", "10.0.0.8", "42")
     >>> data = sorted(n.retrieve().items())
     >>> data[:2]
@@ -1249,7 +1249,7 @@ class Netconsole(NodeConfigFileSection):
     >>> n = Netconsole(fs.FakeFs.File("dst"))
     >>> server = "10.0.0.9"
     >>> port = "666"
-    >>> n.update(server, port)
+    >>> _ = n.update(server, port)
     >>> sorted(n.retrieve().items())
     [('port', '666'), ('server', '10.0.0.9')]
     """
@@ -1283,7 +1283,7 @@ class Logrotate(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = Logrotate(fs.FakeFs.File("dst"))
     >>> max_size = "42"
-    >>> n.update(max_size)
+    >>> _ = n.update(max_size)
     >>> n.retrieve().items()
     [('max_size', '42')]
     """
@@ -1319,7 +1319,7 @@ class Keyboard(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = Keyboard(fs.FakeFs.File("dst"))
     >>> layout = "de_DE.UTF-8"
-    >>> n.update(layout)
+    >>> _ = n.update(layout)
     >>> n.retrieve()
     {'layout': 'de_DE.UTF-8'}
     """
@@ -1356,7 +1356,7 @@ class NFSv4(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = NFSv4(fs.FakeFs.File("dst"))
     >>> domain = "foo.example"
-    >>> n.update(domain)
+    >>> _ = n.update(domain)
     >>> n.retrieve().items()
     [('domain', 'foo.example')]
     """
@@ -1399,7 +1399,7 @@ class SSH(NodeConfigFileSection):
     >>> pwauth = True
     >>> num_bytes = "24"
     >>> disable_aesni = True
-    >>> n.update(pwauth, num_bytes, disable_aesni)
+    >>> _ = n.update(pwauth, num_bytes, disable_aesni)
     >>> sorted(n.retrieve().items())
     [('disable_aesni', True), ('num_bytes', '24'), ('pwauth', True)]
     """
@@ -1463,7 +1463,7 @@ class Installation(NodeConfigFileSection):
     >>> from ovirt.node.utils import fs
     >>> n = Installation(fs.FakeFs.File("dst"))
     >>> kwargs = {"init": ["/dev/sda"], "root_install": "1"}
-    >>> n.update(**kwargs)
+    >>> _ = n.update(**kwargs)
     >>> data = n.retrieve().items()
     """
     keys = ("OVIRT_INIT",
