@@ -994,8 +994,7 @@ class KDump(NodeConfigFileSection):
     >>> n = KDump(fs.FakeFs.File("dst"))
     >>> nfs_url = "host.example.com:/dst/path"
     >>> ssh_url = "root@host.example.com"
-    >>> ssh_key = "http://example.com/id_rsa"
-    >>> _ = n.update(nfs_url, ssh_url, ssh_key, True)
+    >>> _ = n.update(nfs_url, ssh_url, True)
     >>> d = sorted(n.retrieve().items())
     >>> d[:2]
     [('local', True), ('nfs', 'host.example.com:/dst/path')]
