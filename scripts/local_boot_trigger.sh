@@ -21,6 +21,6 @@ done
 
 if [ -n "$trigger_url" ]; then
     trigger_url=$(echo $trigger_url | sed -e "s/@HOSTNAME@/$(hostname)/")
-    wget --no-check-certificate "$trigger_url" -O /dev/null
+    curl --insecure "$trigger_url" 2>&1 >> /var/log/ovirt.log
 fi
 
