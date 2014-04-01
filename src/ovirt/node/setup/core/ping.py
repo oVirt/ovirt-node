@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, valid, ui
 from ovirt.node.utils import process
+import network_page
 import threading
 
 
@@ -71,7 +72,10 @@ class Plugin(plugins.NodePlugin):
               ui.Entry("ping.address", _("Address:")),
               ui.Entry("ping.count", _("Count:")),
               ui.Divider("divider[1]"),
-              ui.SaveButton("ping.do_ping", _("Ping")),
+              ui.Row("row[0]", [ui.SaveButton("ping.do_ping", _("Ping")),
+                                ui.Button("ping.close", _("Close"))
+                                ]
+                     ),
               ui.Divider("divider[2]"),
               ui.Label("ping.result", _("Result:")),
               ]
@@ -96,7 +100,11 @@ class Plugin(plugins.NodePlugin):
         case it is called by on_change
         """
 
-        if "ping.address" in self._model:
+        if "ping.close" in effective_changes:
+            self.application.switch_to_plugin(
+                network_page.Plugin)
+            return
+        elif "ping.address" in self._model:
             addr = self._model["ping.address"]
             count = self._model["ping.count"]
             self.logger.debug("Pinging %s" % addr)
