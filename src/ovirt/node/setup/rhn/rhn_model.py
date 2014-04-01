@@ -286,11 +286,8 @@ class RHN(NodeConfigFileSection):
 
                 if proxy:
                     try:
-                        (host, port) = proxy.split(":")
-                        process.check_call(["subscription-manager", "config",
-                                            "--server.proxy_hostname", host])
-                        process.check_call(["subscription-manager", "config",
-                                            "--server.proxy_port", port])
+                        args.append('--proxy')
+                        args.append(proxy)
                         if proxyuser:
                             args.append('--proxyuser')
                             args.append(proxyuser)
