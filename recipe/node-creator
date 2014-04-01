@@ -62,7 +62,12 @@ ksflatten --config "$RECIPE" --output "$NODE_KS.tmp"
 sed -i 's/^%include /#&/' "$NODE_KS.tmp"
 # add build repositories
 if [ -n "$REPO" ]; then
-    echo "repo --name=build --baseurl=$REPO" >> "$NODE_KS"
+    N=0
+    for ONE_REPO in $REPO;
+    do
+        echo "repo --name=build$N --baseurl=$ONE_REPO" >> "$NODE_KS"
+        N=$(($N + 1))
+    done
 fi
 if [ -n "$OVIRT_LOCAL_REPO" ]; then
     echo "repo --name=local --baseurl=$OVIRT_LOCAL_REPO" >> "$NODE_KS"
