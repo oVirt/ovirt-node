@@ -742,7 +742,9 @@ remove_config() {
                 printf "File not explicitly persisted: ${filename}\n"
             fi
             # clean up the persistent store
-            rm -Rf /config$filename
+            if [[ -n $filename ]]; then
+                rm -Rf /config$filename
+            fi
         done
     fi
 }
