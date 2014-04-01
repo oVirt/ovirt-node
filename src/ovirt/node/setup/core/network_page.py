@@ -197,12 +197,13 @@ class Plugin(plugins.NodePlugin):
               ui.Entry("ntp[1]", _("NTP Server 2:")),
               ui.Divider("divider[2]"),
               NicTable("nics", height=3),
-
-              ui.Row("row[0]",
-                     [ui.Button("button.ping", _("Ping")),
-                      ui.Button("button.toggle_bond", bond_lbl)
-                      ])
               ]
+
+        btn_row = ui.Row("row[0]", [ui.Button("button.ping", _("Ping"))])
+        if not has_managed_ifnames():
+            btn_row.children.append(ui.Button("button.toggle_bond", bond_lbl))
+
+        ws.extend([btn_row])
 
         page = ui.Page("page", ws)
         # Save it "locally" as a dict, for better accessability
@@ -214,7 +215,6 @@ class Plugin(plugins.NodePlugin):
         #
         if has_managed_ifnames():
             self._nic_details_group.enabled(False)
-            self.widgets["button.toggle_bond"].enabled(False)
             nictbl = self.widgets["nics"]
             nictbl.on_activate.clear()
             nictbl.label(nictbl.label() + " (read-only/managed)")
