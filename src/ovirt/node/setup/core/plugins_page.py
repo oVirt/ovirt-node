@@ -21,6 +21,7 @@
 from ovirt.node import ui
 from ovirt.node.plugins import NodePlugin
 from ovirt.node.utils import process
+from ovirt.node.ui import InfoDialog
 import glob
 import os
 import re
@@ -99,24 +100,26 @@ class Plugin(NodePlugin):
             self._model["plugin"] = name
 
     def on_merge(self, changes):
+        manifest_keys = ["button.drpm", "button.dsrpm", "button.dfile"]
         p_manifests_dir = "/etc/ovirt-plugins-manifests.d"
         fn = None
-        if "button.drpm" in changes:
-            fn = glob.glob("%s/delta-manifest-rpm.txt" %
-                           (p_manifests_dir))[0]
-        elif "button.dsrpm" in changes:
-            fn = glob.glob("%s/delta-manifest-srpm.txt" %
-                           (p_manifests_dir))[0]
-        elif "button.dfile" in changes:
-            fn = glob.glob("%s/delta-manifest-file.txt" %
-                           (p_manifests_dir))[0]
-
-        if fn:
-            self.logger.debug("Reading manifest from: %s" % fn)
-            with open(fn) as src:
-                contents = src.read()
-            return ui.TextViewDialog("output.dialog", "Manifest",
-                                     contents)
+        for k in manifest_keys:
+            pfix = k.split(".")[1].lstrip("d")
+            if k in changes:
+                fn = glob.glob("%s/delta-manifest-%s.txt" %
+                               (p_manifests_dir, pfix))
+                try:
+                    fn = fn[0]  # grabs plain text and not gzipped
+                    self.logger.debug("Reading manifest from: %s" % fn)
+                    with open(fn) as src:
+                        contents = src.read()
+                    return ui.TextViewDialog("output.dialog", "Manifest",
+                                             contents)
+                except:
+                    self.logged.debug("Error retrieving manifest:",
+                                      exc_info=True)
+                    return InfoDialog("dialog.info", "An Error Occured",
+                                      "No manifest found")
 
     def __list_of_plugins(self):
         sp = sorted(self.get_plugins_list().items())
