@@ -41,7 +41,10 @@ def has_managed_ifnames():
 
 class NicTable(ui.Table):
     def __init__(self, path, height=3, multi=False):
-        header = "Device  Status       Model         MAC Address"
+        if not has_managed_ifnames():
+            header = "Device  Status       Model         MAC Address"
+        else:
+            header = "Device          Status       MAC Address      "
         if multi:
             header = "    " + header
 
@@ -66,11 +69,18 @@ class NicTable(ui.Table):
             else:
                 is_cfg = ("Configured" if nic.is_configured() else
                           "Unconfigured")
-            description = " ".join([justify(nic.ifname, 7),
-                                    justify(is_cfg, 12),
-                                    justify(nic.vendor, 13),
-                                    justify(nic.hwaddr, 17)
-                                    ])
+
+            fields = [justify(nic.ifname, 7),
+                      justify(is_cfg, 12)]
+
+            if has_managed_ifnames():
+                fields[0] = justify(nic.ifname, 15)
+            if not has_managed_ifnames():
+                fields.append(justify(nic.vendor, 13))
+
+            fields.append(justify(nic.hwaddr, 17))
+            description = " ".join(fields)
+
             node_nics.append((name, description))
         return node_nics
 
