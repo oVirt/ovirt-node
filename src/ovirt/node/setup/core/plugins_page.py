@@ -95,8 +95,8 @@ class Plugin(NodePlugin):
             name = changes["plugins.installed"]
             version, createdat = all_plugins[name]
             self.widgets["plugin.name"].text(name)
-            self.widgets["plugin.version"].text(version)
-            self.widgets["plugin.createdat"].text(createdat)
+            self.widgets["plugin.version"].text(version.strip())
+            self.widgets["plugin.createdat"].text(createdat.strip())
             self._model["plugin"] = name
 
     def on_merge(self, changes):
@@ -123,7 +123,7 @@ class Plugin(NodePlugin):
 
     def __list_of_plugins(self):
         sp = sorted(self.get_plugins_list().items())
-        return [(k, "%s (%s)" % (k, v[0])) for k, v in sp]
+        return [(k, "%s" % k) for k, v in sp]
 
     def get_plugins_list(self):
         plugin_dict = {}
