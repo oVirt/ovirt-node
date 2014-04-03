@@ -451,13 +451,14 @@ cd -
 
 # Remove igor stuff if not needed
 %if ! 0%{?with_igor}
-rm -vf %{buildroot}/etc/rc.d/init.d/ovirt-node-igor-slave \
-       %{buildroot}/usr/libexec/ovirt-node-igor-slave
+%{__rm} -vf %{buildroot}/%{_libexecdir}/ovirt-node-igor-slave \
+            %{buildroot}/%{_unitdir}/ovirt-node-igor-slave.service \
+            %{buildroot}/%{_initrddir}/ovirt-node-igor-slave
 %endif
 
 # Remove minimizer if unneeded
 %if ! 0%{?with_minimizer}
-rm -vf %{buildroot}/%{_sbindir}/image-minimizer
+%{__rm} -vf %{buildroot}/%{_sbindir}/image-minimizer
 %endif
 
 
@@ -519,13 +520,13 @@ echo "%{product_family} release %{product_release}" > /etc/system-release
 
 # Remove minimizer if not needed
 %if ! 0%{?with_minimizer}
-rm -v %{buildroot}/%{_sbindir}/image-minimizer
+rm -vf %{buildroot}/%{_sbindir}/image-minimizer
 %endif
 
 # Remove igor stuff if not needed
 %if ! 0%{?with_igor}
-rm -v %{buildroot}/etc/rc.d/init.d/ovirt-node-igor-slave \
-      %{buildroot}/usr/libexec/ovirt-node-igor-slave
+rm -vf %{buildroot}/etc/rc.d/init.d/ovirt-node-igor-slave \
+       %{buildroot}/usr/libexec/ovirt-node-igor-slave
 %endif
 
 
