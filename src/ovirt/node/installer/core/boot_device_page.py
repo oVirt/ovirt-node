@@ -88,14 +88,20 @@ class Plugin(plugins.NodePlugin):
 
     def on_change(self, changes):
         self.logger.debug("Boot device changes: %s" % changes)
-        if changes.contains_any(["boot.device"]):
-            device = changes["boot.device"]
-            if device == "other":
-                self.widgets["label.details"].text("")
-            else:
-                changes["boot.device.current"] = device
-                self._model.update(changes)
-                self.widgets["label.details"].set_device(device)
+        devices = self.storage_discovery.all_devices_for_ui_table()
+        if devices:
+            if changes.contains_any(["boot.device"]):
+                device = changes["boot.device"]
+                if device == "other":
+                    self.widgets["label.details"].text("")
+                else:
+                    changes["boot.device.current"] = device
+                    self._model.update(changes)
+                    self.widgets["label.details"].set_device(device)
+        else:
+            # Disable the continue button
+            buttons = plugins.UIElements(self.widgets["boot"].buttons)
+            buttons["button.next"].enabled(False)
 
         if changes.contains_any(["boot.device.custom"]):
             if self.storage_discovery.devices.live_disk_name() == \
