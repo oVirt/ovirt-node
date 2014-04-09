@@ -40,7 +40,7 @@ def has_managed_ifnames():
 
 
 class NicTable(ui.Table):
-    def __init__(self, path, height=3, multi=False):
+    def __init__(self, path, height=3, multi=False, filter_configured=False):
         if not has_managed_ifnames():
             header = "Device  Status       Model         MAC Address"
         else:
@@ -51,10 +51,10 @@ class NicTable(ui.Table):
         super(NicTable, self).__init__(path,
                                        "Available System NICs",
                                        header,
-                                       self._get_nics(),
+                                       self._get_nics(filter_configured),
                                        height=height, multi=multi),
 
-    def _get_nics(self):
+    def _get_nics(self, filter_configured):
         def justify(txt, l):
             txt = txt if txt else ""
             return txt.ljust(l)[0:l]
@@ -62,6 +62,9 @@ class NicTable(ui.Table):
         first_nic = None
         model = utils.network.NodeNetwork()
         for name, nic in sorted(model.nics().items()):
+            if nic.is_configured() and filter_configured:
+                continue
+
             if first_nic is None:
                 first_nic = name
             if has_managed_ifnames():
@@ -621,5 +624,5 @@ class CreateBondDialog(ui.Dialog):
                    ui.Divider("bond.divider[0]"),
                    ui.Entry("bond.options", _("Options:")),
                    ui.Divider("bond.divider[1]"),
-                   NicTable("bond.slaves", multi=True)]
+                   NicTable("bond.slaves", multi=True, filter_configured=True)]
         super(CreateBondDialog, self).__init__(path, _("Create Bond"), widgets)
