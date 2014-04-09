@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, valid, utils
 from ovirt.node.utils import system
-from ovirt.node.utils.fs import File
+from ovirt.node.utils.fs import File, Config
 import PAM as _PAM  # @UnresolvedImport
 import cracklib
 import os.path
@@ -181,6 +181,30 @@ class Ssh(base.Base):
             raise RuntimeError("Failed to set SSH password authentication" +
                                "(%s)" % state)
         return state == "yes"
+
+    def port(self, port=None):
+        augpath = "/files/etc/ssh/sshd_config/Port"
+        aug = utils.AugeasWrapper()
+
+        if port is not None and not isinstance(port, int):
+            try:
+                int(port)
+            except ValueError:
+                raise RuntimeError("Port must be an integer")
+        if port is not None:
+            if int(port) in range(1, 65535):
+                self.logger.debug("Setting SSH port to %s" % port)
+                aug.set(augpath, port)
+                Config().persist("/etc/ssh/sshd_config")
+                self.restart()
+
+            else:
+                raise RuntimeError("Port must be in the range [1-65535]")
+
+        state = str(aug.get(augpath)).lower()
+        if state != "none" and int(state) not in range(1, 65535):
+            raise RuntimeError("Failed to set SSH port: value is %s" % state)
+        return state
 
     def get_hostkey(self, variant="rsa"):
         fn_hostkey = "/etc/ssh/ssh_host_%s_key.pub" % variant

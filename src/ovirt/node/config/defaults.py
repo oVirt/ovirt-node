@@ -22,7 +22,7 @@ from ovirt.node import base, exceptions, valid, utils, config, log
 from ovirt.node.config.network import NicConfig
 from ovirt.node.exceptions import InvalidData
 from ovirt.node.utils import storage, process, fs, AugeasWrapper, console, \
-    system
+    system, firewall
 from ovirt.node.utils.fs import ShellVarFile, File
 from ovirt.node.utils.network import NIC, Bridges, Bonds
 import glob
@@ -1399,20 +1399,25 @@ class SSH(NodeConfigFileSection):
     >>> pwauth = True
     >>> num_bytes = "24"
     >>> disable_aesni = True
-    >>> _ = n.update(pwauth, num_bytes, disable_aesni)
+    >>> port = '2222'
+    >>> _ = n.update(pwauth, port, num_bytes, disable_aesni)
     >>> sorted(n.retrieve().items())
-    [('disable_aesni', True), ('num_bytes', '24'), ('pwauth', True)]
+    [('disable_aesni', True), ('num_bytes', '24'),\
+ ('port', '2222'), ('pwauth', True)]
     """
     keys = ("OVIRT_SSH_PWAUTH",
+            "OVIRT_SSH_PORT",
             "OVIRT_USE_STRONG_RNG",
             "OVIRT_DISABLE_AES_NI")
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
-    def update(self, pwauth, num_bytes, disable_aesni):
+    def update(self, pwauth, port, num_bytes, disable_aesni):
         valid.Boolean()(pwauth)
+        (valid.Number() | valid.Empty(or_none=True))(port)
         (valid.Number() | valid.Empty(or_none=True))(num_bytes)
         (valid.Boolean() | valid.Empty(or_none=True))(disable_aesni)
         return {"OVIRT_SSH_PWAUTH": "yes" if pwauth else None,
+                "OVIRT_SSH_PORT": port if port else "22",
                 "OVIRT_DISABLE_AES_NI": "true" if disable_aesni else None
                 }
 
@@ -1426,8 +1431,10 @@ class SSH(NodeConfigFileSection):
 
     def transaction(self):
         cfg = dict(self.retrieve())
-        pwauth, num_bytes, disable_aesni = (cfg["pwauth"], cfg["num_bytes"],
-                                            cfg["disable_aesni"])
+        pwauth, port, num_bytes, disable_aesni = (cfg["pwauth"],
+                                                  cfg["port"],
+                                                  cfg["num_bytes"],
+                                                  cfg["disable_aesni"])
 
         ssh = utils.security.Ssh()
 
@@ -1436,6 +1443,16 @@ class SSH(NodeConfigFileSection):
 
             def commit(self):
                 ssh.password_authentication(pwauth)
+
+        class ConfigureSSHPort(utils.Transaction.Element):
+            title = "Configuring SSH port"
+
+            def commit(self):
+                ssh.port(port)
+                if firewall.is_firewalld():
+                    firewall.setup_firewalld(port, "tcp")
+                else:
+                    firewall.setup_iptables(port, "tcp")
 
         class ConfigureStrongRNG(utils.Transaction.Element):
             title = "Configuring SSH strong RNG"
@@ -1451,6 +1468,7 @@ class SSH(NodeConfigFileSection):
 
         tx = utils.Transaction("Configuring SSH")
         tx.append(ConfigurePasswordAuthentication())
+        tx.append(ConfigureSSHPort())
         tx.append(ConfigureStrongRNG())
         tx.append(ConfigureAESNI())
         return tx

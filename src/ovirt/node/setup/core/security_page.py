@@ -59,6 +59,7 @@ class Plugin(plugins.NodePlugin):
         ws = [ui.Header("header[0]", _("Remote Access")),
               ui.Checkbox("ssh.pwauth",
                           _("Enable SSH password authentication")),
+              ui.Entry("ssh.port", _("SSH Daemon Port:")),
               ui.Header("header[1]", _("Strong Random Number Generator")),
               ui.Checkbox("strongrng.disable_aesni", _("Disable AES-NI")),
               ui.Entry("strongrng.num_bytes", _("Bytes Used:")),
@@ -94,7 +95,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        ssh_keys = ["ssh.pwauth", "strongrng.num_bytes",
+        ssh_keys = ["ssh.pwauth", "ssh.port", "strongrng.num_bytes",
                     "strongrng.disable_aesni"]
 
         txs = utils.Transaction(_("Updating security configuration"))
