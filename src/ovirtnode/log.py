@@ -23,6 +23,7 @@
 import logging
 import ovirtnode.ovirtfunctions as _functions
 from ovirt.node.utils import system
+from ovirt.node.config.defaults import Netconsole
 
 logger = logging.getLogger(__name__)
 
@@ -105,17 +106,12 @@ def ovirt_rsyslog(server, port, protocol):
 
 
 def ovirt_netconsole(server, port):
-    _functions.augtool("set", \
-                       "/files/etc/sysconfig/netconsole/SYSLOGADDR", server)
-    _functions.augtool("set", \
-                       "/files/etc/sysconfig/netconsole/SYSLOGPORT", port)
+    n = Netconsole()
+    n.update(server=server, port=port)
     try:
-        system.service("netconsole", "restart")
+        n.transaction().run()
     except:
-        raise RuntimeError("Failed to restart netconsole service. "
-                           "Is the host resolvable?")
-    if _functions.ovirt_store_config("/etc/sysconfig/netconsole"):
-        logger.info("Netconsole Configuration Updated")
+        return False
     return True
 
 

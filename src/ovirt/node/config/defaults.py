@@ -1315,15 +1315,42 @@ class Netconsole(NodeConfigFileSection):
         valid.Port()(port)
 
     def transaction(self):
+        def _clear_config(self):
+            self.logger.info("Disabling netconsole")
+            f = File("/etc/sysconfig/netconsole")
+            f.sed("/SYSLOGADDR/d")
+            f.sed("/SYSLOGPORT/d")
+
+        def configure_netconsole(self, server, port):
+            from ovirtnode.ovirtfunctions import ovirt_store_config
+            aug = utils.AugeasWrapper()
+            if server and port:
+                aug.set("/files/etc/sysconfig/netconsole/SYSLOGADDR",
+                        server)
+                aug.set("/files/etc/sysconfig/netconsole/SYSLOGPORT",
+                        port)
+                try:
+                    system.service("netconsole", "restart")
+                except:
+                    self._clear_config()
+                    raise RuntimeError("Failed to restart netconsole "
+                                       "service. Is the host resolvable?")
+            else:
+                self._clear_config()
+            if ovirt_store_config("/etc/sysconfig/netconsole"):
+                self.logger.info("Netconsole Configuration Updated")
+
         cfg = dict(self.retrieve())
         server, port = (cfg["server"], cfg["port"])
 
         class CreateNetconsoleConfig(utils.Transaction.Element):
-            title = "Setting netconsole server and port"
+            if server and port:
+                title = "Setting netconsole server and port"
+            else:
+                title = "Disabling netconsole"
 
             def commit(self):
-                import ovirtnode.log as olog
-                olog.ovirt_netconsole(server, port)
+                self.configure_netconsole(server, port)
 
         tx = utils.Transaction("Configuring netconsole")
         tx.append(CreateNetconsoleConfig())
