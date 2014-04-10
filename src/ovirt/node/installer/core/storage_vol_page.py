@@ -40,7 +40,9 @@ class Plugin(plugins.NodePlugin):
         return 40
 
     def model(self):
-        if not self._model:
+        drive_changed = (self._model["storage.install_drive"] !=
+                         self.__get_install_drive())
+        if not self._model or drive_changed:
             self._model = self.__get_default_sizes()
             self._model["storage.data_size"] = "%s" %\
                                                self.__calculate_free_space()
@@ -176,7 +178,8 @@ class Plugin(plugins.NodePlugin):
                  "storage.logging_size": "%s" % stor.LOGGING_SIZE,
                  "storage.data_size": "%s" % "0",
                  "storage.free_space": "0 MB",
-                 "storage.drive_size": "%s MB" % self._drive_size
+                 "storage.drive_size": "%s MB" % self._drive_size,
+                 "storage.install_drive": self.__get_install_drive()
                  }
         return sizes
 
