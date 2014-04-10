@@ -24,6 +24,7 @@ from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
 from ovirt.node.utils import system, Timer, console
 import signal as sys_signal
+import os
 import sys
 
 """
@@ -88,6 +89,14 @@ class Application(base.Base):
         super(Application, self).__init__()
         self.logger.info(("Starting '%s' application " +
                           "with '%s' UI") % (plugin_base, ui_builder))
+
+        if os.ttyname(sys.stdin.fileno()).startswith("/dev/tty") or \
+           os.ttyname(sys.stdin.fileno()) == "/dev/console":
+            # We're on a physical console, so explicitly load fonts in
+            # case they weren't loaded for some reason
+            self.logger.info("Console path is %s" % os.ttyname(
+                sys.stdin.fileno()))
+            utils.process.check_call(["setfont"])
 
         self.args = args
         self.__parse_cmdline()
