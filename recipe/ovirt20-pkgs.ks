@@ -11,7 +11,7 @@ vconfig
 bfa-firmware
 grubby
 glusterfs-server
-
+ql2500-firmware
 # Explicitly add these package, to prevent yum from pulling in the debug versions
 kernel-modules-extra
 

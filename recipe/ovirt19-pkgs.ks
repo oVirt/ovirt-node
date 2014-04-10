@@ -10,6 +10,6 @@ net-tools
 vconfig
 aic94xx-firmware
 bfa-firmware
-
+ql2500-firmware
 # Explicitly add these package, to prevent yum from pulling in the debug versions
 kernel-modules-extra

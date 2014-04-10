@@ -8,3 +8,4 @@ system-config-keyboard-base
 vconfig
 aic94xx-firmware
 bfa-firmware
+ql2500-firmware
