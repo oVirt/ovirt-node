@@ -20,9 +20,13 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 from ovirt.node.utils.console import TransactionProgress
+from ovirt.node.utils.fs import Config
 from ovirt.node.setup.rhn import rhn_model
 import ovirtnode.ovirtfunctions as _functions
 from ovirt.node.plugins import Changeset
+
+RHSM_CONF = "/etc/rhsm/rhsm.conf"
+SYSTEMID = "/etc/sysconfig/rhn/systemid"
 
 args = _functions.get_cmdline_args()
 keys = ["rhn_type", "rhn_url", "rhn_ca_cert", "rhn_username",
@@ -43,6 +47,10 @@ keys_to_model = {"rhn_type": "rhn.rhntype",
 changes = dict((keys_to_model[key], args[key]) for key in keys if key in args)
 
 if __name__ == "__main__":
+    cfg = Config()
+    if cfg.exists(RHSM_CONF) or cfg.exists(SYSTEMID):
+        # skip rerunning again
+        exit()
     rhn = rhn_model.RHN()
     cfg = rhn.retrieve()
     rhn_password = _functions.OVIRT_VARS["OVIRT_RHN_PASSWORD"] \
