@@ -29,6 +29,9 @@ Multiple packages can be specified by comma delimited list (package1,package2)
 .IP \fB\-\-install=PACKAGE_NAME\fR
 Installs a the specific package from a yum repo or specified rpm file, all file locations are valid.
 Multiple packages can be specified by comma delimited list (package1,package2)
+.IP \fB\-\-update=PACKAGE_NAME\fR
+Update a the specific package from a yum repo or specified rpm file, this option will re-use install function to achieve update,
+all file locations are valid. Multiple packages can be specified by comma delimited list (package1,package2)
 .IP \fB\-\-repo=REPO\fR
 Yum repository can be a local directory, a yum repository file, or a driver disk iso file. It must be used in conjunction with --install* options
 .IP \fB\-\-nogpgcheck\fR

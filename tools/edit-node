@@ -883,7 +883,7 @@ class LiveImageEditor(LiveImageCreator):
         self._setup_dns()
         if not self._setup_yum_repo(options):
             return False
-        if not self._run_yum_update(options.update.split(",")):
+        if not self._run_yum_update(options.update):
             return False
         else:
             self._cleanup_editing()
@@ -1143,6 +1143,9 @@ enabled=1
                           os.path.basename(pkg)))
             os.system("rm -rf %s/tmp/yumrepo" % self._instroot)
         return True
+
+    def _run_yum_update(self, pkgs):
+        self._run_yum_install(pkgs)
 
     def _install_dup(self, options):
         self._setup_dns()
