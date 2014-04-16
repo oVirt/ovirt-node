@@ -30,6 +30,7 @@ from ovirt.node.exceptions import InvalidData
 class Plugin(plugins.NodePlugin):
     _model = {}
     _free_space = 0
+    _min_drive_size = 1295
     _fill = True
 
     def name(self):
@@ -66,6 +67,12 @@ class Plugin(plugins.NodePlugin):
         ws = [ui.Header("header[0]", _("Storage Volumes")),
               ui.KeywordLabel("storage.drive_size", "Drive size: ")]
 
+        if not self.__enough_free_space():
+            ws.extend([ui.Notice("space.notice",
+                                 "Not enough space! Needs at least "
+                                 "1295MB for installation, %sMB "
+                                 "available" % self._drive_size)])
+
         if not self._fill:
             ws.extend([ui.KeywordLabel("storage.free_space",
                                        "Remaining Space: ")])
@@ -94,8 +101,11 @@ class Plugin(plugins.NodePlugin):
         self.widgets.add(ws)
         page = ui.Page("storage", ws)
         page.buttons = [ui.QuitButton("button.quit", _("Quit")),
-                        ui.Button("button.back", _("Back")),
-                        ui.SaveButton("button.next", _("Continue"))]
+                        ui.Button("button.back", _("Back"))]
+
+        if self.__enough_free_space():
+            page.buttons.extend([ui.SaveButton("button.next", _("Continue"))])
+
         return page
 
     def on_change(self, changes):
@@ -209,3 +219,9 @@ class Plugin(plugins.NodePlugin):
             free_space = 0
 
         return free_space
+
+    def __enough_free_space(self):
+        """Determin if the available size is large enough to hold the installation
+        """
+        self._drive_size = self.__get_drives_size(self.__get_install_drive())
+        return self._drive_size > self._min_drive_size
