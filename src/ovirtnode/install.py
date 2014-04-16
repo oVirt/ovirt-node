@@ -308,8 +308,11 @@ initrd /initrd0.img
         logger.info("Installing the image.")
         # copy grub.efi to safe location
         if _functions.is_efi_boot():
+            if "OVIRT_ISCSI_INSTALL" in OVIRT_VARS:
+                _functions.system("umount /boot")
             shutil.copy("/boot/efi/EFI/%s/grub.efi" % self.efi_dir_name,
                         "/tmp")
+            _functions.mount_boot()
         if "OVIRT_ROOT_INSTALL" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
                 logger.info("Root Installation Not Required, Finished.")
@@ -339,6 +342,9 @@ initrd /initrd0.img
             if _functions.is_upgrade() and not _functions.is_iscsi_install():
                 _functions.mount_liveos()
                 grub_config_file = "/liveos/grub/grub.conf"
+        if _functions.is_iscsi_install() or _functions.findfs("Boot") \
+            and not _functions.is_efi_boot():
+            grub_config_file = "/boot/grub/grub.conf"
         if _functions.is_efi_boot():
             logger.debug(str(os.listdir("/liveos")))
             _functions.system("umount /liveos")
@@ -347,8 +353,6 @@ initrd /initrd0.img
                 grub_config_file = "/liveos/EFI/fedora/grub.cfg"
             else:
                 grub_config_file = "/liveos/EFI/redhat/grub.conf"
-        if _functions.is_iscsi_install() or _functions.findfs("Boot"):
-            grub_config_file = "/boot/grub/grub.conf"
         grub_config_file_exists = grub_config_file is not None \
             and os.path.exists(grub_config_file)
         logger.debug("Grub config file is: %s" % grub_config_file)

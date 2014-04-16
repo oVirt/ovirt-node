@@ -1431,6 +1431,11 @@ EOP
             tuned-adm profile $OVIRT_TUNED_PROFILE
         fi
 
+        #iscsi installs with hang when network service is killed
+        if [ -e "/dev/disk/by-label/Boot" ]; then
+            rm  /var/lock/subsys/network
+        fi
+
         if is_standalone; then
             return 0
         fi

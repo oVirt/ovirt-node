@@ -37,6 +37,7 @@ import libvirt
 import logging
 import grp
 import pwd
+import time
 from ovirt.node.config import defaults
 from ovirt.node.utils import process, hooks
 import ovirt.node.utils.system as osystem
@@ -616,9 +617,13 @@ def connect_iscsi_root():
                         augtool("set",
                                 "/files/etc/default/ovirt/OVIRT_BOOTIF",
                                 "\"%s\"" % value)
-                    if "BOOTPROTO" in key:
+                    elif "BOOTPROTO" in key:
                         augtool("set",
                                 "/files/etc/default/ovirt/OVIRT_BOOTPROTO",
+                                "\"%s\"" % value)
+                    elif "ISCSI" in key:
+                        augtool("set",
+                                "/files/etc/default/ovirt/%s" % key,
                                 "\"%s\"" % value)
                 except:
                     pass
@@ -639,6 +644,8 @@ def connect_iscsi_root():
                 system(login_cmd)
                 logger.info("Restarting iscsi service")
                 system("service iscsi restart")
+                # let login settle devices
+                time.sleep(5)
                 system("pvscan")
                 system("vgscan")
                 system("vgchange -ay")
@@ -1157,6 +1164,7 @@ def finish_install():
     cmd.communicate()
 
     if is_iscsi_install() or findfs("BootUpdate"):
+        mount_config()
         boot_update_dev = findfs("BootUpdate")
         boot_dev = findfs("Boot")
         e2label_bootbackup_cmd = "e2label '%s' BootBackup" % boot_dev
