@@ -19,8 +19,6 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
-from ovirt.node.config import defaults
-from ovirt.node.utils import AugeasWrapper, network, parse_bool
 from ovirt.node.utils.fs import Config
 from ovirtnode import iscsi, log, ovirtfunctions
 import os
@@ -40,6 +38,8 @@ class ConfigMigrationRunner(base.Base):
     def _determine_migration_func(self):
         """Determins if a migration and which migration is necessary
         """
+        from ovirt.node.config import defaults
+
         migration_func = None
 
         cfgver = defaults.ConfigVersion().retrieve()["ver"]
@@ -61,6 +61,8 @@ class ConfigMigrationRunner(base.Base):
         return migration_func
 
     def _run(self, migration_func):
+        from ovirt.node.config import defaults
+
         try:
             self.logger.info("Starting config migration")
 
@@ -81,6 +83,8 @@ class ImportConfigs(base.Base):
     """Import the real configs into Node's abstract config
     """
     def __init__(self):
+        from ovirt.node.utils import AugeasWrapper
+
         self.aug = AugeasWrapper()
         super(ImportConfigs, self).__init__()
 
@@ -124,6 +128,8 @@ class ImportConfigs(base.Base):
                     str(logrotate_size) or "")
 
     def translate_ssh(self):
+        from ovirt.node.utils import parse_bool
+
         if self.__is_persisted("/etc/ssh/sshd_config"):
             pw_auth_enabled = ovirtfunctions.augtool_get(
                 "/files/etc/ssh/sshd_config/PasswordAuthentication")
@@ -313,6 +319,9 @@ class ImportConfigs(base.Base):
         return Config().exists(path)
 
     def migrate_network_layout(self):
+        from ovirt.node import defaults
+        from ovirt.node.utils import network
+
         bondcfg = defaults.NicBonding().retrieve()
         netlayoutcfg = defaults.NetworkLayout().retrieve()
 
