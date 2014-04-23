@@ -127,12 +127,34 @@ class File(base.Base):
 
     def sed(self, expr, inplace=True):
         """Run a sed expression on the file
+
+        >>> f = File("/tmp/afile")
+        >>> f.write("Woot")
+
+        Replacement without inplace modifcation:
+
+        >>> f.sed("s/oo/ha/", False)
+        u'What'
+
+        Replacement with inplace modifications:
+
+        >>> f.sed("s/oo/alle/")
+        >>> f.read()
+        'Wallet'
+
+        Chaining of expressions also works:
+
+        >>> f.sed("s/alle/oo/ ; s/oo/ha/", False)
+        u'What'
+
+        >>> f.delete()
         """
-        cmd = ["sed", "-c"]
+        cmd = ["sed"]
         if inplace:
-            cmd.append("-i")
+            cmd.append("-ci")
         cmd += ["-e", expr, self.filename]
-        return process.pipe(cmd)
+        stdout = process.check_output(cmd)
+        return None if inplace else stdout
 
     def sub(self, pat, repl, count=0, inplace=True):
         """Run a regexp subs. on each lien of the file
