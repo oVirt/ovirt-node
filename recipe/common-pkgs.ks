@@ -22,7 +22,7 @@ python-gudev
 python-libs
 python-setuptools
 PyPAM
-db4
+#db4
 # debugging
 hdparm
 sos
