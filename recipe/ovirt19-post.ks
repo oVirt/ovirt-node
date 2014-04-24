@@ -21,6 +21,13 @@ EOF_anyterm
    # permit it to run the virsh console
    echo "anyterm ALL=NOPASSWD: /usr/bin/virsh console *" >> /etc/sudoers
 
+# dracut config
+cat <<_EOF_ > /etc/dracut.conf.d/ovirt-node.conf
+
+add_dracutmodules+="dmsquash-live"
+
+_EOF_
+
 # systemd configuration
 # set default runlevel to multi-user(3)
 

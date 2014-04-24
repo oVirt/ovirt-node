@@ -40,3 +40,10 @@ EOF_virt_who
 
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
+
+# dracut config
+cat <<_EOF_ > /etc/dracut.conf.d/ovirt-node.conf
+
+add_dracutmodules+="dmsquash-live"
+
+_EOF_
