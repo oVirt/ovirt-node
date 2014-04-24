@@ -82,5 +82,11 @@ static-checks:
 unittests:
 	$(MAKE) -C tests/ check-local
 
+snapshot:
+	eval export $$(grep ^PACKAGE_ configure) ; \
+	git archive \
+		-o $$PACKAGE_NAME-$$PACKAGE_VERSION.$$(date +%Y%m%d)git$$(git log -n1 --format=%h).tar.gz \
+		--format=tar.gz \
+		--prefix=$$PACKAGE_NAME-$$PACKAGE_VERSION/ master
 
 # vim: ts=2
