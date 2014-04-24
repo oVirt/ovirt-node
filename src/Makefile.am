@@ -139,6 +139,7 @@ pyovirt_node_installer_PYTHON = \
 pyovirt_node_installer_core_PYTHON = \
   ovirt/node/installer/core/__init__.py \
   ovirt/node/installer/core/boot_device_page.py \
+  ovirt/node/installer/core/confirmation_page.py \
   ovirt/node/installer/core/installation_device_page.py \
   ovirt/node/installer/core/keyboard_page.py \
   ovirt/node/installer/core/password_page.py \
