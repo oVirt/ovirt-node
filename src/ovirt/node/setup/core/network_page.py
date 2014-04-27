@@ -268,7 +268,9 @@ class Plugin(plugins.NodePlugin):
         if "bond.slaves" in changes:
             self._model_extra["bond.slaves.selected"] = \
                 self.widgets["bond.slaves"].selection()
-        elif "bond.name" in changes and changes["bond.name"] == "007":
+        else:
+            self._model_extra["bond.slaves.selected"] = []
+        if "bond.name" in changes and changes["bond.name"] == "007":
             self.widgets["bond.options"].text("Bartender: Shaken or stirred?")
 
     def on_merge(self, effective_changes):
@@ -382,9 +384,11 @@ class Plugin(plugins.NodePlugin):
                                                "bond.slaves.selected",
                                                "bond.options"])
             self.logger.debug("args: %s" % args)
-            mb.update(*args)
-            txs += mb.transaction()
-            txs += mnet.transaction()
+            if effective_model["bond.name"] and \
+               effective_model["bond.slaves.selected"]:
+                mb.update(*args)
+                txs += mb.transaction()
+                txs += mnet.transaction()
             self._bond_dialog.close()
 
         progress_dialog = ui.TransactionProgressDialog("dialog.txs", txs, self)
