@@ -68,7 +68,7 @@ format=%(levelname)10s %(asctime)s %(pathname)s:%(lineno)s:%(funcName)s: \
 %(message)s
         """)
     logging.debug("Setting log config to: %s" % mixedfile)
-    logging.config.fileConfig(mixedfile)
+    logging.config.fileConfig(mixedfile, disable_existing_loggers=False)
 
 
 def getLogger(name=None):
