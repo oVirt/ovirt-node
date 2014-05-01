@@ -54,6 +54,7 @@ class NodePlugin(base.Base):
         super(NodePlugin, self).__init__()
         self.application = application
         self.__changes = Changeset()
+        self.__stashed_changes = Changeset()
         self.__invalid_changes = Changeset()
         self.widgets = UIElements()
 
@@ -211,6 +212,46 @@ class NodePlugin(base.Base):
             self.__changes = Changeset()
         return is_valid
 
+    def stash_change(self, path):
+        """Move any pending changes, valid or invalid, for a given path
+        into another changeset so they can be pulled back later if
+        necessary
+
+        Args:
+            path: the widget path
+        """
+
+        if path in self.__changes:
+            self.__stashed_changes.update({path: self.__changes[path]})
+            self.__changes.drop([path])
+            self.widgets[path].notice("")
+            self._on_ui_change({})
+        elif path in self.__invalid_changes:
+            self.__stashed_changes.update({path:
+                                          self.__invalid_changes[path]})
+            self.__invalid_changes.drop([path])
+            self.widgets[path].notice("")
+            self._on_ui_change({})
+
+    def stash_pop_change(self, path, reuse_old=False):
+        """Simulate user input for a widget, even if that input is merely
+        a blank entry, in order to force validation when a widget is first
+        displayed or re-enabled.
+
+        Args:
+            path: the widget path
+            reuse_old: whether to pull changes back from __stashed_changes
+        """
+
+        if path in self.__changes or path in self.__invalid_changes:
+            value = self.__changes[path] if path in self.__changes else \
+                self.__invalid_changes[path]
+            self._on_ui_change({path: value})
+        elif path in self.__stashed_changes and reuse_old:
+            self._on_ui_change({path: self.__stashed_changes[path]})
+        else:
+            self._on_ui_change({path: ""})
+
     def __validate(self, changes):
         """Test changes against the validators
 
@@ -301,6 +342,9 @@ class NodePlugin(base.Base):
                                               change.iteritems()))
                 raise
 
+            # Alternatively, if we pass, the changes are valid
+            [self.__invalid_changes.drop([k]) for k in change.keys() if k
+                in self.__invalid_changes]
             self.__changes.update(change)
 
         except exceptions.InvalidData as e:
@@ -348,6 +392,7 @@ class NodePlugin(base.Base):
 
         try:
             is_valid = self._on_ui_change(effective_changes)
+
         except exceptions.InvalidData as e:
             self.logger.info("Changes to be merged are invalid: %s" %
                              e.message)
