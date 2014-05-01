@@ -157,7 +157,7 @@ class Plugin(plugins.NodePlugin):
                            self.application.product.PRODUCT_SHORT)
             self._dialog = CustomDeviceDialog("installation.device.custom",
                                               "Installation devices.",
-                                              description)
+                                              description, self)
             self.widgets.add(self._dialog)
             return self._dialog
 

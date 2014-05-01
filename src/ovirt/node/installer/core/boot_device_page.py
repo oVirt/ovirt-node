@@ -123,7 +123,7 @@ class Plugin(plugins.NodePlugin):
                            self.application.product.PRODUCT_SHORT)
             self._dialog = CustomDeviceDialog("boot.device.custom",
                                               "Specify a boot device",
-                                              description)
+                                              description, self)
             self.widgets.add(self._dialog)
             return self._dialog
 
@@ -226,7 +226,10 @@ class DeviceDetails(ui.Label):
 class CustomDeviceDialog(ui.Dialog):
     """The dialog to input a custom root/boot device
     """
-    def __init__(self, path_prefix, title, description):
+    def __init__(self, path_prefix, title, description, plugin):
+        def clear_invalid(dialog, changes):
+            plugin.stash_change(path_prefix)
+
         title = _("Custom Block Device")
 
         device_entry = ui.Entry(path_prefix, _("Device path:"))
@@ -239,3 +242,8 @@ class CustomDeviceDialog(ui.Dialog):
                                       enabled=False),
                         ui.CloseButton("dialog.device.custom.close",
                                        _("Cancel"))]
+
+        b = plugins.UIElements(self.buttons)
+        b["dialog.device.custom.close"].on_activate.clear()
+        b["dialog.device.custom.close"].on_activate.connect(ui.CloseAction())
+        b["dialog.device.custom.close"].on_activate.connect(clear_invalid)
