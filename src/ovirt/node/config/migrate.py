@@ -19,17 +19,70 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
+from ovirt.node.config import defaults
 from ovirt.node.utils import AugeasWrapper, network, parse_bool
 from ovirt.node.utils.fs import Config
 from ovirtnode import iscsi, log, ovirtfunctions
 import os
 
 
-class MigrateConfigs(base.Base):
+class ConfigMigrationRunner(base.Base):
+    def run_if_necessary(self):
+        """Migrate the configs if needed
+        """
+        migration_func = self._determine_migration_func()
 
+        if migration_func:
+            self._run(migration_func)
+        else:
+            self.logger.debug("No config migration needed")
+
+    def _determine_migration_func(self):
+        """Determins if a migration and which migration is necessary
+        """
+        migration_func = None
+
+        cfgver = defaults.ConfigVersion().retrieve()["ver"]
+
+        if not Config().exists("/etc/default/ovirt"):
+            # If the cfg file is not persisted, then this is probably
+            # a fresh installation, no migration needed
+            self.logger.info("No migration needed during installation")
+
+        elif cfgver is None:
+            # config is persisted, but no version set, we assume it is an
+            # update from pre ovirt-node-3 to ovirt-node-3
+            def importConfigs():
+                self.logger.info("Assuming pre ovirt-node-3.0 config")
+                ImportConfigs().translate_all()
+
+            migration_func = importConfigs
+
+        return migration_func
+
+    def _run(self, migration_func):
+        try:
+            self.logger.info("Starting config migration")
+
+            # Migrate configs
+            migration_func()
+
+            # And set curret runtime version
+            cfgver = defaults.ConfigVersion()
+            cfgver.set_to_current()
+
+            self.logger.info("Config migration finished (to %s)" %
+                             cfgver.retrieve()["ver"])
+        except:
+            self.logger.exception("Config migration failed")
+
+
+class ImportConfigs(base.Base):
+    """Import the real configs into Node's abstract config
+    """
     def __init__(self):
         self.aug = AugeasWrapper()
-        super(MigrateConfigs, self).__init__()
+        super(ImportConfigs, self).__init__()
 
     def translate_all(self, do_network=True):
         if do_network:
@@ -74,10 +127,10 @@ class MigrateConfigs(base.Base):
         if self.__is_persisted("/etc/ssh/sshd_config"):
             pw_auth_enabled = ovirtfunctions.augtool_get(
                 "/files/etc/ssh/sshd_config/PasswordAuthentication")
-            rng_bytes, aes_enabled = ovirtfunctions.rng_status()
+            rng_bytes, aes_disabled = ovirtfunctions.rng_status()
 
             rng_bytes = None if rng_bytes == 0 else rng_bytes
-            aes_disabled = False if aes_enabled == "1" else True
+            aes_disabled = aes_disabled == 1
             ssh_is_enabled = parse_bool(pw_auth_enabled)
 
             if rng_bytes:
@@ -91,22 +144,33 @@ class MigrateConfigs(base.Base):
                              "yes")
 
     def translate_network_servers(self):
-        dns = [ovirtfunctions.augtool_get(
-               "/files/etc/resolv.conf/nameserver[1]"),
-               ovirtfunctions.augtool_get(
-                   "/files/etc/resolv.conf/nameserver[2]")]
-        self.aug.set("/files/etc/default/ovirt/OVIRT_DNS",
-                     ",".join((filter(None, dns))))
+        # For all of these, make sure it's not actually set already by
+        # install parameters. If it isn't, we won't overwrite anything
+        # by checking the actual values from the configuration files, which
+        # will properly be set
 
-        ntp = [ovirtfunctions.augtool_get(
-               "/files/etc/ntp.conf/server[1]"),
-               ovirtfunctions.augtool_get(
-                   "/files/etc/ntp.conf/server[2]")]
-        self.aug.set("/files/etc/default/ovirt/OVIRT_NTP",
-                     ",".join((filter(None, ntp))))
+        if self.aug.get('/files/etc/default/ovirt/OVIRT_DNS') is None and \
+                self.__is_persisted("/etc/resolv.conf"):
+            dns = [ovirtfunctions.augtool_get(
+                   "/files/etc/resolv.conf/nameserver[1]"),
+                   ovirtfunctions.augtool_get(
+                       "/files/etc/resolv.conf/nameserver[2]")]
+            self.aug.set("/files/etc/default/ovirt/OVIRT_DNS",
+                         ",".join((filter(None, dns))))
 
-        self.aug.set("/files/etc/default/ovirt/OVIRT_HOSTNAME",
-                     os.uname()[1])
+        if self.aug.get('/files/etc/default/ovirt/OVIRT_NTP') is None and \
+                self.__is_persisted("/etc/ntp.conf"):
+            ntp = [ovirtfunctions.augtool_get(
+                   "/files/etc/ntp.conf/server[1]"),
+                   ovirtfunctions.augtool_get(
+                       "/files/etc/ntp.conf/server[2]")]
+            self.aug.set("/files/etc/default/ovirt/OVIRT_NTP",
+                         ",".join((filter(None, ntp))))
+
+        if self.aug.get('/files/etc/default/ovirt/OVIRT_HOSTNAME') is None \
+                and self.__is_persisted("/etc/hosts"):
+            self.aug.set("/files/etc/default/ovirt/OVIRT_HOSTNAME",
+                         os.uname()[1])
 
     def translate_kdump(self):
         if self.__is_persisted("/etc/kdump.conf"):
@@ -249,6 +313,16 @@ class MigrateConfigs(base.Base):
         return Config().exists(path)
 
     def migrate_network_layout(self):
+        bondcfg = defaults.NicBonding().retrieve()
+        netlayoutcfg = defaults.NetworkLayout().retrieve()
+
+        if bondcfg["name"] or netlayoutcfg["layout"]:
+            # We can only reliably import pre node-3.0
+            # network configurations, therefor we abort
+            # the import if it looks like a node-3.0 config
+            self.logger.info("Looks like node-3.0 network, skipping import")
+            return
+
         bridges = [x for x in network.Bridges().ifnames() if
                    x.startswith("br")]
         bridged_nics = [x for x in network.all_ifaces() if
