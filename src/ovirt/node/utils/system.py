@@ -65,6 +65,12 @@ def is_efi():
     return os.path.exists("/sys/firmware/efi")
 
 
+def is_pxe():
+    """If the system is PXE booted
+    """
+    return "BOOTIF" in kernel_cmdline_arguments()
+
+
 def is_python_2_6():
     """If the system is running on Python 2.6
     """

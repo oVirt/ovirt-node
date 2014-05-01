@@ -21,6 +21,7 @@
 
 from ovirt.node import base
 from ovirt.node.utils.fs import File
+from ovirt.node.utils import system
 import os
 
 
@@ -108,11 +109,15 @@ class Devices(base.Base):
         if self._cached_live_disk_name:
             return self._cached_live_disk_name
 
-        from ovirtnode.ovirtfunctions import get_live_disk
-        name = get_live_disk()
-        if not "/dev/mapper" in name:
-            # FIXME explain ...
-            name = "/dev/%s" % name.rstrip('0123456789')
+        if system.is_pxe():
+            # We're PXE, don't filter anything
+            name = ""
+        else:
+            from ovirtnode.ovirtfunctions import get_live_disk
+            name = get_live_disk()
+            if not "/dev/mapper" in name:
+                # FIXME explain ...
+                name = "/dev/%s" % name.rstrip('0123456789')
         self._cached_live_disk_name = name
         return name
 
