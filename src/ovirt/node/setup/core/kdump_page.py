@@ -73,10 +73,8 @@ class Plugin(plugins.NodePlugin):
         """
         # FIXME improve validation for ssh and nfs
         return {"kdump.type": valid.Options(dict(self._types).keys()),
-                "kdump.ssh_location": (valid.Empty() |
-                                       valid.SSHAddress(allow_ipv6=False)),
-                "kdump.nfs_location": (valid.Empty() |
-                                       valid.NFSAddress(allow_ipv6=False)),
+                "kdump.ssh_location": (valid.SSHAddress(allow_ipv6=False)),
+                "kdump.nfs_location": (valid.NFSAddress(allow_ipv6=False)),
                 }
 
     def ui_content(self):
@@ -132,6 +130,7 @@ class Plugin(plugins.NodePlugin):
                 if w in self.widgets:
                     self.widgets[w].enabled(False)
                     self.widgets[w].value("")
+                    self.stash_change(w)
 
             w_pfx = "kdump.%s_" % changes["kdump.type"]
             for n in net_types:
@@ -139,6 +138,7 @@ class Plugin(plugins.NodePlugin):
                     continue
                 self.widgets[n].enabled(True)
                 self.widgets[n].value(self._model[n])
+                self.stash_pop_change(w)
 
     def on_merge(self, effective_changes):
         """Applies the changes to the plugins model, will do all required logic
