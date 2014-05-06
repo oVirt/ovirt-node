@@ -345,17 +345,14 @@ optional_policy(`
 #============= sshd_keygen_t ==============
 optional_policy(`
     require {
+        type ssh_keygen_t;
         type sshd_keygen_t;
         type tmpfs_t;
     }
     allow sshd_keygen_t tmpfs_t:dir { search };
+    allow sshd_keygen_t setfiles_t:process { siginh rlimitinh noatsecure };
+    allow sshd_keygen_t ssh_keygen_t:process { siginh rlimitinh noatsecure };
 ')
-require {
-    type sshd_keygen_t;
-    type ssh_keygen_t;
-}
-allow sshd_keygen_t setfiles_t:process { siginh rlimitinh noatsecure };
-allow sshd_keygen_t ssh_keygen_t:process { siginh rlimitinh noatsecure };
 
 
 #============= mandb_t ==============
