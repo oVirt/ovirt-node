@@ -284,7 +284,7 @@ SELinux policy module supporting %{product_family}
 for selinuxvariant in %{selinux_variants}
 do
   /usr/sbin/semodule -s ${selinuxvariant} -i \
-    %{_datadir}/selinux/${selinuxvariant}/%{selinux_modulename}.pp &> /dev/null || :
+    %{_datadir}/selinux/${selinuxvariant}/%{selinux_modulename}.pp
 done
 # Is this to greedy?
 /sbin/restorecon -R / || :
