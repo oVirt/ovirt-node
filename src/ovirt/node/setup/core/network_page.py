@@ -410,7 +410,7 @@ class Plugin(plugins.NodePlugin):
         model = defaults.Network()
         ipv6model = defaults.IPv6()
 
-        if bootproto == "none":
+        if bootproto == "none" or bootproto is None:
             self.logger.debug("Configuring no networking")
             model.configure_no_networking(iface)
         elif bootproto == "dhcp":
@@ -425,7 +425,7 @@ class Plugin(plugins.NodePlugin):
         # A hack to also set the BOOTIF when IPv6 is used in a second
         enable_bootif = lambda: model.update(iface=iface, vlanid=vlanid)
 
-        if ipv6_bootproto == "none":
+        if ipv6_bootproto == "none" or ipv6_bootproto is None:
             self.logger.debug("Configuring no ipv6 networking")
             ipv6model.disable()
 
