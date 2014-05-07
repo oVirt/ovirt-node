@@ -150,6 +150,7 @@ for device in $lvm_storage_init; do
         sed -i "s/locking_type =.*/locking_type = 0/" /etc/lvm/lvm.conf
     fi
     sdevs=$(lvm vgs -o pv_name,tags | grep storage_domain | while read line; do echo $line | awk '{print $1}'; done)
+    dev_uuid=$(lvm pvs -o pv_uuid --noheading ${device})
 
     IFS=$oldIFS
     for i in $(lvm pvs --noheadings -o pv_name,vg_name --separator=, $device 2>/dev/null); do
@@ -172,6 +173,11 @@ for device in $lvm_storage_init; do
                     exit 1
                     fi
                 done
+                ipv_uuid=$(lvm pvs -o pv_uuid --noheading ${ipv})
+                if [ $dev_uuid = $ipv_uuid ]; then
+                    # Multipath device showing up multiple times
+                    imach=1
+                fi
                 if [ $imach -eq 0 ]; then
                     fatal "LV '$ipv' is a member of VG '$vg' and must be included in \$storage_init"
                     fatal "Not all member PVs of '$vg' are given in the storage_init parameter, exiting"
