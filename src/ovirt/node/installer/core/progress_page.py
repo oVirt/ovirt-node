@@ -20,7 +20,8 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, ui, utils
 from ovirt.node.config import defaults
-from ovirt.node.utils import console
+from ovirt.node.utils import console, system
+from ovirt.node.utils.fs import File
 import threading
 
 
@@ -168,6 +169,9 @@ class InstallerThread(threading.Thread):
                    self.InstallImageAndBootloader(cfg["boot.device.current"]),
                    self.SetKeyboardLayout(cfg["keyboard.layout"])]
 
+            if system.is_pxe():
+                    tx += [self.ClearNetworkConfig()]
+
         elif cfg["method"] in ["upgrade", "downgrade", "reinstall"]:
             tx.title = "Update"
             tx += [self.InstallImageAndBootloader()]
@@ -300,3 +304,10 @@ class InstallerThread(threading.Thread):
         def commit(self):
             from ovirt.node.config import migrate
             migrate.MigrateConfigs().translate_all()
+
+    class ClearNetworkConfig(utils.Transaction.Element):
+        title = "Resetting network configuration"
+
+        def __init__(self):
+            net = defaults.Network()
+            net.configure_no_networking()
