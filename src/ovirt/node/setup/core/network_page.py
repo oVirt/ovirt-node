@@ -61,10 +61,9 @@ class NicTable(ui.Table):
         node_nics = []
         first_nic = None
         model = utils.network.NodeNetwork()
-        for name, nic in sorted(model.nics().items()):
-            if nic.is_configured() and filter_configured:
-                continue
-
+        nics = model.nics(filter_slaveless=True,
+                          filter_configured=filter_configured)
+        for name, nic in sorted(nics.items()):
             if first_nic is None:
                 first_nic = name
             if has_managed_ifnames():
@@ -99,7 +98,7 @@ class Plugin(plugins.NodePlugin):
     def __init__(self, app):
         super(Plugin, self).__init__(app)
 
-            # Keys/Paths to widgets related to NIC settings
+        # Keys/Paths to widgets related to NIC settings
         self._nic_details_group = self.widgets.group([
             "dialog.nic.ipv4.bootproto", "dialog.nic.ipv4.address",
             "dialog.nic.ipv4.netmask", "dialog.nic.ipv4.gateway",
@@ -156,7 +155,7 @@ class Plugin(plugins.NodePlugin):
         valid_bond_name = valid.RegexValidator("^(bond[0-9]{1,2}|007)$",
                                                "a valid bond name (bond[0-99])"
                                                )
-                                               # No regex, but for users ^
+        # No regex, but for users ^
 
         return {"hostname": fqdn_ip_or_empty,
                 "dns[0]": ip_or_empty,
@@ -461,7 +460,7 @@ class Plugin(plugins.NodePlugin):
         # Therefor we don't add it, to not call it twice.
         # But it should be added to the ocmplete transaction when the backend
         # code is more fine granular.
-        #txs += ipv6model.transaction()
+        # txs += ipv6model.transaction()
         return txs
 
 

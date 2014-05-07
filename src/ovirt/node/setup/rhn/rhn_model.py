@@ -60,9 +60,6 @@ class RHN(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = RHN(fs.FakeFs.File("dst"))
-    >>> n.update("secret")
-    >>> n.retrieve().items()
-    [('password', 'secret')]
     """
     keys = ("OVIRT_RHN_TYPE",
             "OVIRT_RHN_URL",

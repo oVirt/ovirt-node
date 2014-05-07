@@ -494,6 +494,14 @@ class BondedNIC(NIC):
         for slave in self.slave_nics:
             slave.identify()
 
+    @property
+    def slaves(self):
+        path = "/sys/class/net/%s/bonding/slaves" % self.ifname
+        if os.path.isfile(path):
+            return File(path).read().split()
+        else:
+            return []
+
     def __str__(self):
         return self.build_str(["ifname", "slave_nics"])
 
@@ -561,7 +569,18 @@ class NodeNetwork(base.Base):
                                            n.startswith("virbr") or
                                            n.startswith("phy"))]
 
-    def build_nic_model(self, ifname):
+    def build_nic_model(self, ifname, filter_slaveless=False,
+                        filter_configured=False):
+        """Return an object for an ifname
+
+        Args:
+          ifname: ifname for the object to build
+          filter_slaves: Only return bonds if they have slaves
+          filter_configured: Only return objects if they are unconfigured
+
+        Returns:
+          A NIC (or subclass) instance.
+        """
         mnet = config.defaults.Network().retrieve()
         mlayout = config.defaults.NetworkLayout().retrieve()
         mbond = config.defaults.NicBonding().retrieve()
@@ -571,11 +590,14 @@ class NodeNetwork(base.Base):
         layout = mlayout["layout"]
 
         nic = NIC(ifname)
+
         self.logger.debug("Building model for: %s" % nic)
 
-        if ifname == bond_name:
+        if ifname == bond_name or nic.typ == "bond":
             self.logger.debug(" Is bond master")
             nic = BondedNIC(nic, bond_slaves)
+            nic.slave_nics = [NIC(n) for n in nic.slaves] if not \
+                nic.slave_nics else nic.slave_nics
 
         if ifname == bootif:
             self.logger.debug(" Is bootif")
@@ -587,14 +609,22 @@ class NodeNetwork(base.Base):
                 self.logger.debug(" Is bridged")
                 nic = BridgedNIC(nic)
 
-        if ifname in bond_slaves:
+        if nic.is_configured() and filter_configured:
+            # Don not return configured NICs
+            nic = None
+        elif ifname in bond_slaves:
+            # Don't return slaves (of bonds)
+            nic = None
+        elif isinstance(nic, BondedNIC) and not nic.slaves and \
+                filter_slaveless:
+            # Bond device with no slaves. Don't show it
             nic = None
 
         self.logger.debug("Concluded Model: %s" % nic)
 
         return nic
 
-    def nics(self):
+    def nics(self, filter_slaveless=False, filter_configured=False):
         """
         >>> model = NodeNetwork()
         """
@@ -614,7 +644,8 @@ class NodeNetwork(base.Base):
         candidates = {}
 
         for nic in nics + vlans:
-            candidate = self.build_nic_model(nic.ifname)
+            candidate = self.build_nic_model(nic.ifname, filter_slaveless,
+                                             filter_configured)
             if candidate:
                 candidates[candidate.ifname] = candidate
 
@@ -791,7 +822,7 @@ class Vlans(base.Base):
                     continue
                 vdev, vid, hdev = [field.strip()
                                    for field in line.split("|")]
-                if not hdev in vlans:
+                if hdev not in vlans:
                     vlans[hdev] = []
                 vlans[hdev].append((vdev, vid))
         except IOError as e:
@@ -885,6 +916,6 @@ class Bonds(base.Base):
         if not self.is_bond(mifname):
             raise RuntimeError("Can no delete '%s', it is no bond master" %
                                mifname)
-        #process.call(["ip", "link", "set", "dev", mifname, "down"])
-        #process.call(["ip", "link", "delete", mifname, "type", "bond"])
+        # process.call(["ip", "link", "set", "dev", mifname, "down"])
+        # process.call(["ip", "link", "delete", mifname, "type", "bond"])
         fs.File(self.bonding_masters_filename).write("-%s" % mifname)
