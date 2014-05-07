@@ -263,10 +263,6 @@ rm -rf /tmp/cim_schema*
 %global selinux_policyver %_selinux_policy_version
 %endif
 
-%post plugin-rhn
-
-sed -ie 's/\(.*\)\.py/\1.pyc/' /etc/cron.d/rhn-virtualization.cron
-
 %package selinux
 Summary:          SELinux policy module supporting %{product_family}
 Group:            System Environment/Base
