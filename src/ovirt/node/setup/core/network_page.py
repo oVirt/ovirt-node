@@ -502,6 +502,12 @@ class NicDetailsDialog(ui.Dialog):
             "dialog.nic.hwaddress": nic.hwaddr,
         })
 
+        if isinstance(nic, network.BondedNIC):
+            self.plugin._model_extra.update({
+                "dialog.nic.bond_mode": nic.mode,
+                "dialog.nic.bond_slaves": " ".join(nic.slaves)
+            })
+
         bootproto = model["bootproto"]
         ipaddr = model["ipaddr"]
         netmask = model["netmask"]
@@ -552,64 +558,71 @@ class NicDetailsDialog(ui.Dialog):
                                       padd("Link Status: ")),
                       ui.KeywordLabel("dialog.nic.hwaddress",
                                       padd("MAC Address: ")),
-                      ]),
+                      ])]
 
-              ui.Divider("dialog.nic._divider[0]"),
+        if isinstance(nic, network.BondedNIC):
+            ws += [ui.Row("dialog.nic._row[3]",
+                          [ui.KeywordLabel("dialog.nic.bond_mode",
+                                           _("Bond Mode: ")),
+                           ui.KeywordLabel("dialog.nic.bond_slaves",
+                                           _("Bond Slaves: "))])]
 
-              ui.Label("dialog.nic.ipv4._header", _("IPv4 Settings")),
+        ws += [ui.Divider("dialog.nic._divider[0]"),
 
-              ui.Options("dialog.nic.ipv4.bootproto",
-                         "Bootprotocol: ", [("none", _("Disabled")),
-                                            ("dhcp", _("DHCP")),
-                                            ("static", _("Static"))
-                                            ]),
+               ui.Label("dialog.nic.ipv4._header", _("IPv4 Settings")),
 
-              ui.Row("dialog.nic._row[4]",
-                     [ui.Entry("dialog.nic.ipv4.address",
-                               padd(_("IP Address: "))),
-                      ui.Entry("dialog.nic.ipv4.netmask",
-                               padd(_("  Netmask: ")))]),
-              ui.Row("dialog.nic._row[5]",
-                     [ui.Entry("dialog.nic.ipv4.gateway",
-                               padd(_("Gateway: "))),
-                      ui.Label("dummy[0]", "")]),
+               ui.Options("dialog.nic.ipv4.bootproto",
+                          "Bootprotocol: ", [("none", _("Disabled")),
+                                             ("dhcp", _("DHCP")),
+                                             ("static", _("Static"))
+                                             ]),
 
-              ui.Divider("dialog.nic._divider[1]"),
+               ui.Row("dialog.nic._row[4]",
+                      [ui.Entry("dialog.nic.ipv4.address",
+                                padd(_("IP Address: "))),
+                       ui.Entry("dialog.nic.ipv4.netmask",
+                                padd(_("  Netmask: ")))]),
+               ui.Row("dialog.nic._row[5]",
+                      [ui.Entry("dialog.nic.ipv4.gateway",
+                                padd(_("Gateway: "))),
+                       ui.Label("dummy[0]", "")]),
 
-              ui.Label("dialog.nic.ipv6._header", _("IPv6 Settings")),
+               ui.Divider("dialog.nic._divider[1]"),
 
-              ui.Options("dialog.nic.ipv6.bootproto",
-                         "Bootprotocol: ", [("none", _("Disabled")),
-                                            ("auto", _("Auto")),
-                                            ("dhcp", _("DHCP")),
-                                            ("static", _("Static"))
-                                            ]),
+               ui.Label("dialog.nic.ipv6._header", _("IPv6 Settings")),
 
-              ui.Row("dialog.nic._row[6]",
-                     [ui.Entry("dialog.nic.ipv6.address",
-                               padd(_("IP Address: "))),
-                      ui.Entry("dialog.nic.ipv6.netmask",
-                               padd(_("  Prefix Length: ")))]),
-              ui.Row("dialog.nic._row[7]",
-                     [ui.Entry("dialog.nic.ipv6.gateway",
-                               padd(_("Gateway: "))),
-                      ui.Label("dummy[1]", "")]),
+               ui.Options("dialog.nic.ipv6.bootproto",
+                          "Bootprotocol: ", [("none", _("Disabled")),
+                                             ("auto", _("Auto")),
+                                             ("dhcp", _("DHCP")),
+                                             ("static", _("Static"))
+                                             ]),
 
-              ui.Divider("dialog.nic._divider[2]"),
+               ui.Row("dialog.nic._row[6]",
+                      [ui.Entry("dialog.nic.ipv6.address",
+                                padd(_("IP Address: "))),
+                       ui.Entry("dialog.nic.ipv6.netmask",
+                                padd(_("  Prefix Length: ")))]),
+               ui.Row("dialog.nic._row[7]",
+                      [ui.Entry("dialog.nic.ipv6.gateway",
+                                padd(_("Gateway: "))),
+                       ui.Label("dummy[1]", "")]),
 
-              ui.Row("dialog.nic._row[8]",
-                     [ui.Entry("dialog.nic.vlanid",
-                               padd(_("VLAN ID: "))),
-                      ui.Label("dummy[2]", "")]),
+               ui.Divider("dialog.nic._divider[2]"),
 
-              ui.Divider("dialog.nic._divider[3]"),
+               ui.Row("dialog.nic._row[8]",
+                      [ui.Entry("dialog.nic.vlanid",
+                                padd(_("VLAN ID: "))),
+                       ui.Label("dummy[2]", "")]),
 
-              ui.Checkbox("dialog.nic.layout_bridged",
-                          _("Use Bridge: ")),
+               ui.Divider("dialog.nic._divider[3]"),
 
-              ui.Divider("dialog.nic._divider[4]"),
-              ui.Button("dialog.nic.identify", _("Flash Lights to Identify")),
-              ]
+               ui.Checkbox("dialog.nic.layout_bridged",
+                           _("Use Bridge: ")),
+
+               ui.Divider("dialog.nic._divider[4]"),
+               ui.Button("dialog.nic.identify", _("Flash Lights to Identify"))
+               ]
 
         self.plugin.widgets.add(ws)
         self.children = ws

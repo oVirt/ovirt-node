@@ -498,6 +498,10 @@ class BondedNIC(NIC):
     def slaves(self):
         return Bonds().slaves(self.ifname)
 
+    @property
+    def mode(self):
+        return Bonds().mode(self.ifname)
+
     def __str__(self):
         return self.build_str(["ifname", "slave_nics"])
 
@@ -882,6 +886,7 @@ class Bonds(base.Base):
     """
     bonding_masters_filename = "/sys/class/net/bonding_masters"
     bond_slaves_path = "/sys/class/net/%s/bonding/slaves"
+    bond_mode_path = "/sys/class/net/%s/bonding/mode"
 
     def is_enabled(self):
         """If bonding is enabled
@@ -909,6 +914,17 @@ class Bonds(base.Base):
         if self.is_bond(ifname):
             slaves = File(path).read().split()
         return slaves
+
+    def mode(self, ifname, text_only=True):
+        """Return the mode used for this bond
+
+        Args:
+         text_only: If only the textual mode representation shall be returned
+        """
+        mode = File(self.bond_mode_path % ifname).read()
+        if text_only:
+            mode = mode.split()[0]
+        return mode
 
     def delete_all(self):
         """Deletes all bond devices
