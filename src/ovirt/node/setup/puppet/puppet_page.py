@@ -109,7 +109,8 @@ class Puppet(NodeConfigFileSection):
 
     >>> n = Puppet(fs.FakeFs.File("dst"))
     >>> n.update(True, "puppet.example.com",
-    ...          "http://localhost/path/to/cert")
+    ...          "http://localhost/path/to/cert")  # doctest: +ELLIPSIS
+    <puppet_page.Puppet object at ...>
     >>> data = sorted(n.retrieve().items())
     >>> data[:2]
     [('certname', 'http://localhost/path/to/cert'), ('enabled', 'yes')]

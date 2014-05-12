@@ -81,7 +81,8 @@ class SNMP(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = SNMP(fs.FakeFs.File("dst"))
-    >>> n.update(True)
+    >>> n.update(True)  # doctest: +ELLIPSIS
+    <snmp_model.SNMP object at ...>
     >>> n.retrieve()
     {'enabled': True}
     """

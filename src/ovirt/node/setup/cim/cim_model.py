@@ -33,7 +33,8 @@ class CIM(NodeConfigFileSection):
 
     >>> from ovirt.node.utils import fs
     >>> n = CIM(fs.FakeFs.File("dst"))
-    >>> n.update(True)
+    >>> n.update(True)  # doctest: +ELLIPSIS
+    <cim_model.CIM object at ...>
     >>> n.retrieve()
     {'enabled': True}
     """
