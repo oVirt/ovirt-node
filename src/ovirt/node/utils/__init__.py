@@ -29,7 +29,15 @@ Utility functions.
 It is aimed that the modules in trhis package display live informations and not
 informations based on static config files.
 Use the .config package for stuff related to configuration files.
-And use the model.py module for oVirt Node's defaults file.
+And use the config/defaults.py module for oVirt Node's defaults file.
+
+The modules in this package should generally not know about the special nature
+of Node. That means that there should be no logic in this package related to
+special properties of Node.
+I.e. should the persistence handling be done in the config.defaults module.
+That way we concentrate the Node specific logic in the defaults.config module.
+And this package contains reliable functions to common operating system tasks.
+
 """
 
 
