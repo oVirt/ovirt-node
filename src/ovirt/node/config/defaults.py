@@ -1470,8 +1470,8 @@ class SSH(NodeConfigFileSection):
             title = "Persisting configuration"
 
             def commit(self):
-                Config().persist("/etc/ssh/sshd_config")
-                Config().persist("/etc/profile")
+                fs.Config().persist("/etc/ssh/sshd_config")
+                fs.Config().persist("/etc/profile")
 
         tx = utils.Transaction("Configuring SSH")
         tx.append(ConfigurePasswordAuthentication())
