@@ -21,7 +21,6 @@
 from ovirt.node import plugins, ui, utils
 from ovirt.node.config import defaults
 from ovirt.node.utils import console, system
-from ovirt.node.utils.fs import File
 import threading
 
 
