@@ -1466,11 +1466,19 @@ class SSH(NodeConfigFileSection):
             def commit(self):
                 ssh.disable_aesni(disable_aesni)
 
+        class PersistConfig(utils.Transaction.Element):
+            title = "Persisting configuration"
+
+            def commit(self):
+                Config().persist("/etc/ssh/sshd_config")
+                Config().persist("/etc/profile")
+
         tx = utils.Transaction("Configuring SSH")
         tx.append(ConfigurePasswordAuthentication())
         tx.append(ConfigureSSHPort())
         tx.append(ConfigureStrongRNG())
         tx.append(ConfigureAESNI())
+        tx.append(PersistConfig())
         return tx
 
 

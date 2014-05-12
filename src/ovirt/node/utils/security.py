@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, valid, utils
 from ovirt.node.utils import system
-from ovirt.node.utils.fs import File, Config
+from ovirt.node.utils.fs import File
 import PAM as _PAM  # @UnresolvedImport
 import cracklib
 import os.path
@@ -102,16 +102,14 @@ class Ssh(base.Base):
         super(Ssh, self).__init__()
 
     def __update_profile(self, rng_num_bytes, disable_aes):
-        import ovirtnode.ovirtfunctions as ofunc
         additional_lines = []
-        ofunc.unmount_config("/etc/profile")
 
-        process.check_call("sed -i '/OPENSSL_DISABLE_AES_NI/d' /etc/profile",
+        process.check_call("sed -ic '/OPENSSL_DISABLE_AES_NI/d' /etc/profile",
                            shell=True)
         if disable_aes:
             additional_lines += ["export OPENSSL_DISABLE_AES_NI=1"]
 
-        process.check_call("sed -i '/SSH_USE_STRONG_RNG/d' /etc/profile",
+        process.check_call("sed -ic '/SSH_USE_STRONG_RNG/d' /etc/profile",
                            shell=True)
         if rng_num_bytes:
             additional_lines += ["export SSH_USE_STRONG_RNG=%s" %
@@ -121,7 +119,6 @@ class Ssh(base.Base):
             self.logger.debug("Updating /etc/profile")
             lines = "\n" + "\n".join(additional_lines)
             File("/etc/profile").write(lines, "a")
-            ofunc.ovirt_store_config("/etc/profile")
 
             self.restart()
 
@@ -169,12 +166,10 @@ class Ssh(base.Base):
         augpath = "/files/etc/ssh/sshd_config/PasswordAuthentication"
         aug = utils.AugeasWrapper()
         if enable in [True, False]:
-            import ovirtnode.ovirtfunctions as ofunc
             value = "yes" if enable else "no"
             self.logger.debug("Setting SSH PasswordAuthentication to " +
                               "%s" % value)
             aug.set(augpath, value)
-            ofunc.ovirt_store_config("/etc/ssh/sshd_config")
             self.restart()
         state = str(aug.get(augpath)).lower()
         if state not in ["yes", "no", "none"]:
@@ -195,7 +190,6 @@ class Ssh(base.Base):
             if int(port) in range(1, 65535):
                 self.logger.debug("Setting SSH port to %s" % port)
                 aug.set(augpath, port)
-                Config().persist("/etc/ssh/sshd_config")
                 self.restart()
 
             else:
