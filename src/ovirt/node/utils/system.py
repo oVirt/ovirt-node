@@ -793,7 +793,7 @@ class Bootloader(base.Base):
         def __getitem__(self, key):
             if re.match(r'^(.*?)=', key):
                 argument = re.match(r'^(.*?)=', key).groups()[0]
-                #flags = re.match(r'^.*?=(.*)', key).groups()[0]
+                # flags = re.match(r'^.*?=(.*)', key).groups()[0]
                 if argument in self.items:
                     return self.items[argument]
             elif key in self.items:
@@ -854,3 +854,33 @@ class Bootloader(base.Base):
 
         def remove_args(self, arg):
             self.update_args(arg, remove=True)
+
+
+class LVM(base.Base):
+    """A convenience class for querying LVM volume groups
+    and their associated attributes
+    """
+
+    def vgs(self):
+        return self._query_lvm("vg_name")
+
+    class VG(base.Base):
+        def __init__(self, name):
+            self.name = name
+
+        @property
+        def tags(self):
+            return LVM._query_lvm("tags", self.name)
+
+        @property
+        def pv_names(self):
+            return LVM._query_lvm("pv_name", self.name)
+
+    @classmethod
+    def _query_lvm(self, option, pv=None):
+        if pv:
+            return [x.strip() for x in process.check_output(["lvm", "vgs",
+                    "--noheadings", "-o", option, pv]).split("\n")]
+        else:
+            return [x.strip() for x in process.check_output(["lvm", "vgs",
+                    "--noheadings", "-o", option]).split("\n")]
