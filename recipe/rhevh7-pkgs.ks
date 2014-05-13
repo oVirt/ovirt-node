@@ -16,6 +16,7 @@ linux-firmware
 #default plugins
 ovirt-node-plugin-snmp
 ovirt-node-plugin-cim
+ovirt-node-plugin-rhn
 
 # To disable hostonly mode
 dracut-config-generic
