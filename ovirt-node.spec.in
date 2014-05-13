@@ -251,6 +251,16 @@ echo "readonly = true;" > /etc/libvirt-cim.conf
 #cleanup tmp directory from cim setup
 rm -rf /tmp/cim_schema*
 
+%package plugin-rhn
+Summary:        RHN plugin for %{product_family} image
+Group:          Applications/System
+Requires:       subscription-manager
+Requires:       rhn-virtualization-host
+Requires:       rhn-setup
+Requires:       virt-who
+
+%description plugin-rhn
+This package provides the necessary rhn plugin tools for use with%{product_family} image.
 
 #
 # SELinux subpackage
@@ -635,6 +645,13 @@ fi
 %{_initrddir}/ovirt-node-igor-slave
 %endif
 %endif
+
+%files plugin-rhn
+%{python_sitelib}/ovirt/node/setup/rhn/__init__.py*
+%{python_sitelib}/ovirt/node/setup/rhn/rhn_model.py*
+%{python_sitelib}/ovirt/node/setup/rhn/rhn_page.py*
+%{_sysconfdir}/ovirt-commandline.d/rhn_autoinstall_args
+%{_sysconfdir}/ovirt-config-boot.d/rhn_autoinstall.py*
 
 
 %files selinux

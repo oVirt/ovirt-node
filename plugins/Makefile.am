@@ -19,6 +19,7 @@ pluginsdir = $(sysconfdir)/ovirt-plugins.d
 pluginsargsdir = $(sysconfdir)/ovirt-commandline.d
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigbootdir = $(sysconfdir)/ovirt-config-boot.d
+pyovirtconfigbootargdir = $(sysconfdir)/ovirt-commandline.d
 puppetplugindir = ${prefix}/share/ovirt-node/puppet-plugin/
 rbovirtsetupdir = $(localstatedir)/lib/puppet/facts
 
@@ -35,9 +36,13 @@ dist_plugins_DATA = \
 dist_pluginsargs_DATA = \
   puppet-args
 
+dist_pyovirtconfigbootarg_DATA = \
+  rhn_autoinstall_args
+
 dist_pyovirtconfigboot_PYTHON = \
   snmp_autoinstall.py \
-  puppet_autoinstall.py
+  puppet_autoinstall.py \
+  rhn_autoinstall.py
 
 rbovirtsetup_SCRIPTS = \
   ovirt.rb

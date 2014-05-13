@@ -70,6 +70,7 @@ pyovirt_node_setup_coredir = $(pyovirt_node_setupdir)/core
 pyovirt_node_setup_cimdir = $(pyovirt_node_setupdir)/cim
 pyovirt_node_setup_snmpdir = $(pyovirt_node_setupdir)/snmp
 pyovirt_node_setup_puppetdir = $(pyovirt_node_setupdir)/puppet
+pyovirt_node_setup_rhndir = $(pyovirt_node_setupdir)/rhn
 pyovirt_node_setup_ipmidir = $(pyovirt_node_setupdir)/ipmi
 
 
@@ -196,6 +197,13 @@ pyovirt_node_setup_snmp_PYTHON = \
 pyovirt_node_setup_puppet_PYTHON = \
   ovirt/node/setup/puppet/__init__.py \
   ovirt/node/setup/puppet/puppet_page.py
+
+
+# Setup RHN Plugin
+pyovirt_node_setup_rhn_PYTHON = \
+   ovirt/node/setup/rhn/__init__.py \
+   ovirt/node/setup/rhn/rhn_model.py \
+   ovirt/node/setup/rhn/rhn_page.py
 
 
 # Setup ipmi Plugin
