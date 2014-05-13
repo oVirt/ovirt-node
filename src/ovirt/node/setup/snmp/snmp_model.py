@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
-from ovirt.node.utils import process, system
+from ovirt.node.utils import process, system, fs
 import os.path
 
 
@@ -28,8 +28,6 @@ snmp_conf = "/var/lib/net-snmp/snmpd.conf"
 
 
 def enable_snmpd(password):
-    from ovirtnode.ovirtfunctions import ovirt_store_config
-
     system.service("snmpd", "stop")
 
     # get old password #
@@ -37,9 +35,9 @@ def enable_snmpd(password):
         conf = "/tmp/snmpd.conf"
     else:
         conf = snmp_conf
-    cmd = "cat %s|grep createUser|awk '{print $4}'" % conf
-    oldpwd, stderr = process.pipe(cmd, shell=True)
-    oldpwd = oldpwd.stdout.read().strip()
+    cmd = "cat %s|grep createUser| grep -v '^#' | awk '{print $4}'" % conf
+    oldpwd = process.pipe(cmd, shell=True).strip()
+
     process.call("sed -c -ie '/^createUser root/d' %s" % snmp_conf, shell=True)
     f = open(snmp_conf, "a")
     # create user account
@@ -48,32 +46,32 @@ def enable_snmpd(password):
 
     # change existing password
     if len(oldpwd) > 0:
+        system.service("snmpd", "start")
         pwd_change_cmd = (("snmpusm -v 3 -u root -n \"\" -l authNoPriv -a " +
                            "SHA -A %s localhost passwd %s %s -x AES") %
                           (oldpwd, oldpwd, password))
         process.check_call(pwd_change_cmd, shell=True)
         # Only reached when no excepion occurs
         process.call(["rm", "-rf", "/tmp/snmpd.conf"])
-    ovirt_store_config(snmp_conf)
+        system.service("snmpd", "stop")
+    fs.Config().persist(snmp_conf)
 
     if not any([x for x in open('/etc/snmp/snmpd.conf').readlines()
                 if 'rwuser root' in x]):
         with open('/etc/snmp/snmpd.conf', 'a') as f:
             f.write("rwuser root")
-    ovirt_store_config('/etc/snmp/snmpd.conf')
+    fs.Config().persist("/etc/snmp/snmpd.conf")
 
     system.service("snmpd", "start")
 
 
 def disable_snmpd():
-    from ovirtnode.ovirtfunctions import remove_config
-
     system.service("snmpd", "stop")
     # copy to /tmp for enable/disable toggles w/o reboot
     process.check_call(["cp", "/etc/snmp/snmpd.conf", "/tmp"])
     process.check_call("sed -c -ie '/^createUser root/d' %s" % snmp_conf,
                        shell=True)
-    remove_config(snmp_conf)
+    fs.Config().unpersist(snmp_conf)
 
 
 class SNMP(NodeConfigFileSection):
@@ -110,14 +108,10 @@ class SNMP(NodeConfigFileSection):
             title = "%s SNMP and setting the password" % state
 
             def commit(self):
-                # FIXME snmp plugin needs to be placed somewhere else (in src)
-                # pylint: disable-msg=E0611
-                from ovirt_config_setup import snmp  # @UnresolvedImport
-                # pylint: enable-msg=E0611
                 if enabled and snmp_password:
-                    snmp.enable_snmpd(snmp_password)
+                    enable_snmpd(snmp_password)
                 else:
-                    snmp.disable_snmpd()
+                    disable_snmpd()
 
         tx.append(ConfigureSNMP())
         return tx
