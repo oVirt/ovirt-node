@@ -21,11 +21,12 @@
 import ovirtnode.ovirtfunctions as _functions
 
 
-def write_kdump_config(config):
+def write_kdump_config(config, type="net"):
+    assert type in ["nfs", "ssh", "net"]
     kdump_config_file = open("/etc/kdump.conf", "w")
     kdump_config_file.write("default reboot\n")
     # adds a 60 sec delay to make sure the nic is up
-    kdump_config_file.write("net " + config + "\n")
+    kdump_config_file.write(type + " " + config + "\n")
     kdump_config_file.close()
     _functions.ovirt_store_config("/etc/kdump.conf")
     return True
@@ -43,7 +44,7 @@ def restore_kdump_config():
 def kdump_auto():
     try:
         if "OVIRT_KDUMP_NFS" in _functions.OVIRT_VARS:
-            write_kdump_config(_functions.OVIRT_VARS["OVIRT_KDUMP_NFS"])
+            write_kdump_config(_functions.OVIRT_VARS["OVIRT_KDUMP_NFS"], "nfs")
             _functions.ovirt_store_config("/etc/kdump.conf")
             _functions.logger.info("Syslog Configuration Completed")
             return True

@@ -1073,7 +1073,7 @@ class KDump(NodeConfigFileSection):
 
             def commit(self):
                 import ovirtnode.kdump as okdump
-                okdump.write_kdump_config(nfs)
+                okdump.write_kdump_config(nfs, "nfs")
 
         class PopulateSshKeys(utils.Transaction.Element):
             title = "Fetching and testing SSH keys"
@@ -1118,7 +1118,7 @@ class KDump(NodeConfigFileSection):
                 import ovirtnode.kdump as okdump
                 from ovirtnode.ovirtfunctions import ovirt_store_config
 
-                okdump.write_kdump_config(ssh)
+                okdump.write_kdump_config(ssh, "ssh")
 
                 kdumpctl_cmd = system.which("kdumpctl")
                 if kdumpctl_cmd:
