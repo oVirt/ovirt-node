@@ -274,8 +274,10 @@ class ConsoleDialog(ui.Dialog):
         super(ConsoleDialog, self).__init__(path, title, [])
         self.plugin._extra_model.update({"console.path": self._console()})
         self.plugin.model()
-        self.children = [ui.Label("Enter the path to a valid console device"),
-                         ui.Label("Example: /dev/ttyS0,115200n8"),
+        self.children = [ui.Label("console.label[0]",
+                                  "Enter the path to a valid console device"),
+                         ui.Label("console.label[1]",
+                                  "Example: /dev/ttyS0,115200n8"),
                          ui.Entry("console.path", "Console path:")]
 
     def _console(self, console_path=None):
