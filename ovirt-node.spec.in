@@ -544,8 +544,28 @@ sed -i -e 's/X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config
 rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
 
+%pre
+#
+# ovirt-node must not be upgraded.
+# It is intended to only be installed.
+# Upgrades happen on an image basis
+#
+if [[ $1 -eq 2 ]] ; then
+    echo "Upgrade ovirt-node as a package is not supported."
+    exit 42
+fi
+
 
 %preun
+#
+# ovirt-node must not be uninstalled.
+# It is intended to only be installed.
+# Upgrades happen on an image basis
+#
+echo "Upgrade/Uninstalling ovirt-node as a package is not supported."
+exit 42
+
+# Keeping the rest if it is possible one day
 /sbin/chkconfig --level 35 netconsole off
 %if ! %{is_systemd}
 if [ $1 = 0 ] ; then
