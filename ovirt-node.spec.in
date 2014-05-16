@@ -18,6 +18,9 @@
 # The minimizer is only bundled on el6, because it is available on Fedora
 %define with_minimizer 0%{?is_el6}
 
+# RHN Plugin is only build on RHEL
+%define with_rhn 0%{?rhel}
+
 
 Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
@@ -251,6 +254,8 @@ echo "readonly = true;" > /etc/libvirt-cim.conf
 #cleanup tmp directory from cim setup
 rm -rf /tmp/cim_schema*
 
+
+%if 0%{?with_rhn}
 %package plugin-rhn
 Summary:        RHN plugin for %{product_family} image
 Group:          Applications/System
@@ -261,6 +266,8 @@ Requires:       virt-who
 
 %description plugin-rhn
 This package provides the necessary rhn plugin tools for use with%{product_family} image.
+%endif
+
 
 #
 # SELinux subpackage
@@ -471,6 +478,15 @@ cd -
 %{__rm} -vf %{buildroot}/%{_sbindir}/image-minimizer
 %endif
 
+# Remove rhn stuff if not needed
+%if ! 0%{?with_rhn}
+%{__rm} -vf %{buildroot}/%{python_sitelib}/ovirt/node/setup/rhn/* \
+            %{buildroot}/%{_sysconfdir}/ovirt-commandline.d/rhn_autoinstall_args \
+            %{buildroot}/%{_sysconfdir}/ovirt-config-boot.d/rhn_autoinstall.py*
+rmdir -f %{buildroot}/%{python_sitelib}/ovirt/node/setup/rhn/
+%endif
+
+
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -527,18 +543,6 @@ sed -i -e 's/X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config
 # remove symlink to keep original redhat-release
 rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
-
-# Remove minimizer if not needed
-%if ! 0%{?with_minimizer}
-rm -vf %{buildroot}/%{_sbindir}/image-minimizer
-%endif
-
-# Remove igor stuff if not needed
-%if ! 0%{?with_igor}
-rm -vf %{buildroot}/etc/rc.d/init.d/ovirt-node-igor-slave \
-       %{buildroot}/usr/libexec/ovirt-node-igor-slave
-%endif
-
 
 
 %preun
@@ -646,12 +650,15 @@ fi
 %endif
 %endif
 
+
+%if 0%{?with_rhn}
 %files plugin-rhn
 %{python_sitelib}/ovirt/node/setup/rhn/__init__.py*
 %{python_sitelib}/ovirt/node/setup/rhn/rhn_model.py*
 %{python_sitelib}/ovirt/node/setup/rhn/rhn_page.py*
 %{_sysconfdir}/ovirt-commandline.d/rhn_autoinstall_args
 %{_sysconfdir}/ovirt-config-boot.d/rhn_autoinstall.py*
+%endif
 
 
 %files selinux
