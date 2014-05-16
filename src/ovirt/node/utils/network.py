@@ -496,11 +496,7 @@ class BondedNIC(NIC):
 
     @property
     def slaves(self):
-        path = "/sys/class/net/%s/bonding/slaves" % self.ifname
-        if os.path.isfile(path):
-            return File(path).read().split()
-        else:
-            return []
+        return Bonds().slaves(self.ifname)
 
     def __str__(self):
         return self.build_str(["ifname", "slave_nics"])
@@ -885,6 +881,7 @@ class Bonds(base.Base):
     """Convenience API to access some bonding related stuff
     """
     bonding_masters_filename = "/sys/class/net/bonding_masters"
+    bond_slaves_path = "/sys/class/net/%s/bonding/slaves"
 
     def is_enabled(self):
         """If bonding is enabled
@@ -902,7 +899,16 @@ class Bonds(base.Base):
     def is_bond(self, ifname):
         """Determins if ifname is a bond device
         """
-        return ifname in self.ifnames()
+        return File(self.bond_slaves_path % ifname).exists()
+
+    def slaves(self, ifname):
+        """Find all slaves of the bond master ifname
+        """
+        path = self.bond_slaves_path % ifname
+        slaves = []
+        if self.is_bond(ifname):
+            slaves = File(path).read().split()
+        return slaves
 
     def delete_all(self):
         """Deletes all bond devices
