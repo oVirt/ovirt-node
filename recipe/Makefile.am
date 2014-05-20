@@ -124,6 +124,7 @@ repos.ks:
 	)
 
 version.ks:
+	echo DISTRO $(DISTRO)
 	( \
 	    echo "PRODUCT='"$(PRODUCT)"'" ;\
 	    echo "PRODUCT_SHORT='"$(PRODUCT_SHORT)"'" ;\
