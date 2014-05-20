@@ -483,7 +483,7 @@ cd -
 %{__rm} -vf %{buildroot}/%{python_sitelib}/ovirt/node/setup/rhn/* \
             %{buildroot}/%{_sysconfdir}/ovirt-commandline.d/rhn_autoinstall_args \
             %{buildroot}/%{_sysconfdir}/ovirt-config-boot.d/rhn_autoinstall.py*
-rmdir -f %{buildroot}/%{python_sitelib}/ovirt/node/setup/rhn/
+rmdir %{buildroot}/%{python_sitelib}/ovirt/node/setup/rhn/
 %endif
 
 
