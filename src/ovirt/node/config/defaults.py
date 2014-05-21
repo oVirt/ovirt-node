@@ -434,6 +434,9 @@ class Network(NodeConfigFileSection):
                     cfg.ipv6init = "yes"
                     cfg.ipv6forwarding = "no"
                     cfg.ipv6_autoconf = "no"
+                else:
+                    cfg.ipv6init = "no"
+                    cfg.ipv6_autoconf = "no"
 
                 if m_ipv6["bootproto"] == "auto":
                     cfg.ipv6_autoconf = "yes"

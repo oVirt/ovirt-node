@@ -72,6 +72,8 @@ class TestCleanNetwork():
     def setUp(self):
         FakeFs.erase()
         FakeFs.File("/etc/default/ovirt").touch()
+        FakeFs.File("/etc/system-release-cpe")\
+            .write("cpe:/o:fedoraproject:fedora:19")
 
     def tearDown(self):
         FakeFs.erase()
@@ -118,6 +120,8 @@ class TestBridgedNIC():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'breth0'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
@@ -155,6 +159,8 @@ class TestBridgedNIC():
                                 ('DEVICE', 'brens1'),
                                 ('GATEWAY', '192.168.122.1'),
                                 ('IPADDR', '192.168.122.42'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NETMASK', '255.255.255.0'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
@@ -198,6 +204,8 @@ class TestBridgedNIC():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'brp1p2'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
@@ -240,6 +248,8 @@ class TestDirectNIC():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'eth0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes')])
@@ -274,6 +284,8 @@ class TestDirectNIC():
         assert ifcfg_has_items("eth0.42",
                                [('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'eth0.42'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
@@ -306,6 +318,8 @@ class TestDirectNIC():
                                 ('GATEWAY', '192.168.122.1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('IPADDR', '192.168.122.42'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NETMASK', '255.255.255.0'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
@@ -374,6 +388,8 @@ class TestBond():
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'bond0'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
@@ -436,6 +452,8 @@ class TestBond():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'brbond0'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
@@ -505,6 +523,8 @@ class TestBond():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'brbond0'),
+                                ('IPV6INIT', 'no'),
+                                ('IPV6_AUTOCONF', 'no'),
                                 ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
