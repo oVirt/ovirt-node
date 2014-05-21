@@ -108,7 +108,11 @@ class Plugin(plugins.NodePlugin):
                         ui.Button("button.back", _("Back"))]
 
         if self.__enough_free_space():
-            page.buttons.extend([ui.SaveButton("button.next", _("Continue"))])
+            can_continue = self.model() and self.__calculate_free_space() >= 0
+            page.buttons.extend([ui.SaveButton("button.next",
+                                               _("Continue"),
+                                               enabled=can_continue)])
+
         return page
 
     def on_change(self, changes):
