@@ -1,0 +1,64 @@
+{
+    "register": {
+        "steps": [
+            {
+                "name": "get_ca",
+                "action": "get",
+                "parameters": {
+                    "host": "engine.example.com",
+                    "url": "http://{host}/url?cmd=get-ca-roots",
+                    "filename": "/etc/pki/ovirt-engine.key"
+                }
+            },
+            {
+                "name": "approve",
+                "action": "ui",
+                "parameters": {
+                    "key": "OVIRT_ENGINE_FINGERPRINT"
+                }
+            },
+            {
+                "name": "persist_ca",
+                "action": "persist",
+                "parameters": {
+                    "file": "/etc/pki/ovirt-engine.key"
+                }
+            },
+            {
+                "name": "get_ssh",
+                "action": "get",
+                "parameters": {
+                    "host": "engine.example.com",
+                    "url": "http://{host}/url?=cmd=get-sshkey&type=manager",
+                    "filename": "/tmp/ovirt-engine.key"
+                }
+            },
+            {
+                "name": "authorize",
+                "action": "exec",
+                "parameters": {
+                    "cmd": "cat /tmp/ovirt-engine.key >> /home/admin/.ssh/.authorized_keys"
+                }
+            },
+            {
+                "name": "persist_ssh",
+                "action": "persist",
+                "parameters": {
+                    "file": "/home/admin/.ssh/.authorized_keys"
+                }
+            },
+            {
+                "name": "finish",
+                "action": "get",
+                "parameters": {
+                    "host": "engine.example.com",
+                    "url": "http://{host}/url?cmd=register&name={name}&ip={ip}&sshkeyfingerprint={fingerprint}&user={user}",
+                    "name": "node.example.com",
+                    "ip": "10.0.0.1",
+                    "fingerprint": "DE:AD:BE:EF",
+                    "user": "admin"
+                }
+            }
+        ]
+    }
+}

@@ -124,7 +124,8 @@ pyovirt_node_utils_PYTHON = \
 pyovirt_node_tools_PYTHON = \
   ovirt/node/tools/__init__.py \
   ovirt/node/tools/password.py \
-  ovirt/node/tools/features.py
+  ovirt/node/tools/features.py \
+  ovirt/node/tools/registration.py
 
 dist_pyovirt_node_tools_DATA = \
   ovirt/node/tools/featured.xsl

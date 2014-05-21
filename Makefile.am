@@ -30,6 +30,7 @@ SUBDIRS =   \
   logrotate \
   plugins \
   modules \
+  registration \
   tools \
   tests
 
