@@ -23,6 +23,7 @@ from ovirt.node import base, utils, plugins, ui, loader
 from ovirt.node.config import defaults
 from ovirt.node.ui import urwid_builder
 from ovirt.node.utils import system, Timer, console
+import signal as sys_signal
 import sys
 
 """
@@ -279,13 +280,19 @@ class Application(base.Base):
         self.ui.header = "\n %s\n" % str(self.product)
         self.ui.footer = "Press esc to quit."
 
+        # Catch ctrl+c
+        if not self.args.debug:
+            def _handler(signum, frame):
+                self.logger.debug("CTRL+C pressed")
+            sys_signal.signal(sys_signal.SIGINT, _handler)
+
+        if system.is_rescue_mode():
+            self.logger.error("The TUI cannot be used in rescue mode. "
+                              "Please reboot without rescue to "
+                              "configure/install.")
+            sys.exit(0)
+
         try:
-            if system.is_rescue_mode():
-                self.logger.error("The TUI cannot be used in rescue mode. "
-                                  "Please reboot without rescue to "
-                                  "configure/install.")
-                import sys
-                sys.exit(0)
             self.ui.run()
         except Exception as e:
             console.reset()
