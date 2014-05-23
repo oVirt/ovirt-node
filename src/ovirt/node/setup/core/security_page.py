@@ -41,6 +41,7 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug(cfg)
         model = {
             "ssh.pwauth": cfg["pwauth"] or False,
+            "ssh.port": cfg["port"] or "22",
             "strongrng.disable_aesni": cfg["disable_aesni"] or False,
             "strongrng.num_bytes": cfg["num_bytes"] or "",
             "passwd.admin.password": "",
