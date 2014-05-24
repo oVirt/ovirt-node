@@ -52,6 +52,7 @@ keep /lib/modules/*/kernel/fs/btrfs
 keep /lib/modules/*/kernel/fs/cifs*
 keep /lib/modules/*/kernel/fs/fat
 keep /lib/modules/*/kernel/fs/nfs
+keep /lib/modules/*/kernel/fs/nfsd
 keep /lib/modules/*/kernel/fs/nfs_common
 keep /lib/modules/*/kernel/fs/fscache
 keep /lib/modules/*/kernel/fs/lockd
@@ -340,7 +341,4 @@ droprpm usermode
 #NFS Server
 drop /usr/bin/rpcgen
 drop /usr/sbin/rpc.gssd
-drop /usr/sbin/rpc.mountd
-drop /usr/sbin/rpc.nfsd
-drop /usr/sbin/rpc.svcgssd
 drop /usr/sbin/rpcdebug
