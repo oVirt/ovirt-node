@@ -104,6 +104,8 @@ class Ssh(base.Base):
     def __update_profile(self, rng_num_bytes, disable_aes):
         additional_lines = []
 
+        utils.fs.Config().unpersist("/etc/profile")
+
         process.check_call("sed -ic '/OPENSSL_DISABLE_AES_NI/d' /etc/profile",
                            shell=True)
         if disable_aes:
@@ -119,6 +121,7 @@ class Ssh(base.Base):
             self.logger.debug("Updating /etc/profile")
             lines = "\n" + "\n".join(additional_lines)
             File("/etc/profile").write(lines, "a")
+            utils.fs.Config().persist("/etc/profile")
 
             self.restart()
 
@@ -170,6 +173,7 @@ class Ssh(base.Base):
             self.logger.debug("Setting SSH PasswordAuthentication to " +
                               "%s" % value)
             aug.set(augpath, value)
+            utils.fs.Config().persist("/etc/ssh/sshd_config")
             self.restart()
         state = str(aug.get(augpath)).lower()
         if state not in ["yes", "no", "none"]:
