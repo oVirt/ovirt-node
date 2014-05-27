@@ -38,6 +38,7 @@ device arcmsr
 device atp870u
 device be2iscsi
 device bfa
+device broadcom
 device BusLogic
 device cciss
 device cxgb3i
