@@ -353,6 +353,7 @@ class Network(NodeConfigFileSection):
                 nic_cfg = NicConfig(m["iface"])
                 nic_cfg.device = m["iface"]
                 nic_cfg.onboot = "yes"
+                nic_cfg.nm_controlled = "no"
 
                 # Only assign a hwaddr if it's not a bond
                 if mbond["name"] != m["iface"]:

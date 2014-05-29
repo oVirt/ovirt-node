@@ -66,13 +66,14 @@ class NicConfig(base.Base):
     vlan_parent = None
 
     _backend = None
+    nm_controlled = None
 
     _keys = ["bridge", "type", "bootproto", "ipaddr", "netmask",
              "gateway", "vlan", "device", "onboot", "hwaddr",
              "ipv6init", "ipv6forwarding", "ipv6_autoconf",
              "dhcpv6c", "ipv6addr", "ipv6_defaultgw", "delay",
              "peerntp", "peerdns",
-             "master", "slave", "bonding_opts"]
+             "master", "slave", "bonding_opts", "nm_controlled"]
 
     def __init__(self, ifname):
         super(NicConfig, self).__init__()

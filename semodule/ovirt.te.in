@@ -153,6 +153,13 @@ allow iscsid_t iscsi_var_lib_t:file { write create unlink };
 allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
 
 
+#============= ping_t ==============
+require {
+    type nfs_t;
+    type ping_t;
+}
+allow ping_t nfs_t:file read;
+
 #============= dhcpc_t ==============
 optional_policy(`
     require {
