@@ -22,6 +22,7 @@ python
 python-gudev
 python-libs
 python-setuptools
+python-requests
 PyPAM
 #db4
 # debugging
