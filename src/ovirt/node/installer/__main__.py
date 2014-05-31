@@ -28,7 +28,8 @@ from ovirt.node import app, installer, log, ui, utils
 
 def quit(instance):
     def ui_quit(dialog, changes):
-        utils.system.reboot()
+        if not instance.args.dry:
+            utils.system.reboot()
         instance.ui.quit()
     txt = "Are you sure you want to quit? The system will be rebooted."
     dialog = ui.ConfirmationDialog("dialog.exit", "Exit", txt,
