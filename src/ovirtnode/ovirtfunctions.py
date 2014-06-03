@@ -79,7 +79,8 @@ OVIRT_CONFIG_FILES = [ "/etc/rsyslog.conf",
                        "/etc/pki",
                        "/etc/iscsi/initiatorname.iscsi",
                        "/etc/logrotate.d/ovirt-node",
-                       "/var/lib/random-seed" ]
+                       "/var/lib/random-seed",
+                       "/var/lib/glusterd"]
 
 OVIRT_VARS = {}
 # Parse all OVIRT_* variables
