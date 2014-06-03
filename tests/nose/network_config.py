@@ -110,6 +110,7 @@ class TestBridgedNIC():
                                [('BRIDGE', 'breth0'),
                                 ('DEVICE', 'eth0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes')])
         assert ifcfg_has_items("breth0",
                                [('BOOTPROTO', 'dhcp'),
@@ -144,6 +145,7 @@ class TestBridgedNIC():
                                [('BRIDGE', 'brens1'),
                                 ('DEVICE', 'ens1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes')])
         assert ifcfg_has_items("brens1",
                                [('DELAY', '0'),
@@ -191,6 +193,7 @@ class TestDirectNIC():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'eth0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes')])
 
@@ -218,6 +221,7 @@ class TestDirectNIC():
         assert ifcfg_has_items("eth0",
                                [('DEVICE', 'eth0'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes')])
 
         assert ifcfg_has_items("eth0.42",
@@ -255,6 +259,7 @@ class TestDirectNIC():
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('IPADDR', '192.168.122.42'),
                                 ('NETMASK', '255.255.255.0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes')])
 
@@ -318,6 +323,7 @@ class TestBond():
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bond')])
@@ -368,6 +374,7 @@ class TestBond():
                                [('BONDING_OPTS', 'mode=4'),
                                 ('BRIDGE', 'brbond0'),
                                 ('DEVICE', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('TYPE', 'Bond')])
 
@@ -425,6 +432,7 @@ class TestBond():
         assert ifcfg_has_items("bond0",
                                [('BONDING_OPTS', 'mode=4'),
                                 ('DEVICE', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('TYPE', 'Bond')])
 
