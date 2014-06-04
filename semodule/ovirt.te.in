@@ -92,7 +92,7 @@ allow local_login_t unconfined_t:process { siginh noatsecure };
 
 
 #============= logrotate_t ==============
-allow logrotate_t virt_cache_t:dir read;
+allow logrotate_t virt_cache_t:dir { read getattr };
 allow logrotate_t var_lib_t:file write;
 
 
