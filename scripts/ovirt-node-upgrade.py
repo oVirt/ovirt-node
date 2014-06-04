@@ -150,8 +150,8 @@ class UpgradeTool(Base):
         parser.add_option("--reboot", type="int", default="0", dest="reboot",
                           help="Perform reboot after upgrade, argument is"
                           " amount of delay in seconds")
-        parser.add_option("--skip-existing-hooks", action="store_true",
-                          dest="skip_existing_hooks", default="False",
+        parser.add_option("--skip-existing-hooks", action="store_false",
+                          dest="skip_existing_hooks", default=False,
                           help="Use only new hooks from provided iso")
 
         parser.add_option("--iso", type="string", dest="iso_file",
@@ -181,7 +181,7 @@ class UpgradeTool(Base):
 
         hooks_path.append(os.path.join(
             self._chroot_path,
-            self._hooks_path,
+            self._hooks_path.lstrip("/"),
             stage,
         ))
 
