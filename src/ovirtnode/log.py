@@ -178,11 +178,11 @@ def syslog_auto():
 def netconsole_auto():
     host = ""
     port = ""
-    if (not "OVIRT_NETCONSOLE_SERVER" in _functions.OVIRT_VARS or not
+    if (not "OVIRT_NETCONSOLE_SERVER" in _functions.OVIRT_VARS and not
         "OVIRT_NETCONSOLE_PORT" in _functions.OVIRT_VARS):
         logger.info("Attempting to locate remote netconsole server...")
         try:
-            host, port = _functions.find_srv("netconsole", "udp")
+            port, host = _functions.find_srv("netconsole", "udp")
         except:
             pass
         if not host is "" and not port is "":
@@ -192,6 +192,12 @@ def netconsole_auto():
         else:
             logger.warn("Netconsole server not found!")
             return False
+    elif ("OVIRT_NETCONSOLE_SERVER" in _functions.OVIRT_VARS and not
+          "OVIRT_NETCONSOLE_PORT" in _functions.OVIRT_VARS):
+        logger.info("Using default netconsole port 6666.")
+        ovirt_netconsole(_functions.OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"],
+                         "6666")
+        return True
     else:
         logger.info("Using default netconsole server " +
                     _functions.OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"] + ":" +
