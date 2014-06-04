@@ -146,11 +146,11 @@ def get_rsyslog_config():
 def syslog_auto():
     host = ""
     port = ""
-    if (not "OVIRT_SYSLOG_SERVER" in _functions.OVIRT_VARS or
+    if (not "OVIRT_SYSLOG_SERVER" in _functions.OVIRT_VARS and
         not "OVIRT_SYSLOG_PORT" in _functions.OVIRT_VARS):
         logger.info("Attempting to locate remote syslog server...")
         try:
-            host, port = _functions.find_srv("syslog", "udp")
+            port, host = _functions.find_srv("syslog", "udp")
         except:
             pass
         if not host is "" and not port is "":
@@ -160,6 +160,12 @@ def syslog_auto():
         else:
             logger.warn("Syslog server not found!")
             return False
+    elif ("OVIRT_SYSLOG_SERVER" in _functions.OVIRT_VARS and
+          not "OVIRT_SYSLOG_PORT" in _functions.OVIRT_VARS):
+        logger.info("Using default syslog port 514")
+        ovirt_rsyslog(_functions.OVIRT_VARS["OVIRT_SYSLOG_SERVER"],
+                      "514", "udp")
+        return True
     else:
         logger.info("Using default syslog server " +
                     _functions.OVIRT_VARS["OVIRT_SYSLOG_SERVER"] + ":" +
