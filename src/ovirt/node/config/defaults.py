@@ -366,6 +366,7 @@ class Network(NodeConfigFileSection):
                     vlan_cfg.device = vlan_ifname
                     vlan_cfg.vlan = "yes"
                     vlan_cfg.onboot = "yes"
+                    vlan_cfg.nm_controlled = "no"
                     if with_bridge:
                         vlan_cfg.bridge = bridge_ifname
                     else:
@@ -385,6 +386,7 @@ class Network(NodeConfigFileSection):
                     bridge_cfg.device = bridge_ifname
                     bridge_cfg.delay = "0"
                     bridge_cfg.type = "Bridge"
+                    bridge_cfg.nm_controlled = "no"
                     bridge_cfg.save()
 
                 nic_cfg.save()
@@ -545,6 +547,7 @@ class NicBonding(NodeConfigFileSection):
                     slave_cfg.slave = "yes"
                     slave_cfg.master = bond["name"]
                     slave_cfg.onboot = "yes"
+                    slave_cfg.nm_controlled = "no"
                     slave_cfg.save()
 
         class WriteMasterConfig(utils.Transaction.Element):
@@ -555,6 +558,7 @@ class NicBonding(NodeConfigFileSection):
                     cfg = NicConfig(bond["name"])
                     cfg.device = bond["name"]
                     cfg.onboot = "yes"
+                    cfg.nm_controlled = "no"
                     cfg.type = "Bond"
                     cfg.bonding_opts = bond["options"]
 

@@ -38,6 +38,7 @@ def patch_common(cls):
     @patch.object(UdevNICInfo, "devtype")
     @patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
     @patch.object(AugeasWrapper, "_aug")
+    @patch.object(NIC, "ip_addresses", lambda s, x: {"inet": [s.ifname], "inet6": []})
     class TestWrapperClass(cls):
         pass
     TestWrapperClass.__name__ = cls.__name__
@@ -116,6 +117,7 @@ class TestBridgedNIC():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'breth0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
@@ -153,6 +155,7 @@ class TestBridgedNIC():
                                 ('GATEWAY', '192.168.122.1'),
                                 ('IPADDR', '192.168.122.42'),
                                 ('NETMASK', '255.255.255.0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
@@ -167,6 +170,49 @@ class TestBridgedNIC():
 
         assert nics.keys() == ["ens1"]
         assert type(nics["ens1"]) is BridgedNIC
+
+    def test_tagged_dhcp(self, *args, **kwargs):
+        mt = defaults.NetworkLayout()
+        m = defaults.Network()
+
+        m.configure_dhcp("p1p2", "42")
+        mt.configure_bridged()
+
+        run_tx_by_name(m.transaction(), "WriteConfiguration")
+
+        assert ifcfg_has_items("p1p2",
+                               [('DEVICE', 'p1p2'),
+                                ('HWADDR', 'th:em:ac:ad:dr'),
+                                ('NM_CONTROLLED', 'no'),
+                                ('ONBOOT', 'yes')])
+
+        assert ifcfg_has_items("p1p2.42",
+                               [('BRIDGE', 'brp1p2'),
+                                ('DEVICE', 'p1p2.42'),
+                                ('NM_CONTROLLED', 'no'),
+                                ('ONBOOT', 'yes'),
+                                ('VLAN', 'yes')])
+
+        assert ifcfg_has_items("brp1p2",
+                               [('BOOTPROTO', 'dhcp'),
+                                ('DELAY', '0'),
+                                ('DEVICE', 'brp1p2'),
+                                ('NM_CONTROLLED', 'no'),
+                                ('ONBOOT', 'yes'),
+                                ('PEERNTP', 'yes'),
+                                ('TYPE', 'Bridge')])
+
+    def test_tagged_dhcp_discovery(self, *args, **kwargs):
+        self.test_tagged_dhcp()
+
+        nn = NodeNetwork()
+        nn.all_ifnames = lambda: ["p1p2"]
+        nics = nn.nics()
+
+        print nics
+        bridge_nic = nics["p1p2"]
+        assert nics.keys() == ["p1p2"]
+        assert type(bridge_nic) is BridgedNIC
 
 
 @patch_common
@@ -227,6 +273,7 @@ class TestDirectNIC():
         assert ifcfg_has_items("eth0.42",
                                [('BOOTPROTO', 'dhcp'),
                                 ('DEVICE', 'eth0.42'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('VLAN', 'yes')])
@@ -302,6 +349,7 @@ class TestBond():
                                [('DEVICE', 'ens1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -309,6 +357,7 @@ class TestBond():
                                [('DEVICE', 'ens2'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -316,6 +365,7 @@ class TestBond():
                                [('DEVICE', 'ens3'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -353,6 +403,7 @@ class TestBond():
                                [('DEVICE', 'ens1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -360,6 +411,7 @@ class TestBond():
                                [('DEVICE', 'ens2'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -367,6 +419,7 @@ class TestBond():
                                [('DEVICE', 'ens3'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -382,6 +435,7 @@ class TestBond():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'brbond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
@@ -412,6 +466,7 @@ class TestBond():
                                [('DEVICE', 'ens1'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -419,6 +474,7 @@ class TestBond():
                                [('DEVICE', 'ens2'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -426,6 +482,7 @@ class TestBond():
                                [('DEVICE', 'ens3'),
                                 ('HWADDR', 'th:em:ac:ad:dr'),
                                 ('MASTER', 'bond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('SLAVE', 'yes')])
 
@@ -439,6 +496,7 @@ class TestBond():
         assert ifcfg_has_items("bond0.42",
                                [('BRIDGE', 'brbond0'),
                                 ('DEVICE', 'bond0.42'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('VLAN', 'yes')])
 
@@ -446,6 +504,7 @@ class TestBond():
                                [('BOOTPROTO', 'dhcp'),
                                 ('DELAY', '0'),
                                 ('DEVICE', 'brbond0'),
+                                ('NM_CONTROLLED', 'no'),
                                 ('ONBOOT', 'yes'),
                                 ('PEERNTP', 'yes'),
                                 ('TYPE', 'Bridge')])
@@ -508,12 +567,15 @@ class TestBond():
         assert ifcfgfilename("bond0") not in FakeFs.filemap
         assert ifcfg_has_items("ens1", [('DEVICE', 'ens1'),
                                         ('HWADDR', 'th:em:ac:ad:dr'),
+                                        ('NM_CONTROLLED', 'no'),
                                         ('ONBOOT', 'yes')])
         assert ifcfg_has_items("ens2", [('DEVICE', 'ens2'),
                                         ('HWADDR', 'th:em:ac:ad:dr'),
+                                        ('NM_CONTROLLED', 'no'),
                                         ('ONBOOT', 'yes')])
         assert ifcfg_has_items("ens3", [('DEVICE', 'ens3'),
                                         ('HWADDR', 'th:em:ac:ad:dr'),
+                                        ('NM_CONTROLLED', 'no'),
                                         ('ONBOOT', 'yes')])
 
     def test_no_bond_and_clean_discovery(self, *args, **kwargs):
