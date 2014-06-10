@@ -539,21 +539,8 @@ def mount_liveos():
             return True
 
 def mount_efi(target="/liveos/efi"):
-    if os.path.ismount(target):
-        return True
-    if is_iscsi_install() or findfs("Boot"):
-        efi_part = findfs("Boot")
-    else:
-        efi_part = findfs("Root")
-    efi_part = efi_part[:-1] + "1"
-    if not os.path.exists(target):
-        if not system("mkdir -v -p %s" % target):
-            logger.warning("Unable to create mount target for EFI partition")
-    if system("mount -t vfat %s %s" % (efi_part, target)):
-        return True
-    else:
-        logger.error("Unable to mount EFI partition")
-        return False
+    # Moved to the new codebase
+    osystem.mount_efi(target)
 
 # mount config partition
 # /config for persistance

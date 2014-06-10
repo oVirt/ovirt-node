@@ -65,6 +65,37 @@ def is_efi():
     return os.path.exists("/sys/firmware/efi")
 
 
+def mount_efi(target="/liveos/efi"):
+    """Mount the EFI config partition
+    """
+    if os.path.ismount(target):
+        return True
+    if is_iscsi() or Filesystem.by_label("Boot"):
+        efi_part = Filesystem.by_label("Boot").device
+    else:
+        efi_part = Filesystem.by_label("Root").device
+
+    # Get the first partition on the disk
+    efi_part = efi_part[:-1] + "1"
+
+    if not os.path.exists(target):
+        if not process.check_call(["mkdir", "-v", "-p", target]):
+            LOGGER.exception("Unable to create mount target for EFI "
+                             "partition")
+            raise RuntimeError("Unable to create mount target for EFI "
+                               "partition")
+    Mount(target, efi_part, "vfat").mount()
+
+
+def is_iscsi():
+    """If the system is iSCSI
+    """
+    from ovirt.node.config import defaults
+
+    if defaults.Installation().retrieve()["iscsi_install"]:
+        return True
+
+
 def is_pxe():
     """If the system is PXE booted
     """
@@ -668,7 +699,8 @@ class Filesystem(base.Base):
             Filesystem._flush()
             with open(os.devnull, 'wb') as DEVNULL:
                 device = process.check_output(["blkid", "-c", "/dev/null",
-                                               "-L", label], stderr=DEVNULL)
+                                               "-L", label], stderr=DEVNULL
+                                              ).strip()
 
             fs = Filesystem(device)
 
@@ -694,13 +726,16 @@ class Mount(base.Base):
     that filesystem for access
     """
 
-    def __init__(self, path):
-        if os.path.ismount(path):
-            self.path = path
-        else:
-            raise RuntimeError("Must be called with a mount point")
+    def __init__(self, path, device=None, fstype=None):
+        self.path = path
+        self.fstype = fstype
+        self.device = device
 
     def remount(self, rw=False):
+        if not os.path.ismount(self.path):
+            self.logger.exception("%s is not a mount point" % self.path)
+            raise RuntimeError("%s is not a mount point" % self.path)
+
         # EL6 won't let you remount if it's not in mtab or fstab
         # So we'll parse /proc/mounts ourselves to find it
         device = self._find_device()
@@ -714,6 +749,21 @@ class Mount(base.Base):
         except:
             self.logger.exception("Can't remount %s on %s!" % (device,
                                                                self.path))
+
+    def mount(self):
+        if not self.device:
+            self.logger.exception("Can't mount without a device specified")
+            raise RuntimeError("No device was specified when Mount() "
+                               "was initialized")
+
+        fstype = self.fstype if self.fstype else "auto"
+
+        try:
+            utils.process.check_call(["mount", "-t", fstype,
+                                      self.device, self.path])
+        except:
+            self.logger.exception("Can't mount %s on %s" % (self.device,
+                                  self.path))
 
     def _find_device(self):
         try:
