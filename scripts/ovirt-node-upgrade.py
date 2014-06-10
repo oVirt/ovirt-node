@@ -150,7 +150,7 @@ class UpgradeTool(Base):
         parser.add_option("--reboot", type="int", default="0", dest="reboot",
                           help="Perform reboot after upgrade, argument is"
                           " amount of delay in seconds")
-        parser.add_option("--skip-existing-hooks", action="store_false",
+        parser.add_option("--skip-existing-hooks", action="store_true",
                           dest="skip_existing_hooks", default=False,
                           help="Use only new hooks from provided iso")
 
