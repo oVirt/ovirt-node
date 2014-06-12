@@ -1194,10 +1194,9 @@ enabled=1
                 home = "/home/%s/.ssh" % user
             if not os.path.exists(self._instroot + home):
                 os.system("mkdir -p %s%s" % (self._instroot, home))
-                k = open(keyfile).read()
-                f = open(self._instroot + home + "/authorized_keys", "a")
-                f.write(k)
-                f.close()
+            with open(keyfile) as k:
+                with open(self._instroot + home + "/authorized_keys", "a") as f:
+                    f.write(k.read())
 
     def _rebuild_initramfs(self):
         print("Creating initramfs")
