@@ -1203,8 +1203,10 @@ enabled=1
         print("Creating initramfs")
         # ensure dmsquash-live dracut module is included
         d_conf = "%s/etc/dracut.conf" % self._instroot
-        with open(d_conf) as f:
-            current = f.readlines()
+        current = ""
+        if os.path.exists(d_conf):
+           with open(d_conf) as f:
+               current = f.readlines()
         add_modules = True
         for line in current:
             if line.startswith("add_dracutmodules") \
