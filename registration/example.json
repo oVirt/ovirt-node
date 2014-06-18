@@ -5,8 +5,8 @@
                 "name": "get_ca",
                 "action": "get",
                 "parameters": {
-                    "host": "engine.example.com",
-                    "url": "http://{host}/url?cmd=get-ca-roots",
+                    "uri": "engine.example.com/ovirt-engine",
+                    "url": "http://{uri}/services/host-register?version=1&cmd=get-pki-trust",
                     "filename": "/etc/pki/ovirt-engine.key"
                 }
             },
@@ -28,8 +28,8 @@
                 "name": "get_ssh",
                 "action": "get",
                 "parameters": {
-                    "host": "engine.example.com",
-                    "url": "http://{host}/url?=cmd=get-sshkey&type=manager",
+                    "uri": "engine.example.com",
+                    "url": "http://{uri}/ovirt-engine/services/host-register?version=1&cmd=get-ssh-trust",
                     "filename": "/tmp/ovirt-engine.key"
                 }
             },
@@ -51,12 +51,14 @@
                 "name": "finish",
                 "action": "get",
                 "parameters": {
-                    "host": "engine.example.com",
-                    "url": "http://{host}/url?cmd=register&name={name}&ip={ip}&sshkeyfingerprint={fingerprint}&user={user}",
+                    "uri": "engine.example.com/ovirt-engine",
+                    "url": "http://{uri}/services/host-register?version=1&cmd=register&name={name}&address={address}&uniqueId={uniqueId}&vdsPort={vdsPort}&sshUser={sshUser}&sshPort={sshPort}",
                     "name": "node.example.com",
-                    "ip": "10.0.0.1",
-                    "fingerprint": "DE:AD:BE:EF",
-                    "user": "admin"
+                    "address": "10.0.0.1",
+                    "vdsPort": "54321",
+                    "sshUser": "admin",
+                    "sshPort": "22",
+                    "uniqueId": "DEADBEEF-UUID-1234-5678-09DEADBEEF00",
                 }
             }
         ]
