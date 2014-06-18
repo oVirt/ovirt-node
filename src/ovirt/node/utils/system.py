@@ -951,8 +951,8 @@ class LVM(base.Base):
     @classmethod
     def _query_lvm(self, option, pv=None):
         if pv:
-            return [x.strip() for x in process.check_output(["lvm", "vgs",
-                    "--noheadings", "-o", option, pv]).split("\n")]
+            return [x.strip() for x in process.check_output(["lvm",
+                    "vgs", "--noheadings", "-o", option, pv]).split("\n")]
         else:
-            return [x.strip() for x in process.check_output(["lvm", "vgs",
-                    "--noheadings", "-o", option]).split("\n")]
+            return [x.strip() for x in process.check_output(["lvm",
+                    "vgs", "--noheadings", "-o", option]).split("\n")]

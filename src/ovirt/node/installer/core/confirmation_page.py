@@ -34,7 +34,7 @@ class Plugin(plugins.NodePlugin):
         super(Plugin, self).__init__(app)
         self.storage_discovery = StorageDiscovery(app.args.dry)
         self.storage_discovery.start()
-        self._header = "{!s:8.8} {!s:48.48} {!s:9.9}"
+        self._header = "{bus!s:8.8} {name!s:48.48} {size!s:9.9}"
 
     def name(self):
         return "Confirm disk selections"
@@ -140,9 +140,8 @@ class DiskDetails(ui.Label):
     def get_details(self, dev):
         all_devices = self._plugin.storage_discovery.all_devices()
         device = all_devices[dev]
-
-        txt = self._plugin._header.format(device.bus, device.name,
-                                          "%sGB" % device.size)
+        txt = self._plugin._header.format(bus=device.bus, name=device.name,
+                                          size="%sGB" % device.size)
 
         self.text(txt)
 
