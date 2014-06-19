@@ -37,6 +37,8 @@ BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 EARLY_DIR=/etc/ovirt-early.d
 
+HOOK_ON_BOOT_DIR=/usr/libexec/ovirt-node/hooks/on-boot
+
 # Drop to a shell
 emergency_shell() {
     plymouth --hide-splash
@@ -1003,6 +1005,16 @@ EOF
 from ovirt.node.utils import firewall
 firewall.process_plugins()
 EOP
+
+    if [[ -d "$HOOK_ON_BOOT_DIR" ]];
+    then
+        for handler in "$HOOK_ON_BOOT_DIR"/*;
+        do
+            echo "Running handler: $handler"
+            "$handler"
+        done
+    fi
+
     return 0
 }
 
