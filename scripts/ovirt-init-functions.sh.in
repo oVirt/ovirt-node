@@ -1010,8 +1010,8 @@ EOP
     then
         for handler in "$HOOK_ON_BOOT_DIR"/*;
         do
-            echo "Running handler: $handler"
-            "$handler"
+            log "Running handler: $handler"
+            "$handler" >> $OVIRT_LOGFILE 2>&1
         done
     fi
 
