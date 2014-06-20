@@ -22,12 +22,15 @@
 """
 Some convenience functions realted to the filesystem
 """
+from __future__ import print_function
 
 import shutil
+import errno
 import os
 import re
 import StringIO
 
+from . import mount
 from .. import process, parse_varfile
 from ... import base, log
 
@@ -382,17 +385,136 @@ def is_bind_mount(filename, fsprefix="ext"):
 class Config(base.Base):
     """oVirt Node specififc way to persist files
     """
-    basedir = "/config"
+    basedir = '/config'
+    path_entries = '/config/files'
 
     def _config_path(self, fn=""):
         return os.path.join(self.basedir, fn.strip("/"))
 
-    def persist(self, filename):
-        """Persist a file and bind mount it
+    def persist(self, path):
+        """Persist path and bind mount it back to its current location
         """
-        if filename and self.is_enabled():
-            from ovirtnode import ovirtfunctions
-            return ovirtfunctions.ovirt_store_config(filename)
+        # TODO: Abort if it is stateless
+        if not self.is_enabled():
+            return
+        abspath = os.path.abspath(path)
+        if os.path.exists(abspath):
+            # Check first for symlinks as os.path file type detection follows
+            # links and will give the type of the target
+            try:
+                if os.path.islink(abspath):
+                    self._persist_symlink(abspath)
+                elif os.path.isdir(abspath):
+                    self._persist_dir(abspath)
+                elif os.path.isfile(abspath):
+                    self._persist_file(abspath)
+            except Exception:
+                self._logger.error('Failed to persist "%s"' % path)
+                return -1
+
+    def _persist_dir(self, abspath):
+        """Persist directory and bind mount it back to its current location
+        """
+        persisted_path = self._config_path(abspath)
+        if os.path.exists(persisted_path):
+            self._logger.warn('Directory "%s" had already been persisted' %
+                              abspath)
+            return
+
+        shutil.copytree(abspath, persisted_path, symlinks=True)
+        mount.mount(persisted_path, abspath, flags=mount.MS_BIND)
+        self._logger.info('Directory "%s" successfully persisted' % abspath)
+        self._add_path_entry(abspath)
+
+    def _persist_file(self, abspath):
+        """Persist file and bind mount it back to its current location
+        """
+        from ovirtnode import ovirtfunctions
+        persisted_path = self._config_path(abspath)
+        if os.path.exists(persisted_path):
+            current_checksum = ovirtfunctions.cksum(abspath)
+            stored_checksum = ovirtfunctions.cksum(persisted_path)
+            if stored_checksum == current_checksum:
+                self._logger.warn('File "%s" had already been persisted' %
+                                  abspath)
+                return
+            else:
+                # If this happens, somehow the bind mount was undone, so we try
+                # and clean up before re-persisting
+                try:
+                    if mount.ismount(abspath):
+                        mount.umount(abspath)
+                    os.unlink(persisted_path)
+                except OSError as ose:
+                    self._logger.error('Failed to clean up persisted file '
+                                       '"%s": %s' % (abspath, ose.message))
+        self._prepare_dir(abspath, persisted_path)
+        shutil.copy2(abspath, persisted_path)
+        mount.mount(persisted_path, abspath, flags=mount.MS_BIND)
+        self._logger.info('File "%s" successfully persisted' % abspath)
+        self._add_path_entry(abspath)
+
+    def _persist_symlink(self, abspath):
+        """Persist symbolic link and bind mount it back to its current location
+        """
+        persisted_path = self._config_path(abspath)
+        current_target = os.readlink(abspath)
+        if os.path.exists(persisted_path):
+            stored_target = os.readlink(persisted_path)
+            if stored_target == current_target:
+                self._logger.warn('Symlink "%s" had already been persisted' %
+                                  abspath)
+                return
+            else:
+                # Write the new symlink to an alternate location and atomically
+                # rename
+                self._prepare_dir(abspath, persisted_path)
+                tmp_path = persisted_path + '.ovirtnode.atom'
+                try:
+                    os.symlink(current_target, tmp_path)
+                except Exception:
+                    raise
+                else:
+                    os.rename(tmp_path, persisted_path)
+        else:
+            self._prepare_dir(abspath, persisted_path)
+            os.symlink(current_target, persisted_path)
+
+        self._logger.info('Symbolic link "%s" successfully persisted' %
+                          abspath)
+        self._add_path_entry(abspath)
+
+    def _prepare_dir(self, abspath, persisted_path):
+        """Creates the necessary directory structure for persisted abspath
+        """
+        dir_path = os.path.dirname(persisted_path)
+        try:
+            os.makedirs(dir_path)
+        except OSError as ose:
+            if ose.errno != errno.EEXIST:
+                self._logger.error('Failed to create the directories '
+                                   'necessary to persist %s: %s' %
+                                   (abspath, ose))
+                raise
+
+    def _persisted_path_entries(self):
+        """Generates the entries in /config/files
+        """
+        with open(self.path_entries) as path_entries:
+            for entry in path_entries:
+                yield entry
+
+    def _add_path_entry(self, abspath):
+        """Adds abspath to /config/files
+        """
+        matches = (entry for entry in self._persisted_path_entries() if
+                   entry == abspath)
+        if any(matches):
+            pass  # Entry already present
+        else:
+            matches.close()  # Close iterator so that path_entries is closed
+            with open(self.path_entries, 'a') as path_entries:
+                print(abspath, file=path_entries)
 
     def unpersist(self, filename):
         """Remove the persistent version of a file and remove the bind mount
