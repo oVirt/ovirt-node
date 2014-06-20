@@ -23,6 +23,7 @@ from ovirt.node.utils import system
 from ovirt.node.utils.fs import File
 import PAM as _PAM  # @UnresolvedImport
 import cracklib
+import hashlib
 import os.path
 import process
 
@@ -239,3 +240,17 @@ class PAM(base.Base):
         for i in range(len(query_list)):
             resp.append((self._password, 0))
         return resp
+
+
+def checksum(data, algo="sha256"):
+    """Determin the hash of some data chunk
+
+    >>> checksum("bar", "sha256")
+    'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9'
+    """
+    assert algo in ["sha256", "sha512"], "Unsupported algorithm: %s" % algo
+
+    hasher = {"sha256": hashlib.sha256,
+              "sha512": hashlib.sha512}[algo]()
+    hasher.update(data)
+    return hasher.hexdigest()

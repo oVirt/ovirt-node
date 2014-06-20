@@ -35,10 +35,26 @@ class Hooks(base.Base):
     beyond the normal install
     """
 
+    known = ["pre-upgrade", "post-upgrade", "rollback", "on-boot",
+             "on-changed-boot-image"]
+
+    legacy_hooks_directory = "/etc/ovirt-config-boot.d/"
+    hooks_path_tpl = "/usr/libexec/ovirt-node/hooks/{name}"
+
     @staticmethod
     def post_auto_install():
-        hooks_directory = "/etc/ovirt-config-boot.d/"
-        Hooks.__run(hooks_directory)
+        Hooks.__run(Hooks.legacy_hooks_directory)
+
+    @staticmethod
+    def emit(name):
+        """Signal that a specific event appeared, and trigger the hook handlers
+
+        Args:
+            name: Name of the hook (bust be in Hooks.known)
+        """
+        assert name in Hooks.known
+        path = Hooks.hooks_path_tpl.format(name=name)
+        Hooks._run(path)
 
     @staticmethod
     def __run(hooks_directory):

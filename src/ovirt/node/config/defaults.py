@@ -1720,3 +1720,41 @@ class Management(NodeConfigFileSection):
 
     def has_managed_ifnames(self):
         return True if self.retrieve()["managed_ifnames"] else False
+
+
+class RuntimeImageState(NodeConfigFileSection):
+    """Track informations about the image state
+    """
+    keys = ("RUNTIME_IMAGE_FINGERPRINT_LAST"
+            )
+
+    product_nvr = str(system.ProductInformation())
+
+    @NodeConfigFileSection.map_and_update_defaults_decorator
+    def update(self, fingerprint):
+        pass
+
+    def stored(self):
+        """Return the stored fingerprint
+        """
+        return self.retrieve()["fingerprint"]
+
+    def is_different(self):
+        """Determin if the current runtime image is different
+        compared to the last time the config file was updated
+        """
+        return self.stored() != self.product_nvr
+
+    def test_and_set(self):
+        """Check if the image state changed, and update to current
+
+        Returns:
+            True - if the state of the image changed (new image)
+        """
+        current = self.product_nvr
+        is_different = self.is_different()
+
+        if is_different:
+            self.update(current)
+
+        return is_different
