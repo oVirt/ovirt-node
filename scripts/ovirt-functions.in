@@ -385,13 +385,19 @@ mount_config() {
                 # skip if already bind-mounted
                 true
             else
-                if [ -d "/config/$f" ]; then
-                    mkdir -p "$f"
+                if [ -h "/config/$f" ]; then
+                    # Instead of mount binding, just redo the link, as symlinks
+                    # can't be bind mounted.
+                    ln -s "$(readlink "/config/$f")" "$f"
                 else
-                    mkdir -p "$(dirname "$f")"
-                    touch "$f"
+                    if [ -d "/config/$f" ]; then
+                        mkdir -p "$f"
+                    else
+                        mkdir -p "$(dirname "$f")"
+                        touch "$f"
+                    fi
+                    mount -n --bind "/config/$f" "$f"
                 fi
-                mount -n --bind "/config/$f" "$f"
             fi
         done
 
