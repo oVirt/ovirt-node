@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# fs.py - Copyright (C) 2012 Red Hat, Inc.
+# fs/__init__.py - Copyright (C) 2012-2014 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,14 +23,13 @@
 Some convenience functions realted to the filesystem
 """
 
-from ovirt.node import log
-from ovirt.node.utils import process, parse_varfile
 import shutil
 import os
 import re
 import StringIO
 
-from ovirt.node import base
+from .. import process, parse_varfile
+from ... import base, log
 
 LOGGER = log.getLogger(__name__)
 

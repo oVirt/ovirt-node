@@ -800,6 +800,7 @@ fi
 %{_datadir}/locale/zh_CN/LC_MESSAGES/*.mo
 %{_datadir}/locale/en_US/LC_MESSAGES/*.mo
 %{python_sitelib}/ovirt/node/utils/*.py*
+%{python_sitelib}/ovirt/node/utils/fs/*.py*
 %{python_sitelib}/ovirt/node/tools/*.py*
 %{python_sitelib}/ovirt/node/tools/*.xsl
 %{python_sitelib}/ovirt/node/config/*.py*

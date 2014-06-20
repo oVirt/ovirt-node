@@ -56,6 +56,7 @@ ovirt_node_locale_cndir = /usr/share/locale/zh_CN/LC_MESSAGES
 ovirt_node_locale_endir = /usr/share/locale/en_US/LC_MESSAGES
 pyovirt_node_uidir = $(pyovirt_nodedir)/ui
 pyovirt_node_utilsdir = $(pyovirt_nodedir)/utils
+pyovirt_node_utils_fsdir = $(pyovirt_nodedir)/utils/fs
 pyovirt_node_toolsdir = $(pyovirt_nodedir)/tools
 
 # Path to installer app and installer plugins
@@ -111,7 +112,6 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/console.py \
   ovirt/node/utils/expose.py \
   ovirt/node/utils/firewall.py \
-  ovirt/node/utils/fs.py \
   ovirt/node/utils/hooks.py \
   ovirt/node/utils/network.py \
   ovirt/node/utils/process.py \
@@ -121,6 +121,9 @@ pyovirt_node_utils_PYTHON = \
   ovirt/node/utils/tuned.py \
   ovirt/node/utils/virt.py \
   ovirt/node/utils/input.py
+
+pyovirt_node_utils_fs_PYTHON = \
+  ovirt/node/utils/fs/__init__.py
 
 pyovirt_node_tools_PYTHON = \
   ovirt/node/tools/__init__.py \
