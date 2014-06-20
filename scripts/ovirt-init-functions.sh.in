@@ -1143,13 +1143,31 @@ trap '__st=$?; stop_log; exit $__st' 0
 #trap 'exit $?' 1 2 13 15
 
 check_version(){
-    if [ -e "/dev/HostVG/Root" ]; then
-    log "                                          "
-    log "   Major version upgrades are not allowed."
-    log "   Please uninstall existing version and reinstall."
-    log "   Press Enter to drop to emergency shell."
-    read < /dev/console
-    bash < /dev/console
+    mount_liveos
+    if [ -e "/live/syslinux" ]; then
+      syslinux=syslinux
+    elif [ -e "/live/isolinux" ]; then
+      syslinux=isolinux
+    else
+      syslinux=
+    fi
+
+    . /liveos/version
+    local current_version=$VERSION
+    local current_major=$(echo $VERSION|cut -d. -f1)
+    # image version
+    . /live/$syslinux/version
+    local new_major=$(echo $VERSION|cut -d. -f1)
+    # only N.x -> N.y upgrades are allowed
+    if [ "$current_major" != "$new_major" ]; then
+        log "                                          "
+        log "   Major version upgrades are not allowed."
+        log "   Installed version: $current_version"
+        log "   New version      : $VERSION"
+        log "   Please uninstall existing version and reinstall."
+        log "   Press Enter to drop to emergency shell."
+        read < /dev/console
+        bash < /dev/console
     fi
 }
 

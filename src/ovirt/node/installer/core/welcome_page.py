@@ -80,6 +80,8 @@ class Plugin(plugins.NodePlugin):
         self.application.ui.navigate.to_next_plugin()
 
     def ___installation_options(self):
+        block_upgrade = False
+
         if self.application.args.dry:
             return [ui.Button("button.install", _("Install (dry)")),
                     ui.Button("button.upgrade", _("Upgrade (dry)")),
@@ -87,13 +89,17 @@ class Plugin(plugins.NodePlugin):
                     ui.Button("button.reinstall", _("Reinstall (dry)"))]
 
         media = utils.system.InstallationMedia()
+        installed = utils.system.InstalledMedia()
+        if media.version_major != installed.version_major:
+            block_upgrade = True
+        elif utils.system.has_hostvg():
+            if os.path.exists("/dev/disk/by-label/ROOT"):
+                block_upgrade = True
 
-        has_hostvg = utils.system.has_hostvg()
-        has_root = os.path.exists("/dev/disk/by-label/ROOT")
-
-        if has_hostvg and has_root:
-            return [ui.Label(_("Major version upgrades are unsupported, ") +
-                             _("uninstall existing version first"))]
+        if block_upgrade:
+            return [ui.Label("lbl.blockupgrade", "Major version upgrades " +
+                             "are unsupported, uninstall existing version " +
+                             "first")]
 
         if has_hostvg:
             try:

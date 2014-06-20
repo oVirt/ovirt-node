@@ -391,6 +391,28 @@ class InstallationMedia(base.Base):
         """
         return "%s-%s" % (self.version, self.release)
 
+    @property
+    def version_major(self):
+        """Return the major version
+        >>> m = InstallationMedia(and_load=False)
+        >>> m.version = "1.2"
+        >>> m.release = "3"
+        >>> m.version_major
+        '1'
+        """
+        return self.version.split(".")[0]
+
+    @property
+    def version_minor(self):
+        """Return the minor version
+        >>> m = InstallationMedia(and_load=False)
+        >>> m.version = "1.2"
+        >>> m.release = "3"
+        >>> m.version_minor
+        '2'
+        """
+        return self.version.split(".")[1]
+
     def __init__(self, and_load=True):
         super(InstallationMedia, self).__init__()
         if and_load:
