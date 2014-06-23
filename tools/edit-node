@@ -1279,6 +1279,10 @@ def parse_options(args):
                       help="specify script to run chrooted in the LiveOS "
                            "fsimage")
 
+    parser.add_option("--skip-initramfs", action="store_true", default=False,
+                      dest="skipinitramfs",
+                      help="Allow unsigned packages to be installed")
+
     parser.add_option("--shell", action="store_true", default=False,
                       dest="shell",
                       help="Open shell for editing")
@@ -1559,7 +1563,8 @@ def main():
                 editor._configure_bootloader(
                     editor._LiveImageCreatorBase__isodir)
                 rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
-                editor._rebuild_initramfs()
+                if not options.skipinitramfs:
+                    editor._rebuild_initramfs()
                 editor.unmount()
                 editor.package(output)
                 edited_iso = os.path.join(output, editor.name + ".iso")
