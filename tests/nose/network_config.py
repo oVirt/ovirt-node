@@ -38,7 +38,8 @@ def patch_common(cls):
     @patch.object(UdevNICInfo, "devtype")
     @patch.object(SysfsNICInfo, "hwaddr", "th:em:ac:ad:dr")
     @patch.object(AugeasWrapper, "_aug")
-    @patch.object(NIC, "ip_addresses", lambda s, x: {"inet": [s.ifname], "inet6": []})
+    @patch.object(NIC, "ip_addresses",
+                  lambda s, x: {"inet": [s.ifname], "inet6": []})
     class TestWrapperClass(cls):
         pass
     TestWrapperClass.__name__ = cls.__name__

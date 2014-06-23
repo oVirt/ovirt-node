@@ -142,7 +142,7 @@ class Namespaces(base.Base):
     def __getitem__(self, path):
         """Get the item with the path <path> or raise a KeyError
         """
-        if not path in self:
+        if path not in self:
             raise KeyError
         return self.__find(path)
 

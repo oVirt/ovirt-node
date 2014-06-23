@@ -305,7 +305,7 @@ class FQDN(RegexValidator):
     def validate(self, value):
         is_valid = super(FQDN, self).validate(value)
 
-        #Don't bother checking if it's not a valid FQDN. Doctest madness.
+        # Don't bother checking if it's not a valid FQDN. Doctest madness.
         if is_valid:
             FQDNLength()(value)
         return is_valid

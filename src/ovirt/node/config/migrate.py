@@ -232,12 +232,12 @@ class ImportConfigs(base.Base):
             SAM_REG_ADDR = "subscription.rhn.redhat.com"
             CANDLEPIN_CERT_FILE = "/etc/rhsm/ca/candlepin-local.pem"
 
-            if not RHN_XMLRPC_ADDR in rhn_conf["serverURL"] and not \
+            if RHN_XMLRPC_ADDR not in rhn_conf["serverURL"] and not \
                     rhn.sam_check():
                 rhn_url = rhn_conf["serverURL"]
                 rhn_ca = rhn_conf["sslCACert"]
             elif rhn.sam_check():
-                if not SAM_REG_ADDR in rhn_conf["hostname"]:
+                if SAM_REG_ADDR not in rhn_conf["hostname"]:
                     rhn_url = "https://%s" % rhn_conf["hostname"]
                     if os.path.exists(CANDLEPIN_CERT_FILE):
                         rhn_ca = CANDLEPIN_CERT_FILE

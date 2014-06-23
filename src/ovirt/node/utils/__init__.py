@@ -414,5 +414,5 @@ def parse_varfile(txt):
         except:
             pass
             # BAAAAD
-            #raise RuntimeError("Failed to parse line: %s" % line)
+            # raise RuntimeError("Failed to parse line: %s" % line)
     return cfg

@@ -579,7 +579,7 @@ class Table(InputElement):
         super(Table, self).__init__(path, label, enabled)
         self.header = header
         if type(items) in [str, tuple, unicode]:
-            #For convenience, create a list of tuples if it is not already one
+            # For convenience, create a list of tuples if it is not already one
             if type(items) in [str, unicode]:
                 self.items = [(i, item) for i, item in zip(range(len(
                                                            items.split('\n'))),

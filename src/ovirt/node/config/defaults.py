@@ -244,8 +244,8 @@ class Network(NodeConfigFileSection):
     def configure_no_networking(self, iface=None):
         """Can be used to disable all networking
         """
-        #iface = iface or self.retrieve()["iface"]
-        #name = iface + "-DISABLED"
+        # iface = iface or self.retrieve()["iface"]
+        # name = iface + "-DISABLED"
         # FIXME why should we use ifname-DISABLED here?
         self.update(None, None, None, None, None, None)
 
@@ -1351,7 +1351,7 @@ class Logrotate(NodeConfigFileSection):
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, max_size, interval):
         valid.Number([0, None])(max_size)
-        if not interval in ["daily", "weekly", "monthly", None]:
+        if interval not in ["daily", "weekly", "monthly", None]:
             raise InvalidData("Update interval must be a valid logrotate "
                               "schedule period or None")
 

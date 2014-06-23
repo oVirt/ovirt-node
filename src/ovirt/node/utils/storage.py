@@ -115,7 +115,7 @@ class Devices(base.Base):
         else:
             from ovirtnode.ovirtfunctions import get_live_disk
             name = get_live_disk()
-            if not "/dev/mapper" in name:
+            if "/dev/mapper" not in name:
                 # FIXME explain ...
                 name = "/dev/%s" % name.rstrip('0123456789')
         self._cached_live_disk_name = name

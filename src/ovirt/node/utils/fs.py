@@ -352,7 +352,7 @@ class BackupedFiles(base.Base):
     def of(self, fn):
         """Returns the backup file for the given file
         """
-        #assert fn in self.backups, "No backup for '%s'" % fn
+        # assert fn in self.backups, "No backup for '%s'" % fn
         if fn in self.backups:
             return self.backups[fn]
         return None

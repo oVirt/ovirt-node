@@ -234,8 +234,8 @@ class TableWidget(NoticeDecoration):
                 self.knob_height = knob_height if knob_height > 1 else 1
                 if rows - 2 - self.knob_height > 0:
                     if self.knob_height is 1:
-                    #Calculate ourselves, subtracting 3 (for the arrows
-                    # and the knob itself)
+                        # Calculate ourselves, subtracting 3 (for the arrows
+                        # and the knob itself)
                         self.below_knob = abs(float(list_size - rows) / (rows -
                                                                          3))
                     else:
@@ -674,8 +674,6 @@ class PageWidget(NoticeDecoration):
     save_button = None
 
     def __init__(self, widgets, title=None):
-#        self._listwalker = urwid.SimpleListWalker(widgets)
-#        self._container = urwid.ListBox(self._listwalker)
         self._container = TabablePile(widgets)
         self._container_attrmap = urwid.AttrMap(self._container,
                                                 "plugin.widget.page")
@@ -723,7 +721,7 @@ class UnderscoreRight(urwid.StandardTextLayout):
                 continue
             fill = width - used
             if fill == width:
-                #Fake out empty entries
+                # Fake out empty entries
                 row = [(1, 0, 1), (0, 1)]
                 last_offset = 1
             if fill < 0:

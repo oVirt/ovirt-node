@@ -91,7 +91,7 @@ def number_of_domains():
             num_domains = str(con.numOfDomains())
     except libvirt.libvirtError:
         pass
-        #warning("Error while working with libvirt: %s" % e.message)
+        # warning("Error while working with libvirt: %s" % e.message)
     return num_domains
 
 

@@ -119,9 +119,9 @@ class UrwidUIBuilder(ui.AbstractUIBuilder):
         return widget
 
     def _build_button_bar(self, ui_buttonbar):
-        #if type(ui_buttonbar) is list:
+        # if type(ui_buttonbar) is list:
         children = ui_buttonbar
-        #else:
+        # else:
         #    children = ui_buttonbar.children
         # FIXME create dedicated widget
         button_widgets = []

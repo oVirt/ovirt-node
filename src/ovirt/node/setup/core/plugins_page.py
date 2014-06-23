@@ -147,7 +147,7 @@ class Plugin(NodePlugin):
         if re.compile(r'Name:.*?\nVer.*:.*?\nInstall Date:.*',
                       re.M | re.S).match(open(plugin_dir + f
                                               ).read()):
-            #Hopefully a plugin metadata file
+            # Hopefully a plugin metadata file
             with open(plugin_dir + f) as p:
                 lines = p.readlines()
             name = lines[0].strip().split(":")[1]

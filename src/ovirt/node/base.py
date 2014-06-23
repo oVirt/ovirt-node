@@ -74,7 +74,7 @@ class Base(object):
         def emit(self, userdata=None):
             """Emit a signal
             """
-            #self.logger.debug("%s: %s" % (self, self.callbacks))
+            # self.logger.debug("%s: %s" % (self, self.callbacks))
             for idx, cb in enumerate(self.callbacks):
                 self.logger.debug("%s (%d/%d) %s" %
                                   (self, idx + 1, len(self.callbacks), cb))
@@ -84,7 +84,7 @@ class Base(object):
             return self
 
         def connect(self, cb):
-            #self.logger.debug("Connecting %s with %s" % (self, cb))
+            # self.logger.debug("Connecting %s with %s" % (self, cb))
             self.callbacks.append(cb)
             return self
 
