@@ -516,12 +516,83 @@ class Config(base.Base):
             with open(self.path_entries, 'a') as path_entries:
                 print(abspath, file=path_entries)
 
-    def unpersist(self, filename):
+    def _del_path_entry(self, abspath):
+        """Removes a path entry from the /config/files entries
+        """
+        matches = (entry for entry in [e.strip() for e in
+                                       self._persisted_path_entries()] if
+                   entry != abspath)
+        with open(self.path_entries, 'w') as path_entries:
+            print('\n'.join(matches), file=path_entries)
+
+    def unpersist(self, path):
         """Remove the persistent version of a file and remove the bind mount
         """
-        if filename and self.is_enabled():
-            from ovirtnode import ovirtfunctions
-            return ovirtfunctions.remove_config(filename)
+        if not self.is_enabled():
+            return
+        abspath = os.path.abspath(path)
+        if os.path.exists(abspath):
+            # Check first for symlinks as os.path file type detection follows
+            # links and will give the type of the target
+            try:
+                if os.path.islink(abspath):
+                    self._unpersist_symlink(abspath)
+                elif os.path.isdir(abspath):
+                    self._unpersist_dir(abspath)
+                elif os.path.isfile(abspath):
+                    self._unpersist_file(abspath)
+            except Exception:
+                self._logger.error('Failed to unpersist "%s"' % path,
+                                   exc_info=True)
+                return -1
+
+    def _unpersist_dir(self, abspath):
+        """Remove the persistent version of a directory and refresh the version
+        in the live filesystem with what was persisted"""
+        persisted_path = self._config_path(abspath)
+        if not mount.isbindmount(abspath):
+            self._logger.warn('The directory "%s" is not a persisted element')
+            return
+        mount.umount(abspath)
+        # Remove the original contents and replace them with what was persisted
+        # up until now
+        shutil.rmtree(abspath)
+        shutil.copytree(persisted_path, abspath, symlinks=True)
+        shutil.rmtree(persisted_path)
+        self._del_path_entry(abspath)
+        self._logger.info('Successfully unpersisted directory "%s"' % abspath)
+
+    def _unpersist_file(self, abspath):
+        """Remove the persistent version of a file and refresh the version in
+        the live filesystem with what was persisted"""
+        persisted_path = self._config_path(abspath)
+        if not mount.ismount(abspath):
+            self._logger.warn('The file "%s" is not a persisted element')
+            return
+        mount.umount(abspath)
+        shutil.copy2(persisted_path, abspath)
+        os.unlink(persisted_path)
+        self._del_path_entry(abspath)
+        self._logger.info('Successfully unpersisted file "%s"' % abspath)
+
+    def _unpersist_symlink(self, abspath):
+        """Remove the persistent version of a symlink. Symlinks are not bind
+        mounted so that won't be necessary"""
+        persisted_path = self._config_path(abspath)
+        try:
+            stored_target = os.readlink(persisted_path)
+        except OSError as ose:
+            if ose.errno == errno.ENOENT:
+                self._logger.warn('The symlink "%s" is not a persisted '
+                                  'element')
+                return
+
+        # Update the link with the current persisted version
+        os.unlink(abspath)
+        os.symlink(stored_target, abspath)
+        os.unlink(persisted_path)
+        self._del_path_entry(abspath)
+        self._logger.info('Successfully unpersisted symlink "%s"' % abspath)
 
     def delete(self, filename):
         """Remove the persiste version and the file
