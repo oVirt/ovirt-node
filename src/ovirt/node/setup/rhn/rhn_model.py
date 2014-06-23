@@ -22,7 +22,7 @@ from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.utils import process
 from ovirt.node.utils.fs import Config
-from ovirtnode.ovirtfunctions import remove_config, unmount_config
+from ovirtnode.ovirtfunctions import unmount_config
 from urlparse import urlparse
 import sys
 import os.path
@@ -173,8 +173,9 @@ class RHN(NodeConfigFileSection):
                 args.extend(extra_args)
 
                 self.logger.info("Registering to RHN account.....")
-                remove_config("/etc/sysconfig/rhn/systemid")
-                remove_config("/etc/sysconfig/rhn/up2date")
+                conf = Config()
+                conf.unpersist("/etc/sysconfig/rhn/systemid")
+                conf.unpersist("/etc/sysconfig/rhn/up2date")
                 logged_args = list(args)
                 remove_values_from_args = ["--password", "--proxyPassword"]
                 for idx, arg in enumerate(logged_args):
@@ -184,7 +185,6 @@ class RHN(NodeConfigFileSection):
                 self.logger.debug(logged_args)
                 try:
                     subprocess.check_call(args)
-                    conf = Config()
                     conf.persist("/etc/sysconfig/rhn/up2date")
                     conf.persist("/etc/sysconfig/rhn/systemid")
                     self.logger.info("System %s sucessfully registered to %s" %
@@ -213,8 +213,9 @@ class RHN(NodeConfigFileSection):
                 profilename = cfg["profile"]
                 proxy = cfg["proxy"]
                 proxyuser = cfg["proxyuser"]
+                conf = Config()
                 if os.path.exists("/etc/sysconfig/rhn/systemid"):
-                    remove_config("/etc/sysconfig/rhn/systemid")
+                    conf.unpersist("/etc/sysconfig/rhn/systemid")
 
                 extra_args = ['--force']
                 if not activationkey:
@@ -259,7 +260,7 @@ class RHN(NodeConfigFileSection):
                         RHN().retrieveCert(cacert, location)
                     if os.path.isfile(location):
                         if os.stat(location).st_size > 0:
-                            Config().persist(location)
+                            conf.persist(location)
                         else:
                             raise RuntimeError("Error Downloading CA cert!")
 
@@ -277,7 +278,7 @@ class RHN(NodeConfigFileSection):
                     smconf.append('/etc/rhsm/ca/candlepin-local.pem')
                 try:
                     subprocess.check_call(smconf)
-                    Config().persist("/etc/rhsm/rhsm.conf")
+                    conf.persist("/etc/rhsm/rhsm.conf")
                 except:
                     raise RuntimeError("Error updating subscription manager \
                                        configuration")
@@ -346,7 +347,6 @@ class RHN(NodeConfigFileSection):
                     else:
                         raise RuntimeError("Registration Failed")
                 else:
-                    conf = Config()
                     conf.persist(rhsm_configs)
                     conf.persist("/etc/pki/consumer/key.pem")
                     conf.persist("/etc/pki/consumer/cert.pem")

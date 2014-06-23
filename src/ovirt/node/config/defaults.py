@@ -1157,9 +1157,7 @@ class KDump(NodeConfigFileSection):
                 super(RemoveKdumpConfig, self).__init__()
 
             def commit(self):
-                from ovirtnode.ovirtfunctions import remove_config
-
-                remove_config("/etc/kdump.conf")
+                Config().unpersist("/etc/kdump.conf")
                 system.service("kdump", "stop")
                 fs.File('/etc/kdump.conf').touch()
 
