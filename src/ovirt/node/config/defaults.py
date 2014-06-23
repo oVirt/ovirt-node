@@ -23,7 +23,7 @@ from ovirt.node.config.network import NicConfig
 from ovirt.node.exceptions import InvalidData
 from ovirt.node.utils import storage, process, fs, AugeasWrapper, console, \
     system, firewall
-from ovirt.node.utils.fs import ShellVarFile, File
+from ovirt.node.utils.fs import Config, ShellVarFile, File
 from ovirt.node.utils.network import NIC, Bridges, Bonds
 from ovirt.node.utils.system import Bootloader
 import glob
@@ -996,10 +996,9 @@ class Collectd(NodeConfigFileSection):
             def commit(self):
                 # pylint: disable-msg=E0611
                 from ovirt_config_setup import collectd  # @UnresolvedImport
-                from ovirtnode.ovirtfunctions import ovirt_store_config
                 # pylint: enable-msg=E0611
                 if collectd.write_collectd_config(server, port):
-                    ovirt_store_config("/etc/collectd.conf")
+                    Config().persist("/etc/collectd.conf")
                     self.logger.debug("Collectd was configured successfully")
                 else:
                     raise exceptions.TransactionError("Failed to configure " +
@@ -1128,7 +1127,6 @@ class KDump(NodeConfigFileSection):
 
             def commit(self):
                 import ovirtnode.kdump as okdump
-                from ovirtnode.ovirtfunctions import ovirt_store_config
 
                 okdump.write_kdump_config(ssh, "ssh")
 
@@ -1141,10 +1139,12 @@ class KDump(NodeConfigFileSection):
                 try:
                     utils.process.check_call(cmd)
 
-                    ovirt_store_config(["/root/.ssh/kdump_id_rsa.pub",
-                                        "/root/.ssh/kdump_id_rsa",
-                                        "/root/.ssh/known_hosts",
-                                        "/root/.ssh/config"])
+                    conf = Config()
+                    for confpath in ("/root/.ssh/kdump_id_rsa.pub",
+                                     "/root/.ssh/kdump_id_rsa",
+                                     "/root/.ssh/known_hosts",
+                                     "/root/.ssh/config"):
+                        conf.persist(confpath)
                 except utils.process.CalledProcessError as e:
                     self.logger.warning("Failed to activate KDump with " +
                                         "SSH: %s" % e)
@@ -1173,8 +1173,7 @@ class KDump(NodeConfigFileSection):
                 super(RestartKdumpService, self).__init__()
 
             def commit(self):
-                from ovirtnode.ovirtfunctions import unmount_config, \
-                    ovirt_store_config
+                from ovirtnode.ovirtfunctions import unmount_config
 
                 try:
                     system.service("kdump", "restart")
@@ -1188,7 +1187,7 @@ class KDump(NodeConfigFileSection):
                                        "location unreachable. Previous " +
                                        "configuration was restored.")
 
-                ovirt_store_config("/etc/kdump.conf")
+                Config().persist("/etc/kdump.conf")
                 self.backups.remove()
 
         tx = utils.Transaction("Configuring kdump")
@@ -1395,21 +1394,19 @@ class Logrotate(NodeConfigFileSection):
             title = "Setting logrotate maximum logfile size"
 
             def commit(self):
-                from ovirtnode.ovirtfunctions import ovirt_store_config
                 aug = utils.AugeasWrapper()
                 aug.set("/files/etc/logrotate.d/ovirt-node/rule/minsize",
                         max_size)
-                ovirt_store_config("/etc/logrotate.d/ovirt-node")
+                Config().persist("/etc/logrotate.d/ovirt-node")
 
         class SetLogrotateInterval(utils.Transaction.Element):
             title = "Setting logrotate interval"
 
             def commit(self):
-                from ovirtnode.ovirtfunctions import ovirt_store_config
                 aug = utils.AugeasWrapper()
                 aug.set("/files/etc/logrotate.d/ovirt-node/rule/schedule",
                         interval)
-                ovirt_store_config("/etc/logrotate.d/ovirt-node")
+                Config().persist("/etc/logrotate.d/ovirt-node")
 
         tx = utils.Transaction("Configuring logrotate")
 
@@ -1444,11 +1441,11 @@ class Keyboard(NodeConfigFileSection):
             title = "Setting keyboard layout"
 
             def commit(self):
-                from ovirtnode.ovirtfunctions import ovirt_store_config
                 kbd = utils.system.Keyboard()
                 kbd.set_layout(layout)
-                ovirt_store_config("/etc/vconsole.conf")
-                ovirt_store_config("/etc/sysconfig/keyboard")
+                conf = Config()
+                conf.persist("/etc/vconsole.conf")
+                conf.persist("/etc/sysconfig/keyboard")
 
         tx = utils.Transaction("Configuring keyboard layout")
         tx.append(CreateKeyboardConfig())

@@ -21,8 +21,8 @@
 from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.utils import process
-from ovirtnode.ovirtfunctions import remove_config, ovirt_store_config, \
-    unmount_config
+from ovirt.node.utils.fs import Config
+from ovirtnode.ovirtfunctions import remove_config, unmount_config
 from urlparse import urlparse
 import sys
 import os.path
@@ -137,7 +137,7 @@ class RHN(NodeConfigFileSection):
                             if os.stat(location).st_size > 0:
                                 args.append('--sslCACert')
                                 args.append(location)
-                                ovirt_store_config(location)
+                                Config().persist(location)
                             else:
                                 raise RuntimeError("Error Downloading \
                                                    CA cert!")
@@ -184,8 +184,9 @@ class RHN(NodeConfigFileSection):
                 self.logger.debug(logged_args)
                 try:
                     subprocess.check_call(args)
-                    ovirt_store_config("/etc/sysconfig/rhn/up2date")
-                    ovirt_store_config("/etc/sysconfig/rhn/systemid")
+                    conf = Config()
+                    conf.persist("/etc/sysconfig/rhn/up2date")
+                    conf.persist("/etc/sysconfig/rhn/systemid")
                     self.logger.info("System %s sucessfully registered to %s" %
                                      (profilename, serverurl))
                     # sync profile if reregistering, fixes problem with
@@ -258,7 +259,7 @@ class RHN(NodeConfigFileSection):
                         RHN().retrieveCert(cacert, location)
                     if os.path.isfile(location):
                         if os.stat(location).st_size > 0:
-                            ovirt_store_config(location)
+                            Config().persist(location)
                         else:
                             raise RuntimeError("Error Downloading CA cert!")
 
@@ -276,7 +277,7 @@ class RHN(NodeConfigFileSection):
                     smconf.append('/etc/rhsm/ca/candlepin-local.pem')
                 try:
                     subprocess.check_call(smconf)
-                    ovirt_store_config("/etc/rhsm/rhsm.conf")
+                    Config().persist("/etc/rhsm/rhsm.conf")
                 except:
                     raise RuntimeError("Error updating subscription manager \
                                        configuration")
@@ -345,9 +346,10 @@ class RHN(NodeConfigFileSection):
                     else:
                         raise RuntimeError("Registration Failed")
                 else:
-                    ovirt_store_config(rhsm_configs)
-                    ovirt_store_config("/etc/pki/consumer/key.pem")
-                    ovirt_store_config("/etc/pki/consumer/cert.pem")
+                    conf = Config()
+                    conf.persist(rhsm_configs)
+                    conf.persist("/etc/pki/consumer/key.pem")
+                    conf.persist("/etc/pki/consumer/cert.pem")
                     self.logger.info("System %s sucessfully registered \
                                       to %s" % (profilename, serverurl))
 
