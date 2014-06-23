@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env python2
 #
-# Copyright (C) 2009, Red Hat, Inc.
-# Written by Darryl L. Pierce <dpierce@redhat.com>
+# Copyright (C) 2014, Red Hat, Inc.
+# Written by Antoni Segura Puimedon <asegurap@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,20 +18,25 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 #
-# Convenience wrapper to give access to the ovirt_store_config
-# function in /usr/libexec/ovirt-functions
+# Convenience wrapper to give access to ovirt/node/utils/fs persistence
+# facilities
+import argparse
+import sys
 
-. /usr/libexec/ovirt-functions
+from ovirt.node.utils import fs
 
-ME=$(basename "$0")
-warn() { printf '%s: %s\n' "$ME" "$*" >&2; }
-help() { printf "Usage: $ME FILE ...\n
-Copies the specified file to /config and then bindmounts it back at it's original location.
-The file is stored with its full path detail.\n\n" >&2; exit 1;
-}
-die() { warn "$*"; help; exit 1; }
 
-if [ $# -eq 0 ]; then die "You need to specify at least one file."; fi
+def persist():
+    parser = argparse.ArgumentParser(
+        description="Copies the specified file to /config and then bindmounts "
+        "it back at it's original location. The file is stored with its full "
+        "path detail.")
+    parser.add_argument('FILE', nargs='+')
+    arguments = parser.parse_args(sys.argv[1:])
 
-ovirt_store_config $*
+    conf = fs.Config()
+    for path in arguments.FILE:
+        conf.persist(path)
 
+if __name__ == '__main__':
+    sys.exit(persist())
