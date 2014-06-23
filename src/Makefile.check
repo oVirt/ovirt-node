@@ -22,7 +22,7 @@ check-static-doctests: $(PYTHONSOURCES:%=%.doctest)
 	@echo Passed $@
 
 %.doctest:
-	@if grep -q ">>>" "$*" ; then set -x ; python -m doctest "$*" ; fi ;
+	python $(top_srcdir)/src/autotest.py $*
 
 check-static-pep8: $(PYTHONSOURCES:%=%.pep8)
 	@echo Passed $@
