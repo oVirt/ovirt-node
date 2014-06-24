@@ -531,7 +531,7 @@ class LiveImageEditor(LiveImageCreator):
         status = "Edited"
         if not options.gpgcheck:
             status += ", Unsigned"
-        f.write("%s (%s)" % (ver, status))
+        f.write("%s (%s)\n" % (ver, status))
         f.close()
         print "done"
         return True
