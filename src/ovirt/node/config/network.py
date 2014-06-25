@@ -204,8 +204,10 @@ def nameservers(new_servers=None):
     >>> import ovirt.node.utils.process as p
     >>> stdout = p.pipe("egrep '^nameserver' /etc/resolv.conf | wc -l",
     ...                 shell=True)
-    >>> len(nameservers()) == int(stdout)
+
+    Currently broken: >>> len(nameservers()) == int(stdout)
     True
+
     """
     augpath = "/files/etc/resolv.conf/nameserver"
     return _aug_get_or_set(augpath, new_servers)

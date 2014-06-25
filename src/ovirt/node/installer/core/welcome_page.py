@@ -81,6 +81,7 @@ class Plugin(plugins.NodePlugin):
 
     def ___installation_options(self):
         block_upgrade = False
+        has_hostvg = False
 
         if self.application.args.dry:
             return [ui.Button("button.install", _("Install (dry)")),
@@ -93,6 +94,7 @@ class Plugin(plugins.NodePlugin):
         if media.version_major != installed.version_major:
             block_upgrade = True
         elif utils.system.has_hostvg():
+            has_hostvg = True
             if os.path.exists("/dev/disk/by-label/ROOT"):
                 block_upgrade = True
 
