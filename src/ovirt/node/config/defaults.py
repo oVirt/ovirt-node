@@ -1322,7 +1322,6 @@ class Netconsole(NodeConfigFileSection):
             f.sed("/SYSLOGPORT/d")
 
         def configure_netconsole(self, server, port):
-            from ovirtnode.ovirtfunctions import ovirt_store_config
             aug = utils.AugeasWrapper()
             if server and port:
                 aug.set("/files/etc/sysconfig/netconsole/SYSLOGADDR",
@@ -1337,7 +1336,7 @@ class Netconsole(NodeConfigFileSection):
                                        "service. Is the host resolvable?")
             else:
                 self._clear_config()
-            fs.Config().persist("/etc/sysconfig/netconsole"):
+            fs.Config().persist("/etc/sysconfig/netconsole")
             self.logger.info("Netconsole Configuration Updated")
 
         cfg = dict(self.retrieve())
