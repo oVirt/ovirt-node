@@ -1337,14 +1337,15 @@ class Netconsole(NodeConfigFileSection):
                                        "service. Is the host resolvable?")
             else:
                 self._clear_config()
-            if ovirt_store_config("/etc/sysconfig/netconsole"):
-                self.logger.info("Netconsole Configuration Updated")
+            fs.Config().persist("/etc/sysconfig/netconsole"):
+            self.logger.info("Netconsole Configuration Updated")
 
         cfg = dict(self.retrieve())
         server, port = (cfg["server"], cfg["port"])
 
         class CreateNetconsoleConfig(utils.Transaction.Element):
-            if server and port:
+            if server:
+                port = port if port else "6666"
                 title = "Setting netconsole server and port"
             else:
                 title = "Disabling netconsole"
