@@ -28,7 +28,7 @@ from ovirt.node.utils.console import TransactionProgress
 from ovirt.node.utils import system
 from ovirt.node.utils import security, storage, hooks
 from ovirt.node.config import defaults
-from ovirt.node.utils.system import which
+from ovirt.node.utils.system import which, kernel_cmdline_arguments
 import logging
 import sys
 import os
@@ -264,7 +264,7 @@ if __name__ == "__main__":
     TransactionProgress(tx, is_dry=False).run()
     print "Installation and Configuration Completed"
 
-    reboot_delay = get_cmdline_args().get("reboot_delay", None)
+    reboot_delay = kernel_cmdline_arguments().get("reboot_delay", None)
     if reboot_delay:
         print "Reboot Scheduled in %s seconds later" % reboot_delay
         time.sleep(int(reboot_delay))
