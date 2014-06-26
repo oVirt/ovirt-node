@@ -141,6 +141,12 @@ class Plugin(plugins.NodePlugin):
                         changes["installation.device.custom"]):
                 raise exceptions.InvalidData("Can't be the same as " +
                                              "the live device")
+            elif self.storage_discovery.devices.translate_device_name(
+                    changes["installation.device.custom"]) in \
+                    self.widgets["installation.device.current"].selection():
+                raise exceptions.InvalidData("%s is already selected" %
+                                             changes[
+                                                 "installation.device.custom"])
             else:
                 self._model.update(changes)
 
