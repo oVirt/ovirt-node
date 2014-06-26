@@ -51,7 +51,6 @@ Requires:       python-augeas
 %endif
 Requires:       glusterfs-client >= 2.0.1
 Requires:       python-IPy
-Requires:       grub2
 Requires:       system-release
 Requires:       libvirt >= 0.9.2, libvirt-python
 Requires:       augeas >= 0.3.5
@@ -89,7 +88,9 @@ Requires:       tuned
 %if %{is_min_f19}
 Requires:       NetworkManager
 %endif
-%if ! %{is_systemd}
+%if 0%{?is_systemd}
+Requires:       grub2
+%else
 Requires:       grub
 # for applying patches in %post
 Requires(post):       patch
