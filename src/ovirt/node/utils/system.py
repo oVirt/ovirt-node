@@ -469,6 +469,10 @@ class InstalledMedia(InstallationMedia):
         if data:
             self.version, self.release = data
 
+    def available(self):
+        """Determin if there is an installed media
+        """
+        return int(self.version_major) > 0
 
 class Keyboard(base.Base):
     """Configure the system wide keyboard layout

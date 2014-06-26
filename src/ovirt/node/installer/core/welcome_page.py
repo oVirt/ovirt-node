@@ -91,7 +91,8 @@ class Plugin(plugins.NodePlugin):
 
         media = utils.system.InstallationMedia()
         installed = utils.system.InstalledMedia()
-        if media.version_major != installed.version_major:
+        if (installed.available()
+            and (media.version_major != installed.version_major)):
             block_upgrade = True
         elif utils.system.has_hostvg():
             has_hostvg = True
