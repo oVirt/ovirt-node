@@ -474,6 +474,7 @@ class InstalledMedia(InstallationMedia):
         """
         return int(self.version_major) > 0
 
+
 class Keyboard(base.Base):
     """Configure the system wide keyboard layout
     FIXME what is the recommended way to do this on F18+ with localectl
@@ -938,7 +939,8 @@ class LVM(base.Base):
     """
 
     def vgs(self):
-        return self._query_lvm("vg_name")
+        return self._query_lvm("vg_name") if "No volume groups found" not in \
+            self._query_lvm("vg_name") else []
 
     class VG(base.Base):
         def __init__(self, name):
@@ -956,7 +958,8 @@ class LVM(base.Base):
     def _query_lvm(self, option, pv=None):
         if pv:
             return [x.strip() for x in process.check_output(["lvm",
-                    "vgs", "--noheadings", "-o", option, pv]).split("\n")]
+                    "vgs", "--noheadings", "-o", option, pv]).strip().split(
+                    "\n")]
         else:
             return [x.strip() for x in process.check_output(["lvm",
-                    "vgs", "--noheadings", "-o", option]).split("\n")]
+                    "vgs", "--noheadings", "-o", option]).strip().split("\n")]
