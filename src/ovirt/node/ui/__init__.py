@@ -439,7 +439,8 @@ class SaveButton(Button):
     """This derived class is primarily needed to allow an easy disabling of the
     save button when the changed data is invalid.
     """
-    def __init__(self, path, label="Save", enabled=True):
+    def __init__(self, path, label=None, enabled=True):
+        label = label or _("Save")
         super(SaveButton, self).__init__(path, label, enabled)
 
 
@@ -447,7 +448,8 @@ class ResetButton(Button):
     """This button calls the ResetAction to reset all UI data to the current
     model, discrading all pending changes.
     """
-    def __init__(self, path, label="Reset", enabled=True):
+    def __init__(self, path, label=None, enabled=True):
+        label = label or _("Reset")
         super(ResetButton, self).__init__(path, label, enabled)
         self.on_activate.clear()
         self.on_activate.connect(ResetAction())
@@ -457,7 +459,8 @@ class ResetButton(Button):
 class CloseButton(Button):
     """The close button can be used to close the top-most dialog
     """
-    def __init__(self, path, label="Close", enabled=True):
+    def __init__(self, path, label=None, enabled=True):
+        label = label or _("Close")
         super(CloseButton, self).__init__(path, label, enabled)
         self.on_activate.clear()
         self.on_activate.connect(CloseAction())
@@ -466,7 +469,8 @@ class CloseButton(Button):
 class QuitButton(Button):
     """The quit button can be used to quit the whole application
     """
-    def __init__(self, path, label="Quit", enabled=True):
+    def __init__(self, path, label=None, enabled=True):
+        label = label or _("Quit")
         super(QuitButton, self).__init__(path, label, enabled)
         self.on_activate.clear()
         self.on_activate.connect(QuitAction())
@@ -825,10 +829,8 @@ class Page(ContainerElement):
 
     def __init__(self, path, children, title=None):
         super(Page, self).__init__(path, children, title)
-        self.buttons = self.buttons or [SaveButton("%s.save" % path,
-                                                   _("Save")),
-                                        ResetButton("%s.reset" % path,
-                                                    _("Reset"))
+        self.buttons = self.buttons or [SaveButton("%s.save" % path),
+                                        ResetButton("%s.reset" % path)
                                         ]
 
     def elements(self):
@@ -847,8 +849,8 @@ class Dialog(Page):
 
     def __init__(self, path, title, children):
         super(Dialog, self).__init__(path, children, title)
-        self.buttons = [SaveButton("%s.save" % path, _("Save")),
-                        CloseButton("%s.close" % path, _("Reset"))
+        self.buttons = [SaveButton("%s.save" % path),
+                        CloseButton("%s.close" % path)
                         ]
         self.on_close_change = self.new_signal()
         self.close(False)
@@ -865,7 +867,7 @@ class InfoDialog(Dialog):
     def __init__(self, path, title, text, buttons=None):
         super(InfoDialog, self).__init__(path, title, [])
         self.children = [Label(path + ".label", text)]
-        self.buttons = buttons or [CloseButton(path + ".close", _("Close"))]
+        self.buttons = buttons or [CloseButton(path + ".close")]
 
 
 class TextViewDialog(Dialog):
@@ -875,7 +877,7 @@ class TextViewDialog(Dialog):
         super(TextViewDialog, self).__init__(path, title, [])
         self.children = [Table("contents", "", _("Contents"),
                                contents, height=height)]
-        self.buttons = [CloseButton("dialog.close", _("Close"))]
+        self.buttons = [CloseButton("dialog.close")]
 
 
 class ConfirmationDialog(InfoDialog):
@@ -909,7 +911,7 @@ class TransactionProgressDialog(Dialog):
         self.texts = [initial_text, ""]
         self.plugin = plugin
 
-        self._close_button = CloseButton("button.close", _("Close"))
+        self._close_button = CloseButton("button.close")
         self.buttons = [self._close_button]
 
     def add_update(self, txt):
