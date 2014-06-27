@@ -123,8 +123,8 @@ class Plugin(plugins.NodePlugin):
     def _storage_tagged(self, dev):
         found = False
         for vg in LVM().vgs():
-            if dev in LVM.VG(vg).pv_names and "storage_domain" in \
-                    " ".join(LVM.VG(vg).tags):
+            if dev in vg.pv_names and "storage_domain" in \
+                    " ".join(vg.tags):
                 found = True
         return found
 

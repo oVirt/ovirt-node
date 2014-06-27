@@ -939,27 +939,39 @@ class LVM(base.Base):
     """
 
     def vgs(self):
-        return self._query_lvm("vg_name") if "No volume groups found" not in \
-            self._query_lvm("vg_name") else []
+        """Return a list of VG instances for each VG on the host
+        """
+        return [LVM.VG(n) for n in self._query_vgs("vg_name")]
 
     class VG(base.Base):
+        """Wrapper around the 'lvm vgs' command
+        """
         def __init__(self, name):
             self.name = name
 
         @property
         def tags(self):
-            return LVM._query_lvm("tags", self.name)
+            """Retrieve all tags associated to a VG
+            """
+            return LVM._query_vgs("tags", self.name)
 
         @property
         def pv_names(self):
-            return LVM._query_lvm("pv_name", self.name)
+            """Rerieve all PV names of a VG
+            """
+            return LVM._query_vgs("pv_name", self.name)
 
     @classmethod
-    def _query_lvm(self, option, pv=None):
+    def _query_vgs(self, option, pv=None):
+        cmd = ["lvm", "vgs", "--noheadings", "-o", option]
+
         if pv:
-            return [x.strip() for x in process.check_output(["lvm",
-                    "vgs", "--noheadings", "-o", option, pv]).strip().split(
-                    "\n")]
-        else:
-            return [x.strip() for x in process.check_output(["lvm",
-                    "vgs", "--noheadings", "-o", option]).strip().split("\n")]
+            cmd.append(pv)
+
+        out = process.check_output(cmd).strip()
+
+        # If not VGs are found, just simulate an empty list of VGs
+        if "No volume groups found" in out:
+            out = []
+
+        return [x.strip() for x in out.split("\n")]
