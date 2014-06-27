@@ -981,9 +981,12 @@ class LVM(base.Base):
             cmd.append(pv)
 
         out = process.check_output(cmd).strip()
+        vgs = None
 
         # If not VGs are found, just simulate an empty list of VGs
         if "No volume groups found" in out:
-            out = []
+            vgs = []
+        else:
+            vgs = [x.strip() for x in out.split("\n")]
 
-        return [x.strip() for x in out.split("\n")]
+        return vgs
