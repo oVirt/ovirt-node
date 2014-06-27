@@ -932,14 +932,15 @@ class Bootloader(base.Base):
             for line in lines:
                 if re.match(r'.*?\s%s' % arg, line):
                     if remove:
-                        line = re.sub(r'%s(=.*?\s?)?' % arg, '', line)
+                        line = re.sub(r'%s(=.*?)?(\s|$)' % arg, '', line)
                     else:
                         if arg != replacement:
-                            line = re.sub(r'%s(=.*?\s)?' % arg, ' %s ' %
+                            line = re.sub(r'%s(=.*?)?(\s|$)' % arg, '%s ' %
                                           replacement, line)
                 elif re.match(r'^.*?vmlinuz', line):
                     # Not in the kernel line. Add it.
-                    line = line.strip() + " %s\n" % replacement
+                    line = line.rstrip() + " %s\n" % replacement
+                line = line.rstrip() + "\n"
                 grub_cfg += line
             File(self.__handle.filename).write(grub_cfg, "w")
             self.__mount.remount(rw=False)
