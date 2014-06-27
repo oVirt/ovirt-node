@@ -896,6 +896,9 @@ class Bootloader(base.Base):
             else:
                 self.update_args("%s=%s" % (key, value))
 
+        def get(self, key, alt=None):
+            return self.items.get(key, alt)
+
         def keys(self):
             return self.items.keys()
 
