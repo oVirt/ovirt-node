@@ -363,11 +363,12 @@ optional_policy(`
 
 
 #============= mandb_t ==============
-require {
-    type mandb_t;
-}
-allow mandb_t admin_home_t:dir search;
-
+optional_policy(`
+    require {
+        type mandb_t;
+    }
+    allow mandb_t admin_home_t:dir search;
+')
 
 
 
