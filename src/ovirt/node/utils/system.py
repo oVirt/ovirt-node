@@ -807,13 +807,19 @@ class Mount(base.Base):
 
     @staticmethod
     def find_by_path(path):
+        """Find the mountpoint for a specific path recursively
+        """
         while not os.path.ismount(path):
             path = os.path.dirname(path)
         return Mount(path)
 
 
 class Bootloader(base.Base):
-    """Figures out where grub.conf can be found and which bootloader is used"""
+    """Figures out where grub.conf can be found and which bootloader is used
+
+    FIXME This really needs a doctest because it is messing with the boot
+    config
+    """
 
     @staticmethod
     def is_grub2():
@@ -824,19 +830,25 @@ class Bootloader(base.Base):
     def find_grub_cfg():
         cfg_path = None
 
-        if Filesystem.by_label("Boot"):
-            cfg_path = "/boot/grub/grub.conf"
-        elif os.path.ismount("/dev/.initramfs/live"):
-            if not Bootloader.is_grub2():
-                cfg_path = "/dev/.initramfs/live/grub/grub.conf"
-            else:
+        if os.path.ismount("/dev/.initramfs/live"):
+            if Bootloader.is_grub2():
                 cfg_path = "/dev/.initramfs/live/grub2/grub.cfg"
+            else:
+                cfg_path = "/dev/.initramfs/live/grub/grub.conf"
         elif os.path.ismount("/run/initramfs/.live"):
             cfg_path = "/liveos/grub/grub.conf"
+        elif Filesystem.by_label("Boot"):
+            cfg_path = "/boot/grub/grub.conf"
 
         else:
             raise RuntimeError("Failed to find the path for grub.[cfg|conf]")
-        return File(cfg_path)
+
+        cfg = File(cfg_path)
+
+        if not cfg.exists():
+            raise RuntimeError("Grub config file does not exist: %s" % cfg)
+
+        return cfg
 
     class Arguments(base.Base):
 

@@ -141,7 +141,7 @@ class Plugin(plugins.NodePlugin):
     def on_change(self, changes):
         if "console.path" in changes:
             if "console.path" is not "" and not os.path.exists(
-                    "/dev/%s" % changes["console.path"].split(',')[0]):
+                    changes["console.path"].split(',')[0]):
                 raise exceptions.InvalidData("Console path must be a valid"
                                              "device or empty")
 
@@ -277,14 +277,16 @@ class ConsoleDialog(ui.Dialog):
         self.children = [ui.Label("console.label[0]",
                                   "Enter the path to a valid console device"),
                          ui.Label("console.label[1]",
-                                  "Example: /dev/ttyS0,115200n8"),
+                                  "Examples: /dev/ttyS1 or " +
+                                  "/dev/ttyS0,115200n8"),
+                         ui.Divider("console.divider[0]"),
                          ui.Entry("console.path", "Console path:")]
 
     def _console(self, console_path=None):
         def real_console():
             b = Bootloader().Arguments()
             if not console_path:
-                return b["console"] if "console" in b else ""
+                return b.get("console",  "")
             else:
                 b["console"] = str(console_path)
         return self.plugin.dry_or(real_console) or ""
