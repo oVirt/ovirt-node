@@ -358,7 +358,7 @@ class UrwidWindow(ui.Window):
                ('plugin.widget.button.disabled', element_styles["disabled"]),
                ('plugin.widget.label', element_styles["text"]),
                ('plugin.widget.label.keyword', element_styles["label"]),
-               ('plugin.widget.progressbar.box', element_styles["disabled"]),
+               ('plugin.widget.progressbar.box', element_styles["label"]),
                ('plugin.widget.progressbar.uncomplete',
                 element_styles["label"]),
                ('plugin.widget.progressbar.complete', "white",
