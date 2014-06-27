@@ -14,6 +14,7 @@ gen_require(`
 @SEMODULE_WITH_SYSTEMD@    type sshd_net_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
+    type dmesg_t;
     type getty_t;
     type initrc_t;
     type initrc_tmp_t;
@@ -34,6 +35,7 @@ gen_require(`
     type syslogd_t;
     type sysstat_t;
     type tuned_t;
+    type tmpfs_t;
     type unconfined_t;
     type unlabeled_t;
     type var_log_t;
@@ -266,13 +268,7 @@ optional_policy(`
 
 
 #============= dmesg_t ==============
-optional_policy(`
-    require {
-        type dmesg_t;
-        type tmpfs_t;
-    }
-    allow dmesg_t tmpfs_t:dir search;
-')
+allow dmesg_t tmpfs_t:dir search;
 
 
 #============= iptables_t ==============
@@ -280,7 +276,6 @@ optional_policy(`
     require {
         type iptables_t;
         type insmod_t;
-        type tmpfs_t;
     }
     allow iptables_t tmpfs_t:dir search;
     allow iptables_t insmod_t:process { siginh rlimitinh noatsecure };
@@ -293,13 +288,6 @@ optional_policy(`
         type rpcbind_t;
     }
     allow rpcbind_t self:udp_socket listen;
-')
-
-optional_policy(`
-    require {
-        type rpcbind_t;
-        type tmpfs_t;
-    }
     allow rpcbind_t tmpfs_t:dir search;
 ')
 
