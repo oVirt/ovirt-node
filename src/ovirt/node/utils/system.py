@@ -852,10 +852,11 @@ class Bootloader(base.Base):
 
     class Arguments(base.Base):
 
-        def __init__(self):
-            self.__handle = Bootloader.find_grub_cfg()
-            self.__mount = Mount.find_by_path(self.__handle.filename)
-            self.items = self.__get_arguments()
+        def __init__(self, dry=False):
+            if not dry:
+                self.__handle = Bootloader.find_grub_cfg()
+                self.__mount = Mount.find_by_path(self.__handle.filename)
+                self.items = self.__get_arguments()
 
         def __str__(self):
             return str(self.items)
@@ -922,12 +923,57 @@ class Bootloader(base.Base):
             return key in self.items
 
         def update_args(self, arg, remove=False):
+            self.__mount.remount(rw=True)
+            grub_cfg = self._parse_config(self.__get_lines(), arg, remove)
+            File(self.__handle.filename).write(grub_cfg, "w")
+            self.__mount.remount(rw=False)
+
+        def remove_args(self, arg):
+            self.update_args(arg, remove=True)
+
+        def _parse_config(self, lines, arg, remove):
+            """Parses and modifies the passed grub config
+
+            >>> cfg = ["head", " kernel /vmlinuz0 arg1 foo=bar arg2", "tail"]
+            >>> b = Bootloader.Arguments(dry=True)
+            >>> split_args = lambda x: filter(None, x.split('\\n'))
+            >>> parse_cfg = lambda cfg, arg, remove: split_args(
+            ...                 b._parse_config(cfg, arg, remove))
+            >>> parsed_args = lambda arg, remove: parse_cfg(cfg, arg, remove)
+            >>> parsed_args("foo=bar", True)
+            ['head', ' kernel /vmlinuz0 arg1 arg2', 'tail']
+            >>> parsed_args("foo=oof", False)
+            ['head', ' kernel /vmlinuz0 arg1 foo=oof arg2', 'tail']
+            >>> parsed_args("new", False)
+            ['head', ' kernel /vmlinuz0 arg1 foo=bar arg2 new', 'tail']
+
+            >>> def closed_args(cfg):
+            ...     cfg = [cfg]
+            ...     def closure(arg, remove):
+            ...         cfg[0] = parse_cfg(cfg[0], arg, remove)
+            ...         return cfg[0]
+            ...     return closure
+            >>> modified_args = closed_args(cfg)
+
+            >>> modified_args("foo=oof", False)
+            ['head', ' kernel /vmlinuz0 arg1 foo=oof arg2', 'tail']
+            >>> modified_args('foo=qq', False)
+            ['head', ' kernel /vmlinuz0 arg1 foo=qq arg2', 'tail']
+            >>> modified_args('foo', True)
+            ['head', ' kernel /vmlinuz0 arg1 arg2', 'tail']
+            >>> modified_args('qq=qux', False)
+            ['head', ' kernel /vmlinuz0 arg1 arg2 qq=qux', 'tail']
+            >>> modified_args('qq=xuq', False)
+            ['head', ' kernel /vmlinuz0 arg1 arg2 qq=xuq', 'tail']
+            >>> modified_args('qq', True)
+            ['head', ' kernel /vmlinuz0 arg1 arg2', 'tail']
+            """
+
             replacement = arg
             # Check if it's parameterized
             if '=' in arg:
                 arg = re.match(r'^(.*?)=.*', arg).groups()[0]
-            self.__mount.remount(rw=True)
-            lines = self.__get_lines()
+
             grub_cfg = ""
             for line in lines:
                 if re.match(r'.*?\s%s' % arg, line):
@@ -942,11 +988,7 @@ class Bootloader(base.Base):
                     line = line.rstrip() + " %s\n" % replacement
                 line = line.rstrip() + "\n"
                 grub_cfg += line
-            File(self.__handle.filename).write(grub_cfg, "w")
-            self.__mount.remount(rw=False)
-
-        def remove_args(self, arg):
-            self.update_args(arg, remove=True)
+            return grub_cfg
 
 
 class LVM(base.Base):
