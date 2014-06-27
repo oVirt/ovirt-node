@@ -160,6 +160,7 @@ require {
 }
 allow ping_t nfs_t:file read;
 
+
 #============= dhcpc_t ==============
 optional_policy(`
     require {
@@ -203,10 +204,12 @@ optional_policy(`
 
 
 #============= systemd_passwd_agent_t ==============
-require {
-    type systemd_passwd_agent_t;
-}
-allow systemd_passwd_agent_t tmpfs_t:dir search;
+optional_policy(`
+    require {
+        type systemd_passwd_agent_t;
+    }
+    allow systemd_passwd_agent_t tmpfs_t:dir search;
+')
 
 
 #============= systemd_localed_t ==============
@@ -220,6 +223,7 @@ optional_policy(`
     allow systemd_localed_t security_t:file { open read };
 ')
 
+
 #============= irqbalance_t ==============
 optional_policy(`
     require {
@@ -228,6 +232,7 @@ optional_policy(`
     }
     allow irqbalance_t tmpfs_t:dir search;
 ')
+
 
 #============= ksmtuned_t ==============
 optional_policy(`
@@ -238,6 +243,7 @@ optional_policy(`
     allow ksmtuned_t tmpfs_t:dir search;
 ')
 
+
 #============= mcelog_t ==============
 optional_policy(`
     require {
@@ -246,6 +252,7 @@ optional_policy(`
     }
     allow mcelog_t tmpfs_t:dir search;
 ')
+
 
 #============= ntpd_t ==============
 optional_policy(`
@@ -258,33 +265,35 @@ optional_policy(`
 ')
 
 
-
-
-
-
 #============= dmesg_t ==============
-require {
-type dmesg_t;
-type tmpfs_t;
-}
-allow dmesg_t tmpfs_t:dir search;
+optional_policy(`
+    require {
+        type dmesg_t;
+        type tmpfs_t;
+    }
+    allow dmesg_t tmpfs_t:dir search;
+')
 
 
 #============= iptables_t ==============
-require {
-    type iptables_t;
-    type insmod_t;
-    type tmpfs_t;
-}
-allow iptables_t tmpfs_t:dir search;
-allow iptables_t insmod_t:process { siginh rlimitinh noatsecure };
+optional_policy(`
+    require {
+        type iptables_t;
+        type insmod_t;
+        type tmpfs_t;
+    }
+    allow iptables_t tmpfs_t:dir search;
+    allow iptables_t insmod_t:process { siginh rlimitinh noatsecure };
+')
 
 
 #============= rpcbind_t ==============
-require {
-    type rpcbind_t;
-}
-allow rpcbind_t self:udp_socket listen;
+optional_policy(`
+    require {
+        type rpcbind_t;
+    }
+    allow rpcbind_t self:udp_socket listen;
+')
 
 optional_policy(`
     require {
@@ -294,11 +303,13 @@ optional_policy(`
     allow rpcbind_t tmpfs_t:dir search;
 ')
 
+
 #============= rpcd_t ==============
 require {
     type rpcd_t;
 }
 allow rpcd_t self:udp_socket listen;
+
 
 #============= ssh_keygen_t ==============
 require {
@@ -323,6 +334,7 @@ type getty_t;
 allow getty_t local_login_t:process { siginh rlimitinh noatsecure };
 allow getty_t var_log_t:file { open write };
 allow getty_t tmpfs_t:dir search;
+
 
 #============= ifconfig_t ==============
 require {
