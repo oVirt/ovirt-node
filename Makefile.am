@@ -65,8 +65,7 @@ rpm:	srpm
 
 publish:
 	mkdir -p $(OVIRT_CACHE_DIR)
-	rsync -aq $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
-	rsync -aq $(shell rpm --eval '%{_srcrpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/src
+	rsync -aq $(TMPREPOS)/ $(OVIRT_CACHE_DIR)/ovirt
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
 
 iso: publish
@@ -86,7 +85,7 @@ unittests:
 	$(MAKE) -C tests/ check-local
 
 snapshot-rpm:
-	make rpm RELEASE_SUFFIX=".$(date --utc +%Y%m%d).git$(git rev-parse --short HEAD)"
+	make rpm RELEASE_SUFFIX=".$$(date --utc +%Y%m%d).git$$(git rev-parse --short HEAD)"
 
 snapshot:
 	eval export $$(grep ^PACKAGE_ configure) ; \
