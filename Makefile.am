@@ -43,25 +43,27 @@ EXTRA_DIST = \
 
 DISTCLEANFILES = $(PACKAGE)-$(VERSION).tar.gz
 
-# For Release: 0..., set _ovirt_dev=1 so that we get extra_release.GIT-
-# annotated rpm version strings.
-_ovirt_dev = \
- $(shell grep -q '^[[:space:]]*Release:[[:space:]]*[0-9\.]*999' \
-   $(srcdir)/*.spec.in && echo 1 || :)
+TMPREPOS = tmp.repos
+RPMBUILD_ARGS :=
+RPMBUILD_ARGS += --define "ovirt_cache_dir $(OVIRT_CACHE_DIR)"
+RPMBUILD_ARGS += --define="_topdir `pwd`/$(TMPREPOS)"
+RPMBUILD_ARGS += $(if $(RELEASE_SUFFIX), --define="release_suffix $$RELEASE_SUFFIX")
 
-git_head	= $$(git log -1 --pretty=format:%h)
-GIT_RELEASE	= $$(date --utc +%Y%m%d%H%M%S)git$(git_head)
-RPMDIR		= $$(rpm --eval '%{_rpmdir}')
-RPM_FLAGS	= --define "ovirt_cache_dir $(OVIRT_CACHE_DIR)"
-RPM_FLAGS	+= $(if $(_ovirt_dev),--define "extra_release .$(GIT_RELEASE)")
+srpm:	dist
+	rm -fr "$(TMPREPOS)"
+	mkdir -p $(TMPREPOS)/{SPECS,RPMS,SRPMS,SOURCES}
+	$(RPMBUILD) $(RPMBUILD_ARGS) -ts "$(PACKAGE_TARNAME)-$(PACKAGE_VERSION).tar.gz"
+	@echo
+	@echo "srpm available at '$(TMPREPOS)'"
+	@echo
 
-rpms: dist
-	rpmbuild $(RPM_FLAGS) -ta $(distdir).tar.gz
+rpm:	srpm
+	$(RPMBUILD) $(RPMBUILD_ARGS) --rebuild "$(TMPREPOS)"/SRPMS/*.src.rpm
+	@echo
+	@echo "rpm(s) available at '$(TMPREPOS)'"
+	@echo
 
-srpms: dist
-	rpmbuild $(RPM_FLAGS) -ts $(distdir).tar.gz
-
-publish: rpms
+publish:
 	mkdir -p $(OVIRT_CACHE_DIR)
 	rsync -aq $(shell rpm --eval '%{_rpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/
 	rsync -aq $(shell rpm --eval '%{_srcrpmdir}')/ $(OVIRT_CACHE_DIR)/ovirt/src
@@ -82,6 +84,9 @@ static-checks:
 
 unittests:
 	$(MAKE) -C tests/ check-local
+
+snapshot-rpm:
+	make rpm RELEASE_SUFFIX=".$(date --utc +%Y%m%d).git$(git rev-parse --short HEAD)"
 
 snapshot:
 	eval export $$(grep ^PACKAGE_ configure) ; \

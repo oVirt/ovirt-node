@@ -21,16 +21,17 @@
 # RHN Plugin is only build on RHEL
 %define with_rhn 0%{?rhel}
 
+%global         package_version @PACKAGE_VERSION@
+%global         package_name @PACKAGE_NAME@
 
 Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
-Version:        @VERSION@
-Release:        0.999%{?BUILD_NUMBER}%{?extra_release}%{?dist}
-Source0:        %{name}-%{version}.tar.gz
+Version:        @PACKAGE_RPM_VERSION@
+Release:        @PACKAGE_RPM_RELEASE@%{?release_suffix}%{?dist}
+Source0:        http://plain.resources.ovirt.org/pub/ovirt-master-snapshot/src/%{name}/%{name}-%{package_version}.tar.gz
 License:        GPLv2+
 Group:          Applications/System
 
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 URL:            http://www.ovirt.org/
 BuildRequires:  python-setuptools python-devel dracut
 BuildRequires:  automake autoconf
@@ -407,7 +408,7 @@ This tool is used to remove unneeded rpms and files from a filesystem tree.
 
 
 %prep
-%setup -q
+%setup -q -n "%{name}-%{package_version}"
 
 
 %build
