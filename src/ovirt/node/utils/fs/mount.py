@@ -23,6 +23,7 @@
 File system mounting bindings
 """
 
+import collections
 import ctypes
 import os
 
@@ -51,6 +52,45 @@ MS_RELATIME = 1 << 21  # Update atime relative to mtime/ctime.
 MS_KERNMOUNT = 1 << 22  # This is a kern_mount call.
 MS_I_VERSION = 1 << 23  # Update inode I_version field.
 MS_STRICTATIME = 1 << 24  # Always perform atime updates.
+
+_MountEntry = collections.namedtuple(
+    '_MountEntry',
+    ('mount_id',  # Unique ID of the mount (may be reused after umount
+     'parent_id',  # ID of the parent (self for the top of the mount tree)
+     'major_minor',  # st_dev value for files on fs, e.g. 0:26
+     'root',  # Root of the mount withing the filesystem
+     'mount_point',  # mount point relative to the process root
+     'mount_opts',  # per mount options
+     'opts',  # optional tag:value fields
+     'type',  # name of the filesystem, e.g. ext3
+     'mount_src',  # fs specific info (or 'none'), e.g. /dev/mapper/foo
+     'super_opts',  # super block options, e.g. rw,seclabel,data=ordered
+     ))
+
+
+def _entries():
+    """Generates _MountEntries with the information in /proc/self/mountinfo"""
+    with open('/proc/self/mountinfo') as mount_file:
+        for line in mount_file:
+            tokens = line.split()
+            yield _MountEntry(*(tokens[:6] + [' '.join(tokens[6:-4])] +
+                              tokens[-3:]))
+
+
+def ismount(path):
+    if os.path.islink(path):  # Must be tested first
+        return False
+    elif os.path.isdir(path):
+        return os.path.ismount(path)
+    else:  # os.path.ismount does not operate with file mount points
+        path = os.path.abspath(path)
+        return any(entry for entry in _entries() if entry.mount_point == path)
+
+
+def isbindmount(path):
+    path = os.path.abspath(path)
+    return any(entry for entry in _entries() if
+               entry.mount_point == path and entry.root != '/')
 
 
 def mount(source, target, fstype='', flags=0L, data=None):
