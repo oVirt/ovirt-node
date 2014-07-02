@@ -23,6 +23,7 @@ python-gudev
 python-libs
 python-setuptools
 python-requests
+python-argparse
 PyPAM
 #db4
 # debugging
