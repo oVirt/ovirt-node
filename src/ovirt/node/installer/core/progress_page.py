@@ -188,13 +188,14 @@ class InstallerThread(threading.Thread):
         app = self.progress_plugin.application
         config = {}
         for pname, plugin in app.plugins().items():
-            self.logger.debug("Config for page %s" % (pname))
-            try:
-                model = plugin.model()
-                config.update(model)
-                self.logger.debug("Merged config: %s" % (model))
-            except NotImplementedError:
-                self.logger.debug("Merged no config.")
+            if not "Confirm disk selections" in pname:
+                self.logger.debug("Config for page %s" % (pname))
+                try:
+                    model = plugin.model()
+                    config.update(model)
+                    self.logger.debug("Merged config: %s" % (model))
+                except NotImplementedError:
+                    self.logger.debug("Merged no config.")
         self.logger.debug("Final config: %s" % config)
         return config
 
