@@ -496,7 +496,7 @@ class Config(base.Base):
         """
         with open(self.path_entries) as path_entries:
             for entry in path_entries:
-                yield entry
+                yield entry.strip()
 
     def _add_path_entry(self, abspath):
         """Adds abspath to /config/files
@@ -513,11 +513,10 @@ class Config(base.Base):
     def _del_path_entry(self, abspath):
         """Removes a path entry from the /config/files entries
         """
-        matches = (entry for entry in [e.strip() for e in
-                                       self._persisted_path_entries()] if
-                   entry != abspath)
+        filtered = '\n'.join(entry for entry in self._persisted_path_entries()
+                             if entry != abspath)
         with open(self.path_entries, 'w') as path_entries:
-            print('\n'.join(matches), file=path_entries)
+            print(filtered, file=path_entries)
 
     def unpersist(self, path):
         """Remove the persistent version of a file and remove the bind mount
