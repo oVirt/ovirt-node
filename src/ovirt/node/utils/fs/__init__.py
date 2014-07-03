@@ -539,6 +539,21 @@ class Config(base.Base):
                                    exc_info=True)
                 return -1
 
+    def _cleanup_tree(self, dirpath):
+        """Removes empty directories in the structure. abspath must be a dir"""
+        path = dirpath
+        while True:
+            try:
+                os.rmdir(path)
+            except OSError as ose:
+                if ose.errno == errno.ENOTEMPTY:
+                    self._logger.debug('Cleaned up "%s" all the way up to '
+                                       '(not including) "%s"', dirpath, path)
+                    break
+                else:
+                    raise
+            path = os.path.dirname(path)
+
     def _unpersist_dir(self, abspath):
         """Remove the persistent version of a directory and refresh the version
         in the live filesystem with what was persisted"""
@@ -554,6 +569,7 @@ class Config(base.Base):
         shutil.copytree(persisted_path, abspath, symlinks=True)
         shutil.rmtree(persisted_path)
         self._del_path_entry(abspath)
+        self._cleanup_tree(os.path.dirname(persisted_path))
         self._logger.info('Successfully unpersisted directory "%s"', abspath)
 
     def _unpersist_file(self, abspath):
@@ -568,6 +584,7 @@ class Config(base.Base):
         shutil.copy2(persisted_path, abspath)
         os.unlink(persisted_path)
         self._del_path_entry(abspath)
+        self._cleanup_tree(os.path.dirname(persisted_path))
         self._logger.info('Successfully unpersisted file "%s"', abspath)
 
     def _unpersist_symlink(self, abspath):
@@ -587,6 +604,7 @@ class Config(base.Base):
         os.symlink(stored_target, abspath)
         os.unlink(persisted_path)
         self._del_path_entry(abspath)
+        self._cleanup_tree(os.path.dirname(persisted_path))
         self._logger.info('Successfully unpersisted symlink "%s"', abspath)
 
     def delete(self, filename):
