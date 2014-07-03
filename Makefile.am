@@ -64,6 +64,10 @@ rpm:	srpm
 	@echo
 
 publish:
+	$(MAKE) rpm
+	$(MAKE) create-repo
+
+create-repo:
 	mkdir -p $(OVIRT_CACHE_DIR)
 	rsync -aq $(TMPREPOS)/ $(OVIRT_CACHE_DIR)/ovirt
 	createrepo $(OVIRT_CACHE_DIR)/ovirt
