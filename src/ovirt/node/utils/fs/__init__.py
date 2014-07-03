@@ -405,7 +405,7 @@ class Config(base.Base):
                 elif os.path.isfile(abspath):
                     self._persist_file(abspath)
             except Exception:
-                self._logger.error('Failed to persist "%s"' % path)
+                self._logger.error('Failed to persist "%s"', path)
                 return -1
 
     def _persist_dir(self, abspath):
@@ -413,13 +413,13 @@ class Config(base.Base):
         """
         persisted_path = self._config_path(abspath)
         if os.path.exists(persisted_path):
-            self._logger.warn('Directory "%s" had already been persisted' %
+            self._logger.warn('Directory "%s" had already been persisted',
                               abspath)
             return
 
         shutil.copytree(abspath, persisted_path, symlinks=True)
         mount.mount(persisted_path, abspath, flags=mount.MS_BIND)
-        self._logger.info('Directory "%s" successfully persisted' % abspath)
+        self._logger.info('Directory "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
 
     def _persist_file(self, abspath):
@@ -431,7 +431,7 @@ class Config(base.Base):
             current_checksum = ovirtfunctions.cksum(abspath)
             stored_checksum = ovirtfunctions.cksum(persisted_path)
             if stored_checksum == current_checksum:
-                self._logger.warn('File "%s" had already been persisted' %
+                self._logger.warn('File "%s" had already been persisted',
                                   abspath)
                 return
             else:
@@ -443,11 +443,11 @@ class Config(base.Base):
                     os.unlink(persisted_path)
                 except OSError as ose:
                     self._logger.error('Failed to clean up persisted file '
-                                       '"%s": %s' % (abspath, ose.message))
+                                       '"%s": %s', abspath, ose.message)
         self._prepare_dir(abspath, persisted_path)
         shutil.copy2(abspath, persisted_path)
         mount.mount(persisted_path, abspath, flags=mount.MS_BIND)
-        self._logger.info('File "%s" successfully persisted' % abspath)
+        self._logger.info('File "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
 
     def _persist_symlink(self, abspath):
@@ -458,7 +458,7 @@ class Config(base.Base):
         if os.path.exists(persisted_path):
             stored_target = os.readlink(persisted_path)
             if stored_target == current_target:
-                self._logger.warn('Symlink "%s" had already been persisted' %
+                self._logger.warn('Symlink "%s" had already been persisted',
                                   abspath)
                 return
             else:
@@ -476,8 +476,7 @@ class Config(base.Base):
             self._prepare_dir(abspath, persisted_path)
             os.symlink(current_target, persisted_path)
 
-        self._logger.info('Symbolic link "%s" successfully persisted' %
-                          abspath)
+        self._logger.info('Symbolic link "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
 
     def _prepare_dir(self, abspath, persisted_path):
@@ -489,8 +488,7 @@ class Config(base.Base):
         except OSError as ose:
             if ose.errno != errno.EEXIST:
                 self._logger.error('Failed to create the directories '
-                                   'necessary to persist %s: %s' %
-                                   (abspath, ose))
+                                   'necessary to persist %s: %s', abspath, ose)
                 raise
 
     def _persisted_path_entries(self):
@@ -538,7 +536,7 @@ class Config(base.Base):
                 elif os.path.isfile(abspath):
                     self._unpersist_file(abspath)
             except Exception:
-                self._logger.error('Failed to unpersist "%s"' % path,
+                self._logger.error('Failed to unpersist "%s"', path,
                                    exc_info=True)
                 return -1
 
@@ -547,7 +545,8 @@ class Config(base.Base):
         in the live filesystem with what was persisted"""
         persisted_path = self._config_path(abspath)
         if not mount.isbindmount(abspath):
-            self._logger.warn('The directory "%s" is not a persisted element')
+            self._logger.warn('The directory "%s" is not a persisted element',
+                              abspath)
             return
         mount.umount(abspath)
         # Remove the original contents and replace them with what was persisted
@@ -556,20 +555,21 @@ class Config(base.Base):
         shutil.copytree(persisted_path, abspath, symlinks=True)
         shutil.rmtree(persisted_path)
         self._del_path_entry(abspath)
-        self._logger.info('Successfully unpersisted directory "%s"' % abspath)
+        self._logger.info('Successfully unpersisted directory "%s"', abspath)
 
     def _unpersist_file(self, abspath):
         """Remove the persistent version of a file and refresh the version in
         the live filesystem with what was persisted"""
         persisted_path = self._config_path(abspath)
         if not mount.ismount(abspath):
-            self._logger.warn('The file "%s" is not a persisted element')
+            self._logger.warn('The file "%s" is not a persisted element',
+                              abspath)
             return
         mount.umount(abspath)
         shutil.copy2(persisted_path, abspath)
         os.unlink(persisted_path)
         self._del_path_entry(abspath)
-        self._logger.info('Successfully unpersisted file "%s"' % abspath)
+        self._logger.info('Successfully unpersisted file "%s"', abspath)
 
     def _unpersist_symlink(self, abspath):
         """Remove the persistent version of a symlink. Symlinks are not bind
@@ -580,7 +580,7 @@ class Config(base.Base):
         except OSError as ose:
             if ose.errno == errno.ENOENT:
                 self._logger.warn('The symlink "%s" is not a persisted '
-                                  'element')
+                                  'element', abspath)
                 return
 
         # Update the link with the current persisted version
@@ -588,7 +588,7 @@ class Config(base.Base):
         os.symlink(stored_target, abspath)
         os.unlink(persisted_path)
         self._del_path_entry(abspath)
-        self._logger.info('Successfully unpersisted symlink "%s"' % abspath)
+        self._logger.info('Successfully unpersisted symlink "%s"', abspath)
 
     def delete(self, filename):
         """Remove the persiste version and the file
