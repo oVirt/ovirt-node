@@ -188,7 +188,7 @@ class InstallerThread(threading.Thread):
         app = self.progress_plugin.application
         config = {}
         for pname, plugin in app.plugins().items():
-            if not "Confirm disk selections" in pname:
+            if "Confirm disk selections" not in pname:
                 self.logger.debug("Config for page %s" % (pname))
                 try:
                     model = plugin.model()

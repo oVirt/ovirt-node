@@ -373,13 +373,9 @@ def is_bind_mount(filename, fsprefix="ext"):
     Returns:
         True if the file is a bind mount target
     """
-    bind_mount_found = False
     mounts = File("/proc/mounts")
     pattern = "%s %s" % (filename, fsprefix)
-    for mount in mounts:
-        if pattern in mount:
-            bind_mount_found = True
-    return bind_mount_found
+    return any(pattern in mountp for mountp in mounts)
 
 
 class Config(base.Base):
