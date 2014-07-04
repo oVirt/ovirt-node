@@ -265,26 +265,11 @@ class NIC(base.Base):
                 LOGGER.debug("Failed to retrieve carrier with NM")
 
         # Fallback
-        has_carrier = False
-        i = 5
-        while i > 0:
-            try:
-                cmd = "ip link set dev {ifname} up".format(ifname=self.ifname)
-                process.check_call(cmd, shell=True)
-            except process.CalledProcessError:
-                LOGGER.debug("Failed to set dev %s link up" % self.ifname)
-            try:
-                content = File("/sys/class/net/%s/carrier" % self.ifname).\
-                    read()
-                has_carrier = "1" in content
-            except:
-                LOGGER.debug("Carrier down for %s" % self.ifname)
-            if not has_carrier:
-                import time
-                time.sleep(1)
-                i -= 1
-            else:
-                break
+        process.call(["ip","link", "set", "dev", self.ifname, "up"])
+
+        content = File("/sys/class/net/%s/carrier" % self.ifname).read()
+        has_carrier = "1" in content
+
         return has_carrier
 
     def ipv4_address(self):
