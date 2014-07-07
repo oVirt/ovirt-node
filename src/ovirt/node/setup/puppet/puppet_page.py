@@ -169,8 +169,8 @@ class ActivatePuppet(utils.Transaction.Element):
         fs.Config().persist("/etc/puppet/puppet.conf")
         try:
             system.service("puppet", "stop")
-            utils.process.check_call("puppet agent --waitforcert 60 --test",
-                                     shell=True)
+            utils.process.pipe("puppet agent --waitforcert 60 "
+                               "--test", shell=True, check=True)
             system.service("puppet", "start")
             fs.Config().persist("/var/lib/puppet")
         except:
