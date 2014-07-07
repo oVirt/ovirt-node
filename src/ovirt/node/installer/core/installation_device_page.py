@@ -167,18 +167,18 @@ class Plugin(plugins.NodePlugin):
             self.widgets.add(self._dialog)
             return self._dialog
 
-        elif changes.contains_any(["installation.device.custom",
-                                   "dialog.device.custom.save"]):
-            self._dialog.close()
-            cdev = self._model["installation.device.custom"]
-            self._model["installation.devices"].append(cdev)
-            self.application.ui.navigate.to_next_plugin()
+        if changes.contains_any(["installation.device.custom"]):
+            # Check if any custom device was set
+            cdevs = self._model.get("installation.device.custom", "").\
+                split(",")
+            # Update the installlation devices accordingly
+            self._model.setdefault("installation.devices", []).extend(cdevs)
 
-        if changes.contains_any(["button.back"]):
+        if changes.contains_any(["dialog.device.custom.save"]):
+            # Custom device dialog: <Save> has been hit
+            self._dialog.close()
+            self.application.ui.navigate.to_next_plugin()
+        elif changes.contains_any(["button.back"]):
             self.application.ui.navigate.to_previous_plugin()
         elif changes.contains_any(["button.next"]):
-            if "installation.device.custom" in self._model:
-                m = self._model
-                cdevs = m["installation.device.custom"].split(",")
-                m.setdefault("installation.devices", []).extend(cdevs)
             self.application.ui.navigate.to_next_plugin()
