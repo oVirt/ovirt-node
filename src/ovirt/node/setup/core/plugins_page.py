@@ -166,9 +166,9 @@ class Plugin(NodePlugin):
                 (plugin_dir, f)
             package = process.check_output(cmd.split(' ')
                                            ).strip()
-            cmd = "rpm -q %s --qf 'NAME: %s DATE: \
-                   %%{version}-%%{release}.%%{arch} INST: \
-                   %%{INSTALLTIME:date}\\n'" %\
+            cmd = "rpm -q %s --qf 'NAME: %s DATE: " \
+                  "%%{version}-%%{release}.%%{arch} INST: " \
+                  "%%{INSTALLTIME:date}\\n'" %\
                 (package, package)
             name, ver, install_date = re.match(
                 r'NAME: (.*?) DATE: (.*?) INST: (.*)',
@@ -186,9 +186,9 @@ class Plugin(NodePlugin):
             cmd = 'rpm -q --qf %%{name} %s' % f
             package = process.check_output(cmd.split(' ')
                                            ).strip()
-            cmd = "rpm -q %s --qf 'NAME: %s DATE: \
-                   %%{version}-%%{release}.%%{arch} INST: \
-                   %%{INSTALLTIME:date}\\n'" %\
+            cmd = "rpm -q %s --qf 'NAME: %s DATE: " \
+                  "%%{version}-%%{release}.%%{arch} INST: " \
+                  "%%{INSTALLTIME:date}\\n'" %\
                 (package, package)
             name, ver, install_date = re.match(
                 r'NAME: (.*?) DATE: (.*?) INST: (.*)',
