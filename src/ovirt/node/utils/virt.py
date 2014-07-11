@@ -77,11 +77,23 @@ def hardware_status():
         read-able string
     """
     if hardware_is_enabled():
-        return "Virtualization hardware was detected and is enabled"
+        msg = "Virtualization hardware was detected and is enabled"
     if hardware_is_available():
-        return "Virtualization hardware was detected but is disabled"
-    return "No virtualization hardware was detected on this system"
+        msg = "Virtualization hardware was detected but is disabled"
+    msg = "No virtualization hardware was detected on this system"
+    if not is_libvirtd_reachable():
+        msg += "\n(Failed to Establish Libvirt Connection)"
+    return msg
 
+
+def is_libvirtd_reachable():
+    reachable = True
+    try:
+        with LibvirtConnection() as l:
+            l.getCapabilities()
+    except:
+        reachable = False
+    return reachable
 
 def number_of_domains():
     # FIXME solve this more general

@@ -263,7 +263,8 @@ class CPUFeaturesDialog(ui.InfoDialog):
     """The dialog beeing displayed when th euser clicks CPU Details
     """
     def __init__(self, path, title):
-        msg = utils.system.cpu_details()
+        msg = "\n%s\n\n%s" % (utils.system.cpu_details(),
+                              utils.virt.hardware_status())
         super(CPUFeaturesDialog, self).__init__(path, title, msg)
 
 

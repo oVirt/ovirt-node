@@ -115,11 +115,64 @@ def is_rescue_mode():
                in ["rescue", "S", "single", "1"])
 
 
-def cpu_details():
-    """Return details for the CPU of this machine, virt related
+def _parse_lscpu(data):
+    """Parse the lines of the lscpu output
+
+    >>> data = \"\"\"
+    ... Architecture:          x86_64
+    ... CPU op-mode(s):        32-bit, 64-bit
+    ... Byte Order:            Little Endian
+    ... CPU(s):                4
+    ... On-line CPU(s) list:   0-3
+    ... Thread(s) per core:    2
+    ... Core(s) per socket:    2
+    ... Socket(s):             1
+    ... NUMA node(s):          1
+    ... Vendor ID:             GenuineIntel
+    ... CPU family:            6
+    ... Model:                 42
+    ... Model name:            Intel(R) Core(TM) i7-2620M CPU @ 2.70GHz
+    ... Stepping:              7
+    ... CPU MHz:               1094.976
+    ... BogoMIPS:              5382.47
+    ... Virtualization:        VT-x
+    ... L1d cache:             32K
+    ... L1i cache:             32K
+    ... L2 cache:              256K
+    ... L3 cache:              4096K
+    ... NUMA node0 CPU(s):     0-3
+    ... \"\"\"
+    >>> _parse_lscpu(data)
+    {'CPU(s)': '4', 'L1d cache': '32K', 'CPU op-mode(s)': '32-bit, 64-bit', \
+'NUMA node0 CPU(s)': '0-3', 'L2 cache': '256K', 'L1i cache': '32K', \
+'Model name': 'Intel(R) Core(TM) i7-2620M CPU @ 2.70GHz', 'CPU MHz': \
+'1094.976', 'Core(s) per socket': '2', 'Thread(s) per core': '2', \
+'On-line CPU(s) list': '0-3', 'Socket(s)': '1', 'Architecture': 'x86_64', \
+'Model': '42', 'Vendor ID': 'GenuineIntel', 'CPU family': '6', 'L3 cache': \
+'4096K', 'BogoMIPS': '5382.47', 'Virtualization': 'VT-x', 'Stepping': '7', \
+'Byte Order': 'Little Endian', 'NUMA node(s)': '1'}
     """
-    from ovirtnode.ovirtfunctions import cpu_details
-    return cpu_details()
+    cpu = {}
+    for line in data.splitlines():
+        if not line.strip():
+            continue
+        k, v = line.split(":", 1)
+        cpu[k.strip()] = v.strip()
+    return cpu
+
+
+def cpu_details():
+    """Return details for the CPU of this machine
+    """
+    fields = ["Model name", "Architecture", "CPU MHz", "Virtualization",
+              "CPU(s)", "Socket(s)",
+              "Core(s) per socket", "Thread(s) per core"]
+
+    data = process.pipe(["lscpu"])
+    cpu = _parse_lscpu(data)
+    cpu_details = ("%s: %s" % (f, cpu.get(f, "(Unknown)")) for f in fields)
+
+    return "\n".join(cpu_details)
 
 
 def has_hostvg():
