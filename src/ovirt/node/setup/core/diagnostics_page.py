@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# kdump_page.py - Copyright (C) 2012 Red Hat, Inc.
+# diagnostics_page.py - Copyright (C) 2012-2014 Red Hat, Inc.
 # Written by Fabian Deutsch <fabiand@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
