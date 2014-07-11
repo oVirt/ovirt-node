@@ -35,6 +35,7 @@ sysstat
 tcpdump
 pciutils
 usbutils
+kbd
 lsscsi
 psmisc
 numactl
