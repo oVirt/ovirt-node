@@ -252,12 +252,23 @@ class Port(Number):
     False
     >>> Port().validate(12345678)
     False
+    >>> Port(value=1024).validate(1024)
+    True
+    >>> Port(exclude_reserved=False).validate(22)
+    True
+    >>> Port(exclude_reserved=True).validate(22)
+    False
     """
 
     description = "a port number"
 
-    def __init__(self):
-        super(Port, self).__init__(bounds=[1, 65535])
+    def __init__(self, exclude_reserved=False, value=None):
+        if value:
+            super(Port, self).__init__(exactly=value)
+        elif exclude_reserved:
+            super(Port, self).__init__(bounds=[1024, 65535])
+        else:
+            super(Port, self).__init__(bounds=[1, 65535])
 
 
 class NoSpaces(RegexValidator):

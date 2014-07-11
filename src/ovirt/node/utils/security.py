@@ -192,16 +192,20 @@ class Ssh(base.Base):
             except ValueError:
                 raise RuntimeError("Port must be an integer")
         if port is not None:
-            if int(port) in range(1, 65535):
+            if int(port) in range(1024, 65536) or int(port) == 22:
                 self.logger.debug("Setting SSH port to %s" % port)
                 aug.set(augpath, port)
                 self.restart()
 
             else:
-                raise RuntimeError("Port must be in the range [1-65535]")
+                raise RuntimeError("Port must be in the range [1024-65536] \
+                                   or 22")
 
         state = str(aug.get(augpath)).lower()
-        if state != "none" and int(state) not in range(1, 65535):
+        if state != "none":
+            if int(state) in range(1024, 65536) or int(state) == 22:
+                self.logger.debug("SSH port %s" % state)
+        else:
             raise RuntimeError("Failed to set SSH port: value is %s" % state)
         return state
 

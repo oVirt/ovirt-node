@@ -53,7 +53,9 @@ class Plugin(plugins.NodePlugin):
             valid.Empty()
         return {"strongrng.num_bytes": number_or_empty,
                 "passwd.admin.password":
-                valid.Empty() | valid.Text(min_length=5)
+                valid.Empty() | valid.Text(min_length=5),
+                "ssh.port":
+                (valid.Port(value=22) | valid.Port(exclude_reserved=True))
                 }
 
     def ui_content(self):
