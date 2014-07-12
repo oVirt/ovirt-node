@@ -489,6 +489,9 @@ cd -
 
 /usr/sbin/hardlink -cv %{buildroot}%{_datadir}/selinux
 
+# Keep old name for backwards compatibilitiy reasons
+ln -vfs %{_bindir}/ovirt-node-config-password %{buildroot}%{_libexecdir}/ovirt-config-password
+
 # Remove igor stuff if not needed
 %if ! 0%{?with_igor}
 %{__rm} -vf %{buildroot}/%{_libexecdir}/ovirt-node-igor-slave \
@@ -570,6 +573,7 @@ sed -i -e 's/X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config
 # remove symlink to keep original redhat-release
 rm -f /etc/system-release
 echo "%{product_family} release %{product_release}" > /etc/system-release
+
 
 %pre
 #
@@ -760,10 +764,10 @@ fi
 %{dracutdir}/91ovirtnode
 %{_sysconfdir}/dracut.conf.d/ovirt-dracut.conf
 %{_libexecdir}/ovirt-auto-install
-%{_libexecdir}/ovirt-config-password
 %{_libexecdir}/ovirt-config-uninstall
 %{_libexecdir}/ovirt-functions
 %{_libexecdir}/ovirt-admin-shell
+%{_libexecdir}/ovirt-config-password
 %{_libexecdir}/ovirt-init-functions.sh
 %{_sbindir}/persist
 %{_sbindir}/unpersist
@@ -815,6 +819,7 @@ fi
 %{_bindir}/ovirt-node-doc
 %{_bindir}/ovirt-node-features
 %{_bindir}/ovirt-node-config
+%{_bindir}/ovirt-node-config-password
 
 
 

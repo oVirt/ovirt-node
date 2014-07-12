@@ -26,12 +26,12 @@ dist_sbin_SCRIPTS = \
 dist_bin_SCRIPTS = \
   ovirt-node-setup \
   ovirt-node-installer \
+  ovirt-node-config-password \
   ovirt-node-doc \
   ovirt-node-features \
   ovirt-node-config
 
 dist_libexec_SCRIPTS = \
-  ovirt-config-password \
   ovirt-config-uninstall \
   ovirt-functions \
   ovirt-init-functions.sh \
