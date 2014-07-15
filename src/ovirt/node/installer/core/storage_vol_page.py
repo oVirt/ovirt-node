@@ -221,7 +221,8 @@ class Plugin(plugins.NodePlugin):
         return free_space
 
     def __enough_free_space(self):
-        """Determin if the available size is large enough to hold the installation
+        """
+        Determin if the available size is large enough to hold the installation
         """
         self._drive_size = self.__get_drives_size(self.__get_install_drive())
         return self._drive_size > self._min_drive_size
