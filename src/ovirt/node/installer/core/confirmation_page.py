@@ -60,7 +60,7 @@ class Plugin(plugins.NodePlugin):
               ui.Notice("notice[0]", _("The data on these disks will "
                                        "be erased!")),
               ui.KeywordLabel("boot.header", _("Boot device")),
-              DiskDetails("boot.device", self,
+              DiskDetails("boot.device.current", self,
                           self._model["boot.device.current"])]
 
         if self._storage_tagged(["boot.device.current"]):
