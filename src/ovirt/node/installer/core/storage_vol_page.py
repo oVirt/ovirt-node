@@ -224,5 +224,7 @@ class Plugin(plugins.NodePlugin):
         """
         Determin if the available size is large enough to hold the installation
         """
+        if self.application.args.dry:
+            return True
         self._drive_size = self.__get_drives_size(self.__get_install_drive())
         return self._drive_size > self._min_drive_size
