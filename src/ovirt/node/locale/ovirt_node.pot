@@ -232,19 +232,19 @@ msgid "(2 partitions at 512MB each)"
 msgstr ""
 
 #: installer/core/storage_vol_page.py:71
-msgid "Swap:"
+msgid "Swap MB:"
 msgstr ""
 
 #: installer/core/storage_vol_page.py:72
-msgid "Config:"
+msgid "Config MB:"
 msgstr ""
 
 #: installer/core/storage_vol_page.py:73
-msgid "Logging:"
+msgid "Logging MB:"
 msgstr ""
 
 #: installer/core/storage_vol_page.py:74
-msgid "Data:"
+msgid "Data MB:"
 msgstr ""
 
 #: installer/core/storage_vol_page.py:80

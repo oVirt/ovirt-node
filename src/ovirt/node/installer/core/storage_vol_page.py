@@ -88,10 +88,10 @@ class Plugin(plugins.NodePlugin):
                    ui.Label("label[1]", _("(2 partitions at %sMB each)") %
                             self.model().get("storage.efi_size")),
                    ui.Divider("divider[2]"),
-                   ui.Entry("storage.swap_size", _("Swap:")),
-                   ui.Entry("storage.config_size", _("Config:")),
-                   ui.Entry("storage.logging_size", _("Logging:")),
-                   ui.Entry("storage.data_size", _("Data:"),
+                   ui.Entry("storage.swap_size", _("Swap MB:")),
+                   ui.Entry("storage.config_size", _("Config MB:")),
+                   ui.Entry("storage.logging_size", _("Logging MB:")),
+                   ui.Entry("storage.data_size", _("Data MB:"),
                             enabled=not self._fill),
                    ])
 
