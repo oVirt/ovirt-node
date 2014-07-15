@@ -1312,13 +1312,13 @@ class Netconsole(NodeConfigFileSection):
         valid.Port()(port)
 
     def transaction(self):
-        def _clear_config(self):
+        def _clear_config():
             self.logger.info("Disabling netconsole")
             f = File("/etc/sysconfig/netconsole")
             f.sed("/SYSLOGADDR/d")
             f.sed("/SYSLOGPORT/d")
 
-        def configure_netconsole(self, server, port):
+        def configure_netconsole(server, port):
             aug = utils.AugeasWrapper()
             if server and port:
                 aug.set("/files/etc/sysconfig/netconsole/SYSLOGADDR",
@@ -1328,11 +1328,11 @@ class Netconsole(NodeConfigFileSection):
                 try:
                     system.service("netconsole", "restart")
                 except:
-                    self._clear_config()
+                    _clear_config()
                     raise RuntimeError("Failed to restart netconsole "
                                        "service. Is the host resolvable?")
             else:
-                self._clear_config()
+                _clear_config()
             fs.Config().persist("/etc/sysconfig/netconsole")
             self.logger.info("Netconsole Configuration Updated")
 
@@ -1341,13 +1341,12 @@ class Netconsole(NodeConfigFileSection):
 
         class CreateNetconsoleConfig(utils.Transaction.Element):
             if server:
-                port = port if port else "6666"
                 title = "Setting netconsole server and port"
             else:
                 title = "Disabling netconsole"
 
             def commit(self):
-                self.configure_netconsole(server, port)
+                configure_netconsole(server, port or "6666")
 
         tx = utils.Transaction("Configuring netconsole")
         tx.append(CreateNetconsoleConfig())
