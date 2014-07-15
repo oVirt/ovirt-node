@@ -676,7 +676,7 @@ _start_ovirt_early () {
             ntp=*)
             ntp=$(printf $i|python -c "`cat << EOP
 import sys
-ovirt.node.config.defaults import Timeservers
+from ovirt.node.config.defaults import Timeservers
 validservers = []
 for line in sys.stdin:
     # remove the leading ntp=...
