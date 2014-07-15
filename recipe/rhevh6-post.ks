@@ -145,10 +145,12 @@ patch -d /sbin -p0 << \EOF_start_udev
 EOF_start_udev
 
 # rhbz#734478 add virt-who (*.py are removed in rhevh image)
-cat > /usr/bin/virt-who <<EOF_virt_who
-#!/bin/sh
-exec /usr/bin/python /usr/share/virt-who/virt-who.pyc "\$@"
+if [ -f /etc/rhev-hypervisor-release ]; then
+    cat > /usr/bin/virt-who <<EOF_virt_who
+    #!/bin/sh
+    exec /usr/bin/python /usr/share/virt-who/virt-who.pyc "\$@"
 EOF_virt_who
+fi
 
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
