@@ -156,11 +156,9 @@ class Plugin(plugins.NodePlugin):
 
     def __get_default_sizes(self):
         if self.application.args.dry:
-            udiskscmd = "udisksctl info -b /dev/[sv]da* | grep Size"
-            stdout = process.check_output(udiskscmd,
-                                          shell=True)
-            self._drive_size = (int(stdout.strip().split(":")[1].strip())
-                                / 1024 / 1024)
+            cmd = "blockdev --getsize64 /dev/[sv]da"
+            stdout = process.check_output(cmd, shell=True)
+            self._drive_size = int(stdout) / 1024 / 1024
             return {"storage.efi_size": "256",
                     "storage.root_size": "50",
                     "storage.swap_size": "0",
