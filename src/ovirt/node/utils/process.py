@@ -167,8 +167,6 @@ def check_output(*args, **kwargs):
 
     return stdout
 
-    return stdout
-
 
 def pipe(cmd, stdin=None, check=False, **kwargs):
     """Run a non-interactive command and return it's output
