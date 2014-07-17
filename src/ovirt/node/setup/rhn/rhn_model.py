@@ -366,7 +366,8 @@ class RHN(NodeConfigFileSection):
                     else:
                         raise RuntimeError("Registration Failed")
                 else:
-                    conf.persist(rhsm_configs)
+                    for cfg in rhsm_configs:
+                        conf.persist(cfg)
                     conf.persist("/etc/pki/consumer/key.pem")
                     conf.persist("/etc/pki/consumer/cert.pem")
                     self.logger.info("System %s sucessfully registered \
