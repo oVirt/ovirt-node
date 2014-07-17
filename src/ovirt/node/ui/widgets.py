@@ -28,6 +28,11 @@ import urwid
 LOGGER = log.getLogger(__name__)
 
 
+def _debug(msg):
+    pass
+    # LOGGER.debug(msg)
+
+
 class SelectableText(urwid.Text):
     """A Text widget that can be selected to be highlighted
     """
@@ -126,7 +131,7 @@ class TableEntryWidget(urwid.AttrMap):
     def __handle_activate(self):
         if self.multi:
             is_checked = self.is_selected()
-            LOGGER.debug("handling activate: %s" % is_checked)
+            _debug("handling activate: %s" % is_checked)
             self.select(not is_checked)
         self._emit('activate', self)
 
@@ -215,7 +220,7 @@ class TableWidget(NoticeDecoration):
     def selection(self, selection=None):
         if selection:
             for c in self.__items:
-                LOGGER.debug("checking: %s" % c)
+                _debug("checking: %s" % c)
                 if self.multi and c._key in selection:
                     c.select(True)
         selected = [w._key for w in self.__items if w.is_selected()]
@@ -329,7 +334,7 @@ class PluginMenu(urwid.WidgetWrap):
                 item = PluginMenuEntry(title, plugin)
                 items.append(item)
             else:
-                LOGGER.debug("No UI page for plugin %s" % plugin)
+                _debug("No UI page for plugin %s" % plugin)
 
         self.__walker = urwid.SimpleListWalker(items)
 
@@ -608,7 +613,7 @@ class Options(urwid.WidgetWrap):
                 bkey = self._button_to_key[button]
                 if key == bkey:
                     button.set_state(True)
-                    LOGGER.debug("Selected option %s (%s)" % (key, button))
+                    _debug("Selected option %s (%s)" % (key, button))
         LOGGER.warning("Could not set selection '%s'" % key)
 
     def set_text(self, txt):
@@ -737,18 +742,18 @@ class TabablePile(urwid.Pile):
     def keypress(self, size, key):
         new_pos = self.focus_position
         delta = 0
-        LOGGER.debug("tab key: %s" % key)
+        _debug("tab key: %s" % key)
         if "tab" in key:
             delta = 1
         elif "shift tab" in key:
             delta = -1
         if delta:
-            LOGGER.debug("Setting focus to: %s" % new_pos)
+            _debug("Setting focus to: %s" % new_pos)
             while new_pos >= 0 and new_pos < len(self.contents):
                 new_pos += delta
                 new_pos = new_pos % len(self.contents)
                 if self.contents[new_pos][0].selectable():
                     self.focus_position = new_pos
                     break
-            LOGGER.debug("Focus on: %s" % self.focus)
+            _debug("Focus on: %s" % self.focus)
         return super(TabablePile, self).keypress(size, key)
