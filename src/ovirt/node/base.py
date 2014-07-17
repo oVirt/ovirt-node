@@ -71,25 +71,29 @@ class Base(object):
             self.callbacks = []
             self.logger = log.getLogger(self.__module__)
 
+        def _debug(self, msg):
+            pass
+            # self._debug(msg)
+
         def emit(self, userdata=None):
             """Emit a signal
             """
-            # self.logger.debug("%s: %s" % (self, self.callbacks))
+            self._debug("%s: %s" % (self, self.callbacks))
             for idx, cb in enumerate(self.callbacks):
-                self.logger.debug("%s (%d/%d) %s" %
-                                  (self, idx + 1, len(self.callbacks), cb))
+                self._debug("%s (%d/%d) %s" %
+                            (self, idx + 1, len(self.callbacks), cb))
                 if cb(self.target, userdata) is False:
-                    self.logger.debug("Breaking callback sequence")
+                    self._debug("Breaking callback sequence")
                     break
             return self
 
         def connect(self, cb):
-            # self.logger.debug("Connecting %s with %s" % (self, cb))
+            self._debug("Connecting %s with %s" % (self, cb))
             self.callbacks.append(cb)
             return self
 
         def clear(self):
-            self.logger.debug("Clearing callbacks on %s" % self)
+            self._debug("Clearing callbacks on %s" % self)
             self.callbacks = []
 
         def target_property(self):
