@@ -265,7 +265,7 @@ class NIC(base.Base):
                 LOGGER.debug("Failed to retrieve carrier with NM")
 
         # Fallback
-        process.call(["ip","link", "set", "dev", self.ifname, "up"])
+        process.call(["ip", "link", "set", "dev", self.ifname, "up"])
 
         content = File("/sys/class/net/%s/carrier" % self.ifname).read()
         has_carrier = "1" in content

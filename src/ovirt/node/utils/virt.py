@@ -95,6 +95,7 @@ def is_libvirtd_reachable():
         reachable = False
     return reachable
 
+
 def number_of_domains():
     # FIXME solve this more general
     num_domains = None
