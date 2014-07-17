@@ -118,7 +118,7 @@ allow setfiles_t dhcpc_t:udp_socket { read write };
 
 #============= sshd_t ==============
 @SEMODULE_WITH_SYSTEMD@allow sshd_net_t initrc_t:process sigchld;
-allow sshd_t var_log_t:file { read open };
+allow sshd_t var_log_t:file { read open write };
 
 
 #============= svirt_t ==============
@@ -225,6 +225,36 @@ optional_policy(`
     allow systemd_localed_t security_t:file { open read };
 ')
 
+#============= rhsmcertd_t ==============
+optional_policy(`
+    require {
+        type rhsmcertd_t;
+    }
+    allow rhsmcertd_t tmpfs_t:dir search;
+    allow rhsmcertd_t var_log_t:file open;
+')
+
+#============= sblim_sfcbd_t ==============
+optional_policy(`
+    require {
+        type sblim_sfcbd_t;
+        type virt_var_run_t;
+        type virt_etc_t;
+        type virtd_t;
+        type chkpwd_exec_t;
+        type user_tmp_t;
+    }
+    allow sblim_sfcbd_t chkpwd_exec_t:file { read execute open execute_no_trans };
+    allow sblim_sfcbd_t self:capability { setuid audit_write dac_override };
+    allow sblim_sfcbd_t self:netlink_audit_socket { nlmsg_relay create };
+    allow sblim_sfcbd_t shadow_t:file { read getattr open };
+    allow sblim_sfcbd_t user_tmp_t:sock_file { write unlink };
+    allow sblim_sfcbd_t virt_etc_t:file { read open };
+    allow sblim_sfcbd_t virt_var_run_t:dir search;
+    allow sblim_sfcbd_t virt_var_run_t:sock_file write;
+
+    allow sblim_sfcbd_t virtd_t:unix_stream_socket connectto;
+')
 
 #============= irqbalance_t ==============
 optional_policy(`
