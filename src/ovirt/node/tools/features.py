@@ -104,5 +104,5 @@ if __name__ == "__main__":
         print(xmlbuilder.build(registry))
     else:
         print("Get a feature summary about this node.")
-        print("Usage: %s [-d] [dumpxml]" % sys.argv[0])
+        print("Usage: %s [dumpxml]" % sys.argv[0])
         sys.exit(1)
