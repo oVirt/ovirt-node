@@ -27,6 +27,7 @@ import logging
 import subprocess
 import shlex
 from ovirtnode.iscsi import set_iscsi_initiator
+from ovirt.node import presets
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +37,8 @@ class Storage:
         logger.propagate = False
         OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5
-        self.BOOT_SIZE = 512
-        self.ROOT_SIZE = 512
+        self.BOOT_SIZE = presets.BOOT_SIZE
+        self.ROOT_SIZE = presets.ROOT_SIZE
         self.CONFIG_SIZE = 5
         self.LOGGING_SIZE = 2048
         self.EFI_SIZE = 256

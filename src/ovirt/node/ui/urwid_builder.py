@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import ui, base
+from ovirt.node import ui, base, presets
 from ovirt.node.ui import widgets as uw
 import os
 import urwid
@@ -331,13 +331,13 @@ class UrwidWindow(ui.Window):
     palette = [(None, 'default', element_styles["background"], 'bold',
                 None, None),
                ('screen', None),
-               ('header', 'white', 'dark blue'),
+               ('header', 'white', presets.TUI_BRAND_COLOR),
                ('footer', element_styles["text"]),
                ('table', element_styles["text"]),
                ('table.label', element_styles["label"]),
                ('table.header', element_styles["label"] + ", standout"),
                ('table.entry', element_styles["text"]),
-               ('table.entry:focus', None, 'dark blue'),
+               ('table.entry:focus', None, presets.TUI_BRAND_COLOR),
                ('main.menu', 'black'),
                ('main.menu.frame', element_styles["text"]),
                ('notice', 'light red'),
@@ -354,7 +354,7 @@ class UrwidWindow(ui.Window):
                ('plugin.widget.notice', element_styles["invalid"]),
                ('plugin.widget.header', element_styles["header"]),
                ('plugin.widget.divider', element_styles["text"]),
-               ('plugin.widget.button', 'dark blue'),
+               ('plugin.widget.button', element_styles["header"]),
                ('plugin.widget.button.disabled', element_styles["disabled"]),
                ('plugin.widget.label', element_styles["text"]),
                ('plugin.widget.label.keyword', element_styles["label"]),

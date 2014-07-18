@@ -98,6 +98,7 @@ Requires(post):       patch
 Requires:       system-release
 
 Requires:       %{name}-selinux = %{version}-%{release}
+Requires:       %{name}-branding-ovirt = %{version}-%{release}
 
 #libvirt dependencies
 Requires: libvirt-python
@@ -422,6 +423,18 @@ This tool is used to remove unneeded rpms and files from a filesystem tree.
 %endif
 
 
+#
+# oVirt Brand subpackage
+#
+%package branding-ovirt
+Summary:  oVirt branding for oVirt Node
+Group:    Applications/System
+
+%description branding-ovirt
+This package contains the files to let Node appear in the oVirt look.
+
+
+
 %prep
 %setup -q -n "%{name}-%{package_version}"
 
@@ -726,6 +739,10 @@ fi
 %endif
 
 
+%files branding-ovirt
+%{python_sitelib}/ovirt/node/presets.py*
+
+
 %files
 %defattr(-,root,root)
 %config(noreplace) %attr(0644,root,root) %{_sysconfdir}/default/ovirt
@@ -808,6 +825,7 @@ fi
 %{python_sitelib}/ovirt/node/tools/*.py*
 %{python_sitelib}/ovirt/node/tools/*.xsl
 %{python_sitelib}/ovirt/node/config/*.py*
+%exclude %{python_sitelib}/ovirt/node/presets.py*
 %{python_sitelib}/ovirt/node/setup/*.py*
 %{python_sitelib}/ovirt/node/setup/core/*.py*
 %{python_sitelib}/ovirt/node/installer/*.py*

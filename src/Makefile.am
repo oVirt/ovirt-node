@@ -86,7 +86,8 @@ pyovirt_node_PYTHON = \
   ovirt/node/app.py \
   ovirt/node/base.py \
   ovirt/node/loader.py \
-  ovirt/node/log.py
+  ovirt/node/log.py \
+  ovirt/node/presets.py
 
 dist_ovirt_node_locale_cn_DATA = \
   ovirt/node/locale/zh_CN/LC_MESSAGES/ovirt_node.mo

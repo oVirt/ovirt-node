@@ -25,6 +25,7 @@ Storage Volume page of the installer
 from ovirt.node import plugins, ui, valid
 from ovirt.node.utils import process
 from ovirt.node.exceptions import InvalidData
+from ovirt.node.config import presets
 
 
 class Plugin(plugins.NodePlugin):
@@ -161,8 +162,8 @@ class Plugin(plugins.NodePlugin):
             cmd = "blockdev --getsize64 /dev/[sv]da"
             stdout = process.check_output(cmd, shell=True)
             self._drive_size = int(stdout) / 1024 / 1024
-            return {"storage.efi_size": "256",
-                    "storage.root_size": "50",
+            return {"storage.efi_size": presets.BOOT_SIZE,
+                    "storage.root_size": presets.ROOT_SIZE,
                     "storage.swap_size": "0",
                     "storage.config_size": "5",
                     "storage.logging_size": "2048",
