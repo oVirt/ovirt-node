@@ -123,7 +123,7 @@ class Plugin(plugins.NodePlugin):
     def model(self):
         cfg = rhn_model.RHN().retrieve()
         self.logger.debug(cfg)
-        model = {"rhn.user": "",
+        model = {"rhn.username": "",
                  "rhn.password": "",
                  "rhn.profilename": "",
                  "rhn.type": "",
@@ -139,6 +139,7 @@ class Plugin(plugins.NodePlugin):
 
         rhn_conf = get_rhn_config()
         status, rhn_type = get_rhn_status()
+        model["rhn.username"] = cfg["username"]
         model["rhn.type"] = cfg["rhntype"]
         model["rhn.profilename"] = cfg["profile"]
         if RHN_XMLRPC_ADDR not in rhn_conf["serverURL"] and not sam_check():
@@ -213,7 +214,7 @@ class Plugin(plugins.NodePlugin):
                           % rhntype
 
             ws = [ui.Header("header[0]", rhn_msg),
-                  ui.Entry("rhn.user", "Login:"),
+                  ui.Entry("rhn.username", "Login:"),
                   ui.PasswordEntry("rhn.password", "Password:"),
                   ui.Entry("rhn.profilename", "Profile Name (optional):"),
                   ui.Divider("divider[0]"),
@@ -254,17 +255,17 @@ class Plugin(plugins.NodePlugin):
         self.logger.debug("Changes: %s" % changes)
         self.logger.debug("Effective Model: %s" % effective_model)
 
-        rhn_keys = ["rhn.user", "rhn.password", "rhn.profilename", "rhn.type",
-                    "rhn.url", "rhn.ca", "rhn.proxyhost", "rhn.proxyport",
-                    "rhn.proxyuser", "rhn.proxypassword", "rhn.org",
-                    "rhn.activation_key"]
+        rhn_keys = ["rhn.username", "rhn.password", "rhn.profilename",
+                    "rhn.type", "rhn.url", "rhn.ca", "rhn.proxyhost",
+                    "rhn.proxyport", "rhn.proxyuser", "rhn.proxypassword",
+                    "rhn.org", "rhn.activation_key"]
 
         txs = utils.Transaction("Updating RHN configuration")
 
         if changes.contains_any(rhn_keys):
             self.logger.debug(changes)
             self.logger.debug(effective_model)
-            user = effective_model["rhn.user"]
+            user = effective_model["rhn.username"]
             pw = effective_model["rhn.password"]
             profilename = effective_model["rhn.profilename"]
             rhn_type = effective_model["rhn.type"]
