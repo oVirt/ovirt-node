@@ -21,7 +21,7 @@
 """
 Storage Volume page of the installer
 """
-
+import os
 from ovirt.node import plugins, ui, valid
 from ovirt.node.utils import process
 from ovirt.node.exceptions import InvalidData
@@ -160,9 +160,14 @@ class Plugin(plugins.NodePlugin):
 
     def __get_default_sizes(self):
         if self.application.args.dry:
-            cmd = "blockdev --getsize64 /dev/[sv]da"
-            stdout = process.check_output(cmd, shell=True)
-            self._drive_size = int(stdout) / 1024 / 1024
+            if os.geteuid() == 0:
+                cmd = "blockdev --getsize64 /dev/[sv]da"
+                stdout = process.check_output(cmd, shell=True)
+                self._drive_size = int(stdout) / 1024 / 1024
+            else:
+                # If we're not root and can't query the drive,
+                # pretend it's 5G
+                self._drive_size = 5242880
             return {"storage.efi_size": "%s" % presets.BOOT_SIZE,
                     "storage.root_size": "%s" % presets.ROOT_SIZE,
                     "storage.swap_size": "0",
