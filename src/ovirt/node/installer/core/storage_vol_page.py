@@ -25,7 +25,7 @@ Storage Volume page of the installer
 from ovirt.node import plugins, ui, valid
 from ovirt.node.utils import process
 from ovirt.node.exceptions import InvalidData
-from ovirt.node.config import presets
+from ovirt.node import presets
 
 
 class Plugin(plugins.NodePlugin):
