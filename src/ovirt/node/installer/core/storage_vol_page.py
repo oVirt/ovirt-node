@@ -42,7 +42,8 @@ class Plugin(plugins.NodePlugin):
 
     def model(self):
         drive_changed = (self._model["storage.install_drive"] !=
-                         self.__get_install_drive())
+                         self.__get_install_drive() if self._model
+                         else None)
         if not self._model or drive_changed:
             self._model = self.__get_default_sizes()
             self._model["storage.data_size"] = "%s" %\
@@ -162,12 +163,13 @@ class Plugin(plugins.NodePlugin):
             cmd = "blockdev --getsize64 /dev/[sv]da"
             stdout = process.check_output(cmd, shell=True)
             self._drive_size = int(stdout) / 1024 / 1024
-            return {"storage.efi_size": presets.BOOT_SIZE,
-                    "storage.root_size": presets.ROOT_SIZE,
+            return {"storage.efi_size": "%s" % presets.BOOT_SIZE,
+                    "storage.root_size": "%s" % presets.ROOT_SIZE,
                     "storage.swap_size": "0",
                     "storage.config_size": "5",
                     "storage.logging_size": "2048",
                     "storage.data_size": "0",
+                    "storage.install_drive": self.__get_install_drive()
                     }
         from ovirtnode.storage import Storage
         stor = Storage()
