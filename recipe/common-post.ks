@@ -176,7 +176,9 @@ EOF_nfs
 # sosreport fixups for node image:
 # use .pyc for plugins enumeration, .py is blacklisted
 # include *-release
-if [[ $(rpm -E "%{?fedora}") = 20 ]];then
+if [[ $(rpm -E "%{?fedora}") = 20 ]] ||
+    [[ $(rpm -E "%{?rhel}") = 7 ]] ||
+    [[ $(rpm -E "%{?centos}" = 7 ]]; then
 patch --fuzz 3 -d /usr/lib/python2.7/site-packages/sos -p0 <<  \EOF_sos_patch
 --- utilities.py.orig    2013-08-04 08:36:51.000000000 -0700
 +++ utilities.py   2014-03-18 15:25:02.675059445 -0700
