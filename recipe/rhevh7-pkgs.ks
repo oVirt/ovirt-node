@@ -3,6 +3,7 @@
 # rhbz#641494 RFE - add libguestfs
 libguestfs-winsupport
 
+net-tools
 ltrace
 vhostmd
 firewalld
