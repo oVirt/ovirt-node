@@ -173,7 +173,7 @@ class Plugin(plugins.NodePlugin):
 
     def validators(self):
         return {"rhn.user": valid.Text(),
-                "rhn.profilename": valid.Empty() | valid.Text(min_length=3),
+                "rhn.profilename": valid.Empty() | valid.Text(),
                 "rhn.url": valid.Empty() | valid.URL(),
                 "rhn.ca": valid.Empty() | valid.URL(),
                 "rhn.proxyhost": (valid.FQDNOrIPAddress() |
