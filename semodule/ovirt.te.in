@@ -10,13 +10,10 @@ gen_require(`
 @SEMODULE_NOT_EL6@    type virtd_t;
 @SEMODULE_NOT_EL6@    type virt_etc_t;
 @SEMODULE_NOT_EL6@    type virt_var_run_t;
-@SEMODULE_WITH_SYSTEMD@    type etc_t;
-@SEMODULE_WITH_SYSTEMD@    type sshd_net_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
-@COLLECTD_COMMENT@    type collectd_t;
-@SYSTEMD_COMMENT@    type systemd_localed_t;
-@SYSTEMD_COMMENT@    type systemd_unit_file_t;
+@SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
+@SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
     type collectd_t;
     type etc_t;
     type dmesg_t;
