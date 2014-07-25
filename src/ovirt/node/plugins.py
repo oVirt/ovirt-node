@@ -556,6 +556,9 @@ class UIElements(base.Base):
                 self.logger.debug("Is a container adding children")
                 self.add(element.children)
 
+    def items(self):
+        return self._elements.items()
+
     def __getitem__(self, path):
         return self._elements[path]
 

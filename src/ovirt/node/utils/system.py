@@ -271,6 +271,17 @@ def has_systemd():
     return True
 
 
+def journal(unit=None, this_boot=True):
+    """Convenience function to access the journal
+    """
+    cmd = ["journalctl"]
+    if unit:
+        cmd += ["--unit", unit]
+    if this_boot:
+        cmd += ["--this-boot"]
+    return process.pipe(cmd)
+
+
 def copy_dir_if_not_exist(orig, target):
     """function to copy missing directories from one location to another
     should only be used when syncing a directory structure from iso
