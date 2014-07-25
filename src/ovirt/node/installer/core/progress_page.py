@@ -167,6 +167,8 @@ class InstallerThread(threading.Thread):
                    self.SetPassword(cfg["admin.password"]),
                    self.InstallImageAndBootloader(cfg["boot.device.current"]),
                    self.SetKeyboardLayout(cfg["keyboard.layout"])]
+            if "disable_kdump" not in system.kernel_cmdline_arguments():
+                tx += [self.ConfigureKdump()]
 
             if system.is_pxe():
                     tx += [self.ClearNetworkConfig()]
@@ -296,6 +298,22 @@ class InstallerThread(threading.Thread):
             model.update(layout=self.kbd_layout)
             tx = model.transaction()
             tx()
+
+    class ConfigureKdump(utils.Transaction.Element):
+        title = "Configuring Local KDump"
+
+        def __init__(self):
+            super(InstallerThread.ConfigureKdump, self).__init__()
+
+        def commit(self):
+            try:
+                model = defaults.KDump()
+                model.configure_local()
+                tx = model.transaction()
+                tx()
+
+            except:
+                self.logger.info("Could not configure local kdump!")
 
     class MigrateConfigs(utils.Transaction.Element):
         title = "Migrating configuration data"

@@ -178,7 +178,9 @@ class ConfigureKdump(Transaction.Element):
                                     OVIRT_VARS["OVIRT_KDUMP_SSH_KEY"])
             elif "OVIRT_KDUMP_NFS" in OVIRT_VARS:
                 model.configure_nfs(OVIRT_VARS["OVIRT_KDUMP_NFS"])
-            elif "OVIRT_KDUMP_LOCAL" in OVIRT_VARS:
+            elif "OVIRT_DISABLE_KDUMP" in OVIRT_VARS:
+                model.disable_kdump()
+            else:
                 model.configure_local()
 
             tx = model.transaction()

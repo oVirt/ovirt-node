@@ -48,10 +48,5 @@ def kdump_auto():
             _functions.ovirt_store_config("/etc/kdump.conf")
             _functions.logger.info("Syslog Configuration Completed")
             return True
-        if "OVIRT_KDUMP_LOCAL" in _functions.OVIRT_VARS:
-            restore_kdump_config()
-            _functions.ovirt_store_config("/etc/kdump.conf")
-            _functions.logger.info("Syslog Configuration Completed")
-            return True
     except:
         _functions.logger.error("KDump Configuration Failed")
