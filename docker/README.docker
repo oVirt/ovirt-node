@@ -25,4 +25,6 @@ Start docker (and check that it's running)
 Build oVirt Node in docker
 --------------------------
 
-    $ sudo docker build - < Dockerfile-f20
+    $ ln -s Dockerfile-${distro} Dockerfile
+    $ sudo docker build -t ovirt/${distro} .
+    $ sudo docker run ovirt/${distro} [commithash]
