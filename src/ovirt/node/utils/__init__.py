@@ -93,7 +93,7 @@ class AugeasWrapper(base.Base):
             self.set(path, value)
         return self.save()
 
-    def remove_many(self, paths, basepath=None):
+    def remove_many(self, paths, basepath=""):
         """Removes many keys at once
 
         Args:
@@ -105,7 +105,7 @@ class AugeasWrapper(base.Base):
             self.remove(path, False)
         return self.save()
 
-    def get_many(self, paths, strip_basepath=""):
+    def get_many(self, paths, strip_basepath="", basepath=""):
         """Get all values for all the paths
 
         Args:
@@ -116,6 +116,8 @@ class AugeasWrapper(base.Base):
         for path in paths:
             if strip_basepath:
                 path = path[len(strip_basepath):]
+            if basepath:
+                path = basepath + path
             values[path] = self.get(path)
         return values
 
