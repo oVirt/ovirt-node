@@ -6,15 +6,10 @@ gen_require(`
 @SEMODULE_NOT_EL6@    type collectd_t;
 @SEMODULE_NOT_EL6@    type NetworkManager_t;
 @SEMODULE_NOT_EL6@    type passwd_file_t;
-@SEMODULE_NOT_EL6@    type virtd_exec_t;
-@SEMODULE_NOT_EL6@    type virtd_t;
-@SEMODULE_NOT_EL6@    type virt_etc_t;
-@SEMODULE_NOT_EL6@    type virt_var_run_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
-    type collectd_t;
     type etc_t;
     type dmesg_t;
     type getty_t;
@@ -29,7 +24,6 @@ gen_require(`
     type logrotate_t;
     type mount_t;
     type net_conf_t;
-    type passwd_file_t;
     type policykit_t;
     type sanlock_t;
     type setfiles_t;
