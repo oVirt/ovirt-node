@@ -34,7 +34,6 @@ gen_require(`
     type sanlock_t;
     type setfiles_t;
     type shadow_t;
-    type sshd_net_t;
     type sshd_t;
     type svirt_t;
     type syslogd_t;
@@ -79,7 +78,12 @@ optional_policy(`
 
 
 #============= initrc_t ==============
-@SEMODULE_WITH_SYSTEMD@allow initrc_t sshd_net_t:process dyntransition;
+optional_policy(`
+    require {
+        type sshd_net_t;
+    }
+    allow initrc_t sshd_net_t:process dyntransition;
+')
 allow initrc_t unconfined_t:process dyntransition;
 
 
@@ -126,8 +130,16 @@ allow setfiles_t net_conf_t:file read;
 allow setfiles_t dhcpc_t:udp_socket { read write };
 
 
+#============= sshd_net_t ==============
+optional_policy(`
+    require {
+        type sshd_net_t;
+    }
+    allow sshd_net_t initrc_t:process sigchld;
+')
+
+
 #============= sshd_t ==============
-@SEMODULE_WITH_SYSTEMD@allow sshd_net_t initrc_t:process sigchld;
 allow sshd_t var_log_t:file { read open write };
 
 
@@ -411,22 +423,21 @@ optional_policy(`
 ')
 
 
-
-#============= initrc_t ==============
-allow initrc_t sshd_net_t:process dyntransition;
-allow initrc_t unconfined_t:process dyntransition;
-
 #============= local_login_t ==============
 allow local_login_t var_log_t:file { open write create read lock };
+
 
 #============= logrotate_t ==============
 allow logrotate_t virt_cache_t:dir read;
 
+
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
 
+
 #============= tuned_t ==============
 allow tuned_t ovirt_t:dbus send_msg;
+
 
 # Remove this block once the bug is solved
 # Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1025401
