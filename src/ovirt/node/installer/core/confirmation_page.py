@@ -116,6 +116,8 @@ class Plugin(plugins.NodePlugin):
          self.application.plugins().values() if not
          plugin.name() == "Confirm disk selections"]
 
+        if "storage.fill_data" in _model:
+            del _model["storage.fill_data"]
         _model["installation.devices"].sort()
 
         self._model = _model
