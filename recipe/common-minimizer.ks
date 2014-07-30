@@ -186,6 +186,7 @@ keep /usr/share/augeas/lenses/dist/inittab.aug
 keep /usr/share/augeas/lenses/dist/iptables.aug
 keep /usr/share/augeas/lenses/dist/json.aug
 keep /usr/share/augeas/lenses/dist/krb5.aug
+keep /usr/share/augeas/lenses/dist/kdump.aug
 keep /usr/share/augeas/lenses/dist/limits.aug
 keep /usr/share/augeas/lenses/dist/logrotate.aug
 keep /usr/share/augeas/lenses/dist/lokkit.aug
