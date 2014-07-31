@@ -21,17 +21,15 @@
 
 from ovirt.node.utils.console import TransactionProgress
 from ovirt.node.setup.cim import cim_model
-import ovirtnode.ovirtfunctions as _functions
+from ovirt.node.utils import system
 
-args = _functions.get_cmdline_args()
-
-cim_pw = args.get("cim_passwd")
+args = system.kernel_cmdline_args()
 
 if __name__ == "__main__":
     cim = cim_model.CIM()
-    if len(cim_pw) > 0:
+    if "cim_passwd" in args and len(args["cim_passwd"]) > 0:
         cim.update(enabled=True)
-        tx = cim.transaction(cim_password=cim_pw)
+        tx = cim.transaction(cim_password=args["cim_passwd"])
         TransactionProgress(tx, is_dry=False).run()
         # clear ovirt_cim_passwd from /etc/default/ovirt
         pw_keys = ("OVIRT_CIM_PASSWD")

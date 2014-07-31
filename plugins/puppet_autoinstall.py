@@ -18,11 +18,11 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 from ovirt.node.setup.puppet.puppet_page import *
-import ovirtnode.ovirtfunctions as _functions
+from ovirt.node.utils import system
 from ovirt.node.plugins import Changeset
 import re
 
-args = _functions.get_cmdline_args()
+args = system.kernel_cmdline_args()
 keys = ["puppet_enabled", "puppet_server", "puppet_certname"]
 changes = dict((re.sub(r'_', r'.', key), args[key]) for key in keys
                if key in args)

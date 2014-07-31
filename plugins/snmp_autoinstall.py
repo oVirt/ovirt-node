@@ -19,17 +19,15 @@
 
 from ovirt.node.utils.console import TransactionProgress
 from ovirt.node.setup.snmp import snmp_model
-import ovirtnode.ovirtfunctions as _functions
+from ovirt.node.utils import system
 
-args = _functions.get_cmdline_args()
-
-snmp_pw = args.get("snmp_password")
+args = system.kernel_cmdline_args()
 
 if __name__ == "__main__":
     snmp = snmp_model.SNMP()
-    if len(snmp_pw) > 0:
+    if "snmp_password" in args and len(args["snmp_password"]) > 0:
         snmp.update(enabled=True)
-        tx = snmp.transaction(snmp_password=snmp_pw)
+        tx = snmp.transaction(snmp_password=args["snmp_passwd"])
         TransactionProgress(tx, is_dry=False).run()
         # clear ovirt_snmp_passwd from /etc/default/ovirt
         pw_keys = ("OVIRT_SNMP_PASSWORD",)
