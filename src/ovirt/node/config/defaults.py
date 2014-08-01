@@ -468,7 +468,9 @@ class Network(NodeConfigFileSection):
         tx.append(StopNetworkServices())
         tx.append(RemoveConfiguration())
         tx.append(WriteConfiguration())
-        tx.append(PersistMacNicMapping())
+        if system.is_max_el(6):
+            # Running EL6 -- persist network renaming
+            tx.append(PersistMacNicMapping())
         tx.append(StartNetworkServices())
         return tx
 

@@ -908,10 +908,12 @@ EOP
     fi
 
     [[ -f "/etc/udev/rules.d/71-persistent-node-net.rules" ]] && {
-        # Rename the interfaces after bind-mounting the udev rules, rhbz#831658
-        rm -f /etc/udev/rules.d/70-persistent-net.rules
-        udevadm control --reload-rules
-        udevadm trigger --action=add --subsystem-match=net
+        [[ $(rpm -E "%{?rhel"}) = 6 ]] || [[ $(rpm -E "%{?centos}") = 6 ]] && {
+            # Rename the interfaces after bind-mounting the udev rules, rhbz#831658
+            rm -f /etc/udev/rules.d/70-persistent-net.rules
+            udevadm control --reload-rules
+            udevadm trigger --action=add --subsystem-match=net
+        }
     }
 
     if [ -n "$adminpw" ]; then
