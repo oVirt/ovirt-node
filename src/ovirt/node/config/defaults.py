@@ -1075,8 +1075,16 @@ class KDump(NodeConfigFileSection):
 
     def transaction(self):
         cfg = dict(self.retrieve())
-        nfs, ssh, ssh_key, restore = (cfg["nfs"], cfg["ssh"], cfg["ssh_key"],
-                                      cfg["local"])
+        nfs, ssh, ssh_key, local = (cfg["nfs"], cfg["ssh"], cfg["ssh_key"],
+                                    cfg["local"])
+
+        aug = AugeasWrapper()
+        prefix = "/files/etc/kdump.conf/"
+
+        def _set_values(vals):
+            for k, v in vals.iteritems():
+                aug.set(prefix + k, v)
+            aug.save()
 
         class BackupKdumpConfig(utils.Transaction.Element):
             title = "Backing up config files"
@@ -1088,19 +1096,34 @@ class KDump(NodeConfigFileSection):
             def commit(self):
                 self.backups.create(ignore_existing=True)
 
-        class RestoreKdumpConfig(utils.Transaction.Element):
-            title = "Restoring default kdump config"
+        class WipeKdumpConfig(utils.Transaction.Element):
+            title = "Removing set kdump options"
 
             def commit(self):
-                import ovirtnode.kdump as okdump
-                okdump.restore_kdump_config()
+                paths = ["default", "ext4", "path", "nfs", "ssh", "net"]
+
+                vals = aug.get_many(paths, basepath=prefix)
+                [aug.remove(v) for v in vals.keys() if vals[v] is not None]
+                aug.save()
+
+        class LocalKdumpConfig(utils.Transaction.Element):
+            title = "Setting local kdump config"
+
+            def commit(self):
+                vals = {"default": "reboot",
+                        "ext4": "/dev/HostVG/Data",
+                        "path": "/core"}
+
+                _set_values(vals)
 
         class CreateNfsKdumpConfig(utils.Transaction.Element):
             title = "Creating kdump NFS config"
 
             def commit(self):
-                import ovirtnode.kdump as okdump
-                okdump.write_kdump_config(nfs, "nfs")
+                vals = {"default": "reboot",
+                        "nfs": nfs}
+
+                _set_values(vals)
 
         class PopulateSshKeys(utils.Transaction.Element):
             title = "Fetching and testing SSH keys"
@@ -1142,9 +1165,10 @@ class KDump(NodeConfigFileSection):
             title = "Creating kdump SSH config"
 
             def commit(self):
-                import ovirtnode.kdump as okdump
+                vals = {"default": "reboot",
+                        "ssh": ssh}
 
-                okdump.write_kdump_config(ssh, "ssh")
+                _set_values(vals)
 
                 kdumpctl_cmd = system.which("kdumpctl")
                 if kdumpctl_cmd:
@@ -1156,11 +1180,13 @@ class KDump(NodeConfigFileSection):
                     utils.process.check_call(cmd)
 
                     conf = Config()
-                    for confpath in ("/root/.ssh/kdump_id_rsa.pub",
-                                     "/root/.ssh/kdump_id_rsa",
-                                     "/root/.ssh/known_hosts",
-                                     "/root/.ssh/config"):
-                        conf.persist(confpath)
+                    files = ["/root/.ssh/kdump_id_rsa.pub",
+                             "/root/.ssh/kdump_id_rsa",
+                             "/root/.ssh/known_hosts",
+                             "/root/.ssh/config"]
+
+                    [conf.persist(file) for file in files]
+
                 except utils.process.CalledProcessError as e:
                     self.logger.warning("Failed to activate KDump with " +
                                         "SSH: %s" % e)
@@ -1209,6 +1235,9 @@ class KDump(NodeConfigFileSection):
         backup_txe = BackupKdumpConfig()
         tx.append(backup_txe)
 
+        wipe_txe = WipeKdumpConfig()
+        tx.append(wipe_txe)
+
         final_txe = RestartKdumpService(backup_txe.backups)
         if nfs:
             tx.append(CreateNfsKdumpConfig())
@@ -1216,8 +1245,8 @@ class KDump(NodeConfigFileSection):
             if ssh_key:
                 tx.append(PopulateSshKeys())
             tx.append(CreateSshKdumpConfig())
-        elif restore in [True, False]:
-            tx.append(RestoreKdumpConfig())
+        elif local in [True, False]:
+            tx.append(LocalKdumpConfig())
         else:
             final_txe = RemoveKdumpConfig(backup_txe.backups)
 
