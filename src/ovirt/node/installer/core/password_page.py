@@ -42,7 +42,7 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         ws = [ui.Header("header[0]",
-                        _("Require a password for the admin user?")),
+                        _("Enter a password for the admin user")),
               ui.Divider("divider[0]"),
               ui.ConfirmedEntry("admin.password", _("Password:"),
                                 is_password=True, min_length=3)
