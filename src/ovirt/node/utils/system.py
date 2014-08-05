@@ -108,6 +108,18 @@ def is_python_2_6():
     return sys.version_info[:2] == (2, 6)
 
 
+def is_min_el(minver):
+    """Check if el and min version minver
+    """
+    return SystemRelease().is_min_el(minver)
+
+
+def is_max_el(maxver):
+    """Check if el and max version maxver
+    """
+    return SystemRelease().is_max_el(maxver)
+
+
 def is_rescue_mode():
     """If the system is running in rescue mode
     """
@@ -416,6 +428,22 @@ class SystemRelease(base.Base):
         """Determin if this system is an "enterprise linux" (RHEL, CentOS)
         """
         return self.VENDOR.lower() == "redhat"
+
+    def is_min_el(self, minversion):
+        """Determin if this system is an EL and at min version minversion
+        """
+        if not self.is_el():
+            raise RuntimeError("Expected el product, but got: %s" %
+                               self.PRODUCT)
+        return (int(self.VERSION) >= minversion)
+
+    def is_max_el(self, maxversion):
+        """Determin if this system is an EL and at max version maxversion
+        """
+        if not self.is_el():
+            raise RuntimeError("Expected el product, but got: %s" %
+                               self.PRODUCT)
+        return (int(self.VERSION) <= maxversion)
 
 
 class ProductInformation(base.Base):
