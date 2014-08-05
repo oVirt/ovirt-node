@@ -23,7 +23,6 @@ from ovirtnode.storage import *
 from ovirtnode.install import *
 from ovirtnode.network import *
 from ovirtnode.log import *
-from ovirtnode.kdump import *
 from ovirt.node.utils.console import TransactionProgress
 from ovirt.node.utils import system
 from ovirt.node.utils import security, storage, hooks

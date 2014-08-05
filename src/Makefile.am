@@ -41,7 +41,6 @@ pyovirtnode_PYTHON = \
   ovirtnode/__init__.py \
   ovirtnode/install.py \
   ovirtnode/iscsi.py \
-  ovirtnode/kdump.py \
   ovirtnode/log.py \
   ovirtnode/network.py \
   ovirtnode/ovirtfunctions.py \
