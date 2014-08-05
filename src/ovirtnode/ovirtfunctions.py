@@ -1177,12 +1177,12 @@ def finish_install():
 
     # fix SELinux
     logging_dev = findfs("LOGGING")
-    logging_mount_cmd = ("grep %s /proc/mounts | grep writable |" +
-                         "awk '{print $2}'") % logging_dev
+    logging_mount_cmd = ("grep %s /proc/mounts | awk '{print $2}'") % \
+                         logging_dev
     logging_mount = subprocess_closefds(logging_mount_cmd, shell=True,
                                         stdout=PIPE, stderr=STDOUT)
     (logging_mount_output, dummy) = logging_mount.communicate()
-    system("chcon -R system_u:object_r:var_log_t:s0 %s" % logging_mount_output)
+    system("chcon system_u:object_r:var_log_t:s0 %s" % logging_mount_output)
     system("chcon -R system_u:object_r:auditd_log_t:s0 %s/audit/" %
            logging_mount_output.rstrip())
 
