@@ -427,7 +427,8 @@ class SystemRelease(base.Base):
     def is_el(self):
         """Determin if this system is an "enterprise linux" (RHEL, CentOS)
         """
-        return self.VENDOR.lower() == "redhat"
+        return self.VENDOR.lower() == "redhat" or \
+            self.VENDOR.lower() == "centos"
 
     def is_min_el(self, minversion):
         """Determin if this system is an EL and at min version minversion
