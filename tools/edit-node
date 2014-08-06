@@ -74,6 +74,7 @@ class LiveImageEditor(LiveImageCreator):
         self.tmpdir = "/var/tmp"
         self.dd_dir = None
         self.item = None
+        self.tmprepo = ""
         """The directory in which all temporary files will be created."""
 
         self.compress_type = None
@@ -972,6 +973,7 @@ class LiveImageEditor(LiveImageCreator):
                     options.repo = tempfile.mkstemp(".repo")
                     with open(options.repo, "w") as f:
                         f.write(conf_builder)
+                    self.tmprepo = options.repo
                     os.system("mkdir %s/tmp/rpms" % self._instroot)
                     cmd = "mount -o bind %s %s/tmp/rpms" \
                         % (self.item, self._instroot)
@@ -1125,7 +1127,7 @@ enabled=1
             # cleanup local rpms if exists
             if os.system("umount %s/tmp/rpms" % self._instroot):
                 os.system("rmdir %s/tmp/rpms" % self._instroot)
-        if self.item and os.path.exists(options.repo):
+        if self.item and os.path.exists(self.tmprepo):
             os.system("rm -f %s" % options.repo)
         if os.path.exists(self.dd_dir):
             os.system("umount %s" % self.dd_dir)
