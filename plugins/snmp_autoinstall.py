@@ -21,7 +21,7 @@ from ovirt.node.utils.console import TransactionProgress
 from ovirt.node.setup.snmp import snmp_model
 from ovirt.node.utils import system
 
-args = system.kernel_cmdline_args()
+args = system.kernel_cmdline_arguments()
 
 if __name__ == "__main__":
     snmp = snmp_model.SNMP()

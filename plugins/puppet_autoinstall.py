@@ -22,7 +22,7 @@ from ovirt.node.utils import system
 from ovirt.node.plugins import Changeset
 import re
 
-args = system.kernel_cmdline_args()
+args = system.kernel_cmdline_arguments()
 keys = ["puppet_enabled", "puppet_server", "puppet_certname"]
 changes = dict((re.sub(r'_', r'.', key), args[key]) for key in keys
                if key in args)
