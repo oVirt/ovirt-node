@@ -60,14 +60,15 @@ class Hooks(base.Base):
     def __run(hooks_directory):
         for hook in os.listdir(hooks_directory):
             script = os.path.join(hooks_directory, hook)
-            if script.endswith(".py"):
-                LOGGER.debug("Running hook %s" % script)
+
+            if script.endswith(".py") or script.endswith(".pyo"):
+                continue
+
+            LOGGER.debug("Running hook %s" % script)
+            if script.endswith(".pyc"):
                 output = process.check_output(["python", script])
-                [LOGGER.debug("%s: %s" % (script, line)) for line in
-                    output]
             else:
-                LOGGER.debug("Running hook %s" % script)
                 output = process.check_output("%s &> /dev/null" % script,
                                               shell=True)
-                [LOGGER.debug("%s: %s" % (script, line)) for line in
-                    output]
+
+            [LOGGER.debug("%s: %s" % (script, line)) for line in output]
