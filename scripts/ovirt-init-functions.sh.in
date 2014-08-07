@@ -1353,8 +1353,10 @@ start_ovirt_post() {
         swapon -a
         mount -a
 
-        # force update rhn profile on boot for upgrades
-        rhn_check
+        if [ -f /etc/rhev-hypervisor-release ]; then
+            # force update rhn profile on boot for upgrades
+            rhn_check
+        fi
 
         # Synchronize logs
         log "Synchronizing log files"
