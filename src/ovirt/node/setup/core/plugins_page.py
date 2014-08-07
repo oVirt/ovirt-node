@@ -116,7 +116,7 @@ class Plugin(NodePlugin):
                     return ui.TextViewDialog("output.dialog", "Manifest",
                                              contents)
                 except:
-                    self.logged.debug("Error retrieving manifest:",
+                    self.logger.debug("Error retrieving manifest:",
                                       exc_info=True)
                     return InfoDialog("dialog.info", "An Error Occured",
                                       "No manifest found")
