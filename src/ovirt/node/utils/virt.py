@@ -76,13 +76,38 @@ def hardware_status():
         Status of hardware virtualization support on this machine as a human
         read-able string
     """
-    if hardware_is_enabled():
-        msg = "Virtualization hardware was detected and is enabled"
-    if hardware_is_available():
-        msg = "Virtualization hardware was detected but is disabled"
+    return _hardware_status(hardware_is_available(),
+                            hardware_is_enabled(),
+                            is_libvirtd_reachable())
+
+
+def _hardware_status(hardware_is_available, hardware_is_enabled,
+                     is_libvirtd_reachable):
+    """
+    >>> _hardware_status(True, True, True)
+    'Virtualization hardware was detected and is enabled'
+
+    >>> _hardware_status(True, True, False)
+    'Virtualization hardware was detected and is enabled\\n\
+(Failed to Establish Libvirt Connection)'
+
+    >>> _hardware_status(True, False, True)
+    'Virtualization hardware was detected but is disabled'
+
+    >>> _hardware_status(False, False, True)
+    'No virtualization hardware was detected on this system'
+    """
+
     msg = "No virtualization hardware was detected on this system"
-    if not is_libvirtd_reachable():
+
+    if hardware_is_available:
+        msg = "Virtualization hardware was detected but is disabled"
+    if hardware_is_enabled:
+        msg = "Virtualization hardware was detected and is enabled"
+
+    if not is_libvirtd_reachable:
         msg += "\n(Failed to Establish Libvirt Connection)"
+
     return msg
 
 
