@@ -1382,8 +1382,11 @@ EOP
         # Create a minimalistic /etc/hosts if it's empty, rhbz#829753
         create_minimal_etc_hosts_file
 
-        # Restart jorunald to pick up /var/log/journal
-        service systemd-journald restart
+        if [ -f /usr/lib/systemd/system/systemd-journald.service ];
+        then
+            # Restart jorunald to pick up /var/log/journal
+            /bin/systemctl restart systemd-journald.service
+        fi
 
         # Add symlink for libguestfs
         if [ -f /dev/.initramfs/live/vmlinuz0 ];
