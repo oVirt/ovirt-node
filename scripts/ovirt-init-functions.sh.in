@@ -1008,7 +1008,7 @@ from ovirt.node.utils import firewall
 firewall.process_plugins()
 EOP
 
-    if [[ -d "$HOOK_ON_BOOT_DIR" ]];
+    if [[ -d "$HOOK_ON_BOOT_DIR" ]] && [[ "$(ls -A $HOOK_ON_BOOT_DIR)" ]];
     then
         for handler in "$HOOK_ON_BOOT_DIR"/*;
         do
