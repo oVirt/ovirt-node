@@ -21,3 +21,8 @@ ovirt-node-plugin-rhn
 
 # To disable hostonly mode
 dracut-config-generic
+
+# Add EFi support
+shim
+grub2-efi
+efibootmgr
