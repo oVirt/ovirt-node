@@ -197,11 +197,13 @@ keep /usr/share/augeas/lenses/dist/pam.aug
 keep /usr/share/augeas/lenses/dist/passwd.aug
 keep /usr/share/augeas/lenses/dist/quote.aug
 keep /usr/share/augeas/lenses/dist/resolv.aug
+keep /usr/share/augeas/lenses/dist/rsyslog.aug
 keep /usr/share/augeas/lenses/dist/securetty.aug
 keep /usr/share/augeas/lenses/dist/services.aug
 keep /usr/share/augeas/lenses/dist/shellvars_list.aug
 keep /usr/share/augeas/lenses/dist/sshd.aug
 keep /usr/share/augeas/lenses/dist/sudoers.aug
+keep /usr/share/augeas/lenses/dist/syslog.aug
 keep /usr/share/augeas/lenses/dist/utill.aug
 keep /usr/share/augeas/lenses/dist/yum.aug
 drop /usr/share/tc
