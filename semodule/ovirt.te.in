@@ -95,15 +95,14 @@ allow loadkeys_t console_device_t:chr_file open;
 require {
     type local_login_t;
 }
+allow local_login_t chkpwd_t:process { siginh rlimitinh noatsecure };
 allow local_login_t var_log_t:file { open write create read lock };
 allow local_login_t var_log_t:dir { write add_name };
-allow local_login_t chkpwd_t:process { siginh rlimitinh noatsecure };
-allow local_login_t unconfined_t:process { siginh noatsecure };
 
 
 #============= logrotate_t ==============
-allow logrotate_t virt_cache_t:dir { read getattr };
 allow logrotate_t var_lib_t:file write;
+allow logrotate_t virt_cache_t:dir { read getattr };
 
 
 #============= mount_t ==============
@@ -312,7 +311,6 @@ optional_policy(`
 #============= ntpd_t ==============
 optional_policy(`
     require {
-        type ntpd_t;
         type init_tmp_t;
     }
     allow ntpd_t init_tmp_t:dir { write add_name remove_name };
@@ -455,6 +453,10 @@ allow iscsid_t iscsi_var_lib_t:file { write create unlink };
 allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
 
 
+=======
+#
+# Transitions
+#
 type ovirt_t;
 type ovirt_exec_t;
 init_daemon_domain(ovirt_t, ovirt_exec_t)
