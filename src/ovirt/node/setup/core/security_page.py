@@ -62,7 +62,9 @@ class Plugin(plugins.NodePlugin):
         ws = [ui.Header("header[0]", _("Remote Access")),
               ui.Checkbox("ssh.pwauth",
                           _("Enable SSH password authentication")),
-              ui.Entry("ssh.port", _("SSH Daemon Port:")),
+              # Hide ssh port until
+              # https://bugzilla.redhat.com/show_bug.cgi?id=1085907 lands
+              # ui.Entry("ssh.port", _("SSH Daemon Port:")),
               ui.Header("header[1]", _("Strong Random Number Generator")),
               ui.Checkbox("strongrng.disable_aesni", _("Disable AES-NI")),
               ui.Entry("strongrng.num_bytes", _("Bytes Used:")),
