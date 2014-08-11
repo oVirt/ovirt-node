@@ -53,6 +53,7 @@ pyovirt_nodedir = $(pyovirtdir)/node
 pyovirt_node_configdir = $(pyovirt_nodedir)/config
 ovirt_node_locale_cndir = /usr/share/locale/zh_CN/LC_MESSAGES
 ovirt_node_locale_endir = /usr/share/locale/en_US/LC_MESSAGES
+ovirt_node_locale_ptdir = /usr/share/locale/pt_BR/LC_MESSAGES
 pyovirt_node_uidir = $(pyovirt_nodedir)/ui
 pyovirt_node_utilsdir = $(pyovirt_nodedir)/utils
 pyovirt_node_utils_fsdir = $(pyovirt_nodedir)/utils/fs
@@ -94,6 +95,8 @@ dist_ovirt_node_locale_cn_DATA = \
 dist_ovirt_node_locale_en_DATA = \
   ovirt/node/locale/en_US/LC_MESSAGES/ovirt_node.mo
 
+dist_ovirt_node_locale_pt_DATA = \
+  ovirt/node/locale/pt_BR/LC_MESSAGES/ovirt_node.mo
 
 pyovirt_node_config_PYTHON = \
   ovirt/node/config/__init__.py \

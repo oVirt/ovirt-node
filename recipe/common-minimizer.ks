@@ -259,6 +259,7 @@ drop /usr/share/doc
 drop /usr/share/locale/
 keep /usr/share/locale/en_US
 keep /usr/share/locale/zh_CN
+keep /usr/share/locale/pt_BR
 drop /usr/share/man
 drop /usr/share/X11
 drop /usr/share/i18n
