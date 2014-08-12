@@ -958,7 +958,7 @@ class LiveImageEditor(LiveImageCreator):
                     rpms_path = "/tmp/rpms"
                     with open(options.repo, "r") as f:
                         for line in f.readlines():
-                            if "file://" in line:
+                            if line.startswith("baseurl=file://"):
                                 self.item = re.match(r'.*file://(.*)', \
                                                      line).group(1)
                                 conf_builder += re.sub(r'(.*file://).*',
@@ -969,9 +969,9 @@ class LiveImageEditor(LiveImageCreator):
                 except:
                     self.item = ""
                     logging.warning("Failed to get the path from repo file")
-                if os.path.exists(self.item):
+                if self.item and os.path.exists(self.item):
                     options.repo = tempfile.mkstemp(".repo")
-                    with open(options.repo, "w") as f:
+                    with open(options.repo[1], "w") as f:
                         f.write(conf_builder)
                     self.tmprepo = options.repo
                     os.system("mkdir %s/tmp/rpms" % self._instroot)
