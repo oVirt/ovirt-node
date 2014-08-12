@@ -173,7 +173,7 @@ class Plugin(plugins.NodePlugin):
             elif ktype == "local":
                 model.configure_local()
             else:
-                model.disable_kdump()
+                model.configure_disable()
             txs += model.transaction()
 
         try:
@@ -190,7 +190,7 @@ class Plugin(plugins.NodePlugin):
             with self.application.ui.suspended():
                 _original_sigint = signal.getsignal(signal.SIGINT)
                 signal.signal(signal.SIGINT, _handler)
-                model.disable_kdump()
+                model.configure_disable()
                 txs = model.transaction()
                 txs()
                 console.reset()
@@ -212,7 +212,7 @@ class Plugin(plugins.NodePlugin):
             elif saved_model["kdump.type"] == "local":
                 model.configure_local()
             else:
-                model.disable_kdump()
+                model.configure_disable()
             self.logger.exception("Exception while configuring kdump")
             self.application.show(self.ui_content())
             return InfoDialog("dialog.info", "An error occurred", e.message)

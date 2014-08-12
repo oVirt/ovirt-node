@@ -1069,7 +1069,7 @@ class KDump(NodeConfigFileSection):
     def configure_local(self):
         self.update(None, None, None, True)
 
-    def disable_kdump(self):
+    def configure_disable(self):
         self.update(None, None, None, None)
 
     def retrieve(self):
