@@ -416,8 +416,7 @@ class SystemRelease(base.Base):
     def cpe(self):
         """Return the CPE URI
         """
-        with open(self.CPE_FILE, "r") as f:
-            return f.read().strip()
+        return File(self.CPE_FILE).read().strip()
 
     def is_fedora(self):
         """Determin if this system is a fedora system
