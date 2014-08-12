@@ -15,8 +15,17 @@ def list_funcs(cfg):
     return funcs
 
 def print_func_usage(func, with_doc=True):
-    args = inspect.getargspec(func).args[1:]
-    txtargs = " ".join("<%s>" % s.upper() for s in args)
+    argspec = inspect.getargspec(func)
+    args = argspec.args[1:]
+    txtargs = []
+    for idx, arg in enumerate(args):
+        defidx = idx - len(argspec.defaults) if argspec.defaults else -1
+        if defidx >= 0:
+            txtargs.append("[<%s=%s>]" % (arg.upper(),
+                                          argspec.defaults[defidx]))
+        else:
+            txtargs.append("<%s>" % arg.upper())
+    txtargs = " ".join(txtargs)
     if with_doc and inspect.getdoc(func):
         txtargs += "\n" + inspect.getdoc(func)
     return txtargs
