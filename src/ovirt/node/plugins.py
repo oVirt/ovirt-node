@@ -221,7 +221,7 @@ class NodePlugin(base.Base):
             path: the widget path
         """
 
-        if path in self.__changes:
+        if path in self.__changes and self.__changes[path]:
             self.__stashed_changes.update({path: self.__changes[path]})
             self.__changes.drop([path])
             self.widgets[path].notice("")
@@ -247,8 +247,9 @@ class NodePlugin(base.Base):
             value = self.__changes[path] if path in self.__changes else \
                 self.__invalid_changes[path]
             self._on_ui_change({path: value})
-        elif path in self.__stashed_changes and reuse_old:
-            self._on_ui_change({path: self.__stashed_changes[path]})
+        elif reuse_old:
+            if path in self.__stashed_changes:
+                self._on_ui_change({path: self.__stashed_changes[path]})
         else:
             self._on_ui_change({path: ""})
 
