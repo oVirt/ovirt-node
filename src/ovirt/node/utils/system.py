@@ -189,6 +189,12 @@ def cpu_details():
 
     data = process.pipe(["lscpu"])
     cpu = _parse_lscpu(data)
+
+    # Fallback for some values
+    cpuinfo = _parse_lscpu(File("/proc/cpuinfo").read())
+    cpu["Model name"] = \
+        cpu.get("Model name", "") or cpuinfo.get("model name", "")
+
     cpu_details = ("%s: %s" % (f, cpu.get(f, "(Unknown)")) for f in fields)
 
     return "\n".join(cpu_details)
