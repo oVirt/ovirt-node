@@ -1,0 +1,62 @@
+         oVirt Node Author Credits
+         ==========================
+
+The oVirt Node project current primary maintainers with commit
+access are:
+
+    Fabian Deutsch <fabiand@redhat.com>
+    Ryan Barry <rbarry@redhat.com>
+
+Patches have also been contributed by (ordered by first name):
+
+    Alan Pevec <apevec@redhat.com>
+    Alon Bar-Lev <alonbl@redhat.com>
+    Antoine Mercadal <antoine.mercadal@gmail.com>
+    Antoni S. Puimedon <asegurap@redhat.com>
+    Arjun Roy <arroy@redhat.com>
+    Arthur Clement <aclement@linagora.com>
+    boh.ricky <boh.ricky@gmail.com>
+    Bryan Kearney <bkearney@redhat.com>
+    Bryan W Clark <clarkbw@gnome.org>
+    Charles Rose <charles_rose@dell.com>
+    Chris Lalancette <clalance@redhat.com>
+    Christopher Curran <ccurran@ccurran.csb>
+    Dan Kenigsberg <danken@redhat.com>
+    Daniel P. Berrange <berrange@redhat.com>
+    Darryl L. Pierce <dpierce@redhat.com>
+    David Cantrell <dcantrell@redhat.com>
+    David Huff <dhuff@redhat.com>
+    David Lutterkort <dlutter@redhat.com>
+    Douglas Schilling Landgraf <dougsland@redhat.com>
+    Eli Qiao <taget@linux.vnet.ibm.com>
+    hadong <hadong@redhat.com>
+    Harshavardhana <harsha@gluster.com>
+    Hermann Huy <hermann.huy@nsn.com>
+    Hugh Brock <hbrock@caliban.harpcolumn.com>
+    Hugh O. Brock <hbrock@redhat.com>
+    Ian Main <imain@redhat.com>
+    jarod.w <work.iec23801@gmail.com>
+    Jason Guiditta <jguiditt@redhat.com>
+    jay <jay@localhost.localdomain>
+    Jeff Schroeder <jeffschroeder@computer.org>
+    Jeremy Katz <katzj@redhat.com>
+    Jim Meyering <meyering@redhat.com>
+    Joey Boggs <jboggs@redhat.com>
+    lizhihui <zhihuili@linux.vnet.ibm.com>
+    Lukas Zapletal <lzap+git@redhat.com>
+    Michael Burns <mburns@redhat.com>
+    Mohammed Morsi <mmorsi@redhat.com>
+    Nigel Jones <nigjones@redhat.com>
+    Ouyang guohua <ouyanggh0815@gmail.com>
+    Perry Myers <pmyers@redhat.com>
+    Ramon Medeiros <ramonn@linux.vnet.ibm.com>
+    Ricardo Marin Matinata <matinata@br.ibm.com>
+    Robert Middleswarth <robert@middleswarth.net>
+    Ryan Harper <ryanh@us.ibm.com>
+    Scott Seago <sseago@redhat.com>
+    Steve Linabery <slinabery@gmail.com>
+    Tim Allen <tallen@redhat.com>
+    Wenyi Gao <wenyi@linux.vnet.ibm.com>
+    Yotam Oron <yoron@redhat.com>
+
+[....send patches to get your name here....]
