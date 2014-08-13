@@ -63,7 +63,7 @@ class Plugin(plugins.NodePlugin):
               DiskDetails("boot.device.current", self,
                           self._model["boot.device.current"])]
 
-        if self._storage_tagged(["boot.device.current"]):
+        if self._storage_tagged(self._model["boot.device.current"]):
             ws.extend([ui.Notice("boot.notice", _("Boot device may be part "
                                                   "of a storage domain!"))])
 
