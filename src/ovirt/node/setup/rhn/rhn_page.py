@@ -106,6 +106,7 @@ class Plugin(plugins.NodePlugin):
     _rhn_types = [("rhn", "RHN"),
                   ("satellite", "Satellite"),
                   ("sam", "SAM")]
+    _fields_enabled = False
 
     def __init__(self, app):
         super(Plugin, self).__init__(app)
@@ -236,15 +237,20 @@ class Plugin(plugins.NodePlugin):
     def on_change(self, changes):
         net_is_configured = NodeNetwork().is_configured()
         if "rhn.type" in changes and net_is_configured:
-            self.widgets["rhn.url"].enabled(False)
-            self.widgets["rhn.ca"].enabled(False)
             if (changes["rhn.type"] == "sam" or
-                    changes["rhn.type"] == "satellite"):
-                self.widgets["rhn.url"].enabled(True)
-                self.widgets["rhn.ca"].enabled(True)
+               changes["rhn.type"] == "satellite"):
+                if not self._fields_enabled:
+                    self._fields_enabled = True
+                    self.widgets["rhn.url"].enabled(True)
+                    self.widgets["rhn.ca"].enabled(True)
+                    self.stash_pop_change("rhn.url", reuse_old=True)
+                    self.stash_pop_change("rhn.ca", reuse_old=True)
             else:
-                self.widgets["rhn.url"].text("")
-                self.widgets["rhn.ca"].text("")
+                self._fields_enabled = False
+                self.widgets["rhn.url"].enabled(False)
+                self.widgets["rhn.ca"].enabled(False)
+                self.stash_change("rhn.url")
+                self.stash_change("rhn.ca")
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving RHN page")
