@@ -963,18 +963,27 @@ class Syslog(NodeConfigFileSection):
         self.update(server, port)
 
     def transaction(self):
-        return self.__legacy_transaction()
-
-    def __legacy_transaction(self):
         cfg = dict(self.retrieve())
         server, port = (cfg["server"], cfg["port"])
+        rsyslog = Syslog()
 
         class CreateRsyslogConfig(utils.Transaction.Element):
-            title = "Setting syslog server and port"
+            if server:
+                title = "Configuring remote syslog"
+            else:
+                title = "Disabling remote syslog"
 
             def commit(self):
-                import ovirtnode.log as olog
-                olog.ovirt_rsyslog(server, port, "udp")
+                rsyslog.configure(server, port or "514")
+                try:
+                    system.service("rsyslog", "restart")
+                    Config().persist("/etc/rsyslog.conf")
+                except:
+                    rsyslog.clear_config()
+                    self.logger.debug("Failed to configure syslog",
+                                      exc_info=True)
+                    raise RuntimeError("Failed to restart rsyslog, please "
+                                       "check the options passed")
 
         tx = utils.Transaction("Configuring syslog")
         tx.append(CreateRsyslogConfig())

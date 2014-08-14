@@ -387,6 +387,62 @@ def mounted_boot():
     LOGGER.info("Successfully unmounted /liveos and /boot")
 
 
+class Syslog(base.Base):
+    aug = utils.AugeasWrapper()
+
+    def __get_index(self):
+        index = None
+        m = self.aug.match("/files/etc/rsyslog.conf/*/action/hostname")
+        group = m[0] if m else None
+        pat = re.compile(r'.*?entry\[(\d+)\].*')
+        if group:
+            index = int(pat.sub(r'\1', group))
+        elif self.aug.get("/augeas/files/etc/rsyslog.conf/error"):
+            self.logger.error("Augeas could not parse rsyslog.conf. "
+                              "Please check "
+                              "/augeas/files/etc/rsyslog.conf/error "
+                              "with augtool")
+            raise RuntimeError("Augeas could not parse rsyslog.conf")
+        else:
+            group = \
+                self.aug.match('/files/etc/rsyslog.conf/entry[last()]/*')[0]
+            index = int(pat.sub(r'\1', group)) + 1
+        return index
+
+    def clear_config(self):
+        self.logger.info("Clearing rsyslog config")
+        sel = self.aug.match("/files/etc/rsyslog.conf/entry[%d]" %
+                             self.__get_index())
+        self.aug.remove_many(sel)
+
+    def configure(self, server, port):
+        # I know this doesn't make any sense, but augeas is incredibly
+        # finicky about the lenses, and if these aren't inserted in exactly
+        # the right order, it will fail
+        config = [{"/selector/facility": "*"},
+                  {"/selector/level": "*"},
+                  {"/action/hostname": server},
+                  {"/action/port": port}]
+
+        path = "/files/etc/rsyslog.conf/entry[%d]" % self.__get_index()
+        for i in config:
+            for k, v in i.items():
+                k = path + k
+                self.aug.set(k, v, do_save=False)
+        try:
+            self.aug.save()
+        except:
+            self.logger.error("Augeas failed to save values, check "
+                              "lenses versus values")
+            self.logger.error(self.aug.get_many(self.aug.match("%s/*/*" %
+                                                               path)))
+            self.logger.error(self.aug.get_many(self.aug.match(
+                "/augeas/files/etc/rsyslog.conf/error/*")))
+            self.logger.error(self.aug.get_many(self.aug.match(
+                "/augeas/files/etc/rsyslog.conf/error/*/*")))
+            raise RuntimeError("Augeas failed to save rsyslog.conf")
+
+
 class NVR(object):
     """Simple clas to parse and compare NVRs
 

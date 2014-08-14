@@ -23,85 +23,18 @@
 import logging
 import ovirtnode.ovirtfunctions as _functions
 from ovirt.node.utils import system
-from ovirt.node.config.defaults import Netconsole
+from ovirt.node.config.defaults import Netconsole, Syslog
 
 logger = logging.getLogger(__name__)
 
 
-RSYSLOG_FILE = "/etc/rsyslog.conf"
-
-RSYSLOG_CONFIG_TEMPLATE = """
-#ovirt rsyslog config file
-
-#### MODULES ####
-# provides support for local system logging (e.g. via logger command)
-$ModLoad imuxsock.so
-# provides kernel logging support (previously done by rklogd)
-$ModLoad imklog.so
-
-#### GLOBAL DIRECTIVES ####
-# Use default timestamp format
-$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
-
-#### RULES ####
-# Log anything (except mail) of level info or higher.
-# Don't log private authentication messages!
-*.info;mail.none;authpriv.none;cron.none                /var/log/messages
-
-# The authpriv file has restricted access.
-authpriv.*                                              /var/log/secure
-
-# Log all the mail messages in one place.
-mail.*                                                  -/var/log/maillog
-
-# Log cron stuff
-cron.*                                                  /var/log/cron
-
-# Everybody gets emergency messages
-*.emerg                                                 *
-
-# Save news errors of level crit and higher in a special file.
-uucp,news.crit                                          /var/log/spooler
-
-# Save boot messages also to boot.log
-local7.*                                                /var/log/boot.log
-
-$WorkDirectory /var/spool/rsyslog
-$ActionQueueFileName ovirtNode
-$ActionQueueMaxDiskSpace 10m
-$ActionQueueSaveOnShutdown on
-$ActionQueueType LinkedList
-$ActionResumeRetryCount -1
-%(disable)s*.* %(delim)s%(server)s:%(port)s
-"""
-
-
 def ovirt_rsyslog(server, port, protocol):
-    if server == "":
-        disable = "#"
-    else:
-        disable = ""
-    if protocol == "tcp":
-        DELIM = "@@"
-    else:
-        DELIM = "@"
-
-    if _functions.is_valid_ipv6(server):
-        server = "[" + server + "]"
-
-    rsyslog_dict = {
-        "disable": disable,
-        "delim": DELIM,
-        "server": server,
-        "port": port
-    }
-    rsyslog_config_out = RSYSLOG_CONFIG_TEMPLATE % rsyslog_dict
-    rsyslog_config = open(RSYSLOG_FILE, "w")
-    rsyslog_config.write(rsyslog_config_out)
-    rsyslog_config.close()
-    _functions.system_closefds("/sbin/service rsyslog restart &> /dev/null")
-    if _functions.ovirt_store_config("/etc/rsyslog.conf"):
-        logger.info("Syslog Configuration Updated")
+    s = Syslog()
+    s.update(server=server, port=port)
+    try:
+        s.commit()
+    except:
+        return False
     return True
 
 
@@ -109,7 +42,7 @@ def ovirt_netconsole(server, port):
     n = Netconsole()
     n.update(server=server, port=port)
     try:
-        n.transaction().run()
+        n.commit()
     except:
         return False
     return True
@@ -119,7 +52,7 @@ def get_rsyslog_config():
     rsyslog_config = open(RSYSLOG_FILE)
     for line in rsyslog_config:
         if "@" in line:
-            #strip excess details
+            # strip excess details
             line = line.replace("*.* ", "")
             line = line.replace("@", "")
             try:
@@ -142,14 +75,14 @@ def get_rsyslog_config():
 def syslog_auto():
     host = ""
     port = ""
-    if (not "OVIRT_SYSLOG_SERVER" in _functions.OVIRT_VARS and
-        not "OVIRT_SYSLOG_PORT" in _functions.OVIRT_VARS):
+    if ("OVIRT_SYSLOG_SERVER" not in _functions.OVIRT_VARS and
+            "OVIRT_SYSLOG_PORT" not in _functions.OVIRT_VARS):
         logger.info("Attempting to locate remote syslog server...")
         try:
             port, host = _functions.find_srv("syslog", "udp")
         except:
             pass
-        if not host is "" and not port is "":
+        if host is not "" and port is not "":
             logger.info("Found! Using syslog server " + host + ":" + port)
             ovirt_rsyslog(host, port, "udp")
             return True
@@ -157,7 +90,7 @@ def syslog_auto():
             logger.warn("Syslog server not found!")
             return False
     elif ("OVIRT_SYSLOG_SERVER" in _functions.OVIRT_VARS and
-          not "OVIRT_SYSLOG_PORT" in _functions.OVIRT_VARS):
+          "OVIRT_SYSLOG_PORT" not in _functions.OVIRT_VARS):
         logger.info("Using default syslog port 514")
         ovirt_rsyslog(_functions.OVIRT_VARS["OVIRT_SYSLOG_SERVER"],
                       "514", "udp")
@@ -174,22 +107,22 @@ def syslog_auto():
 def netconsole_auto():
     host = ""
     port = ""
-    if (not "OVIRT_NETCONSOLE_SERVER" in _functions.OVIRT_VARS and not
-        "OVIRT_NETCONSOLE_PORT" in _functions.OVIRT_VARS):
+    if ("OVIRT_NETCONSOLE_SERVER" not in _functions.OVIRT_VARS and
+            "OVIRT_NETCONSOLE_PORT" not in _functions.OVIRT_VARS):
         logger.info("Attempting to locate remote netconsole server...")
         try:
             port, host = _functions.find_srv("netconsole", "udp")
         except:
             pass
-        if not host is "" and not port is "":
+        if host is not "" and port is not "":
             logger.info("Found! Using netconsole server " + host + ":" + port)
             ovirt_netconsole(host, port)
             return True
         else:
             logger.warn("Netconsole server not found!")
             return False
-    elif ("OVIRT_NETCONSOLE_SERVER" in _functions.OVIRT_VARS and not
-          "OVIRT_NETCONSOLE_PORT" in _functions.OVIRT_VARS):
+    elif ("OVIRT_NETCONSOLE_SERVER" in _functions.OVIRT_VARS and
+          "OVIRT_NETCONSOLE_PORT" not in _functions.OVIRT_VARS):
         logger.info("Using default netconsole port 6666.")
         ovirt_netconsole(_functions.OVIRT_VARS["OVIRT_NETCONSOLE_SERVER"],
                          "6666")
@@ -205,8 +138,8 @@ def netconsole_auto():
 
 def logrotate_auto():
     logroate_max_size = _functions.OVIRT_VARS["OVIRT_LOGROTATE_MAX_SIZE"]
-    if not logroate_max_size is "":
-        logger.info("Found! Using logroate_max_size " + logroate_max_size)
+    if logroate_max_size is not "":
+        logger.info("Found! Using logrotate_max_size " + logroate_max_size)
         from ovirt.node.config import defaults
         try:
             model = defaults.Logrotate()
