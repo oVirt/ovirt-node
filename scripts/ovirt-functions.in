@@ -356,7 +356,17 @@ mount_liveos() {
         return 0
     fi
     mkdir -p /liveos
-    mount LABEL=Root /liveos || mount -r LABEL=Root /liveos
+    if grep -vq "CDLABEL" /proc/cmdline; then
+        mount LABEL=Root /liveos || mount -r LABEL=Root /liveos
+    else
+        if mountpoint -q /dev/.initramfs/live; then
+            mount -o bind /dev/.initramfs/live /liveos
+        elif mountpoint -q /run/.initramfs/live; then
+            mount -o bind /run/initramfs/live /liveos
+        else
+            return 1
+        fi
+    fi
 }
 
 mount_iscsi_liveos() {

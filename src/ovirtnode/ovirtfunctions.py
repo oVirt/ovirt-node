@@ -522,21 +522,22 @@ def mount_liveos():
         if is_iscsi_install():
             connect_iscsi_root()
         system_closefds("mkdir -p /liveos")
-        if not system("mount LABEL=Root /liveos &>/dev/null"):
-            # just in case /dev/disk/by-label is not using devmapper and fails
-            for dev in os.listdir("/dev/mapper"):
-                if system("e2label \"/dev/mapper/" + dev + "\" 2>/dev/null|grep Root|grep -v Backup"):
-                    system("rm -rf /dev/disk/by-label/Root")
-                    system("ln -s \"/dev/mapper/" + dev + "\" /dev/disk/by-label/Root")
-                    if system("mount LABEL=Root /liveos"):
-                        return True
-                    else:
-                        if os.path.ismount("/dev/.initramfs/live"):
-                            system_closefds("mount -o bind /dev/.initramfs/live /liveos")
-                        elif os.path.ismount("/run/initramfs/live"):
-                            system_closefds("mount -o bind /run/initramfs/live /liveos")
-                        else:
-                            return False
+        if not "CDLABEL" in open("/proc/cmdline").read():
+            if not system("mount LABEL=Root /liveos &>/dev/null"):
+                # just in case /dev/disk/by-label is not using devmapper and fails
+                for dev in os.listdir("/dev/mapper"):
+                    if system("e2label \"/dev/mapper/" + dev + "\" 2>/dev/null|grep Root|grep -v Backup"):
+                        system("rm -rf /dev/disk/by-label/Root")
+                        system("ln -s \"/dev/mapper/" + dev + "\" /dev/disk/by-label/Root")
+                        if system("mount LABEL=Root /liveos"):
+                            return True
+        elif "CDLABEL" in open("/proc/cmdline").read():
+            if os.path.ismount("/dev/.initramfs/live"):
+                system_closefds("mount -o bind /dev/.initramfs/live /liveos")
+            elif os.path.ismount("/run/initramfs/live"):
+                system_closefds("mount -o bind /run/initramfs/live /liveos")
+            else:
+                return False
         else:
             return True
 
@@ -1365,7 +1366,7 @@ def wipe_partitions(_drive):
     logger.info("Wiping old boot sector")
 #    system_closefds("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("parted -s \""+ drive +"\" mklabel loop &>>" + OVIRT_TMP_LOGFILE)
-    system_closefds("wipefs -a \""+ drive +"\" &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("wipefs -af \""+ drive +"\" &>>" + OVIRT_TMP_LOGFILE)
     ## zero out the GPT secondary header
     #logger.info("Wiping secondary gpt header")
     #disk_kb = subprocess_closefds("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)

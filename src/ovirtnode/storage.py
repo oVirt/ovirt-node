@@ -511,7 +511,7 @@ class Storage:
             drv_count = drv_count + 1
         if self.SWAP_SIZE > 0:
             logger.info("Creating swap partition")
-            _functions.system("lvcreate --name Swap --size " + \
+            _functions.system_closefds("yes | lvcreate --name Swap --size " + \
                               str(self.SWAP_SIZE) + "M /dev/HostVG")
             _functions.system("mkswap -L \"SWAP\" /dev/HostVG/Swap")
             _functions.system_closefds("echo \"/dev/HostVG/Swap swap swap " +
@@ -523,14 +523,14 @@ class Storage:
                                 "\" >> /etc/ovirt-crypttab")
         if self.CONFIG_SIZE > 0:
             logger.info("Creating config partition")
-            _functions.system("lvcreate --name Config --size " +
+            _functions.system_closefds("yes | lvcreate --name Config --size " +
                     str(self.CONFIG_SIZE) + "M /dev/HostVG")
             _functions.system("mke2fs -j -t ext4 /dev/HostVG/Config " + \
                               "-L \"CONFIG\"")
             _functions.system("tune2fs -c 0 -i 0 /dev/HostVG/Config")
         if self.LOGGING_SIZE > 0:
             logger.info("Creating log partition")
-            _functions.system("lvcreate --name Logging --size " +
+            _functions.system_closefds("yes | lvcreate --name Logging --size " +
                     str(self.LOGGING_SIZE) + "M /dev/HostVG")
             _functions.system("mke2fs -j -t ext4 /dev/HostVG/Logging " + \
                               "-L \"LOGGING\"")
@@ -541,12 +541,12 @@ class Storage:
         use_data = 1
         if self.DATA_SIZE == -1:
             logger.info("Creating data partition with remaining free space")
-            _functions.system("lvcreate --name Data -l 100%FREE /dev/HostVG")
+            _functions.system_closefds("yes | lvcreate --name Data -l 100%FREE /dev/HostVG")
             use_data = 0
         elif self.DATA_SIZE > 0:
             logger.info("Creating data partition")
-            _functions.system("lvcreate --name Data --size " + \
-                              str(self.DATA_SIZE) + "M /dev/HostVG")
+            _functions.system_closefds("yes | lvcreate --name Data --size " + \
+                                       str(self.DATA_SIZE) + "M /dev/HostVG")
             use_data = 0
         if use_data == 0:
             _functions.system("mke2fs -j -t ext4 /dev/HostVG/Data -L \"DATA\"")
@@ -676,10 +676,10 @@ class Storage:
 
         if self.SWAP2_SIZE > 0:
             logger.info("Creating swap2 partition")
-            lv_cmd = ("lvcreate --name Swap2 --size \"" +
+            lv_cmd = ("yes | lvcreate --name Swap2 --size \"" +
                       str(self.SWAP2_SIZE) + "M\" /dev/AppVG")
             logger.debug(lv_cmd)
-            _functions.system(lv_cmd)
+            _functions.system_closefds(lv_cmd)
             if "OVIRT_CRYPT_SWAP2" in _functions.OVIRT_VARS:
                 _functions.system_closefds("echo \"SWAP2 /dev/AppVG/Swap2 " +
                                 "/dev/mapper/ovirt-crypt-swap2 " +
@@ -693,12 +693,12 @@ class Storage:
         use_data = "1"
         if self.DATA2_SIZE == -1:
             logger.info("Creating data2 partition with remaining free space")
-            _functions.system("lvcreate --name Data2 -l 100%FREE /dev/AppVG")
+            _functions.system_closefds("yes | lvcreate --name Data2 -l 100%FREE /dev/AppVG")
             use_data = 0
         elif self.DATA2_SIZE > 0:
             logger.info("Creating data2 partition")
-            _functions.system("lvcreate --name Data2 --size " + \
-                              str(self.DATA2_SIZE) +
+            _functions.system_closefds("yes | lvcreate --name Data2 --size " + \
+                                       str(self.DATA2_SIZE) +
                    "M /dev/AppVG")
             use_data = 0
 
