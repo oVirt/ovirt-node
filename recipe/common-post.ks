@@ -17,7 +17,8 @@ echo "Lock root account"
 passwd -l root
 
 echo "Relabeling files"
-/usr/sbin/fixfiles -R -a restore
+#/usr/sbin/fixfiles -R -a restore
+restorecon -R /
 
 echo "Configuring libvirt"
 # make sure we don't autostart virbr0 on libvirtd startup
@@ -172,12 +173,62 @@ set /files/etc/sysconfig/nfs/STATD_OUTGOING_PORT 2020
 save
 EOF_nfs
 
+python -m compileall /usr/lib/python2.*/site-packages/sos
+
+# XXX someting is wrong with readonly-root and dracut
+# see modules.d/95rootfs-block/mount-root.sh
+sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
+
+echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
+
+#mount kernel debugfs
+echo "debugfs /sys/kernel/debug debugfs auto 0 0" >> /etc/fstab
+
+#symlink ovirt-node-setup into $PATH
+ln -s /usr/bin/ovirt-node-setup /usr/sbin/setup
+
+
+#set NETWORKING off by default
+augtool << \EOF_NETWORKING
+set /files/etc/sysconfig/network/NETWORKING no
+save
+EOF_NETWORKING
+
+# disable SSH password auth by default
+# set ssh timeouts for increased security
+augtool << \EOF_sshd_config
+set /files/etc/ssh/sshd_config/PasswordAuthentication no
+set /files/etc/ssh/sshd_config/ClientAliveInterval 900
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
+save
+EOF_sshd_config
+
+echo "
+disable yum repos by default"
+rm -f /tmp/yum.aug
+for i in $(augtool match /files/etc/yum.repos.d/*/*/enabled 1); do
+    echo "set $i 0" >> /tmp/yum.aug
+done
+if [ -f /tmp/yum.aug ]; then
+    echo "save" >> /tmp/yum.aug
+    augtool < /tmp/yum.aug
+    rm -f /tmp/yum.aug
+fi
+
+echo "cleanup yum directories"
+rm -rf /var/lib/yum/*
+
+echo "enable strong random number generation"
+sed -i '/SSH_USE_STRONG_RNG/d' /etc/sysconfig/sshd
+
+
+
 # sosreport fixups for node image:
-# use .pyc for plugins enumeration, .py is blacklisted
+echo "use .pyc for plugins enumeration, .py is blacklisted"
 # include *-release
 if [[ $(rpm -E "%{?fedora}") = 20 ]] ||
     [[ $(rpm -E "%{?rhel}") = 7 ]] ||
-    [[ $(rpm -E "%{?centos}" = 7 ]]; then
+    [[ $(rpm -E "%{?centos}") = 7 ]]; then
 patch --fuzz 3 -d /usr/lib/python2.7/site-packages/sos -p0 <<  \EOF_sos_patch
 --- utilities.py.orig    2013-08-04 08:36:51.000000000 -0700
 +++ utilities.py   2014-03-18 15:25:02.675059445 -0700
@@ -238,50 +289,3 @@ patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
          self.addCopySpec("/etc/sysconfig")
 EOF_sos_patch
 fi
-
-python -m compileall /usr/lib/python2.*/site-packages/sos
-
-# XXX someting is wrong with readonly-root and dracut
-# see modules.d/95rootfs-block/mount-root.sh
-sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
-
-echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-
-#mount kernel debugfs
-echo "debugfs /sys/kernel/debug debugfs auto 0 0" >> /etc/fstab
-
-#symlink ovirt-node-setup into $PATH
-ln -s /usr/bin/ovirt-node-setup /usr/sbin/setup
-
-
-#set NETWORKING off by default
-augtool << \EOF_NETWORKING
-set /files/etc/sysconfig/network/NETWORKING no
-save
-EOF_NETWORKING
-
-# disable SSH password auth by default
-# set ssh timeouts for increased security
-augtool << \EOF_sshd_config
-set /files/etc/ssh/sshd_config/PasswordAuthentication no
-set /files/etc/ssh/sshd_config/ClientAliveInterval 900
-set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
-save
-EOF_sshd_config
-
-# disable yum repos by default
-rm -f /tmp/yum.aug
-for i in $(augtool match /files/etc/yum.repos.d/*/*/enabled 1); do
-    echo "set $i 0" >> /tmp/yum.aug
-done
-if [ -f /tmp/yum.aug ]; then
-    echo "save" >> /tmp/yum.aug
-    augtool < /tmp/yum.aug
-    rm -f /tmp/yum.aug
-fi
-
-# cleanup yum directories
-rm -rf /var/lib/yum/*
-
-# enable strong random number generation
-sed -i '/SSH_USE_STRONG_RNG/d' /etc/sysconfig/sshd
