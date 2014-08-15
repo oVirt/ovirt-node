@@ -1182,6 +1182,7 @@ def finish_install():
     logging_mount = subprocess_closefds(logging_mount_cmd, shell=True,
                                         stdout=PIPE, stderr=STDOUT)
     (logging_mount_output, dummy) = logging_mount.communicate()
+    system("chcon -R system_u:object_r:virt_cache_t:s0 /var/log/core/")
     system("chcon system_u:object_r:var_log_t:s0 %s" % logging_mount_output)
     system("chcon -R system_u:object_r:auditd_log_t:s0 %s/audit/" %
            logging_mount_output.rstrip())
