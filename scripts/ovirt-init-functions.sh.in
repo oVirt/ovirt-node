@@ -887,6 +887,9 @@ EOP
         value=$(ptr $p)
         if [ -n "$value" -o $p = 'init' -o $p = 'upgrade' -o $p = 'install' ]; then
             log "Updating OVIRT_$PARAM to '$value'"
+            if [[ ${PARAM} == "MANAGEMENT_SERVER" ]]; then
+                value=`echo ${value} | sed 's/http\(\|s\):\/\///g'`
+            fi
             if [[ ${PARAM} == "MANAGEMENT_SERVER" && ${value} == *:* ]]; then
                 MGMSERVER=${value%:*}
                 MGMPORT=${value#*:}
