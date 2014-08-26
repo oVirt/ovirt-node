@@ -1,5 +1,9 @@
 # create grub/grub2 efi boot configuation
 
+if [ ! -d $LIVE_ROOT/EFI/BOOT ]; then
+    mkdir -p $LIVE_ROOT/EFI/BOOT
+fi
+
 if [ ! -e $INSTALL_ROOT/sbin/grub2-install ]; then
     cat > $LIVE_ROOT/EFI/BOOT/BOOTX64.conf <<EOF
 default=0
