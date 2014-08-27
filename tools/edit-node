@@ -675,11 +675,17 @@ class LiveImageEditor(LiveImageCreator):
             plugin_info_dir = "%s/etc/ovirt-plugins.d" % self._instroot
             os.system("mkdir -p %s" % plugin_info_dir)
             for pkg in pkg.split(","):
-                pkgfilename = re.sub("\.(rpm)$", "", os.path.basename(pkg))
+                if pkg.endswith(".rpm"):
+                    pkg = re.sub("\.(rpm)$", "", os.path.basename(pkg))
+                    rpm_flags = "-q"
+                else:
+                    rpm_flags = "-qa"
+
+                pkgfilename = pkg.strip("*")
 
                 # get name#version-release
-                cmd = "rpm -qa %s --qf '%%{name}#%%{version}-" \
-                    "%%{release}.%%{arch}\n'" % pkgfilename
+                cmd = "rpm %s %s --qf '%%{name}#%%{version}-" \
+                    "%%{release}.%%{arch}\n'" % (rpm_flags, pkgfilename)
                 f = subprocess.Popen(cmd,
                                      shell=True,
                                      stdout=PIPE,
@@ -687,11 +693,14 @@ class LiveImageEditor(LiveImageCreator):
                                      preexec_fn=self._chroot)
                 namevr, err = f.communicate()
 
+                if "is not installed" in namevr:
+                    continue
+
                 for nvr in namevr.split("\n"):
                     if not nvr:
                         break
 
-                    pkgname, pkgversion = nvr.strip("*").split("#")
+                    pkgname, pkgversion = nvr.split("#")
                     # get install date
                     cmd = "LC_ALL=C rpm -q %s --qf '%%{INSTALLTIME:date}\n'" \
                         % pkgname
