@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
-from ovirt.node.utils import process, system, fs
+from ovirt.node.utils import process, system, fs, firewall
 import os.path
 
 
@@ -37,11 +37,6 @@ def enable_snmpd(password):
         conf = snmp_conf
     cmd = "cat %s|grep createUser| grep -v '^#' | awk '{print $4}'" % conf
     oldpwd = process.pipe(cmd, shell=True).strip()
-    process.call("sed -c -ie '/^createUser root/d' %s" % snmp_conf, shell=True)
-    f = open(snmp_conf, "a")
-    # create user account
-    f.write("createUser root SHA %s AES\n" % password)
-    f.close()
 
     # change existing password
     if len(oldpwd) > 0:
@@ -53,7 +48,6 @@ def enable_snmpd(password):
         # Only reached when no excepion occurs
         process.call(["rm", "-rf", "/tmp/snmpd.conf"])
         system.service("snmpd", "stop")
-    fs.Config().persist(snmp_conf)
 
     if not any([x for x in open('/etc/snmp/snmpd.conf').readlines()
                 if 'rwuser root' in x]):
@@ -61,7 +55,16 @@ def enable_snmpd(password):
             f.write("rwuser root")
     fs.Config().persist("/etc/snmp/snmpd.conf")
 
+    cfg = fs.File(snmp_conf)
+    # create user account
+    cfg.write("createUser root SHA %s AES\n" % password)
     system.service("snmpd", "start")
+    fs.Config().persist(snmp_conf)
+
+    if firewall.is_firewalld():
+        firewall.setup_firewalld(port="161", proto="udp")
+    else:
+        firewall.setup_iptables(port="161", proto="udp")
 
 
 def disable_snmpd():
