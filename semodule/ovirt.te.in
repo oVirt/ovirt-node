@@ -356,10 +356,17 @@ allow ssh_keygen_t tmpfs_t:dir search;
 require {
 type chkpwd_t;
 type tty_device_t;
+type file_t;
 }
 allow chkpwd_t tty_device_t:chr_file { read write };
 allow chkpwd_t tmpfs_t:dir search;
+allow chkpwd_t file_t:file { read open getattr };
 
+#============= passwd_t ==============
+require {
+type passwd_t;
+}
+allow passwd_t file_t:file { read open getattr };
 
 #============= getty_t ==============
 require {
