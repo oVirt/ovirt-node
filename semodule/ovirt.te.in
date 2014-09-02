@@ -135,7 +135,8 @@ optional_policy(`
 
 #============= sshd_t ==============
 allow sshd_t var_log_t:file { read open write };
-
+allow sshd_t device_t:sock_file write;
+allow sshd_t ovirt_t:unix_dgram_socket sendto;
 
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
