@@ -132,6 +132,12 @@ optional_policy(`
     allow sshd_net_t initrc_t:process sigchld;
 ')
 
+#============= snmpd_t ==============
+require {
+    type snmpd_t;
+}
+allow snmpd_t device_t:sock_file write;
+allow snmpd_t ovirt_t:unix_dgram_socket sendto;
 
 #============= sshd_t ==============
 allow sshd_t var_log_t:file { read open write };
