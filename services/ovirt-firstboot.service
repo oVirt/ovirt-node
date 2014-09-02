@@ -1,7 +1,8 @@
 [Unit]
 Description=oVirt Node installation and configuration service
 After=ovirt-early.service
-Before=getty@tty1.service
+Before=getty@tty0.service getty@tty1.service getty@ttyS0.service getty@ttyS1.service getty@ttyS2.service
+Before=rc-local.service
 
 [Service]
 Environment=RUNLEVEL=3
