@@ -49,6 +49,13 @@ def is_firewalld():
         return False
 
 
+def open_port(port, proto):
+    if is_firewalld():
+        setup_firewalld(port, proto)
+    else
+        setup_iptables(port, proto)
+
+
 def setup_iptables(port, proto):
     rules = "/etc/sysconfig/iptables"
 
@@ -116,10 +123,7 @@ def process_plugins():
     for i in fw_conf:
         LOGGER.debug("Opening firewall ports: %s" % str(i))
         port, proto = i
-        if is_firewalld():
-            setup_firewalld(port, proto)
-        else:
-            setup_iptables(port, proto)
+        open_port(port, proto)
 
 
 if __name__ == "__main__":
