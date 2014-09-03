@@ -11,6 +11,7 @@ gen_require(`
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
     type etc_t;
+    type device_t;
     type dmesg_t;
     type getty_t;
     type init_t;
