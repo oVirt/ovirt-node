@@ -1010,7 +1010,7 @@ def handle_fakeraid(device):
 
 def storage_auto():
     storage = Storage()
-    if not _functions.OVIRT_VARS["OVIRT_INIT"] == "":
+    if not _functions.OVIRT_VARS.get("OVIRT_INIT"):
         #force root install variable for autoinstalls
         _functions.OVIRT_VARS["OVIRT_ROOT_INSTALL"] = "y"
         if _functions.check_existing_hostvg("") or \
