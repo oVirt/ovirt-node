@@ -227,8 +227,6 @@ class NIC(base.Base):
     def exists(self):
         """If this NIC currently exists in the system
 
-        >>> NIC("lo").exists()
-        True
         """
         return self.ifname in all_ifaces()
 
@@ -242,9 +240,6 @@ class NIC(base.Base):
 
     def has_link(self):
         """Determin if L1 is up on a given interface
-
-        >>> NIC("lo").has_link()
-        True
 
         Args:
             ifname: The interface to be checked
