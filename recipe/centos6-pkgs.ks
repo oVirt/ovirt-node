@@ -5,7 +5,7 @@ libguestfs
 ltrace
 # keyboard layout
 system-config-keyboard-base
-vconfig
+iproute
 aic94xx-firmware
 bfa-firmware
 ql2500-firmware

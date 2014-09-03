@@ -782,7 +782,7 @@ def reset_resolver():
 
 
 class Vlans(base.Base):
-    """A class to offer a convenience api to the vconfig file
+    """A class to offer a convenience api for vlans
     """
     cfgfilename = "/proc/net/vlan/config"
 
@@ -843,7 +843,7 @@ class Vlans(base.Base):
         if not self.is_vlan_device(ifname):
             raise RuntimeError("Can no delete '%s', is no vlan device" %
                                ifname)
-        process.call(["vconfig", "rem", ifname])
+        process.call(["ip", "link", "del", ifname])
 
 
 class Bridges(base.Base):

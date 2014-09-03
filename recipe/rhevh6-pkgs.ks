@@ -14,7 +14,7 @@ ql2400-firmware
 ql2500-firmware
 aic94xx-firmware
 bfa-firmware
-vconfig
+iproute
 #default plugins
 ovirt-node-plugin-snmp
 ovirt-node-plugin-cim

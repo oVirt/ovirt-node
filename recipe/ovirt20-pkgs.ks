@@ -7,7 +7,7 @@ shim
 linux-firmware
 iptables
 net-tools
-vconfig
+iproute
 bfa-firmware
 grubby
 glusterfs-server

@@ -7,7 +7,7 @@ shim
 linux-firmware
 iptables
 net-tools
-vconfig
+iproute
 aic94xx-firmware
 bfa-firmware
 # Explicitly add these package, to prevent yum from pulling in the debug versions

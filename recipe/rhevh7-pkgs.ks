@@ -4,6 +4,7 @@
 libguestfs-winsupport
 
 net-tools
+iproute
 ltrace
 vhostmd
 firewalld
