@@ -1486,7 +1486,7 @@ def add_user(username, shell="/usr/libexec/ovirt-admin-shell", group="",
         system_closefds(cmd)
 
 def get_installed_version_number():
-    if mount_liveos():
+    if mount_liveos() and os.path.exists("/liveos/version"):
         existing_version = open("/liveos/version")
         existing_install = {}
         for line in existing_version.readlines():
@@ -1496,10 +1496,11 @@ def get_installed_version_number():
                 existing_install[key] = value
             except:
                 pass
+
         if existing_install.has_key("VERSION") and existing_install.has_key("RELEASE"):
             return [existing_install["VERSION"],existing_install["RELEASE"]]
-        else:
-            return False
+
+    return False
 
 def get_media_version_number():
     new_install = {}
