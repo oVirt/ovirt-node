@@ -949,6 +949,23 @@ class LiveImageEditor(LiveImageCreator):
         os.system("mount -o bind /etc/resolv.conf %s/etc/resolv.conf" %
                   self._instroot)
 
+    def _setup_pki_entitlement(self):
+        print "Setting pki entitlement"
+        if os.path.exists("/etc/pki/entitlement"):
+            cmd = "mkdir -p %s/etc/pki/entitlement" % self._instroot
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            cmd = "mount -o bind %s %s/etc/pki/entitlement" % \
+                ("/etc/pki/entitlement", self._instroot)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
+                stderr=STDOUT)
+            output, err = f.communicate()
+            if f.returncode > 0:
+               print "Can't Bind /etc/pki/entitlement"
+               print output
+               return False
+
+         return True
+
     def _setup_yum_repo(self, options):
         print "Configuring Yum Repo"
         self.dd_dir = tempfile.mkdtemp(dir=os.path.abspath(self.tmpdir),
@@ -956,6 +973,9 @@ class LiveImageEditor(LiveImageCreator):
         if not options.repo:
             return True
         else:
+            if not self._setup_pki_entitlement():
+                return False
+
             if os.path.isfile(options.repo) and \
                     options.repo.lower().endswith(".repo"):
                 cmd = "mkdir -p %s/etc/yum.repos.d" % self._instroot
@@ -1129,6 +1149,9 @@ enabled=1
 
     def _cleanup_editing(self):
         print "Cleaning Up Yum Configuration"
+        if os.path.exists(self._instroot + "/etc/pki/entitlement"):
+            os.system("umount %s/etc/pki/entitlement" % self._instroot)
+
         os.system("umount %s/etc/resolv.conf" % self._instroot)
         if os.path.exists(self._instroot + "/etc/yum.repos.d/plugin.repo"):
             try:
