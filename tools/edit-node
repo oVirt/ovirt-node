@@ -528,12 +528,12 @@ class LiveImageEditor(LiveImageCreator):
         return output
 
     def _update_version(self, options):
-        ver = self._print_version().strip()
+        ver = options.name or self._print_version()
         f = open("%s/etc/system-release" % self._instroot, "w")
         status = "Edited"
         if not options.gpgcheck:
             status += ", Unsigned"
-        f.write("%s (%s)\n" % (ver, status))
+        f.write("%s (%s)\n" % (ver.strip(), status))
         f.close()
         print "done"
         return True
