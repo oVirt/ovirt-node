@@ -313,6 +313,7 @@ optional_policy(`
 optional_policy(`
     require {
         type init_tmp_t;
+        type ntpd_t;
     }
     allow ntpd_t init_tmp_t:dir { write add_name remove_name };
     allow ntpd_t init_tmp_t:file { create open unlink write };
