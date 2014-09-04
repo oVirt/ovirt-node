@@ -74,7 +74,7 @@ def collectd_auto():
             write_collectd_config(host, port)
             return True
         else:
-            logger.error("collectd server not found!")
+            logger.info("Failed to retrieve collectd server via DNS")
             return False
     else:
         logger.info("Using default collectd server: " +
