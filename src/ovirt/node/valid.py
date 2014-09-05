@@ -322,6 +322,25 @@ class FQDN(RegexValidator):
         return is_valid
 
 
+class HostnameLength(Validator):
+    """hostname or hostnamectl tools only accepts 64 chars or less
+
+    >>> HostnameLength().validate('localhost.localdomain.11111111111111111111\
+1111111111111111111111')
+    True
+    >>> HostnameLength().validate('localhost.localdomain.11111111111111111111\
+11111111111111111111111')
+    False
+    """
+
+    description = "a field less then 64 chars"
+
+    def validate(self, value):
+        if len(value) <= 64:
+            return True
+        return False
+
+
 class FQDNLength(Validator):
     """Matches a FQDN and ensures that fields are 63 characters or less
     per level and 255 characters or less total

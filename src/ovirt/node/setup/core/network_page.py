@@ -150,6 +150,7 @@ class Plugin(plugins.NodePlugin):
 
     def validators(self):
         ip_or_empty = valid.IPAddress() | valid.Empty()
+        hostname_64_chars_or_empty = valid.HostnameLength() | valid.Empty()
         fqdn_ip_or_empty = valid.FQDNOrIPAddress() | valid.Empty()
 
         valid_bond_name = valid.RegexValidator("^(bond[0-9]{1,2}|007)$",
@@ -157,7 +158,7 @@ class Plugin(plugins.NodePlugin):
                                                )
         # No regex, but for users ^
 
-        return {"hostname": fqdn_ip_or_empty,
+        return {"hostname": hostname_64_chars_or_empty,
                 "dns[0]": ip_or_empty,
                 "dns[1]": ip_or_empty,
                 "ntp[0]": fqdn_ip_or_empty,
