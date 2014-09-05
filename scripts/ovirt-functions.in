@@ -658,11 +658,9 @@ EOF
 ovirt_store_config() {
     for p in "$@"; do
         python <<EOP
-import sys
 from ovirtnode.ovirtfunctions import ovirt_store_config_retnum
 
-ovirt_store_config_retnum("$p")
-sys.exit(0)
+raise SystemExit(ovirt_store_config_retnum("$p"))
 EOP
         rc=$?
         if [ $rc -eq 1 ] || [ $rc -eq 2 ]; then
