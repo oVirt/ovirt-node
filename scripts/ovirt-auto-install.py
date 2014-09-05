@@ -27,7 +27,8 @@ from ovirt.node.utils.console import TransactionProgress
 from ovirt.node.utils import system
 from ovirt.node.utils import security, storage, hooks
 from ovirt.node.config import defaults
-from ovirt.node.utils.system import which, kernel_cmdline_arguments
+from ovirt.node.utils.system import which, kernel_cmdline_arguments, \
+    SystemRelease
 import logging
 import sys
 import os
@@ -260,7 +261,8 @@ if __name__ == "__main__":
 
     tx.append(ConfigureLogging())
 
-    tx.append(ConfigureCollectd())
+    if not SystemRelease().is_el():
+        tx.append(ConfigureCollectd())
 
     tx.append(PerformInstallation())  # FIXME needed??
 

@@ -425,9 +425,13 @@ class SystemRelease(base.Base):
         return File(self.CPE_FILE).read().strip()
 
     def is_fedora(self):
-        """Determin if this system is a fedora system
-        """
         return self.VENDOR.lower() == "fedoraproject"
+
+    def is_centos(self):
+        return self.VENDOR.lower() == "centos"
+
+    def is_redhat(self):
+        return self.VENDOR.lower() == "redhat"
 
     def is_el(self):
         """Determin if this system is an "enterprise linux" (RHEL, CentOS)
