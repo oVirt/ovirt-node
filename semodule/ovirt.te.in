@@ -10,6 +10,7 @@ gen_require(`
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
+@SEMODULE_WITH_SYSTEMD@    type systemd_hostnamed_t;
     type etc_t;
     type device_t;
     type dmesg_t;
@@ -62,6 +63,9 @@ gen_require(`
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t systemd_unit_file_t:service start;
 @SEMODULE_WITH_SYSTEMD@allow systemd_localed_t ovirt_t:dbus send_msg;
 
+#============= systemd_hostnamectl ==============
+@SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t tmpfs_t:dir { write remove_name search add_name };
+@SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t ovirt_t:dbus send_msg;
 
 #============= hald_t ==============
 optional_policy(`
