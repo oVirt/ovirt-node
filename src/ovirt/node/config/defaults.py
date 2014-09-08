@@ -1171,7 +1171,7 @@ class KDump(NodeConfigFileSection):
 
             def commit(self):
                 vals = {"default": "reboot",
-                        "ssh": ssh}
+                        "net": ssh}
 
                 _set_values(vals)
 
