@@ -954,6 +954,7 @@ class LiveImageEditor(LiveImageCreator):
         if os.path.exists("/etc/pki/entitlement"):
             cmd = "mkdir -p %s/etc/pki/entitlement" % self._instroot
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
             cmd = "mount -o bind %s %s/etc/pki/entitlement" % \
                 ("/etc/pki/entitlement", self._instroot)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
