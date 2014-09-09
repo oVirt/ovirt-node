@@ -964,7 +964,7 @@ class LiveImageEditor(LiveImageCreator):
                print output
                return False
 
-         return True
+        return True
 
     def _setup_yum_repo(self, options):
         print "Configuring Yum Repo"
