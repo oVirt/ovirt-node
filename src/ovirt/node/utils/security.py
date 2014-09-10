@@ -26,6 +26,7 @@ import cracklib
 import hashlib
 import os.path
 import process
+import selinux
 
 """
 Some convenience functions related to security
@@ -96,6 +97,14 @@ class Passwd(base.Base):
     def set_password(self, username, password):
         import ovirtnode.password as opasswd
         opasswd.set_password(password, username)
+
+
+class Selinux(base.Base):
+    def restorecon(self, abspath):
+        try:
+            selinux.restorecon(abspath)
+        except OSError:
+            self._logger.debug('No default label: "%s"', abspath)
 
 
 class Ssh(base.Base):

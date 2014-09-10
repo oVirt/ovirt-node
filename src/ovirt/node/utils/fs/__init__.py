@@ -30,9 +30,10 @@ import os
 import StringIO
 import re
 
+
 from . import mount
 from .. import process, parse_varfile
-from ... import base, log
+from ... import base, log, utils
 
 LOGGER = log.getLogger(__name__)
 
@@ -414,6 +415,8 @@ class Config(base.Base):
             except Exception:
                 self._logger.error('Failed to persist "%s"', path)
                 return -1
+
+            utils.security.Selinux().restorecon(abspath)
 
     def _persist_dir(self, abspath):
         """Persist directory and bind mount it back to its current location
