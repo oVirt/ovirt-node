@@ -61,10 +61,7 @@ def enable_snmpd(password):
     system.service("snmpd", "start")
     fs.Config().persist(snmp_conf)
 
-    if firewall.is_firewalld():
-        firewall.setup_firewalld(port="161", proto="udp")
-    else:
-        firewall.setup_iptables(port="161", proto="udp")
+    firewall.open_port(port="161", proto="udp")
 
 
 def disable_snmpd():

@@ -1598,10 +1598,7 @@ class SSH(NodeConfigFileSection):
 
             def commit(self):
                 ssh.port(port)
-                if firewall.is_firewalld():
-                    firewall.setup_firewalld(port, "tcp")
-                else:
-                    firewall.setup_iptables(port, "tcp")
+                firewall.open_port(port, "tcp")
 
         class ConfigureStrongRNG(utils.Transaction.Element):
             title = "Configuring SSH strong RNG"
