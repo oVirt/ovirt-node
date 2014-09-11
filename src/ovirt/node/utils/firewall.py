@@ -52,7 +52,7 @@ def is_firewalld():
 def open_port(port, proto):
     if is_firewalld():
         setup_firewalld(port, proto)
-    else
+    else:
         setup_iptables(port, proto)
 
 
