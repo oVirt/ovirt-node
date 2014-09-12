@@ -33,7 +33,7 @@ import re
 
 from . import mount
 from .. import process, parse_varfile
-from ... import base, log, utils
+from ... import base, log
 
 LOGGER = log.getLogger(__name__)
 
@@ -82,6 +82,15 @@ def truncate(filename):
     """
     with open(filename, "wb"):
         pass
+
+
+def restorecon(path):
+    """Restore the context of the given path
+
+    Import is inside the function to address circular imports
+    """
+    from ...utils import security
+    security.Selinux().restorecon(path)
 
 
 class File(base.Base):
@@ -416,7 +425,7 @@ class Config(base.Base):
                 self._logger.error('Failed to persist "%s"', path)
                 return -1
 
-            utils.security.Selinux().restorecon(abspath)
+            restorecon(abspath)
 
     def _persist_dir(self, abspath):
         """Persist directory and bind mount it back to its current location
