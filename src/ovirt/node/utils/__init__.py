@@ -282,11 +282,11 @@ title='First' at 0x...>
                 self.prepare()
                 self.commit()
         except Exception as e:
-            self.logger.debug("Transaction failed (%s): %s" %
-                              (e, e.message), exc_info=True)
+            self.logger.debug("Transaction failed: %s" % e,
+                              exc_info=True)
             self.abort()
             raise exceptions.TransactionError("Transaction failed: " +
-                                              "%s" % e.message)
+                                              "%s" % e)
         self.logger.info("Transaction '%s' succeeded" % self)
         return True
 
