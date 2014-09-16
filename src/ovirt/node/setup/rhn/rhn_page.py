@@ -255,7 +255,7 @@ class Plugin(plugins.NodePlugin):
             user = effective_model["rhn.username"]
             pw = effective_model["rhn.password"]
             profilename = effective_model["rhn.profilename"]
-            rhn_type = effective_model["rhn.type"]
+            rhn_type = effective_model["rhn.type"] or "rhn"
             url = effective_model["rhn.url"]
             ca = effective_model["rhn.ca"]
             org = effective_model["rhn.org"]

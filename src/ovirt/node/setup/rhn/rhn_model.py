@@ -20,7 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils
 from ovirt.node.config.defaults import NodeConfigFileSection
-from ovirt.node.utils import process
+from ovirt.node.utils import process, system
 from ovirt.node.utils.fs import Config
 from urlparse import urlparse
 import sys
@@ -276,7 +276,7 @@ class RHN(NodeConfigFileSection):
                 smconf.append(host)
                 smconf.append('--server.port')
                 smconf.append(port)
-                if not cacert.endswith(".pem"):
+                if cacert and not cacert.endswith(".pem"):
                     smconf.append('--server.prefix')
                     smconf.append(prefix)
                 else:
@@ -376,10 +376,12 @@ class RHN(NodeConfigFileSection):
         cfg = self.retrieve()
         self.logger.debug(cfg)
         rhntype = cfg["rhntype"]
-        cacert = cfg["ca_cert"]
+        cacert = cfg["ca_cert"] or ""
         tx = utils.Transaction("Performing RHN Registration")
 
         if rhntype == "sam" or cacert.endswith(".pem"):
+            tx.append(ConfigureSAM())
+        elif system.is_min_el(7):
             tx.append(ConfigureSAM())
         else:
             tx.append(ConfigureRHNClassic())
