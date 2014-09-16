@@ -32,6 +32,10 @@ sed -i '/rm -f \/etc\/localtime/d' $DHSCRIPT
 sed -i '/rm -f \/etc\/ntp.conf/d' $DHSCRIPT
 sed -i '/rm -f \/etc\/yp.conf/d' $DHSCRIPT
 
+# bz#1128523 - replace dirs with files to keep everything below /var/lib/puppet
+sed -ie 's/dirs[ \t]\+\(.*puppet\)//1' /etc/rwtab
+echo "files     /var/lib/puppet" >> /etc/rwtab
+
 # rhbz#734478 add virt-who (*.py are removed in rhevh image)
 cat > /usr/bin/virt-who <<EOF_virt_who
 #!/bin/sh
