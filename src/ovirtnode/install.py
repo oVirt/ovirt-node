@@ -194,8 +194,12 @@ EOF
             if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
                 _functions.system("cp /tmp/grub.efi \
                                    /liveos/efi/EFI/BOOT/BOOTX64.efi")
-            _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
-                              /liveos/efi/EFI/BOOT/BOOTX64.efi")
+            if os.path.isfile("/boot/efi/EFI/redhat/grubx86.efi"):
+                _functions.system("cp /boot/efi/EFI/redhat/grubx64.efi \
+                                  /liveos/efi/EFI/BOOT/BOOTX64.efi")
+            else:
+                _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
+                                  /liveos/efi/EFI/BOOT/BOOTX64.efi")
             _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" \
                               % self.grub_config_file)
             _functions.system("umount /liveos/efi")
@@ -310,8 +314,13 @@ initrd /initrd0.img
         if _functions.is_efi_boot():
             if "OVIRT_ISCSI_INSTALL" in OVIRT_VARS:
                 _functions.system("umount /boot")
-            shutil.copy("/boot/efi/EFI/%s/grub.efi" % self.efi_dir_name,
-                        "/tmp")
+            if os.path.isfile("/boot/efi/EFI/%s/grubx64.efi" %
+                              self.efi_dir_name):
+                shutil.copy("/boot/efi/EFI/%s/grubx64.efi" % self.efi_dir_name,
+                            "/tmp")
+            else:
+                shutil.copy("/boot/efi/EFI/%s/grub.efi" % self.efi_dir_name,
+                            "/tmp")
             _functions.mount_boot()
         if "OVIRT_ROOT_INSTALL" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
@@ -476,8 +485,15 @@ initrd /initrd0.img
                 _functions.mount_efi()
                 _functions.system("mkdir -p /liveos/efi/EFI/redhat")
                 if _functions.is_iscsi_install() or _functions.is_efi_boot():
-                    shutil.copy("/tmp/grub.efi",
-                                "/liveos/efi/EFI/redhat/grub.efi")
+                    if os.path.isfile("/tmp/grubx64.efi"):
+                        shutil.copy("/tmp/grubx64.efi",
+                                    "/liveos/efi/EFI/redhat/grubx64.efi")
+                    else:
+                        shutil.copy("/tmp/grub.efi",
+                                    "/liveos/efi/EFI/redhat/grub.efi")
+                elif os.path.isfile("/boot/efi/EFI/redhat/grubx64.efi"):
+                    shutil.copy("/boot/efi/EFI/redhat/grubx64.efi",
+                          "/liveos/efi/EFI/redhat/grubx64.efi")
                 else:
                     shutil.copy("/boot/efi/EFI/redhat/grub.efi",
                           "/liveos/efi/EFI/redhat/grub.efi")
@@ -486,7 +502,7 @@ initrd /initrd0.img
                 if not "/dev/mapper/" in self.disk:
                     efi_disk = self.disk[:-1]
                 else:
-                    efi_disk = re.sub("p[1,2,3]$", "", self.disk)
+                    efi_disk = re.sub(r'p?[1,2,3]$', "", self.disk)
                 # generate grub legacy config for efi partition
                 #remove existing efi entries
                 _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
@@ -496,10 +512,16 @@ initrd /initrd0.img
                                               self.efi_dir_name),
                                              efi_disk)
                 else:
-                    _functions.add_efi_entry(_functions.PRODUCT_SHORT,
-                                             ("\\EFI\\%s\\grub.efi" %
-                                              self.efi_dir_name),
-                                             efi_disk)
+                    if os.path.isfile("/liveos/efi/EFI/redhat/grubx64.efi"):
+                        _functions.add_efi_entry(_functions.PRODUCT_SHORT,
+                                                 ("\\EFI\\%s\\grubx64.efi" %
+                                                  self.efi_dir_name),
+                                                 efi_disk)
+                    else:
+                        _functions.add_efi_entry(_functions.PRODUCT_SHORT,
+                                                 ("\\EFI\\%s\\grub.efi" %
+                                                  self.efi_dir_name),
+                                                 efi_disk)
         self.kernel_image_copy()
 
         # reorder tty0 to allow both serial and phys console after installation
