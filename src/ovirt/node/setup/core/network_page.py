@@ -104,8 +104,7 @@ class Plugin(plugins.NodePlugin):
             "dialog.nic.ipv4.netmask", "dialog.nic.ipv4.gateway",
             "dialog.nic.ipv6.bootproto", "dialog.nic.ipv6.address",
             "dialog.nic.ipv6.netmask", "dialog.nic.ipv6.gateway",
-            "dialog.nic.vlanid",
-            "dialog.nic.layout_bridged"])
+            "dialog.nic.vlanid"])
 
         self._bond_group = self.widgets.group([
             "bond.name",
@@ -404,7 +403,7 @@ class Plugin(plugins.NodePlugin):
 
     def _configure_nic(self, bootproto, ipaddr, netmask, gateway,
                        ipv6_bootproto, ipv6_address, ipv6_netmask,
-                       ipv6_gateway, vlanid, layout_bridged):
+                       ipv6_gateway, vlanid):
         vlanid = vlanid or None
         iface = self._model_extra["dialog.nic.ifname"]
 
@@ -452,10 +451,7 @@ class Plugin(plugins.NodePlugin):
             model.update(bootif=None, vlanid=None)
 
         mt = defaults.NetworkLayout()
-        if layout_bridged:
-            mt.configure_bridged()
-        else:
-            mt.configure_default()
+        mt.configure_default()
 
         # Return the resulting transaction
         txs = model.transaction()
@@ -484,7 +480,6 @@ class NicDetailsDialog(ui.Dialog):
 
         model = defaults.Network().retrieve()
         ip6model = defaults.IPv6().retrieve()
-        m_layout = defaults.NetworkLayout().retrieve()
 
         self.logger.debug("nic: %s" % nic)
         self.logger.debug("model: %s" % model)
@@ -535,7 +530,6 @@ class NicDetailsDialog(ui.Dialog):
             "dialog.nic.ipv6.netmask": ip6model["netmask"],
             "dialog.nic.ipv6.gateway": ip6model["gateway"],
             "dialog.nic.vlanid": vlanid,
-            "dialog.nic.layout_bridged": m_layout["layout"] == "bridged",
         }
         self.plugin._model_extra.update(nicfields)
 
@@ -618,9 +612,6 @@ class NicDetailsDialog(ui.Dialog):
 
                ui.Divider("dialog.nic._divider[3]"),
 
-               ui.Checkbox("dialog.nic.layout_bridged",
-                           _("Use Bridge: ")),
-
                ui.Divider("dialog.nic._divider[4]"),
                ui.Button("dialog.nic.identify", _("Flash Lights to Identify"))
                ]
@@ -632,7 +623,6 @@ class NicDetailsDialog(ui.Dialog):
                         ]
         self.plugin._nic_details_group.enabled(False)
         self.plugin.widgets["dialog.nic.vlanid"].enabled(True)
-        self.plugin.widgets["dialog.nic.layout_bridged"].enabled(True)
 
 
 class CreateBondDialog(ui.Dialog):
