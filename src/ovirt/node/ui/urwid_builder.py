@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import ui, base, presets
 from ovirt.node.ui import widgets as uw
+from ovirt.node.utils import console
 import os
 import urwid
 
@@ -320,12 +321,12 @@ class UrwidWindow(ui.Window):
     with_menu = True
 
     element_styles = {
-        "text": "black",
-        "label": "dark gray",
-        "disabled": "white",
         "background": "light gray",
+        "text": "black",
+        "label": "black",
+        "header": "black",
+        "disabled": "dark gray" if console.is_terminal() else "white",
         "invalid": "dark red",
-        "header": 'black, bold',
     }
 
     palette = [(None, 'default', element_styles["background"], 'bold',

@@ -90,8 +90,7 @@ class Application(base.Base):
         self.logger.info(("Starting '%s' application " +
                           "with '%s' UI") % (plugin_base, ui_builder))
 
-        if os.ttyname(sys.stdin.fileno()).startswith("/dev/tty") or \
-           os.ttyname(sys.stdin.fileno()) == "/dev/console":
+        if console.is_terminal():
             # We're on a physical console, so explicitly load fonts in
             # case they weren't loaded for some reason
             self.logger.info("Console path is %s" % os.ttyname(

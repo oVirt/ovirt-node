@@ -22,8 +22,24 @@ from ovirt.node import base
 from ovirt.node.utils import Transaction, process
 import StringIO
 import sys
+import os
 import termios
 import tty
+
+
+def is_terminal():
+    """Is true if the terminal is a real one
+    Like the linux terminal console
+    """
+    ttyname = os.ttyname(sys.stdin.fileno())
+    return ttyname.startswith("/dev/tty") or ttyname == "/dev/console"
+
+
+def is_pty():
+    """Is true if the terminal is a pseudo one
+    Like GUI terminals or an ssh session
+    """
+    return not is_terminal()
 
 
 def reset():
