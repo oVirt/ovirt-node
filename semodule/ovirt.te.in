@@ -447,8 +447,13 @@ allow logrotate_t virt_cache_t:dir read;
 allow svirt_t initrc_t:unix_stream_socket connectto;
 
 
-#============= tuned_t ==============
-allow tuned_t ovirt_t:dbus send_msg;
+#============= firewalld_t ==============
+optional_policy(`
+    require {
+        type firewalld_t;
+    }
+    allow firewalld_t ovirt_t:dbus send_msg;
+')
 
 
 # Remove this block once the bug is solved
