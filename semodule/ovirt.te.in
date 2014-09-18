@@ -11,6 +11,7 @@ gen_require(`
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_hostnamed_t;
+    type auditd_log_t;
     type etc_t;
     type device_t;
     type dmesg_t;
@@ -155,6 +156,8 @@ allow svirt_t sanlock_t:unix_stream_socket connectto;
 
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
+allow syslogd_t auditd_log_t:dir { write add_name };
+allow syslogd_t auditd_log_t:file { ioctl open create append getattr };
 
 
 #============= sysstat_t ==============
@@ -162,8 +165,9 @@ require {
     type sysstat_t;
     type admin_home_t;
 }
-allow sysstat_t tmpfs_t:dir search;
 allow sysstat_t admin_home_t:dir { search getattr };
+allow sysstat_t auditd_log_t:file { read lock open append };
+allow sysstat_t tmpfs_t:dir search;
 allow sysstat_t var_lib_t:file { read append };
 allow sysstat_t var_log_t:file { open read };
 
@@ -259,6 +263,8 @@ optional_policy(`
     }
     allow rhsmcertd_t tmpfs_t:dir search;
     allow rhsmcertd_t var_log_t:file open;
+    allow rhsmcertd_t auditd_log_t:dir { write getattr add_name };
+    allow rhsmcertd_t auditd_log_t:file { create open getattr append };
 ')
 
 #============= sblim_sfcbd_t ==============
@@ -381,11 +387,13 @@ allow passwd_t file_t:file { read open getattr };
 
 #============= getty_t ==============
 require {
-type getty_t;
+  type getty_t;
 }
 allow getty_t local_login_t:process { siginh rlimitinh noatsecure };
 allow getty_t var_log_t:file { open write };
 allow getty_t tmpfs_t:dir search;
+allow getty_t auditd_log_t:file { write lock open };
+
 
 
 #============= ifconfig_t ==============
@@ -437,10 +445,16 @@ optional_policy(`
 
 #============= local_login_t ==============
 allow local_login_t var_log_t:file { open write create read lock };
+allow local_login_t auditd_log_t:dir { write add_name };
+allow local_login_t auditd_log_t:file { write lock create open read };
 
 
 #============= logrotate_t ==============
 allow logrotate_t virt_cache_t:dir read;
+allow logrotate_t auditd_log_t:dir read;
+allow logrotate_t auditd_log_t:file getattr;
+allow logrotate_t virt_cache_t:dir { write remove_name add_name };
+allow logrotate_t virt_cache_t:file { rename setattr read create getattr write ioctl unlink open };
 
 
 #============= svirt_t ==============
