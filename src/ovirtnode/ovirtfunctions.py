@@ -522,7 +522,8 @@ def mount_liveos():
         if is_iscsi_install():
             connect_iscsi_root()
         system_closefds("mkdir -p /liveos")
-        if not "CDLABEL" in open("/proc/cmdline").read():
+        if not "CDLABEL" in open("/proc/cmdline").read() and \
+                not "reinstall" in open("/proc/cmdline"):
             if not system("mount LABEL=Root /liveos &>/dev/null"):
                 # just in case /dev/disk/by-label is not using devmapper and fails
                 for dev in os.listdir("/dev/mapper"):
@@ -531,7 +532,8 @@ def mount_liveos():
                         system("ln -s \"/dev/mapper/" + dev + "\" /dev/disk/by-label/Root")
                         if system("mount LABEL=Root /liveos"):
                             return True
-        elif "CDLABEL" in open("/proc/cmdline").read():
+        elif "CDLABEL" in open("/proc/cmdline").read() or \
+                "reinstall" in open("/proc/cmdline"):
             if os.path.ismount("/dev/.initramfs/live"):
                 system_closefds("mount -o bind /dev/.initramfs/live /liveos")
             elif os.path.ismount("/run/initramfs/live"):

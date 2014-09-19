@@ -885,10 +885,12 @@ class Storage:
             if not os.path.exists(partroot):
                 partroot = self.ROOTDRIVE + "p2"
                 partrootbackup = self.ROOTDRIVE + "p3"
+            _functions.system("umount -l " + partroot)
             _functions.system("mke2fs \"" + partroot + "\" -L Root")
             _functions.system("tune2fs -c 0 -i 0 \"" + partroot + "\"")
             _functions.system("ln -snf \"" + partrootbackup +
                    "\" /dev/disk/by-label/RootBackup")
+            _functions.system("umount -l " + partrootbackup)
             _functions.system("mke2fs \"" + partrootbackup + \
                               "\" -L RootBackup")
             _functions.system("tune2fs -c 0 -i 0 \"" + partrootbackup + "\"")
