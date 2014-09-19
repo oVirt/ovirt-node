@@ -1197,6 +1197,11 @@ network.configure_dns()
 EOP
 }
 
+plymouth()
+{
+    [[ -x /bin/plymouth ]] && /bin/plymouth $@
+}
+
 # execute a function if called as a script, e.g.
 #   ovirt-functions ovirt_store_config /etc/hosts
 
