@@ -658,7 +658,12 @@ EOP
             return $rc
         fi
     done
-    return $rc
+    # We alwasy return 0 here, because:
+    # If any of the persisted files in $@ had a severe issue
+    # (rc of 1 or 2), then we'd have already exited.
+    # But if we got here, then no severe issue was hit and
+    # we are good.
+    return 0
 }
 
 # check if stored config exists
@@ -1108,6 +1113,7 @@ autoinstall_failed(){
     plymouth --hide-splash
     log "Automatic installation failed. Please review console messages."
     log "Press Enter to drop to emergency shell."
+    [[ -n $@ ]] && log "$@"
     [[ -f "/tmp/ovirt.log" ]] && {
         cat /tmp/ovirt.log >> /var/log/ovirt.log
     }

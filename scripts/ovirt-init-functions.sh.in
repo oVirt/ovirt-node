@@ -497,7 +497,7 @@ _start_ovirt_early () {
                     for d in $appvgdisks; do
                         did="$(IFS="$oldIFS" parse_disk_id "$d")"
                         if [ -z "$did" ]; then
-                            autoinstall_failed
+                            autoinstall_failed "Reason: AppVG"
                         fi
                         if [ -n "$init_app" ]; then
                             init_app="$init_app${SEP}$did"
@@ -1182,11 +1182,11 @@ start_ovirt_firstboot ()
             rm -f $OVIRT_TMP_LOGFILE
         fi
         if [ $rc -ne 0 ]; then
-            autoinstall_failed
+            autoinstall_failed "Reason: Transactio issue"
         fi
     elif [ "$auto_install" = "2" ]; then
         echo "Device specified in storage_init does not exist"
-        autoinstall_failed
+        autoinstall_failed "Reason: Storage device issue"
     fi
 
     if is_stateless; then
@@ -1208,13 +1208,13 @@ migrate.MigrateConfigs().translate_all()
 EOP
         fi
         if [ $? -ne 0 ]; then
-            autoinstall_failed
+            autoinstall_failed "Reason: Boot setup issue"
         fi
         disable_firstboot
         ovirt_store_firstboot_config
         retval=$?
         if [ $retval -eq 1 ] || [ $retval -eq 2 ]; then
-            autoinstall_failed
+            autoinstall_failed "Reason: Store firstboot issue"
         fi
 
         # rhbz#920208
@@ -1229,7 +1229,7 @@ EOP
         reboot
 
         if [ $? -ne 0 ]; then
-            autoinstall_failed
+            autoinstall_failed "Reason: Reboot ..."
         fi
         return 1
     fi
