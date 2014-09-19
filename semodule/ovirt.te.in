@@ -48,6 +48,10 @@ gen_require(`
 ')
 
 
+#============= avahi_t ==============
+allow avahi_t tmpfs_t:file { read getattr open };
+
+
 #============= collectd_t ==============
 @SEMODULE_NOT_EL6@allow collectd_t initrc_t:unix_stream_socket connectto;
 @SEMODULE_NOT_EL6@allow collectd_t passwd_file_t:file { open read };
@@ -55,6 +59,19 @@ gen_require(`
 @SEMODULE_NOT_EL6@allow collectd_t virt_etc_t:file read;
 @SEMODULE_NOT_EL6@allow collectd_t virt_var_run_t:sock_file write;
 @SEMODULE_NOT_EL6@allow collectd_t virtd_t:unix_stream_socket connectto;
+
+
+#============= dnsmasq_t ==============
+optional_policy(`
+    require {
+        type dnsmasq_t;
+    }
+    allow dnsmasq_t tmpfs_t:dir search;
+')
+
+
+#============= sanlock_t ==============
+allow sanlock_t tmpfs_t:dir search;
 
 
 #============= systemd_localed_t ==============
@@ -143,6 +160,7 @@ require {
 }
 allow snmpd_t device_t:sock_file write;
 allow snmpd_t ovirt_t:unix_dgram_socket sendto;
+allow snmpd_t tmpfs_t:file { read getattr open };
 
 #============= sshd_t ==============
 allow sshd_t var_log_t:file { read open write };
