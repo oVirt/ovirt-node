@@ -49,7 +49,12 @@ gen_require(`
 
 
 #============= avahi_t ==============
-allow avahi_t tmpfs_t:file { read getattr open };
+optional_policy(`
+    require {
+        type avahi_t;
+    }
+    allow avahi_t tmpfs_t:file { read getattr open };
+')
 
 
 #============= collectd_t ==============
