@@ -390,13 +390,13 @@ class Application(base.Base):
         self.ui.register_plugin(plugin.ui_name(), plugin)
 
     def __drop_to_shell(self):
-        utils.console.writeln("Dropping to rescue shell ...")
 
         def open_console():
-            utils.process.call("clear ; bash", shell=True)
+            utils.process.call("bash", shell=True)
 
         def return_ok(dialog, changes):
             with self.ui.suspended():
+                utils.console.writeln("Dropping to rescue shell...")
                 open_console()
 
         try:
