@@ -357,7 +357,7 @@ _start_ovirt_early () {
     #   vlan=id
     #   network_layout=bridged|direct
     #
-    #   bond or bond_setup=<bondname>:<bondslaves>:[:<options>]
+    #   bond_setup=<bondname>:<bondslave,bondslave>:[:<option_arg,option_arg>]
     #   Use bond for node based on RHEL/CentOS 7 or higher
     #   Use bond_setup for node based on RHEL/CentOS 6
     #
@@ -712,6 +712,7 @@ EOP
             i=${i#bond=}
             i=${i#bond_setup=}
             eval $(printf $i|awk -F: '{print "bond_name="$1; print "bond_slaves="$2; print "bond_options="$3;}')
+            bond_options=${bond_options//,/ }
             ;;
             hostname=*)
             hostname=${i#hostname=}
