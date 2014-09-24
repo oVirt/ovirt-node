@@ -22,7 +22,7 @@ from ovirt.node import plugins, ui, valid, utils, config
 from ovirt.node.config import defaults
 from ovirt.node.plugins import Changeset
 import ping
-from ovirt.node.utils import network
+from ovirt.node.utils import network, system
 
 """
 Network page plugin
@@ -41,12 +41,8 @@ def has_managed_ifnames():
 
 class NicTable(ui.Table):
     def __init__(self, path, height=3, multi=False, filter_configured=False):
-        if not has_managed_ifnames():
-            header = "Device  Status       Model         MAC Address"
-        else:
-            header = "Device          Status       MAC Address      "
-        if multi:
-            header = "    " + header
+        header = self.__build_header(has_managed_ifnames(),
+                                     system.has_systemd(), multi)
 
         super(NicTable, self).__init__(path,
                                        "Available System NICs",
@@ -54,10 +50,40 @@ class NicTable(ui.Table):
                                        self._get_nics(filter_configured),
                                        height=height, multi=multi),
 
-    def _get_nics(self, filter_configured):
+    def __build_header(self, managed, without_mac, multi):
+        if not managed:
+            if without_mac:
+                header = "Device          Status       Model            "
+            else:
+                header = "Device  Status       Model         MAC Address"
+        else:
+            header = "Device          Status       MAC Address      "
+        if multi:
+            header = "    " + header
+        return header
+
+    def __build_fields(self, nic, is_cfg, managed, systemd):
         def justify(txt, l):
             txt = txt if txt else ""
             return txt.ljust(l)[0:l]
+
+        fields = [justify(nic.ifname, 7),
+                  justify(is_cfg, 12)]
+
+        if managed or systemd:
+            fields[0] = justify(nic.ifname, 15)
+        if not managed:
+            if not systemd:
+                fields.append(justify(nic.vendor, 13))
+            else:
+                fields.append(justify(nic.vendor, 22))
+
+        if managed or not systemd:
+            fields.append(justify(nic.hwaddr, 17))
+
+        return fields
+
+    def _get_nics(self, filter_configured):
         node_nics = []
         first_nic = None
         model = utils.network.NodeNetwork()
@@ -72,15 +98,9 @@ class NicTable(ui.Table):
                 is_cfg = ("Configured" if nic.is_configured() else
                           "Unconfigured")
 
-            fields = [justify(nic.ifname, 7),
-                      justify(is_cfg, 12)]
+            fields = self.__build_fields(nic, is_cfg, has_managed_ifnames(),
+                                         system.has_systemd())
 
-            if has_managed_ifnames():
-                fields[0] = justify(nic.ifname, 15)
-            if not has_managed_ifnames():
-                fields.append(justify(nic.vendor, 13))
-
-            fields.append(justify(nic.hwaddr, 17))
             description = " ".join(fields)
 
             node_nics.append((name, description))
