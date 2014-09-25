@@ -1,3 +1,5 @@
+# vim: sw=4 sts=4 et
+
 policy_module(ovirt, 1.0)
 
 # Existence of types can be checked at runtime using:
@@ -77,6 +79,8 @@ optional_policy(`
 
 #============= sanlock_t ==============
 allow sanlock_t tmpfs_t:dir search;
+allow sanlock_t auditd_log_t:dir search;
+allow sanlock_t auditd_log_t:file { read getattr open append };
 
 
 #============= systemd_localed_t ==============
@@ -123,9 +127,17 @@ allow loadkeys_t console_device_t:chr_file open;
 require {
     type local_login_t;
 }
+allow local_login_t auditd_log_t:dir { search write add_name };
+allow local_login_t auditd_log_t:file { write lock create open read };
 allow local_login_t chkpwd_t:process { siginh rlimitinh noatsecure };
+allow local_login_t shadow_t:file { write rename create unlink setattr };
+allow local_login_t tmpfs_t:dir { write remove_name add_name };
 allow local_login_t var_log_t:file { open write create read lock };
 allow local_login_t var_log_t:dir { write add_name };
+optional_policy(`
+    require { type passwd_file_t; }
+    allow local_login_t passwd_file_t:file write;
+')
 
 
 #============= logrotate_t ==============
@@ -179,7 +191,7 @@ allow svirt_t sanlock_t:unix_stream_socket connectto;
 
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
-allow syslogd_t auditd_log_t:dir { write add_name };
+allow syslogd_t auditd_log_t:dir { search write add_name };
 allow syslogd_t auditd_log_t:file { ioctl open create append getattr };
 
 
@@ -416,6 +428,7 @@ allow getty_t local_login_t:process { siginh rlimitinh noatsecure };
 allow getty_t var_log_t:file { open write };
 allow getty_t tmpfs_t:dir search;
 allow getty_t auditd_log_t:file { write lock open };
+allow getty_t auditd_log_t:dir search;
 
 
 
@@ -464,12 +477,6 @@ optional_policy(`
     }
     allow mandb_t admin_home_t:dir search;
 ')
-
-
-#============= local_login_t ==============
-allow local_login_t var_log_t:file { open write create read lock };
-allow local_login_t auditd_log_t:dir { write add_name };
-allow local_login_t auditd_log_t:file { write lock create open read };
 
 
 #============= logrotate_t ==============
