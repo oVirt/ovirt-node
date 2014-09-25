@@ -1214,7 +1214,7 @@ EOP
         ovirt_store_firstboot_config
         retval=$?
         if [ $retval -eq 1 ] || [ $retval -eq 2 ]; then
-            autoinstall_failed "Reason: Store firstboot issue"
+            autoinstall_failed "Reason: Store firstboot issue ($retval)"
         fi
 
         # rhbz#920208

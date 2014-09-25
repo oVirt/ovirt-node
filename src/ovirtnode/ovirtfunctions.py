@@ -890,6 +890,7 @@ def ovirt_store_config_retnum(filename):
         dirname = os.path.dirname(filename)
         system("mkdir -p /config/" + dirname)
         if system("cp -a " + filename + " /config"+filename):
+            system("umount "+filename)
             if not system("mount -n --bind /config"+filename+ " " + \
                           filename):
                 logger.error("Failed to persist: " + filename)
@@ -903,7 +904,6 @@ def ovirt_store_config_retnum(filename):
         system_closefds("echo "+filename+" >> /config/files")
         logger.info("Successfully persisted: " + filename)
 
-    return True
 
 def ovirt_store_config_atomic(filename, source=None):
     rc = True

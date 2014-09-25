@@ -651,7 +651,7 @@ ovirt_store_config() {
         python <<EOP
 from ovirtnode.ovirtfunctions import ovirt_store_config_retnum
 
-raise SystemExit(ovirt_store_config_retnum("$p"))
+ovirt_store_config_retnum("$p")
 EOP
         rc=$?
         if [ $rc -eq 1 ] || [ $rc -eq 2 ]; then
