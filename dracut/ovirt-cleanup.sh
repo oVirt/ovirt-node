@@ -185,10 +185,10 @@ for device in $lvm_storage_init; do
                 fi
             done
             info "Found and removing vg: $vg"
-            yes | lvm vgremove -ff "$vg"
+            yes 2>/dev/null | lvm vgremove -ff "$vg" 2>/dev/null
         fi
         info "Found and removing pv: $pv"
-        yes | lvm pvremove -ff "$pv"
+        yes 2>/dev/null | lvm pvremove -ff "$pv" 2>/dev/null
     done
     IFS=,
     if [ -f "/etc/lvm/lvm.conf" ]; then
