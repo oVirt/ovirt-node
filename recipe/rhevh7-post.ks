@@ -1,5 +1,33 @@
 %include version.ks
 
+# patch kdumpctl so "net" still works for now
+# can remove when rhbz#1139298 lands
+# rhbz#1095140
+patch -d /bin -p0 << \EOF_kdump
+--- /bin/kdumpctl       2014-09-28 17:24:41.744858571 +0000
++++ /tmp/kdumpctl       2014-09-28 17:24:28.251942734 +0000
+@@ -242,7 +242,7 @@
+                case "$config_opt" in
+                \#* | "")
+                        ;;
+-               raw|ext2|ext3|ext4|minix|btrfs|xfs|nfs|ssh|sshkey|path|core_collector|kdump_post|kdump_pre|extra_bins|extra_modules|default|force_rebuild|dracut_args|fence_kdump_args|fence_kdump_nodes)
++               raw|ext2|ext3|ext4|minix|btrfs|xfs|nfs|net|ssh|sshkey|path|core_collector|kdump_post|kdump_pre|extra_bins|extra_modules|default|force_rebuild|dracut_args|fence_kdump_args|fence_kdump_nodes)
+                        [ -z "$config_val" ] && {
+                                echo "Invalid kdump config value for option $config_opt."
+                                return 1;
+@@ -476,6 +476,9 @@
+                ssh)
+                        DUMP_TARGET=$config_val
+                        ;;
++               net)
++                       DUMP_TARGET=$config_val
++                       ;;
+                *)
+                        ;;
+                esac
+EOF_kdump
+
+
 # add RHEV-H rwtab locations
 mkdir -p /rhev
 cat > /etc/rwtab.d/rhev << EOF_RWTAB_RHEVH
