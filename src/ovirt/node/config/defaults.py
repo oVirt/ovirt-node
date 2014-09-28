@@ -1085,6 +1085,7 @@ class KDump(NodeConfigFileSection):
 
         aug = AugeasWrapper()
         prefix = "/files/etc/kdump.conf/"
+        nfs_path = "/var/run/kdump-nfs"
 
         def _set_values(vals):
             for k, v in vals.iteritems():
@@ -1120,6 +1121,35 @@ class KDump(NodeConfigFileSection):
                         "path": "/core"}
 
                 _set_values(vals)
+
+        class MountNFS(utils.Transaction.Element):
+            title = "Mounting NFS volume for kdump configuration"
+
+            def commit(self):
+                try:
+                    if not os.path.isdir(nfs_path):
+                        os.makedirs(nfs_path)
+                    system.Mount(nfs_path, nfs, "nfs").mount()
+
+                    File("/etc/fstab").write(
+                        "\n%s\t%s\tnfs\tdefaults\t0 0" % (nfs, nfs_path),
+                        "a")
+                except utils.process.CalledProcessError:
+                    self.logger.warning("Failed to mount %s at " +
+                                        "%s" % (nfs, nfs_path),
+                                        exc_info=True)
+
+        class UmountNFS(utils.Transaction.Element):
+            title = "Umounting Kdump NFS volume"
+
+            def commit(self):
+                try:
+                    system.Mount(nfs_path).umount()
+                    File("/etc/fstab").sed(r'\#.*{dir}#d'.format(
+                        dir=nfs_path))
+                except utils.process.CalledProcessError:
+                    self.logger.warning("Failed to umount %s" % nfs,
+                                        exc_info=True)
 
         class CreateNfsKdumpConfig(utils.Transaction.Element):
             title = "Creating kdump NFS config"
@@ -1245,6 +1275,8 @@ class KDump(NodeConfigFileSection):
 
         final_txe = RestartKdumpService(backup_txe.backups)
         if nfs:
+            if not system.is_max_el(6):
+                tx.append(MountNFS())
             tx.append(CreateNfsKdumpConfig())
         elif ssh:
             if ssh_key:
@@ -1254,6 +1286,9 @@ class KDump(NodeConfigFileSection):
             tx.append(LocalKdumpConfig())
         else:
             final_txe = RemoveKdumpConfig(backup_txe.backups)
+
+        if not nfs and os.path.ismount(nfs_path):
+            tx.insert(0, UmountNFS())
 
         tx.append(final_txe)
 
