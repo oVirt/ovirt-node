@@ -275,6 +275,14 @@ optional_policy(`
     allow systemd_passwd_agent_t tmpfs_t:dir search;
 ')
 
+#============= kdump_t ==============
+optional_policy(`
+    require {
+        type kdump_t;
+        type system_map_t;
+    }
+    allow kdump_t system_map_t: file { read open };
+')
 
 #============= systemd_localed_t ==============
 optional_policy(`
