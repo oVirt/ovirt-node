@@ -1573,6 +1573,11 @@ status_ovirt_cim () {
     return $?
 }
 
+major_release() {
+    REL=`cat /etc/redhat-release | sed -r 's/.*release ([0-9]+).*/\1/'`
+    echo $REL
+}
+
 start_ovirt_kdump () {
     [ -f "$VAR_SUBSYS_OVIRT_cim" ] && exit 0
     {
@@ -1581,6 +1586,10 @@ start_ovirt_kdump () {
         touch $VAR_SUBSYS_OVIRT_KDUMP
 
         if is_persisted /etc/kdump.conf; then
+            if [[ ! -z $OVIRT_KDUMP_NFS && $(major_release) -ge 7 ]]; then
+                [[ ! -d //var/run/kdump-nfs ]] && mkdir /var/run/kdump-nfs
+                mount /var/run/kdump-nfs
+            fi
             service kdump start
         fi
 
