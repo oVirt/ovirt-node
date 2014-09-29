@@ -140,11 +140,6 @@ optional_policy(`
 ')
 
 
-#============= logrotate_t ==============
-allow logrotate_t var_lib_t:file write;
-allow logrotate_t virt_cache_t:dir { read getattr };
-
-
 #============= mount_t ==============
 allow mount_t shadow_t:file mounton;
 allow mount_t unlabeled_t:filesystem remount;
@@ -292,6 +287,7 @@ optional_policy(`
     allow systemd_localed_t security_t:file { open read };
 ')
 
+
 #============= rhsmcertd_t ==============
 optional_policy(`
     require {
@@ -302,6 +298,7 @@ optional_policy(`
     allow rhsmcertd_t auditd_log_t:dir { write getattr add_name search };
     allow rhsmcertd_t auditd_log_t:file { create open getattr append };
 ')
+
 
 #============= sblim_sfcbd_t ==============
 optional_policy(`
@@ -415,11 +412,13 @@ allow chkpwd_t tty_device_t:chr_file { read write };
 allow chkpwd_t tmpfs_t:dir search;
 allow chkpwd_t file_t:file { read open getattr };
 
+
 #============= passwd_t ==============
 require {
 type passwd_t;
 }
 allow passwd_t file_t:file { read open getattr };
+
 
 #============= getty_t ==============
 require {
@@ -430,7 +429,6 @@ allow getty_t var_log_t:file { open write };
 allow getty_t tmpfs_t:dir search;
 allow getty_t auditd_log_t:file { write lock open };
 allow getty_t auditd_log_t:dir search;
-
 
 
 #============= ifconfig_t ==============
@@ -481,15 +479,11 @@ optional_policy(`
 
 
 #============= logrotate_t ==============
-allow logrotate_t virt_cache_t:dir read;
 allow logrotate_t auditd_log_t:dir read;
 allow logrotate_t auditd_log_t:file getattr;
-allow logrotate_t virt_cache_t:dir { write remove_name add_name };
+allow logrotate_t var_lib_t:file write;
+allow logrotate_t virt_cache_t:dir { read getattr write remove_name add_name };
 allow logrotate_t virt_cache_t:file { rename setattr read create getattr write ioctl unlink open };
-
-
-#============= svirt_t ==============
-allow svirt_t initrc_t:unix_stream_socket connectto;
 
 
 #============= firewalld_t ==============
@@ -502,12 +496,6 @@ optional_policy(`
 ')
 
 
-# Remove this block once the bug is solved
-# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1025401
-#============= iscsid_t ==============
-allow iscsid_t iscsi_var_lib_t:dir { write remove_name create add_name rmdir };
-allow iscsid_t iscsi_var_lib_t:file { write create unlink };
-allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
 
 
 #
