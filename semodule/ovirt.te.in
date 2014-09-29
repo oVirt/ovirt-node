@@ -299,7 +299,7 @@ optional_policy(`
     }
     allow rhsmcertd_t tmpfs_t:dir search;
     allow rhsmcertd_t var_log_t:file open;
-    allow rhsmcertd_t auditd_log_t:dir { write getattr add_name };
+    allow rhsmcertd_t auditd_log_t:dir { write getattr add_name search };
     allow rhsmcertd_t auditd_log_t:file { create open getattr append };
 ')
 
