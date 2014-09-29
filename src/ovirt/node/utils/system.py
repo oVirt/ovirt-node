@@ -1002,9 +1002,12 @@ class Bootloader(base.Base):
 
     class Arguments(base.Base):
 
-        def __init__(self, dry=False):
+        def __init__(self, dry=False, path=None):
             if not dry:
-                self.__handle = Bootloader.find_grub_cfg()
+                if not path:
+                    self.__handle = Bootloader.find_grub_cfg()
+                else:
+                    self.__handle = File(path)
                 self.__mount = Mount.find_by_path(self.__handle.filename)
                 self.items = self.__get_arguments()
 
@@ -1015,11 +1018,12 @@ class Bootloader(base.Base):
             lines = [line for line in self.__handle]
             return lines
 
-        def __get_arguments(self):
-            kernel = [line for line in self.__get_lines() if
-                      re.match(r'[^#].*?vmlinuz', line)][0]
-            kernel = re.sub(r'^\s*?(kernel|linux)\s+?\/vmlinuz.*?\s+', '',
-                            kernel)
+        def __get_arguments(self, kernel=None):
+            if not kernel:
+                kernel = [line for line in self.__get_lines() if
+                          re.match(r'[^#].*?vmlinuz', line)][0]
+                kernel = re.sub(r'^\s*?(kernel|linux)\s+?\/vmlinuz.*?\s+', '',
+                                kernel)
             params = {}
             for param in kernel.split():
                 match = re.match(r'(.*?)=(.*)', param)
@@ -1029,6 +1033,11 @@ class Bootloader(base.Base):
                     params[param] = True
             self.items = params
             return params
+
+        def dry_arguments(self, line):
+            if not "vmlinuz" in line:
+                line = "vmlinuz " + line
+            return self.__get_arguments(kernel=line)
 
         def __getitem__(self, key):
             if re.match(r'^(.*?)=', key):
