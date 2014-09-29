@@ -498,6 +498,7 @@ optional_policy(`
         type firewalld_t;
     }
     allow firewalld_t ovirt_t:dbus send_msg;
+    allow firewalld_t auditd_log_t:dir search;
 ')
 
 
