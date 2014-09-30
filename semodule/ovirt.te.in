@@ -5,9 +5,7 @@ policy_module(ovirt, 1.0)
 # Existence of types can be checked at runtime using:
 # seinfo -t<type>
 gen_require(`
-@SEMODULE_NOT_EL6@    type collectd_t;
 @SEMODULE_NOT_EL6@    type NetworkManager_t;
-@SEMODULE_NOT_EL6@    type passwd_file_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_unit_file_t;
 @SEMODULE_WITH_SYSTEMD@    type systemd_localed_t;
@@ -85,12 +83,18 @@ optional_policy(`
 
 
 #============= collectd_t ==============
-@SEMODULE_NOT_EL6@allow collectd_t initrc_t:unix_stream_socket connectto;
-@SEMODULE_NOT_EL6@allow collectd_t passwd_file_t:file { open read };
-@SEMODULE_NOT_EL6@allow collectd_t virtd_exec_t:file getattr;
-@SEMODULE_NOT_EL6@allow collectd_t virt_etc_t:file read;
-@SEMODULE_NOT_EL6@allow collectd_t virt_var_run_t:sock_file write;
-@SEMODULE_NOT_EL6@allow collectd_t virtd_t:unix_stream_socket connectto;
+optional_policy(`
+    require {
+        type collectd_t;
+        type passwd_file_t;
+    }
+    allow collectd_t passwd_file_t:file { open read };
+    allow collectd_t initrc_t:unix_stream_socket connectto;
+    allow collectd_t virtd_exec_t:file getattr;
+    allow collectd_t virt_etc_t:file read;
+    allow collectd_t virt_var_run_t:sock_file write;
+    allow collectd_t virtd_t:unix_stream_socket connectto;
+')
 
 
 #============= dnsmasq_t ==============
@@ -152,6 +156,13 @@ allow loadkeys_t console_device_t:chr_file open;
 require {
     type local_login_t;
 }
+
+optional_policy(`
+    require {
+        type passwd_file_t;
+    }
+    allow local_login_t passwd_file_t:file write;
+')
 allow local_login_t auditd_log_t:dir { search write add_name };
 allow local_login_t auditd_log_t:file { write lock create open read };
 allow local_login_t chkpwd_t:process { siginh rlimitinh noatsecure };
