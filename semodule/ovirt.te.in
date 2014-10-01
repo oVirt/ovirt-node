@@ -66,6 +66,15 @@ optional_policy(`
     allow gssd_t tmpfs_t:dir search;
 ')
 
+#============= ldconfig_t ==============
+optional_policy(`
+    require {
+        type ldconfig_t;
+    }
+    allow ldconfig_t auditd_log_t:file append;
+    allow ldconfig_t tmpfs_t:dir search;
+')
+
 #============= avahi_t ==============
 optional_policy(`
     require {
