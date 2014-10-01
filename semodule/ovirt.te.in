@@ -272,6 +272,7 @@ require {
     type hostname_t;
 }
 allow hostname_t tmpfs_t:dir search;
+allow hostname_t dhcpc_t:udp_socket { read write };
 
 
 #============= systemd_sysctl_t ==============
