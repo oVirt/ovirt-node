@@ -241,8 +241,9 @@ optional_policy(`
         type user_tmpfs_t;
     }
     allow dhcpc_t tmpfs_t:dir { write add_name read };
-    allow dhcpc_t tmpfs_t:file { write create open getattr };
+    allow dhcpc_t tmpfs_t:file { write create open getattr read };
     allow dhcpc_t user_tmpfs_t:file { read getattr open };
+    allow dhcpc_t hostname_t:process { siginh noatsecure rlimitinh };
 ')
 
 optional_policy(`
