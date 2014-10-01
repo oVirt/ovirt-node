@@ -498,9 +498,13 @@ allow logrotate_t virt_cache_t:file { rename setattr read create getattr write i
 optional_policy(`
     require {
         type firewalld_t;
+        type iptables_t;
     }
     allow firewalld_t ovirt_t:dbus send_msg;
-    allow firewalld_t auditd_log_t:dir search;
+    allow firewalld_t auditd_log_t:dir { write add_name search };
+    allow firewalld_t auditd_log_t:file { create open getattr append };
+    allow firewalld_t init_t:dbus send_msg;
+    allow firewalld_t iptables_t:process { siginh noatsecure rlimitinh };
 ')
 
 
