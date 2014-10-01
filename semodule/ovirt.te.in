@@ -58,6 +58,14 @@ optional_policy(`
     allow brctl_t self:capability sys_module;
 ')
 
+#============= gssd_t ==============
+optional_policy(`
+    require {
+        type gssd_t;
+    }
+    allow gssd_t tmpfs_t:dir search;
+')
+
 #============= avahi_t ==============
 optional_policy(`
     require {
