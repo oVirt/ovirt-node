@@ -50,6 +50,14 @@ gen_require(`
 ')
 
 
+#============= brctl_t ==============
+optional_policy(`
+    require {
+        type brctl_t;
+    }
+    allow brctl_t self:capability sys_module;
+')
+
 #============= avahi_t ==============
 optional_policy(`
     require {
