@@ -1890,8 +1890,13 @@ def isoname_to_nvr(isofilename):
     >>> fn = "ovirt-node-iso-2.6.1-20120228.fc18.iso"
     >>> isoname_to_nvr(fn)
     ('ovirt-node-iso', '2.6.1', '20120228', 'dummyarch', 'fc18')
+    >>> fn = "rhev-hypervisor7-7.0-20140926.0.iso"
+    >>> isoname_to_nvr(fn)
+    ('rhev-hypervisor7', '7.0', '20140926.0', 'dummyarch', 'dummydist')
     """
     newfn = re.sub("\.(iso)$", "", isofilename)
+    if not re.search(r'(\.fc\d+\.?)|(\.el\d(ev)?\.?)', newfn):
+        newfn += ".dummydist"
     newfn += ".dummyarch"
     return filename_to_nvra(newfn)
 
@@ -1907,7 +1912,12 @@ def build_isoname_for_plugins(edited_iso, plugins):
     >>> edited_iso = "ovirt-node-iso-2.6.1-20120228.fc18.iso.edited.iso"
     >>> plugins = ["ovirt-node-plugin-igor-slave", "3rd-plugin-cim"]
     >>> build_isoname_for_plugins(edited_iso, plugins)
-    'ovirt-node-iso-2.6.1-20120228.igor-slave_3rd-plugin-cim.fc18.iso'
+    'ovirt-node-iso-2.6.1-20120228.fc18-igor-slave_3rd-plugin-cim.iso'
+    >>> rhevh_edited = "rhev-hypervisor7-7.0-20140926.0.iso.edited.iso"
+    >>> rhevh_plugins = ["ovirt-node-plugin-snmp", "ovirt-node-plugin-ipmi",
+    ...                  "ovirt-node-plugin-cim", "3rd-party"]
+    >>> build_isoname_for_plugins(rhevh_edited, rhevh_plugins)
+    'rhev-hypervisor7-7.0-20140926.0-snmp_ipmi_cim_3rd-party.iso'
     """
     def sane_name_for_plugin(plugin):
         package = os.path.basename(plugin)
@@ -1936,13 +1946,14 @@ def build_isoname_for_plugins(edited_iso, plugins):
     isoname = None
     try:
         nvra = isoname_to_nvr(editname_prefix)
-        # print "edited nvra", nvra
-        isoname = "{name}-{version}-{release}.{packages}.{distro}.iso".format(
+        #print "edited nvra", nvra
+        distro = "" if nvra[4] == "dummydist" else ".%s" % nvra[4]
+        isoname = "{name}-{version}-{release}{distro}-{packages}.iso".format(
             name=nvra[0],
             version=nvra[1],
             release=nvra[2],
             packages=packages,
-            distro=nvra[4])
+            distro=distro)
     except Exception as e:
         logging.exception("ISO Filename '%s' doesn't follow NVRA scheme" %
                           editname_prefix, e)
