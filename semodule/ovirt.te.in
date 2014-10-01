@@ -203,6 +203,7 @@ allow snmpd_t tmpfs_t:file { read getattr open };
 allow sshd_t var_log_t:file { read open write };
 allow sshd_t device_t:sock_file write;
 allow sshd_t ovirt_t:unix_dgram_socket sendto;
+allow sshd_t auditd_log_t:file { read lock open };
 
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
