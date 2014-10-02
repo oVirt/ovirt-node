@@ -240,7 +240,7 @@ require {
 }
 allow sysstat_t admin_home_t:dir { search getattr };
 allow sysstat_t auditd_log_t:file { read lock open append getattr };
-allow sysstat_t auditd_log_t:dir { write search };
+allow sysstat_t auditd_log_t:dir { write search getattr add_name };
 allow sysstat_t tmpfs_t:dir search;
 allow sysstat_t var_lib_t:file { read append };
 allow sysstat_t var_log_t:file { open read };
