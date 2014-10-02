@@ -54,7 +54,7 @@ class Hooks(base.Base):
         """
         assert name in Hooks.known
         path = Hooks.hooks_path_tpl.format(name=name)
-        Hooks._run(path)
+        Hooks.__run(path)
 
     @staticmethod
     def __run(hooks_directory):

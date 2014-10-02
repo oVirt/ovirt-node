@@ -880,18 +880,6 @@ reboot() {
         log "Relabeling failed, please check logs"
         return 1
     fi
-    # run post-install hooks
-    # e.g. to avoid reboot loops using Cobbler PXE only once
-    # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
-    # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
-    #   -O /dev/null
-    for hook in $(ls /etc/ovirt-config-boot.d/* 2>/dev/null); do
-        $hook
-        rc=$?
-        if [ $? -ne 0 ]; then
-            log "Hook \"$hook\" failed."
-        fi
-    done
     /sbin/reboot
 }
 
@@ -1196,6 +1184,7 @@ network = ovirtnode.network.Network()
 network.configure_dns()
 EOP
 }
+
 
 plymouth()
 {

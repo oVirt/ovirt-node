@@ -211,6 +211,12 @@ class InstallBootloader(Transaction.Element):
 
 
 class RunHooks(Transaction.Element):
+    """Run post-install hooks
+    e.g. to avoid reboot loops using Cobbler PXE only once
+    Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
+    wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
+      -O /dev/null
+    """
     title = "Running Hooks"
 
     def commit(self):
