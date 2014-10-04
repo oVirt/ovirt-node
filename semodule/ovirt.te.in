@@ -56,6 +56,12 @@ optional_policy(`
     allow brctl_t self:capability sys_module;
 ')
 
+#============= updpwd_t ==============
+require {
+    type updpwd_t;
+}
+allow updpwd_t tmpfs_t:dir { search write add_name remove_name };
+
 #============= gssd_t ==============
 optional_policy(`
     require {
