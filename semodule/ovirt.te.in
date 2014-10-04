@@ -471,7 +471,7 @@ require {
 type passwd_t;
 }
 allow passwd_t file_t:file { read open getattr };
-
+allow passwd_t self:capability sys_admin;
 
 #============= getty_t ==============
 require {
