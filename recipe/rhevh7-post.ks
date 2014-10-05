@@ -64,6 +64,10 @@ sed -i '/rm -f \/etc\/yp.conf/d' $DHSCRIPT
 sed -ie 's/dirs[ \t]\+\(.*puppet\)//1' /etc/rwtab
 echo "files     /var/lib/puppet" >> /etc/rwtab
 
+# bz#1095138 - replace dirs with files to keep everything below /var/lib/nfs
+sed -ie '/dirs[ \t].*nfs/ d' /etc/rwtab
+echo "files     /var/lib/nfs" >> /etc/rwtab
+
 # rhbz#734478 add virt-who (*.py are removed in rhevh image)
 cat > /usr/bin/virt-who <<EOF_virt_who
 #!/bin/sh
