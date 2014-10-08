@@ -21,7 +21,7 @@
 
 from glob import glob
 import os
-from ovirt.node.utils import process, fs
+from ovirt.node.utils import process, fs, system
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -42,16 +42,27 @@ FIREWALLD_XML_TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 
-def is_firewalld():
-    if os.path.exists("/etc/firewalld"):
-        return True
-    else:
-        return False
+def is_firewalld_available():
+    """Check if firewalld is installed
+    """
+    return os.path.exists("/etc/firewalld")
+
+
+def is_firewalld_started():
+    """Check if firewalld is started
+    """
+    is_started = False
+    try:
+        system.service("firewalld", "status")
+        is_started = True
+    except Exception as e:
+        LOGGER.debug("Firewalld service status: %s" % e)
+    return is_started
 
 
 def open_port(port, proto):
-    if is_firewalld():
-        setup_firewalld(port, proto)
+    if is_firewalld_available() and is_firewalld_started():
+        _setup_firewalld(port, proto)
     else:
         setup_iptables(port, proto)
 
@@ -89,7 +100,7 @@ def setup_iptables(port, proto):
         save_rules()
 
 
-def setup_firewalld(port, proto):
+def _setup_firewalld(port, proto):
     port_conf = ""
     rule_dict = {"port": port,
                  "proto": proto
