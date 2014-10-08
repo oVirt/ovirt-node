@@ -553,6 +553,17 @@ optional_policy(`
 ')
 
 
+#============= wdmd_t ==============
+optional_policy(`
+    require {
+        type wdmd_t;
+        type device_t;
+    }
+    allow wdmd_t device_t:file unlink;
+    allow wdmd_t device_t:sock_file write;
+    allow wdmd_t ovirt_t:unix_dgram_socket sendto;
+')
+
 
 
 #
