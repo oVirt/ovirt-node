@@ -52,6 +52,67 @@ cat > /etc/system-release-cpe <<EOF_CPE
 cpe:/o:redhat:enterprise_linux:${MAJORVER}:update${MINORVER}:hypervisor${TYPE}
 EOF_CPE
 
+echo "Configuring IPTables"
+# here, we need to punch the appropriate holes in the firewall
+cat > /etc/sysconfig/iptables << \EOF
+# oVirt automatically generated firewall configuration
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+# vdsm
+-A INPUT -p tcp --dport 54321 -j ACCEPT
+# libvirt tls
+-A INPUT -p tcp --dport 16514 -j ACCEPT
+# SSH
+-A INPUT -p tcp --dport 22 -j ACCEPT
+# gluster
+-A INPUT -p tcp --dport 24007 -j ACCEPT
+-A INPUT -p tcp --dport 24009:24109 -j ACCEPT
+# guest consoles
+-A INPUT -p tcp -m multiport --dports 5634:6166 -j ACCEPT
+# migration
+-A INPUT -p tcp -m multiport --dports 49152:49216 -j ACCEPT
+# snmp
+-A INPUT -p udp --dport 161 -j ACCEPT
+#
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -m physdev ! --physdev-is-bridged -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+EOF
+
+# configure IPv6 firewall, default is all ACCEPT
+cat > /etc/sysconfig/ip6tables << \EOF
+# oVirt automatically generated firewall configuration
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p ipv6-icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+# vdsm
+-A INPUT -p tcp --dport 54321 -j ACCEPT
+# libvirt tls
+-A INPUT -p tcp --dport 16514 -j ACCEPT
+# SSH
+-A INPUT -p tcp --dport 22 -j ACCEPT
+# guest consoles
+-A INPUT -p tcp -m multiport --dports 5634:6166 -j ACCEPT
+# migration
+-A INPUT -p tcp -m multiport --dports 49152:49216 -j ACCEPT
+# snmp
+-A INPUT -p udp --dport 161 -j ACCEPT
+# unblock ipv6 dhcp response
+-A INPUT -p udp --dport 546 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp6-adm-prohibited
+-A FORWARD -m physdev ! --physdev-is-bridged -j REJECT --reject-with icmp6-adm-prohibited
+COMMIT
+EOF
+
 # remove errors from /sbin/dhclient-script
 DHSCRIPT=/sbin/dhclient-script
 sed -i 's/mv /cp -p /g'  $DHSCRIPT
