@@ -228,6 +228,7 @@ allow sshd_t auditd_log_t:file { read lock open };
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
 allow svirt_t sanlock_t:unix_stream_socket connectto;
+allow svirt_t nfs_t:file open;
 
 
 #============= syslogd_t ==============
