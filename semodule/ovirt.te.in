@@ -27,6 +27,7 @@ gen_require(`
     type logrotate_t;
     type mount_t;
     type net_conf_t;
+    type nfs_t;
     type policykit_t;
     type sanlock_t;
     type setfiles_t;
@@ -116,6 +117,8 @@ optional_policy(`
 allow sanlock_t tmpfs_t:dir search;
 allow sanlock_t auditd_log_t:dir search;
 allow sanlock_t auditd_log_t:file { read getattr open append };
+allow sanlock_t nfs_t:dir search;
+allow sanlock_t nfs_t:file open;
 
 
 #============= systemd_localed_t ==============
@@ -262,7 +265,6 @@ allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
 
 #============= ping_t ==============
 require {
-    type nfs_t;
     type ping_t;
 }
 allow ping_t nfs_t:file read;
