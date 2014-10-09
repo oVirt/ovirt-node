@@ -289,3 +289,6 @@ patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
          self.addCopySpec("/etc/sysconfig")
 EOF_sos_patch
 fi
+
+echo "Regenerating initramfs"
+dracut -f || :
