@@ -16,6 +16,7 @@ RemainAfterExit=yes
 StandardInput=tty-force
 StandardOutput=inherit
 StandardError=inherit
+TTYReset=yes
 TTYPath=/dev/console
 
 [Install]
