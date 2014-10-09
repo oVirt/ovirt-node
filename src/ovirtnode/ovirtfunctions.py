@@ -1177,15 +1177,17 @@ def finish_install():
 
     # fix SELinux
     logging_dev = findfs("LOGGING")
-    logging_mount_cmd = ("grep %s /proc/mounts | awk '{print $2}'") % \
-                         logging_dev
+    assert logging_dev, "Failed to find logging device"
+    logging_mount_cmd = "mkdir -p /var/log ; mount %s /var/log" % logging_dev
     logging_mount = subprocess_closefds(logging_mount_cmd, shell=True,
                                         stdout=PIPE, stderr=STDOUT)
-    (logging_mount_output, dummy) = logging_mount.communicate()
+    logging_mount.communicate()
+    # First restore all
+    system("restorecon -rv /var/log")
+    # Now handle exceptions
     system("chcon -R system_u:object_r:virt_cache_t:s0 /var/log/core/")
-    system("chcon system_u:object_r:var_log_t:s0 %s" % logging_mount_output)
-    system("chcon -R system_u:object_r:auditd_log_t:s0 %s/audit/" %
-           logging_mount_output.rstrip())
+    # Either removes the layering mount, or fails
+    system("umount /var/log")
 
     # run post-install hooks
     # e.g. to avoid reboot loops using Cobbler PXE only once
