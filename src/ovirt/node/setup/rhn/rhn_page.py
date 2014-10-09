@@ -21,7 +21,7 @@
 from ovirt.node import plugins, valid, ui, utils
 import rhn_model
 from ovirt.node.plugins import Changeset
-from ovirt.node.utils import process
+from ovirt.node.utils import process, system
 from ovirt.node.utils.network import NodeNetwork
 import os.path
 import logging
@@ -68,9 +68,10 @@ def rhn_check():
 
 
 def sam_check():
-    import rhnreg
-    if rhnreg.rhsm_registered():
-        return True
+    if system.SystemRelease().is_redhat():
+        import rhnreg
+        if rhnreg.rhsm_registered():
+            return True
     return False
 
 
@@ -202,9 +203,9 @@ class Plugin(plugins.NodePlugin):
                   ui.Options("rhn.type", "Type", self._rhn_types),
                   ui.Entry("rhn.url", "URL:"),
                   ui.Entry("rhn.ca", "CA URL:"),
-                  ui.Header("header[0]", "HTTP Proxy Configuration"),
-                  ui.Entry("rhn.proxyhost", "Server:"),
-                  ui.Entry("rhn.proxyport", "Port:"),
+                  ui.Header("header[1]", "HTTP Proxy Configuration"),
+                  ui.Row("row[0]", [ui.Entry("rhn.proxyhost", "Server:"),
+                                    ui.Entry("rhn.proxyport", "  Port:")]),
                   ui.Entry("rhn.proxyuser", "Username:"),
                   ui.PasswordEntry("rhn.proxypassword", "Password:"),
                   ui.Divider("divider[1]"),
