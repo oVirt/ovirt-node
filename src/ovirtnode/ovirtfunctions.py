@@ -1532,6 +1532,7 @@ def get_media_version_number():
 
 def findfs(label):
     system("partprobe /dev/mapper/*")
+    system("partprobe")
     system("udevadm settle")
     blkid_cmd = "/sbin/blkid -c /dev/null -l -o device -t LABEL=\"" + label + "\""
     blkid = subprocess_closefds(blkid_cmd, shell=True, stdout=PIPE, stderr=STDOUT)

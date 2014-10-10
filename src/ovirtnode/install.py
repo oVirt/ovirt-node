@@ -413,13 +413,15 @@ initrd /initrd0.img
             time.sleep(1)
             _functions.system("partprobe")
             for candidate_name in candidate_names:
+                logger.debug("Finding %s: '%s'" % (candidate_name, _functions.findfs(candidate_name)))
                 if _functions.findfs(candidate_name):
                     candidate = candidate_name
+                    logger.debug("Found: %s" % candidate)
                     break
             logger.debug("Trial %s to find candidate (%s)" % (trial,
                                                               candidate_name))
             if candidate:
-                logger.debug("Found candidate: %s" % candidate)
+                logger.debug("Found candidate: '%s'" % candidate)
                 break
 
         if not candidate:
@@ -435,8 +437,8 @@ initrd /initrd0.img
 
         try:
             candidate_dev = self.disk = _functions.findfs(candidate)
-            logger.info(candidate_dev)
-            logger.info(self.disk)
+            logger.info("Candidate device: %s" % candidate_dev)
+            logger.info("Candidate disk: %s" % self.disk)
             # grub2 starts at part 1
             self.partN = int(self.disk[-1:])
             if not _functions.grub2_available():
