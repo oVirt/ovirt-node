@@ -220,10 +220,13 @@ allow sshd_t device_t:sock_file write;
 allow sshd_t ovirt_t:unix_dgram_socket sendto;
 
 #============= svirt_t ==============
+require {
+    type bin_t;
+}
 allow svirt_t initrc_t:unix_stream_socket connectto;
 allow svirt_t sanlock_t:unix_stream_socket connectto;
 allow svirt_t nfs_t:file open;
-
+allow svirt_t bin_t:file entrypoint;
 
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
