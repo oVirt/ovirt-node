@@ -421,6 +421,8 @@ optional_policy(`
     allow iptables_t user_tmpfs_t:file { read open getattr };
 ')
 
+#============= init_t ==============
+allow init_t svirt_t:process transition;
 
 #============= rpcbind_t ==============
 optional_policy(`
