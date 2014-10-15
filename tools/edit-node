@@ -967,6 +967,24 @@ class LiveImageEditor(LiveImageCreator):
 
         return True
 
+    def _setup_rhsm_ca(self):
+        print "Setting rhsm ca"
+        if os.path.exists("/etc/rhsm/ca"):
+            cmd = "mkdir -p %s/etc/rhsm/ca" % self._instroot
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+            output, err = f.communicate()
+            cmd = "mount -o bind %s %s/etc/rhsm/ca" % \
+                ("/etc/rhsm/ca", self._instroot)
+            f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
+                stderr=STDOUT)
+            output, err = f.communicate()
+            if f.returncode > 0:
+               print "Can't Bind /etc/rhsm/ca"
+               print output
+               return False
+
+        return True
+
     def _setup_yum_repo(self, options):
         print "Configuring Yum Repo"
         self.dd_dir = tempfile.mkdtemp(dir=os.path.abspath(self.tmpdir),
@@ -975,6 +993,9 @@ class LiveImageEditor(LiveImageCreator):
             return True
         else:
             if not self._setup_pki_entitlement():
+                return False
+
+            if not self._setup_rhsm_ca():
                 return False
 
             if os.path.isfile(options.repo) and \
@@ -1152,6 +1173,9 @@ enabled=1
         print "Cleaning Up Yum Configuration"
         if os.path.exists(self._instroot + "/etc/pki/entitlement"):
             os.system("umount %s/etc/pki/entitlement" % self._instroot)
+
+        if os.path.exists(self._instroot + "/etc/rhsm/ca"):
+            os.system("umount %s/etc/rhsm/ca" % self._instroot)
 
         os.system("umount %s/etc/resolv.conf" % self._instroot)
         if os.path.exists(self._instroot + "/etc/yum.repos.d/plugin.repo"):
