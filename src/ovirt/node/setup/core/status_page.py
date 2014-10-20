@@ -24,6 +24,7 @@ from ovirt.node.utils import security, virt, system
 from ovirt.node.utils.network import IPAddress
 from ovirt.node.utils.system import Bootloader
 import os
+import re
 import textwrap
 
 
@@ -289,7 +290,7 @@ class ConsoleDialog(ui.Dialog):
             if not console_path:
                 return b.get("console",  "")
             else:
-                b["console"] = str(console_path)
+                b["console"] = re.sub(r'^/dev/', '', str(console_path))
         return self.plugin.dry_or(real_console) or ""
 
 
