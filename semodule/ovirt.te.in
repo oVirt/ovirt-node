@@ -99,6 +99,7 @@ allow sshd_t var_log_t:file { read open };
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
 allow svirt_t sanlock_t:unix_stream_socket connectto;
+allow svirt_t nfs_t:file open;
 
 #============= sanlock_t ==============
 allow sanlock_t nfs_t:dir search;
