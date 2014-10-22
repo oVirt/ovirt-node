@@ -239,7 +239,7 @@ initrd /initrd0.img
 
         GRUB2_BACKUP_TEMPLATE = """
 menuentry "BACKUP %(oldtitle)s" {
-set root (hd0,%(partB)d)
+set root=(hd0,%(partB)d)
 search --no-floppy --label RootBackup --set root
 linux /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
 initrd /initrd0.img
