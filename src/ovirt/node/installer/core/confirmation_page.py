@@ -25,6 +25,7 @@ Confirmation page of the installer
 from ovirt.node import plugins, ui
 from ovirt.node.installer.core.boot_device_page import StorageDiscovery
 from ovirt.node.utils.system import LVM
+import re
 
 
 class Plugin(plugins.NodePlugin):
@@ -78,7 +79,7 @@ class Plugin(plugins.NodePlugin):
                                        "domain!"))])
 
         ws.extend([ui.Divider("divider[0]"),
-                   ui.KeywordLabel("storage.volumes", _("Volume sizes (MB)"))])
+                   ui.KeywordLabel("storage.volumes", _("Volume sizes"))])
 
         intuples = lambda lst, n: [lst[x:x+n] for x in range(0, len(lst), n)]
         for xs in intuples(sorted(k for k in self._model.keys()
@@ -122,11 +123,15 @@ class Plugin(plugins.NodePlugin):
          self.application.plugins().values() if not
          plugin.name() == "Confirm disk selections"]
 
+        [_model.update({k: "%s MB" % _model[k]}) for k in _model.keys() if
+         re.match(r'storage.*?size$', k) and not _model[k].endswith(" MB")]
+
         if "storage.fill_data" in _model:
             del _model["storage.fill_data"]
         _model["installation.devices"].sort()
 
         self._model = _model
+        self.logger.debug("SET %s" % _model)
 
     def _storage_tagged(self, dev):
         found = False

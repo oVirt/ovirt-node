@@ -129,6 +129,8 @@ class Plugin(plugins.NodePlugin):
             size_keys.append("storage.data_size")
         if changes.contains_any(size_keys):
             self._free_space = self.__calculate_free_space()
+            self._model["storage.free_space"] = "%s MB" % self._free_space
+
             if "storage.free_space" in self.widgets:
                 self.widgets["storage.free_space"].text("%s MB" %
                                                         self._free_space)
