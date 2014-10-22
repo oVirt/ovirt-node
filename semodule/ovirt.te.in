@@ -24,6 +24,7 @@ gen_require(`
     type logrotate_t;
     type mount_t;
     type net_conf_t;
+    type nfs_t;
     type policykit_t;
     type sanlock_t;
     type setfiles_t;
@@ -98,6 +99,10 @@ allow sshd_t var_log_t:file { read open };
 #============= svirt_t ==============
 allow svirt_t initrc_t:unix_stream_socket connectto;
 allow svirt_t sanlock_t:unix_stream_socket connectto;
+
+#============= sanlock_t ==============
+allow sanlock_t nfs_t:dir search;
+allow sanlock_t nfs_t:file open;
 
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
