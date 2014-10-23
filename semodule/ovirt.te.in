@@ -358,7 +358,7 @@ optional_policy(`
     }
     allow sblim_sfcbd_t chkpwd_exec_t:file { read execute open execute_no_trans };
     allow sblim_sfcbd_t self:capability { setuid audit_write dac_override };
-    allow sblim_sfcbd_t self:netlink_audit_socket { nlmsg_relay create };
+    allow sblim_sfcbd_t self:netlink_audit_socket { nlmsg_relay create write };
     allow sblim_sfcbd_t shadow_t:file { read getattr open };
     allow sblim_sfcbd_t user_tmp_t:sock_file { write unlink };
     allow sblim_sfcbd_t virt_etc_t:file { read open };
