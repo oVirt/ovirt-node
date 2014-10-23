@@ -146,10 +146,21 @@ EOF_start_udev
 
 # rhbz#734478 add virt-who (*.py are removed in rhevh image)
 if [ -f /etc/rhev-hypervisor-release ]; then
-    cat > /usr/bin/virt-who <<EOF_virt_who
-    #!/bin/sh
-    exec /usr/bin/python /usr/share/virt-who/virt-who.pyc "\$@"
+    cmd_who=""
+    if [ -f /usr/share/virt-who/virt-who.pyc ]; then
+        cmd_who="virt-who.pyc"
+    elif [ -f /usr/share/virt-who/virtwho.pyc ]; then
+        cmd_who="virtwho.pyc"
+    else
+        echo "Couldn't find a known virt-who executable. Please check"
+    fi
+
+    if [ ! -z $cmd_who ]; then
+        cat > /usr/bin/virt-who <<EOF_virt_who
+        #!/bin/sh
+        exec /usr/bin/python /usr/share/virt-who/$cmd_who "\$@"
 EOF_virt_who
+    fi
 fi
 
 # set maxlogins to 3
