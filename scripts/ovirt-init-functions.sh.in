@@ -685,7 +685,8 @@ EOP
             network_layout=*)
             network_layout=${i#network_layout=}
             ;;
-            bond_setup=*)
+            bond_setup=* | bond=*)
+            i=${i#bond=}
             i=${i#bond_setup=}
             eval $(printf $i|awk -F: '{print "bond_name="$1; print "bond_slaves="$2; print "bond_options="$3;}')
             ;;
