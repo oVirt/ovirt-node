@@ -408,13 +408,15 @@ initrd /initrd0.img
                               % boot_candidate_dev)
 
         candidate = None
+        candidate_dev = None
         candidate_names = ["RootBackup", "RootUpdate", "RootNew"]
         for trial in range(1, 3):
             time.sleep(1)
             _functions.system("partprobe")
             for candidate_name in candidate_names:
-                logger.debug("Finding %s: '%s'" % (candidate_name, _functions.findfs(candidate_name)))
-                if _functions.findfs(candidate_name):
+                candidate_dev = _functions.findfs(candidate_name)
+                logger.debug("Finding %s: '%s'" % (candidate_name, candidate_dev))
+                if candidate_dev:
                     candidate = candidate_name
                     logger.debug("Found: %s" % candidate)
                     break
@@ -436,7 +438,7 @@ initrd /initrd0.img
             return False
 
         try:
-            candidate_dev = self.disk = _functions.findfs(candidate)
+            self.disk = candidate_dev
             logger.info("Candidate device: %s" % candidate_dev)
             logger.info("Candidate disk: %s" % self.disk)
             # grub2 starts at part 1
@@ -444,7 +446,7 @@ initrd /initrd0.img
             if not _functions.grub2_available():
                 self.partN = self.partN - 1
         except:
-            logger.debug(traceback.format_exc())
+            logger.debug("Failed to get partition", exc_info=True)
             return False
 
         if self.disk is None or self.partN < 0:
