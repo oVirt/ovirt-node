@@ -66,6 +66,28 @@ optional_policy(`
     allow hald_t ovirt_t:dbus send_msg;
 ')
 
+#============= sblim_sfcbd_t ==============
+optional_policy(`
+    require {
+        type sblim_sfcbd_t;
+        type virt_var_run_t;
+        type virt_etc_t;
+        type virtd_t;
+        type chkpwd_exec_t;
+        type user_tmp_t;
+    }
+    allow sblim_sfcbd_t chkpwd_exec_t:file { read execute open execute_no_trans };
+    allow sblim_sfcbd_t self:capability { setuid audit_write dac_override };
+    allow sblim_sfcbd_t self:netlink_audit_socket { nlmsg_relay create write };
+    allow sblim_sfcbd_t shadow_t:file { read getattr open };
+    allow sblim_sfcbd_t user_tmp_t:sock_file { write unlink };
+    allow sblim_sfcbd_t virt_etc_t:file { read open };
+    allow sblim_sfcbd_t virt_var_run_t:dir search;
+    allow sblim_sfcbd_t virt_var_run_t:sock_file write;
+
+    allow sblim_sfcbd_t virtd_t:unix_stream_socket connectto;
+')
+
 #============= initrc_t ==============
 @SEMODULE_WITH_SYSTEMD@allow initrc_t sshd_net_t:process dyntransition;
 allow initrc_t unconfined_t:process dyntransition;
