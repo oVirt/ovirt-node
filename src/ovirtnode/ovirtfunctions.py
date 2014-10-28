@@ -1560,6 +1560,8 @@ def system(command):
     if system_cmd.returncode == 0:
         return True
     else:
+        logger.debug("Command '%s' failed with return code %s\nSTDERR: %s" %
+                     (command, system_cmd.returncode, err))
         return False
 
 def password_check(password_1, password_2, min_length=1):
