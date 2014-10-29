@@ -474,7 +474,14 @@ initrd /initrd0.img
                 logger.error("Failed to label new Root partition")
                 return False
         mount_cmd = "mount \"%s\" /liveos" % candidate_dev
-        _functions.system(mount_cmd)
+        if not _functions.system(mount_cmd):
+            logger.error("Failed to mount %s on /liveos" % candidate_dev)
+            _functions.system("lsof")
+            _functions.system("dmsetup info -c")
+            _functions.system("cat /proc/mounts")
+            _functions.system("multipath -ll")
+            _functions.system("lsblk")
+            _functions.system("ls -l /dev/mapper")
         _functions.system("rm -rf /liveos/LiveOS")
         _functions.system("mkdir -p /liveos/LiveOS")
         _functions.mount_live()
