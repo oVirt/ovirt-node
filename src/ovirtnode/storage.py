@@ -478,7 +478,8 @@ class Storage:
             i = 15
             while i > 0 and partpv is None:
                 # e.g. /dev/cciss/c0d0p2
-                for _partpv in [drv + hostvgpart, drv + "p" + hostvgpart]:
+                for _partpv in [drv + hostvgpart, drv + "p" + hostvgpart,
+                                drv + "-part" + hostvgpart]:
                     if os.path.exists(_partpv):
                         partpv = _partpv
                         break
