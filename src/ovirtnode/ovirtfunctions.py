@@ -1365,15 +1365,28 @@ def wipe_partitions(_drive):
         if "HostVG" in lv:
             system_closefds("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
     logger.info("Wiping old boot sector")
-#    system_closefds("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("parted -s \""+ drive +"\" mklabel loop &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("which systemctl 2>/dev/null >&2 && wipefs -af \""+ drive +"\" >>" + OVIRT_TMP_LOGFILE + "2>&1")
     system_closefds("which systemctl 2>/dev/null >&2 || wipefs -a \""+ drive +"\"  >>" + OVIRT_TMP_LOGFILE + "2>&1")
+    system_closefds("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
     ## zero out the GPT secondary header
-    #logger.info("Wiping secondary gpt header")
-    #disk_kb = subprocess_closefds("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
-    #disk_kb_count = disk_kb.stdout.read()
-    #system_closefds("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
+    logger.info("Wiping secondary gpt header")
+    disk_kb = subprocess_closefds("sfdisk -s \""+ drive +"\" 2>/dev/null", shell=True, stdout=PIPE, stderr=STDOUT)
+    disk_kb_count = disk_kb.stdout.read()
+    system_closefds("dd if=/dev/zero of=\"" +drive +"\" bs=1024 seek=$(("+ disk_kb_count+" - 1)) count=1 &>>" + OVIRT_TMP_LOGFILE)
+
+    # Potentially wipe out new GPT header locations
+    logger.info("Wiping GPT header")
+    system_closefds("dd if=/dev/zero of=\"" + drive +
+                    "\" bs=4096 count=35 &>>" + OVIRT_TMP_LOGFILE)
+    logger.info("Wiping secondary gpt header")
+    disk_kb = subprocess_closefds("blockdev --getsz \"" + drive +
+                                  "\" 2>/dev/null", shell=True, stdout=PIPE,
+                                  stderr=STDOUT)
+    disk_kb_count = disk_kb.stdout.read()
+    system_closefds("dd if=/dev/zero of=\"" + drive +
+                    "\" bs=4096 seek=$((" + disk_kb_count +
+                    " * 512/4096 - 35)) count=35 &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("sync")
 
 def test_ntp_configuration(self):
