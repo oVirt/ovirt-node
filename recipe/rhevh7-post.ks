@@ -181,6 +181,18 @@ EOF_virt_who
     fi
 fi
 
+# rhbz 1152947 fixing virt-who start dependancy syslog.socket
+# first of all fixing the missing link of syslog to rsyslog
+# depending service and socket for correct operation
+
+sed -i "s/syslog\.target/syslog.socket/" /usr/lib/systemd/system/virt-who.service
+sed -i "s/;Requires/Requires/" /lib/systemd/system/rsyslog.service
+ln -s /lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service
+
+#enabling libvirtd as described in its libvirtd.service comments and virt-who as requested in bug
+systemctl enable libvirtd.service
+systemctl enable virt-who.service
+
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
 
