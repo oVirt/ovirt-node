@@ -34,6 +34,11 @@ fi
 systemctl disable lvm2-lvmetad
 systemctl disable lvm2-lvmetad.socket
 
+# Disable ksmtuned, becuase it conflicts with vdsmd
+# https://bugzilla.redhat.com/show_bug.cgi?id=1156369
+systemctl disable ksmtuned.service
+systemctl disable ksm.service
+
 # minimal lsb_release for bz#549147
 cat > /usr/bin/lsb_release <<\EOF_LSB
 #!/bin/sh
