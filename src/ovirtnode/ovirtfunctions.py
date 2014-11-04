@@ -1371,7 +1371,8 @@ def wipe_partitions(_drive):
         if "HostVG" in lv:
             system_closefds("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
     logger.info("Wiping old boot sector")
-#    system_closefds("dd if=/dev/zero of=\""+ drive +"\" bs=1024K count=1 &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("parted -s \""+ drive +"\" mklabel msdos &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("parted -s \""+ drive +"\" mklabel gpt &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("parted -s \""+ drive +"\" mklabel loop &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("wipefs -a \""+ drive +"\" &>>" + OVIRT_TMP_LOGFILE)
     ## zero out the GPT secondary header
