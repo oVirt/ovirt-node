@@ -1365,6 +1365,8 @@ def wipe_partitions(_drive):
         if "HostVG" in lv:
             system_closefds("dmsetup remove " +lv + " &>>" + OVIRT_TMP_LOGFILE)
     logger.info("Wiping old boot sector")
+    system_closefds("parted -s \""+ drive +"\" mklabel msdos &>>" + OVIRT_TMP_LOGFILE)
+    system_closefds("parted -s \""+ drive +"\" mklabel gpt &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("parted -s \""+ drive +"\" mklabel loop &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("which systemctl 2>/dev/null >&2 && wipefs -af \""+ drive +"\" >>" + OVIRT_TMP_LOGFILE + "2>&1")
     system_closefds("which systemctl 2>/dev/null >&2 || wipefs -a \""+ drive +"\"  >>" + OVIRT_TMP_LOGFILE + "2>&1")
