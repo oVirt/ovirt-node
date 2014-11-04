@@ -114,6 +114,25 @@ patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
  fi
  
  disable_selinux() {
+EOF_rc_sysinit
+
+if grep -q 6.6 /etc/system-release; then
+    patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
+@@ -513,9 +513,9 @@
+ # filesystems are NOT unmounted in single user mode.
+ # The 'no' applies to all listed filesystem types. See mount(8).
+ if [ "$READONLY" != "yes" ] ; then
+-	action $"Mounting local filesystems: " mount -a -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2,glusterfs -O no_netdev
++	action $"Mounting local filesystems: " mount -a -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2,glusterfs,noproc,nosysfs,nodevpts -O no_netdev
+ else
+-	action $"Mounting local filesystems: " mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2i,glusterfs -O no_netdev
++	action $"Mounting local filesystems: " mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2i,glusterfs,noproc,nosysfs,nodevpts -O no_netdev
+ fi
+
+ # Update quotas if necessary
+EOF_rc_sysinit
+else
+    patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
 @@ -497,9 +497,9 @@
  # filesystems are NOT unmounted in single user mode.
  # The 'no' applies to all listed filesystem types. See mount(8).
@@ -127,6 +146,7 @@ patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
 
  # Update quotas if necessary
 EOF_rc_sysinit
+fi
 
 # rhbz#675868
 # Modify start_udev
