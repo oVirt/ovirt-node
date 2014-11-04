@@ -165,7 +165,11 @@ EOF_start_udev
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
 
 # rhbz#738170
-patch -d /sbin -p0 << \EOF_mkdumprd
+# later versions use mkdumprd/kdump_is_bridge(), which is smarter about
+# detecting bridge devices (instead of just br*), and this patch is not
+# necessary
+if ! grep -q 6.6 /etc/system-release; then
+    patch -d /sbin -p0 << \EOF_mkdumprd
 --- /sbin/mkdumprd.orig	2011-10-06 06:37:49.000000000 +0000
 +++ /sbin/mkdumprd	2011-11-01 04:21:19.000000000 +0000
 @@ -583,7 +583,7 @@
@@ -188,3 +192,4 @@ patch -d /sbin -p0 << \EOF_mkdumprd
                  handlenetdev $j
 
 EOF_mkdumprd
+fi
