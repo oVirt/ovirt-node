@@ -48,6 +48,14 @@ gen_require(`
     type virt_var_run_t;
 ')
 
+#======== systemd_logind_t ==========
+optional_policy(`
+    require {
+        type systemd_logind_t;
+        type unconfined_service_t;
+    }
+    allow systemd_logind_t unconfined_service_t:dbus send_msg;
+')
 
 #============= brctl_t ==============
 optional_policy(`
