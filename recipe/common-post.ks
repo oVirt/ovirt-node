@@ -173,8 +173,6 @@ set /files/etc/sysconfig/nfs/STATD_OUTGOING_PORT 2020
 save
 EOF_nfs
 
-python -m compileall /usr/lib/python2.*/site-packages/sos
-
 # XXX someting is wrong with readonly-root and dracut
 # see modules.d/95rootfs-block/mount-root.sh
 sed -i "s/defaults,noatime/defaults,ro,noatime/g" /etc/fstab
@@ -289,6 +287,8 @@ patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
          self.addCopySpec("/etc/sysconfig")
 EOF_sos_patch
 fi
+
+python -m compileall /usr/lib/python2.*/site-packages/sos
 
 patch --ignore-whitespace -d /lib/udev/rules.d -p0 << \EOF_udev_patch
 --- 40-multipath.rules.orig     2014-11-04 14:57:12.385999154 +0000
