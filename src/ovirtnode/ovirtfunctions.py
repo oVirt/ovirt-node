@@ -1769,22 +1769,8 @@ def is_capslock_on():
     return "on" == output.strip()
 
 def rng_status():
-    bit_value = 0
-    disable_aes_ni = 0
-    try:
-        with open("/etc/profile") as f:
-            for line in f:
-                try:
-                    if "SSH_USE_STRONG_RNG" in line:
-                        export , kv = line.split()
-                        key, bit_value = kv.split("=")
-                    elif "OPENSSL_DISABLE_AES_NI=" in line:
-                        disable_aes_ni = 1
-                except:
-                    pass
-    except:
-        pass
-    return (bit_value, disable_aes_ni)
+    from ovirt.node.utils.security import Ssh
+    return Ssh().rng_status()
 
 def get_cmdline_args():
     with open("/proc/cmdline") as cmdline:

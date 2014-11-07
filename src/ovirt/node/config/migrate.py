@@ -127,11 +127,12 @@ class ImportConfigs(base.Base):
 
     def translate_ssh(self):
         from ovirt.node.utils import parse_bool
+        from ovirt.node.utils.security import Ssh
 
         if self.__is_persisted("/etc/ssh/sshd_config"):
             pw_auth_enabled = ovirtfunctions.augtool_get(
                 "/files/etc/ssh/sshd_config/PasswordAuthentication")
-            rng_bytes, aes_disabled = ovirtfunctions.rng_status()
+            rng_bytes, aes_disabled = Ssh().rng_status()
 
             rng_bytes = None if rng_bytes == 0 else rng_bytes
             aes_disabled = aes_disabled == 1

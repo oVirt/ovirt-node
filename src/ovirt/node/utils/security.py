@@ -23,6 +23,7 @@ from ovirt.node.utils import system
 from ovirt.node.utils.fs import File
 import PAM as _PAM  # @UnresolvedImport
 import cracklib
+from collections import namedtuple
 import hashlib
 import os.path
 import process
@@ -157,18 +158,15 @@ class Ssh(base.Base):
         Returns:
             The status of aes_ni
         """
-        import ovirtnode.ovirtfunctions as ofunc
-        rng, aes = ofunc.rng_status()
+        rng, aes = self.rng_status()
         if disable in [True, False]:
             self.__update_profile(rng, disable)
         else:
             self.logger.warning("Unknown value for AES NI: %s" % disable)
-        return ofunc.rng_status()[1]  # FIXME should rurn bool
-        # and does it return disable_aes_ni?
+        return self.rng_status().disable_aesni
 
     def strong_rng(self, num_bytes=None):
-        import ovirtnode.ovirtfunctions as ofunc
-        rng, aes = ofunc.rng_status()
+        rng, aes = self.rng_status()
         if (valid.Empty() | valid.Number(bounds=[0, None])).\
            validate(num_bytes):
             self.__update_profile(num_bytes, aes)
@@ -177,7 +175,23 @@ class Ssh(base.Base):
         else:
             self.logger.warning("Unknown value for RNG num bytes: " +
                                 "%s" % num_bytes)
-        return ofunc.rng_status()[0]
+        return self.rng_status().rng_bytes
+
+    def rng_status(self):
+        rng_bytes = None
+        disable_aes_ni = False
+
+        status = namedtuple("rngstatus", ["rng_bytes", "disable_aes_ni"])
+
+        f = File("/etc/profile")
+        if f.findall(r'SSH_USE_STRONG_RNG=\d+'):
+            rng_bytes = f.findall(r'SSH_USE_STRONG_RNG=\d+'
+                                  )[0].split('=')[1]
+        if f.findall(r'DISABLE_AES_NI='):
+            disable_aes_ni = True
+
+        rng_status = status(rng_bytes, disable_aes_ni)
+        return rng_status
 
     def restart(self):
         self.logger.debug("Restarting SSH")
