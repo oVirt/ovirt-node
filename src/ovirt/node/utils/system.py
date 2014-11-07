@@ -873,6 +873,26 @@ class Filesystem(base.Base):
             LOGGER.debug("Failed to resolve disks: %s" % e.cmd, exc_info=True)
         return fs
 
+    @staticmethod
+    def by_partlabel(partlabel):
+        """Determines whether a filesystem with a given partlabel is present on
+        this system
+        """
+        fs = None
+        try:
+            Filesystem._flush()
+            with open(os.devnull, 'wb') as DEVNULL:
+                device = process.check_output(["blkid", "-c", "/dev/null",
+                                               "-o", "device", "-l", "-t",
+                                               "PARTLABEL=%s" % partlabel],
+                                              stderr=DEVNULL).strip()
+
+            fs = Filesystem(device)
+
+        except process.CalledProcessError as e:
+            LOGGER.debug("Failed to resolve disks: %s" % e.cmd, exc_info=True)
+        return fs
+
     def _tokens(self):
         tokens = process.check_output(["blkid", "-o", "export", self.device])
         return parse_varfile(tokens)
