@@ -127,7 +127,7 @@ class Ssh(base.Base):
     def __init__(self):
         super(Ssh, self).__init__()
 
-    def __update_profile(self, rng_num_bytes, disable_aes):
+    def __update_profile(self, rng_num_bytes=None, disable_aes=False):
         additional_lines = []
 
         utils.fs.Config().unpersist("/etc/profile")
@@ -158,18 +158,16 @@ class Ssh(base.Base):
         Returns:
             The status of aes_ni
         """
-        rng, aes = self.rng_status()
         if disable in [True, False]:
-            self.__update_profile(rng, disable)
+            self.__update_profile(disable_aes=disable)
         else:
             self.logger.warning("Unknown value for AES NI: %s" % disable)
         return self.rng_status().disable_aesni
 
     def strong_rng(self, num_bytes=None):
-        rng, aes = self.rng_status()
         if (valid.Empty() | valid.Number(bounds=[0, None])).\
            validate(num_bytes):
-            self.__update_profile(num_bytes, aes)
+            self.__update_profile(num_bytes)
         elif num_bytes is None:
             pass
         else:
