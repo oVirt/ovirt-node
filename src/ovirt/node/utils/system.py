@@ -901,9 +901,12 @@ class Filesystem(base.Base):
         return self._tokens().get("LABEL", None)
 
     def mountpoints(self):
-        targets = process.check_output(["findmnt", "-o", "target", "-n",
-                                        self.device]).split("\n")
-        return [Mount(t.strip()) for t in targets]
+        try:
+            targets = process.check_output(["findmnt", "-o", "target", "-n",
+                                            self.device]).strip().split("\n")
+            return [Mount(t.strip()) for t in targets]
+        except process.CalledProcessError:
+            return []
 
 
 class Mount(base.Base):
