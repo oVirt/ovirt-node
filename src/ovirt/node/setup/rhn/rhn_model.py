@@ -27,6 +27,7 @@ import sys
 import os.path
 import glob
 import subprocess
+import urllib
 
 
 RHN_XMLRPC_ADDR = "https://xmlrpc.rhn.redhat.com/XMLRPC"
@@ -80,12 +81,18 @@ class RHN(NodeConfigFileSection):
         return cfg
 
     def retrieveCert(self, url, dest):
-        try:
-            cmd = ["wget", "-nd", "--no-check-certificate", "--timeout=30",
-                   "--tries=3", "-O", dest, url]
-            subprocess.check_call(cmd)
-        except:
-            raise RuntimeError("Error Downloading SSL Certificate!")
+        for x in range(0, 3):
+            try:
+                # urllib doesn't check ssl certs, so we're ok here
+                urllib.urlretrieve(url, dest)
+                return
+            except IOError:
+                self.logger.debug(
+                    "Failed to download {url} on try {x}".format(
+                        url=url, x=x))
+
+        # If we're here, we failed to get it
+        raise RuntimeError("Error downloading SSL certificate!")
 
     def transaction(self, password, proxypass=None):
 
@@ -224,8 +231,12 @@ class RHN(NodeConfigFileSection):
                     conf.unpersist("/etc/sysconfig/rhn/systemid")
 
                 extra_args = ['--force']
-                if not activationkey:
-                    extra_args.append("--autosubscribe")
+
+                # Don't autosubscribe for now, since it may cause entitlement
+                # problems with SAM and Sat6
+                # if not activationkey:
+                #     extra_args.append("--autosubscribe")
+
                 sm = ['/usr/sbin/subscription-manager']
 
                 args = list(sm)
@@ -241,6 +252,9 @@ class RHN(NodeConfigFileSection):
                     if password:
                         args.append('--password')
                         args.append(password)
+                    if org:
+                        args.append('--org')
+                        args.append(org)
                 else:
                     # skip RHN registration when neither activationkey
                     # nor username/password is supplied
@@ -251,6 +265,8 @@ class RHN(NodeConfigFileSection):
                     (host, port) = parse_host_port(serverurl)
                     parsed_url = urlparse(serverurl)
                     prefix = parsed_url.path
+                    if cacert.endswith(".pem") and rhntype == "satellite":
+                        prefix = "/rhsm"
                     if port == 0:
                         port = "443"
                     else:
@@ -276,7 +292,8 @@ class RHN(NodeConfigFileSection):
                 smconf.append(host)
                 smconf.append('--server.port')
                 smconf.append(port)
-                if cacert and not cacert.endswith(".pem"):
+                if cacert and not cacert.endswith(".pem") or \
+                   rhntype == "satellite":
                     smconf.append('--server.prefix')
                     smconf.append(prefix)
                 else:
@@ -349,13 +366,19 @@ class RHN(NodeConfigFileSection):
                 logged_args = str(logged_args)
                 self.logger.info(logged_args)
 
-                smreg_output = process.check_output(args)
+                # This may block if waiting for input with check_output.
+                # pipe doesn't block
+                smreg_output = process.pipe(args)
                 if "been registered" not in smreg_output:
                     if "Invalid credentials" in smreg_output:
                         raise RuntimeError("Invalid Username / Password")
                     elif "already been taken" in smreg_output:
                         raise RuntimeError("Hostname is already " +
                                            "registered")
+
+                    if "Organization" in smreg_output:
+                        raise RuntimeError("Organization must be specified "
+                                           "with Satellite 6")
 
                     if activationkey:
                         cmd = ["subscription-manager", "auto-attach"]
