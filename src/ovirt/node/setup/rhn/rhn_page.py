@@ -146,6 +146,7 @@ class Plugin(plugins.NodePlugin):
         model["rhn.url"] = cfg["url"]
         model["rhn.ca"] = cfg["ca_cert"]
         model["rhn.proxyuser"] = cfg["proxyuser"]
+        model["rhn.org"] = cfg["org"]
         try:
             p_server, p_port = cfg["proxy"].rsplit(":", 1)
             model["rhn.proxyhost"] = p_server
@@ -163,6 +164,7 @@ class Plugin(plugins.NodePlugin):
                                   valid.URL() | valid.Empty()),
                 "rhn.proxyport": valid.Port() | valid.Empty(),
                 "rhn.proxyuser": valid.Text() | valid.Empty(),
+                "rhn.org": valid.Text() | valid.Empty(),
                 }
 
     def ui_content(self):
@@ -203,12 +205,8 @@ class Plugin(plugins.NodePlugin):
                   ui.Options("rhn.type", "Type", self._rhn_types),
                   ui.Entry("rhn.url", "URL:"),
                   ui.Entry("rhn.ca", "CA URL:"),
-                  ui.Header("header[1]", "HTTP Proxy Configuration"),
-                  ui.Row("row[0]", [ui.Entry("rhn.proxyhost", "Server:"),
-                                    ui.Entry("rhn.proxyport", "  Port:")]),
-                  ui.Entry("rhn.proxyuser", "Username:"),
-                  ui.PasswordEntry("rhn.proxypassword", "Password:"),
-                  ui.Divider("divider[1]"),
+                  ui.Entry("rhn.org", "Organization:"),
+                  ui.Button("button.proxy", "HTTP Proxy Configuration"),
                   ]
 
         page = ui.Page("page", ws)
@@ -224,6 +222,7 @@ class Plugin(plugins.NodePlugin):
                     self._fields_enabled = True
                     self.widgets["rhn.url"].enabled(True)
                     self.widgets["rhn.ca"].enabled(True)
+                    self.widgets["rhn.org"].enabled(True)
                     self.stash_pop_change("rhn.url", reuse_old=True)
                     self.stash_pop_change("rhn.ca", reuse_old=True)
             else:
@@ -232,6 +231,12 @@ class Plugin(plugins.NodePlugin):
                 self.widgets["rhn.ca"].enabled(False)
                 self.stash_change("rhn.url")
                 self.stash_change("rhn.ca")
+
+        # Don't run a transaction yet, just close it out, save if the
+        # normal save button is triggered
+        if "proxy.save" in changes:
+            self._dialog.close()
+            return
 
     def on_merge(self, effective_changes):
         self.logger.debug("Saving RHN page")
@@ -246,6 +251,14 @@ class Plugin(plugins.NodePlugin):
                     "rhn.type", "rhn.url", "rhn.ca", "rhn.proxyhost",
                     "rhn.proxyport", "rhn.proxyuser", "rhn.proxypassword",
                     "rhn.org", "rhn.activation_key"]
+
+        if "button.proxy" in changes:
+            description = ("Please enter the proxy details to use " +
+                           "for contacting the management server ")
+            self._dialog = ProxyDialog("Input proxy information",
+                                       description, self)
+            self.widgets.add(self._dialog)
+            return self._dialog
 
         txs = utils.Transaction("Updating RHN configuration")
 
@@ -301,3 +314,34 @@ class Plugin(plugins.NodePlugin):
                                                                txs, self)
                 progress_dialog.run()
         return self.ui_content()
+
+
+class ProxyDialog(ui.Dialog):
+    """A dialog to input proxy information
+    """
+    def __init__(self, title, description, plugin):
+        self.keys = ["rhn.proxyhost", "rhn.proxyport", "rhn.proxyuser",
+                     "rhn.proxypassword"]
+
+        def clear_invalid(dialog, changes):
+            [plugin.stash_change(prefix) for prefix in self.keys]
+
+        title = _("RHN Proxy Information")
+
+        entries = [ui.Entry("rhn.proxyhost", "Server:"),
+                   ui.Entry("rhn.proxyport", "Port:"),
+                   ui.Entry("rhn.proxyuser", "Username:"),
+                   ui.PasswordEntry("rhn.proxypassword", "Password:")]
+        children = [ui.Label("label[0]", description),
+                    ui.Divider("divider[0]")]
+        children.extend(entries)
+        super(ProxyDialog, self).__init__("proxy.dialog", title, children)
+        self.buttons = [ui.CloseButton("proxy.save", _("Save"),
+                                       enabled=True),
+                        ui.CloseButton("proxy.close",
+                                       _("Cancel"))]
+
+        b = plugins.UIElements(self.buttons)
+        b["proxy.close"].on_activate.clear()
+        b["proxy.close"].on_activate.connect(ui.CloseAction())
+        b["proxy.close"].on_activate.connect(clear_invalid)
