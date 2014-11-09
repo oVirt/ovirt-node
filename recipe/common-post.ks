@@ -263,7 +263,7 @@ patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
 --- sosreport.py.orig	2011-04-07 11:51:40.000000000 +0000
 +++ sosreport.py	2011-07-06 13:26:44.000000000 +0000
 @@ -428,8 +428,8 @@
- 
+
      # validate and load plugins
      for plug in plugins:
 -        plugbase =  plug[:-3]
@@ -277,7 +277,7 @@ patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
 +++ plugins/general.py  2011-07-06 23:13:32.000000000 +0000
 @@ -25,8 +25,7 @@
                    ("all_logs", "collect all log files defined in syslog.conf", "", False)]
- 
+
      def setup(self):
 -        self.addCopySpec("/etc/redhat-release")
 -        self.addCopySpec("/etc/fedora-release")
@@ -289,18 +289,6 @@ EOF_sos_patch
 fi
 
 python -m compileall /usr/lib/python2.*/site-packages/sos
-
-patch --ignore-whitespace -d /lib/udev/rules.d -p0 << \EOF_udev_patch
---- 40-multipath.rules.orig     2014-11-04 14:57:12.385999154 +0000
-+++ 40-multipath.rules  2014-11-04 14:58:19.081002175 +0000
-@@ -20,5 +20,5 @@
- ENV{DM_UUID}!="mpath-?*", GOTO="end_mpath"
- ENV{DM_SUSPENDED}=="1", GOTO="end_mpath"
- ENV{DM_ACTION}=="PATH_FAILED", GOTO="end_mpath"
--RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
-+ENV{DM_ACTIVATION}==1, RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
- LABEL="end_mpath"
-EOF_udev_patch
 
 echo "Regenerating initramfs"
 dracut -f || :

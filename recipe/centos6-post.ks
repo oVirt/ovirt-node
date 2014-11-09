@@ -92,7 +92,7 @@ patch -d /etc/init.d/ -p0 << \EOF_halt
 @@ -138,7 +138,7 @@
      $"Unmounting pipe file systems (retry): " \
      -f
- 
+
 -LANG=C __umount_loop '$2 ~ /^\/$|^\/proc|^\/dev/{next}
 +LANG=C __umount_loop '$2 ~ /^\/$|^\/proc|^\/etc|^\/dev/{next}
  	$3 == "tmpfs" || $3 == "proc" {print $2 ; next}
@@ -107,12 +107,12 @@ patch -d /etc/rc.d -p0 << \EOF_rc_sysinit
 +++ rc.sysinit	2012-08-27 13:02:45.554484158 +0530
 @@ -43,7 +43,7 @@
  fi
- 
+
  if [ -n "$SELINUX_STATE" -a -x /sbin/restorecon ] && __fgrep " /dev " /proc/mounts >/dev/null 2>&1 ; then
 -	/sbin/restorecon -R -F /dev 2>/dev/null
 +	/sbin/restorecon -e /dev/.initramfs -R /dev 2>/dev/null
  fi
- 
+
  disable_selinux() {
 EOF_rc_sysinit
 
@@ -143,7 +143,7 @@ else
 -	action $"Mounting local filesystems: " mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2 -O no_netdev
 +	action $"Mounting local filesystems: " mount -a -n -t nonfs,nfs4,smbfs,ncpfs,cifs,gfs,gfs2,noproc,nosysfs,nodevpts -O no_netdev
  fi
- 
+
  # Update quotas if necessary
 EOF_rc_sysinit
 fi
@@ -155,12 +155,12 @@ patch -d /sbin -p0 << \EOF_start_udev
 +++ start_udev	2011-09-02 17:16:57.954610422 +0000
 @@ -121,7 +121,7 @@
  	#/bin/chown root:root /dev/fuse
- 
+
  	if [ -x /sbin/restorecon ]; then
 -		/sbin/restorecon -R /dev
 +		/sbin/restorecon -e /dev/.initramfs -R /dev
  	fi
- 
+
  	if [ -x "$MAKEDEV" ]; then
 EOF_start_udev
 
@@ -196,3 +196,17 @@ if ! grep -q 6.6 /etc/system-release; then
 
 EOF_mkdumprd
 fi
+
+patch --ignore-whitespace -d /lib/udev/rules.d -p0 << \EOF_udev_patch
+--- 40-multipath.rules.orig     2014-11-04 14:57:12.385999154 +0000
++++ 40-multipath.rules  2014-11-04 14:58:19.081002175 +0000
+@@ -20,5 +20,5 @@
+ ENV{DM_UUID}!="mpath-?*", GOTO="end_mpath"
+ ENV{DM_SUSPENDED}=="1", GOTO="end_mpath"
+ ENV{DM_ACTION}=="PATH_FAILED", GOTO="end_mpath"
+-RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
++ENV{DM_ACTIVATION}==1, RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
+ LABEL="end_mpath"
+EOF_udev_patch
+
+
