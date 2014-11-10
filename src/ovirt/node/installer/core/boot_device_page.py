@@ -155,7 +155,7 @@ class StorageDiscovery(threading.Thread):
     devices = None
     do_fake = False
 
-    tbl_tpl = " {bus!s:8.8}  {name!s:48.48} {size!s:9.9}"
+    tbl_tpl = " {bus!s:15.15}  {name!s:40.40} {size!s:9.9}"
 
     def __init__(self, do_fake):
         super(StorageDiscovery, self).__init__()
