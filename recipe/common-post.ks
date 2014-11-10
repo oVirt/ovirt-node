@@ -17,7 +17,6 @@ echo "Lock root account"
 passwd -l root
 
 echo "Relabeling files"
-#/usr/sbin/fixfiles -R -a restore
 restorecon -R /
 
 echo "Configuring libvirt"
