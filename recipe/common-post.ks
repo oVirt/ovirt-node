@@ -17,7 +17,7 @@ echo "Lock root account"
 passwd -l root
 
 echo "Relabeling files"
-/usr/sbin/fixfiles -R -a restore
+restorecon -R /
 
 echo "Configuring libvirt"
 # make sure we don't autostart virbr0 on libvirtd startup
