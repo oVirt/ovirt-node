@@ -21,6 +21,7 @@
 from ovirt.node import plugins, ui, utils
 from ovirt.node.utils import virt, system
 import os
+from ovirt.node.utils.system import is_reinstall
 
 """
 Welcome page of the installer
@@ -92,9 +93,13 @@ class Plugin(plugins.NodePlugin):
         media = utils.system.InstallationMedia()
         installed = utils.system.InstalledMedia()
         is_installed = installed.available()
-        if is_installed and (media.version_major != installed.version_major):
-            block_upgrade = True
-        elif utils.system.has_hostvg():
+
+        if not is_reinstall():
+            if is_installed and \
+               (media.version_major != installed.version_major):
+                block_upgrade = True
+
+        if utils.system.has_hostvg():
             has_hostvg = True
             if os.path.exists("/dev/disk/by-label/ROOT"):
                 block_upgrade = True

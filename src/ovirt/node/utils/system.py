@@ -127,6 +127,40 @@ def is_rescue_mode():
                in ["rescue", "S", "single", "1"])
 
 
+def is_reinstall(_c=None):
+    """is the system is in reinstalling mode
+
+    >>> is_reinstall("foo bar reinstall z")
+    True
+    >>> is_reinstall("foo bar reinstall=1 z")
+    True
+    >>> is_reinstall("foo bar reinstall=0 z")
+    False
+
+    >>> is_reinstall("foo bar firstboot")
+    True
+    >>> is_reinstall("foo bar firstboot=1 z")
+    True
+    >>> is_reinstall("foo bar firstboot=0 z")
+    False
+
+    We are also conservative, if contradiction assume False:
+
+    >>> is_reinstall("reinstall=1 firstboot=0 z")
+    False
+
+    >>> is_reinstall("foo bar z")
+    False
+    """
+    flags = ["firstboot", "reinstall"]
+    cmdline = kernel_cmdline_arguments(_c)
+
+    is_given = any(f in cmdline for f in flags)
+    not_denies = all(cmdline.get(f, 1) != "0" for f in flags)
+
+    return (is_given and not_denies)
+
+
 def node_version():
     """Return the version of the ovirt-node package
     This is the package version at runtime
@@ -207,10 +241,11 @@ def has_hostvg():
     return os.path.exists("/dev/HostVG")
 
 
-def kernel_cmdline_arguments():
+def kernel_cmdline_arguments(cmdline=None):
     """Return the arguments of the currently booted kernel
     """
-    return _parse_cmdline_args(File("/proc/cmdline").read())
+    cmdline = cmdline or File("/proc/cmdline").read()
+    return _parse_cmdline_args(cmdline)
 
 
 def _parse_cmdline_args(cmdline):
