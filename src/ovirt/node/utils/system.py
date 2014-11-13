@@ -930,6 +930,19 @@ class Mount(base.Base):
             self.logger.exception("Can't mount %s on %s" % (self.device,
                                   self.path))
 
+    def umount(self):
+        if not self.device:
+            self.logger.exception("Can't umount without a path specified")
+            raise RuntimeError("No path was specified when Mount() "
+                               "was initialized")
+
+        try:
+            utils.process.check_call(["umount", self.path])
+
+        except:
+            self.logger.exception("Can't umount %s" % self.path,
+                                  exc_info=True)
+
     def _find_device(self):
         try:
             return process.check_output(["findmnt", "-o", "SOURCE", "-n",
