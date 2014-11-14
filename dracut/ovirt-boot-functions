@@ -25,7 +25,7 @@ udev_info() {
 # livecd boot disk
 get_live_disk() {
     local live_dev=$(grep /dev/.initramfs/live /proc/mounts | awk '{print $1}')
-    if [ ! -e $live_dev ]; then
+    if [ -z $live_dev ] || [ ! -e $live_dev ]; then
       # PXE boot
       live_dev=/dev/loop0
       live_disk=
