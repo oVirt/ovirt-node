@@ -50,9 +50,12 @@ find_disk() {
     # so manually enumerate them
     for d in $(ls /dev/disk/by-id/$bus* 2>/dev/null); do
         DEVTYPE=
+        ID_BUS=
+        ID_CDROM=
         eval $(udev_info $(readlink -f $d) property "--export")
         # ID_FS_USAGE is set for partitions
-        if [ "$DEVTYPE" = "disk" -a "$ID_BUS" = "$bus" ]; then
+        if [ "$DEVTYPE" = "disk" -a "$ID_BUS" = "$bus" -a \
+                "$ID_CDROM" != "1"]; then
             if [ -z "$serial" -o "$serial" = "ALL" \
                 -o "$ID_SERIAL" = "$serial" ]; then
                 local dev="$(readlink -e $d)"
