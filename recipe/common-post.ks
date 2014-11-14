@@ -257,7 +257,7 @@ patch --ignore-whitespace -d /lib/udev/rules.d -p0 << \EOF_udev_patch
  ENV{DM_SUSPENDED}=="1", GOTO="end_mpath"
  ENV{DM_ACTION}=="PATH_FAILED", GOTO="end_mpath"
 -RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
-+ENV{DM_ACTIVATION}==1, RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
++ENV{DM_ACTIVATION}=="1", RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
  LABEL="end_mpath"
 EOF_udev_patch
 
