@@ -214,6 +214,27 @@ patch --ignore-whitespace -d /lib/udev/rules.d -p0 << \EOF_udev_patch
  LABEL="end_mpath"
 EOF_udev_patch
 
+
+patch --ignore-whitespace -d /usr/lib/dracut/ -p0 << \EOF_dracut
+--- modules.d/90dmsquash-live/dmsquash-live-genrules.sh
++++ modules.d/90dmsquash-live/dmsquash-live-genrules.sh
+@@ -3,10 +3,10 @@
+ case "$root" in
+   live:/dev/*)
+     {
+-        printf 'KERNEL=="%s", RUN+="/sbin/initqueue --settled --onetime --unique /sbin/dmsquash-live-root $env{DEVNAME}"\n' \
+-            ${root#live:/dev/}
+-        printf 'SYMLINK=="%s", RUN+="/sbin/initqueue --settled --onetime --unique /sbin/dmsquash-live-root $env{DEVNAME}"\n' \
+-            ${root#live:/dev/}
++        printf 'KERNEL=="%s", RUN+="/sbin/initqueue --settled --onetime --unique /sbin/dmsquash-live-root %s"\n' \
++            "${root#live:/dev/}" "${root#live:}"
++        printf 'SYMLINK=="%s", RUN+="/sbin/initqueue --settled --onetime --unique /sbin/dmsquash-live-root %s"\n' \
++            "${root#live:/dev/}" "${root#live:}"
+     } >> /etc/udev/rules.d/99-live-squash.rules
+     wait_for_dev -n "${root#live:}"
+   ;;
+EOF_dracut
+
 # https://bugzilla.redhat.com/show_bug.cgi?id=1167620
 cat <<EOF_mpath >> /etc/multipath.conf
 
@@ -221,3 +242,4 @@ defaults {
         find_multipaths yes
 }
 EOF_mpath
+
