@@ -25,14 +25,31 @@ import sys
 import os
 import termios
 import tty
+import re
 
 
-def is_terminal():
+def is_terminal(path=None):
     """Is true if the terminal is a real one
     Like the linux terminal console
+
+    >>> is_terminal("/dev/tty0")
+    True
+
+    >>> is_terminal("/dev/ttyUSB0")
+    False
+
+    >>> is_terminal("/dev/ttyS0")
+    False
+
+    >>> is_terminal("/dev/tty")
+    True
+
+    >>> is_terminal("/dev/console")
+    True
     """
-    ttyname = os.ttyname(sys.stdin.fileno())
-    return ttyname.startswith("/dev/tty") or ttyname == "/dev/console"
+    ttyname = path or os.ttyname(sys.stdin.fileno())
+    return (re.match("/dev/tty([0-9]|$)", ttyname) is not None
+            or ttyname == "/dev/console")
 
 
 def is_pty():
