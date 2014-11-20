@@ -438,7 +438,7 @@ class NodePlugin(base.Base):
         """
         changes = self.pending_changes(False)
         self.logger.debug("Request to discard model changes: %s" % changes)
-        self.__changes = {}
+        self.__changes = Changeset()
 
     def __effective_changes(self):
         """Calculates the effective changes, so changes which change the
