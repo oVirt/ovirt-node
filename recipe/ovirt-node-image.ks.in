@@ -14,6 +14,7 @@
 %post
 %include common-post.ks
 %include @DISTRO@-post.ks
+%include dracut-post.ks
 %end
 
 %post --nochroot

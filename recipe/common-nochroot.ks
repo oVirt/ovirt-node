@@ -1,6 +1,9 @@
 
 %include version.ks
 
+echo "Copying the initrd out..."
+cp $INSTALL_ROOT/boot/*.img $LIVE_ROOT/isolinux/initrd0.img
+
 if [ -f "ovirt-authorized_keys" ]; then
   echo "Adding authorized_keys to Image"
   mkdir -p $INSTALL_ROOT/root/.ssh

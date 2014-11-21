@@ -1,0 +1,4 @@
+echo
+echo "Regenerating initramfs"
+echo `rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}" kernel`
+dracut @DRACUT_ARGS@ `rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}" kernel` || :
