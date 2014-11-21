@@ -23,6 +23,7 @@ from ovirt.node.config.defaults import NodeConfigFileSection
 from ovirt.node.plugins import Changeset
 from ovirt.node.utils import system, fs
 from ovirt.node.utils.fs import File
+from ovirt.node.utils.network import NodeNetwork
 import re
 
 """
@@ -54,12 +55,26 @@ class Plugin(plugins.NodePlugin):
                 }
 
     def ui_content(self):
-        ws = [ui.Header("header[0]", "Puppet Configuration"),
-              ui.Checkbox("puppet.enabled", "Enable Puppet"),
-              ui.Entry("puppet.server", "Puppet Server:"),
-              ui.Entry("puppet.certname", "Puppet Certificate Name:"),
-              ui.Divider("divider[0]"),
-              ]
+        if self.application.args.dry:
+            net_is_configured = True
+        else:
+            net_is_configured = NodeNetwork().is_configured()
+
+        ws = [ui.Header("puppet.header", _("Configure Puppet"))]
+
+        if not net_is_configured:
+            ws.extend([ui.Notice(_("network.notice"),
+                                 _("Networking is not configured, ") +
+                                 _("please configure it configuring ") +
+                                 _("Puppet"))])
+
+        else:
+            ws.extend([ui.Checkbox("puppet.enabled", _("Enable Puppet")),
+                       ui.Entry("puppet.server", _("Puppet Server:")),
+                       ui.Entry("puppet.certname",
+                                _("Puppet Certificate Name:")),
+                       ui.Divider("divider[0]"),
+                       ])
 
         page = ui.Page("page", ws)
         page.buttons = [ui.SaveButton("action.register", "Save"),
