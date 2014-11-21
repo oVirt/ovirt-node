@@ -24,7 +24,7 @@ EOF_anyterm
 # dracut config
 cat <<_EOF_ > /etc/dracut.conf.d/ovirt-node.conf
 
-add_dracutmodules+="dmsquash-live"
+add_dracutmodules+=" dmsquash-live "
 
 _EOF_
 

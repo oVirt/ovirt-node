@@ -67,6 +67,10 @@ AM_COND_IF([TARGET_EL6],
 AC_SUBST([SEMODULE_WITH_SYSTEMD])
 AC_SUBST([SEMODULE_NOT_EL6])
 
+AM_COND_IF([TARGET_SYSTEMD],
+    [DRACUT_ARGS="-f --kver"], [DRACUT_ARGS="-f ''"])
+AC_SUBST([DRACUT_ARGS])
+
 AM_COND_IF([TARGET_NEW_DRACUT],
      [DRACUTDIR="/usr/lib/dracut/modules.d"], [DRACUTDIR="/usr/share/dracut/modules.d"])
 AC_SUBST([DRACUTDIR])
@@ -124,6 +128,7 @@ AC_CONFIG_FILES([Makefile
                 tests/Makefile
                 $MAIN_KS
                 recipe/common-install.ks
+                recipe/dracut-post.ks
                 recipe/image-minimizer.ks
                 scripts/ovirt-functions
                 scripts/ovirt-init-functions.sh
