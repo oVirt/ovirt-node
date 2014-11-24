@@ -381,7 +381,7 @@ class RHN(NodeConfigFileSection):
 
         if rhntype == "sam" or cacert.endswith(".pem"):
             tx.append(ConfigureSAM())
-        elif system.is_min_el(7):
+        elif system.is_min_el(7) and rhntype == "rhn":
             tx.append(ConfigureSAM())
         else:
             tx.append(ConfigureRHNClassic())
