@@ -462,6 +462,9 @@ class UrwidWindow(ui.Window):
             def call(self, callback):
                 """Run the callback in the context of the UI thread
                 """
+                if not callback:
+                    self.logger.debug("Won't call a null callback")
+                    return
                 self.logger.debug("Data: %s to %s - %s" % (callback,
                                                            dst._pipe_fd,
                                                            dst._pipe_q))
