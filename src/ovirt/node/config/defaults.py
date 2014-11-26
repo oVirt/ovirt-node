@@ -1134,6 +1134,7 @@ class KDump(NodeConfigFileSection):
                     File("/etc/fstab").write(
                         "\n%s\t%s\tnfs\tdefaults\t0 0" % (nfs, nfs_path),
                         "a")
+                    Config().persist("/etc/fstab")
                 except utils.process.CalledProcessError:
                     self.logger.warning("Failed to mount %s at " +
                                         "%s" % (nfs, nfs_path),
@@ -1220,7 +1221,7 @@ class KDump(NodeConfigFileSection):
                              "/root/.ssh/known_hosts",
                              "/root/.ssh/config"]
 
-                    [conf.persist(file) for file in files]
+                    [conf.persist(f) for f in files]
 
                 except utils.process.CalledProcessError as e:
                     self.logger.warning("Failed to activate KDump with " +
