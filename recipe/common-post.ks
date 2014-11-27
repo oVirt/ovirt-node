@@ -291,3 +291,6 @@ python -m compileall /usr/lib/python2.*/site-packages/sos
 
 echo "Regenerating initramfs"
 dracut -f || :
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1168582
+rm -vf /usr/lib64/python2.*/site-packages/backports/*
