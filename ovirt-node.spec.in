@@ -46,12 +46,12 @@ Requires(preun): /sbin/chkconfig
 Requires:       systemd-units
 Requires(post):     systemd-units
 Requires(preun):    systemd-units
+Requires:       python-IPy
 %endif
 %if ! 0%{?is_el6}
 Requires:       python-augeas
 %endif
 Requires:       glusterfs-client >= 2.0.1
-Requires:       python-IPy
 Requires:       system-release
 Requires:       augeas >= 0.3.5
 Requires:       bridge-utils
