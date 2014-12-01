@@ -8,6 +8,7 @@ iproute
 ltrace
 vhostmd
 firewalld
+plymouth
 
 # keyboard layout
 system-config-keyboard-base
