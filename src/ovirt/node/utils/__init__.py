@@ -319,6 +319,9 @@ title='First' at 0x...>
     def append(self, value):
         self.elements.append(value)
 
+    def insert(self, pos, value):
+        self.elements.insert(pos, value)
+
     def extend(self, iterable):
         self.elements.extend(iterable)
 
