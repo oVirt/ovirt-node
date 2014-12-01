@@ -898,7 +898,7 @@ class Mount(base.Base):
 
     def remount(self, rw=False):
         if not os.path.ismount(self.path):
-            self.logger.exception("%s is not a mount point" % self.path)
+            LOGGER.exception("%s is not a mount point" % self.path)
             raise RuntimeError("%s is not a mount point" % self.path)
 
         # EL6 won't let you remount if it's not in mtab or fstab
@@ -912,12 +912,12 @@ class Mount(base.Base):
                 utils.process.check_call(["mount", "-o", "ro,remount",
                                           device, self.path])
         except:
-            self.logger.exception("Can't remount %s on %s!" % (device,
-                                                               self.path))
+            LOGGER.exception("Can't remount %s on %s!" % (device,
+                                                          self.path))
 
     def mount(self):
         if not self.device:
-            self.logger.exception("Can't mount without a device specified")
+            LOGGER.exception("Can't mount without a device specified")
             raise RuntimeError("No device was specified when Mount() "
                                "was initialized")
 
@@ -927,12 +927,12 @@ class Mount(base.Base):
             utils.process.check_call(["mount", "-t", fstype,
                                       self.device, self.path])
         except:
-            self.logger.exception("Can't mount %s on %s" % (self.device,
-                                  self.path))
+            LOGGER.exception("Can't mount %s on %s" % (self.device,
+                             self.path))
 
     def umount(self):
-        if not self.device:
-            self.logger.exception("Can't umount without a path specified")
+        if not self.path:
+            LOGGER.exception("Can't umount without a path specified")
             raise RuntimeError("No path was specified when Mount() "
                                "was initialized")
 
@@ -940,8 +940,8 @@ class Mount(base.Base):
             utils.process.check_call(["umount", self.path])
 
         except:
-            self.logger.exception("Can't umount %s" % self.path,
-                                  exc_info=True)
+            LOGGER.exception("Can't umount %s" % self.path,
+                             exc_info=True)
 
     def _find_device(self):
         try:
