@@ -411,6 +411,10 @@ class Config(base.Base):
         # TODO: Abort if it is stateless
         if not self.is_enabled():
             return
+
+        if path is None:
+            return
+
         abspath = os.path.abspath(path)
         if os.path.exists(abspath):
             # Check first for symlinks as os.path file type detection follows
@@ -557,6 +561,10 @@ class Config(base.Base):
         """
         if not self.is_enabled():
             return
+
+        if path is None:
+            return
+
         abspath = os.path.abspath(path)
         if os.path.exists(abspath):
             # Check first for symlinks as os.path file type detection follows
