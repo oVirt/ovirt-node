@@ -214,7 +214,6 @@ patch --ignore-whitespace -d /lib/udev/rules.d -p0 << \EOF_udev_patch
  LABEL="end_mpath"
 EOF_udev_patch
 
-
 patch --ignore-whitespace -d /usr/lib/dracut/ -p0 << \EOF_dracut
 --- modules.d/90dmsquash-live/dmsquash-live-genrules.sh
 +++ modules.d/90dmsquash-live/dmsquash-live-genrules.sh
@@ -234,3 +233,8 @@ patch --ignore-whitespace -d /usr/lib/dracut/ -p0 << \EOF_dracut
      wait_for_dev -n "${root#live:}"
    ;;
 EOF_dracut
+
+# rhbz 1162699 setting correct theme
+/usr/sbin/plymouth-set-default-theme text
+rm -rf /var/lib/sfcb/registration/repository.previous/root/virt
+
