@@ -228,14 +228,3 @@ patch -d /sbin -p0 << \EOF_mkdumprd
                              echo "Cannot unmount the temporary directory"
 EOF_mkdumprd
 
-patch --ignore-whitespace -d /lib/udev/rules.d -p0 << \EOF_udev_patch
---- 40-multipath.rules.orig     2014-11-04 14:57:12.385999154 +0000
-+++ 40-multipath.rules  2014-11-04 14:58:19.081002175 +0000
-@@ -20,5 +20,5 @@
- ENV{DM_UUID}!="mpath-?*", GOTO="end_mpath"
- ENV{DM_SUSPENDED}=="1", GOTO="end_mpath"
- ENV{DM_ACTION}=="PATH_FAILED", GOTO="end_mpath"
--RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
-+ENV{DM_ACTIVATION}=="1", RUN+="$env{MPATH_SBIN_PATH}/kpartx -a -p p $tempnode"
- LABEL="end_mpath"
-EOF_udev_patch
