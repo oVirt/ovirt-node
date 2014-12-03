@@ -236,7 +236,7 @@ patch --ignore-whitespace -d /usr/lib/dracut/ -p0 << \EOF_dracut
 EOF_dracut
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1167620
-cat <<EOF_mpath >> /etc/multipath.conf
+cat << \EOF_mpath >> /etc/multipath.conf
 
 defaults {
         find_multipaths yes
