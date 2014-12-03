@@ -242,7 +242,7 @@ EOF_udev_patch
 
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1167620
-cat <<EOF_mpath >> /etc/multipath.conf
+cat << \EOF_mpath >> /etc/multipath.conf
 
 defaults {
         find_multipaths yes
