@@ -303,9 +303,7 @@ class LockDialog(ui.Dialog):
         super(LockDialog, self).__init__(path, title, [])
         self.children = [ui.Header("lock.label[0]",
                                    _("Enter the admin password to unlock")),
-                         ui.KeywordLabel("username", _("Username: "),
-                                         os.getlogin()),
-                         ui.PasswordEntry("password", _("Password:"))
+                         ui.PasswordEntry("password", _("Password: "))
                          ]
         self.buttons = [ui.Button("action.unlock", _("Unlock"))]
         self.escape_key = None
