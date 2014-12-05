@@ -245,6 +245,7 @@ EOF_udev_patch
 cat << \EOF_mpath >> /etc/multipath.conf
 
 defaults {
-        find_multipaths yes
+    find_multipaths yes
+    getuid_callout "/lib/udev/scsi_id --replace-whitespace --whitelisted --device=/dev/%n"
 }
 EOF_mpath

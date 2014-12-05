@@ -565,19 +565,6 @@ fi
 patch -d /usr/share/dracut/ -p0 < %{app_root}/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch
 
 %endif
-#use all hard-coded defaults for multipath
-# except for getuid_callout where we need to replace-whitespace on EL6
-%if %{is_el6}
-cat > /etc/multipath.conf << \EOF_multipath_conf
-defaults {
-    getuid_callout "/lib/udev/scsi_id --replace-whitespace --whitelisted --device=/dev/%n"
-}
-EOF_multipath_conf
-%else
-cat > /etc/multipath.conf << \EOF_multipath_conf2
-#Use Defaults
-EOF_multipath_conf2
-%endif
 
 #Disable X11Forwarding for sshd
 sed -i -e 's/X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config
