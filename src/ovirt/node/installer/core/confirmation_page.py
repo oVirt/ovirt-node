@@ -141,9 +141,13 @@ class DiskDetails(ui.Label):
 
     def get_details(self, dev):
         all_devices = self._plugin.storage_discovery.all_devices()
-        device = all_devices[dev]
-        txt = self._plugin._header.format(bus=device.bus, name=device.name,
-                                          size="%sGB" % device.size)
+
+        if dev in all_devices:
+            device = all_devices[dev]
+            txt = self._plugin._header.format(bus=device.bus, name=device.name,
+                                              size="%sGB" % device.size)
+        else:
+            txt = self._plugin._header.format(bus="", name=dev, size="")
 
         self.text(txt)
 
