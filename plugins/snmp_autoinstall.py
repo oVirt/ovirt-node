@@ -27,7 +27,7 @@ if __name__ == "__main__":
     snmp = snmp_model.SNMP()
     if "snmp_password" in args and len(args["snmp_password"]) > 0:
         snmp.update(enabled=True)
-        tx = snmp.transaction(snmp_password=args["snmp_passwd"])
+        tx = snmp.transaction(snmp_password=args["snmp_password"])
         TransactionProgress(tx, is_dry=False).run()
         # clear ovirt_snmp_passwd from /etc/default/ovirt
         pw_keys = ("OVIRT_SNMP_PASSWORD",)
