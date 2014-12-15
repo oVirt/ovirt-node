@@ -57,13 +57,79 @@ class MultipleOption(Option):
 
 
 class ExistingSparseLoopbackDisk(SparseLoopbackDisk):
+
     """don't want to expand the disk"""
+
     def __init__(self, lofile, size):
         SparseLoopbackDisk.__init__(self, lofile, size)
 
     def create(self):
-        #self.expand(create = True)
+        # self.expand(create=True)
         LoopbackDisk.create(self)
+
+
+class SimpleMenuParser:
+    __items = list()
+    __default_entry = None
+
+    def __init__(self, cmenu):
+        """ Simple menu parser class
+        Retrieves the menu enteries of islinux boot menu
+        >>> x= (line for line in ["label testLabel", \
+        "    append initrd=initrd0.img \
+        root=live:CDLABEL=ovirt-node-iso rootfstype=auto \\n ",
+        "    menu default\\n"])
+        >>> parser = SimpleMenuParser(x)
+        >>> entry =  parser.menu_labels().next()
+        >>> print entry["label"]
+        testLabel
+        initrd=initrd0.img root=live:CDLABEL=ovirt-node-iso rootfstype=auto
+        >>> >>> print parser.default_entry["arg_line"]
+        2
+        """
+        item = None
+        for line_number, line in enumerate(cmenu):
+            if line.find("label") == 0:
+                if item is not None:
+                    self.__items.append(item.copy())
+                name, value = SimpleMenuParser.__parse_label_line(line.strip())
+                item = {name: value}
+
+            name, value = SimpleMenuParser.__parse_label_line(line.strip())
+            # must treat menu differently
+            if name == "menu" and value == "default":
+                    self.__default_entry = item.copy()
+            if SimpleMenuParser.__indentation(line) > 0:
+                if name == "append":
+                    item[name] = value
+                    item["arg_line"] = line_number
+                else:
+                    item[name] = value
+
+        if item is not None:
+            self.__items.append(item.copy())
+
+    @staticmethod
+    def __indentation(s, tabsize=4):
+        sx = s.expandtabs(tabsize)
+        return 0 if sx.isspace() else len(sx) - len(sx.lstrip())
+
+    @staticmethod
+    def __parse_label_line(line):
+        items = line.split(" ", 1)
+        if len(items) < 1:
+            items.append(" ")
+        if len(items) < 2:
+            items.append(" ")
+
+        return items[0], items[1]
+
+    def menu_labels(self):
+        for item in self.__items:
+            yield item
+
+    def default_entry(self):
+        return self.__default_entry
 
 
 class LiveImageEditor(LiveImageCreator):
@@ -89,7 +155,7 @@ class LiveImageEditor(LiveImageCreator):
         self.skip_minimize = False
         """Controls whether an image minimizing snapshot should be created."""
 
-        self._builder = os.getlogin()
+        self._builder = os.environ.get("LOGNAME", None)
         """The name of the Remix builder for _branding.
         Default = os.getlogin()"""
 
@@ -117,6 +183,8 @@ class LiveImageEditor(LiveImageCreator):
 
         self.ks = None
         """optional kickstart file as a recipe for editing the image"""
+
+        self._ImageCreator__fstype = "ext4"
 
         self._ImageCreator__selinux_mountpoint = "/sys/fs/selinux"
         with open("/proc/self/mountinfo", "r") as f:
@@ -147,20 +215,21 @@ class LiveImageEditor(LiveImageCreator):
 
             self._LoopImageCreator__fslabel = out.strip()
 
-        except IOError, e:
+        except IOError as e:
             raise CreatorError("Failed to determine fsimage LABEL: %s" % e)
         finally:
             os.close(dev_null)
 
     def __ensure_builddir(self):
-        if not self._ImageCreator__builddir is None:
+        if self._ImageCreator__builddir is not None:
             return
 
         try:
             self._ImageCreator__builddir = tempfile.mkdtemp(
                 dir=os.path.abspath(self.tmpdir),
                 prefix="edit-liveos-")
-        except OSError, (err, msg):
+        except OSError as e:
+            (err, msg) = e.args
             raise CreatorError("Failed create build directory in %s: %s" %
                                (self.tmpdir, msg))
 
@@ -172,13 +241,13 @@ class LiveImageEditor(LiveImageCreator):
         logging.debug("copying script to install root: %s" % path)
         shutil.copy(os.path.abspath(script), path)
         os.close(fd)
-        os.chmod(path, 0700)
+        os.chmod(path, 0o700)
 
         script = "/tmp/" + os.path.basename(path)
 
         try:
             subprocess.call([script], preexec_fn=self._chroot)
-        except OSError, e:
+        except OSError as e:
             raise CreatorError("Failed to execute script %s, %s " %
                                (script, e))
         finally:
@@ -235,7 +304,7 @@ class LiveImageEditor(LiveImageCreator):
             self.tmpdir)
         try:
             self._LoopImageCreator__instloop.mount()
-        except MountError, e:
+        except MountError as e:
             raise CreatorError("Failed to loopback mount '%s' : %s" %
                                (self._image, e))
 
@@ -258,7 +327,7 @@ class LiveImageEditor(LiveImageCreator):
         """Clone the running LiveOS image as the basis for the new image."""
 
         self.__fstype = 'ext4'
-        self.__image_size = 4096L * 1024 * 1024
+        self.__image_size = 4096 * 1024 * 1024
         self.__blocksize = 4096
 
         self.__instloop = ExtDiskMount(SparseLoopbackDisk(self._image,
@@ -270,7 +339,7 @@ class LiveImageEditor(LiveImageCreator):
                                        self.tmpdir)
         try:
             self.__instloop.mount()
-        except MountError, e:
+        except MountError as e:
             raise CreatorError("Failed to loopback mount '%s' : %s" %
                                (self._image, e))
 
@@ -308,18 +377,17 @@ class LiveImageEditor(LiveImageCreator):
 
         try:
             imgmnt.mount()
-        except MountError, e:
+        except MountError as e:
             raise CreatorError("Failed to mount '%s' : %s" % (base_on, e))
         else:
             # include specified files or directories
-            #copy over everything but squashfs.img or ext3fs.img
+            # copy over everything but squashfs.img or ext3fs.img
             shutil.copytree(imgmnt.mountdir,
                             self._LiveImageCreatorBase__isodir,
                             ignore=shutil.ignore_patterns(*ignore_list))
             subprocess.call(['sync'])
         finally:
             imgmnt.cleanup()
-
 
     def _brand(self, _builder):
         """Adjust the image branding to show its variation from original
@@ -338,14 +406,14 @@ class LiveImageEditor(LiveImageCreator):
         # Get build name from boot configuration file.
         try:
             cfgf = open(fpath, 'r')
-        except IOError, e:
+        except IOError as e:
             raise CreatorError("Failed to open '%s' : %s" % (fpath, e))
         else:
             release = None
             for line in cfgf:
                 i = line.find('Welcome to ')
                 if i > -1:
-                    release = line[i+11:-2]
+                    release = line[i + 11:-2]
                     break
             cfgf.close()
         if not release:
@@ -363,7 +431,7 @@ class LiveImageEditor(LiveImageCreator):
                     with open(self._instroot + fn, 'r') as f:
                         text = ntext + '\n' + f.read()
                         open(f.name, 'w').write(text)
-                except IOError, e:
+                except IOError as e:
                     raise CreatorError("Failed to open or write '%s' : %s" %
                                        (f.name, e))
 
@@ -425,7 +493,7 @@ class LiveImageEditor(LiveImageCreator):
                              stderr=dev_null).communicate()[0]
             return 0
 
-        except IOError, e:
+        except IOError as e:
             raise CreatorError("Failed to configure bootloader file: %s" % e)
             return 1
         finally:
@@ -438,7 +506,7 @@ class LiveImageEditor(LiveImageCreator):
 
             os.write(fd, s.script)
             os.close(fd)
-            os.chmod(path, 0700)
+            os.chmod(path, 0o700)
 
             env = self._get_post_scripts_env(s.inChroot)
 
@@ -453,10 +521,10 @@ class LiveImageEditor(LiveImageCreator):
             try:
                 subprocess.check_call([s.interp, script],
                                       preexec_fn=preexec, env=env)
-            except OSError, e:
+            except OSError as e:
                 raise CreatorError("Failed to execute %%post script "
                                    "with '%s' : %s" % (s.interp, e.strerror))
-            except subprocess.CalledProcessError, err:
+            except subprocess.CalledProcessError as err:
                 if s.errorOnFail:
                     raise CreatorError("%%post script failed with code %d "
                                        % err.returncode)
@@ -466,6 +534,7 @@ class LiveImageEditor(LiveImageCreator):
                 os.unlink(path)
 
     class simpleCallback:
+
         def __init__(self):
             self.fdnos = {}
 
@@ -514,7 +583,7 @@ class LiveImageEditor(LiveImageCreator):
                 baseurl += "/"
             for pkg_from_list in kickstart.get_packages(self.ks):
                 # TODO report if package listed in ks is missing
-                for pkg in glob.glob(baseurl+pkg_from_list+"-[0-9]*.rpm"):
+                for pkg in glob.glob(baseurl + pkg_from_list + "-[0-9]*.rpm"):
                     fdno = os.open(pkg, os.O_RDONLY)
                     hdr = ts.hdrFromFdno(fdno)
                     os.close(fdno)
@@ -599,7 +668,7 @@ class LiveImageEditor(LiveImageCreator):
         return True
 
     def _print_err(self, *args):
-        sys.stderr.write('WARNING: ' + ' '.join(map(str,args)) + '\n')
+        sys.stderr.write('WARNING: ' + ' '.join(map(str, args)) + '\n')
 
     def _list_plugins(self):
         plugin_info_dir = "%s/etc/ovirt-plugins.d" % self._instroot
@@ -612,7 +681,6 @@ class LiveImageEditor(LiveImageCreator):
 
     def _create_manifests(self, options):
         pkg = ""
-        timestamp = date("%Y-%m-%d_%H-%M-%S")
         if options.plugin:
             pkg = options.plugin
         elif options.install_dup:
@@ -756,10 +824,10 @@ class LiveImageEditor(LiveImageCreator):
             output, err = f.communicate()
         for i in ["rpm", "srpm", "license"]:
             if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" %
-                             (self._ImageCreator__builddir, i)):
+                              (self._ImageCreator__builddir, i)):
                 cmd = "cat %s/iso/isolinux/current-manifest-%s.txt|sort -u " \
-                    "> %s/manifest-tmp-%s.txt" % \
-                    (self._ImageCreator__builddir, i, self._instroot, i)
+                      "> %s/manifest-tmp-%s.txt" % \
+                      (self._ImageCreator__builddir, i, self._instroot, i)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
                                      stderr=STDOUT)
                 output, err = f.communicate()
@@ -811,9 +879,9 @@ class LiveImageEditor(LiveImageCreator):
         # update symlink
         for f in ["rpm", "srpm", "license", "file", "dir"]:
             if os.path.exists("%s/iso/isolinux/current-manifest-%s.txt" %
-                             (self._ImageCreator__builddir, f)):
+                              (self._ImageCreator__builddir, f)):
                 os.system("rm -rf %s/iso/isolinux/current-manifest-%s.txt" %
-                         (self._ImageCreator__builddir, f))
+                          (self._ImageCreator__builddir, f))
             cwd = os.getcwd()
             os.chdir("%s/iso/isolinux" % self._ImageCreator__builddir)
             src = "update%s/manifest-%s.txt" % (update_num, f)
@@ -882,10 +950,59 @@ class LiveImageEditor(LiveImageCreator):
         os.system("rm -rf %s" % isodir)
         return
 
+    def _print_bootparams(self, iso):
+        isodir = self._mount_iso(iso)
+        bootcfg_path = "%s/isolinux/isolinux.cfg" % (isodir)
+        if os.path.exists(bootcfg_path):
+            with open(bootcfg_path) as f:
+                cmenu = SimpleMenuParser(f.readlines())
+                for label in cmenu.menu_labels():
+                    print "Entry : ", label["label"]
+                    if "append" in label.keys():
+                        print "Arguments : ", label["append"]
+                if cmenu.default_entry() is not None:
+                    print "Default entry is :", cmenu.default_entry()["label"]
+        else:
+            print "\nCant find bootparams file"
+
+        os.system("umount %s" % isodir)
+        os.system("rm -rf %s" % isodir)
+
+    def _add_bootparams(self, iso, arguments):
+        bootcfg_path = "%s/isolinux/isolinux.cfg" % (iso)
+        if os.path.exists(bootcfg_path):
+            # we now have old config file lets parse it
+            bootcfg_backup_path = "%s/isolinux/isolinux.back.cfg" % (iso)
+            os.system("mv -f %s %s" % (bootcfg_path, bootcfg_backup_path))
+            with open(bootcfg_backup_path, "r") as in_file:
+                cmenu = SimpleMenuParser(in_file.readlines())
+                # do we have default entry
+                if cmenu.default_entry() is not None:
+                    # lets rewrite the file entrys
+                    # we start over again
+                    default_args_line = cmenu.default_entry()["arg_line"]
+                    in_file.seek(0)
+                    with open(bootcfg_path, "w") as out_file:
+                        # all line are copied as is
+                        # except the defualt args line
+                        for line_num, line in enumerate(in_file.readlines()):
+                            if line_num == default_args_line:
+                                new_arg_line = line.rstrip() + " "
+                                new_arg_line += arguments + "\n"
+                                out_file.write(new_arg_line)
+                            else:
+                                out_file.write(line)
+                    os.system("rm -rf %s" % (bootcfg_backup_path))
+                else:
+                    print "No default boot entry to edit"
+                    os.system("mv -f %s %s" %
+                              (bootcfg_backup_path, bootcfg_path))
+        else:
+            print "\nCant find bootparams file"
+
     def _print_manifests(self, iso):
         isodir = self._mount_iso(iso)
-        li = os.listdir("%s/isolinux" % isodir)
-        li.sort()
+        li = sorted(os.listdir("%s/isolinux" % isodir))
         print "\n"
         for entry in li:
             if os.path.islink("%s/isolinux/%s" % (isodir, entry)):
@@ -929,7 +1046,7 @@ class LiveImageEditor(LiveImageCreator):
             self._cleanup_editing()
             return False
         else:
-            #validate files added
+            # validate files added
             for rpm in options.plugin.split(","):
                 self._cleanup_editing()
                 if self._validate_installed_files(options, rpm):
@@ -940,7 +1057,6 @@ class LiveImageEditor(LiveImageCreator):
             self._cleanup_editing()
             return True
         return True
-
 
     def _setup_dns(self):
         print "Setting Up DNS For Chroot"
@@ -958,12 +1074,12 @@ class LiveImageEditor(LiveImageCreator):
             cmd = "mount -o bind %s %s/etc/pki/entitlement" % \
                 ("/etc/pki/entitlement", self._instroot)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
-                stderr=STDOUT)
+                                 stderr=STDOUT)
             output, err = f.communicate()
             if f.returncode > 0:
-               print "Can't Bind /etc/pki/entitlement"
-               print output
-               return False
+                print "Can't Bind /etc/pki/entitlement"
+                print output
+                return False
 
         return True
 
@@ -976,12 +1092,12 @@ class LiveImageEditor(LiveImageCreator):
             cmd = "mount -o bind %s %s/etc/rhsm/ca" % \
                 ("/etc/rhsm/ca", self._instroot)
             f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
-                stderr=STDOUT)
+                                 stderr=STDOUT)
             output, err = f.communicate()
             if f.returncode > 0:
-               print "Can't Bind /etc/rhsm/ca"
-               print output
-               return False
+                print "Can't Bind /etc/rhsm/ca"
+                print output
+                return False
 
         return True
 
@@ -1018,7 +1134,7 @@ class LiveImageEditor(LiveImageCreator):
                     with open(options.repo, "r") as f:
                         for line in f.readlines():
                             if line.startswith("baseurl=file://"):
-                                self.item = re.match(r'.*file://(.*)', \
+                                self.item = re.match(r'.*file://(.*)',
                                                      line).group(1)
                                 conf_builder += re.sub(r'(.*file://).*',
                                                        r'\1' + rpms_path,
@@ -1045,7 +1161,8 @@ class LiveImageEditor(LiveImageCreator):
                         self._print_err("Can't Bind Mount rpm directory")
                         return False
                 else:
-                    self._print_err("rpm directory %s does not exist" % self.item)
+                    self._print_err(
+                        "rpm directory %s does not exist" % self.item)
                 cmd = "mount -o bind %s %s/etc/yum.repos.d/plugin.repo" % \
                       (options.repo, self._instroot)
                 f = subprocess.Popen(cmd, shell=True, stdout=PIPE,
@@ -1136,7 +1253,7 @@ enabled=1
                 i = 0
                 for dir in valid_write_locations:
                     # checking list against valid paths
-                    if not dir in line and i <= len(valid_write_locations):
+                    if dir not in line and i <= len(valid_write_locations):
                         i = i + 1
                         # check for last iteration
                         if i == len(valid_write_locations):
@@ -1157,7 +1274,7 @@ enabled=1
         print "Running Minimizer"
         minimizer = "image-minimizer"
         if (os.path.exists("/usr/bin/" + minimizer) or
-            os.path.exists("/usr/sbin/" + minimizer)):
+                os.path.exists("/usr/sbin/" + minimizer)):
             print glob.glob("%s/etc/ovirt-plugins.d/*.minimize"
                             % self._instroot)
             for f in glob.glob("%s/etc/ovirt-plugins.d/*.minimize"
@@ -1212,7 +1329,7 @@ enabled=1
             if os.path.isfile(pkg):
                 filetype = subprocess.Popen("/usr/bin/file %s" % pkg,
                                             shell=True, stdout=subprocess.PIPE
-                ).communicate()[0]
+                                            ).communicate()[0]
                 if not re.match(r'^.*?:\sRPM.*', filetype):
                     print "ERROR: Can't install %s. Not in RPM format" % pkg
                     break
@@ -1264,7 +1381,7 @@ enabled=1
                 self._cleanup_editing()
                 return False
             else:
-                #validate files added by dup
+                # validate files added by dup
                 for rpm in options.install_dup.split(","):
                     self._cleanup_editing()
                     if self._validate_installed_files(options, rpm):
@@ -1287,7 +1404,7 @@ enabled=1
             try:
                 print self._chroot
                 subprocess.call([cmd], preexec_fn=self._chroot, shell=True)
-            except OSError, e:
+            except OSError as e:
                 raise CreatorError("Failed to set password, %s " % e)
 
     def _setup_ssh_keys(self, options):
@@ -1305,7 +1422,8 @@ enabled=1
             if not os.path.exists(self._instroot + home):
                 os.system("mkdir -p %s%s" % (self._instroot, home))
             with open(keyfile) as k:
-                with open(self._instroot + home + "/authorized_keys", "a") as f:
+                filename = self._instroot + home + "/authorized_keys"
+                with open(filename, "a") as f:
                     f.write(k.read())
 
     def _rebuild_initramfs(self):
@@ -1314,12 +1432,12 @@ enabled=1
         d_conf = "%s/etc/dracut.conf" % self._instroot
         current = ""
         if os.path.exists(d_conf):
-           with open(d_conf) as f:
-               current = f.readlines()
+            with open(d_conf) as f:
+                current = f.readlines()
         add_modules = True
         for line in current:
             if line.startswith("add_dracutmodules") \
-                and "dmsquash-live" in line:
+                    and "dmsquash-live" in line:
                 add_modules = False
         if add_modules:
             dracut_conf = open(d_conf, "a")
@@ -1419,7 +1537,7 @@ def parse_options(args):
                       help="Specify release file/s for branding.")
 
     parser.add_option("-b", "--builder", type="string",
-                      dest="builder", default=os.getlogin(),
+                      dest="builder", default=os.environ.get("LOGNAME", None),
                       help="Specify the builder of a Remix.")
 
     parser.add_option("-p", "--install-plugin", type="string",
@@ -1437,7 +1555,7 @@ def parse_options(args):
 
     parser.add_option("--update", type="string",
                       dest="update", help="comma delimited list of packages" +
-                                           " to update (needs --repo)")
+                      " to update (needs --repo)")
 
     parser.add_option("--repo", type="string",
                       dest="repo",
@@ -1480,6 +1598,20 @@ def parse_options(args):
 
     parser.add_option_group(m_grp)
 
+    boot_grp = optparse.OptionGroup(parser, ("Install boot parameters"))
+
+    boot_grp.add_option("", "--print-boot-params", action="store_true",
+                        default=False, dest="getbootparams",
+                        help="prints the live cd boot menu"
+                        "to stdout")
+
+    boot_grp.add_option("", "--add-boot-param", action="store", type="string",
+                        default=False, dest="addbootparam",
+                        help="Adds args to default boot menu"
+                        "to stdout")
+
+    parser.add_option_group(boot_grp)
+
     setup_logging(parser)
 
     (options, args) = parser.parse_args()
@@ -1502,7 +1634,7 @@ def get_fsvalue(filesystem, tag):
         fs_type = subprocess.Popen(args,
                                    stdout=subprocess.PIPE,
                                    stderr=dev_null).communicate()[0]
-    except IOError, e:
+    except IOError as e:
         raise CreatorError("Failed to determine fs %s: %s" % value, e)
     finally:
         os.close(dev_null)
@@ -1583,13 +1715,20 @@ def main():
         elif options.printmanifests:
             editor._print_manifests(LiveOS)
             mount = False
+        elif options.getbootparams:
+            editor._print_bootparams(LiveOS)
+            mount = False
         elif options.repo is None and len(p) < 0:
             print "An Editing Option Must Be Specified"
             return False
         # only mount rootfs as required since it's not
         # necesary for all operations
         elif mount:
+
             editor.mount(LiveOS, cachedir=None)
+            if options.addbootparam:
+                editor._add_bootparams(
+                    editor._LiveImageCreatorBase__isodir, options.addbootparam)
             if options.printversion:
                 ver = editor._print_version()
                 print "\n%s\n" % ver
@@ -1639,18 +1778,18 @@ def main():
                         logging.error("Error Installing Drive Update " +
                                       "Package : %s" % options.install_dup)
                         failed = True
-                        #raise RuntimeError("Unable to Install Package")
+                        # raise RuntimeError("Unable to Install Package")
                 if options.update:
                     print("Updating packages: %s" % options.update)
                     editor._update_pkgs(options)
-                if not options.password is None:
+                if options.password is not None:
                     print "Setting Account Passwords"
                     editor._set_password(options)
-                if not options.ssh_keys is None:
+                if options.ssh_keys is not None:
                     editor._setup_ssh_keys(options)
-                if not options.uidmod is None:
+                if options.uidmod is not None:
                     editor._change_uid(options)
-                if not options.gidmod is None:
+                if options.gidmod is not None:
                     editor._change_gid(options)
                 if options.shell:
                     print "Launching shell. Exit to continue."
@@ -1672,6 +1811,13 @@ def main():
                 print "Editing Complete"
                 editor._configure_bootloader(
                     editor._LiveImageCreatorBase__isodir)
+                # make sure all bootloader images present even in old images
+                # just by copyin efi boot , it didnt boot mac anyway before
+                # the fc20/21 image creator refuses to create image with
+                # out macboot and old images have it
+                if not os.path.isfile(editor._LiveImageCreatorBase__isodir+"/isolinux/macboot.img"):
+                    shutil.copy(editor._LiveImageCreatorBase__isodir+"/isolinux/efiboot.img",
+                                editor._LiveImageCreatorBase__isodir+"/isolinux/macboot.img")
                 rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
                 if not options.skipinitramfs:
                     editor._rebuild_initramfs()
@@ -1686,7 +1832,6 @@ def main():
                     n = options.install
                 else:
                     n = ""
-
                 if n:
                     plugins = n.split(",")
                     finished_iso = build_isoname_for_plugins(edited_iso,
@@ -1702,7 +1847,7 @@ def main():
                 editor.unmount()
 
             logging.info("%s.iso saved to %s" % (editor.name, output))
-    except CreatorError, e:
+    except CreatorError as e:
         logging.error(u"Error editing LiveOS : %s" % e)
         return 1
     finally:
@@ -1777,11 +1922,11 @@ def build_isoname_for_plugins(edited_iso, plugins):
         package = package.replace(common_prefix, "")
 
         return package
-    plugins = plugins if type(plugins) is list else [plugins]
+    plugins = plugins if isinstance(plugins, list) else [plugins]
     packages = [sane_name_for_plugin(p) for p in plugins]
 
-    #print "plugins", plugins
-    #print "packages", packages
+    # print "plugins", plugins
+    # print "packages", packages
 
     packages = "_".join(packages)
 
@@ -1791,7 +1936,7 @@ def build_isoname_for_plugins(edited_iso, plugins):
     isoname = None
     try:
         nvra = isoname_to_nvr(editname_prefix)
-        #print "edited nvra", nvra
+        # print "edited nvra", nvra
         isoname = "{name}-{version}-{release}.{packages}.{distro}.iso".format(
             name=nvra[0],
             version=nvra[1],
