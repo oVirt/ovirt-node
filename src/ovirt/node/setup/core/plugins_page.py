@@ -47,9 +47,9 @@ class Plugin(NodePlugin):
         all_plugins = self.__list_of_plugins()
         if all_plugins:
             selected_plugin = all_plugins[0][0]
-            ws = [ui.Header("header[0]", _("Installed Plugins")),
+            ws = [ui.Header("header[0]", _("Plugins")),
 
-                  ui.Table("plugins.installed", "", _("Installed plugins:"),
+                  ui.Table("plugins.installed", "", _("Installed Plugins:"),
                            all_plugins, selected_plugin),
 
                   ui.Divider("divider[0]"),
@@ -72,6 +72,8 @@ class Plugin(NodePlugin):
                                     ui.SaveButton("button.dfile",
                                                   _("File Diff"))])
                   ]
+
+            plugin_selected_name = {"plugins.installed": selected_plugin}
         else:
             ws = [ui.Header("header[0]", _("Plugins")),
                   ui.Label("label[0]",
@@ -80,6 +82,11 @@ class Plugin(NodePlugin):
         page = ui.Page("page", ws)
         page.buttons = []
         self.widgets.add(page)
+
+        # show immediately data about the plugin selected
+        if all_plugins:
+            self.on_change(plugin_selected_name)
+
         return page
 
     def model(self):
