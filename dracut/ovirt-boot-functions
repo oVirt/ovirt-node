@@ -55,7 +55,7 @@ find_disk() {
         eval $(udev_info $(readlink -f $d) property "--export")
         # ID_FS_USAGE is set for partitions
         if [ "$DEVTYPE" = "disk" -a "$ID_BUS" = "$bus" -a \
-                "$ID_CDROM" != "1"]; then
+             "$ID_CDROM" != "1" ]; then
             if [ -z "$serial" -o "$serial" = "ALL" \
                 -o "$ID_SERIAL" = "$serial" ]; then
                 local dev="$(readlink -e $d)"
