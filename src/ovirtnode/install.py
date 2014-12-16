@@ -386,7 +386,6 @@ initrd /initrd0.img
             boot_candidate_names = ["BootBackup", "BootUpdate", "BootNew"]
             for trial in range(1, 3):
                 time.sleep(1)
-                _functions.system("partprobe")
                 for candidate_name in boot_candidate_names:
                     logger.debug(os.listdir("/dev/disk/by-label"))
                     if _functions.findfs(candidate_name):
@@ -426,7 +425,6 @@ initrd /initrd0.img
         candidate_names = ["RootBackup", "RootUpdate", "RootNew"]
         for trial in range(1, 3):
             time.sleep(1)
-            _functions.system("partprobe")
             for candidate_name in candidate_names:
                 candidate_dev = _functions.findfs(candidate_name)
                 logger.debug("Finding %s: '%s'" % (candidate_name, candidate_dev))
@@ -584,9 +582,6 @@ initrd /initrd0.img
             sysfs = open("/proc/sys/vm/drop_caches", "w")
             sysfs.write("3")
             sysfs.close()
-            partprobe_cmd = "partprobe \"/dev/%s\"" % self.disk
-            logger.debug(partprobe_cmd)
-            _functions.system(partprobe_cmd)
 
         if not self.disk.startswith("/dev/"):
             self.disk = "/dev/" + self.disk
