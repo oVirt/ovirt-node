@@ -849,9 +849,6 @@ class Filesystem(base.Base):
         """
         # Don't litter the screen with output, so get a handle to /dev/null
         with open(os.devnull, 'wb') as DEVNULL:
-            process.call(["partprobe"] + [x for x in glob.glob("/dev/mapper/*")
-                                          if not re.match(r'.*\/control$', x)],
-                         stdout=DEVNULL, stderr=DEVNULL)
             process.call(["udevadm", "settle"], stdout=DEVNULL, stderr=DEVNULL)
 
     @staticmethod
