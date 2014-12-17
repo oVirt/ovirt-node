@@ -18,21 +18,18 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
-from ovirtnode.ovirtfunctions import *
-from ovirtnode.storage import *
-from ovirtnode.install import *
-from ovirtnode.network import *
-from ovirtnode.log import *
 from ovirt.node.utils.console import TransactionProgress
-from ovirt.node.utils import system
-from ovirt.node.utils import security, storage, hooks
+from ovirt.node.utils import hooks, process, Transaction
 from ovirt.node.config import defaults
 from ovirt.node.utils.system import which, kernel_cmdline_arguments, \
     SystemRelease
+from ovirt.node.utils.fs import Config, File
 import logging
 import sys
 import os
 import time
+
+OVIRT_VARS = defaults.NodeConfigFile().get_dict()
 
 
 class PrepareInstallation(Transaction.Element):
@@ -46,6 +43,7 @@ class ConfigureNetworking(Transaction.Element):
     title = "Configuring network"
 
     def commit(self):
+        from ovirtnode.network import build_network_auto_transaction
         build_network_auto_transaction().run()
 
 
@@ -53,16 +51,15 @@ class AutomaticDiskPartitioning(Transaction.Element):
     title = "Performing automatic disk partitioning"
 
     def commit(self):
+        from ovirtnode.storage import storage_auto
         if storage_auto():
             # store /etc/shadow if adminpw/rootpw are set,
             # handled already in ovirt-early
-            file = open("/proc/cmdline")
-            args = file.read()
+            args = File("/proc/cmdline").read()
             if "adminpw" in args or "rootpw" in args:
                 print "Storing /etc/shadow"
-                ovirt_store_config("/etc/passwd")
-                ovirt_store_config("/etc/shadow")
-            file.close()
+                Config().persist("/etc/passwd")
+                Config().persist("/etc/shadow")
         else:
             raise RuntimeError("Automatic installation failed. " +
                                "Please review /var/log/ovirt.log")
@@ -72,16 +69,16 @@ class EnableSshPasswordAuthentication(Transaction.Element):
     title = "Enabling SSH password authentication"
 
     def commit(self):
+        from ovirt.node.utils import AugeasWrapper
+        aug = AugeasWrapper()
         if OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "yes":
-            augtool("set",
-                    "/files/etc/ssh/sshd_config/PasswordAuthentication",
+            aug.set("/files/etc/ssh/sshd_config/PasswordAuthentication",
                     "yes")
         elif OVIRT_VARS["OVIRT_SSH_PWAUTH"] == "no":
-            augtool("set",
-                    "/files/etc/ssh/sshd_config/PasswordAuthentication",
+            aug.set("/files/etc/ssh/sshd_config/PasswordAuthentication",
                     "no")
-        ovirt_store_config("/etc/ssh/sshd_config")
-        system_closefds("service sshd restart &> /dev/null")
+        Config().persist("/etc/ssh/sshd_config")
+        process.call("service sshd restart &> /dev/null", shell=True)
 
 
 class SetKeyboardLayout(Transaction.Element):
@@ -94,7 +91,7 @@ class SetKeyboardLayout(Transaction.Element):
             tx = model.transaction()
             tx()
         except:
-            logger.warning("Unknown keyboard layout: %s" % \
+            logger.warning("Unknown keyboard layout: %s" %
                            OVIRT_VARS["OVIRT_KEYBOARD_LAYOUT"])
 
 
@@ -108,7 +105,7 @@ class ConfigureStrongRNG(Transaction.Element):
             tx = model.transaction()
             tx()
         except:
-            logger.warning("Unknown ssh strong RNG: %s" % \
+            logger.warning("Unknown ssh strong RNG: %s" %
                            OVIRT_VARS["OVIRT_USE_STRONG_RNG"])
 
 
@@ -122,7 +119,7 @@ class ConfigureAESNI(Transaction.Element):
             tx = model.transaction()
             tx()
         except:
-            logger.warning("Unknown ssh AES NI: %s" % \
+            logger.warning("Unknown ssh AES NI: %s" %
                            OVIRT_VARS["OVIRT_DISABLE_AES_NI"])
 
 
@@ -136,7 +133,7 @@ class ConfigureNfsv4(Transaction.Element):
             tx = model.transaction()
             tx()
         except:
-            logger.warning("Unknown NFSv4 domain: %s" % \
+            logger.warning("Unknown NFSv4 domain: %s" %
                            OVIRT_VARS["OVIRT_NFSV4_DOMAIN"])
 
 
@@ -144,7 +141,8 @@ class ConfigureLogging(Transaction.Element):
     title = "Configuring Logging"
 
     def commit(self):
-        logging_auto()
+        from ovirtnode import log
+        log.logging_auto()
 
 
 class ConfigureCollectd(Transaction.Element):
@@ -189,9 +187,9 @@ class ConfigureKdump(Transaction.Element):
         except:
             kdump_args = ["OVIRT_KDUMP_SSH", "OVIRT_KDUMP_SSH_KEY",
                           "OVIRT_KDUMP_NFS", "OVIRT_KDUMP_LOCAL"]
-            logger.warning("Unknown kdump configuration: %s" % \
-                            " ".join([x for x in kdump_args if \
-                                      x in OVIRT_VARS]))
+            logger.warning("Unknown kdump configuration: %s" %
+                           " ".join([x for x in kdump_args if
+                                     x in OVIRT_VARS]))
 
 
 class InstallBootloader(Transaction.Element):
@@ -241,26 +239,26 @@ if __name__ == "__main__":
     if not is_iscsi_install():
         tx.append(ConfigureNetworking())
 
-    #set ssh_passwd_auth
+    # set ssh_passwd_auth
     if "OVIRT_SSH_PWAUTH" in OVIRT_VARS:
         tx.append(EnableSshPasswordAuthentication())
 
-    #set keyboard_layout
+    # set keyboard_layout
     if "OVIRT_KEYBOARD_LAYOUT" in OVIRT_VARS and \
        not OVIRT_VARS["OVIRT_KEYBOARD_LAYOUT"] is "":
         tx.append(SetKeyboardLayout())
 
-    #set ssh strong RHG
+    # set ssh strong RHG
     if "OVIRT_USE_STRONG_RNG" in OVIRT_VARS and \
        not OVIRT_VARS["OVIRT_USE_STRONG_RNG"] is "":
         tx.append(ConfigureStrongRNG())
 
-    #set ssh AES NI
+    # set ssh AES NI
     if "OVIRT_DISABLE_AES_NI" in OVIRT_VARS and \
        OVIRT_VARS["OVIRT_DISABLE_AES_NI"] == "true":
         tx.append(ConfigureAESNI())
 
-    #set NFSv4 domain
+    # set NFSv4 domain
     if "OVIRT_NFSV4_DOMAIN" in OVIRT_VARS and \
        not OVIRT_VARS["OVIRT_NFSV4_DOMAIN"] is "":
         tx.append(ConfigureNfsv4())
