@@ -560,6 +560,30 @@ initrd /initrd0.img
                                                             ).replace(
                                                             "rd_NO_MULTIPATH",
                                                             "")
+
+        with open("/etc/system-release-cpe", "r") as src:
+            is_el7 = ":7:" in src.read()
+        if is_el7 and self.disk and self.disk.startswith("/dev/mapper"):
+            """On el7 we need to specify the wwid of the root device, if it
+            is using multiple paths, to prevent races within dracut.
+            Basically there are two options:
+            1. bake wwid of root device into initrd
+            2. pass wwid of root device on kernel cmdline
+            I choose 2 because it seems to be less invasive.
+            https://bugzilla.redhat.com/show_bug.cgi?id=1152948
+            """
+            wwidcmd = "multipath -ll | egrep -o '^.*dm-[0-9]' | cut -d' ' -f1"
+            logger.debug("We are on el7, checking for multipath: %s" % wwidcmd)
+            wwidproc = _functions.subprocess_closefds(wwidcmd, shell=True,
+                                                      stdout=subprocess.PIPE,
+                                                      stderr=subprocess.STDOUT)
+            wwidout, wwiderr = wwidproc.communicate()
+            logger.debug("multipath returned: %s -- %s" % (wwidout, wwiderr))
+            wwid = wwidout.strip()
+            logger.debug("Using multipath wwid: %s" % wwid)
+            self.bootparams += " mpath.wwid=%s" % wwid
+            logger.debug("Cmdline with mpath: %s" % self.bootparams)
+
         if " " in self.disk or os.path.exists("/dev/cciss"):
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
@@ -582,7 +606,6 @@ initrd /initrd0.img
             sysfs = open("/proc/sys/vm/drop_caches", "w")
             sysfs.write("3")
             sysfs.close()
-
         if not self.disk.startswith("/dev/"):
             self.disk = "/dev/" + self.disk
         try:
