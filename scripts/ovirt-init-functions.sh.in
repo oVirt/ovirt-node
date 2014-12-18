@@ -1209,6 +1209,13 @@ start_ovirt_firstboot ()
         breakpoint "pre-installer"
         debugmode && AIARGS="--debug"
         /usr/libexec/ovirt-auto-install $AIARGS
+
+        # Greedy approach to remove eventual password variables
+        # after auto installation. Done here to workaround nasty
+        # caching of OVIRT_VARS in .py files.
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1062541
+        sed -i "/.*PASSWORD.*=/ d" /etc/default/ovirt
+
         rc=$?
         breakpoint "post-installer"
         # Handle Log file
