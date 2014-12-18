@@ -186,34 +186,32 @@ class Plugin(plugins.NodePlugin):
                 console.wait_for_keypress()
         except KeyboardInterrupt:
             def _handler(signum, frame):
-                console.writeln("\nWait for configuration to be reset\n")
+                console.writeln("\nWait for configuration to be restored\n")
             with self.application.ui.suspended():
                 _original_sigint = signal.getsignal(signal.SIGINT)
                 signal.signal(signal.SIGINT, _handler)
-                model.configure_disable()
-                txs = model.transaction()
-                txs()
-                console.reset()
-                console.writeln("\nDisabled kdump and Removed related " +
-                                "configuration")
-                console.writeln("\nPlease press any key to continue")
-                console.wait_for_keypress()
+                self.restore_config(saved_model)
                 signal.signal(signal.SIGINT, _original_sigint)
+                return InfoDialog("dialog.restore", "Restored the "
+                                  "configuration on keyboard interrupt")
         except Exception as e:
-            # Restore the configuration
-            if saved_model["kdump.type"] == "nfs":
-                model.configure_nfs(saved_model["kdump.nfs_location"])
-            elif saved_model["kdump.type"] == "kdump.ssh_location":
-                if self.model()["kdump.ssh_key"]:
-                    model.configure_ssh(saved_model['kdump.ssh_location'],
-                                        saved_model['kdump.ssh_key'])
-                else:
-                    model.configure_ssh(saved_model['kdump.ssh_location'])
-            elif saved_model["kdump.type"] == "local":
-                model.configure_local()
-            else:
-                model.configure_disable()
+            self.restore_config(saved_model)
             self.logger.exception("Exception while configuring kdump")
             self.application.show(self.ui_content())
             return InfoDialog("dialog.info", "An error occurred", e.message)
         return self.ui_content()
+
+    def restore_config(self, saved_model):
+        model = defaults.KDump()
+        if saved_model["kdump.type"] == "nfs":
+            model.configure_nfs(saved_model["kdump.nfs_location"])
+        elif saved_model["kdump.type"] == "kdump.ssh_location":
+            if self.model()["kdump.ssh_key"]:
+                model.configure_ssh(saved_model['kdump.ssh_location'],
+                                    saved_model['kdump.ssh_key'])
+            else:
+                model.configure_ssh(saved_model['kdump.ssh_location'])
+        elif saved_model["kdump.type"] == "local":
+            model.configure_local()
+        else:
+            model.configure_disable()
