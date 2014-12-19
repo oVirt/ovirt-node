@@ -561,10 +561,10 @@ initrd /initrd0.img
                                                             "rd_NO_MULTIPATH",
                                                             "")
 
-        with open("/etc/system-release-cpe", "r") as src:
-            is_el7 = ":7:" in src.read()
-        if is_el7 and self.disk and self.disk.startswith("/dev/mapper"):
-            """On el7 we need to specify the wwid of the root device, if it
+        is_mpath_root = self.disk and self.disk.startswith("/dev/mapper")
+        has_mpath_wwid = "mpath.wwid=" in self.bootparams
+        if is_mpath_root and not has_mpath_wwid:
+            """We need to specify the wwid of the root device, if it
             is using multiple paths, to prevent races within dracut.
             Basically there are two options:
             1. bake wwid of root device into initrd
