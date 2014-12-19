@@ -23,9 +23,6 @@ echo "Configuring libvirt"
 # make sure we don't autostart virbr0 on libvirtd startup
 rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 
-# rhevh uses libvirtd upstart job, sysv initscript must not interfere
-rm -f /etc/rc.d/init.d/libvirtd
-
 # Remove the default logrotate daily cron job
 # since we run it every 10 minutes instead.
 rm -f /etc/cron.daily/logrotate

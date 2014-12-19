@@ -467,16 +467,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/on-boot
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/on-changed-boot-image
 
-%if %{is_f16}
-# install libvirtd systemd service
-%{__install} -p -m0644 libvirtd.service %{buildroot}%{_unitdir}
-%endif
-%if ! %{is_systemd}
-# install libvirtd upstart job
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/init
-%{__install} -p -m0644 libvirtd.upstart %{buildroot}%{_sysconfdir}/init/libvirtd.conf
-%endif
-
 # dracut patches for rhel6
 %if ! %{is_systemd}
 %{__install} -p -m0644 dracut/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch %{buildroot}%{app_root}
@@ -741,12 +731,6 @@ fi
 %dir %{_sysconfdir}/ovirt-config-boot.d
 %{_sysconfdir}/ovirt-config-boot.d/local_boot_trigger.sh
 
-%if %{is_f16}
-%{_unitdir}/libvirtd.service
-%endif
-%if ! %{is_systemd}
-%{_sysconfdir}/init/libvirtd.conf
-%endif
 %{_sysconfdir}/ovirt-node/logging.conf
 %{_sysconfdir}/ovirt-node/logging.debug.conf
 %{_sysconfdir}/sysconfig/modules/vlan.modules
