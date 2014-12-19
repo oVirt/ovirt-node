@@ -333,7 +333,7 @@ class HostnameLength(Validator):
     False
     """
 
-    description = "a field less then 64 chars"
+    description = "a field less than 64 chars"
 
     def validate(self, value):
         if len(value) <= 64:
