@@ -1118,7 +1118,12 @@ class KDump(NodeConfigFileSection):
             def commit(self):
                 vals = {"default": "reboot",
                         "ext4": "/dev/HostVG/Data",
-                        "path": "/core"}
+                        "path": "core"}
+
+                # kdumpctl on EL7 doesn't like it if the path doesn't
+                # exist
+                if not os.path.isdir(os.path.join("/data", vals["path"])):
+                        os.makedirs(os.path.join("/data", vals["path"]))
 
                 _set_values(vals)
 
@@ -1252,7 +1257,13 @@ class KDump(NodeConfigFileSection):
                 from ovirtnode.ovirtfunctions import unmount_config
 
                 try:
-                    system.service("kdump", "restart")
+                    if system.which("kdumpctl"):
+                        with open("/dev/null", "wb") as DEVNULL:
+                            utils.process.check_call(["kdumpctl", "restart"],
+                                                     stdout=DEVNULL,
+                                                     stderr=DEVNULL)
+                    else:
+                        system.service("kdump", "restart")
                 except utils.process.CalledProcessError as e:
                     self.logger.info("Failure while restarting kdump: %s" % e)
                     unmount_config("/etc/kdump.conf")
