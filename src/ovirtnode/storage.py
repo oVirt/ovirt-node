@@ -175,13 +175,20 @@ class Storage:
 
     def get_drive_size(self, drive):
         logger.debug("Getting Drive Size For: %s" % drive)
-        size_cmd = "sfdisk -s " + drive + " 2>/dev/null"
+        size_cmd = "lsblk -bn -o SIZE " + drive + " 2>/dev/null | head -n1"
         size_popen = _functions.subprocess_closefds(size_cmd, shell=True,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT)
         size, size_err = size_popen.communicate()
         size = size.strip()
-        size = int(int(size) / 1024)
+        try:
+            # Size is bytes, calculate MB
+            size = int(int(size) / 1024 / 1024)
+        except Exception as e:
+            logger.debug(str(e))
+            logger.debug(drive)
+            logger.debug(size)
+            raise RuntimeError("Failed to determin disk size: %s" % drive)
         logger.debug(size)
         return size
 
