@@ -1450,6 +1450,7 @@ def check_existing_hostvg(install_dev, vg_name=None):
 def translate_multipath_device(dev):
     #trim so that only sdX is stored, but support passing /dev/sdX
     logger.debug("Translating: %s" % dev)
+    multipath_dev = dev
     if dev is None:
         return False
     if "/dev/mapper" in dev:
@@ -1458,8 +1459,8 @@ def translate_multipath_device(dev):
         cciss_dev_cmd = "cciss_id " + dev
         cciss_dev = subprocess_closefds(cciss_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         output, err = cciss_dev.communicate()
-        dev = "/dev/mapper/" + output.strip()
-    dm_dev_cmd = "multipath -ll '%s' | egrep dm-[0-9]+" % dev
+        multipath_dev = "/dev/mapper/" + output.strip()
+    dm_dev_cmd = "multipath -ll '%s' | egrep dm-[0-9]+" % multipath_dev
     dm_dev = subprocess_closefds(dm_dev_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
     (dm_dev_output, dummy) = dm_dev.communicate()
     if dm_dev.returncode > 0:
