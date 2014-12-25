@@ -584,7 +584,7 @@ initrd /initrd0.img
             self.bootparams += " mpath.wwid=%s" % wwid
             logger.debug("Cmdline with mpath: %s" % self.bootparams)
 
-        if " " in self.disk or os.path.exists("/dev/cciss"):
+        if " " in self.disk:
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
             self.disk = re.sub("p[1,2,3]$", "", self.disk)
