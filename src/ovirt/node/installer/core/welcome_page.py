@@ -91,10 +91,11 @@ class Plugin(plugins.NodePlugin):
                     ui.Button("button.reinstall", _("Reinstall (dry)"))]
 
         media = utils.system.InstallationMedia()
-        installed = utils.system.InstalledMedia()
-        is_installed = installed.available()
 
         if not is_reinstall():
+            # Only check installed, if reinstall, rhbz 1167240
+            installed = utils.system.InstalledMedia()
+            is_installed = installed.available()
             if is_installed and \
                (media.version_major != installed.version_major):
                 block_upgrade = True

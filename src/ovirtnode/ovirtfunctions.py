@@ -1505,21 +1505,32 @@ def add_user(username, shell="/usr/libexec/ovirt-admin-shell", group="",
         system_closefds(cmd)
 
 def get_installed_version_number():
+    #rhbz 1167240 restoring mount situation
+    retval = False
+    unmount = False
+    if not os.path.ismount("/liveos"):
+        unmount = True
     if mount_liveos() and os.path.exists("/liveos/version"):
-        existing_version = open("/liveos/version")
-        existing_install = {}
-        for line in existing_version.readlines():
-            try:
-                key, value = line.strip().split("=")
-                value = value.replace("'", "")
-                existing_install[key] = value
-            except:
-                pass
+        with open("/liveos/version") as existing_version:
+            existing_install = {}
+            for line in existing_version.readlines():
+                try:
+                    key, value = line.strip().split("=")
+                    value = value.replace("'", "")
+                    existing_install[key] = value
+                except:
+                    pass
 
         if existing_install.has_key("VERSION") and existing_install.has_key("RELEASE"):
-            return [existing_install["VERSION"],existing_install["RELEASE"]]
+            retval = [existing_install["VERSION"],existing_install["RELEASE"]]
 
-    return False
+    if unmount:
+            if system("umount /liveos &>/dev/null"):
+                logger.debug("unmounted liveos")
+            else:
+                logger.error("Wasnt able to restore mounting")
+
+    return retval
 
 def get_media_version_number():
     new_install = {}
