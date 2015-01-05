@@ -23,7 +23,6 @@ A module to access system wide stuff
 e.g. services, reboot ...
 """
 
-import glob
 import os
 import re
 import shlex
@@ -606,6 +605,9 @@ class InstalledMedia(InstallationMedia):
         data = get_installed_version_number()
         if data:
             self.version, self.release = data
+        else:
+            LOGGER.debug("Failed to retrieve installed media " +
+                         "version: %s" % data)
 
     def available(self):
         """Determin if there is an installed media
