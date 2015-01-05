@@ -572,17 +572,20 @@ initrd /initrd0.img
             I choose 2 because it seems to be less invasive.
             https://bugzilla.redhat.com/show_bug.cgi?id=1152948
             """
-            wwidcmd = "multipath -ll | egrep -o '^.*dm-[0-9]' | cut -d' ' -f1"
-            logger.debug("We are on el7, checking for multipath: %s" % wwidcmd)
+            wwidcmd = "multipath -ll %s | egrep -o '^.*dm-[0-9]' | cut -d' ' -f1" % self.disk
+            logger.debug("Checking device for multipath: %s" % wwidcmd)
             wwidproc = _functions.subprocess_closefds(wwidcmd, shell=True,
                                                       stdout=subprocess.PIPE,
                                                       stderr=subprocess.STDOUT)
             wwidout, wwiderr = wwidproc.communicate()
             logger.debug("multipath returned: %s -- %s" % (wwidout, wwiderr))
             wwid = wwidout.strip()
-            logger.debug("Using multipath wwid: %s" % wwid)
-            self.bootparams += " mpath.wwid=%s" % wwid
-            logger.debug("Cmdline with mpath: %s" % self.bootparams)
+            if wwid:
+                logger.debug("Using multipath wwid: %s" % wwid)
+                self.bootparams += " mpath.wwid=%s" % wwid
+                logger.debug("Cmdline with mpath: %s" % self.bootparams)
+            else:
+                logger.debug("Got NO multipath wwid, not using any")
 
         if " " in self.disk:
             # workaround for grub setup failing with spaces in dev.name:
