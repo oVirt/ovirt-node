@@ -241,14 +241,6 @@ class Storage:
         logger.debug("Rereading pt")
         _functions.system("sync")
         if "dev/mapper" in drive:
-            # kpartx -a -p p "$drive"
-            # XXX fails with spaces in device names (TBI)
-            # ioctl(3, DM_TABLE_LOAD, 0x966980) = -1 EINVAL (Invalid argument)
-            # create/reload failed on 0QEMU   QEMU HARDDISK  drive-scsi0-0-0p1
-            _functions.system("kpartx -a '%s'" % drive)
-            _functions.system("partprobe")
-            # partprobe fails on cdrom:
-            # Error: Invalid partition table - recursive partition on /dev/sr0.
             _functions.system("service multipathd reload")
             _functions.system("multipath -r &>/dev/null")
             # wait for device to exit
@@ -872,7 +864,7 @@ class Storage:
                          str(self.RootBackup_end) + "M\"")
             logger.debug(parted_cmd)
             _functions.system(parted_cmd)
-            _functions.system("sync ; udevadm settle ; partprobe")
+            _functions.system("sync ; udevadm settle")
             parted_cmd = ("parted \"" + self.ROOTDRIVE +
                          "\" -s \"set 2 boot on\"")
             logger.debug(parted_cmd)
