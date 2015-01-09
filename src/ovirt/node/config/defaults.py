@@ -1129,6 +1129,8 @@ class KDump(NodeConfigFileSection):
 
             def commit(self):
                 vals = {"default": "reboot",
+                        "core_collector": "makedumpfile -l "
+                        "--message-level 1 -d 31",
                         "ext4": "/dev/HostVG/Data",
                         "path": "core"}
 
@@ -1174,6 +1176,8 @@ class KDump(NodeConfigFileSection):
 
             def commit(self):
                 vals = {"default": "reboot",
+                        "core_collector": "makedumpfile -l "
+                        "--message-level 1 -d 31",
                         "nfs": nfs}
 
                 _set_values(vals)
@@ -1219,6 +1223,8 @@ class KDump(NodeConfigFileSection):
 
             def commit(self):
                 vals = {"default": "reboot",
+                        "core_collector": "makedumpfile -F -l "
+                        "--message-level 1 -d 31",
                         "net": ssh}
 
                 _set_values(vals)
