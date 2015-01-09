@@ -23,7 +23,7 @@ sed -i -e '/label check0/{N;N;N;d;}' $LIVE_ROOT/isolinux/isolinux.cfg
 
 # Rename Boot option to Install or Upgrade
 sed -i 's/^  menu label Boot$/  menu label Install or Upgrade/' $LIVE_ROOT/isolinux/isolinux.cfg
-sed -i '/^  menu label Boot (Basic Video)$/d' $LIVE_ROOT/isolinux/isolinux.cfg
+sed -i '/^  menu label Boot (Basic Video)$/a \  menu hide' $LIVE_ROOT/isolinux/isolinux.cfg
 
 # add serial console boot entry
 menu=$(mktemp)
