@@ -77,7 +77,7 @@ AM_COND_IF([TARGET_NEW_DRACUT],
 AC_SUBST([DRACUTDIR])
 
 AM_COND_IF([TARGET_RDLIVECHECK],
-    [BOOTLOADER_ARGS="rd.live.check rd.lvm=0"], [BOOTLOADER_ARGS="check RD_NO_LVM"])
+    [BOOTLOADER_ARGS="rd.live.check crashkernel=256M"], [BOOTLOADER_ARGS="check RD_NO_LVM crashkernel=128M"])
 AC_SUBST([BOOTLOADER_ARGS])
 
 AC_ARG_WITH([image-minimizer], [AC_HELP_STRING([--with-image-minimizer],
@@ -128,6 +128,7 @@ AC_CONFIG_FILES([Makefile
                 plugins/Makefile
                 tests/Makefile
                 $MAIN_KS
+                recipe/common-efi.ks
                 recipe/common-install.ks
                 recipe/dracut-post.ks
                 recipe/image-minimizer.ks
