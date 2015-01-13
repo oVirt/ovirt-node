@@ -30,20 +30,19 @@ EOF_kdump
 # include dmsquash-live in dracut for kdump
 sed -ie 's/^#add_dracutmodules+=""/add_dracutmodules+="dmsquash-live"/' /etc/dracut.conf
 
-# Don't use hostonly for kdump or we'll miss dmsquash-live
-patch -d /usr/sbin -p0 << \EOF_mkdumprd
---- mkdumprd.orig       2015-01-09 11:05:44.132744400 -0700
-+++ mkdumprd    2015-01-09 11:05:56.858840503 -0700
-@@ -14,7 +14,7 @@
- SAVE_PATH=$(grep ^path $conf_file| cut -d' '  -f2)
- [ -z "$SAVE_PATH" ] && SAVE_PATH="/var/crash"
- extra_modules=""
--dracut_args=("--hostonly" "--hostonly-cmdline" "-o" "plymouth dash")
-+dracut_args=("-o" "plymouth dash")
- OVERRIDE_RESETTABLE=0
+# Make dmsquash-live able to be included on hostonly configurations
+patch -d /usr/lib/dracut/modules.d/90dmsquash-live -p0 << \EOF_dmsquash
+--- /tmp/module-setup.sh.orig   2015-01-13 07:29:57.907325412 -0700
++++ /tmp/module-setup.sh        2015-01-13 07:30:08.900364143 -0700
+@@ -3,8 +3,6 @@
+ # ex: ts=8 sw=4 sts=4 et filetype=sh
  
- perror_exit() {
-EOF_mkdumprd
+ check() {
+-    # a live host-only image doesn't really make a lot of sense
+-    [[ $hostonly ]] && return 1
+     return 255
+ }
+EOF_dmsquash
 
 # add RHEV-H rwtab locations
 mkdir -p /rhev
