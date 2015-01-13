@@ -33,9 +33,9 @@ linux0==1 && $1=="append" {
 }
 linux0==1 && $1=="label" && $2!="linux0" {
   linux0=2
-  print "label install (basic video)"     
-  print " menu label Install (Basic Video)"       
-  print " kernel vmlinuz0"        
+  print "label install (basic video)"
+  print " menu label Install (Basic Video)"
+  print " kernel vmlinuz0"
   print append0" nomodeset "
   print "label serial-console"
   print "  menu label Install or Upgrade with serial console"
@@ -45,9 +45,9 @@ linux0==1 && $1=="label" && $2!="linux0" {
   print "  menu label Reinstall"
   print "  kernel vmlinuz0"
   print append0" reinstall "
-  print "label reinstall (basic video)"       
-  print " menu label Reinstall (Basic Video)"     
-  print " kernel vmlinuz0"        
+  print "label reinstall (basic video)"
+  print " menu label Reinstall (Basic Video)"
+  print " kernel vmlinuz0"
   print append0" reinstall nomodeset "
   print "label reinstall-serial"
   print "  menu label Reinstall with serial console"
@@ -98,6 +98,8 @@ echo "Kernel \r on an \m (\l)" >> $INSTALL_ROOT/etc/issue
 cp $INSTALL_ROOT/etc/issue $INSTALL_ROOT/etc/issue.net
 
 # Also update os-release, this is where ply 7.0 is taking the name from
+# we should update both since both can be used
+sed -i "/^REDHAT_BUGZILLA_PRODUCT=/ s/.*/REDHAT_BUGZILLA_PRODUCT=\"$PRODUCT release $VERSION\"/" $INSTALL_ROOT/etc/os-release
 sed -i "/^PRETTY_NAME/ s/.*/PRETTY_NAME=\"$PRODUCT release $VERSION\"/" $INSTALL_ROOT/etc/os-release
 
 NAME=$(grep CDLABEL $LIVE_ROOT/isolinux/isolinux.cfg |head -n1|sed -r 's/^.*CDLABEL\=([a-zA-Z0-9_\.-]+) .*$/\1/g')
