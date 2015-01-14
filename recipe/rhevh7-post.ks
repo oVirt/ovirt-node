@@ -32,8 +32,8 @@ sed -ie 's/^#add_dracutmodules+=""/add_dracutmodules+="dmsquash-live"/' /etc/dra
 
 # Make dmsquash-live able to be included on hostonly configurations
 patch -d /usr/lib/dracut/modules.d/90dmsquash-live -p0 << \EOF_dmsquash
---- /tmp/module-setup.sh.orig   2015-01-13 07:29:57.907325412 -0700
-+++ /tmp/module-setup.sh        2015-01-13 07:30:08.900364143 -0700
+--- module-setup.sh        2015-01-13 07:29:57.907325412 -0700
++++ module-setup.sh        2015-01-13 07:30:08.900364143 -0700
 @@ -3,8 +3,6 @@
  # ex: ts=8 sw=4 sts=4 et filetype=sh
  
