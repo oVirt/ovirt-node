@@ -70,6 +70,7 @@ require {
     type updpwd_t;
 }
 allow updpwd_t tmpfs_t:dir { search write add_name remove_name };
+allow updpwd_t device_t:dir { search write add_name remove_name };
 
 #============= gssd_t ==============
 optional_policy(`
