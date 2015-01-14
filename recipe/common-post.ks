@@ -28,7 +28,7 @@ rm -f /etc/libvirt/qemu/networks/autostart/default.xml
 rm -f /etc/cron.daily/logrotate
 
 # Logrotate more judiciously so the size of syslog stays under control
-sed -i '/^.*sharedscripts/a \    rotate 5\n    size 15M\n    compress' /etc/logrotate.d/syslog
+sed -i '/^.*sharedscripts/a \    rotate 5\n    size 15M\n    compress\n    missingok' /etc/logrotate.d/syslog
 
 if rpm -q --quiet rhn-virtualization-host; then
     sed -i -e 's/\.py/\.pyc/' -e 's/<//' /etc/cron.d/rhn-virtualization.cron
