@@ -358,6 +358,8 @@ class UpgradeTool(Base):
             elif not os.path.exists(self._options.iso_file):
                 raise RuntimeError("%s does not exist" %
                                    self._options.iso_file)
+
+            ret = 1
             try:
                 self._extract_rootfs(self._options.iso_file)
                 self._run_hooks("pre-upgrade")
@@ -366,14 +368,13 @@ class UpgradeTool(Base):
                 if self._options.reboot > 0:
                     self._reboot(self._options.reboot)
                 self._logger.info("Upgrade Completed")
+                ret = 0
             except Exception as e:
                 self._logger.exception('Error: Upgrade Failed: %s', e)
                 self._run_hooks("rollback")
                 self._logger.info("Upgrade Failed, Rollback Completed")
-                ret = 1
             finally:
                 self._cleanup()
-                ret = 0
             sys.exit(ret)
 
 if __name__ == "__main__":
