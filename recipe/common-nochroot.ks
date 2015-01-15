@@ -98,11 +98,6 @@ cp $INSTALL_ROOT/etc/$PACKAGE-release $INSTALL_ROOT/etc/issue
 echo "Kernel \r on an \m (\l)" >> $INSTALL_ROOT/etc/issue
 cp $INSTALL_ROOT/etc/issue $INSTALL_ROOT/etc/issue.net
 
-# Also update os-release, this is where ply 7.0 is taking the name from
-# we should update both since both can be used
-sed -i "/^REDHAT_BUGZILLA_PRODUCT=/ s/.*/REDHAT_BUGZILLA_PRODUCT=\"$PRODUCT release $VERSION\"/" $INSTALL_ROOT/etc/os-release
-sed -i "/^PRETTY_NAME/ s/.*/PRETTY_NAME=\"$PRODUCT release $VERSION\"/" $INSTALL_ROOT/etc/os-release
-
 NAME=$(grep CDLABEL $LIVE_ROOT/isolinux/isolinux.cfg |head -n1|sed -r 's/^.*CDLABEL\=([a-zA-Z0-9_\.-]+) .*$/\1/g')
 
 %include common-efi.ks

@@ -1,3 +1,6 @@
+
+%include version.ks
+
 # -*-Shell-script-*-
 echo "Starting Kickstart Post"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
@@ -303,4 +306,9 @@ sed -i \
    -e "/^#/ d" \
    -e "/user_friendly_names/ d" \
    /etc/multipath.conf
+
+# Also update os-release, this is where ply 7.0 is taking the name from
+# we should update both since both can be used
+sed -i "/^REDHAT_BUGZILLA_PRODUCT=/ s/.*/REDHAT_BUGZILLA_PRODUCT=\"$PRODUCT release $VERSION\"/" /etc/os-release
+sed -i "/^PRETTY_NAME/ s/.*/PRETTY_NAME=\"$PRODUCT release $VERSION\"/" /etc/os-release
 
