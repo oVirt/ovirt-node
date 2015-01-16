@@ -36,7 +36,7 @@ patch -d /usr/lib/dracut/modules.d/90dmsquash-live -p0 << \EOF_dmsquash
 +++ module-setup.sh        2015-01-13 07:30:08.900364143 -0700
 @@ -3,8 +3,6 @@
  # ex: ts=8 sw=4 sts=4 et filetype=sh
- 
+
  check() {
 -    # a live host-only image doesn't really make a lot of sense
 -    [[ $hostonly ]] && return 1
@@ -253,4 +253,7 @@ EOF_dracut
 # rhbz 1162699 setting correct theme
 /usr/sbin/plymouth-set-default-theme text
 rm -rf /var/lib/sfcb/registration/repository.previous/root/virt
+
+# rhbz 1181987 removing plymouth dracut message
+sed -i 's/ln -sf initrd-release $initdir\/etc\/os-release/cp \/etc\/os-release $initdir\/etc\//' /lib/dracut/modules.d/99base/module-setup.sh
 
