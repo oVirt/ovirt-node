@@ -2,7 +2,8 @@
 %include version.ks
 
 echo "Copying the initrd out..."
-cp $INSTALL_ROOT/boot/*.img $LIVE_ROOT/isolinux/initrd0.img
+cp $INSTALL_ROOT/boot/initramfs-$(cd $INSTALL_ROOT/boot && ls vmlinuz-[23]* | \
+    sed -e 's/vmlinuz-//').img $LIVE_ROOT/isolinux/initrd0.img
 
 if [ -f "ovirt-authorized_keys" ]; then
   echo "Adding authorized_keys to Image"
