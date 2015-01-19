@@ -22,6 +22,7 @@
 from ovirt.node import base
 from ovirt.node.utils.fs import File
 from ovirt.node.utils import system
+import subprocess
 import os
 
 
@@ -127,11 +128,21 @@ class Devices(base.Base):
         if self._fake_devices:
             return self._fake_devices
         from ovirtnode.ovirtfunctions import translate_multipath_device
+        from ovirtnode.ovirtfunctions import subprocess_closefds
         dev_names, disk_dict = self._storage.get_udev_devices()
         devices = {}
         for _dev in dev_names:
             dev = translate_multipath_device(_dev)
             self.logger.debug("Checking device %s (%s)" % (dev, _dev))
+            disk_type_cmd = ["lsblk", "-ino", "TYPE", dev, "--nodeps"]
+            disk_type_popen = subprocess_closefds(disk_type_cmd,
+                                                  stdout=subprocess.PIPE,
+                                                  stderr=subprocess.STDOUT)
+            dev_type, dev_type_err = disk_type_popen.communicate()
+            if not dev_type.strip() in ("disk", "mpath"):
+                self.logger.warning("Type is %s" % dev_type)
+                self.logger.warning("Device is not disk %s" % dev)
+                continue
             if dev in devices:
                 self.logger.warning("Device is already in dict: %s" % dev)
                 continue
