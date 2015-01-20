@@ -310,6 +310,6 @@ sed -i \
 
 # Also update os-release, this is where ply 7.0 is taking the name from
 # we should update both since both can be used
-sed -i "/^REDHAT_BUGZILLA_PRODUCT=/ s/.*/REDHAT_BUGZILLA_PRODUCT=\"$PRODUCT release $VERSION\"/" /etc/os-release
-sed -i "/^PRETTY_NAME/ s/.*/PRETTY_NAME=\"$PRODUCT release $VERSION\"/" /etc/os-release
+sed -i "/^REDHAT_BUGZILLA_PRODUCT=/ s/.*/REDHAT_BUGZILLA_PRODUCT=\"$PRODUCT $VERSION\"/" /etc/os-release
+sed -i "/^PRETTY_NAME/ s/.*/PRETTY_NAME=\"$PRODUCT $VERSION\"/" /etc/os-release
 
