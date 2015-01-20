@@ -79,6 +79,7 @@ mkdir -p /live
 mkdir -p /liveos
 mkdir -p /root/.uml
 mkdir -p /var/cache/multipathd
+mkdir -p /var/cache/rhn
 touch /var/lib/random-seed
 echo "/dev/HostVG/Config /config ext4 defaults,noauto,noatime 0 0" >> /etc/fstab
 
