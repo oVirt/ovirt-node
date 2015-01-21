@@ -572,8 +572,6 @@ class NodeNetwork(base.Base):
 
         nic = NIC(ifname)
 
-        self.logger.debug("Building model for: %s" % nic)
-
         if ifname == bond_name or nic.typ == "bond":
             self.logger.debug(" Is bond master")
             nic = BondedNIC(nic, bond_slaves)
@@ -589,6 +587,9 @@ class NodeNetwork(base.Base):
             if layout == "bridged":
                 self.logger.debug(" Is bridged")
                 nic = BridgedNIC(nic)
+
+        if nic.typ == "bridge":
+            nic = BridgedNIC(nic)
 
         if nic.is_configured() and filter_configured:
             # Don not return configured NICs
@@ -612,7 +613,7 @@ class NodeNetwork(base.Base):
         nics = [NIC(ifname) for ifname
                 in self.relevant_ifnames(filter_vlans=True,
                                          filter_bonds=False,
-                                         filter_bridges=True)]
+                                         filter_bridges=False)]
 
         bridges = [nic for nic in nics if nic.typ == "bridge"]
         vlans = [nic for nic in nics if nic.typ == "vlan"]
@@ -624,7 +625,7 @@ class NodeNetwork(base.Base):
 
         candidates = {}
 
-        for nic in nics + vlans:
+        for nic in nics + vlans + bridges:
             candidate = self.build_nic_model(nic.ifname, filter_slaveless,
                                              filter_configured)
             if candidate:

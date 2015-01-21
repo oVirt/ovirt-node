@@ -86,7 +86,7 @@ class TestCleanNetwork():
 
         print nics
 
-        assert sorted(nics.keys()) == ["bond007", "ens1", "ens2"]
+        assert sorted(nics.keys()) == ["bond007", "brens3", "ens1", "ens2"]
         assert all(type(n) is NIC for n in nics.values())
 
 
@@ -135,7 +135,8 @@ class TestBridgedNIC():
                                   "breth0"]
         nics = nn.nics()
 
-        assert nics.keys() == ["eth0"]
+        print nics.keys()
+        assert sorted(nics.keys()) == ["breth0", "eth0"]
         assert type(nics["eth0"]) is BridgedNIC
 
     def test_static(self, *args, **kwargs):
@@ -175,7 +176,7 @@ class TestBridgedNIC():
                                   "brens1"]
         nics = nn.nics()
 
-        assert nics.keys() == ["ens1"]
+        assert sorted(nics.keys()) == ["brens1", "ens1"]
         assert type(nics["ens1"]) is BridgedNIC
 
     def test_tagged_dhcp(self, *args, **kwargs):

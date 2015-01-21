@@ -636,11 +636,14 @@ class NicDetailsDialog(ui.Dialog):
 
         self.plugin.widgets.add(ws)
         self.children = ws
-        self.buttons = [ui.SaveButton("dialog.nic.save", _("Save")),
-                        ui.CloseButton("dialog.nic.close", _("Close"))
-                        ]
         self.plugin._nic_details_group.enabled(False)
-        self.plugin.widgets["dialog.nic.vlanid"].enabled(True)
+        if isinstance(nic, network.BridgedNIC):
+            self.buttons = [ui.CloseButton("dialog.nic.close", _("Close"))]
+        else:
+            self.plugin.widgets["dialog.nic.vlanid"].enabled(True)
+            self.buttons = [ui.SaveButton("dialog.nic.save", _("Save")),
+                            ui.CloseButton("dialog.nic.close", _("Close"))
+                            ]
 
 
 class CreateBondDialog(ui.Dialog):
