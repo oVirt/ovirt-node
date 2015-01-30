@@ -179,8 +179,8 @@ if [ -z $cmd_who ]; then
 else
     echo "Found virt-who, creating bin"
     cat > /usr/bin/virt-who <<EOF_virt_who
-    #!/bin/sh
-    exec /usr/bin/python /usr/share/virt-who/$cmd_who "\$@"
+#!/bin/sh
+exec /usr/bin/python /usr/share/virt-who/$cmd_who "\$@"
 EOF_virt_who
     chmod a+x /usr/bin/virt-who
 fi
