@@ -166,33 +166,3 @@ EOF_start_udev
 
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
-
-# rhbz#738170
-# later versions use mkdumprd/kdump_is_bridge(), which is smarter about
-# detecting bridge devices (instead of just br*), and this patch is not
-# necessary
-if ! grep -q 6.6 /etc/system-release; then
-    patch -d /sbin -p0 << \EOF_mkdumprd
---- /sbin/mkdumprd.orig	2011-10-06 06:37:49.000000000 +0000
-+++ /sbin/mkdumprd	2011-11-01 04:21:19.000000000 +0000
-@@ -583,7 +583,7 @@
-         eth*.*)
-             modalias=8021q
-             ;;
--        br*)
-+        rhevm|br*)
-             modalias=bridge
-             ;;
-         *)
-@@ -756,7 +756,7 @@
-             echo >> $MNTIMAGE/etc/ifcfg-$dev
-             echo "BUS_ID=\"Bonding\"" >> $MNTIMAGE/etc/ifcfg-$dev
-             ;;
--	br*)
-+	rhevm|br*)
-             for j in `ls /sys/class/net/$dev/brif`
-             do
-                 handlenetdev $j
-
-EOF_mkdumprd
-fi
