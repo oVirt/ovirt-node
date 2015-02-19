@@ -11,6 +11,7 @@
 %define is_systemd %( test %{is_rhel_systemd} -eq 1 || test %{is_centos_systemd} = 1 || test %{is_fedora_systemd} = 1 && echo 1 || echo 0)
 %define dracutdir %(test -e /usr/share/dracut && echo "/usr/share/dracut/modules.d" || echo "/usr/lib/dracut/modules.d")
 %define is_el6 %(test 0%{?centos} -eq 06 || test 0%{?rhel} -eq 06 && echo 1 || echo 0)
+%define is_el7 %(test 0%{?centos} -eq 07 || test 0%{?rhel} -eq 07 && echo 1 || echo 0)
 
 # Igor can only be shipped on Fedora (because of python-uinput)
 %define with_igor 0%{?is_min_f19}
@@ -97,6 +98,10 @@ Requires:       grub
 # for applying patches in %post
 Requires(post):       patch
 %endif
+%if 0%{?is_el7}
+Requires:       perf
+%endif
+Requires:       system-release
 
 Requires:       %{name}-selinux = %{version}-%{release}
 Requires:       %{name}-branding-ovirt = %{version}-%{release}
