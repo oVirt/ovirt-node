@@ -233,16 +233,16 @@ set timeout=5
 menuentry "%(product)s %(version)s-%(release)s" {
 set root=(hd0,%(partN)d)
 search --no-floppy --label Root --set root
-linux /vmlinuz0 %(root_param)s %(bootparams)s
-initrd /initrd0.img
+%(linux)s /vmlinuz0 %(root_param)s %(bootparams)s
+%(initrd)s /initrd0.img
 }"""
 
         GRUB2_BACKUP_TEMPLATE = """
 menuentry "BACKUP %(oldtitle)s" {
 set root=(hd0,%(partB)d)
 search --no-floppy --label RootBackup --set root
-linux /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
-initrd /initrd0.img
+%(linux)s /vmlinuz0 root=live:LABEL=RootBackup %(bootparams)s
+%(initrd)s /initrd0.img
 }    """
         if _functions.is_iscsi_install():
             disk = re.sub("p[1,2,3]$", "", \
@@ -252,33 +252,53 @@ initrd /initrd0.img
             disk = self.disk
         if _functions.is_efi_boot():
             boot_dir = self.initrd_dest + "/efi"
+            self.grub_dict["linux"] = "linuxefi"
+            self.grub_dict["initrd"] = "initrdefi"
         else:
             boot_dir = self.initrd_dest
-        grub_setup_cmd = ("/sbin/grub2-install " + disk +
-                          " --boot-directory=" + boot_dir +
-                          " --root-directory=" + boot_dir +
-                          " --efi-directory=" + boot_dir +
-                          " --bootloader-id=" + self.efi_dir_name +
-                          " --force")
-        _functions.system("echo '%s' >> /liveos/efi/cmd" % grub_setup_cmd)
-        logger.info(grub_setup_cmd)
-        grub_setup = _functions.subprocess_closefds(grub_setup_cmd, \
-                                         shell=True,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.STDOUT)
-        grub_results, grub_err = grub_setup.communicate()
-        logger.info(grub_results)
-        if grub_setup.wait() != 0 or "Error" in grub_results:
-            logger.error("grub2-install Failed")
-            return False
+        if not _functions.is_efi_boot():
+            grub_setup_cmd = ("/sbin/grub2-install " + disk +
+                              " --boot-directory=" + boot_dir +
+                              " --root-directory=" + boot_dir +
+                              " --efi-directory=" + boot_dir +
+                              " --bootloader-id=" + self.efi_dir_name +
+                              " --force")
+            _functions.system("echo '%s' >> /liveos/efi/cmd" % grub_setup_cmd)
+            logger.info(grub_setup_cmd)
+            grub_setup = _functions.subprocess_closefds(grub_setup_cmd, \
+                                             shell=True,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT)
+            grub_results, grub_err = grub_setup.communicate()
+            logger.info(grub_results)
+            if grub_setup.wait() != 0 or "Error" in grub_results:
+                logger.error("grub2-install Failed")
+                return False
         else:
-            logger.debug("Generating Grub2 Templates")
-            if _functions.is_efi_boot():
-                if not os.path.exists("/liveos/efi/EFI/%s" \
-                                      % self.efi_dir_name):
-                    os.makedirs("/liveos/efi/EFI/%s" % self.efi_dir_name)
-            grub_conf = open(self.grub_config_file, "w")
-            grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
+            efi_setup_cmd = (r'efibootmgr -c -L "RHEV-H" -l '
+                             r'"\EFI\redhat\shim.efi" -d %s -p 1' % disk)
+            _functions.system("echo '%s' >> /liveos/efi/cmd" % efi_setup_cmd)
+            logger.info(efi_setup_cmd)
+            efi_setup = _functions.subprocess_closefds(efi_setup_cmd,
+                                                       shell=True,
+                                                       stdout=subprocess.PIPE,
+                                                       stderr=subprocess.STDOUT
+                                                       )
+            efi_results, efi_err = efi_setup.communicate()
+            logger.info(efi_results)
+            if efi_setup.wait() != 0:
+                logger.error("efibootmgr setup failed")
+                return False
+            else:
+                shutil.copy("/boot/efi/EFI/redhat/shim.efi",
+                            "/liveos/efi/EFI/redhat/shim.efi")
+        logger.debug("Generating Grub2 Templates")
+        if _functions.is_efi_boot():
+            if not os.path.exists("/liveos/efi/EFI/%s" \
+                                  % self.efi_dir_name):
+                os.makedirs("/liveos/efi/EFI/%s" % self.efi_dir_name)
+        grub_conf = open(self.grub_config_file, "w")
+        grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
             partB = 0
             if self.partN == 0:
@@ -651,7 +671,9 @@ initrd /initrd0.img
         "disk": self.disk,
         "grub_dir": self.grub_dir,
         "grub_prefix": self.grub_prefix,
-        "efi_hd": self.efi_hd
+        "efi_hd": self.efi_hd,
+        "linux": "linux",
+        "initrd": "initrd",
     }
         if not _functions.is_firstboot():
             if os.path.ismount("/live"):
