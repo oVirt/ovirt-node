@@ -23,6 +23,7 @@ SUBDIRS =   \
   data \
   dracut \
   images \
+  hooks \
   recipe \
   scripts \
   src \
