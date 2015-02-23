@@ -116,6 +116,7 @@ AC_CONFIG_FILES([Makefile
                 data/Makefile
                 dracut/Makefile
                 images/Makefile
+                hooks/Makefile
                 scripts/Makefile
                 registration/Makefile
                 tools/Makefile

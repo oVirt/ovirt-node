@@ -1,0 +1,62 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# 03-validate-owner-ssh-keys - Copyright (C) 2015 Red Hat, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+import grp
+import os
+import pwd
+import subprocess
+import sys
+
+
+def main():
+    _RESTART_SSH_DAEMON = False
+    _GROUP_SSH_KEYS = "ssh_keys"
+    _PATH_KEYS = ("/etc/ssh/ssh_host_rsa_key",
+                  "/etc/ssh/ssh_host_key",
+                  "/etc/ssh/ssh_host_dsa_key",
+                  "/etc/ssh/ssh_host_ecdsa_key")
+
+    try:
+        for key in _PATH_KEYS:
+            if os.path.exists(key) and \
+                    grp.getgrnam(_GROUP_SSH_KEYS).gr_gid >= 0:
+                stat_info = os.stat(key)
+                user = pwd.getpwuid(stat_info.st_uid)[0]
+                group = grp.getgrgid(stat_info.st_gid)[0]
+                if user != "root" or group != _GROUP_SSH_KEYS:
+                    os.chown(key,
+                             pwd.getpwnam("root").pw_uid,
+                             grp.getgrnam(_GROUP_SSH_KEYS).gr_gid)
+                    _RESTART_SSH_DAEMON = True
+
+        if _RESTART_SSH_DAEMON:
+            cmd = subprocess.Popen(['service', 'sshd', 'restart'],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   shell=False)
+
+            output, err = cmd.communicate()
+            if cmd.returncode != 0:
+                print("Cannot restart sshd service!")
+                return cmd.returncode
+
+    except KeyError:
+        print "No ssh keys group, nothing to do.."
+    except:
+        print "Exception got, raising it.."
+        raise
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
