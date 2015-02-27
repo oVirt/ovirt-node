@@ -798,6 +798,9 @@ class Nameservers(NodeConfigFileSection):
         return {"OVIRT_DNS": ",".join(servers) or None
                 }
 
+    def configure(self, servers):
+        self.update(servers)
+
     def retrieve(self):
         """We mangle the original vale a bit for py convenience
         """
@@ -897,6 +900,9 @@ class Timeservers(NodeConfigFileSection):
         return {"OVIRT_NTP": ",".join(servers) or None
                 }
 
+    def configure(self, servers):
+        self.update(servers)
+
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
         cfg.update({"servers": cfg["servers"].split(",") if cfg["servers"]
@@ -966,6 +972,9 @@ class Syslog(NodeConfigFileSection):
         (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(server)
         valid.Port()(port)
 
+    def configure(self, server, port=None):
+        self.update(server, port)
+
     def transaction(self):
         return self.__legacy_transaction()
 
@@ -1003,6 +1012,9 @@ class Collectd(NodeConfigFileSection):
     def update(self, server, port):
         valid.FQDNOrIPAddress()(server)
         valid.Port()(port)
+
+    def configure(self, server, port):
+        self.update(server, port)
 
     def transaction(self):
         return self.__legacy_transaction()
@@ -1333,6 +1345,9 @@ class iSCSI(NodeConfigFileSection):
         (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(target_host)
         (valid.Empty(or_none=True) | valid.Port())(target_port)
 
+    def configure_initiator_name(self, name):
+        self.update(name, None, None, None)
+
     def transaction(self):
         cfg = dict(self.retrieve())
         initiator_name = cfg["name"]
@@ -1365,6 +1380,9 @@ class SCSIDhAlua(NodeConfigFileSection):
     def update(self, enabled):
         (valid.Boolean() | valid.Empty(or_none=True))(enabled)
         return {"OVIRT_SCSI_DH_ALUA": "true" if enabled else None}
+
+    def configure(self, enabled):
+        self.update(enabled)
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
@@ -1407,6 +1425,9 @@ class Netconsole(NodeConfigFileSection):
     def update(self, server, port):
         (valid.Empty(or_none=True) | valid.FQDNOrIPAddress())(server)
         valid.Port()(port)
+
+    def configure(self, server, port):
+        self.update(server, port)
 
     def transaction(self):
         def _clear_config():
@@ -1479,6 +1500,12 @@ class Logrotate(NodeConfigFileSection):
                 "OVIRT_LOGROTATE_INTERVAL": "daily" if interval is None
                 else interval}
 
+    def configure_interval(self, interval):
+        self.update(None, interval)
+
+    def configure_max_size(self, max_size):
+        self.update(max_size, None)
+
     def transaction(self):
         cfg = dict(self.retrieve())
         max_size = cfg["max_size"] or 1024
@@ -1527,6 +1554,9 @@ class Keyboard(NodeConfigFileSection):
         # FIXME Some validation that layout is in the list of available layouts
         pass
 
+    def configure(self, layout):
+        self.update(layout)
+
     def transaction(self):
         cfg = dict(self.retrieve())
         layout = cfg["layout"]
@@ -1564,6 +1594,9 @@ class NFSv4(NodeConfigFileSection):
         (valid.Empty() | valid.FQDN())(domain)
         return {"OVIRT_NFSV4_DOMAIN": domain or None
                 }
+
+    def configure_domain(self, domain):
+        self.update(domain)
 
     def transaction(self):
         cfg = dict(self.retrieve())
@@ -1620,6 +1653,18 @@ class SSH(NodeConfigFileSection):
                 "OVIRT_SSH_PORT": port if port else "22",
                 "OVIRT_DISABLE_AES_NI": "true" if disable_aesni else None
                 }
+
+    def configure_aesni(self, enabled):
+        self.update(None, None, None, enabled)
+
+    def configure_pwauth(self, enabled):
+        self.update(enabled, None, None, None)
+
+    def configure_port(self, port):
+        self.update(None, port, None, None)
+
+    def configure_aesni_bytes(self, num_bytes):
+        self.update(None, None, num_bytes, None)
 
     def retrieve(self):
         cfg = dict(NodeConfigFileSection.retrieve(self))
