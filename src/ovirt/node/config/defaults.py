@@ -279,7 +279,7 @@ class Network(NodeConfigFileSection):
         """Return all transactions to re-configure networking
         """
         services = ["network", "ntpd", "ntpdate", "rpcbind", "nfslock",
-                    "rpcidmapd", "rpcgssd"]
+                    "rpcidmapd", "nfs-idmapd", "rpcgssd"]
 
         def do_services(cmd, services):
             with console.CaptureOutput():
@@ -1579,7 +1579,11 @@ class NFSv4(NodeConfigFileSection):
                 nfsv4.domain(domain or "")
 
                 fs.Config().persist(nfsv4.configfilename)
-                system.service("rpcidmapd", "restart")
+                servicename = "rpcidmapd"
+                sysdfile = File("/usr/lib/systemd/system/nfs-idmapd.service")
+                if sysdfile.exists():
+                    servicename = "nfs-idmapd"
+                system.service(servicename, "restart")
                 process.call(["nfsidmap", "-c"])
 
         tx = utils.Transaction("Configuring NFSv4")
