@@ -95,7 +95,6 @@ Requires:       grub
 # for applying patches in %post
 Requires(post):       patch
 %endif
-Requires:       system-release
 
 Requires:       %{name}-selinux = %{version}-%{release}
 Requires:       %{name}-branding-ovirt = %{version}-%{release}
@@ -205,6 +204,18 @@ EOF
 echo 'files /var/lib/puppet' >> /etc/rwtab
 %endif
 
+#
+# oVirt Node plugin SNMP logic
+#
+%package plugin-snmp-logic
+Summary:        SNMP logic for SNMP plugin
+Group:          Applications/System
+BuildArch:      noarch
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-lib-config = %{version}-%{release}
+
+%description plugin-snmp-logic
+This package provides the snmp logic for snmp plugin
 
 %package plugin-snmp
 Summary:        SNMP plugin for %{product_family} image
@@ -212,6 +223,7 @@ Group:          Applications/System
 Requires:       net-snmp
 Requires:       net-snmp-utils
 Requires:       perl-libs
+Requires:       %{name}-plugin-snmp-logic = %{version}-%{release}
 
 %define snmp_root %{_datadir}/%{name}
 
@@ -231,10 +243,25 @@ dontLogTCPWrappersConnects yes
 rwuser root auth .1
 EOF_snmpd
 
+#
+# oVirt Node plugin CIM logic
+#
+%package plugin-cim-logic
+Summary:        CIM logic for the CIM plugin
+Group:          Applications/System
+BuildArch:      noarch
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-lib-config = %{version}-%{release}
+Requires:       %{name}-lib-legacy = %{version}-%{release}
+
+%description plugin-cim-logic
+This package provides a cim logic used in CIM plugin
+
 
 %package plugin-cim
 Summary:        CIM plugin for %{product_family} image
 Group:          Applications/System
+Requires:       %{name}-plugin-cim-logic = %{version}-%{release}
 Requires:       libvirt-cim
 Requires:       sblim-sfcb
 
@@ -433,6 +460,145 @@ Group:    Applications/System
 %description branding-ovirt
 This package contains the files to let Node appear in the oVirt look.
 
+#
+# oVirt Node Lib
+#
+%package lib
+Summary:         oVirt Node lib
+BuildArch:       noarch
+BuildRequires:   python-setuptools python-devel dracut
+BuildRequires:   automake autoconf
+Requires:        %{name}-lib-config = %{version}-%{release}
+Requires:        %{name}-lib-legacy = %{version}-%{release}
+Requires:        ethtool
+Requires:        augeas >= 0.3.5
+Requires:        bridge-utils
+Requires(post):  /sbin/chkconfig
+Requires(preun): /sbin/chkconfig
+%if %{is_systemd}
+Requires:        systemd-units
+Requires(post):  systemd-units
+Requires(preun): systemd-units
+Requires:        python-IPy
+%endif
+Requires:        iscsi-initiator-utils
+Requires:        PyPAM
+Requires:        python-urwid
+Requires:        python-lockfile
+Requires:        python-lxml
+Requires:        cracklib-python
+Requires:        dracut
+Requires:        tuned
+Requires:        openssh-server
+Requires:        python-gudev
+Requires:        nfs-utils
+Requires:        system-release
+Requires:        ntp
+Requires:        udev >= 147-2.34
+%if ! 0%{?is_el6}
+Requires:        python-augeas
+%endif
+%if %{is_el6}
+Requires:        /bin/hostname
+%else
+Requires:        hostname
+%endif
+%if %{is_min_f19}
+Requires:        NetworkManager
+%endif
+%if 0%{?is_systemd}
+Requires:       grub2
+%else
+Requires:       grub
+# for applying patches in %post
+Requires(post):       patch
+%endif
+
+#libvirt dependencies
+Requires: libvirt-python
+%if 0%{?rhel} >= 7 || 0%{?fedora} >= 18
+Requires: libvirt-daemon >= 1.0.2-1
+Requires: libvirt-daemon-config-nwfilter
+Requires: libvirt-daemon-driver-network
+Requires: libvirt-daemon-driver-nwfilter
+Requires: libvirt-daemon-driver-qemu
+%else
+%if 0%{?rhel}
+Requires: libvirt >= 0.10.2-18.el6_4.4
+%else
+Requires: libvirt >= 1.0.2-1
+%endif
+%endif
+
+%description lib
+The core source of oVirt Node
+
+
+#
+# oVirt Node Lib Config
+#
+%package lib-config
+Summary:        oVirt Node core logic
+BuildArch:      noarch
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-lib-legacy = %{version}-%{release}
+
+%description lib-config
+All the logic for configuring the Node
+
+
+#
+# oVirt Node cli tools
+#
+%package cli-tools
+Summary:        oVirt Node Cli Tools
+BuildArch:      noarch
+Requires:       %{name}-lib = %{version}-%{release}
+
+%description cli-tools
+Clients tools for oVirt Node
+
+
+#
+# oVirt Node Text User Interface (TUI) Installer
+#
+%package tui-installer
+Summary:        oVirt Node TUI Installer
+BuildArch:      noarch
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-lib-config = %{version}-%{release}
+Requires:       %{name}-lib-legacy = %{version}-%{release}
+
+%description tui-installer
+oVirt Node Text User Interface Installer
+
+
+#
+# oVirt Node Text User Interface (TUI) Setup
+#
+%package tui-setup
+Summary:        oVirt Node TUI Setup
+BuildArch:      noarch
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-lib-config = %{version}-%{release}
+Requires:       %{name}-plugin-snmp-logic = %{version}-%{release}
+Requires:       %{name}-plugin-cim-logic = %{version}-%{release}
+
+%description tui-setup
+oVirt Node Text User Interface Setup
+
+
+#
+# oVirt Node Lib Legacy
+#
+%package lib-legacy
+Summary:        oVirt Node Lib legacy
+BuildArch:      noarch
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-lib-config = %{version}-%{release}
+
+%description lib-legacy
+oVirt Node Legacy code
 
 
 %prep
@@ -641,6 +807,104 @@ fi
 %{_mandir}/man8/node-creator.8.gz
 %{_sbindir}/node-creator
 
+%files lib-legacy
+%{python_sitelib}/ovirt_config_setup/plugins.py*
+%if ! 0%{?rhel}
+%{python_sitelib}/ovirt_config_setup/collectd.py*
+%endif
+%{python_sitelib}/ovirt_config_setup/__init__.py*
+%{python_sitelib}/ovirtnode/network.py*
+%{python_sitelib}/ovirtnode/log.py*
+%{python_sitelib}/ovirtnode/install.py*
+%{python_sitelib}/ovirtnode/iscsi.py*
+%{python_sitelib}/ovirtnode/ovirtfunctions.py*
+%{python_sitelib}/ovirtnode/storage.py*
+%{python_sitelib}/ovirtnode/password.py*
+%{python_sitelib}/ovirtnode/__init__.py*
+
+%files tui-setup
+%{python_sitelib}/ovirt/node/setup/ipmi/ipmi_page.py*
+%{python_sitelib}/ovirt/node/setup/ipmi/__init__.py*
+%{python_sitelib}/ovirt/node/setup/core/network_page.py*
+%{python_sitelib}/ovirt/node/setup/core/support_page.py*
+%{python_sitelib}/ovirt/node/setup/core/security_page.py*
+%{python_sitelib}/ovirt/node/setup/core/ping.py*
+%{python_sitelib}/ovirt/node/setup/core/kdump_page.py*
+%if ! 0%{?rhel}
+%{python_sitelib}/ovirt/node/setup/core/monitoring_page.py*
+%endif
+%{python_sitelib}/ovirt/node/setup/core/diagnostics_page.py*
+%{python_sitelib}/ovirt/node/setup/core/performance_page.py*
+%{python_sitelib}/ovirt/node/setup/core/logging_page.py*
+%{python_sitelib}/ovirt/node/setup/core/keyboard_page.py*
+%{python_sitelib}/ovirt/node/setup/core/status_page.py*
+%{python_sitelib}/ovirt/node/setup/core/remote_storage_page.py*
+%{python_sitelib}/ovirt/node/setup/core/plugins_page.py*
+%{python_sitelib}/ovirt/node/setup/core/__init__.py*
+%{python_sitelib}/ovirt/node/setup/snmp/snmp_page.py*
+%{python_sitelib}/ovirt/node/setup/snmp/__init__.py*
+%{python_sitelib}/ovirt/node/setup/cim/cim_page.py*
+%{python_sitelib}/ovirt/node/setup/cim/__init__.py*
+%{python_sitelib}/ovirt/node/setup/__main__.py*
+%{python_sitelib}/ovirt/node/setup/__init__.py*
+
+
+%files tui-installer
+%{python_sitelib}/ovirt/node/installer/core/storage_vol_page.py*
+%{python_sitelib}/ovirt/node/installer/core/confirmation_page.py*
+%{python_sitelib}/ovirt/node/installer/core/progress_page.py*
+%{python_sitelib}/ovirt/node/installer/core/welcome_page.py*
+%{python_sitelib}/ovirt/node/installer/core/installation_device_page.py*
+%{python_sitelib}/ovirt/node/installer/core/password_page.py*
+%{python_sitelib}/ovirt/node/installer/core/boot_device_page.py*
+%{python_sitelib}/ovirt/node/installer/core/upgrade_page.py*
+%{python_sitelib}/ovirt/node/installer/core/keyboard_page.py*
+%{python_sitelib}/ovirt/node/installer/core/__init__.py*
+%{python_sitelib}/ovirt/node/installer/__main__.py*
+%{python_sitelib}/ovirt/node/installer/__init__.py*
+
+%files cli-tools
+%{python_sitelib}/ovirt/node/tools/features.py*
+%{python_sitelib}/ovirt/node/tools/registration.py*
+%{python_sitelib}/ovirt/node/tools/password.py*
+%{python_sitelib}/ovirt/node/tools/__init__.py*
+
+%files lib
+%{python_sitelib}/ovirt/node/ui/__init__.py*
+%{python_sitelib}/ovirt/node/ui/urwid_builder.py*
+%{python_sitelib}/ovirt/node/ui/widgets.py*
+%{python_sitelib}/ovirt/node/plugins.py*
+%{python_sitelib}/ovirt/node/base.py*
+%{python_sitelib}/ovirt/node/log.py*
+%{python_sitelib}/ovirt/node/valid.py*
+%{python_sitelib}/ovirt/node/loader.py*
+%{python_sitelib}/ovirt/node/exceptions.py*
+%{python_sitelib}/ovirt/node/app.py*
+%{python_sitelib}/ovirt/node/__init__.py*
+%{python_sitelib}/ovirt/__init__.py*
+%{python_sitelib}/ovirt/node/utils/network.py*
+%{python_sitelib}/ovirt/node/utils/firewall.py*
+%{python_sitelib}/ovirt/node/utils/fs/mount.py*
+%{python_sitelib}/ovirt/node/utils/fs/__init__.py*
+%{python_sitelib}/ovirt/node/utils/security.py*
+%{python_sitelib}/ovirt/node/utils/virt.py*
+%{python_sitelib}/ovirt/node/utils/input.py*
+%{python_sitelib}/ovirt/node/utils/hooks.py*
+%{python_sitelib}/ovirt/node/utils/tuned.py*
+%{python_sitelib}/ovirt/node/utils/process.py*
+%{python_sitelib}/ovirt/node/utils/storage.py*
+%{python_sitelib}/ovirt/node/utils/system.py*
+%{python_sitelib}/ovirt/node/utils/expose.py*
+%{python_sitelib}/ovirt/node/utils/console.py*
+%{python_sitelib}/ovirt/node/utils/__init__.py*
+
+%files lib-config
+%{python_sitelib}/ovirt/node/config/network.py*
+%{python_sitelib}/ovirt/node/config/defaults.py*
+%{python_sitelib}/ovirt/node/config/tuned.py*
+%{python_sitelib}/ovirt/node/config/__init__.py*
+%{python_sitelib}/ovirt/node/config/migrate.py*
+
 
 %files tools
 %{_sbindir}/edit-node
@@ -660,19 +924,22 @@ fi
 %{app_root}/puppet-plugin/puppet-operatingsystem.rb.patch
 %{_sysconfdir}/ovirt-config-boot.d/puppet_autoinstall.py*
 
+%files plugin-snmp-logic
+%{python_sitelib}/ovirt/node/setup/snmp/snmp_model.py*
+
 %files plugin-snmp
 %{python_sitelib}/ovirt_config_setup/snmp.py*
 %{python_sitelib}/ovirt/node/setup/snmp/__init__.py*
-%{python_sitelib}/ovirt/node/setup/snmp/snmp_model.py*
 %{python_sitelib}/ovirt/node/setup/snmp/snmp_page.py*
 %{_sysconfdir}/ovirt-plugins.d/snmp.minimize
 %{_sysconfdir}/ovirt-config-boot.d/snmp_autoinstall.py*
 
+%files plugin-cim-logic
+%{python_sitelib}/ovirt/node/setup/cim/cim_model.py*
 
 %files plugin-cim
 %{python_sitelib}/ovirt_config_setup/cim.py*
 %{python_sitelib}/ovirt/node/setup/cim/__init__.py*
-%{python_sitelib}/ovirt/node/setup/cim/cim_model.py*
 %{python_sitelib}/ovirt/node/setup/cim/cim_page.py*
 %{_sysconfdir}/ovirt-plugins.d/cim.minimize
 %{_sysconfdir}/ovirt-commandline.d/cim-args
