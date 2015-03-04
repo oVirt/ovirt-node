@@ -108,7 +108,7 @@ class TransactionProgress(base.Base):
     def run(self):
         if self.transaction:
             self.logger.debug("Initiating transaction")
-            self.__run_transaction()
+            self.run_transaction()
         else:
             self.add_update("There were no changes, nothing to do.")
 
@@ -116,7 +116,7 @@ class TransactionProgress(base.Base):
         writeln([self.transaction.title,
                  "-" * len(self.transaction.title)])
 
-    def __run_transaction(self):
+    def run_transaction(self):
         try:
             self.__print_title()
             self.logger.debug("Preparing transaction for console %s" %
