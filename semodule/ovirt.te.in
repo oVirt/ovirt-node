@@ -215,6 +215,7 @@ optional_policy(`
     allow sshd_net_t initrc_t:process sigchld;
 ')
 
+
 #============= snmpd_t ==============
 require {
     type snmpd_t;
@@ -223,10 +224,12 @@ allow snmpd_t device_t:sock_file write;
 allow snmpd_t ovirt_t:unix_dgram_socket sendto;
 allow snmpd_t tmpfs_t:file { read getattr open };
 
+
 #============= sshd_t ==============
 allow sshd_t var_log_t:file { read open write };
 allow sshd_t device_t:sock_file write;
 allow sshd_t ovirt_t:unix_dgram_socket sendto;
+
 
 #============= svirt_t ==============
 require {
@@ -265,6 +268,13 @@ allow iscsid_t iscsi_var_lib_t:dir { write remove_name create add_name rmdir };
 allow iscsid_t iscsi_var_lib_t:file { write create unlink };
 allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
 
+optional_policy(`
+    require {
+        type kdumpctl_tmp_t;
+    }
+    allow iscsid_t kdumpctl_tmp_t:fifo_file write;
+')
+
 
 #============= ping_t ==============
 require {
@@ -295,6 +305,16 @@ optional_policy(`
     allow dhcpc_t ifconfig_t:process { siginh rlimitinh noatsecure };
     allow dhcpc_t netutils_t:process { siginh rlimitinh noatsecure };
     allow dhcpc_t setfiles_t:process { siginh rlimitinh noatsecure };
+')
+
+optional_policy(`
+    require {
+        type dhcpc_t;
+        type random_device_t;
+        type tmpfs_t;
+    }
+    allow dhcpc_t random_device_t:chr_file read;
+    allow dhcpc_t tmpfs_t:dir remove_name;
 ')
 
 
