@@ -432,6 +432,7 @@ class Config(base.Base):
                 return -1
 
             restorecon(abspath)
+            return True
 
     def _persist_dir(self, abspath):
         """Persist directory and bind mount it back to its current location
@@ -580,6 +581,7 @@ class Config(base.Base):
                 self._logger.error('Failed to unpersist "%s"', path,
                                    exc_info=True)
                 return -1
+        return True
 
     def _cleanup_tree(self, dirpath):
         """Removes empty directories in the structure. abspath must be a dir"""
