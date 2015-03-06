@@ -21,6 +21,7 @@
 # Convenience wrapper to give access to ovirt/node/utils/fs persistence
 # facilities
 import argparse
+import os
 import sys
 
 from ovirt.node.utils import fs
@@ -36,7 +37,22 @@ def persist():
 
     conf = fs.Config()
     for path in arguments.FILE:
-        conf.persist(path)
+        if conf.exists(path):
+            print "Already persisted: %s" % path
+            continue
+
+        ret_persist = conf.persist(path)
+        if ret_persist == -1:
+            print "Cannot persist: %s" % path
+            return -1
+
+        if ret_persist is None:
+            print "%s doesn't exist" % path
+            return -1
+
+        print "Successfully persisted: %s" % path
+
+    return 0
 
 if __name__ == '__main__':
     sys.exit(persist())

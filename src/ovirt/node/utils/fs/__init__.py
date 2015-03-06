@@ -433,6 +433,7 @@ class Config(base.Base):
                 return -1
 
             restorecon(abspath)
+            return True
 
     def copy_attributes(self, abspath, destpath):
         """Copy the owner/group, selinux context from abspath to destpath"""
@@ -599,6 +600,7 @@ class Config(base.Base):
                 self._logger.error('Failed to unpersist "%s"', path,
                                    exc_info=True)
                 return -1
+        return True
 
     def _cleanup_tree(self, dirpath):
         """Removes empty directories in the structure. abspath must be a dir"""

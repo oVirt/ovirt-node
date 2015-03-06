@@ -21,6 +21,7 @@
 # Convenience wrapper to give access to ovirt/node/utils/fs persistence
 # facilities
 import argparse
+import os
 import sys
 
 from ovirt.node.utils import fs
@@ -35,7 +36,18 @@ def unpersist():
 
     conf = fs.Config()
     for path in arguments.PATH:
-        conf.unpersist(path)
+        if not conf.exists(path):
+            print "File not explicitly persisted: %s" % path
+            continue
+
+        ret_unpersist = conf.unpersist(path)
+        if ret_unpersist == -1:
+            print "Cannot unpersist: %s" % path
+            return -1
+
+        print "%s successully unpersisted" % path
+
+    return 0
 
 if __name__ == '__main__':
     sys.exit(unpersist())
