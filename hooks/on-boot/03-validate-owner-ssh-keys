@@ -59,4 +59,6 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    if not any(x in open("/proc/cmdline").read() for x in ["install",
+                                                           "reinstall"]):
+        sys.exit(main())
