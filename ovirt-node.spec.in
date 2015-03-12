@@ -540,6 +540,7 @@ The core source of oVirt Node
 %package lib-config
 Summary:        oVirt Node core logic
 BuildArch:      noarch
+Requires:       system-config-keyboard-base
 Requires:       %{name}-lib = %{version}-%{release}
 Requires:       %{name}-lib-legacy = %{version}-%{release}
 
