@@ -148,12 +148,18 @@ however on a development machine to help to build the image.
 %package tools
 Summary:        Tools for working with plugins on %{product_family} images
 Group:          Applications/System
+
+
+%if 0%{with_minimizer}
+Requires:       ovirt-node-minimizer
+%else
 %if 0%{?centos}
 Requires:       livecd-tools >= 13.4.4
 %else
 Requires:       livecd-tools >= 1:16.0
 %endif
-Requires:       ovirt-node-minimizer
+%endif
+
 Requires:       libselinux-python
 
 %define tools_root %{_datadir}/ovirt-node-tools
