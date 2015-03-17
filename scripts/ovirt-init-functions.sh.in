@@ -705,6 +705,7 @@ EOP
             ;;
             rdloaddriver=scsi_dh_alua)
             scsi_dh_alua="true"
+            ;;
             syslog=*)
             i=${i#syslog=}
             eval $(printf $i|awk -F: '{print "syslog_server="$1; print "syslog_port="$2;}')
