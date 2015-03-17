@@ -20,6 +20,8 @@ recipe/archipel-node-image.ks
 recipe/image-minimizer.ks
 recipe/common-install.ks
 recipe/version.ks
+recipe/common-efi.ks
+recipe/dracut-post.ks
 scripts/collectd.conf
 *.iso
 *manifest
