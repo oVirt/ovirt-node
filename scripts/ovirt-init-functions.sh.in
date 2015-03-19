@@ -458,8 +458,9 @@ _start_ovirt_early () {
                 fi
                 done
                 ;;
-                ??-??-??-??-??-??-??)
-                i=${i#??-}
+                ??-??-??-??-??-??|??-??-??-??-??-??-??)
+                #Note: PXE IPAPPEND always appends "01-" to the front of the 06 bytes of MAC.
+                i=${i:0-17}
                 bootif=$(grep -il $(echo $i|sed 's/-/:/g') /sys/class/net/[ep]*/address|rev|cut -d/ -f2|rev)
                 ;;
             esac
