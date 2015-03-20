@@ -119,3 +119,5 @@ mcelog
 
 # for qemu
 libicu
+
+xfsprogs
