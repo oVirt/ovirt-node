@@ -1354,15 +1354,6 @@ reload_ovirt () {
 # ovirt-post
 #
 start_ovirt_post() {
-    if [[ -d "$HOOK_ON_BOOT_DIR" ]] && [[ "$(ls -A $HOOK_ON_BOOT_DIR)" ]];
-    then
-        for handler in "$HOOK_ON_BOOT_DIR"/*;
-        do
-            log "Running handler: $handler"
-            "$handler" >> $OVIRT_LOGFILE 2>&1
-        done
-    fi
-
     [ -f "$VAR_SUBSYS_OVIRT_POST" ] && exit 0
     {
         log "Starting ovirt-post"
@@ -1517,6 +1508,15 @@ EOP
         # perform any post startup operations
         case $OVIRT_RUNTIME_MODE in
         esac
+
+        if [[ -d "$HOOK_ON_BOOT_DIR" ]] && [[ "$(ls -A $HOOK_ON_BOOT_DIR)" ]];
+        then
+            for handler in "$HOOK_ON_BOOT_DIR"/*;
+            do
+                log "Running handler: $handler"
+                "$handler" >> $OVIRT_LOGFILE 2>&1
+            done
+        fi
 
         rm -f $VAR_SUBSYS_OVIRT_POST
 
