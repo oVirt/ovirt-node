@@ -235,6 +235,7 @@ allow sshd_t ovirt_t:unix_dgram_socket sendto;
 require {
     type bin_t;
 }
+allow svirt_t ovirt_t:unix_stream_socket connectto;
 allow svirt_t initrc_t:unix_stream_socket connectto;
 allow svirt_t sanlock_t:unix_stream_socket connectto;
 allow svirt_t nfs_t:file open;
