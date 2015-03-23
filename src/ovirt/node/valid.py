@@ -448,12 +448,18 @@ class FQDNOrIPAddress(Validator):
     True
     >>> FQDNOrIPAddress()("::1")
     True
+    >>> FQDNOrIPAddress()('localhost.localdomain.01234567890123456789\
+0123456789012345678901')
+    True
+    >>> FQDNOrIPAddress().validate('localhost.localdomain.01234567890123456789\
+01234567890123456789012')
+    False
     >>> FQDNOrIPAddress().validate("")
     False
     """
 
     def __init__(self, allow_ipv6=True):
-        self._validator = FQDN() | IPAddress(allow_ipv6)
+        self._validator = IPAddress(allow_ipv6) | (FQDN() & HostnameLength())
         self.description = self._validator.description
 
     def validate(self, value):

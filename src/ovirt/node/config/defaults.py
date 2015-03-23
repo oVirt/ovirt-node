@@ -709,7 +709,7 @@ class Hostname(NodeConfigFileSection):
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, hostname):
-        (valid.Empty() | valid.HostnameLength())(hostname)
+        (valid.Empty() | valid.FQDNOrIPAddress())(hostname)
 
     def transaction(self):
         cfg = self.retrieve()
