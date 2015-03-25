@@ -104,7 +104,7 @@ class Selinux(base.Base):
         try:
             selinux.restorecon(abspath)
         except OSError:
-            self._logger.debug('No default label: "%s"', abspath)
+            self._logger.warning('No default label: "%s"', abspath)
 
     def getcon(self, abspath):
         """ Return context of file, symlink or dir """
