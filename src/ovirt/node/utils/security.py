@@ -106,6 +106,21 @@ class Selinux(base.Base):
         except OSError:
             self._logger.debug('No default label: "%s"', abspath)
 
+    def getcon(self, abspath):
+        """ Return context of file, symlink or dir """
+        try:
+            return selinux.getfilecon(abspath)[1]
+        except OSError:
+            self._logger.warning('Cannot get selinux context: "%s"', abspath)
+
+    def chcon(self, abspath, context):
+        """ Change selinux security context """
+        try:
+            return selinux.chcon(abspath, context)
+        except OSError:
+            self._logger.warning('Cannot change selinux context: "%s" "%s"',
+                                 (abspath, context))
+
 
 class Ssh(base.Base):
     def __init__(self):
