@@ -27,6 +27,7 @@ from __future__ import print_function
 import shutil
 import errno
 import os
+import stat
 import StringIO
 import re
 import hashlib
@@ -433,6 +434,21 @@ class Config(base.Base):
 
             restorecon(abspath)
 
+    def copy_attributes(self, abspath, destpath):
+        """Copy the owner/group, selinux context from abspath to destpath"""
+
+        if not os.path.exists(abspath) or not os.path.exists(destpath):
+            raise RuntimeError("Cannot proceed, check if paths exist!")
+
+        abspath_stat = os.stat(abspath)
+        owner = abspath_stat[stat.ST_UID]
+        group = abspath_stat[stat.ST_GID]
+        os.chown(destpath, owner, group)
+
+        from ...utils import security
+        security.Selinux().chcon(destpath,
+                                 security.Selinux().getcon(abspath))
+
     def _persist_dir(self, abspath):
         """Persist directory and bind mount it back to its current location
         """
@@ -443,6 +459,7 @@ class Config(base.Base):
             return
 
         shutil.copytree(abspath, persisted_path, symlinks=True)
+        self.copy_attributes(abspath, persisted_path)
         mount.mount(persisted_path, abspath, flags=mount.MS_BIND)
         self._logger.info('Directory "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
@@ -484,6 +501,7 @@ class Config(base.Base):
                                        '"%s": %s', abspath, ose.message)
         self._prepare_dir(abspath, persisted_path)
         shutil.copy2(abspath, persisted_path)
+        self.copy_attributes(abspath, persisted_path)
         mount.mount(persisted_path, abspath, flags=mount.MS_BIND)
         self._logger.info('File "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
@@ -514,6 +532,7 @@ class Config(base.Base):
             self._prepare_dir(abspath, persisted_path)
             os.symlink(current_target, persisted_path)
 
+        self.copy_attributes(abspath, persisted_path)
         self._logger.info('Symbolic link "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
 
