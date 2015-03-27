@@ -253,6 +253,7 @@ allow svirt_t bin_t:file entrypoint;
 
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
+allow syslogd_t tmpfs_t:file read;
 
 
 #============= sysstat_t ==============
