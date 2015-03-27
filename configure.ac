@@ -19,9 +19,9 @@ AC_PREREQ(2.60)
 
 define([VERSION_MAJOR], [3])
 define([VERSION_MINOR], [2])
-define([VERSION_FIX], [1])
+define([VERSION_FIX], [2])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX)
-define([VERSION_RELEASE], [11])
+define([VERSION_RELEASE], [1])
 define([VERSION_SUFFIX], [])
 
 AC_INIT([ovirt-node], VERSION_NUMBER[]VERSION_SUFFIX, [devel@ovirt.org])
