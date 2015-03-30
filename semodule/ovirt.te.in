@@ -585,12 +585,12 @@ optional_policy(`
 ')
 
 
-
 #
 # Transitions
 #
 type ovirt_t;
 type ovirt_exec_t;
+allow ovirt_t unconfined_t:process transition;
 init_daemon_domain(ovirt_t, ovirt_exec_t)
 unconfined_domain(ovirt_t)
 unconfined_domain(mount_t)
