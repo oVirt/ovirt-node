@@ -57,6 +57,16 @@ optional_policy(`
     allow systemd_logind_t unconfined_service_t:dbus send_msg;
 ')
 
+#============= plymouthd_t ===========
+optional_policy(`
+    require {
+        type devpts_t;
+        type plymouthd_t;
+    }
+    allow plymouthd_t devpts_t:chr_file setattr;
+    allow plymouthd_t tmpfs_t:dir search;
+')
+
 #============= brctl_t ==============
 optional_policy(`
     require {
