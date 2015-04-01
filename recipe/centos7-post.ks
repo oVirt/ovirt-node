@@ -178,34 +178,8 @@ echo "files     /var/lib/puppet" >> /etc/rwtab
 sed -ie '/dirs[ \t].*nfs/ d' /etc/rwtab
 echo "files     /var/lib/nfs" >> /etc/rwtab
 
-# rhbz#734478 add virt-who (*.py are removed in rhevh image)
-cmd_who=""
-if [ -f /usr/share/virt-who/virt-who.pyc ]; then
-    cmd_who="virt-who.pyc"
-elif [ -f /usr/share/virt-who/virtwho.pyc ]; then
-    cmd_who="virtwho.pyc"
-else
-    echo "Couldn't find a known virt-who executable. Please check"
-fi
-
-if [ ! -z $cmd_who ]; then
-   cat > /usr/bin/virt-who <<EOF_virt_who
-#!/bin/sh
-exec /usr/bin/python /usr/share/virt-who/$cmd_who "\$@"
-EOF_virt_who
-fi
-
-# rhbz 1152947 fixing virt-who start dependancy syslog.socket
-# first of all fixing the missing link of syslog to rsyslog
-# depending service and socket for correct operation
-
-sed -i "s/syslog\.target/syslog.socket/" /usr/lib/systemd/system/virt-who.service
-sed -i "s/;Requires/Requires/" /lib/systemd/system/rsyslog.service
-ln -s /lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service
-
-#enabling libvirtd as described in its libvirtd.service comments and virt-who as requested in bug
+#enabling libvirtd as described in its libvirtd.service comments
 systemctl enable libvirtd.service
-systemctl enable virt-who.service
 
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
