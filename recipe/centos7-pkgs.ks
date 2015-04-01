@@ -7,6 +7,7 @@ net-tools
 iproute
 ltrace
 firewalld
+plymouth
 
 # keyboard layout
 system-config-keyboard-base
