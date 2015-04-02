@@ -1480,7 +1480,7 @@ EOP
             for handler in "$HOOK_ON_BOOT_DIR"/*;
             do
                 log "Running handler: $handler"
-                "$handler" >> $OVIRT_LOGFILE 2>&1
+                runcon -t unconfined_t "$handler" 2>&1
             done
         fi
 
