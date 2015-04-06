@@ -118,6 +118,7 @@ Requires: libvirt >= 1.0.2-1
 
 BuildArch:      noarch
 
+%{!?_licensedir:%global license %%doc}
 %define app_root %{_datadir}/%{name}
 
 %description
@@ -808,7 +809,8 @@ fi
 #
 %files recipe
 %defattr(0644,root,root,0755)
-%doc README COPYING
+%doc README
+%license COPYING
 %{recipe_root}/*.ks
 %defattr(0755,root,root,0755)
 %{_mandir}/man8/node-creator.8.gz
@@ -1013,7 +1015,7 @@ fi
 %{_libexecdir}/ovirt-node/hooks
 
 
-%doc COPYING
+%license COPYING
 # should be ifarch i386
 %{app_root}/grub-splash.xpm.gz
 # end i386 bits
