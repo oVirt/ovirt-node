@@ -108,6 +108,7 @@ dirs	/root/.uml
 files	/var/cache/libvirt
 files	/var/empty/sshd/etc/localtime
 files	/var/lib/libvirt
+files   /var/lib/virt-who
 files   /var/lib/multipath
 files   /var/cache/multipathd
 empty	/mnt
