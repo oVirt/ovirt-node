@@ -355,7 +355,11 @@ _start_ovirt_early () {
     #   ntp=server[,server]
     #   vlan=id
     #   network_layout=bridged|direct
-    #   bond_setup=<bondname>:<bondslaves>:[:<options>]
+    #
+    #   bond or bond_setup=<bondname>:<bondslaves>:[:<options>]
+    #   Use bond for node based on RHEL/CentOS 7 or higher
+    #   Use bond_setup for node based on RHEL/CentOS 6
+    #
     # static network configuration
     ip_address=
     ip_gateway=
