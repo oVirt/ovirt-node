@@ -8,6 +8,7 @@ Wants=ovirt.service libvirtd.service
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/libexec/ovirt-node-hooks trigger on-boot
+ExecStop=/usr/libexec/ovirt-node-hooks trigger on-shutdown
 
 [Install]
 WantedBy=multi-user.target

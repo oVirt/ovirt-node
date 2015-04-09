@@ -577,6 +577,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/post-upgrade
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/rollback
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/on-boot
+%{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/on-shutdown
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/on-changed-boot-image
 
 %if 0%{?is_systemd}

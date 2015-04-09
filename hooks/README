@@ -1,2 +1,2 @@
 on-boot dir contains scripts that will run during the boot.
-
+on-shutdown dir contains scripts that will be run during shutdown.
