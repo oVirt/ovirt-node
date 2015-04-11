@@ -178,9 +178,6 @@ echo "files     /var/lib/puppet" >> /etc/rwtab
 sed -ie '/dirs[ \t].*nfs/ d' /etc/rwtab
 echo "files     /var/lib/nfs" >> /etc/rwtab
 
-#enabling libvirtd as described in its libvirtd.service comments
-systemctl enable libvirtd.service
-
 # set maxlogins to 3
 echo "*        -       maxlogins      3" >> /etc/security/limits.conf
 
