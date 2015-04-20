@@ -90,7 +90,7 @@ cp $LIVE_ROOT/isolinux/version $INSTALL_ROOT/etc/default/
 # /(which is not shown in ply anyway)
 # The initrd can not be regeneated in a non-chroot env (here)
 cat > $INSTALL_ROOT/etc/$PACKAGE-release <<EOF
-$PRODUCT $VERSION ($RELEASE)
+$PRODUCT release $VERSION ($RELEASE)
 EOF
 ln -snf $PACKAGE-release $INSTALL_ROOT/etc/redhat-release
 ln -snf $PACKAGE-release $INSTALL_ROOT/etc/system-release
