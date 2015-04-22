@@ -43,6 +43,7 @@ class Install:
         self.efi_hd = ""
         self.live_path = None
         self.efi_path = self._get_efi_path()
+        self.efi_name = self.efi_path.split("/")[1]
 
     def _get_efi_path(self):
         if not _system.SystemRelease().is_el():
@@ -106,13 +107,10 @@ class Install:
         else:
             self.grub_config_file = "%s/grub.conf" % self.grub_dir
 
-        if os.path.exists("/boot/efi/EFI/fedora"):
-            self.efi_dir_name = "fedora"
-        else:
-            self.efi_dir_name = "redhat"
         if _functions.is_efi_boot():
-            if self.efi_dir_name == "fedora":
-                self.grub_config_file = "/liveos/efi/EFI/fedora/grub.cfg"
+            if self.efi_name == "fedora":
+                self.grub_config_file = "/liveos/efi/%s/grub.cfg" % \
+                        self.efi_path
             else:
                 self.grub_config_file = "/liveos/efi/%s/grub.conf" % \
                         self.efi_path
@@ -276,7 +274,7 @@ search --no-floppy --label RootBackup --set root
                               " --boot-directory=" + boot_dir +
                               " --root-directory=" + boot_dir +
                               " --efi-directory=" + boot_dir +
-                              " --bootloader-id=" + self.efi_dir_name +
+                              " --bootloader-id=" + self.efi_name +
                               " --force")
             _functions.system("echo '%s' >> /liveos/efi/cmd" % grub_setup_cmd)
             logger.info(grub_setup_cmd)
@@ -309,9 +307,8 @@ search --no-floppy --label RootBackup --set root
                             "/liveos/efi/%s/shim.efi" % self.efi_path)
         logger.debug("Generating Grub2 Templates")
         if _functions.is_efi_boot():
-            if not os.path.exists("/liveos/efi/EFI/%s" \
-                                  % self.efi_dir_name):
-                os.makedirs("/liveos/efi/EFI/%s" % self.efi_dir_name)
+            if not os.path.exists("/liveos/efi/%s" % self.efi_path):
+                os.makedirs("/liveos/efi/%s" % self.efi_path)
         grub_conf = open(self.grub_config_file, "w")
         grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
         if self.oldtitle is not None:
@@ -323,8 +320,8 @@ search --no-floppy --label RootBackup --set root
             grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
         grub_conf.close()
         if os.path.exists("/liveos/efi/EFI"):
-            efi_grub_conf = open("/liveos/efi/EFI/%s/grub.cfg" \
-                    % self.efi_dir_name, "w")
+            efi_grub_conf = open("/liveos/efi/%s/grub.cfg" \
+                    % self.efi_path, "w")
             # inject efi console output modules
             efi_grub_conf.write(GRUB2_EFI_CONFIG_TEMPLATE)
             efi_grub_conf.write(GRUB2_CONFIG_TEMPLATE % self.grub_dict)
@@ -337,7 +334,7 @@ search --no-floppy --label RootBackup --set root
                 efi_grub_conf.write(GRUB2_BACKUP_TEMPLATE % self.grub_dict)
                 efi_grub_conf.close()
             _functions.system("umount /liveos")
-            _functions.remove_efi_entry(self.efi_dir_name)
+            _functions.remove_efi_entry(self.efi_name)
             logger.info("Grub2 Install Completed")
             return True
         return True
@@ -349,13 +346,10 @@ search --no-floppy --label RootBackup --set root
         if _functions.is_efi_boot():
             if "OVIRT_ISCSI_INSTALL" in OVIRT_VARS:
                 _functions.system("umount /boot")
-            if os.path.isfile("/boot/efi/EFI/%s/grubx64.efi" %
-                              self.efi_dir_name):
-                shutil.copy("/boot/efi/EFI/%s/grubx64.efi" % self.efi_dir_name,
-                            "/tmp")
+            if os.path.isfile("/boot/efi/%s/grubx64.efi" % self.efi_path):
+                shutil.copy("/boot/efi/%s/grubx64.efi" % self.path, "/tmp")
             else:
-                shutil.copy("/boot/efi/EFI/%s/grub.efi" % self.efi_dir_name,
-                            "/tmp")
+                shutil.copy("/boot/efi/%s/grub.efi" % self.efi_path, "/tmp")
             _functions.mount_boot()
         if "OVIRT_ROOT_INSTALL" in OVIRT_VARS:
             if OVIRT_VARS["OVIRT_ROOT_INSTALL"] == "n":
@@ -393,7 +387,7 @@ search --no-floppy --label RootBackup --set root
             logger.debug(str(os.listdir("/liveos")))
             _functions.system("umount /liveos")
             _functions.mount_efi(target="/liveos")
-            if self.efi_dir_name == "fedora":
+            if self.efi_name == "fedora":
                 grub_config_file = "/liveos/EFI/fedora/grub.cfg"
             else:
                 grub_config_file = "/liveos/%s/grub.conf" % self.efi_path
@@ -552,22 +546,22 @@ search --no-floppy --label RootBackup --set root
                 # generate grub legacy config for efi partition
                 #remove existing efi entries
                 _functions.remove_efi_entry(_functions.PRODUCT_SHORT)
-                if self.efi_dir_name == "fedora":
+                if self.efi_name == "fedora":
                     _functions.add_efi_entry(_functions.PRODUCT_SHORT,
                                              ("\\EFI\\%s\\grubx64.efi" %
-                                              self.efi_dir_name),
+                                              self.efi_name),
                                              efi_disk)
                 else:
                     if os.path.isfile("/liveos/efi/%s/grubx64.efi" %
                             self.efi_path):
                         _functions.add_efi_entry(_functions.PRODUCT_SHORT,
                                                  ("\\EFI\\%s\\grubx64.efi" %
-                                                  self.efi_dir_name),
+                                                  self.efi_name),
                                                  efi_disk)
                     else:
                         _functions.add_efi_entry(_functions.PRODUCT_SHORT,
                                                  ("\\EFI\\%s\\grub.efi" %
-                                                  self.efi_dir_name),
+                                                  self.efi_name),
                                                  efi_disk)
         self.kernel_image_copy()
 
