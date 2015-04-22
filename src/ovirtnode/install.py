@@ -42,6 +42,18 @@ class Install:
         self.s = Storage()
         self.efi_hd = ""
         self.live_path = None
+        self.efi_path = self._get_efi_path()
+
+    def _get_efi_path(self):
+        if not _system.is_el():
+            return "EFI/fedora"
+        elif _system.is_centos():
+            if _system.is_min_el(7):
+                return "EFI/centos"
+            else:
+                return "EFI/redhat"
+        else:
+            return "EFI/redhat"
 
     def kernel_image_copy(self):
         if (not _functions.system("cp -p %s/vmlinuz0 %s" % \
@@ -102,7 +114,8 @@ class Install:
             if self.efi_dir_name == "fedora":
                 self.grub_config_file = "/liveos/efi/EFI/fedora/grub.cfg"
             else:
-                self.grub_config_file = "/liveos/efi/EFI/redhat/grub.conf"
+                self.grub_config_file = "/liveos/efi/%s/grub.conf" % \
+                        self.efi_path
 
     def grub_install(self):
         if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
@@ -194,12 +207,14 @@ EOF
             if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
                 _functions.system("cp /tmp/grub.efi \
                                    /liveos/efi/EFI/BOOT/BOOTX64.efi")
-            if os.path.isfile("/boot/efi/EFI/redhat/grubx86.efi"):
-                _functions.system("cp /boot/efi/EFI/redhat/grubx64.efi \
-                                  /liveos/efi/EFI/BOOT/BOOTX64.efi")
+            if os.path.isfile("/boot/efi/%s/grubx86.efi" % self.efi_path):
+                _functions.system("cp /boot/efi/%s/grubx64.efi \
+                                  /liveos/efi/EFI/BOOT/BOOTX64.efi" %
+                                  self.efi_path)
             else:
-                _functions.system("cp /boot/efi/EFI/redhat/grub.efi \
-                                  /liveos/efi/EFI/BOOT/BOOTX64.efi")
+                _functions.system("cp /boot/efi/%s/grub.efi \
+                                  /liveos/efi/EFI/BOOT/BOOTX64.efi" %
+                                  self.efi_path)
             _functions.system("cp %s /liveos/efi/EFI/BOOT/BOOTX64.conf" \
                               % self.grub_config_file)
             _functions.system("umount /liveos/efi")
@@ -290,8 +305,8 @@ search --no-floppy --label RootBackup --set root
                 logger.error("efibootmgr setup failed")
                 return False
             else:
-                shutil.copy("/boot/efi/EFI/redhat/shim.efi",
-                            "/liveos/efi/EFI/redhat/shim.efi")
+                shutil.copy("/boot/efi/%s/shim.efi" % self.efi_path,
+                            "/liveos/efi/%s/shim.efi" % self.efi_path)
         logger.debug("Generating Grub2 Templates")
         if _functions.is_efi_boot():
             if not os.path.exists("/liveos/efi/EFI/%s" \
@@ -381,7 +396,7 @@ search --no-floppy --label RootBackup --set root
             if self.efi_dir_name == "fedora":
                 grub_config_file = "/liveos/EFI/fedora/grub.cfg"
             else:
-                grub_config_file = "/liveos/EFI/redhat/grub.conf"
+                grub_config_file = "/liveos/%s/grub.conf" % self.efi_path
         grub_config_file_exists = grub_config_file is not None \
             and os.path.exists(grub_config_file)
         logger.debug("Grub config file is: %s" % grub_config_file)
@@ -512,20 +527,22 @@ search --no-floppy --label RootBackup --set root
                 logger.info("efi detected, installing efi configuration")
                 _functions.system("mkdir /liveos/efi")
                 _functions.mount_efi()
-                _functions.system("mkdir -p /liveos/efi/EFI/redhat")
+                _functions.system("mkdir -p /liveos/efi/%s" % self.efi_path)
                 if _functions.is_iscsi_install() or _functions.is_efi_boot():
                     if os.path.isfile("/tmp/grubx64.efi"):
                         shutil.copy("/tmp/grubx64.efi",
-                                    "/liveos/efi/EFI/redhat/grubx64.efi")
+                                    "/liveos/efi/%s/grubx64.efi" %
+                                    self.efi_path)
                     else:
                         shutil.copy("/tmp/grub.efi",
-                                    "/liveos/efi/EFI/redhat/grub.efi")
-                elif os.path.isfile("/boot/efi/EFI/redhat/grubx64.efi"):
-                    shutil.copy("/boot/efi/EFI/redhat/grubx64.efi",
-                          "/liveos/efi/EFI/redhat/grubx64.efi")
+                                    "/liveos/efi/%s/grub.efi" % self.efi_path)
+                elif os.path.isfile("/boot/efi/%s/grubx64.efi" %
+                        self.efi_path):
+                    shutil.copy("/boot/efi/%s/grubx64.efi" % self.efi_path,
+                          "/liveos/efi/%s/grubx64.efi" % self.efi_path)
                 else:
-                    shutil.copy("/boot/efi/EFI/redhat/grub.efi",
-                          "/liveos/efi/EFI/redhat/grub.efi")
+                    shutil.copy("/boot/efi/%s/grub.efi" % self.efi_path,
+                          "/liveos/efi/%s/grub.efi" % self.efi_path)
                 if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
                     self.disk = _functions.findfs("BootNew")
                 if not "/dev/mapper/" in self.disk:
@@ -541,7 +558,8 @@ search --no-floppy --label RootBackup --set root
                                               self.efi_dir_name),
                                              efi_disk)
                 else:
-                    if os.path.isfile("/liveos/efi/EFI/redhat/grubx64.efi"):
+                    if os.path.isfile("/liveos/efi/%s/grubx64.efi" %
+                            self.efi_path):
                         _functions.add_efi_entry(_functions.PRODUCT_SHORT,
                                                  ("\\EFI\\%s\\grubx64.efi" %
                                                   self.efi_dir_name),
