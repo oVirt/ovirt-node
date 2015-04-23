@@ -156,8 +156,8 @@ class Plugin(plugins.NodePlugin):
         return model
 
     def validators(self):
-        return {"rhn.user": valid.Text(),
-                "rhn.profilename": valid.Empty() | valid.Text(),
+        return {"rhn.username": valid.Ascii(),
+                "rhn.profilename": valid.Ascii() | valid.Empty(),
                 "rhn.url": valid.Empty() | valid.URL(),
                 "rhn.ca": valid.Empty() | valid.URL(),
                 "rhn.proxyhost": (valid.FQDNOrIPAddress() |

@@ -322,6 +322,28 @@ class FQDN(RegexValidator):
         return is_valid
 
 
+class Ascii(Validator):
+    """ Checks if the param is ascii or not.
+
+    >>> Ascii().validate('rhn.user.123')
+    True
+    >>> Ascii().validate('rhn.usê€')
+    False
+    >>> Ascii().validate('rhn.正體字')
+    False
+    """
+
+    description = "a valid ASCII char(s) field"
+
+    def validate(self, value):
+        valid = True
+        try:
+            value.decode('ascii')
+        except:
+            valid = False
+        return valid
+
+
 class HostnameLength(Validator):
     """hostname or hostnamectl tools only accepts 64 chars or less
 
