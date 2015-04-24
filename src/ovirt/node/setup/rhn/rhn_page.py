@@ -19,87 +19,9 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, valid, ui, utils
-import rhn_model
 from ovirt.node.plugins import Changeset
-from ovirt.node.utils import process, system
 from ovirt.node.utils.network import NodeNetwork
-import os.path
-import logging
-import sys
-sys.path.append("/usr/share/rhn/up2date_client")
-
-
-RHN_CONFIG_FILE = "/etc/sysconfig/rhn/up2date"
-RHSM_CONFIG_FILE = "/etc/rhsm/rhsm.conf"
-RHN_XMLRPC_ADDR = "https://xmlrpc.rhn.redhat.com/XMLRPC"
-SAM_REG_ADDR = "subscription.rhn.redhat.com"
-CANDLEPIN_CERT_FILE = "/etc/rhsm/ca/candlepin-local.pem"
-
-logger = logging.getLogger(__name__)
-
-
-def get_rhn_config():
-    conf_files = []
-    if os.path.exists(RHN_CONFIG_FILE):
-        conf_files.append(RHN_CONFIG_FILE)
-    if os.path.exists(RHSM_CONFIG_FILE):
-        conf_files.append(RHSM_CONFIG_FILE)
-    rhn_conf = {}
-    for f in conf_files:
-        rhn_config = open(f)
-        for line in rhn_config:
-            if "=" in line and "[comment]" not in line:
-                item, value = line.replace(" ", "").split("=")
-                rhn_conf[item] = value.strip()
-        rhn_config.close()
-    return rhn_conf
-
-
-def rhn_check():
-    filebased = True
-    registered = False
-    if filebased:
-        # The following file exists when the sys is registered with rhn
-        registered = os.path.exists("/etc/sysconfig/rhn/systemid")
-    else:
-        if process.check_call("rhn_check"):
-            registered = True
-    return registered
-
-
-def sam_check():
-    if system.SystemRelease().is_redhat():
-        import rhnreg
-        if rhnreg.rhsm_registered():
-            return True
-    return False
-
-
-def get_rhn_status():
-    msg = ""
-    status = 0
-    rhn_conf = get_rhn_config()
-    # local copy, blank proxy password
-    # rhbz#837249
-    for arg in "proxyPassword", "proxy_password":
-        if arg in rhn_conf and rhn_conf[arg] != "":
-            rhn_conf[arg] = "XXXXXXXX"
-    if rhn_check():  # Is Satellite or Hosted
-        status = 1
-        try:
-            if "serverURL" in rhn_conf:
-                if RHN_XMLRPC_ADDR in rhn_conf["serverURL"]:
-                    msg = "RHN"
-                else:
-                    msg = "Satellite"
-        except:
-            # corrupt up2date config in this case
-            status = 0
-            pass
-    elif sam_check():
-        status = 1
-        msg = "SAM"
-    return (status, msg)
+import rhn_model
 
 
 class Plugin(plugins.NodePlugin):
@@ -120,40 +42,33 @@ class Plugin(plugins.NodePlugin):
         return "RHN Registration"
 
     def rank(self):
-        return 310
+        return -310
 
     def model(self):
         cfg = rhn_model.RHN().retrieve()
         self.logger.debug(cfg)
-        model = {"rhn.username": "",
-                 "rhn.password": "",
-                 "rhn.profilename": "",
-                 "rhn.type": "",
-                 "rhn.url": "",
-                 "rhn.ca": "",
-                 "rhn.org": "",
-                 "rhn.activation_key": "",
+
+        model = {"rhn.username": cfg["username"],
+                 "rhn.profilename": cfg["profile"],
+                 "rhn.type": cfg["rhntype"],
+                 "rhn.url": cfg["url"],
+                 "rhn.ca": cfg["ca_cert"],
+                 "rhn.org": cfg["org"],
+                 "rhn.activation_key": cfg["activationkey"],
+                 "rhn.proxyuser": cfg["proxyuser"],
                  "rhn.proxyhost": "",
                  "rhn.proxyport": "",
-                 "rhn.proxyuser": "",
+                 "rhn.password": "",
                  "rhn.proxypassword": "",
                  }
-
-        status, rhn_type = get_rhn_status()
-        model["rhn.username"] = cfg["username"]
-        model["rhn.type"] = cfg["rhntype"]
-        model["rhn.profilename"] = cfg["profile"]
-        model["rhn.url"] = cfg["url"]
-        model["rhn.ca"] = cfg["ca_cert"]
-        model["rhn.proxyuser"] = cfg["proxyuser"]
-        model["rhn.org"] = cfg["org"]
-        model["rhn.activation_key"] = cfg["activationkey"]
         try:
-            p_server, p_port = cfg["proxy"].rsplit(":", 1)
-            model["rhn.proxyhost"] = p_server
-            model["rhn.proxyport"] = p_port
+            model["rhn.proxyhost"], model["rhn.proxyport"] = cfg["proxy"
+                                                                 ].rsplit(
+                ":", 1)
         except:
-            pass
+            # We're passing because it can't assign multiple values, reassign
+            # instead of passing
+            model["rhn.proxyhost"] = cfg["proxy"] if cfg["proxy"] else ""
         return model
 
     def validators(self):
@@ -185,8 +100,7 @@ class Plugin(plugins.NodePlugin):
                    ui.Divider("notice.divider")])
 
         else:
-            status, rhn_type = get_rhn_status()
-            if status == 0:
+            if not cfg["rhntype"]:
                 rhn_msg = ("RHN Registration is required only if you wish " +
                            "to use Red Hat Enterprise Linux with virtual " +
                            "guests subscriptions for your guests.")
@@ -264,37 +178,55 @@ class Plugin(plugins.NodePlugin):
             self.widgets.add(self._dialog)
             return self._dialog
 
+        if "rhn.activation_key" in changes and "rhn.username" in changes:
+            return ui.InfoDialog("dialog.error", "Conflicting Inputs",
+                                 "Username and activationkey cannot be used "
+                                 "simultaneously. Please clear one of the "
+                                 "values")
+
+        elif "rhn.activation_key" not in effective_model and \
+                ("rhn.username" not in effective_model and
+                 "rhn.password" not in effective_model):
+            return ui.InfoDialog("dialog.error", "Conflicting Inputs",
+                                 "Username or activationkey must be set."
+                                 "Please set one of the values.")
+
         txs = utils.Transaction("Updating RHN configuration")
 
         if changes.contains_any(rhn_keys):
+            def update_proxy():
+                vals = [effective_model["rhn.proxyhost"],
+                        effective_model["rhn.proxyport"]]
+                proxy_str = "%s:%s" % (vals[0], vals[1]) if vals[1] else \
+                            "%s" % vals[0]
+                return proxy_str
+                effective_model["rhn.proxy"] = proxy_str
+
             self.logger.debug(changes)
             self.logger.debug(effective_model)
-            user = effective_model["rhn.username"]
+
+            effective_model["rhn.type"] = effective_model["rhn.type"] or "rhn"
+            effective_model["rhn.proxy"] = update_proxy() if \
+                effective_model["rhn.proxyhost"] else ""
+
+            rhn_keys = ["rhn.type", "rhn.url", "rhn.ca", "rhn.username",
+                        "rhn.profilename", "rhn.activation_key", "rhn.org",
+                        "rhn.proxy", "rhn.proxyuser"]
+
             pw = effective_model["rhn.password"]
-            profilename = effective_model["rhn.profilename"]
-            rhn_type = effective_model["rhn.type"] or "rhn"
-            url = effective_model["rhn.url"]
-            ca = effective_model["rhn.ca"]
-            org = effective_model["rhn.org"]
-            activationkey = effective_model["rhn.activation_key"]
-            proxyhost = effective_model["rhn.proxyhost"]
-            proxyport = effective_model["rhn.proxyport"]
-            proxyuser = effective_model["rhn.proxyuser"]
             proxypassword = effective_model["rhn.proxypassword"]
 
-            warning_text = ""
+            warning_text = None
 
+            rhn_type = effective_model["rhn.type"]
             if rhn_type == "sam" or rhn_type == "satellite":
-                if url == "" or url is None:
-                        warning_text += "URL "
+                if not effective_model["rhn.url"] and not \
+                        effective_model["rhn.ca"]:
+                    warning_text = "URL and CA path "
+                elif not effective_model["rhn.ca"]:
+                    warning_text = "CA path "
 
-                if ca == "" or ca is None:
-                        if warning_text is "":
-                            warning_text += "CA path "
-                        else:
-                            warning_text += "and CA path "
-
-            if warning_text is not "":
+            if warning_text:
                 txt = "%s must not be empty!" % warning_text
                 self._error_dialog = ui.InfoDialog("dialog.error",
                                                    "RHN Error",
@@ -303,17 +235,11 @@ class Plugin(plugins.NodePlugin):
             else:
                 model = rhn_model.RHN()
                 model.clear()
-                # join proxy host/port
-                self.logger.debug(proxyhost)
-                self.logger.debug(proxyport)
-                proxy = None
-                if len(proxyhost) > 0 and len(proxyport) > 0:
-                    proxy = "%s:%s" % (proxyhost, proxyport)
-                    self.logger.debug(proxy)
-                model.update(rhn_type, url, ca, user, profilename,
-                             activationkey, org, proxy, proxyuser)
+
+                model.update(*effective_model.values_for(rhn_keys))
                 txs += model.transaction(password=pw,
                                          proxypass=proxypassword)
+
                 progress_dialog = ui.TransactionProgressDialog("dialog.txs",
                                                                txs, self)
                 progress_dialog.run()
@@ -323,6 +249,7 @@ class Plugin(plugins.NodePlugin):
 class ProxyDialog(ui.Dialog):
     """A dialog to input proxy information
     """
+
     def __init__(self, title, description, plugin):
         self.keys = ["rhn.proxyhost", "rhn.proxyport", "rhn.proxyuser",
                      "rhn.proxypassword"]
