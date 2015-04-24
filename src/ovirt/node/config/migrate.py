@@ -317,7 +317,7 @@ class ImportConfigs(base.Base):
         return Config().exists(path)
 
     def migrate_network_layout(self):
-        from ovirt.node import defaults
+        from ovirt.node.config import defaults
         from ovirt.node.utils import network
 
         bondcfg = defaults.NicBonding().retrieve()
