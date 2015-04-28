@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# ovirt-upgrade-tool - Copyright (C) 2013 Red Hat, Inc.
+# ovirt-upgrade-tool - Copyright (C) 2013-2015 Red Hat, Inc.
 # Written by Joey Boggs <jboggs@redhat.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -318,6 +318,10 @@ class UpgradeTool(Base):
         time.sleep(sleepTime)
         os.execl(reboot, reboot)
 
+    def _checkisomd5(self, isofile):
+        self._logger.info("Checking iso md5")
+        self._system("checkisomd5", isofile)
+
     def _reboot(self, delay):
         self._logger.info("Scheduling Reboot")
         self._simpleDaemon(
@@ -361,6 +365,7 @@ class UpgradeTool(Base):
 
             ret = 1
             try:
+                self._checkisomd5(self._options.iso_file)
                 self._extract_rootfs(self._options.iso_file)
                 self._run_hooks("pre-upgrade")
                 self._run_upgrade()

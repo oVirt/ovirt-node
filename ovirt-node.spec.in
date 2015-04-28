@@ -62,6 +62,7 @@ Requires:       iscsi-initiator-utils
 Requires:       system-config-keyboard-base
 Requires:       ntp
 Requires:       nfs-utils
+Requires:       isomd5sum
 Requires:       bash
 Requires:       chkconfig
 Requires:       bind-utils
