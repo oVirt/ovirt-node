@@ -24,6 +24,7 @@ from ovirt.node.utils.fs import Config
 from ovirt.node.setup.rhn import rhn_model
 import ovirtnode.ovirtfunctions as _functions
 from ovirt.node.plugins import Changeset
+import system
 
 RHSM_CONF = "/etc/rhsm/rhsm.conf"
 SYSTEMID = "/etc/sysconfig/rhn/systemid"
@@ -72,6 +73,10 @@ if __name__ == "__main__":
     effective_model.update(changes)
     rhn.update(*effective_model.values_for(
         [keys_to_model[key] for key in keys]))
+    if cfg["username"] and cfg["activationkey"]:
+        print ("Activationkey and username should not be specified together "
+               "not doing anything")
+        system.exit(2)
     if cfg['username'] and rhn_password or cfg['activationkey']:
         tx = rhn.transaction(password=rhn_password, \
                              proxypass=rhn_proxypassword)
