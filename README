@@ -48,29 +48,31 @@ THE DRY MODE
 oVirt Node provides a way to simulate/debug the installer or the menu setup without need to generate an iso, it's possible use
 RHEL/Centos/Fedora based distro, this schema is called the 'dry mode'.
 
-First, clone the repo:
+First, clone the repo, install needed packages and create default ovirt file:
     $ git clone git://gerrit.ovirt.org/ovirt-node
     $ cd ovirt-node
+    $ sudo yum install PyPAM cracklib-python python-gudev python-urwid -y
+    $ sudo touch /etc/default/ovirt
 
 RHEL/CentOS <= 6
 ============================
 Simulating the installer locally:
     $ovirt-node> cd src
-    $ovirt-node/src> python -m “ovirt.node.setup.__main__” --debug --dry
+    $ovirt-node/src> python -m ovirt.node.installer.__main__ --debug --dry
 
 Simulating the setup locally:
     $ovirt-node> cd src
-    $ovirt-node/src> python -m “ovirt.node.installer.__main__” --debug –dry
+    $ovirt-node/src> python -m ovirt.node.setup.__main__ --debug --dry
 
 Fedora or CentOS/RHEL >= 7
 ============================
 Simulating the installer locally:
     $ovirt-node> cd src
-    $ovirt-node/src> python -m ovirt.node.setup --debug --dry
+    $ovirt-node/src> python -m ovirt.node.installer --debug --dry
 
 Simulating the setup locally:
     $ovirt-node> cd src
-    $ovirt-node/src> python -m ovirt.node.installer --debug –dry
+    $ovirt-node/src> python -m ovirt.node.setup --debug --dry
 
 Log available at:
     /tmp/ovirt-node.debug.log
