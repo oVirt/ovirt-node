@@ -91,6 +91,12 @@ class Plugin(plugins.NodePlugin):
             row = ui.Row("row[%s]" % xs, chi)
             ws.append(row)
 
+        if int(self._model["storage.data_size"]) < (50*1024):
+            ws.extend([ui.Divider("divider.he"),
+                      ui.Notice("notice.he", "The size of the data volume is "
+                                "not large enough to use the Engine "
+                                "Appliance, must be at least 50GB (51200MB)")])
+
         page = ui.Page("confirmation", ws)
         page.buttons = [ui.QuitButton("button.quit", _("Quit")),
                         ui.Button("button.back", _("Back")),
