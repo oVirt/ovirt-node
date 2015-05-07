@@ -23,7 +23,8 @@
 This module contains some presets for several key values
 """
 
-BOOT_SIZE = 512
-ROOT_SIZE = 4096
+BOOT_SIZE_MB = 512
+ROOT_SIZE_MB = 4096
+MIN_DRIVE_SIZE_MB = 1295
 
 TUI_BRAND_COLOR = "dark blue"

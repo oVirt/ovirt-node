@@ -31,7 +31,7 @@ from ovirt.node import presets
 class Plugin(plugins.NodePlugin):
     _model = {}
     _free_space = 0
-    _min_drive_size = 1295
+    _min_drive_size = presets.MIN_DRIVE_SIZE_MB
     _fill = True
 
     def name(self):
@@ -74,8 +74,9 @@ class Plugin(plugins.NodePlugin):
         if not self.__enough_free_space():
             ws.extend([ui.Notice("space.notice",
                                  "Not enough space! Needs at least "
-                                 "1295MB for installation, %sMB "
-                                 "available" % self._drive_size)])
+                                 "%sMB for installation, %sMB "
+                                 "available" % (str(self._min_drive_size),
+                                                self._drive_size))])
 
         if not self._fill:
             ws.extend([ui.KeywordLabel("storage.free_space",
@@ -171,10 +172,10 @@ class Plugin(plugins.NodePlugin):
                 self._drive_size = int(stdout) / 1024 / 1024
             else:
                 # If we're not root and can't query the drive,
-                # pretend it's 5G
-                self._drive_size = 5242880
-            return {"storage.efi_size": "%s" % presets.BOOT_SIZE,
-                    "storage.root_size": "%s" % presets.ROOT_SIZE,
+                # pretend it's 15G
+                self._drive_size = 15*1024**2
+            return {"storage.efi_size": "%s" % presets.BOOT_SIZE_MB,
+                    "storage.root_size": "%s" % presets.ROOT_SIZE_MB,
                     "storage.swap_size": "0",
                     "storage.config_size": "5",
                     "storage.logging_size": "2048",
