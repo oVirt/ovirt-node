@@ -44,6 +44,7 @@ class Storage:
         self.EFI_SIZE = 256
         self.SWAP_SIZE = 0
         self.MIN_SWAP_SIZE = 5
+        self.MIN_DATA_SIZE = 10*1024
         self.MIN_LOGGING_SIZE = 5
         self.SWAP2_SIZE = 0
         self.DATA2_SIZE = 0

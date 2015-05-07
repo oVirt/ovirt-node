@@ -52,7 +52,7 @@ class Plugin(plugins.NodePlugin):
         return self._model
 
     def validators(self):
-        min_swap, min_logging = self.__get_min_sizes()
+        min_swap, min_logging, min_data = self.__get_min_sizes()
         return {"storage.efi_size":
                 valid.Number(bounds=[0, None]),
                 "storage.root_size":
@@ -64,7 +64,7 @@ class Plugin(plugins.NodePlugin):
                 "storage.logging_size":
                 valid.Number(bounds=[min_logging, None]),
                 "storage.data_size":
-                valid.Number(bounds=[-1, None]),
+                valid.Number(bounds=[min_data, None]),
                 }
 
     def ui_content(self):
@@ -156,10 +156,10 @@ class Plugin(plugins.NodePlugin):
 
     def __get_min_sizes(self):
         if self.application.args.dry:
-            return 2048, 256
+            return 2048, 256, 10*1024
         from ovirtnode.storage import Storage
         stor = Storage()
-        return stor.MIN_SWAP_SIZE, stor.MIN_LOGGING_SIZE
+        return stor.MIN_SWAP_SIZE, stor.MIN_LOGGING_SIZE, stor.MIN_DATA_SIZE
 
     def __get_default_sizes(self):
         if self.application.args.dry:
