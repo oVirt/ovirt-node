@@ -439,6 +439,41 @@ class IPv6Address(IPv4Address):
     family = socket.AF_INET6
 
 
+class IPv4Netmask(IPv4Address):
+    """ Validates dotted decimal netmasks
+
+    >>> IPv4Netmask()("255.255.255.0")
+    True
+    >>> IPv4Netmask()("255.0.0.0")
+    True
+    >>> IPv4Netmask().validate("256.")
+    False
+    >>> IPv4Netmask().validate("")
+    False
+    """
+
+    description = "a valid IPv4 netmask in dotted decimal format"
+
+
+class IPv6Netmask(Number):
+    """ Validates IPv6 CIDR netmasks
+
+    >>> IPv6Netmask()(128)
+    True
+    >>> IPv6Netmask()(2)
+    True
+    >>> IPv6Netmask().validate("abc")
+    False
+    >>> IPv6Netmask().validate(129)
+    False
+    """
+
+    description = "a valid IPv6 netmask CIDR"
+
+    def __init__(self):
+        super(IPv6Netmask, self).__init__(bounds=[0, 128])
+
+
 class IPAddress(Validator):
     """Allows any IPv4 or IPv6 address
 
