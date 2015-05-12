@@ -31,7 +31,7 @@ class Plugin(plugins.NodePlugin):
 
     def __init__(self, app):
         super(Plugin, self).__init__(app)
-        self.storage_discovery = StorageDiscovery(app.args.dry)
+        self.storage_discovery = StorageDiscovery(app.args.dry, refresh=True)
         self.storage_discovery.run()
 
     def name(self):
@@ -157,12 +157,14 @@ class StorageDiscovery(threading.Thread):
 
     tbl_tpl = " {bus!s:15.15}  {name!s:40.40} {size!s:9.9}"
 
-    def __init__(self, do_fake):
+    def __init__(self, do_fake, refresh=False):
         super(StorageDiscovery, self).__init__()
         self.do_fake = do_fake
+        self.refresh = refresh
 
     def run(self):
-        self.devices = utils.storage.Devices(fake=self.do_fake)
+        self.devices = utils.storage.Devices(fake=self.do_fake,
+                                             refresh=self.refresh)
         self._all_devices = self.devices.get_all()
 
     def all_devices(self):

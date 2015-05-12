@@ -22,6 +22,7 @@
 from ovirt.node import base
 from ovirt.node.utils.fs import File
 from ovirt.node.utils import system
+from ovirt.node.utils import process
 import subprocess
 import os
 
@@ -90,7 +91,7 @@ class Devices(base.Base):
     _fake_devices = None
     _cached_live_disk_name = None
 
-    def __init__(self, fake=False):
+    def __init__(self, fake=False, refresh=False):
         super(Devices, self).__init__()
         if fake:
             self._fake_devices = {}
@@ -99,6 +100,15 @@ class Devices(base.Base):
                         "desc", "serial", "model"]
                 self._fake_devices[args[1]] = Device(*tuple(args))
         else:
+            if refresh:
+                try:
+                    process.check_call(["udevadm", "trigger",
+                                        "--action=change",
+                                        "--subsystem-match=block"])
+                    process.check_call(["udevadm", "settle", "--timeout=10"])
+                except process.CalledProcessError:
+                    self.logger.error("Couldn't refresh udev block devices")
+
             import ovirtnode.storage
             self._storage = ovirtnode.storage.Storage()
 
