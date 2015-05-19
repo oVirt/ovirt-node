@@ -48,6 +48,9 @@ if [ $? -eq 1 ]; then
     fi
 fi
 
+# Wait for storage
+udevadm settle -timeout=10
+
 # Check for HostVG
 lvm pvscan >/dev/null 2>&1
 
