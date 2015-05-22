@@ -120,7 +120,7 @@ class ImportConfigs(base.Base):
     def translate_logrotate(self):
         if self.__is_persisted("/etc/logrotate.d/ovirt-node"):
             logrotate_size = ovirtfunctions.get_logrotate_size()
-            if logrotate_size is not 1024:
+            if logrotate_size and logrotate_size is not 1024:
                 self.aug.set(
                     "/files/etc/default/ovirt/OVIRT_LOGROTATE_MAX_SIZE",
                     str(logrotate_size) or "")
