@@ -1589,6 +1589,8 @@ def password_check(password_1, password_2, min_length=1):
 
 def get_logrotate_size():
     size = augtool_get("/files/etc/logrotate.d/ovirt-node/rule/size")
+    if not size:
+        return None
     if "m" in size.lower():
         multiplier = 1024
     else:
