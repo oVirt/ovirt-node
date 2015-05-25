@@ -882,7 +882,6 @@ fi
 
 %files cli-tools
 %{python_sitelib}/ovirt/node/tools/features.py*
-%{python_sitelib}/ovirt/node/tools/registration.py*
 %{python_sitelib}/ovirt/node/tools/password.py*
 %{python_sitelib}/ovirt/node/tools/__init__.py*
 
@@ -1044,7 +1043,6 @@ fi
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{_sbindir}/ovirt-node-upgrade
-%{_sbindir}/ovirt-node-register
 %{python_sitelib}/ovirt_config_setup
 %exclude %{python_sitelib}/ovirt_config_setup/cim.py*
 %exclude %{python_sitelib}/ovirt_config_setup/snmp.py*

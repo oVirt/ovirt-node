@@ -118,7 +118,6 @@ AC_CONFIG_FILES([Makefile
                 images/Makefile
                 hooks/Makefile
                 scripts/Makefile
-                registration/Makefile
                 tools/Makefile
                 scripts/collectd.conf
                 src/Makefile
