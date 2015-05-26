@@ -51,7 +51,7 @@ RHEL/Centos/Fedora based distro, this schema is called the 'dry mode'.
 First, clone the repo, install needed packages and create default ovirt file:
     $ git clone git://gerrit.ovirt.org/ovirt-node
     $ cd ovirt-node
-    $ sudo yum install PyPAM cracklib-python python-gudev python-urwid -y
+    $ sudo yum install PyPAM cracklib-python python-gudev python-urwid python-augeas python-lxml -y
     $ sudo touch /etc/default/ovirt
 
 RHEL/CentOS <= 6
