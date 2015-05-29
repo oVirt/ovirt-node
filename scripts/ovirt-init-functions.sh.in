@@ -1393,6 +1393,9 @@ EOP
         # Create a minimalistic /etc/hosts if it's empty, rhbz#829753
         create_minimal_etc_hosts_file
 
+	# Reload multipath to pickup a persisted multipath.conf
+	service multipathd reload
+
         if [ -f /usr/lib/systemd/system/systemd-journald.service ];
         then
             # Restart jorunald to pick up /var/log/journal
