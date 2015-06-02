@@ -914,6 +914,7 @@ class Timeservers(NodeConfigFileSection):
         m = Timeservers().retrieve()
 
         servers = m["servers"]
+        disable = len(servers) == 1 and "off" in servers
 
         class WriteConfiguration(utils.Transaction.Element):
             title = "Writing timeserver configuration"
@@ -928,17 +929,22 @@ class Timeservers(NodeConfigFileSection):
                 aug.set(p + "/keys", "/etc/ntp/keys", False)
                 aug.save()
 
-                config.network.timeservers(servers)
+                if disable:
+                    servers = []
+                    utils.fs.Config().unpersist("/etc/ntp.conf")
+                else:
+                    utils.fs.Config().persist("/etc/ntp.conf")
 
-                utils.fs.Config().persist("/etc/ntp.conf")
+                config.network.timeservers(servers)
 
         class ApplyConfiguration(utils.Transaction.Element):
             title = "Restarting time services"
 
             def commit(self):
                 system.service("ntpd", "stop", False)
-                system.service("ntpdate", "start", False)
-                system.service("ntpd", "start", False)
+                if not disable:
+                    system.service("ntpdate", "start", False)
+                    system.service("ntpd", "start", False)
 
         tx = utils.Transaction("Configuring timeservers")
         tx.append(WriteConfiguration())

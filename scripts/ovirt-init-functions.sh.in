@@ -228,7 +228,7 @@ _start_ovirt_early () {
     #   or               ip=dhcp|off
     #   ipv6=dhcp|auto
     #   dns=server[,server]
-    #   ntp=server[,server]
+    #   ntp=server[,server]|off
     #   vlan=id:eth*
     #   ssh_pwauth=[0|1]
     #   syslog=server[:port]
