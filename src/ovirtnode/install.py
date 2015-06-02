@@ -45,10 +45,10 @@ class Install:
         self.efi_path = self._get_efi_path()
 
     def _get_efi_path(self):
-        if not _system.is_el():
+        if not _system.SystemRelease().is_el():
             return "EFI/fedora"
-        elif _system.is_centos():
-            if _system.is_min_el(7):
+        elif _system.SystemRelease().is_centos():
+            if _system.SystemRelease().is_min_el(7):
                 return "EFI/centos"
             else:
                 return "EFI/redhat"
