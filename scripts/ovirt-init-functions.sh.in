@@ -239,6 +239,7 @@ _start_ovirt_early () {
     #   disable_aes_ni=[y|n]
     #   use_strong_rng=<bytes>
     #   nfsv4_domain=domain
+    #   logrotate_interval=weekly|daily|monthly
     #   logrotate_max_size=number
     #   reboot_delay=number
 
@@ -419,6 +420,9 @@ _start_ovirt_early () {
     # keyboard=layout
     # default keyboard layout
     keyboard_layout=
+
+    #logrotate_interval=weekly|daily|monthly
+    logrotate_interval=
 
     #logrotate_max_size=number
     logrotate_max_size=
@@ -784,6 +788,9 @@ EOP
             keyboard*)
             keyboard_layout=${i#keyboard=}
             ;;
+            logrotate_interval=*)
+            logrotate_interval=${i#logrotate_interval=}
+            ;;
             logrotate_max_size=*)
             logrotate_max_size=${i#logrotate_max_size=}
             ;;
@@ -869,7 +876,7 @@ EOP
     mkdir /tmp/early-logs && ( mount --bind /var/log /tmp/early-logs && mount --make-rprivate /tmp/early-logs ; )
 
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs disable_kdump kdump_ssh kdump_ssh_key scsi_dh_alua iscsi_name snmp_password install netconsole_server netconsole_port stateless wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout logrotate_max_size"
+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs disable_kdump kdump_ssh kdump_ssh_key scsi_dh_alua iscsi_name snmp_password install netconsole_server netconsole_port stateless wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout logrotate_max_size logrotate_interval"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
