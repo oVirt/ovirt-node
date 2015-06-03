@@ -1227,6 +1227,11 @@ class KDump(NodeConfigFileSection):
                         "--message-level 1 -d 31",
                         "net": ssh}
 
+                # Augeas support for setting "ssh" in kdump.conf is
+                # only present on EL7 for now
+                if system.is_min_el(7):
+                    vals["ssh"] = vals.pop("net")
+
                 _set_values(vals)
 
                 kdumpctl_cmd = system.which("kdumpctl")
