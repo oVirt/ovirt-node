@@ -1,6 +1,6 @@
 [Unit]
 Description=oVirt Node kdump service
-After=network.target ovirt-early.service
+After=network.target network-online.target remote-fs.target ovirt-early.service
 
 [Service]
 Type=oneshot
