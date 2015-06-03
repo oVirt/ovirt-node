@@ -1280,8 +1280,7 @@ class KDump(NodeConfigFileSection):
                             utils.process.check_call(["kdumpctl", "restart"],
                                                      stdout=DEVNULL,
                                                      stderr=DEVNULL)
-                    else:
-                        system.service("kdump", "restart")
+                    system.service("kdump", "restart")
                 except utils.process.CalledProcessError as e:
                     self.logger.info("Failure while restarting kdump: %s" % e)
                     unmount_config("/etc/kdump.conf")
