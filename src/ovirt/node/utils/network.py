@@ -712,11 +712,19 @@ def networking_status(ifname=None):
             if nic:
                 ifname = nic.ifname
                 addresses = nic.ip_addresses()
-                has_address = any(a is not None for a in addresses.values())
+                has_address = any(a.address is not None
+                                  for a in addresses.values() if a)
+                details = []
 
-                if nic.has_link():
-                    status = "Connected (Link only, no IP)"
-                if has_address:
+                if not nic.has_link():
+                    details.append("no link")
+
+                if not has_address:
+                    details.append("no IP")
+
+                if details:
+                    status += " (%s)" % ", ".join(details)
+                else:
                     status = "Connected"
     except UnknownNicError:
         LOGGER.exception("Assume broken nic configuration")
