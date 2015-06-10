@@ -913,29 +913,22 @@ class Timeservers(NodeConfigFileSection):
     def transaction(self):
         m = Timeservers().retrieve()
 
+        disable = False
         servers = m["servers"]
-        disable = len(servers) == 1 and "off" in servers
+
+        if servers is not None and "off" in servers:
+            disable = True
 
         class WriteConfiguration(utils.Transaction.Element):
             title = "Writing timeserver configuration"
 
             def commit(self):
-                aug = AugeasWrapper()
-
-                p = "/files/etc/ntp.conf"
-                aug.remove(p, False)
-                aug.set(p + "/driftfile", "/var/lib/ntp/drift", False)
-                aug.set(p + "/includefile", "/etc/ntp/crypto/pw", False)
-                aug.set(p + "/keys", "/etc/ntp/keys", False)
-                aug.save()
+                config.network.timeservers(servers)
 
                 if disable:
-                    servers = []
                     utils.fs.Config().unpersist("/etc/ntp.conf")
                 else:
                     utils.fs.Config().persist("/etc/ntp.conf")
-
-                config.network.timeservers(servers)
 
         class ApplyConfiguration(utils.Transaction.Element):
             title = "Restarting time services"

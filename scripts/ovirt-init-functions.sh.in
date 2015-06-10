@@ -1399,6 +1399,15 @@ EOP
         # Migrate config files if needed
         migrate_node_config
 
+        # Manual install doesn't persist /etc/ntp.conf and
+        # to start the ntp daemon is required to file be persisted.
+        if egrep -q "OVIRT_NTP=['\"]?off" /etc/default/ovirt; then
+            unpersist /etc/ntp.conf
+            service ntpd stop
+        else
+            persist /etc/ntp.conf
+        fi
+
         # Re-load keyboard settings
         load_keyboard_config
 
