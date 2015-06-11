@@ -1035,7 +1035,7 @@ class Bootloader(base.Base):
             return params
 
         def dry_arguments(self, line):
-            if not "vmlinuz" in line:
+            if "vmlinuz" not in line:
                 line = "vmlinuz " + line
             return self.__get_arguments(kernel=line)
 
