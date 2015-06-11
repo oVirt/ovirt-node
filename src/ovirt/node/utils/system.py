@@ -23,6 +23,7 @@ A module to access system wide stuff
 e.g. services, reboot ...
 """
 
+import logging
 import os
 import re
 import shlex
@@ -33,12 +34,12 @@ import time
 import rpm
 import system_config_keyboard.keyboard
 
-from ovirt.node import base, utils, log
+from ovirt.node import base, utils
 from ovirt.node.utils import process, parse_varfile
 from ovirt.node.utils.fs import File
 
 
-LOGGER = log.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def reboot():

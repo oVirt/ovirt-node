@@ -22,12 +22,13 @@
 """
 Manage running installer hooks
 """
-
-from ovirt.node import base, log
-from ovirt.node.utils import process
+import logging
 import os
 
-LOGGER = log.getLogger(__name__)
+from ovirt.node import base
+from ovirt.node.utils import process
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Hooks(base.Base):

@@ -1853,14 +1853,6 @@ class PluginBase(object):
 
 OVIRT_VARS = parse_defaults()
 
-# setup logging facility
-if is_stateless():
-    log_file = OVIRT_LOGFILE
-elif is_firstboot():
-    log_file = OVIRT_TMP_LOGFILE
-else:
-    log_file = OVIRT_LOGFILE
-
 def setup_custom_logger():
     formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
     handler = logging.FileHandler(log_file)
@@ -1870,5 +1862,8 @@ def setup_custom_logger():
     logger.addHandler(handler)
     return logger
 
-setup_custom_logger()
-logger = logging.getLogger(PRODUCT_SHORT)
+if is_firstboot():
+    log_file = OVIRT_TMP_LOGFILE
+    logger = setup_custom_logger()
+else:
+    logger = logging.getLogger(PRODUCT_SHORT)

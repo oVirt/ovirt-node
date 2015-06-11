@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
-from ovirt.node import base, exceptions, valid, utils, config, log
+from ovirt.node import base, exceptions, valid, utils, config
 from ovirt.node.config.network import NicConfig
 from ovirt.node.exceptions import InvalidData
 from ovirt.node.utils import storage, process, fs, AugeasWrapper, console, \
@@ -27,6 +27,7 @@ from ovirt.node.utils.fs import Config, ShellVarFile, File
 from ovirt.node.utils.network import NIC, Bridges, Bonds
 from ovirt.node.utils.system import Bootloader
 import glob
+import logging
 import os
 
 """
@@ -45,7 +46,7 @@ Each class should implement a configure method, mainly to define all the
 required arguments (or keys).
 """
 
-LOGGER = log.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 OVIRT_NODE_DEFAULTS_FILENAME = "/etc/default/ovirt"
 

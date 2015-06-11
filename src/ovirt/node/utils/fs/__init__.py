@@ -31,13 +31,14 @@ import stat
 import StringIO
 import re
 import hashlib
+import logging
 
 
 from . import mount
 from .. import process, parse_varfile
-from ... import base, log
+from ... import base
 
-LOGGER = log.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def get_contents(src):

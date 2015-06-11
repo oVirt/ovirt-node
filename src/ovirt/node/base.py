@@ -23,7 +23,7 @@
 Base for all classes
 """
 
-import log
+import logging
 
 
 class Base(object):
@@ -38,7 +38,7 @@ class Base(object):
 
     def __init__(self):
         """Contructor."""
-        self._logger = log.getLogger(self.__module__)
+        self._logger = logging.getLogger(self.__module__)
 
     def _super(self):
         """Return the parent class of this obj
@@ -69,7 +69,7 @@ class Base(object):
         def __init__(self, target):
             self.target = target
             self.callbacks = []
-            self.logger = log.getLogger(self.__module__)
+            self.logger = logging.getLogger(self.__module__)
 
         def _debug(self, msg):
             pass
