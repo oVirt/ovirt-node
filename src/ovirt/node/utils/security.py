@@ -162,7 +162,7 @@ class Ssh(base.Base):
             self.__update_profile(disable_aes=disable)
         else:
             self.logger.warning("Unknown value for AES NI: %s" % disable)
-        return self.rng_status().disable_aesni
+        return self.rng_status().disable_aes_ni
 
     def strong_rng(self, num_bytes=None):
         if (valid.Empty() | valid.Number(bounds=[0, None])).\
