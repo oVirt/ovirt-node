@@ -319,7 +319,8 @@ class Storage:
                     devices.append("/dev/cciss/%s" % d)
 
         # include multipath devices
-        devs_to_remove = ""
+        mpath_sets = ""
+        devs_to_remove = {}
         multipath_list_cmd = "dmsetup ls --target=multipath | cut -f1"
         multipath_list = _functions.subprocess_closefds(multipath_list_cmd,
                                              shell=True,
@@ -338,22 +339,23 @@ class Storage:
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.STDOUT)
             dm_dev_output, dm_dev_err = dm_dev.communicate()
-            devs_to_remove = ("%s %s %s" % (devs_to_remove, sd_devs,
-                                          dm_dev_output))
+            [devs_to_remove.update({d: True}) for d in sd_devs.split()]
+            mpath_sets = ("%s %s %s" % (mpath_sets, sd_devs,
+                                        dm_dev_output))
+
+        logger.debug("Multipath sets are %s" % mpath_sets)
+        logger.debug("Removing the following from the list of disks, because "
+                     "they're part of a multipath set: %s" % sorted(
+                         devs_to_remove))
+
         # Remove /dev/sd* devices that are part of a multipath device
-        dev_list = []
+        dev_list = set()
         for d in devices:
             if (os.path.basename(d) not in devs_to_remove and
                     not "/dev/dm-" in d):
-                dev_list.append(d)
+                dev_list.add(d)
 
-        for dev in dev_list:
-            if dev_list.count(dev) > 1:
-                count = dev_list.count(dev)
-                while (count > 1):
-                    dev_list.remove(dev)
-                    count = count - 1
-        return dev_list
+        return list(dev_list)
 
     def get_udev_devices(self):
         self.disk_dict = {}
