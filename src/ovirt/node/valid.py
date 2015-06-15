@@ -24,7 +24,6 @@ import os.path
 import re
 import socket
 import subprocess
-import urlparse
 
 """
 A module with several validators for common user inputs.
@@ -141,11 +140,13 @@ class RegexValidator(Validator):
     """
     # pattern defined by subclass
     pattern = None
+    flags = None
 
-    def __init__(self, pattern=None, description=None):
+    def __init__(self, pattern=None, description=None, flags=0):
         super(RegexValidator, self).__init__()
         self.pattern = self.pattern or pattern
         self.description = self.description or description
+        self.flags = self.flags or flags
 
     def validate(self, value):
         if type(self.pattern) in [str, unicode]:
@@ -156,8 +157,11 @@ class RegexValidator(Validator):
             pass
         else:
             self.logger.warning("Unknown type: %s %s" % (value, type(value)))
+        if len(self.pattern) > 1:
+            print self.pattern
         return value is not None and \
-            re.compile(*self.pattern).search(value) is not None
+            re.compile(*self.pattern, flags=self.flags).search(value) \
+            is not None
 
 
 class Text(RegexValidator):
@@ -311,7 +315,8 @@ class FQDN(RegexValidator):
 
     description = "a valid FQDN"
     pattern = ("^(?!(\d+\.){3}\d+)(([a-z0-9\-]*[a-z0-9])\.)*" +
-               "(([a-z0-9\-]*[a-z0-9])\.?)$", re.I)
+               "(([a-z0-9\-]*[a-z0-9])\.?)$")
+    flags = re.IGNORECASE
 
     def validate(self, value):
         is_valid = super(FQDN, self).validate(value)
@@ -547,44 +552,148 @@ class Empty(Validator):
         return value == "" or (self.or_none and value is None)
 
 
-class URL(Validator):
+class URL(RegexValidator):
     """Allows any FQDN, IPv4 or IPv6 address
 
     >>> URL().validate("")
     False
     >>> URL().validate("https://1.2.3.4/abc")
     True
-    >>> URL(True, True, False).validate("https://1.2.3.4/")
+    >>> URL().validate("https://1.2.3.4/")
     True
-    >>> URL(True, True, False).validate("https://1.2.3.4")
+    >>> URL().validate("https://1.2.3.4")
     True
-    >>> URL(True, False, False).validate("https:///")
+    >>> URL().validate("https:///")
+    False
+    >>> URL().validate("http://1.2.3./")
+    False
+    >>> URL().validate("http://1.2.3.4:")
+    False
+    >>> URL().validate("http://1.2.3.4::")
+    False
+    >>> URL().validate("http://foo.com/blah_blah")
     True
+    >>> URL().validate("http://foo.com/blah_blah/")
+    True
+    >>> URL().validate("http://foo.com/blah_blah_(wikipedia)")
+    True
+    >>> URL().validate("http://foo.com/blah_blah_(wikipedia)_(again)")
+    True
+    >>> URL().validate("http://www.example.com/wpstyle/?p=364")
+    True
+    >>> URL().validate("https://www.example.com/foo/?bar=baz&inga=42&quux")
+    True
+    >>> URL().validate("http://142.42.1.1/")
+    True
+    >>> URL().validate("http://142.42.1.1:8080/")
+    True
+    >>> URL().validate("http://foo.com/blah_(wikipedia)#cite-1")
+    True
+    >>> URL().validate("http://foo.com/blah_(wikipedia)_blah#cite-1")
+    True
+    >>> URL().validate("http://foo.com/unicode_(✪)_in_parens")
+    True
+    >>> URL().validate("http://foo.com/(something)?after=parens")
+    True
+    >>> URL().validate("http://code.google.com/events/#&product=browser")
+    True
+    >>> URL().validate("http://j.mp")
+    True
+    >>> URL().validate("http://foo.bar/?q=Test%20URL-encoded%20stuff")
+    True
+    >>> URL().validate("http://1337.net")
+    True
+    >>> URL().validate("http://a.b-c.de")
+    True
+    >>> URL().validate("http://223.255.255.254")
+    True
+    >>> URL().validate("http://➡.ws/䨹")
+    False
+    >>> URL().validate("http://⌘.ws")
+    False
+    >>> URL().validate("http://⌘.ws/")
+    False
+    >>> URL().validate("http://مثال.إختبار")
+    False
+    >>> URL().validate("http://☺.damowmow.com/")
+    False
+    >>> URL().validate("http://例子.测试")
+    False
+    >>> URL().validate("http://उदाहरण.परीक्षा")
+    False
+    >>> URL().validate("http://-.~_!$&'()*+,;=:%40:80%2f::::::@example.com")
+    False
+    >>> URL().validate("http://")
+    False
+    >>> URL().validate("http://.")
+    False
+    >>> URL().validate("http://..")
+    False
+    >>> URL().validate("http://../")
+    False
+    >>> URL().validate("http://?")
+    False
+    >>> URL().validate("http://??")
+    False
+    >>> URL().validate("http://??/")
+    False
+    >>> URL().validate("http://#")
+    False
+    >>> URL().validate("http://##")
+    False
+    >>> URL().validate("http://##/")
+    False
+    >>> URL().validate("http://foo.bar?q=Spaces should be encoded")
+    False
+    >>> URL().validate("//")
+    False
+    >>> URL().validate("//a")
+    False
+    >>> URL().validate("///a")
+    False
+    >>> URL().validate("///")
+    False
+    >>> URL().validate("http:///a")
+    False
+    >>> URL().validate("foo.com")
+    False
+    >>> URL().validate("rdar://1234")
+    False
+    >>> URL().validate("h://test")
+    False
+    >>> URL().validate("http:// shouldfail.com")
+    False
+    >>> URL().validate(":// should fail")
+    False
+    >>> URL().validate("http://foo.bar/foo(bar)baz quux")
+    False
+    >>> URL().validate("http://-error-.invalid/")
+    False
+    >>> URL().validate("http://a.b--c.de/")
+    False
+    >>> URL().validate("http://-a.b.co")
+    False
+    >>> URL().validate("http://a.b-.co")
+    False
+    >>> URL().validate("http://1.1.1.1.1")
+    False
+    >>> URL().validate("http://3628126748")
+    False
+    >>> URL().validate("http://.www.foo.bar/")
+    False
+    >>> URL().validate("http://.www.foo.bar./")
+    False
     """
 
     description = "a valid URL"
-
-    requires_scheme = True
-    requires_netloc = True
-    requires_path = False
-
-    def __init__(self, scheme=True, netloc=True, path=False):
-        self.requires_scheme = scheme
-        self.requires_netloc = netloc
-        self.requires_path = path
-
-    def validate(self, value):
-        p = urlparse.urlparse(value)
-        is_valid = True
-        # pylint: disable-msg=E1101
-        if self.requires_scheme:
-            is_valid &= p.scheme != ""
-        if self.requires_netloc:
-            is_valid &= p.netloc != ""
-        if self.requires_path:
-            is_valid &= p.path != ""
-        # pylint: enable-msg=E1101
-        return is_valid
+    pattern = r"""^(?:http)s?:// # protocol
+                  (?:(?:[A-Z0-9](?!.*--)(?:[A-Z0-9-]{0,61}
+                  [A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)| # domain
+                  localhost| # or localhost...
+                  \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) # or ip
+                  (?::\d+)? # and port
+                  (?:/?|[/?]\S+)$ # path"""
+    flags = re.IGNORECASE | re.VERBOSE
 
 
 class Boolean(Validator):
