@@ -1169,10 +1169,7 @@ EOP
 
 load_keyboard_config ()
 {
-    python <<EOP
-import ovirtnode.ovirtfunctions as ovirtfunctions
-ovirtfunctions.load_keyboard_config()
-EOP
+    _pyovirtfunctions "load_keyboard_config()"
 }
 
 configure_dns ()

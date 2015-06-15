@@ -932,6 +932,13 @@ EOP
             hostname $HOSTNAME
         fi
     fi
+    if [ -f /etc/hostname ]; then
+        if [ -n "$(cat /etc/hostname)" ]; then
+            hostname -b -F /etc/hostname
+            hostname -F /etc/hostname
+        fi
+    fi
+
 
     [[ -f "/etc/udev/rules.d/71-persistent-node-net.rules" ]] && {
         [[ $(rpm -E "%{?rhel"}) = 6 ]] || [[ $(rpm -E "%{?centos}") = 6 ]] && {

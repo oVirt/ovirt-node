@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils, base
-from ovirt.node.utils import AugeasWrapper as Augeas, fs, is_fileobj
+from ovirt.node.utils import AugeasWrapper as Augeas, fs, is_fileobj, system
 from ovirt.node.utils.fs import ShellVarFile
 import glob
 import os
@@ -227,12 +227,12 @@ def hostname(new_hostname=None):
     """
     hostnamefile = "/etc/hostname"
 
-    if not os.path.isfile(hostnamefile):
+    if system.is_max_el(6):
         return __legacy_hostname(new_hostname)
 
     if new_hostname:
         # hostnamectl set's runtime and config file
-        utils.process.check_call(["hostnamectl", "--static", "set-hostname",
+        utils.process.check_call(["hostnamectl", "set-hostname",
                                   new_hostname])
 
     current_hostname = utils.fs.get_contents(hostnamefile)
