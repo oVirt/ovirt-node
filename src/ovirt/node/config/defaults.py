@@ -448,18 +448,6 @@ class Network(NodeConfigFileSection):
                                               m_ipv6["netmask"])
                     cfg.ipv6_defaultgw = m_ipv6["gateway"]
 
-        class PersistMacNicMapping(utils.Transaction.Element):
-            title = "Persist MAC-NIC Mappings"
-
-            def commit(self):
-                # Copy the initial net rules to a file that get's not
-                # overwritten at each boot, rhbz#773495
-                rulesfile = "/etc/udev/rules.d/70-persistent-net.rules"
-                newrulesfile = "/etc/udev/rules.d/71-persistent-node-net.rules"
-                if File(rulesfile).exists():
-                    process.check_call(["cp", rulesfile, newrulesfile])
-                    fs.Config().persist(newrulesfile)
-
         class StartNetworkServices(utils.Transaction.Element):
             title = "Start network services"
 
@@ -472,9 +460,6 @@ class Network(NodeConfigFileSection):
         tx.append(StopNetworkServices())
         tx.append(RemoveConfiguration())
         tx.append(WriteConfiguration())
-        if system.is_max_el(6):
-            # Running EL6 -- persist network renaming
-            tx.append(PersistMacNicMapping())
         tx.append(StartNetworkServices())
         return tx
 
