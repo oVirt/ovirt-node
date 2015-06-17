@@ -1857,7 +1857,7 @@ def setup_custom_logger():
     formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
     handler = logging.FileHandler(log_file)
     handler.setFormatter(formatter)
-    logger = logging.getLogger(PRODUCT_SHORT)
+    logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
     return logger
@@ -1866,4 +1866,4 @@ if is_firstboot() or is_install():
     log_file = OVIRT_TMP_LOGFILE
     logger = setup_custom_logger()
 else:
-    logger = logging.getLogger(PRODUCT_SHORT)
+    logger = logging.getLogger(__name__)
