@@ -1391,17 +1391,6 @@ def wipe_partitions(_drive):
                     " * 512/4096 - 35)) count=35 &>>" + OVIRT_TMP_LOGFILE)
     system_closefds("sync")
 
-def test_ntp_configuration(self):
-    # stop ntpd service for testing
-    system_closefds("service ntpd stop > /dev/null 2>&1")
-    for server in OVIRT_VARS["NTP"].split():
-        ret = system_closefds("ntpdate %s > /dev/null 2>&1" % server)
-        if ret > 0:
-            logger.error("Unable to verify NTP server: %s" % server)
-        else:
-            logger.info("Verified NTP server: %s" % server)
-    system_closefds("service ntpd start")
-
 def get_dm_device(device):
     dev_major_cmd="stat -c '%t' " + "\"/dev/" + device + "\""
     dev_minor_cmd="stat -c '%T' " + "\"/dev/" + device + "\""

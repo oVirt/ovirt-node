@@ -279,7 +279,7 @@ class Network(NodeConfigFileSection):
     def transaction(self):
         """Return all transactions to re-configure networking
         """
-        services = ["network", "ntpd", "ntpdate", "rpcbind", "nfslock",
+        services = ["network", "ntpd", "rpcbind", "nfslock",
                     "rpcidmapd", "nfs-idmapd", "rpcgssd"]
 
         def do_services(cmd, services):
@@ -925,7 +925,6 @@ class Timeservers(NodeConfigFileSection):
             def commit(self):
                 system.service("ntpd", "stop", False)
                 if not disable:
-                    system.service("ntpdate", "start", False)
                     system.service("ntpd", "start", False)
 
         tx = utils.Transaction("Configuring timeservers")

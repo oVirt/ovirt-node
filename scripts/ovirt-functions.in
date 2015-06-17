@@ -982,23 +982,6 @@ wipe_partitions() {
     done
 }
 
-test_ntp_configuration () {
-    # stop ntpd service for testing
-    service ntpd stop > /dev/null 2>&1
-    SERVERS=$(echo $NTPSERVERS | awk 'BEGIN{FS=":"}{for (i=1; i<=NF; i++) print $i}')
-        for server in $SERVERS; do
-            ntpdate $server > /dev/null 2>&1
-            result=$?
-            if [ $result -ne 0 ]; then
-                printf "\n Unable to verify NTP server: $server \n"
-            else
-                printf "\n Verified NTP server: $server \n"
-            fi
-        done
-    service ntpd start
-
-}
-
 get_dm_device ()
 {
     local device="$1"
