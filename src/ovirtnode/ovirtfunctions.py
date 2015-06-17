@@ -1862,7 +1862,7 @@ def setup_custom_logger():
     logger.addHandler(handler)
     return logger
 
-if is_firstboot():
+if is_firstboot() or is_install():
     log_file = OVIRT_TMP_LOGFILE
     logger = setup_custom_logger()
 else:
