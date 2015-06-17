@@ -39,6 +39,7 @@ from .. import process, parse_varfile
 from ... import base
 
 LOGGER = logging.getLogger(__name__)
+LOGGER.addHandler(logging.NullHandler())
 
 
 def get_contents(src):

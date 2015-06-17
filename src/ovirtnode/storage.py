@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class Storage:
     def __init__(self):
-        logger = logging.getLogger(_functions.PRODUCT_SHORT)
+        logger.addHandler(logging.NullHandler())
         logger.propagate = False
         OVIRT_VARS = _functions.parse_defaults()
         self.overcommit = 0.5

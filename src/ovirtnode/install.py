@@ -31,11 +31,12 @@ import logging
 OVIRT_VARS = _functions.parse_defaults()
 from ovirtnode.storage import Storage
 
-logger = logging.getLogger(_functions.PRODUCT_SHORT)
+logger = logging.getLogger(__name__)
 
 
 class Install:
     def __init__(self):
+        logger.addHandler(logging.NullHandler())
         logger.propagate = False
         self.disk = None
         self.partN = -1

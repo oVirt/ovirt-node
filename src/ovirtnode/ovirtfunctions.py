@@ -1867,3 +1867,4 @@ if is_firstboot() or is_install():
     logger = setup_custom_logger()
 else:
     logger = logging.getLogger(__name__)
+    logger.addHandler(logging.NullHandler())
