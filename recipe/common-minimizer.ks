@@ -6,7 +6,6 @@ keeprpm system-config-keyboard-base
 #droprpm checkpolicy
 #droprpm make
 drop /usr/share/selinux
-droprpm selinux-policy-devel
 
 droprpm gamin
 droprpm pm-utils
@@ -39,99 +38,6 @@ droprpm mysql*
 droprpm sysklogd
 # pam complains when this is missing
 keeprpm ConsoleKit-libs
-
-# kernel modules minimization
-
-# filesystems
-drop /lib/modules/*/kernel/fs
-keep /lib/modules/*/kernel/fs/ext*
-keep /lib/modules/*/kernel/fs/xfs*
-keep /lib/modules/*/kernel/fs/mbcache*
-keep /lib/modules/*/kernel/fs/squashfs
-keep /lib/modules/*/kernel/fs/jbd*
-keep /lib/modules/*/kernel/fs/btrfs
-keep /lib/modules/*/kernel/fs/cifs*
-keep /lib/modules/*/kernel/fs/fat
-keep /lib/modules/*/kernel/fs/nfs
-keep /lib/modules/*/kernel/fs/nfsd
-keep /lib/modules/*/kernel/fs/nfs_common
-keep /lib/modules/*/kernel/fs/fscache
-keep /lib/modules/*/kernel/fs/lockd
-keep /lib/modules/*/kernel/fs/nls/nls_utf8.ko
-keep /lib/modules/*/kernel/fs/configfs/configfs.ko
-keep /lib/modules/*/kernel/fs/fuse
-keep /lib/modules/*/kernel/fs/isofs
-# autofs4     configfs  exportfs *fat     *jbd    mbcache.ko  nls       xfs
-#*btrfs       cramfs   *ext2     *fscache *jbd2  *nfs         squashfs
-# cachefiles  dlm      *ext3      fuse     jffs2 *nfs_common  ubifs
-# cifs        ecryptfs *ext4      gfs2    *lockd  nfsd        udf
-
-# network
-drop /lib/modules/*/kernel/net
-keep /lib/modules/*/kernel/net/802*
-keep /lib/modules/*/kernel/net/bridge
-keep /lib/modules/*/kernel/net/core
-keep /lib/modules/*/kernel/net/dns_resolver
-keep /lib/modules/*/kernel/net/ipv*
-keep /lib/modules/*/kernel/net/key
-keep /lib/modules/*/kernel/net/llc
-keep /lib/modules/*/kernel/net/netfilter
-keep /lib/modules/*/kernel/net/rds
-keep /lib/modules/*/kernel/net/sctp
-keep /lib/modules/*/kernel/net/sched
-keep /lib/modules/*/kernel/net/sunrpc
-#*802    atm        can   ieee802154 *key      *netfilter  rfkill *sunrpc  xfrm
-#*8021q  bluetooth *core *ipv4       *llc       phonet     sched   wimax
-# 9p    *bridge     dccp *ipv6        mac80211 *rds       *sctp    wireless
-
-drop /lib/modules/*/kernel/sound
-
-# drivers
-drop /lib/modules/*/kernel/drivers
-keep /lib/modules/*/kernel/drivers/ata
-keep /lib/modules/*/kernel/drivers/block
-keep /lib/modules/*/kernel/drivers/cdrom
-keep /lib/modules/*/kernel/drivers/char
-keep /lib/modules/*/kernel/drivers/cpufreq
-keep /lib/modules/*/kernel/drivers/dca
-keep /lib/modules/*/kernel/drivers/dma
-keep /lib/modules/*/kernel/drivers/edac
-keep /lib/modules/*/kernel/drivers/firmware
-keep /lib/modules/*/kernel/drivers/idle
-keep /lib/modules/*/kernel/drivers/infiniband
-keep /lib/modules/*/kernel/drivers/input/misc/uinput.ko
-keep /lib/modules/*/kernel/drivers/md
-keep /lib/modules/*/kernel/drivers/message
-keep /lib/modules/*/kernel/drivers/net
-drop /lib/modules/*/kernel/drivers/net/pcmcia
-drop /lib/modules/*/kernel/drivers/net/wireless
-drop /lib/modules/*/kernel/drivers/net/ppp*
-keep /lib/modules/*/kernel/drivers/pci
-keep /lib/modules/*/kernel/drivers/pps
-keep /lib/modules/*/kernel/drivers/ptp
-keep /lib/modules/*/kernel/drivers/scsi
-keep /lib/modules/*/kernel/drivers/staging/ramzswap
-keep /lib/modules/*/kernel/drivers/uio
-keep /lib/modules/*/kernel/drivers/usb
-drop /lib/modules/*/kernel/drivers/usb/atm
-drop /lib/modules/*/kernel/drivers/usb/class
-drop /lib/modules/*/kernel/drivers/usb/image
-drop /lib/modules/*/kernel/drivers/usb/misc
-drop /lib/modules/*/kernel/drivers/usb/serial
-keep /lib/modules/*/kernel/drivers/usb/storage
-keep /lib/modules/*/kernel/drivers/vhost
-keep /lib/modules/*/kernel/drivers/virtio
-keep /lib/modules/*/kernel/drivers/watchdog
-keep /lib/modules/*/kernel/drivers/i2c
-
-# acpi       *cpufreq   hid         leds      mtd      ?regulator  uwb
-#*ata         crypto   ?hwmon      *md       *net*      rtc       *vhost
-# atm        *dca      ?i2c         media    ?parport  *scsi*      video
-# auxdisplay *dma      *idle        memstick *pci      ?serial    *virtio
-#*block      *edac      ieee802154 *message   pcmcia   ?ssb        watchdog
-# bluetooth   firewire *infiniband ?mfd       platform *staging    xen
-#*cdrom      *firmware  input       misc     ?power    ?uio
-#*char*      ?gpu       isdn        mmc      ?pps      *usb
 
 drop /usr/share/zoneinfo
 keep /usr/share/zoneinfo/UTC
@@ -283,26 +189,6 @@ keep /usr/lib*/libboost_chrono-mt.so*
 drop /usr/kerberos
 keep /usr/kerberos/bin/kinit
 keep /usr/kerberos/bin/klist
-drop /lib/firmware
-keep /lib/firmware/3com
-keep /lib/firmware/acenic
-keep /lib/firmware/adaptec
-keep /lib/firmware/advansys
-keep /lib/firmware/bnx2
-keep /lib/firmware/bnx2x
-keep /lib/firmware/bnx2x*
-keep /lib/firmware/cxgb3
-keep /lib/firmware/cxgb4
-keep /lib/firmware/e100
-keep /lib/firmware/myricom
-keep /lib/firmware/ql*
-keep /lib/firmware/sun
-keep /lib/firmware/tehuti
-keep /lib/firmware/tigon
-keep /lib/firmware/cbfw*
-keep /lib/firmware/ctfw*
-keep /lib/firmware/ct2fw*
-keep /lib/firmware/aic94xx-seq.fw
 
 drop /etc/pki/tls
 keep /etc/pki/tls/openssl.cnf
