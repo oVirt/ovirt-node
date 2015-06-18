@@ -500,7 +500,10 @@ class NicBonding(NodeConfigFileSection):
     # Set some sane defaults if not options are diven
     # https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/
     # tree/Documentation/networking/bonding.txt#n153
-    default_options = "mode=balance-rr miimon=100"
+    #
+    # By default a mode suitable for VM networks is used:
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1094842
+    default_options = "mode=active-backup miimon=100"
 
     @NodeConfigFileSection.map_and_update_defaults_decorator
     def update(self, name, slaves, options):
