@@ -22,6 +22,7 @@ import doctest
 import sys
 import re
 import os
+import traceback
 
 def test():
     parser = argparse.ArgumentParser(description="Runs doctests on a file")
@@ -47,6 +48,7 @@ def test():
             else:
                 return 0
         except ImportError:
+            traceback.print_exc()
             print "Failed to import %s" % arguments.FILE
             return -1
 

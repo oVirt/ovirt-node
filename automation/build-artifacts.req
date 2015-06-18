@@ -1,0 +1,15 @@
+automake
+autoconf
+make
+python
+python-devel
+git
+python-setuptools
+dracut
+python-lockfile
+policycoreutils
+checkpolicy
+selinux-policy-devel
+hardlink
+selinux-policy-doc
+createrepo
