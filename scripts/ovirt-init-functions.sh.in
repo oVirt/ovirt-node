@@ -427,6 +427,20 @@ _start_ovirt_early () {
     #logrotate_max_size=number
     logrotate_max_size=
 
+    # Specify the FQDN or IP of oVirt Engine for node registration
+    # Use the : to specify the oVirt Engine
+    # management_server=engine.localdomain|engine.localdomain:443
+    management_server=
+
+    # Specify the oVirt Engine Port for node registration
+    # NOTE: This param is optional, see management_server
+    # management_port=443
+    management_port=
+
+    # Specify the fingerprint of oVirt Engine CA for node registration
+    # management_server_fingeprint=11:22:33:44:55:66:77:88:99
+    management_server_fingerprint=
+
     cat /etc/system-release >> $OVIRT_LOGFILE
 
     for i in $(cat /proc/cmdline); do
@@ -794,6 +808,15 @@ EOP
             logrotate_max_size=*)
             logrotate_max_size=${i#logrotate_max_size=}
             ;;
+            management_server=*)
+            management_server=${i#management_server=}
+            ;;
+            management_port=*)
+            management_port=${i#management_port=}
+            ;;
+            management_server_fingerprint=*)
+            management_server_fingerprint=${i#management_server_fingerprint=}
+            ;;
             swap_encrypt=* | ovirt_swap_encrypt=* )
             i=${i#ovirt_swap_encrypt=}
             i=${i#swap_encrypt=}
@@ -876,7 +899,7 @@ EOP
     mkdir /tmp/early-logs && ( mount --bind /var/log /tmp/early-logs && mount --make-rprivate /tmp/early-logs ; )
 
     # save boot parameters as defaults for ovirt-config-*
-    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs disable_kdump kdump_ssh kdump_ssh_key scsi_dh_alua iscsi_name snmp_password install netconsole_server netconsole_port stateless wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout logrotate_max_size logrotate_interval"
+    params="bootif init init_app vol_boot_size vol_efi_size vol_swap_size vol_root_size vol_config_size vol_logging_size vol_data_size vol_swap2_size vol_data2_size crypt_swap crypt_swap2 upgrade standalone overcommit ip_address ip_netmask ip_gateway ipv6 dns ntp vlan ssh_pwauth syslog_server syslog_port collectd_server collectd_port bootparams hostname firstboot runtime_mode kdump_nfs disable_kdump kdump_ssh kdump_ssh_key scsi_dh_alua iscsi_name snmp_password install netconsole_server netconsole_port stateless wipe_fakeraid iscsi_init iscsi_target_name iscsi_target_host iscsi_target_port iscsi_install network_layout bond_name bond_slaves bond_options tuned_profile nfsv4_domain use_strong_rng disable_aes_ni keyboard_layout logrotate_max_size logrotate_interval management_server management_port management_server_fingerprint"
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
@@ -901,20 +924,7 @@ EOP
         value=$(ptr $p)
         if [ -n "$value" -o $p = 'init' -o $p = 'upgrade' -o $p = 'install' ]; then
             log "Updating OVIRT_$PARAM to '$value'"
-            if [[ ${PARAM} == "MANAGEMENT_SERVER" ]]; then
-                value=`echo ${value} | sed 's/http\(\|s\):\/\///g'`
-            fi
-            if [[ ${PARAM} == "MANAGEMENT_SERVER" && ${value} == *:* ]]; then
-                MGMSERVER=${value%:*}
-                MGMPORT=${value#*:}
-                echo "set /files$OVIRT_DEFAULTS/OVIRT_MANAGEMENT_SERVER '\"${MGMSERVER}\"'" \
-                    >> $tmpaug
-                echo "set /files$OVIRT_DEFAULTS/OVIRT_MANAGEMENT_PORT '\"${MGMPORT}\"'" \
-                    >> $tmpaug
-            else
-                echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" \
-                    >> $tmpaug
-            fi
+            echo "set /files$OVIRT_DEFAULTS/OVIRT_$PARAM '\"$value\"'" >> $tmpaug
         fi
     done
     # block accidental bootif changes on upgrades
