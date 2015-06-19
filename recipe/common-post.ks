@@ -230,7 +230,7 @@ sed -i '/SSH_USE_STRONG_RNG/d' /etc/sysconfig/sshd
 echo "use .pyc for plugins enumeration, .py is blacklisted"
 # include *-release
 if [[ $(rpm -q sos) =~ sos-3.2 ]]; then
-patch --fuzz 3 -d /usr/lib/python2.7/site-packages/sos -p2 <<  \EOF_sos_patch
+patch --fuzz 3 -d /usr/lib/python2.?/site-packages/sos -p2 <<  \EOF_sos_patch
 index 341d268..51883fa 100644
 --- a/sos/plugins/general.py
 +++ b/sos/plugins/general.py
