@@ -156,6 +156,14 @@ optional_policy(`
     allow hald_t ovirt_t:dbus send_msg;
 ')
 
+#============= useradd_t ==============
+optional_policy(`
+    require {
+        type useradd_t;
+    }
+    allow useradd_t tmpfs_t:dir { write remove_name add_name };
+    allow useradd_t tmpfs_t:file { write getattr link create unlink open };
+')
 
 #============= initrc_t ==============
 optional_policy(`
