@@ -500,7 +500,8 @@ type passwd_t;
 }
 allow passwd_t file_t:file { read open getattr };
 allow passwd_t self:capability sys_admin;
-
+allow passwd_t tmpfs_t:dir { remove_name add_name write };
+allow passwd_t tmpfs_t:file { write getattr link create unlink open };
 #============= getty_t ==============
 require {
   type getty_t;
