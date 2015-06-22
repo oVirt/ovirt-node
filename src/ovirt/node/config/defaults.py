@@ -455,7 +455,8 @@ class Network(NodeConfigFileSection):
                 # overwritten at each boot, rhbz#773495
                 rulesfile = "/etc/udev/rules.d/70-persistent-net.rules"
                 newrulesfile = "/etc/udev/rules.d/71-persistent-node-net.rules"
-                if File(rulesfile).exists():
+                if File(rulesfile).exists() and \
+                        not File(newrulesfile).exists():
                     process.check_call(["cp", rulesfile, newrulesfile])
                     fs.Config().persist(newrulesfile)
 
