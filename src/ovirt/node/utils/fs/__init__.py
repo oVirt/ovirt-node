@@ -467,27 +467,27 @@ class Config(base.Base):
         self._logger.info('Directory "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
 
+    def cksum(self, filename):
+        try:
+            m = hashlib.md5()
+        except:
+            m = hashlib.sha1()
+
+        with open(filename) as f:
+            data = f.read(4096)
+            while data:
+                m.update(data)
+                data = f.read(4096)
+            return m.hexdigest()
+
     def _persist_file(self, abspath):
         """Persist file and bind mount it back to its current location
         """
 
-        def cksum(filename):
-            try:
-                m = hashlib.md5()
-            except:
-                m = hashlib.sha1()
-
-            with open(filename) as f:
-                data = f.read(4096)
-                while data:
-                    m.update(data)
-                    data = f.read(4096)
-                return m.hexdigest()
-
         persisted_path = self._config_path(abspath)
         if os.path.exists(persisted_path):
-            current_checksum = cksum(abspath)
-            stored_checksum = cksum(persisted_path)
+            current_checksum = self.cksum(abspath)
+            stored_checksum = self.cksum(persisted_path)
             if stored_checksum == current_checksum:
                 self._logger.warn('File "%s" had already been persisted',
                                   abspath)
@@ -682,7 +682,18 @@ class Config(base.Base):
     def exists(self, filename):
         """Check if the given file is persisted
         """
-        return filename and File(self._config_path(filename)).exists()
+        persisted_path = self._config_path(filename)
+
+        if not os.path.exists(persisted_path) or \
+                not os.path.exists(filename):
+            return False
+
+        current_checksum = self.cksum(filename)
+        stored_checksum = self.cksum(persisted_path)
+        if stored_checksum == current_checksum:
+            return True
+
+        return False
 
     def is_enabled(self):
         return File("/proc").exists() and is_bind_mount(self.basedir)
