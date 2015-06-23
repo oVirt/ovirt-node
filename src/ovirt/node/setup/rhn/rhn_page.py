@@ -147,6 +147,7 @@ class Plugin(plugins.NodePlugin):
         model["rhn.ca"] = cfg["ca_cert"]
         model["rhn.proxyuser"] = cfg["proxyuser"]
         model["rhn.org"] = cfg["org"]
+        model["rhn.activation_key"] = cfg["activationkey"]
         try:
             p_server, p_port = cfg["proxy"].rsplit(":", 1)
             model["rhn.proxyhost"] = p_server
@@ -165,6 +166,7 @@ class Plugin(plugins.NodePlugin):
                 "rhn.proxyport": valid.Port() | valid.Empty(),
                 "rhn.proxyuser": valid.Text() | valid.Empty(),
                 "rhn.org": valid.Text() | valid.Empty(),
+                "rhn.activation_key": valid.Text() | valid.Empty(),
                 }
 
     def ui_content(self):
@@ -206,6 +208,7 @@ class Plugin(plugins.NodePlugin):
                   ui.Entry("rhn.url", "URL:"),
                   ui.Entry("rhn.ca", "CA URL:"),
                   ui.Entry("rhn.org", "Organization:"),
+                  ui.Entry("rhn.activation_key", "Activation Key:"),
                   ui.Button("button.proxy", "HTTP Proxy Configuration"),
                   ]
 
@@ -223,6 +226,7 @@ class Plugin(plugins.NodePlugin):
                     self.widgets["rhn.url"].enabled(True)
                     self.widgets["rhn.ca"].enabled(True)
                     self.widgets["rhn.org"].enabled(True)
+                    self.widgets["rhn.activation_key"].enabled(True)
                     self.stash_pop_change("rhn.url", reuse_old=True)
                     self.stash_pop_change("rhn.ca", reuse_old=True)
             else:
