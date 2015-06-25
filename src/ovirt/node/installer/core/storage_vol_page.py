@@ -119,10 +119,6 @@ class Plugin(plugins.NodePlugin):
     def on_change(self, changes):
         self._model.update(changes)
 
-        if "storage.fill_data" in changes:
-            if self._fill is not changes["storage.fill_data"]:
-                self._fill = changes["storage.fill_data"]
-                self.application.show(self.ui_content())
         size_keys = ["storage.efi_size", "storage.root_size",
                      "storage.swap_size", "storage.config_size",
                      "storage.logging_size"]
@@ -147,6 +143,13 @@ class Plugin(plugins.NodePlugin):
                     if hasattr(self.widgets[w], "notice"):
                         self.widgets[w].notice("")
                 self._on_ui_change(self._NodePlugin__invalid_changes)
+
+        if "storage.fill_data" in changes:
+            self._on_ui_change(plugins.Changeset(
+                {"storage.data_size": self._model["storage.data_size"]}))
+            if self._fill is not changes["storage.fill_data"]:
+                self._fill = changes["storage.fill_data"]
+                self.application.show(self.ui_content())
 
     def on_merge(self, effective_changes):
         changes = self.pending_changes(False)
