@@ -20,7 +20,8 @@ localboottriggerdir=$(sysconfdir)/ovirt-config-boot.d
 dist_sbin_SCRIPTS = \
   persist \
   unpersist \
-  ovirt-node-upgrade.py
+  ovirt-node-upgrade.py \
+  ovirt-node-update-initramfs
 
 dist_bin_SCRIPTS = \
   ovirt-node-setup \

@@ -594,42 +594,8 @@ search --no-floppy --label RootBackup --set root
                                                             "rd_NO_MULTIPATH",
                                                             "")
 
-        is_mpath_root = self.disk and self.disk.startswith("/dev/mapper")
-        has_mpath_wwid = "mpath.wwid=" in self.bootparams
-        if is_mpath_root and not has_mpath_wwid:
-            """We need to specify the wwid of the root device if it
-            is using multiple paths to prevent races within dracut.
-            Basically there are two options:
-            1. bake wwid of root device into initrd
-            2. pass wwid of root device on kernel cmdline
-            I choose 2 because it seems to be less invasive.
-            https://bugzilla.redhat.com/show_bug.cgi?id=1152948
-            """
-            lsblkcmd = "lsblk -inls %s | awk 'FNR==2 {print $1}'" % self.disk
-            lsblkproc = _functions.subprocess_closefds(lsblkcmd, shell=True,
-                                                       stdout=subprocess.PIPE,
-                                                       stderr=subprocess.STDOUT)
-            lsblkout, lsblkerr = lsblkproc.communicate()
-            logger.debug("lsblk returned: %s -- %s" % (lsblkout, lsblkerr))
-            if not lsblkout.strip():
-                raise RuntimeError("Failed to determin parent of partition: %s" % self.disk)
-            part_parent = "/dev/mapper/" + lsblkout.strip()
-            logger.debug("lsblk found parent for partition %s: %s" % (self.disk, part_parent))
-
-            wwidcmd = "multipath -ll %s | egrep -o '^.*dm-[0-9]' | cut -d' ' -f1" % part_parent
-            logger.debug("Checking device for multipath: %s" % wwidcmd)
-            wwidproc = _functions.subprocess_closefds(wwidcmd, shell=True,
-                                                      stdout=subprocess.PIPE,
-                                                      stderr=subprocess.STDOUT)
-            wwidout, wwiderr = wwidproc.communicate()
-            logger.debug("multipath returned: %s -- %s" % (wwidout, wwiderr))
-            wwid = wwidout.strip()
-            if wwid:
-                logger.debug("Using multipath wwid: %s" % wwid)
-                self.bootparams += " mpath.wwid=%s" % wwid
-                logger.debug("Cmdline with mpath: %s" % self.bootparams)
-            else:
-                logger.debug("Got NO multipath wwid, not using any")
+        # Update initramfs to pickup multipath wwids
+        _system.Initramfs().rebuild()
 
         if " " in self.disk:
             # workaround for grub setup failing with spaces in dev.name:

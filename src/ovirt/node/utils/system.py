@@ -30,6 +30,7 @@ import shlex
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 
 import rpm
 import system_config_keyboard.keyboard
@@ -37,6 +38,7 @@ import system_config_keyboard.keyboard
 from ovirt.node import base, utils
 from ovirt.node.utils import process, parse_varfile
 from ovirt.node.utils.fs import File
+from ovirt.node.utils.process import check_output, check_call
 
 
 LOGGER = logging.getLogger(__name__)
@@ -351,6 +353,38 @@ def copy_dir_if_not_exist(orig, target):
             else:
                 copy_dir_if_not_exist("%s/%s" % (orig, f), "%s/%s" % (target,
                                                                       f))
+
+
+@contextmanager
+def mounted_boot():
+    LOGGER.info("Mounting /liveos and /boot")
+    import ovirtnode.ovirtfunctions as ofunc
+
+    ofunc.mount_liveos()
+    if not os.path.ismount("/liveos"):
+        raise RuntimeError("Failed to mount /liveos")
+
+    liveos = Mount("/liveos")
+    boot = Mount(device="/liveos", path="/boot")
+
+    liveos.remount(rw=True)
+    boot.mount("bind")
+
+    if not os.path.ismount("/boot"):
+        raise RuntimeError("Failed to mount /boot")
+
+    try:
+        # Now run something in this context
+        yield
+    except Exception as e:
+        LOGGER.warn("An error appeared while "
+                    "interacting with /boot: %s" % e)
+        raise
+    finally:
+        boot.umount()
+        liveos.umount()
+
+    LOGGER.info("Successfully unmounted /liveos and /boot")
 
 
 class NVR(object):
@@ -879,6 +913,7 @@ class Filesystem(base.Base):
         this system
         """
         fs = None
+
         try:
             Filesystem._flush()
             with open(os.devnull, 'wb') as DEVNULL:
@@ -891,6 +926,7 @@ class Filesystem(base.Base):
 
         except process.CalledProcessError as e:
             LOGGER.debug("Failed to resolve disks: %s" % e.cmd, exc_info=True)
+
         return fs
 
     def _tokens(self):
@@ -938,17 +974,19 @@ class Mount(base.Base):
             LOGGER.exception("Can't remount %s on %s!" % (device,
                                                           self.path))
 
-    def mount(self):
+    def mount(self, options=None):
         if not self.device:
             LOGGER.exception("Can't mount without a device specified")
             raise RuntimeError("No device was specified when Mount() "
                                "was initialized")
 
-        fstype = self.fstype if self.fstype else "auto"
+        args = ["mount", "-t", self.fstype if self.fstype else "auto"]
+        if options:
+            args += ["-o" + options]
+        args += [self.device, self.path]
 
         try:
-            utils.process.check_call(["mount", "-t", fstype,
-                                      self.device, self.path])
+            utils.process.check_call(args)
         except:
             LOGGER.exception("Can't mount %s on %s" % (self.device,
                              self.path))
@@ -1219,3 +1257,72 @@ class LVM(base.Base):
             vgs = [x.strip() for x in out.split("\n")]
 
         return vgs
+
+
+class Initramfs(base.Base):
+    """This class shall wrap the logic needed to rebuild the initramfs
+
+    The main obstacle is mounting the correct paths.
+    Furthermore we are taking care that now orphans are left over.
+    """
+    def try_unlink(self, path):
+        try:
+            os.unlink(path)
+        except OSError as e:
+            LOGGER.warn("Failed to remove %r: %s", path, e)
+
+    def _generate_new_initramfs(self, new_initrd):
+        LOGGER.info("Generating new initramfs "
+                    "%r (this can take a while)" % new_initrd)
+
+        rd_stdout = ""
+        try:
+            rd_stdout = check_output(["dracut", new_initrd],
+                                     stderr=process.STDOUT)
+        except:
+            LOGGER.warn("dracut failed to generate the initramfs")
+            LOGGER.warn("dracut output: %s" % rd_stdout)
+            self.try_unlink(new_initrd)
+            raise
+
+    def _install_new_initramfs(self, new_initrd, pri_initrd):
+        LOGGER.info("Installing the new initramfs "
+                    "%r to %r" % (new_initrd, pri_initrd))
+
+        backup_initrd = "/var/tmp/initrd0.img.backup"
+
+        try:
+            check_call(["cp", pri_initrd, backup_initrd])
+        except:
+            LOGGER.error("Failed to create the backupfile")
+            # Still trying to unlink, maybe setting attrs failed
+            self.try_unlink(backup_initrd)
+            raise
+
+        try:
+            check_call(["mv", new_initrd, pri_initrd])
+            # Only remove the backup in case that the new on got installed
+            self.try_unlink(backup_initrd)
+        except:
+            LOGGER.error("Failed to put the new initrd in place")
+            LOGGER.error(" Please cleanup manually")
+            LOGGER.error(" Backup: %r" % backup_initrd)
+            LOGGER.error(" initrd location: %r" % pri_initrd)
+            self.try_unlink(new_initrd)
+            raise
+
+    def rebuild(self):
+        pri_initrd = "/boot/initrd0.img"
+        new_initrd = "/var/tmp/initrd0.img.new"
+
+        LOGGER.info("Preparing to regenerate the initramfs")
+        LOGGER.info("The regenreation will overwrite the "
+                    "existing")
+
+        with mounted_boot():
+            self._generate_new_initramfs(new_initrd)
+            self._install_new_initramfs(new_initrd, pri_initrd)
+
+        LOGGER.info("Initramfs regenration completed successfully")
+
+# vim: set sts=4 et:
