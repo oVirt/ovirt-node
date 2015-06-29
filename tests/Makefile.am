@@ -22,7 +22,7 @@ PYTHONSOURCES:=$(PYTHONUNITTESTS)
 
 .PHONY: %.junit.xml
 
-check-local: unittests
+check: unittests
 	@echo -e "---\n Passed $@\n---"
 
 unittests: $(PYTHONUNITTESTS:%=%.nose)
