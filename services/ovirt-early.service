@@ -2,7 +2,7 @@
 Description=oVirt Node early configuration service
 After=rhel-readonly.service fedora-readonly.service local-fs.target network.target
 Wants=rhel-readonly.service fedora-readonly.service local-fs.target
-Before=sshd.service rsyslog.service
+Before=sshd.service rsyslog.service rc-local.service
 
 [Service]
 Type=oneshot
