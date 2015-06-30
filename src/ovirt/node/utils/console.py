@@ -47,9 +47,15 @@ def is_terminal(path=None):
     >>> is_terminal("/dev/console")
     True
     """
-    ttyname = path or os.ttyname(sys.stdin.fileno())
-    return (re.match("/dev/tty([0-9]|$)", ttyname) is not None
-            or ttyname == "/dev/console")
+    is_terminal = False
+    try:
+        ttyname = path or os.ttyname(sys.stdin.fileno())
+        is_tty = re.match("/dev/tty([0-9]|$)", ttyname) is not None
+        is_console = ttyname == "/dev/console"
+        is_terminal = is_tty or is_console
+    except OSError:
+        pass
+    return is_terminal
 
 
 def is_pty():
