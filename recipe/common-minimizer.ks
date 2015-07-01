@@ -256,7 +256,7 @@ drop /usr/bin/ssh-keyscan
 drop /usr/share/omf
 drop /usr/share/gnome
 drop /usr/share/doc
-keep /usr/share/doc/libvirt-*/libvirtd.upstart
+keep /usr/share/doc/libvirt*
 drop /usr/share/locale/
 keep /usr/share/locale/en_US
 keep /usr/share/locale/zh_CN
