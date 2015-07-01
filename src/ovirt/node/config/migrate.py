@@ -20,8 +20,11 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
 from ovirt.node.utils.fs import Config
-from ovirtnode import iscsi, log, ovirtfunctions
+from augeas import Augeas
 import os
+
+aug_unwrapped = Augeas()
+aug_unwrapped.set("/augeas/save/copy_if_rename_fails", "")
 
 
 class ConfigMigrationRunner(base.Base):
@@ -96,6 +99,7 @@ class ImportConfigs(base.Base):
 
     def translate_rsyslog(self):
         if self.__is_persisted("/etc/rsyslog.conf"):
+            from ovirtnode import log
             rsyslog_server, rsyslog_port = log.get_rsyslog_config() if \
                 log.get_rsyslog_config() is not None else (None, 514)
             if rsyslog_server:
@@ -106,9 +110,9 @@ class ImportConfigs(base.Base):
 
     def translate_netconsole(self):
         if self.__is_persisted("/etc/sysconfig/netconsole"):
-            netconsole_server = ovirtfunctions.augtool_get(
+            netconsole_server = aug_unwrapped.get(
                 "/files/etc/sysconfig/netconsole/SYSLOGADDR")
-            netconsole_port = ovirtfunctions.augtool_get(
+            netconsole_port = aug_unwrapped.get(
                 "/files/etc/sysconfig/netconsole/SYSLOGPORT")
             if netconsole_server:
                 self.aug.set(
@@ -119,6 +123,7 @@ class ImportConfigs(base.Base):
 
     def translate_logrotate(self):
         if self.__is_persisted("/etc/logrotate.d/ovirt-node"):
+            from ovirtnode import ovirtfunctions
             logrotate_size = ovirtfunctions.get_logrotate_size()
             if logrotate_size and logrotate_size is not 1024:
                 self.aug.set(
@@ -130,7 +135,7 @@ class ImportConfigs(base.Base):
         from ovirt.node.utils.security import Ssh
 
         if self.__is_persisted("/etc/ssh/sshd_config"):
-            pw_auth_enabled = ovirtfunctions.augtool_get(
+            pw_auth_enabled = aug_unwrapped.get(
                 "/files/etc/ssh/sshd_config/PasswordAuthentication")
             rng_bytes, aes_disabled = Ssh().rng_status()
 
@@ -156,19 +161,15 @@ class ImportConfigs(base.Base):
 
         if self.aug.get('/files/etc/default/ovirt/OVIRT_DNS') is None and \
                 self.__is_persisted("/etc/resolv.conf"):
-            dns = [ovirtfunctions.augtool_get(
-                   "/files/etc/resolv.conf/nameserver[1]"),
-                   ovirtfunctions.augtool_get(
-                       "/files/etc/resolv.conf/nameserver[2]")]
+            dns = [aug_unwrapped.get("/files/etc/resolv.conf/nameserver[1]"),
+                   aug_unwrapped.get("/files/etc/resolv.conf/nameserver[2]")]
             self.aug.set("/files/etc/default/ovirt/OVIRT_DNS",
                          ",".join((filter(None, dns))))
 
         if self.aug.get('/files/etc/default/ovirt/OVIRT_NTP') is None and \
                 self.__is_persisted("/etc/ntp.conf"):
-            ntp = [ovirtfunctions.augtool_get(
-                   "/files/etc/ntp.conf/server[1]"),
-                   ovirtfunctions.augtool_get(
-                       "/files/etc/ntp.conf/server[2]")]
+            ntp = [aug_unwrapped.get("/files/etc/ntp.conf/server[1]"),
+                   aug_unwrapped.get("/files/etc/ntp.conf/server[2]")]
             self.aug.set("/files/etc/default/ovirt/OVIRT_NTP",
                          ",".join((filter(None, ntp))))
 
@@ -197,6 +198,7 @@ class ImportConfigs(base.Base):
 
     def translate_iscsi(self):
         if self.__is_persisted("/etc/iscsi/initiatorname.iscsi"):
+            from ovirtnode import iscsi
             iscsi_initiator = iscsi.get_current_iscsi_initiator_name()
             if iscsi_initiator:
                 self.aug.set("/files/etc/default/ovirt/OVIRT_ISCSI_NODE_NAME",
