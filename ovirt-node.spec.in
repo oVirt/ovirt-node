@@ -1020,7 +1020,8 @@ fi
 %{_sysconfdir}/modprobe.d/ovirt-qla4xxx.conf
 %{_sysconfdir}/modprobe.d/bonding.conf
 %{_libexecdir}/ovirt-node/hooks
-
+# Bundle libvirtd upstart conf: rhbz#1235350
+%{_sysconfdir}/init/libvirtd.conf
 
 %license COPYING
 # should be ifarch i386

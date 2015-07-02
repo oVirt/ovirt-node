@@ -16,7 +16,12 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 nodeconfdir = $(sysconfdir)/ovirt-node/
+upstartconfdir = $(sysconfdir)/init/
 
 dist_nodeconf_DATA = \
   logging.conf \
   logging.debug.conf
+
+# The file is taken from the el6 libvirtd package
+dist_upstartconf_DATA = \
+  libvirtd.conf
