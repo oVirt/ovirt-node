@@ -24,6 +24,10 @@ cat > /etc/system-release-cpe <<EOF_CPE
 cpe:/o:redhat:enterprise_linux:${MAJORVER}:update${MINORVER}:hypervisor${TYPE}
 EOF_CPE
 
+echo "Installing libvirtd.upstart file"
+# https://bugzilla.redhat.com/show_bug.cgi?id=1233059
+cp -v /usr/share/doc/libvirt-*/libvirtd.upstart /etc/init/libvirtd.conf
+
 echo "Configuring IPTables"
 # here, we need to punch the appropriate holes in the firewall
 cat > /etc/sysconfig/iptables << \EOF
