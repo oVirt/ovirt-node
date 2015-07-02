@@ -26,7 +26,12 @@ EOF_CPE
 
 echo "Installing libvirtd.upstart file"
 # https://bugzilla.redhat.com/show_bug.cgi?id=1233059
-cp -v /usr/share/doc/libvirt-*/libvirtd.upstart /etc/init/libvirtd.conf
+# We install the file to /etc/init - now we need to copy it into
+# place for vdsm. vdsm retrieves the upstart path by querying rpm
+LIBVIRT_UPSTART=$(rpm -ql libvirt | grep upstart)
+echo "Using ${LIBVIRT_UPSTART}"
+mkdir -vp $(dirname ${LIBVIRT_UPSTART})
+cp -v /etc/init/libvirtd.conf ${LIBVIRT_UPSTART}
 
 echo "Configuring IPTables"
 # here, we need to punch the appropriate holes in the firewall
