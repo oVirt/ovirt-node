@@ -160,6 +160,7 @@ class PerformInstallation(Transaction.Element):
     title = "Transferring image"
 
     def commit(self):
+        from ovirtnode.install import Install
         Install()
 
 
@@ -202,6 +203,7 @@ class InstallBootloader(Transaction.Element):
         cfgfile = defaults.NodeConfigFile()
         cfg = cfgfile.get_dict()
 
+        from ovirtnode.install import Install
         install = Install()
         if not install.ovirt_boot_setup():
             raise RuntimeError("Bootloader Installation Failed")
@@ -219,6 +221,20 @@ class RunHooks(Transaction.Element):
 
     def commit(self):
         hooks.Hooks.post_auto_install()
+
+def is_iscsi_install():
+    if OVIRT_VARS.has_key("OVIRT_ISCSI_INSTALL") and \
+            OVIRT_VARS["OVIRT_ISCSI_INSTALL"].upper() == "Y":
+        return True
+
+def is_stateless():
+    # check if theres a key first
+    if OVIRT_VARS.has_key("OVIRT_STATELESS"):
+        if OVIRT_VARS["OVIRT_STATELESS"] == "1":
+            return True
+        elif OVIRT_VARS["OVIRT_STATELESS"] == "0":
+            return False
+    return False
 
 
 if __name__ == "__main__":
