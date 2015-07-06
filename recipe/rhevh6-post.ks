@@ -31,7 +31,7 @@ echo "Installing libvirtd.upstart file"
 LIBVIRT_UPSTART=$(rpm -ql libvirt | grep upstart)
 echo "Using ${LIBVIRT_UPSTART}"
 mkdir -vp $(dirname ${LIBVIRT_UPSTART})
-cp -v /etc/init/libvirtd.conf ${LIBVIRT_UPSTART}
+cp -v /usr/share/ovirt-node/libvirtd.upstart ${LIBVIRT_UPSTART}
 
 echo "Configuring IPTables"
 # here, we need to punch the appropriate holes in the firewall
