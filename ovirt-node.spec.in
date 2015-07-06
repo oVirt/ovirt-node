@@ -16,14 +16,23 @@
 # RHN Plugin is only build on RHEL
 %define with_rhn 0%{?rhel}
 
-%global         package_version @PACKAGE_VERSION@
-%global         package_name @PACKAGE_NAME@
+%global use_snapshot 0
+%global snapshot .20150109
+%global commit d06b7c5925d2e36e2844f8a4bf282aaf3b2114db
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+%global checkout %{?snapshot}git%{shortcommit}
 
 Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
 Version:        @PACKAGE_RPM_VERSION@
 Release:        @PACKAGE_RPM_RELEASE@%{?release_suffix}%{?dist}
-Source0:        http://plain.resources.ovirt.org/pub/ovirt-master-snapshot/src/%{name}/%{name}-%{package_version}.tar.gz
+%if 0%{?use_snapshot}
+Release:        %{rhevh_build}%{?checkout}%{?dist}%{?extra_release}
+Source0:        https://gerrit.ovirt.org/gitweb?p=%{name}.git;a=snapshot;h=%{commit};sf=tgz#/%{name}-%{version}%{?checkout}.tar.gz
+%else
+Release:        0%{?dist}%{-extra_release}
+Source0:        %{name}-%{version}.tar.gz
+%endif
 License:        GPLv2+
 Group:          Applications/System
 
@@ -46,7 +55,6 @@ Requires:       python-IPy
 %if ! 0%{?is_el6}
 Requires:       python-augeas
 %endif
-Requires:       glusterfs-client >= 2.0.1
 Requires:       system-release
 Requires:       augeas >= 0.3.5
 Requires:       bridge-utils
@@ -87,16 +95,13 @@ Requires:       NetworkManager
 Requires:       grub2
 %else
 Requires:       grub
-# for applying patches in %post
+# for applying patches in % post
 Requires(post):       patch
 %endif
 %if 0%{?is_el7}
 Requires:       perf
 %endif
 Requires:       system-release
-
-Requires:       %{name}-selinux = %{version}-%{release}
-Requires:       %{name}-branding-ovirt = %{version}-%{release}
 
 #libvirt dependencies
 Requires: libvirt-python
@@ -113,6 +118,9 @@ Requires: libvirt >= 0.10.2-18.el6_4.4
 Requires: libvirt >= 1.0.2-1
 %endif
 %endif
+
+Requires:       %{name}-selinux = %{version}-%{release}
+Requires:       %{name}-branding-ovirt = %{version}-%{release}
 
 
 BuildArch:      noarch
@@ -133,7 +141,7 @@ Requires:       livecd-tools >= 13.4.4
 %else
 Requires:       livecd-tools >= 1:16.0
 %endif
-Obsoletes:      ovirt-node-tools <= 2.3.0-999
+Obsoletes:      ovirt-node-tools <= 2.3.0-2
 
 %define recipe_root %{_datadir}/ovirt-node-recipe
 
@@ -173,6 +181,7 @@ however on a development machine to work with the image.
 Summary:        Ipmi plugin for %{product_family} image
 Group:          Applications/System
 Requires:       ipmitool
+Requires:       OpenIPMI
 
 %description plugin-ipmi
 This package provides a ipmi plugin for use with %{product_family} image.
@@ -575,7 +584,7 @@ oVirt Node Legacy code
 
 
 %prep
-%setup -q -n "%{name}-%{package_version}"
+%setup -q -n "%{name}-@PACKAGE_VERSION@"
 
 
 %build
