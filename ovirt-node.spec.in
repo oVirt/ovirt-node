@@ -39,14 +39,11 @@ Group:          Applications/System
 URL:            http://www.ovirt.org/
 BuildRequires:  python-setuptools python-devel dracut
 BuildRequires:  automake autoconf
-%if %{is_systemd}
-BuildRequires:  systemd-units
-%endif
 BuildRequires:  python-lockfile
 
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
-%if %{is_systemd}
+%if 0%{?is_systemd}
 Requires:       systemd-units
 Requires(post):     systemd-units
 Requires(preun):    systemd-units
@@ -214,7 +211,7 @@ Requires:       %{name}-plugin-snmp-logic = %{version}-%{release}
 This package provides an snmp plugin tools for use with%{product_family} image.
 
 %post plugin-snmp
-%if %{is_systemd}
+%if 0%{?is_systemd}
 systemctl enable snmpd.service
 %else
 chkconfig snmpd on
@@ -267,7 +264,7 @@ if [[ ! `egrep '^cim' /etc/group` ]]; then
     fi
 fi
 useradd -g cim -G sfcb -s /sbin/nologin cim
-%if ! %{is_systemd}
+%if ! 0%{?is_systemd}
 /sbin/chkconfig --add ovirt-cim
 /sbin/chkconfig ovirt-cim on
 %else
@@ -398,7 +395,7 @@ fi
 
 
 %preun plugin-igor-slave
-%if ! %{is_systemd}
+%if ! 0%{?is_systemd}
 if [ $1 = 0 ] ; then
     /sbin/service ovirt-node-igor-slave stop >/dev/null 2>&1
     /sbin/chkconfig --del ovirt-node-igor-slave
@@ -458,7 +455,7 @@ Requires:        augeas >= 0.3.5
 Requires:        bridge-utils
 Requires(post):  /sbin/chkconfig
 Requires(preun): /sbin/chkconfig
-%if %{is_systemd}
+%if 0%{?is_systemd}
 Requires:        systemd-units
 Requires(post):  systemd-units
 Requires(preun): systemd-units
@@ -615,7 +612,7 @@ make install DESTDIR=%{buildroot}
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/on-boot
 %{__install} -d -m0755 %{buildroot}%{_libexecdir}/ovirt-node/hooks/on-changed-boot-image
 
-%if %{is_systemd}
+%if 0%{?is_systemd}
 %{__install} -Dp -m0644 services/ntpd-pre-start.conf \
                        %{buildroot}%{_sysconfdir}/systemd/system/ntpd.service.d/ntpd-pre-start.conf
 %else
@@ -677,7 +674,7 @@ rmdir %{buildroot}/%{python_sitelib}/ovirt/node/setup/rhn/
 
 %post
 /sbin/chkconfig --level 35 netconsole off
-%if ! %{is_systemd}
+%if ! 0%{?is_systemd}
 /sbin/chkconfig --add ovirt-awake
 /sbin/chkconfig --add ovirt-early
 /sbin/chkconfig --add ovirt-firstboot
@@ -698,7 +695,7 @@ fi
 if [ ! -e /boot/grub/splash.xpm.gz ]; then
   cp %{app_root}/grub-splash.xpm.gz /boot/grub/splash.xpm.gz
 fi
-%if ! %{is_systemd}
+%if ! 0%{?is_systemd}
 # apply dracut fixes not in rhel6
 # rhbz#683330
 # dracut.git commits rediffed for dracut-004-336.el6
@@ -738,7 +735,7 @@ exit 42
 
 # Keeping the rest if it is possible one day
 /sbin/chkconfig --level 35 netconsole off
-%if ! %{is_systemd}
+%if ! 0%{?is_systemd}
 if [ $1 = 0 ] ; then
     /sbin/service ovirt-early stop >/dev/null 2>&1
     /sbin/service ovirt-firstboot stop >/dev/null 2>&1
@@ -766,7 +763,7 @@ fi
 
 
 %preun plugin-cim
-%if ! %{is_systemd}
+%if ! 0%{?is_systemd}
 if [ $1 = 0 ] ; then
     /sbin/service ovirt-cim stop >/dev/null 2>&1
     /sbin/chkconfig --del ovirt-cim
@@ -919,7 +916,7 @@ fi
 %{_sysconfdir}/ovirt-plugins.d/cim.minimize
 %{_sysconfdir}/ovirt-commandline.d/cim-args
 %{_sysconfdir}/ovirt-config-boot.d/cim_autoinstall.py*
-%if %{is_systemd}
+%if 0%{?is_systemd}
 %{_unitdir}/ovirt-cim.service
 %else
 %{_initrddir}/ovirt-cim
@@ -928,7 +925,7 @@ fi
 %if 0%{?with_igor}
 %files plugin-igor-slave
 %{_libexecdir}/ovirt-node-igor-slave
-%if %{is_systemd}
+%if 0%{?is_systemd}
 %{_unitdir}/ovirt-node-igor-slave.service
 %else
 %{_initrddir}/ovirt-node-igor-slave
@@ -988,7 +985,7 @@ fi
 %{app_root}/grub-splash.xpm.gz
 # end i386 bits
 %{app_root}/syslinux-vesa-splash.jpg
-%if ! %{is_systemd}
+%if ! 0%{?is_systemd}
 %{app_root}/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch
 
 %endif
@@ -1013,7 +1010,7 @@ fi
 %endif
 %{_sysconfdir}/ovirt-early.d
 %dir %{_sysconfdir}/ovirt-commandline.d
-%if %{is_systemd}
+%if 0%{?is_systemd}
 %{_unitdir}/ovirt.service
 %{_unitdir}/ovirt-awake.service
 %{_unitdir}/ovirt-firstboot.service
