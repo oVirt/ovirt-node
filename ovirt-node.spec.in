@@ -744,7 +744,7 @@ fi
 %{_sysconfdir}/modprobe.d/bonding.conf
 %{_libexecdir}/ovirt-node/hooks
 # Bundle libvirtd upstart conf: rhbz#1235350
-%{_sysconfdir}/init/libvirtd.conf
+%{_datarootdir}/ovirt-node/libvirtd.upstart
 
 %doc COPYING
 # should be ifarch i386
