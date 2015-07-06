@@ -10,9 +10,6 @@
 %define is_el6 %(test 0%{?centos} -eq 06 || test 0%{?rhel} -eq 06 && echo 1 || echo 0)
 %define is_el7 %(test 0%{?centos} -eq 07 || test 0%{?rhel} -eq 07 && echo 1 || echo 0)
 
-# Igor can only be shipped on Fedora (because of python-uinput)
-%define with_igor 0%{?is_min_f19}
-
 # The minimizer is only bundled on el6, because it is available on Fedora
 %define with_minimizer 0%{?is_el6}
 
@@ -180,37 +177,6 @@ Requires:       ipmitool
 %description plugin-ipmi
 This package provides a ipmi plugin for use with %{product_family} image.
 
-%package plugin-puppet
-Summary:        Puppet plugin for %{product_family} image
-Group:          Applications/System
-Requires:       puppet
-
-%description plugin-puppet
-This package provides a puppet plugin for use with %{product_family} image.
-
-%post plugin-puppet
-%if %{is_el6}
-patch -d /usr/lib/ruby/site_ruby/1.8/facter -p0 < \
-%else
-patch -d /usr/share/ruby/vendor_ruby/facter -p0 < \
-%endif
-   %{app_root}/puppet-plugin/puppet-operatingsystem.rb.patch
-cd /etc/puppet
-patch -p0 << EOF
---- puppet.conf 2013-03-21 14:55:43.969130799 -0700
-+++ puppet.conf.new 2013-03-21 14:56:02.690178578 -0700
-@@ -1,4 +1,6 @@
- [main]
-+#    server = ""
-+#    certname = ""
-     # The Puppet log directory.
-     # The default value is '$vardir/log'.
-     logdir = /var/log/puppet
-EOF
-
-%if %{is_el6}
-echo 'files /var/lib/puppet' >> /etc/rwtab
-%endif
 
 #
 # oVirt Node plugin SNMP logic
@@ -923,15 +889,6 @@ fi
 %files plugin-ipmi
 %{python_sitelib}/ovirt/node/setup/ipmi/__init__.py*
 %{python_sitelib}/ovirt/node/setup/ipmi/ipmi_page.py*
-
-%files plugin-puppet
-%{python_sitelib}/ovirt/node/setup/puppet/__init__.py*
-%{python_sitelib}/ovirt/node/setup/puppet/puppet_page.py*
-%{_localstatedir}/lib/puppet/facts/ovirt.rb
-%{_sysconfdir}/ovirt-plugins.d/puppet.minimize
-%{_sysconfdir}/ovirt-commandline.d/puppet-args
-%{app_root}/puppet-plugin/puppet-operatingsystem.rb.patch
-%{_sysconfdir}/ovirt-config-boot.d/puppet_autoinstall.py*
 
 %files plugin-snmp-logic
 %{python_sitelib}/ovirt/node/setup/snmp/snmp_model.py*

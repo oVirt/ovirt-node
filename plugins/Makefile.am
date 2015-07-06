@@ -20,8 +20,6 @@ pluginsargsdir = $(sysconfdir)/ovirt-commandline.d
 pyovirtconfigsetupdir =$(pythondir)/ovirt_config_setup
 pyovirtconfigbootdir = $(sysconfdir)/ovirt-config-boot.d
 pyovirtconfigbootargdir = $(sysconfdir)/ovirt-commandline.d
-puppetplugindir = ${prefix}/share/ovirt-node/puppet-plugin/
-rbovirtsetupdir = $(localstatedir)/lib/puppet/facts
 
 # FIXME this can be removed
 dist_pyovirtconfigsetup_PYTHON = \
@@ -30,11 +28,9 @@ dist_pyovirtconfigsetup_PYTHON = \
 
 dist_plugins_DATA = \
   snmp.minimize \
-  cim.minimize \
-  puppet.minimize
+  cim.minimize
 
 dist_pluginsargs_DATA = \
-  puppet-args \
   cim-args
 
 dist_pyovirtconfigbootarg_DATA = \
@@ -42,15 +38,5 @@ dist_pyovirtconfigbootarg_DATA = \
 
 dist_pyovirtconfigboot_PYTHON = \
   snmp_autoinstall.py \
-  puppet_autoinstall.py \
   rhn_autoinstall.py \
   cim_autoinstall.py
-
-rbovirtsetup_SCRIPTS = \
-  ovirt.rb
-
-dist_puppetplugin_DATA = \
-  puppet-operatingsystem.rb.patch
-
-EXTRA_DIST = \
-  *.rb

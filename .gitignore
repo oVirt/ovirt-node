@@ -34,7 +34,6 @@ scripts/ovirt-init-functions.sh
 tmp
 .checkstyle
 semodule/ovirt.te
-plugins/puppet/build
 tmp.repos/*
 *.swp
 *.swo
