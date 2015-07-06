@@ -1,5 +1,12 @@
 %include version.ks
 
+# According with man systemd-journald.service:
+# By default, the journal stores log data in /run/log/journal/.
+# Since /run/ is volatile, log data is lost at reboot. To make the data
+# persistent, it is sufficient to create /var/log/journal/ where
+# systemd-journald will then store the data
+install -dm 0755 /var/log/journal
+
 # patch kdumpctl so "net" still works for now
 # can remove when rhbz#1139298 lands
 # rhbz#1095140

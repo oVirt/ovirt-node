@@ -1,3 +1,10 @@
+# According with man systemd-journald.service:
+# By default, the journal stores log data in /run/log/journal/.
+# Since /run/ is volatile, log data is lost at reboot. To make the data
+# persistent, it is sufficient to create /var/log/journal/ where
+# systemd-journald will then store the data
+install -dm 0755 /var/log/journal
+
 # ovirt-install-node-stateless
 # ovirt_setup_libvirtd()
     # just to get a boot warning to shut up
