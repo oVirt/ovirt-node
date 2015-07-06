@@ -585,10 +585,15 @@ oVirt Node Legacy code
 
 
 %build
-aclocal && autoheader && automake --add-missing && autoconf
-
-
-%configure --with-image-minimizer @ARCHIPEL_FLAGS@
+%if 0%{?use_snapshot}
+./autogen.sh
+%else
+aclocal
+autoheader || :
+automake --add-missing
+autoconf
+%endif
+%configure --with-image-minimizer
 make
 
 # Build SELinux policy module
