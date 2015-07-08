@@ -908,11 +908,14 @@ EOP
         # Trigger mounting so logfiles are visible
         if [[ -e "/bin/systemctl" ]];
         then
+            # EL7
             systemctl daemon-reload
             mount -a
             swapon -a
             service auditd restart
         else
+            # EL6
+            initctl reload-configuration
             mount -a
             swapon -a
         fi
