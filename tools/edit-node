@@ -1815,7 +1815,8 @@ def main():
                 # just by copyin efi boot , it didnt boot mac anyway before
                 # the fc20/21 image creator refuses to create image with
                 # out macboot and old images have it
-                if not os.path.isfile(editor._LiveImageCreatorBase__isodir+"/isolinux/macboot.img"):
+                if (( not os.path.isfile(editor._LiveImageCreatorBase__isodir+"/isolinux/macboot.img")) and
+                       os.path.isfile(editor._LiveImageCreatorBase__isodir+"/isolinux/efiboot.img") ):
                     shutil.copy(editor._LiveImageCreatorBase__isodir+"/isolinux/efiboot.img",
                                 editor._LiveImageCreatorBase__isodir+"/isolinux/macboot.img")
                 rebuild_iso_symlinks(editor._LiveImageCreatorBase__isodir)
