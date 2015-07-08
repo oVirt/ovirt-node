@@ -23,8 +23,6 @@ sed -i -e '/label check0/{N;N;N;d;}' $LIVE_ROOT/isolinux/isolinux.cfg
 
 # Rename Boot option to Install or Upgrade
 sed -i 's/^  menu label Boot$/  menu label Install or Upgrade/' $LIVE_ROOT/isolinux/isolinux.cfg
-sed -i '/^  menu label Boot (Basic Video)$/a \  menu hide' $LIVE_ROOT/isolinux/isolinux.cfg
-
 # add serial console boot entry
 menu=$(mktemp)
 awk '
@@ -63,6 +61,7 @@ linux0==1 && $1=="label" && $2!="linux0" {
 ' $LIVE_ROOT/isolinux/isolinux.cfg > $menu
 # change the title
 sed -i -e '/^menu title/d' $menu
+sed -i '/^  menu label Boot (Basic Video)$/,+3d' $menu
 echo "say This is the $PRODUCT $VERSION ($RELEASE)" > $LIVE_ROOT/isolinux/isolinux.cfg
 echo "menu title ${PRODUCT_SHORT} $VERSION ($RELEASE)" >> $LIVE_ROOT/isolinux/isolinux.cfg
 cat $menu >> $LIVE_ROOT/isolinux/isolinux.cfg
