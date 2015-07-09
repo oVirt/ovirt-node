@@ -1,5 +1,4 @@
 %global product_family oVirt Node
-%global product_release %{version} (0)
 %global mgmt_scripts_dir %{_sysconfdir}/node.d
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %define is_fedora_systemd %(test 0%{?fedora} -ne 0 && test %{?fedora} -ge 16 && echo 1 || echo 0)
@@ -18,16 +17,17 @@
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 %global checkout %{?snapshot}git%{shortcommit}
 
+%global source_basename @PACKAGE_TARNAME@-@PACKAGE_VERSION@
+
 Summary:        The %{product_family} daemons/scripts
 Name:           ovirt-node
 Version:        @PACKAGE_RPM_VERSION@
-Release:        @PACKAGE_RPM_RELEASE@%{?release_suffix}%{?dist}
 %if 0%{?use_snapshot}
-Release:        %{rhevh_build}%{?checkout}%{?dist}%{?extra_release}
+Release:        @PACKAGE_RPM_RELEASE@%{?release_suffix}%{?checkout}%{?dist}
 Source0:        https://gerrit.ovirt.org/gitweb?p=%{name}.git;a=snapshot;h=%{commit};sf=tgz#/%{name}-%{version}%{?checkout}.tar.gz
 %else
-Release:        0%{?dist}%{-extra_release}
-Source0:        %{name}-%{version}.tar.gz
+Release:        @PACKAGE_RPM_RELEASE@%{?release_suffix}%{?dist}
+Source0:        %{source_basename}.tar.gz
 %endif
 License:        GPLv2+
 Group:          Applications/System
@@ -149,8 +149,6 @@ Requires:       livecd-tools >= 13.4.4
 %else
 Requires:       livecd-tools >= 1:16.0
 %endif
-%endif
-
 Requires:       libselinux-python
 
 %define tools_root %{_datadir}/ovirt-node-tools
@@ -542,10 +540,10 @@ oVirt Node Legacy code
 
 %prep
 %if 0%{?use_snapshot}
-%setup -q -n"%{name}-%{?shortcommit}"                                                                    
+%setup -q -n"%{name}-%{?shortcommit}"
 %else
-%setup -q -n"%{name}-%{version}"                                                                         
-%endif  
+%setup -q -n"%{source_basename}"
+%endif
 
 
 %build
@@ -665,7 +663,7 @@ sed -i -e 's/X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config
 #release info for dracut to pick it up into initramfs
 # remove symlink to keep original redhat-release
 rm -f /etc/system-release
-echo "%{product_family} release %{product_release}" > /etc/system-release
+echo "%{product_family} release %{version}" > /etc/system-release
 
 
 %pre
