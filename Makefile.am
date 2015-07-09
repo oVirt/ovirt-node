@@ -43,7 +43,6 @@ DISTCLEANFILES = $(PACKAGE)-$(VERSION).tar.gz
 
 TMPREPOS = tmp.repos
 RPMBUILD_ARGS :=
-RPMBUILD_ARGS += --define "ovirt_cache_dir $(OVIRT_CACHE_DIR)"
 RPMBUILD_ARGS += --define="_topdir `pwd`/$(TMPREPOS)"
 RPMBUILD_ARGS += $(if $(RELEASE_SUFFIX), --define="release_suffix $$RELEASE_SUFFIX")
 
