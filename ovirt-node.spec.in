@@ -7,11 +7,7 @@
 %define is_centos_systemd %(test 0%{?centos} -ne 0 && test %{?centos} -ge 7 && echo 1 || echo 0)
 %define is_systemd %( test %{is_rhel_systemd} -eq 1 || test %{is_centos_systemd} = 1 || test %{is_fedora_systemd} = 1 && echo 1 || echo 0)
 %define dracutdir %(test -e /usr/share/dracut && echo "/usr/share/dracut/modules.d" || echo "/usr/lib/dracut/modules.d")
-%define is_el6 %(test 0%{?centos} -eq 06 || test 0%{?rhel} -eq 06 && echo 1 || echo 0)
 %define is_el7 %(test 0%{?centos} -eq 07 || test 0%{?rhel} -eq 07 && echo 1 || echo 0)
-
-# The minimizer is only bundled on el6, because it is available on Fedora
-%define with_minimizer 0%{?is_el6}
 
 # RHN Plugin is only build on RHEL
 %define with_rhn 0%{?rhel}
@@ -49,9 +45,7 @@ Requires(post):     systemd-units
 Requires(preun):    systemd-units
 Requires:       python-IPy
 %endif
-%if ! 0%{?is_el6}
 Requires:       python-augeas
-%endif
 Requires:       system-release
 Requires:       augeas >= 0.3.5
 Requires:       bridge-utils
@@ -81,11 +75,7 @@ Requires:       ethtool
 Requires:       cracklib-python
 Requires:       dracut
 Requires:       openssh-server
-%if %{is_el6}
-Requires:       /bin/hostname
-%else
 Requires:       hostname
-%endif
 Requires:       tuned
 Requires:       NetworkManager
 %if 0%{?is_systemd}
@@ -154,9 +144,6 @@ Summary:        Tools for working with plugins on %{product_family} images
 Group:          Applications/System
 
 
-%if 0%{with_minimizer}
-Requires:       ovirt-node-minimizer
-%else
 %if 0%{?centos}
 Requires:       livecd-tools >= 13.4.4
 %else
@@ -301,11 +288,7 @@ This package provides the necessary rhn plugin tools for use with%{product_famil
 #
 %global selinux_modulename ovirt
 %global selinux_variants targeted
-%if %{is_el6}
-%global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
-%else
 %global selinux_policyver %_selinux_policy_version
-%endif
 
 %package selinux
 Summary:          SELinux policy module supporting %{product_family}
@@ -412,29 +395,12 @@ fi
 %endif
 
 
-#
-# minimizer subpackage
-#
-%if 0%{?with_minimizer}
-%package minimizer
-Summary:        The image-minimizer tool
-Group:          Applications/System
-Obsoletes:      appliance-tools-minimizer
-
-
-%description minimizer
-This package ships the image-minimizer tool.
-This tool is used to remove unneeded rpms and files from a filesystem tree.
-
-# </minimizer subpackage>
-%endif
-
 
 #
 # oVirt Brand subpackage
 #
 %package branding-ovirt
-Summary:  oVirt branding for oVirt Node
+Summary:  Branding for oVirt Node
 Group:    Applications/System
 
 %description branding-ovirt
@@ -475,14 +441,8 @@ Requires:        nfs-utils
 Requires:        system-release
 Requires:        ntp
 Requires:        udev >= 147-2.34
-%if ! 0%{?is_el6}
 Requires:        python-augeas
-%endif
-%if %{is_el6}
-Requires:        /bin/hostname
-%else
 Requires:        hostname
-%endif
 Requires:        NetworkManager
 %if 0%{?is_systemd}
 Requires:       grub2
@@ -581,7 +541,11 @@ oVirt Node Legacy code
 
 
 %prep
-%setup -q -n "%{name}-@PACKAGE_VERSION@"
+%if 0%{?use_snapshot}
+%setup -q -n"%{name}-%{?shortcommit}"                                                                    
+%else
+%setup -q -n"%{name}-%{version}"                                                                         
+%endif  
 
 
 %build
@@ -625,12 +589,6 @@ make install DESTDIR=%{buildroot}
 %{__install} -p -m0644 dracut/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch %{buildroot}%{app_root}
 %endif
 
-# python-augeas is not in RHEL-6
-%if 0%{?is_el6}
-# specific version of python-augeas is not available in Fedora yet
-%{__install} -p -m0644 scripts/augeas.py %{buildroot}%{python_sitelib}
-%endif
-
 # Install SELinux policy module
 cd semodule
 %{__install} -d %{buildroot}%{_datadir}/selinux
@@ -654,10 +612,7 @@ ln -vfs %{_bindir}/ovirt-node-config-password %{buildroot}%{_libexecdir}/ovirt-c
             %{buildroot}/%{_initrddir}/ovirt-node-igor-slave
 %endif
 
-# Remove minimizer if unneeded
-%if ! 0%{?with_minimizer}
 %{__rm} -vf %{buildroot}/%{_sbindir}/image-minimizer
-%endif
 
 # Remove rhn stuff if not needed
 %if ! 0%{?with_rhn}
@@ -667,10 +622,6 @@ ln -vfs %{_bindir}/ovirt-node-config-password %{buildroot}%{_libexecdir}/ovirt-c
 rmdir %{buildroot}/%{python_sitelib}/ovirt/node/setup/rhn/
 %endif
 
-# Remove augeas.py if not needed
-%if ! 0%{?is_el6}
-%{__rm} -vf %{buildroot}/%{python_sitelib}/augeas*
-%endif
 
 
 %clean
@@ -954,12 +905,6 @@ fi
 %{_datadir}/selinux/*/%{selinux_modulename}.pp
 
 
-%if 0%{?with_minimizer}
-%files minimizer
-%{_sbindir}/image-minimizer
-%endif
-
-
 %files branding-ovirt
 %{python_sitelib}/ovirt/node/presets.py*
 
@@ -1010,9 +955,6 @@ fi
 %exclude %{python_sitelib}/ovirt_config_setup/cim.py*
 %exclude %{python_sitelib}/ovirt_config_setup/snmp.py*
 %{python_sitelib}/ovirtnode
-%if 0%{?is_el6}
-%{python_sitelib}/augeas*
-%endif
 %{_sysconfdir}/ovirt-early.d
 %dir %{_sysconfdir}/ovirt-commandline.d
 %if 0%{?is_systemd}
