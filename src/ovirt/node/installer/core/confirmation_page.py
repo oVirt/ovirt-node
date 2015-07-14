@@ -123,7 +123,7 @@ class Plugin(plugins.NodePlugin):
          self.application.plugins().values() if not
          plugin.name() == "Confirm disk selections"]
 
-        [_model.update({k: "%s MB" % _model[k]}) for k in _model.keys() if
+        [_model.update({k: "%s" % _model[k]}) for k in _model.keys() if
          re.match(r'storage.*?size$', k) and not _model[k].endswith(" MB")]
 
         if "storage.fill_data" in _model:
