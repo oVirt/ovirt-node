@@ -24,6 +24,7 @@ from ovirt.node.utils.fs import ShellVarFile
 import glob
 import os
 import logging
+import socket
 
 """
 Some convenience functions related to networking
@@ -222,11 +223,8 @@ def timeservers(new_servers=None):
 
 
 def hostname(new_hostname=None):
-    """Get or set the current hostname in the config files
-    Using the hostnamectl tool
+    """Get or set the current hostname
     """
-    hostnamefile = "/etc/hostname"
-
     if system.is_max_el(6):
         return __legacy_hostname(new_hostname)
 
@@ -235,13 +233,7 @@ def hostname(new_hostname=None):
         utils.process.check_call(["hostnamectl", "set-hostname",
                                   new_hostname])
 
-    current_hostname = utils.fs.get_contents(hostnamefile)
-    if new_hostname and current_hostname != new_hostname:
-        raise RuntimeError(("Runtime hostname '%s' doesn't match" +
-                            "configured one: %s") % (current_hostname,
-                                                     new_hostname))
-
-    return current_hostname
+    return socket.gethostname()
 
 
 def __legacy_hostname(new_hostname=None):
