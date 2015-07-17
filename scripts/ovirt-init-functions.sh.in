@@ -870,14 +870,14 @@ EOP
         if [[ -e "/bin/systemctl" ]];
         then
             systemctl daemon-reload
-            mount -a
-            swapon -a
-            service auditd restart
-        else
-            mount -a
-            swapon -a
         fi
 
+        # A few services need to be restarted to pickup the newly bind-mounted
+        # config files (mounted in by the preceeding mount_config call)
+        mount -a
+        swapon -a
+        service network restart
+        service auditd restart
     fi
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
@@ -1448,9 +1448,6 @@ EOP
 
         # Hack to fix rhbz#844997
         mount --make-rshared /
-
-        # Small hack to fix https://bugzilla.redhat.com/show_bug.cgi?id=805313
-        service network restart 2>/dev/null
 
         # Restarting netconsole, now that the network is up, rhbz#869984
         [[ -f "/config/etc/sysconfig/netconsole" &&
