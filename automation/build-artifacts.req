@@ -13,3 +13,4 @@ selinux-policy-devel
 hardlink
 selinux-policy-doc
 createrepo
+python-pep8
