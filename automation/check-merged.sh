@@ -4,6 +4,6 @@ echo "check-merged.sh"
 
 source ./automation/build-node.sh
 
-if ! make check-local ; then
+if ! make -j5 check-local ; then
     die "Node check failed"
 fi
