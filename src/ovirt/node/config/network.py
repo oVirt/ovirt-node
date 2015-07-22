@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import utils, base
-from ovirt.node.utils import AugeasWrapper as Augeas, fs, is_fileobj, system
+from ovirt.node.utils import AugeasWrapper as Augeas, fs, is_fileobj
 from ovirt.node.utils.fs import ShellVarFile
 import glob
 import os
