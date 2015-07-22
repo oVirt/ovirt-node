@@ -11,7 +11,7 @@ function die {
 
 #sets the env variables required for the rest
 export CACHE="$PWD"/build
-export OVIRT_NODE_BASE="$PWD/.."
+export OVIRT_NODE_BASE="$PWD"
 export OVIRT_CACHE_DIR="$CACHE"
 export OVIRT_LOCAL_REPO=file://"$OVIRT_CACHE_DIR"/ovirt
 
@@ -22,9 +22,7 @@ for dir in exported-artifacts; do
 done
 
 rm -rf "$CACHE"
-cd "$OVIRT_NODE_BASE"/ovirt-node
-# get rid of old makefiles
- git clean -dfx
+cd "$OVIRT_NODE_BASE"
 # generate new makefiles
 ./autogen.sh
 make distclean || clean_failed=true
