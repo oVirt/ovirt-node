@@ -225,36 +225,12 @@ def timeservers(new_servers=None):
 def hostname(new_hostname=None):
     """Get or set the current hostname
     """
-    if system.is_max_el(6):
-        return __legacy_hostname(new_hostname)
-
     if new_hostname:
         # hostnamectl set's runtime and config file
         utils.process.check_call(["hostnamectl", "set-hostname",
                                   new_hostname])
 
     return socket.gethostname()
-
-
-def __legacy_hostname(new_hostname=None):
-    """The legacy way of setting a hostname.
-    """
-    aug = utils.AugeasWrapper()
-    augpath = "/files/etc/sysconfig/network/HOSTNAME"
-    sys_hostname = None
-    if new_hostname:
-        aug.set(augpath, new_hostname)
-        sys_hostname = utils.network.hostname(new_hostname)
-    cfg_hostname = aug.get(augpath)
-
-    if sys_hostname and (sys_hostname != cfg_hostname):
-        # A trivial check: Check that the configured hostname equals the
-        # configured one (only check if we are configuring a new hostname)
-        raise RuntimeError(("A new hostname was configured (%s) but the " +
-                            "systems hostname (%s) wasn't set accordingly.") %
-                           (cfg_hostname, sys_hostname))
-
-    return cfg_hostname
 
 
 def ifaces():
