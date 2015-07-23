@@ -60,8 +60,19 @@ rpm:	srpm
 	@echo "rpm(s) available at '$(TMPREPOS)'"
 	@echo
 
+snapshot-rpm: RELEASE_SUFFIX = .$(shell date --utc +%Y%m%d%H%M%S).git$(shell git rev-parse --short HEAD)
+snapshot-rpm: RPMBUILD_ARGS += "--define=release_suffix $(RELEASE_SUFFIX)"
+snapshot-rpm: srpm
+	$(RPMBUILD) $(RPMBUILD_ARGS) --rebuild "$(TMPREPOS)"/SRPMS/*.src.rpm
+	@echo
+	@echo "rpm(s) available at '$(TMPREPOS)'"
+	@echo
+
 publish:
 	$(MAKE) rpm
+	$(MAKE) create-repo
+
+publish-artifacts: snapshot-rpm
 	$(MAKE) create-repo
 
 create-repo:
@@ -84,9 +95,6 @@ static-checks:
 
 unittests:
 	$(MAKE) -C tests/ check-local
-
-snapshot-rpm:
-	make rpm RELEASE_SUFFIX=".$$(date --utc +%Y%m%d).git$$(git rev-parse --short HEAD)"
 
 snapshot:
 	eval export $$(grep ^PACKAGE_ configure) ; \

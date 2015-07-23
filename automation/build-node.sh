@@ -28,6 +28,6 @@ cd "$OVIRT_NODE_BASE"
 make distclean || clean_failed=true
 
 ./autogen.sh --with-image-minimizer
-if ! make publish ; then
+if ! make publish-artifacts ; then
     die "Node building failed"
 fi
