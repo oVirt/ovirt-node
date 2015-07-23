@@ -40,8 +40,10 @@ def set_password(password, user):
     root = admin.lookupUserByName(user)
     passwd = cryptPassword(password)
     _functions.unmount_config("/etc/shadow")
+    _functions.unmount_config("/etc/passwd")
     admin.setpassUser(root, passwd, "is_crypted")
     _functions.ovirt_store_config("/etc/shadow")
+    _functions.ovirt_store_config("/etc/passwd")
     return True
 
 
