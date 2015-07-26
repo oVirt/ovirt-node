@@ -21,6 +21,7 @@
 from ovirt.node import base
 from ovirt.node.utils import console, security
 from ovirt.node.exceptions import InvalidData
+import threading
 
 """
 This contains abstract UI Elements
@@ -913,6 +914,12 @@ class TransactionProgressDialog(Dialog):
 
         self._close_button = CloseButton("button.close")
         self.buttons = [self._close_button]
+        self.buttons[0].on_activate.connect(self._clear_event)
+        self.event = threading.Event()
+
+    def _clear_event(self, *args, **kwargs):
+        self.event.set()
+        self.event.clear()
 
     def add_update(self, txt):
         self.texts.append(txt)
@@ -953,6 +960,7 @@ class TransactionProgressDialog(Dialog):
                              exc_info=True)
             self.add_update("\nAn error occurred while applying the changes:")
             self.add_update("%s" % e)
+            self._clear_event()
 
         if captured.stderr.getvalue():
             se = captured.stderr.getvalue()
