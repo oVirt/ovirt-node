@@ -511,12 +511,12 @@ class SystemRelease(base.Base):
     def is_min_el(self, minversion):
         """Determin if this system is an EL and at min version minversion
         """
-        return (self.is_el() and int(self.VERSION) >= minversion)
+        return (self.is_el() and float(self.VERSION) >= minversion)
 
     def is_max_el(self, maxversion):
         """Determin if this system is an EL and at max version maxversion
         """
-        return (self.is_el() and int(self.VERSION) <= maxversion)
+        return (self.is_el() and float(self.VERSION) <= maxversion)
 
 
 class ProductInformation(base.Base):
