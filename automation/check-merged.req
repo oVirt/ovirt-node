@@ -32,3 +32,4 @@ libvirt-python
 python-lxml
 python-nose
 python-pep8
+python-requests
