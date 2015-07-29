@@ -380,7 +380,7 @@ mount_config() {
             cp -rv --update /live/config/* /config
         fi
         # bind mount all persisted configs to rootfs
-        for f in $(cat /config/files); do
+        for f in $(sort -u /config/files); do
             if grep -q " $f ext[234]" /proc/mounts ; then
                 # skip if already bind-mounted
                 true
