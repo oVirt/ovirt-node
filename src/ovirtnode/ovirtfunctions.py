@@ -845,7 +845,16 @@ def ovirt_store_config(files):
                 rc = rc and True
         else:
             logger.warn(filename + " Already persisted")
+
+            # Even if persisted, make sure it's mounted
+            if not check_bind_mount(filename):
+                if not system("mount -n --bind /config/" + filename + \
+                              " " + filename):
+                    logger.error("Failed to mount unchanged file %r" %
+                                 filename)
+
             rc = rc and True
+
     return rc
 
 def ovirt_store_config_retnum(filename):
