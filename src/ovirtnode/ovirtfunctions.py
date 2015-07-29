@@ -836,7 +836,7 @@ def ovirt_store_config(files):
                         logger.info("File: " + filename + " persisted")
                         rc = rc and True
             # register in /config/files used by rc.sysinit
-            ret = system_closefds("grep -q \"^$" + filename +"$\" " + \
+            ret = system_closefds("grep -q \"^" + filename +"$\" " + \
                                   " /config/files 2> /dev/null")
             if ret > 0:
                 system_closefds("echo "+filename+" >> /config/files")
