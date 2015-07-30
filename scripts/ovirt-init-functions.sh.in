@@ -1484,6 +1484,8 @@ EOP
             done
         fi
 
+        ovirt_store_config $(ls /etc/ssh_host*_key*)
+
         # FIXME is this still needed?
         if is_standalone; then
             return 0
@@ -1491,8 +1493,7 @@ EOP
 
         # persist selected configuration files
         ovirt_store_config \
-            /etc/node.d \
-            /etc/ssh/ssh_host*_key*
+            /etc/node.d
 
         . /usr/libexec/ovirt-functions
 
