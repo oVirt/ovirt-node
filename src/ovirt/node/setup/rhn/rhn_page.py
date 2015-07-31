@@ -42,7 +42,7 @@ class Plugin(plugins.NodePlugin):
         return "RHN Registration"
 
     def rank(self):
-        return -310
+        return 310
 
     def model(self):
         cfg = rhn_model.RHN().retrieve()
