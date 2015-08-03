@@ -1491,7 +1491,7 @@ EOP
             done
         fi
 
-        ovirt_store_config $(ls /etc/ssh_host*_key*)
+        ovirt_store_config $(ls /etc/ssh/ssh_host*_key*)
 
         # FIXME is this still needed?
         if is_standalone; then
