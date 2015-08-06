@@ -538,7 +538,8 @@ optional_policy(`
     require {
         type NetworkManager_t;
     }
-    allow NetworkManager_t tmpfs_t:dir { read };
+    allow NetworkManager_t tmpfs_t:dir { read write add_name remove_name };
+    allow NetworkManager_t tmpfs_t:file { read write getattr open create rename unlink };
 ')
 
 
