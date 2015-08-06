@@ -71,6 +71,7 @@ Requires:       python-urwid
 Requires:       python-lockfile
 Requires:       python-lxml
 Requires:       PyPAM
+Requires:       rpm-python
 Requires:       ethtool
 Requires:       cracklib-python
 Requires:       dracut
@@ -430,6 +431,7 @@ Requires:        PyPAM
 Requires:        python-urwid
 Requires:        python-lockfile
 Requires:        python-lxml
+Requires:        rpm-python
 Requires:        cracklib-python
 Requires:        dracut
 Requires:        tuned
