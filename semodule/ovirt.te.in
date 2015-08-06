@@ -136,6 +136,7 @@ allow sanlock_t nfs_t:file open;
 
 #============= systemd_hostnamectl ==============
 @SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t tmpfs_t:dir { write remove_name search add_name };
+@SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t tmpfs_t:file { unlink };
 @SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t ovirt_t:dbus send_msg;
 
 #============= hald_t ==============
