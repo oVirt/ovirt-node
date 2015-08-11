@@ -245,7 +245,7 @@ allow svirt_t var_log_t:file { read write create open };
 
 #============= syslogd_t ==============
 allow syslogd_t var_lib_t:file { write getattr open };
-allow syslogd_t tmpfs_t:file read;
+allow syslogd_t tmpfs_t:file { read open };
 
 
 #============= sysstat_t ==============
