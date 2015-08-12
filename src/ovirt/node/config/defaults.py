@@ -278,7 +278,7 @@ class Network(NodeConfigFileSection):
     def transaction(self):
         """Return all transactions to re-configure networking
         """
-        services = ["network", "ntpd", "ntpdate", "rpcbind", "nfslock",
+        services = ["network", "ntpd", "rpcbind", "nfslock",
                     "rpcidmapd", "nfs-idmapd", "rpcgssd",
                     "rpc-statd"]
 
