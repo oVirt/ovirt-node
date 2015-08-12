@@ -279,7 +279,8 @@ class Network(NodeConfigFileSection):
         """Return all transactions to re-configure networking
         """
         services = ["network", "ntpd", "ntpdate", "rpcbind", "nfslock",
-                    "rpcidmapd", "nfs-idmapd", "rpcgssd"]
+                    "rpcidmapd", "nfs-idmapd", "rpcgssd",
+                    "rpc-statd"]
 
         def do_services(cmd, services):
             with console.CaptureOutput():
