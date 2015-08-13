@@ -1,1 +1,0 @@
-ovirt19-minimizer.ks

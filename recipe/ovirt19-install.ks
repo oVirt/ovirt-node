@@ -1,1 +1,0 @@
-ovirt18-install.ks
