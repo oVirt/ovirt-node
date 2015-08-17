@@ -102,7 +102,7 @@ class Passwd(base.Base):
 class Selinux(base.Base):
     def restorecon(self, abspath):
         try:
-            selinux.restorecon(abspath)
+            selinux.restorecon(abspath.encode("utf-8"))
         except OSError:
             self._logger.warning('No default label: "%s"', abspath)
 
