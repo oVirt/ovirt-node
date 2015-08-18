@@ -230,6 +230,14 @@ def hostname(new_hostname=None):
         utils.process.check_call(["hostnamectl", "set-hostname",
                                   new_hostname])
 
+        # FIXME:
+        # hostnamectl --static is not writing into /etc/hostname.
+        # Because of that, the new hostname won't persist across
+        # reboot in case user change it via TUI.
+        # Restarting systemd-hostnamed doesn't help either.
+        hostname_file = fs.File("/etc/hostname")
+        hostname_file.write(contents=new_hostname, mode="w+")
+
     return socket.gethostname()
 
 
