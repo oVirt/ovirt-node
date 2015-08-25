@@ -109,14 +109,14 @@ class Selinux(base.Base):
     def getcon(self, abspath):
         """ Return context of file, symlink or dir """
         try:
-            return selinux.getfilecon(abspath)[1]
+            return selinux.getfilecon(abspath.encode("utf-8"))[1]
         except OSError:
             self._logger.warning('Cannot get selinux context: "%s"', abspath)
 
     def chcon(self, abspath, context):
         """ Change selinux security context """
         try:
-            return selinux.chcon(abspath, context)
+            return selinux.chcon(abspath.encode("utf-8"), context)
         except OSError:
             self._logger.warning('Cannot change selinux context: "%s" "%s"',
                                  (abspath, context))
