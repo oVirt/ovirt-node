@@ -19,7 +19,7 @@
 # MA  02110-1301, USA.  A copy of the GNU General Public License is
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base, valid, utils
-from ovirt.node.utils import system
+from ovirt.node.utils import console, system
 from ovirt.node.utils.fs import File
 import PAM as _PAM  # @UnresolvedImport
 import cracklib
@@ -84,12 +84,15 @@ def password_check(password, confirmation, min_length=1):
         try:
             cracklib.FascistCheck(password)
         except ValueError as e:
-            message = "You have provided a weak password! "
-            message += "Strong passwords contain a mix of uppercase, "
-            message += "lowercase, numeric and punctuation characters. "
-            message += "They are six or more characters long and "
-            message += "do not contain dictionary words. "
-            message += "Reason: %s" % e
+            console_size = console.size() if console.isatty() else None
+            message = "You have provided a weak password!"
+
+            if console_size and console_size.rows > 24:
+                message += "Strong passwords contain a mix of uppercase, "
+                message += "lowercase, numeric and punctuation characters. "
+                message += "They are six or more characters long and "
+                message += "do not contain dictionary words. "
+                message += "Reason: %s" % e
 
     return message
 
