@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import base
 from ovirt.node.utils import Transaction, process
+from collections import namedtuple
 import StringIO
 import sys
 import os
@@ -67,6 +68,25 @@ def is_pty():
 
 def reset():
     process.call(["reset"])
+
+
+def isatty():
+    """Check whether or not it's an actual terminal, so unit tests go through
+    jenkins ok"""
+
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def size():
+    """Returns the size of the console as a tuple
+    """
+
+    size = namedtuple("consolesize", ["rows", "columns"])
+
+    rows, cols = ([int(x) for x in process.check_output(['stty',
+                                                         'size']).split()])
+
+    return size(rows, cols)
 
 
 def writeln(txts):
