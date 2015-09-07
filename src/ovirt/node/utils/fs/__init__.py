@@ -682,6 +682,7 @@ class Config(base.Base):
     def exists(self, filename):
         """Check if the given file is persisted
         """
+        filename = os.path.abspath(filename)
         persisted_path = self._config_path(filename)
 
         if not os.path.exists(persisted_path) or \
