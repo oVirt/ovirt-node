@@ -107,6 +107,7 @@ MINORVER=${VERSION##*.}
 cat > /etc/system-release-cpe <<EOF_CPE
 cpe:/o:redhat:enterprise_linux:${MAJORVER}:update${MINORVER}:hypervisor${TYPE}
 EOF_CPE
+sed -i "/^CPE_NAME=/ s#.*#CPE_NAME=\"$(cat /etc/system-release-cpe)\"#" /etc/os-release
 
 echo "Configuring IPTables"
 # here, we need to punch the appropriate holes in the firewall
