@@ -680,6 +680,7 @@ class Config(base.Base):
     def exists(self, filename):
         """Check if the given file is persisted
         """
+        filename = os.path.abspath(filename) if filename else filename
         return filename and File(self._config_path(filename)).exists()
 
     def is_enabled(self):
