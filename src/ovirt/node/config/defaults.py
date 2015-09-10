@@ -1121,6 +1121,12 @@ class KDump(NodeConfigFileSection):
                 [aug.remove(v) for v in vals.keys() if vals[v] is not None]
                 aug.save()
 
+                for entry in aug.match("/files/etc/fstab/*"):
+                    if aug.get(entry + "/file") == "/var/run/kdump-nfs":
+                        aug.remove(entry)
+                aug.save()
+
+
         class LocalKdumpConfig(utils.Transaction.Element):
             title = "Setting local kdump config"
 
