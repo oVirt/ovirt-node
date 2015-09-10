@@ -594,9 +594,6 @@ search --no-floppy --label RootBackup --set root
                                                             "rd_NO_MULTIPATH",
                                                             "")
 
-        # Update initramfs to pickup multipath wwids
-        _system.Initramfs().rebuild()
-
         if " " in self.disk:
             # workaround for grub setup failing with spaces in dev.name:
             # use first active sd* device
@@ -677,6 +674,9 @@ search --no-floppy --label RootBackup --set root
                 return False
             else:
                 logger.info("Grub Installation Completed")
+
+        # Update initramfs to pickup multipath wwids
+        _system.Initramfs().rebuild()
 
         if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
             # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
