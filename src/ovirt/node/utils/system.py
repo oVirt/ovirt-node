@@ -1114,7 +1114,8 @@ class Bootloader(base.Base):
         cfg = File(cfg_path)
 
         if not cfg.exists():
-            raise RuntimeError("Grub config file does not exist: %s" % cfg)
+            raise RuntimeError("Grub config file does not exist: %s" %
+                               cfg.filename)
 
         return cfg
 
