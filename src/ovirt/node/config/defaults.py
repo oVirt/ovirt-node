@@ -1153,6 +1153,13 @@ class KDump(NodeConfigFileSection):
                         os.makedirs(nfs_path)
                     system.Mount(nfs_path, nfs, "nfs").mount()
 
+                    crash_path = aug.get("/files/etc/kdump.conf/path") or \
+                        "var/crash"
+
+                    crash_path = "%s/%s" % (nfs_path, crash_path)
+                    if not os.path.isdir(crash_path):
+                        os.makedirs(crash_path)
+
                     File("/etc/fstab").write(
                         "\n%s\t%s\tnfs\tdefaults\t0 0" % (nfs, nfs_path),
                         "a")
