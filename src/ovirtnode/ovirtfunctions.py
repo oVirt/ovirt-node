@@ -530,14 +530,15 @@ def mount_liveos():
                     system("ln -s \"/dev/mapper/" + dev + "\" /dev/disk/by-label/Root")
                     if system("mount LABEL=Root /liveos"):
                         return True
-        if os.path.ismount("/dev/.initramfs/live"):
-            if system_closefds("mount -o bind /dev/.initramfs/live /liveos"):
-                return True
-        elif os.path.ismount("/run/initramfs/live"):
-            if system_closefds("mount -o bind /run/initramfs/live /liveos"):
-                return True
-
-        return False
+                    else:
+                        if os.path.ismount("/dev/.initramfs/live"):
+                            system_closefds("mount -o bind /dev/.initramfs/live /liveos")
+                        elif os.path.ismount("/run/initramfs/live"):
+                            system_closefds("mount -o bind /run/initramfs/live /liveos")
+                        else:
+                            return False
+        else:
+            return True
 
 def mount_efi(target="/liveos/efi"):
     # Moved to the new codebase
