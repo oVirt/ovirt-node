@@ -1126,7 +1126,6 @@ class KDump(NodeConfigFileSection):
                         aug.remove(entry)
                 aug.save()
 
-
         class LocalKdumpConfig(utils.Transaction.Element):
             title = "Setting local kdump config"
 
