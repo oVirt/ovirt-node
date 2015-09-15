@@ -207,6 +207,10 @@ allow setfiles_t net_conf_t:file read;
 allow setfiles_t dhcpc_t:udp_socket { read write };
 
 
+#============= sshd_t ==============
+allow sshd_t local_login_t:process signull;
+
+
 #============= sshd_net_t ==============
 optional_policy(`
     require {
