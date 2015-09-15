@@ -467,12 +467,8 @@ class Config(base.Base):
         self._logger.info('Directory "%s" successfully persisted', abspath)
         self._add_path_entry(abspath)
 
-    def cksum(self, filename):
-        try:
-            m = hashlib.md5()
-        except:
-            m = hashlib.sha1()
-
+    def checksum(self, filename):
+        m = hashlib.sha1()
         with open(filename) as f:
             data = f.read(4096)
             while data:
@@ -486,8 +482,8 @@ class Config(base.Base):
 
         persisted_path = self._config_path(abspath)
         if os.path.exists(persisted_path):
-            current_checksum = self.cksum(abspath)
-            stored_checksum = self.cksum(persisted_path)
+            current_checksum = self.checksum(abspath)
+            stored_checksum = self.checksum(persisted_path)
             if stored_checksum == current_checksum:
                 self._logger.warn('File "%s" had already been persisted',
                                   abspath)
@@ -679,22 +675,25 @@ class Config(base.Base):
             from ovirtnode import ovirtfunctions
             return ovirtfunctions.ovirt_safe_delete_config(filename)
 
-    def exists(self, filename):
+    def exists(self, filename, check_is_in_sync=True):
         """Check if the given file is persisted
         """
         filename = os.path.abspath(filename)
         persisted_path = self._config_path(filename)
 
-        if not os.path.exists(persisted_path) or \
-                not os.path.exists(filename):
-            return False
+        exists = True
 
-        current_checksum = self.cksum(filename)
-        stored_checksum = self.cksum(persisted_path)
-        if stored_checksum == current_checksum:
-            return True
+        # Check that the files exist
+        exists &= os.path.exists(persisted_path)
+        exists &= os.path.exists(filename)
 
-        return False
+        if exists and check_is_in_sync:
+            # If requested, also check that the contents match
+            current_checksum = self.checksum(filename)
+            stored_checksum = self.checksum(persisted_path)
+            exists &= stored_checksum == current_checksum
+
+        return exists
 
     def is_enabled(self):
         return File("/proc").exists() and is_bind_mount(self.basedir)
