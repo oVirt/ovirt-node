@@ -1215,8 +1215,6 @@ def finish_install():
     # Cobbler XMLRPC post-install trigger (XXX is there cobbler SRV record?):
     # wget "http://192.168.50.2/cblr/svc/op/trig/mode/post/system/$(hostname)"
     #   -O /dev/null
-    if is_auto_install():
-        hooks.Hooks.post_auto_install()
     for f in ["/etc/ssh/ssh_host%s_key" % t for t in ["", "_dsa", "_rsa"]]:
         ovirt_store_config(f)
         ovirt_store_config("%s.pub" % f)
