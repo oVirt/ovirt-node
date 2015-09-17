@@ -295,3 +295,6 @@ sed -i \
 sed -i "/^REDHAT_BUGZILLA_PRODUCT=/ s/.*/REDHAT_BUGZILLA_PRODUCT=\"$PRODUCT $VERSION\"/" /etc/os-release
 sed -i "/^PRETTY_NAME/ s/.*/PRETTY_NAME=\"$PRODUCT $VERSION\"/" /etc/os-release
 
+echo "Removing nologin tmpfiles rhbz#1261702"
+rm -vf /usr/lib/tmpfiles.d/systemd-nologin.conf
+
