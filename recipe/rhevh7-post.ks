@@ -182,47 +182,12 @@ sed -i '/rm -f \/etc\/yp.conf/d' $DHSCRIPT
 sed -ie '/dirs[ \t].*nfs/ d' /etc/rwtab
 echo "files     /var/lib/nfs" >> /etc/rwtab
 
-# rhbz#734478 add virt-who (*.py are removed in rhevh image)
-cmd_who=""
-if [ -f /usr/share/virt-who/virt-who.pyc ]; then
-    cmd_who="virt-who.pyc"
-elif [ -f /usr/share/virt-who/virtwho.pyc ]; then
-    cmd_who="virtwho.pyc"
-else
-    echo "Couldn't find a known virt-who executable. Please check"
-fi
-
 if [ ! -z $cmd_who ]; then
    cat > /usr/bin/virt-who <<EOF_virt_who
 #!/bin/sh
 exec /usr/bin/python /usr/share/virt-who/$cmd_who "\$@"
 EOF_virt_who
 fi
-
-# rhbz 1209350 virt-who keeps using absolute paths to uncompiled
-# python files. Change this to the compiled version as well, and
-# persist the generated key file
-
-patch -d /bin -p0 << \EOF_virt_who_password
---- virt-who-password      2015-04-07 12:13:41.992000000 -0400
-+++ virt-who-password       2015-04-07 12:14:33.909000000 -0400
-@@ -1,10 +1,12 @@
- #!/bin/sh
-
--if [ -f ./virtwhopassword.py ];
-+if [ -f ./virtwhopassword.pyc ];
- then
-     # Run it from local directory when available
--    exec /usr/bin/python ./virtwhopassword.py "$@"
-+    /usr/bin/python ./virtwhopassword.pyc "$@"
- else
-     # Run it from /usr/share/virt-who
--    exec /usr/bin/python /usr/share/virt-who/virtwhopassword.py "$@"
-+    /usr/bin/python /usr/share/virt-who/virtwhopassword.pyc "$@"
- fi
-+
-+persist /var/lib/virt-who/key
-EOF_virt_who_password
 
 # rhbz 1152947 fixing virt-who start dependancy syslog.socket
 # first of all fixing the missing link of syslog to rsyslog
