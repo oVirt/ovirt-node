@@ -870,11 +870,6 @@ EOP
         if [[ -e "/bin/systemctl" ]];
         then
             systemctl daemon-reload
-            systemctl --no-block isolate default.target
-            service auditd restart
-        else
-            # EL6
-            initctl reload-configuration
         fi
 
         # A few services need to be restarted to pickup the newly bind-mounted
