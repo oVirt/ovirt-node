@@ -28,38 +28,38 @@ snmp_conf = "/var/lib/net-snmp/snmpd.conf"
 
 
 def enable_snmpd(password):
-    def change_password(oldpwd):
-        system.service("snmpd", "start")
-        pwd_change_cmd = (("snmpusm -v 3 -u root -n \"\" -l authNoPriv " +
-                           "-a SHA -A %s localhost passwd %s %s -x AES") %
-                          (oldpwd, oldpwd, password))
-        process.check_call(pwd_change_cmd, shell=True)
-        # Only reached when no excepion occurs
-        process.call(["rm", "-rf", "/tmp/snmpd.conf"])
+    system.service("snmpd", "stop")
 
-    # Check for an old password
+    # get old password #
     if os.path.exists("/tmp/snmpd.conf"):
         conf = "/tmp/snmpd.conf"
     else:
         conf = snmp_conf
-
-    cmd = "cat %s | grep createUser | grep -v '^#' | awk '{print $4}'" % conf
+    cmd = "cat %s|grep createUser| grep -v '^#' | awk '{print $4}'" % conf
     oldpwd = process.pipe(cmd, shell=True).strip()
 
+    # change existing password
     if len(oldpwd) > 0:
-        change_password(oldpwd)
-    else:
-        system.service("snmpd", "stop")
-        # net-snmp tries to move this to a backup. We don't care about that,
-        # but it fails, and fails to create the user if it's persisted (and
-        # bind mounted).
-        fs.Config().unpersist(snmp_conf)
-        # create user account
-        process.check_call(["net-snmp-create-v3-user", "-A", password, "-a",
-                            "SHA", "-x", "AES", "root"])
         system.service("snmpd", "start")
-        fs.Config().persist("/etc/snmp/snmpd.conf")
-        fs.Config().persist(snmp_conf)
+        pwd_change_cmd = (("snmpusm -v 3 -u root -n \"\" -l authNoPriv -a " +
+                           "SHA -A %s localhost passwd %s %s -x AES") %
+                          (oldpwd, oldpwd, password))
+        process.check_call(pwd_change_cmd, shell=True)
+        # Only reached when no excepion occurs
+        process.call(["rm", "-rf", "/tmp/snmpd.conf"])
+        system.service("snmpd", "stop")
+
+    if not any([x for x in open('/etc/snmp/snmpd.conf').readlines()
+                if 'rwuser root' in x]):
+        with open('/etc/snmp/snmpd.conf', 'a') as f:
+            f.write("rwuser root")
+    fs.Config().persist("/etc/snmp/snmpd.conf")
+
+    cfg = fs.File(snmp_conf)
+    # create user account
+    cfg.write("createUser root SHA %s AES\n" % password)
+    system.service("snmpd", "start")
+    fs.Config().persist(snmp_conf)
 
     firewall.open_port(port="161", proto="udp")
 
