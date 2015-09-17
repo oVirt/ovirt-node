@@ -33,10 +33,6 @@ rm -f /etc/cron.daily/logrotate
 # Logrotate more judiciously so the size of syslog stays under control
 sed -i '/^.*sharedscripts/a \    rotate 5\n    size 15M\n    compress\n    missingok' /etc/logrotate.d/syslog
 
-if rpm -q --quiet rhn-virtualization-host; then
-    sed -i -e 's/\.py/\.pyc/' -e 's/<//' /etc/cron.d/rhn-virtualization.cron
-fi
-
 # root's bash profile
 cat >> /root/.bashrc << \EOF_bashrc
 # aliases used for the temporary
@@ -244,50 +240,12 @@ index 341d268..51883fa 100644
 +            "/etc/*-release",
              "/var/log/up2date"
          ])
- 
-index 7c06781..05e193e 100644
---- a/sos/utilities.py
-+++ b/sos/utilities.py
-@@ -207,13 +207,13 @@ class ImporterHelper(object):
-         plugins = [self._plugin_name(plugin)
-                    for plugin in list_
-                    if "__init__" not in plugin
--                   and plugin.endswith(".py")]
-+                   and plugin.endswith(".pyc")]
-         plugins.sort()
-         return plugins
- 
-     def _find_plugins_in_dir(self, path):
-         if os.path.exists(path):
--            py_files = list(find("*.py", path))
-+            py_files = list(find("*.pyc", path))
-             pnames = self._get_plugins_from_list(py_files)
-             if pnames:
-                 return pnames
 EOF_sos_patch
 
 elif [[ $(rpm -E "%{?fedora}") = 20 ]] ||
     [[ $(rpm -E "%{?rhel}") = 7 ]] ||
     [[ $(rpm -E "%{?centos}") = 7 ]]; then
 patch --fuzz 3 -d /usr/lib/python2.7/site-packages/sos -p0 <<  \EOF_sos_patch
---- utilities.py.orig    2013-08-04 08:36:51.000000000 -0700
-+++ utilities.py   2014-03-18 15:25:02.675059445 -0700
-@@ -296,13 +296,13 @@
-         plugins = [self._plugin_name(plugin)
-                 for plugin in list_
-                 if "__init__" not in plugin
--                and plugin.endswith(".py")]
-+                and plugin.endswith(".pyc")]
-         plugins.sort()
-         return plugins
-
-     def _find_plugins_in_dir(self, path):
-         if os.path.exists(path):
--            py_files = list(find("*.py", path))
-+            py_files = list(find("*.pyc", path))
-             pnames = self._get_plugins_from_list(py_files)
-             if pnames:
-                 return pnames
 --- plugins/general.py.orig  2014-03-18 15:07:20.570811354 -0700
 +++ plugins/general.py  2014-03-18 15:28:49.371866760 -0700
 @@ -51,8 +51,7 @@
@@ -302,19 +260,6 @@ EOF_sos_patch
 
 else
 patch --fuzz 3 -d /usr/lib/python2.*/site-packages/sos -p0 << \EOF_sos_patch
---- sosreport.py.orig	2011-04-07 11:51:40.000000000 +0000
-+++ sosreport.py	2011-07-06 13:26:44.000000000 +0000
-@@ -428,8 +428,8 @@
-
-     # validate and load plugins
-     for plug in plugins:
--        plugbase =  plug[:-3]
--        if not plug[-3:] == '.py' or plugbase == "__init__":
-+        plugbase =  plug[:-4]
-+        if not plug[-4:] == '.pyc' or plugbase == "__init__":
-             continue
-         try:
-             if GlobalVars.policy.validatePlugin(pluginpath + plug):
 --- plugins/general.py.orig     2011-02-09 15:25:48.000000000 +0000
 +++ plugins/general.py  2011-07-06 23:13:32.000000000 +0000
 @@ -25,8 +25,7 @@
