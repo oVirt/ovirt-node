@@ -62,11 +62,11 @@ class Hooks(base.Base):
         for hook in os.listdir(hooks_directory):
             script = os.path.join(hooks_directory, hook)
 
-            if script.endswith(".py") or script.endswith(".pyo"):
+            if script.endswith(".pyc") or script.endswith(".pyo"):
                 continue
 
             LOGGER.debug("Running hook %s" % script)
-            if script.endswith(".pyc"):
+            if script.endswith(".py"):
                 output = process.check_output(["python", script])
             else:
                 output = process.check_output("%s &> /dev/null" % script,
