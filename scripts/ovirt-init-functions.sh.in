@@ -906,14 +906,7 @@ EOP
         mount_config
 
         # Trigger mounting so logfiles are visible
-        if [[ -e "/bin/systemctl" ]];
-        then
-            # EL7
-            systemctl daemon-reload
-        else
-            # EL6
-            initctl reload-configuration
-        fi
+        systemctl daemon-reload
 
         # A few services need to be restarted to pickup the newly bind-mounted
         # config files (mounted in by the preceeding mount_config call)
