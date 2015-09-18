@@ -247,9 +247,9 @@ class Storage:
             i = 0
             timeout = 15
             while not os.path.exists(drive):
-                logger.error(drive + " is not available, waiting %s more " +
-                             "secs") % (timeout - i)
-                i = i + i
+                logger.error((drive + " is not available, waiting %s more " +
+                              "secs") % (timeout - i))
+                i = i + 1
                 time.sleep(1)
                 if i == timeout:
                     logger.error("Timed out waiting for: %s" % drive)
