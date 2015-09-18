@@ -910,7 +910,6 @@ EOP
         then
             # EL7
             systemctl daemon-reload
-            systemctl --no-block isolate default.target
         else
             # EL6
             initctl reload-configuration
