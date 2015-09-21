@@ -198,7 +198,7 @@ fi
 # python files. Change this to the compiled version as well, and
 # persist the generated key file
 
-patch -d /bin -p0 << \EOF_virt_who_password
+patch -d /usr/bin -p0 << \EOF_virt_who_password
 --- virt-who-password      2015-04-07 12:13:41.992000000 -0400
 +++ virt-who-password       2015-04-07 12:14:33.909000000 -0400
 @@ -1,10 +1,12 @@
