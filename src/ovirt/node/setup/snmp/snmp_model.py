@@ -24,7 +24,8 @@ from ovirt.node.utils import process, system, fs, firewall
 import os.path
 
 
-snmp_conf = "/var/lib/net-snmp/snmpd.conf"
+snmp_conf = "/var/lib/net-snmp/"
+old_conf = "/var/lib/net-snmp/snmpd.conf"
 
 
 def enable_snmpd(password):
@@ -50,15 +51,11 @@ def enable_snmpd(password):
         change_password(oldpwd)
     else:
         system.service("snmpd", "stop")
-        # net-snmp tries to move this to a backup. We don't care about that,
-        # but it fails, and fails to create the user if it's persisted (and
-        # bind mounted).
-        fs.Config().unpersist(snmp_conf)
         # create user account
         process.check_call(["net-snmp-create-v3-user", "-A", password, "-a",
                             "SHA", "-x", "AES", "root"])
         system.service("snmpd", "start")
-        fs.Config().persist("/etc/snmp/snmpd.conf")
+
         fs.Config().persist(snmp_conf)
 
     firewall.open_port(port="161", proto="udp")
@@ -70,7 +67,8 @@ def disable_snmpd():
     process.check_call(["cp", "/etc/snmp/snmpd.conf", "/tmp"])
     process.check_call("sed -c -ie '/^createUser root/d' %s" % snmp_conf,
                        shell=True)
-    fs.Config().unpersist(snmp_conf)
+    configs = [snmp_conf, old_conf]
+    [fs.Config().unpersist(c) for c in configs if fs.Config().exists(c)]
 
 
 class SNMP(NodeConfigFileSection):
