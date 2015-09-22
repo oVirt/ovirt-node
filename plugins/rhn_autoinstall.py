@@ -58,6 +58,8 @@ if __name__ == "__main__":
     rhn_proxypassword = _functions.OVIRT_VARS["OVIRT_RHN_PROXYPASSWORD"] \
                         if "OVIRT_RHN_PROXYPASSWORD" in _functions.OVIRT_VARS \
                         else ""
+
+    cfg['rhntype'] = cfg['rhntype'] or 'rhn'
     effective_model = Changeset({
         "rhn.rhntype": cfg['rhntype'],
         "rhn.url": cfg['url'],
