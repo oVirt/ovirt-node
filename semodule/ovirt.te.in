@@ -295,6 +295,7 @@ allow iscsid_t iscsi_var_lib_t:dir { write remove_name create add_name rmdir };
 allow iscsid_t iscsi_var_lib_t:file { write create unlink };
 allow iscsid_t iscsi_var_lib_t:lnk_file { create unlink };
 
+
 optional_policy(`
     require {
         type kdumpctl_tmp_t;
@@ -302,6 +303,12 @@ optional_policy(`
     allow iscsid_t kdumpctl_tmp_t:fifo_file write;
 ')
 
+optional_policy(`
+    require {
+        type modules_dep_t;
+    }
+    allow iscsid_t modules_dep_t:file { read };
+')
 
 #============= ping_t ==============
 require {
@@ -489,6 +496,7 @@ optional_policy(`
         type rpcbind_t;
     }
     allow rpcbind_t self:udp_socket listen;
+    allow rpcbind_t self:capability chown;
     allow rpcbind_t tmpfs_t:dir search;
 ')
 
