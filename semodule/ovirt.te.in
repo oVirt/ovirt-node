@@ -289,7 +289,7 @@ optional_policy(`
     require {
         type modules_dep_t;
     }
-    allow iscsid_t modules_dep_t:file { read };
+    allow iscsid_t modules_dep_t:file { read open getattr };
 ')
 
 #============= ping_t ==============
