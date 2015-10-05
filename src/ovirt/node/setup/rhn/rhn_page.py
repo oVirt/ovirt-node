@@ -108,6 +108,8 @@ class Plugin(plugins.NodePlugin):
                   ("satellite", "Satellite"),
                   ("sam", "SAM")]
     _fields_enabled = False
+    _type = "RHNSM Registration" if system.is_min_el(7) else \
+            "RHN Registration"
 
     def __init__(self, app):
         super(Plugin, self).__init__(app)
@@ -117,7 +119,7 @@ class Plugin(plugins.NodePlugin):
         return True
 
     def name(self):
-        return "RHN Registration"
+        return self._type
 
     def rank(self):
         return 310
@@ -185,17 +187,17 @@ class Plugin(plugins.NodePlugin):
         else:
             status, rhn_type = get_rhn_status()
             if status == 0:
-                rhn_msg = ("RHN Registration is required only if you wish " +
-                           "to use Red Hat Enterprise Linux with virtual " +
-                           "guests subscriptions for your guests.")
+                rhn_msg = ("{0} is required only if you wish to use Red Hat "
+                           "Enterprise Linux with virtual guests "
+                           "subscriptions for your guests.".format(self._type))
             else:
                 rhntype = cfg["rhntype"]
                 if "satellite" in rhntype:
                     rhntype = rhntype.title()
                 else:
                     rhntype = rhntype.upper()
-                rhn_msg = "RHN Registration\n\nRegistration Status: %s" \
-                          % rhntype
+                rhn_msg = "%s\n\nRegistration Status: %s" \
+                          % (self._type, rhntype)
 
             ws = [ui.Header("header[0]", rhn_msg),
                   ui.Entry("rhn.username", "Login:"),
