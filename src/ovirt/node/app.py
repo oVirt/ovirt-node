@@ -396,6 +396,7 @@ class Application(base.Base):
 
         def return_ok(dialog, changes):
             with self.ui.suspended():
+                utils.console.reset()
                 utils.console.writeln("Dropping to rescue shell...")
                 open_console()
 
