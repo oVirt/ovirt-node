@@ -39,7 +39,7 @@ class Plugin(plugins.NodePlugin):
         return True
 
     def name(self):
-        return "RHN Registration"
+        return "RHNSM Registration"
 
     def rank(self):
         return 310
@@ -101,7 +101,7 @@ class Plugin(plugins.NodePlugin):
 
         else:
             if not cfg["rhntype"]:
-                rhn_msg = ("RHN Registration is required only if you wish " +
+                rhn_msg = ("RHNSM Registration is required only if you wish " +
                            "to use Red Hat Enterprise Linux with virtual " +
                            "guests subscriptions for your guests.")
             else:
@@ -110,7 +110,7 @@ class Plugin(plugins.NodePlugin):
                     rhntype = rhntype.title()
                 else:
                     rhntype = rhntype.upper()
-                rhn_msg = "RHN Registration\n\nRegistration Status: %s" \
+                rhn_msg = "RHNSM Registration\n\nRegistration Status: %s" \
                           % rhntype
 
             ws = [ui.Header("header[0]", rhn_msg),
