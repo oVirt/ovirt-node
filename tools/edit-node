@@ -1509,7 +1509,7 @@ def parse_options(args):
 
     parser.add_option("--skip-initramfs", action="store_true", default=False,
                       dest="skipinitramfs",
-                      help="Allow unsigned packages to be installed")
+                      help="Do not rebuild initramfs")
 
     parser.add_option("--shell", action="store_true", default=False,
                       dest="shell",
