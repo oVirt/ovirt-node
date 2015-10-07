@@ -40,4 +40,8 @@ dist_initd_SCRIPTS = \
   init.d/ovirt-node-igor-slave
 endif
 
+EXTRA_DIST = \
+  ntpd-private-tmp.conf \
+  $(NULL)
+
 # vim: ts=2
