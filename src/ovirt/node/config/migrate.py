@@ -93,9 +93,16 @@ class ImportConfigs(base.Base):
         if do_network:
             self.migrate_network_layout()
 
-        [getattr(self, func)() for func in dir(self) if
-            func.startswith("translate_") and not
-            func.endswith("all")]
+        funcs = [getattr(self, func) for func in dir(self) if
+                 func.startswith("translate_") and not
+                 func.endswith("all")]
+        for func in funcs:
+            try:
+                self.logger.debug("Calling %s" % func)
+                func()
+            except Exception as e:
+                self.logger.info("Failed to translate %s: %s" % (func, e),
+                                 exc_info=True)
 
     def translate_rsyslog(self):
         if self.__is_persisted("/etc/rsyslog.conf"):
