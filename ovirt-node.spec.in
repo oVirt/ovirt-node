@@ -584,6 +584,8 @@ make install DESTDIR=%{buildroot}
 %if 0%{?is_systemd}
 %{__install} -Dp -m0644 services/ntpd-pre-start.conf \
                        %{buildroot}%{_sysconfdir}/systemd/system/ntpd.service.d/ntpd-pre-start.conf
+%{__install} -Dp -m0644 services/ntpd-private-tmp.conf \
+                       %{buildroot}%{_sysconfdir}/systemd/system/ntpd.service.d/ntpd-private-tmp.conf
 %else
 # dracut patches for rhel6
 %{__install} -p -m0644 dracut/dracut-7ed4ff0636c74a2f819ad6e4f2ab4862.patch %{buildroot}%{app_root}
@@ -966,6 +968,7 @@ fi
 %{_unitdir}/ovirt-early.service
 %{_unitdir}/ovirt-kdump.service
 %{_sysconfdir}/systemd/system/ntpd.service.d/ntpd-pre-start.conf
+%{_sysconfdir}/systemd/system/ntpd.service.d/ntpd-private-tmp.conf
 %else
 %{_initrddir}/ovirt-awake
 %{_initrddir}/ovirt-early

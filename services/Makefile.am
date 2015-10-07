@@ -42,6 +42,7 @@ endif
 
 EXTRA_DIST = \
   ntpd-pre-start.conf \
+  ntpd-private-tmp.conf \
   $(NULL)
 
 # vim: ts=2
