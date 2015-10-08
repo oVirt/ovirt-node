@@ -464,7 +464,7 @@ class RHN(NodeConfigFileSection):
                                "/var/lib/rhsm/facts/facts.json"]
 
                     for conf in configs:
-                        Config().persist(cfg)
+                        Config().persist(conf)
                         Config().persist("/etc/pki/consumer/key.pem")
                         Config().persist("/etc/pki/consumer/cert.pem")
                         if cfg["url"]:
