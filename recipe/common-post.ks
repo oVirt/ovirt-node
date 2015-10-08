@@ -298,3 +298,9 @@ sed -i "/^PRETTY_NAME/ s/.*/PRETTY_NAME=\"$PRODUCT $VERSION\"/" /etc/os-release
 echo "Removing nologin tmpfiles rhbz#1261702"
 rm -vf /usr/lib/tmpfiles.d/systemd-nologin.conf
 
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1269752
+mkdir -vp /lib/systemd/system/rhsmcertd.service.d/
+cat > /lib/systemd/system/rhsmcertd.service.d/node.conf <<EOC
+[Unit]
+ConditionPathExists=/etc/sysconfig/rhn/systemid
+EOC
