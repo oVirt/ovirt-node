@@ -962,13 +962,12 @@ EOP
     fi
     # check if root or admin password is expired, this might be upon reboot
     # in case of automated installed with rootpw or adminpw parameter!
-    if ! grep -q "sudo persist /etc/passwd /etc/shadow" /etc/profile; then
-        if LC_ALL=C chage -l root | grep  -q "password must be changed" \
-            || LC_ALL=C chage -l admin | grep -q "password must be changed"; then
-            unmount_config /etc/passwd /etc/shadow
-            # PAM will force password change at first login
-            # so make sure we persist it after a successful login
-            cat >> /etc/profile << EOF
+    if LC_ALL=C chage -l root | grep  -q "password must be changed" \
+        || LC_ALL=C chage -l admin | grep -q "password must be changed"; then
+        unmount_config /etc/passwd /etc/shadow
+        # PAM will force password change at first login
+        # so make sure we persist it after a successful login
+        cat >> /etc/profile << EOF
 # added by ovirt-early
 if [ "\$USER" = "root" -o "\$USER" = "admin" ]; then
     sudo persist /etc/passwd /etc/shadow
@@ -978,7 +977,6 @@ if [ "\$USER" = "root" -o "\$USER" = "admin" ]; then
     fi
 fi
 EOF
-        fi
     fi
 
     if [ "$rescue" = 1 ]; then
