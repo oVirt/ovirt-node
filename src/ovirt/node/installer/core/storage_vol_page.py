@@ -184,7 +184,8 @@ class Plugin(plugins.NodePlugin):
                     "storage.config_size": "5",
                     "storage.logging_size": "2048",
                     "storage.data_size": "0",
-                    "storage.install_drive": self.__get_install_drive()
+                    "storage.install_drive": self.__get_install_drive(),
+                    "storage.fill_data": True
                     }
         from ovirtnode.storage import Storage
         stor = Storage()
@@ -197,7 +198,8 @@ class Plugin(plugins.NodePlugin):
                  "storage.data_size": "%s" % "0",
                  "storage.free_space": "0 MB",
                  "storage.drive_size": "%s MB" % self._drive_size,
-                 "storage.install_drive": self.__get_install_drive()
+                 "storage.install_drive": self.__get_install_drive(),
+                 "storage.fill_data": True
                  }
         return sizes
 
