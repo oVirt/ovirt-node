@@ -64,7 +64,8 @@ class Plugin(plugins.NodePlugin):
                 "storage.logging_size":
                 valid.Number(bounds=[min_logging, None]),
                 "storage.data_size":
-                valid.Number(bounds=[min_data, None]),
+                (valid.Number(bounds=[min_data, None]) |
+                    valid.Number(exactly=-1)),
                 }
 
     def ui_content(self):
