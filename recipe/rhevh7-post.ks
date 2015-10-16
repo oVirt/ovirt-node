@@ -251,3 +251,5 @@ rm -rf /var/lib/sfcb/registration/repository.previous/root/virt
 # rhbz 1181987 removing plymouth dracut message
 sed -i 's/ln -sf initrd-release $initdir\/etc\/os-release/cp \/etc\/os-release $initdir\/etc\//' /lib/dracut/modules.d/99base/module-setup.sh
 
+# NetworkManager service is not required as VDSM owns the network settings
+systemctl disable NetworkManager
