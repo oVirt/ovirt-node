@@ -78,7 +78,6 @@ Requires:       dracut
 Requires:       openssh-server
 Requires:       hostname
 Requires:       tuned
-Requires:       NetworkManager
 %if 0%{?is_systemd}
 Requires:       grub2
 %else
@@ -443,7 +442,6 @@ Requires:        ntp
 Requires:        udev >= 147-2.34
 Requires:        python-augeas
 Requires:        hostname
-Requires:        NetworkManager
 %if 0%{?is_systemd}
 Requires:       grub2
 %else
