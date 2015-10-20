@@ -62,6 +62,7 @@ class SetDefaultBootproto(Transaction.Element):
 def build_network_auto_transaction():
     from ovirt.node.config.defaults import Network, Nameservers, \
         Timeservers, Hostname
+    from ovirt.node.utils.network import NIC
 
     txs = Transaction("Automatic Installation")
 
@@ -73,6 +74,9 @@ def build_network_auto_transaction():
     logger.debug("Got netmodel: %s" % netmodel)
 
     if netmodel["iface"]:
+	if not NIC(netmodel["iface"]).exists():
+            raise RuntimeError("NIC %r does not exist" % netmodel["iface"])
+
         if not netmodel["ipaddr"]:
             txs.append(SetDefaultBootproto())
 
