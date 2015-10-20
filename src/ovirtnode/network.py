@@ -74,7 +74,7 @@ def build_network_auto_transaction():
     logger.debug("Got netmodel: %s" % netmodel)
 
     if netmodel["iface"]:
-	if not NIC(netmodel["iface"]).exists():
+        if not NIC(netmodel["iface"]).exists():
             raise RuntimeError("NIC %r does not exist" % netmodel["iface"])
 
         if not netmodel["ipaddr"]:
