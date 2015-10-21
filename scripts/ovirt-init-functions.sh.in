@@ -37,8 +37,6 @@ BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 EARLY_DIR=/etc/ovirt-early.d
 
-HOOK_ON_BOOT_DIR=/usr/libexec/ovirt-node/hooks/on-boot
-
 # Drop to a shell
 emergency_shell() {
     plymouth --hide-splash
@@ -1504,16 +1502,6 @@ EOP
             rm  /var/lock/subsys/network
         fi
 
-        # Run on-boot hooks
-        if [[ -d "$HOOK_ON_BOOT_DIR" ]] && [[ "$(ls -A $HOOK_ON_BOOT_DIR)" ]];
-        then
-            for handler in "$HOOK_ON_BOOT_DIR"/*;
-            do
-                log "Running handler: $handler"
-                runcon -t unconfined_t "$handler" 2>&1
-            done
-        fi
-
         ovirt_store_config $(ls /etc/ssh/ssh_host*_key*)
 
         # FIXME is this still needed?
@@ -1654,6 +1642,10 @@ status_ovirt_kdump () {
     service kdump status > /dev/null 2>&1
     return $?
 }
+
+# Don't actually execute the case statement below if this is sourced as a
+# utility script
+[[ $BASH_SOURCE != $0 ]] && exit 0
 
 #
 # If called with a param from .service file:

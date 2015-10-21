@@ -1,0 +1,13 @@
+[Unit]
+Description=oVirt Node Hooks configuration service
+After=ovirt.service libvirtd.service ovirt-early.service ovirt-firstboot.service
+Before=vdsmd.service ovirt-post.service
+Wants=ovirt.service libvirtd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/ovirt-node-hooks trigger on-boot
+
+[Install]
+WantedBy=multi-user.target
