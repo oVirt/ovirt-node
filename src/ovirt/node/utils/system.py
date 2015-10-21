@@ -356,16 +356,23 @@ def copy_dir_if_not_exist(orig, target):
 
 
 @contextmanager
-def mounted_boot():
-    LOGGER.info("Mounting /liveos and /boot")
-    import ovirtnode.ovirtfunctions as ofunc
+def mounted_boot(source="/liveos"):
+    """Used to mount /boot
+    Normally /boot is from the /liveos mountpoint, but sometimes it's
+    elsewhere, thus we have source
+    """
 
-    ofunc.mount_liveos()
-    if not os.path.ismount("/liveos"):
-        raise RuntimeError("Failed to mount /liveos")
+    LOGGER.info("Mounting %r to /boot" % source)
 
-    liveos = Mount("/liveos")
-    boot = Mount(device="/liveos", path="/boot")
+    if source == "/liveos":
+        import ovirtnode.ovirtfunctions as ofunc
+        ofunc.mount_liveos()
+
+        if not os.path.ismount("/liveos"):
+            raise RuntimeError("Failed to mount /liveos")
+
+    liveos = Mount(source)
+    boot = Mount(device=source, path="/boot")
 
     liveos.remount(rw=True)
     boot.mount("bind")
@@ -1321,21 +1328,35 @@ class Initramfs(base.Base):
 
     The main obstacle is mounting the correct paths.
     Furthermore we are taking care that now orphans are left over.
+
+    Args:
+        dracut_chroot: Path for dracut chroot
+        boot_source: Source where to take /boot from
     """
+    dracut_chroot = None
+    boot_source = None
+
+    def __init__(self, dracut_chroot="/", boot_source=None):
+        self.dracut_chroot = dracut_chroot
+        self.boot_source = boot_source
+
     def try_unlink(self, path):
         try:
             os.unlink(path)
         except OSError as e:
             LOGGER.warn("Failed to remove %r: %s", path, e)
 
-    def _generate_new_initramfs(self, new_initrd):
+    def _generate_new_initramfs(self, new_initrd, kver):
         LOGGER.info("Generating new initramfs "
-                    "%r (this can take a while)" % new_initrd)
-
+                    "%r for kver %s (this can take a while)" %
+                    (new_initrd, kver))
         rd_stdout = ""
         try:
-            rd_stdout = check_output(["dracut", new_initrd],
-                                     stderr=process.STDOUT)
+            argv = ["chroot", self.dracut_chroot,
+                    "dracut", "--kver", kver, new_initrd]
+            LOGGER.debug("Calling: %s" % argv)
+
+            rd_stdout = check_output(argv, stderr=process.STDOUT)
         except:
             LOGGER.warn("dracut failed to generate the initramfs")
             LOGGER.warn("dracut output: %s" % rd_stdout)
@@ -1368,16 +1389,17 @@ class Initramfs(base.Base):
             self.try_unlink(new_initrd)
             raise
 
-    def rebuild(self):
+    def rebuild(self, kver):
         pri_initrd = "/boot/initrd0.img"
         new_initrd = "/var/tmp/initrd0.img.new"
 
         LOGGER.info("Preparing to regenerate the initramfs")
         LOGGER.info("The regenreation will overwrite the "
                     "existing")
+        LOGGER.info("Rebuilding for kver: %s" % kver)
 
-        with mounted_boot():
-            self._generate_new_initramfs(new_initrd)
+        with mounted_boot(source=self.boot_source):
+            self._generate_new_initramfs(new_initrd, kver)
             self._install_new_initramfs(new_initrd, pri_initrd)
 
         LOGGER.info("Initramfs regenration completed successfully")
