@@ -966,7 +966,7 @@ class Syslog(NodeConfigFileSection):
     def transaction(self):
         cfg = dict(self.retrieve())
         server, port = (cfg["server"], cfg["port"])
-        rsyslog = Syslog()
+        rsyslog = system.Syslog()
 
         class CreateRsyslogConfig(utils.Transaction.Element):
             if server:
