@@ -28,6 +28,7 @@ import subprocess
 import re
 import time
 import logging
+import tempfile
 OVIRT_VARS = _functions.parse_defaults()
 from ovirtnode.storage import Storage
 
@@ -675,9 +676,6 @@ search --no-floppy --label RootBackup --set root
             else:
                 logger.info("Grub Installation Completed")
 
-        # Update initramfs to pickup multipath wwids
-        _system.Initramfs().rebuild()
-
         if _functions.is_iscsi_install() or _functions.findfs("BootNew"):
             # copy default for when Root/HostVG is inaccessible(iscsi upgrade)
             shutil.copy(_functions.OVIRT_DEFAULTS, "/boot")
@@ -699,6 +697,81 @@ search --no-floppy --label RootBackup --set root
             logger.error("Unable to relabel " + candidate_dev +
                          " to RootUpdate ")
             return False
+        _functions.system("udevadm settle --timeout=10")
+
+        #
+        # Rebuild the initramfs
+        # A few hacks are needed to prep the chroot
+        # The general issue is that we need to run dracut in the context fo the new iso
+        # and that we need to put the initrd in the right place of the new iso.
+        # These two things make the logic a bit more complicated.
+        #
+        mnts = []
+        try:
+            if not _functions.system("blkid -L RootUpdate"):
+                raise RuntimeError("RootUpdate not found")
+
+            # Let's mount the update fs, and use that kernel version and modules
+            # We need this work to help dracut
+            isomnt = tempfile.mkdtemp("RootUpdate")
+            squashmnt = tempfile.mkdtemp("RootUpdate-LiveOS")
+            updfs = tempfile.mkdtemp("RootUpdate-LiveOS-Img")
+            mnts += [isomnt, squashmnt, updfs]
+
+            # Unpack the iso
+            def _call(args):
+                logger.debug("Calling: %s" % args)
+                try:
+                    out = subprocess.check_output(args)
+                    logger.debug("Out: %s" % out)
+                except Exception as e:
+                    logger.debug("Failed with: %s %s" % (e, e.output))
+                    raise
+
+            _call(["mount", "LABEL=RootUpdate", isomnt])
+            _call(["mount", "%s/LiveOS/squashfs.img" % isomnt, squashmnt])
+            _call(["mount", "%s/LiveOS/ext3fs.img" % squashmnt, updfs])
+
+            # Now mount the update modules into place, and find the
+            # correct kver
+            def rbind(path, updfs=updfs):
+                dst = updfs + "/" + path
+                logger.debug("Binding %r to %r" % (path, dst))
+                _call(["mount", "--rbind", "/" + path, dst])
+                return dst
+
+            for path in ["etc", "dev", "proc", "sys", "tmp", "run", "var/tmp"]:
+                mnts += [rbind(path)]
+
+            upd_kver = str(_functions.passthrough("ls -1 %s/lib/modules" % updfs)).strip()
+
+            if len(upd_kver.splitlines()) != 1:
+                # It would be very unusual to see more than one kver directory
+                # in /lib/modules, because our images just contain one kernel
+                raise RuntimeError("Found more than one kernel version")
+
+            # Update initramfs to pickup multipath wwids
+            # Let /boot point to the filesystem on the update candidate partition
+            builder = _system.Initramfs(dracut_chroot=updfs, boot_source=isomnt)
+            builder.rebuild(kver=upd_kver)
+
+        except Exception as e:
+            logger.debug("Failed to build initramfs: %s" % e, exc_info=True)
+            output = getattr(e, "output", "")
+            if output:
+                logger.debug("Output: %s" % output)
+            raise
+
+
+        finally:
+            # Clean up all eventual mounts
+            pass
+            # Disabled for now because akward things happen, we leave it to
+            # systemd to unnmount on reboot
+            # for mnt in reversed(mnts):
+            #     d = _functions.passthrough("umount -fl %s" % mnt, logger.debug)
+            #     logger.debug("Returned: %s" % d)
+
         _functions.disable_firstboot()
         if _functions.finish_install():
             if _functions.is_firstboot():
@@ -710,3 +783,5 @@ search --no-floppy --label RootBackup --set root
             return True
         else:
             return False
+
+# vim: et sts=4 sw=4:

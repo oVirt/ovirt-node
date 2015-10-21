@@ -952,7 +952,7 @@ fi
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{_sbindir}/ovirt-node-upgrade
-%{_sbindir}/ovirt-node-update-initramfs
+%{_sbindir}/ovirt-node-rebuild-initramfs
 %{python_sitelib}/ovirt_config_setup
 %exclude %{python_sitelib}/ovirt_config_setup/cim.py*
 %exclude %{python_sitelib}/ovirt_config_setup/snmp.py*
