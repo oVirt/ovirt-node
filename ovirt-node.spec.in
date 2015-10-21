@@ -950,6 +950,7 @@ fi
 %{_libexecdir}/ovirt-admin-shell
 %{_libexecdir}/ovirt-config-password
 %{_libexecdir}/ovirt-init-functions.sh
+%{_libexecdir}/ovirt-node-hooks
 %{_sbindir}/persist
 %{_sbindir}/unpersist
 %{_sbindir}/ovirt-node-upgrade
@@ -967,6 +968,7 @@ fi
 %{_unitdir}/ovirt-post.service
 %{_unitdir}/ovirt-early.service
 %{_unitdir}/ovirt-kdump.service
+%{_unitdir}/ovirt-node-hooks.service
 %{_sysconfdir}/systemd/system/ntpd.service.d/ntpd-pre-start.conf
 %{_sysconfdir}/systemd/system/ntpd.service.d/ntpd-private-tmp.conf
 %else
