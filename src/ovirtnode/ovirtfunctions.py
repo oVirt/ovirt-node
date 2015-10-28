@@ -82,6 +82,7 @@ OVIRT_CONFIG_FILES = [ "/etc/rsyslog.conf",
                        "/etc/logrotate.d/ovirt-node",
                        "/var/lib/random-seed",
                        "/var/lib/glusterd",
+                       "/var/lib/rhsm",
                        "/etc/sysconfig/virt-who"]
 
 OVIRT_VARS = {}
