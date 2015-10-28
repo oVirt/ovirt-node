@@ -27,6 +27,7 @@ dist_systemunit_DATA = \
   ovirt-firstboot.service \
   ovirt-cim.service \
   ovirt-kdump.service \
+  ovirt-node-hooks.service \
   ovirt-node-igor-slave.service
 else
 dist_initd_SCRIPTS = \

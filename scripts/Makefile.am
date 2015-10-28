@@ -35,6 +35,7 @@ dist_libexec_SCRIPTS = \
   ovirt-config-uninstall \
   ovirt-functions \
   ovirt-init-functions.sh \
+  ovirt-node-hooks.sh \
   ovirt-auto-install.py \
   ovirt-admin-shell \
   ovirt-node-igor-slave
@@ -49,6 +50,7 @@ augeas_PYTHON = \
 install-exec-hook:
 	mv $(DESTDIR)$(libexecdir)/ovirt-auto-install.py $(DESTDIR)$(libexecdir)/ovirt-auto-install
 	mv $(DESTDIR)$(sbindir)/ovirt-node-upgrade.py $(DESTDIR)$(sbindir)/ovirt-node-upgrade
+	mv $(DESTDIR)$(libexecdir)/ovirt-node-hooks.sh $(DESTDIR)$(libexecdir)/ovirt-node-hooks
 
 	mkdir -p --mode=0755 \
 	  $(DESTDIR)$(localboottriggerdir) \

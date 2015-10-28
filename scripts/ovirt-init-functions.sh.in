@@ -37,8 +37,6 @@ BONDING_MODCONF_FILE=/etc/modprobe.d/bonding
 AUGTOOL_CONFIG=/var/tmp/augtool-config
 EARLY_DIR=/etc/ovirt-early.d
 
-HOOK_ON_BOOT_DIR=/usr/libexec/ovirt-node/hooks/on-boot
-
 # Drop to a shell
 emergency_shell() {
     plymouth --hide-splash
@@ -1476,16 +1474,9 @@ EOP
             rm  /var/lock/subsys/network
         fi
 
-        # Run on-boot hooks
-        if [[ -d "$HOOK_ON_BOOT_DIR" ]] && [[ "$(ls -A $HOOK_ON_BOOT_DIR)" ]];
-        then
-            for handler in "$HOOK_ON_BOOT_DIR"/*;
-            do
-                log "Running handler: $handler"
-                runcon -t unconfined_t "$handler" 2>&1
-            done
+        if [[ $(rpm -E "%{?rhel"}) = 6 ]]; then
+            /usr/libexec/ovirt-node-hooks trigger on-boot
         fi
-
         ovirt_store_config $(ls /etc/ssh/ssh_host*_key*)
 
         # FIXME is this still needed?
