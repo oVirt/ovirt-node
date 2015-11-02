@@ -1061,11 +1061,11 @@ class Mount(base.Base):
                                "was initialized")
 
         try:
-            utils.process.check_call(["umount", self.path])
+            utils.process.check_output(["umount", self.path])
 
-        except:
-            LOGGER.exception("Can't umount %s" % self.path,
-                             exc_info=True)
+        except subprocess.CalledProcessError as e:
+            LOGGER.warn("Can't umount %s: %s" % (self.path, e.output),
+                        exc_info=True)
 
     def _find_device(self):
         try:
