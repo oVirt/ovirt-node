@@ -287,7 +287,7 @@ class RHN(NodeConfigFileSection):
 
             def commit(self):
                 def scrub(f):
-                    if os.path.exists(f):
+                    if Config().exists(f):
                         Config().unpersist(f)
                         # Unlinking causes problems with satellite5. Why?
                         # os.unlink(f)
