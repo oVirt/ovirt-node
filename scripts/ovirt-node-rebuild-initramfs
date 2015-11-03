@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     initramfs = system.Initramfs()
     try:
-        kver = process.check_output(["uname", "-r"])
+        kver = process.check_output(["uname", "-r"]).strip()
         initramfs.rebuild(kver)
     except:
         log.exception("Initramfs regeneration failed")
