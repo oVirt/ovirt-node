@@ -92,10 +92,10 @@ def setup_iptables(port, proto):
 
         fs.Config().persist(rules)
 
+    # We need to load the rules before, to prevent overwriting them
+    # when they weren't loaded.
+    load_rules()
     if not is_open():
-        # We need to load the rules before, to prevent overwriting them
-        # when they weren't loaded.
-        load_rules()
         open_port()
         save_rules()
 
