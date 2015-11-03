@@ -55,7 +55,9 @@ class Plugin(plugins.NodePlugin):
 
     def ui_content(self):
         ws = [ui.Header("header", _("Remote Storage")),
-              ui.Checkbox("scsi.dh_alua", _("Enable SCSI DH_ALUA")),
+              # Deactivate SCSI ALUA
+              # Bug-Url: https://bugzilla.redhat.com/1273715
+              # ui.Checkbox("scsi.dh_alua", _("Enable SCSI DH_ALUA")),
               ui.Entry("iscsi.initiator_name", _("iSCSI Initiator Name:"),
                        align_vertical=True),
               ui.Divider("divider[0]"),
