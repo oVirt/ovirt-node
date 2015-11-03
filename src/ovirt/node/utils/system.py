@@ -38,7 +38,7 @@ import system_config_keyboard.keyboard
 from ovirt.node import base, utils
 from ovirt.node.utils import process, parse_varfile
 from ovirt.node.utils.fs import File
-from ovirt.node.utils.process import check_output, check_call
+from ovirt.node.utils.process import check_call
 
 
 LOGGER = logging.getLogger(__name__)
@@ -356,11 +356,13 @@ def copy_dir_if_not_exist(orig, target):
 
 
 @contextmanager
-def mounted_boot(source="/liveos"):
+def mounted_boot(source=None):
     """Used to mount /boot
     Normally /boot is from the /liveos mountpoint, but sometimes it's
     elsewhere, thus we have source
     """
+
+    source = source or "/liveos"
 
     LOGGER.info("Mounting %r to /boot" % source)
 
@@ -1356,7 +1358,7 @@ class Initramfs(base.Base):
                     "dracut", "--kver", kver, new_initrd]
             LOGGER.debug("Calling: %s" % argv)
 
-            rd_stdout = check_output(argv, stderr=process.STDOUT)
+            rd_stdout = process.check_output(argv, stderr=process.STDOUT)
         except:
             LOGGER.warn("dracut failed to generate the initramfs")
             LOGGER.warn("dracut output: %s" % rd_stdout)
