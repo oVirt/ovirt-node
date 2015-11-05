@@ -422,7 +422,8 @@ class RHN(NodeConfigFileSection):
                            "--name":          cfg["profile"],
                            "--proxy":         cfg["proxy"],
                            "--proxyuser":     cfg["proxyuser"],
-                           "--proxypassword": proxypass
+                           "--proxypassword": proxypass,
+                           "--type":          "hypervisor"
                            }
 
                 Vars.argbuilder = ArgBuilder(initial_args, mapping)
