@@ -557,10 +557,12 @@ optional_policy(`
         type ssh_keygen_t;
         type sshd_keygen_t;
         type tmpfs_t;
+        type plymouth_exec_t;
     }
     allow sshd_keygen_t tmpfs_t:dir { search };
     allow sshd_keygen_t setfiles_t:process { siginh rlimitinh noatsecure };
     allow sshd_keygen_t ssh_keygen_t:process { siginh rlimitinh noatsecure };
+    allow sshd_keygen_t plymouth_exec_t:file execute;
 ')
 
 
