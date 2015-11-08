@@ -40,6 +40,7 @@ def has_managed_ifnames():
 
 
 class NicTable(ui.Table):
+
     def __init__(self, path, height=3, multi=False, filter_configured=False):
         header = self.__build_header(has_managed_ifnames(),
                                      system.has_systemd(), multi)
@@ -90,6 +91,8 @@ class NicTable(ui.Table):
         nics = model.nics(filter_slaveless=True,
                           filter_configured=filter_configured)
         for name, nic in sorted(nics.items()):
+            if nic.ifname.startswith(";"):
+                continue
             if first_nic is None:
                 first_nic = name
             if has_managed_ifnames():
@@ -108,6 +111,7 @@ class NicTable(ui.Table):
 
 
 class Plugin(plugins.NodePlugin):
+
     """This is the network page
     """
     _model_extra = {"bond.slaves.selected": []}
@@ -647,6 +651,7 @@ class NicDetailsDialog(ui.Dialog):
 
 
 class CreateBondDialog(ui.Dialog):
+
     def __init__(self, path):
         widgets = [ui.Entry("bond.name", _("Name:")),
                    ui.Divider("bond.divider[0]"),
