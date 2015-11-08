@@ -1477,6 +1477,9 @@ EOP
         if [[ $(rpm -E "%{?rhel"}) = 6 ]]; then
             /usr/libexec/ovirt-node-hooks trigger on-boot
         fi
+
+        # making sure the sshd-keygen service is up and running
+        service sshd-keygen restart
         ovirt_store_config $(ls /etc/ssh/ssh_host*_key*)
 
         # FIXME is this still needed?
