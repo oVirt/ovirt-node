@@ -1,7 +1,7 @@
 [Unit]
 Description=oVirt Node post configuration service
-After=ovirt.service ovirt-firstboot.service
-Wants=ovirt.service
+After=ovirt.service ovirt-firstboot.service sshd-keygen.service
+Wants=ovirt.service sshd-keygen.service
 Before=getty@tty1.service vdsmd.service supervdsmd.service vdsm-network.service sanlock.service
 
 [Service]
