@@ -280,15 +280,10 @@ python -m compileall /usr/lib/python2.*/site-packages/sos
 # https://bugzilla.redhat.com/show_bug.cgi?id=1168582
 rm -vf /usr/lib64/python2.*/site-packages/backports/*
 
-# https://bugzilla.redhat.com/show_bug.cgi?id=1167620
-# Ensure that mpath is enabled and find_multipaths is y
-mpathconf --enable --find_multipaths y
-# Then ensure that getuid_callout is set for b/c
-sed -i \
-   -e "/find_multipaths / a getuid_callout \"/lib/udev/scsi_id --replace-whitespace --whitelisted --device=/dev/%n\"" \
-   -e "/^#/ d" \
-   -e "/user_friendly_names/ d" \
-   /etc/multipath.conf
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1275956
+# Create a multipath config which is close to the final one to prevent
+# problems during the initramfs-userspace switchroot.
+vdsm-tool configure --module multipath --force
 
 # Also update os-release, this is where ply 7.0 is taking the name from
 # we should update both since both can be used
