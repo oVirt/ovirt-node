@@ -20,6 +20,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 from ovirt.node import plugins, valid, ui, utils
 from ovirt.node.plugins import Changeset
+from ovirt.node.utils import process
 from ovirt.node.utils.network import NodeNetwork
 import rhn_model
 
@@ -105,13 +106,7 @@ class Plugin(plugins.NodePlugin):
                            "to use Red Hat Enterprise Linux with virtual " +
                            "guests subscriptions for your guests.")
             else:
-                rhntype = cfg["rhntype"]
-                if "satellite" in rhntype:
-                    rhntype = rhntype.title()
-                else:
-                    rhntype = rhntype.upper()
-                rhn_msg = "RHNSM Registration\n\nRegistration Status: %s" \
-                          % rhntype
+                rhn_msg = self._get_status(cfg)
 
             ws = [ui.Header("header[0]", rhn_msg),
                   ui.Entry("rhn.username", "Login:"),
@@ -244,6 +239,29 @@ class Plugin(plugins.NodePlugin):
                                                                txs, self)
                 progress_dialog.run()
         return self.ui_content()
+
+    def _get_status(self, cfg):
+        if "satellite" in cfg["rhntype"]:
+            rhntype = cfg["rhntype"].title()
+        else:
+            rhntype = cfg["rhntype"].upper()
+
+        try:
+            cmd = ["subscription-manager", "status"]
+            process.check_call(cmd)
+            rhn_msg = "RHNSM Registration\n\nRegistration Status: %s" \
+                      % rhntype
+
+        except process.CalledProcessError as e:
+            if "Status: Unknown" in e.output:
+                # Not registered or registration failed
+                pass
+            else:
+                rhn_msg = ("Registered to %s, but there are no "
+                           "subscriptions attached or it is otherwise"
+                           " invalid" % rhntype)
+
+        return rhn_msg
 
 
 class ProxyDialog(ui.Dialog):
