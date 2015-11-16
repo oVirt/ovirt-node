@@ -18,3 +18,6 @@ iproute
 #default plugins
 ovirt-node-plugin-snmp
 ovirt-node-plugin-cim
+
+#ipmi for edit node
+OpenIPMI
