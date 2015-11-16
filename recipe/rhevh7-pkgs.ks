@@ -28,3 +28,6 @@ dracut-config-generic
 shim
 grub2-efi
 efibootmgr
+
+#ipmi for edit node
+openIPMI
