@@ -36,7 +36,12 @@ trigger () {
             for handler in "$HOOK_DIR/$1"/*;
             do
                 echo "Running handler: $handler"
-                runcon -t unconfined_t "$handler" >> $OVIRT_HOOKLOG 2>&1
+                if grep -qs ":7:" /etc/system-release-cpe; then
+                    "$handler" >> $OVIRT_HOOKLOG 2>&1
+                else
+                    # On el6 we need to use runcon for correct SELinux ctx transitions
+                    runcon -t unconfined_t "$handler" >> $OVIRT_HOOKLOG 2>&1
+                fi
             done
         fi
 
