@@ -36,7 +36,7 @@ trigger () {
             for handler in "$HOOK_DIR/$1"/*;
             do
                 echo "Running handler: $handler"
-                runcon -t unconfined_t "$handler" >> $OVIRT_HOOKLOG 2>&1
+                "$handler" >> $OVIRT_HOOKLOG 2>&1
             done
         fi
 
