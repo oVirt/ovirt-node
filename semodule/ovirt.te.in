@@ -39,6 +39,7 @@ gen_require(`
     type unconfined_t;
     type unlabeled_t;
     type user_tmpfs_t;
+    type user_tmp_t;
     type var_log_t;
     type var_lib_t;
     type virt_cache_t;
@@ -148,6 +149,7 @@ allow sanlock_t nfs_t:file open;
 @SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t tmpfs_t:dir { write remove_name search add_name };
 @SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t tmpfs_t:file { unlink };
 @SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t ovirt_t:dbus send_msg;
+@SEMODULE_WITH_SYSTEMD@allow systemd_hostnamed_t user_tmp_t:file { unlink open };
 
 #============= hald_t ==============
 optional_policy(`
