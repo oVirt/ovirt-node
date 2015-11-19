@@ -737,6 +737,7 @@ class Hostname(NodeConfigFileSection):
                     p = "%s/alias[%s]" % (localhost_entry, idx)
                     aug.set(p, alias, False)
 
+                fs.Config().unpersist("/etc/hostname")
                 config.network.hostname(self.hostname)
 
                 fs.Config().persist("/etc/hosts")
