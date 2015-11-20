@@ -894,7 +894,12 @@ EOP
         PARAM=$(uc $p)
         value=$(ptr $p)
         if [ -n "$value" -o $p = 'init' -o $p = 'upgrade' -o $p = 'install' ]; then
-            log "Updating OVIRT_$PARAM to '$value'"
+            if [[ "$PARAM" =~ PASSWORD ]]; then
+                log "Updating OVIRT_$PARAM to a for security reasons hidden value"
+            else
+                log "Updating OVIRT_$PARAM to '$value'"
+            fi
+
             if [[ ${PARAM} == "MANAGEMENT_SERVER" ]]; then
                 value=`echo ${value} | sed 's/http\(\|s\):\/\///g'`
             fi
