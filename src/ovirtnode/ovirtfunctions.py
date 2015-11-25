@@ -83,7 +83,8 @@ OVIRT_CONFIG_FILES = [ "/etc/rsyslog.conf",
                        "/var/lib/random-seed",
                        "/var/lib/glusterd",
                        "/var/lib/rhsm",
-                       "/etc/sysconfig/virt-who"]
+                       "/etc/sysconfig/virt-who",
+                       "/etc/virt-who.conf"]
 
 OVIRT_VARS = {}
 # Parse all OVIRT_* variables
