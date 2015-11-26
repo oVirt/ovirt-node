@@ -523,6 +523,14 @@ def mount_liveos():
             connect_iscsi_root()
         system_closefds("mkdir -p /liveos")
         if not system("mount LABEL=Root /liveos &>/dev/null"):
+            # Let's first see if Root is maybe already mounted
+            if os.path.ismount("/dev/.initramfs/live"):
+                system_closefds("mount -o bind /dev/.initramfs/live /liveos")
+            elif os.path.ismount("/run/initramfs/live"):
+                system_closefds("mount -o bind /run/initramfs/live /liveos")
+            if os.path.ismount("/liveos"):
+                return True
+
             # just in case /dev/disk/by-label is not using devmapper and fails
             for dev in os.listdir("/dev/mapper"):
                 if system("e2label \"/dev/mapper/" + dev + "\" 2>/dev/null|grep Root|grep -v Backup"):
@@ -535,8 +543,10 @@ def mount_liveos():
                             system_closefds("mount -o bind /dev/.initramfs/live /liveos")
                         elif os.path.ismount("/run/initramfs/live"):
                             system_closefds("mount -o bind /run/initramfs/live /liveos")
-                        else:
-                            return False
+                        if os.path.ismount("/liveos"):
+                            return True
+
+            return False
         else:
             return True
 
