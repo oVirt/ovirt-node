@@ -221,3 +221,6 @@ sed -i 's/ln -sf initrd-release $initdir\/etc\/os-release/cp \/etc\/os-release $
 #we need network manager CLI but  (maybe) but not it service
 systemctl disable NetworkManager
 
+# FIXME Hack around bug https://bugzilla.redhat.com/show_bug.cgi?id=1286242
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1263648
+sed -i "/MountFlags/ s/^/#/" /usr/lib/systemd/system/systemd-udevd.service
