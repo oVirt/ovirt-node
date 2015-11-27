@@ -253,3 +253,7 @@ sed -i 's/ln -sf initrd-release $initdir\/etc\/os-release/cp \/etc\/os-release $
 
 # NetworkManager service is not required as VDSM owns the network settings
 systemctl disable NetworkManager
+
+# FIXME Hack around bug https://bugzilla.redhat.com/show_bug.cgi?id=1286242
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1263648
+sed -i "/MountFlags/ s/^/#/" /usr/lib/systemd/system/systemd-udevd.service
