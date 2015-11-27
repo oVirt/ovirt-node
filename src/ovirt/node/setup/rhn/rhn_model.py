@@ -265,7 +265,7 @@ class RHN(NodeConfigFileSection):
                         self.logger.info("System %s successfully registered to"
                                          " %s" % (cfg["profile"], cfg["url"]))
                     else:
-                        self.logger.info("System %s successfully registered to"
+                        self.logger.info("System successfully registered to"
                                          "RHN classic")
 
                 except process.CalledProcessError:
