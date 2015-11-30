@@ -297,5 +297,7 @@ rm -vf /usr/lib/tmpfiles.d/systemd-nologin.conf
 mkdir -vp /lib/systemd/system/rhsmcertd.service.d/
 cat > /lib/systemd/system/rhsmcertd.service.d/node.conf <<EOC
 [Unit]
-ConditionPathExists=/etc/sysconfig/rhn/systemid
+ConditionPathExists=|/var/lib/rhsm/facts/facts.json
+ConditionPathExists=|/var/lib/rhsm/productid.js
+ConditionPathExists=|/etc/sysconfig/rhn/systemid
 EOC
