@@ -312,6 +312,13 @@ class RHN(NodeConfigFileSection):
 
                 [scrub(f) for f in configs]
 
+                # Don't rely on Vars.location, since it may not be set, but we
+                # should remove this regardless
+                cert_path = "/etc/rhsm/ca/candlepin-local.pem"
+                if os.path.exists(cert_path):
+                    Config().unpersist(cert_path)
+                    os.unlink(cert_path)
+
         class ConfigureSubscriptionManager(utils.Transaction.Element):
             title = "Configuring subscription manager"
 
@@ -328,8 +335,9 @@ class RHN(NodeConfigFileSection):
 
                     # Default to /rhsm for Satellite 6
                     if cfg["ca_cert"].endswith(".pem") and \
-                       cfg["rhn_type"] == "satellite":
+                       cfg["rhntype"] == "satellite":
                         prefix = "/rhsm"
+
                 else:
                     # Default values for public SAM
                     host = "subscription.rhn.redhat.com"
@@ -345,7 +353,7 @@ class RHN(NodeConfigFileSection):
                 # Figure out what other arguments need to be set
                 # If there's a ca certificate or it's satellite, it's sat6
                 if cfg["ca_cert"] and not cfg["ca_cert"].endswith(".pem") or \
-                   cfg["rhn_type"] == "satellite":
+                   cfg["rhntype"] == "satellite":
                     mapping["--server.prefix"] = prefix
                 else:
                     prefix = "%s/%s" % (host, prefix) if prefix else \
@@ -501,12 +509,17 @@ class RHN(NodeConfigFileSection):
                 tx.extend([RaiseError("Registration to Satellite 6 requires "
                                       "an organization to be set")])
                 return tx
+
             if cfg["proxy"]:
                 tx.append(ConfigureSAMProxy())
+
             if cfg["ca_cert"]:
                 Vars.ca_cert = cfg["ca_cert"]
                 Vars.location = "/etc/rhsm/ca/candlepin-local.pem"
                 tx.append(DownloadCertificate())
+
+            if cfg["url"]:
+                tx.append(ConfigureSubscriptionManager())
 
             tx.extend([PrepareSAM(),
                        RegisterSAM()
