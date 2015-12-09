@@ -127,12 +127,12 @@ class Plugin(plugins.NodePlugin):
          re.match(r'storage.*?size$', k) and not _model[k].endswith(" MB")]
 
         if "storage.fill_data" in _model:
-            _model["storage.free_space"] = "0"
+            if _model["storage.fill_data"]:
+                _model["storage.free_space"] = "0"
             del _model["storage.fill_data"]
         _model["installation.devices"].sort()
 
         self._model = _model
-        self.logger.debug("SET %s" % _model)
 
     def _storage_tagged(self, dev):
         found = False
