@@ -283,3 +283,6 @@ rm -rf /var/lib/sfcb/registration/repository.previous/root/virt
 # rhbz 1181987 removing plymouth dracut message
 sed -i 's/ln -sf initrd-release $initdir\/etc\/os-release/cp \/etc\/os-release $initdir\/etc\//' /lib/dracut/modules.d/99base/module-setup.sh
 
+# FIXME Hack around bug https://bugzilla.redhat.com/show_bug.cgi?id=1286242
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1263648
+sed -i "/MountFlags/ s/^/#/" /usr/lib/systemd/system/systemd-udevd.service
