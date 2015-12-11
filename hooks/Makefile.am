@@ -16,15 +16,7 @@
 # also available at http://www.gnu.org/copyleft/gpl.html.
 
 onbootdir = $(libexecdir)/ovirt-node/hooks/on-boot
-onshutdowndir = $(libexecdir)/ovirt-node/hooks/on-shutdown
 
 dist_onboot_SCRIPTS = \
 	on-boot/03-validate-owner-ssh-keys \
 	$(NULL)
-
-dist_onshutdown_SCRIPTS = \
-	on-shutdown/01-save-virtwho.py
-
-install-data-hook:
-	mv $(DESTDIR)$(libexecdir)/ovirt-node/hooks/on-shutdown/01-save-virtwho.py \
-		$(DESTDIR)$(libexecdir)/ovirt-node/hooks/on-shutdown/01-save-virtwho

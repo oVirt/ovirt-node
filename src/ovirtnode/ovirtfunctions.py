@@ -84,6 +84,7 @@ OVIRT_CONFIG_FILES = [ "/etc/rsyslog.conf",
                        "/var/lib/glusterd",
                        "/var/lib/rhsm",
                        "/etc/sysconfig/virt-who",
+                       "/etc/virt-who.d/",
                        "/etc/virt-who.conf"]
 
 OVIRT_VARS = {}
