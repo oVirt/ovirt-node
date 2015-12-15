@@ -101,11 +101,11 @@ class Plugin(plugins.NodePlugin):
                    ui.Divider("notice.divider")])
 
         else:
-            if not cfg["rhntype"]:
-                rhn_msg = ("RHNSM Registration is required only if you wish " +
-                           "to use Red Hat Enterprise Linux with virtual " +
-                           "guests subscriptions for your guests.")
-            else:
+            rhn_msg = ("RHNSM Registration is required only if you wish " +
+                       "to use Red Hat Enterprise Linux with virtual " +
+                       "guests subscriptions for your guests.")
+
+            if cfg["rhntype"] and self._get_status(cfg) is not None:
                 rhn_msg = self._get_status(cfg)
 
             ws = [ui.Header("header[0]", rhn_msg),
@@ -241,6 +241,7 @@ class Plugin(plugins.NodePlugin):
         return self.ui_content()
 
     def _get_status(self, cfg):
+        rhn_msg = None
         if "satellite" in cfg["rhntype"]:
             rhntype = cfg["rhntype"].title()
         else:
@@ -248,9 +249,10 @@ class Plugin(plugins.NodePlugin):
 
         try:
             cmd = ["subscription-manager", "status"]
-            process.check_call(cmd)
-            rhn_msg = "RHNSM Registration\n\nRegistration Status: %s" \
-                      % rhntype
+            output = process.check_output(cmd)
+            if not "Status: Unknown" in output:
+                rhn_msg = "RHNSM Registration\n\nRegistration Status: %s" \
+                          % rhntype
 
         except process.CalledProcessError as e:
             if "Status: Unknown" in e.output:
