@@ -863,6 +863,7 @@ EOP
     # mount /config unless firstboot is forced
     if [ "$firstboot" != "1" ]; then
         mount_config
+	mount --make-rshared /etc
 
         # Trigger mounting so logfiles are visible
         if [[ -e "/bin/systemctl" ]];
