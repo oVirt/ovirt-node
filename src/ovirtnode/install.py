@@ -737,7 +737,7 @@ search --no-floppy --label RootBackup --set root
             def rbind(path, updfs=updfs):
                 dst = updfs + "/" + path
                 logger.debug("Binding %r to %r" % (path, dst))
-                _call(["mount", "--rbind", "/" + path, dst])
+                _call(["mount", "--make-rshared", "--rbind", "/" + path, dst])
                 return dst
 
             for path in ["etc", "dev", "proc", "sys", "tmp", "run", "var/tmp"]:
