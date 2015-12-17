@@ -24,8 +24,8 @@ from ovirt.node.utils import process, system, fs, firewall
 import os.path
 
 
-snmp_conf = "/var/lib/net-snmp/"
-old_conf = "/var/lib/net-snmp/snmpd.conf"
+snmp_dir = "/var/lib/net-snmp/"
+snmp_conf = "/var/lib/net-snmp/snmpd.conf"
 
 
 def enable_snmpd(password):
@@ -56,7 +56,7 @@ def enable_snmpd(password):
                             "SHA", "-x", "AES", "root"])
         system.service("snmpd", "start")
 
-        fs.Config().persist(snmp_conf)
+        fs.Config().persist(snmp_dir)
 
     firewall.open_port(port="161", proto="udp")
 
@@ -67,7 +67,7 @@ def disable_snmpd():
     process.check_call(["cp", "/etc/snmp/snmpd.conf", "/tmp"])
     process.check_call("sed -c -ie '/^createUser root/d' %s" % snmp_conf,
                        shell=True)
-    configs = [snmp_conf, old_conf]
+    configs = [snmp_conf, snmp_dir]
     [fs.Config().unpersist(c) for c in configs if fs.Config().exists(c)]
 
 
