@@ -27,7 +27,7 @@ import rhn_model
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _rhn_types = [("rhn", "RHN"),
+    _rhn_types = [("rhn", "RHSM"),
                   ("satellite", "Satellite"),
                   ("sam", "SAM")]
     _fields_enabled = False
@@ -40,7 +40,7 @@ class Plugin(plugins.NodePlugin):
         return True
 
     def name(self):
-        return "RHNSM Registration"
+        return "RHSM Registration"
 
     def rank(self):
         return 310
@@ -97,11 +97,11 @@ class Plugin(plugins.NodePlugin):
             ws = ([ui.Divider("notice.divider"),
                    ui.Notice("network.notice",
                              "Networking is not configured, please " +
-                             "configure it before configuring RHN"),
+                             "configure it before configuring RHSM"),
                    ui.Divider("notice.divider")])
 
         else:
-            rhn_msg = ("RHNSM Registration is required only if you wish " +
+            rhn_msg = ("RHSM Registration is required only if you wish " +
                        "to use Red Hat Enterprise Linux with virtual " +
                        "guests subscriptions for your guests.")
 
@@ -152,7 +152,7 @@ class Plugin(plugins.NodePlugin):
             return
 
     def on_merge(self, effective_changes):
-        self.logger.debug("Saving RHN page")
+        self.logger.debug("Saving RHSM page")
         changes = Changeset(self.pending_changes(False))
         effective_model = Changeset(self.model())
         effective_model.update(effective_changes)
@@ -186,7 +186,7 @@ class Plugin(plugins.NodePlugin):
                                  "Username or activationkey must be set."
                                  "Please set one of the values.")
 
-        txs = utils.Transaction("Updating RHN configuration")
+        txs = utils.Transaction("Updating RHSM configuration")
 
         if changes.contains_any(rhn_keys):
             def update_proxy():
@@ -224,7 +224,7 @@ class Plugin(plugins.NodePlugin):
             if warning_text:
                 txt = "%s must not be empty!" % warning_text
                 self._error_dialog = ui.InfoDialog("dialog.error",
-                                                   "RHN Error",
+                                                   "RHSM Error",
                                                    txt)
                 return self._error_dialog
             else:
@@ -251,7 +251,7 @@ class Plugin(plugins.NodePlugin):
             cmd = ["subscription-manager", "status"]
             output = process.check_output(cmd)
             if not "Status: Unknown" in output:
-                rhn_msg = "RHNSM Registration\n\nRegistration Status: %s" \
+                rhn_msg = "RHSM Registration\n\nRegistration Status: %s" \
                           % rhntype
 
         except process.CalledProcessError as e:
@@ -277,7 +277,7 @@ class ProxyDialog(ui.Dialog):
         def clear_invalid(dialog, changes):
             [plugin.stash_change(prefix) for prefix in self.keys]
 
-        title = _("RHN Proxy Information")
+        title = _("RHSM Proxy Information")
 
         entries = [ui.Entry("rhn.proxyhost", "Server:"),
                    ui.Entry("rhn.proxyport", "Port:"),
