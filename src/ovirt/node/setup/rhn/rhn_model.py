@@ -400,7 +400,8 @@ class RHN(NodeConfigFileSection):
         self.logger.debug(cfg)
         rhntype = cfg["rhntype"]
         cacert = cfg["ca_cert"] or ""
-        tx = utils.Transaction("Performing RHN Registration")
+        _rhn_brand = "RHSM" if system.is_min_el(7) else "RHN"
+        tx = utils.Transaction("Performing %s Registration" % _rhn_brand)
 
         if rhntype == "sam" or cacert.endswith(".pem"):
             tx.append(ConfigureSAM())

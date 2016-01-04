@@ -104,11 +104,13 @@ def get_rhn_status():
 
 class Plugin(plugins.NodePlugin):
     _model = None
-    _rhn_types = [("rhn", "RHN"),
+
+    _rhn_brand = "RHSM" if system.is_min_el(7) else "RHN"
+    _rhn_types = [("rhn", _rhn_brand),
                   ("satellite", "Satellite"),
                   ("sam", "SAM")]
     _fields_enabled = False
-    _type = "RHNSM Registration" if system.is_min_el(7) else \
+    _type = "RHSM Registration" if system.is_min_el(7) else \
             "RHN Registration"
 
     def __init__(self, app):
