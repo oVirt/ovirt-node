@@ -370,6 +370,7 @@ class RHN(NodeConfigFileSection):
                 try:
                     process.check_call(ab.get_commandlist())
                     Config().persist("/etc/rhsm/rhsm.conf")
+                    system.service("rhsmcertd", "start")
                 except process.CalledProcessError:
                     self.logger.debug("Calling subscription-manager with "
                                       "'%s' failed!" % ab.get_commandlist(
