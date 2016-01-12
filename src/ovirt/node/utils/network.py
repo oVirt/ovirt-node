@@ -398,6 +398,19 @@ class BridgedNIC(NIC):
         return self.build_str(["ifname"], additional_pairs=pairs)
 
 
+class BridgeNIC(BridgedNIC):
+    def __init__(self, nic):
+        snic = Bridges().slave_for_bridge(nic)
+        super(BridgeNIC, self).__init__(snic)
+        if snic.ifname != nic.ifname:
+            self.ifname = nic.ifname
+        else:
+            # There are no slaves. ;vdsmdummy; ?
+            # Leave it with the old behavior so we don't introduce
+            # any regressions
+            pass
+
+
 class TaggedNIC(NIC):
     """A class to provide easy access to tagged NICs
     """
@@ -584,12 +597,12 @@ class NodeNetwork(base.Base):
                 self.logger.debug(" Has tag")
                 nic = TaggedNIC(nic, vlanid)
 
-            if layout == "bridged":
+            if layout == "bridged" and not nic.typ == "bridge":
                 self.logger.debug(" Is bridged")
                 nic = BridgedNIC(nic)
 
         if nic.typ == "bridge":
-            nic = BridgedNIC(nic)
+            nic = BridgeNIC(nic)
 
         if nic.is_configured() and filter_configured:
             # Don not return configured NICs
@@ -869,6 +882,17 @@ class Bridges(base.Base):
             raise RuntimeError("Can no delete '%s', is no bridge" % ifname)
         process.call(["ip", "link", "set", "dev", ifname, "down"])
         process.call(["brctl", "delbr", ifname])
+
+    def slave_for_bridge(self, nic):
+        try:
+            slave = os.listdir("/sys/class/net/%s/brif" % nic.ifname)[0]
+            nic = NIC(slave)
+        except IndexError:
+            # No slaves. ;vdsmdummy; ?
+            # leave snic as it is with the old behavior
+            self.logger.info("Couldn't find a slave for BridgedNIC %s" %
+                             nic.ifname)
+        return nic
 
 
 class Bonds(base.Base):
