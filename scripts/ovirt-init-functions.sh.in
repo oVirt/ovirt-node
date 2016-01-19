@@ -932,7 +932,9 @@ EOP
         fi
     done
     # block accidental bootif changes on upgrades
-    if [ "$upgrade" == "1" ]; then
+    grep -sq BOOTIF /etc/default/ovirt
+    bootif_set=$?
+    if [[ "$upgrade" == "1" || $bootif_set -eq 0 ]]; then
         sed -i '/OVIRT_BOOTIF/d' $tmpaug
     fi
     augtool $tmpaug
