@@ -349,7 +349,7 @@ search --no-floppy --label RootBackup --set root
             if "OVIRT_ISCSI_INSTALL" in OVIRT_VARS:
                 _functions.system("umount /boot")
             if os.path.isfile("/boot/efi/%s/grubx64.efi" % self.efi_path):
-                shutil.copy("/boot/efi/%s/grubx64.efi" % self.path, "/tmp")
+                shutil.copy("/boot/efi/%s/grubx64.efi" % self.efi_path, "/tmp")
             else:
                 shutil.copy("/boot/efi/%s/grub.efi" % self.efi_path, "/tmp")
             _functions.mount_boot()

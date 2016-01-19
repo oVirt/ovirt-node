@@ -75,11 +75,3 @@ menuentry 'Uninstall' --class fedora --class gnu-linux --class gnu --class os {
 EOF
 fi
 cp $LIVE_ROOT/EFI/BOOT/BOOTX64.conf $LIVE_ROOT/EFI/BOOT/grub.cfg
-
-
-#
-# EFI support was dropped on RHEV-H:
-# https://bugzilla.redhat.com/show_bug.cgi?id=1227752
-# And it is now removed from the ISO to save space
-#
-rm -rvf "$LIVE_ROOT/EFI/" "$LIVE_ROOT/isolinux/efiboot.img"
