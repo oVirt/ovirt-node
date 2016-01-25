@@ -21,7 +21,7 @@ define([VERSION_MAJOR], [3])
 define([VERSION_MINOR], [6])
 define([VERSION_FIX], [1])
 define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX)
-define([VERSION_RELEASE], [3])
+define([VERSION_RELEASE], [4])
 define([VERSION_SUFFIX], [ovirt36])
 
 AC_INIT([ovirt-node], [VERSION_NUMBER[-]VERSION_RELEASE[.]VERSION_SUFFIX], [devel@ovirt.org])
