@@ -211,6 +211,7 @@ start_ovirt_early () {
 
 _start_ovirt_early () {
     touch $VAR_SUBSYS_OVIRT_EARLY
+
     # oVirt boot parameters
     #   BOOTIF=link|eth*|<MAC> (appended by pxelinux)
     #   storage_init=[usb|scsi[:serial#]|/dev/...]
@@ -939,10 +940,17 @@ EOP
         mount_crypt_swap
     fi
     if [ -f /etc/sysconfig/network ]; then
-        . /etc/sysconfig/network
-        if [ -n "$HOSTNAME" ]; then
-            hostname $HOSTNAME
-        fi
+        cond_set_hostname() {
+            # HOSTNAME is set uo further up in this script
+            # we need to make it local to make the check correct
+            # Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1254580
+            local HOSTNAME
+            . /etc/sysconfig/network
+            if [ -n "$HOSTNAME" ]; then
+                hostname $HOSTNAME
+            fi
+        }
+        cond_set_hostname
     fi
     if [ -f /etc/hostname ]; then
         if [ -n "$(cat /etc/hostname)" ]; then
