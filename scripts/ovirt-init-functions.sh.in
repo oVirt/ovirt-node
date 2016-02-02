@@ -913,6 +913,7 @@ EOP
         swapon -a
         service network restart
         service auditd restart
+        service rhel-dmesg restart
     fi
     log "Updating $OVIRT_DEFAULTS"
     tmpaug=$(mktemp)
