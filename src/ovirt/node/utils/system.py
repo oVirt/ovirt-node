@@ -1107,16 +1107,18 @@ class Bootloader(base.Base):
     def find_grub_cfg():
         cfg_path = None
 
-        if os.path.ismount("/dev/.initramfs/live"):
+        if is_efi():
+            mount_efi(target="/liveos")
+            cfg_path = "/liveos/EFI/redhat/grub.cfg"
+        elif os.path.ismount("/dev/.initramfs/live"):
             if Bootloader.is_grub2():
                 cfg_path = "/dev/.initramfs/live/grub2/grub.cfg"
             else:
                 cfg_path = "/dev/.initramfs/live/grub/grub.conf"
-        elif os.path.ismount("/run/initramfs/.live"):
+        elif os.path.ismount("/run/.initramfs/live"):
             cfg_path = "/liveos/grub/grub.conf"
         elif Filesystem.by_label("Boot"):
             cfg_path = "/boot/grub/grub.conf"
-
         else:
             raise RuntimeError("Failed to find the path for grub.[cfg|conf]")
 
