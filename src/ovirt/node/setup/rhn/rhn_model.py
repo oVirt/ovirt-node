@@ -484,7 +484,8 @@ class RHN(NodeConfigFileSection):
                                               cfg["url"]))
                         else:
                             self.logger.info("System %s successfully "
-                                             "registered to SAM")
+                                             "registered to SAM" %
+                                             cfg["profile"])
 
                     # This isn't strictly necessary
                     if RHN().retrieve()["activationkey"]:
