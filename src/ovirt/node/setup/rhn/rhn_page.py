@@ -244,6 +244,8 @@ class Plugin(plugins.NodePlugin):
         rhn_msg = None
         if "satellite" in cfg["rhntype"]:
             rhntype = cfg["rhntype"].title()
+        elif "rhn" in cfg["rhntype"]:
+            rhntype = "RHSM"
         else:
             rhntype = cfg["rhntype"].upper()
 
