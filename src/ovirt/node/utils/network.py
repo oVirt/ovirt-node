@@ -885,7 +885,8 @@ class Bridges(base.Base):
 
     def slave_for_bridge(self, nic):
         try:
-            slave = os.listdir("/sys/class/net/%s/brif" % nic.ifname)[0]
+            slave = [n for n in os.listdir("/sys/class/net/%s/brif"
+                     % nic.ifname) if "vnet" not in n].pop()
             nic = NIC(slave)
         except IndexError:
             # No slaves. ;vdsmdummy; ?
