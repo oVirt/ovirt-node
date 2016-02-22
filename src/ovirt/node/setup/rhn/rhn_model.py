@@ -370,7 +370,6 @@ class RHN(NodeConfigFileSection):
                 try:
                     process.check_call(ab.get_commandlist())
                     Config().persist("/etc/rhsm/rhsm.conf")
-                    system.service("rhsmcertd", "start")
                 except process.CalledProcessError:
                     self.logger.debug("Calling subscription-manager with "
                                       "'%s' failed!" % ab.get_commandlist(
@@ -470,6 +469,7 @@ class RHN(NodeConfigFileSection):
 
                 # If we made it down here, we registered successfully
                 else:
+                    system.service("rhsmcertd", "start")
                     configs = ["/var/lib/rhsm/cache/installed_products.json",
                                "/var/lib/rhsm/facts/facts.json"]
 

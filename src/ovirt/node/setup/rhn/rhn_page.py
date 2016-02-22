@@ -250,7 +250,7 @@ class Plugin(plugins.NodePlugin):
         try:
             cmd = ["subscription-manager", "status"]
             output = process.check_output(cmd)
-            if not "Status: Unknown" in output:
+            if "Status: Unknown" not in output:
                 rhn_msg = "RHSM Registration\n\nRegistration Status: %s" \
                           % rhntype
 
