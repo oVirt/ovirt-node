@@ -85,6 +85,3 @@ submenu 'Troubleshooting -->' {
 EOF
 fi
 cp $LIVE_ROOT/EFI/BOOT/BOOTX64.conf $LIVE_ROOT/EFI/BOOT/grub.cfg
-
-PATH=${PATH}:$INSTALL_ROOT/usr/bin:$INSTALL_ROOT/usr/sbin /usr/sbin/mkefiboot $LIVE_ROOT/EFI/BOOT $LIVE_ROOT/isolinux/efiboot.img
-
