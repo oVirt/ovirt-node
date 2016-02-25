@@ -56,31 +56,21 @@ menuentry 'Install or Upgrade ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora
         linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0
         initrdefi /isolinux/initrd0.img
 }
-submenu 'Troubleshooting -->' {
-  menuentry 'Install or Upgrade (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
-          linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0 nomodeset
-          initrdefi /isolinux/initrd0.img
-  }
-  menuentry 'Install or Upgrade with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
-          linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0 console=ttyS0,115200n8
-          initrdefi /isolinux/initrd0.img
-  }
-  menuentry 'Reinstall ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
-          linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0 reinstall
-          initrdefi /isolinux/initrd0.img
-  }
-  menuentry 'Reinstall (Basic Video) ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
-          linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0 reinstall nomodeset
-          initrdefi /isolinux/initrd0.img
-  }
-  menuentry 'Reinstall with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
-          linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0  reinstall console=ttyS0,115200n8
-          initrdefi /isolinux/initrd0.img
-  }
-  menuentry 'Uninstall' --class fedora --class gnu-linux --class gnu --class os {
-          linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0  uninstall
-          initrdefi /isolinux/initrd0.img
-  }
+menuentry 'Install or Upgrade with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
+        linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0  console=ttyS0,115200n8
+        initrdefi /isolinux/initrd0.img
+}
+menuentry 'Reinstall ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
+        linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0  reinstall
+        initrdefi /isolinux/initrd0.img
+}
+menuentry 'Reinstall with serial console ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
+        linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0  reinstall console=ttyS0,115200n8
+        initrdefi /isolinux/initrd0.img
+}
+menuentry 'Uninstall' --class fedora --class gnu-linux --class gnu --class os {
+        linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0  uninstall
+        initrdefi /isolinux/initrd0.img
 }
 EOF
 fi
