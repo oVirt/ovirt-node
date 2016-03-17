@@ -31,3 +31,6 @@ efibootmgr
 
 #ipmi for edit node
 OpenIPMI
+
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1318014
+virt-v2v
