@@ -730,7 +730,7 @@ class Hostname(NodeConfigFileSection):
                 # ... and create a new one
                 aliases = ["localhost", "localhost.localdomain"]
                 if self.hostname:
-                    aliases.append(self.hostname)
+                    aliases.insert(0, self.hostname)
 
                 for _idx, alias in enumerate(aliases):
                     idx = _idx + 1
