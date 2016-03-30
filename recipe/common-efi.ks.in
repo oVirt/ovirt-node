@@ -51,7 +51,6 @@ insmod part_gpt
 insmod ext2
 
 set timeout=30
-set root=(hd0)
 
 menuentry 'Install or Upgrade ${PRODUCT_SHORT}-$VERSION-$RELEASE' --class fedora --class gnu-linux --class gnu --class os {
         linuxefi /isolinux/vmlinuz0 @BOOTLOADER_ARGS@ root=live:CDLABEL=$NAME rootfstype=auto ro liveimg rootflags=ro elevator=deadline install rhgb quiet rd_NO_MULTIPATH rd.luks=0 rd.md=0 rd.dm=0
