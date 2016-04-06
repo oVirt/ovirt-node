@@ -728,9 +728,10 @@ class Hostname(NodeConfigFileSection):
                     aug.remove(alias_entry, False)
 
                 # ... and create a new one
-                aliases = ["localhost", "localhost.localdomain"]
                 if self.hostname:
-                    aliases.insert(0, self.hostname)
+                    aug.set("%s/canonical" % localhost_entry, self.hostname)
+
+                aliases = ["localhost", "localhost.localdomain"]
 
                 for _idx, alias in enumerate(aliases):
                     idx = _idx + 1
