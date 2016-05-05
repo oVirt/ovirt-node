@@ -30,7 +30,10 @@ import time
 import logging
 import tempfile
 OVIRT_VARS = _functions.parse_defaults()
+
+from itertools import combinations
 from ovirtnode.storage import Storage
+from rpmUtils.miscutils import compareVerOnly
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +60,38 @@ class Install:
                 return "EFI/redhat"
         else:
             return "EFI/redhat"
+
+    def check_higher_kernel(self, path=None):
+        """
+        Check through kernel modules dir, the higher version
+        available
+
+        path -- The path to kernel modules dir
+        """
+        higher_kernel = None
+
+        if path is None:
+            modules_dir = "/lib/modules"
+        else:
+            modules_dir = "{0}/lib/modules".format(path)
+
+        modules_dir = os.listdir(modules_dir)
+        for km1, km2 in combinations(modules_dir, 2):
+            ret = compareVerOnly(km1, km2)
+
+            # Extra validation via rpmUtils.miscutils to
+            # check if new value in km1 or in km2 is higher than
+            # the current hold in higher_kernel
+            if ret == 1:
+                if higher_kernel is None or \
+                        compareVerOnly(km1, higher_kernel) == 1:
+                    higher_kernel = km1
+            elif ret == -1:
+                if higher_kernel is None or \
+                        compareVerOnly(km2, higher_kernel) == 1:
+                    higher_kernel = km2
+
+        return higher_kernel
 
     def kernel_image_copy(self):
         if (not _functions.system("cp -p %s/vmlinuz0 %s" % \
@@ -747,8 +782,11 @@ search --no-floppy --label RootBackup --set root
 
             if len(upd_kver.splitlines()) != 1:
                 # It would be very unusual to see more than one kver directory
-                # in /lib/modules, because our images just contain one kernel
-                raise RuntimeError("Found more than one kernel version")
+                # in /lib/modules but might happen when using edit-node.
+                # Check via check_higher_kernel() the higher version available
+                upd_kver = self.check_higher_kernel(updfs)
+                if upd_kver is None:
+                    raise RuntimeError("Unable to find the kernel version")
 
             # Update initramfs to pickup multipath wwids
             # Let /boot point to the filesystem on the update candidate partition
