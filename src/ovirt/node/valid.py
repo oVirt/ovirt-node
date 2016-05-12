@@ -327,6 +327,13 @@ class FQDN(RegexValidator):
         return is_valid
 
 
+class FileURL(Validator):
+    description = "a valid file URL"
+
+    def validate(self, value):
+        return value.startswith("file://") and os.path.isfile(value[7:])
+
+
 class Ascii(Validator):
     """ Checks if the param is ascii or not.
 
