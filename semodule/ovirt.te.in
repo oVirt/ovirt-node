@@ -248,6 +248,7 @@ require {
 allow snmpd_t device_t:sock_file write;
 allow snmpd_t ovirt_t:unix_dgram_socket sendto;
 allow snmpd_t tmpfs_t:file { read getattr open };
+allow snmpd_t unlabeled_t:file { rename read getattr unlink open };
 
 
 #============= sshd_t ==============
