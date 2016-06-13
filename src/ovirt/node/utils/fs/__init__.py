@@ -689,12 +689,13 @@ class Config(base.Base):
                 not os.path.exists(filename):
             return False
 
-        current_checksum = self.cksum(filename)
-        stored_checksum = self.cksum(persisted_path)
-        if stored_checksum == current_checksum:
-            return True
+        if os.path.isfile(filename):
+            current_checksum = self.cksum(filename)
+            stored_checksum = self.cksum(persisted_path)
+            if stored_checksum != current_checksum:
+                return False
 
-        return False
+        return True
 
     def is_enabled(self):
         return File("/proc").exists() and is_bind_mount(self.basedir)
