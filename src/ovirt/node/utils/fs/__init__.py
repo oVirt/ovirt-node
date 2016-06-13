@@ -687,7 +687,7 @@ class Config(base.Base):
         exists &= os.path.exists(persisted_path)
         exists &= os.path.exists(filename)
 
-        if exists and check_is_in_sync:
+        if exists and check_is_in_sync and os.path.isfile(filename):
             # If requested, also check that the contents match
             current_checksum = self.checksum(filename)
             stored_checksum = self.checksum(persisted_path)
