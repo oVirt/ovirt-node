@@ -57,6 +57,8 @@ Requires:       augeas >= 0.3.5
 Requires:       bridge-utils
 Requires:       udev >= 147-2.34
 Requires:       wget
+Requires:       shadow-utils
+Requires:       sanlock >= 2.8-3, sanlock-python
 Requires:       cyrus-sasl-gssapi cyrus-sasl >= 2.1.22
 Requires:       iscsi-initiator-utils
 Requires:       ntp
