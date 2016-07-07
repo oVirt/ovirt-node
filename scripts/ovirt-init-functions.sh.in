@@ -1015,6 +1015,11 @@ EOF
         fi
     done
 
+    #BZ1348860 - We should not ship RHEL pem
+    if [ -f /etc/pki/product-default/69.pem ]; then
+        rm -f /etc/pki/product-default/69.pem
+    fi
+
     # fix logrotate syntax between 6.4 -> 6.5 upgrades
     unmount_config /etc/logrotate.d/ovirt-node
     sed -i 's/log{/log {/g' /etc/logrotate.d/ovirt-node
