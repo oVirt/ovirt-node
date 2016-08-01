@@ -596,6 +596,11 @@ class LiveImageEditor(LiveImageCreator):
         f.close()
         return output
 
+    def _add_comment_title_tui(self, options):
+        comment_path = "%s/etc/ovirt-node/node-comment" % self._instroot
+        with open(comment_path, 'w') as f:
+            f.write(options.comment)
+
     def _update_version(self, options):
         ver = options.name or self._print_version()
         f = open("%s/etc/system-release" % self._instroot, "w")
@@ -1557,6 +1562,11 @@ def parse_options(args):
                       dest="update", help="comma delimited list of packages" +
                       " to update (needs --repo)")
 
+    parser.add_option("--comment", type="string",
+                      dest="comment",
+                      help="Add a specify comment to be added into the "
+                      "title of TUI")
+
     parser.add_option("--repo", type="string",
                       dest="repo",
                       help="Specify yum repo file or yum repository on the"
@@ -1791,6 +1801,8 @@ def main():
                     editor._change_uid(options)
                 if options.gidmod is not None:
                     editor._change_gid(options)
+                if options.comment is not None:
+                    editor._add_comment_title_tui(options)
                 if options.shell:
                     print "Launching shell. Exit to continue."
                     print "----------------------------------"

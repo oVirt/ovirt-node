@@ -285,7 +285,12 @@ class Application(base.Base):
         self.ui.register_hotkey("f12", self.__reload_page)
         self.ui.register_hotkey("window resize", self.__check_terminal_size)
 
-        self.ui.header = "\n %s\n" % str(self.product)
+        if os.path.exists("/etc/ovirt-node/node-comment"):
+            with open("/etc/ovirt-node/node-comment") as f:
+                self.ui.header = "\n%s %s\n" % (f.read(), str(self.product))
+        else:
+            self.ui.header = "\n %s\n" % str(self.product)
+
         self.ui.footer = "Press esc to quit."
 
         # Catch ctrl+c
