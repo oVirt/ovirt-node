@@ -318,6 +318,7 @@ class RHN(NodeConfigFileSection):
                 if os.path.exists(cert_path):
                     Config().unpersist(cert_path)
                     os.unlink(cert_path)
+                Config().unpersist("/etc/cron.d/rhn-virtualization.cron")
 
         class ConfigureSubscriptionManager(utils.Transaction.Element):
             title = "Configuring subscription manager"
@@ -469,6 +470,12 @@ class RHN(NodeConfigFileSection):
 
                 # If we made it down here, we registered successfully
                 else:
+                    # Truncate the classic rhn cron job in favor of RHSM
+                    rhn_cronjob = "/etc/cron.d/rhn-virtualization.cron"
+                    with open(rhn_cronjob, "w"):
+                        pass
+                    Config().persist(rhn_cronjob)
+
                     system.service("rhsmcertd", "start")
                     configs = ["/var/lib/rhsm/cache/installed_products.json",
                                "/var/lib/rhsm/facts/facts.json"]
