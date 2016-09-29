@@ -34,7 +34,7 @@ class Tuned(NodeConfigFileSection):
         all_profiles = tuned.get_available_profiles()
         if profile not in all_profiles:
             raise InvalidData("Unknown tuned profile: %s" % profile)
-        return {"OVIRT_TUNED_PROFILE": profile}
+        return {"OVIRT_TUNED_PROFILE": profile.split()[0]}
 
     def transaction(self):
         # This method builds a transaction to modify the system
@@ -49,7 +49,7 @@ class Tuned(NodeConfigFileSection):
             title = "Requesting profile change"
 
             def commit(self):
-                tuned.set_active_profile(profile)
+                tuned.set_active_profile(profile.split()[0])
 
         tx = utils.Transaction("Applying tuned configuration")
         if profile:
