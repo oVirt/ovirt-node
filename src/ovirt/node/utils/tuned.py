@@ -63,7 +63,7 @@ def set_active_profile(profile):
     try:
         if (profile == "None" or profile == "off"):
             process.check_output(["/usr/sbin/tuned-adm", "off"])
-        elif profile not in get_available_profiles():
+        elif not any(profile in s for s in get_available_profiles()):
             raise RuntimeError("%s is not a known profile" % profile)
         else:
             process.check_output(["/usr/sbin/tuned-adm", "profile",
