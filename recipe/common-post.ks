@@ -99,6 +99,7 @@ files	/etc
 dirs	/var/lib/multipath
 files	/var/lib/net-snmp
 dirs    /var/lib/dnsmasq
+dirs    /var/lib/rsyslog
 files	/root/.ssh
 dirs	/root/.uml
 files	/var/cache/libvirt
