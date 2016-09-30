@@ -261,3 +261,4 @@ sed -i "/MountFlags/ s/^/#/" /usr/lib/systemd/system/systemd-udevd.service
 # Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1378304
 sed -i "/PrivateDevices/ s/^/#/" /usr/lib/systemd/system/systemd-localed.service
 sed -i "/PrivateDevices/ s/^/#/" /usr/lib/systemd/system/systemd-machined.service
+sed -i "/PrivateDevices/ s/^/#/" /usr/lib/systemd/system/systemd-hostnamed.service
