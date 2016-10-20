@@ -1,2 +1,2 @@
 # Run each log rotation every 10 minutes
-*/10 * * * * root /usr/sbin/logrotate /etc/logrotate.conf
+*/10 * * * * root /usr/sbin/logrotate -s /var/lib/logrotate/logrotate.status /etc/logrotate.conf

@@ -100,6 +100,7 @@ dirs	/var/lib/multipath
 files	/var/lib/net-snmp
 dirs    /var/lib/dnsmasq
 dirs    /var/lib/rsyslog
+dirs    /var/lib/logrotate
 files	/root/.ssh
 dirs	/root/.uml
 files	/var/cache/libvirt
@@ -302,3 +303,7 @@ ConditionPathExists=|/var/lib/rhsm/facts/facts.json
 ConditionPathExists=|/var/lib/rhsm/productid.js
 ConditionPathExists=|/etc/sysconfig/rhn/systemid
 EOC
+
+# Bug-Url: https://bugzilla.redhat.com/show_bug.cgi?id=1381719
+mkdir -p /var/lib/logrotate
+sed -i 's#/usr/sbin/logrotate /etc/vdsm/logrotate/vdsm#/usr/sbin/logrotate -s /var/lib/logrotate/logrotate.status /etc/vdsm/logrotate/vdsm#g' /etc/cron.hourly/vdsm-logrotate
