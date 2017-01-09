@@ -590,6 +590,14 @@ optional_policy(`
 ')
 
 
+#============= lldpad_t ==============
+optional_policy(`
+    require {
+        type lldpad_t;
+    }
+    allow lldpad_t tmpfs_t:file { read write open };
+')
+
 #============= mandb_t ==============
 optional_policy(`
     require {
