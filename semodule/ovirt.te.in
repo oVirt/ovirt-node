@@ -485,12 +485,14 @@ optional_policy(`
         type iptables_t;
         type insmod_t;
         type var_lib_t;
+        type var_run_t;
     }
     allow iptables_t tmpfs_t:dir search;
     allow iptables_t insmod_t:process { siginh rlimitinh noatsecure };
     allow iptables_t user_tmpfs_t:file { read open getattr };
     allow iptables_t var_lib_t:dir { write remove_name create add_name };
     allow iptables_t var_lib_t:file { write create unlink open };
+    allow iptables_t var_run_t:file { read open lock };
 ')
 
 #============= init_t ==============
