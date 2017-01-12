@@ -238,6 +238,7 @@ class ImportConfigs(base.Base):
             rhn_org = None
             rhn_proxyurl = None
             rhn_proxyuser = None
+            rhn_environment = None
 
             rhn_conf = rhn.get_rhn_config()
             status, rhn_type = rhn.get_rhn_status()
@@ -279,6 +280,8 @@ class ImportConfigs(base.Base):
                          rhn_type.lower() if rhn_type else "")
             self.aug.set("/files/etc/default/ovirt/OVIRT_RHN_URL",
                          rhn_url or "")
+            self.aug.set("/files/etc/default/ovirt/OVIRT_RHN_ENVIRONMENT",
+                         rhn_environment or "")
             self.aug.set("/files/etc/default/ovirt/OVIRT_RHN_CA_CERT",
                          rhn_ca or "")
             self.aug.set("/files/etc/default/ovirt/OVIRT_RHN_USERNAME",
