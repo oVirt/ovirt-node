@@ -520,40 +520,36 @@ class RHN(NodeConfigFileSection):
                 if cfg["activationkey"]:
                     if not cfg["org"]:
                         del tx[0]
-                        tx.extend([RaiseError(
-                                        "Registration to Satellite "
-                                        "6 with activation key requires "
-                                        "an organization to be set")])
+                        tx.extend([RaiseError("Registration to Satellite "
+                                              "6 with activation key requires"
+                                              " an organization to be set")])
                         return tx
                     if cfg["environment"]:
                         del tx[0]
-                        tx.extend([RaiseError(
-                                        "Registration to Satellite 6 with "
-                                        "activation key do not allow "
-                                        "environments to be specified")])
+                        tx.extend([RaiseError("Registration to Satellite 6 "
+                                              "with activation key do not "
+                                              "allow environments to be"
+                                              "specified")])
                         return tx
                     if cfg["username"] or password:
                         del tx[0]
-                        tx.extend([RaiseError(
-                                        "Registration to Satellite 6 with an "
-                                        "activation key do not require "
-                                        "credentials")])
+                        tx.extend([RaiseError("Registration to Satellite 6 "
+                                              "with an activation key do not"
+                                              " require credentials")])
                         return tx
                 else:
                     if not cfg["org"] or not cfg["environment"]:
                         del tx[0]
-                        tx.extend([RaiseError(
-                                        "Registration to Satellite 6 requires "
-                                        "an organization and environment to "
-                                        "be set")])
+                        tx.extend([RaiseError("Registration to Satellite 6 "
+                                              "requires an organization and"
+                                              "environment to be set")])
                         return tx
 
                     if not cfg["username"] or not password:
                         del tx[0]
-                        tx.extend([RaiseError(
-                                        "Registration to Satellite 6 without "
-                                        "an activation key requires user "
-                                        "credentials")])
+                        tx.extend([RaiseError("Registration to Satellite 6 "
+                                              "without an activation key "
+                                              "requires user credentials")])
                         return tx
 
             if cfg["proxy"]:
