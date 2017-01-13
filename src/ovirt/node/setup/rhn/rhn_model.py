@@ -338,8 +338,9 @@ class RHN(NodeConfigFileSection):
                     host, port, prefix = RHN().parse_host_uri(cfg["url"])
 
                     # Default to /rhsm for Satellite 6
-                    if DEFAULT_CA_SAT6 in cfg["ca_cert"] and \
-                       cfg["rhntype"] == "satellite":
+                    if cfg["ca_cert"] and \
+                            DEFAULT_CA_SAT6 in cfg["ca_cert"] and \
+                            cfg["rhntype"] == "satellite":
                         prefix = "/rhsm"
 
                 else:
@@ -357,7 +358,7 @@ class RHN(NodeConfigFileSection):
                 # Figure out what other arguments need to be set
                 # If there's a ca certificate or it's satellite, it's sat6
                 if cfg["ca_cert"] and DEFAULT_CA_SAT6 in cfg["ca_cert"] and \
-                   cfg["rhntype"] == "satellite":
+                   cfg["rhntype"] and cfg["rhntype"] == "satellite":
                     mapping["--server.prefix"] = prefix
                 else:
                     prefix = "%s/%s" % (host, prefix) if prefix else \
