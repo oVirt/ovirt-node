@@ -30,18 +30,18 @@ RHSM_CONF = "/etc/rhsm/rhsm.conf"
 SYSTEMID = "/etc/sysconfig/rhn/systemid"
 
 args = _functions.get_cmdline_args()
-keys = ["rhn_type", "rhn_url", "rhn_environment", "rhn_ca_cert", "rhn_username",
-        "rhn_profile", "rhn_activationkey", "rhn_org",
+keys = ["rhn_type", "rhn_url", "rhn_ca_cert", "rhn_username",
+        "rhn_profile", "rhn_activationkey", "rhn_org", "rhn_environment",
         "rhn_proxy", "rhn_proxyuser"]
 
 keys_to_model = {"rhn_type": "rhn.rhntype",
                  "rhn_url": "rhn.url",
-                 "rhn_environment": "rhn.environment",
                  "rhn_ca_cert": "rhn.ca_cert",
                  "rhn_username": "rhn.username",
                  "rhn_profile": "rhn.profile",
                  "rhn_activationkey": "rhn.activationkey",
                  "rhn_org": "rhn.org",
+                 "rhn_environment": "rhn.environment",
                  "rhn_proxy": "rhn.proxy",
                  "rhn_proxyuser": "rhn.proxyuser",
                  }
@@ -65,12 +65,12 @@ if __name__ == "__main__":
     effective_model = Changeset({
         "rhn.rhntype": cfg['rhntype'],
         "rhn.url": cfg['url'],
-        "rhn.environment": cfg['environment'],
         "rhn.ca_cert": cfg['ca_cert'],
         "rhn.username": cfg['username'],
         "rhn.profile": cfg['profile'],
         "rhn.activationkey": cfg['activationkey'],
         "rhn.org": cfg['org'],
+        "rhn.environment": cfg['environment'],
         "rhn.proxy": cfg['proxy'],
         "rhn.proxyuser": cfg['proxyuser'],
     })
